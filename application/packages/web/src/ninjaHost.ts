@@ -69,6 +69,8 @@ let dismissing = false;
 /** Set when "Write a note" hands the box over to its note mode: the close that follows keeps the box. */
 let handingOff = false;
 let queued = false;
+/** Set while the box holds a frame of the list: from the first frame sent until the box hides or changes to its note mode. */
+let boxDrawn = false;
 
 async function toBox(event: string, payload: unknown): Promise<void> {
   try {
@@ -100,6 +102,7 @@ function sendFrame(): void {
     end: input?.selectionEnd ?? 0,
     ack,
   };
+  boxDrawn = true;
   void toBox('pn-ninja-frame', frame);
 }
 
@@ -116,7 +119,11 @@ export function registerNinjaHost(next: Host): () => void {
   return () => {
     if (host !== next) return;
     host = null;
-    if (dialog) void lockedFrame().then((frame) => toBox('pn-ninja-frame', frame));
+    // The lock screen takes the place of NotesView in one commit, and React
+    // detaches the dialog's ref before it runs this cleanup. So the dialog is
+    // no measure of what the box shows: the frame it was last sent is.
+    if (dialog || boxDrawn) void lockedFrame().then((frame) => toBox('pn-ninja-frame', frame));
+    boxDrawn = false;
   };
 }
 
@@ -149,6 +156,7 @@ export function remoteNinjaClosed(): void {
  */
 export function openBoxNoteMode(title: string): void {
   handingOff = true;
+  boxDrawn = false;
   void toBox('pn-ninja-note-mode', { title });
 }
 
@@ -224,7 +232,9 @@ export function startNinjaHost(): void {
         if (host) host.open();
         else void lockedFrame().then((frame) => toBox('pn-ninja-frame', frame));
       }),
+      // The box hid, and cleared itself as it did (NinjaWindow.tsx).
       listen('pn-ninja-close', () => {
+        boxDrawn = false;
         if (dialog) host?.close();
       }),
       // The box asks when it loads or shows: an open before it loaded went nowhere.

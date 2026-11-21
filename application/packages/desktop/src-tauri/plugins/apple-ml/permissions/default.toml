@@ -1,0 +1,3 @@
+[default]
+description = "Text in pictures (Apple Vision), Scan a page (VisionKit, iOS) and Voice to text (SpeechAnalyzer), with Cancel for a transcription."
+permissions = ["allow-ocr", "allow-scan", "allow-speech-status", "allow-speech-install", "allow-transcribe", "allow-cancel"]

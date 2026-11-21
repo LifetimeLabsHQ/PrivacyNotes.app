@@ -103,6 +103,7 @@ export type ListPrefs = {
  * no override.
  */
 import type { View } from './views';
+import type { ViewMode } from './viewMode';
 
 export type Pillar = 'global' | 'notes' | 'tasks' | 'journal' | 'vault' | 'files' | 'bookmarks' | 'contacts';
 
@@ -120,6 +121,40 @@ export type ListPrefsStore = {
   bookmarks?: ListPrefs;
   contacts?: ListPrefs;
 };
+
+/** One folder's or tag's own list settings: the prefs and the layout. */
+export type ScopedListPrefs = { prefs: ListPrefs; layout: ViewMode };
+
+/**
+ * The folders and tags that remember their own sort and layout ("Remember for
+ * this folder" or "for this tag" in the list menu);
+ * `UserSettings.scopedListPrefs`. Keyed by `prefsScopeOf`: `folder:<id>` or
+ * `tag:<name>`. A folder or tag with no entry uses Global and this device's
+ * layout. The layout here is synced, unlike the device layout in
+ * `viewMode.ts`: it follows what the folder or tag holds, not the screen. An
+ * entry for a folder or tag that no longer exists is dropped on the next
+ * write (`pruneScopedPrefs`); a renamed tag starts again from Global.
+ *
+ * A top-level setting and not a key inside `listPrefs`: a client older than
+ * this one rebuilds `listPrefs` from the keys it knows and would drop it, but
+ * carries an unknown top-level key through unchanged (`hydrate` in
+ * `userSettings.ts`).
+ * Spec: docs/internal/design-decisions.md (per-folder and per-tag list settings)
+ */
+export type ScopedListPrefsStore = Record<string, ScopedListPrefs>;
+
+/**
+ * The scope the open list remembers its settings under: one folder or one
+ * tag, never both at once (no rule for which would win is obvious), and never
+ * the "untagged" filter. Null when the list follows Global.
+ */
+export function prefsScopeOf(folderId: string | null, tag: string | null): string | null {
+  const realTag = tag && tag !== '__untagged__' ? tag : null;
+  if (folderId && realTag) return null;
+  if (folderId) return `folder:${folderId}`;
+  if (realTag) return `tag:${realTag}`;
+  return null;
+}
 
 const DEFAULT_PREFS: ListPrefs = {
   sortField: 'modified',
@@ -229,6 +264,23 @@ function hydratePrefs(raw: unknown): ListPrefs {
   return base;
 }
 
+/** A scope key: `folder:` or `tag:` and a name of bounded length. */
+function isScopeKey(id: string): boolean {
+  return id.length <= 300 && /^(folder|tag):./.test(id);
+}
+
+export function hydrateScopedListPrefs(raw: unknown): ScopedListPrefsStore {
+  const out: ScopedListPrefsStore = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  for (const [id, v] of Object.entries(raw)) {
+    if (!isScopeKey(id) || !v || typeof v !== 'object') continue;
+    const entry = v as { prefs?: unknown; layout?: unknown };
+    const layout = entry.layout === 'list' || entry.layout === 'grid' || entry.layout === 'auto' ? entry.layout : 'auto';
+    out[id] = { prefs: hydratePrefs(entry.prefs), layout };
+  }
+  return out;
+}
+
 export function hydrateListPrefsStore(raw: unknown): ListPrefsStore {
   const base: ListPrefsStore = { global: { ...DEFAULT_PREFS } };
   if (!raw || typeof raw !== 'object') return base;
@@ -283,6 +335,34 @@ export function setPillarPrefs(
 ): ListPrefsStore {
   if (pillar === 'global') return { ...store, global: prefs };
   return { ...store, [pillar]: prefs };
+}
+
+/** The scope's own settings, or null when it follows Global. */
+export function scopedPrefs(store: ScopedListPrefsStore, scope: string | null): ScopedListPrefs | null {
+  if (!scope) return null;
+  return Object.prototype.hasOwnProperty.call(store, scope) ? store[scope]! : null;
+}
+
+/** Give a scope its own settings (an entry), or drop them (null). */
+export function setScopedPrefs(
+  store: ScopedListPrefsStore,
+  scope: string,
+  entry: ScopedListPrefs | null
+): ScopedListPrefsStore {
+  const next = { ...store };
+  if (entry) next[scope] = entry;
+  else delete next[scope];
+  return next;
+}
+
+/** Drop the entries of folders and tags that no longer exist. The same store
+ *  comes back when nothing is dropped. */
+export function pruneScopedPrefs(store: ScopedListPrefsStore, live: (scope: string) => boolean): ScopedListPrefsStore {
+  const dead = Object.keys(store).filter((id) => !live(id));
+  if (!dead.length) return store;
+  const next = { ...store };
+  for (const id of dead) delete next[id];
+  return next;
 }
 
 /* ────────────────────────────────────────────────────────────────

@@ -12,7 +12,7 @@ Everything below was made with the toolbar at the top of this note. No settings,
 
 You can make a word **bold**, or *italic*, or ***both***. You can put a line through it, like ~~this one~~. You can <u>underline</u> it. Small print goes in <sub>subscript</sub> and powers go in <sup>superscript</sup>.
 
-Text can be <span style="color: #e03131">red</span>, <span style="color: #1971c2">blue</span>, <span style="color: #2f9e44">green</span> or any of nine colours.
+Text can be <span style="color: #e03131">red</span>, <span style="color: #1971c2">blue</span>, <span style="color: #2f9e44">green</span> or any of nine colors.
 
 It can be ==highlighted in yellow== or <mark style="background-color: rgba(64, 192, 87, 0.35)">in green</mark>.
 
@@ -24,7 +24,7 @@ The **Aa** button changes size and font. Text can be <span style="font-size: 0.8
 
 ## Where the words sit
 
-<p style="text-align: center;">This paragraph is centred.</p>
+<p style="text-align: center;">This paragraph is centered.</p>
 
 <p style="text-align: right;">This one is pushed to the right.</p>
 
@@ -60,7 +60,7 @@ Alignment moves a whole paragraph, never a single word. Put the cursor in the pa
 | Asia | 401 | 16% |
 <!-- table-fill: r0=blue r1c2=green r3c2=red -->
 
-The middle column is centred and the last one is right-aligned. Click a column edge and drag to make it wider. A cell or a whole row can take a colour from the table bar. The small arrow in a header cell sorts the rows under it, and a second click sorts them the other way.
+The middle column is centered and the last one is right-aligned. Click a column edge and drag to make it wider. A cell or a whole row can take a color from the table bar. The small arrow in a header cell sorts the rows under it, and a second click sorts them the other way.
 
 A table can also do sums. Type `=` in a cell to pick a function. The cell shows the answer and the note keeps the formula, so click an answer to see how it was made.
 
@@ -72,23 +72,23 @@ A table can also do sums. Type `=` in a cell to pick a function. The cell shows 
 
 ## Callouts
 
-A callout is a coloured box for something a reader must not miss. Type `[!` on an empty line to pick one.
+A callout is a colored box for something a reader must not miss. Type `[!` on an empty line to pick one.
 
 > [!tip]+ Tip
 > Click its icon to fold it shut.
 
 > [!warning]+ Warning
-> Each kind has its own colour and its own icon.
+> Each kind has its own color and its own icon.
 
 > [!danger]+ Danger
 > There are many kinds. The **Insert** menu lists them.
 
 > [!fold]- A fold
-> No box and no colour: just text that stays out of the way until you open it.
+> No box and no color: just text that stays out of the way until you open it.
 
 ## Quotes
 
-> A quote steps in from the margin and takes a coloured line down its side.
+> A quote steps in from the margin and takes a colored line down its side.
 
 ## Footnotes
 
@@ -96,7 +96,7 @@ A footnote keeps a source or an aside out of the way of the text.[^1] Type `[^1]
 
 ## Code
 
-Code keeps its spacing and gets coloured by language. The name at the top of a block is its language: click it to pick another.
+Code keeps its spacing and gets colored by language. The name at the top of a block is its language: click it to pick another.
 
 ```js
 export function seal(note, key) {
@@ -168,9 +168,9 @@ ssh-keygen -t ed25519 -C "laptop"
 
 A short piece of code inside a sentence looks like `this` instead. Hold Cmd (Ctrl on Windows and Linux) and click it to copy it.
 
-## Maths
+## Math
 
-Maths can sit inside a sentence, like $a^2 + b^2 = c^2$, or stand on its own line:
+Math can sit inside a sentence, like $a^2 + b^2 = c^2$, or stand on its own line:
 
 $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 
@@ -178,7 +178,7 @@ $$i\hbar\frac{\partial}{\partial t}\Psi = \hat{H}\Psi$$
 
 ![Mount Fuji behind cherry blossom.](/onboarding/fuji.webp){width=50 align=center}
 
-Drag an image into a note, or paste it. Click it once to change its size, or to move it left, centre or right. The one above is half width and centred.
+Drag an image into a note, or paste it. Click it once to change its size, or to move it left, center or right. The one above is half width and centered.
 
 ## Maps
 

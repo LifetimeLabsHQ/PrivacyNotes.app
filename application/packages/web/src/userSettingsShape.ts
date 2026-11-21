@@ -1,5 +1,5 @@
 import type { CustomHabitDef } from './habitList';
-import { DEFAULT_STORE as DEFAULT_LIST_PREFS_STORE, type ListPrefsStore } from './listPrefs';
+import { DEFAULT_STORE as DEFAULT_LIST_PREFS_STORE, type ScopedListPrefsStore, type ListPrefsStore } from './listPrefs';
 import { defaultTrackerSettings, type FactorDef, type TrackerSettings, type MedicationTemplate } from './trackerTypes';
 import type { ColorTheme, LineSpacing, NestedNumbers } from './theme';
 import type { JournalTitleFormat } from './notesViewUtils';
@@ -151,6 +151,12 @@ export type UserSettings = {
    */
   listPrefs: ListPrefsStore;
   /**
+   * The folders and tags that remember their own list settings and layout. A
+   * top-level key so that an older client carries it; see `listPrefs.ts`.
+   * Spec: docs/internal/design-decisions.md (per-folder and per-tag list settings)
+   */
+  scopedListPrefs: ScopedListPrefsStore;
+  /**
    * Whether the Tasks view shows completed task items. Synced so
    * toggling on one device carries to the others - matches the
    * sync-everything design rule.
@@ -300,6 +306,13 @@ export type UserSettings = {
    * Spec: docs/internal/specs/sidebar-views.md (synced account-wide, not per-device)
    */
   hiddenViews: View[];
+  /**
+   * Sections behind the PIN gate, from the row menu in the sidebar. A
+   * client-only organizational flag, as `pinProtected` on a note. Members a
+   * build cannot protect are ignored at render, never dropped.
+   * Spec: docs/internal/specs/section-lock.md (section 3)
+   */
+  protectedViews: View[];
   /**
    * The order of the sidebar rows, as the person set it (GitHub #621). Empty
    * is the stock order. A view it does not name keeps its stock place
@@ -624,6 +637,7 @@ export function defaultSettings(): UserSettings {
     pinTimeoutMinutes: 5,
     appLockTimeoutMinutes: 5,
     listPrefs: DEFAULT_LIST_PREFS_STORE,
+    scopedListPrefs: {},
     tasksShowDone: false,
     sinkCheckedTasks: true,
     taskConfetti: true,
@@ -650,6 +664,7 @@ export function defaultSettings(): UserSettings {
     colorTheme: 'default',
     viewMode: 'list', // Spec: docs/internal/specs/grid-view.md (default view mode)
     hiddenViews: [],
+    protectedViews: [],
     viewOrder: [],
     hiddenInAll: [],
     archivedInAll: false,

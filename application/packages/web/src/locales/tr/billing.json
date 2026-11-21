@@ -35,6 +35,7 @@
     "title": "Kulübe hoş geldiniz",
     "proLine": "<brand/> Pro, tek seferlik {{price}} $. Ömür boyu sizin.",
     "storageLine": "<brand/> +{{gb}} GB depolama, yılda {{price}} $.",
+    "storagePayerNote": "Hesap sahibi paketi daha sonra değiştirebilir. Farkı bu kart öder.",
     "benefitDevices": "Sınırsız cihaz",
     "benefitDevicesSub": "Telefon, tablet, dizüstü, hepsi eşitlenir",
     "benefitStorage": "500 MB depolama",
@@ -63,7 +64,7 @@
     "openingBody": "Bir Paddle ödeme penceresi görünmeli. Görünmezse tarayıcınız açılır pencereyi engellemiş olabilir - tekrar denemek için bu sayfayı yenileyin."
   },
   "cryptoCheckout": {
-    "coins": "Bitcoin, Ethereum, Lightning, USDC veya USDT'yi bir sonraki sayfada seçersiniz; o sayfayı BlockBee yürütür. Ad ya da e-posta istemez. Bir kripto ödemesi kendi blokzincirinde herkese açıktır.",
+    "coins": "Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin veya TON'u bir sonraki sayfada seçersiniz; o sayfayı BlockBee yürütür. Ad ya da e-posta istemez. Bir kripto ödemesi kendi blokzincirinde herkese açıktır.",
     "consent": "Pro'yu şimdi başlat. Kripto ödemelerinin kesin olduğunu anlıyorum ve 14 günlük cayma hakkımdan vazgeçiyorum.",
     "consentNeeded": "Devam etmek için yukarıdaki kutuyu işaretleyin.",
     "loadingTitle": "Siparişiniz kontrol ediliyor...",

@@ -74,8 +74,8 @@
     "try-before-signup": {
       "q": "Môžem si PrivacyNotes vyskúšať bez vytvorenia účtu?",
       "a": [
-        "Áno. Demo na [try.privacynotes.app](https://try.privacynotes.app) je celá aplikácia s ukážkovým obsahom: bez registrácie, bez e-mailu a nič, čo napíšeš, sa neukladá. Beží celé v tvojom prehliadači a nikdy nič neposiela na naše servery.",
-        "Zatvorením karty sa všetko vymaže, o to práve ide. Keď budeš chcieť svoje poznámky zachovať, vytvor si skutočný trezor na [use.privacynotes.app](https://use.privacynotes.app) a začni odznova: najprv si skopíruj všetko z dema, čo si chceš vziať so sebou."
+        "Áno. Demo na [try.privacynotes.app](https://try.privacynotes.app) je celá aplikácia s ukážkovým obsahom: bez registrácie, bez e-mailu a bez účtu. Nič, čo napíšeš, sa neodosiela: stránka, ktorú uložíš, alebo kalendár, ktorý odoberáš, sa sťahuje cez náš server a mapa sa číta z nášho servera s mapami.",
+        "To, čo do dema vložíš, zostane v tomto prehliadači, kým sa demo tu znova neotvorí; ak to chceš odstrániť hneď, vymaž údaje stránky. Keď budeš chcieť svoje poznámky zachovať, vytvor si skutočný trezor na [use.privacynotes.app](https://use.privacynotes.app) a začni odznova: najprv si skopíruj všetko z dema, čo si chceš vziať so sebou."
       ]
     },
     "need-email": {
@@ -117,7 +117,7 @@
       "q": "Čo o mojich poznámkach vidí PrivacyNotes?",
       "a": [
         "Poznámky, názvy, značky a prílohy sú vždy šifrované, na tvojom zariadení aj na ceste na server. [Pri vlastnej správe](/sk/help/threat-model-levels), ktorou začína každá registrácia frázou, na našej strane neexistuje žiadny dešifrovací kľúč. Pri registrácii cez Google, Apple alebo GitHub sa aplikácia opýta, kde má byť tvoj kľúč, a začína na možnosti „Jednoducho a pohodlne“, ktorá ukladá tvoju frázu na náš server, šifrovanú naším kľúčom. V tomto režime náš server dokáže frázu dešifrovať, a teda aj tvoje poznámky. Nastavenia > Účet > Správa kľúča ukazuje tvoj aktuálny režim a umožňuje ti ho prepnúť.",
-        "Vidíme údaje potrebné na prevádzku služby: verejný kľúč, ktorý vytvára tvoja fráza, koľko položiek a koľko šifrovaného úložiska máš, koľko zariadení máš prepojených a časové údaje synchronizácie. Naše limity rýchlosti vidia aj IP adresu každej požiadavky, ktorú nezapisujeme do tvojho účtu. Ak používaš iba frázu a [nemáš prepojený účet Google, Apple ani GitHub](/sk/help/connected-logins), tvoju e-mailovú adresu nepoznáme."
+        "Vidíme údaje potrebné na prevádzku služby: verejný kľúč, ktorý vytvára tvoja fráza, koľko položiek a koľko šifrovaného úložiska máš, koľko zariadení máš prepojených, pri každom zariadení jeho druh, verziu aplikácie a čas, kedy bolo naposledy online, ID objednávok tvojich nákupov a časové údaje synchronizácie. [SECURITY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md#what-we-measure) uvádza všetko. Naše limity rýchlosti vidia aj IP adresu každej požiadavky, ktorú nezapisujeme do tvojho účtu. Ak používaš iba frázu a [nemáš prepojený účet Google, Apple ani GitHub](/sk/help/connected-logins), tvoju e-mailovú adresu nepoznáme."
       ]
     },
     "us-company": {
@@ -125,7 +125,7 @@
       "a": [
         "Tvoje poznámky sú šifrované na tvojom zariadení a pri [vlastnej správe](/sk/help/threat-model-levels) server nemá nič, čo by ich otvorilo. To, čo píšeš, sa k nemu dostane iba ako šifrované údaje, takže súdny príkaz v ktorejkoľvek krajine získa iba šifrované údaje, nech je spoločnosť zaregistrovaná kdekoľvek. Môžeš si to overiť: kód je [open source na GitHube](https://github.com/LifetimeLabsHQ/PrivacyNotes.app) a karta siete v tvojom prehliadači ukazuje, že tvoje slová odchádzajú iba šifrované.",
         "Lifetime Labs LLC je spoločnosť z USA, pretože to bol najrýchlejší spôsob, ako dať naše projekty pod jeden názov. Nikto z tímu nežije v USA a tvoje synchronizované poznámky sú uložené v Zürichu vo Švajčiarsku.",
-        "Zákon môže siahnuť na údaje, ktoré služba potrebuje: tvoj verejný kľúč, časové údaje synchronizácie, veľkosť úložiska, krátkodobé serverové logy a, ak pripojíš Google, Apple alebo GitHub, tento e-mail. Pri možnosti „Jednoducho a pohodlne“ je tvoja obnovovacia fráza uložená aj na našom serveri a otvára tvoje poznámky. Nastavenia > Účet > Správa kľúča ťa prepne na vlastnú správu. [Čo vidí PrivacyNotes](/sk/help/what-can-you-see) uvádza viac."
+        "Zákon môže siahnuť na údaje, ktoré služba potrebuje: tvoj verejný kľúč, časové údaje synchronizácie, veľkosť úložiska, pri každom zariadení jeho druh, verziu aplikácie a čas, kedy bolo naposledy online, ID objednávok tvojich nákupov, krátkodobé serverové logy a, ak pripojíš Google, Apple alebo GitHub, tento e-mail. Pri možnosti „Jednoducho a pohodlne“ je tvoja obnovovacia fráza uložená aj na našom serveri a otvára tvoje poznámky. Nastavenia > Účet > Správa kľúča ťa prepne na vlastnú správu. [Čo vidí PrivacyNotes](/sk/help/what-can-you-see) uvádza viac."
       ]
     },
     "app-privacy-label": {
@@ -140,7 +140,7 @@
       "q": "Prečo obnovovacia fráza namiesto používateľského mena a hesla?",
       "a": [
         "Spočiatku to môže pôsobiť opačne, ale jedna obnovovacia fráza je silnejšia konštrukcia. Pri mene a hesle nie je meno tajné (objaví sa v každom uniknutom zozname), takže všetka bezpečnosť stojí na hesle a heslá vymyslené ľuďmi majú v priemere možno 30 až 40 bitov entropie. [Tvoja obnovovacia fráza má zaručených 128 bitov alebo viac](/sk/help/twelve-word-phrase), vygenerovalo ju tvoje zariadenie, nevymyslel ju človek a nikdy sa nepoužila na inej stránke.",
-        "Nemáme ani žiadne heslo, ktoré by sme mohli stratiť. Prihlásenie heslom znamená, že server ukladá aspoň hash hesla, ktorý môže uniknúť, dá sa prelomiť alebo vyloviť phishingom. [Pri vlastnej správe](/sk/help/threat-model-levels) tvoja fráza nikdy neopustí tvoje zariadenie: šifrovacie kľúče z nej vznikajú lokálne a server vždy vidí iba šifrované dáta. Nie je tu žiadny hash, ktorý by sa dal ukradnúť, a žiadne obnovenie hesla, ktoré by mohol útočník zneužiť.",
+        "Nemáme ani žiadne heslo, ktoré by sme mohli stratiť. Prihlásenie heslom znamená, že server ukladá aspoň hash hesla, ktorý môže uniknúť, dá sa prelomiť alebo vyloviť phishingom. [Pri vlastnej správe](/sk/help/threat-model-levels) tvoja fráza nikdy neopustí tvoje zariadenie, ibaže pridáš [prístupový kľúč na prihlásenie](/sk/help/passkey-sign-in): vtedy server drží kópiu, ktorú otvorí iba tento prístupový kľúč. Šifrovacie kľúče z frázy vznikajú lokálne a server vždy vidí iba šifrované dáta. Ukladá si iba hash prihlasovacieho poverenia, ktoré tvoje zariadenie odvodí z frázy; nedá sa z neho získať späť fráza, neotvorí žiadnu poznámku a nie je tu žiadne obnovenie hesla, ktoré by mohol útočník zneužiť.",
         "Ak sa ti písanie frázy zdá nepraktické: frázu si môžeš jedným klepnutím uložiť do správcu hesiel (Nastavenia > Zabezpečenie > Fráza) a prihlasovanie potom vyzerá ako každé iné. Uprednostňuješ známy postup? [Funguje aj prihlásenie cez Google, Apple alebo GitHub](/sk/help/signup-options): aj pri tomto spôsobe prihlásenia dostaneš frázu a ty si vyberieš, či zostane na tvojom zariadení, alebo ju uložíme my."
       ]
     },
@@ -149,9 +149,17 @@
       "a": [
         "Áno, a zámerne. Nie každý sa bráni rovnakým hrozbám, preto je model účtu rebríček, nie jediná dogma. Každá priečka udržiava tvoje poznámky šifrované na tvojom zariadení; mení sa to, kto drží kľúč a čo o tebe vieme.",
         "Pohodlný koniec: prihlás sa cez Google, Apple alebo GitHub a nechaj vybranú možnosť „Jednoducho a pohodlne“, keď sa ťa aplikácia opýta; práve ňou obrazovka začína. Obnovovaciu frázu za teba ukladáme na našom serveri v šifrovanej podobe, takže nové zariadenie môže otvoriť tvoje poznámky po prihlásení cez poskytovateľa a zadaní [kódu z overovacej aplikácie, ak je 2FA zapnuté](/sk/help/enable-2fa). Výmenou za to poznáme e-mail za týmto prihlásením a náš server dokáže tvoju frázu dešifrovať. Ulož si frázu pre prípad, že stratíš účet poskytovateľa, a ak zapneš dvojfaktorové prihlásenie, uchovaj si záložný kľúč 2FA.",
-        "Stred: prihlás sa cez Google, Apple alebo GitHub, ale vyber „Maximálna bezpečnosť a súkromie“. Tvoja fráza sa našich serverov nikdy nedotkne, takže server nedrží nič, čo by otvorilo tvoje poznámky; nové zariadenia potrebujú frázu alebo [naskenovanie QR kódu zo zariadenia, ktoré je už prihlásené](/sk/help/add-second-device). E-mail za týmto prihlásením stále poznáme a právny príkaz alebo prienik na náš server sa môže dostať k tomuto e-mailu, nikdy však k obsahu tvojich poznámok.",
+        "Stred: prihlás sa cez Google, Apple alebo GitHub, ale vyber „Maximálna bezpečnosť a súkromie“. Tvoja fráza sa našich serverov nikdy nedotkne (prístupový kľúč na prihlásenie, ak ho pridáš, zanechá kópiu, ktorú otvorí iba on), takže server nedrží nič, čo by otvorilo tvoje poznámky; nové zariadenia potrebujú frázu alebo [naskenovanie QR kódu zo zariadenia, ktoré je už prihlásené](/sk/help/add-second-device). E-mail za týmto prihlásením stále poznáme a právny príkaz alebo prienik na náš server sa môže dostať k tomuto e-mailu, nikdy však k obsahu tvojich poznámok.",
         "Súkromný koniec: prihlásenia úplne vynechaj a používaj iba svoju obnovovaciu frázu. Žiadny e-mail, žiadne meno, žiadna identita a v spojení s [anonymným nákupom Pro](/sk/help/buy-pro-anonymously) ani platba nikde nezanechá žiadne meno. Výmenou za to je správa kľúča celá na tebe: ak frázu stratíš a nezostane ti žiadne prihlásené zariadenie, nikto ti nepomôže.",
         "Nastavenia > Účet > Správa kľúča ukazuje oba režimy s ich kompromismi a umožňuje ti prepínať. Opustenie správy na serveri odstráni našu uloženú kópiu po tom, čo potvrdíš tri slová zo svojej uloženej frázy. Prepnutie späť nahrá frázu znova a vyžaduje výslovnú voľbu. Oba smery sa podpisujú kľúčom tvojho účtu a vyžadujú nový kód z overovacej aplikácie, keď je 2FA zapnuté. [Účet s frázou môže prepojiť poskytovateľa](/sk/help/connected-logins) v časti Účet > Účty a až potom osobitne zvoliť správu na serveri; samotné prepojenie poskytovateľa frázu nenahrá. Každý režim môže zároveň používať zámok aplikácie cez PIN, biometrické odomknutie a [ochranu jednotlivých poznámok](/sk/help/locked-vs-protected)."
+      ]
+    },
+    "stored-phrase": {
+      "q": "Ak je moja fráza uložená šifrovane, ako by sa k mojim poznámkam mohol dostať súdny príkaz?",
+      "a": [
+        "Pretože náš server drží kľúč k tomuto šifrovaniu. Pri možnosti „Jednoducho a pohodlne“ je tvoja obnovovacia fráza uložená na našom serveri, šifrovaná kľúčom, ktorý server uchováva. Práve to umožňuje prihlásenie na jedno kliknutie: keď sa na novom zariadení prihlásiš cez Google, Apple alebo GitHub, server frázu otvorí a pošle ju na to zariadenie.",
+        "Šifrovanie chráni frázu pred každým, kto má iba kópiu databázy. Server ju však vie otvoriť a fráza otvára tvoje poznámky, takže by sa k nim mohol dostať súdny príkaz alebo narušenie servera.",
+        "Ak chceš nastavenie, v ktorom tvoje poznámky nedokáže otvoriť nič na našej strane, prepni sa na vlastnú správu v Nastavenia > Účet > Správa kľúča. Tým sa odstráni kópia na našom serveri a tvoja fráza zostane iba u teba, takže si ju najprv [ulož na bezpečné miesto](/sk/help/lost-phrase). [Rebríček súkromia](/sk/help/threat-model-levels) porovnáva oba režimy."
       ]
     },
     "twelve-word-phrase": {
@@ -168,7 +176,7 @@
       "a": [
         "Nie. Nikto nemôže uhádnuť tvoju obnovovaciu frázu a nikto iný neskončí s rovnakou: žiadny existujúci počítač ani taký, aký dokážeme predvídať, sa k tomu ani nepriblíži. Prihlásiť sa môže iba ten, kto získa tvoje skutočné slová, preto ich uchovávaj v bezpečí.",
         "Tvoje zariadenie vyberá frázu náhodne. Pri fráze z 12 slov má počet možných fráz 39 číslic a pri fráze z 24 slov 78. Uhádnuť frázu z 12 slov na prvý pokus je menej pravdepodobné ako štyrikrát po sebe vyhrať jackpot v lotérii s pravdepodobnosťou 1 ku 300 miliónom. Počítač, ktorý by skúšal miliardu miliárd fráz za sekundu, by na vyskúšanie všetkých stále potreboval asi 10 biliónov rokov, oveľa dlhšie, ako existuje vesmír. Aj keby mal každý z 8 miliárd ľudí na Zemi svoju frázu, pravdepodobnosť, že sa niektoré dve zhodujú, je menšia ako dvakrát po sebe vyhrať tento jackpot.",
-        "Sila pramení z tejto náhodnosti, nie z toho, ako slová vyzerajú. Frázu si nevymýšľaj ani do nej nepridávaj symboly: použi slová presne tak, ako ti ich dá aplikácia. Na veľkých písmenách nezáleží. Posledné slovo funguje ako kontrola, takže aplikácia odmietne frázu s preklepom aj vymyslenú frázu."
+        "Sila pramení z tejto náhodnosti, nie z toho, ako slová vyzerajú. Frázu si nevymýšľaj ani do nej nepridávaj symboly: použi slová presne tak, ako ti ich dá aplikácia. Na veľkých písmenách nezáleží. Posledné slovo funguje ako kontrola, takže aplikácia odmietne väčšinu fráz s preklepom alebo vymyslených fráz, asi 15 zo 16. Fráza, ktorá prejde, je fráza iného, prázdneho trezora."
       ]
     },
     "same-phrase": {
@@ -181,8 +189,8 @@
     "enable-2fa": {
       "q": "Ako zapnem dvojfaktorové prihlásenie (2FA)?",
       "a": [
-        "Voliteľné dvojfaktorové prihlásenie zapneš cez Nastavenia > Zabezpečenie > 2FA. Najprv aktualizuj PrivacyNotes na ostatných zariadeniach. Naskenuj QR kód overovacou aplikáciou alebo zadaj kľúč nastavenia ručne. Ulož záložný kľúč 2FA mimo PrivacyNotes, potvrď uloženú kópiu a potom na dokončenie zadaj aktuálny kód.",
-        "Po nastavení nová relácia na serveri potrebuje frázu alebo [prepojeného poskytovateľa](/sk/help/connected-logins) a potom kód z overovacej aplikácie. Pri vlastnej správe je fráza stále potrebná na dešifrovanie poznámok. Účty poskytovateľov spravuješ cez Nastavenia > Účet > Účty; prepojením účtu [sa správa kľúča nemení](/sk/help/threat-model-levels).",
+        "Voliteľné dvojfaktorové prihlásenie zapneš cez Nastavenia > Zabezpečenie > 2FA. Naskenuj QR kód overovacou aplikáciou alebo zadaj kľúč nastavenia ručne. Ulož záložný kľúč 2FA mimo PrivacyNotes, potvrď uloženú kópiu a potom na dokončenie zadaj aktuálny kód.",
+        "Po nastavení nová relácia na serveri potrebuje frázu alebo [prepojeného poskytovateľa](/sk/help/connected-logins) a potom kód z overovacej aplikácie. Zapnutie 2FA odpojí rozšírenie prehliadača aj príkazový riadok, preto rozšírenie pripoj znova v Nastavenia > Rozšírenie, príkazový riadok v Nastavenia > CLI. Pri vlastnej správe je fráza stále potrebná na dešifrovanie poznámok. Účty poskytovateľov spravuješ cez Nastavenia > Účet > Účty; prepojením účtu [sa správa kľúča nemení](/sk/help/threat-model-levels).",
         "[Ak stratíš overovaciu aplikáciu](/sk/help/lost-2fa), pridaj uložený záložný kľúč 2FA do inej overovacej aplikácie. Ak stratíš oboje, nemôžeme obnoviť prístup k serveru. Poznámky už odomknuté na zariadení zostávajú čitateľné a dajú sa exportovať. Dvojfaktorové prihlásenie nepridáva šifrovanie ani nechráni už odomknuté zariadenie."
       ]
     },
@@ -201,11 +209,18 @@
         "Vyplýva to z architektúry, nie z pravidla: [server uchováva tvoje poznámky iba ako zašifrované dáta](/sk/help/what-can-you-see) a nad nimi nevedie žiadny index. Vyhľadávanie potrebuje text a ten existuje iba na tvojich zariadeniach."
       ]
     },
+    "website-icons": {
+      "q": "Vyhľadáva PrivacyNotes ikony webov a čo sa pri tom odosiela?",
+      "a": [
+        "Áno, aby sa pri tvojich odkazoch a prihlasovacích údajoch v trezore zobrazilo logo stránky, a každé vyhľadanie odosiela iba doménu stránky. Ide na náš vlastný server, ktorý ikonu stiahne za teba, takže služby s ikonami nikdy neuvidia tvoje zariadenie, tvoju IP adresu ani zvyšok odkazu. S vyhľadaním necestuje žiadny účet, cookie ani obsah poznámok a náš server si nevedie záznam o tom, na akú doménu sa pýtal.",
+        "Keď je ikona v tvojom zariadení, zostáva tam, šifrovaná spolu s ostatnými lokálnymi dátami aplikácie, takže sa tá istá stránka nevyhľadáva znova pri každom zobrazení. Ak chceš vyhľadávanie zastaviť, vypni **Ikony webov** v Nastavenia > Zoznamy > Všeobecné: odkazy a prihlasovacie údaje potom zobrazia písmenovú dlaždicu. Prepínač platí iba pre dané zariadenie, takže ho vypni na každom zariadení, kde ho chceš mať vypnutý."
+      ]
+    },
     "no-ai": {
       "q": "Používa PrivacyNotes AI na moje poznámky?",
       "a": [
-        "Žiadna AI nečíta tvoje poznámky, pokiaľ ju nezapneš, a nič, čo napíšeš, nikdy nejde do služby s AI. Nie je tu chatbot, písanie pomocou AI, AI na našich serveroch ani trénovanie na tvojom obsahu. Ninja a vyhľadávanie sú obyčajný kód v tvojom zariadení. [Tvoje poznámky sú vždy šifrované, na tvojom zariadení aj na ceste na server](/sk/help/what-can-you-see) a cloudová AI by ich z tohto šifrovania vyňala, preto do nej nejde žiadna poznámka.",
-        "Jediná výnimka je voliteľná a zostáva v tvojom zariadení. Inteligentné prepojenia nájdu poznámky s rovnakým významom, aj keď sú napísané inými slovami alebo v inom jazyku. Používajú offline AI ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)), ktorá beží iba v tomto zariadení. Nič nepíše ani na nič neodpovedá: každú poznámku premení na zoznam čísel a tie porovná. Stiahneš ju raz v časti Nastavenia > Editor > Správanie > Inteligentné prepojenia, potom funguje bez pripojenia. Jej prepínač ju vypne a Odstrániť ju odstráni zo zariadenia. Nič, čo sa o poznámke zistí, sa neukladá ani neposiela."
+        "Žiadna AI nečíta tvoje poznámky, pokiaľ ju nezapneš, a nič, čo napíšeš, nikdy nejde do služby s AI. Nie je tu chatbot, AI na našich serveroch ani trénovanie na tvojom obsahu. Ninja a vyhľadávanie sú obyčajný kód v tvojom zariadení. [Tvoje poznámky sú vždy šifrované, na tvojom zariadení aj na ceste na server](/sk/help/what-can-you-see) a cloudová AI by ich z tohto šifrovania vyňala, preto do nej nejde žiadna poznámka.",
+        "Výnimkou sú voliteľné pluginy v časti Nastavenia > Pluginy, ktoré bežia iba v tvojom zariadení. Inteligentné prepojenia nájdu poznámky s rovnakým významom. Text v obrázkoch prečíta text v obrázku, skene alebo PDF. Preklad poznámok preloží poznámku. Hlas na text prevedie nahrávku na text. Každý z nich zapínaš ty. Plugin sa stiahne raz alebo použije jadro vstavané v tvojom zariadení a potom funguje bez pripojenia; Odstrániť ho odstráni zo zariadenia. Plugin nikdy sám nezmení poznámku: najprv uvidíš jeho výsledok a rozhodneš sa, či ho pridáš. Nič, čo sa o poznámke zistí, sa neukladá ani neposiela."
       ]
     },
     "vibe-coded": {
@@ -245,7 +260,7 @@
       "q": "Obnovovaciu frázu už nemám. Dokážete mi obnoviť účet?",
       "a": [
         "Ak je niektoré tvoje zariadenie ešte prihlásené: áno, frázu obnovíš priamo na ňom. Otvor Nastavenia > Zabezpečenie > Fráza a hneď ju ulož do správcu hesiel.",
-        "Ak nemáš prihlásené žiadne zariadenie ani frázu, [závisí to od toho, kto drží kľúč](/sk/help/threat-model-levels). Ak sme frázu na tvoje želanie uložili pri registrácii cez Google, Apple alebo GitHub, prihlás sa týmto účtom a si späť. Pri vlastnej správe to nedokáže nikto: tvoja fráza sa nikdy nedostane na naše servery, takže nie je čo resetovať a nijaká žiadosť o podporu nepomôže. Každá služba, ktorá dokáže po úplnej strate obnoviť tvoje zašifrované dáta, drží tvoje kľúče.",
+        "Ak nemáš prihlásené žiadne zariadenie ani frázu, [závisí to od toho, kto drží kľúč](/sk/help/threat-model-levels). Ak sme frázu na tvoje želanie uložili pri registrácii cez Google, Apple alebo GitHub, prihlás sa týmto účtom a si späť. Pri vlastnej správe to dokáže iba [prístupový kľúč na prihlásenie](/sk/help/passkey-sign-in), ak je pridaný: inak sa tvoja fráza nikdy nedostane na naše servery, takže nie je čo resetovať a nijaká žiadosť o podporu nepomôže. Každá služba, ktorá dokáže po úplnej strate obnoviť tvoje zašifrované dáta, drží tvoje kľúče.",
         "Riešenie trvá desať sekúnd: ulož si frázu do správcu hesiel v deň, keď si vytvoríš účet. Ak je už preč a platíš za rozšírenie úložiska, Paddle ti fakturuje priamo a vie ho zrušiť aj bez tvojej frázy: pozri [zmena alebo zrušenie rozšírenia](/sk/help/manage-storage-addon)."
       ]
     },
@@ -254,7 +269,7 @@
       "a": [
         "Pridaj svoj záložný kľúč 2FA do ľubovoľnej overovacej aplikácie a potom zadaj kód, ktorý zobrazí, keď ho PrivacyNotes bude chcieť. Záložný kľúč je [ten, ktorý máš uložený zo zapnutia 2FA](/sk/help/enable-2fa), a funguje zakaždým, keď ho potrebuješ.",
         "Ak sú preč telefón aj záložný kľúč, 2FA neresetujeme a naša podpora s tým nevie pomôcť. Poznámky, ktoré už máš vo svojich zariadeniach, zostanú čitateľné.",
-        "Ak ich chceš zachovať, choď v zariadení, ktoré ich ešte má, do časti Nastavenia > Zálohovanie > Ručné. Potom vytvor nový trezor a [export tam importuj](/sk/help/restore-backup)."
+        "Ak ich chceš zachovať, choď v zariadení, ktoré ich ešte má, do Nastavenia > Zálohovanie > Ručné a vyber „Všetko, nešifrované (.zip)“: šifrované zálohy otvorí iba účet, ktorý ich vytvoril. Potom vytvor nový trezor a [export tam importuj](/sk/help/restore-backup)."
       ]
     },
     "oauth-recovery": {
@@ -276,7 +291,7 @@
       "a": [
         "Účet môžeš odstrániť v aplikácii alebo v prehliadači. V prehliadači sa prihlás na [use.privacynotes.app](https://use.privacynotes.app). Potom otvor **Nastavenia > Účet**, vyber **Odstrániť účet a dáta…**, zvoľ **Odstrániť dáta v cloude a účet**, napíš DELETE a vyber **Odstrániť navždy**. Ak je zapnuté 2FA, aplikácia si vypýta nový kód z overovacej aplikácie. Odstránenie sa nedá vrátiť späť, takže [si najprv exportuj všetko, čo chceš zachovať](/sk/help/export) (Nastavenia > Prenos).",
         "**Čo sa odstráni:** tvoje synchronizované poznámky, úlohy, denníky, položky trezora, súbory a obrázky, história poznámok, nastavenia, zariadenia, prepojené spôsoby prihlásenia, kópia tvojej obnovovacej frázy uložená na serveri (ak máš túto možnosť zvolenú), tvoj záznam o Pro a samotný účet. Lokálne dáta v zariadení, z ktorého odstraňuješ, sa tiež vymažú. [Aktívne predplatné úložiska treba najprv zrušiť](/sk/help/manage-storage-addon) v Nastavenia > Úložisko; predplatné, ktoré je už naplánované na zrušenie, odstránenie neblokuje.",
-        "**Čo zostane:** ak k účtu patrilo predplatné úložiska, jeho záznamy zostanú kvôli fakturácii a vráteniu platieb. Môže zostať aj minimálny identifikátor účtu, aby sa staré prihlasovacie tokeny naďalej odmietali. Ani jedno neobsahuje tvoje poznámky ani súbory a ani jedno automaticky nevyprší. Poskytovateľ našej databázy uchováva logy a denné zálohy sedem dní, takže záloha vytvorená pred odstránením môže až týždeň obsahovať tvoje šifrované dáta. Paddle, Apple a Google uchovávajú vlastné záznamy o transakciách podľa vlastných zásad. Podrobnosti a postup, ako nás požiadať o odstránenie uchovaných osobných údajov, nájdeš v [zásadách ochrany osobných údajov](https://lifetimelabs.dev/privacy/)."
+        "**Čo zostane:** ak k účtu patrilo predplatné úložiska, jeho záznamy zostanú kvôli fakturácii a vráteniu platieb. Môže zostať aj minimálny identifikátor účtu, aby sa staré prihlasovacie tokeny naďalej odmietali. Ani jedno neobsahuje tvoje poznámky ani súbory a ani jedno automaticky nevyprší. Poskytovateľ našej databázy uchováva logy a denné zálohy sedem dní, takže záloha vytvorená pred odstránením môže až týždeň obsahovať tvoje šifrované dáta. Šifrované kópie tvojich súborov môžu zostať v našom koši súborov a v zálohách až 30 dní. Paddle, Apple a Google uchovávajú vlastné záznamy o transakciách podľa vlastných zásad. Podrobnosti a postup, ako nás požiadať o odstránenie uchovaných osobných údajov, nájdeš v [zásadách ochrany osobných údajov](https://lifetimelabs.dev/privacy/)."
       ]
     },
     "what-syncs": {
@@ -309,8 +324,9 @@
     "data-location": {
       "q": "Kde sú uložené moje dáta?",
       "a": [
-        "Najprv v tvojom zariadení a to je kópia, s ktorou pracuješ: aplikácia je local-first, takže [poznámky sa otvárajú a upravujú offline](/sk/help/offline). Synchronizovaná kópia je na serveroch v Zürichu vo Švajčiarsku. Nachádza sa tam tvoj verejný kľúč, zašifrované bloby tvojich poznámok, súborov a nastavení a časové pečiatky a veľkosti, ktoré synchronizácia potrebuje. Žiadne názvy, žiadny text, žiadne značky.",
-        "Krajina je menej dôležitá ako šifrovanie. Všetko je vždy zašifrované, v tvojom zariadení aj na ceste na server, takže tá kópia sú zašifrované dáta, nech leží kdekoľvek, a pri vlastnej správe ju na serveri nič nevie otvoriť. Švajčiarsko je bonus, nie sľub. [Čo sa synchronizuje](/sk/help/what-syncs) to vypisuje položku po položke.",
+        "Najprv v tvojom zariadení a to je kópia, s ktorou pracuješ: aplikácia je local-first, takže [poznámky sa otvárajú a upravujú offline](/sk/help/offline). Synchronizovaná kópia tvojich poznámok, denníkov, nastavení a všetkého ostatného je na serveroch v Zürichu vo Švajčiarsku. Nové obrázky a súbory z aktuálnej aplikácie sa ukladajú v EÚ a ostatné sa tam časom presunú. Na týchto serveroch sa nachádza tvoj verejný kľúč, zašifrované bloby tvojich poznámok, súborov a nastavení a časové pečiatky a veľkosti, ktoré synchronizácia potrebuje. Žiadne názvy, žiadny text, žiadne značky.",
+        "Súbory uložené v EÚ navyše ako zálohu uchovávame v druhej šifrovanej kópii u iného poskytovateľa v EÚ. Odstránený súbor môže zostať v našom koši súborov až 30 dní a v tejto zálohe až 35 dní.",
+        "Miesto je menej dôležité ako šifrovanie. Všetko je vždy zašifrované, v tvojom zariadení aj na ceste na server, takže tá kópia sú zašifrované dáta, nech leží kdekoľvek, a pri vlastnej správe ju na serveri nič nevie otvoriť. Umiestnenie je bonus, nie sľub. [Čo sa synchronizuje](/sk/help/what-syncs) to vypisuje položku po položke.",
         "Aj kópia v tvojom zariadení je šifrovaná: [poznámky sú na disku zapečatené](/sk/help/data-on-disk) kľúčom odvodeným z tvojej obnovovacej frázy, keď odomkneš."
       ]
     },
@@ -348,7 +364,7 @@
       "q": "Môže Trezor nahradiť môj správca hesiel, napríklad Bitwarden?",
       "a": [
         "Áno. Trezor uchováva tvoje prihlasovacie údaje, karty a kľúče SSH, šifrované na tvojom zariadení. Bezplatné rozšírenie prehliadača vyplní prihlasovacie údaje iba na stránke, ku ktorej patria. [Import z Bitwardenu](/sk/help/import/bitwarden) prenesie tvoje heslá jediným krokom.",
-        "Hlavným kľúčom je tvoja [obnovovacia fráza](/sk/help/phrase-vs-password), nie PIN. PIN alebo prístupový kód zamyká zariadenie, na ktorom si už prihlásený, podobne ako kód na telefóne. Rozšírenie má vlastný PIN alebo prístupový kód, oddelený od toho v aplikácii. Po 10 nesprávnych pokusoch rozšírenie odpojí daný prehliadač.",
+        "Hlavným kľúčom je tvoja [obnovovacia fráza](/sk/help/phrase-vs-password), nie PIN. PIN alebo prístupový kód zamyká zariadenie, na ktorom si už prihlásený, podobne ako kód na telefóne. Rozšírenie má vlastný PIN alebo prístupový kód, oddelený od toho v aplikácii. Po 10 nesprávnych pokusoch do 30 dní rozšírenie odpojí daný prehliadač.",
         "Pre najsilnejšiu ochranu zvoľ v Nastavenia > Zabezpečenie > PIN namiesto 4-ciferného PIN prístupový kód a prístupový kód zvoľ aj pre rozšírenie. Nechaj zapnuté šifrovanie disku a zámku obrazovky na svojom počítači. Podrobnosti sú v našom [modeli hrozieb](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
@@ -379,6 +395,13 @@
       "a": [
         "Pretože služba je zámerne lacná na prevádzku. Aplikácia je local-first a poznámky sú malé šifrované bloky, takže server robí o málo viac, než že ich uloží a prenáša medzi tvojimi zariadeniami. Žiadna analytika toho, čo píšeš, žiadne pixely ani sledovacie prvky tretích strán, žiadna AI bežiaca na našich serveroch, žiadne oddelenie podpory.",
         "Jediná položka, ktorá s časom rastie, je úložisko, a je podľa toho aj spoplatnená: úložisko nad zahrnutých 500 MB je [malý ročný príplatok](/sk/help/storage-addons). Jednorazové náklady sa platia raz, opakované sa opakujú. Model sa musí uživiť len sám, a to zvláda."
+      ]
+    },
+    "discounts": {
+      "q": "Môžem získať zľavu, kupón alebo Black Friday ponuku na Pro?",
+      "a": [
+        "Nie. Pro má férovú cenu pre všetkých a platíš ju raz: [Pro je jednorazový nákup](/sk/help/one-time-pricing), nie predplatné. Black Friday, Deň vďakyvzdania ani iné sviatočné výpredaje nerobíme a nerozdávame žiadne zľavové kódy ani kupóny, takže nemá zmysel čakať na lepší deň.",
+        "Prosím, nepíš nám e-mail ani sa nepýtaj na Reddite, na X či inde na zľavu: odpoveď je vždy táto stránka a čas, ktorý také žiadosti zaberú, sa uberá z času, ktorý venujeme aplikácii. [Bezplatný tarif](/sk/help/free-vs-pro) nemá časový limit, takže najprv môžeš používať celú aplikáciu v ňom a Pro si kúpiť v deň, keď ho budeš chcieť. K platbe kreditnou alebo debetnou kartou, alebo cez obchod s aplikáciami, patrí [30-dňové vrátenie peňazí](/sk/help/refunds)."
       ]
     },
     "pro-cross-platform": {
@@ -412,7 +435,7 @@
     "pay-with-crypto": {
       "q": "Môžem za Pro zaplatiť bitcoinom alebo inou kryptomenou?",
       "a": [
-        "Áno, na webe aj v desktopovej aplikácii. V okne Prejsť na Pro vyber Zaplatiť kryptomenou a zaplať bitcoinom, etherom, cez Lightning, USDC alebo USDT. Cena je rovnaká ako pri karte a platí sa jednorazovo. [Verzie z obchodov s aplikáciami](/sk/help/store-purchases) predávajú Pro iba cez Apple a Google.",
+        "Áno, na webe aj v desktopovej aplikácii. V okne Prejsť na Pro vyber Zaplatiť kryptomenou a zaplať bitcoinom, etherom, cez Lightning, USDC, USDT, litecoinom, Bitcoin Cash, dogecoinom alebo TON. Cena je rovnaká ako pri karte a platí sa jednorazovo. [Verzie z obchodov s aplikáciami](/sk/help/store-purchases) predávajú Pro iba cez Apple a Google.",
         "Stránku s platbou prevádzkuje [BlockBee](https://blockbee.io). Nepýta si meno ani e-mail a tvoje ID účtu nikdy nedostane. Platba v kryptomenách je verejná na svojom blockchaine. Pri bitcoine sa Pro zapne po potvrdení platby sieťou, zvyčajne za 10 až 60 minút, a pri Ethereu a väčšine stablecoinov to trvá približne minútu. Pruh v aplikácii ukazuje, v akom stave platba je.",
         "Platby v kryptomenách sú konečné: vrátenie peňazí neexistuje. Pri platbe súhlasíš, že Pro sa spustí okamžite, čím zaniká 14-dňové právo EÚ na odstúpenie od zmluvy, takže najprv vyskúšaj bezplatný tarif. Stránka po platbe je tvoje potvrdenie o nákupe. Ulož si ju ako PDF, pretože nemáme e-mailovú adresu, na ktorú by sme ho poslali."
       ]
@@ -561,7 +584,7 @@
       "q": "Môže rozšírenie prehliadača čítať moje poznámky?",
       "a": [
         "Nie. Rozšírenie nikdy nedrží kľúč, ktorý otvára tvoje poznámky. Každý uložený záznam zamkne skôr, než opustí tvoj prehliadač, a jedna z tvojich aplikácií ho pri najbližšej synchronizácii premení na poznámku.",
-        "Ak zapneš prihlasovacie údaje, rozšírenie vidí tvoje prihlasovacie údaje, karty, verejnú polovicu kľúčov SSH a záložky, nikdy text poznámky a nikdy súkromný kľúč. Chráni ich PIN alebo prístupový kód, ktorý pre rozšírenie nastavíš, oddelený od kódu aplikácie. Po 10 nesprávnych pokusoch sa prehliadač odpojí, takže kópiu tvojho prehliadača nemožno otvoriť hádaním. Prihlasovacie údaje sa zamknú po čase, ktorý si vyberieš v rozšírení (15 minút bez použitia, ak to nezmeníš), najneskôr po 7 dňoch a vždy, keď sa prehliadač zatvorí. Podrobnosti nájdeš v našom [modeli hrozieb](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+        "Ak zapneš prihlasovacie údaje, rozšírenie vidí tvoje prihlasovacie údaje a prístupové kľúče v nich uložené, karty, verejnú polovicu kľúčov SSH a záložky, nikdy text poznámky a nikdy súkromný kľúč SSH. Chráni ich PIN alebo prístupový kód, ktorý pre rozšírenie nastavíš, oddelený od kódu aplikácie. Po 10 nesprávnych pokusoch do 30 dní sa prehliadač odpojí, takže kópiu tvojho prehliadača nemožno otvoriť hádaním. Prihlasovacie údaje sa zamknú, keď počítač nezaznamenal žiadny vstup z klávesnice ani myši počas času, ktorý si vyberieš v rozšírení (15 minút, ak to nezmeníš), najneskôr po 7 dňoch a vždy, keď sa prehliadač zatvorí. Podrobnosti nájdeš v našom [modeli hrozieb](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
     "contacts": {
@@ -606,6 +629,45 @@
       "a": [
         "„Iba na čítanie“ (v ponuke možností poznámky, Pro) zamkne poznámku proti úpravám, aby sa hotový dokument nedal omylom pokaziť; nič neskrýva. „Chrániť“ (tá istá ponuka, Pro) skryje obsah poznámky za tvoj PIN alebo [biometrické odomknutie](/sk/help/biometric-unlock), pre veci, ktoré nechceš mať viditeľné na obrazovke, ktorú občas vidia aj iní. Jej názov zostáva v zozname viditeľný, takže tajomstvo do názvu nedávaj. Jedno odomknutie otvorí všetky chránené poznámky na čas, ktorý nastavíš v Nastavenia > Zabezpečenie. Ak chceš otvorenú poznámku zavrieť skôr, vyber **Zamknúť** nad jej textom alebo **Zamknúť teraz** v jej ponuke možností; zostane zavretá, kým ju znova neodomkneš.",
         "Oboje sú brány na obrazovke, nie druhá vrstva šifrovania. Príznaky putujú vnútri šifrovaných údajov samotnej poznámky a poznámka sa zámerne nešifruje znova tvojím PIN-om, takže [zabudnutý PIN nikdy nemôže zničiť údaje](/sk/help/forgot-pin). Skutočnou hranicou zostáva fráza: chráň najprv ju a tieto brány používaj na obrazovku, ktorú občas vidia aj iní."
+      ]
+    },
+    "protect-section": {
+      "q": "Môžem zamknúť PIN-om iba Trezor alebo inú sekciu?",
+      "a": [
+        "Áno, a je to zadarmo. Klikni na Trezor na bočnom paneli pravým tlačidlom alebo ho na telefóne podrž a vyber **Chrániť Trezor**. Rovnako fungujú Poznámky, Úlohy, Kresby, Súbory, Denníky, Kalendár, Kontakty, Záložky a Kôš. Ak ešte nemáš PIN, aplikácia ťa najprv požiada o jeho nastavenie. Sekciu otvoríš PIN-om alebo [biometrickým odomknutím](/sk/help/biometric-unlock).",
+        "Kým je sekcia zamknutá, jej položky sa nezobrazujú ani nikde inde: ani v zobrazení Všetko, ani na Domove, vo vyhľadávaní či v Koši. Jedno odomknutie otvorí každú chránenú sekciu a [každú chránenú poznámku](/sk/help/locked-vs-protected) na čas, ktorý nastavíš v Nastavenia > Zabezpečenie > Zámok > „Znova vyžiadať PIN po“. Ak chceš sekciu zamknúť skôr, klikni na otvorený zámok vedľa jej názvu alebo v jej ponuke vyber **Zamknúť teraz**.",
+        "[Rozšírenie prehliadača](/sk/help/browser-extension-security) má vlastné odomknutie, takže ďalej vypĺňa tvoje prihlasovacie údaje. Položky, ktoré odstrániš zo zamknutej sekcie, sa stále riadia [automatickým odstraňovaním z koša](/sk/help/trash-auto-delete) a **Vyprázdniť** v Koši si najprv vyžiada tvoj PIN."
+      ]
+    },
+    "lock-reload": {
+      "q": "Prečo sa stránka znovu načíta, keď sa PrivacyNotes zamkne?",
+      "a": [
+        "Znovu načítanie je spôsob, akým zamknutá aplikácia pustí tvoje poznámky z pamäte. Keď je zámok aplikácie zapnutý, zamknutie uloží tvoju poslednú úpravu a potom spustí aplikáciu znova za zamknutou obrazovkou, takže zamknutá aplikácia už nedrží tvoju obnovovaciu frázu, jej kľúče ani poznámky, ktoré boli otvorené. Stane sa to, keď vyberieš **Zamknúť aplikáciu**, a tiež keď sa aplikácia zamkne sama po čase, ktorý si nastavíš v Nastavenia > Zabezpečenie > Zámok > „Znova zamknúť po“.",
+        "Odomkni ako zvyčajne cez PIN, prístupový kód alebo [biometrické odomknutie](/sk/help/biometric-unlock) a otvorená poznámka sa vráti. Nič z tvojho písania sa nestratí. [Pripomienky](/sk/help/reminders) zvonia aj počas zamknutej aplikácie, ako „Pripomienka“ a čas."
+      ]
+    },
+    "passkey-unlock": {
+      "q": "Môžem PrivacyNotes odomknúť prístupovým kľúčom?",
+      "a": [
+        "Áno. V prehliadači je biometrické odomknutie prístupový kľúč. Prístupový kľúč je kľúč, ktorý tvoje zariadenie alebo správca hesiel uchováva pre jednu webovú stránku a použije ho až po tvojom odtlačku prsta, tvári alebo hesle zariadenia. Keď zapneš biometrické odomknutie, PrivacyNotes si vytvorí vlastný prístupový kľúč a ten pri každom otvorení aplikácie potvrdí, že si to ty. Prístupový kľúč uchováva aj kľúč biometrického odomknutia; ak to tvoja aplikácia na prístupové kľúče nedokáže, biometrické odomknutie sa nezapne. Pri zapnutom zámku aplikácie a biometrickom odomknutí zviazanom s tvojím prístupovým kľúčom potom kópia úložiska prehliadača potrebuje prístupový kľúč alebo tvoj PIN či prístupový kód, preto zvoľ prístupový kód: 4-miestny PIN sa dá uhádnuť.",
+        "Ak to chceš zapnúť, otvor Nastavenia > Zabezpečenie > Zámok a vyber „Zapnúť biometrické odomknutie“. Tvoj prehliadač alebo správca hesiel si vypýta odtlačok prsta, tvár alebo heslo zariadenia a uloží prístupový kľúč a na karte sa zobrazí „Biometrické odomknutie je zviazané s tvojím prístupovým kľúčom.“ Nastav to v každom prehliadači, kde to chceš: aj keď sa prístupový kľúč synchronizuje do tvojich ďalších zariadení, odomyká iba prehliadače, v ktorých je biometrické odomknutie zapnuté. PIN, prístupový kód a obnovovacia fráza fungujú popri ňom ďalej. Ak ho vypneš, prístupový kľúč zostane v tvojej aplikácii na prístupové kľúče, kým ho tam neodstrániš.",
+        "Biometrické odomknutie v rozšírení prehliadača je tiež prístupový kľúč. Vytvára sa iba pre rozšírenie a otvára tam len tvoje prihlasovacie údaje. Aplikácie pre iPhone, Android a Mac namiesto prístupového kľúča používajú vlastný bezpečný hardvér zariadenia a aplikácia pre Windows používa Windows Hello, s rovnakým prepínačom na rovnakom mieste."
+      ]
+    },
+    "passkey-sign-in": {
+      "q": "Môžem sa do PrivacyNotes prihlásiť prístupovým kľúčom?",
+      "a": [
+        "Áno. V prehliadači na [use.privacynotes.app](https://use.privacynotes.app) môže prístupový kľúč v novom zariadení nahradiť písanie tvojej [obnovovacej frázy](/sk/help/phrase-vs-password). Vyber „Prihlásenie frázou“ a potom „Prihlásiť sa prístupovým kľúčom“. Tvoja aplikácia na prístupové kľúče si vypýta odtlačok prsta, tvár alebo heslo zariadenia a prihlásenie pokračuje ako pri napísanej fráze, takže [dvojfaktorové prihlásenie](/sk/help/enable-2fa) si aj tak vypýta svoj kód.",
+        "Prístupový kľúč najprv pridaj v prehliadači, v ktorom si prihlásený: otvor Nastavenia > Zabezpečenie > Prístupové kľúče a vyber „Pridať prístupový kľúč“. Vypýta si tvoj PIN alebo prístupový kód, ak si ho nastavil, a aktuálny kód 2FA, ak je 2FA zapnuté. Môžeš ich pridať až 10. Tvoja fráza funguje ďalej.",
+        "Server ukladá iba kópiu tvojej frázy zašifrovanú na tvojom zariadení kľúčom z prístupového kľúča a tento kľúč nikdy nedostane. Prístupový kľúč uchovávaj v aplikácii na prístupové kľúče, ktorú môžeš otvoriť iba ty."
+      ]
+    },
+    "vault-passkeys": {
+      "q": "Dokáže PrivacyNotes ukladať prístupové kľúče pre iné webové stránky?",
+      "a": [
+        "Áno. S [rozšírením prehliadača](/sk/help/browser-extension) môže stránka, ktorá ponúka prístupový kľúč, uložiť ho do tvojho Trezora, do tvojich prihlasovacích údajov pre túto stránku, takže jedna položka obsahuje heslo, prístupový kľúč alebo oboje. Rozšírenie sa najprv opýta. Keď si stránka nabudúce vypýta prístupový kľúč, rozšírenie zobrazí zoznam prihlasovacích údajov, ktoré ho obsahujú, a ty si vyberieš, ktorými sa prihlásiš. „Použiť inú aplikáciu na prístupové kľúče“ odovzdá požiadavku namiesto toho vlastnej aplikácii na prístupové kľúče v tvojom prehliadači.",
+        "Rozšírenie ukladá a používa prístupové kľúče, keď je odomknuté a prihlasovacie údaje sú zapnuté. V aplikácii zobrazuje čip Prístupové kľúče v Trezore prihlasovacie údaje, ktoré ich obsahujú, a prístupový kľúč odstrániš úpravou prihlasovacích údajov. Ak chceš ponuky zastaviť, vypni v nastaveniach rozšírenia „Ponúkať prístupové kľúče“.",
+        "Každý prístupový kľúč je zašifrovaný na tvojom zariadení rovnako ako zvyšok Trezora a rozšírenie ho otvorí iba vtedy, keď je odomknuté."
       ]
     },
     "biometric-unlock": {
@@ -669,7 +731,7 @@
     "backup-app-closed": {
       "q": "Spustí sa automatická záloha, keď je PrivacyNotes zatvorené?",
       "a": [
-        "Na počítači sa spustí, keď je aplikácia otvorená, a aj vtedy, keď je okno zatvorené do oblasti oznámení. Zapni to v Nastavenia > Systém > „Bežať ďalej v oblasti oznámení“. Ak bola záloha na rade, keď bola aplikácia úplne zatvorená, spustí sa asi minútu po jej opätovnom otvorení.",
+        "Na počítači sa spustí, keď je aplikácia otvorená, a aj vtedy, keď je okno zatvorené do oblasti oznámení. Zapni to v Nastavenia > Systém > „Bežať ďalej v oblasti oznámení“. Ak bola záloha na rade, keď bola aplikácia úplne zatvorená, spustí sa asi minútu po jej opätovnom otvorení, s internetom aj bez neho. Na prvú synchronizáciu čaká iba zariadenie, ktoré sa od prihlásenia ešte nesynchronizovalo.",
         "Telefón nedovolí aplikácii bežať kvôli tomu na pozadí, takže na Androide a iPhone sa záloha spustí niekoľko sekúnd po otvorení aplikácie, ak je nejaká na rade. Ak aplikáciu dlhšie neotvoríš, upozornenie v telefóne ti povie, že záloha mešká. V prehliadači sa záloha spustí iba vtedy, keď je PrivacyNotes otvorené na karte."
       ]
     },
@@ -677,7 +739,7 @@
       "q": "Nie je synchronizácia už sama zálohou?",
       "a": [
         "Nie. Synchronizácia udržiava všetky zariadenia rovnaké, takže keď sa poznámka odstráni na jednom zariadení, odstráni sa na všetkých. Omyl, chyba alebo ukradnuté zariadenie môže odstrániť poznámky všade naraz a synchronizácia ich nevie vrátiť.",
-        "Záloha je kópia z predchádzajúceho dňa, ktorej sa synchronizácia nedotkne. [Automatické zálohy](/sk/help/automatic-backups) zapisujú takú kópiu do priečinka, ktorý vyberieš, a uchovávajú kópie z niekoľkých dní. Ak záloha obsahuje oveľa menej položiek ako predchádzajúca, PrivacyNotes ponechá staršie kópie, kým to nepotvrdíš, takže omylom vyprázdnený trezor nevytlačí tvoje dobré zálohy."
+        "Záloha je kópia z predchádzajúceho dňa, ktorej sa synchronizácia nedotkne. [Automatické zálohy](/sk/help/automatic-backups) zapisujú takú kópiu do priečinka, ktorý vyberieš, a uchovávajú kópie z niekoľkých dní. Ak záloha obsahuje oveľa menej položiek ako predchádzajúca a tá mala 20 alebo viac, PrivacyNotes ponechá staršie kópie, kým to nepotvrdíš, takže omylom vyprázdnený trezor nevytlačí tvoje dobré zálohy."
       ]
     },
     "backup-cloud-folder": {
@@ -705,14 +767,14 @@
       "q": "Ako zistím, že automatická záloha prebehla v poriadku?",
       "a": [
         "Pozri sa na „Nedávne zálohy“ v Nastavenia > Zálohovanie > Automatické. Dobrá záloha má zelenú značku začiarknutia a slovo „Skontrolované“: PrivacyNotes súbor pred uložením znova otvoril tvojím kľúčom a potom prečítal uloženú kópiu späť z priečinka, aby sa uistil, že sa zhoduje bajt po bajte.",
-        "Záloha, ktorá kontrolou neprejde, sa neponechá, tvoje staršie kópie zostanú a aplikácia ti povie prečo, napríklad že priečinok neexistuje. „Žiadne zmeny, nič sa nezapísalo“ znamená, že [od poslednej zálohy sa nič nezmenilo](/sk/help/backup-no-changes), takže nový súbor nebol potrebný. Ak chceš súbor otestovať sám, [obnov ho](/sk/help/restore-backup): obnova do rovnakého účtu nič nezmení."
+        "Záloha, ktorá kontrolou neprejde, sa neponechá, tvoje staršie kópie zostanú a aplikácia ti povie prečo, napríklad že priečinok neexistuje. „Žiadne zmeny, nič sa nezapísalo“ znamená, že [od poslednej zálohy sa nič nezmenilo](/sk/help/backup-no-changes), takže nový súbor nebol potrebný. Ak chceš súbor otestovať sám, [obnov ho](/sk/help/restore-backup): obnova do rovnakého účtu nič nezmení, pokiaľ sa od tej zálohy nič nepresunulo do koša ani neodstránilo."
       ]
     },
     "backup-no-changes": {
       "q": "Prečo moja automatická záloha hlási „Žiadne zmeny, nič sa nezapísalo“?",
       "a": [
         "Pretože sa v tvojom trezore od poslednej zálohy nič nezmenilo. Súbor z minulého razu už obsahuje všetko, takže PrivacyNotes tú istú kópiu nezapisuje znova. Tvoj priečinok tak uchová viac dní histórie, lebo rovnaký súbor nikdy nevytlačí starší. Počíta sa to ako dobrá záloha a ďalšia je na rade o jedno obdobie neskôr.",
-        "PrivacyNotes porovnáva počet položiek, položky v koši, čas tvojej poslednej úpravy, nastavenia, ktoré záloha obsahuje (napríklad tvoje priečinky, motívy a sledované hodnoty), typ zálohy a priečinok. Ak sa niektoré z nich zmenilo, alebo ak posledný súbor zálohy už nie je v priečinku, zapíše nový súbor. „Zálohovať teraz“ kontroluje rovnako, takže jeho dvojité stlačenie nikdy nezaplní priečinok kópiami z jedného dňa. Ak chceš nový súbor aj tak, napríklad pre USB kľúč, použi Nastavenia > Zálohovanie > Ručné > „Všetko, šifrované (.pnbackupz)“."
+        "PrivacyNotes porovnáva počet položiek, položky v koši, čas úpravy každej položky, nastavenia, ktoré záloha obsahuje (napríklad tvoje priečinky, motívy a sledované hodnoty), typ zálohy a priečinok. Ak sa niektoré z nich zmenilo, alebo ak posledný súbor zálohy už nie je v priečinku, zapíše nový súbor. „Zálohovať teraz“ kontroluje rovnako, takže jeho dvojité stlačenie nikdy nezaplní priečinok kópiami z jedného dňa. Ak chceš nový súbor aj tak, napríklad pre USB kľúč, použi Nastavenia > Zálohovanie > Ručné > „Všetko, šifrované (.pnbackupz)“."
       ]
     },
     "backup-time-name": {
@@ -739,7 +801,7 @@
     "restore-new-device": {
       "q": "Ako obnovím automatickú zálohu na novom zariadení?",
       "a": [
-        "Prihlás sa na novom zariadení rovnakou obnovovacou frázou alebo rovnakým prihlásením cez Google, Apple či GitHub a počkaj, kým pätička neukáže „Synced“. Väčšina tvojich poznámok je v tej chvíli už späť, vďaka synchronizácii.",
+        "Prihlás sa na novom zariadení rovnakou obnovovacou frázou alebo rovnakým prihlásením cez Google, Apple či GitHub a počkaj, kým pätička neukáže „Synchronizované“. Väčšina tvojich poznámok je v tej chvíli už späť, vďaka synchronizácii.",
         "Potom otvor Nastavenia > Zálohovanie > Obnova, zvoľ „Šifrovaná záloha (.pnbackup, .pnbackupz)“ a vyber najnovší súbor [zo svojho priečinka so zálohami](/sk/help/automatic-backups). Obnova pridá, čo účtu chýba, a ponechá to, čo tam už je ([ako funguje obnova](/sk/help/restore-backup)). Šifrovaná záloha sa otvorí iba v účte, ktorý ju vytvoril."
       ]
     },
@@ -760,7 +822,7 @@
     "image-quality": {
       "q": "Mení alebo komprimuje PrivacyNotes moje obrázky?",
       "a": [
-        "Áno. Obe nastavenia sú predvolene zapnuté, pretože máme radi svojich používateľov: chceme ti [ušetriť miesto v úložisku](/sk/help/storage-usage) a ochrániť tvoje súkromie. Šetrič miesta zmenší veľký obrázok tak, aby sa zmestil do 2048 pixelov, a uloží ho ako JPEG s kvalitou 85 %, čo zachová všetky detaily, ktoré obrazovka dokáže zobraziť. Odstrániť údaje o polohe odstráni metadáta EXIF, ktoré fotoaparát zapisuje do fotky, vrátane polohy GPS, ešte pred uložením obrázka. Obe sa uplatňujú na každý obrázok v aplikácii: vložený do poznámky, pridaný ako súbor alebo importovaný. Dve výnimky: GIF si zachová svoju veľkosť, aby sa jeho animácia stále prehrávala, a súbor pripojený k položke Trezoru sa uchová presne taký, aký bol.",
+        "Áno. Obe nastavenia sú predvolene zapnuté, pretože máme radi svojich používateľov: chceme ti [ušetriť miesto v úložisku](/sk/help/storage-usage) a ochrániť tvoje súkromie. Šetrič miesta zmenší veľký obrázok tak, aby sa zmestil do 2048 pixelov, a uloží ho ako JPEG s kvalitou 85 %, čo zachová všetky detaily, ktoré obrazovka dokáže zobraziť. Odstrániť údaje o polohe odstráni metadáta EXIF, ktoré fotoaparát zapisuje do fotky, vrátane polohy GPS, ešte pred uložením obrázka. Obe sa uplatňujú na každý obrázok, ktorý aplikácia dokáže prečítať: vložený do poznámky, pridaný ako súbor alebo importovaný. Obrázok, ktorý prečítať nedokáže, napríklad AVIF, SVG alebo taký, ktorý sa neotvorí, sa pri pridaní ako súbor alebo pri importe uloží tak, ako prišiel, vrátane údajov o polohe. Dve výnimky: GIF si zachová svoju veľkosť, aby sa jeho animácia stále prehrávala, a súbor pripojený k položke Trezoru sa uchová presne taký, aký bol.",
         "Ktorékoľvek vypni v **Nastavenia > Úložisko > Obrázky**, kde majú fotky kontaktov tretí prepínač, ktorý ich drží na 512 pixeloch. Nastavenia platia iba pre nové obrázky; súbory, ktoré nie sú obrázky, sa ukladajú presne tak, ako sú. Obrázky HEIC a TIFF sa prevádzajú na JPEG, pretože ich dokáže zobraziť iba Safari. [Záloha, ktorú obnovíš](/sk/help/restore-backup), sa zapíše späť bajt po bajte."
       ]
     },
@@ -768,7 +830,7 @@
       "q": "Čo sa počíta do môjho úložiska a ako uvoľním miesto?",
       "a": [
         "Všetko, čo synchronizuješ, v zašifrovanej veľkosti: text poznámok, obrázky, zvukové nahrávky a prílohy. Ukazovateľ v Nastavenia > Úložisko ukazuje súčet; vlastná stopa každej poznámky je uvedená v možnostiach poznámky ako „Využité úložisko“. [Poznámky v koši sa počítajú, kým sa kôš nevyprázdni](/sk/help/trash-auto-delete).",
-        "Ak chceš miesto uvoľniť rýchlo, otvor Súbory, zoraď ich podľa možnosti „Veľkosť“ a [odstráň najväčšie položky](/sk/help/storage-after-delete) - prílohy takmer v každom účte prevyšujú text. Potom vyprázdni kôš: zobrazenie Kôš ukazuje, koľko miesta „Vyprázdniť“ uvoľní. Samotný text takmer nikdy nezaplní kvótu; aj bezplatných 50 MB pojme desaťtisíce obyčajných poznámok."
+        "Ak chceš miesto uvoľniť rýchlo, otvor Súbory, zoraď ich podľa možnosti „Veľkosť“ a [odstráň najväčšie položky](/sk/help/storage-after-delete) - prílohy takmer v každom účte prevyšujú text. Potom vyprázdni kôš: zobrazenie Kôš ukazuje, koľko miesta „Vyprázdniť“ uvoľní. Každý tarif pojme až 10 000 položiek vrátane koša: poznámky, úlohy, prihlasovacie údaje a každý iný druh. Samotný text takmer nikdy nezaplní bajty."
       ]
     },
     "upload-failed": {
@@ -788,22 +850,22 @@
     "dead-mans-switch": {
       "q": "Čo spínač mŕtveho muža odstráni a čo zostane na mojich zariadeniach?",
       "a": [
-        "Iba kópiu na serveri. Keď je spínač zapnutý a žiadne z tvojich zariadení sa nepripojí online počas obdobia, ktoré si vyberieš (od 1 mesiaca do 5 rokov), server odstráni tvoje šifrované poznámky, ich históriu, tvoje súbory a tvoje nastavenia. Po skončení obdobia čaká ešte dva týždne, kým niečo odstráni, ako bezpečnostnú rezervu: zariadenie, ktoré sa počas týchto dvoch týždňov pripojí online, odstránenie stále zastaví. Tvoj účet zostáva, takže tvoja obnovovacia fráza ťa stále prihlási, a Pro zostáva. Aj predplatné úložiska zostáva a naďalej sa obnovuje. Nepríde žiadne upozornenie e-mailom a odstránenie sa nedá vrátiť späť.",
+        "Iba kópiu na serveri. Keď je spínač zapnutý a žiadne z tvojich zariadení sa nepripojí online a nepoužije sa ani pripojené rozšírenie prehliadača či príkazový riadok počas obdobia, ktoré si vyberieš (od 1 mesiaca do 5 rokov), server odstráni tvoje šifrované poznámky, ich históriu, tvoje súbory a tvoje nastavenia. Po skončení obdobia čaká ešte dva týždne, kým niečo odstráni (zriedka až tri týždne, keď je na rade naraz veľa účtov), ako bezpečnostnú rezervu: zariadenie, ktoré sa počas tohto času pripojí online, odstránenie stále zastaví. Tvoj účet zostáva, takže tvoja obnovovacia fráza ťa stále prihlási, a Pro zostáva. Aj predplatné úložiska zostáva a naďalej sa obnovuje. Nepríde žiadne upozornenie e-mailom a odstránenie sa nedá vrátiť späť. Šifrované kópie odstránených súborov môžu zostať v našom koši súborov a v zálohách až 40 dní.",
         "Tvoje zariadenia si svoje poznámky ponechajú. Keď sa zariadenie po odstránení znova pripojí online, prestane synchronizovať a najprv sa ťa opýta: stiahni si zálohu všetkého, čo obsahuje, ktorú môžeš neskôr [obnoviť](/sk/help/restore-backup), a potom odstráň poznámky z tohto zariadenia. Zariadenie sa odhlási a ďalšie prihlásenie začne v prázdnom účte. Súbor, ktorý toto zariadenie nikdy neotvorilo, už zo servera môže byť preč, a záloha ho potom uvedie ako chýbajúci. Udržiavaj aplikáciu aktualizovanú na každom zariadení, pretože staršia verzia sa nevie najprv opýtať.",
-        "Zapni ho v Nastavenia > ID & Sync > „Spínač mŕtveho muža“ a vyber obdobie. Otvorenie aplikácie online na ktoromkoľvek z tvojich zariadení spustí odpočítavanie odznova a údaj „Dátum odstránenia“ na tejto karte ukazuje najskorší deň, keď môže k odstráneniu dôjsť, vrátane tých dvoch týždňov. Spínač môžeš kedykoľvek vypnúť a odstránenie tým zastaviť."
+        "Zapni ho v Nastavenia > ID & Sync > „Spínač mŕtveho muža“ a vyber obdobie. Otvorenie aplikácie online na ktoromkoľvek z tvojich zariadení alebo použitie pripojeného rozšírenia prehliadača či príkazového riadka spustí odpočítavanie odznova, preto odstráň príkazový riadok, ktorý ukladá sám, inak naň spínač čaká. Údaj „Dátum odstránenia“ na tejto karte ukazuje najskorší deň, keď môže k odstráneniu dôjsť, vrátane tých dvoch týždňov. Spínač môžeš kedykoľvek vypnúť a odstránenie tým zastaviť."
       ]
     },
     "leaving": {
       "q": "Ako PrivacyNotes úplne opustím?",
       "a": [
         "[Najprv export](/sk/help/export), potom odstránenie - oboje bez cudzej pomoci. Všetky cesty von pokrývajú dve stránky. Nastavenia > Zálohovanie > Ručné obsahuje „Všetko, nešifrované (.zip)“ pre kompletnú kópiu. Nastavenia > Prenos > Export obsahuje „Iba poznámky (.zip)“ v Markdowne a archív HTML pre tvoju ďalšiu aplikáciu na poznámky a „Export trezora (.json)“ vo formáte kompatibilnom s Bitwardenom pre tvojho ďalšieho správcu hesiel. Exporty sa vytvárajú na tvojom zariadení.",
-        "Potom Nastavenia > Účet > „Odstrániť účet a dáta…“: napíš DELETE a tvoje synchronizované poznámky, súbory, zariadenia, nastavenia aj samotný účet sa natrvalo odstránia. Zostanú záznamy o predplatnom úložiska a minimálny bezpečnostný identifikátor a zálohy vytvorené pred odstránením vypršia po siedmich dňoch ([podrobnosti](/sk/help/delete-account)). [Aktívne rozšírenie úložiska treba najprv zrušiť](/sk/help/manage-storage-addon) v Nastavenia > Úložisko. Žiadne manipulatívne triky a žiadne e-maily, ktoré ťa majú vrátiť späť - tvoje dáta sú tvoje, aj na ceste von."
+        "Potom Nastavenia > Účet > „Odstrániť účet a dáta…“: napíš DELETE a tvoje synchronizované poznámky, súbory, zariadenia, nastavenia aj samotný účet sa natrvalo odstránia. Zostanú záznamy o predplatnom úložiska a minimálny bezpečnostný identifikátor, zálohy vytvorené pred odstránením vypršia po siedmich dňoch a šifrované kópie súborov najneskôr po 30 dňoch ([podrobnosti](/sk/help/delete-account)). [Aktívne rozšírenie úložiska treba najprv zrušiť](/sk/help/manage-storage-addon) v Nastavenia > Úložisko. Žiadne manipulatívne triky a žiadne e-maily, ktoré ťa majú vrátiť späť - tvoje dáta sú tvoje, aj na ceste von."
       ]
     },
     "data-rights": {
       "q": "Ako PrivacyNotes rieši GDPR a moje práva k dátam?",
       "a": [
-        "Hlavne tým, že drží čo najmenej. Zaregistruj sa frázou a nie je tu žiadne meno, e-mail ani identita, o ktorú by sa dalo žiadať: tvoje dáta sú šifrovaný text pod náhodným verejným kľúčom, [hostovaný v Zürichu vo Švajčiarsku](/sk/help/data-location). Prihlás sa cez Google, Apple alebo GitHub a e-mail a ID účtu tohto prihlásenia sú naviazané na ten kľúč. Platobné údaje zostávajú u [Paddle](https://www.paddle.com), Apple alebo Google; my uchovávame záznamy o objednávkach a predplatnom potrebné na udelenie a obnovenie nákupov.",
+        "Hlavne tým, že drží čo najmenej. Zaregistruj sa frázou a nie je tu žiadne meno, e-mail ani identita, o ktorú by sa dalo žiadať: tvoje dáta sú šifrovaný text pod náhodným verejným kľúčom, [hostovaný v Zürichu vo Švajčiarsku a v EÚ](/sk/help/data-location). Prihlás sa cez Google, Apple alebo GitHub a e-mail a ID účtu tohto prihlásenia sú naviazané na ten kľúč. Platobné údaje zostávajú u [Paddle](https://www.paddle.com), Apple alebo Google; my uchovávame záznamy o objednávkach a predplatnom potrebné na udelenie a obnovenie nákupov.",
         "Väčšinu práv si môžeš uplatniť priamo v aplikácii, bez potreby formulára: prístup a prenosnosť cez Nastavenia > Prenos ([úplný export v otvorených formátoch](/sk/help/export)), výmaz cez Nastavenia > Účet > „Odstrániť účet a dáta…“ (niektoré fakturačné a bezpečnostné záznamy zostanú, [pozri, čo odstránenie zmaže](/sk/help/delete-account)) a opravu úpravou svojich poznámok. Formálna verzia, vrátane toho, ako nás kontaktovať pri všetkom, čo aplikácia nezvládne sama, je v [zásadách ochrany osobných údajov](https://lifetimelabs.dev/privacy/)."
       ]
     },
@@ -818,7 +880,7 @@
     "pro-not-active": {
       "q": "Pro mám zaplatené, ale nie je aktívne. Čo teraz?",
       "a": [
-        "Počkaj chvíľu a potom aplikáciu znova načítaj. Po platbe sa aplikácia približne 20 sekúnd pýta servera a odomkne sa sama, a opätovné načítanie pri spustení stav Pro skontroluje znova. [Platba v kryptomenách](/sk/help/pay-with-crypto) trvá dlhšie a pruh ukazuje, v akom stave je. Ak platba prišla, ale aktivácia sa zdržiava, zobrazí sa pruh s hlásením „Platba bola prijatá, ale aktivácia Pro trvá dlhšie ako zvyčajne“ - tento stav sa takmer vždy vyrieši sám. [Vo verziách z obchodov](/sk/help/store-purchases) sa nákup, ktorý sa nepodarí overiť, po reštarte aplikácie skúsi znova a peniaze za nákup, ktorý sa nikdy neaktivuje, obchod automaticky vráti do 3 dní.",
+        "Počkaj chvíľu a potom aplikáciu znova načítaj. Po platbe sa aplikácia približne 20 sekúnd pýta servera a odomkne sa sama, a opätovné načítanie pri spustení stav Pro skontroluje znova. [Platba v kryptomenách](/sk/help/pay-with-crypto) trvá dlhšie a pruh ukazuje, v akom stave je. Ak platba prišla, ale aktivácia sa zdržiava, zobrazí sa pruh s hlásením „Platba bola prijatá, ale aktivácia Pro trvá dlhšie ako zvyčajne“ - tento stav sa takmer vždy vyrieši sám. [Vo verziách z obchodov](/sk/help/store-purchases) sa nákup, ktorý sa nepodarí overiť, po reštarte aplikácie skúsi znova a na Androide Google Play automaticky vráti peniaze za nákup, ktorý sa nikdy neaktivuje, do 3 dní.",
         "Stále zamknuté? Takmer vždy ide o zámenu účtov: Pro sa viaže na účet, ktorý bol prihlásený pri nákupe, takže iná fráza - alebo prihlásenie cez Google, Apple alebo GitHub namiesto tvojho trezora s frázou - je iný účet. Porovnaj ID účtu v Nastavenia > ID & Sync na zariadení, na ktorom nákup prebehol. Ak je to naozaj zaseknuté, [nahlás to](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) a pripoj toto ID účtu: identifikuje nákup a o tvojich poznámkach neprezradí nič."
       ]
     },
@@ -841,7 +903,7 @@
       "q": "Obtainium, priame APK alebo Google Play: čo si stiahnuť do Androidu?",
       "a": [
         "Vyber si Google Play, ak chceš bežnú cestu: nainštaluje a aktualizuje aplikáciu ako každú inú a nákupy v aplikácii účtuje Google. Vyber si [Obtainium](/sk/help/obtainium), ak chceš, aby sa aplikácia udržiavala aktuálna sama bez účtu Google, a [priame APK](/sk/help/android-updates), ak kvôli tomu nechceš mať druhú aplikáciu. Obtainium a APK ti dajú ten istý súbor podpísaný tým istým kľúčom, takže medzi týmito dvoma môžeš kedykoľvek prejsť: Obtainium prevezme APK nainštalované ručne a APK z webu sa nainštaluje aj cez verziu, ktorú nainštaloval Obtainium. Verzia z Google Play je podpísaná iným kľúčom, takže prechod medzi Google Play a ktoroukoľvek z ostatných dvoch ciest vyžaduje najprv odinštalovanie.",
-        "Svoj názor môžeš neskôr zmeniť bez problémov. Pred každým prechodom, ktorý vyžaduje najprv odinštalovať, over, že aplikácia ukazuje „Synced“, a priprav si obnovovaciu frázu alebo [prihlasovací QR kód z iného zariadenia](/sk/help/add-second-device), pretože odinštalovanie vymaže lokálnu kópiu."
+        "Svoj názor môžeš neskôr zmeniť bez problémov. Pred každým prechodom, ktorý vyžaduje najprv odinštalovať, over, že aplikácia ukazuje „Synchronizované“, a priprav si obnovovaciu frázu alebo [prihlasovací QR kód z iného zariadenia](/sk/help/add-second-device), pretože odinštalovanie vymaže lokálnu kópiu."
       ]
     },
     "markdown-folder": {
@@ -886,6 +948,13 @@
         "Priečinok najvyššej úrovne patrí aj s celým obsahom do jedného priestoru a **Presunúť do priestoru Práca** alebo **Presunúť do priestoru Osobné** v jeho ponuke, alebo v ponuke ľubovoľnej položky, ho presunie do druhého. Položka bez priečinka patrí do priestoru Osobné, rovnako ako všetko, čo vytvoríš, keď je otvorené Všetko. Priestory prestaneš používať vypnutím Nastavenia > Zoznamy > Priestory: zobrazí sa každá položka, nič sa nepresunie a každý priečinok si svoj priestor pamätá pre prípad, že ich znova zapneš. Priestory vyžadujú Pro."
       ]
     },
+    "hide-sections": {
+      "q": "Môžem skryť sekcie, ktoré nepoužívam, napríklad kalendár alebo denník?",
+      "a": [
+        "Áno. Klikni pravým tlačidlom na sekciu v bočnom paneli, alebo ju na telefóne podrž, a zruš začiarknutie **Zobraziť v bočnom paneli**. Sekcia z bočného panela zmizne a nič v nej sa neodstráni: jej položky zostanú v tvojej knižnici, ďalej sa synchronizujú a vrátia sa, keď sekciu znova zobrazíš. Oko vedľa popisu **Obsah** v bočnom paneli vypíše všetky sekcie naraz, s políčkom pri každej.",
+        "Nastavenia > Zoznamy > Bočný panel a Všetko obsahujú rovnakú voľbu ako tabuľku, plus ešte jednu. Stĺpec **Bočný panel** určuje sekcie, ktoré bočný panel zobrazuje, a stĺpec **Všetko** určuje, aké druhy položiek obsahuje zoznam Všetko, takže záznamy v denníku môžu zo Všetkého zmiznúť, zatiaľ čo Denníky zostanú v bočnom paneli. Obe voľby sa prenášajú s tvojím účtom na ďalšie zariadenia a obe sú zadarmo. Ak chceš Denníky ponechať, ale zbaviť sa karty „Ako sa dnes máš?“, skry ju v [možnostiach záznamu nálady](/sk/help/daily-check-in)."
+      ]
+    },
     "note-links": {
       "q": "Ako prepojím jednu poznámku s druhou?",
       "a": [
@@ -910,7 +979,7 @@
     "add-second-device": {
       "q": "Ako sa prihlásim na druhom zariadení?",
       "a": [
-        "Na zariadení, ktoré už používaš, otvor Nastavenia > Zabezpečenie > Fráza. Zobrazia sa slová tvojej frázy a prihlasovací QR kód. Na novom zariadení vyber „Prihlásenie frázou“, potom ten QR kód naskenuj fotoaparátom, nahraj jeho fotku, alebo slová napíš. Tvoje poznámky dorazia za pár sekúnd.",
+        "Na zariadení, ktoré už používaš, otvor Nastavenia > Zabezpečenie > Fráza. Zobrazia sa slová tvojej frázy a prihlasovací QR kód. Na novom zariadení vyber „Prihlásenie frázou“, potom „Naskenovať QR kamerou“, nahraj fotku QR kódu alebo slová napíš. Tvoje poznámky dorazia za pár sekúnd. Použi vlastný skener aplikácie: aplikácia fotoaparátu v telefóne sa týmto QR kódom neprihlási. QR kód uložený skôr tu stále funguje, ale starší je odkaz, ktorý vie otvoriť aplikácia fotoaparátu, preto znova vyber **Uložiť QR** a starý obrázok odstráň. Ak skener QR kód neprečíta, aktualizuj aplikáciu alebo slová napíš.",
         "[Bezplatný účet pokryje 2 zariadenia](/sk/help/device-limit), Pro tak veľa, koľko chceš, a dva prehliadače na jednom počítači sa počítajú ako jedno zariadenie. S QR kódom zaobchádzaj presne ako s frázou, ktorú nesie: nikomu ho neukazuj a nikdy ho nenechaj skončiť vo fotogalérii, ktorá sa synchronizuje do cudzieho cloudu."
       ]
     },
@@ -918,7 +987,8 @@
       "q": "Môžem zastaviť synchronizáciu zariadenia bez odhlásenia?",
       "a": [
         "Áno. Otvor Nastavenia > ID & Sync a stlač „Pozastaviť synchronizáciu“. Toto zariadenie prestane posielať na server čokoľvek: poznámky, nastavenia aj súbory. Píšeš presne ako predtým, všetko sa hromadí lokálne a hneď ako synchronizáciu obnovíš, všetko sa odošle.",
-        "Pauza patrí iba tomuto zariadeniu. Neprenáša sa na tvoje ostatné zariadenia a nikdy sa sama nezruší, pretože prepínač, ktorý hovorí „toto zariadenie nekomunikuje s nikým“, nesmie nič okrem teba vrátiť späť. Jedna vec beží ďalej zámerne: malý signál, vďaka ktorému sa odstránené zariadenie dozvie, že bolo odstránené. Takto sa [stratené zariadenie](/sk/help/lost-device) predsa len samo vymaže."
+        "Pauza patrí iba tomuto zariadeniu. Neprenáša sa na tvoje ostatné zariadenia a nikdy sa sama nezruší, pretože prepínač, ktorý drží tvoje poznámky na tomto zariadení, nesmie nič okrem teba vrátiť späť. Jedna vec beží ďalej zámerne: malý signál, vďaka ktorému sa odstránené zariadenie dozvie, že bolo odstránené. Takto sa [stratené zariadenie](/sk/help/lost-device) predsa len samo vymaže.",
+        "Nový účet takto začína, keď pri registrácii zostane „Synchronizácia medzi zariadeniami“ vypnutá, čo je predvolené pre účet vytvorený iba s frázou. Kým synchronizáciu nezapneš, tvoje poznámky existujú iba na tomto zariadení: ak ho stratíš alebo vymažeš údaje prehliadača, nevráti ich ani tvoja fráza, ani tvoje prihlasovacie údaje, preto si tu a tam exportuj zálohu."
       ]
     },
     "wifi-only": {
@@ -932,15 +1002,36 @@
       "q": "Čo sa stane, ak vymažem údaje prehliadača alebo súbory cookie?",
       "a": [
         "Webová aplikácia drží tvoje poznámky vo vlastnom úložisku prehliadača, takže vymazanie údajov stránky PrivacyNotes vymaže lokálnu kópiu a odhlási ťa. Všetko, čo sa už synchronizovalo, je v bezpečí: prihlás sa svojou obnovovacou frázou a vráti sa to. Čo sa ešte nesynchronizovalo, je preč, pretože sme z toho nikdy nemali kópiu.",
-        "Preto urob dve veci. Skontroluj, že pätička hovorí „Synced“, skôr než niečo vymažeš, a nechaj si frázu v správcovi hesiel, pretože vymazaný prehliadač sa o ňu slušne nepýta. [Aplikácií pre počítač a mobilných aplikácií](/sk/help/platforms) sa to netýka vôbec: [majú vlastné úložisko](/sk/help/data-on-disk), ktorého sa čistenie prehliadača nikdy nedotkne."
+        "Preto urob dve veci. Skontroluj, že pätička hovorí „Synchronizované“, skôr než niečo vymažeš, a nechaj si frázu v správcovi hesiel, pretože vymazaný prehliadač sa o ňu slušne nepýta. [Aplikácií pre počítač a mobilných aplikácií](/sk/help/platforms) sa to netýka vôbec: [majú vlastné úložisko](/sk/help/data-on-disk), ktorého sa čistenie prehliadača nikdy nedotkne."
+      ]
+    },
+    "phrase-not-saved": {
+      "q": "Prečo banner hovorí, že ma opätovné načítanie alebo zatvorenie tejto karty odhlási?",
+      "a": [
+        "Pretože tento prehliadač nedokázal ochrániť tvoju obnovovaciu frázu, a PrivacyNotes ju preto v tomto zariadení neuložil. Aplikácia frázu neukladá nechránenú, takže ju drží iba v otvorenej karte a opätovné načítanie alebo zatvorená karta ukončí prihlásenie. Tvoje poznámky sú v bezpečí: všetko, čo sa synchronizovalo, sa vráti, keď sa prihlásiš znova.",
+        "Aby ťa to neodhlasovalo, zapni zámok aplikácie v Nastavenia > Zabezpečenie > Zámok. Tvoj PIN alebo prístupový kód potom frázu ochráni, banner zmizne a pri ďalšej návšteve uvidíš namiesto prihlásenia zamknutú obrazovku. Dovtedy maj [svoju obnovovaciu frázu](/sk/help/lost-phrase) poruke. [Aplikácie pre počítač a mobil](/sk/help/platforms) chránia frázu samotným zariadením."
+      ]
+    },
+    "shared-computer": {
+      "q": "Môžem používať PrivacyNotes na zdieľanom alebo verejnom počítači?",
+      "a": [
+        "Áno. Otvor webovú aplikáciu na https://use.privacynotes.app, prihlás sa obnovovacou frázou a skôr než budeš pokračovať, zruš začiarknutie **Dôverovať tomuto zariadeniu**. Prehliadač si potom ponechá prihlásenie iba v tejto karte: zatvorením karty alebo okna sa odhlásiš a pri ďalšej návšteve sa znova pýta celá fráza. Nie je potrebné nič inštalovať ani nič nosiť na USB kľúči.",
+        "Tvoje poznámky sú šifrované na počítači a fráza, ktorá ich otvára, odíde spolu s kartou. Zámok aplikácie a biometrické odomknutie tam zostanú vypnuté, pretože obe uchovávajú na zariadení chránenú kópiu tvojej frázy. Políčko sa zobrazí iba pri prihlásení [obnovovacou frázou](/sk/help/lost-phrase): prihlásenie cez Google, Apple alebo GitHub zariadeniu vždy dôveruje. Keď skončíš, odhlás sa, čím sa z toho prehliadača odstráni aj šifrovaná kópia tvojich poznámok. Na vlastných zariadeniach nechaj políčko začiarknuté, aby prihlásenie zostalo zachované."
       ]
     },
     "android-backup": {
       "q": "Sú moje poznámky v zálohe telefónu s Androidom?",
       "a": [
         "Nie. Aplikácia pre Android drží svoje dáta mimo cloudovej zálohy telefónu, takže nič z nich nedôjde na Disk Google. Dôvodom je kľúč, nie poznámky: tam, kde máš zvolené **Dôverovať tomuto zariadeniu**, zostáva tvoja obnovovacia fráza na tom zariadení kvôli trvalému prihláseniu a cloudová záloha nie je miesto pre kľúč, ktorý dešifruje tvoje poznámky.",
-        "Nový telefón preto začína prázdny: nainštaluj aplikáciu, [prihlás sa svojou frázou](/sk/help/add-second-device) a príde všetko, čo sa synchronizovalo. Obnova počká na túto prvú synchronizáciu, takže záloha, ktorú si prinesieš, sa spáruje s tým, čo účet obsahuje, namiesto toho, aby sa pridala dvakrát. Čo sa nikdy nesynchronizovalo, žije iba v starom telefóne, takže najprv skontroluj, že pätička hovorí „Synced“, alebo si so sebou vezmi „Všetko, nešifrované (.zip)“ z Nastavenia > Zálohovanie > Ručné ([akú zálohu robiť](/sk/help/backup-strategy)).",
+        "Nový telefón preto začína prázdny: nainštaluj aplikáciu, [prihlás sa svojou frázou](/sk/help/add-second-device) a príde všetko, čo sa synchronizovalo. Obnova počká na túto prvú synchronizáciu, takže záloha, ktorú si prinesieš, sa spáruje s tým, čo účet obsahuje, namiesto toho, aby sa pridala dvakrát. Čo sa nikdy nesynchronizovalo, žije iba v starom telefóne, takže najprv skontroluj, že pätička hovorí „Synchronizované“, alebo si so sebou vezmi „Všetko, nešifrované (.zip)“ z Nastavenia > Zálohovanie > Ručné ([akú zálohu robiť](/sk/help/backup-strategy)).",
         "Priamy prenos z telefónu na telefón pri prvom nastavení je niečo iné: niektoré telefóny pri ňom presunú dáta aplikácií a Android nedáva aplikácii žiadny spoľahlivý spôsob, ako to odmietnuť. Tá kópia tvoje dve zariadenia nikdy neopustí, takže starý telefón potom vymaž."
+      ]
+    },
+    "ios-backup": {
+      "q": "Sú moje poznámky súčasťou zálohy môjho iPhonu?",
+      "a": [
+        "Nie. Aplikácia pre iPhone drží svoje dáta mimo záloh telefónu, takže nič z nich nedôjde do zálohy iCloud ani do zálohy, ktorú urobíš v počítači. Patria sem aj položky, ktoré si do aplikácie zdieľal a ktoré ešte neprezrela. Dôvodom je kľúč, nie poznámky: tam, kde máš zvolené **Dôverovať tomuto zariadeniu**, zostáva tvoja obnovovacia fráza na tom zariadení kvôli trvalému prihláseniu a záloha nie je miesto pre kľúč, ktorý dešifruje tvoje poznámky.",
+        "Nový iPhone preto začína prázdny: nainštaluj aplikáciu, [prihlás sa frázou](/sk/help/add-second-device) a príde všetko, čo sa synchronizovalo. To, čo sa nikdy nesynchronizovalo, je iba na starom telefóne, takže najprv skontroluj, či päta hovorí „Synchronizované“, alebo si prenes „Všetko, nešifrované (.zip)“ z Nastavenia > Zálohovanie > Ručné ([akú zálohu urobiť](/sk/help/backup-strategy))."
       ]
     },
     "print": {
@@ -1003,8 +1094,8 @@
     "storage-after-delete": {
       "q": "Prečo sa po odstránení súborov nezmenšilo využité miesto v mojom úložisku?",
       "a": [
-        "Tvoje miesto je už voľné. V okamihu, keď sa odstránenie synchronizuje, tieto bajty sa prestanú počítať [do tvojho limitu](/sk/help/storage-usage), na serveri aj na tomto zariadení. Ak ukazovateľ stále zobrazuje starú hodnotu, stlač ikonu obnovenia vedľa neho: prepočíta úložisko zo servera a vynechá všetko, čo čaká na odstránenie. Zariadenie, ktoré bolo offline, si ponechá vlastný posledný údaj, kým sa nesynchronizuje.",
-        "„Niekoľko dní“, o ktorých aplikácia hovorí, sa týka samotného zašifrovaného súboru, nie tvojho limitu, a to čakanie je zámerné. Odstránenie súboru z úložiska je trvalé, bez koša, z ktorého by sa dal získať späť. Zariadenie, ktoré ešte nedokončilo synchronizáciu, má neúplný obraz tvojich poznámok, a mohlo by teda odstrániť obrázok, ktorý stále zobrazuje iná poznámka. Súbor preto čaká aspoň 24 hodín a odstráni ho až zariadenie, ktoré dokončilo čistú synchronizáciu. Trpezlivosť ťa nič nestojí, pretože miesto sa ti pripísalo v deň odstránenia."
+        "Miesto sa vráti približne o deň po odstránení. Odstránený súbor sa stále počíta [do tvojho limitu](/sk/help/storage-usage), kým sa samotný zašifrovaný súbor neodstráni z úložiska, na serveri aj na tomto zariadení. Keď sa to stane, stlač ikonu obnovenia vedľa ukazovateľa, ak stále zobrazuje starú hodnotu: prepočíta úložisko zo servera. Zariadenie, ktoré bolo offline, si ponechá vlastný posledný údaj, kým sa nesynchronizuje.",
+        "To čakanie na zašifrovaný súbor je zámerné. Odstránenie súboru z úložiska je trvalé, bez koša, z ktorého by sa dal získať späť. Zariadenie, ktoré ešte nedokončilo synchronizáciu, má neúplný obraz tvojich poznámok, a mohlo by teda odstrániť obrázok, ktorý stále zobrazuje iná poznámka. Súbor preto čaká aspoň 24 hodín a odstráni ho až zariadenie, ktoré dokončilo čistú synchronizáciu. Dovtedy sa stále počíta, preto odstraňuj skôr, keď si blízko svojho limitu."
       ]
     },
     "spoiler-text": {
@@ -1048,7 +1139,7 @@
         "Áno. Otvor Nastavenia > Editor a pod položkou **Písmo poznámok** vyber Sans, Serif alebo Mono. Potom hneď pod ňou otvor **Písmo pre Sans** (alebo Serif, či Mono) a vyber písmo. Poznámky sa zmenia okamžite. Každé z týchto troch môže mať vlastné písmo. Voľba zostáva v tomto zariadení, pretože každý počítač má vlastné písma, a do tvojich poznámok sa nič nezapisuje.",
         "Zoznam ukazuje iba bežné písma. Prehliadače webovej stránke nepovedia, aké písma máš, pretože by sa tento zoznam dal použiť na sledovanie. Aplikácia preto vyskúša zoznam známych písem a zobrazí tie, ktoré nájde. Ak tvoje písmo v zozname nie je, môže stále fungovať:",
         "- Do vyhľadávacieho poľa napíš presný názov písma, napríklad `Fira Code`, a vyber riadok, ktorý ho ponúka. Názov sa musí zhodovať s názvom písma v tvojom počítači vrátane medzier.\n- V prehliadačoch Chrome a Edge vyber **Zobraziť všetky písma v tomto zariadení** a povoľ to. Zoznam potom obsahuje každé písmo, ktoré máš.\n- Ak riadok pod poľom hlási, že písmo sa nenašlo, skontroluj najprv pravopis. Safari dovoľuje webovým stránkam používať iba písma, ktoré boli súčasťou tvojho Macu, nie písma, ktoré si nainštaloval sám.",
-        "Písmo vybrané na paneli nástrojov má stále prednosť pred týmto nastavením a bloky kódu si ponechávajú vlastné písmo."
+        "Písmo vybrané na lište pre niekoľko slov má stále prednosť pred týmto nastavením a jeho Sans, Serif alebo Mono používa písmo, ktoré si preň nastavíš tu. Bloky kódu si ponechávajú vlastné písmo."
       ]
     },
     "format-bar": {
@@ -1114,7 +1205,7 @@
         "Áno. Napíš `=` do bunky tabuľky, vyber funkciu alebo napíš vzorec sám. Bunka namiesto textu ukáže výsledok a každý výsledok sa prepočíta hneď, ako zmeníš bunku, z ktorej vychádza. Bunky sa označujú písmenom stĺpca a číslom riadka, pričom hlavička je riadok 1, takže tvoj prvý riadok s údajmi je riadok 2. Výsledky fungujú v každom účte; výber z ponuky je v Pro.",
         "Ak chceš vyskúšať všetko naraz, stiahni si ukážkovú poznámku, potom otvor Nastavenia > Prenos > Import, zvoľ **Súbory Markdown** a vyber súbor.",
         "[Ukážková poznámka (.md)](/marketing/table-formulas-examples.md)",
-        "Toto sú funkcie a dajú sa kombinovať s `+`, `-`, `*`, `/` a zátvorkami:",
+        "Toto sú funkcie a dajú sa kombinovať s `+`, `-`, `*`, `/`, `^` pre mocninu a zátvorkami:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` a `COUNT` pracujú s rozsahom, napríklad `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` a `LOG` pracujú s jednou hodnotou, napríklad `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` a `PHI` sú konštanty a `RAND` vráti náhodné číslo\n- `=B7-B2` odpočíta jednu bunku od druhej a `=SUM(B2:B10)*0.2` vypočíta percento zo súčtu",
         "Klikni na bunku, ktorá ukazuje výsledok, a vzorec sa vráti, pripravený na úpravu. Poznámka ukladá samotný vzorec, nikdy výsledok, takže export aj akákoľvek iná aplikácia na Markdown ukážu `=SUM(B2:B10)` presne v tvare, v akom ho zadáš."
       ]
@@ -1143,7 +1234,7 @@
     "share-into-app": {
       "q": "Môžem zdieľať text alebo odkaz do PrivacyNotes z inej aplikácie?",
       "a": [
-        "Áno, na iPhone, iPade a Androide, ako beta. Ťukni v ľubovoľnej aplikácii na tlačidlo zdieľania a vyber PrivacyNotes. [Webový odkaz sa stane záložkou](/sk/help/bookmarks) s názvom stránky, text novou poznámkou a obrázky a súbory skončia v Súboroch. Odkaz, ktorý už máš uložený, sa zobrazí namiesto toho, aby sa uložil dvakrát. Zdieľané položky prídu bez priečinka a značky, takže ich roztriediš, keď sa ti to hodí.",
+        "Áno, na iPhone, iPade a Androide. Ťukni v ľubovoľnej aplikácii na tlačidlo zdieľania a vyber PrivacyNotes. [Webový odkaz sa stane záložkou](/sk/help/bookmarks) s názvom stránky, text novou poznámkou a obrázky a súbory skončia v Súboroch. Odkaz, ktorý už máš uložený, sa zobrazí namiesto toho, aby sa uložil dvakrát. Zdieľané položky prídu bez priečinka a značky, takže ich roztriediš, keď sa ti to hodí.",
         "Na Androide sa aplikácia najprv opýta: vypíše, čo prišlo, a uloží to, až keď vyberieš **Uložiť všetko**, alebo to zahodí cez **Zahodiť**. Na iPhone a iPade uloženie potvrdí karta **Uložené do PrivacyNotes**. Každý súbor sa riadi tvojím [limitom nahrávania](/sk/help/attachment-limits) a zdieľanie počká, kým sa prihlásiš a odomkneš aplikáciu."
       ]
     },
@@ -1157,7 +1248,7 @@
     "session-expired": {
       "q": "Prečo aplikácia hlási „Relácia vypršala“?",
       "a": [
-        "Znamená to, že náš server už neprijíma prihlásenie tohto zariadenia, takže sa synchronizácia zastaví. Slabé pripojenie ani výpadok servera to nikdy nespôsobí: aplikácia sa pred zobrazením správy ešte raz spýta servera. Tvoje poznámky sú v bezpečí v tomto zariadení.",
+        "Znamená to, že náš server už neprijíma prihlásenie tohto zariadenia, takže sa synchronizácia zastaví. Slabé pripojenie ani výpadok servera to nikdy nespôsobí: aplikácia sa pred zobrazením správy ešte raz spýta servera. Prihlásenie sa tiež skončí, keď toto zariadenie neotvorilo PrivacyNotes 60 dní. Tvoje poznámky sú v bezpečí v tomto zariadení.",
         "Klikni na **Prihlásiť sa znova**. Aplikácia sa najprv opýta, [či máš uloženú obnovovaciu frázu](/sk/help/lost-phrase), pretože na návrat potrebuješ buď ju, alebo spôsob prihlásenia, cez ktorý bol účet založený. Poznámky, ktoré sa ešte nesynchronizovali, zostanú v zariadení a po prihlásení sa synchronizujú. To isté okno ťa upozorní, [ak sa nahrávanie niektorých súborov ešte nedokončilo](/sk/help/upload-failed), pretože tie sa pri odhlásení odstránia."
       ]
     },
@@ -1354,7 +1445,7 @@
     "tracker-privacy": {
       "q": "Kto môže čítať moje údaje zo sledovaných hodnôt a liekov?",
       "a": [
-        "Údaje zo sledovaných hodnôt sú v tvojich záznamoch v denníku, ktoré sú šifrované na tvojom zariadení a pri synchronizácii zostávajú šifrované. Zoznam liekov a vlastné sledované hodnoty sú v tvojich nastaveniach. Synchronizujú sa šifrované ako tvoje poznámky, ale kópia, ktorú o nich drží toto zariadenie, zatiaľ nie je šifrovaná, takže ju tam chránia šifrovanie disku a zámka obrazovky. Štatistiky, [PDF pre lekára](/sk/help/doctor-pdf), [prompt pre AI](/sk/help/ai-prompt) aj oba stiahnuteľné súbory sa vytvárajú na tvojom zariadení.",
+        "Údaje zo sledovaných hodnôt sú v tvojich záznamoch v denníku, ktoré sú šifrované na tvojom zariadení a pri synchronizácii zostávajú šifrované. Zoznam liekov a vlastné sledované hodnoty sú v tvojich nastaveniach. Synchronizujú sa šifrované ako tvoje poznámky a kópia, ktorú o nich drží toto zariadenie, je uzamknutá kľúčom z tvojej frázy, rovnako ako tvoje poznámky. Štatistiky, [PDF pre lekára](/sk/help/doctor-pdf), [prompt pre AI](/sk/help/ai-prompt) aj oba stiahnuteľné súbory sa vytvárajú na tvojom zariadení.",
         "[Pri vlastnej správe kľúča](/sk/help/threat-model-levels) server nedrží nič, čo ich otvorí. Ak je tvoj účet založený cez Google, Apple alebo GitHub a zvolená je možnosť „Jednoducho a pohodlne“, tvoja fráza je uložená na našom serveri pod naším kľúčom; Nastavenia > Účet > Správa kľúča ukazuje tvoj režim a umožňuje ho prepnúť. Viac v [čo vidí PrivacyNotes](/sk/help/what-can-you-see)."
       ]
     },
@@ -1362,7 +1453,7 @@
       "q": "Čo obsahuje úplná záloha?",
       "a": [
         "Všetko, čo si vytvoril: poznámky, záznamy denníka so všetkými hodnotami, ktoré si zapísal, úlohy, udalosti, položky trezora, záložky, kontakty, kresby, obrázky, zvuk a súbory, aj tie v koši. Obsahuje aj to, čo si nastavil ručne: priečinky a ich farby, pripnuté značky, vlastné motívy, tvoje lieky, vlastné sledované hodnoty, faktory a otázky na návyky, zapnuté sledované hodnoty a ich jednotky, odoberané kalendáre a rozloženie tvojho Domova.",
-        "Vynecháva PIN zámku aplikácie, históriu poznámok, zoznam tvojich zariadení a vzhľad aplikácie, napríklad motív a veľkosť textu. [Obnova](/sk/help/restore-backup) pridá, čo tvojmu účtu chýba, a nikdy nevráti zmenu, ktorú si urobil po zálohe. Ak chceš mať svoje sledované hodnoty v súbore, ktorý vieš otvoriť, použi **Stiahnuť JSON** v Nastavenia > Prenos > Sledované hodnoty ([súbory sledovaných hodnôt](/sk/help/tracker-json-csv))."
+        "Vynecháva PIN zámku aplikácie, históriu poznámok, zoznam tvojich zariadení a vzhľad aplikácie, napríklad motív a veľkosť textu. [Obnova](/sk/help/restore-backup) pridá, čo tvojmu účtu chýba, a ponechá tvoje neskoršie úpravy. Poznámka presunutá do koša alebo odstránená po zálohe sa vráti. Ak chceš mať svoje sledované hodnoty v súbore, ktorý vieš otvoriť, použi **Stiahnuť JSON** v Nastavenia > Prenos > Sledované hodnoty ([súbory sledovaných hodnôt](/sk/help/tracker-json-csv))."
       ]
     }
   }

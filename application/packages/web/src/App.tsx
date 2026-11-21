@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useAuth } from './auth';
-import { consumePhraseFragment } from './qrSignIn';
-import { QrSignInPrompt } from './QrSignInPrompt';
+import { dropPhraseFragment } from './qrSignIn';
+import { QrLinkNotice } from './QrLinkNotice';
 import { LoadingScreen } from './LoadingScreen';
 import { LockScreen } from './LockScreen';
 import { OAuthRetryScreen } from './OAuthRetryScreen';
@@ -14,31 +14,39 @@ import {
   hasPinWrappedPhrase,
   hasStoredPhrase,
   onWrappedBlobChange,
+  sealLocalPinWrap,
   type PinWrapBlob,
+  type ReplacedPinWrap,
 } from './biometric';
-import { shouldPromptForAppLock, markAppUnlocked, clearPinUnlock, hasPin } from './pin';
+import { shouldPromptForAppLock, markAppUnlocked, clearPinUnlock, hasPin, holdPinWrapUpgrade } from './pin';
 import { clearPin, phraseMatches } from './pinRecovery';
-import { phraseOwnsThisDevice, switchWouldWipe } from './authStorage';
+import { phraseOwnsThisDevice } from './authStorage';
 import { phraseSignsFor } from './identity';
-import { clearManualLock, lockCurtainIsStale, manualLockArmed, startReLockWatch } from './appReLock';
+import { clearManualLock, lockCurtainIsStale, lockReloadKeptReminders, manualLockArmed, startReLockWatch } from './appReLock';
+import { lockReloadHeld, lockReloadsPage, reloadForLock } from './lockReload';
+import { exitWritesRun, flushEditorsForExit, tabEditWaits } from './flushStash';
+import { syncPassRunning } from './sync';
 import { startTrayMode } from './trayMode';
 import { ninjaKeySupported, startNinjaShortcut } from './ninjaShortcut';
 import { startNinjaHost } from './ninjaHost';
 import { finishLoginStart } from './openAtLogin';
 import { applyPrivacyScreen } from './privacyScreen';
+import { removedWhileLocked, wipeRemovedWhileLocked } from './lockRemovalCheck';
 import { loadLocalSettings, saveLocalSettings } from './userSettings';
 import { isTrustedDevice } from './trustStorage';
 import { isDemoMode } from './demo';
-import { detectPlatform, isOpenLinkModifier, warmAuthEdgeFunctions } from './devices';
+import { detectPlatform, isOpenLinkModifier } from './devices';
 import { isApexHost, usesOfficialServer } from './hosts';
 import { isTouchPointer } from './useIsMobile';
 import { readLinkModifier } from './theme';
 import { isComputerBrowser, openShortcutInApp, peekPendingShortcut } from './noteShortcut';
+import { isAppRelativeNewWindowLink, pluginOpensThisApp } from './openExternal';
 import { localeFromPath } from './localeRoutes';
 import { setLanguage } from './languages';
 import { applyMarketingSeo } from './seo';
 import i18n from './i18n';
-import { ConfirmModal } from './ConfirmModal';
+import { stopAllJobs } from './plugins/jobs';
+import { closePluginSheet } from './plugins/pluginDoors';
 
 /** Native (Tauri) apps never show the marketing page; see LandingPage. */
 const IS_DESKTOP = detectPlatform() !== 'web';
@@ -55,17 +63,14 @@ const APEX_APP_RETIRED =
   isApexHost() && !isDemoMode() && detectPlatform() === 'web';
 
 // True when this page load is an OAuth redirect return: the URL still carries
-// what supabase-js is about to consume, a PKCE `?code=` in the query (the
-// legacy implicit return carried `#access_token=` in the hash). Captured at
-// module eval, before supabase-js strips it (it reads window.location.href
-// asynchronously behind navigator.locks - see the boot effect in auth.tsx).
-// Used to hold the loading screen through callback processing instead of
-// flashing the landing page.
+// a PKCE `?code=` in the query. Every flow is PKCE (auth.tsx), so no token
+// arrives in the hash. Captured at module eval, before the callback handler
+// strips it. Used to hold the loading screen through callback processing
+// instead of flashing the landing page.
 
 const OAUTH_CALLBACK_AT_BOOT =
   typeof window !== 'undefined' &&
-  (window.location.hash.includes('access_token=') ||
-    new URLSearchParams(window.location.search).has('code'));
+  new URLSearchParams(window.location.search).has('code');
 
 // Code-split the two big halves of the app: visitors never parse the
 // notes app (TipTap, sync, modals) and returning users never parse the
@@ -115,7 +120,7 @@ if (hasStoredPhrase()) {
 const ShortcutSignInCard = lazy(() => import('./ShortcutOffer').then((m) => ({ default: m.ShortcutSignInCard })));
 
 export default function App() {
-  const { auth, signInWithPhrase, unlockLocally, finishPhraseChangeWithPin } = useAuth();
+  const { auth, supabase, forceSignOut, signInWithPhrase, unlockLocally, finishPhraseChangeWithPin } = useAuth();
 
   // Explicit per-language marketing URL (/de, /en, ...). Locale slugs are the
   // public marketing site and stay browsable at that URL for everyone -
@@ -180,7 +185,14 @@ export default function App() {
     const onClick = (e: MouseEvent) => {
       if (e.defaultPrevented || e.button !== 0) return;
       const anchor = (e.target as Element | null)?.closest('a');
-      const href = anchor?.getAttribute('href');
+      // Trimmed, as the cleaner and the plugin's script read it (beta #200).
+      const href = anchor?.getAttribute('href')?.trim();
+      // A click the plugin's own script would turn into an address of the
+      // app itself does nothing, on every platform (beta issues 169, 200).
+      if (anchor && (pluginOpensThisApp(anchor, e) || (href && isAppRelativeNewWindowLink(anchor, href)))) {
+        e.preventDefault();
+        return;
+      }
       // tel: and sms: ride along with mailto:: a contact's number is a
       // handoff to the dialer, which the WebView cannot make on its own.
       // Spec: docs/internal/specs/contacts-pillar.md (section 9, tap to call)
@@ -255,15 +267,16 @@ export default function App() {
   // old behaviour: show onboarding immediately when there's nothing to
   // restore.
   //
-  // Exception on web: an OAuth redirect return (access_token in the hash)
+  // Exception on web: an OAuth redirect return (`?code=` in the query)
   // also holds the loading screen. Without it, the landing page renders
   // for the several seconds hydrateFromOAuthSession spends on its edge
   // function round-trips - which reads as a silently failed sign-in, and
   // invites the user into a manual phrase entry that races the pending
   // hydration (its branch-b signOut then tears down the in-flight
   // handshake - the "Session is missing the account link" error). If the
-  // callback token is dead, the 12 s fallback in auth.tsx flips the state
-  // to 'onboarding' and dismisses this screen.
+  // code exchange fails, `exchangeAndHydrate` in authOAuth.ts moves the
+  // state past 'loading' (the failed sign-in screen, or the sign-in
+  // options for a cancelled step) and dismisses this screen.
   const showLoading =
     auth.status === 'loading' &&
     (hasSession || IS_DESKTOP || OAUTH_CALLBACK_AT_BOOT);
@@ -312,6 +325,13 @@ export default function App() {
     applyPrivacyScreen(loadLocalSettings().appLockEnabled);
   }, []);
 
+  // In the apps a PIN wrap written before the device-key seal moves under it
+  // once (pinWrapSeal.ts); every later write seals on its own.
+  // Spec: docs/internal/plans/pin-wrap-hardening.md (section 5.4, C2-1)
+  useEffect(() => {
+    void sealLocalPinWrap();
+  }, []);
+
   // Keep running in the tray: push the stored switch to the desktop shell.
   // Ninja from any app: push the key, and answer the box (#694). A start at
   // sign-in shows as Start minimized says (Settings > System).
@@ -329,17 +349,73 @@ export default function App() {
   // half-booted session would fight the boot check above. The watch itself
   // decides whether this device has a door back in.
   // Spec: docs/contrib/biometric-unlock.md (section 3.3 re-lock)
+  //
+  // With the app lock armed and no phrase at rest, the lock reloads the page
+  // (lockReload.ts, lockReloadsPage): the open editors write their last typing
+  // first, while they are still mounted (their unmount flush writes no flush
+  // stash), and a plain screen covers the wait for the save and the sync pass.
+  // A job that holds the reload (an import) keeps the lock screen up until it
+  // ends. Leaving the lock meanwhile cancels the reload (lockReloadSeq,
+  // lockedNow).
+  // Spec: docs/internal/plans/phrase-lock-hardening.md (section 3.2)
+  const [lockReloading, setLockReloading] = useState(false);
+  const lockReloadSeq = useRef(0);
+  // Read during the wait: the unlock's render clears it before the effect
+  // below bumps the sequence, so a hold that ends in between reloads nothing.
+  const lockedNow = useRef(locked);
+  lockedNow.current = locked;
   useEffect(() => {
     if (locked || auth.status !== 'authenticated') return;
-    return startReLockWatch(() => setLocked(true));
+    return startReLockWatch(() => {
+      if (!lockReloadsPage()) {
+        setLocked(true);
+        return;
+      }
+      flushEditorsForExit();
+      const seq = ++lockReloadSeq.current;
+      if (!lockReloadHeld()) setLockReloading(true);
+      lockedNow.current = true;
+      setLocked(true);
+      const cancelled = () => lockReloadSeq.current !== seq || !lockedNow.current;
+      void reloadForLock({
+        saveWaits: () => tabEditWaits() || exitWritesRun(),
+        syncRuns: syncPassRunning,
+        cancelled,
+        onQuiet: () => setLockReloading(true),
+        keep: () => import('./notesView/useReminders').then((m) => m.keepLockedPlan()),
+        reload: () => window.location.reload(),
+      }).then((reloaded) => {
+        // Offline by now, or out of the lock: the lock screen, as a curtain.
+        if (!reloaded && !cancelled()) setLockReloading(false);
+      });
+    });
   }, [locked, auth.status]);
+  // Out of the lock (an unlock, a curtain gone stale): a reload the lock had
+  // planned is no longer due.
+  useEffect(() => {
+    if (locked) return;
+    lockReloadSeq.current++;
+    setLockReloading(false);
+  }, [locked]);
+
+  // A plugin's work and its results end when the app locks, and the request
+  // of an open sheet goes with them, so no sheet opens again after the unlock.
+  // Spec: docs/internal/plans/plugins.md (section 3.1)
+  useEffect(() => {
+    if (locked) {
+      stopAllJobs();
+      closePluginSheet();
+    }
+  }, [locked]);
 
   // The lock screen replaces the notes view and its reminder timer: ring the
   // view's last plan from here while the lock is up (GitHub #667). A dynamic
   // import keeps it off the boot path; a plan exists only after the notes
   // view ran, and that view loaded the module already.
+  // After a lock's reload the page holds no session and no notes view; the
+  // plan that reload kept for this tab rings instead (lockReloadKeptReminders).
   useEffect(() => {
-    if (!locked || auth.status !== 'authenticated') return;
+    if (!locked || (auth.status !== 'authenticated' && !lockReloadKeptReminders())) return;
     let stop: (() => void) | null = null;
     let gone = false;
     void import('./notesView/useReminders').then((m) => { if (!gone) stop = m.ringWhileLocked(); });
@@ -348,10 +424,18 @@ export default function App() {
 
   // A locked app shuts the PIN gate behind it, so the person who unlocks the
   // app next meets the gate again at the first protected note.
+  // Any way out of the lock ends a lock the button armed, and only a tab that
+  // was locked has a way out. The mark is one key for the whole browser: a tab
+  // that starts unlocked (on a device that is not trusted, a new tab holds no
+  // session and no PIN, so it shows the sign-in screen) must leave it for the
+  // tab that is locked, or a reload of that tab opens with no PIN.
+  // Test: tests/lockAppSecondTab.test.ts
+  const lockedBefore = useRef(locked);
   useEffect(() => {
+    const leftTheLock = lockedBefore.current && !locked;
+    lockedBefore.current = locked;
     if (locked) clearPinUnlock();
-    // Any way out of the lock ends a lock the button armed.
-    else clearManualLock();
+    else if (leftTheLock) clearManualLock();
   }, [locked]);
 
   // A sign-out in another tab signs this one out and removes the wrapped
@@ -364,6 +448,36 @@ export default function App() {
   useEffect(() => {
     if (locked && lockCurtainIsStale(auth.status)) setLocked(false);
   }, [locked, auth.status]);
+
+  // A device its owner removed wipes while it is locked, when it is online:
+  // the notes view and its heartbeat do not run behind the lock, so the lock
+  // screen asks once when it comes up and again when the device comes online
+  // or back to the screen (beta.privacynotes.app #214 item 10). The check
+  // reads and writes nothing, so it is no activity for the dead man's switch.
+  useEffect(() => {
+    if (!locked) return;
+    let gone = false;
+    let wiping = false;
+    const check = async () => {
+      if (wiping || !(await removedWhileLocked(supabase)) || gone || wiping) return;
+      wiping = true;
+      const live = authStatusRef.current === 'authenticated';
+      await wipeRemovedWhileLocked(live ? () => forceSignOut('device revoked') : null);
+      // The doors are gone with the wipe; a start from nothing shows the
+      // signed-out screen.
+      if (!live) window.location.reload();
+    };
+    void check();
+    const again = () => { if (document.visibilityState === 'visible') void check(); };
+    window.addEventListener('online', again);
+    document.addEventListener('visibilitychange', again);
+    return () => {
+      gone = true;
+      window.removeEventListener('online', again);
+      document.removeEventListener('visibilitychange', again);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locked]);
 
   // Listen for cross-tab changes to wrapped blobs (e.g. biometric
   // disabled in another tab).
@@ -435,8 +549,14 @@ export default function App() {
    * so an upgrade the account never learned of would be undone on the next
    * pass and redone on the next unlock.
    */
-  function applyPinWrapUpgrade(blob: PinWrapBlob) {
-    saveLocalSettings({ ...loadLocalSettings(), ...blob });
+  function applyPinWrapUpgrade(blob: PinWrapBlob, replaced: ReplacedPinWrap) {
+    // Held, not written: the first settings pass after the unlock that reads
+    // the account's row saves it, and only over the wrap that opened
+    // (saveHeldPinRehash in pinRecovery.ts). Written here, before any pull,
+    // it went out as a change made on this device, and a cache with no merge
+    // base pushed it over a newer secret.
+    // Spec: docs/internal/plans/pin-wrap-hardening.md (section 3)
+    holdPinWrapUpgrade({ blob, replaced });
   }
 
   async function runUnlockSignIn(phrase: string) {
@@ -553,97 +673,25 @@ export default function App() {
     return true;
   }
 
-  // Consume any `#phrase=…` fragment exactly once on mount. This also
-  // blanks the fragment out of the address bar immediately - we don't
-  // want the master secret sitting in the URL longer than needed.
+  // Consume any `#phrase=…` fragment once on mount: it no longer signs in.
+  // dropPhraseFragment clears it from the address bar and answers true when
+  // it held a valid phrase (an old sign-in QR read by a camera app); the
+  // sign-in screen then says what the browser history kept. Elsewhere (signed
+  // in, locked) it is dropped silently.
+  // Spec: docs/internal/plans/qr-signin-content.md (3.3)
+  const [qrLinkOpened, setQrLinkOpened] = useState(() => dropPhraseFragment());
+  // A signed-in or locked device drops it silently: the notice must not
+  // wait for a later sign-out in this tab.
+  useEffect(() => {
+    if (qrLinkOpened && auth.status === 'authenticated') setQrLinkOpened(false);
+  }, [qrLinkOpened, auth.status]);
+
   // A shortcut that waits for sign-in offers the desktop app first, in a
   // computer browser. Spec: docs/internal/specs/note-shortcuts.md (6.2)
   // Read on every render, so a target the notes view already opened never
   // shows on a later sign-in screen.
   const [shortcutCardOpen, setShortcutCardOpen] = useState(isComputerBrowser);
   const shortcutCard = shortcutCardOpen ? peekPendingShortcut() : null;
-  const [pendingSignIn, setPendingSignIn] = useState<string | null>(
-    () => consumePhraseFragment()
-  );
-  const [promptBusy, setPromptBusy] = useState(false);
-  const [promptError, setPromptError] = useState<string | null>(null);
-  // Set only after the server refuses a tokenless confirm for want of a
-  // challenge token. Until then the prompt runs no Turnstile at all -
-  // the link-pubkey gate's enforcement mode is not readable from the
-  // client, so its refusal is the only honest signal that a challenge
-  // is due.
-  const [promptCaptchaRequired, setPromptCaptchaRequired] = useState(false);
-  const [promptTrustDevice, setPromptTrustDevice] = useState(true);
-
-  // QR sign-in lands with a phrase fragment on a device that usually has
-  // no cached chunks. Warm the NotesView chunk and the sign-in edge
-  // functions while the user reads the confirm prompt, mirroring what
-  // Onboarding does for its auth flows, so the confirm hits warm isolates
-  // and the post-auth <Suspense> fallback resolves instantly.
-  useEffect(() => {
-    if (pendingSignIn) {
-      void import('./NotesView');
-      warmAuthEdgeFunctions();
-    }
-  }, [pendingSignIn]);
-
-  // Edge case: if the user arrives with a fragment while already
-  // authenticated (e.g. they scanned their own QR on a device that was
-  // still signed in), we just drop the fragment silently. Switching
-  // accounts from a QR is too risky without a proper "switch account"
-  // flow that also wipes local data first.
-  useEffect(() => {
-    if (pendingSignIn && auth.status === 'authenticated') {
-      setPendingSignIn(null);
-    }
-  }, [pendingSignIn, auth.status]);
-
-  // A sign-in link carries somebody's phrase, so opening one on a device that
-  // holds another account's data would clear that data with no question:
-  // the three other doors ask through `switchWouldWipe`, and this one did
-  // not. Asked here rather than in the provider for the reason the phrase
-  // screen asks in its own component (auth.tsx, askAccountSwitch).
-  const [askPendingSwitch, setAskPendingSwitch] = useState(false);
-  const pendingSwitchConfirmed = useRef(false);
-
-  async function handleConfirmPendingPhrase(captchaToken?: string) {
-    if (!pendingSignIn) return;
-    if (!pendingSwitchConfirmed.current && (await switchWouldWipe(pendingSignIn))) {
-      setAskPendingSwitch(true);
-      return;
-    }
-    setPromptBusy(true);
-    setPromptError(null);
-    const result = await signInWithPhrase(pendingSignIn, promptTrustDevice, false, captchaToken);
-    if (!result.ok) {
-      // The server wants a challenge token: put the widget on screen
-      // instead of an error the user cannot act on. Guarded on the flag
-      // so a token the server then rejects surfaces as a real error
-      // rather than re-arming a challenge that will refuse again.
-      if (result.captchaRequired && !promptCaptchaRequired) {
-        setPromptCaptchaRequired(true);
-        setPromptBusy(false);
-        return;
-      }
-      // A second challenge refusal carries the internal 'session_expired'
-      // taxonomy string as its message - show the generic failure copy
-      // instead of that raw token.
-      setPromptError(
-        result.captchaRequired
-          ? i18n.t('auth:signIn.failedUnexpectedly')
-          : result.error,
-      );
-      setPromptBusy(false);
-      return;
-    }
-    setPendingSignIn(null);
-    setPromptBusy(false);
-  }
-
-  function handleCancelPendingPhrase() {
-    setPendingSignIn(null);
-    setPromptError(null);
-  }
 
   // Retired apex only: the MoveScreen's stuck-state escape hatch. One
   // legacy boot of NotesView so a sync error or conflict can be fixed
@@ -675,6 +723,10 @@ export default function App() {
         }}
       />
     );
+  } else if (locked && lockReloading) {
+    // A lock that reloads the page: nothing to read and no door to open while
+    // the last save and the sync pass finish.
+    screen = <div className="min-h-dvh bg-surface-0" aria-busy="true" />;
   } else if (locked) {
     screen = (
       <LockScreen
@@ -709,43 +761,12 @@ export default function App() {
     screen = (
       <>
         <Onboarding />
-        {shortcutCard && !pendingSignIn && (
+        {shortcutCard && !qrLinkOpened && (
           <Suspense fallback={null}>
             <ShortcutSignInCard target={shortcutCard} onSignIn={() => setShortcutCardOpen(false)} />
           </Suspense>
         )}
-        {pendingSignIn && askPendingSwitch && (
-          <ConfirmModal
-            title={i18n.t('auth:signIn.switchTitle')}
-            confirmLabel={i18n.t('auth:signIn.switchConfirm')}
-            variant="info"
-            onConfirm={() => {
-              pendingSwitchConfirmed.current = true;
-              setAskPendingSwitch(false);
-              void handleConfirmPendingPhrase();
-            }}
-            // The confirm button runs onConfirm and then onClose
-            // (Onboarding.tsx has the same guard).
-            onClose={() => {
-              if (pendingSwitchConfirmed.current) return;
-              setAskPendingSwitch(false);
-            }}
-          >
-            {i18n.t('auth:signIn.switchBody')}
-          </ConfirmModal>
-        )}
-        {pendingSignIn && !askPendingSwitch && (
-          <QrSignInPrompt
-            phrase={pendingSignIn}
-            onConfirm={handleConfirmPendingPhrase}
-            onCancel={handleCancelPendingPhrase}
-            busy={promptBusy}
-            error={promptError}
-            captchaRequired={promptCaptchaRequired}
-            trustDevice={promptTrustDevice}
-            onTrustDeviceChange={setPromptTrustDevice}
-          />
-        )}
+        {qrLinkOpened && <QrLinkNotice onClose={() => setQrLinkOpened(false)} />}
       </>
     );
   } else if (auth.status === 'device_limit_reached') {

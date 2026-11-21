@@ -8,7 +8,7 @@
  * class.
  * Spec: docs/internal/plans/click-to-fill.md (section 4.6)
  */
-import { isUsable, isVisible } from './read';
+import { isUsable, isVisible, type Box } from './read';
 
 // Spec: docs/internal/plans/click-to-fill.md (section 4.6, step 11)
 const MARK_MS = 600;
@@ -75,6 +75,17 @@ export function focusField(el: HTMLInputElement): void {
  *  same letters and digits in the same order are the same code. */
 const sameCode = (shown: string, code: string): boolean => shown.replace(/[^\p{L}\p{N}]/gu, '') === code;
 
+/** After the scroll, the centre of the field's box lies inside its window. A
+ *  field still outside (`position: fixed` far to the right or below) is one
+ *  nobody can see, and the probe's on-top test skipped it (beta #217 item 4). */
+function centreInWindow(el: HTMLInputElement, box: Box): boolean {
+  const view = el.ownerDocument.defaultView;
+  if (!view) return false;
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  return x >= 0 && y >= 0 && x <= view.innerWidth && y <= view.innerHeight;
+}
+
 /**
  * Write `value` into `el`. A password is never cut to fit, a field that a
  * person cannot see or type into is never written, and a field that already
@@ -85,7 +96,8 @@ export async function writeField(el: HTMLInputElement, value: string, code = fal
   const holds = (): boolean => el.value === value || (code && sameCode(el.value, value));
   if (!el.isConnected || !isUsable(el)) return 'readonly';
   el.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-  if (!isVisible(el).visible) return 'readonly';
+  const { visible, box } = isVisible(el);
+  if (!visible || !centreInWindow(el, box)) return 'readonly';
   if (holds()) return 'same';
   if (el.maxLength >= 0 && el.maxLength < value.length) return 'tooLong';
   if (el.type === 'number' && !/^\d+$/.test(value)) return 'refused';

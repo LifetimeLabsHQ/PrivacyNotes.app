@@ -233,6 +233,8 @@
       "prevYear": "ปีก่อนหน้า",
       "nextYear": "ปีถัดไป"
     },
+    "seeEntries": "ดูรายการ",
+    "showInCalendar": "แสดงในปฏิทิน",
     "trackers": {
       "tapHint": "แตะเพื่อเปิดสำรวจ",
       "stopped": "หยุดแล้ว",

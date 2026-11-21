@@ -197,9 +197,12 @@ export function ConfirmModal({
           </div>
         ) : extra ? (
         // A second answer stacks the three in one column, the safest first,
-        // so no label shares a row and none wraps (#630).
+        // so no label shares a row and none wraps (#630). Cancel sits between
+        // the two, so a hurried click under the first never lands on the
+        // permanent one (#826).
         <div className="flex flex-col gap-2 pt-2">
           {confirmButton}
+          {resolvedCancelLabel !== null && cancelButton}
           <Button action="delete" variant="dangerSoft" className="w-full justify-center" onClick={() => { extra.onSelect(); onClose(); }}>
             {extra.label}
             {enterConfirms && (
@@ -208,7 +211,6 @@ export function ConfirmModal({
               </span>
             )}
           </Button>
-          {resolvedCancelLabel !== null && cancelButton}
         </div>
         ) : (
         // A label never breaks inside its button; a long one (a longer

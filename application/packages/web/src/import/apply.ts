@@ -7,10 +7,39 @@ import { addToContactMatchIndex, contactMatches, emptyContactMatchIndex } from '
 import { SOURCE_IDENTITY_KEY } from '../schedule';
 import { normalizeJournalTrackers } from '../trackerTypes';
 import { compareStamps } from '../noteMerge';
+import { sectionOf } from '../sectionLock';
 import i18n from '../i18n';
+import { PUBKEY_OWNER_KEY } from '../authStorage';
+import { sha256Hex } from '../sha256Hex';
 import type { ApplyResult, ImportedNote, ParsedImport, StagedBlob } from './types';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:apply.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:apply.${key}`, options);
+
+/**
+ * The id a note of our own backup takes when the vault lacks it: derived from
+ * the account and the backup's id, so the same backup restored on two devices
+ * before either has uploaded makes one row, not two (beta #197 item 6). The
+ * second insert then meets the first on the server and settles on the equal
+ * row. Another account derives another id, so a backup from a previous
+ * account never collides with a row this one cannot see. A version 4 shape,
+ * so it passes every uuid check.
+ */
+export async function restoredId(account: string, backupId: string): Promise<string> {
+  const hex = (await sha256Hex(new TextEncoder().encode(`pn-restore-id-v1:${account}:${backupId}`))).slice(0, 32).split('');
+  hex[12] = '4';
+  hex[16] = ((parseInt(hex[16]!, 16) & 0x3) | 0x8).toString(16);
+  const h = hex.join('');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+/** The account this device's notes belong to, or null (the demo, or none yet). */
+export function localAccount(): string | null {
+  try {
+    return localStorage.getItem(PUBKEY_OWNER_KEY);
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Write a ParsedImport into the local Dexie store with dirty=1, so the next
@@ -73,7 +102,13 @@ export async function applyImport(
   // Every title is stored on one line, whichever importer read it and from
   // what: the matching below and the stored row both see it that way. See
   // oneLineTitle for why a line break cannot stay in a title.
-  let incoming = parsed.notes.map((n) => ({ ...n, title: oneLineTitle(n.title) }));
+  // A title is text. An importer hands on what the file holds, and a file
+  // can hold a number, a list or an object where a name belongs, while every
+  // reader of a stored title takes it for a string. A number keeps its
+  // digits; anything else that is not text is no title.
+  const titleText = (title: unknown): string =>
+    typeof title === 'string' ? title : typeof title === 'number' && Number.isFinite(title) ? String(title) : '';
+  let incoming = parsed.notes.map((n) => ({ ...n, title: oneLineTitle(titleText(n.title)) }));
   let skippedDuplicates = 0;
   // A note that carries its own id is matched on that id below, and the
   // match outranks these two lookalike rules: a contact from our own backup
@@ -175,9 +210,29 @@ export async function applyImport(
     const at = Date.parse(n.createdAt);
     return [n.type || 'note', Number.isFinite(at) ? String(at) : n.createdAt, n.title, n.body].join('\u0000');
   };
+  // The derived id of each note the vault lacks under its own id: a live row
+  // under it is an earlier restore of the same note, on this device or pulled
+  // from another; any row under it (a tombstone too) keeps it from being
+  // reused, and a fresh random id is taken instead.
+  const account = localAccount();
+  const derivedIds = new Map<string, string>();
+  if (account) {
+    for (const id of ownIds) if (!localById.has(id)) derivedIds.set(id, await restoredId(account, id));
+  }
+  const derivedRows = new Map<string, LocalNote | undefined>();
+  if (derivedIds.size > 0) {
+    const ids = [...derivedIds.values()];
+    const found = await db.notes.bulkGet(ids);
+    ids.forEach((id, i) => derivedRows.set(id, found[i]));
+  }
+  const derivedTaken = new Set<string>();
+  const derivedLive = (backupId: string): LocalNote | undefined => {
+    const row = derivedRows.get(derivedIds.get(backupId) ?? '');
+    return row && row.deleted !== 1 ? row : undefined;
+  };
   const localByContent = new Map<string, LocalNote[]>();
   if (incoming.some((n) => n.id && !localById.has(n.id))) {
-    const named = new Set(ownIds);
+    const named = new Set([...ownIds, ...derivedIds.values()]);
     for (const row of await db.notes.where('deleted').equals(0).toArray()) {
       if (named.has(row.id)) continue;
       const key = contentKey(row);
@@ -188,9 +243,16 @@ export async function applyImport(
   let unchanged = 0;
 
   const rows: LocalNote[] = incoming.flatMap((n) => {
-    // One copy in the vault answers for one note in the file.
-    const mine = n.id
-      ? localById.get(n.id) ?? localByContent.get(contentKey(n))?.shift()
+    // One copy in the vault answers for one note in the file. A file that
+    // gives a live item a type of another section would move it out of a
+    // shut section (a login out of the Vault), and its body would not fit
+    // the live type either: that copy comes in beside it under a fresh id,
+    // and the live row is left alone (beta #199 item 8).
+    const byId = n.id ? localById.get(n.id) : undefined;
+    const crosses = byId !== undefined && sectionOf({ type: n.type || 'note' }) !== sectionOf(byId);
+    const derived = n.id && !byId ? derivedLive(n.id) : undefined;
+    const mine = n.id && !crosses
+      ? byId ?? (derived && sectionOf({ type: n.type || 'note' }) === sectionOf(derived) ? derived : undefined) ?? localByContent.get(contentKey(n))?.shift()
       : undefined;
     const stamp = stampFromPast(n.updatedAt);
     const edited = stampFromPast(n.editedAt ?? n.updatedAt);
@@ -202,7 +264,9 @@ export async function applyImport(
     // backup from a previous account looks like after a lost phrase, because
     // the id is the table's primary key and the insert collides. A fresh id
     // syncs in both cases. The cost is that a purged note comes back as a
-    // new note rather than as itself.
+    // new note rather than as itself. That fresh id is derived from the
+    // account and the backup's id (restoredId), so two devices restoring the
+    // same file make the same row.
     if (mine) {
       // The vault already has this note. Keep whichever copy is newer, which
       // is the same rule sync applies between two devices. A restore is for
@@ -236,8 +300,13 @@ export async function applyImport(
       ? [...n.tags, sourceTag]
       : n.tags;
     const trashed = n.trashed ? 1 : 0;
+    // A note the vault lacks takes its derived id (restoredId), unless a row
+    // already holds that id, or another note of this file took it.
+    const derivedId = n.id ? derivedIds.get(n.id) : undefined;
+    const useDerived = !mine && derivedId !== undefined && !crosses && !derivedRows.get(derivedId) && !derivedTaken.has(derivedId);
+    if (useDerived) derivedTaken.add(derivedId);
     return {
-      id: mine ? mine.id : crypto.randomUUID(),
+      id: mine ? mine.id : useDerived ? derivedId : crypto.randomUUID(),
       title: n.title,
       body: n.body,
       tags,
@@ -264,8 +333,11 @@ export async function applyImport(
       deleted: 0,
       trashed,
       starred: n.starred ? 1 : 0,
-      locked: n.locked ? 1 : 0,
-      pinProtected: n.pinProtected ? 1 : 0,
+      // A file never lowers either flag on a note it replaces: a crafted zip
+      // that names a live note's id would take it out from behind the PIN
+      // (beta #154.1). The stricter of the two copies wins.
+      locked: n.locked || mine?.locked === 1 ? 1 : 0,
+      pinProtected: n.pinProtected || mine?.pinProtected === 1 ? 1 : 0,
       type: n.type || 'note',
       folderId: n.folderId ?? null,
       ...(n.archived ? { archived: 1 } : {}),

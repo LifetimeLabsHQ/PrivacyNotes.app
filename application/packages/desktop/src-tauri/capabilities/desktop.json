@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "desktop",
-  "description": "Desktop-only grants for the Markdown folder pillar, which picks a file or folder and then scans, reads, writes and renames plaintext notes inside it. Separate from default.json because the pillar reports itself unavailable on iOS and Android, so those builds were carrying grants with no feature behind them. What stayed in default.json is what `saveBlob` needs on every platform: a Save As dialog, a write, and the stat that proves the bytes landed, which Android's create-document flow makes load-bearing rather than decorative. No fs grant carries an allow: each reaches only the runtime scope, which the folder picker widens to the folder the user chose, Save As to the file, and take_pending_opens to a double-clicked file and its staging path, and which tauri-plugin-persisted-scope keeps across restarts. A static $HOME/** allow left the deny list as the only guard, and a deny glob folds ASCII case only, so on APFS a folded spelling such as LaunchAgentſ (U+017F) created a new file in LaunchAgents. The deny list stays as a second layer, refused whatever the allow says, because a deny always wins: credential directories that no notes folder is, the places where a written file runs on its own or replaces the installed app (LaunchAgents, ~/Applications, ~/bin, which Ubuntu puts first on PATH, AppData with the Startup folder and the per-user install, the PowerShell profile folders), and the app's own data with the webview profile, each as the folder itself and as everything under it. Only $HOME paths, because default.json carries the same list and also reaches the phone builds, where a path that does not resolve fails the whole grant. The four window grants size and place the file window, a Markdown file opened from the file manager while the app was closed (markdownFolder/fileWindow.ts). `plugins.fs.requireLiteralLeadingDot` is true, so a picked folder's pattern does not reach a dot-path inside it; a hidden folder the user picks is covered, because its own pattern spells the dot out. Pinned by tests/fs_scope_casefold.rs (cargo test) and tests/desktopCapabilities.test.ts.",
+  "description": "Desktop-only grants for the Markdown folder pillar, which picks a file or folder and then scans, reads, writes and renames plaintext notes inside it. Separate from default.json because the pillar reports itself unavailable on iOS and Android, so those builds were carrying grants with no feature behind them. What stayed in default.json is what `saveBlob` needs on every platform: a Save As dialog, a write, and the stat that proves the bytes landed, which Android's create-document flow makes load-bearing rather than decorative. No fs grant carries an allow: each reaches only the runtime scope, which the folder picker widens to the folder the user chose, Save As to the file, and take_pending_opens to a double-clicked file and its staging path, and which tauri-plugin-persisted-scope keeps across restarts. A static $HOME/** allow left the deny list as the only guard, and a deny glob folds ASCII case only, so on APFS a folded spelling such as LaunchAgentſ (U+017F) created a new file in LaunchAgents. The deny list stays as a second layer, refused whatever the allow says, because a deny always wins: credential directories that no notes folder is, the places where a written file runs on its own or replaces the installed app (LaunchAgents, ~/Applications, ~/bin, which Ubuntu puts first on PATH, AppData with the Startup folder and the per-user install, the PowerShell profile folders), and the app's own data with the webview profile, each as the folder itself and as everything under it. Only $HOME paths, because default.json carries the same list and also reaches the phone builds, where a path that does not resolve fails the whole grant. A file is read by the app command read_opened_file (app-commands.json, src/opened_file.rs), not fs:allow-read-file, so the regular-file check and the size cap act on one opened handle (beta issue 168). The four window grants size and place the file window, a Markdown file opened from the file manager while the app was closed (markdownFolder/fileWindow.ts). `plugins.fs.requireLiteralLeadingDot` is true, so a picked folder's pattern does not reach a dot-path inside it; a hidden folder the user picks is covered, because its own pattern spells the dot out. Pinned by tests/fs_scope_casefold.rs (cargo test) and tests/desktopCapabilities.test.ts.",
   "platforms": [
     "macOS",
     "windows",
@@ -99,6 +99,24 @@
         },
         {
           "path": "$HOME/Library/WebKit/**"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes/**"
         }
       ]
     },
@@ -185,92 +203,24 @@
         },
         {
           "path": "$HOME/Library/WebKit/**"
-        }
-      ]
-    },
-    {
-      "identifier": "fs:allow-read-file",
-      "deny": [
-        {
-          "path": "$HOME/.ssh/**"
         },
         {
-          "path": "$HOME/.gnupg/**"
+          "path": "$HOME/.config/app.privacynotes"
         },
         {
-          "path": "$HOME/.aws/**"
+          "path": "$HOME/.config/app.privacynotes/**"
         },
         {
-          "path": "$HOME/.kube/**"
+          "path": "$HOME/.local/share/app.privacynotes"
         },
         {
-          "path": "$HOME/.docker/**"
+          "path": "$HOME/.local/share/app.privacynotes/**"
         },
         {
-          "path": "$HOME/.config/gh/**"
+          "path": "$HOME/.cache/app.privacynotes"
         },
         {
-          "path": "$HOME/.local/share/keyrings/**"
-        },
-        {
-          "path": "$HOME/Library/LaunchAgents"
-        },
-        {
-          "path": "$HOME/Library/LaunchAgents/**"
-        },
-        {
-          "path": "$HOME/Applications"
-        },
-        {
-          "path": "$HOME/Applications/**"
-        },
-        {
-          "path": "$HOME/bin"
-        },
-        {
-          "path": "$HOME/bin/**"
-        },
-        {
-          "path": "$HOME/AppData"
-        },
-        {
-          "path": "$HOME/AppData/**"
-        },
-        {
-          "path": "$HOME/Documents/WindowsPowerShell"
-        },
-        {
-          "path": "$HOME/Documents/WindowsPowerShell/**"
-        },
-        {
-          "path": "$HOME/Documents/PowerShell"
-        },
-        {
-          "path": "$HOME/Documents/PowerShell/**"
-        },
-        {
-          "path": "$HOME/Library/Application Support/app.privacynotes"
-        },
-        {
-          "path": "$HOME/Library/Application Support/app.privacynotes/**"
-        },
-        {
-          "path": "$HOME/Library/Caches/app.privacynotes"
-        },
-        {
-          "path": "$HOME/Library/Caches/app.privacynotes/**"
-        },
-        {
-          "path": "$HOME/Library/Logs/app.privacynotes"
-        },
-        {
-          "path": "$HOME/Library/Logs/app.privacynotes/**"
-        },
-        {
-          "path": "$HOME/Library/WebKit"
-        },
-        {
-          "path": "$HOME/Library/WebKit/**"
+          "path": "$HOME/.cache/app.privacynotes/**"
         }
       ]
     },
@@ -357,6 +307,24 @@
         },
         {
           "path": "$HOME/Library/WebKit/**"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes/**"
         }
       ]
     },
@@ -443,6 +411,24 @@
         },
         {
           "path": "$HOME/Library/WebKit/**"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes/**"
         }
       ]
     },
@@ -529,6 +515,24 @@
         },
         {
           "path": "$HOME/Library/WebKit/**"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes/**"
         }
       ]
     },
@@ -615,6 +619,24 @@
         },
         {
           "path": "$HOME/Library/WebKit/**"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes/**"
         }
       ]
     }

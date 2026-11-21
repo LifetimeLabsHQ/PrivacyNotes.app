@@ -47,9 +47,10 @@
     "title": "Protege os teus logins",
     "body": "Escolhe um PIN ou um código de acesso para este navegador. Precisas dele para desbloquear aqui os teus logins. É separado do da app.",
     "biometric": "Usar também o desbloqueio biométrico",
-    "biometricHelp": "Touch ID ou Windows Hello, além do PIN ou do código de acesso, que também funcionam sempre.",
+    "biometricHelp": "Touch ID ou Windows Hello, através de uma passkey para este navegador. O PIN ou o código de acesso também funcionam sempre.",
     "repeat": "Introduz outra vez",
-    "mismatch": "Os dois não coincidem. Tenta novamente."
+    "mismatch": "Os dois não coincidem. Tenta novamente.",
+    "commonPin": "Este PIN é demasiado fácil de adivinhar. Escolhe outro."
   },
   "clip": {
     "selection": "Seleção",
@@ -83,7 +84,7 @@
     "unlockPin": "Introduz o teu PIN",
     "unlockPasscode": "Introduz o teu código de acesso",
     "useBiometric": "Usar o desbloqueio biométrico",
-    "wrong_other": "Errado. Restam {{count}} tentativas antes de este navegador ser desligado.",
+    "wrong_other": "Errado. Restam {{count}} tentativas este mês antes de este navegador ser desligado.",
     "forSite": "Para {{site}}",
     "none": "Nenhum login para este site.",
     "off": "Os logins estão desativados neste navegador. Ativa Cofre quando o ligares.",
@@ -99,12 +100,15 @@
     "noMatch": "Nenhum login corresponde.",
     "openSite": "Abrir o site",
     "duplicate": "Já tens um login para este site com este nome de utilizador.",
-    "wrong_one": "Errado. Resta {{count}} tentativa antes de este navegador ser desligado."
+    "editTitle": "Editar login",
+    "saved": "Alterações guardadas.",
+    "wrong_one": "Errado. Resta {{count}} tentativa este mês antes de este navegador ser desligado."
   },
   "account": {
     "confirmDisconnect": "Desligar?",
     "revoked": "Este navegador já não está ligado",
-    "revokedBody": "Liga-o outra vez com um código novo da app."
+    "revokedBody": "Liga-o outra vez com um código novo da app.",
+    "pendingPasskey": "Uma passkey guardada neste navegador ainda não está no teu Cofre. Abre o PrivacyNotes e deixa-o sincronizar primeiro, ou a passkey perde-se."
   },
   "badge": {
     "problem": "Há algo que precisa da tua atenção"
@@ -147,7 +151,8 @@
     "unlockToCopy": "Desbloqueia para copiar",
     "omniboxDefault": "Procurar %s no teu cofre do PrivacyNotes",
     "omniboxUnlock": "Desbloqueia o PrivacyNotes para procurar",
-    "moreOptions": "Mais opções"
+    "moreOptions": "Mais opções",
+    "editNotSaved": "A tua alteração a {{name}} nunca chegou ao teu Cofre, por isso o login mantém os valores antigos. Edita-o outra vez para guardar a alteração."
   },
   "shortcuts": {
     "notSet": "Não definido",
@@ -194,5 +199,19 @@
     "biometricPin": "Introduz o teu PIN para o configurares.",
     "biometricPasscode": "Introduz o teu código de acesso para o configurares.",
     "biometricOff": "O desbloqueio biométrico está desativado"
+  },
+  "passkey": {
+    "saveTitle": "Guardar uma passkey para {{site}}?",
+    "useTitle": "Iniciar sessão em {{site}}",
+    "saveTo": "Guardar em",
+    "save": "Guardar no PrivacyNotes",
+    "other": "Usar outra app de passkeys",
+    "already": "Já tens uma passkey para {{site}} no PrivacyNotes.",
+    "saved": "Passkey guardada.",
+    "notSaved": "Não foi possível guardar a passkey. A app de passkeys do teu navegador assume o controlo.",
+    "maybeSaved": "A passkey pode ter sido guardada. Verifica o teu Cofre.",
+    "unlockFirst": "Desbloqueia para usares as tuas passkeys.",
+    "offer": "Oferecer passkeys",
+    "offerHelp": "Guarda e usa passkeys em sites."
   }
 }

@@ -2,6 +2,7 @@ import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from '
 import { useTranslation } from 'react-i18next';
 import { usePointMenuPosition } from './usePopoverPosition';
 import { VERSION } from './version';
+import { ExpandLabel } from './ui/ExpandLabel';
 import { BETA_COMMITS_URL, isBetaHost } from './hosts';
 import { LogoIcon } from './LogoIcon';
 import { Brand } from './Brand';
@@ -19,13 +20,14 @@ import { useFolderExpansion } from './folderTreeState';
 import { useRailItemDrop } from './useRailItemDrop';
 import type { FolderSortDir, FolderSortField } from './folders';
 import { ProGlyph, ProMark } from './UpgradeModal';
-import { Star, Hash, DotsThree, PencilSimple, Palette, Trash, X, CaretDown, PushPin, File, NotePencil, CheckFat, Shield, Key, Folder, Book, Notebook, FunnelSimple, ArrowsInLineVertical, ArrowsOutLineVertical, Eye, Download, Plus, Prohibit, Chat, Devices, Question, FileMd, Bookmarks, BellSimple, type Icon, PILLAR_GLYPHS } from './icons';
+import { Star, Hash, DotsThree, PencilSimple, Palette, Trash, X, CaretDown, PushPin, File, NotePencil, CheckFat, Shield, Key, Folder, Book, Notebook, FunnelSimple, ArrowsInLineVertical, ArrowsOutLineVertical, Eye, Download, Plus, Prohibit, Chat, Devices, Question, FileMd, Bookmarks, BellSimple, LockSimple, LockSimpleOpen, type Icon, PILLAR_GLYPHS } from './icons';
 import { KATANA_LINE, NinjaIcon } from './NinjaIcon';
 import { useUnseenAlerts } from './reminders';
 import { SPACE_ICONS, SpaceMoveLabel, SpaceSwitch } from './SpaceSwitch';
 import type { Space, SpaceView } from './spaces';
 import { keyText, sectionKeyText } from './shortcutMatch';
 import { isViewShown, type View } from './views';
+import type { SectionLockControls } from './sectionLock';
 import { exemptOpts } from './i18nExempt';
 import { SIDEBAR_ACTIVE, SIDEBAR_DROP_INSIDE, SIDEBAR_ROW_MENU_BUTTON } from './sidebarUI';
 import { marketingHomeHref, siteHref } from './siteLinks';
@@ -211,6 +213,9 @@ export interface TagsRailProps {
    *  table so the two surfaces cannot drift.
    *  Spec: docs/internal/specs/sidebar-views.md (moves the user to All first, so the row leaves at once) */
   onToggleHidden: (field: 'hiddenViews' | 'hiddenInAll', key: View) => void;
+  /** Section lock: each row's state, "Lock now", and the row menu. Owned by
+   *  NotesView, which holds the gate. Spec: docs/internal/specs/section-lock.md (section 4) */
+  sectionLock: SectionLockControls;
   setImportExportModal: (v: { open: false } | { open: true; tab: 'import' | 'export' | 'restore' }) => void;
 
   // Mobile tab index
@@ -287,11 +292,7 @@ function FooterAction({
           Touch renders icons only - the aria-label carries the name.
           Suppressed while badged: the caller's tip then carries both the
           button's name and the news, so the word isn't on screen twice. */}
-      {!badge && (
-        <span className="pn-sb-wide grid grid-cols-[0fr] transition-[grid-template-columns] duration-200 group-hover:grid-cols-[1fr] [@media(hover:none)]:hidden">
-          <span className="overflow-hidden whitespace-nowrap text-small font-medium opacity-0 transition-[opacity,padding] duration-200 group-hover:opacity-100 group-hover:ps-1">{label}</span>
-        </span>
-      )}
+      {!badge && <ExpandLabel className="pn-sb-wide">{label}</ExpandLabel>}
     </>
   );
   const action = href ? (
@@ -396,6 +397,7 @@ export function TagsRail(props: TagsRailProps) {
     onLooksLocked,
     onLooksSaved,
     onToggleHidden,
+    sectionLock,
     setImportExportModal,
     mobileTabIndex,
     markdownRail,
@@ -541,22 +543,59 @@ export function TagsRail(props: TagsRailProps) {
 
   // Trash scrolls with the tags and folds away with them. An empty trash has
   // no row, like Pinned and Archive, unless it is the open view.
-  const trashRow = (trashedCount > 0 || view === 'trash') && (
+  // Section lock: a protected row shows a lock where its count was. An open
+  // one draws "Lock now" as a sibling button over that slot, because a button
+  // inside the row's button is invalid. Spec: docs/internal/specs/section-lock.md (section 4)
+  const lockSlot = (key: View, normal: React.ReactNode) => {
+    const lock = sectionLock.stateOf(key);
+    if (lock === 'shut') {
+      return (
+        <span className="inline-flex text-pn-muted">
+          <LockSimple size={16} aria-hidden="true" />
+          <span className="sr-only">{t('tagsRail.sectionProtected')}</span>
+        </span>
+      );
+    }
+    if (lock === 'open') return <span className="inline-block w-4 h-4" aria-hidden="true" />;
+    return normal;
+  };
+  const lockNowButton = (key: View) => sectionLock.stateOf(key) === 'open' && (
+    // HoverLabel's host is `relative`, so the placement sits on a wrapper.
+    <div className="absolute end-2 top-1/2 -translate-y-1/2 flex">
+      <HoverLabel label={t('notes:editor.lockNow')} position="above" className="flex">
+        <button
+          type="button"
+          onClick={() => sectionLock.lockNow(key)}
+          aria-label={t('notes:editor.lockNow')}
+          className="inline-flex rounded p-0.5 -m-0.5 text-accent hover:text-pn transition"
+        >
+          <LockSimpleOpen size={16} aria-hidden="true" />
+        </button>
+      </HoverLabel>
+    </div>
+  );
+
+  const trashRow = (trashedCount > 0 || view === 'trash' || sectionLock.stateOf('trash') !== 'none') && (
     <div className="mt-2 -mx-3 px-3 border-t border-divider pt-2">
-      <button
-        onClick={() => handleSelectView('trash')}
-        className={viewBtnClass(view === 'trash')}
-      >
-        <span className="flex items-center gap-2">
-          <span className="text-accent inline-flex">
-            <Trash />
+      <div className="relative" onContextMenu={(e) => sectionLock.openMenu(e, 'trash')}>
+        <button
+          onClick={() => handleSelectView('trash')}
+          className={viewBtnClass(view === 'trash')}
+        >
+          <span className="flex items-center gap-2">
+            <span className="text-accent inline-flex">
+              <Trash />
+            </span>
+            {t('shell:pillars.trash')}
           </span>
-          {t('shell:pillars.trash')}
-        </span>
-        <span className="text-small text-pn-muted tabular-nums">
-          {trashedCount}
-        </span>
-      </button>
+          {lockSlot('trash', (
+            <span className="text-small text-pn-muted tabular-nums">
+              {trashedCount}
+            </span>
+          ))}
+        </button>
+        {lockNowButton('trash')}
+      </div>
     </div>
   );
 
@@ -809,7 +848,7 @@ export function TagsRail(props: TagsRailProps) {
     <div className="h-full flex flex-col min-h-0">
       {renderTagMenu()}
       {/* Brand row */}
-      <div className="group shrink-0 min-h-[3.5rem] lg:min-h-0 lg:h-14 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] lg:pt-0 border-b border-divider flex items-center gap-2">
+      <div className="group shrink-0 min-h-[3.5rem] lg:min-h-0 lg:h-14 px-4 pt-[max(0.75rem,var(--pn-safe-top))] lg:pt-0 border-b border-divider flex items-center gap-2">
         <h1 className="text-heading tracking-tight truncate m-0">
           <HoverLabel label={t('tagsRail.showAllItems')} keys={sectionKeyText(1)} position="end">
           <button
@@ -1042,9 +1081,10 @@ export function TagsRail(props: TagsRailProps) {
           const count = viewCounts[r.key];
           const sectionKey = sectionKeyText(sectionRows.indexOf(r.key) + 2);
           const row = (
+            <div className="relative w-full group/sec" onContextMenu={(e) => sectionLock.openMenu(e, r.key)}>
             <button
               onClick={() => handleSelectView(r.key)}
-              className={`group/sec ${viewBtnClass(view === r.key)}`}
+              className={viewBtnClass(view === r.key)}
             >
               <span className="flex items-center gap-2">
                 <span className="text-accent inline-flex">
@@ -1059,7 +1099,7 @@ export function TagsRail(props: TagsRailProps) {
                   {sectionKey}
                 </span>
               )}
-              {r.key === 'calendar' && calendarBell ? (
+              {lockSlot(r.key, r.key === 'calendar' && calendarBell ? (
                 // A reminder fired and its item is not opened yet: the count
                 // takes the accent fill and the bell until it is.
                 <span className="inline-flex items-center gap-0.5 rounded-full bg-accent-fill text-white px-1.5 text-small font-semibold tabular-nums">
@@ -1070,8 +1110,10 @@ export function TagsRail(props: TagsRailProps) {
                 <span className="text-small text-pn-muted tabular-nums">
                   {count}
                 </span>
-              )}
+              ))}
             </button>
+            {lockNowButton(r.key)}
+            </div>
           );
           // The Markdown row explains itself, and `above` is the only position
           // that works here. This list is `overflow-y-auto`, and CSS forces

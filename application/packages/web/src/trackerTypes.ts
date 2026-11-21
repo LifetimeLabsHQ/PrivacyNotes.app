@@ -288,6 +288,7 @@ export function readCustomTrackerTemplates(raw: unknown): CustomTrackerTemplate[
         ? { pairLabels: [String(labels[0]).slice(0, PAIR_LABEL_MAX), String(labels[1]).slice(0, PAIR_LABEL_MAX)] as [string, string] }
         : {}),
       ...(str(c.unit) ? { unit: c.unit.slice(0, PAIR_UNIT_MAX) } : {}),
+      ...(counterLimit(c.limit) !== undefined ? { limit: counterLimit(c.limit) } : {}),
       ...(str(c.updatedAt) ? { updatedAt: c.updatedAt } : {}),
       ...(str(c.deletedAt) ? { deletedAt: c.deletedAt } : {}),
     };
@@ -327,8 +328,10 @@ export interface MedicationLogEntry {
 
 /** The custom tracker types, in the order of the setup's type chips. A
  *  `pair` is one reading of two numbers, such as a blood pressure of 120/80
- *  (GitHub #746). Spec: docs/internal/mood-wellness-tracker.md section 16 */
-export const CUSTOM_TRACKER_TYPES = ['scale10', 'scale5', 'slider100', 'number', 'pair', 'yesno'] as const;
+ *  (GitHub #746). A `counter` adds up uses across days up to a limit, such
+ *  as the shaves of one razor blade (GitHub #812, `customCounter.ts`).
+ *  Spec: docs/internal/mood-wellness-tracker.md section 16 */
+export const CUSTOM_TRACKER_TYPES = ['scale10', 'scale5', 'slider100', 'number', 'pair', 'counter', 'yesno'] as const;
 export type CustomTrackerType = (typeof CUSTOM_TRACKER_TYPES)[number];
 
 /** A pair's reading as "120/80 mmHg", a dash for a second number not
@@ -341,10 +344,19 @@ export function pairText(value: number, value2: number | undefined, unit?: strin
 export const PAIR_LABEL_MAX = 16;
 export const PAIR_UNIT_MAX = 10;
 
+/** The highest limit a counter takes, and the most uses one day holds.
+ *  Spec: docs/internal/mood-wellness-tracker.md section 16.1 (Counter) */
+export const COUNTER_LIMIT_MAX = 9999;
+export const COUNTER_DAY_MAX = 9999;
+
+/** A stored counter limit, or undefined when it is not a whole number in range. */
+export function counterLimit(v: unknown): number | undefined {
+  return typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= COUNTER_LIMIT_MAX ? v : undefined;
+}
+
 /**
  * The colors a custom tracker can take: the editor's text colors, the one
- * palette of the app (gray, red, orange, yellow, green, teal, blue, purple,
- * pink), in the same order. They are made to read as text in every theme, so
+ * palette of the app (`TEXT_COLORS` in editorColors.ts), in the same order. They are made to read as text in every theme, so
  * no surface puts white text on them.
  * Spec: docs/internal/design/ui-patterns.md section 141
  */
@@ -392,6 +404,9 @@ export interface CustomTrackerTemplate {
   pairLabels?: [string, string];
   /** A `pair`: the unit after the reading ("mmHg"). */
   unit?: string;
+  /** A `counter`: the uses it lasts, 1 to `COUNTER_LIMIT_MAX`. Absent: it
+   *  counts with no limit. */
+  limit?: number;
   /** Last edit to THIS template - see MedicationTemplate.updatedAt. */
   updatedAt?: string;
   /**
@@ -472,13 +487,19 @@ export function activeCustomTrackers(
 }
 
 /** Per-day custom tracker value - lives in the journal note payload. */
-interface CustomTrackerEntry {
+export interface CustomTrackerEntry {
   trackerId: string;
   value: number | boolean | string;
   /** A `pair`: the second number. `value` is the first; the entry exists
    *  only while the first is logged, so an older client that knows no pairs
    *  still reads and keeps it as a number. */
   value2?: number;
+  /** A `counter`: the day had a "Start again", and this many of the day's
+   *  `value` uses came after it. Only they count toward the total. */
+  reset?: number;
+  /** A `counter`: when the entry was last written, so the merge keeps the
+   *  newer of two devices' counts of one day (`unionById`). */
+  ts?: string;
 }
 
 // ------------------------------------------------------------------
@@ -899,16 +920,28 @@ export function normalizeJournalTrackers(trackers: Record<string, unknown>): Rec
   keepWhere('emotions', (v) => typeof v === 'string');
   keepWhere('factors', (v) => typeof v === 'string');
   keepWhere('medications', isMedicationLog);
-  // A pair's second number that is not a number goes alone; the first stays.
+  // A pair's second number, a counter's uses after a restart or a write
+  // stamp of the wrong shape goes alone; the value stays.
   const custom = trackers.customTrackers;
   if (custom !== undefined) {
     if (!Array.isArray(custom)) put('customTrackers', undefined);
     else {
-      const finite2 = (c: unknown) => !isRecord(c) || c.value2 === undefined || (typeof c.value2 === 'number' && Number.isFinite(c.value2));
-      if (!custom.every((c) => finite2(c) && isCustomEntry(c))) {
-        put('customTrackers', custom
-          .map((c) => (finite2(c) ? c : (({ value2: _drop, ...rest }) => rest)(c as Record<string, unknown>)))
-          .filter(isCustomEntry));
+      const finite = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
+      const extraOk: Record<string, (v: unknown) => boolean> = {
+        value2: finite,
+        reset: (v) => finite(v) && (v as number) >= 0,
+        ts: (v) => typeof v === 'string',
+      };
+      const clean = (c: unknown) => {
+        if (!isRecord(c)) return c;
+        const bad = Object.keys(extraOk).filter((k) => c[k] !== undefined && !extraOk[k]!(c[k]));
+        if (bad.length === 0) return c;
+        const rest = { ...c };
+        for (const k of bad) delete rest[k];
+        return rest;
+      };
+      if (!custom.every((c) => clean(c) === c && isCustomEntry(c))) {
+        put('customTrackers', custom.map(clean).filter(isCustomEntry));
       }
     }
   }

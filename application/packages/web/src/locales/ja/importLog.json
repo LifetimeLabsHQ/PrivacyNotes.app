@@ -18,6 +18,7 @@
     "filedNotes_other": "{{count}}件のノートを振り分け",
     "tags_other": "{{count}}件のノートのタグを保持しました。",
     "droppedAlign": "エディタで配置を変えられないブロックは、配置を外し、文字はそのまま残しました。",
+    "lostPasskeys_other": "ログイン情報とともに保存されていたパスキー{{count}}件を除外しました。以前のアプリに残しておくか、それらのサイトで新しいパスキーを追加してください。",
     "foldersFromNotebooks_other": "ノートブックから{{count}}個のフォルダを作り直しました（{{filed}}）。",
     "parsingJson": "JSONを解析中…",
     "buildingNotes": "ノートを作成中…",
@@ -207,6 +208,11 @@
     "invalidJson": "このファイルは有効なJSONではありません。暗号化なしの「.json」で書き出したか確認してください。",
     "encryptedExport": "これは暗号化されたBitwardenの書き出しデータです。「.json (Encrypted)」ではなく、通常の「.json」形式で書き出し直してください。",
     "missingItems": "このファイルには想定された「items」配列がありません。Bitwardenの保管庫の書き出しデータではありません。",
+    "notZipExport": "このzipの最上位にdata.jsonがありません。Bitwardenの「.zip (with attachments)」の書き出しデータではありません。",
+    "keptPasskeys_other": "{{count}}件のパスキーをそれぞれのログイン情報に残しました。",
+    "passkeyOtherSite": "ログイン情報「{{name}}」には、そのウェブサイトに含まれない {{site}} のパスキーがあります。ログイン情報と一緒に読み込まれました。心当たりがなければ、そこで削除してください。",
+    "skippedPasskeys_other": "保管庫に保存できないパスキー{{count}}件を除外しました。鍵がP-256ではないか、値がWebAuthnの許す長さを超えています。そのサイトで新しいパスキーを追加してください。",
+    "unmatchedAttachments_other": "{{count}}件の添付ファイルを1つのアイテムに対応付けられませんでした。そのフォルダ名を持つアイテムがないか、複数あるためです。添付ファイルは、フォルダ名を付けたノートに入っています。",
     "unknownType": "不明な種類 {{type}} のアイテム「{{name}}」をスキップしました。",
     "importedCards_other": "{{count}}件のカードを保管庫のアイテムとして読み込みました。",
     "importedSecureNotes_other": "{{count}}件のセキュアメモを読み込みました。",
@@ -409,6 +415,10 @@
     "notEnpass": "このファイルはEnpassの書き出しファイルではありません。Enpassで File > Export を選び、.json形式を選んでください。",
     "leftFiles_other": "{{count}}件の添付ファイルは読み込まれませんでした。Enpassから保存し、ここでアイテムに添付してください。"
   },
+  "msecure": {
+    "notMSecure": "このファイルはmSecureの書き出しファイルではありません。mSecureで Settings > Backups > Export records to CSV file を選んでください。",
+    "fieldDataOnly": "このmSecureの書き出しファイルにはフィールド名がないため、フィールドを区別できません。「Only export field data」をオフにして、もう一度書き出してください。"
+  },
   "nordpass": {
     "notNordPass": "このファイルはNordPassの書き出しファイルではありません。NordPassで Settings > Export items を選んでください。"
   },
@@ -423,6 +433,7 @@
     "kdbxFile": "これはKeePassのデータベースそのもので、ロックされています。KeePassまたはKeePassXCでXMLとして書き出し、そのファイルを読み込んでください。",
     "notKeePass": "このファイルはKeePass XMLの書き出しファイルではありません。KeePassでは File > Export > KeePass XML (2.x)、KeePassXCでは Database > Export > XML File を選んでください。",
     "noEntries": "このKeePassファイルには、「Recycle Bin」以外のエントリーがありません。",
+    "doctype": "このファイルはDOCTYPEを宣言していますが、KeePassの書き出しファイルがDOCTYPEを書くことはないため、読み取りませんでした。KeePassからもう一度XMLを書き出して、そのファイルを読み込んでください。",
     "readingEntries": "エントリーを読み取り中…",
     "leftHistory_other": "エントリーの古いバージョン{{count}}件を除外しました。読み込まれるのは最新のものだけです。",
     "missingFiles_other": "{{count}}件の添付ファイルは書き出しファイルに含まれていなかったため、読み込まれませんでした。KeePassから保存し、ここでログイン情報に添付してください。"
@@ -434,6 +445,13 @@
     "rebuiltFolders_other": "ファイルから{{count}}個のフォルダを作り直しました（{{filed}}）。",
     "broughtAcross": "フォルダから{{parts}}を引き継ぎました。"
   },
+  "raindrop": {
+    "notRaindrop": "このファイルはRaindrop.ioの書き出しファイルではありません。Export > CSV で作成された.csvファイル、またはそれを含む.zipが必要です。",
+    "noCsv": "このzipには.csvファイルがありません。Raindrop.ioからCSVを書き出し、そのファイルを選んでください。",
+    "highlightsHeading": "ハイライト",
+    "skipped_other": "{{count}}件のブックマークは、アドレスがウェブリンクではないため読み込みませんでした。",
+    "covers_other": "{{count}}件のカバー画像は読み込みませんでした。ブックマークには代わりにウェブサイトのアイコンが表示されます。"
+  },
   "browserBookmarks": {
     "notBookmarks": "ブックマークの書き出しファイルではありません。ブラウザが書き出すブックマークの.htmlファイルが必要です。",
     "noBookmarks": "このファイルにはブックマークが見つかりません。",
@@ -443,7 +461,9 @@
     "mediaTooLarge_other": "{{size}}を超える{{count}}個のファイルをスキップしました。どのプランでも同期できるファイルの最大サイズです。",
     "entryTooLarge": "{{name}}は展開すると、1回の読み込みで読み取れる{{limit}}を超えます。書き出しデータから外して、もう一度お試しください。",
     "entryTooLargeKnown": "{{name}}は展開すると{{size}}になり、1回の読み込みで読み取れる{{limit}}を超えます。書き出しデータから外して、もう一度お試しください。",
-    "unreadable": "このファイルを開けませんでした。不完全か破損している可能性があります。もう一度書き出して、新しいファイルを選んでください。"
+    "unreadable": "このファイルを開けませんでした。不完全か破損している可能性があります。もう一度書き出して、新しいファイルを選んでください。",
+    "importTooLarge": "このファイルは展開すると{{limit}}を超え、実際の書き出しデータではありえない大きさです。もう一度書き出して、新しいファイルを選んでください。",
+    "tooManyEntries": "このzipには{{max}}個を超えるファイルが含まれており、実際の書き出しデータではありえない数です。もう一度書き出して、新しいファイルを選んでください。"
   },
   "safariArchive": {
     "noEntry": "このzipには{{want}}が入っていません。",
@@ -455,5 +475,33 @@
   },
   "apply": {
     "unknownWriteError": "ローカルデータベースへの書き込み中に不明なエラーが発生しました。"
+  },
+  "onenote": {
+    "reading": "OneNoteのノートブックを読み取り中…",
+    "notOneNote": "これはOneNoteのノートブックではありません。OneNote for Windowsで File > Export > Notebook > OneNote Package を選び、その.onepkgファイルをここにドロップしてください。",
+    "cloudFormat": "このセクションはOneNoteがオンラインで保存する形式で、OneNoteでしか読み取れません。OneNote for Windowsでノートブックを開き、File > Export > Notebook > OneNote Package を選んで、その.onepkgファイルをここにドロップしてください。",
+    "splitPackage": "このOneNoteパッケージは複数のファイルに分かれています。ノートブックを1つのOneNote Packageとしてもう一度書き出し、そのファイルをここにドロップしてください。",
+    "tooLarge": "このOneNoteパッケージは大きすぎて一度に読み取れません。セクショングループまたはセクションを1つずつ書き出してください。",
+    "damaged": "このOneNoteファイルは破損していて読み取れません。OneNoteからノートブックをもう一度書き出し、そのファイルで試してください。",
+    "noPages": "このOneNoteのノートブックにはページが見つかりません。",
+    "allLocked": "このノートブックのセクションはすべてパスワードで保護されています。OneNoteでセクションのロックを解除してパスワードを外し、もう一度書き出してから、新しいファイルをここにドロップしてください。",
+    "subpages_other": "{{count}}件のサブページを、親ページの隣のノートとして保持しました。",
+    "noteTags_other": "{{count}}件のページのノートタグをタグとして保持しました。",
+    "lockedSections_other": "パスワードで保護された{{count}}個のセクションを省きました。OneNoteでパスワードを外してもう一度書き出すと、それらも読み込まれます。",
+    "unreadableSections_other": "読み取れなかった{{count}}個のセクションを省きました。",
+    "unsupported_other": "ここに対応する形がない手書き、音声クリップ、数式を{{count}}個省きました。",
+    "missingFiles_other": "{{count}}個の画像またはファイルがパッケージに含まれていないため、省きました。",
+    "deadLinks_other": "{{count}}件のOneNoteリンクはこのノートブックの外を指しているため、リンクの文字だけが残ります。",
+    "recycleBin_other": "ノートブックのごみ箱にあった{{count}}件のページを省きました。"
+  },
+  "capacities": {
+    "notCapacities": "これはCapacitiesの書き出しデータではありません。Capacitiesで Settings > Full Export を開き、メディアを含めて Manual Full Export を実行してから、そのzipをここにドロップしてください。",
+    "noObjects": "このCapacitiesの書き出しデータには、テキストを含むページやほかのオブジェクトが見つかりません。",
+    "typeFolders_other": "{{count}}個のオブジェクトタイプをフォルダとして作り直しました。",
+    "properties_other": "{{count}}件のオブジェクトのプロパティを、各ノートの先頭にリストとして保持しました。",
+    "mediaObjects_other": "{{count}}個の画像とファイルを、それらを表示するノートの中に保持しました。単独のノートにはなりません。",
+    "queries_other": "{{count}}個のクエリを省きました。クエリはCapacitiesの保存された検索で、それ自体のテキストを持ちません。",
+    "collections_other": "{{count}}個のコレクションのリストを省きました。中のオブジェクトはコレクションなしで読み込まれます。",
+    "deadLinks_other": "{{count}}件のリンクは、ゴミ箱にあるものなど、書き出しデータにないオブジェクトを指しているため、リンクの文字だけが残ります。"
   }
 }

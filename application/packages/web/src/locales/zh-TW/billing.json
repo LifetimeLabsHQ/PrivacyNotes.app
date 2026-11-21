@@ -35,6 +35,7 @@
     "title": "歡迎加入俱樂部",
     "proLine": "<brand/> Pro，一次付清 {{price}} 美元，永久屬於你。",
     "storageLine": "<brand/> +{{gb}} GB 儲存空間，每年 {{price}} 美元。",
+    "storagePayerNote": "帳號擁有者之後可以變更方案。差額由這張卡片支付。",
     "benefitDevices": "裝置數量無上限",
     "benefitDevicesSub": "手機、平板、筆電，全部同步",
     "benefitStorage": "500 MB 儲存空間",
@@ -63,7 +64,7 @@
     "openingBody": "Paddle 結帳視窗應該會出現。如果沒有，可能是瀏覽器攔截了彈出視窗，請重新載入此頁面再試。"
   },
   "cryptoCheckout": {
-    "coins": "你會在下一頁選擇 Bitcoin、Ethereum、Lightning、USDC 或 USDT，該頁面由 BlockBee 提供。它不會要求姓名，也不會要求電子郵件。加密貨幣付款會公開記錄在其區塊鏈上。",
+    "coins": "你會在下一頁選擇 Bitcoin、Ethereum、Lightning、USDC、USDT、Litecoin、Bitcoin Cash、Dogecoin 或 TON，該頁面由 BlockBee 提供。它不會要求姓名，也不會要求電子郵件。加密貨幣付款會公開記錄在其區塊鏈上。",
     "consent": "立即啟用 Pro。我了解加密貨幣付款不可退款，並且放棄 14 天的撤回權。",
     "consentNeeded": "請勾選上方的方塊以繼續。",
     "loadingTitle": "正在檢查你的訂單…",

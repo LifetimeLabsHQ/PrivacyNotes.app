@@ -10,16 +10,17 @@
 import { clipDownload, type TokenSource } from '../clipDownload';
 
 /** The address to download, or null when it is not a calendar address.
- *  `webcal` and `webcals` become `https`; `http` and `https` stay. */
+ *  `webcal`, `webcals` and `http` become `https`, and `https` stays: a
+ *  calendar is never downloaded over plain http, which would show its
+ *  address and its events to anyone on the network path (beta #159). */
 export function calendarFeedUrl(raw: string): string | null {
   const text = raw.trim();
   const m = /^(webcals?|https?):\/\//i.exec(text);
   if (!m) return null;
-  const scheme = m[1]!.toLowerCase();
   const rest = text.slice(m[0].length);
   let url: URL;
   try {
-    url = new URL(`${scheme === 'http' ? 'http' : 'https'}://${rest}`);
+    url = new URL(`https://${rest}`);
   } catch {
     return null;
   }

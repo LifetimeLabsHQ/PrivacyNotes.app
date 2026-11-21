@@ -14,7 +14,7 @@ import { Callout } from '@web/ui/feedback';
 import { SectionEyebrow, SettingsSegmented, SETTINGS_HELP } from '@web/settingsUI';
 import { SecretInput } from '@web/PasscodeInput';
 import type { PinInputHandle } from '@web/PinInput';
-import { PASSCODE_MIN_CHARS } from '@web/secretKind';
+import { isCommonPin, PASSCODE_MIN_CHARS } from '@web/secretKind';
 import type { Connection, SecretKind } from '../../src/connection';
 import { biometricPossible, biometricReady, startEnrollment } from '../../src/biometric';
 import { changeSecret } from '../../src/changeSecret';
@@ -54,6 +54,12 @@ export function ChangeSecretView({ connection, onBack, onChanged }: {
     if (!ready || busy) return;
     if (first !== repeat) {
       setError({ tone: 'warning', text: t('protect.mismatch') });
+      setSecond('');
+      return;
+    }
+    if (kind === 'pin' && isCommonPin(first)) {
+      setError({ tone: 'warning', text: t('protect.commonPin') });
+      setFirst('');
       setSecond('');
       return;
     }

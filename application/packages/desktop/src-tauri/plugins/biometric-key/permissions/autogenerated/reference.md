@@ -62,6 +62,58 @@ Denies the delete command without any pre-configured scope.
 <tr>
 <td>
 
+`biometric-key:allow-deviceCreate`
+
+</td>
+<td>
+
+Enables the deviceCreate command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`biometric-key:deny-deviceCreate`
+
+</td>
+<td>
+
+Denies the deviceCreate command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`biometric-key:allow-deviceOpen`
+
+</td>
+<td>
+
+Enables the deviceOpen command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`biometric-key:deny-deviceOpen`
+
+</td>
+<td>
+
+Denies the deviceOpen command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `biometric-key:allow-open`
 
 </td>

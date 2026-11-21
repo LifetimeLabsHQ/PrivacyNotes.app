@@ -56,7 +56,7 @@ class BackupFolderPlugin: Plugin, UIDocumentPickerDelegate {
     DispatchQueue.main.async {
       // A picker that went away without a word must not hold the next one.
       self.answerPick(picked: false, label: "")
-      guard let presenter = self.manager.viewController else {
+      guard let presenter = sheetPresenter(self.manager) else {
         invoke.reject("No view to present from", code: "io")
         return
       }
@@ -341,6 +341,18 @@ class BackupFolderPlugin: Plugin, UIDocumentPickerDelegate {
     }
     return "io"
   }
+}
+
+/// The view to present a system sheet from. Tauri hands its view controller
+/// to the plugin manager when the web view starts, but in the app's build the
+/// manager these plugins see stays empty (`manager.viewController` is nil on
+/// iPhone, measured 2026-11-18), so the key window's root stands in.
+private func sheetPresenter(_ manager: PluginManager) -> UIViewController? {
+  manager.viewController
+    ?? UIApplication.shared.connectedScenes
+      .compactMap { $0 as? UIWindowScene }
+      .flatMap(\.windows)
+      .first(where: \.isKeyWindow)?.rootViewController
 }
 
 @_cdecl("init_plugin_backup_folder")

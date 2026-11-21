@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "h",
+    "minutesSuffix": "min",
+    "hoursMinutes": "{{h}}h {{m}}min",
     "bpm": "ppm",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -142,6 +144,7 @@
     "takenCount_one": "{{count}} tomada",
     "takenCount_other": "{{count}} tomadas",
     "namePlaceholder": "Nombre de la medicación",
+    "nameMissing": "Ponle un nombre a la medicación.",
     "dosagePlaceholder": "Dosis (p. ej. 50 mg)",
     "editMedication": "Editar medicación",
     "removeMedication": "Quitar medicación",
@@ -250,12 +253,18 @@
     "yes": "Sí",
     "no": "No",
     "unknownType": "Este registro necesita una versión más reciente de la app.",
+    "counterOf": "de {{limit}}",
+    "counterToday": "usos hoy",
+    "counterReached": "Has llegado al límite de {{limit}}.",
+    "counterStartAgain": "Empezar {{name}} de nuevo desde 0",
+    "counterStartAgainConfirm": "¿Empezar de nuevo?",
     "typeLabels": {
       "scale10": "Escala (0-10)",
       "scale5": "Escala (0-5)",
       "slider100": "Puntuación (0-100)",
       "number": "Número",
       "pair": "Dos números",
+      "counter": "Contador",
       "yesno": "Sí / No"
     }
   },
@@ -271,7 +280,7 @@
     "medicationCard": "Tarjeta de medicación",
     "medicationCardHelp": "«¿Has tomado tu medicación?» en este dispositivo, solo los días en que toca una medicación.",
     "customHelp": "Registros a los que pones nombre tú: una escala, un número o un sí o no. Hasta {{max}}.",
-    "customHelpPair": "Registros a los que pones nombre tú: una escala, un número, dos números o un sí o no. Hasta {{max}}.",
+    "customHelpPair": "Registros a los que pones nombre tú: una escala, un número, dos números, un contador o un sí o no. Hasta {{max}}.",
     "yourCustomTrackers": "Tus registros personalizados",
     "categoryMoodMind": "Ánimo y mente",
     "categoryBodyHealth": "Cuerpo y salud",
@@ -312,7 +321,10 @@
     "pairFirstPlaceholder": "Sistólica",
     "pairSecondPlaceholder": "Diastólica",
     "pairUnit": "Unidad (opcional)",
-    "pairWaiting": "Se guarda en cuanto escribas el primer número."
+    "pairWaiting": "Se guarda en cuanto escribas el primer número.",
+    "nameMissing": "Ponle un nombre al registro.",
+    "counterLimit": "Límite (opcional)",
+    "counterHelp": "Suma tus usos a lo largo de los días. Pon un límite, como 30 para una cuchilla de afeitar, y empieza de nuevo cuando lo alcances."
   },
   "factors": {
     "prompt": "¿Qué formó parte de tu día?",
@@ -402,5 +414,6 @@
   "flow": {
     "finish": "Terminar",
     "step": "Registro {{n}} de {{total}}"
-  }
+  },
+  "showEveryDay": "Mostrar cada día con esto"
 }

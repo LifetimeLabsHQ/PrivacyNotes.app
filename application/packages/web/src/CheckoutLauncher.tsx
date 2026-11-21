@@ -111,7 +111,9 @@ export default function CheckoutLauncher() {
       return;
     }
 
-    if (!pubkey || (product !== 'pro' && product !== 'storage')) {
+    // The webhook grants only to a 64-hex Account ID, so any other value
+    // would take the money and grant nothing: refuse it before Paddle opens.
+    if (!/^[0-9a-f]{64}$/.test(pubkey) || (product !== 'pro' && product !== 'storage')) {
       setState('error');
       return;
     }
@@ -174,6 +176,11 @@ export default function CheckoutLauncher() {
                 components={{ brand: <Brand /> }}
               />
             </p>
+            {/* An upgrade from the app charges this card the difference,
+                and the person paying may not be the account owner (beta #185). */}
+            {purchase.kind === 'storage' && (
+              <p className="mt-1 text-small text-[#6A6152]">{t('checkout.storagePayerNote')}</p>
+            )}
 
             <ul className="mt-3 inline-flex flex-col gap-2 text-start">
               {purchase.kind === 'pro' ? (

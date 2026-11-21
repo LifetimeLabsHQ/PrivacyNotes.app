@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- Merged into the generated Info.plist by Tauri for macOS and iOS bundles.
      These TCC usage strings are required for the webview's getUserMedia calls:
-     NSCameraUsageDescription for the sign-in QR scanner, NSMicrophoneUsageDescription
+     NSCameraUsageDescription for the sign-in QR scanner and Scan a page (VisionKit), NSMicrophoneUsageDescription
      for the in-app audio recorder (AudioRecorder.tsx). Without the matching string,
      macOS TCC denies the request and can kill the app outright. On a signed/notarized
      macOS build these pair with the hardened-runtime entitlements in Entitlements.plist;
@@ -17,7 +17,7 @@
 <plist version="1.0">
 <dict>
 	<key>NSCameraUsageDescription</key>
-	<string>PrivacyNotes uses the camera only to scan sign-in QR codes. The video feed is processed on this device and never uploaded.</string>
+	<string>PrivacyNotes uses the camera to scan sign-in QR codes and pages.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>PrivacyNotes uses the microphone only when you record an audio note. The recording is encrypted on this device before it is stored or synced.</string>
 	<key>NSFaceIDUsageDescription</key>

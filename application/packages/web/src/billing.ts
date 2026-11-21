@@ -19,14 +19,16 @@ import { detectPlatform, isNativeStoreBuild } from './devices';
 
 export { isNativeStoreBuild };
 import { isDemoMode } from './demo';
-import { APEX_ORIGIN } from './hosts';
-import { cryptoCheckoutPage, newCryptoOrderId, rememberCryptoOrder, reusableCryptoOrder } from './cryptoCheckout';
+import { PAY_ORIGIN } from './hosts';
+import { cryptoCheckoutLink, newCryptoOrderId, rememberCryptoOrder, reusableCryptoOrder } from './cryptoCheckout';
 import { cryptoCheckoutReleased } from './cryptoRelease';
 
 // The CheckoutLauncher page runs the Paddle overlay on an approved Paddle
-// domain. Desktop sends users here in their system browser.
-// Spec: docs/internal/design-decisions.md (native checkout)
-const WEB_CHECKOUT_ORIGIN = APEX_ORIGIN;
+// domain, its own host. Desktop sends users here in their system browser.
+// Builds that shipped with the apex still work: the Worker 301s the apex
+// /checkout here with its query.
+// Spec: docs/internal/design-decisions.md (native checkout), docs/internal/billing-integration.md (checkout host)
+const WEB_CHECKOUT_ORIGIN = PAY_ORIGIN;
 
 // Native store product IDs (App Store + Google Play, mirrored). Pro is a
 // non-consumable one-time unlock; storage tiers are auto-renewable subs.
@@ -53,8 +55,10 @@ async function openWebCheckout(query: string): Promise<void> {
  * loading Paddle's script into this document.
  *
  * The point is the ORIGIN. The app runs on use.privacynotes.app; the checkout
- * page is on privacynotes.app, and a different origin cannot read this one's
- * localStorage, where the recovery phrase and the wrapped-phrase blobs live.
+ * page is on pay.privacynotes.app, and a different origin cannot read this
+ * one's localStorage, where the recovery phrase and the wrapped-phrase blobs
+ * live. Not the apex: the app ran there until 2026-08-25, and a browser that
+ * signed in there before the move still stores its phrase there (beta #224).
  * Loading paddle.js into this document instead would put a third-party script
  * (and, through it, Paddle's own ProfitWell analytics) in the same document as
  * the phrase and the in-memory keys - the same threat-model regression the
@@ -117,8 +121,9 @@ function refreshOnReturn(onComplete: () => void): void {
  * How a native store purchase failed. `store` = the checkout never completed
  * (store error, product unavailable, plugin failure) and the user was NOT
  * charged. `validate` = the store charged the user but our server could not
- * confirm the purchase - the entitlement did not flip, and because the purchase
- * stays unacknowledged the store auto-refunds it within 3 days.
+ * confirm the purchase - the entitlement did not flip. On Google Play the
+ * purchase stays unacknowledged and Google auto-refunds it within 3 days;
+ * Apple has no such rule.
  * `alreadyOwned` = the store refused to sell because the account already owns
  * the item AND the automatic restore that follows could not apply it to this
  * account - the usual cause is a purchase bound to a different recovery phrase.
@@ -182,9 +187,9 @@ export function cryptoCheckoutOffered(): boolean {
 
 /**
  * Start a crypto purchase of Pro: the order this account is already waiting
- * on while it is open, else a fresh order id, remembered so the app can wait
- * on it, and the /crypto-checkout page in a new tab (web) or the system
- * browser (desktop, direct APK). The waiting banner registers a new order
+ * on while it is open, else a fresh order id and its secret (beta #172),
+ * remembered so the app can wait on it, and the /crypto-checkout page in a
+ * new tab (web) or the system browser (desktop, direct APK). The waiting banner registers a new order
  * with the session (CryptoPaymentBanner.tsx), so it can only pay for this
  * account. A separate page from /checkout on purpose: Paddle approved the
  * crypto route on the condition that it stays apart from theirs, so this path
@@ -198,8 +203,10 @@ export function startCryptoProCheckout(pubkey: string): void {
   if (isDemoMode() || !cryptoCheckoutOffered()) return;
   const reused = reusableCryptoOrder(pubkey);
   const order = reused?.order ?? newCryptoOrderId();
-  if (!reused) rememberCryptoOrder(order, pubkey);
-  const url = cryptoCheckoutPage(`order=${encodeURIComponent(order)}&pubkey=${encodeURIComponent(pubkey)}`);
+  // The secret has the order id's shape; an order an older app remembered has none.
+  const secret = reused ? reused.secret : newCryptoOrderId();
+  if (!reused) rememberCryptoOrder(order, secret, pubkey);
+  const url = cryptoCheckoutLink(order, pubkey, secret);
   if (detectPlatform() === 'web') {
     window.open(url, '_blank', 'noopener,noreferrer');
     return;
@@ -311,8 +318,11 @@ async function validateNativePurchase(
       if (res.ok) return 'ok';
       // 4xx is a real refusal and will read the same on every attempt -
       // stop. 5xx is the server having a moment, which is what a retry is
-      // for.
-      if (res.status < 500 || attempt >= VALIDATE_RETRY_DELAYS_MS.length) {
+      // for, and so is 429: the validators' per-address limit
+      // (`rate_limited`, storeCallerLimit) judged nothing about the purchase.
+      // Spec: docs/contrib/map/billing.md (Edge functions, the per-address limits)
+      const retryable = res.status >= 500 || res.status === 429;
+      if (!retryable || attempt >= VALIDATE_RETRY_DELAYS_MS.length) {
         console.error(`[billing] ${fn} returned ${res.status}`);
         // One refusal is worth telling apart: the purchase is real but
         // bound to another account. The server names it so the user gets

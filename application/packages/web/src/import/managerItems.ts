@@ -1,11 +1,11 @@
 import { serializeLoginBody } from '../LoginForm';
 import { domainFromUrlString } from '../favicon';
 import { serializeCardBody } from '../CardForm';
+import { serializeSshKeyBody } from '../sshKeyBody';
 import { newLoginField, withLoginExtras } from '../loginExtras';
 import { normalizeTag } from '../notesRepo';
 import i18n from '../i18n';
 import { formatIdentity, type BwIdentity } from './bitwarden';
-import { linkifyMarkdown } from './linkify';
 import type { ImportedNote, ImporterId, ParsedImport } from './types';
 
 /**
@@ -13,7 +13,9 @@ import type { ImportedNote, ImporterId, ParsedImport } from './types';
  * manager (LastPass, NordPass, Proton Pass): each parser reads its own file and
  * hands the fields here, and the log lines come out the same as Bitwarden's.
  * A login keeps its password and 2FA key byte for byte; a note's CRLF becomes
- * LF; an identity becomes a note through Bitwarden's `formatIdentity`.
+ * LF; an identity becomes a note through Bitwarden's `formatIdentity`; an SSH
+ * key becomes an SSH key item, its private key in the field the SSH key form
+ * keeps hidden.
  * Spec: docs/internal/plans/password-manager-importers.md (section 2)
  */
 
@@ -24,7 +26,7 @@ const t = (key: string, count: number) => i18n.t(`importLog:${key}`, { count });
 
 export class ManagerItems {
   readonly notes: ImportedNote[] = [];
-  private readonly n = { logins: 0, cards: 0, secureNotes: 0, identities: 0, totp: 0, fields: 0, extraUrls: 0, starred: 0, archived: 0, noPassword: 0, dated: 0, named: 0 };
+  private readonly n = { logins: 0, cards: 0, secureNotes: 0, identities: 0, totp: 0, fields: 0, extraUrls: 0, starred: 0, archived: 0, noPassword: 0, dated: 0, named: 0, sshKeys: 0, lostPasskeys: 0 };
   readonly warnings: string[] = [];
   readonly transforms: string[] = [];
 
@@ -45,19 +47,34 @@ export class ManagerItems {
     this.push({ ...it, title }, 'login', serializeLoginBody({ url: it.url, username: it.username, password: it.password, totp: it.totp ?? '', notes: lf(it.notes) }), trackers);
   }
 
+  /** `expMonth` may come as written ("3", " 03"); a missing date stays empty,
+   *  never "00". */
   card(it: ItemCommon & { holder: string; number: string; expMonth: string; expYear: string; cvv: string; zip?: string }): void {
     this.n.cards++;
-    this.push(it, 'card', serializeCardBody({ cardholderName: it.holder, cardNumber: it.number, expMonth: it.expMonth, expYear: it.expYear, cvv: it.cvv, billingZip: it.zip ?? '', notes: lf(it.notes) }));
+    const month = it.expMonth.trim();
+    this.push(it, 'card', serializeCardBody({ cardholderName: it.holder, cardNumber: it.number, expMonth: month && month.padStart(2, '0'), expYear: it.expYear, cvv: it.cvv, billingZip: it.zip ?? '', notes: lf(it.notes) }));
   }
 
   note(it: ItemCommon & { extra?: Field[] }): void {
     this.n.secureNotes++;
-    this.push(it, 'note', linkifyMarkdown(withFields(lf(it.notes), it.extra)));
+    this.push(it, 'note', withFields(lf(it.notes), it.extra));
   }
 
   identity(it: ItemCommon & { identity: BwIdentity; extra?: Field[] }): void {
     this.n.identities++;
-    this.push(it, 'note', linkifyMarkdown(formatIdentity(it.identity, withFields(lf(it.notes), it.extra))));
+    this.push(it, 'note', formatIdentity(it.identity, withFields(lf(it.notes), it.extra)));
+  }
+
+  /** `label` is what Bitwarden's import puts there too: the fingerprint. */
+  sshKey(it: ItemCommon & { privateKey: string; publicKey: string; label?: string; extra?: Field[] }): void {
+    this.n.sshKeys++;
+    this.push(it, 'ssh-key', serializeSshKeyBody({ label: it.label ?? '', privateKey: it.privateKey, publicKey: it.publicKey, passphrase: '', notes: withFields(lf(it.notes), it.extra) }));
+  }
+
+  /** The passkeys a parser read but could not bring in. The summary says so,
+   *  so nobody deletes the old vault believing everything came over. */
+  lostPasskeys(count: number): void {
+    this.n.lostPasskeys += count;
   }
 
   /** The finished import, or the source's "nothing here" message. */
@@ -70,6 +87,7 @@ export class ManagerItems {
     line(n.logins, 'shared.importedLogins');
     line(n.cards, 'bitwarden.importedCards');
     line(n.secureNotes, 'bitwarden.importedSecureNotes');
+    line(n.sshKeys, 'bitwarden.importedSshKeys');
     line(n.identities, 'bitwarden.convertedIdentities');
     line(n.totp, 'shared.keptTotp');
     line(n.fields, 'bitwarden.keptLoginFields');
@@ -81,21 +99,16 @@ export class ManagerItems {
     line(n.dated, 'passwordCsv.keptDates');
     line(n.named, 'passwordCsv.namedAfterSite');
     if (n.noPassword > 0) this.warnings.push(t('passwordCsv.noPassword', n.noPassword));
+    if (n.lostPasskeys > 0) this.warnings.push(t('shared.lostPasskeys', n.lostPasskeys));
     return {
       notes: this.notes,
       warnings: this.warnings,
       transforms: this.transforms,
-      stats: {
-        totalNotes: this.notes.length,
-        emptyNotes: 0,
-        untaggedNotes: this.notes.length - tagged,
-        uniqueTags: new Set(this.notes.flatMap((x) => x.tags)).size,
-      },
       source,
     };
   }
 
-  private push(it: ItemCommon, type: 'login' | 'card' | 'note', body: string, trackers?: Record<string, unknown>): void {
+  private push(it: ItemCommon, type: 'login' | 'card' | 'note' | 'ssh-key', body: string, trackers?: Record<string, unknown>): void {
     const now = new Date().toISOString();
     if (it.created || it.changed) this.n.dated++;
     if (it.starred) this.n.starred++;

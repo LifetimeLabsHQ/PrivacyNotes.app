@@ -1,8 +1,18 @@
 # Vite emits content-hashed filenames under /assets, so they can be
 # cached forever: a new deploy produces new URLs. Without this rule the
 # browser revalidates every asset on every load (~100 ms per file).
+#
+# Every worker script (pdf.js, the map, the page scan) starts no worker of its
+# own. Without `worker-src` a nested worker falls under `script-src 'self'` and
+# runs under its own script's policy, which has a network. A second policy on
+# purpose: the /* policy below joins it and both apply, so this one narrows
+# that by one directive and copies nothing of it. A page never comes from
+# /assets. The same as `default_policy` and `PDF_WORKER` in script_csp.rs
+# (beta #218). The plugin worker's rule drops it with the page policy.
+# tests/pluginWorkerHeaders.test.ts holds it.
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+  Content-Security-Policy: worker-src 'none'
 
 # Polled by versionCheck.ts to detect new deploys - must never be
 # served from the browser cache.
@@ -62,8 +72,36 @@
   # This is the STRICT policy, naming no payment host. It is a fallback only:
   # wrangler.jsonc sets run_worker_first, and withSecurityHeaders() in worker.ts
   # overwrites this header on every HTML response, including the one page that
-  # may load Paddle (/checkout). Deliberately not given a /checkout rule of its
-  # own: relying on _headers precedence for a security header is a bad trade,
-  # and this way a Worker that failed to run breaks checkout visibly instead of
-  # loosening the app silently. Keep in sync with cspFor(false) in worker.ts.
-  Content-Security-Policy: default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; connect-src 'self' data: blob: https://sync.privacynotes.app https://releases.privacynotes.app https://maps.privacynotes.app https://challenges.cloudflare.com; img-src 'self' data: blob: https://sync.privacynotes.app; frame-src https://challenges.cloudflare.com; font-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+  # may load Paddle (/checkout on pay.privacynotes.app). Deliberately not given
+  # a /checkout rule of its own: relying on _headers precedence for a security
+  # header is a bad trade, and this way a Worker that failed to run breaks
+  # checkout visibly instead of loosening the app silently. Keep in sync with
+  # CSP in worker.ts. This file is the whole policy on the beta site (Pages,
+  # no Worker), which reaches /clip-fetch on use.privacynotes.app (GitHub #849).
+  Content-Security-Policy: default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; connect-src 'self' data: blob: https://sync.privacynotes.app https://files.privacynotes.app https://releases.privacynotes.app https://maps.privacynotes.app https://plugins.privacynotes.app https://challenges.cloudflare.com https://use.privacynotes.app; img-src 'self' data: blob: https://sync.privacynotes.app; frame-src https://challenges.cloudflare.com; font-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+
+# The plugin worker (Settings > Plugins), the one script that runs WebAssembly.
+# After /* on purpose: `!` removes only a header an earlier rule set, so this
+# rule replaces the page policy above for the worker's own script. Before /*,
+# or without the `!` line, the file sends two policies, both apply, and
+# WebAssembly is refused. No network at all: the app hands the worker the
+# bytes of every file it checked. `worker-src 'none'` is part of that: without
+# it a nested worker falls under `script-src 'self'`, starts from any script
+# of this site and runs under that script's policy, which has a network.
+# tests/pluginWorkerHeaders.test.ts holds it.
+# Spec: docs/internal/plans/plugins.md (section 4, Web header)
+/assets/pluginWorker-*
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'; worker-src 'none'
+
+# The beta site (beta.privacynotes.app) and every Pages preview host serve the
+# same pages as privacynotes.app, so a search engine that indexed them would
+# list each page twice. The canonical link on every page names the apex, but
+# Google treats that as a hint only. A host rule never matches the apex or the
+# app host, so production keeps its own indexing. Crawling stays allowed on
+# purpose: a robots.txt Disallow would hide this header from the crawler, and a
+# blocked URL can still be listed from links.
+https://beta.privacynotes.app/*
+  X-Robots-Tag: noindex
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex

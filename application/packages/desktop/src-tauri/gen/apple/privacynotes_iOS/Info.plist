@@ -15,9 +15,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.780.9</string>
+	<string>0.796.0</string>
 	<key>CFBundleVersion</key>
-	<string>0.780.9</string>
+	<string>0.796.0</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -41,7 +41,7 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>PrivacyNotes uses the camera only to scan sign-in QR codes. The video feed is processed on this device and never uploaded.</string>
+	<string>PrivacyNotes uses the camera to scan sign-in QR codes and pages.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>PrivacyNotes uses the microphone only when you record an audio note. The recording is encrypted on this device before it is stored or synced.</string>
 	<key>NSFaceIDUsageDescription</key>
@@ -82,6 +82,6 @@
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>PrivacyNotes uses your location only when you tap Use my current location, to add that place to the note.</string>
+	<string>PrivacyNotes uses your location when you tap Use my current location, or for each new note if you turn on Automatically add my location, to add that place to the note.</string>
 </dict>
 </plist>

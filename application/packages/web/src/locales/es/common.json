@@ -37,7 +37,7 @@
   "storageBar": {
     "usage": "{{percent}} % usado ({{used}} / {{max}})",
     "refresh": "Actualizar almacenamiento",
-    "cleanupInfo": "Los elementos eliminados dejan de contar al instante. Los archivos cifrados en sí salen del servidor en unos días.",
+    "cleanupInfo": "Las notas eliminadas para siempre dejan de contar al instante. Un archivo eliminado cuenta hasta que su copia cifrada sale del servidor, alrededor de un día después.",
     "open": "Abrir los ajustes de almacenamiento"
   },
   "updateToast": {
@@ -324,6 +324,8 @@
     "commands": {
       "syncResume": "Reanudar la sincronización",
       "lockProtected": "Bloquear esta nota",
+      "randomItem": "Abrir un elemento al azar",
+      "randomBookmark": "Abrir un marcador al azar",
       "changelog": "Novedades",
       "themesPage": "Temas de la comunidad",
       "website": "Web de PrivacyNotes"

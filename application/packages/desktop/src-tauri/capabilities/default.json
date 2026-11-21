@@ -104,6 +104,24 @@
         },
         {
           "path": "$HOME/Library/WebKit/**"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes/**"
         }
       ]
     },
@@ -190,6 +208,24 @@
         },
         {
           "path": "$HOME/Library/WebKit/**"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes/**"
         }
       ]
     }

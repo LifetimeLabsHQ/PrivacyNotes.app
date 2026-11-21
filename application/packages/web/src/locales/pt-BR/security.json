@@ -4,7 +4,8 @@
     "tabBiometricShort": "Bloqueio",
     "tabPhraseShort": "Frase",
     "tabPhrase": "Sua frase",
-    "tabTwoFactor": "2FA"
+    "tabTwoFactor": "2FA",
+    "tabTwoFactorPasskeys": "2FA / Passkeys"
   },
   "pinTab": {
     "changeLost": "Sua alteração do PIN não foi salva: o PIN já tinha sido alterado em outro dispositivo.",
@@ -70,7 +71,7 @@
     "browserRestart": "Ao reiniciar o navegador"
   },
   "pinInfo": {
-    "body": "Quando está ativo, o seu PIN é pedido toda vez que você abre este item, mesmo que o aplicativo já esteja desbloqueado. Use para itens sensíveis que devem continuar protegidos quando você se afasta."
+    "body": "Quando está ativo, este item pede o seu PIN antes de abrir, a menos que você tenha digitado o PIN dentro do tempo definido em Configurações > Segurança > Bloqueio (5 minutos, a menos que você mude). Use para os seus itens mais sensíveis."
   },
   "removePinDialog": {
     "introWithBio": "Digite seu PIN atual para confirmar a remoção. O desbloqueio biométrico continua ativo, mas sua única alternativa será sua frase de recuperação.",
@@ -121,6 +122,7 @@
     "hideQr": "Ocultar QR code",
     "showQr": "Mostrar QR code",
     "saveQr": "Salvar QR",
+    "qrHint": "No novo dispositivo, escolha “{{scanQr}}” na tela de login.",
     "copyPhrase": "Copiar frase"
   },
   "custody": {
@@ -134,7 +136,7 @@
     "rowLostSelf": "Sem outra cópia salva ou um dispositivo desbloqueado, não é possível recuperar as notas.",
     "rowKey": "Onde fica sua frase",
     "rowKeyCustodial": "No nosso servidor e nos seus dispositivos",
-    "rowKeySelf": "Só nos seus dispositivos",
+    "rowKeySelf": "Só nos seus dispositivos, a menos que você adicione uma passkey de login",
     "releaseWarning": "Salve sua frase fora do PrivacyNotes primeiro. Depois que excluirmos nossa cópia, você precisará dela em dispositivos novos.",
     "challengePrompt": "Digite estas palavras a partir da lista acima para confirmar que você as tem.",
     "wordLabel": "Palavra {{position}}",
@@ -167,14 +169,18 @@
   "biometricTab": {
     "checkingSupport": "Verificando suporte biométrico...",
     "description": "Desbloqueie com sua impressão digital ou rosto em vez de digitar o PIN.",
+    "descriptionWeb": "Desbloqueie com sua impressão digital ou rosto em vez de digitar o PIN. Em um navegador, isso cria uma passkey para o PrivacyNotes neste dispositivo, salva pelo seu dispositivo ou pelo seu gerenciador de senhas.",
     "trustFirst": "Ative \"Confiar neste dispositivo\" primeiro. O desbloqueio biométrico e o bloqueio do app guardam uma cópia da sua frase de recuperação neste dispositivo, e não é para isso que serve um dispositivo não confiável.",
     "notAvailable": "O desbloqueio biométrico não está disponível neste dispositivo. Seu navegador ou hardware não tem suporte a um autenticador de plataforma (Touch ID, Face ID, Windows Hello).",
     "enabledFlash": "Desbloqueio biométrico ativado.",
     "enrolledOnDevice": "Cadastrado neste dispositivo",
     "boundStatus": "O desbloqueio biométrico está vinculado à sua passkey.",
     "boundStatusNative": "O desbloqueio biométrico está vinculado ao hardware seguro deste dispositivo.",
+    "boundStatusWindows": "O desbloqueio biométrico está vinculado ao Windows Hello neste PC.",
+    "boundStatusWindowsSoftware": "O desbloqueio biométrico está vinculado ao Windows Hello neste PC. O Windows não informa nenhum chip de segurança (TPM) aqui que ele possa usar. Sem um, o Windows Hello guarda a chave em software, e alguém com uma cópia do armazenamento deste PC pode tentar PINs do Windows Hello sem limite.",
     "setUpAgain": "Configurar de novo para um bloqueio mais forte",
     "unboundWeaker": "Neste dispositivo, o desbloqueio biométrico é uma barreira para quem está por perto, não um bloqueio: alguém com uma cópia do armazenamento deste dispositivo pode abrir as suas notas sem a sua impressão digital ou o seu rosto.",
+    "noPrfRefused": "Este app de passkeys não consegue guardar a chave do desbloqueio biométrico, então o desbloqueio biométrico continua desativado. Se um gerenciador de senhas salvou a passkey, exclua-a lá, desative a opção de passkeys dele e tente de novo.",
     "cannotBind": "O app de passkeys que salvou esta passkey, muitas vezes um gerenciador de senhas, não consegue criar o bloqueio completo. Neste dispositivo, o desbloqueio biométrico só impede quem está por perto: alguém com uma cópia do armazenamento deste dispositivo pode abrir as suas notas sem a sua impressão digital ou o seu rosto. Se um gerenciador de senhas salva as suas passkeys, desative a opção de passkeys dele e depois desative e ative de novo o desbloqueio biométrico.",
     "bindOffer": "O desbloqueio biométrico neste dispositivo ainda não está vinculado à sua passkey, e este navegador consegue vinculá-lo. Configure de novo uma vez, para que a chave dele fique com a sua passkey em vez de no armazenamento deste dispositivo.",
     "bindOfferLater": "Agora não",
@@ -185,18 +191,26 @@
     "lockOnOpenHint": "Pede seu PIN ou sua impressão digital quando o app abre neste dispositivo e de novo depois que ele fica inativo.",
     "lockHidesOnSwitch": "Também esconde suas notas quando você troca de app.",
     "confirmPinForLock": "Digite seu PIN para ativar. Ele tranca uma cópia da sua frase de recuperação, então só o seu PIN pode abrir o app.",
+    "pinWeakCopy": "Com um PIN de 4 dígitos, qualquer pessoa com uma cópia do armazenamento deste dispositivo consegue descobrir o PIN em minutos ou horas e abrir suas notas. Um código de acesso é muito mais difícil de adivinhar: defina um na aba PIN.",
     "confirmPasscodeForLock": "Digite seu código de acesso para ativar. Ele tranca uma cópia da sua frase de recuperação, então só o seu código de acesso pode abrir o app.",
     "setupTitle": "Escolha como desbloquear",
     "setupPin": "Um PIN desbloqueia tudo aqui.",
     "setupBiometric": "Uma impressão digital ou o rosto desbloqueia o app apenas neste dispositivo.",
+    "setupBiometricWeb": "Uma impressão digital ou o rosto desbloqueia o app apenas neste dispositivo, por meio de uma passkey.",
     "setupBiometrics": "Biometria",
-    "setupAddPinTitle": "Adicione um PIN para notas protegidas",
+    "setupAddPinTitle": "Adicione um PIN para o bloqueio e as notas protegidas",
+    "fingerprintOnlyLock": "Este bloqueio abre apenas com sua impressão digital. Digite seu PIN para adicioná-lo como uma segunda forma de entrar.",
+    "fingerprintOnlyLockPasscode": "Este bloqueio abre apenas com sua impressão digital. Digite seu código de acesso para adicioná-lo como uma segunda forma de entrar.",
+    "fingerprintOnlyLockAction": "Digitar PIN",
+    "fingerprintOnlyLockActionPasscode": "Digitar código de acesso",
     "appLockHeading": "Bloqueio do app",
     "relockAgainAfter": "Bloquear de novo após",
     "notesHeading": "Notas protegidas",
     "reaskAfter": "Pedir o PIN de novo após",
-    "reaskHint": "Para notas protegidas e sua frase de recuperação.",
+    "reaskHint": "Para notas protegidas, seções protegidas e sua frase de recuperação.",
+    "sectionsHint": "Proteja uma seção inteira, como o Cofre, pelo menu dela na barra lateral.",
     "biometricHeading": "Impressão digital ou rosto",
+    "biometricHeadingWeb": "Impressão digital ou rosto (passkey)",
     "blockCapture": "Ocultar em capturas de tela",
     "blockCaptureHint": "Mantém suas notas fora de capturas de tela, gravações e compartilhamento de tela, quando o seu dispositivo permite. Aplica-se apenas a este dispositivo.",
     "perDeviceNote": "O desbloqueio biométrico abre as mesmas notas que o seu PIN. Ele fica neste dispositivo e nunca sincroniza.",
@@ -205,8 +219,30 @@
     "disableConfirmBody": "Desativar o desbloqueio biométrico neste dispositivo?",
     "disableConfirmBodyAppLock": "Desativar o desbloqueio biométrico neste dispositivo? O bloqueio do app também será desligado."
   },
+  "passkeysTab": {
+    "intro": "Entre em um novo dispositivo com uma passkey em vez de digitar sua frase de recuperação. Sua frase continua funcionando.",
+    "add": "Adicionar uma passkey",
+    "adding": "Adicionando...",
+    "lastUsed": "Último uso em {{date}}",
+    "neverUsed": "Nunca usada",
+    "removeTitle": "Remover esta passkey?",
+    "removeBody": "Você não poderá mais entrar com ela. A passkey em si continua no seu app de passkeys até você excluí-la lá.",
+    "retired": "Criada antes de a sua frase mudar. Remova-a e adicione-a de novo.",
+    "noPrf": "Este app de passkeys não consegue proteger sua frase, então a passkey não foi adicionada. Tente as passkeys do próprio dispositivo ou outro gerenciador de senhas.",
+    "tooMany": "Você tem {{count}} passkeys para entrar. Remova uma para adicionar outra.",
+    "failed": "Não foi possível adicionar a passkey. Verifique sua conexão e tente novamente.",
+    "appsOnly": "Adicione passkeys no seu navegador em use.privacynotes.app. Entrar com elas nos apps virá depois.",
+    "empty": "Nenhuma passkey ainda.",
+    "loadFailed": "Não foi possível carregar suas passkeys. Verifique sua conexão e tente novamente.",
+    "removeFailed": "Não foi possível remover a passkey. Verifique sua conexão e tente novamente.",
+    "pinPrompt": "Digite seu PIN de 4 dígitos para adicionar uma passkey.",
+    "pinPromptPasscode": "Digite seu código de acesso para adicionar uma passkey."
+  },
   "appLock": {
-    "phraseNotSaved": "Este dispositivo não conseguiu salvar sua frase de recuperação, então nada foi alterado. Tente de novo."
+    "phraseNotSaved": "Este dispositivo não conseguiu salvar sua frase de recuperação, então nada foi alterado. Tente de novo.",
+    "phraseInMemoryOnly": "Este navegador não conseguiu proteger sua frase de recuperação, então ela não está salva neste dispositivo. Recarregar ou fechar esta aba encerra sua sessão, então mantenha sua frase de recuperação à mão. Para manter sua sessão aberta aqui, ative o bloqueio do app em Configurações > Segurança > Bloqueio.",
+    "untrustedSignIn": "Você não confiou neste dispositivo, então seu login não fica salvo nele. Fechar ou recarregar o app encerra sua sessão, então mantenha sua frase de recuperação à mão.",
+    "presenceGateRemoved": "O desbloqueio por impressão digital ou rosto está desativado: este navegador guardava a chave dele junto da sua frase de recuperação. Seu PIN ou código de acesso continua desbloqueando o app."
   },
   "pinSetup": {
     "description": "Um PIN de 4 dígitos será exigido para ver sua frase de recuperação. Opcional, mas recomendado para espaços compartilhados.",
@@ -241,13 +277,21 @@
     "disableTitlePasscode": "Digite o código de acesso para desativar a proteção",
     "verifySubtitlePasscode": "Digite seu código de acesso para desbloquear este item. O desbloqueio dura o tempo limite definido em Segurança.",
     "passcodeRequired": "Código de acesso obrigatório",
-    "deleteSubtitlePasscode": "Digite seu código de acesso para excluir este item protegido."
+    "deleteSubtitlePasscode": "Digite seu código de acesso para excluir este item protegido.",
+    "sectionTitle": "Esta seção está protegida",
+    "sectionBiometricSubtitle": "Use sua impressão digital ou rosto para abrir esta seção.",
+    "sectionVerifySubtitle": "Digite seu PIN de 4 dígitos para abrir esta seção. O desbloqueio dura o tempo limite definido em Segurança.",
+    "sectionVerifySubtitlePasscode": "Digite seu código de acesso para abrir esta seção. O desbloqueio dura o tempo limite definido em Segurança.",
+    "sectionDisableSubtitle": "Os itens dela continuam onde estão. Só a proteção sai.",
+    "sectionBootstrapSubtitle": "Esta seção está protegida, mas nenhum PIN está definido neste dispositivo. Defina um PIN de 4 dígitos para abri-la. Seu PIN sincroniza em todos os seus dispositivos."
   },
   "lockScreen": {
     "unlockApp": "Desbloquear o <brand/>",
     "subtitleWithBio": "Use sua impressão digital, rosto ou PIN para continuar.",
     "subtitleNoBio": "Digite seu PIN para continuar.",
     "biometricFailed": "A verificação biométrica falhou ou foi cancelada.",
+    "deviceKeyUnavailable": "Este dispositivo não consegue abrir o bloqueio agora, e o que você digitou não é o problema. Desbloqueie de outra forma abaixo, por exemplo com sua frase de recuperação.",
+    "keyringCancelled": "Desbloqueie seu chaveiro e tente de novo.",
     "biometricUnopened": "O desbloqueio biométrico não conseguiu abrir suas notas. Use seu PIN ou código de acesso, ou configure o desbloqueio biométrico de novo.",
     "biometricGone": "O desbloqueio biométrico parou de funcionar neste dispositivo e precisa ser configurado de novo. Use outra forma de entrar abaixo e depois ative o desbloqueio biométrico de novo em Configurações.",
     "verifying": "Verificando...",
@@ -275,9 +319,6 @@
     "upgradeHeading": "Ou faça upgrade para o Pro",
     "upgradeBody": "Pagamento único, sem assinatura. Dispositivos ilimitados, além de imagens, histórico de notas e mais.",
     "upgradeCta": "Faça upgrade para o Pro por US$ {{price}}",
-    "needMoreHeading": "Precisa de mais dispositivos?",
-    "needMoreBody": "Os upgrades do Pro não estão disponíveis nesta versão. Se você realmente precisar de um terceiro dispositivo, fale com a gente que damos um jeito.",
-    "contactSupport": "Falar com o suporte",
     "saveRecoveryHeading": "Salve sua frase de recuperação",
     "saveRecoveryBody": "Você entrou com OAuth. Anote sua frase de recuperação também. Ela é sua alternativa caso o OAuth falhe ou você perca o acesso em todos os dispositivos.",
     "hide": "Ocultar",
@@ -310,7 +351,7 @@
     "custodial": "Armazenamos uma cópia criptografada da sua frase. Mantenha pelo menos uma conta conectada ou mude para a autocustódia antes de desconectar a última.",
     "selfCustody": "Em um dispositivo novo, uma conta conectada ainda precisa da sua frase de recuperação para abrir as notas. Conectar uma conta não armazena a frase conosco.",
     "mfaRequired": "O login em duas etapas continua ativado para todos os métodos de login. Mantenha seu autenticador ou a chave de backup salva.",
-    "unavailable": "Ainda não é possível alterar contas conectadas. Seu login atual continua funcionando.",
+    "unavailable": "As alterações de contas conectadas estão desativadas por enquanto. Seu login atual continua funcionando.",
     "loading": "Verificando contas conectadas...",
     "emailHidden": "E-mail não compartilhado",
     "disconnectAccount": "Desconectar conta {{email}} do {{provider}}",
@@ -384,7 +425,7 @@
     "signInAgain": "Entrar novamente",
     "lostAuthenticator": "Perdeu o celular?",
     "restore": "Adicione sua chave de backup a qualquer app autenticador e digite o código dele no PrivacyNotes.",
-    "noBackup": "Sem celular e sem chave de backup? Nós não redefinimos o 2FA, e nosso suporte não pode ajudar com isso. Exporte as notas deste dispositivo e crie um novo cofre.",
+    "noBackup": "Sem celular e sem chave de backup? Nós não redefinimos o 2FA, e nosso suporte não pode ajudar com isso. Exporte as notas deste dispositivo como \"Tudo, sem criptografia (.zip)\" e crie um novo cofre.",
     "localNotes": "Agora não? Continue usando as notas deste dispositivo. A sincronização volta depois que você digitar um código.",
     "useLocalNotes": "Pular por enquanto"
   },
@@ -394,7 +435,7 @@
     "loading": "Verificando o 2FA...",
     "retry": "Tentar novamente",
     "unavailable": "Não foi possível verificar o 2FA. Suas notas neste dispositivo estão seguras. Verifique sua conexão e tente novamente.",
-    "notAvailable": "O 2FA ainda não está disponível.",
+    "notAvailable": "O 2FA está desativado por enquanto. Tente novamente mais tarde.",
     "actionFailed": "Não deu certo. Verifique sua conexão e tente novamente. Suas notas neste dispositivo estão seguras.",
     "warning": "Guarde seu celular ou sua chave de backup. Se perder os dois, você não consegue entrar em um novo dispositivo. Isso é para a sua própria segurança. Nós não redefinimos o 2FA, e nosso suporte não pode ajudar com isso.",
     "cannotEnroll": "Entre novamente com sua frase ou uma conta conectada para configurar o 2FA.",
@@ -423,6 +464,7 @@
     "backupWarning": "Perdeu o celular? Esta chave traz seus códigos de volta. Guarde em um lugar seguro, fora do PrivacyNotes.",
     "savedAcknowledgment": "Salvei a chave de backup.",
     "confirmBackup": "Digite de novo sua chave de backup da etapa anterior e depois o código do seu app.",
+    "disconnectsConnections": "Ativar o 2FA desconecta a extensão do navegador e a linha de comando. Conecte a extensão de novo em Configurações > Extensão, e a linha de comando em Configurações > CLI.",
     "codeLabel": "Código do seu app",
     "cancelSetup": "Cancelar",
     "enabled": "O 2FA está ativado",
@@ -452,6 +494,7 @@
   },
   "phraseChange": {
     "lengthGroup": "Tamanho da frase",
+    "lengthLater": "Você pode mudar o tamanho ou a frase depois em Configurações > Segurança > Frase.",
     "badgeMargin": "Margem extra",
     "rowWrite": "Para anotar",
     "write12": "Rápida de copiar à mão.",
@@ -506,10 +549,23 @@
     "failed": "A frase não mudou.",
     "failedTooMany": "Sua frase mudou três vezes nas últimas 24 horas. Tente novamente mais tarde.",
     "failedMoved": "Suas configurações mudaram em outro dispositivo nesse meio-tempo. Tente novamente.",
+    "failedSettingsMoved": "Suas configurações mudaram em outro dispositivo nesse meio-tempo. Tente novamente: desta vez a mudança de frase as substitui, mesmo que mudem de novo.",
     "failedTwoFactor": "O código do 2FA não foi aceito. Tente novamente.",
     "failedKeyRing": "Este dispositivo não tem as chaves de uma frase anterior. Faça a mudança em um dispositivo que tenha.",
     "failedBiometric": "Sua impressão digital ou seu rosto é o único bloqueio deste dispositivo. Confirme para fazer a mudança.",
+    "failedCannotBind": "Sua impressão digital ou seu rosto é o único bloqueio deste dispositivo, e neste dispositivo ele não consegue proteger a nova frase. Defina primeiro um PIN ou código de acesso em Configurações > Segurança > PIN e depois faça a mudança.",
     "failedUnsynced": "Algumas configurações deste dispositivo ainda não foram sincronizadas. Espere um momento e tente novamente.",
-    "failedOffline": "O servidor não conseguiu receber a mudança agora. Verifique sua conexão e tente novamente."
+    "failedOffline": "O servidor não conseguiu receber a mudança agora. Verifique sua conexão e tente novamente.",
+    "signInPasskeysReset_one": "Sua passkey de login para de funcionar. Adicione-a de novo depois da mudança.",
+    "signInPasskeysReset_other": "Suas {{count}} passkeys de login param de funcionar. Adicione-as de novo depois da mudança."
+  },
+  "releaseNotice": {
+    "sent": "Um novo dispositivo entrou na sua conta em {{when}}. Não foi você? Remova-o em Dispositivos."
+  },
+  "releaseApproval": {
+    "ask": "Um novo login em {{when}} pede sua frase de recuperação (código {{code}}). Permita apenas se for você e se o novo dispositivo mostrar o mesmo código.",
+    "waiting": "Um novo login pede sua frase de recuperação (código {{code}}) e a recebe após {{when}}, a menos que você o negue. Permita apenas se for você e se o novo dispositivo mostrar o mesmo código.",
+    "allow": "Permitir",
+    "deny": "Negar"
   }
 }

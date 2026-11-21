@@ -29,6 +29,8 @@
     "tags_one": "Étiquettes conservées sur {{count}} note.",
     "tags_other": "Étiquettes conservées sur {{count}} notes.",
     "droppedAlign": "Alignement retiré des blocs que l'éditeur ne sait pas aligner, le texte est conservé.",
+    "lostPasskeys_one": "{{count}} passkey enregistrée avec un identifiant laissée de côté. Garde-la dans ton ancienne app, ou ajoute une nouvelle passkey sur ce site.",
+    "lostPasskeys_other": "{{count}} passkeys enregistrées avec des identifiants laissées de côté. Garde-les dans ton ancienne app, ou ajoute de nouvelles passkeys sur ces sites.",
     "foldersFromNotebooks_one": "{{count}} dossier recréé à partir de tes carnets ({{filed}}).",
     "foldersFromNotebooks_other": "{{count}} dossiers recréés à partir de tes carnets ({{filed}}).",
     "parsingJson": "Analyse du JSON…",
@@ -324,6 +326,14 @@
     "invalidJson": "Ce fichier n'est pas du JSON valide. Vérifie que tu as exporté en \".json\" (non chiffré).",
     "encryptedExport": "C'est un export Bitwarden chiffré. Exporte à nouveau au format \".json\" simple (pas \".json (Encrypted)\").",
     "missingItems": "Il manque à ce fichier le tableau \"items\" attendu. Ce n'est pas un export de coffre Bitwarden.",
+    "notZipExport": "Ce zip n'a pas de data.json à sa racine. Ce n'est pas un export Bitwarden \".zip (with attachments)\".",
+    "keptPasskeys_one": "{{count}} passkey conservée sur son identifiant.",
+    "keptPasskeys_other": "{{count}} passkeys conservées sur leurs identifiants.",
+    "passkeyOtherSite": "L'identifiant \"{{name}}\" contient une passkey pour {{site}}, qui ne fait pas partie de ses sites web. Elle a été importée avec l'identifiant ; supprime-la là-bas si tu ne la connais pas.",
+    "skippedPasskeys_one": "{{count}} passkey laissée de côté, car le Coffre ne peut pas la contenir : sa clé n'est pas P-256, ou une valeur dépasse la longueur permise par WebAuthn. Ajoute une nouvelle passkey sur ce site.",
+    "skippedPasskeys_other": "{{count}} passkeys laissées de côté, car le Coffre ne peut pas les contenir : la clé n'est pas P-256, ou une valeur dépasse la longueur permise par WebAuthn. Ajoute de nouvelles passkeys sur ces sites.",
+    "unmatchedAttachments_one": "{{count}} pièce jointe n'a pas pu être rattachée à un seul élément, car aucun élément ou plusieurs éléments portent le nom de son dossier. Elle se trouve dans une note nommée d'après le dossier.",
+    "unmatchedAttachments_other": "{{count}} pièces jointes n'ont pas pu être rattachées à un seul élément, car aucun élément ou plusieurs éléments portent le nom de leur dossier. Elles se trouvent dans des notes nommées d'après leurs dossiers.",
     "unknownType": "Élément \"{{name}}\" de type inconnu {{type}} ignoré.",
     "importedCards_one": "{{count}} carte importée comme élément du Coffre.",
     "importedCards_other": "{{count}} cartes importées comme éléments du Coffre.",
@@ -629,6 +639,10 @@
     "leftFiles_many": "{{count}} fichiers joints sont restés de côté. Enregistre-les depuis Enpass et joins-les aux éléments ici.",
     "leftFiles_other": "{{count}} fichiers joints sont restés de côté. Enregistre-les depuis Enpass et joins-les aux éléments ici."
   },
+  "msecure": {
+    "notMSecure": "Ce fichier n'est pas un export mSecure. Dans mSecure, choisis Settings > Backups > Export records to CSV file.",
+    "fieldDataOnly": "Cet export mSecure n'a pas de noms de champs, donc ses champs ne peuvent pas être distingués. Exporte à nouveau avec \"Only export field data\" désactivé."
+  },
   "nordpass": {
     "notNordPass": "Ce fichier n'est pas un export NordPass. Dans NordPass, choisis Settings > Export items."
   },
@@ -645,6 +659,7 @@
     "kdbxFile": "C'est la base de données KeePass elle-même, qui est verrouillée. Dans KeePass ou KeePassXC, exporte-la en XML, puis importe ce fichier.",
     "notKeePass": "Ce fichier n'est pas un export KeePass XML. Dans KeePass, choisis File > Export > KeePass XML (2.x) ; dans KeePassXC, Database > Export > XML File.",
     "noEntries": "Ce fichier KeePass n'a aucune entrée en dehors de la Recycle Bin.",
+    "doctype": "Ce fichier déclare un DOCTYPE, ce qu'aucun export KeePass n'écrit, donc il n'a pas été lu. Exporte à nouveau le XML depuis KeePass et importe ce fichier.",
     "readingEntries": "Lecture des entrées…",
     "leftHistory_one": "{{count}} ancienne version d'une entrée laissée de côté : seule la plus récente suit.",
     "leftHistory_other": "{{count}} anciennes versions d'entrées laissées de côté : seule la plus récente suit.",
@@ -662,6 +677,15 @@
     "rebuiltFolders_other": "{{count}} dossiers recréés à partir de tes fichiers ({{filed}}).",
     "broughtAcross": "{{parts}} repris de ton dossier."
   },
+  "raindrop": {
+    "notRaindrop": "Ce n'est pas un export Raindrop.io - le fichier .csv de Export > CSV, ou le .zip qui le contient, était attendu.",
+    "noCsv": "Aucun fichier .csv dans ce zip. Exporte le CSV depuis Raindrop.io et choisis ce fichier.",
+    "highlightsHeading": "Surlignages",
+    "skipped_one": "{{count}} signet a été laissé de côté, car son adresse n'est pas un lien web.",
+    "skipped_other": "{{count}} signets ont été laissés de côté, car leurs adresses ne sont pas des liens web.",
+    "covers_one": "{{count}} image de couverture n'a pas été importée. Le signet affiche l'icône du site web à la place.",
+    "covers_other": "{{count}} images de couverture n'ont pas été importées. Les signets affichent les icônes des sites web à la place."
+  },
   "browserBookmarks": {
     "notBookmarks": "Ce n'est pas un export de favoris - le fichier .html de favoris qu'exporte un navigateur était attendu.",
     "noBookmarks": "Aucun favori trouvé dans ce fichier.",
@@ -673,7 +697,9 @@
     "mediaTooLarge_other": "{{count}} fichiers de plus de {{size}} ignorés, la taille maximale qu'un forfait peut synchroniser.",
     "entryTooLarge": "{{name}} dépasse une fois décompressé les {{limit}} qu'un import peut lire d'un coup. Retire-le de l'export et réessaie.",
     "entryTooLargeKnown": "{{name}} fait {{size}} une fois décompressé, plus que les {{limit}} qu'un import peut lire d'un coup. Retire-le de l'export et réessaie.",
-    "unreadable": "Impossible d'ouvrir ce fichier. Il est peut-être incomplet ou endommagé. Exporte-le à nouveau et choisis le nouveau fichier."
+    "unreadable": "Impossible d'ouvrir ce fichier. Il est peut-être incomplet ou endommagé. Exporte-le à nouveau et choisis le nouveau fichier.",
+    "importTooLarge": "Ce fichier dépasse {{limit}} une fois décompressé, plus que ce que contient un vrai export. Exporte-le à nouveau et choisis le nouveau fichier.",
+    "tooManyEntries": "Ce zip liste plus de {{max}} fichiers, plus que ce que contient un vrai export. Exporte-le à nouveau et choisis le nouveau fichier."
   },
   "safariArchive": {
     "noEntry": "Aucun {{want}} dans ce zip.",
@@ -685,5 +711,47 @@
   },
   "apply": {
     "unknownWriteError": "Erreur inconnue lors de l'écriture dans la base de données locale."
+  },
+  "onenote": {
+    "reading": "Lecture du bloc-notes OneNote…",
+    "notOneNote": "Ce n'est pas un bloc-notes OneNote. Dans OneNote pour Windows, choisis File > Export > Notebook > OneNote Package, puis dépose ici le fichier .onepkg.",
+    "cloudFormat": "Cette section est dans le format que OneNote garde en ligne, que seul OneNote sait lire. Ouvre le bloc-notes dans OneNote pour Windows, choisis File > Export > Notebook > OneNote Package, puis dépose ici ce fichier .onepkg.",
+    "splitPackage": "Ce package OneNote est réparti sur plusieurs fichiers. Exporte à nouveau le bloc-notes en un seul OneNote Package et dépose ce fichier ici.",
+    "tooLarge": "Ce package OneNote est trop volumineux pour être lu d'un coup. Exporte un groupe de sections ou une section à la fois.",
+    "damaged": "Ce fichier OneNote est endommagé et ne peut pas être lu. Exporte à nouveau le bloc-notes depuis OneNote et essaie ce fichier.",
+    "noPages": "Aucune page trouvée dans ce bloc-notes OneNote.",
+    "allLocked": "Toutes les sections de ce bloc-notes sont protégées par mot de passe. Déverrouille les sections dans OneNote, retire leurs mots de passe, exporte à nouveau et dépose ici le nouveau fichier.",
+    "subpages_one": "{{count}} sous-page conservée en note à côté de sa page.",
+    "subpages_other": "{{count}} sous-pages conservées en notes à côté de leurs pages.",
+    "noteTags_one": "Les indicateurs de note de {{count}} page ont été conservés en étiquettes.",
+    "noteTags_other": "Les indicateurs de note de {{count}} pages ont été conservés en étiquettes.",
+    "lockedSections_one": "{{count}} section protégée par mot de passe a été laissée de côté. Retire son mot de passe dans OneNote et exporte à nouveau pour l'importer aussi.",
+    "lockedSections_other": "{{count}} sections protégées par mot de passe ont été laissées de côté. Retire leurs mots de passe dans OneNote et exporte à nouveau pour les importer aussi.",
+    "unreadableSections_one": "{{count}} section n'a pas pu être lue et a été laissée de côté.",
+    "unreadableSections_other": "{{count}} sections n'ont pas pu être lues et ont été laissées de côté.",
+    "unsupported_one": "{{count}} dessin, extrait audio ou équation sans équivalent ici a été laissé de côté.",
+    "unsupported_other": "{{count}} dessins, extraits audio et équations sans équivalent ici ont été laissés de côté.",
+    "missingFiles_one": "{{count}} image ou fichier n'était pas dans le package et a été laissé de côté.",
+    "missingFiles_other": "{{count}} images ou fichiers n'étaient pas dans le package et ont été laissés de côté.",
+    "deadLinks_one": "{{count}} lien OneNote pointe hors de ce bloc-notes. Seul son texte est conservé.",
+    "deadLinks_other": "{{count}} liens OneNote pointent hors de ce bloc-notes. Seul leur texte est conservé.",
+    "recycleBin_one": "{{count}} page de la corbeille du bloc-notes a été laissée de côté.",
+    "recycleBin_other": "{{count}} pages de la corbeille du bloc-notes ont été laissées de côté."
+  },
+  "capacities": {
+    "notCapacities": "Ce n'est pas un export Capacities. Dans Capacities, ouvre Settings > Full Export, lance Manual Full Export avec les médias inclus, puis dépose le zip ici.",
+    "noObjects": "Aucune page ni aucun autre objet avec du texte trouvé dans cet export Capacities.",
+    "typeFolders_one": "{{count}} type d'objet reconstruit en dossier.",
+    "typeFolders_other": "{{count}} types d'objets reconstruits en dossiers.",
+    "properties_one": "Les propriétés de {{count}} objet ont été écrites sous forme de liste en haut de sa note.",
+    "properties_other": "Les propriétés de {{count}} objets ont été écrites sous forme de liste en haut de chaque note.",
+    "mediaObjects_one": "{{count}} image ou fichier conservé dans les notes qui l'affichent, sans note à part.",
+    "mediaObjects_other": "{{count}} images et fichiers conservés dans les notes qui les affichent, sans note à part.",
+    "queries_one": "{{count}} requête a été laissée de côté. Une requête est une recherche enregistrée dans Capacities, sans texte propre.",
+    "queries_other": "{{count}} requêtes ont été laissées de côté. Une requête est une recherche enregistrée dans Capacities, sans texte propre.",
+    "collections_one": "{{count}} liste de collection a été laissée de côté. Les objets qu'elle contient suivent, sans la collection.",
+    "collections_other": "{{count}} listes de collections ont été laissées de côté. Les objets qu'elles contiennent suivent, sans les collections.",
+    "deadLinks_one": "{{count}} lien pointe vers un objet absent de l'export, par exemple un objet dans la corbeille. Seul son texte est conservé.",
+    "deadLinks_other": "{{count}} liens pointent vers des objets absents de l'export, par exemple des objets dans la corbeille. Seul leur texte est conservé."
   }
 }

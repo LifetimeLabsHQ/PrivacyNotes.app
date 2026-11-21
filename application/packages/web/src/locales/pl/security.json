@@ -4,7 +4,8 @@
     "tabBiometricShort": "Blokada",
     "tabPhraseShort": "Fraza",
     "tabPhrase": "Twoja fraza",
-    "tabTwoFactor": "2FA"
+    "tabTwoFactor": "2FA",
+    "tabTwoFactorPasskeys": "2FA / Passkey"
   },
   "pinTab": {
     "changeLost": "Zmiana PIN-u nie została zapisana: PIN został wcześniej zmieniony na innym urządzeniu.",
@@ -70,7 +71,7 @@
     "browserRestart": "Po ponownym uruchomieniu przeglądarki"
   },
   "pinInfo": {
-    "body": "Gdy ta opcja jest włączona, PIN jest wymagany za każdym razem, gdy otwierasz ten element, nawet jeśli aplikacja jest już odblokowana. Używaj jej do wrażliwych elementów, które mają pozostać chronione, gdy odchodzisz od urządzenia."
+    "body": "Gdy ta opcja jest włączona, ten element prosi o PIN przed otwarciem, chyba że wpisano PIN w czasie ustawionym w Ustawienia > Bezpieczeństwo > Blokada (5 minut, jeśli tego nie zmienisz). Używaj jej do swoich najbardziej wrażliwych elementów."
   },
   "removePinDialog": {
     "introWithBio": "Wpisz obecny PIN, aby potwierdzić usunięcie. Odblokowanie biometryczne pozostanie aktywne, ale Twoim jedynym zapasowym sposobem będzie fraza odzyskiwania.",
@@ -123,6 +124,7 @@
     "hideQr": "Ukryj kod QR",
     "showQr": "Pokaż kod QR",
     "saveQr": "Zapisz QR",
+    "qrHint": "Na nowym urządzeniu wybierz „{{scanQr}}” na ekranie logowania.",
     "copyPhrase": "Kopiuj frazę"
   },
   "custody": {
@@ -136,7 +138,7 @@
     "rowLostSelf": "Bez innej zapisanej kopii lub odblokowanego urządzenia nie da się odzyskać notatek.",
     "rowKey": "Gdzie jest Twoja fraza",
     "rowKeyCustodial": "Na naszym serwerze i Twoich urządzeniach",
-    "rowKeySelf": "Tylko na Twoich urządzeniach",
+    "rowKeySelf": "Tylko na Twoich urządzeniach, chyba że dodasz passkey do logowania",
     "releaseWarning": "Najpierw zapisz swoją frazę poza PrivacyNotes. Po usunięciu naszej kopii będzie potrzebna na nowych urządzeniach.",
     "challengePrompt": "Przepisz te słowa z listy powyżej, aby potwierdzić, że je masz.",
     "wordLabel": "Słowo {{position}}",
@@ -169,14 +171,18 @@
   "biometricTab": {
     "checkingSupport": "Sprawdzanie obsługi biometrii...",
     "description": "Odblokowuj odciskiem palca lub twarzą zamiast wpisywać PIN.",
+    "descriptionWeb": "Odblokowuj odciskiem palca lub twarzą zamiast wpisywać PIN. W przeglądarce tworzy to passkey dla PrivacyNotes na tym urządzeniu, zapisany przez twoje urządzenie lub menedżer haseł.",
     "trustFirst": "Najpierw włącz „Ufaj temu urządzeniu”. Odblokowanie biometryczne i blokada aplikacji zapisują na tym urządzeniu kopię twojej frazy odzyskiwania, a niezaufane urządzenie nie jest do tego.",
     "notAvailable": "Odblokowanie biometryczne nie jest dostępne na tym urządzeniu. Twoja przeglądarka lub sprzęt nie obsługuje uwierzytelniania platformy (Touch ID, Face ID, Windows Hello).",
     "enabledFlash": "Odblokowanie biometryczne włączone.",
     "enrolledOnDevice": "Zarejestrowane na tym urządzeniu",
     "boundStatus": "Odblokowanie biometryczne jest powiązane z twoim passkey.",
     "boundStatusNative": "Odblokowanie biometryczne jest powiązane z bezpiecznym sprzętem tego urządzenia.",
+    "boundStatusWindows": "Odblokowanie biometryczne jest powiązane z Windows Hello na tym komputerze.",
+    "boundStatusWindowsSoftware": "Odblokowanie biometryczne jest powiązane z Windows Hello na tym komputerze. Windows nie zgłasza tu żadnego układu zabezpieczeń (TPM), którego mógłby użyć. Bez niego Windows Hello przechowuje klucz w oprogramowaniu, a ktoś, kto ma kopię pamięci tego komputera, może próbować kodów PIN Windows Hello bez ograniczeń.",
     "setUpAgain": "Skonfiguruj ponownie, aby uzyskać silniejszą blokadę",
     "unboundWeaker": "Na tym urządzeniu odblokowanie biometryczne jest barierą dla osób w pobliżu, a nie blokadą: ktoś, kto ma kopię pamięci tego urządzenia, może otworzyć twoje notatki bez twojego odcisku palca czy twarzy.",
+    "noPrfRefused": "Ta aplikacja passkey nie może przechowywać klucza odblokowania biometrycznego, więc odblokowanie biometryczne pozostaje wyłączone. Jeśli passkey zapisał menedżer haseł, usuń go tam, wyłącz w nim opcję passkey i spróbuj ponownie.",
     "cannotBind": "Aplikacja passkey, która zapisała ten passkey, często menedżer haseł, nie może utworzyć pełnej blokady. Na tym urządzeniu odblokowanie biometryczne zatrzymuje tylko osoby w pobliżu: ktoś, kto ma kopię pamięci tego urządzenia, może otworzyć twoje notatki bez twojego odcisku palca czy twarzy. Jeśli twoje passkey zapisuje menedżer haseł, wyłącz w nim opcję passkey, a potem wyłącz i ponownie włącz odblokowanie biometryczne.",
     "bindOffer": "Odblokowanie biometryczne na tym urządzeniu nie jest jeszcze powiązane z twoim passkey, a ta przeglądarka może je powiązać. Skonfiguruj je ponownie jeden raz, aby jego klucz był przechowywany razem z twoim passkey zamiast w pamięci tego urządzenia.",
     "bindOfferLater": "Nie teraz",
@@ -187,18 +193,26 @@
     "lockOnOpenHint": "Pyta o twój PIN lub odcisk palca, gdy aplikacja otwiera się na tym urządzeniu, i ponownie po okresie bezczynności.",
     "lockHidesOnSwitch": "Ukrywa też twoje notatki przy przełączaniu aplikacji.",
     "confirmPinForLock": "Wpisz swój PIN, aby to włączyć. Zamyka on kopię Twojej frazy odzyskiwania, więc tylko Twój PIN może otworzyć aplikację.",
+    "pinWeakCopy": "Przy 4-cyfrowym PIN-ie każdy, kto ma kopię pamięci tego urządzenia, może odgadnąć PIN w ciągu od kilku minut do kilku godzin i otworzyć twoje notatki. Kod dostępu jest znacznie trudniejszy do odgadnięcia: ustaw go na karcie PIN.",
     "confirmPasscodeForLock": "Wpisz swój kod dostępu, aby to włączyć. Zamyka on kopię twojej frazy odzyskiwania, więc tylko twój kod dostępu może otworzyć aplikację.",
     "setupTitle": "Wybierz sposób odblokowania",
     "setupPin": "PIN odblokowuje tu wszystko.",
     "setupBiometric": "Odcisk palca lub twarz odblokowuje aplikację tylko na tym urządzeniu.",
+    "setupBiometricWeb": "Odcisk palca lub twarz odblokowuje aplikację tylko na tym urządzeniu, przez passkey.",
     "setupBiometrics": "Biometria",
-    "setupAddPinTitle": "Dodaj PIN do chronionych notatek",
+    "setupAddPinTitle": "Dodaj PIN do blokady i chronionych notatek",
+    "fingerprintOnlyLock": "Ta blokada otwiera się tylko odciskiem palca. Wpisz PIN, aby dodać go jako drugi sposób odblokowania.",
+    "fingerprintOnlyLockPasscode": "Ta blokada otwiera się tylko odciskiem palca. Wpisz kod dostępu, aby dodać go jako drugi sposób odblokowania.",
+    "fingerprintOnlyLockAction": "Wpisz PIN",
+    "fingerprintOnlyLockActionPasscode": "Wpisz kod dostępu",
     "appLockHeading": "Blokada aplikacji",
     "relockAgainAfter": "Zablokuj ponownie po",
     "notesHeading": "Chronione notatki",
     "reaskAfter": "Pytaj ponownie o PIN po",
-    "reaskHint": "Dotyczy chronionych notatek i twojej frazy odzyskiwania.",
+    "reaskHint": "Dotyczy chronionych notatek, chronionych sekcji i twojej frazy odzyskiwania.",
+    "sectionsHint": "Całą sekcję, na przykład Sejf, możesz chronić z jej menu na pasku bocznym.",
     "biometricHeading": "Odcisk palca lub twarz",
+    "biometricHeadingWeb": "Odcisk palca lub twarz (passkey)",
     "blockCapture": "Ukrywaj przed przechwytywaniem ekranu",
     "blockCaptureHint": "Nie pokazuje twoich notatek na zrzutach ekranu, nagraniach i przy udostępnianiu ekranu, jeśli urządzenie na to pozwala. Dotyczy tylko tego urządzenia.",
     "perDeviceNote": "Odblokowanie biometryczne otwiera te same notatki co PIN. Zostaje na tym urządzeniu i nigdy się nie synchronizuje.",
@@ -207,8 +221,30 @@
     "disableConfirmBody": "Wyłączyć odblokowanie biometryczne na tym urządzeniu?",
     "disableConfirmBodyAppLock": "Wyłączyć odblokowanie biometryczne na tym urządzeniu? Blokada aplikacji również zostanie wyłączona."
   },
+  "passkeysTab": {
+    "intro": "Loguj się na nowym urządzeniu za pomocą passkey zamiast wpisywać frazę odzyskiwania. Twoja fraza nadal działa.",
+    "add": "Dodaj passkey",
+    "adding": "Dodawanie...",
+    "lastUsed": "Ostatnio użyty {{date}}",
+    "neverUsed": "Nigdy nieużyty",
+    "removeTitle": "Usunąć ten passkey?",
+    "removeBody": "Nie zalogujesz się już nim. Sam passkey zostaje w twojej aplikacji passkey, dopóki go tam nie usuniesz.",
+    "retired": "Utworzony przed zmianą frazy. Usuń go i dodaj ponownie.",
+    "noPrf": "Ta aplikacja passkey nie może chronić twojej frazy, więc passkey nie został dodany. Spróbuj własnych passkey urządzenia albo innego menedżera haseł.",
+    "tooMany": "Masz {{count}} passkey do logowania. Usuń jeden, aby dodać kolejny.",
+    "failed": "Nie udało się dodać passkey. Sprawdź połączenie i spróbuj ponownie.",
+    "appsOnly": "Dodawaj passkey w przeglądarce na use.privacynotes.app. Logowanie nimi w aplikacjach pojawi się później.",
+    "empty": "Nie masz jeszcze żadnego passkey.",
+    "loadFailed": "Nie udało się wczytać twoich passkey. Sprawdź połączenie i spróbuj ponownie.",
+    "removeFailed": "Nie udało się usunąć passkey. Sprawdź połączenie i spróbuj ponownie.",
+    "pinPrompt": "Wpisz swój 4-cyfrowy PIN, aby dodać passkey.",
+    "pinPromptPasscode": "Wpisz swój kod dostępu, aby dodać passkey."
+  },
   "appLock": {
-    "phraseNotSaved": "To urządzenie nie mogło zapisać twojej frazy odzyskiwania, więc nic nie zostało zmienione. Spróbuj ponownie."
+    "phraseNotSaved": "To urządzenie nie mogło zapisać twojej frazy odzyskiwania, więc nic nie zostało zmienione. Spróbuj ponownie.",
+    "phraseInMemoryOnly": "Ta przeglądarka nie mogła ochronić twojej frazy odzyskiwania, więc nie jest ona zapisana na tym urządzeniu. Odświeżenie lub zamknięcie tej karty wyloguje cię, więc miej frazę odzyskiwania pod ręką. Aby utrzymać tu sesję, włącz blokadę aplikacji w Ustawienia > Bezpieczeństwo > Blokada.",
+    "untrustedSignIn": "Nie zaufano temu urządzeniu, więc twoje logowanie nie jest na nim zapisane. Zamknięcie lub odświeżenie aplikacji wyloguje cię, więc miej frazę odzyskiwania pod ręką.",
+    "presenceGateRemoved": "Odblokowanie odciskiem palca lub twarzą jest wyłączone: ta przeglądarka przechowywała jego klucz obok twojej frazy odzyskiwania. Twój PIN lub kod dostępu nadal odblokowuje aplikację."
   },
   "pinSetup": {
     "description": "4-cyfrowy PIN będzie wymagany do zobaczenia frazy odzyskiwania. Opcjonalny, ale zalecany we wspólnych przestrzeniach.",
@@ -243,13 +279,21 @@
     "disableTitlePasscode": "Wpisz kod dostępu, aby wyłączyć ochronę",
     "verifySubtitlePasscode": "Wpisz swój kod dostępu, aby odblokować ten element. Odblokowanie trwa tyle, ile ustawiono w sekcji Bezpieczeństwo.",
     "passcodeRequired": "Wymagany kod dostępu",
-    "deleteSubtitlePasscode": "Wpisz kod dostępu, aby usunąć ten chroniony element."
+    "deleteSubtitlePasscode": "Wpisz kod dostępu, aby usunąć ten chroniony element.",
+    "sectionTitle": "Ta sekcja jest chroniona",
+    "sectionBiometricSubtitle": "Użyj odcisku palca lub twarzy, aby otworzyć tę sekcję.",
+    "sectionVerifySubtitle": "Wpisz swój 4-cyfrowy PIN, aby otworzyć tę sekcję. Odblokowanie trwa tyle, ile ustawiono w sekcji Bezpieczeństwo.",
+    "sectionVerifySubtitlePasscode": "Wpisz swój kod dostępu, aby otworzyć tę sekcję. Odblokowanie trwa tyle, ile ustawiono w sekcji Bezpieczeństwo.",
+    "sectionDisableSubtitle": "Jej elementy zostają na miejscu. Znika tylko ochrona.",
+    "sectionBootstrapSubtitle": "Ta sekcja jest chroniona, ale na tym urządzeniu nie ustawiono PIN-u. Ustaw 4-cyfrowy PIN, aby ją otworzyć. Twój PIN synchronizuje się na wszystkich Twoich urządzeniach."
   },
   "lockScreen": {
     "unlockApp": "Odblokuj <brand/>",
     "subtitleWithBio": "Użyj odcisku palca, twarzy lub PIN-u, aby kontynuować.",
     "subtitleNoBio": "Wpisz PIN, aby kontynuować.",
     "biometricFailed": "Weryfikacja biometryczna nie powiodła się lub została anulowana.",
+    "deviceKeyUnavailable": "To urządzenie nie może teraz otworzyć swojej blokady, a problemem nie jest to, co wpisano. Odblokuj poniżej w inny sposób, na przykład frazą odzyskiwania.",
+    "keyringCancelled": "Odblokuj bazę kluczy, a potem spróbuj ponownie.",
     "biometricUnopened": "Odblokowanie biometryczne nie mogło otworzyć twoich notatek. Użyj PIN-u lub kodu dostępu albo skonfiguruj odblokowanie biometryczne ponownie.",
     "biometricGone": "Odblokowanie biometryczne przestało działać na tym urządzeniu i trzeba je skonfigurować ponownie. Użyj poniżej innego sposobu wejścia, a potem włącz odblokowanie biometryczne z powrotem w Ustawieniach.",
     "verifying": "Weryfikowanie...",
@@ -277,9 +321,6 @@
     "upgradeHeading": "Albo przejdź na Pro",
     "upgradeBody": "Płatność jednorazowa, bez subskrypcji. Nieograniczona liczba urządzeń plus obrazy, historia notatek i więcej.",
     "upgradeCta": "Przejdź na Pro za {{price}} $",
-    "needMoreHeading": "Potrzebujesz więcej urządzeń?",
-    "needMoreBody": "Ulepszenia do Pro nie są dostępne w tej wersji. Jeśli naprawdę potrzebujesz trzeciego urządzenia, napisz do nas, a coś wymyślimy.",
-    "contactSupport": "Skontaktuj się ze wsparciem",
     "saveRecoveryHeading": "Zapisz swoją frazę odzyskiwania",
     "saveRecoveryBody": "To logowanie odbyło się przez OAuth. Zapisz też swoją frazę odzyskiwania. To Twoje zabezpieczenie na wypadek awarii OAuth albo utraty dostępu na wszystkich urządzeniach.",
     "hide": "Ukryj",
@@ -315,7 +356,7 @@
     "custodial": "Przechowujemy zaszyfrowaną kopię Twojej frazy. Zachowaj co najmniej jedno połączone konto lub przejdź na samodzielne przechowywanie przed odłączeniem ostatniego.",
     "selfCustody": "Na nowym urządzeniu połączone konto nadal wymaga Twojej frazy odzyskiwania, aby otworzyć notatki. Połączenie konta nie zapisuje frazy u nas.",
     "mfaRequired": "Logowanie dwuskładnikowe pozostaje włączone dla wszystkich metod logowania. Zachowaj aplikację uwierzytelniającą lub zapisany klucz zapasowy.",
-    "unavailable": "Zmiany połączonych kont nie są jeszcze dostępne. Twoje obecne logowanie nadal działa.",
+    "unavailable": "Zmiany połączonych kont są na razie wyłączone. Twoje obecne logowanie nadal działa.",
     "loading": "Sprawdzanie połączonych kont...",
     "emailHidden": "E-mail nie został udostępniony",
     "disconnectAccount": "Odłącz konto {{provider}} {{email}}",
@@ -389,7 +430,7 @@
     "signInAgain": "Zaloguj się ponownie",
     "lostAuthenticator": "Zgubiony telefon?",
     "restore": "Dodaj klucz zapasowy do dowolnej aplikacji uwierzytelniającej, a potem wpisz jej kod w PrivacyNotes.",
-    "noBackup": "Nie masz telefonu ani klucza zapasowego? Nie resetujemy 2FA, a nasze wsparcie nie może w tym pomóc. Wyeksportuj notatki z tego urządzenia i załóż nowy sejf.",
+    "noBackup": "Nie masz telefonu ani klucza zapasowego? Nie resetujemy 2FA, a nasze wsparcie nie może w tym pomóc. Wyeksportuj notatki z tego urządzenia jako „Wszystko, bez szyfrowania (.zip)” i załóż nowy sejf.",
     "localNotes": "Nie teraz? Korzystaj dalej z notatek na tym urządzeniu. Synchronizacja wróci po wpisaniu kodu.",
     "useLocalNotes": "Pomiń na razie"
   },
@@ -399,7 +440,7 @@
     "loading": "Sprawdzanie 2FA...",
     "retry": "Spróbuj ponownie",
     "unavailable": "Nie udało się sprawdzić 2FA. Notatki na tym urządzeniu są bezpieczne. Sprawdź połączenie i spróbuj ponownie.",
-    "notAvailable": "2FA nie jest jeszcze dostępne.",
+    "notAvailable": "2FA jest na razie wyłączone. Spróbuj ponownie później.",
     "actionFailed": "Nie udało się. Sprawdź połączenie i spróbuj ponownie. Notatki na tym urządzeniu są bezpieczne.",
     "warning": "Zachowaj telefon lub klucz zapasowy. Jeśli stracisz oba, nie zalogujesz się na nowym urządzeniu. To dla Twojego bezpieczeństwa. Nie resetujemy 2FA, a nasze wsparcie nie może w tym pomóc.",
     "cannotEnroll": "Zaloguj się ponownie frazą lub połączonym kontem, aby skonfigurować 2FA.",
@@ -428,6 +469,7 @@
     "backupWarning": "Zgubiony telefon? Ten klucz przywróci Twoje kody. Przechowuj go w bezpiecznym miejscu poza PrivacyNotes.",
     "savedAcknowledgment": "Klucz zapasowy jest zapisany.",
     "confirmBackup": "Wpisz ponownie klucz zapasowy z poprzedniego kroku, a potem kod z aplikacji.",
+    "disconnectsConnections": "Włączenie 2FA odłącza rozszerzenie przeglądarki i wiersz poleceń. Połącz rozszerzenie ponownie w Ustawienia > Rozszerzenie, a wiersz poleceń w Ustawienia > CLI.",
     "codeLabel": "Kod z aplikacji",
     "cancelSetup": "Anuluj",
     "enabled": "2FA jest włączone",
@@ -457,6 +499,7 @@
   },
   "phraseChange": {
     "lengthGroup": "Długość frazy",
+    "lengthLater": "Długość albo samą frazę możesz zmienić później w Ustawienia > Bezpieczeństwo > Fraza.",
     "badgeMargin": "Dodatkowy zapas",
     "rowWrite": "Zapisywanie",
     "write12": "Szybko przepiszesz ją ręcznie.",
@@ -517,10 +560,24 @@
     "failed": "Fraza nie została zmieniona.",
     "failedTooMany": "Twoja fraza zmieniła się trzy razy w ciągu ostatnich 24 godzin. Spróbuj ponownie później.",
     "failedMoved": "W międzyczasie Twoje ustawienia zmieniły się na innym urządzeniu. Spróbuj ponownie.",
+    "failedSettingsMoved": "W międzyczasie Twoje ustawienia zmieniły się na innym urządzeniu. Spróbuj ponownie: tym razem zmiana frazy je zastąpi, nawet jeśli znowu się zmienią.",
     "failedTwoFactor": "Kod 2FA nie został przyjęty. Spróbuj ponownie.",
     "failedKeyRing": "To urządzenie nie ma kluczy wcześniejszej frazy. Wprowadź zmianę na urządzeniu, które je ma.",
     "failedBiometric": "Odcisk palca lub twarz to jedyna blokada tego urządzenia. Potwierdź je, aby wprowadzić zmianę.",
+    "failedCannotBind": "Odcisk palca lub twarz to jedyna blokada tego urządzenia, a na tym urządzeniu nie może ona ochronić nowej frazy. Najpierw ustaw PIN lub kod dostępu w Ustawienia > Bezpieczeństwo > PIN, a potem wprowadź zmianę.",
     "failedUnsynced": "Niektóre ustawienia na tym urządzeniu nie są jeszcze zsynchronizowane. Poczekaj chwilę i spróbuj ponownie.",
-    "failedOffline": "Serwer nie mógł teraz przyjąć zmiany. Sprawdź połączenie i spróbuj ponownie."
+    "failedOffline": "Serwer nie mógł teraz przyjąć zmiany. Sprawdź połączenie i spróbuj ponownie.",
+    "signInPasskeysReset_one": "Twój passkey do logowania przestanie działać. Dodaj go ponownie po zmianie.",
+    "signInPasskeysReset_few": "Twoje {{count}} passkey do logowania przestaną działać. Dodaj je ponownie po zmianie.",
+    "signInPasskeysReset_many": "Twoich {{count}} passkey do logowania przestanie działać. Dodaj je ponownie po zmianie."
+  },
+  "releaseNotice": {
+    "sent": "Nowe urządzenie zalogowało się na Twoje konto {{when}}. To nie Ty? Usuń je w sekcji Urządzenia."
+  },
+  "releaseApproval": {
+    "ask": "Nowe logowanie ({{when}}) prosi o Twoją frazę odzyskiwania (kod {{code}}). Zezwól tylko wtedy, gdy to Ty, a nowe urządzenie pokazuje ten sam kod.",
+    "waiting": "Nowe logowanie prosi o Twoją frazę odzyskiwania (kod {{code}}) i otrzyma ją po {{when}}, chyba że odmówisz. Zezwól tylko wtedy, gdy to Ty, a nowe urządzenie pokazuje ten sam kod.",
+    "allow": "Zezwól",
+    "deny": "Odmów"
   }
 }

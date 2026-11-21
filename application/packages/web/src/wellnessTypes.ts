@@ -28,6 +28,8 @@ export interface TrackerDescriptor {
   part?: string;
   partKey?: string;
   color: string;
+  /** A custom tracker's look icon id, for its glyph. */
+  icon?: string;
   kind: TrackerKind;
   /** The declared range of a scale. */
   min?: number;

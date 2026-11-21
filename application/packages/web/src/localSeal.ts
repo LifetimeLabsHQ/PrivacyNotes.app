@@ -26,6 +26,11 @@
  *    blob several-fold. The attachment meta seals beside the bytes as
  *    its own small JSON envelope (metaSealed). No liveQuery touches
  *    these tables.
+ *  - A late field (`lateFields`, the row `type` of notes and replaced
+ *    copies) moved into the payload after the first format. Every reader
+ *    takes a payload with or without it, and a plain value beside the blob
+ *    wins over the one inside, because only a bundle that writes it plain
+ *    leaves both. It goes inside only while `rowTypeSealActive()`.
  * Everything else stays plain: indexes and sync bookkeeping read it.
  * The AAD binds a per-table tag and the row id, so a ciphertext moved
  * onto another row or table fails authentication instead of decrypting.
@@ -70,7 +75,7 @@
  *
  * Spec: docs/internal/specs/local-at-rest.md (sections 3.2 and 3.3)
  */
-import type { DBCore, DBCoreTable, Middleware } from 'dexie';
+import type { DBCore, DBCoreSchema, DBCoreTable, Middleware } from 'dexie';
 import {
   encryptJsonAad,
   decryptJsonAad,
@@ -113,6 +118,11 @@ interface TableSealConfig {
    *  not know: an envelope it carries through untouched keeps a
    *  rollback or a stale tab able to open every row. */
   sideField?: string;
+  /** json mode: fields that moved into the payload after the first format.
+   *  Read from either place; written inside only while rowTypeSealActive(),
+   *  because a bundle that predates the move refuses such a payload.
+   *  Spec: docs/internal/plans/row-type-seal.md (3.1) */
+  lateFields?: readonly string[];
 }
 
 /** The tables the middleware covers, and what it seals in each. */
@@ -124,12 +134,16 @@ const SEALED_TABLES: Record<string, TableSealConfig> = {
     fields: ['title', 'body', 'tags', 'trackers'],
     fenceDirty: true,
     sideField: 'syncBase',
+    lateFields: ['type'],
   },
   editorDocCache: { pk: 'noteId', aad: 'editorDocCache', mode: 'json', fields: ['body', 'json'] },
   imageCache: { pk: 'id', aad: 'img', mode: 'bytes', bytesField: 'data' },
   attachmentCache: { pk: 'id', aad: 'att', mode: 'bytes', bytesField: 'data', jsonField: 'meta' },
   // The text a sync pull replaced (replacedCopies.ts): the note's own fields.
-  replacedCopies: { pk: 'id', aad: 'replaced', mode: 'json', fields: ['title', 'body', 'tags', 'trackers'] },
+  replacedCopies: { pk: 'id', aad: 'replaced', mode: 'json', fields: ['title', 'body', 'tags', 'trackers'], lateFields: ['type'] },
+  // The day ledger (dayLedger.ts): the counts of writing over time. Only the
+  // day stays readable, as the key the queries walk.
+  dayLedger: { pk: 'date', aad: 'ledger', mode: 'json', fields: ['words', 'edits', 'creates', 'hours', 'estimated'] },
 };
 
 /** Thrown when a sealed row is read and no usable key is registered. */
@@ -220,6 +234,50 @@ export function setSealedWrites(on: boolean): void {
  *  sealed-writer tab never reloads itself on another writer's announce. */
 export function sealedWritesOn(): boolean {
   return sealedWrites;
+}
+
+/**
+ * Whether a sealed write puts the row type inside the payload (#795 point
+ * 8). Built false: the bundles released before the move refuse a payload
+ * that holds it, so a stale tab or a rollback to one of them could not open
+ * such a row. The release after the one that carries this reader turns it
+ * on. With it false this bundle writes the bytes the released bundles write.
+ * Spec: docs/internal/plans/row-type-seal.md (3.2, 6)
+ */
+export const ROW_TYPE_SEALED_IN_PRODUCTION = false;
+
+let rowTypeSealed = false;
+
+/** The switch main.tsx sets at boot from ROW_TYPE_SEALED_IN_PRODUCTION. */
+export function setRowTypeSealed(on: boolean): void {
+  rowTypeSealed = on;
+}
+
+// True when the open database has a `type` index on notes. Schema version 19
+// has none; only a bundle that predates it adds it back, when it opens the
+// database (Dexie re-creates a declared index it finds missing). Such a bundle
+// cannot see a row whose type is sealed, so this bundle then stops sealing it.
+// Set from the installed schema each time the app connection opens, and by
+// the sweep from its own connection inside each write transaction, since the
+// sweep's connection can reopen before the app's does.
+let olderBundleIndex = false;
+
+/** Read the gate from a connection's installed schema (Dexie rebuilds the
+ *  core schema at every open, and no version change lands inside an open
+ *  transaction). Spec: docs/internal/plans/row-type-seal.md (3.2) */
+export function noteInstalledSchema(schema: DBCoreSchema, log = true): void {
+  const indexed = !!schema.tables.find((t) => t.name === 'notes')?.indexes.some((i) => i.name === 'type');
+  // Once a profile meets an older bundle the move stays off until a schema
+  // version drops the index again; the breadcrumb says why. Only the sweep
+  // logs: the middleware also runs inside an upgrade, before it drops the index.
+  if (log && indexed && !olderBundleIndex && rowTypeSealed) logAuthEvent('seal:type-gate-closed', {});
+  olderBundleIndex = indexed;
+}
+
+/** The switch on, and no bundle that predates the move has opened this
+ *  database since its last schema change. */
+export function rowTypeSealActive(): boolean {
+  return rowTypeSealed && !olderBundleIndex;
 }
 
 // ------------------------------------------------------------------
@@ -318,8 +376,20 @@ function sealJsonPayload(
   table: string,
   cfg: TableSealConfig,
   row: RawRow,
-  payload: Record<string, unknown>,
+  merged: Record<string, unknown>,
 ): RawRow {
+  // A late field goes inside while the move is on, and beside the blob,
+  // where every bundle reads it, while it is off.
+  const inside = rowTypeSealActive();
+  const payload = { ...merged };
+  const beside: Record<string, unknown> = {};
+  for (const f of cfg.lateFields ?? []) {
+    if (payload[f] === undefined) delete payload[f];
+    else if (!inside) {
+      beside[f] = payload[f];
+      delete payload[f];
+    }
+  }
   const key = requireKey();
   const { ciphertext, nonce } = encryptJsonAad(payload, key, aadFor(cfg, row[cfg.pk]));
   key.fill(0);
@@ -327,6 +397,8 @@ function sealJsonPayload(
   const ct = bytesToBase64(ciphertext);
   const out: RawRow = { ...row, sv: SEAL_VERSION, sealed: { n, ct, ...epochMarker() } };
   for (const f of cfg.fields!) delete out[f];
+  if (inside) for (const f of cfg.lateFields ?? []) delete out[f];
+  Object.assign(out, beside);
   if (cfg.fenceDirty && out.dirty === 1) out.dirty = 2;
   memoSet(table, row[cfg.pk], n, ct, payload);
   return out;
@@ -352,7 +424,7 @@ function openJsonPayload(table: string, cfg: TableSealConfig, row: RawRow): Reco
       payload === null ||
       typeof payload !== 'object' ||
       Array.isArray(payload) ||
-      !Object.keys(payload).every((k) => cfg.fields!.includes(k))
+      !Object.keys(payload).every((k) => cfg.fields!.includes(k) || !!cfg.lateFields?.includes(k))
     ) {
       throw new Error('payload shape does not match table');
     }
@@ -436,20 +508,40 @@ export function sealRow(table: string, row: RawRow): RawRow {
   }
   const r = sealSideField(cfg, row);
   const present = cfg.fields!.filter((f) => f in r);
+  // A late field beside the blob is either a lower layer's patch or the
+  // earlier format; it has to move in only while the move is on.
+  const late = (cfg.lateFields ?? []).filter((f) => r[f] !== undefined);
   if (isSealedRow(r)) {
     // A genuinely sealed raw row. Plaintext fields beside the blob mean
     // a lower layer patched the stored value: merge and re-seal.
-    if (present.length === 0) return r;
+    if (present.length === 0 && (late.length === 0 || !rowTypeSealActive())) return r;
     const payload = openJsonPayload(table, cfg, r);
     const merged = { ...payload };
-    for (const f of present) merged[f] = r[f];
+    for (const f of [...present, ...late]) merged[f] = r[f];
     return sealJsonPayload(table, cfg, r, merged);
   }
   // Plaintext row - including modify/update values, which carry a stale
   // sv marker and no blob. The blob decides, never the marker.
   const payload: Record<string, unknown> = {};
   for (const f of cfg.fields!) payload[f] = r[f];
+  for (const f of late) payload[f] = r[f];
   return sealJsonPayload(table, cfg, r, payload);
+}
+
+/**
+ * True when the sweep has work on this stored row: it is not sealed, or the
+ * move is on and a late field sits beside the blob. A sealed row counts only
+ * when this device holds the key of its blob's epoch, so a row it cannot
+ * open waits for its key. Reads the markers only, no crypto.
+ * Spec: docs/internal/plans/row-type-seal.md (3.4)
+ */
+export function sealPending(table: string, row: RawRow): boolean {
+  const cfg = SEALED_TABLES[table];
+  if (!cfg) return false;
+  if (!isSealedRow(row)) return true;
+  if (!rowTypeSealActive() || !(cfg.lateFields ?? []).some((f) => row[f] !== undefined)) return false;
+  // Moving the field opens the main blob only; the side envelope is carried.
+  return holdsEpoch(epochOf(row.sealed?.e));
 }
 
 /**
@@ -504,6 +596,8 @@ export function unsealRow(table: string, row: RawRow): RawRow {
   if (cfg.mode === 'bytes') return unsealBytesRow(table, cfg, row);
   const payload = openJsonPayload(table, cfg, row);
   const out: RawRow = { ...row, ...payload };
+  // A late field beside the blob is newer than the one inside (3.1).
+  for (const f of cfg.lateFields ?? []) if (row[f] !== undefined) out[f] = row[f];
   delete out.sealed;
   return out;
 }
@@ -612,6 +706,7 @@ export function localSealMiddleware(): Middleware<DBCore> {
     name: 'localSeal',
     create(down: DBCore): DBCore {
       if (isDemoMode()) return down;
+      noteInstalledSchema(down.schema, false);
       return {
         ...down,
         table(name: string): DBCoreTable {

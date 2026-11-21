@@ -58,19 +58,22 @@ function wordsOf(n: LocalNote): number {
 const isAlive = (n: LocalNote) => n.deleted === 0 && n.trashed === 0;
 
 /** The list footer's counts over the rows a view lists. Trash lists trashed
- *  notes, so only a hard-deleted tombstone is skipped here. */
-export function footerCounts(notes: LocalNote[]): { totalNotes: number; totalWords: number } {
+ *  notes, so only a hard-deleted tombstone is skipped here. A row behind a
+ *  shut gate (`gated`) is counted, its words are not (RFS #215). */
+export function footerCounts(notes: LocalNote[], gated?: (n: LocalNote) => boolean): { totalNotes: number; totalWords: number } {
   let totalNotes = 0;
   let totalWords = 0;
   for (const n of notes) {
     if (n.deleted !== 0) continue;
     totalNotes++;
-    totalWords += wordsOf(n);
+    if (!gated?.(n)) totalWords += wordsOf(n);
   }
   return { totalNotes, totalWords };
 }
 
-export function computeStats(notes: LocalNote[]): Stats {
+/** `gated`: a note behind a shut gate counts as a note and a day, its words,
+ *  characters and length do not (RFS #215). */
+export function computeStats(notes: LocalNote[], gated?: (n: LocalNote) => boolean): Stats {
   // Exclude both hard-deleted tombstones and trashed notes from writing stats.
   const alive = notes.filter(isAlive);
 
@@ -87,10 +90,12 @@ export function computeStats(notes: LocalNote[]): Stats {
   const tagSet = new Set<string>();
 
   for (const n of alive) {
-    const w = wordsOf(n);
-    totalWords += w;
-    totalChars += n.body.length;
-    if (w > longestWords) { longestWords = w; longestNote = n; }
+    if (!gated?.(n)) {
+      const w = wordsOf(n);
+      totalWords += w;
+      totalChars += n.body.length;
+      if (w > longestWords) { longestWords = w; longestNote = n; }
+    }
 
     for (const t of n.tags) tagSet.add(t);
 

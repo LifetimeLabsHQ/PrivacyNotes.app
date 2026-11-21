@@ -6,10 +6,6 @@
     "error": "Ara mateix no s'ha pogut sincronitzar tot. Comprova la connexió i torna-ho a provar.",
     "conflict": "Una de les teves notes té un conflicte de sincronització que necessita la teva decisió. Resol-lo al diàleg i torna-ho a provar."
   },
-  "movedHint": {
-    "body": "Aquesta és la nova casa de l'aplicació. Actualitza el marcador a use.privacynotes.app i torna a afegir les dreceres de la pantalla d'inici.",
-    "gotIt": "Entesos"
-  },
   "moveScreen": {
     "title": "L'aplicació s'ha traslladat a use.privacynotes.app",
     "bodySignIn": "Inicia la sessió allà amb la teva frase de recuperació o amb «{{scanQr}}». Aquest dispositiu sincronitza primer, així que totes les teves notes t'hi esperen, i aquí no s'esborra res.",
@@ -34,6 +30,7 @@
       "configured": "Emmagatzematge ple. Algunes notes no s'han pogut sincronitzar. Allibera espai o afegeix més emmagatzematge.",
       "unconfigured": "Emmagatzematge ple. Algunes notes no s'han pogut sincronitzar. Allibera espai retallant notes."
     },
+    "deletedSpace": "L'espai dels fitxers suprimits es recupera aproximadament un dia després de suprimir-los.",
     "manageStorage": "Gestiona l'emmagatzematge",
     "viewUsage": "Mostra l'ús"
   },
@@ -74,7 +71,11 @@
     "neverBackedUp_one": "Només en aquest dispositiu:",
     "neverBackedUp_other": "Només en aquest dispositiu:",
     "moreNotes": "i {{count}} més",
-    "appLockHint": "Dispositiu compartit? Activa el bloqueig de l'app a Configuració > Seguretat."
+    "appLockHint": "Dispositiu compartit? Activa el bloqueig de l'app a Configuració > Seguretat.",
+    "unopenedWarn_other": "{{count}} notes tenen una còpia al servidor que aquest dispositiu no pot obrir. En tancar la sessió se suprimeixen les còpies d'aquí, que potser són les úniques bones. Abans, torna-les a enviar a Configuració > ID & Sync.",
+    "unopenedKept_other": "{{count}} notes tenen una còpia al servidor que aquest dispositiu no pot obrir. Les còpies d'aquí es queden després de tancar la sessió.",
+    "unopenedKept_one": "1 nota té una còpia al servidor que aquest dispositiu no pot obrir. La còpia d'aquí es queda després de tancar la sessió.",
+    "unopenedWarn_one": "1 nota té una còpia al servidor que aquest dispositiu no pot obrir. En tancar la sessió se suprimeix la còpia d'aquí, que potser és l'única bona. Abans, torna-la a enviar a Configuració > ID & Sync."
   },
   "signOutUpload": {
     "uploading": "S'estan pujant els teus últims canvis…",

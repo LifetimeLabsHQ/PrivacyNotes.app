@@ -5,8 +5,9 @@ import { normalizeTag } from '../notesRepo';
 import { parseKeePassXml } from './keepassXml';
 import { readArchiveEntry } from './safariArchive';
 import type { Importer, ImporterId, ImportedNote, ParsedImport } from './types';
+import { withBareLinks } from './bareLinks';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:passwordCsv.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:passwordCsv.${key}`, options);
 
 /**
  * Browser password import adapter.
@@ -106,8 +107,10 @@ function csvImporter(meta: { id: ImporterId; label: string; description: string;
   return {
     ...rest,
     enabled: true,
-    parse: (file, onProgress) =>
-      xml && /\.xml$/i.test(file.name) ? parseKeePassXml(file, xml, onProgress) : parsePasswordCsv(file, meta.id, onProgress),
+    // A KeePass secure note is Markdown: its bare links are made after the
+    // parse (bareLinks.ts).
+    parse: withBareLinks((file: File, onProgress?: (msg: string) => void) =>
+      xml && /\.xml$/i.test(file.name) ? parseKeePassXml(file, xml, onProgress) : parsePasswordCsv(file, meta.id, onProgress)),
   };
 }
 
@@ -123,7 +126,7 @@ async function parsePasswordCsv(file: File, source: ImporterId, onProgress?: (ms
   }
 
   onProgress?.(msg('readingColumns'));
-  const rows = parseCsv(text, sniffDelimiter(firstLine(text)));
+  const rows = csvRows(text);
   const header = (rows.shift() ?? []).map((c) => c.trim().toLowerCase());
   const columns = resolveColumns(header);
 
@@ -141,7 +144,6 @@ async function parsePasswordCsv(file: File, source: ImporterId, onProgress?: (ms
   let datedCount = 0;
   let noPassword = 0;
   let recycled = 0;
-  const allTags = new Set<string>();
 
   for (const row of rows) {
     // Trailing newlines and blank separator lines both land here.
@@ -159,7 +161,6 @@ async function parsePasswordCsv(file: File, source: ImporterId, onProgress?: (ms
       const tag = normalizeTag(g);
       if (tag && !tags.includes(tag)) tags.push(tag);
     }
-    for (const tag of tags) allTags.add(tag);
 
     const url = cell(row, columns.url);
     const username = cell(row, columns.username);
@@ -240,13 +241,6 @@ async function parsePasswordCsv(file: File, source: ImporterId, onProgress?: (ms
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      // A login body is always JSON, so no note is empty.
-      emptyNotes: 0,
-      untaggedNotes: notes.length - tagged,
-      uniqueTags: allTags.size,
-    },
     source,
   } satisfies ParsedImport;
 }
@@ -258,7 +252,7 @@ async function parsePasswordCsv(file: File, source: ImporterId, onProgress?: (ms
  */
 export async function readCsvTable(file: File): Promise<{ header: string[]; rows: string[][]; col: (name: string) => number }> {
   const text = stripBom(await file.text());
-  const rows = text.trim() ? parseCsv(text, sniffDelimiter(firstLine(text))) : [];
+  const rows = text.trim() ? csvRows(text) : [];
   const header = (rows.shift() ?? []).map((c) => c.trim().toLowerCase());
   return {
     header,
@@ -267,10 +261,21 @@ export async function readCsvTable(file: File): Promise<{ header: string[]; rows
   };
 }
 
+/** A CSV document as rows of fields, with the delimiter sniffed from the
+ *  header. KeePass 2 writes a quote inside a field as `\"` and a backslash
+ *  as `\\` (the KeePass 1.x CSV form), not as a doubled quote, so its header
+ *  turns those escapes on; the header itself holds neither. */
+function csvRows(text: string): string[][] {
+  const delimiter = sniffDelimiter(firstLine(text));
+  const header = (parseCsv(firstLine(text), delimiter, false)[0] ?? []).map((c) => c.trim().toLowerCase());
+  return parseCsv(text, delimiter, detectSource(header) === 'KeePass');
+}
+
 /** Split a CSV document into rows of fields, per RFC 4180: quoted
  *  fields, doubled quotes inside them, and delimiters or newlines
- *  inside them. */
-function parseCsv(text: string, delimiter: string): string[][] {
+ *  inside them. With `backslashEscapes`, `\"` and `\\` inside a quoted
+ *  field are one quote and one backslash. */
+function parseCsv(text: string, delimiter: string, backslashEscapes: boolean): string[][] {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = '';
@@ -280,6 +285,11 @@ function parseCsv(text: string, delimiter: string): string[][] {
     const ch = text[i];
 
     if (quoted) {
+      if (backslashEscapes && ch === '\\' && (text[i + 1] === '"' || text[i + 1] === '\\')) {
+        field += text[i + 1];
+        i++;
+        continue;
+      }
       if (ch === '"') {
         // A doubled quote is one literal quote; a single one ends the field.
         if (text[i + 1] === '"') {

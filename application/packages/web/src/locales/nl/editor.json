@@ -115,10 +115,13 @@
       "red": "Rood",
       "orange": "Oranje",
       "yellow": "Geel",
+      "lime": "Limoengroen",
       "green": "Groen",
       "teal": "Blauwgroen",
       "blue": "Blauw",
+      "indigo": "Indigo",
       "purple": "Paars",
+      "grape": "Druivenpaars",
       "pink": "Roze"
     }
   },
@@ -241,6 +244,8 @@
     "words_other": "{{formatted}} woorden",
     "characters_one": "{{formatted}} teken",
     "characters_other": "{{formatted}} tekens",
+    "lines_one": "{{formatted}} regel",
+    "lines_other": "{{formatted}} regels",
     "tasksChecked_one": "{{done}} van {{formatted}} afgevinkt",
     "tasksChecked_other": "{{done}} van {{formatted}} afgevinkt",
     "syncLimit": " · {{share}} van de synchronisatielimiet van 1 MB",
@@ -275,6 +280,10 @@
     "collapse": "Codeblok inklappen",
     "expand": "Codeblok uitklappen",
     "placeholder": "Typ of plak code. Kies hierboven een taal voor kleuren."
+  },
+  "fold": {
+    "collapse": "Sectie inklappen",
+    "expand": "Sectie uitklappen"
   },
   "math": {
     "sourceLabel": "LaTeX-broncode"
@@ -312,7 +321,7 @@
     "hiddenNote": "Ze werken nog steeds met hun sneltoets en Markdown.",
     "hiddenDrop": "Zet hier een knop neer om hem te verbergen.",
     "arrangeTitle": "Knoppen",
-    "markdownViewNote": "De Markdown-weergave houdt een eigen vaste set knoppen.",
+    "markdownViewNote": "De Markdown-weergave toont dezelfde knoppen. Knoppen die de opgemaakte weergave nodig hebben, zijn daar gedimd en werken nog steeds in de opgemaakte weergave.",
     "hiddenEmpty": "Niets is verborgen.",
     "alwaysVisible": "Altijd zichtbaar",
     "pinned": "Opent een paneel, blijft dus op de balk of verborgen",
@@ -339,7 +348,7 @@
       "notelink": "Notitielink",
       "audio": "Opname",
       "attachMenu": "Bijvoegen",
-      "separator": "Verticale scheidingslijn",
+      "separator": "Scheidingslijn in de balk",
       "markdownView": "Markdown tonen"
     },
     "positionTitle": "Positie van de balk",

@@ -240,6 +240,8 @@
       "prevYear": "Önceki yıl",
       "nextYear": "Sonraki yıl"
     },
+    "seeEntries": "Kayıtları gör",
+    "showInCalendar": "Takvimde göster",
     "trackers": {
       "tapHint": "Dokununca Keşfet açılır",
       "stopped": "Durdurulanlar",

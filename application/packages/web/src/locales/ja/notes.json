@@ -27,9 +27,20 @@
   "tagChip": {
     "clear": "タグの絞り込みを解除: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "トラッカーのフィルターを解除: {{tracker}}",
+    "anyTag": "すべてのタグ",
+    "tagLabel": "{{tracker}}のタグ",
+    "answerLabel": "{{tracker}}の回答",
+    "anyAnswer": "すべての回答"
+  },
+  "trackerFocus": {
+    "every_other": "約{{count}}日ごと",
+    "last": "{{when}}に記録",
+    "locked_other": "PINで保護された{{count}}件の記録は含まれていません"
+  },
   "vaultNew": {
     "ariaLabel": "新規保管庫アイテム",
-    "card": "クレジットカード",
     "sshKey": "SSH鍵",
     "generator": "パスワード"
   },
@@ -48,7 +59,8 @@
   "vaultFilter": {
     "all": "すべて",
     "logins": "ログイン",
-    "cards": "クレジットカード",
+    "passkeys": "パスキー",
+    "cards": "カード",
     "keys": "鍵"
   },
   "journal": {
@@ -60,7 +72,8 @@
   "trash": {
     "empty": "空にする",
     "emptyHover": "ゴミ箱のノートをすべて削除",
-    "autoDelete": "30日後に自動削除"
+    "autoDelete": "30日後に自動削除",
+    "replacedTitle": "削除されたノートのコピー"
   },
   "search": {
     "sortOptions": "並び替えと表示オプション",
@@ -112,6 +125,7 @@
     "imageUploadFailed": "画像のアップロードに失敗しました: {{error}}",
     "imageError": "画像エラー: {{error}}",
     "uploadFailedFor": "「{{filename}}」のアップロードに失敗しました: {{error}}",
+    "uploadsHeld": "今日のアップロードの上限に達しました。画像とファイルはこのデバイスに安全に保存されており、{{time}}以降にアップロードされます。",
     "importedSyncing_other": "{{count}}件のノートを読み込みました。同期中…",
     "addedTag_other": "{{count}}件のアイテムに#{{tag}}を追加しました",
     "restoreSummary": "復元しました。追加 {{added}}件、更新 {{updated}}件、変更なし {{unchanged}}件。"
@@ -122,6 +136,7 @@
   },
   "loadError": {
     "message": "ノートを読み込めませんでした。ローカルデータベースへの接続が中断されました。アプリが長くバックグラウンドにあった後に起こることがあります。",
+    "storageOff": "ノートを読み込めませんでした。このデバイスで、PrivacyNotesがノートを保存するストレージがオフになっています。これはロックダウンモードによるものです。解決するには、「設定」を開き、「プライバシーとセキュリティ」、「ロックダウンモード」、「Webサイトをカスタマイズ」の順に進んで、PrivacyNotesをオフにしてください。Safariでは、「ウェブサイトの設定」でこのサイトのロックダウンモードをオフにしてください。",
     "reload": "再読み込み"
   },
   "banner": {
@@ -174,6 +189,7 @@
   "editor": {
     "backToList": "ノートリストに戻る",
     "backToGrid": "グリッドに戻る",
+    "closeSide": "この側を閉じる",
     "titlePlaceholder": "無題(クリックして編集、または自動生成)",
     "titlePlaceholderLogin": "例: GitHub",
     "titlePlaceholderCard": "例: 下4桁4242のVisa",
@@ -182,10 +198,22 @@
     "lockNow": "今すぐロック",
     "lockNowHint": "今すぐ内容を隠す",
     "turnOffHint": "再び編集できるようにする",
+    "turnOffForNowHint": "このノートを離れるまで編集できるようにする",
     "unarchiveHint": "再びリストに表示する",
     "showFormatted": "書式付きで表示",
+    "splitView": "分割表示",
+    "showSplitView": "分割表示にする",
+    "hideSplitView": "分割表示を閉じる",
+    "splitViewNeedsWidth": "分割表示を使うにはウィンドウを広げてください",
+    "swapSides": "左右を入れ替え",
+    "formattedOnly": "{{name}}は書式付き表示で使えます",
+    "formattedOnlyHint": "書式付き表示",
     "invisiblesShow": "編集記号を表示",
     "invisiblesHide": "編集記号を非表示",
+    "lineNumbersShow": "行番号を表示",
+    "lineNumbersHide": "行番号を非表示",
+    "footerPin": "統計をピン留め",
+    "footerUnpin": "統計のピン留めを解除",
     "undo": "元に戻す",
     "redo": "やり直す",
     "hide": "隠す",
@@ -258,6 +286,7 @@
     "accountLabel": "IDと同期",
     "appearanceLabel": "デザイン",
     "editorLabel": "エディタ",
+    "pluginsLabel": "プラグイン",
     "formatBarLabel": "ツールバー",
     "listsLabel": "リスト",
     "trackersLabel": "トラッカー",
@@ -278,6 +307,9 @@
   },
   "archiveConfirm": {
     "body_other": "<highlight>{{count}}件のアイテム</highlight>をアーカイブしますか?リストから外れ、「アーカイブ」ビューに入ります。「アーカイブを解除」で元に戻せます。"
+  },
+  "duplicateConfirm": {
+    "body_other": "<highlight>{{count}}件のアイテム</highlight>を複製しますか?それぞれに専用のコピーが作成されます。"
   },
   "bulkTrash": {
     "body_other": "<highlight>{{count}}件のアイテム</highlight>を削除しますか?ゴミ箱に移動すれば後で復元できます。完全に削除することもできます。",
@@ -317,6 +349,7 @@
     "title": "つながり",
     "hide": "つながりを隠す",
     "linkedFrom": "このノートへのリンク",
+    "usedIn": "使用箇所",
     "linksTo": "このノートからのリンク",
     "missing": "未作成",
     "protectedHidden_other": "PIN保護された{{count}}件の項目は表示されていません",
@@ -326,9 +359,10 @@
     "relatedLinkedFrom": "どちらも{{title}}からリンクされています",
     "relatedTag": "どちらもタグ{{tag}}付き",
     "relatedMeaning": "同じ意味",
+    "relatedMention": "{{name}}に言及",
     "meaningDoor": "スマートつながり：オフラインAIで同じ意味のノートを見つける",
     "meaningDoorNo": "今後表示しない",
-    "meaningDoorHidden": "すべてのノートで非表示にしました。スマートつながりは引き続き 設定 > エディタ > 動作 にあります。",
+    "meaningDoorHidden": "すべてのノートで非表示にしました。スマートつながりは引き続き 設定 > プラグイン にあります。",
     "hideSuggestions": "つながりの候補を隠す",
     "notRelated": "関係なし",
     "notRelatedDone": "今後は候補に表示しません",
@@ -401,5 +435,30 @@
     "autoJournal": "新しいジャーナルの記録すべてに現在地を追加",
     "autoDenied": "PrivacyNotesの位置情報がオフになっています。先にスマートフォンの設定でオンにしてください。",
     "autoOff": "このスマートフォンの位置情報サービスがオフになっています。先にオンにしてください。"
+  },
+  "vaultPasskey": {
+    "forSite": "{{rpId}} のパスキー",
+    "hasPasskey": "パスキーあり",
+    "removeTitle": "{{rpId}} のパスキーを削除しますか?",
+    "removeBody": "PrivacyNotes から、このパスキーで {{rpId}} にサインインできなくなります。",
+    "savedByExtension": "サイトがパスキーを提供すると、PrivacyNotes のブラウザ拡張機能がそれを保存します。",
+    "removeBrowserWaiting": "このブラウザが送信した一部の項目が、まだ保管庫にありません。今削除すると、それらは失われます。",
+    "removeBrowserAnyway": "それでも削除"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "翻訳",
+    "from": "翻訳元",
+    "to": "翻訳先",
+    "saveAsNote": "新しいノートとして保存",
+    "needPair": "{{language}}をダウンロード · {{size}}",
+    "noModel": "この言語はまだ翻訳できません。",
+    "nothing": "このノートには翻訳する文字がありません。",
+    "turnOn": "{{language}}をオンにする",
+    "failed": "このノートを翻訳できませんでした。もう一度お試しください。",
+    "untranslated_other": "{{count}}行を翻訳できなかったため、元のままにしています。"
+  },
+  "tags": {
+    "suggestMove": "{{folder}}に移動"
   }
 }

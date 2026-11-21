@@ -27,7 +27,7 @@ import {
   type SupabaseClient,
 } from '@notes/shared';
 import { db, KEY_RING_CACHE_KEY } from './db';
-import { installKeyRing, type EpochKeys, type KeyKind } from './keyRing';
+import { installKeyRing, noteKeyRingRotatedAt, type EpochKeys, type KeyKind } from './keyRing';
 import { registerLocalDataKey } from './localKey';
 import { isPhraseReplacedRefusal, PhraseReplacedError } from './phraseReplaced';
 
@@ -77,22 +77,41 @@ export function openKeyRing(text: string, syncKey: Uint8Array, account: string, 
   return out;
 }
 
+/** The server's `rotated_at` as ms, or null. */
+function rotatedAtOf(value: unknown): number | null {
+  const at = typeof value === 'string' ? Date.parse(value) : NaN;
+  return Number.isFinite(at) ? at : null;
+}
+
 /**
  * The account's epoch and ring, as the server holds them. `ring` is null for
- * an account that never changed its phrase. Throws PhraseReplacedError when
- * the session did not prove the current key, and a plain error when there is
- * no answer.
+ * an account that never changed its phrase; `rotatedAt` is when the current
+ * epoch began (ms, the server's clock), null when the server did not say.
+ * Throws PhraseReplacedError when the session did not prove the current key,
+ * and a plain error when there is no answer.
  */
-export async function fetchKeyRing(supabase: SupabaseClient): Promise<{ epoch: number; ring: string | null }> {
+export async function fetchKeyRing(supabase: SupabaseClient): Promise<{ epoch: number; ring: string | null; rotatedAt: number | null }> {
   const { data, error } = await supabase.rpc('account_key_ring');
   if (isPhraseReplacedRefusal(error)) throw new PhraseReplacedError('retired');
   if (error) throw new Error('key ring unavailable');
-  const answer = data as { epoch?: unknown; key_ring?: unknown } | null;
+  const answer = data as { epoch?: unknown; key_ring?: unknown; rotated_at?: unknown } | null;
   const epoch = typeof answer?.epoch === 'number' ? answer.epoch : NaN;
   if (!wholeEpoch(epoch)) throw new Error('key ring unavailable');
-  if (epoch === 1) return { epoch, ring: null };
+  if (epoch === 1) return { epoch, ring: null, rotatedAt: null };
   if (typeof answer?.key_ring !== 'string') throw new Error('key ring unavailable');
-  return { epoch, ring: answer.key_ring };
+  return { epoch, ring: answer.key_ring, rotatedAt: rotatedAtOf(answer.rotated_at) };
+}
+
+/** When the epoch this device keeps the ring of began, as cached, or null. */
+async function readCachedRotatedAt(account: string, epoch: number): Promise<number | null> {
+  try {
+    const raw = (await db.kv.get(KEY_RING_CACHE_KEY))?.value;
+    if (typeof raw !== 'string') return null;
+    const rec = JSON.parse(raw) as { account?: unknown; epoch?: unknown; rotatedAt?: unknown };
+    return rec.account === account && rec.epoch === epoch && typeof rec.rotatedAt === 'number' ? rec.rotatedAt : null;
+  } catch {
+    return null;
+  }
 }
 
 /** The ring this device keeps for this account and epoch, or null. */
@@ -107,9 +126,9 @@ export async function readCachedKeyRing(account: string, epoch: number): Promise
   }
 }
 
-async function cacheKeyRing(account: string, epoch: number, ring: string): Promise<void> {
+async function cacheKeyRing(account: string, epoch: number, ring: string, rotatedAt: number | null): Promise<void> {
   try {
-    await db.kv.put({ key: KEY_RING_CACHE_KEY, value: JSON.stringify({ account, epoch, ring }) });
+    await db.kv.put({ key: KEY_RING_CACHE_KEY, value: JSON.stringify({ account, epoch, ring, ...(rotatedAt !== null ? { rotatedAt } : {}) }) });
   } catch {
     /* Best effort: the next sign-in asks the server again. */
   }
@@ -121,10 +140,10 @@ export function zeroKeyRing(entries: Map<number, EpochKeys>): void {
 }
 
 /** Register the new local key and install the ring, with nothing in between. */
-function swapTo(epoch: number, entries: Map<number, EpochKeys>, localKey: Uint8Array): void {
+function swapTo(epoch: number, entries: Map<number, EpochKeys>, localKey: Uint8Array, rotatedAt: number | null): void {
   try {
     registerLocalDataKey(localKey);
-    installKeyRing(epoch, entries);
+    installKeyRing(epoch, entries, rotatedAt);
   } finally {
     zeroKeyRing(entries);
   }
@@ -153,7 +172,9 @@ export async function takeCachedKeyRing(opts: Take): Promise<boolean> {
   } catch {
     return false;
   }
-  swapTo(opts.epoch, entries, opts.localKey);
+  // A cache from before the time was kept has none: the next background
+  // pass reads it from the server (reencryptPass.ts).
+  swapTo(opts.epoch, entries, opts.localKey, await readCachedRotatedAt(opts.account, opts.epoch));
   return true;
 }
 
@@ -168,6 +189,7 @@ export async function takeKeyRing(opts: Take & { supabase: SupabaseClient }): Pr
   const fetched = await fetchKeyRing(opts.supabase);
   if (fetched.epoch !== opts.epoch || fetched.ring === null) throw new Error('key ring of another epoch');
   const entries = openKeyRing(fetched.ring, opts.syncKey, opts.account, opts.epoch);
-  swapTo(opts.epoch, entries, opts.localKey);
-  await cacheKeyRing(opts.account, opts.epoch, fetched.ring);
+  swapTo(opts.epoch, entries, opts.localKey, fetched.rotatedAt);
+  await cacheKeyRing(opts.account, opts.epoch, fetched.ring, fetched.rotatedAt);
+  noteKeyRingRotatedAt(fetched.rotatedAt);
 }

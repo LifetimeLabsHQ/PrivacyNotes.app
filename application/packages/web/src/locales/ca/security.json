@@ -4,7 +4,8 @@
     "tabBiometricShort": "Bloqueig",
     "tabPhraseShort": "Frase",
     "tabPhrase": "La teva frase",
-    "tabTwoFactor": "2FA"
+    "tabTwoFactor": "2FA",
+    "tabTwoFactorPasskeys": "2FA / Claus d'accés"
   },
   "pinTab": {
     "changeLost": "El canvi de PIN no s'ha desat: el PIN s'ha canviat primer en un altre dispositiu.",
@@ -70,7 +71,7 @@
     "browserRestart": "En reiniciar el navegador"
   },
   "pinInfo": {
-    "body": "Quan està actiu, se't demana el PIN cada vegada que obres aquest element, encara que l'aplicació ja estigui desbloquejada. Fes-lo servir per a elements sensibles que hagin de continuar protegits quan t'allunyis."
+    "body": "Quan està actiu, aquest element et demana el PIN abans d'obrir-se, tret que l'hagis introduït dins del temps definit a Configuració > Seguretat > Bloqueig (5 minuts si no el canvies). Fes-lo servir per als teus elements més sensibles."
   },
   "removePinDialog": {
     "introWithBio": "Introdueix el PIN actual per confirmar-ne l'eliminació. El desbloqueig biomètric continuarà actiu, però l'única alternativa que et quedarà serà la frase de recuperació.",
@@ -121,6 +122,7 @@
     "hideQr": "Amaga el codi QR",
     "showQr": "Mostra el codi QR",
     "saveQr": "Desa el QR",
+    "qrHint": "Al dispositiu nou, tria «{{scanQr}}» a la pantalla d'inici de sessió.",
     "copyPhrase": "Copia la frase"
   },
   "custody": {
@@ -134,7 +136,7 @@
     "rowLostSelf": "Sense cap altra còpia desada ni cap dispositiu desbloquejat, no es poden recuperar les notes.",
     "rowKey": "On viu la teva frase",
     "rowKeyCustodial": "Al nostre servidor i als teus dispositius",
-    "rowKeySelf": "Només als teus dispositius",
+    "rowKeySelf": "Només als teus dispositius, tret que afegeixis una clau d'accés d'inici de sessió",
     "releaseWarning": "Desa primer la teva frase fora de PrivacyNotes. Després d'eliminar la nostra còpia, la necessitaràs als dispositius nous.",
     "challengePrompt": "Escriu aquestes paraules de la llista de dalt per confirmar que les tens.",
     "wordLabel": "Paraula {{position}}",
@@ -167,14 +169,18 @@
   "biometricTab": {
     "checkingSupport": "S'està comprovant la compatibilitat biomètrica...",
     "description": "Desbloqueja amb l'empremta o la cara en lloc d'escriure el PIN.",
+    "descriptionWeb": "Desbloqueja amb l'empremta o la cara en lloc d'escriure el PIN. En un navegador, això crea una clau d'accés per a PrivacyNotes en aquest dispositiu, desada pel teu dispositiu o pel teu gestor de contrasenyes.",
     "trustFirst": "Activa primer \"Confia en aquest dispositiu\". El desbloqueig biomètric i el bloqueig de l'aplicació desen tots dos una còpia de la teva frase de recuperació en aquest dispositiu, i no és per a això que serveix un dispositiu no fiable.",
     "notAvailable": "El desbloqueig biomètric no està disponible en aquest dispositiu. El navegador o el maquinari no admet cap autenticador de plataforma (Touch ID, Face ID, Windows Hello).",
     "enabledFlash": "Desbloqueig biomètric activat.",
     "enrolledOnDevice": "Registrat en aquest dispositiu",
     "boundStatus": "El desbloqueig biomètric està vinculat a la teva clau d'accés.",
     "boundStatusNative": "El desbloqueig biomètric està vinculat al maquinari segur d'aquest dispositiu.",
+    "boundStatusWindows": "El desbloqueig biomètric està vinculat a Windows Hello en aquest PC.",
+    "boundStatusWindowsSoftware": "El desbloqueig biomètric està vinculat a Windows Hello en aquest PC. Windows no indica cap xip de seguretat (TPM) que pugui fer servir aquí. Sense xip, Windows Hello guarda la clau en programari, i qualsevol persona amb una còpia de l'emmagatzematge d'aquest PC pot provar PIN de Windows Hello sense límit.",
     "setUpAgain": "Torna-ho a configurar per a un bloqueig més fort",
     "unboundWeaker": "En aquest dispositiu, el desbloqueig biomètric és una barrera per a les persones properes, no un bloqueig: qualsevol persona amb una còpia de l'emmagatzematge d'aquest dispositiu pot obrir les teves notes sense la teva empremta ni la teva cara.",
+    "noPrfRefused": "Aquesta aplicació de claus d'accés no pot guardar la clau del desbloqueig biomètric, així que el desbloqueig biomètric continua desactivat. Si un gestor de contrasenyes ha desat la clau d'accés, suprimeix-la d'allà, desactiva'n l'opció de claus d'accés i torna-ho a provar.",
     "cannotBind": "L'aplicació de claus d'accés que ha desat aquesta clau d'accés, sovint un gestor de contrasenyes, no pot crear el bloqueig complet. En aquest dispositiu, el desbloqueig biomètric només atura les persones properes: qualsevol persona amb una còpia de l'emmagatzematge d'aquest dispositiu pot obrir les teves notes sense la teva empremta ni la teva cara. Si un gestor de contrasenyes desa les teves claus d'accés, desactiva'n l'opció de claus d'accés i, després, desactiva i torna a activar el desbloqueig biomètric.",
     "bindOffer": "El desbloqueig biomètric d'aquest dispositiu encara no està vinculat a la teva clau d'accés, i aquest navegador el pot vincular. Torna'l a configurar una vegada perquè la seva clau es quedi amb la teva clau d'accés en lloc de l'emmagatzematge d'aquest dispositiu.",
     "bindOfferLater": "Ara no",
@@ -185,18 +191,26 @@
     "lockOnOpenHint": "Demana el PIN o l'empremta quan l'aplicació s'obre en aquest dispositiu, i de nou després d'un temps d'inactivitat.",
     "lockHidesOnSwitch": "També amaga les teves notes quan canvies d'aplicació.",
     "confirmPinForLock": "Introdueix el teu PIN per activar-ho. Tanca amb clau una còpia de la teva frase de recuperació, de manera que només el teu PIN pot obrir l'aplicació.",
+    "pinWeakCopy": "Amb un PIN de 4 xifres, algú amb una còpia de l'emmagatzematge d'aquest dispositiu pot trobar el PIN en minuts o hores i obrir les teves notes. Un codi d'accés és molt més difícil d'endevinar: configura'n un a la pestanya \"PIN\".",
     "confirmPasscodeForLock": "Introdueix el teu codi d'accés per activar-ho. Tanca amb clau una còpia de la teva frase de recuperació, de manera que només el teu codi d'accés pot obrir l'aplicació.",
     "setupTitle": "Tria com desbloqueges",
     "setupPin": "Un PIN ho desbloqueja tot aquí.",
     "setupBiometric": "L'empremta o la cara desbloqueja l'aplicació només en aquest dispositiu.",
+    "setupBiometricWeb": "L'empremta o la cara desbloqueja l'aplicació només en aquest dispositiu, mitjançant una clau d'accés.",
     "setupBiometrics": "Biometria",
-    "setupAddPinTitle": "Afegeix un PIN per a les notes protegides",
+    "setupAddPinTitle": "Afegeix un PIN per al bloqueig i les notes protegides",
+    "fingerprintOnlyLock": "Aquest bloqueig només s'obre amb la teva empremta. Introdueix el PIN per afegir-lo com a segona manera d'entrar.",
+    "fingerprintOnlyLockPasscode": "Aquest bloqueig només s'obre amb la teva empremta. Introdueix el codi d'accés per afegir-lo com a segona manera d'entrar.",
+    "fingerprintOnlyLockAction": "Introdueix el PIN",
+    "fingerprintOnlyLockActionPasscode": "Introdueix el codi d'accés",
     "appLockHeading": "Bloqueig de l'app",
     "relockAgainAfter": "Torna a bloquejar després de",
     "notesHeading": "Notes protegides",
     "reaskAfter": "Torna a demanar el PIN després de",
-    "reaskHint": "Per a les notes protegides i la teva frase de recuperació.",
+    "reaskHint": "Per a les notes protegides, les seccions protegides i la teva frase de recuperació.",
+    "sectionsHint": "Protegeix una secció sencera, com la Caixa forta, des del seu menú a la barra lateral.",
     "biometricHeading": "Empremta o cara",
+    "biometricHeadingWeb": "Empremta o cara (clau d'accés)",
     "blockCapture": "Amaga a les captures de pantalla",
     "blockCaptureHint": "Manté les teves notes fora de captures, enregistraments i pantalles compartides, si el dispositiu ho permet. S'aplica només a aquest dispositiu.",
     "perDeviceNote": "El desbloqueig biomètric obre les mateixes notes que el PIN. Es queda en aquest dispositiu i no se sincronitza mai.",
@@ -205,8 +219,30 @@
     "disableConfirmBody": "Vols desactivar el desbloqueig biomètric en aquest dispositiu?",
     "disableConfirmBodyAppLock": "Vols desactivar el desbloqueig biomètric en aquest dispositiu? El bloqueig de l'aplicació també es desactivarà."
   },
+  "passkeysTab": {
+    "intro": "Inicia la sessió en un dispositiu nou amb una clau d'accés en lloc d'escriure la teva frase de recuperació. La frase continua funcionant.",
+    "add": "Afegeix una clau d'accés",
+    "adding": "S'està afegint...",
+    "lastUsed": "Darrer ús: {{date}}",
+    "neverUsed": "Mai no s'ha fet servir",
+    "removeTitle": "Vols eliminar aquesta clau d'accés?",
+    "removeBody": "Ja no podràs iniciar la sessió amb ella. La clau d'accés es queda a la teva app de claus d'accés fins que la suprimeixis allà.",
+    "retired": "Creada abans que canviés la teva frase. Elimina-la i torna-la a afegir.",
+    "noPrf": "Aquesta app de claus d'accés no pot protegir la teva frase, així que no s'ha afegit la clau d'accés. Prova les claus d'accés del teu dispositiu o un altre gestor de contrasenyes.",
+    "tooMany": "Tens {{count}} claus d'accés per iniciar la sessió. Elimina'n una per afegir-ne una altra.",
+    "failed": "No s'ha pogut afegir la clau d'accés. Comprova la connexió i torna-ho a provar.",
+    "appsOnly": "Afegeix claus d'accés al navegador a use.privacynotes.app. Iniciar la sessió amb elles a les apps arribarà més endavant.",
+    "empty": "Encara no hi ha cap clau d'accés.",
+    "loadFailed": "No s'han pogut carregar les teves claus d'accés. Comprova la connexió i torna-ho a provar.",
+    "removeFailed": "No s'ha pogut eliminar la clau d'accés. Comprova la connexió i torna-ho a provar.",
+    "pinPrompt": "Introdueix el teu PIN de 4 xifres per afegir una clau d'accés.",
+    "pinPromptPasscode": "Introdueix el teu codi d'accés per afegir una clau d'accés."
+  },
   "appLock": {
-    "phraseNotSaved": "Aquest dispositiu no ha pogut desar la teva frase de recuperació, així que no s'ha canviat res. Torna-ho a provar."
+    "phraseNotSaved": "Aquest dispositiu no ha pogut desar la teva frase de recuperació, així que no s'ha canviat res. Torna-ho a provar.",
+    "phraseInMemoryOnly": "Aquest navegador no ha pogut protegir la teva frase de recuperació, així que no s'ha desat en aquest dispositiu. Si tornes a carregar o tanques aquesta pestanya, es tancarà la sessió, així que tingues la frase de recuperació a mà. Per mantenir la sessió iniciada aquí, activa el bloqueig de l'app a Configuració > Seguretat > Bloqueig.",
+    "untrustedSignIn": "No has confiat en aquest dispositiu, així que el teu inici de sessió no s'hi desa. Si tanques o tornes a carregar l'app, es tancarà la sessió, així que tingues la frase de recuperació a mà.",
+    "presenceGateRemoved": "El desbloqueig amb empremta o cara està desactivat: aquest navegador en guardava la clau al costat de la teva frase de recuperació. El teu PIN o codi d'accés continua desbloquejant l'app."
   },
   "pinSetup": {
     "description": "Es demanarà un PIN de 4 xifres per veure la teva frase de recuperació. És opcional, però recomanable en espais compartits.",
@@ -241,13 +277,21 @@
     "disableTitlePasscode": "Introdueix el codi d'accés per desactivar la protecció",
     "verifySubtitlePasscode": "Introdueix el teu codi d'accés per desbloquejar aquest element. El desbloqueig dura el temps que hagis definit a Seguretat.",
     "passcodeRequired": "Cal el codi d'accés",
-    "deleteSubtitlePasscode": "Introdueix el codi d'accés per suprimir aquest element protegit."
+    "deleteSubtitlePasscode": "Introdueix el codi d'accés per suprimir aquest element protegit.",
+    "sectionTitle": "Aquesta secció està protegida",
+    "sectionBiometricSubtitle": "Fes servir l'empremta o la cara per obrir aquesta secció.",
+    "sectionVerifySubtitle": "Introdueix el teu PIN de 4 xifres per obrir aquesta secció. El desbloqueig dura el temps que hagis definit a Seguretat.",
+    "sectionVerifySubtitlePasscode": "Introdueix el teu codi d'accés per obrir aquesta secció. El desbloqueig dura el temps que hagis definit a Seguretat.",
+    "sectionDisableSubtitle": "Els seus elements es queden on són. Només desapareix la protecció.",
+    "sectionBootstrapSubtitle": "Aquesta secció està protegida, però no hi ha cap PIN establert en aquest dispositiu. Estableix un PIN de 4 xifres per obrir-la. El PIN se sincronitza entre tots els teus dispositius."
   },
   "lockScreen": {
     "unlockApp": "Desbloqueja <brand/>",
     "subtitleWithBio": "Fes servir l'empremta, la cara o el PIN per continuar.",
     "subtitleNoBio": "Introdueix el PIN per continuar.",
     "biometricFailed": "La verificació biomètrica ha fallat o s'ha cancel·lat.",
+    "deviceKeyUnavailable": "Ara mateix aquest dispositiu no pot obrir el seu bloqueig, i el problema no és el que has escrit. Desbloqueja d'una altra manera aquí sota, per exemple amb la frase de recuperació.",
+    "keyringCancelled": "Desbloqueja l'anell de claus i torna-ho a provar.",
     "biometricUnopened": "El desbloqueig biomètric no ha pogut obrir les teves notes. Fes servir el PIN o el codi d'accés, o torna a configurar el desbloqueig biomètric.",
     "biometricGone": "El desbloqueig biomètric ha deixat de funcionar en aquest dispositiu i s'ha de tornar a configurar. Entra d'una altra manera aquí sota i després torna a activar el desbloqueig biomètric a Configuració.",
     "verifying": "S'està verificant...",
@@ -275,9 +319,6 @@
     "upgradeHeading": "O millora a Pro",
     "upgradeBody": "Pagament únic, sense subscripció. Dispositius il·limitats, més imatges, historial de notes i molt més.",
     "upgradeCta": "Millora a Pro per {{price}} $",
-    "needMoreHeading": "Necessites més dispositius?",
-    "needMoreBody": "Les millores a Pro no estan disponibles en aquesta versió. Si de debò necessites un tercer dispositiu, escriu-nos i ho arreglarem.",
-    "contactSupport": "Contacta amb el suport",
     "saveRecoveryHeading": "Desa la teva frase de recuperació",
     "saveRecoveryBody": "Has iniciat la sessió amb OAuth. Apunta també la teva frase de recuperació. És la teva alternativa si OAuth falla o et quedes fora de tots els dispositius.",
     "hide": "Amaga",
@@ -310,7 +351,7 @@
     "custodial": "Desem una còpia xifrada de la teva frase. Mantén almenys un compte connectat o passa a l'autocustòdia abans de desconnectar l'últim.",
     "selfCustody": "En un dispositiu nou, un compte connectat encara necessita la teva frase de recuperació per obrir les notes. Connectar un compte no desa la frase amb nosaltres.",
     "mfaRequired": "L'inici de sessió en dos passos continua activat per a tots els mètodes d'inici de sessió. Conserva l'autenticador o la seva clau de còpia de seguretat desada.",
-    "unavailable": "Encara no es poden modificar els comptes connectats. El teu inici de sessió actual continua funcionant.",
+    "unavailable": "Els canvis als comptes connectats estan desactivats de moment. El teu inici de sessió actual continua funcionant.",
     "loading": "S'estan comprovant els comptes connectats...",
     "emailHidden": "Correu electrònic no compartit",
     "disconnectAccount": "Desconnecta el compte de {{provider}} {{email}}",
@@ -384,7 +425,7 @@
     "signInAgain": "Torna a iniciar la sessió",
     "lostAuthenticator": "Has perdut el telèfon?",
     "restore": "Afegeix la clau de còpia de seguretat a qualsevol app d'autenticació i després introdueix-ne el codi a PrivacyNotes.",
-    "noBackup": "Sense telèfon ni clau de còpia de seguretat? No restablim el 2FA, i el nostre suport no hi pot ajudar. Exporta les notes d'aquest dispositiu i crea una caixa forta nova.",
+    "noBackup": "Sense telèfon ni clau de còpia de seguretat? No restablim el 2FA, i el nostre suport no hi pot ajudar. Exporta les notes d'aquest dispositiu com a «Tot, sense xifrar (.zip)» i crea una caixa forta nova.",
     "localNotes": "Ara no? Continua fent servir les notes d'aquest dispositiu. La sincronització torna a començar quan introdueixis un codi.",
     "useLocalNotes": "Omet de moment"
   },
@@ -394,7 +435,7 @@
     "loading": "S'està comprovant el 2FA...",
     "retry": "Torna-ho a provar",
     "unavailable": "No s'ha pogut comprovar el 2FA. Les notes d'aquest dispositiu estan segures. Comprova la connexió i torna-ho a provar.",
-    "notAvailable": "El 2FA encara no està disponible.",
+    "notAvailable": "El 2FA està desactivat de moment. Torna-ho a provar més tard.",
     "actionFailed": "No ha funcionat. Comprova la connexió i torna-ho a provar. Les notes d'aquest dispositiu estan segures.",
     "warning": "Conserva el telèfon o la clau de còpia de seguretat. Si perds totes dues coses, no podràs iniciar la sessió en un dispositiu nou. És per la teva pròpia seguretat. No restablim el 2FA, i el nostre suport no hi pot ajudar.",
     "cannotEnroll": "Torna a iniciar la sessió amb la frase o un compte connectat per configurar el 2FA.",
@@ -423,6 +464,7 @@
     "backupWarning": "Has perdut el telèfon? Aquesta clau et retorna els codis. Guarda-la en un lloc segur, fora de PrivacyNotes.",
     "savedAcknowledgment": "He desat la clau de còpia de seguretat.",
     "confirmBackup": "Torna a escriure la clau de còpia de seguretat del pas anterior i després introdueix el codi de l'app.",
+    "disconnectsConnections": "En activar el 2FA es desconnecten l'extensió del navegador i la línia d'ordres. Torna a connectar l'extensió a Configuració > Extensió, i la línia d'ordres a Configuració > CLI.",
     "codeLabel": "Codi de l'app",
     "cancelSetup": "Cancel·la",
     "enabled": "El 2FA està activat",
@@ -452,6 +494,7 @@
   },
   "phraseChange": {
     "lengthGroup": "Longitud de la frase",
+    "lengthLater": "Pots canviar la longitud o la frase més endavant a Configuració > Seguretat > Frase.",
     "badgeMargin": "Marge extra",
     "rowWrite": "Per apuntar",
     "write12": "Ràpida de copiar a mà.",
@@ -506,10 +549,23 @@
     "failed": "La frase no ha canviat.",
     "failedTooMany": "La teva frase ha canviat tres vegades en les últimes 24 hores. Torna-ho a provar més tard.",
     "failedMoved": "Mentrestant, la teva configuració ha canviat en un altre dispositiu. Torna-ho a provar.",
+    "failedSettingsMoved": "Mentrestant, la teva configuració ha canviat en un altre dispositiu. Torna-ho a provar: aquesta vegada el canvi de frase la substitueix, encara que torni a canviar.",
     "failedTwoFactor": "No s'ha acceptat el codi 2FA. Torna-ho a provar.",
     "failedKeyRing": "Aquest dispositiu no té les claus d'una frase anterior. Fes el canvi en un dispositiu que les tingui.",
     "failedBiometric": "La teva empremta o la teva cara és l'únic bloqueig d'aquest dispositiu. Confirma-ho per fer el canvi.",
+    "failedCannotBind": "La teva empremta o la teva cara és l'únic bloqueig d'aquest dispositiu, i en aquest dispositiu no pot protegir la frase nova. Primer defineix un PIN o un codi d'accés a Configuració > Seguretat > PIN i després fes el canvi.",
     "failedUnsynced": "Part de la configuració d'aquest dispositiu encara no s'ha sincronitzat. Espera un moment i torna-ho a provar.",
-    "failedOffline": "Ara mateix el servidor no ha pogut acceptar el canvi. Comprova la connexió i torna-ho a provar."
+    "failedOffline": "Ara mateix el servidor no ha pogut acceptar el canvi. Comprova la connexió i torna-ho a provar.",
+    "signInPasskeysReset_other": "Les teves {{count}} claus d'accés d'inici de sessió deixen de funcionar. Torna-les a afegir després del canvi.",
+    "signInPasskeysReset_one": "La teva clau d'accés d'inici de sessió deixa de funcionar. Torna-la a afegir després del canvi."
+  },
+  "releaseNotice": {
+    "sent": "Un dispositiu nou ha iniciat la sessió al teu compte el {{when}}. No has estat tu? Elimina'l a Dispositius."
+  },
+  "releaseApproval": {
+    "ask": "Un inici de sessió nou el {{when}} demana la teva frase de recuperació (codi {{code}}). Permet-ho només si ets tu i el dispositiu nou mostra el mateix codi.",
+    "waiting": "Un inici de sessió nou demana la teva frase de recuperació (codi {{code}}) i la rebrà després de {{when}}, tret que el deneguis. Permet-ho només si ets tu i el dispositiu nou mostra el mateix codi.",
+    "allow": "Permet",
+    "deny": "Denega"
   }
 }

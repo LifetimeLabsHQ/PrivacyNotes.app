@@ -20,7 +20,7 @@ import {
   type TrackerSettings,
 } from './trackerTypes';
 import { moodAnchor } from './moodMark';
-import { waterText, type TrackerUnits } from './trackerExport';
+import { sleepHoursText, waterText, type TrackerUnits } from './trackerExport';
 
 /**
  * The daily check-in (GitHub #439): which entry a day's check-in writes to,
@@ -123,7 +123,7 @@ export function checkInParts(data: JournalTrackerData, settings: TrackerSettings
   }
   if (on('sleep') && data.sleep) {
     const q = t(`sleep.quality.${data.sleep.quality as SleepQuality}`);
-    out.push(data.sleep.hours != null ? `${q} (${data.sleep.hours}${t('units.hoursSuffix')})` : q);
+    out.push(data.sleep.hours != null ? `${q} (${sleepHoursText(data.sleep.hours)})` : q);
   }
   if (on('activity') && data.activity) out.push(t(`activity.level.${data.activity as ActivityLevel}`));
   const scale = (id: 'energy' | 'focus' | 'pain', max: number) => {
@@ -241,4 +241,22 @@ export function checkInLogged(notes: readonly LocalNote[], day: string, isGated:
   const entry = checkInEntry(notes, day);
   if (!entry || isGated(entry)) return false;
   return typeof (entry.trackers as { mood?: unknown } | undefined)?.mood === 'number';
+}
+
+/** The gate of a check-in's own reads and writes against the whole store:
+ *  only the entry's own PIN-protect hides it. A shut Journals section takes
+ *  the write (spec section 8) and counts as logged for the reminder.
+ *  Spec: docs/internal/specs/section-lock.md (section 8), beta #139 */
+export function checkInOwnGate(isNoteLocked: (n: LocalNote) => boolean): (n: LocalNote) => boolean {
+  return (n) => n.pinProtected === 1 && isNoteLocked(n);
+}
+
+/** What the check-in and medication cards read: the listed notes, and while
+ *  Journals is shut, `day`'s entry from the whole live `store`. The card
+ *  draws a gated entry as its lock, never its values, and no other day of
+ *  the shut section joins (its calendar dots stay out). Beta #139. */
+export function checkInCardNotes(listed: readonly LocalNote[], store: readonly LocalNote[], day: string): readonly LocalNote[] {
+  if (listed === store) return listed;
+  const entry = checkInEntry(store, day);
+  return entry && !listed.includes(entry) ? [...listed, entry] : listed;
 }

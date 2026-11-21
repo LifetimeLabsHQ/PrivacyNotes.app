@@ -29,7 +29,7 @@ import {
   type RenderTask,
 } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
-import { cachedPdfCover, loadPdfCover, type PdfCoverImage } from './EncryptedAttachment';
+import { cachedPdfCover, cachedPdfStrip, loadPdfCover, loadPdfStrip, type PdfCoverImage } from './EncryptedAttachment';
 import { useNearScreen } from './useNearScreen';
 
 GlobalWorkerOptions.workerSrc = workerUrl;
@@ -275,21 +275,132 @@ function PdfPage({ doc, pageNumber, cssWidth, initialAspect, root, label }: {
  *  desktop note column at 1x, and a fraction of a full page's memory. */
 const COVER_WIDTH_PX = 900;
 
-/** The first page as a PNG, with the page count. One per file per session:
- *  the cache lives beside the attachment URLs (`loadPdfCover`). */
-export async function drawCover(bytes: Uint8Array): Promise<PdfCoverImage> {
+/**
+ * A page read for Text in pictures: its text layer, or the page as a PNG.
+ * `total` is the pages this run reads, `pages` the file's own count.
+ */
+export type PdfPageForOcr = { page: number; total: number; pages: number; text: string | null; png: ArrayBuffer | null };
+
+/** A scanned page is drawn at this many pixels per PDF point (about 150 dpi) before OCR. */
+const OCR_SCALE = 2;
+
+/**
+ * Pages one run reads: a scanned page is an OCR run of seconds and a drawn
+ * page's memory, so a long file stops here and the sheet names the pages
+ * read (beta #240 item 12).
+ * Spec: docs/internal/plans/plugins.md (section 6.4)
+ */
+export const OCR_MAX_PAGES = 50;
+
+/**
+ * Fewer visible characters than this in a page's text layer is a scan with
+ * a stamp, a page number or a fax header on it: the page is read as a
+ * picture (beta #240 item 11).
+ * Spec: docs/internal/plans/plugins.md (section 6.4)
+ */
+const OCR_SPARSE_TEXT = 50;
+
+/** The longest side of a page drawn for OCR: a browser refuses a canvas side far past this, area cap or not. */
+const OCR_MAX_SIDE = 8192;
+
+/**
+ * Each page of a PDF for Text in pictures, up to `OCR_MAX_PAGES`: a page
+ * with a text layer gives its text and needs no OCR; a page without one, or
+ * with a nearly empty one, is drawn and handed over as a PNG. Each page is
+ * let go once read, so a long scan does not hold every page drawn.
+ * Spec: docs/internal/plans/plugins.md (section 6.4)
+ */
+export async function* readPdfForOcr(bytes: Uint8Array): AsyncGenerator<PdfPageForOcr> {
   const { task, doc } = await openPdf(bytes);
+  const pages = doc.numPages;
+  const total = Math.min(pages, OCR_MAX_PAGES);
   try {
-    const page = await doc.getPage(1);
+    for (let n = 1; n <= total; n++) {
+      const page = await doc.getPage(n);
+      try {
+        const content = await page.getTextContent();
+        const text = content.items.map((i) => ('str' in i ? i.str + (i.hasEOL ? '\n' : ' ') : '')).join('').replace(/[ \t]+\n/g, '\n').trim();
+        if (text.replace(/\s/g, '').length >= OCR_SPARSE_TEXT) {
+          yield { page: n, total, pages, text, png: null };
+          continue;
+        }
+        const base = page.getViewport({ scale: 1 });
+        let scale = OCR_SCALE;
+        const area = base.width * base.height * scale * scale;
+        if (area > MAX_CANVAS_PIXELS) scale *= Math.sqrt(MAX_CANVAS_PIXELS / area);
+        const side = Math.max(base.width, base.height) * scale;
+        if (side > OCR_MAX_SIDE) scale *= OCR_MAX_SIDE / side;
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+        await page.render({ canvas, viewport }).promise;
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+        // The canvas's pixels go now, not when the collector gets to them.
+        canvas.width = 0;
+        canvas.height = 0;
+        const png = blob ? await blob.arrayBuffer() : null;
+        // A page that would not draw keeps what its text layer had.
+        yield { page: n, total, pages, text: png || !text ? null : text, png };
+      } finally {
+        // pdf.js keeps a drawn page's operators and pictures until this.
+        page.cleanup();
+      }
+    }
+  } finally {
+    void task.destroy();
+  }
+}
+
+/** Pixel width of the strip's further pages: sharp at 2x in a 220 px tall
+ *  strip, where a page is about 155 px wide. */
+const STRIP_WIDTH_PX = 360;
+
+/** One page as a PNG object URL, drawn `width` pixels wide. */
+async function drawPagePng(doc: Awaited<ReturnType<typeof openPdf>>['doc'], n: number, width: number): Promise<string> {
+  const page = await doc.getPage(n);
+  try {
     const base = page.getViewport({ scale: 1 });
-    const viewport = page.getViewport({ scale: COVER_WIDTH_PX / base.width });
+    const viewport = page.getViewport({ scale: width / base.width });
     const canvas = document.createElement('canvas');
     canvas.width = Math.floor(viewport.width);
     canvas.height = Math.floor(viewport.height);
     await page.render({ canvas, viewport }).promise;
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+    canvas.width = 0;
+    canvas.height = 0;
     if (!blob) throw new Error('cover');
-    return { url: URL.createObjectURL(blob), pages: doc.numPages };
+    return URL.createObjectURL(blob);
+  } finally {
+    page.cleanup();
+  }
+}
+
+/** The first page as a PNG, with the page count. One per file per session:
+ *  the cache lives beside the attachment URLs (`loadPdfCover`). */
+export async function drawCover(bytes: Uint8Array): Promise<PdfCoverImage> {
+  const { task, doc } = await openPdf(bytes);
+  try {
+    return { url: await drawPagePng(doc, 1, COVER_WIDTH_PX), pages: doc.numPages };
+  } finally {
+    void task.destroy();
+  }
+}
+
+/** Pages 2 to `last` as small PNGs, for the file card's strip
+ *  (`loadPdfStrip`). A page that will not draw ends the strip there. */
+export async function drawStrip(bytes: Uint8Array, last: number): Promise<string[]> {
+  const { task, doc } = await openPdf(bytes);
+  const urls: string[] = [];
+  try {
+    for (let n = 2; n <= Math.min(last, doc.numPages); n++) {
+      try {
+        urls.push(await drawPagePng(doc, n, STRIP_WIDTH_PX));
+      } catch {
+        break;
+      }
+    }
+    return urls;
   } finally {
     void task.destroy();
   }
@@ -305,7 +416,14 @@ export function PdfCover({ uuid, name }: { uuid: string; name: string }) {
   const near = useNearScreen(placeholderRef, !cover && !failed);
 
   useEffect(() => {
-    if (!near || cachedPdfCover(uuid)) return;
+    if (!near) return;
+    // Another reader (the chip's tile, a Files tile) may have drawn it
+    // since this mounted: take it, or the card waits forever.
+    const drawn = cachedPdfCover(uuid);
+    if (drawn) {
+      setCover(drawn);
+      return;
+    }
     let alive = true;
     loadPdfCover(uuid).then(
       (drawn) => { if (alive) setCover(drawn); },
@@ -329,19 +447,56 @@ export function PdfCover({ uuid, name }: { uuid: string; name: string }) {
       </span>
     );
   }
+  return cover.pages > 1 ? <PdfStrip uuid={uuid} name={name} cover={cover} /> : (
+    // One page: the top of it at the card's full width, cut off at a fixed
+    // height with a fade, so the heading reads and the card has no empty
+    // sides (owner, 2026-11-20).
+    <span className="relative block max-h-[260px] overflow-hidden px-3 pt-3">
+      <img
+        src={cover.url}
+        alt={name}
+        draggable={false}
+        className="block w-full !my-0 bg-white shadow-sm"
+      />
+      <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-b from-transparent to-surface-1" />
+    </span>
+  );
+}
+
+/** How many pages the strip shows: two on a narrow card, three from 30rem. */
+const STRIP_PAGES_WIDE = 3;
+
+/**
+ * Several pages: the first ones side by side, sharing the width (each up to
+ * 220 px), so a card has no empty sides until it is very wide. The last page
+ * shown carries "+N" for the pages after it; the page count itself is on
+ * the meta line under the card.
+ */
+function PdfStrip({ uuid, name, cover }: { uuid: string; name: string; cover: PdfCoverImage }) {
+  const [rest, setRest] = useState<string[]>(() => cachedPdfStrip(uuid) ?? []);
+  useEffect(() => {
+    if (cachedPdfStrip(uuid)) return;
+    let alive = true;
+    loadPdfStrip(uuid, STRIP_PAGES_WIDE).then((urls) => { if (alive) setRest(urls); }, () => {});
+    return () => { alive = false; };
+  }, [uuid]);
+  const pages = [cover.url, ...rest];
+  const more = (shown: number) => cover.pages - shown;
+  const badge = 'absolute bottom-2 end-2 rounded-md bg-black/60 text-white text-meta font-medium px-1.5 py-0.5';
   return (
-    <span className="relative flex justify-center p-3">
-      <span className="relative block">
-        <img
-          src={cover.url}
-          alt={name}
-          draggable={false}
-          className="block max-w-full max-h-[60vh] !my-0 bg-white shadow-sm"
-        />
-        <span className="absolute bottom-2 end-2 rounded-md bg-black/60 text-white text-meta font-medium px-1.5 py-0.5">
-          {t('viewer.pageCount', { count: cover.pages })}
+    <span className="flex justify-center items-start gap-2.5 p-3">
+      {pages.map((url, i) => (
+        <span key={url} className={`relative min-w-0 flex-1 max-w-[220px] ${i >= 2 ? 'hidden @[30rem]/chip:block' : 'block'}`}>
+          <img src={url} alt={i === 0 ? name : ''} draggable={false} className="block w-full h-auto !my-0 bg-white shadow-sm" />
+          {/* "+N" on the last page shown: page 2 on a narrow card, page 3 on a wide one. */}
+          {i === 1 && more(2) > 0 && (
+            <span aria-hidden="true" className={`${badge} ${pages.length > 2 ? '@[30rem]/chip:hidden' : ''}`}>+{more(2)}</span>
+          )}
+          {i === 2 && more(3) > 0 && (
+            <span aria-hidden="true" className={badge}>+{more(3)}</span>
+          )}
         </span>
-      </span>
+      ))}
     </span>
   );
 }

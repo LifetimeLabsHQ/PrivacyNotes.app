@@ -62,6 +62,12 @@ export function vaultContent(note: Pick<LocalNote, 'type' | 'body' | 'trackers'>
     for (const f of extras.fields) {
       if (f.value) fields.push({ label: f.label || i18n.t('shell:vaultItem.customField'), value: f.value, secret: !isPublicField(f) });
     }
+    // A site passkey is named, never carried: its site and account only, so
+    // a print, an HTML or Markdown file and a burn share hold no key.
+    // Spec: docs/contrib/passkeys.md (P26)
+    for (const p of l.passkeys) {
+      fields.push({ label: i18n.t('notes:vaultPasskey.forSite', { rpId: p.rpId }), value: p.userName || p.displayName || p.rpId });
+    }
     return { fields, notes: l.notes, notesLabel: i18n.t('common:cardForm.notes'), files: fileNamesOf(note) };
   }
 

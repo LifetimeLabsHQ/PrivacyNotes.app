@@ -1,22 +1,38 @@
 import { normalizeTag } from '../notesRepo';
 import { serializeLoginBody } from '../LoginForm';
+import { base64urlToBytesStrict, bytesToBase64url, parseSitePasskey, SITE_PASSKEY_PRF_SECRET_BYTES, type SitePasskey } from '@notes/shared';
 import { newLoginField, withLoginExtras, type LoginField } from '../loginExtras';
 import { serializeCardBody } from '../CardForm';
 import { serializeSshKeyBody } from '../SshKeyForm';
 import { BW_EXPORTED_BY, BW_OWN_FIELDS } from '../export';
 import { buildFolderTree } from './folderImport';
-import { linkifyMarkdown } from './linkify';
-import type { Importer, ImportedNote, ParsedImport } from './types';
+import type { Importer, ImportBlob, ImportedNote, ParsedImport } from './types';
+import { mimeFromExt } from './blobImport';
+import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
+import { openZip } from './zipOpen';
+import type JSZip from 'jszip';
 import i18n from '../i18n';
+import { withBareLinks } from './bareLinks';
 
 /** A Bitwarden import log line; the KeePass importer reuses the ones it shares. */
-export const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:bitwarden.${key}`, options);
+export const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:bitwarden.${key}`, options);
 
 /**
  * Bitwarden import adapter.
  *
  * Reads the unencrypted .json export from Bitwarden's vault export
- * (Tools > Export vault > File format: .json).
+ * (Tools > Export vault > File format: .json), and the ".zip (with
+ * attachments)" export: `data.json` (the same .json) plus
+ * `attachments/<folder>/<file>`. Bitwarden names each folder after its item,
+ * not its id: the name with `/\><:"|?*` as `_` and runs of `_` as one, and
+ * `_1`, `_2` on the second and later item of the same name, counted over the
+ * items with attachments only (`getDecryptedExportZip` in
+ * bitwarden/clients `individual-vault-export.service.ts`, read 2026-11-16).
+ * data.json does not say which items have attachments, so a folder goes to
+ * the one item whose name gives it (or whose id is the folder name). A folder
+ * that fits no item, or several, becomes a note of its own named after the
+ * folder, so no file is lost. A login's, card's or SSH key's files go to its
+ * Files section, a note's become file links at the end of its body.
  *
  * Supported item types:
  *   1 = Login  -> PN 'login' vault item
@@ -44,6 +60,7 @@ interface BwLogin {
   username?: string | null;
   password?: string | null;
   totp?: string | null;
+  fido2Credentials?: unknown[] | null;
 }
 interface BwCard {
   cardholderName?: string | null;
@@ -118,18 +135,18 @@ const BW_TYPE_CARD = 3;
 const BW_TYPE_IDENTITY = 4;
 const BW_TYPE_SSH_KEY = 5;
 
-export const bitwardenImporter: Importer = {
+const bitwardenImporterBase: Importer = {
   id: 'bitwarden',
   label: 'Bitwarden',
   description:
-    'Unencrypted .json vault export from Bitwarden (Tools > Export vault > .json).',
-  accept: '.json,application/json',
+    'Unencrypted vault export from Bitwarden (Tools > Export vault > .json, or .zip (with attachments)).',
+  accept: '.json,application/json,.zip,application/zip',
   enabled: true,
   sourceTag: 'bitwarden',
 
   async parse(file, onProgress) {
     onProgress?.(i18n.t('importExport:status.readingFile'));
-    const text = await file.text();
+    const { text, folders: fileFolders } = await readExport(file);
 
     onProgress?.(i18n.t('importLog:shared.parsingJson'));
     let data: BwExport;
@@ -148,6 +165,9 @@ export const bitwardenImporter: Importer = {
     }
 
     const ownExport = data.exportedBy === BW_EXPORTED_BY;
+    const { byItem: filesByItem, unmatched } = matchAttachmentFolders(fileFolders, data.items);
+    const blobs = new Map<string, ImportBlob>();
+    const fileCounts = { tooLarge: 0 };
 
     // Build folder ID -> name map: tags for a Bitwarden file, folders for
     // our own.
@@ -171,11 +191,13 @@ export const bitwardenImporter: Importer = {
     let totpCount = 0;
     let starredCount = 0;
     let pinProtectedCount = 0;
-    let linkifiedCount = 0;
     let customFieldCount = 0;
     let loginFieldCount = 0;
     let extraUrlCount = 0;
     let skippedOrg = 0;
+    let passkeyCount = 0;
+    let skippedPasskeys = 0;
+    let unmatchedFiles = 0;
 
     for (const item of data.items) {
       // Skip organization vault items - user exported an individual vault
@@ -229,6 +251,15 @@ export const bitwardenImporter: Importer = {
           const trackers = withLoginExtras(undefined, { extraUrls: uris.slice(1), fields });
 
           if (login.totp) totpCount++;
+          const passkeys = sitePasskeysOf(login.fido2Credentials);
+          passkeyCount += passkeys.length;
+          skippedPasskeys += (Array.isArray(login.fido2Credentials) ? login.fido2Credentials.length : 0) - passkeys.length;
+          // A passkey for a site none of the login's websites names (beta
+          // #131) still comes in, since the file says it belongs here; the
+          // summary names that site so the person can check it.
+          for (const site of otherSites(passkeys, uris)) {
+            warnings.push(msg('passkeyOtherSite', { name: item.name || uris[0], site }));
+          }
 
           notes.push({
             title: item.name ?? '',
@@ -238,6 +269,7 @@ export const bitwardenImporter: Importer = {
               password: login.password ?? '',
               notes: item.notes ?? '',
               totp: login.totp ?? '',
+              passkeys,
             }),
             ...(Object.keys(trackers).length > 0 ? { trackers } : {}),
             tags,
@@ -279,11 +311,8 @@ export const bitwardenImporter: Importer = {
 
         case BW_TYPE_SECURE_NOTE: {
           secureNoteCount++;
-          let body = appendCustomFields(item.notes ?? '', rest);
+          const body = appendCustomFields(item.notes ?? '', rest);
           customFieldCount += rest.length;
-          const original = body;
-          body = linkifyMarkdown(body);
-          if (body !== original) linkifiedCount++;
 
           notes.push({
             title: item.name ?? '',
@@ -305,14 +334,10 @@ export const bitwardenImporter: Importer = {
           // Identity is bitwarden's SECOND markdown body producer and the only
           // one that is not a structured vault type: formatIdentity returns
           // plain `Label: value` lines pushed as type 'note', carrying both the
-          // item's Email field and the user's free-text notes. It went
-          // unlinkified until the v0.300.0 call-site audit - the same shape as
-          // the standardNotes checklist gap, and missed the same way, because
-          // the exemption list named login / card / sshKey and simply never
-          // mentioned this branch.
-          const rawIdentity = formatIdentity(item.identity ?? {}, identityNotes);
-          const body = linkifyMarkdown(rawIdentity);
-          if (body !== rawIdentity) linkifiedCount++;
+          // item's Email field and the user's free-text notes. A per-branch
+          // link call missed it until v0.300.0; the bare-link pass after the
+          // parse (withBareLinks) reads every 'note' body, so no branch can.
+          const body = formatIdentity(item.identity ?? {}, identityNotes);
 
           notes.push({
             title: item.name ?? '',
@@ -360,6 +385,19 @@ export const bitwardenImporter: Importer = {
       if (ownExport && folderPath.length > 0 && notes.length > pushedAt) {
         notes[pushedAt]!.folderPath = folderPath;
       }
+      const entries = filesByItem.get(item);
+      if (entries && notes.length > pushedAt) {
+        notes[pushedAt] = withFiles(notes[pushedAt]!, await attachFiles(entries, blobs, fileCounts));
+      }
+    }
+
+    // A folder that fits no item, or several, keeps its files on a note of its own.
+    for (const [folder, entries] of unmatched) {
+      const keys = await attachFiles(entries, blobs, fileCounts);
+      if (keys.length === 0) continue;
+      unmatchedFiles += keys.length;
+      const now = new Date().toISOString();
+      notes.push(withFiles({ title: folder, body: '', tags: [], createdAt: now, updatedAt: now, type: 'note' }, keys));
     }
 
     // Our own export's folders, rebuilt once across all paths so siblings
@@ -406,39 +444,127 @@ export const bitwardenImporter: Importer = {
     if (pinProtectedCount > 0) {
       transforms.push(msg('markedPinProtected', { count: pinProtectedCount }));
     }
-    if (linkifiedCount > 0) {
-      transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkifiedCount }));
-    }
     if (totpCount > 0) {
       transforms.push(i18n.t('importLog:shared.keptTotp', { count: totpCount }));
+    }
+    if (passkeyCount > 0) {
+      transforms.push(msg('keptPasskeys', { count: passkeyCount }));
+    }
+    if (blobs.size > 0) {
+      transforms.push(i18n.t('importLog:shared.foundAttachments', { count: blobs.size }));
     }
 
     // Warnings.
     if (skippedOrg > 0) {
       warnings.push(msg('skippedOrg', { count: skippedOrg }));
     }
-
-    const uniqueTags = new Set<string>();
-    for (const n of notes) for (const t of n.tags) uniqueTags.add(t);
-
-    const emptyNotes = notes.filter((n) => !n.body.trim()).length;
-    const untaggedNotes = notes.filter((n) => n.tags.length === 0).length;
+    if (skippedPasskeys > 0) {
+      warnings.push(msg('skippedPasskeys', { count: skippedPasskeys }));
+    }
+    if (unmatchedFiles > 0) {
+      warnings.push(msg('unmatchedAttachments', { count: unmatchedFiles }));
+    }
+    if (fileCounts.tooLarge > 0) {
+      warnings.push(mediaTooLargeWarning(fileCounts.tooLarge));
+    }
 
     return {
       notes,
       warnings,
       transforms,
-      stats: {
-        totalNotes: notes.length,
-        emptyNotes,
-        untaggedNotes,
-        uniqueTags: uniqueTags.size,
-      },
       source: 'bitwarden',
       ...(rebuilt ? { folders: rebuilt.folders } : {}),
+      ...(blobs.size > 0 ? { blobs } : {}),
     } satisfies ParsedImport;
   },
 };
+
+/** The importer with the bare-link pass after its parse (bareLinks.ts). */
+export const bitwardenImporter: Importer = { ...bitwardenImporterBase, parse: withBareLinks(bitwardenImporterBase.parse) };
+
+/**
+ * The export's JSON text, and for a zip the files under `attachments/` by
+ * folder name. A zip is known by its first two bytes, whatever the file name.
+ */
+async function readExport(file: File): Promise<{ text: string; folders: Map<string, JSZip.JSZipObject[]> }> {
+  const head = new Uint8Array(await file.slice(0, 2).arrayBuffer());
+  const folders = new Map<string, JSZip.JSZipObject[]>();
+  if (head[0] !== 0x50 || head[1] !== 0x4b) return { text: await file.text(), folders };
+  let zip: JSZip;
+  try {
+    zip = await openZip(file);
+  } catch {
+    throw new Error(msg('notZipExport'));
+  }
+  const data = Object.values(zip.files).find((e) => !e.dir && e.name === 'data.json');
+  if (!data) throw new Error(msg('notZipExport'));
+  for (const entry of Object.values(zip.files)) {
+    const m = /^attachments\/([^/]+)\/([^/]+)$/.exec(entry.name);
+    if (!m || entry.dir) continue;
+    const list = folders.get(m[1]!) ?? [];
+    list.push(entry);
+    folders.set(m[1]!, list);
+  }
+  return { text: await zipEntryText(data), folders };
+}
+
+/** An item's name as Bitwarden writes it for its attachments folder. */
+const folderNameOf = (name: string): string => name.replace(/[/\\><:"|?*]/g, '_').replace(/__+/g, '_');
+
+/**
+ * Each attachments folder to the one item it names, by id or by name; a
+ * name that more than one item gives cannot be placed and stays unmatched.
+ */
+function matchAttachmentFolders(
+  folders: Map<string, JSZip.JSZipObject[]>,
+  items: BwItem[],
+): { byItem: Map<BwItem, JSZip.JSZipObject[]>; unmatched: Map<string, JSZip.JSZipObject[]> } {
+  const byItem = new Map<BwItem, JSZip.JSZipObject[]>();
+  const unmatched = new Map<string, JSZip.JSZipObject[]>();
+  if (folders.size === 0) return { byItem, unmatched };
+  const byId = new Map<string, BwItem>();
+  const byName = new Map<string, BwItem[]>();
+  for (const item of items) {
+    if (item.organizationId) continue;
+    if (item.id) byId.set(item.id, item);
+    // The file types `name`, and a name that is not text names no folder.
+    const key = folderNameOf(typeof item.name === 'string' ? item.name : '');
+    byName.set(key, [...(byName.get(key) ?? []), item]);
+  }
+  for (const [folder, entries] of folders) {
+    const named = byName.get(folder);
+    const item = byId.get(folder) ?? (named?.length === 1 ? named[0] : undefined);
+    if (item) byItem.set(item, [...(byItem.get(item) ?? []), ...entries]);
+    else unmatched.set(folder, entries);
+  }
+  return { byItem, unmatched };
+}
+
+/** Each file as a blob under a key only this import uses; returns the keys of the ones that came along. */
+async function attachFiles(entries: JSZip.JSZipObject[], blobs: Map<string, ImportBlob>, counts: { tooLarge: number }): Promise<string[]> {
+  const keys: string[] = [];
+  for (const entry of entries) {
+    const data = await zipEntryMedia(entry);
+    if (data === null) { counts.tooLarge++; continue; }
+    const name = entry.name.slice(entry.name.lastIndexOf('/') + 1) || 'Attachment';
+    const key = `bitwardenfile:${blobs.size}`;
+    blobs.set(key, { data, name, mime: mimeFromExt(name), file: true });
+    keys.push(key);
+  }
+  return keys;
+}
+
+/**
+ * The note with these blob keys: in a login's, card's or SSH key's `files`
+ * list, or as file links at the end of a note's body. `importBlobs` swaps
+ * each key for the stored file.
+ */
+function withFiles(note: ImportedNote, keys: string[]): ImportedNote {
+  if (keys.length === 0) return note;
+  const links = keys.map((key) => `[file](${key})`);
+  if (note.type === 'note') return { ...note, body: [note.body, ...links].filter(Boolean).join('\n\n') };
+  return { ...note, body: JSON.stringify({ ...JSON.parse(note.body), files: links }) };
+}
 
 /**
  * Split an item's custom fields into the ones our vault export writes for
@@ -470,6 +596,67 @@ function takeOwnFields(
     else rest.push(f);
   }
   return { own, rest };
+}
+
+/** Standard or url-safe base64, padded or not, as unpadded base64url. */
+const asBase64url = (v: unknown): string | null => (typeof v === 'string' && /^[A-Za-z0-9+/_-]+=*$/.test(v) ? v.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '') : null);
+
+/**
+ * A login's `fido2Credentials` as site passkeys: ours and Bitwarden's, P-256
+ * only, each checked by `parseSitePasskey`; any other entry is left out. A
+ * credential id is a GUID (16 bytes) or `b64.` and base64url, as Bitwarden
+ * writes it. A file without a 32-byte `prfSecret` (Bitwarden's own has none) gets a new one,
+ * so a site that uses the PRF extension sees other outputs.
+ * Spec: docs/contrib/passkeys.md (section 16, finding 11)
+ */
+function sitePasskeysOf(list: unknown): SitePasskey[] {
+  if (!Array.isArray(list)) return [];
+  const out: SitePasskey[] = [];
+  for (const raw of list) {
+    const c = raw as Record<string, unknown> | null;
+    if (!c || typeof c !== 'object' || c.keyType !== 'public-key' || c.keyAlgorithm !== 'ECDSA' || c.keyCurve !== 'P-256') continue;
+    const id = typeof c.credentialId !== 'string' ? null
+      : c.credentialId.startsWith('b64.') ? asBase64url(c.credentialId.slice(4))
+        : /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(c.credentialId)
+          ? bytesToBase64url(Uint8Array.from(c.credentialId.replace(/-/g, '').match(/../g)!, (h) => parseInt(h, 16)))
+          : null;
+    // A secret of another length (beta #131) is replaced too, so the passkey is kept.
+    const given = asBase64url(c.prfSecret);
+    const prf = given && base64urlToBytesStrict(given, 43)?.length === SITE_PASSKEY_PRF_SECRET_BYTES
+      ? given
+      : bytesToBase64url(crypto.getRandomValues(new Uint8Array(SITE_PASSKEY_PRF_SECRET_BYTES)));
+    const passkey = parseSitePasskey({
+      v: 1,
+      credentialId: id,
+      rpId: typeof c.rpId === 'string' ? c.rpId.toLowerCase() : null,
+      userHandle: asBase64url(c.userHandle),
+      userName: typeof c.userName === 'string' ? c.userName : '',
+      displayName: typeof c.userDisplayName === 'string' ? c.userDisplayName : '',
+      key: asBase64url(c.keyValue),
+      prfSecret: prf,
+      created: typeof c.creationDate === 'string' && Number.isFinite(Date.parse(c.creationDate)) ? new Date(c.creationDate).toISOString() : new Date().toISOString(),
+    });
+    if (passkey && !out.some((p) => p.credentialId === passkey.credentialId)) out.push(passkey);
+  }
+  return out;
+}
+
+/**
+ * The RP IDs of these passkeys that are neither the host of one of the
+ * login's web addresses nor a parent of it. A login with no web address
+ * (none, or only an `androidapp://` one) names no site to compare with.
+ */
+function otherSites(passkeys: SitePasskey[], uris: string[]): string[] {
+  const hosts = uris.flatMap((u) => {
+    try {
+      const url = new URL(/^[a-z][a-z0-9+.-]*:/i.test(u) ? u : `https://${u}`);
+      return url.protocol === 'https:' || url.protocol === 'http:' ? [url.hostname] : [];
+    } catch {
+      return [];
+    }
+  });
+  if (hosts.length === 0) return [];
+  return [...new Set(passkeys.map((p) => p.rpId))].filter((rp) => !hosts.some((h) => h === rp || h.endsWith(`.${rp}`)));
 }
 
 /**

@@ -28,6 +28,7 @@ struct Request<'a> {
 }
 
 #[derive(Serialize)]
+/// The handle alone: `delete` and `deviceOpen`.
 struct DeleteRequest<'a> {
     handle: &'a str,
 }
@@ -67,6 +68,21 @@ impl<R: Runtime> BiometricKey<R> {
     pub fn open(&self, handle: &str, reason: &str, cancel_title: &str) -> Result<String, String> {
         self.0
             .run_mobile_plugin::<Opened>("open", Request { handle: Some(handle), reason, cancel_title })
+            .map(|opened| opened.secret)
+            .map_err(code_of)
+    }
+
+    /// The device key: a Keystore AES key that needs no user seals a fresh
+    /// secret. No prompt.
+    /// Spec: docs/internal/plans/device-bound-phrase-key.md (section 3)
+    pub fn device_create(&self) -> Result<Created, String> {
+        self.0.run_mobile_plugin("deviceCreate", ()).map_err(code_of)
+    }
+
+    /// The secret of a device-key handle. No prompt.
+    pub fn device_open(&self, handle: &str) -> Result<String, String> {
+        self.0
+            .run_mobile_plugin::<Opened>("deviceOpen", DeleteRequest { handle })
             .map(|opened| opened.secret)
             .map_err(code_of)
     }

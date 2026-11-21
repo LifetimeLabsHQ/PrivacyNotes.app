@@ -14,7 +14,7 @@
 import type { LocalNote } from './db';
 import { isDemoMode } from './demo';
 import type { FolderDef } from './folders';
-import { folderLookKey, renameTagLook, setItemLook, type ItemStyles } from './itemStyles';
+import { feedLookKey, folderLookKey, renameTagLook, setItemLook, type ItemStyles } from './itemStyles';
 
 export type Space = 'personal' | 'work';
 
@@ -73,6 +73,20 @@ export function setRootSpace(styles: ItemStyles, folderId: string, space: Space)
   const has = styles[folderLookKey(folderId)]?.space;
   if (space === 'personal' && !has) return styles;
   return setItemLook(styles, folderLookKey(folderId), { space: space === 'work' ? WORK : null });
+}
+
+/** The space a subscribed calendar shows in: one space, or `all` (both).
+ *  No register, or a reset, is `all`, so a calendar subscribed before #772
+ *  shows where it always did.
+ *  Spec: docs/internal/specs/calendar-pillar-spec.md (section 14) */
+export function feedSpace(styles: ItemStyles, feedId: string): SpaceView {
+  const v = styles[feedLookKey(feedId)]?.space?.v;
+  return v === WORK || v === 'personal' ? v : 'all';
+}
+
+/** Put a subscribed calendar in a space, or in both with `all` (a reset). */
+export function setFeedSpace(styles: ItemStyles, feedId: string, space: SpaceView): ItemStyles {
+  return setItemLook(styles, feedLookKey(feedId), { space: space === 'all' ? null : space });
 }
 
 /**

@@ -18,7 +18,10 @@ import { Trans, useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
 import { generateTotpCode, parseTotpInput, totpSecondsRemaining } from '@notes/shared';
 import type { BookmarkCopyEntry, CardCopyEntry, CopyEntry, CopyKind, LoginCopyEntry, SshKeyCopyEntry } from '@notes/shared/extension';
-import { ArrowSquareOut, BookmarkSimple, Check, Copy, CreditCard, DotsThreeOutlineVertical, Fingerprint, GlobeSimple, Key, LinkSimple, ListBullets, NotePencil, PushPin, Textbox, User } from '@web/icons';
+import { ArrowSquareOut, BookmarkSimple, Check, Copy, CreditCard, DotsThreeOutlineVertical, Fingerprint, GlobeSimple, Key, LinkSimple, ListBullets, NotePencil, PencilSimple, PushPin, Textbox, User, X } from '@web/icons';
+import { HoverLabel } from '@web/HoverLabel';
+import { passkeysReleased } from '../../src/passkeyRelease';
+import { DROPPED_KEY, isPendingItem, type NotSavedEdit } from '../../src/pending';
 import { Button, IconButton } from '@web/ui/Button';
 import { Badge, Callout, StatusLine } from '@web/ui/feedback';
 import { Kbd } from '@web/ui/misc';
@@ -29,7 +32,7 @@ import { SectionEyebrow, SETTINGS_HELP } from '@web/settingsUI';
 import { ProMark } from '@web/proMark';
 import type { ContextMenuItem } from '@web/ContextMenu';
 import { forgetLocal, type Connection } from '../../src/connection';
-import { allEntries, isUnlocked, lockLogins, pull, pullInFlight, ROWS_KEY, SESSION_KEY, shortcutUrl, unlock } from '../../src/logins';
+import { allEntries, dismissNotSaved, isUnlocked, lockLogins, pull, pullInFlight, ROWS_KEY, SESSION_KEY, shortcutUrl, unlock } from '../../src/logins';
 import { biometricReady, unlockWithBiometric } from '../../src/biometric';
 import { copyAndClear, copyPlain } from '../../src/copy';
 import { CLEAR_AFTER_MS } from '../../src/clipboard';
@@ -59,6 +62,9 @@ export interface Vault {
   loaded: boolean;
   /** A delta pull runs behind the list. */
   pulling: boolean;
+  /** Login edits the Vault never got, shown until dismissed (beta #130). */
+  notSaved: NotSavedEdit[];
+  dismissNotSaved: (row: string) => Promise<void>;
   onUnlocked: () => void;
   lock: () => Promise<void>;
 }
@@ -67,7 +73,7 @@ export interface Vault {
  *  background) and with the rows a pull writes. */
 export function useVault(enabled: boolean): Vault {
   const [unlocked, setUnlocked] = useState<boolean | null>(null);
-  const [data, setData] = useState<{ entries: CopyEntry[]; pro: boolean } | null>(null);
+  const [data, setData] = useState<{ entries: CopyEntry[]; pro: boolean; notSaved?: NotSavedEdit[] } | null>(null);
   const [pulling, setPulling] = useState(false);
 
   const load = useCallback(async () => {
@@ -106,7 +112,7 @@ export function useVault(enabled: boolean): Vault {
         setUnlocked(false);
         setData(null);
       }
-      if (area === 'local' && ROWS_KEY in changes) void load();
+      if (area === 'local' && (ROWS_KEY in changes || DROPPED_KEY in changes)) void load();
     };
     browser.storage.onChanged.addListener(onChange);
     return () => browser.storage.onChanged.removeListener(onChange);
@@ -118,6 +124,11 @@ export function useVault(enabled: boolean): Vault {
     pro: data?.pro ?? false,
     loaded: data !== null,
     pulling: pulling || pullInFlight(),
+    notSaved: data?.notSaved ?? [],
+    dismissNotSaved: async (row) => {
+      await dismissNotSaved(row);
+      await load();
+    },
     onUnlocked: () => {
       setUnlocked(true);
       void load();
@@ -138,8 +149,27 @@ export function filterByType(entries: readonly CopyEntry[], filter: TypeFilter):
 
 // ── Unlock ───────────────────────────────────────────────────────────
 
-export function Unlock({ connection, onUnlocked, focusNonce }: { connection: Connection; onUnlocked: () => void; focusNonce: number }) {
+/**
+ * `pageOpened`: a prompt a page opened, not the person from the toolbar. A
+ * key press on the page is enough to open it, and the next keys may be a
+ * card number or a code typed there, so the PIN box takes no focus and a
+ * full PIN (or Enter) is no try until the person has clicked in the popup
+ * (beta #127). Spec: docs/contrib/passkeys.md (section 5.4, Prompts)
+ */
+/** The PIN boxes of `SecretInput` (PinInput's length). */
+const PIN_DIGITS = 4;
+
+export function Unlock({ connection, onUnlocked, focusNonce, pageOpened = false }: { connection: Connection; onUnlocked: () => void; focusNonce: number; pageOpened?: boolean }) {
   const { t } = useTranslation('extension');
+  const clicked = useRef(!pageOpened);
+  useEffect(() => {
+    if (clicked.current) return;
+    const onDown = () => {
+      clicked.current = true;
+    };
+    document.addEventListener('pointerdown', onDown, true);
+    return () => document.removeEventListener('pointerdown', onDown, true);
+  }, []);
   const [value, setValue] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ tone: 'warning' | 'danger'; text: string } | null>(null);
@@ -178,10 +208,15 @@ export function Unlock({ connection, onUnlocked, focusNonce }: { connection: Con
     <div className="space-y-3 py-2" ref={box}>
       <div className="text-center text-body font-semibold text-pn">{kind === 'pin' ? t('logins.unlockPin') : t('logins.unlockPasscode')}</div>
       <div className={busy ? 'opacity-50' : undefined}>
-        <SecretInput kind={kind} value={value} onChange={setValue} onComplete={(v) => void answer(() => unlock({ secret: v }))} autoFocus disabled={busy} fill />
+        <SecretInput kind={kind} value={value} onChange={setValue} onComplete={(v) => {
+          if (clicked.current) void answer(() => unlock({ secret: v }));
+        }} autoFocus={!pageOpened} disabled={busy} fill />
       </div>
-      {kind === 'passcode' && (
-        <Button action="next" onClick={() => void answer(() => unlock({ secret: value }))} disabled={busy || !value} className="w-full" />
+      {/* A PIN in a prompt a page opened makes no try at its fourth digit
+          before a click, so Next is its keyboard way in: Tab to it and press
+          Enter or Space (beta #198 item 3). */}
+      {(kind === 'passcode' || pageOpened) && (
+        <Button action="next" onClick={() => void answer(() => unlock({ secret: value }))} disabled={busy || !value || (kind === 'pin' && value.length < PIN_DIGITS)} className="w-full" />
       )}
       {fingerprint && (
         <Button icon={<Fingerprint aria-hidden="true" />} onClick={() => void answer(unlockWithBiometric)} disabled={busy} className="w-full">
@@ -219,9 +254,11 @@ function rowMenu(entry: CopyEntry, t: (k: string) => string, copy: Copy, code?: 
   return items;
 }
 
-/** The site a row opens: a login's first web address, a bookmark's page. */
+/** The site a row opens: a login's first web address, a bookmark's page.
+ *  Only an http or https address: a bookmark's is any text (beta #217 item 8). */
 function siteOf(entry: CopyEntry): string | undefined {
-  return entry.kind === 'login' ? entry.urls.find((u) => /^https?:\/\//i.test(u)) : entry.kind === 'bookmark' ? entry.url : undefined;
+  const web = (u: string) => /^https?:\/\//i.test(u);
+  return entry.kind === 'login' ? entry.urls.find(web) : entry.kind === 'bookmark' && web(entry.url) ? entry.url : undefined;
 }
 
 /** A copy tool on a row: the glyph turns into a check for two seconds. */
@@ -281,7 +318,9 @@ function fillNotice(outcome: FillOutcome, t: (k: string) => string): Notice {
   }
 }
 
-/** A row's tile: the site's favicon, or a letter or glyph. The Clip tab's page card uses it too. */
+/** A row's tile: the site's favicon, or a letter or glyph. The Clip tab's
+ *  page card and the passkey prompt's head use it with no `url`, a letter:
+ *  only a vault row asks the favicon proxy (beta #217 item 1). */
 export function Tile({ url, letter, glyph }: { url?: string; letter: string; glyph?: ReactNode }) {
   const { favicons } = useViewPrefs();
   const icon = url && favicons ? faviconOf(url) : null;
@@ -298,10 +337,12 @@ export function Tile({ url, letter, glyph }: { url?: string; letter: string; gly
 // adds a second line under them: its site under the username, and the 2FA
 // block under the tools, as wide as the tools or as its own one line,
 // whichever is wider; the words give way (owner, 2026-11-12, option A).
-function Row({ entry, tile, title, meta, tools, sub, side, copy, menu, code }: {
+function Row({ entry, tile, title, titleEnd, meta, tools, sub, side, copy, menu, code }: {
   entry: CopyEntry;
   tile: ReactNode;
   title: string;
+  /** After the title: a login's passkey mark. */
+  titleEnd?: ReactNode;
   meta: string;
   tools: ReactNode;
   /** A second line under the words: a login's site. */
@@ -329,6 +370,7 @@ function Row({ entry, tile, title, meta, tools, sub, side, copy, menu, code }: {
         <div className="text-body font-medium text-pn truncate" dir="auto">
           {entry.pinned && <PushPin aria-hidden="true" className="inline-block me-1 text-pn-muted align-[-2px]" weight="fill" />}
           {title}
+          {titleEnd}
         </div>
         <div className="text-meta text-pn-muted truncate" dir="auto">{meta}</div>
       </div>
@@ -362,7 +404,7 @@ function Row({ entry, tile, title, meta, tools, sub, side, copy, menu, code }: {
   );
 }
 
-function LoginRow({ login, pro, copy, menu, onFill, fillKeys }: { login: LoginCopyEntry; pro: boolean; copy: Copy; menu: OpenMenu; onFill?: () => Promise<void>; fillKeys?: string }) {
+function LoginRow({ login, pro, copy, menu, onFill, fillKeys, onEdit }: { login: LoginCopyEntry; pro: boolean; copy: Copy; menu: OpenMenu; onFill?: () => Promise<void>; fillKeys?: string; onEdit?: () => void }) {
   const { t } = useTranslation('extension');
   const { showTotp, totpBar } = useViewPrefs();
   const totp = login.totp ? parseTotpInput(login.totp) : null;
@@ -375,6 +417,11 @@ function LoginRow({ login, pro, copy, menu, onFill, fillKeys }: { login: LoginCo
       entry={login}
       tile={<Tile url={login.urls[0]} letter={login.name || login.username} glyph={login.urls[0] ? undefined : <GlobeSimple />} />}
       title={login.name || login.username}
+      titleEnd={login.passkeys?.length ? (
+        <HoverLabel label={t('notes:vaultPasskey.hasPasskey')} inline className="ms-1 align-[-2px]">
+          <Fingerprint aria-label={t('notes:vaultPasskey.hasPasskey')} className="text-pn-muted" />
+        </HoverLabel>
+      ) : undefined}
       // The username; the site on the line under it only beside a 2FA block,
       // where it fills the line's empty start (alone it looked orphaned,
       // owner 2026-11-12).
@@ -390,6 +437,12 @@ function LoginRow({ login, pro, copy, menu, onFill, fillKeys }: { login: LoginCo
       tools={
         <>
           {onFill && <FillTool onFill={onFill} keys={fillKeys} />}
+          {/* Edit beside the tools; the row menu stays off (owner, 2026-11-12; passkeys.md section 6). */}
+          {onEdit && (
+            <IconButton label={t('common:actions.edit')} onClick={onEdit}>
+              <PencilSimple aria-hidden="true" />
+            </IconButton>
+          )}
           <CopyTool label={t('auth:loginForm.copyUsername')} done={t('logins.usernameCopied')} value={login.username} copy={copy}><User aria-hidden="true" /></CopyTool>
           <CopyTool label={t('auth:loginForm.copyPassword')} done={t('logins.passwordCopied')} value={login.password} copy={copy}><Key aria-hidden="true" /></CopyTool>
         </>
@@ -488,10 +541,11 @@ function BookmarkRow({ bookmark, copy, menu }: { bookmark: BookmarkCopyEntry; co
   );
 }
 
-function EntryRow({ entry, pro, copy, menu, fill, fillKeys }: { entry: CopyEntry; pro: boolean; copy: Copy; menu: OpenMenu; fill?: (item: string) => Promise<void>; fillKeys?: string }) {
+function EntryRow({ entry, pro, copy, menu, fill, fillKeys, edit }: { entry: CopyEntry; pro: boolean; copy: Copy; menu: OpenMenu; fill?: (item: string) => Promise<void>; fillKeys?: string; edit?: (login: LoginCopyEntry) => void }) {
   switch (entry.kind) {
     case 'login':
-      return <LoginRow login={entry} pro={pro} copy={copy} menu={menu} onFill={fill && (() => fill(entry.item))} fillKeys={fillKeys} />;
+      // A login this browser made that the copy does not hold yet has no item to edit.
+      return <LoginRow login={entry} pro={pro} copy={copy} menu={menu} onFill={fill && (() => fill(entry.item))} fillKeys={fillKeys} onEdit={edit && !isPendingItem(entry.item) ? () => edit(entry) : undefined} />;
     case 'card':
       return <CardRow card={entry} copy={copy} menu={menu} />;
     case 'ssh':
@@ -540,7 +594,7 @@ function Section({ icon, title, count, tools, children }: { icon: typeof GlobeSi
   );
 }
 
-export function VaultSections({ vault, url, tabId, query, typeFilter, menu, loginKeys }: {
+export function VaultSections({ vault, url, tabId, query, typeFilter, menu, loginKeys, onEdit }: {
   vault: Vault;
   url: string;
   /** The tab the window was opened for; without it no row offers Fill. */
@@ -550,6 +604,8 @@ export function VaultSections({ vault, url, tabId, query, typeFilter, menu, logi
   menu: OpenMenu;
   /** The browser's key for Copy login, for the hint under one match. */
   loginKeys?: string;
+  /** Edit on each login row (passkeys.md section 6), while the switch is on. */
+  onEdit?: (login: LoginCopyEntry) => void;
 }) {
   const { t } = useTranslation('extension');
   const notify = useNotify();
@@ -603,15 +659,23 @@ export function VaultSections({ vault, url, tabId, query, typeFilter, menu, logi
   const entries = filterByType(vault.entries, typeFilter);
   const rows = (list: CopyEntry[], canFill = false) => (
     <ul className="divide-y divide-divider">
-      {list.map((e) => <EntryRow key={e.item} entry={e} pro={vault.pro} copy={copy} menu={menu} fill={canFill ? fill : undefined} fillKeys={loginKeys} />)}
+      {list.map((e) => <EntryRow key={e.item} entry={e} pro={vault.pro} copy={copy} menu={menu} fill={canFill ? fill : undefined} fillKeys={loginKeys} edit={passkeysReleased() ? onEdit : undefined} />)}
     </ul>
   );
   const checking = vault.pulling && <StatusLine busy>{t('vault.checking')}</StatusLine>;
+  // An edit the queue had to drop stays on screen until the person has read it.
+  const notSaved = vault.notSaved.map((n) => (
+    <Callout key={n.row} look="card" tone="warning" title={t('shell:markdown.notSaved')}
+      action={<Button icon={<X aria-hidden="true" />} onClick={() => void vault.dismissNotSaved(n.row)}>{t('common:updateToast.dismiss')}</Button>}>
+      {t('vault.editNotSaved', { name: n.name })}
+    </Callout>
+  ));
 
   if (query.trim()) {
     const found = searchEntries(entries, query);
     return (
       <div className="px-3 pb-3 space-y-3">
+        {notSaved}
         <Section icon={ListBullets} title={t('settingsSearch:resultCount', { count: found.length })}>
           {found.length ? rows(found) : <p className={SETTINGS_HELP}>{t('logins.noMatch')}</p>}
         </Section>
@@ -638,6 +702,7 @@ export function VaultSections({ vault, url, tabId, query, typeFilter, menu, logi
   const showHere = !!site && typeFilter !== 'card' && typeFilter !== 'ssh';
   return (
     <div className="px-3 pb-3 space-y-3">
+      {notSaved}
       {showHere && (
         <Section icon={GlobeSimple} title={t('logins.forSite', { site })}>
           {here.length ? rows(here, true)

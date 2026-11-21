@@ -1,5 +1,7 @@
 import { Suspense, useEffect, useMemo, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import { lazyPart } from './chunkLoad';
+import { AppSizeRow } from './AppSizeRow';
+import { appSizeSupported, DEFAULT_APP_ZOOM, applyAppZoom } from './appZoom';
 import { usePopoverPosition } from './usePopoverPosition';
 import { Trans, useTranslation } from 'react-i18next';
 import { useEscapeToClose } from './useEscapeToClose';
@@ -44,7 +46,8 @@ import { allLocalFonts, canListAllFonts, fontInstalled, installedCandidates } fr
 import { intlLocale } from './languages';
 import { IconUpgrade, ProMark, type UpgradeTrigger } from './UpgradeModal';
 import { proUnlocked } from './demo';
-import { ArrowCounterClockwise, Folder, Intersect, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, ClockCounterClockwise, Layout, Tabs, Paragraph, LinkSimple, Eye, Brain, TextAa, ListNumbers, ListChecks, Check, ListMagnifyingGlass, CheckSquare, Confetti, CircleHalf, PaintBucket, Sun, Moon, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, BoxArrowDown, MapPin, PILLAR_GLYPHS, type Icon } from './icons';
+import { PencilSimpleSlash, ArrowCounterClockwise, Folder, Intersect, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, ClockCounterClockwise, Layout, Tabs, Paragraph, Hash, LinkSimple, Eye, Brain, TextAa, ListNumbers, ListChecks, Check, ListMagnifyingGlass, CheckSquare, Confetti, CircleHalf, PaintBucket, Sun, Moon, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, BoxArrowDown, MapPin, PILLAR_GLYPHS, type Icon } from './icons';
+import { setLineNumbersPref, useLineNumbersPref } from './editorPrefs';
 import type { BUILTIN_THEME_CODES } from './builtinThemeCodes';
 import type { CustomThemes } from './customThemes';
 import type { ThemeGalleryCtx } from './customThemeUI';
@@ -63,11 +66,10 @@ const ExtraThemeCards = lazyPart(() => import('./customThemeUI').then((m) => m.E
 const ThemePasteField = lazyPart(() => import('./customThemeUI').then((m) => m.ThemePasteField));
 const FormatBarBoard = lazyPart(() => import('./FormatBarBoard').then((m) => m.FormatBarBoard));
 // Loads the model code only when the Behavior tab opens: off the boot path.
-const SmartConnectionsRow = lazyPart(() => import('./SmartConnectionsRow').then((m) => m.SmartConnectionsRow));
 import { exemptOpts } from './i18nExempt';
-import { AccentBar, EYEBROW_ICON_ROW, EyebrowGlyph, HeadlineRule, ROW_TITLE, ResetDefaultsButton, RowTitle, SectionEyebrow, SETTINGS_BTN, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_SELECT, SettingsTabStrip, settingsTabClass, SETTINGS_TRACK } from './settingsUI';
+import { AccentBar, DeviceOnlyTip, EYEBROW_ICON_ROW, EyebrowGlyph, HeadlineRule, ROW_TITLE, ResetDefaultsButton, RowTitle, SectionEyebrow, SETTINGS_BTN, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_SELECT, SettingsTabStrip, settingsTabClass, SETTINGS_TRACK } from './settingsUI';
 import { Switch } from './Switch';
-import { onDeviceAiShown } from './onDeviceAi';
+import { pluginsShown, useMeaningState } from './onDeviceAi';
 import { canReadPosition } from './currentPosition';
 import { writeAutoLocation } from './autoLocation';
 import { AutoLocationSwitch } from './notesView/NoteLocationChip';
@@ -78,7 +80,7 @@ import { ViewCheckBox } from './SidebarOptionsPopover';
 import { allViewRows, moveView, resolveStartView, sidebarViewRows, startViewRows } from './viewRows';
 import { ViewMenu } from './ViewMenu';
 import type { View } from './views';
-import { defaultSettings, isShownInAll } from './userSettings';
+import { defaultSettings, isShownInAll, type BindSetting } from './userSettings';
 import { NOTE_COLOR_CHOICES, NOTE_COLOR_LABEL, noteColorChoice, type NoteColorChoice } from './itemStyles';
 import { Button, CloseButton, Popover } from './ui';
 import { NoteColorExample } from './looks/NoteColorExample';
@@ -100,12 +102,15 @@ type Props = {
   onEditorModeChange: (mode: 'formatted' | 'markdown') => void;
   /** The Format bar tab's board. Without it the tab is not shown. */
   formatBar?: FormatBarBoardProps;
-  /** Gap between two paragraphs in a note body, and its setter. */
-  lineSpacing: LineSpacing;
-  onLineSpacingChange: (next: LineSpacing) => void;
-  /** How a numbered list inside a numbered list counts (#689), and its setter. */
-  nestedNumbers: NestedNumbers;
-  onNestedNumbersChange: (next: NestedNumbers) => void;
+  /** The synced settings the panes show and change, each as its value and
+   *  its setter (`settingsBinder` in userSettings.ts): `lineSpacing` (the gap
+   *  between two paragraphs), `nestedNumbers` (how a numbered list inside a
+   *  numbered list counts, #689), `startView` (the view a cold start opens on,
+   *  docs/internal/specs/start-view.md), `sinkCheckedTasks` (a ticked task
+   *  moves below the open ones, in the editor and in Tasks), `taskConfetti`,
+   *  `typedSymbols`, `linkSuggestions`, `confirmTrash`, `confirmArchive` and
+   *  `spaces` (Personal and Work, docs/internal/specs/spaces.md). */
+  bind: BindSetting;
   /** Views switched off in the sidebar, and item types switched out of the
    *  All list. Both also live behind the rail's own two icons - this is the
    *  same field shown twice, like View. Spec: docs/internal/specs/sidebar-views.md */
@@ -115,34 +120,13 @@ type Props = {
   onToggleHidden: (field: 'hiddenViews' | 'hiddenInAll', key: View) => void;
   /** The order of the sidebar rows (GitHub #621); [] is the stock order. */
   onViewOrderChange: (order: View[]) => void;
-  /** The view the app opens on at a cold start, and its setter.
-   *  Spec: docs/internal/specs/start-view.md */
-  startView: View;
-  onStartViewChange: (next: View) => void;
   /** How a note shows its folder, tag or own color: a background, an accent
    *  on its icon, or off. The same control the look picker shows.
    *  Spec: docs/internal/specs/note-color-style.md (section 3) */
   noteColors: NoteColorChoice;
   onNoteColorsChange: (next: NoteColorChoice) => void;
-  /** Whether a ticked task moves below the open tasks of its list, in the
-   *  editor and in the Tasks view. */
-  sinkCheckedTasks: boolean;
-  onSinkCheckedTasksChange: (on: boolean) => void;
-  taskConfetti: boolean;
-  onTaskConfettiChange: (on: boolean) => void;
-  typedSymbols: boolean;
-  onTypedSymbolsChange: (on: boolean) => void;
-  linkSuggestions: boolean;
-  onLinkSuggestionsChange: (on: boolean) => void;
-  confirmTrash: boolean;
-  onConfirmTrashChange: (on: boolean) => void;
-  confirmArchive: boolean;
-  onConfirmArchiveChange: (on: boolean) => void;
   /** Lists only: which of its two tabs opens. */
   initialTab?: string;
-  /** Personal and Work. Spec: docs/internal/specs/spaces.md */
-  spaces: boolean;
-  onSpacesChange: (on: boolean) => void;
   /** Embedded only: which Settings entry this is. Design is the look,
    *  Editor is writing, Format bar is its board, Lists is finding things. */
   pane?: AppearancePane;
@@ -150,6 +134,8 @@ type Props = {
    *  it when `row` names a settings search id ("All themes" lands on the
    *  themes). */
   onOpenAll?: (pane: AppearancePane, row?: string) => void;
+  /** Opens Settings > Plugins (the Smart connections link row). */
+  onOpenPlugins?: () => void;
   /** The color themes a person made, from the settings blob.
    *  Spec: docs/contrib/color-themes.md (section 6) */
   customThemes: CustomThemes;
@@ -462,7 +448,38 @@ const SEG_FILL = 'flex-1 px-3 lg:flex-none';
 
 export type AppearancePane = 'design' | 'editor' | 'formatBar' | 'lists';
 
-export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = false, viewMode, onViewModeChange, editorMode, onEditorModeChange, formatBar, lineSpacing, onLineSpacingChange, nestedNumbers, onNestedNumbersChange, hiddenViews, hiddenInAll, archivedInAll, onToggleHidden, onViewOrderChange, startView, onStartViewChange, noteColors, onNoteColorsChange, sinkCheckedTasks, onSinkCheckedTasksChange, taskConfetti, onTaskConfettiChange, typedSymbols, onTypedSymbolsChange, linkSuggestions, onLinkSuggestionsChange, confirmTrash, onConfirmTrashChange, confirmArchive, onConfirmArchiveChange, initialTab, spaces, onSpacesChange, pane = 'design', onOpenAll, customThemes, onCustomThemesChange, onOpenThemeBuilder }: Props) {
+/**
+ * Editor > Behavior keeps one line for Smart connections once it lives in
+ * Settings > Plugins: the title, its state in a word, and "Manage in Plugins".
+ * Spec: docs/internal/plans/plugins.md (section 5, Editor > Behavior)
+ */
+function SmartConnectionsLink({ isPro, onOpen }: { isPro: boolean; onOpen?: () => void }) {
+  const { t } = useTranslation('settings');
+  const on = useMeaningState().status === 'on';
+  return (
+    <div data-setting="appearance.smartConnectionsLink" className="pb-3 flex flex-wrap items-center justify-between gap-x-5 gap-y-2">
+      <span className={ROW_TITLE}>
+        <Sparkle className="text-accent" aria-hidden="true" />
+        {t('onDeviceAi.title')}
+        {!isPro && <ProMark />}
+        <span className={`${SETTINGS_HELP} font-normal`}>{t(on ? 'appearance.spellCheckOn' : 'appearance.spellCheckOff')}</span>
+      </span>
+      {onOpen && <Button action="open" variant="secondary" onClick={onOpen}>{t('plugins.manage')}</Button>}
+    </div>
+  );
+}
+
+export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = false, viewMode, onViewModeChange, editorMode, onEditorModeChange, formatBar, bind, hiddenViews, hiddenInAll, archivedInAll, onToggleHidden, onViewOrderChange, noteColors, onNoteColorsChange, initialTab, pane = 'design', onOpenAll, onOpenPlugins, customThemes, onCustomThemesChange, onOpenThemeBuilder }: Props) {
+  const { value: lineSpacing, onChange: onLineSpacingChange } = bind('lineSpacing');
+  const { value: nestedNumbers, onChange: onNestedNumbersChange } = bind('nestedNumbers');
+  const { value: startView, onChange: onStartViewChange } = bind('startView');
+  const { value: sinkCheckedTasks, onChange: onSinkCheckedTasksChange } = bind('sinkCheckedTasks');
+  const { value: taskConfetti, onChange: onTaskConfettiChange } = bind('taskConfetti');
+  const { value: typedSymbols, onChange: onTypedSymbolsChange } = bind('typedSymbols');
+  const { value: linkSuggestions, onChange: onLinkSuggestionsChange } = bind('linkSuggestions');
+  const { value: confirmTrash, onChange: onConfirmTrashChange } = bind('confirmTrash');
+  const { value: confirmArchive, onChange: onConfirmArchiveChange } = bind('confirmArchive');
+  const { value: spaces, onChange: onSpacesChange } = bind('spaces');
   const { t } = useTranslation('settings');
   // The table's row labels are the sidebar's own strings, so the pane and the
   // rail can never disagree in any language.
@@ -518,7 +535,8 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   const triggerRect = trigger?.getBoundingClientRect();
   const centred = !!triggerRect && triggerRect.left + triggerRect.width / 2 < window.innerWidth / 2;
   const popPos = usePopoverPosition(!!trigger, triggerRef, panelRef, { gap: 8, align: 'end', shrink: true });
-  const { theme, themeMode, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, favicons, setFavicons, invisibles, setInvisibles, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, noteFont, setNoteFont, customFonts, setCustomFont } = useTheme();
+  const { theme, themeMode, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, favicons, setFavicons, invisibles, setInvisibles, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, openReadOnly, setOpenReadOnly, noteFont, setNoteFont, customFonts, setCustomFont } = useTheme();
+  const lineNumbers = useLineNumbersPref();
   // Its own store rather than an axis of useTheme(): a level is handed to the
   // webview under the page, not to a CSS variable on <html>, and keeping it
   // out of theme.ts keeps that module free of a native import on the boot
@@ -791,6 +809,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     setCopyFormat('markdown');
     setPasteFormat('formatted');
     setLinkModifier(false);
+    setOpenReadOnly(false);
     onSinkCheckedTasksChange(d.sinkCheckedTasks);
     onTaskConfettiChange(d.taskConfetti);
     onTypedSymbolsChange(d.typedSymbols);
@@ -804,6 +823,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   function resetThemes() {
     const d = defaultSettings();
     resetThemeAxes();
+    if (appSizeSupported()) applyAppZoom(DEFAULT_APP_ZOOM);
     onNoteColorsChange(noteColorChoice(d.tintNotes, d.noteColorStyle));
     savedThemesRef.current = { light: 'default', dark: 'default' };
   }
@@ -958,6 +978,10 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           </div>
           <div className={track}>{modeButtons}</div>
         </div>
+
+        {/* App size in the desktop and phone apps (#834): how big the whole
+            app looks. Spec: docs/internal/design-decisions.md (app zoom) */}
+        {appSizeSupported() && <AppSizeRow />}
 
 
         {/* The pair: one palette per mode, both always shown, so a choice for
@@ -1147,7 +1171,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
         <div>
           <div data-setting="appearance.textSize" className={row}>
             <div className="min-w-0">
-              <RowTitle icon={TextT}>{t('appearance.textSizeTitle')}</RowTitle>
+              <RowTitle icon={TextT} hint={<DeviceOnlyTip />}>{t('appearance.textSizeTitle')}</RowTitle>
               <p className={`${SETTINGS_HELP} mt-0.5`}>{t('appearance.textSizeDesc')}</p>
             </div>
             <div className={track}>{textSizeButtons}</div>
@@ -1189,7 +1213,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             and a font picked in the toolbar still wins. */}
         <div data-setting="appearance.noteFont" className={row}>
           <div className="min-w-0">
-            <RowTitle icon={TextAa}>{t('appearance.noteFontTitle')}</RowTitle>
+            <RowTitle icon={TextAa} hint={<DeviceOnlyTip />}>{t('appearance.noteFontTitle')}</RowTitle>
             <p className={`${SETTINGS_HELP} mt-0.5`}>{t('appearance.noteFontDesc')}</p>
           </div>
           <div className={track}>
@@ -1281,7 +1305,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             default cap, so this row is the way in at every other width. */}
         <div data-setting="appearance.contentWidth" className={row}>
           <div className="min-w-0">
-            <RowTitle icon={FrameCorners}>{t('appearance.contentWidthTitle')}</RowTitle>
+            <RowTitle icon={FrameCorners} hint={<DeviceOnlyTip />}>{t('appearance.contentWidthTitle')}</RowTitle>
             <p className={`${SETTINGS_HELP} mt-0.5`}>{t('appearance.contentWidthDesc')}</p>
           </div>
           <div className={track}>{contentWidthButtons}</div>
@@ -1329,18 +1353,47 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           onChange={setInvisibles}
           className="gap-x-5 py-3"
         />
+
+        {/* Line numbers, the same switch as the # beside "Show markdown" in
+            the note footer (lineNumbers.ts). Device-local. */}
+        <Switch
+          setting="appearance.lineNumbers"
+          icon={<Hash className="text-accent" />}
+          labelClassName={ROW_TITLE}
+          label={t('appearance.lineNumbersTitle')}
+          description={t('appearance.lineNumbersDesc')}
+          checked={lineNumbers}
+          onChange={setLineNumbersPref}
+          className="gap-x-5 py-3"
+        />
       </>
     );
 
     const behaviorRows = (
       <>
+        {/* Open notes read-only - a text note opens with no cursor or
+            keyboard until Turn off on the note, which lasts until the note
+            is left. Nothing is written to the note. Off by default.
+            Device-local. (#824) */}
+        <Switch
+          setting="appearance.openReadOnly"
+          icon={<PencilSimpleSlash className="text-accent" />}
+          labelClassName={ROW_TITLE}
+          label={t('appearance.openReadOnlyTitle')}
+          hint={<DeviceOnlyTip />}
+          description={t('appearance.openReadOnlyDesc')}
+          checked={openReadOnly}
+          onChange={setOpenReadOnly}
+          className="gap-x-5 py-3"
+        />
+
         {/* Copied text - what the plain-text part of a copy holds. Markdown
             keeps today's copy; Plain text drops the `- [ ]` and every other
             formatting character for targets that print them as they are.
             Device-local. Spec: docs/internal/specs/paste-pictures.md (section 3.6) */}
         <div data-setting="appearance.copyFormat" className={row}>
           <div className="min-w-0">
-            <RowTitle icon={Copy}>{t('appearance.copyFormatTitle')}</RowTitle>
+            <RowTitle icon={Copy} hint={<DeviceOnlyTip />}>{t('appearance.copyFormatTitle')}</RowTitle>
             <p className={helpExplain}>{t('appearance.copyFormatDesc')}</p>
           </div>
           <div className={track}>
@@ -1365,7 +1418,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             Spec: docs/internal/issues/0508.md (Spec) */}
         <div data-setting="appearance.pasteFormat" className={row}>
           <div className="min-w-0">
-            <RowTitle icon={ClipboardText}>{t('appearance.pasteFormatTitle')}</RowTitle>
+            <RowTitle icon={ClipboardText} hint={<DeviceOnlyTip />}>{t('appearance.pasteFormatTitle')}</RowTitle>
             <p className={helpExplain}>{t('appearance.pasteFormatDesc')}</p>
           </div>
           <div className={track}>
@@ -1392,6 +1445,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           icon={<LinkSimple className="text-accent" />}
           labelClassName={ROW_TITLE}
           label={t('appearance.linkModifierTitle')}
+          hint={<DeviceOnlyTip />}
           description={t('appearance.linkModifierDesc')}
           checked={linkModifier}
           onChange={setLinkModifier}
@@ -1427,14 +1481,10 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             onChange={onLinkSuggestionsChange}
             className="gap-x-5 py-3"
           />
-          {/* Smart connections, the offline meaning model, right under the
-              suggestions it adds to. Per device. Behind the release switch
-              in onDeviceAi.ts. Spec: docs/internal/plans/related-notes.md (part 2) */}
-          {onDeviceAiShown() && (
-            <Suspense fallback={null}>
-              <SmartConnectionsRow isPro={isPro} parentOn={linkSuggestions} onParentOn={() => onLinkSuggestionsChange(true)} onUpgrade={() => { upgradeHandoffRef.current = true; onOpenUpgrade('smartConnections'); }} />
-            </Suspense>
-          )}
+          {/* Smart connections lives in Settings > Plugins; the Editor keeps a
+              link right under the suggestions it adds to (D3). Behind the
+              release switch in onDeviceAi.ts. Spec: docs/internal/plans/plugins.md (section 5) */}
+          {pluginsShown() && <SmartConnectionsLink isPro={isPro} onOpen={onOpenPlugins} />}
         </div>
 
         {/* Ask before moving to trash. The trash confirm's "Don't ask
@@ -1468,7 +1518,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             position. Spec: docs/internal/plans/note-location.md (section 3c) */}
         {canReadPosition() && (
           <div className="pt-4">
-            <SectionEyebrow icon={MapPin}>{t('appearance.autoLocationTitle')}</SectionEyebrow>
+            <SectionEyebrow icon={MapPin}>{t('appearance.autoLocationTitle')}<DeviceOnlyTip phone /></SectionEyebrow>
             <p className={SETTINGS_HELP}>{t('appearance.autoLocationDesc')}</p>
             <div className="divide-y divide-divider">
               <AutoLocationSwitch
@@ -1527,9 +1577,16 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             the phone pillar switcher uses, so a pillar added later appears in
             both without a second list.
             Spec: docs/internal/specs/start-view.md */}
+        {/* While "Reopen where I left off" is on, it decides where a start
+            lands, so this row dims and says so. It stays clickable: picking
+            a view turns the switch off. The two never both apply (#828).
+            Spec: docs/internal/specs/keep-my-place.md (section 4) */}
         <div data-setting="appearance.startView" className={row}>
           <div className="min-w-0">
-            <RowTitle icon={HouseLine}>{t('appearance.startViewTitle')}</RowTitle>
+            <div className={reopenLastOpen ? 'opacity-50' : undefined}>
+              <RowTitle icon={HouseLine}>{t('appearance.startViewTitle')}</RowTitle>
+            </div>
+            {reopenLastOpen && <p className={`${SETTINGS_HELP} mt-0.5`}>{t('appearance.startViewReopenOn')}</p>}
           </div>
           <button
             ref={startBtnRef}
@@ -1538,7 +1595,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             aria-haspopup="menu"
             aria-expanded={startMenuOpen}
             aria-label={`${t('appearance.startViewTitle')}: ${startRow?.label ?? ''}`}
-            className="shrink-0 self-start lg:self-auto inline-flex items-center gap-2 rounded-md bg-track px-3 py-1.5 text-body font-medium text-pn hover:bg-pn-muted/20 transition"
+            className={`shrink-0 self-start lg:self-auto inline-flex items-center gap-2 rounded-md bg-track px-3 py-1.5 text-body font-medium text-pn hover:bg-pn-muted/20 transition${reopenLastOpen ? ' opacity-50 hover:opacity-100' : ''}`}
           >
             {startRow && <startRow.icon size={15} className="text-accent shrink-0" aria-hidden="true" />}
             {startRow?.label}
@@ -1548,7 +1605,10 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             <ViewMenu
               rows={startRows}
               current={startView}
-              onPick={onStartViewChange}
+              onPick={(v) => {
+                onStartViewChange(v);
+                setReopenLastOpen(false);
+              }}
               anchorRef={startBtnRef}
               onClose={() => setStartMenuOpen(false)}
               align="end"
@@ -1556,8 +1616,9 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           )}
         </div>
 
-        {/* Reopen the last item - what a cold start opens, next to where it
-            starts. Device-local, like the id it gates.
+        {/* Reopen where I left off - the list and the item a cold start
+            opens, next to where it starts otherwise. Device-local, like the
+            ids it gates.
             Spec: docs/internal/specs/keep-my-place.md (section 3) */}
         <Switch
           setting="appearance.reopenLastOpen"
@@ -1645,6 +1706,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           icon={<Globe className="text-accent" />}
           labelClassName={ROW_TITLE}
           label={t('appearance.faviconsTitle')}
+          hint={<DeviceOnlyTip />}
           description={
             <>
               {/* The example is live: real domain, real proxy response, and the

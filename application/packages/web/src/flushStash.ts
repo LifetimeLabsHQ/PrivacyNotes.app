@@ -211,6 +211,46 @@ export function stashPendingEdit(noteId: string, body: string): void {
 }
 
 /**
+ * Make every open editor write what it holds now, the way a closing tab
+ * does: `useDebouncedMarkdownSave` answers `beforeunload` and a drawing
+ * (`DrawingItem.tsx`) answers `pagehide`, each with the synchronous stash and
+ * the save. For a page that ends with no real unload event (an updater's
+ * quit), or before an unload that must not race the editor's unmount (a
+ * lock's reload, lockReload.ts).
+ */
+export function flushEditorsForExit(): void {
+  window.dispatchEvent(new Event('beforeunload'));
+  window.dispatchEvent(new Event('pagehide'));
+}
+
+/** Writes with no flush stash that a page ending on purpose waits for (a
+ *  Markdown folder file, `MarkdownFilePane.tsx`). */
+let exitWrites = 0;
+
+export function trackExitWrite(write: Promise<unknown>): void {
+  exitWrites++;
+  const done = () => {
+    exitWrites--;
+  };
+  write.then(done, done);
+}
+
+export function exitWritesRun(): boolean {
+  return exitWrites > 0;
+}
+
+/** Whether the fresh slot holds a stash this tab wrote whose save has not
+ *  settled it yet (`settlePendingEdit`). */
+export function tabEditWaits(): boolean {
+  try {
+    const raw = localStorage.getItem(STASH_KEY);
+    return !!raw && (JSON.parse(raw) as Stash).tab === TAB_ID;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Forget the fresh stash when it holds this note: the editor that wrote it
  * was found behind its row (a save of another device's version arrived), so
  * replaying it at the next boot would put the old text back over that
@@ -270,6 +310,29 @@ function readSlot(slot: string, clear: boolean): string | null {
 /** The waiting list as stored; an unreadable list reads as empty. */
 function readWaiting(): string[] {
   return readStringList(WAITING_STASH_KEY);
+}
+
+/**
+ * The notes whose typing waits in a slot (fresh, kept or waiting). A forced
+ * wipe keeps their rows, or the next boot's replay finds no note and drops
+ * the text (notesRepo.ts `clearLocalDatabase`). The id is a readable field of
+ * every shape.
+ */
+export function stashedNoteIds(): string[] {
+  const ids = new Set<string>();
+  const add = (raw: string | null) => {
+    if (!raw) return;
+    try {
+      const id = (JSON.parse(raw) as Stash).noteId;
+      if (typeof id === 'string' && id) ids.add(id);
+    } catch { /* not a stash */ }
+  };
+  try {
+    add(localStorage.getItem(STASH_KEY));
+    add(localStorage.getItem(KEPT_STASH_KEY));
+  } catch { /* storage unavailable */ }
+  for (const raw of readWaiting()) add(raw);
+  return [...ids];
 }
 
 /** Store the waiting list when it changed; false when the storage refused

@@ -43,6 +43,7 @@ import { EYEBROW_ICON_ROW, EyebrowGlyph, SETTINGS_EYEBROW, SETTINGS_BTN_PRIMARY 
 import { Switch } from './Switch';
 import { VERSION } from './version';
 import { SwissFlag } from './SwissFlag';
+import { UnopenedNotesList } from './UnopenedNotesList';
 
 /**
  * The redesigned sync readout: one status word with its age, the recent
@@ -317,6 +318,11 @@ export function SyncPanel({
           </ul>
         </div>
       )}
+
+      {/* ── Notes this device can't open: the server rows the pull met and
+          could not open, each with a resend and a delete (beta #203). Only
+          while the list holds a row. ── */}
+      <UnopenedNotesList onSyncNow={onSyncNow} />
 
       {/* ── Controls: the two actions side by side, settings rows under ── */}
       <div className="grid gap-3 sm:grid-cols-2">

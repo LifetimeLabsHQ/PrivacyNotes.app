@@ -36,7 +36,7 @@
   "storageBar": {
     "usage": "{{percent}}% 使用中 ({{used}} / {{max}})",
     "refresh": "ストレージを更新",
-    "cleanupInfo": "削除した項目はすぐにカウントされなくなります。暗号化されたファイル自体は数日以内にサーバーから削除されます。",
+    "cleanupInfo": "完全に削除したノートは、すぐにカウントされなくなります。削除したファイルは、その暗号化されたコピーがサーバーから消えるまで(約1日後)カウントされます。",
     "open": "ストレージ設定を開く"
   },
   "updateToast": {
@@ -318,6 +318,8 @@
     "commands": {
       "syncResume": "同期を再開",
       "lockProtected": "このノートをロック",
+      "randomItem": "ランダムな項目を開く",
+      "randomBookmark": "ランダムなブックマークを開く",
       "changelog": "新機能",
       "themesPage": "コミュニティテーマ",
       "website": "PrivacyNotesのウェブサイト"

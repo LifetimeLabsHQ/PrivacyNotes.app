@@ -32,6 +32,7 @@ import { paragraphGapCss, readLineSpacing, readPasteFormat, withCopyFormat, type
 import { END_BREAK_ATTR, LINES_ATTR, LINE_BREAK_ATTR, joinParagraphLines } from './paragraphLines';
 import { keepPaletteStyles } from './pasteStyles';
 import { keepWindowsPathBackslashes } from './pastedPaths';
+import { isEmptyParagraph } from './editorClipboard';
 
 /** Elements that only group their children, so a paragraph inside one still
  *  sits in the main flow of the text. */
@@ -192,10 +193,6 @@ export function blankLinesInPastedHtml(html: string, gapsAsBlankLines: boolean, 
 /** A paragraph a reader sees something in: text or an embed. */
 function isContent(p: Element): boolean {
   return (p.textContent ?? '').replace(/[\s ]/g, '') !== '' || !!p.querySelector(EMBEDS);
-}
-
-function isEmptyParagraph(node: ProseMirrorNode): boolean {
-  return node.type.name === 'paragraph' && node.content.size === 0;
 }
 
 /**
@@ -510,16 +507,18 @@ function isPlainLines(slice: Slice): boolean {
  * (Keep's own converter, a vendor's clipboard), and some of them turn every
  * line break into a paragraph break, so one blank line arrived as three
  * (GitHub #345). Plain text has nothing to convert, and it holds the whole
- * of a copy that is only lines of text on Compact and Tight. Normal keeps
- * the HTML, because its plain text marks a paragraph gap with a blank line,
- * and a paste back into the app reads a run of them as one gap. Desktop keeps the HTML too: a word
- * processor gives every pasted plain-text line its own paragraph spacing.
+ * of a copy that is only lines of text, on every Line spacing: the text is
+ * the lines as typed, never the gap Relaxed draws. Desktop keeps the HTML: a
+ * word processor gives every pasted plain-text line its own paragraph spacing.
  */
+function onAndroid(): boolean {
+  return /android/i.test(navigator.userAgent);
+}
+
 function copyPlainLinesAsText(view: EditorView, event: ClipboardEvent, cut: boolean): boolean {
   // ProseMirror's own cut refuses a read-only note, and this one runs first.
   if (cut && !view.editable) return false;
-  if (!/android/i.test(navigator.userAgent) || !event.clipboardData || view.state.selection.empty) return false;
-  if (readLineSpacing() === 'normal') return false;
+  if (!onAndroid() || !event.clipboardData || view.state.selection.empty) return false;
   const slice = view.state.selection.content();
   if (!isPlainLines(slice)) return false;
   const text = view.someProp('clipboardTextSerializer', (f) => f(slice, view));
@@ -594,14 +593,21 @@ function placePlainPaste(view: EditorView, slice: Slice): boolean {
  * The copy half: ProseMirror's own serializer, with the paragraphs drawn the
  * way the note draws them. The `data-pm-slice` marker goes on afterwards, so
  * a copy inside the app still pastes back as the exact document.
+ *
+ * On Android the HTML takes Default's form on every Line spacing. Apps there
+ * turn the HTML into text with Android's own converter, which ends every
+ * `<p>` with a blank line whatever its margin, so a Relaxed copy of a
+ * formatted note pasted one empty line as two (GitHub #345). The plain text
+ * is the same on every spacing already (`markdownForClipboard`).
  */
 function spacedClipboardSerializer(schema: Schema): DOMSerializer {
   const base = DOMSerializer.fromSchema(schema);
   const serializer = new DOMSerializer(base.nodes, base.marks);
   serializer.serializeFragment = (fragment, options, target) => {
     const out = base.serializeFragment(fragment, options, target);
-    if (readLineSpacing() !== 'normal') joinParagraphLines(out as HTMLElement | DocumentFragment, true);
-    styleCopiedParagraphs(out as HTMLElement | DocumentFragment, paragraphGapCss());
+    const spacing = onAndroid() ? 'compact' : readLineSpacing();
+    if (spacing !== 'normal') joinParagraphLines(out as HTMLElement | DocumentFragment, true);
+    styleCopiedParagraphs(out as HTMLElement | DocumentFragment, paragraphGapCss(spacing));
     for (const el of Array.from((out as HTMLElement | DocumentFragment).children)) el.setAttribute(COPY_ATTR, '');
     return out;
   };

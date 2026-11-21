@@ -13,6 +13,14 @@
     "./extension": {
       "types": "./dist/extension.d.ts",
       "import": "./dist/extension.js"
+    },
+    "./inbox-signed": {
+      "types": "./dist/inboxSigned.d.ts",
+      "import": "./dist/inboxSigned.js"
+    },
+    "./minisign": {
+      "types": "./dist/minisign.d.ts",
+      "import": "./dist/minisign.js"
     }
   },
   "scripts": {
@@ -24,6 +32,7 @@
     "@noble/curves": "^2.4.0",
     "@noble/ed25519": "^3.2.0",
     "@noble/hashes": "^2.4.0",
+    "@noble/post-quantum": "0.7.1",
     "@scure/bip39": "^2.4.0",
     "@supabase/supabase-js": "^2.119.0"
   },

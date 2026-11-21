@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from '../db';
 import type { ContextMenuItem } from '../ContextMenu';
-import { ArrowsInLineHorizontal, CaretDown, PushPin, X, XSquare } from '../icons';
+import { ArrowsInLineHorizontal, CaretDown, Columns, PushPin, X, XSquare } from '../icons';
 import { LooksContext, PathGlyph, useNoteIconPaths } from '../looks/LookGlyph';
 import { resolveNoteLook, type NoteLook } from '../itemStyles';
 import { noteFaviconDomain, typeGlyph } from '../NoteRow';
@@ -36,6 +36,7 @@ export default function TabStrip({
   onCloseOthers,
   onCloseAll,
   onTogglePin,
+  sideBySide,
   onMove,
   onOpenItems,
   onContextMenu,
@@ -52,6 +53,10 @@ export default function TabStrip({
   onCloseOthers: (id: string) => void;
   onCloseAll: () => void;
   onTogglePin: (id: string) => void;
+  /** Opens the tab's item beside the open one; absent where it cannot be
+   *  offered, and `offers` is false for an item already on screen.
+   *  Spec: docs/internal/plans/side-by-side-notes.md (section 2) */
+  sideBySide?: { offers: (id: string) => boolean; open: (id: string) => void };
   onMove: (id: string, beforeId: string | null) => void;
   /** List items dropped on the strip: each opens as a tab before `beforeId`
    *  (null: at the end). The trackpad's way to open a tab where Alt-click is
@@ -136,6 +141,7 @@ export default function TabStrip({
     const items: ContextMenuItem[] = [
       { label: t(pinned ? 'contextMenu.unpinTab' : 'contextMenu.pinTab'), icon: <PushPin weight={pinned ? 'fill' : 'bold'} />, onSelect: () => onTogglePin(id) },
     ];
+    if (sideBySide?.offers(id)) items.push({ label: t('contextMenu.openSideBySide'), icon: <Columns />, onSelect: () => sideBySide.open(id) });
     if (!pinned) items.push({ label: t('contextMenu.closeTab'), icon: <X />, onSelect: () => onClose(id) });
     if (closable.some((n) => n.id !== id)) items.push({ label: t('contextMenu.closeOtherTabs'), icon: <ArrowsInLineHorizontal />, onSelect: () => onCloseOthers(id) });
     if (closable.length > 0) items.push({ label: t('contextMenu.closeAllTabs'), icon: <XSquare />, onSelect: onCloseAll });

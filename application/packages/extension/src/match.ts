@@ -91,3 +91,13 @@ export function searchEntries(entries: readonly CopyEntry[], query: string, limi
 export function byName(a: CopyEntry, b: CopyEntry): number {
   return (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' });
 }
+
+/** The logins of a page's registrable domain (private suffixes on), the
+ *  places a new site passkey may go. Pinned order is the caller's.
+ *  Spec: docs/contrib/passkeys.md (section 5.4, Save to) */
+export function loginsOfDomain(logins: readonly LoginCopyEntry[], pageUrl: string): LoginCopyEntry[] {
+  const domain = getDomain(pageUrl, { allowPrivateDomains: true });
+  const host = getHostname(pageUrl);
+  if (!host) return [];
+  return logins.filter((l) => loginHosts(l).some((h) => h === host || (!!domain && getDomain(h, { allowPrivateDomains: true }) === domain)));
+}

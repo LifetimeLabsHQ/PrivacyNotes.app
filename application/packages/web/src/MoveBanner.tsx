@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from './auth';
 import { db } from './db';
 import { sync } from './sync';
-import { hasMovedFromApexFlag, clearMovedFromApexFlag } from './migrate';
-import { APP_ORIGIN, isApexHost, isAppHost } from './hosts';
+import { APP_ORIGIN, isApexHost } from './hosts';
 import { isDemoMode } from './demo';
 import { detectPlatform } from './devices';
 import { X } from './icons';
@@ -23,9 +22,6 @@ import type { NoteConflict } from './sync';
  *     apex is ever wiped. NotesView on the apex is reachable only
  *     through the MoveScreen's stuck-state escape hatch, so this banner
  *     is the second chance after the user fixed what blocked the sync.
- *
- *   - MovedBookmarkHint (app host): one-time "update your bookmark"
- *     notice, keyed off the movedFromApex flag (migrate.ts).
  *
  * Spec: docs/internal/domain-split.md (cutover checklist: move trigger +
  * user comms)
@@ -145,43 +141,6 @@ export function MoveBanner({ onConflict }: { onConflict: (conflict: NoteConflict
         className="shrink-0 rounded-md p-1 text-pn-muted hover:bg-accent/10 transition"
       >
         <X />
-      </button>
-    </div>
-  );
-}
-
-/**
- * One-time bookmark hint on the app host. Visible while the movedFromApex
- * flag is set on this install (migrate.ts); Got it clears it.
- */
-export function MovedBookmarkHint() {
-  const { t } = useTranslation('notesChrome');
-  const [visible, setVisible] = useState(
-    // Web-only by explicit intent (not just because tauri://localhost
-    // never matches the app host): bookmarks and home-screen shortcuts
-    // are browser concepts, so native builds must never show this.
-    () =>
-      detectPlatform() === 'web' && isAppHost() && hasMovedFromApexFlag(),
-  );
-
-  if (!visible) return null;
-
-  function handleGotIt() {
-    clearMovedFromApexFlag();
-    setVisible(false);
-  }
-
-  return (
-    <div className="shrink-0 flex items-center gap-2 sm:gap-3 border-b border-emerald-300/80 dark:border-emerald-800/70 bg-emerald-50 dark:bg-emerald-950/90 px-3 sm:px-4 py-2">
-      <p className="min-w-0 flex-1 truncate text-compact leading-snug text-emerald-950 dark:text-emerald-100">
-        {t('movedHint.body')}
-      </p>
-      <button
-        type="button"
-        onClick={handleGotIt}
-        className="shrink-0 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-compact font-semibold px-3 py-1.5 transition"
-      >
-        {t('movedHint.gotIt')}
       </button>
     </div>
   );

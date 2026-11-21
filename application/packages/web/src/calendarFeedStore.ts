@@ -8,8 +8,10 @@
  * downloads it again, and a failed download keeps the events of the last
  * good one. The address never goes into a log or an error.
  *
- * A feed is downloaded when the app opens, then again once it is an hour old
- * (ten minutes after a failure), and only while the app is in view. The
+ * A feed is downloaded when the app opens, then again once it is an hour old,
+ * and only while the app is in view. A failing feed backs off: ten minutes
+ * after its first failure, an hour after its second, six hours after every
+ * one after that, and back to hourly after a good download (beta #159). The
  * module loads only once the account has a feed (`useCalendarFeeds`), so it
  * is not on the boot path.
  *
@@ -34,11 +36,19 @@ export type FeedState = {
   checkedAt: number;
   /** Why the last download failed; the events of the one before stay. */
   error: FeedError | null;
+  /** How many downloads in a row failed; 0 (or absent) after a good one. */
+  failures?: number;
   busy: boolean;
 };
 
 const FRESH_MS = 60 * 60_000;
-const RETRY_MS = 10 * 60_000;
+/** The wait after the first, second and every later failure in a row.
+ *  Spec: docs/internal/specs/calendar-pillar-spec.md (section 14) */
+const RETRY_MS = [10 * 60_000, 60 * 60_000, 6 * 60 * 60_000] as const;
+/** Reasons that say nothing about the feed: the device is offline, or the
+ *  account used up its downloads. Neither counts as a failure, so the feed
+ *  is tried again after the first wait (beta #199 item 4). */
+const NOT_THE_FEED: ReadonlySet<FeedError> = new Set<FeedError>(['offline', 'limit']);
 /** How often an open app looks for a feed that is due. */
 const TICK_MS = 5 * 60_000;
 
@@ -78,7 +88,12 @@ export function useFeedStates(): ReadonlyMap<string, FeedState> {
 export function feedIsDue(state: FeedState | undefined, now = Date.now()): boolean {
   if (!state) return true;
   if (state.busy) return false;
-  return now - state.checkedAt >= (state.error ? RETRY_MS : FRESH_MS);
+  const wait = !state.error
+    ? FRESH_MS
+    : NOT_THE_FEED.has(state.error)
+      ? RETRY_MS[0]
+      : RETRY_MS[Math.min(Math.max(state.failures ?? 1, 1), RETRY_MS.length) - 1]!;
+  return now - state.checkedAt >= wait;
 }
 
 /** The host of an address: a feed's name before its first download. */
@@ -131,7 +146,8 @@ async function download(id: string, url: string, token: TokenSource, mark: strin
   const base: FeedState = prev ?? { name: feedHost(url), items: [], checkedAt: 0, error: null, busy: false };
   put(id, { ...base, busy: true });
   const done = (patch: Partial<FeedState>): FeedError | null => {
-    if (markOf(id) === mark) put(id, { ...base, ...patch, busy: false, checkedAt: Date.now() });
+    const failures = !patch.error ? 0 : (base.failures ?? 0) + (NOT_THE_FEED.has(patch.error) ? 0 : 1);
+    if (markOf(id) === mark) put(id, { ...base, ...patch, failures, busy: false, checkedAt: Date.now() });
     return patch.error ?? null;
   };
   // The download code loads on the first download, off the boot path.

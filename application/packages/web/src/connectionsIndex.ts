@@ -1,4 +1,5 @@
 import { noteLinkKey, noteLinkTargets, parseNoteLinkTarget } from './noteLinks';
+import { extractAttachmentIds } from './mediaRefs';
 
 /**
  * Which items link to which, read from the note bodies on this device: the
@@ -9,8 +10,9 @@ import { noteLinkKey, noteLinkTargets, parseNoteLinkTarget } from './noteLinks';
  * so a title two notes share links to neither of them here, as a click
  * offers a choice instead of following it.
  *
- * Sources are the notes whose body is markdown: a structured body (a contact,
- * a vault entry) is JSON and holds no note-link. Any item can be a target. A
+ * Sources are the notes whose body is markdown, and the items whose form has a
+ * notes field (a contact, a login): `textOf` hands over the text to read, the
+ * body or that field. Any item can be a target. A
  * PIN-protected source is never listed, only counted, so the panel says how
  * many it left out without naming them.
  * Spec: docs/internal/issues/0351.md (Spec)
@@ -90,11 +92,14 @@ export function buildLinkIndex<T extends Item>(
   {
     nameOf,
     isSource,
+    textOf,
   }: {
     /** The name a note-link finds the item by (`noteLinkName`). */
     nameOf: (item: T) => string;
-    /** False for an item whose body is not markdown. */
+    /** False for an item that holds no text a note-link can sit in. */
     isSource: (item: T) => boolean;
+    /** The text that holds its links: the body (the default), or a form's notes field. */
+    textOf?: (item: T) => string;
   },
 ): LinkIndex {
   const incoming = new Map<string, string[]>();
@@ -104,9 +109,10 @@ export function buildLinkIndex<T extends Item>(
 
   for (const source of items) {
     if (!isSource(source)) continue;
-    if (!source.body.includes('[[')) continue;
+    const text = textOf ? textOf(source) : source.body;
+    if (!text.includes('[[')) continue;
     const isProtected = source.pinProtected === 1;
-    const out = linksInBody(source.body, source.id, resolver);
+    const out = linksInBody(text, source.id, resolver);
     outgoing.set(source.id, out);
     for (const id of out.ids) {
       if (isProtected) {
@@ -119,4 +125,48 @@ export function buildLinkIndex<T extends Item>(
     }
   }
   return { incoming, protectedIncoming, outgoing };
+}
+
+/** The notes that use one file item, and how many PIN-protected ones do (only counted). */
+export type FileUse = { ids: string[]; hidden: number };
+
+/**
+ * Which notes use each file item (#852): the items that hold one of its files
+ * (a file chip, or a picture placed from Files, both `pn:file/<uuid>`) and the
+ * items that note-link to it. Files shows the first one on the file's row,
+ * and the file's Connections panel lists them all. A file item with no use is
+ * an unused file. A PIN-protected item is only counted, as in the backlinks,
+ * so a file it uses is still in use.
+ * Spec: docs/internal/issues/0852.md
+ */
+export function buildFileUses<T extends Item & { type?: string }>(
+  items: readonly T[],
+  index: Pick<LinkIndex, 'incoming' | 'protectedIncoming'>,
+): Map<string, FileUse> {
+  const uses = new Map<string, { ids: Set<string>; hidden: Set<string>; protectedLinks: number }>();
+  const filesOf = new Map<string, string[]>();
+  for (const item of items) {
+    if (item.type !== 'file') continue;
+    uses.set(item.id, { ids: new Set(index.incoming.get(item.id)), hidden: new Set(), protectedLinks: index.protectedIncoming.get(item.id) ?? 0 });
+    for (const uuid of extractAttachmentIds(item.body)) {
+      const list = filesOf.get(uuid);
+      if (list) list.push(item.id);
+      else filesOf.set(uuid, [item.id]);
+    }
+  }
+  if (uses.size === 0) return new Map();
+  for (const item of items) {
+    if (!item.body.includes('pn:file/')) continue;
+    for (const uuid of extractAttachmentIds(item.body)) {
+      for (const fileId of filesOf.get(uuid) ?? []) {
+        if (fileId === item.id) continue;
+        const use = uses.get(fileId)!;
+        if (item.pinProtected === 1) use.hidden.add(item.id);
+        else use.ids.add(item.id);
+      }
+    }
+  }
+  const out = new Map<string, FileUse>();
+  for (const [id, use] of uses) out.set(id, { ids: [...use.ids], hidden: use.hidden.size + use.protectedLinks });
+  return out;
 }

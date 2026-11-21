@@ -115,10 +115,13 @@
       "red": "Red",
       "orange": "Orange",
       "yellow": "Yellow",
+      "lime": "Lime",
       "green": "Green",
       "teal": "Teal",
       "blue": "Blue",
+      "indigo": "Indigo",
       "purple": "Purple",
+      "grape": "Grape",
       "pink": "Pink"
     }
   },
@@ -241,6 +244,8 @@
     "words_other": "{{formatted}} words",
     "characters_one": "{{formatted}} character",
     "characters_other": "{{formatted}} characters",
+    "lines_one": "{{formatted}} line",
+    "lines_other": "{{formatted}} lines",
     "tasksChecked_one": "{{done}} of {{formatted}} checked",
     "tasksChecked_other": "{{done}} of {{formatted}} checked",
     "syncLimit": " · {{share}} of the 1 MB sync limit",
@@ -275,6 +280,10 @@
     "collapse": "Collapse code block",
     "expand": "Expand code block",
     "placeholder": "Type or paste code. For colors, pick a language above."
+  },
+  "fold": {
+    "collapse": "Collapse section",
+    "expand": "Expand section"
   },
   "math": {
     "sourceLabel": "LaTeX source"
@@ -312,7 +321,7 @@
     "hiddenNote": "They still work by shortcut and Markdown.",
     "hiddenDrop": "Drop a button here to hide it.",
     "arrangeTitle": "Buttons",
-    "markdownViewNote": "The Markdown view keeps its own fixed set of buttons.",
+    "markdownViewNote": "The Markdown view shows the same buttons. The ones that need the formatted view are dimmed there and still work in the formatted view.",
     "hiddenEmpty": "Nothing is hidden.",
     "alwaysVisible": "Always visible",
     "pinned": "Opens a panel, so it stays on the bar or is hidden",
@@ -339,7 +348,7 @@
       "notelink": "Note-link",
       "audio": "Recording",
       "attachMenu": "Attach",
-      "separator": "Separator",
+      "separator": "Toolbar divider",
       "markdownView": "Show markdown"
     },
     "positionTitle": "Bar position",

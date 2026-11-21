@@ -1,21 +1,24 @@
-import React, { useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import React, { useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ACTIONS } from './ui/actions';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from './db';
-import type { ListPrefs, ListPrefsStore } from './listPrefs';
+import type { ScopedListPrefsStore, ListPrefs, ListPrefsStore } from './listPrefs';
 import type { ContextMenuItem } from './ContextMenu';
 import { SelectionToolbar } from './SelectionToolbar';
 import { SelectionCountStrip } from './SelectionCountStrip';
 import { suppressShiftTextSelection } from './useMultiSelect';
 import { ListPrefsPopover } from './ListPrefsPopover';
+import { HelpTip } from './settingsUI';
 import { itemDragSelection } from './NoteRow';
 import { WindowedNoteRow, WindowedNoteCard } from './WindowedNoteItem';
 import { StorageBar } from './StorageBar';
 import { HoverLabel } from './HoverLabel';
+import { OverflowTip } from './OverflowTip';
 import { JournalCalendarCard, JournalCalendarPopover, useJournalCalendarMood, useJournalCalendarShown, type CalendarCardExtras } from './JournalCalendar';
-import { EmptyState } from './ui';
-import { Key, CreditCard, Lock, NotePencil, Trash, SquaresFour, Book, Shield, ShieldPlus, PushPin, FileText, FunnelSimple, Note, CheckSquare, Upload, BookmarkSimple, Plus, Notebook, CalendarPlus, PILLAR_GLYPHS, NEW_GLYPHS } from './icons';
-import { ActiveFilterEntry, ActiveSearchEntry, FilteredEmpty, ListFilterChips } from './ListFilterChips';
+import { EmptyState, KindChips } from './ui';
+import { TrashReplacedCopies } from './notesView/TrashReplacedCopies';
+import { Key, CreditCard, Fingerprint, Lock, NotePencil, Trash, TrashSimple, SquaresFour, Book, Shield, ShieldPlus, PushPin, FileText, FunnelSimple, Note, CheckSquare, Upload, BookmarkSimple, Plus, Notebook, CalendarPlus, ChartBar, LockSimple, PILLAR_GLYPHS, NEW_GLYPHS } from './icons';
+import { ActiveFilterEntry, ActiveSearchEntry, FilteredEmpty, ListFilterChips, type TrackerChip } from './ListFilterChips';
 import { ListEntryCard } from './ListEntryCard';
 import { BookmarkRowActions } from './BookmarkRowActions';
 import { ListSearchInput } from './ListSearchInput';
@@ -23,18 +26,39 @@ import { Switch } from './Switch';
 import { exemptOpts } from './i18nExempt';
 import { NewButton, NewButtonDock, NewDropdown, type NewMenuOption } from './NewButton';
 import { keyText } from './shortcutMatch';
-import type { View } from './views';
+import { VIEW_NOTE_TYPES, type VaultFilter, type View } from './views';
 import { ListNav } from './notesView/ListNav';
 import { ItemList, useContextTarget, useItemList } from './itemList';
 import { ImportPromptEntry, importPromptFor, type ImportOffer, type ImportPromptKind } from './ImportPrompt';
 import { useListKeys } from './listKeys';
 import { useListGroups, type ListEntry } from './ListGroupHeader';
-import type { DayIndex } from './notesViewUtils';
+import { entryDayOf, type DayIndex } from './notesViewUtils';
+import { daysApart } from './localDate';
+import { relativeDayName } from './intlFormat';
+import type { PillTone } from './trackerTone';
 import type { Space } from './spaces';
 import { toLocalIso } from './intlFormat';
+import { activeLocale } from './languages';
+import { passkeysReleased } from './passkeysRelease';
 
-type VaultFilter = 'all' | 'login' | 'card' | 'ssh-key';
 
+/**
+ * The tracker in focus in Journals, as the list draws it: the chip, the
+ * value on each row, the summary line and the calendar card's dots.
+ * Spec: docs/internal/specs/tracker-focus-771.md (section 4)
+ */
+export interface ListTrackerFocus {
+  chip: TrackerChip;
+  badgeOf: (n: LocalNote) => { text: string; tone: PillTone } | null;
+  /** The days with the tracker, newest first, each with its dot's paint. */
+  days: readonly { date: string; paint: string }[];
+  /** The usual number of days between them, or null. */
+  every: number | null;
+  /** Journal entries behind a PIN, which the focus cannot read. */
+  locked: number;
+  /** Opens the Calendar with this tracker shown on its days. */
+  onCalendar: () => void;
+}
 
 export interface NotesListProps {
   /** The view and space this list draws, so a return lands where it was;
@@ -48,6 +72,11 @@ export interface NotesListProps {
    *  under the title row so users can't miss why the list is scoped.
    *  `selectedTag` gets a chip of its own beside it. */
   activeFolderName: string | null;
+  /** The one folder or tag whose list settings the menu can remember
+   *  (`ListPrefsPopover` `prefsScope`), or null. */
+  prefsScope: string | null;
+  scopedListPrefs: ScopedListPrefsStore;
+  onScopedListPrefsChange: (next: ScopedListPrefsStore) => void;
   onClearFolder: () => void;
   onClearTag: () => void;
   /** Bookmark row actions, for the link rows this list shows in All and
@@ -103,6 +132,8 @@ export interface NotesListProps {
   onBulkDeleteForever: () => void;
   /** All existing tags with note counts, for the bulk tag picker. */
   allTags?: [string, number][];
+  /** The selection bar's More menu rows (contextMenus buildSelectionMore). */
+  selectionMore?: () => ContextMenuItem[];
 
   // Row handlers
   onRowClick: (e: React.MouseEvent, id: string) => void;
@@ -136,8 +167,6 @@ export interface NotesListProps {
   calendarDays: DayIndex;
   /** Whether Notes and All hold a dated item, so their card shows. */
   datedLists: { notes: boolean; all: boolean };
-  /** With Spaces on, the space that is not open, for the calendar switch. */
-  otherSpace: Space | null;
   /** Opens an item a calendar names; a repeating one names its occurrence. */
   onOpenCalendarItem: (id: string, occurrence?: string) => void;
   /** The cards' expand button and the drop of a row on a day. */
@@ -153,6 +182,9 @@ export interface NotesListProps {
   onNewEvent: (isoDate: string) => void;
   /** The check-in card, first in the list when the view shows it. */
   checkInCard?: ReactNode;
+  /** Trash: opens a note restored from a replaced copy of a note that is
+   *  gone (notesView/TrashReplacedCopies.tsx). The list shows only with it. */
+  onRestoredCopy?: (id: string) => void;
   /** The card's switch for the list options menu, where this list can draw it. */
   checkInCardToggle?: { checked: boolean; onChange: (on: boolean) => void };
   /** The medication card's switch, while a medication is set up (GitHub #649). */
@@ -168,12 +200,20 @@ export interface NotesListProps {
   otherSpaceLine?: string;
   /** The mood of each journal day, for the Journals calendar's mood look. */
   journalMoods?: ReadonlyMap<string, number | 'written'>;
+  /** Journals: the Statistics button beside the search, which opens the
+   *  Statistics window on the tracker in focus. */
+  onOpenStats?: () => void;
+  /** Journals: the tracker in focus, while one is. */
+  trackerFocus?: ListTrackerFocus | null;
   onEmptyTrash: () => void;
   trashedNotesLength: number;
   onRefreshStorage: () => Promise<void> | void;
 
   // Vault
   vaultFilter: VaultFilter;
+  /** The count on each kind chip, from the list the view filters; null
+   *  outside the Vault. */
+  vaultCounts?: Record<VaultFilter, number> | null;
   onVaultFilterChange: (f: VaultFilter) => void;
 
   // Storage quota (shown in trash view)
@@ -199,6 +239,9 @@ export function NotesList({
   selectedId,
   selectedTag,
   activeFolderName,
+  prefsScope,
+  scopedListPrefs,
+  onScopedListPrefsChange,
   onClearFolder,
   onClearTag,
   onEditBookmark,
@@ -236,6 +279,7 @@ export function NotesList({
   onBulkRestore,
   onBulkDeleteForever,
   allTags,
+  selectionMore,
   onRowClick,
   onContextMenu,
   onOpenMenu,
@@ -254,7 +298,6 @@ export function NotesList({
   onBackfillDate,
   calendarDays,
   datedLists,
-  otherSpace,
   onOpenCalendarItem,
   calendarExtras,
   calendarBody,
@@ -262,6 +305,7 @@ export function NotesList({
   onCreateDated,
   onNewEvent,
   checkInCard,
+  onRestoredCopy,
   checkInCardToggle,
   medicationCardToggle,
   checkInToggle,
@@ -269,10 +313,13 @@ export function NotesList({
   hiddenInAll = 0,
   otherSpaceLine,
   journalMoods,
+  onOpenStats,
+  trackerFocus = null,
   onEmptyTrash,
   trashedNotesLength,
   onRefreshStorage,
   vaultFilter,
+  vaultCounts,
   onVaultFilterChange,
   quotaUsedBytes,
   quotaMaxBytes,
@@ -334,7 +381,14 @@ export function NotesList({
     isNoteLocked,
     onContextMenu,
   });
-  const entries = grouping.entries;
+  // While a tracker is in focus and the list runs by entry day, a line
+  // between two entries says how many days lie between them.
+  // Spec: docs/internal/specs/tracker-focus-771.md (section 4)
+  const gapsOn = !!trackerFocus && !search.trim() && viewMode !== 'grid' && listPrefs.sortField === 'created';
+  const entries = useMemo(
+    () => (gapsOn ? withDayGaps(grouping.entries ?? displayNotes.map((note): ListEntry => ({ kind: 'note', note }))) : grouping.entries),
+    [gapsOn, grouping.entries, displayNotes],
+  );
   /** What the progressive reveal counts: headers and shown items together. */
   const revealTotal = entries ? entries.length : displayNotes.length;
   // The items arrive in slices of 200, and a different list - a new view,
@@ -426,12 +480,22 @@ export function NotesList({
   const ItemComponent = viewMode === 'grid' ? WindowedNoteCard : WindowedNoteRow;
   const calendarShown = useJournalCalendarShown();
   const moodLook = useJournalCalendarMood();
+  // The calendar card under a focus dots only the tracker's days, each in
+  // the tone of its value; the day panel still lists every item.
+  const focusMarks = useMemo(() => {
+    if (!trackerFocus) return null;
+    const paint = new Map(trackerFocus.days.map((d) => [d.date, d.paint] as const));
+    return {
+      has: (day: string) => paint.has(day),
+      entriesOf: (day: string) => [{ space: null, kind: 'journal' as const, color: paint.get(day) }],
+    };
+  }, [trackerFocus]);
 
   // Vault view "New" menu - structured secret types.
   const GeneratorIcon = ACTIONS.generate.icon;
   const vaultNewOptions: NewMenuOption[] = [
     { key: 'login', label: t('notes:newMenu.login'), icon: <Lock />, onSelect: () => onNew('login') },
-    { key: 'card', label: t('vaultNew.card'), icon: <CreditCard />, onSelect: () => onNew('card') },
+    { key: 'card', label: t('shell:vaultItem.badgeCard'), icon: <CreditCard />, onSelect: () => onNew('card') },
     { key: 'ssh-key', label: t('vaultNew.sshKey', exemptOpts('notes:vaultNew.sshKey')), icon: <Key />, onSelect: () => onNew('ssh-key') },
     // The login form's Generate icon: the same generator, here to copy.
     { key: 'generator', label: t('vaultNew.generator'), icon: <GeneratorIcon />, onSelect: onOpenGenerator },
@@ -493,6 +557,7 @@ export function NotesList({
           onRestore={onBulkRestore}
           onDeleteForever={onBulkDeleteForever}
           allTags={allTags}
+          moreItems={selectionMore}
         />
       ) : (
       <div className="shrink-0 h-11 md:h-14 px-4 border-b border-divider flex items-center justify-between gap-3">
@@ -527,13 +592,16 @@ export function NotesList({
           }
         />
         {view === 'trash' && trashedNotesLength > 0 ? (
-          <HoverLabel label={t('trash.emptyHover')} position="above">
+          // Empty Trash sits where the other lists keep New: the same square,
+          // in the danger color, so the title keeps its room in every language.
+          // The click still opens the confirm window with the count.
+          <HoverLabel label={t('common:emptyTrash.title')} position="above-end">
           <button
             onClick={onEmptyTrash}
-            aria-label={t('trash.emptyHover')}
-            className="shrink-0 inline-flex items-center rounded-md bg-red-500/10 hover:bg-red-500/20 text-danger font-semibold px-3 py-1.5 text-heading tracking-tight transition"
+            aria-label={t('common:emptyTrash.title')}
+            className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-danger hover:opacity-90 active:scale-95 text-white transition cursor-pointer"
           >
-            {t('trash.empty')}
+            <TrashSimple size={22} weight="bold" />
           </button>
           </HoverLabel>
         ) : view !== 'trash' && view !== 'archive' ? (
@@ -605,8 +673,10 @@ export function NotesList({
           tag={selectedTag}
           onClearFolder={onClearFolder}
           onClearTag={onClearTag}
+          tracker={trackerFocus?.chip ?? null}
         />
       )}
+      {trackerFocus && !search.trim() && <FocusSummary focus={trackerFocus} />}
       {/* Storage bar - shown in trash view to encourage emptying. */}
       {view === 'trash' && quotaMaxBytes != null && quotaMaxBytes > 0 && quotaUsedBytes != null && (
         <StorageBar
@@ -618,46 +688,24 @@ export function NotesList({
       )}
       {/* Auto-delete toggle - shown in trash view. */}
       {view === 'trash' && (
+        // One short word; the rule ("Auto-delete after 30 days") is in the
+        // "?" beside it, on hover or a tap, so a narrow pane never breaks it.
         <Switch
-          label={t('trash.autoDelete')}
+          label={t('common:actions.delete')}
+          hint={<HelpTip text={t('trash.autoDelete')} />}
           checked={autoDeleteTrashDays > 0}
           onChange={(on) => onAutoDeleteTrashDaysChange(on ? 30 : 0)}
           className="shrink-0 px-4 py-2 gap-2 select-none"
-          labelClassName="text-small text-pn-muted"
         />
       )}
-      {/* Vault sub-filter pills - narrow by item type.
-          `overflow-x-auto` + per-pill `shrink-0 whitespace-nowrap` because four
-          pills of translated text do not fit the list column: es "Inicios de
-          sesion"/"Tarjetas de credito" (17/19 chars), ca and pt (16/18), fr and
-          it (12/16), pl (6/15), cs (10/14). Without it the pills shrank and their
-          labels wrapped to two lines, which every locale but English and Dutch
-          has been doing since it shipped. Scrolling a chip row is the normal
-          affordance; wrapping inside a pill is not.
-          Spec: docs/internal/design/ui-patterns.md section 45. */}
+      {/* Replaced copies of notes that are gone, which no History window
+          shows any more (beta #203). Only while there is one. */}
+      {view === 'trash' && onRestoredCopy && <TrashReplacedCopies onRestored={onRestoredCopy} />}
+      {/* Vault kind chips: an icon and a count each, the label too when
+          the whole row fits with labels. Spec: docs/contrib/passkeys.md (section 7),
+          docs/internal/design/ui-patterns.md section 190. */}
       {view === 'vault' && (
-        <div className="shrink-0 px-3 pt-2 pb-1 flex gap-1.5 overflow-x-auto pn-scrollbar-none">
-          {([
-            ['all', t('vaultFilter.all')],
-            ['login', t('vaultFilter.logins')],
-            ['card', t('vaultFilter.cards')],
-            ['ssh-key', t('vaultFilter.keys', exemptOpts('notes:vaultFilter.keys'))],
-          ] as const).map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onVaultFilterChange(key as VaultFilter)}
-              aria-pressed={vaultFilter === key}
-              className={`shrink-0 whitespace-nowrap text-small px-2.5 py-1 rounded-full transition font-medium ${
-                vaultFilter === key
-                  ? 'bg-accent-fill text-white'
-                  : 'bg-surface-1 text-pn-muted hover:bg-pn/10'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <VaultKindChips filter={vaultFilter} counts={vaultCounts ?? null} onChange={onVaultFilterChange} />
       )}
       {/* Search row - separate block so its own bottom border sits below
           the HR coming from the title row above. The sort / list-prefs
@@ -673,11 +721,7 @@ export function NotesList({
             onClick={() => setShowListPrefs((v) => !v)}
             aria-label={t('search.sortOptions')}
             aria-expanded={showListPrefs}
-            className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-md border transition ${
-              showListPrefs
-                ? 'bg-accent/10 border-accent text-accent-strong'
-                : 'bg-surface-2 border-divider text-pn-muted hover:border-accent hover:text-accent'
-            }`}
+            className={listToolClass(showListPrefs)}
           >
             {/* Sort / filter icon - three lines of descending length,
                 matches SN + most filemanagers. */}
@@ -692,6 +736,21 @@ export function NotesList({
             onChange={setSearch}
             placeholder={view === 'vault' ? t('search.placeholderVault') : view === 'calendar' ? t('search.placeholderEvents') : view === 'drawings' ? t('search.placeholderDrawings') : t('search.placeholderNotes')}
           />
+          {/* Statistics, one tap from the entries it reads: on the page of
+              the tracker in focus. In the search row, so the title row keeps
+              its two controls. Spec: docs/internal/specs/tracker-focus-771.md (section 5) */}
+          {onOpenStats && view === 'journal' && (
+            <HoverLabel label={t('settings.statsLabel')} position="above-end">
+              <button
+                type="button"
+                onClick={onOpenStats}
+                aria-label={t('settings.statsLabel')}
+                className={listToolClass(false)}
+              >
+                <ChartBar />
+              </button>
+            </HoverLabel>
+          )}
         </div>
         {showListPrefs && (
           <ListPrefsPopover
@@ -702,12 +761,14 @@ export function NotesList({
             className="absolute start-3 top-full mt-1"
             calendarRows={view === 'journal' || view === 'all' || view === 'home'}
             moodRow={view === 'journal'}
-            otherSpace={otherSpace}
             /* Journal and Vault own their view. Everything else this list
                draws - Notes, All, Pinned, Trash, a folder or tag filter
                inside any of them - shares Global: giving Notes a copy of its
                own would island the very pane the shared lists inherit from. */
             pillar={view === 'journal' ? 'journal' : view === 'vault' ? 'vault' : 'global'}
+            prefsScope={prefsScope}
+            scopeStore={scopedListPrefs}
+            onScopeChange={onScopedListPrefsChange}
             showGroupsToggle
             checkInCard={checkInCardToggle}
             medicationCard={medicationCardToggle}
@@ -744,7 +805,7 @@ export function NotesList({
       <ItemList list={list} grid={viewMode === 'grid'} onMouseDown={suppressShiftTextSelection}>
         {checkInCard}
         {view === 'journal' && calendarShown && !search.trim() && !selectionMode && (
-          <JournalCalendarCard grid={viewMode === 'grid'} entries={calendarDays} onOpen={onOpenCalendarItem} onPick={onBackfillDate} onToday={() => onNew()} creates="journal" onEvent={onNewEvent} moodOf={moodLook && journalMoods ? (d) => journalMoods.get(d) : undefined} {...calendarExtras} />
+          <JournalCalendarCard grid={viewMode === 'grid'} entries={calendarDays} onOpen={onOpenCalendarItem} onPick={onBackfillDate} onToday={() => onNew()} creates="journal" onEvent={onNewEvent} moodOf={moodLook && journalMoods && !focusMarks ? (d) => journalMoods.get(d) : undefined} marks={focusMarks ?? undefined} {...calendarExtras} />
         )}
         {/* Notes and All draw the same card once they hold a dated item. A day
             makes a note in Notes and a journal entry in All, where a date
@@ -774,12 +835,13 @@ export function NotesList({
                   {t('shell:checkIn.showThem')}
                 </button>
               </p>
-            ) : !search.trim() && (activeFolderName !== null || selectedTag !== null) ? (
+            ) : !search.trim() && (activeFolderName !== null || selectedTag !== null || trackerFocus) ? (
               <FilteredEmpty
                 folderName={activeFolderName}
                 tag={selectedTag}
                 onClearFolder={onClearFolder}
                 onClearTag={onClearTag}
+                {...(trackerFocus ? { onClearTracker: trackerFocus.chip.onClear } : {})}
               />
             ) : !search.trim() && hiddenInAll > 0 ? (
               <p className="p-4 text-compact text-pn-muted text-center">
@@ -812,7 +874,21 @@ export function NotesList({
         )}
         {(entries ?? displayNotes.map((note): ListEntry => ({ kind: 'note', note }))).slice(0, reveal.visible).map((entry) => {
           if (entry.kind === 'header') return grouping.header(entry, viewMode === 'grid');
+          if (entry.kind === 'gap') {
+            const label = t('stats:wellness.units.days', { count: entry.days });
+            return (
+              <li
+                key={entry.key}
+                role="separator"
+                aria-label={label}
+                className={`flex items-center gap-2 px-4 h-6 text-meta tabular-nums border-b border-divider bg-surface-1 before:flex-1 before:border-t before:border-dashed before:border-divider after:flex-1 after:border-t after:border-dashed after:border-divider ${entry.longest ? 'text-warning' : 'text-pn-muted'}`}
+              >
+                {label}
+              </li>
+            );
+          }
           const n = entry.note;
+          const badge = trackerFocus?.badgeOf(n) ?? null;
           return (
           <ItemComponent
             key={n.id}
@@ -835,6 +911,13 @@ export function NotesList({
                same icon on every row names nothing. A check-in keeps its
                mood face. Spec: issue #618. */
             hideTypeIcon={view === 'all' || view === 'journal'}
+            /* All, Pinned, Archive and Trash mix types; a one-type
+               list names the type in its header. */
+            typeMarks={!VIEW_NOTE_TYPES[view as View]}
+            valueBadge={badge?.text}
+            valueTone={badge?.tone}
+            valueIcon={badge ? trackerFocus?.chip.icon : undefined}
+            valueName={badge ? trackerFocus?.chip.name : undefined}
             sortAwareDate
             entryDays={view === 'journal'}
             trashTint={view === 'trash'}
@@ -877,6 +960,7 @@ export function NotesList({
             tag={selectedTag}
             onClearFolder={onClearFolder}
             onClearTag={onClearTag}
+            {...(trackerFocus ? { onClearTracker: trackerFocus.chip.onClear } : {})}
             variant={viewMode === 'grid' ? 'tile' : 'row'}
           />
         )}
@@ -891,5 +975,102 @@ export function NotesList({
       </ItemList>
       )}
     </>
+  );
+}
+
+/** The Vault's kinds in chip order, each with the glyph its rows wear (a
+ *  login's Lock, as in the mini grid; a card's CreditCard; a key's Key) and
+ *  Fingerprint for the logins that hold a passkey. All has no glyph: its
+ *  label always shows. Spec: docs/contrib/passkeys.md (section 7) */
+const VAULT_KINDS: { key: VaultFilter; label: string; Icon: typeof Lock | null }[] = [
+  { key: 'all', label: 'vaultFilter.all', Icon: null },
+  { key: 'login', label: 'vaultFilter.logins', Icon: Lock },
+  { key: 'passkey', label: 'vaultFilter.passkeys', Icon: Fingerprint },
+  { key: 'card', label: 'vaultFilter.cards', Icon: CreditCard },
+  { key: 'ssh-key', label: 'vaultFilter.keys', Icon: Key },
+];
+
+/**
+ * The kind chips above the Vault list (`KindChips`, ui-patterns.md section 190).
+ * The Passkeys chip waits for the release switch; the other four stay.
+ * Spec: docs/contrib/passkeys.md (section 9, P27)
+ */
+function VaultKindChips({ filter, counts, onChange }: {
+  filter: VaultFilter;
+  counts: Record<VaultFilter, number> | null;
+  onChange: (f: VaultFilter) => void;
+}) {
+  const { t } = useTranslation('notes');
+  const kinds = (passkeysReleased() ? VAULT_KINDS : VAULT_KINDS.filter((k) => k.key !== 'passkey')).map((k) => ({
+    key: k.key,
+    label: t(k.label, k.key === 'ssh-key' ? exemptOpts('notes:vaultFilter.keys') : {}),
+    Icon: k.Icon,
+    count: counts?.[k.key],
+  }));
+  return <KindChips kinds={kinds} value={filter} onChange={onChange} />;
+}
+
+/** The search row's square tools (the list options, Statistics): bordered, accent while open. */
+function listToolClass(on: boolean): string {
+  return `shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-md border transition ${
+    on ? 'bg-accent/10 border-accent text-accent-strong' : 'bg-surface-2 border-divider text-pn-muted hover:border-accent hover:text-accent'
+  }`;
+}
+
+/**
+ * A gap line between two entries of different days, the widest one marked.
+ * A group header breaks the run, and so does the edge of the pinned entries,
+ * which sort first out of day order: no line crosses either.
+ * Spec: docs/internal/specs/tracker-focus-771.md (section 4)
+ */
+function withDayGaps(base: readonly ListEntry[]): ListEntry[] {
+  const out: ListEntry[] = [];
+  let prev: string | null = null;
+  let prevPinned = 0;
+  let widest = -1;
+  let widestAt = -1;
+  let count = 0;
+  for (const e of base) {
+    if (e.kind === 'note') {
+      const day = entryDayOf(e.note);
+      if (e.note.starred !== prevPinned) prev = null;
+      prevPinned = e.note.starred;
+      if (prev !== null && day !== prev) {
+        const days = Math.abs(daysApart(prev, day));
+        if (days > widest) {
+          widest = days;
+          widestAt = out.length;
+        }
+        out.push({ kind: 'gap', days, longest: false, key: `gap:${e.note.id}` });
+        count += 1;
+      }
+      prev = day;
+    } else {
+      prev = null;
+    }
+    out.push(e);
+  }
+  const at = out[widestAt];
+  if (count > 1 && at?.kind === 'gap') out[widestAt] = { ...at, longest: true };
+  return out;
+}
+
+/** The line under the chips: how many days hold the tracker, the usual gap, the last one, and the way to the Calendar. */
+function FocusSummary({ focus }: { focus: ListTrackerFocus }) {
+  const { t } = useTranslation('notes');
+  const last = focus.days[0]?.date;
+  const todayIso = toLocalIso(new Date());
+  return (
+    <div className="shrink-0 px-4 py-2 border-b border-divider flex flex-wrap items-center gap-x-3 gap-y-1 text-small text-pn-muted">
+      <span className="font-semibold text-pn">{t('stats:wellness.units.days', { count: focus.days.length })}</span>
+      {focus.every !== null && <span>{t('trackerFocus.every', { count: focus.every })}</span>}
+      {last && <span>{t('trackerFocus.last', { when: relativeDayName(-daysApart(todayIso, last)) })}</span>}
+      {focus.locked > 0 && (
+        <span className="inline-flex items-center gap-1"><LockSimple aria-hidden="true" />{t('trackerFocus.locked', { count: focus.locked })}</span>
+      )}
+      <button type="button" onClick={focus.onCalendar} className="ms-auto text-accent hover:underline">
+        {t('shell:tagsRail.calendar')}
+      </button>
+    </div>
   );
 }

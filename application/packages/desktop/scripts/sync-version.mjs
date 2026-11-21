@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Sync the native build version from the single source of truth (web/src/version.ts)
-// into tauri.conf.json, Cargo.toml, the Android version stamp and the iOS share
+// into tauri.conf.json, Cargo.toml, Cargo.lock, the Android version stamp and the iOS share
 // extension's Info.plist, and the language list (SUPPORTED_LOCALES in
 // web/src/i18n.ts) into both Info.plist files. Runs
 // automatically before every Tauri dev/build (wired into
@@ -40,6 +40,18 @@ const cargoNext = cargo.replace(/(\[package\][^[]*?\nversion\s*=\s*")[^"]+(")/, 
 if (cargoNext !== cargo) {
   writeFileSync(cargoPath, cargoNext);
   updated.push('Cargo.toml');
+}
+
+// Cargo.lock: the app's own `version` line, the one under `name = "privacynotes"`.
+// Left behind, cargo has to rewrite the lockfile on every build, so a release
+// could never run with `--locked` and would resolve a crate the commit does not
+// pin (beta #236 item 1). Nothing else in the lockfile is touched.
+const lockPath = resolve(root, 'packages/desktop/src-tauri/Cargo.lock');
+const lock = readFileSync(lockPath, 'utf8');
+const lockNext = lock.replace(/(\[\[package\]\]\r?\nname = "privacynotes"\r?\nversion = ")[^"]+(")/, `$1${version}$2`);
+if (lockNext !== lock) {
+  writeFileSync(lockPath, lockNext);
+  updated.push('Cargo.lock');
 }
 
 // gen/android/app/tauri.properties: the versionName/versionCode gradle actually reads.

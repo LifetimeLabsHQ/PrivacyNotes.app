@@ -2,7 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowUpRight, CaretDown, CaretUp, Compass, List, SignIn } from './icons';
-import { DEMO_HREF, NAV_SECTIONS, type FooterIcon } from './footerData';
+import { NAV_SECTIONS, type FooterIcon } from './footerData';
+import { demoHref } from './siteLinks';
 import { FooterGlyph } from './SiteFooter';
 import { LanguageMenu } from './LanguageMenu';
 import { helpPath } from './localeRoutes';
@@ -163,7 +164,7 @@ export function HeaderRail({ mode, items, measure, themeToggle, onApp, onMenu, m
       {mode !== 'min' && mode !== 'tiny' && mode !== 'micro' && themeToggle}
       {mode !== 'bare' && mode !== 'min' && mode !== 'tiny' && mode !== 'micro' && (
         <a
-          href={DEMO_HREF}
+          href={demoHref()}
           className="ms-0.5 inline-flex items-center gap-1.5 rounded-lg border border-[var(--wl-amber-border)] bg-[var(--wl-tint-amber)] px-[11px] py-[6px] font-semibold text-[var(--wl-amber-text)] transition hover:brightness-95"
         >
           {t('hero.tryDemo')}

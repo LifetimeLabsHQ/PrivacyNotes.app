@@ -1,6 +1,5 @@
 {
   "header": {
-    "betaBadge": "beta",
     "downloads": "Downloads",
     "price": "Preis",
     "priceLine": "Was deine Apps zusammen kosten",
@@ -290,7 +289,7 @@
   },
   "demoShot": {
     "kicker": "Live ansehen",
-    "caption": "Die echte App mit Beispielnotizen, direkt in deinem Browser. Nichts wird gespeichert."
+    "caption": "Die echte App mit Beispielnotizen, direkt in deinem Browser. Was du tippst, bleibt dort."
   },
   "badges": {
     "privacyToolsAlt": "PrivacyNotes auf PrivacyTools.io",
@@ -358,7 +357,7 @@
     "freeImport": "Import und Export, darunter Keep und Obsidian",
     "freeAnon": "Anonyme Anmeldung, ohne E-Mail",
     "earlyAdopterBadge": "Early Adopter",
-    "payMethods": "Bezahle per Karte oder mit Bitcoin, Ethereum, Lightning, USDC oder USDT."
+    "payMethods": "Bezahle per Karte oder mit Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin oder TON."
   },
   "underHood": {
     "heading": "Unter der Haube",
@@ -498,7 +497,7 @@
     "noLockIn": "Lock-in",
     "noEmail": "E-Mail-Pflicht",
     "noDarkPatterns": "Dark Patterns",
-    "noBackdoor": "Hintertüren"
+    "noBackdoor": "Versteckte Hintertüren"
   },
   "noRecovery": {
     "heading": "Deine Phrase ist dein Schlüssel",
@@ -506,7 +505,7 @@
     "noRecoveryTerm": "Keine Wiederherstellung",
     "noRecoveryDesc": "Bei Selbstverwahrung: Phrase verloren, Notizen verloren",
     "deviceTerm": "Auf dem Gerät erzeugt",
-    "deviceDesc": "Bei Selbstverwahrung gelangt deine Phrase nie auf unsere Server",
+    "deviceDesc": "Bei Selbstverwahrung gelangt deine Phrase nie auf unsere Server, außer du fügst einen Passkey zum Anmelden hinzu",
     "zkTerm": "Zero-Knowledge",
     "zkDesc": "Bei Selbstverwahrung liegt auf dem Server nichts, was deine Notizen öffnet",
     "writeTerm": "Schreib sie auf",
@@ -521,7 +520,7 @@
     "heading": "Dein Tresor steht in unter einer Minute.",
     "importNote": "Du wechselst die App? Exportiere aus jeder dieser Apps und importiere in Minuten:",
     "importDemoTitle": "Probier deinen eigenen Import zuerst in der Demo aus",
-    "importDemoBody": "Deine Datei wird in deinem Browser gelesen, nichts geht an unsere Server, und wenn du den Tab schließt, ist sie gelöscht."
+    "importDemoBody": "Deine Datei wird in deinem Browser gelesen, und nichts davon wird hochgeladen. Sie bleibt in diesem Browser, bis die Demo hier wieder geöffnet wird; lösche die Websitedaten, um sie früher zu entfernen."
   },
   "about": {
     "tabs": {
@@ -529,7 +528,7 @@
       "hotkeys": "Tastenkürzel",
       "rating": "Bewertung"
     },
-    "intro": "<brand/> bündelt deine Notizen, Aufgaben, Passwörter, dein Tagebuch, deine Dateien, deinen Kalender, deine Kontakte und Lesezeichen an einem Ort, mit Stimmungs- und Medikamenten-Tracking. Alles wird auf deinem Gerät mit einem Schlüssel aus deiner Wiederherstellungsphrase verschlüsselt und bleibt auch auf unseren Servern in der <nowrap>Schweiz</nowrap> verschlüsselt. Es funktioniert offline, und die App ist Open Source.",
+    "intro": "<brand/> bündelt deine Notizen, Aufgaben, Passwörter, dein Tagebuch, deine Dateien, deinen Kalender, deine Kontakte und Lesezeichen an einem Ort, mit Stimmungs- und Medikamenten-Tracking. Alles wird auf deinem Gerät mit einem Schlüssel aus deiner Wiederherstellungsphrase verschlüsselt und bleibt auch auf unseren Servern in der <nowrap>Schweiz</nowrap> und der EU verschlüsselt. Es funktioniert offline, und die App ist Open Source.",
     "versionHeading": "Version",
     "windowVersion": "Version {{version}}",
     "windowHelp": "Hilfe-Center",
@@ -549,7 +548,7 @@
     "openSourceLink": "Quellcode auf GitHub.com lesen",
     "openSourceBody": "Die App und die Verschlüsselung darin sind veröffentlicht, jeder kann also prüfen, wie deine Notizen verschlüsselt werden.",
     "dataStorageHeading": "Datenspeicherung",
-    "dataStorageBody": "Verschlüsselte Blobs gespeichert in Zürich, <flag/> Schweiz.",
+    "dataStorageBody": "Verschlüsselte Notizen, Tagebücher und alles andere gespeichert in Zürich, <flag/> Schweiz. Neue Bilder und Dateien aus der aktuellen App gespeichert in der EU.",
     "faviconsHeading": "Website-Icons",
     "faviconsBody1": "Website-Icons (Favicons) kommen von DuckDuckGo und Google, von unserem Server in deinem Auftrag geladen. Dein Browser kontaktiert keinen von beiden, sie sehen also unseren Server nach einer Domain fragen und nie dich.",
     "faviconsBody2": "Icons werden 90 Tage lang auf deinem Gerät zwischengespeichert. Keine Anfrage enthält deine Identität, und du kannst Icons unter Einstellungen > Listen abschalten."

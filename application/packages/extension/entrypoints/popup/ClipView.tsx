@@ -136,7 +136,9 @@ export function ClipView({ connection, bookmark, bookmarkKeys, noteKeys }: { con
   return (
     <div className="space-y-3">
       <div className="flex items-start gap-2.5 min-w-0">
-        <Tile url={p.url} letter={p.title || displayHost(p.url)} />
+        {/* A letter, not the site's icon: opening the popup must tell no
+            server the host of the page in front (beta #217 item 1). */}
+        <Tile letter={p.title || displayHost(p.url)} />
         <div className="min-w-0">
           <div className="text-body font-semibold text-pn line-clamp-2" dir="auto">{p.title || displayHost(p.url)}</div>
           <div className="text-meta text-pn-muted truncate" dir="ltr">{displayHost(p.url)}</div>

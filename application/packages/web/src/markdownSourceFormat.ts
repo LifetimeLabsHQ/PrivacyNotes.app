@@ -3,23 +3,42 @@
  * text and the selection and returns one replacement, so the field applies it
  * as a single typed change and its own undo takes it back in one step.
  *
- * Marks wrap the selection and unwrap it on a second press. Line prefixes act
- * on every line the selection touches and come off when every line already
- * carries them. Blocks (divider, code block, table) sit on their own lines
- * with a blank line before them, because a `---` right under a line of text
- * makes that line a heading.
- * Spec: docs/internal/issues/0493.md (Spec)
+ * Marks wrap the selection and unwrap it on a second press. They wrap the
+ * words only: spaces and line ends at the edges of the selection, and a list,
+ * quote or heading marker at the start of a line, stay outside, because
+ * `**hello **` and `**- item**` are not bold in Markdown. Across lines each
+ * line gets its own pair, because a mark cannot cross a blank line. Line
+ * prefixes act on every line the selection touches and come off when every
+ * line already carries them. Blocks (divider, code block, table) sit on their
+ * own lines with a blank line before them, because a `---` right under a line
+ * of text makes that line a heading.
+ * Spec: docs/internal/specs/editor-mode-toggle.md (Source bar edits)
  */
+
+import { setSourceFolded, sourceFoldSummary } from './markdownSourceFolds';
 
 /** Replace [from, to) with `insert`, then select [selFrom, selTo). */
 export type SourceEdit = { from: number; to: number; insert: string; selFrom: number; selTo: number };
 
 export type SourceAction =
-  | 'bold' | 'italic' | 'strike' | 'inlinecode'
+  | 'bold' | 'italic' | 'strike' | 'inlinecode' | 'highlight' | 'spoiler' | 'math'
   | 'heading' | 'tasks' | 'bullets' | 'numbered' | 'quote'
-  | 'link' | 'notelink' | 'codeblock' | 'table' | 'hr';
+  | 'link' | 'notelink' | 'codeblock' | 'table' | 'hr'
+  | 'blockmath' | 'callout' | 'footnote' | 'foldAll';
 
-function wrap(text: string, s: number, e: number, mark: string): SourceEdit {
+/** Every action the Markdown view can run from a toolbar item of the same
+ *  key (formatBar.ts). An item not here writes no Markdown of its own
+ *  (underline, color, alignment, font, superscript and subscript are HTML)
+ *  or needs the formatted editor (pictures, files, a map, a doodle, a board,
+ *  an icon), so the Markdown view does not offer it. */
+export const SOURCE_ACTIONS: ReadonlySet<string> = new Set<SourceAction>([
+  'bold', 'italic', 'strike', 'inlinecode', 'highlight', 'spoiler', 'math',
+  'heading', 'tasks', 'bullets', 'numbered', 'quote',
+  'link', 'notelink', 'codeblock', 'table', 'hr',
+  'blockmath', 'callout', 'footnote', 'foldAll',
+]);
+
+function wrapRange(text: string, s: number, e: number, mark: string): SourceEdit {
   const n = mark.length;
   // A lone '*' must not take one star of a '**' pair.
   const lone = (at: number) => mark !== '*' || text[at] !== '*';
@@ -31,7 +50,54 @@ function wrap(text: string, s: number, e: number, mark: string): SourceEdit {
     const inner = sel.slice(n, sel.length - n);
     return { from: s, to: e, insert: inner, selFrom: s, selTo: s + inner.length };
   }
-  return { from: s, to: e, insert: mark + sel + mark, selFrom: s + n, selTo: e + n };
+  // A backtick inside inline code needs a longer fence around it.
+  const open = mark === '`' && sel.includes('`') ? '`` ' : mark;
+  const close = open === mark ? mark : ' ``';
+  return { from: s, to: e, insert: open + sel + close, selFrom: s + open.length, selTo: e + open.length };
+}
+
+// A list, task, quote or heading marker at the start of a line, nested ones
+// included (`> - [ ] `): a mark goes after it, never around it.
+const LINE_MARKER = /^[ \t]*(?:(?:- \[[ xX]\] |[-*+] |\d+[.)] |> ?|#{1,6} )[ \t]*)*/;
+
+/** [s, e) without the spaces at its edges and a line marker at its start. */
+function words(text: string, s: number, e: number): [number, number] {
+  const lineStart = text.lastIndexOf('\n', s - 1) + 1;
+  s = Math.max(s, lineStart + LINE_MARKER.exec(text.slice(lineStart))![0].length);
+  while (s < e && /\s/.test(text[s]!)) s++;
+  while (e > s && /\s/.test(text[e - 1]!)) e--;
+  return [s, e];
+}
+
+function wrap(text: string, selS: number, selE: number, mark: string): SourceEdit {
+  if (selS === selE) return wrapRange(text, selS, selE, mark);
+  const [s, e] = words(text, selS, selE);
+  // Only spaces or a marker selected: the caret goes where the words would.
+  if (s >= e) return wrapRange(text, Math.min(s, selE), Math.min(s, selE), mark);
+  if (!text.slice(s, e).includes('\n')) return wrapRange(text, s, e, mark);
+  // Several lines: one pair per line with words, all on or all off.
+  const n = mark.length;
+  const parts: [number, number][] = [];
+  for (let at = s; at <= e;) {
+    const nl = text.indexOf('\n', at);
+    const end = nl === -1 || nl > e ? e : nl;
+    const [ws, we] = words(text, at, end);
+    if (ws < we) parts.push([ws, we]);
+    at = end + 1;
+  }
+  // A line in bold is not a line in italic: '**' counts for '*' only as '***'.
+  const lone = (at: number, step: number) => mark !== '*' || text[at + step] !== '*' || text[at + 2 * step] === '*';
+  const on = (p: [number, number]) => p[1] - p[0] >= 2 * n && text.startsWith(mark, p[0]) && text.endsWith(mark, p[1]) && lone(p[0], 1) && lone(p[1] - 1, -1);
+  const off = parts.every(on);
+  let insert = '';
+  let at = s;
+  for (const [ws, we] of parts) {
+    const inner = text.slice(ws, we);
+    insert += text.slice(at, ws) + (off ? inner.slice(n, inner.length - n) : on([ws, we]) ? inner : mark + inner + mark);
+    at = we;
+  }
+  insert += text.slice(at, e);
+  return { from: s, to: e, insert, selFrom: s, selTo: s + insert.length };
 }
 
 // The first group is the indent, which a nested item keeps. A quote starts
@@ -134,6 +200,9 @@ export function sourceEdit(action: SourceAction, text: string, selStart: number,
     case 'italic': return wrap(text, s, e, '*');
     case 'strike': return wrap(text, s, e, '~~');
     case 'inlinecode': return wrap(text, s, e, '`');
+    case 'highlight': return wrap(text, s, e, '==');
+    case 'spoiler': return wrap(text, s, e, '||');
+    case 'math': return wrap(text, s, e, '$');
     case 'heading': return heading(text, s, e);
     case 'tasks':
     case 'bullets':
@@ -165,6 +234,43 @@ export function sourceEdit(action: SourceAction, text: string, selStart: number,
       const caret = e + out.insert.length;
       return { ...out, selFrom: caret, selTo: caret };
     }
+    case 'blockmath': {
+      const content = '$$\n' + sel + '\n$$';
+      return block(text, s, e, content, [3, 3 + sel.length]);
+    }
+    case 'callout': {
+      // The type the formatted view's picker opens on; the selection, if any,
+      // becomes the body, each line quoted. The caret ends in the body.
+      const head = '> [!note]+';
+      const body = (sel === '' ? [''] : sel.split('\n')).map((l) => `> ${l}`).join('\n');
+      const content = `${head}\n${body}`;
+      return block(text, s, e, content, [content.length, content.length]);
+    }
+    case 'footnote': {
+      // The next free number, its marker after the selection and its line at
+      // the end of the note, where the editor keeps the definitions; the
+      // caret waits on that line. One replacement, so one undo.
+      const used = [...text.matchAll(/\[\^(\d+)\]/g)].map((m) => Number(m[1]));
+      const n = used.length > 0 ? Math.max(...used) + 1 : 1;
+      const rest = text.slice(e);
+      const gap = text === '' || text.endsWith('\n\n') ? '' : text.endsWith('\n') ? '\n' : '\n\n';
+      const insert = `${sel}[^${n}]${rest}${gap}[^${n}]: `;
+      const end = s + insert.length;
+      return { from: s, to: text.length, insert, selFrom: end, selTo: end };
+    }
+    case 'foldAll': {
+      // Closes every fold while one is open, opens them all once each is
+      // closed, as the formatted view's button does. Only the lines that
+      // change are replaced; the selection stays where it was.
+      const { foldable, open } = sourceFoldSummary(text);
+      const next = setSourceFolded(text, open > 0 || foldable === 0);
+      let from = 0;
+      while (from < text.length && from < next.length && text[from] === next[from]) from++;
+      let tail = 0;
+      while (tail < text.length - from && tail < next.length - from && text[text.length - 1 - tail] === next[next.length - 1 - tail]) tail++;
+      const shift = (at: number) => (at <= from ? at : Math.max(from, at + next.length - text.length));
+      return { from, to: text.length - tail, insert: next.slice(from, next.length - tail), selFrom: shift(s), selTo: shift(e) };
+    }
   }
 }
 
@@ -181,6 +287,12 @@ export function sourceEdit(action: SourceAction, text: string, selStart: number,
 export function applySourceAction(el: HTMLTextAreaElement, action: SourceAction): string | null {
   const edit = sourceEdit(action, el.value, el.selectionStart, el.selectionEnd);
   el.focus();
+  // Nothing to change (Collapse all with every fold already closed): a
+  // delete over an empty range would take the character before the caret.
+  if (edit.from === edit.to && edit.insert === '') {
+    el.setSelectionRange(edit.selFrom, edit.selTo);
+    return null;
+  }
   el.setSelectionRange(edit.from, edit.to);
   const typed = edit.insert === ''
     ? document.execCommand?.('delete', false)

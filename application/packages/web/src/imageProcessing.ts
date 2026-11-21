@@ -324,6 +324,16 @@ function keepSource(
 }
 
 /**
+ * A blob the browser can decode: HEIC/HEIF (which browsers but Safari cannot
+ * read) goes through heic-to as a JPEG first; anything else as it is.
+ */
+export async function decodablePicture(file: File): Promise<Blob> {
+  if (!isHeic(file)) return file;
+  const heicTo = await loadHeicTo();
+  return heicTo({ blob: file, type: 'image/jpeg', quality: 0.92 });
+}
+
+/**
  * Decode, fit inside the box, encode. `source` is the file's bytes when
  * the caller already read them, so the EXIF copy-back does not read the
  * file twice.
@@ -337,13 +347,7 @@ async function reencode(
     return { ok: false, error: 'Image too large (over 50 MB). Please use a smaller image.' };
   }
 
-  // HEIC/HEIF: browsers (except Safari) can't decode these natively.
-  // Convert to JPEG blob first via heic-to, then proceed as normal.
-  let decodable: Blob = file;
-  if (isHeic(file)) {
-    const heicTo = await loadHeicTo();
-    decodable = await heicTo({ blob: file, type: 'image/jpeg', quality: 0.92 });
-  }
+  const decodable = await decodablePicture(file);
 
   // Decode to ImageBitmap - raw pixels, no metadata, orientation applied.
   const bitmap = await createImageBitmap(decodable);

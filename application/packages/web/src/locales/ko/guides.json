@@ -316,21 +316,21 @@
       "app": "Bitwarden",
       "title": "Bitwarden 보관함 내보내기",
       "metaTitle": "Bitwarden 보관함을 내보내는 방법 - PrivacyNotes",
-      "lead": "Bitwarden은 보관함 전체를 암호화되지 않은 .json 파일 하나로 내보내요. PrivacyNotes는 로그인, 카드, SSH 키, 보안 메모까지 항목마다 제자리에 정리해 넣어요.",
+      "lead": "Bitwarden은 보관함 전체를 암호화되지 않은 .json 파일 하나로, 또는 첨부 파일이 담긴 .zip으로 내보내요. PrivacyNotes는 로그인, 카드, SSH 키, 보안 메모까지 항목마다 제자리에 정리해 넣어요.",
       "sections": [
         {
           "h": "Bitwarden에서 보관함 내보내기",
           "steps": [
             "Bitwarden 웹 보관함(또는 데스크톱 앱)을 열고 로그인하세요.",
             "Tools로 이동한 다음 \"Export vault\"를 선택하세요.",
-            "파일 형식으로 .json을 선택하세요. 일반 .json이어야 하고, \".json (Encrypted)\"가 아니에요.",
+            "파일 형식으로 .json을 선택하거나, 첨부 파일도 가져오려면 \".zip (with attachments)\"를 선택하세요. \".json (Encrypted)\"는 선택하지 마세요.",
             "마스터 비밀번호로 확인하고 파일을 다운로드하세요."
           ]
         },
         {
           "h": "각 항목이 들어가는 자리",
           "p": [
-            "로그인은 [보관함의 로그인 항목](/ko/help/vault)이 되고(사이트 아이콘 포함), 카드는 카드 항목, SSH 키는 SSH 키 항목이 되고, 보안 메모와 신원 정보는 읽을 수 있는 노트로 들어와요. Bitwarden 폴더는 태그로 매핑되고, 즐겨찾기는 별표가 붙은 채 도착해요. 인증 키(TOTP)도 함께 옮겨져서 [2FA 코드를 그대로 쓸 수 있어요](/ko/help/vault-totp).",
+            "로그인은 [보관함의 로그인 항목](/ko/help/vault)이 되고(사이트 아이콘 포함), 카드는 카드 항목, SSH 키는 SSH 키 항목이 되고, 보안 메모와 신원 정보는 읽을 수 있는 노트로 들어와요. Bitwarden 폴더는 태그로 매핑되고, 즐겨찾기는 별표가 붙은 채 도착해요. 인증 키(TOTP)도 함께 옮겨져서 [2FA 코드를 그대로 쓸 수 있어요](/ko/help/vault-totp). Bitwarden에 저장한 패스키도 함께 들어와요. .zip에서 가져오면 첨부 파일마다 해당 항목에 붙어요.",
             "내보내기 파일에는 비밀번호가 평문으로 들어 있으니, 가져온 뒤 모든 것이 잘 도착했는지 확인하고 그 파일을 확실하게 삭제하세요. PrivacyNotes 안에서는 기기에서도, 서버로 가는 동안에도 전부 다시 암호화돼요."
           ]
         }
@@ -1115,6 +1115,31 @@
         }
       ]
     },
+    "msecure": {
+      "app": "mSecure",
+      "title": "mSecure 보관함 내보내기",
+      "metaTitle": "mSecure 보관함을 내보내는 방법 - PrivacyNotes",
+      "lead": "mSecure는 데스크톱 앱에서 레코드를 .csv 파일 하나로 내보내고, PrivacyNotes는 이를 사용자 지정 필드까지 포함해 보관함의 로그인 항목, 카드, 노트로 바꿔요.",
+      "sections": [
+        {
+          "h": "mSecure에서 내보내기",
+          "steps": [
+            "컴퓨터에서 mSecure를 열고 잠금을 해제하세요.",
+            "Settings를 열고 Backups를 선택하세요.",
+            "Import and Export records 아래에서 Export records to CSV file을 선택하세요.",
+            "Export all records를 고르세요. 파일에 각 필드의 이름이 남도록 \"Only export field data\"는 꺼 두세요.",
+            "Export를 선택하고 .csv 파일을 저장하세요."
+          ]
+        },
+        {
+          "h": "각 항목이 들어가는 자리",
+          "p": [
+            "모든 로그인은 2FA 키와 함께 [보관함의 로그인 항목](/ko/help/vault)이 되어서 [코드를 그대로 쓸 수 있고](/ko/help/vault-totp), 추가 웹사이트와 사용자 지정 필드도 이름과 함께 옮겨져요. PIN이나 복구 코드 같은 비밀 필드는 숨겨진 채로 남아요. 카드는 카드가 돼요. 보안 메모는 노트가 되고, 신원 정보나 은행 계좌 같은 다른 레코드 유형은 필드를 나열한 노트가 되며 레코드 유형이 태그로 붙어요. 태그는 태그로 남아요. 파일에 날짜와 즐겨찾기가 없어서 각 항목의 날짜는 가져온 날이 돼요.",
+            "내보내기 파일에는 비밀번호가 평문으로 들어 있어요. 가져온 뒤 모든 것이 잘 도착했는지 확인하고 그 파일을 삭제하세요."
+          ]
+        }
+      ]
+    },
     "nordpass": {
       "app": "NordPass",
       "title": "NordPass 보관함 내보내기",
@@ -1163,6 +1188,36 @@
           "p": [
             "모든 로그인은 추가 웹사이트, 사용자 지정 필드, 날짜와 함께 [보관함의 로그인 항목](/ko/help/vault)이 돼요. 2FA 키도 함께 옮겨져서 [코드를 그대로 쓸 수 있어요](/ko/help/vault-totp). 항목에 이메일과 사용자 이름이 둘 다 있으면 사용자 이름이 로그인에 들어가고 이메일은 필드가 돼요. 노트는 노트로, 카드는 카드로 도착하고, 신원 정보는 모든 세부 정보를 한 줄씩 적은 노트가 돼요. 이메일 숨기기 별칭은 각각 주소가 적힌 노트가 되어서, 어느 사이트에 어느 주소를 줬는지 목록으로 남아요. Proton 계정을 유지하는 동안 Proton은 계속 메일을 전달해요. 보관함이 둘 이상이면 보관함마다 태그가 돼요. 휴지통의 항목은 가져오지 않아요.",
             "내보내기 파일에는 비밀번호가 평문으로 들어 있어요. 가져온 뒤 모든 것이 잘 도착했는지 확인하고 그 파일을 삭제하세요."
+          ]
+        }
+      ]
+    },
+    "raindrop": {
+      "app": "Raindrop.io",
+      "title": "Raindrop.io 북마크 내보내기",
+      "metaTitle": "Raindrop.io 북마크를 내보내는 방법 - PrivacyNotes",
+      "lead": "Raindrop.io 북마크를 .csv 백업 파일 하나로 내보내면, PrivacyNotes가 같은 컬렉션 구조의 북마크로 바꿔 줘요. 메모, 발췌, 하이라이트도 함께 옮겨져요.",
+      "sections": [
+        {
+          "h": "전체 백업 받기",
+          "steps": [
+            "브라우저나 앱에서 Raindrop.io를 열고 로그인하세요.",
+            "All bookmarks를 열고 Export > Get backup을 선택하세요.",
+            "백업이 준비되었다는 이메일을 기다리세요. 보통 몇 분 걸려요.",
+            "Settings > Backups를 열고 새 백업 옆의 CSV를 선택하세요."
+          ]
+        },
+        {
+          "h": "HTML이 아니라 CSV를 고르세요",
+          "p": [
+            "HTML 파일에는 링크와 메모는 담기지만 발췌와 하이라이트는 빠져요. 컬렉션 하나만 옮기려면 그 컬렉션을 열고 Export > CSV를 선택하세요. 그 메뉴의 .zip 파일도 쓸 수 있어요."
+          ]
+        },
+        {
+          "h": "옮겨지는 위치",
+          "p": [
+            "모든 북마크는 Bookmarks 아래에 들어가고, 컬렉션마다 폴더가 만들어져서 Raindrop.io에서 중첩한 모양 그대로 이어져요. Unsorted 북마크는 Bookmarks 바로 아래에 들어가요. 메모, 발췌, 그리고 스티커 메모가 달린 각 하이라이트는 북마크의 노트로 들어가고, 즐겨찾기는 고정된 채로 유지돼요. 태그는 태그로 남고, 모든 북마크는 저장한 날짜를 그대로 유지해요.",
+            "파일에는 휴지통, 미리 알림, 하이라이트 색상이 없어서 그 항목들은 옮겨지지 않아요. 커버 이미지도 옮겨지지 않고, 대신 각 북마크에 해당 웹사이트의 아이콘이 표시돼요."
           ]
         }
       ]
@@ -1288,6 +1343,83 @@
           "p": [
             "[모든 항목은 저널에 도착하고](/ko/help/journal), Journal에서 지정한 날짜 그대로 들어가요. 각 항목은 제목과 텍스트를 유지하고, 사진과 동영상은 이미지와 첨부 파일로 가져와요. 항목에 있던 지도는 이미지로 함께 와요.",
             "Takeout에는 장소 이름, 작성 프롬프트, 북마크, Journal의 되돌아보기가 들어 있지 않아서 그것들은 Journal에 남아요. 가져오기 요약에도 그렇게 나와요."
+          ]
+        }
+      ]
+    },
+    "capacities": {
+      "app": "Capacities",
+      "title": "Capacities 스페이스 내보내기",
+      "metaTitle": "Capacities 스페이스를 내보내는 방법 - PrivacyNotes",
+      "lead": "Capacities는 모든 스페이스를 한꺼번에, Markdown 파일과 미디어를 담은 zip 하나로 내보내요. 그 zip으로 페이지, 데일리 노트, 사용자 지정 객체가 태그, 속성, 링크, 표, 이미지와 함께 넘어와요.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/capacities-export.webp",
+            "alt": "Capacities 설정의 Full Export 페이지. Manual Full Export에서 Include media가 켜져 있고 Export All Spaces 버튼이 보이는 모습.",
+            "width": 1576,
+            "height": 802
+          },
+          "h": "전체 내보내기 만들기",
+          "steps": [
+            "컴퓨터에서 Capacities를 열고 Settings를 여세요.",
+            "Full Export를 선택하세요.",
+            "Manual Full Export 아래에서 Options를 열고 \"Include media\"를 켜 둔 채로 두세요. 나머지 두 옵션은 그대로 두어도 돼요. 두 가지 링크 방식을 모두 읽고, 맨 위의 제목은 빼고 가져와요.",
+            "\"Export All Spaces\"를 클릭하세요. Capacities가 백그라운드에서 zip을 만들어 다운로드 폴더에 저장하고, 파일 이름은 \"Capacities\"에 날짜와 시간이 붙어요.",
+            "그 .zip을 그대로 끌어다 놓으세요."
+          ],
+          "p": [
+            "Capacities는 이미지와 파일이 이 기기에 있을 때만 zip에 넣어요. 빠진 것이 있다면 Settings > Offline & Sync > Media loading을 \"Everything\"으로 바꾸고, 다운로드가 끝나길 기다린 다음 다시 내보내세요."
+          ]
+        },
+        {
+          "h": "옮겨지는 것",
+          "p": [
+            "페이지, 데일리 노트, 직접 만든 유형의 객체는 모두 태그와 Capacities가 저장한 날짜가 담긴 노트가 돼요. 객체 유형마다 폴더가 하나씩 생겨서, 페이지는 Pages에, 데일리 노트는 DailyNotes에, Books 같은 유형은 자기만의 폴더에 들어가요.",
+            "제목, 목록, 할 일, 인용, 언어가 표시된 코드, 수식, 표는 있던 그대로 넘어와요. Capacities는 표 수식을 계산 결과로 내보내서, 숫자는 도착하지만 수식은 도착하지 않아요. [이쪽 표도 같은 수식을 지원하고](/ko/help/table-formulas) 이름과 셀 참조도 같으니, 셀에 `=`를 입력해서 다시 설정하세요. [객체 사이의 링크와 멘션은 노트 링크가 되고](/ko/help/note-links), 이미지와 파일은 여러분의 저장 공간으로 가져와요.",
+            "사용자 지정 유형의 속성, 예를 들어 평점이나 장르는 노트 맨 위에 짧은 목록으로 적혀요. 쿼리는 텍스트가 없는 저장된 검색이라 가져오지 않아요. Capacities는 휴지통, 컬렉션, 토글과 색상 블록의 모양을 내보내지 않아요. 토글은 목록으로 도착하고, 그 안의 텍스트는 함께 넘어와요."
+          ]
+        }
+      ]
+    },
+    "onenote": {
+      "app": "OneNote",
+      "title": "OneNote 노트북 내보내기",
+      "metaTitle": "OneNote 노트북을 내보내는 방법 - PrivacyNotes",
+      "lead": "Windows용 OneNote는 노트북 전체를 OneNote Package 파일(.onepkg) 하나로 내보내요. 그 파일로 섹션, 페이지, 하위 페이지가 할 일, 표, 사진, 첨부 파일과 함께 넘어와요.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/onenote-export.webp",
+            "alt": "Windows용 OneNote의 File > Export 화면. Export Current에서 Notebook, Select Format에서 OneNote Package가 선택되어 있고 Export 버튼이 보이는 모습.",
+            "width": 1576,
+            "height": 548
+          },
+          "h": "노트북을 OneNote Package로 내보내기",
+          "steps": [
+            "데스크톱 앱인 Windows용 OneNote에서 노트북을 여세요. OneDrive에 있는 노트북도 거기서 열려요.",
+            "File > Export를 선택하세요.",
+            "\"Export Current\" 아래에서 \"Notebook\"을 고르세요.",
+            "\"Select Format\" 아래에서 \"OneNote Package (*.onepkg)\"를 고르고 \"Export\"를 클릭하세요.",
+            "폴더를 고르고 저장하세요. OneNote가 노트북 이름을 딴 .onepkg 파일 하나를 만들어요.",
+            "그 .onepkg를 그대로 끌어다 놓으세요."
+          ],
+          "p": [
+            "패키지 하나에는 노트북 하나가 들어 있어요. 노트북이 여러 개면 각각 내보낸 다음 파일을 차례로 끌어다 놓으세요. 웹, Mac, 휴대폰의 OneNote에는 내보내기가 없으니, 이 단계는 Windows 컴퓨터에서 하세요."
+          ]
+        },
+        {
+          "h": "보호된 섹션은 먼저 잠금 해제하기",
+          "p": [
+            "비밀번호가 걸린 섹션은 패키지 안에서도 암호화된 채로 남아서 OneNote만 열 수 있어요. OneNote에서 각 섹션의 잠금을 풀고, Review > Password > Remove Password로 비밀번호를 없앤 다음 다시 내보내세요. 가져오기 미리보기에는 제외해야 했던 섹션의 이름이 표시돼요."
+          ]
+        },
+        {
+          "h": "옮겨지는 것",
+          "p": [
+            "노트북은 폴더가 되고, 그 안에 섹션 그룹과 섹션마다 폴더가 하나씩 생겨요. 모든 페이지는 해당 섹션의 폴더 안에서 OneNote가 만든 날짜가 붙은 노트가 되고, 하위 페이지는 같은 폴더에서 상위 페이지 뒤에 이어져요.",
+            "제목, 굵게, 기울임, 밑줄, 색상, 형광펜, 글머리 기호 목록과 번호 목록, 표, 코드 단락은 있던 그대로 넘어와요. 할 일 태그는 체크리스트 항목이 되고 완료했다면 체크된 채로 도착해요. Important나 Question 같은 다른 노트 태그는 노트의 태그가 돼요. [페이지 사이의 링크는 노트 링크가 되고](/ko/help/note-links), 사진과 첨부 파일은 여러분의 저장 공간으로 가져와요.",
+            "섹션 파일(.one) 하나나 zip으로 묶은 노트북 폴더도 가져올 수 있어요. 펜으로 그린 그림, 음성 녹음, 수식은 이쪽에서 표현할 방법이 없어서 가져오기 미리보기에 개수만 표시되고, OneNote 휴지통에 있는 페이지는 패키지에 들어 있지 않아요."
           ]
         }
       ]

@@ -16,15 +16,17 @@ import { encryptBlob, decryptBlob, type SupabaseClient } from '@notes/shared';
 import { db } from './db';
 import { openWithRing } from './keyRing';
 import { isDemoMode } from './demo';
-import { recordStorageFault, recordSyncFault } from './syncFaults';
+import { recordSyncFault } from './syncFaults';
 import { isServerWriteBlocked } from './syncPause';
 import { uploadsHeldForWifi } from './wifiOnly';
 import { recalculateQuota } from './devices';
-import { claimRemoval, isAlreadyExists, markIfPending } from './blobUploadRecovery';
+import { claimRemoval, markIfPending } from './blobUploadRecovery';
 import { PENDING_GC_WAIT_MS, settleWithin } from './pendingGcWait';
-import { BlobStoreBase, BUCKET, UPLOAD_REFUSED, isBlobQuotaError, isPermanentUploadError } from './blobStoreBase';
+import { BlobStoreBase, UPLOAD_REFUSED, isBlobQuotaError, isPermanentUploadError } from './blobStoreBase';
+import { BlobError, blobBackend } from './blobStore';
 import { sha256Hex } from './sha256Hex';
 import { BlobDamagedError } from './blobDamaged';
+import { newBlobId, openedImageBytes, sealedImageBytes } from './blobBind';
 
 /**
  * Encrypted blob sizes learned from a Storage listing, keyed by uuid.
@@ -104,24 +106,22 @@ export async function listImageSizes(
   const outstanding = new Set(wanted);
   if (outstanding.size === 0) return { sizes, absent: [] };
 
+  const backend = blobBackend(supabase, pubkey);
   const learned: Record<string, number> = {};
-  for (let offset = 0; outstanding.size > 0; offset += LIST_PAGE) {
-    const { data, error } = await supabase.storage
-      .from(BUCKET)
-      .list(pubkey, { limit: LIST_PAGE, offset });
+  for (let after: string | null = null; outstanding.size > 0; ) {
+    const page = await backend.list(after, LIST_PAGE);
     // A failed page leaves the rest outstanding rather than absent: the
     // caller must not read a network error as "this blob is gone".
-    if (error) return { sizes, absent: [] };
-    const page = data ?? [];
+    if (!page) return { sizes, absent: [] };
     for (const obj of page) {
-      const size = (obj.metadata as Record<string, unknown> | null)?.size;
-      if (typeof size === 'number' && size > 0) {
-        if (wantedSet.has(obj.name)) sizes.set(obj.name, size);
-        learned[obj.name] = size;
+      if (obj.size > 0) {
+        if (wantedSet.has(obj.uuid)) sizes.set(obj.uuid, obj.size);
+        learned[obj.uuid] = obj.size;
       }
-      outstanding.delete(obj.name);
+      outstanding.delete(obj.uuid);
     }
     if (page.length < LIST_PAGE) break;
+    after = page[page.length - 1]!.uuid;
   }
   await rememberImageSizes(learned);
   return { sizes, absent: [...outstanding] };
@@ -138,8 +138,8 @@ export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
   protected cached(uuid: string) {
     return db.imageCache.get(uuid);
   }
-  protected plaintextOf(cached: { data: Uint8Array }): Uint8Array {
-    return cached.data;
+  protected plaintextOf(cached: { data: Uint8Array }, uuid: string): Uint8Array {
+    return sealedImageBytes(uuid, cached.data);
   }
   protected retryUpload(uuid: string, _cached: { data: Uint8Array }, encrypted: Uint8Array): Promise<void> {
     return this._backgroundUpload(uuid, encrypted);
@@ -161,7 +161,7 @@ export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
       return existing.uuid;
     }
 
-    const uuid = crypto.randomUUID();
+    const uuid = newBlobId();
     // signOut can zero this.encryptionKey mid-upload. This is a
     // user-initiated path, not a background retry - throw rather than
     // silently encrypt with a dead key; callers already handle upload
@@ -170,7 +170,7 @@ export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
     if (!passKey) {
       throw new Error('Sign-out in progress');
     }
-    const encrypted = encryptBlob(data, passKey);
+    const encrypted = encryptBlob(sealedImageBytes(uuid, data), passKey);
     passKey.fill(0);
 
     // --- Local-first: cache + dedup record, return immediately ---
@@ -225,29 +225,26 @@ export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
     }
     this.uploading.add(uuid);
     try {
-      const path = `${this.pubkey}/${uuid}`;
-
       // A removal claimed after this moment can be of the object a 409
       // below proves, so the settle compares against it.
       const attemptAt = Date.now();
-      const { error } = await this.supabase.storage
-        .from(BUCKET)
-        .upload(path, encrypted, {
-          contentType: 'application/octet-stream',
-          // Create-only. A 409 says an earlier attempt of ours landed, which
-          // blobUploadRecovery.ts settles and counts once. The bucket's one
-          // UPDATE is the phrase change's same-size overwrite (reencryptPass.ts).
-          upsert: false,
-        });
-
-      if (error) {
-        const msg = error.message || '';
-        if (isAlreadyExists(error)) {
-          await this._settleExistingObject(uuid, path, encrypted, attemptAt);
+      try {
+        // Create-only. A taken name says an earlier attempt of ours landed,
+        // which blobUploadRecovery.ts settles and counts once. The store's
+        // one overwrite is the phrase change's same-size rewrite
+        // (reencryptPass.ts).
+        await this.backend.put(uuid, encrypted);
+      } catch (error) {
+        if (!(error instanceof BlobError)) throw error;
+        const msg = error.message;
+        if (error.kind === 'exists') {
+          await this._settleExistingObject(uuid, encrypted, attemptAt);
           return;
         }
-        recordStorageFault('file-up', error, uuid);
-        if (isPermanentUploadError(msg)) {
+        if (this.waitsForLater(error)) return;
+        // By kind first, the message as before: the Worker's answers and
+        // Storage's own text both reach the same branch.
+        if (error.kind === 'too_large' || isPermanentUploadError(msg)) {
           // Keep local cache so restored/pasted images remain viewable offline,
           // and mark the row refused so the doomed upload is never retried.
           const dedup = await db.imageDedup.where('uuid').equals(uuid).first();
@@ -258,7 +255,7 @@ export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
           console.error('[imageStore] permanent upload failure, kept local cache:', uuid, msg);
           return;
         }
-        if (isBlobQuotaError(msg)) {
+        if (error.kind === 'quota' || isBlobQuotaError(msg)) {
           // Retryable - pendingUpload stays 1, but still toast the user now.
           // Mark the row so the retry sweep skips it while it cannot fit
           // and the status surfaces say "doesn't fit" (backlog #143).
@@ -281,7 +278,7 @@ export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
           // wait for real headroom instead of re-uploading the full blob
           // just to land back here (backlog #143).
           if (await claimRemoval(db.imageDedup, uuid)) {
-            await this.supabase.storage.from(BUCKET).remove([path]).catch(() => {});
+            await this.backend.remove([uuid]).catch(() => {});
           }
           await markIfPending(db.imageDedup, uuid, { quotaBlocked: 1 });
           this.onBackgroundError?.(msg);
@@ -292,7 +289,7 @@ export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
           // Remove the remote blob we just uploaded; the local cache stays,
           // refused, as the only copy.
           if (await claimRemoval(db.imageDedup, uuid)) {
-            await this.supabase.storage.from(BUCKET).remove([path]).catch(() => {});
+            await this.backend.remove([uuid]).catch(() => {});
           }
           await markIfPending(db.imageDedup, uuid, { pendingUpload: UPLOAD_REFUSED });
           this.onBackgroundError?.(msg);
@@ -333,9 +330,8 @@ export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
     const cached = await db.imageCache.get(uuid);
     if (cached) return cached.data;
 
-    // Download from Supabase Storage, with one retry on auth errors.
-    const path = `${this.pubkey}/${uuid}`;
-    const result = await this._downloadWithRetry(path);
+    // Download from the store, with one retry on auth errors.
+    const result = await this._downloadWithRetry(uuid);
     if (!result) return null;
 
     const encrypted = new Uint8Array(await result.arrayBuffer());
@@ -347,6 +343,11 @@ export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
     } catch {
       throw new BlobDamagedError(uuid);
     }
+    // An object written for another id is not this image: damaged, the same
+    // way, so nothing is cached or deleted (blobBind.ts).
+    const image = openedImageBytes(uuid, decrypted);
+    if (image === null) throw new BlobDamagedError(uuid);
+    decrypted = image;
 
     // Cache for next time.
     await db.imageCache.put({ id: uuid, data: decrypted, cachedAt: new Date().toISOString() });
@@ -357,9 +358,9 @@ export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
 
   /**
    * Defer deletion of multiple images: remove local cache + dedup rows
-   * and decrement quota immediately, but leave the Supabase Storage
-   * object in place. The uuid is enqueued in db.blobGC so sweepBlobGC
-   * (imageGC.ts) can remove the remote object later, once a clean sync
+   * immediately, but leave the Supabase Storage object in place (it
+   * counts toward the quota until it leaves Storage). The uuid is
+   * enqueued in db.blobGC so sweepBlobGC (imageGC.ts) can remove the remote object later, once a clean sync
    * pull has proven the local mirror is complete enough to trust the
    * reference re-check. See imageGC.ts for the full two-phase design.
    *
@@ -399,20 +400,19 @@ export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
     // the objects and settles quota once the user updates.
     if (isServerWriteBlocked()) return;
 
-    // Server-side pending set (migration 0068): the recalc exclusion must
-    // not depend on which device asks - db.blobGC is device-local, and a
-    // peer recalculating would re-inflate the quota row (backlog #131).
-    // Awaited, up to PENDING_GC_WAIT_MS, so a recount the caller runs next
-    // already leaves these out; a failure or a stall is still only logged or
-    // outwaited, because the local queue drives the sweep, which re-asserts
-    // these rows on every pass, so a lost enqueue converges at the next clean
-    // pull.
+    // Server-side pending set (migration 0068): db.blobGC is device-local,
+    // and these rows let the nightly purge remove the objects if this device
+    // never sweeps them. Since 0136 they no longer change what is counted.
+    // Awaited, up to PENDING_GC_WAIT_MS; a failure or a stall is still only
+    // logged or outwaited, because the local queue drives the sweep, which
+    // re-asserts these rows on every pass, so a lost enqueue converges at
+    // the next clean pull.
     // Spec: packages/supabase/migrations/history/0068_pending_blob_gc_server_side.sql
     await settleWithin(this.ensurePendingGC(uuids), PENDING_GC_WAIT_MS);
 
-    // Decrement image_bytes quota (best-effort) - the blob still counts
-    // against Storage until the sweep removes it, but the user's quota
-    // must reflect the delete now.
+    // Report the delete (best-effort). A server with migration 0136 counts
+    // files itself and ignores a negative report: the blob counts until the
+    // sweep removes it from Storage. An older server decrements here.
     if (!this.ownershipLost() && totalSize > 0) {
       this.supabase.rpc('adjust_blob_bytes', { delta: -totalSize })
         .then(({ error: rpcErr }) => {
@@ -521,32 +521,14 @@ export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
   }
 
   /**
-   * Remove Storage objects only - no local row deletion, no quota
-   * adjustment (deferDelete settled quota when it queued the uuid, and
+   * Remove Storage objects only - no local row deletion and no quota
+   * report (the server takes a file's bytes off when its object goes, and
    * sweepBlobGC drops any local rows it kept). Used by sweepBlobGC once
    * a queued uuid has cleared the grace period and the reference re-check.
-   *
-   * The Supabase JS client's storage.remove() reports one aggregate
-   * error for the whole batch, not per-path, so on error we can't tell
-   * which paths actually failed. Treat a "not found" style aggregate
-   * error as success (the blobs are already gone, which is the desired
-   * end state); treat any other error as every uuid failing, so the
-   * sweep retries the whole batch next time.
+   * The store answers for the batch as a whole (blobStore.ts), so a failure
+   * fails every uuid and the sweep retries the whole batch next time.
    */
-  async removeRemoteOnly(uuids: string[]): Promise<{ removed: string[]; failed: string[] }> {
-    if (uuids.length === 0) return { removed: [], failed: [] };
-
-    const paths = uuids.map((uuid) => `${this.pubkey}/${uuid}`);
-    const { error } = await this.supabase.storage.from(BUCKET).remove(paths);
-
-    if (!error) return { removed: uuids, failed: [] };
-
-    if (error.message?.includes('not found') || error.message?.includes('404')) {
-      return { removed: uuids, failed: [] };
-    }
-
-    recordStorageFault('file-delete', error);
-    console.warn('[imageStore] sweepBlobGC remote removal failed:', error.message);
-    return { removed: [], failed: uuids };
+  removeRemoteOnly(uuids: string[]): Promise<{ removed: string[]; failed: string[] }> {
+    return this.backend.remove(uuids);
   }
 }

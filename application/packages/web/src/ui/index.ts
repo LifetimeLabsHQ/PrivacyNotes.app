@@ -16,6 +16,7 @@ export { CompareTiles, type CompareTile } from './CompareTiles';
 export { TaskCheckbox } from './TaskCheckbox';
 export { Popover, Kbd, Divider, CopyButton, IconTile } from './misc';
 export { RowChip } from './RowChip';
+export { KindChips, type KindChip } from './KindChips';
 export { GridCard } from './GridCard';
 export { FeaturePitch, PitchBadge } from './FeaturePitch';
 export { TerminalBlock } from './TerminalBlock';
@@ -112,11 +113,11 @@ export { ScaleTiles, MoodScale } from '../MoodScale';
 export { HoverLabel } from '../HoverLabel';
 
 /**
- * @catalog Tracker panel parts (PanelQuestion, ChoiceGrid, Segmented, NumberStepper, chipClass, CHIP_ADD)
- * use: inside a tracker panel of the check-in card or a journal entry only: the question, equal choice tiles, a joined pair (Taken | Skipped, kg | lb), the number stepper with quick picks, a many-value chip and the dashed add chip. Their compact sizes are part of the panel language.
+ * @catalog Tracker panel parts (PanelQuestion, ChoiceGrid, Segmented, NumberStepper, chipClass, choiceTileClass, CHIP_ADD)
+ * use: inside a tracker panel of the check-in card or a journal entry: the question, equal choice tiles, a joined pair (Taken | Skipped, kg | lb), the number stepper with quick picks, a many-value chip and the dashed add chip. Their compact sizes are part of the panel language. One other host: the calendar's day counter, whose From and To are `choiceTileClass(on, 'soft')` tiles (bordered, an accent tint when chosen) around a `NumberStepper`.
  * never: in a Settings pane (use the settings parts); a second stepper, chip or choice grid for a tracker.
  */
-export { PanelQuestion, ChoiceGrid, Segmented as PanelSegmented, NumberStepper, chipClass, CHIP_ADD } from '../trackers/panelUI';
+export { PanelQuestion, ChoiceGrid, Segmented as PanelSegmented, NumberStepper, chipClass, choiceTileClass, CHIP_ADD } from '../trackers/panelUI';
 
 /**
  * @catalog FieldLabel, GroupHeading, FIELD_CLASS, FIELD_BUTTON
@@ -154,7 +155,7 @@ export { ColorSwatch } from '../ColorSwatch';
  * use: every choice of a palette color for an item (a note, a folder or tag look, a Kanban column): "no color" first, the palette through the theme's label tokens, the touch size, an optional dashed ring for an inherited color.
  * never: a row of ColorSwatch of your own over LOOK_COLORS; another gap, size or color source for the same choice.
  */
-export { ColorSwatchRow } from '../ColorSwatch';
+export { COLOR_MENU_WIDTH, ColorSwatchRow } from '../ColorSwatch';
 
 /**
  * @catalog InlineRenameField

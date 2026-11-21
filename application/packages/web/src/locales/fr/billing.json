@@ -35,6 +35,7 @@
     "title": "Bienvenue dans le club",
     "proLine": "<brand/> Pro, {{price}} $ une seule fois. À toi pour toujours.",
     "storageLine": "<brand/> +{{gb}} Go de stockage, {{price}} $ par an.",
+    "storagePayerNote": "Le titulaire du compte pourra changer de forfait plus tard. Cette carte paie la différence.",
     "benefitDevices": "Appareils illimités",
     "benefitDevicesSub": "Téléphone, tablette, ordinateur, tout synchronisé",
     "benefitStorage": "500 Mo de stockage",
@@ -63,7 +64,7 @@
     "openingBody": "Une fenêtre de paiement Paddle devrait apparaître. Si ce n'est pas le cas, ton navigateur a peut-être bloqué la popup - recharge cette page pour réessayer."
   },
   "cryptoCheckout": {
-    "coins": "Tu choisis Bitcoin, Ethereum, Lightning, USDC ou USDT sur la page suivante, gérée par BlockBee. Elle ne demande ni nom ni e-mail. Un paiement en crypto est public sur sa blockchain.",
+    "coins": "Tu choisis Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin ou TON sur la page suivante, gérée par BlockBee. Elle ne demande ni nom ni e-mail. Un paiement en crypto est public sur sa blockchain.",
     "consent": "Démarrer Pro maintenant. Je comprends que les paiements en crypto sont définitifs et je renonce au droit de rétractation de 14 jours.",
     "consentNeeded": "Coche la case ci-dessus pour continuer.",
     "loadingTitle": "Vérification de ta commande...",

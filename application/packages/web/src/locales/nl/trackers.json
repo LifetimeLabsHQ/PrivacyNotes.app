@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "u",
+    "minutesSuffix": "min",
+    "hoursMinutes": "{{h}}u {{m}}min",
     "bpm": "bpm",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -142,6 +144,7 @@
     "takenCount_one": "{{count}} ingenomen",
     "takenCount_other": "{{count}} ingenomen",
     "namePlaceholder": "Naam medicijn",
+    "nameMissing": "Geef het medicijn een naam.",
     "dosagePlaceholder": "Dosering (bijv. 50mg)",
     "editMedication": "Medicijn bewerken",
     "removeMedication": "Medicijn verwijderen",
@@ -250,12 +253,18 @@
     "yes": "Ja",
     "no": "Nee",
     "unknownType": "Deze tracker heeft een nieuwere versie van de app nodig.",
+    "counterOf": "van {{limit}}",
+    "counterToday": "vandaag gebruikt",
+    "counterReached": "Je hebt de limiet van {{limit}} bereikt.",
+    "counterStartAgain": "{{name}} opnieuw starten vanaf 0",
+    "counterStartAgainConfirm": "Opnieuw starten?",
     "typeLabels": {
       "scale10": "Schaal (0-10)",
       "scale5": "Schaal (0-5)",
       "slider100": "Score (0-100)",
       "number": "Getal",
       "pair": "Twee getallen",
+      "counter": "Teller",
       "yesno": "Ja / Nee"
     }
   },
@@ -271,7 +280,7 @@
     "medicationCard": "Medicatiekaart",
     "medicationCardHelp": "\"Heb je je medicijnen ingenomen?\" op dit apparaat, alleen op een dag dat er een medicijn aan de beurt is.",
     "customHelp": "Trackers die je zelf een naam geeft: een schaal, een getal of ja of nee. Maximaal {{max}}.",
-    "customHelpPair": "Trackers die je zelf een naam geeft: een schaal, een getal, twee getallen of ja of nee. Maximaal {{max}}.",
+    "customHelpPair": "Trackers die je zelf een naam geeft: een schaal, een getal, twee getallen, een teller of ja of nee. Maximaal {{max}}.",
     "yourCustomTrackers": "Je eigen trackers",
     "categoryMoodMind": "Stemming & geest",
     "categoryBodyHealth": "Lichaam & gezondheid",
@@ -312,7 +321,10 @@
     "pairFirstPlaceholder": "Systolisch",
     "pairSecondPlaceholder": "Diastolisch",
     "pairUnit": "Eenheid (optioneel)",
-    "pairWaiting": "Opgeslagen zodra het eerste getal is ingevuld."
+    "pairWaiting": "Opgeslagen zodra het eerste getal is ingevuld.",
+    "nameMissing": "Geef de tracker een naam.",
+    "counterLimit": "Limiet (optioneel)",
+    "counterHelp": "Telt je gebruik over meerdere dagen op. Stel een limiet in, zoals 30 voor een scheermesje, en start opnieuw als je die bereikt."
   },
   "factors": {
     "prompt": "Wat hoorde bij je dag?",
@@ -402,5 +414,6 @@
   "flow": {
     "finish": "Afronden",
     "step": "Tracker {{n}} van {{total}}"
-  }
+  },
+  "showEveryDay": "Elke dag met deze tracker tonen"
 }

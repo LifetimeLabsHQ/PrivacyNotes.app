@@ -1,6 +1,5 @@
 {
   "header": {
-    "betaBadge": "beta",
     "downloads": "Download",
     "price": "Prezzo",
     "priceLine": "Quanto costano le tue app, tutte insieme",
@@ -290,7 +289,7 @@
   },
   "demoShot": {
     "kicker": "Provala dal vivo",
-    "caption": "L'app vera con note di esempio, direttamente nel tuo browser. Non viene salvato nulla."
+    "caption": "L'app vera con note di esempio, direttamente nel tuo browser. Quello che scrivi resta lì."
   },
   "badges": {
     "privacyToolsAlt": "PrivacyNotes su PrivacyTools.io",
@@ -358,7 +357,7 @@
     "freeImport": "Importa ed esporta, inclusi Keep e Obsidian",
     "freeAnon": "Accesso anonimo, senza email",
     "earlyAdopterBadge": "Early Adopter",
-    "payMethods": "Paga con carta oppure con Bitcoin, Ethereum, Lightning, USDC o USDT."
+    "payMethods": "Paga con carta oppure con Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin o TON."
   },
   "underHood": {
     "heading": "Sotto il cofano",
@@ -498,7 +497,7 @@
     "noLockIn": "Vincoli",
     "noEmail": "Email obbligatoria",
     "noDarkPatterns": "Dark pattern",
-    "noBackdoor": "Backdoor"
+    "noBackdoor": "Backdoor nascoste"
   },
   "noRecovery": {
     "heading": "La tua frase è la tua chiave",
@@ -506,7 +505,7 @@
     "noRecoveryTerm": "Nessun recupero",
     "noRecoveryDesc": "Con la custodia personale, se perdi la frase perdi le note",
     "deviceTerm": "Generata dal dispositivo",
-    "deviceDesc": "Con la custodia personale, la tua frase non tocca mai i nostri server",
+    "deviceDesc": "Con la custodia personale, la tua frase non tocca mai i nostri server, a meno che tu non aggiunga una passkey di accesso",
     "zkTerm": "Zero-knowledge",
     "zkDesc": "Con la custodia personale, il server non conserva nulla che apra le tue note",
     "writeTerm": "Annotala",
@@ -521,7 +520,7 @@
     "heading": "La tua cassaforte è pronta in meno di un minuto.",
     "importNote": "Stai cambiando app? Esporta da una qualsiasi di queste e importa in pochi minuti:",
     "importDemoTitle": "Prova prima la tua importazione nella demo",
-    "importDemoBody": "Il tuo file viene letto nel tuo browser, niente arriva ai nostri server e chiudendo la scheda viene cancellato."
+    "importDemoBody": "Il tuo file viene letto nel tuo browser e niente di ciò che contiene viene caricato. Resta in questo browser finché la demo non si riapre qui; cancella i dati del sito per rimuoverlo prima."
   },
   "about": {
     "tabs": {
@@ -529,7 +528,7 @@
       "hotkeys": "Scorciatoie",
       "rating": "Valutazione"
     },
-    "intro": "<brand/> riunisce le tue note, attività, password, diario, file, calendario, contatti e segnalibri in un unico posto, con il monitoraggio di umore e farmaci. Tutto è cifrato sul tuo dispositivo con una chiave creata dalla tua frase di recupero, e resta cifrato sui nostri server in <nowrap>Svizzera</nowrap>. Funziona offline, e l'app è open source.",
+    "intro": "<brand/> riunisce le tue note, attività, password, diario, file, calendario, contatti e segnalibri in un unico posto, con il monitoraggio di umore e farmaci. Tutto è cifrato sul tuo dispositivo con una chiave creata dalla tua frase di recupero, e resta cifrato sui nostri server in <nowrap>Svizzera</nowrap> e nell'UE. Funziona offline, e l'app è open source.",
     "versionHeading": "Versione",
     "windowVersion": "Versione {{version}}",
     "windowHelp": "Centro assistenza",
@@ -549,7 +548,7 @@
     "openSourceLink": "Leggi il codice su GitHub.com",
     "openSourceBody": "L'app e la cifratura al suo interno sono pubblicate, quindi chiunque può verificare come vengono cifrate le tue note.",
     "dataStorageHeading": "Conservazione dei dati",
-    "dataStorageBody": "Blob cifrati conservati a Zurigo, <flag/> Svizzera.",
+    "dataStorageBody": "Note, diario e tutto il resto cifrati e conservati a Zurigo, <flag/> Svizzera. Le nuove immagini e i nuovi file dell'app attuale sono conservati nell'UE.",
     "faviconsHeading": "Icone dei siti",
     "faviconsBody1": "Le icone dei siti (favicon) provengono da DuckDuckGo e Google, recuperate dal nostro server per tuo conto. Il tuo browser non contatta mai né l'uno né l'altro, quindi vedono il nostro server chiedere un dominio e non vedono mai te.",
     "faviconsBody2": "Le icone vengono memorizzate nella cache sul tuo dispositivo per 90 giorni. Nessuna richiesta include la tua identità e puoi disattivare le icone in Impostazioni > Elenchi."

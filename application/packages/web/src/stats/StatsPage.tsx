@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDown, ArrowUp, CalendarBlank, CalendarCheck, ChartLineUp, CheckCircle, DownloadSimple, Fire, PencilSimple, Pill, Pulse, SmileySad, Sparkle } from '../icons';
+import { ArrowDown, ArrowUp, CalendarBlank, CalendarCheck, ChartLineUp, CheckCircle, DownloadSimple, Fire, Notebook, PencilSimple, Pill, Pulse, SmileySad, Sparkle } from '../icons';
 import type { LocalNote } from '../db';
 import { NO_FACTORS, type FactorDef, type MedicationTemplate, type TrackerSettings } from '../trackerTypes';
 import { computeTrackerStats, journalsInRange } from '../trackerStats';
@@ -39,7 +39,7 @@ export type StatsView = { kind: 'home' } | { kind: 'tracker'; id: string } | { k
  * thing's own page with a Back row. No tabs, so nothing hides behind one.
  * Spec: docs/internal/specs/wellness-statistics.md (section 22)
  */
-export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_FACTORS, medications, isPro, onOpenUpgrade, weekReflection, onWeekReflectionChange, onOpenDay, onOpenExport, initialView }: {
+export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_FACTORS, medications, isPro, onOpenUpgrade, weekReflection, onWeekReflectionChange, onOpenDay, onOpenExport, initialView, onShowEntries, onShowInCalendar }: {
   notes: LocalNote[];
   isNoteLocked: (n: LocalNote) => boolean;
   trackerSettings: TrackerSettings;
@@ -53,6 +53,10 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
   /** Opens Settings > Import & Export on its Trackers tab. */
   onOpenExport?: () => void;
   initialView?: StatsView;
+  /** A tracker page's doors: its days in Journals, and on the Calendar.
+   *  Spec: docs/internal/specs/tracker-focus-771.md (section 5) */
+  onShowEntries?: (id: string) => void;
+  onShowInCalendar?: (id: string) => void;
 }) {
   const { t } = useTranslation('stats');
   const [view, setView] = useState<StatsView>(initialView ?? { kind: 'home' });
@@ -104,7 +108,10 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
     />
   );
 
-  if (view.kind === 'medication') {
+  // A medicine has no page of its own: a door that names one lands on the
+  // Medication page, which shows every medicine.
+  const isMedication = view.kind === 'medication' || (view.kind === 'tracker' && model.byId(view.id)?.kind === 'medication');
+  if (isMedication) {
     return (
       <div data-setting="stats.medication" className="space-y-6">
         {back(<span className="text-body font-semibold text-pn">{t('wellness.subTabs.medication')}</span>)}
@@ -121,6 +128,12 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
       <div className="space-y-6">
         {back(d ? <TrackerSwitcher model={model} current={d} onPick={(id) => setView({ kind: 'tracker', id })} /> : <span className="text-body font-semibold text-pn">{t('notes:settings.statsLabel')}</span>)}
         {range}
+        {d && (onShowEntries || onShowInCalendar) && (
+          <div className="flex flex-wrap gap-2">
+            {onShowEntries && <Button icon={<Notebook aria-hidden="true" />} onClick={() => onShowEntries(d.id)}>{t('wellness.seeEntries')}</Button>}
+            {onShowInCalendar && <Button icon={<CalendarBlank aria-hidden="true" />} onClick={() => onShowInCalendar(d.id)}>{t('wellness.showInCalendar')}</Button>}
+          </div>
+        )}
         {d ? (
           <ExploreSubTab model={model} trackerId={d.id} unlocked={unlocked} isPro={isPro} onOpenUpgrade={onOpenUpgrade} onOpenDay={onOpenDay} />
         ) : (
@@ -508,16 +521,18 @@ function TrackerRows({ model, onOpen }: { model: WellnessModel; onOpen: (d: Trac
 function TrackerSwitcher({ model, current, onPick }: { model: WellnessModel; current: TrackerDescriptor; onPick: (id: string) => void }) {
   const { t } = useTranslation('stats');
   const items = useMemo<SwitcherItem[]>(() => model.registry
-    .filter((d) => d.kind !== 'medication' && visibleInUi(d))
+    // The open tracker is always listed, so the heading names it even when it
+    // is stopped or has no value in the range.
+    .filter((d) => d.id === current.id || (d.kind !== 'medication' && visibleInUi(d)))
     .map((d) => ({ d, series: model.seriesOf(d) }))
-    .filter(({ series }) => hasData(series))
+    .filter(({ d, series }) => d.id === current.id || hasData(series))
     .sort((a, b) => (a.d.id === 'mood' ? -1 : b.d.id === 'mood' ? 1 : 0))
     .map(({ d, series }) => ({
       id: d.id,
       name: trackerName(d, t),
       tile: (size: number) => <TrackerTile d={d} size={size} />,
       detail: cardNumbers(d, series, t).headline,
-    })), [model, t]);
+    })), [model, t, current.id]);
   return <ItemSwitcher items={items} currentId={current.id} label={t('home.trackers')} onPick={onPick} />;
 }
 

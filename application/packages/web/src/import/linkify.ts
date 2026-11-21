@@ -2,49 +2,36 @@
  * Convert bare URLs and emails in a markdown body into `<...>` autolinks so
  * that tiptap-markdown's parser emits proper link nodes when the note loads.
  *
- * EVERY IMPORTER THAT PRODUCES A NOTE BODY MUST CALL THIS. It is not optional
+ * EVERY IMPORTER THAT PRODUCES A MARKDOWN NOTE BODY RUNS THIS, once, after
+ * its parse: its exported parse is wrapped in `withBareLinks` (bareLinks.ts),
+ * which passes every note whose body is Markdown through `linkifyMarkdown`
+ * and says in one message how many notes it changed. It is not optional
  * polish - skipping it ships notes whose links are dead until the user puts a
  * caret behind each one and presses space. The failure is invisible in review
- * (the text looks right, it just is not a link) and invisible in the type
- * system, which is how the markdown importer went without it from the start
- * and was only caught in v0.300.0 by importing a test note by hand.
+ * (the text looks right, it just is not a link), which is how the markdown
+ * importer went without it from the start, and a per-branch call missed a
+ * body path twice (standardNotes' converted checklists, bitwarden's
+ * identities). One pass over the finished notes has no branch to miss, and
+ * `tests/importerBareLinks.test.ts` fails for a registry entry whose parse
+ * neither runs it nor is named there as exempt.
  *
- * Wired in: appleJournal, appleNotes, bitwarden, evernote, googleKeep,
- * markdown, notesnook, obsidian, samsungNotes, simplenote, standardNotes,
- * upnote.
+ * The converters call this module themselves, because only they know which
+ * text is literal as they write Markdown from HTML or plain text
+ * (`linkifyLiteralText`), and count what they link: upnote, notesnook,
+ * standardNotes (with standardNotesSuper), siyuan's .sy reader, googleJournal,
+ * googleCalendar and raindrop (a bookmark's own notes, inside its JSON body).
+ * Each still runs `linkifyMarkdown` on what it writes, as before.
  *
- * CHECK THE CALL SITE, NOT THE IMPORT. An importer can call this on one body
- * path and miss another, which is what happened twice - standardNotes (the
- * converted-checklist branch bypassed it) and bitwarden (the identity branch)
- * - and what a file-level grep cannot see. For any importer with more than one
- * body producer, confirm they all converge before the call: samsungNotes,
- * notesnook, obsidian and googleKeep funnel every branch into one variable
- * first, which is the shape to prefer. bitwarden cannot, because its branches
- * are switch cases over item types, so there each markdown branch needs its
- * own call and the count of branches is the thing to check against.
- *
- * Deliberately NOT wired in, and each for a reason that must be checked rather
- * than assumed:
- *   - `folderImport.ts`, `blobImport.ts`, `safariArchive.ts` - build no note
- *     bodies at all (folder tree helpers, attachment blobs, archive readers).
- *   - `browserBookmarks.ts`, `passwordCsv.ts` - structured bodies (a bookmark's
- *     JSON `{ url }`, a login's vault JSON) consumed by forms, not markdown -
- *     the same exemption as bitwarden's vault items below.
+ * Never linked, and each for a reason that must be checked rather than
+ * assumed:
+ *   - structured bodies (a bookmark's JSON `{ url }`, a login's vault JSON, a
+ *     contact card, a drawing, a file) consumed by forms, not markdown: the
+ *     pass reads only the Markdown types (`MARKDOWN_BODY` in bareLinks.ts).
+ *     Linkifying one would wrap a URL inside a JSON string value and corrupt
+ *     the stored field.
  *   - `privacynotes.ts` - restores our OWN export, whose bodies were already
  *     serialized out of the editor with real link nodes. A restore should
  *     reproduce what was backed up, not rewrite it.
- *   - bitwarden's login / card / sshKey items - those bodies are JSON consumed
- *     by the vault forms (`serializeLoginBody` and friends), NOT markdown.
- *     Linkifying them would wrap a URL inside a JSON string value and corrupt
- *     the stored field. Any future structured note type inherits this
- *     exemption. Its other TWO branches, secure-note and identity, are plain
- *     markdown pushed as `type: 'note'` and both must be wired in. Identity
- *     only became so in the v0.300.0 call-site audit: this exemption list
- *     named the three JSON types, which read as complete while silently
- *     accounting for only four of bitwarden's five branches.
- *
- * If you add an importer, you are in the first list unless you can name which
- * of those reasons puts you in the second.
  *
  * Why this exists:
  *   TipTap's Link extension is configured with `autolink: true`, but
@@ -269,6 +256,19 @@ export function linkifyMarkdown(input: string): string {
     parts.push(linkifyPlainSegment(input.slice(cursor)));
   }
   return parts.join('');
+}
+
+/** An autolink as the link pass writes one: `<https://...>`, `<mailto:...>` or `<me@example.com>`. */
+const AUTOLINK_RE = /<(?:https?:\/\/[^<>\s]+|mailto:[^<>\s]+|[^<>\s@]+@[^<>\s@]+)>/g;
+const autolinks = (text: string): number => text.match(AUTOLINK_RE)?.length ?? 0;
+
+/** `linkifyMarkdown` for a converter that links its own text (upnote,
+ *  notesnook): the autolinks it adds count in `counter.bareLinks`, so the
+ *  converter says "Made bare URLs clickable" only when it made a link. */
+export function linkifyCounting(body: string, counter: { bareLinks: number }): string {
+  const out = linkifyMarkdown(body);
+  if (out !== body) counter.bareLinks += Math.max(0, autolinks(out) - autolinks(body));
+  return out;
 }
 
 function linkifyPlainSegment(text: string): string {

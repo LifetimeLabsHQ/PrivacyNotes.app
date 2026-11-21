@@ -1,6 +1,5 @@
 {
   "header": {
-    "betaBadge": "beta",
     "downloads": "下載",
     "price": "價格試算",
     "priceLine": "把你的 App 費用加起來看看",
@@ -290,7 +289,7 @@
   },
   "demoShot": {
     "kicker": "線上實際體驗",
-    "caption": "內含範例筆記的真實應用程式，直接在瀏覽器中操作。不會儲存任何內容。"
+    "caption": "內含範例筆記的真實應用程式，直接在瀏覽器中操作。你輸入的內容會留在這個瀏覽器裡。"
   },
   "badges": {
     "privacyToolsAlt": "PrivacyNotes 於 PrivacyTools.io",
@@ -358,7 +357,7 @@
     "freeImport": "匯入與匯出，包含 Keep 與 Obsidian",
     "freeAnon": "匿名登入，不需電子郵件",
     "earlyAdopterBadge": "早鳥",
-    "payMethods": "可使用信用卡付款，或使用 Bitcoin、Ethereum、Lightning、USDC 或 USDT。"
+    "payMethods": "可使用信用卡付款，或使用 Bitcoin、Ethereum、Lightning、USDC、USDT、Litecoin、Bitcoin Cash、Dogecoin 或 TON。"
   },
   "underHood": {
     "heading": "深入底層",
@@ -495,7 +494,7 @@
     "noLockIn": "平台鎖定",
     "noEmail": "必填電子郵件",
     "noDarkPatterns": "誘導設計",
-    "noBackdoor": "後門"
+    "noBackdoor": "隱藏後門"
   },
   "noRecovery": {
     "heading": "你的助憶詞就是你的金鑰",
@@ -503,7 +502,7 @@
     "noRecoveryTerm": "無法救援",
     "noRecoveryDesc": "在自我保管下，遺失助憶詞就會失去筆記",
     "deviceTerm": "裝置端產生",
-    "deviceDesc": "在自我保管下，你的助憶詞從不觸及我們的伺服器",
+    "deviceDesc": "在自我保管下，除非你新增登入用的密碼金鑰，否則你的助憶詞從不觸及我們的伺服器",
     "zkTerm": "零知識",
     "zkDesc": "在自我保管下，伺服器上沒有任何能打開你筆記的東西",
     "writeTerm": "抄下來",
@@ -518,7 +517,7 @@
     "heading": "不用一分鐘，就能建立你的保險庫。",
     "importNote": "從其他應用程式搬家？以下任一款都能匯出，幾分鐘內就匯入完成：",
     "importDemoTitle": "先在示範版試試匯入你自己的檔案",
-    "importDemoBody": "你的檔案在瀏覽器中讀取，不會傳到我們的伺服器，關閉分頁就會清除。"
+    "importDemoBody": "你的檔案在瀏覽器中讀取，其中的內容都不會上傳。它會留在這個瀏覽器裡，直到下次在這裡開啟示範版為止；若想提早移除，請清除網站資料。"
   },
   "about": {
     "tabs": {
@@ -526,7 +525,7 @@
       "hotkeys": "快速鍵",
       "rating": "評分"
     },
-    "intro": "<brand/> 把你的筆記、任務、密碼、日誌、檔案、日曆、聯絡人和書籤放在同一個地方，還有心情與用藥追蹤。所有內容都在你的裝置上，以你的復原助憶詞產生的金鑰加密，在我們位於<nowrap>瑞士</nowrap>的伺服器上也保持加密。可離線使用，而且 App 是開放原始碼。",
+    "intro": "<brand/> 把你的筆記、任務、密碼、日誌、檔案、日曆、聯絡人和書籤放在同一個地方，還有心情與用藥追蹤。所有內容都在你的裝置上，以你的復原助憶詞產生的金鑰加密，在我們位於<nowrap>瑞士</nowrap>與歐盟的伺服器上也保持加密。可離線使用，而且 App 是開放原始碼。",
     "versionHeading": "版本",
     "windowVersion": "版本 {{version}}",
     "windowHelp": "說明中心",
@@ -546,7 +545,7 @@
     "openSourceLink": "在 GitHub.com 上閱讀原始碼",
     "openSourceBody": "應用程式與其中的加密都已公開，任何人都能檢驗你的筆記是如何加密的。",
     "dataStorageHeading": "資料儲存",
-    "dataStorageBody": "加密資料塊儲存於 <flag/> 瑞士蘇黎世。",
+    "dataStorageBody": "加密的筆記、日誌和其他內容儲存於 <flag/> 瑞士蘇黎世。目前版本 App 新增的圖片與檔案儲存於歐盟。",
     "faviconsHeading": "網站圖示",
     "faviconsBody1": "網站圖示（favicon）來自 DuckDuckGo 和 Google，由我們的伺服器代你抓取。你的瀏覽器從不直接連到任何一方，所以他們看到的是我們的伺服器在詢問網域，永遠看不到你。",
     "faviconsBody2": "圖示會在你的裝置上快取 90 天。任何請求都不含你的身分，你也可以在設定 > 清單關閉圖示。"

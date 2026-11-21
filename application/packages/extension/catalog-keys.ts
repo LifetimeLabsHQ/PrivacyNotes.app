@@ -33,6 +33,9 @@ export const BORROWED_KEYS: readonly string[] = [
   'shell:vaultItem.fieldName',
   'shell:vaultItem.copied',
   'notes:vaultFilter',
+  // Spec: docs/contrib/passkeys.md (section 5.5: "New login" and "Has a passkey" are the app's words)
+  'notes:vaultPasskey.hasPasskey',
+  'shell:quickAdd.types.login',
   'shell:tagsRail.pinned',
   'shell:tagsRail.vault',
   'shell:tagsRail.bookmarks',
@@ -57,4 +60,7 @@ export const BORROWED_KEYS: readonly string[] = [
   'common:state.saving',
   'security:passcodeInput',
   'security:connectedAccounts.disconnect',
+  // The Vault's notice for a login edit the queue had to drop (beta #130).
+  'shell:markdown.notSaved',
+  'common:updateToast.dismiss',
 ];

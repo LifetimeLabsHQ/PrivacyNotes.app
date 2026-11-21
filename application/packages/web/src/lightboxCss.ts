@@ -26,17 +26,12 @@ export const LIGHTBOX_CSS = `.cl-lb{position:fixed;inset:0;z-index:100;backgroun
 .cl-lb .lb-btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .cl-lb .lb-btn[hidden]{display:none}
 .cl-lb .lb-btn kbd{margin-left:2px;padding:0 5px;border:1px solid rgba(255,255,255,.28);border-radius:5px;font:inherit;font-size:var(--fs-small);line-height:17px;color:#c3c8cf;font-variant-numeric:tabular-nums}
-.cl-lb .lb-copy .ic-done{display:none}
-.cl-lb .lb-copy.on{color:#5ee08f;border-color:#5ee08f}
-.cl-lb .lb-copy.on .ic-copy{display:none}
-.cl-lb .lb-copy.on .ic-done{display:block}
 .cl-lb>button{position:absolute;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:10px;background:rgba(255,255,255,.1);color:#fff;cursor:pointer}
 .cl-lb>button:hover{background:rgba(255,255,255,.2)}
 .cl-lb .lb-x{top:16px;right:16px}
 .cl-lb .lb-p{left:16px;top:50%;margin-top:-22px}
 .cl-lb .lb-n{right:16px;top:50%;margin-top:-22px}
 .cl-lb>button[hidden]{display:none}
-@media(hover:none){.cl-lb .lb-copy kbd{display:none}}
 .cl-lb img.lb-zoomable{cursor:zoom-in}
 .cl-lb.lb-zoom{display:block;padding:0;overflow:auto;overscroll-behavior:contain;background:#08090c}
 .cl-lb.lb-zoom .lb-fig{flex-direction:row;align-items:center;max-width:none;width:max-content;min-height:100%}

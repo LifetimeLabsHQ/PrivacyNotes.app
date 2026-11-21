@@ -9,7 +9,7 @@ import { faviconUrl, domainFromUrlString } from './favicon';
 import { prefetchFavicon } from './faviconQueue';
 import { HoverLabel } from './HoverLabel';
 import { exemptOpts } from './i18nExempt';
-import { Copy, Check, Download, ArrowSquareOut, X, Key, CreditCard, Lock, Globe, User, Calendar, MapPin, Tag, Shield, RocketLaunch } from './icons';
+import { Copy, Check, Download, ArrowSquareOut, X, Key, CreditCard, Fingerprint, Lock, Globe, User, Calendar, MapPin, Tag, Shield, RocketLaunch } from './icons';
 import { openExternal } from './openExternal';
 import { DETAIL_COLUMN, DetailAction, DetailCopyAction, DetailHero, DetailLink, DetailNotes, DetailRow, DetailTile } from './detailPane';
 import { useCopyToClipboard } from './clipboard';
@@ -23,6 +23,7 @@ import { mergeVaultDraft } from './vaultBody';
 import { saveFailureText } from './saveFile';
 import { TotpRing, groupTotpCode } from './TotpRing';
 import { CustomFieldRow, RevealAction } from './CustomFields';
+import { formatInstant } from './intlFormat';
 
 // Own chunk: it brings the editor's file chip, which only an item's Files section needs.
 const VaultFiles = lazy(() => import('./VaultFiles'));
@@ -335,6 +336,16 @@ function LoginViewMode({ note, onEdit, copy, copied, isPro, onOpenUpgrade, files
         {data.totp.trim() && (
           <TotpField raw={data.totp} isPro={isPro} onOpenUpgrade={onOpenUpgrade} copy={copy} copied={copied} />
         )}
+
+        {/* A site passkey: the site, the account and the day it was added.
+            No key, no secret, no copy button: the extension signs with it.
+            Spec: docs/contrib/passkeys.md (section 5.2) */}
+        {data.passkeys.map((p) => (
+          <DetailRow key={p.credentialId} label={t('notes:vaultPasskey.forSite', { rpId: p.rpId })} icon={<Fingerprint />}>
+            <span className="block break-all" data-passkey-row="">{p.userName || p.displayName}</span>
+            <span className="block text-small text-pn-muted">{t('security:twoFactor.addedOn', { date: formatInstant(p.created, 'date') })}</span>
+          </DetailRow>
+        ))}
 
         {/* The address comes after the credentials: the hero already names
             the site, so this row is a detail rather than the headline. */}

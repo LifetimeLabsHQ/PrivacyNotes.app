@@ -115,10 +115,13 @@
       "red": "Rot",
       "orange": "Orange",
       "yellow": "Gelb",
+      "lime": "Limettengrün",
       "green": "Grün",
       "teal": "Türkis",
       "blue": "Blau",
+      "indigo": "Indigo",
       "purple": "Lila",
+      "grape": "Violett",
       "pink": "Pink"
     }
   },
@@ -241,6 +244,8 @@
     "words_other": "{{formatted}} Wörter",
     "characters_one": "{{formatted}} Zeichen",
     "characters_other": "{{formatted}} Zeichen",
+    "lines_one": "{{formatted}} Zeile",
+    "lines_other": "{{formatted}} Zeilen",
     "tasksChecked_one": "{{done}} von {{formatted}} abgehakt",
     "tasksChecked_other": "{{done}} von {{formatted}} abgehakt",
     "syncLimit": " · {{share}} des Sync-Limits von 1 MB",
@@ -275,6 +280,10 @@
     "collapse": "Codeblock einklappen",
     "expand": "Codeblock ausklappen",
     "placeholder": "Tippe oder füge Code ein. Für Farben wählst du oben eine Sprache."
+  },
+  "fold": {
+    "collapse": "Abschnitt einklappen",
+    "expand": "Abschnitt ausklappen"
   },
   "math": {
     "sourceLabel": "LaTeX-Quelltext"
@@ -312,7 +321,7 @@
     "hiddenNote": "Sie funktionieren weiter über Tastenkürzel und Markdown.",
     "hiddenDrop": "Zieh eine Schaltfläche hierher, um sie auszublenden.",
     "arrangeTitle": "Schaltflächen",
-    "markdownViewNote": "Die Markdown-Ansicht hat ihre eigenen, festen Schaltflächen.",
+    "markdownViewNote": "Die Markdown-Ansicht zeigt dieselben Schaltflächen. Die, die die formatierte Ansicht brauchen, sind dort abgeblendet und funktionieren weiter in der formatierten Ansicht.",
     "hiddenEmpty": "Nichts ist ausgeblendet.",
     "alwaysVisible": "Immer sichtbar",
     "pinned": "Öffnet ein Fenster, bleibt also in der Leiste oder wird ausgeblendet",
@@ -339,7 +348,7 @@
       "notelink": "Notiz-Link",
       "audio": "Aufnahme",
       "attachMenu": "Anhängen",
-      "separator": "Senkrechter Trenner",
+      "separator": "Trenner in der Symbolleiste",
       "markdownView": "Markdown anzeigen"
     },
     "positionTitle": "Position der Leiste",

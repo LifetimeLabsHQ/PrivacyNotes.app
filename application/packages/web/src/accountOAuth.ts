@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@notes/shared';
 import { trustAwareStorage } from './trustStorage';
 import { guardAccountSessionWrite, MfaCancelledError, mfaSessionIdentity } from './sessionWriteGuard';
 import { isDemoMode } from './demo';
+import { jwtClaims } from './jwtClaims';
 
 export type AccountOAuthProvider = 'google' | 'apple' | 'github';
 type ExchangeContext = {
@@ -19,19 +20,9 @@ export function supabaseAuthStorageKey(url: string): string {
   return `sb-${new URL(url).hostname.split('.')[0]}-auth-token`;
 }
 
-/** Query-code callbacks are consumed only after broker preflight. Legacy
- * implicit returns retain the SDK's existing detection behavior. */
-export function detectAutomaticOAuthSession(): boolean {
-  return typeof window === 'undefined' || !new URLSearchParams(window.location.search).has('code');
-}
-
 function tokenClaims(token: string): { sub?: unknown; session_id?: unknown; aal?: unknown; exp?: unknown; app_metadata?: { pubkey?: unknown } } {
-  try {
-    const raw = token.split('.')[1];
-    if (!raw) throw new Error('Invalid token');
-    const value = JSON.parse(atob(raw.replace(/-/g, '+').replace(/_/g, '/')));
-    if (value && typeof value === 'object' && !Array.isArray(value)) return value;
-  } catch { /* invalid token */ }
+  const value = jwtClaims(token);
+  if (value) return value;
   throw new Error('The sign-in response was invalid. Start sign-in again.');
 }
 

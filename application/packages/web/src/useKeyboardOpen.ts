@@ -128,16 +128,20 @@ export function useKeyboardOpen(): boolean {
     const check = () => {
       // The on-screen keyboard only changes viewport HEIGHT, never width. A
       // width change is a window resize / orientation change, so re-baseline to
-      // the new height and report closed. Without this, dragging a desktop
+      // the new height. Without this, dragging a desktop
       // window shorter reads as a keyboard opening and hides mobile chrome (the
       // header hamburger), since the now-narrow window also counts as mobile.
+      // A turn of the device with the keyboard up is a width change too, and
+      // the height it leaves is the keyboard's: the new baseline is the
+      // layout viewport, which iOS does not shrink for the keyboard. The
+      // keyboard then still counts as up, the shell keeps its cut, and iOS
+      // does not push the page up to the caret (GitHub #778). Where the two
+      // are equal (a desktop window, Android, which resizes the layout with
+      // the keyboard) nothing changes.
       if (vv.width !== lastWidth.current) {
         lastWidth.current = vv.width;
-        maxHeight.current = vv.height;
+        maxHeight.current = Math.max(vv.height, window.innerHeight);
         publish();
-        setSoftKeyboardUp(false);
-        setOpen(false);
-        return;
       }
       const h = vv.height;
       if (h > maxHeight.current) {

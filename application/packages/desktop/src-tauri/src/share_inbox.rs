@@ -186,12 +186,22 @@ fn parse_item(dir: &Path, id: &str, bytes: &[u8]) -> Option<SharedItem> {
         size: None,
     };
     match raw.kind.as_str() {
-        "url" => Some(SharedItem {
-            kind: "url",
-            url: Some(web_url(raw.url)?),
-            title: capped(raw.title, MAX_SHORT_CHARS),
-            ..base
-        }),
+        "url" => match web_url(raw.url.clone()) {
+            Some(url) => Some(SharedItem { kind: "url", url: Some(url), title: capped(raw.title, MAX_SHORT_CHARS), ..base }),
+            // A web address the share sheet already reported as saved, too
+            // long or refused by the parser (Android writes any
+            // `^https?://\S+$` text as a link): kept as text, not deleted
+            // (beta issue 176). Any other scheme is still refused.
+            None if raw.url.as_deref().is_some_and(|u| {
+                let u = u.trim_start().as_bytes();
+                u.get(..7).is_some_and(|h| h.eq_ignore_ascii_case(b"http://"))
+                    || u.get(..8).is_some_and(|h| h.eq_ignore_ascii_case(b"https://"))
+            }) =>
+            {
+                Some(SharedItem { kind: "text", text: Some(capped(raw.url, MAX_TEXT_CHARS)?), ..base })
+            }
+            None => None,
+        },
         "text" => Some(SharedItem { kind: "text", text: Some(capped(raw.text, MAX_TEXT_CHARS)?), ..base }),
         "file" => {
             let meta = std::fs::symlink_metadata(dir.join(PAYLOAD_FILE)).ok()?;
@@ -413,6 +423,22 @@ mod tests {
         put(&dir, c, r#"{"v":2,"kind":"text","text":"from the future"}"#, None);
         assert!(list_in(&dir).is_empty());
         assert!(!dir.join(A).exists() && !dir.join(B).exists() && !dir.join(c).exists());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    /// Beta issue 176: a web link the Rust side cannot take as a link is
+    /// kept as a text note, not deleted after the sheet said Saved.
+    #[test]
+    fn keeps_a_web_link_it_cannot_parse_as_text() {
+        let dir = inbox();
+        let long = format!("https://example.org/{}", "a".repeat(MAX_URL_CHARS));
+        put(&dir, A, &format!(r#"{{"v":1,"kind":"url","url":"{long}"}}"#), None);
+        put(&dir, B, r#"{"v":1,"kind":"url","url":"http://[broken"}"#, None);
+        let items = list_in(&dir);
+        assert_eq!(items.len(), 2);
+        assert!(items.iter().all(|i| i.kind == "text" && i.url.is_none()));
+        assert!(items.iter().any(|i| i.text.as_deref() == Some(long.as_str())));
+        assert!(items.iter().any(|i| i.text.as_deref() == Some("http://[broken")));
         std::fs::remove_dir_all(&dir).unwrap();
     }
 

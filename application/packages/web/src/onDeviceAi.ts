@@ -1,8 +1,9 @@
-import { useSyncExternalStore } from 'react';
 import type { LocalNote } from './db';
 import type { NotesIndexOps } from './searchIndexSync';
-import { MAP_ORIGIN } from './hosts';
-import { isDemoMode } from './demo';
+import { PLUGINS_ORIGIN } from './hosts';
+import { useSyncExternalStore } from 'react';
+import { isDemoMode, proUnlocked } from './demo';
+import { MEANING_FLAG, pluginFlagOn, pluginState, setPlanPro, setPluginState, usePluginState, type PluginState } from './plugins/pluginState';
 
 /**
  * Smart connections (Settings > Editor > Behavior, under Suggested
@@ -16,7 +17,7 @@ import { isDemoMode } from './demo';
  * This file is the light half, on the boot path: the switch, the state and
  * thin doors that load `onDeviceAiModel.ts` when needed.
  *
- * Released (owner, 2026-11-14): the model is on our map host and the FAQ
+ * Released (owner, 2026-11-14): the model is on our plugin host and the FAQ
  * answer "no-ai" describes it. The switch stays, so one line hides it again.
  * Spec: docs/internal/plans/related-notes.md (part 2)
  */
@@ -25,6 +26,18 @@ const ON_DEVICE_AI_RELEASED = true;
 
 export function onDeviceAiShown(): boolean {
   return ON_DEVICE_AI_RELEASED || import.meta.env.DEV;
+}
+
+/**
+ * The one switch for everything Settings > Plugins shows a user: the rail
+ * item, the Editor link row, the door text, the in-note chips and menu items,
+ * the scan action and the settings search entries. A DEV build shows them.
+ * Spec: docs/internal/plans/plugins.md (D19)
+ */
+const PLUGINS_RELEASED = true;
+
+export function pluginsShown(): boolean {
+  return PLUGINS_RELEASED || import.meta.env.DEV;
 }
 
 /**
@@ -40,13 +53,13 @@ export const MEANING_FILES = [
 ] as const;
 export const MEANING_BYTES = MEANING_FILES.reduce((sum, f) => sum + f.bytes, 0);
 
-export const ENABLED_KEY = 'privacynotes.onDeviceAi.meaning';
+export const ENABLED_KEY = MEANING_FLAG;
 const NO_DOOR_KEY = 'privacynotes.onDeviceAi.noDoor';
 const BASE_KEY = 'privacynotes.onDeviceAi.modelBase';
 export const CACHE = 'pn-on-device-ai';
 
 /**
- * Where the model files are served: our map host, in its `models/` folder
+ * Where the model files are served: our plugin host, in its `models/` folder
  * (`.github/workflows/model-upload.yml` puts them there). A development build
  * reads the local copy the dev server serves from
  * `packages/web/node_modules/.cache/pn-models/` (made by `convert.mjs`), or
@@ -62,53 +75,51 @@ export function modelBase(): string {
     }
     return '/node_modules/.cache/pn-models/';
   }
-  return `${MAP_ORIGIN}/models/`;
+  return `${PLUGINS_ORIGIN}/models/`;
 }
 
-/**
- * `kept`: off, with the model still in this device's cache, so turning it on
- * again reads the cache and downloads nothing. `off`: no model here (or not
- * checked yet).
- */
-export type MeaningState =
-  | { status: 'off' }
-  | { status: 'kept' }
-  | { status: 'unavailable' }
-  | { status: 'downloading'; loaded: number; total: number }
-  | { status: 'loading' }
-  | { status: 'on' }
-  | { status: 'error' };
-
-let state: MeaningState = { status: 'off' };
-const listeners = new Set<() => void>();
+/** The state of Smart connections: its entry in the plugin store (`plugins/pluginState.ts`). */
+export type MeaningState = PluginState;
 
 /** The heavy half (onDeviceAiModel.ts) reports progress through this. */
 export function setMeaningState(next: MeaningState) {
-  state = next;
-  for (const l of listeners) l();
+  setPluginState('smartConnections', next);
 }
 
 export function useMeaningState(): MeaningState {
+  return usePluginState('smartConnections');
+}
+
+/**
+ * Whether the meaning index holds every note: Find duplicates and the tag
+ * and folder suggestions wait for it ("Reading your notes").
+ */
+let indexReady = false;
+const readyListeners = new Set<() => void>();
+
+export function setMeaningIndexReady(ready: boolean): void {
+  if (ready === indexReady) return;
+  indexReady = ready;
+  for (const l of readyListeners) l();
+}
+
+export function useMeaningIndexReady(): boolean {
   return useSyncExternalStore(
     (l) => {
-      listeners.add(l);
-      return () => listeners.delete(l);
+      readyListeners.add(l);
+      return () => readyListeners.delete(l);
     },
-    () => state,
+    () => indexReady,
   );
 }
 
-function enabledHere(): boolean {
-  try {
-    return localStorage.getItem(ENABLED_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
+const enabledHere = () => pluginFlagOn('smartConnections');
 
 type MeaningModule = {
   index: NotesIndexOps;
+  reset: typeof import('./onDeviceAiModel').resetMeaningIndex;
   nearest: typeof import('./onDeviceAiModel').nearestInMeaning;
+  nearestScored: typeof import('./onDeviceAiModel').nearestScored;
   turnOn: typeof import('./onDeviceAiModel').turnMeaningOn;
 };
 
@@ -118,20 +129,44 @@ let meaningLoading: Promise<MeaningModule> | null = null;
 function loadMeaning(): Promise<MeaningModule> {
   meaningLoading ??= import('./onDeviceAiModel').then((m) => (meaning = {
     index: m.MEANING_INDEX_OPS,
+    reset: m.resetMeaningIndex,
     nearest: m.nearestInMeaning,
+    nearestScored: m.nearestScored,
     turnOn: m.turnMeaningOn,
   }));
   return meaningLoading;
 }
 
 /**
- * At boot: a device that turned meaning on loads the model from its cache.
- * Never in the demo: it shares this origin's flag with a signed-in tab, and it
- * cannot download the model.
+ * At boot, and whenever the plan changes: a device that turned a plugin on
+ * loads it from its cache, on a Pro account only. A free account (a refund)
+ * keeps the files, but nothing loads, and the card shows the Pro mark (D23).
+ * Smart connections builds its index at boot; the other plugins load on first
+ * use. Never in the demo: it shares this origin's flags with a signed-in tab,
+ * and it cannot download plugins.
+ * Spec: docs/internal/plans/plugins.md (section 3, Boot)
  */
-export function restoreMeaning(): void {
-  if (!onDeviceAiShown() || isDemoMode() || state.status !== 'off' || !enabledHere()) return;
-  void loadMeaning().then((m) => m.turnOn());
+export function restorePlugins(isPro: boolean | undefined): void {
+  setPlanPro(isPro === true);
+  if (!onDeviceAiShown() || isDemoMode() || isPro === undefined || !enabledHere()) return;
+  const { status } = pluginState('smartConnections');
+  if (!proUnlocked(isPro)) {
+    if (status === 'needsPro') return;
+    if (meaning) void import('./onDeviceAiModel').then((m) => m.suspendMeaning());
+    else setMeaningState({ status: 'needsPro' });
+    return;
+  }
+  if (status === 'off' || status === 'needsPro') void loadMeaning().then((m) => m.turnOn());
+}
+
+/**
+ * The index of the account that leaves goes with it: a sign-out and an
+ * account switch call this, so the next account's notes view builds its own
+ * and no vector of the earlier account is scored in its searches
+ * (beta.privacynotes.app #214 item 4). The model stays loaded.
+ */
+export function dropMeaningIndex(): void {
+  meaning?.reset();
 }
 
 /** The meaning index as `useIndexSync` drives it; fed no notes while the model is off. */
@@ -145,6 +180,11 @@ export const MEANING_INDEX: NotesIndexOps = {
 /** The notes nearest in meaning to one note, best first. Empty while meaning is off. */
 export function meaningHits(note: Pick<LocalNote, 'id' | 'title' | 'body'>, skip: (id: string) => boolean, limit: number): string[] {
   return meaning ? meaning.nearest(note, skip, limit) : [];
+}
+
+/** The nearest notes with their scores, for the tag and folder suggestions. Empty while meaning is off. */
+export function meaningNeighbors(note: Pick<LocalNote, 'id' | 'title' | 'body'>, skip: (id: string) => boolean, limit: number): { id: string; score: number }[] {
+  return meaning ? meaning.nearestScored(note, skip, limit) : [];
 }
 
 /** "Not now": hides the panel's offer line in every note until the app starts again. Memory only. */

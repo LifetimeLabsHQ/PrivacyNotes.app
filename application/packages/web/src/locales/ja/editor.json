@@ -115,10 +115,13 @@
       "red": "赤",
       "orange": "オレンジ",
       "yellow": "黄色",
+      "lime": "ライム",
       "green": "緑",
       "teal": "ティール",
       "blue": "青",
+      "indigo": "藍色",
       "purple": "紫",
+      "grape": "ぶどう色",
       "pink": "ピンク"
     }
   },
@@ -238,6 +241,7 @@
   "wordCount": {
     "words_other": "{{formatted}}語",
     "characters_other": "{{formatted}}文字",
+    "lines_other": "{{formatted}}行",
     "tasksChecked_other": "{{formatted}}件中{{done}}件チェック済み",
     "syncLimit": " · 同期の上限1 MBの{{share}}",
     "overSyncLimit": " · 同期の上限1 MBを超えているため、このデバイスにのみ保存されます",
@@ -270,6 +274,10 @@
     "collapse": "コードブロックを折りたたむ",
     "expand": "コードブロックを展開",
     "placeholder": "コードを入力するか貼り付けます。色を付けるには、上で言語を選びます。"
+  },
+  "fold": {
+    "collapse": "セクションを折りたたむ",
+    "expand": "セクションを展開"
   },
   "math": {
     "sourceLabel": "LaTeX ソース"
@@ -307,7 +315,7 @@
     "hiddenNote": "ショートカットとMarkdownで引き続き使えます。",
     "hiddenDrop": "ボタンをここにドロップすると非表示になります。",
     "arrangeTitle": "ボタン",
-    "markdownViewNote": "Markdown表示には独自の固定ボタンセットがあります。",
+    "markdownViewNote": "Markdown表示にも同じボタンが表示されます。書式付き表示が必要なボタンはそこでは淡色表示になり、書式付き表示では引き続き使えます。",
     "hiddenEmpty": "非表示のものはありません。",
     "alwaysVisible": "常に表示",
     "pinned": "パネルを開くため、バーに置くか非表示にします",
@@ -334,7 +342,7 @@
       "notelink": "ノートリンク",
       "audio": "録音",
       "attachMenu": "添付",
-      "separator": "縦の区切り線",
+      "separator": "ツールバーの区切り線",
       "markdownView": "Markdownを表示"
     },
     "positionTitle": "バーの位置",

@@ -2,15 +2,15 @@ import { zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
 import { normalizeTag } from '../notesRepo';
 import { buildFolderTree } from './folderImport';
-import { linkifyMarkdown } from './linkify';
+import { withBareLinks } from './bareLinks';
 import { importBlobs } from './blobImport';
 import type { ImportedNote, ParsedImport } from './types';
-import { isJunkEntry, noteLink } from './importHelpers';
+import { escapeTypedTags, isJunkEntry, noteLink } from './importHelpers';
 import { toLocalIso } from '../notesViewUtils';
 import i18n from '../i18n';
 import { LOCATION_KEY, importedLocation, type NoteLocation } from '../noteLocation';
 
-const msg = (key: string, options?: Record<string, unknown>): string =>
+const msg = (key: string, options: Record<string, unknown> = {}): string =>
   i18n.t(`importLog:evernote.${key}`, options);
 
 /**
@@ -559,7 +559,8 @@ function enmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     // writes the target's title as the link text, so that is the handle
     // we resolve against.
     if (/^evernote:/i.test(href)) {
-      const label = inner || 'Untitled';
+      // The title as typed, with no escape, so the link finds the note.
+      const label = inlineOnly(el.textContent ?? '') || 'Untitled';
       ctx.flags.noteLinks++;
       return noteLink(label, label);
     }
@@ -581,7 +582,10 @@ function enmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
 
     if (mime.startsWith('image/')) return `\n\n![](${token})\n\n`;
 
-    const name = ctx.blobs.get(token)?.name ?? 'Attachment';
+    // The label must not carry brackets: a "]" ends the link early and
+    // blobImport's rewrite would never find the file. The stored file keeps
+    // its real name from the blob.
+    const name = (ctx.blobs.get(token)?.name ?? 'Attachment').replace(/[[\]]/g, '');
     let out = `\n\n[${name}](${token})\n\n`;
 
     // Voice notes carry Evernote's auto-transcription. It is real content
@@ -596,7 +600,7 @@ function enmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
 
   function walk(node: Node, indent: string): string {
     if (node.nodeType === 1 && depth >= MAX_ENML_DEPTH) {
-      const text = flatText(node as Element);
+      const text = escapeTypedTags(flatText(node as Element));
       return text ? `\n${text}\n\n` : '';
     }
     depth++;
@@ -608,7 +612,8 @@ function enmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
   }
 
   function walkNode(node: Node, indent: string): string {
-    if (node.nodeType === 3) return node.textContent ?? '';
+    // Typed text: a `<word>` in it is text, not a tag (beta #149).
+    if (node.nodeType === 3) return escapeTypedTags(node.textContent ?? '');
     if (node.nodeType !== 1) return '';
 
     const el = node as Element;
@@ -722,7 +727,8 @@ function enmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
         return inner ? `<sub>${inner}</sub>` : '';
       }
       case 'code': {
-        const inner = inlineOnly(children());
+        // The raw text: a code span shows an escape as a backslash.
+        const inner = inlineOnly(el.textContent ?? '');
         return inner ? `\`${inner}\`` : '';
       }
 
@@ -1013,7 +1019,9 @@ async function readInput(
 /* Public importer                                                    */
 /* ------------------------------------------------------------------ */
 
-export async function parseEvernote(
+export const parseEvernote = withBareLinks(readEvernote);
+
+async function readEvernote(
   file: File,
   onProgress?: (msg: string) => void
 ): Promise<ParsedImport> {
@@ -1082,7 +1090,8 @@ export async function parseEvernote(
         body = `${body}\n\nSource: ${parsed.sourceUrl}`;
       }
 
-      body = linkifyMarkdown(body.trim());
+      // Bare URLs become links after the parse (withBareLinks).
+      body = body.trim();
 
       const fallback = new Date().toISOString();
       const createdAt = parsed.createdAt ?? parsed.updatedAt ?? fallback;
@@ -1216,20 +1225,11 @@ export async function parseEvernote(
       msg('droppedStyling')
     );
   }
-  transforms.push(i18n.t('importLog:shared.linkifiedBare'));
-
-  const uniqueTags = new Set(notes.flatMap((n) => n.tags));
 
   return {
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: notes.filter((n) => !n.title.trim() && !n.body.trim()).length,
-      untaggedNotes: notes.filter((n) => n.tags.length === 0).length,
-      uniqueTags: uniqueTags.size,
-    },
     source: 'evernote',
     blobBytes,
     blobs: referenced.size > 0 ? referenced : undefined,

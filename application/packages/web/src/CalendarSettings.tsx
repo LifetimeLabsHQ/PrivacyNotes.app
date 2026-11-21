@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { ArrowLineDown, BellRinging, BellSimple, CalendarCheck, CalendarDots, Cake, Clock, Devices, Hash, Eye, Sun } from './icons';
+import { ArrowLineDown, BellRinging, BellSimple, CalendarCheck, CalendarDots, Cake, Clock, Devices, Hash, Eye, Globe, Sun } from './icons';
+import { FeedSubscribeForm, SubscribedFeeds, type FeedsControl } from './calendarFeedUI';
 import { ROW_TITLE, RowTitle, SectionEyebrow, SETTINGS_HELP, SETTINGS_ROW, SETTINGS_SELECT, SETTINGS_TRACK, settingsSegClass, SettingsCallout, ResetDefaultsButton } from './settingsUI';
 import { Switch } from './Switch';
 import { ProMark } from './UpgradeModal';
@@ -17,8 +18,9 @@ import { ReminderPermissionControl, useReminderPermission, useRemindersThrough, 
  * Settings › Date & Time › Calendar: the default alerts (Pro), whether a reminder shows the
  * title, where reminders ring on this device, the first day of the week, the
  * hours the hour grid opens on and the week numbers. Every value syncs; where
- * a reminder rings is this device's own answer.
- * Spec: docs/internal/specs/calendar-pillar-spec.md (decisions 11, 12, 15; step 7)
+ * a reminder rings is this device's own answer. Under Reminders, the
+ * subscribed calendars, each with its space (#772), and a field to add one.
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (decisions 11, 12, 15; step 7; section 14)
  */
 
 // The end padding keeps the browser's own arrow off the border.
@@ -31,7 +33,7 @@ export function TimeInput({ value, onCommit, label }: { value: string; onCommit:
   return <TimeField value={value} label={label} onCommit={(t) => t && onCommit(t)} className={FIELD} />;
 }
 
-export function CalendarSettings({ value, onChange, weekStart, onWeekStartChange, alertsUnlocked, showPro, onUpgrade }: {
+export function CalendarSettings({ value, onChange, weekStart, onWeekStartChange, alertsUnlocked, showPro, onUpgrade, feeds }: {
   value: Settings;
   onChange: (next: Settings) => void;
   /** A top-level synced key, not part of `value`: an older client copies it through. */
@@ -40,6 +42,8 @@ export function CalendarSettings({ value, onChange, weekStart, onWeekStartChange
   alertsUnlocked: boolean;
   showPro: boolean;
   onUpgrade: () => void;
+  /** The subscribed calendars, the same control the calendar's Subscribe window writes through. */
+  feeds: FeedsControl;
 }) {
   const { t } = useTranslation('settings');
   const { t: ts } = useTranslation('shell');
@@ -81,7 +85,13 @@ export function CalendarSettings({ value, onChange, weekStart, onWeekStartChange
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto text-pn">
-      <SectionEyebrow icon={CalendarDots} className="px-6 pt-4">{t('shell:listPrefs.view')}</SectionEyebrow>
+      <SectionEyebrow icon={Globe} className="px-6 pt-4">{t('importExport:webcal.subscribed')}</SectionEyebrow>
+      <div data-setting="calendar.feeds" className="px-6 pt-1 space-y-3">
+        <p className={SETTINGS_HELP}>{t('importExport:webcal.subscribeDesc')}</p>
+        <FeedSubscribeForm feeds={feeds} />
+        <SubscribedFeeds feeds={feeds} heading={false} />
+      </div>
+      <SectionEyebrow icon={CalendarDots} className="px-6 pt-6">{t('shell:listPrefs.view')}</SectionEyebrow>
       <div className="px-6 divide-y divide-divider">
         <div data-setting="calendar.weekStart" className={SETTINGS_ROW}>
           <div className="min-w-0">

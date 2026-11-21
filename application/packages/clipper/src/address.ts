@@ -6,15 +6,19 @@
  * a name up), and the extension's picture and linked-page downloads
  * (packages/extension/src/publicFetch.ts, which cannot). It imports nothing,
  * so the Worker bundles it without the clip engine. The desktop's
- * `clip_fetch` (clip_fetch.rs `is_blocked`) refuses the same ranges.
+ * `clip_fetch` (clip_fetch.rs `is_blocked`) refuses the same ranges, but goes
+ * by the resolved address alone (no name list) and reads `::a.b.c.d` as the
+ * IPv4 address inside, which this file refuses outright.
  * Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1)
  */
 
 const LOCAL_NAMES = /(?:^|\.)(?:localhost|local|internal|intranet|lan|home|corp|home\.arpa|localdomain)$/i;
 
-/** A URL's host as an address or a name: no brackets, lower case. */
+/** A URL's host as an address or a name: no brackets, no dot at the end,
+ *  lower case. `localhost.` names the same host as `localhost`, so the two
+ *  get the same answer below. */
 export function bareHost(url: URL): string {
-  return url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+  return url.hostname.replace(/^\[|\]$/g, '').replace(/\.+$/, '').toLowerCase();
 }
 
 /** Whether a URL names, by literal or by a local name, a host outside the

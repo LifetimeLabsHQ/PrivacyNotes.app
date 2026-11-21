@@ -40,12 +40,16 @@ const TAB_INDENT = '    ';
  * Shift+Tab removes up to that many spaces before it. Markdown keeps no
  * leading spaces in a heading, so a heading is left alone, and so is a list,
  * where Tab moves the item instead. A range selection is left alone too, so
- * a stray Tab never replaces selected text.
+ * a stray Tab never replaces selected text. In a code block, a selection and
+ * Shift+Tab work on whole lines instead (`indentCodeLines`).
  */
 export function indentText(editor: TipTapEditor, dir: number): boolean {
   const { selection } = editor.state;
+  const { $from, $to } = selection;
+  if ($from.parent.type.name === 'codeBlock' && $from.sameParent($to) && (dir < 0 || !selection.empty)) {
+    return indentCodeLines(editor, dir);
+  }
   if (!selection.empty) return false;
-  const { $from } = selection;
   const parent = $from.parent.type.name;
   if (parent !== 'paragraph' && parent !== 'codeBlock') return false;
   for (let depth = $from.depth; depth > 0; depth--) {
@@ -62,6 +66,42 @@ export function indentText(editor: TipTapEditor, dir: number): boolean {
   const run = /[ \u00a0]{1,4}$/.exec(before)?.[0].length ?? 0;
   if (run === 0) return false;
   return editor.chain().focus().deleteRange({ from: $from.pos - run, to: $from.pos }).run();
+}
+
+/**
+ * Tab and Shift+Tab on every line a code block selection touches, as code
+ * editors do: Tab adds TAB_INDENT at the start of each line, Shift+Tab takes
+ * up to four spaces or one tab off it. Shift+Tab with a caret works on the
+ * caret's line, wherever the caret is in it. A selection that ends at the
+ * start of a line leaves that line alone, and Tab skips an empty line of a
+ * selection of several lines. GitHub #780 (comment by the owner, 2026-11-20).
+ */
+function indentCodeLines(editor: TipTapEditor, dir: number): boolean {
+  const { $from, $to, empty } = editor.state.selection;
+  const base = $from.start();
+  const text = $from.parent.textContent;
+  const end = $to.parentOffset;
+  const starts = [text.lastIndexOf('\n', $from.parentOffset - 1) + 1];
+  for (let i = text.indexOf('\n', $from.parentOffset); i !== -1 && i + 1 < end; i = text.indexOf('\n', i + 1)) {
+    starts.push(i + 1);
+  }
+  const several = !empty && starts.length > 1;
+  return editor.chain().focus().command(({ tr }) => {
+    let changed = false;
+    for (const at of starts.reverse()) {
+      if (dir > 0) {
+        if (several && (at === text.length || text[at] === '\n')) continue;
+        tr.insertText(TAB_INDENT, base + at);
+        changed = true;
+      } else {
+        const run = /^(?:\t| {1,4})/.exec(text.slice(at))?.[0].length ?? 0;
+        if (run === 0) continue;
+        tr.delete(base + at, base + at + run);
+        changed = true;
+      }
+    }
+    return changed;
+  }).run();
 }
 
 /**

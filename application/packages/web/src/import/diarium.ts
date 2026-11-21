@@ -3,7 +3,7 @@ import i18n from '../i18n';
 import { normalizeTag } from '../notesRepo';
 import { noteLinkTarget } from '../noteLinks';
 import { LOCATION_KEY, importedLocation } from '../noteLocation';
-import { linkifyMarkdown } from './linkify';
+import { withBareLinks } from './bareLinks';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
 import { mimeFromExtOrBytes } from './blobImport';
@@ -12,7 +12,7 @@ import { ImportedFactors, blobKey, isoDay, untitledEntryTitle } from './journalI
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 import { cleanPath } from './importHelpers';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:diarium.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:diarium.${key}`, options);
 
 /**
  * Diarium importer.
@@ -46,7 +46,9 @@ const STAR_MOOD: Record<number, number> = { 1: 1, 2: 3, 3: 5, 4: 7, 5: 10 };
 /** .NET ticks at the Unix epoch. */
 const EPOCH_TICKS = 621355968000000000n;
 
-const ENTRY_LINK_RE = /<a\b[^>]*\bhref\s*=\s*["']diarium:\/\/view\?entryId=(\d{1,20})["'][^>]*>([\s\S]*?)<\/a>/gi;
+// Bounded runs, so a body of opening tags with no end is not scanned to the
+// end once per tag.
+const ENTRY_LINK_RE = /<a\b[^>]{0,2000}?\bhref\s*=\s*["']diarium:\/\/view\?entryId=(\d{1,20})["'][^>]{0,2000}>([\s\S]{0,5000}?)<\/a>/gi;
 
 type Json = Record<string, unknown>;
 const isObj = (v: unknown): v is Json => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -122,7 +124,9 @@ async function readEntries(file: File): Promise<{ entries: Json[]; media: Map<st
   return { entries, media };
 }
 
-export async function parseDiarium(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
+export const parseDiarium = withBareLinks(readDiarium);
+
+async function readDiarium(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
   onProgress?.(msg('reading'));
   const { entries, media } = await readEntries(file);
   const valid = entries
@@ -133,7 +137,6 @@ export async function parseDiarium(file: File, onProgress?: (msg: string) => voi
   const c: Counters = { moods: 0, factors: 0, trackers: 0, places: 0, photos: 0, files: 0, missing: 0, tooLarge: 0, links: 0, brokenLinks: 0, untitled: 0, skipped: entries.length - valid.length };
   const factors = new ImportedFactors();
   const blobs = new Map<string, ImportBlob>();
-  const allTags = new Set<string>();
 
   // Titles first: an entry link names the entry it points at by its ticks.
   const titles = valid.map(({ e, when }) => {
@@ -200,7 +203,8 @@ export async function parseDiarium(file: File, onProgress?: (msg: string) => voi
         mediaLines.push(`![](${key})`);
         c.photos++;
       } else {
-        mediaLines.push(`[${name}](${key})`);
+        // No brackets in the label, or blobImport never finds the file.
+        mediaLines.push(`[${name.replace(/[[\]]/g, '')}](${key})`);
         c.files++;
       }
     }
@@ -216,7 +220,6 @@ export async function parseDiarium(file: File, onProgress?: (msg: string) => voi
     if (mood !== undefined) c.moods++;
 
     const tags = strings(e.tags).map((t) => normalizeTag(t)).filter(Boolean);
-    for (const t of tags) allTags.add(t);
     const factorIds: string[] = [];
     for (const name of strings(e.tags)) {
       const id = factors.id(name);
@@ -233,7 +236,7 @@ export async function parseDiarium(file: File, onProgress?: (msg: string) => voi
 
     notes.push({
       title: titles[i]!,
-      body: linkifyMarkdown(blocks.join('\n\n')),
+      body: blocks.join('\n\n'),
       tags: [...new Set(tags)],
       createdAt: when.wall.toISOString(),
       updatedAt: when.wall.toISOString(),
@@ -267,17 +270,10 @@ export async function parseDiarium(file: File, onProgress?: (msg: string) => voi
 
   let blobBytes = 0;
   for (const b of blobs.values()) blobBytes += b.data.length;
-  const tagged = notes.filter((n) => n.tags.length > 0).length;
   return {
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: notes.filter((n) => !n.body.trim()).length,
-      untaggedNotes: notes.length - tagged,
-      uniqueTags: allTags.size,
-    },
     source: 'diarium',
     ...(blobs.size > 0 ? { blobs, blobBytes } : {}),
     ...(added.length > 0 ? { settings: { factors: added } } : {}),

@@ -36,12 +36,19 @@ function isLine(node: PMNode): boolean {
   return node.type.name === 'paragraph' || node.type.name === 'heading';
 }
 
+function isEmptyLine(node: PMNode): boolean {
+  return node.type.name === 'paragraph' && node.content.size === 0;
+}
+
 /** Whether the gap between two touching top-level blocks gets the helper:
  *  every gap except one between two lines, where a click already lands at
  *  the end or the start of a line. The footnotes section at the foot of a
- *  note is managed by the editor, so no line goes next to it. */
+ *  note is managed by the editor, so no line goes next to it. Nor does one
+ *  go next to an empty line, which is already the line the helper would add:
+ *  a tap aimed at that line, a few px off, added a second one (GitHub #829). */
 export function gapTakesLine(above: PMNode, below: PMNode): boolean {
   if (above.type.name === 'footnotes' || below.type.name === 'footnotes') return false;
+  if (isEmptyLine(above) || isEmptyLine(below)) return false;
   return !(isLine(above) && isLine(below));
 }
 

@@ -74,8 +74,8 @@
     "try-before-signup": {
       "q": "Can I try PrivacyNotes without creating an account?",
       "a": [
-        "Yes. The demo at [try.privacynotes.app](https://try.privacynotes.app) is the full app with sample content: no signup, no email, and nothing you type is saved. It runs entirely in your browser and never sends anything to our servers.",
-        "Closing the tab clears everything, which is the point. When you are ready to keep your notes, create a real vault at [use.privacynotes.app](https://use.privacynotes.app) and start fresh: copy out anything from the demo you want to take with you first."
+        "Yes. The demo at [try.privacynotes.app](https://try.privacynotes.app) is the full app with sample content: no signup, no email and no account. Nothing you type is sent: a page you clip or a calendar you subscribe to is downloaded through our server, and a map is read from our map host.",
+        "What you put in the demo stays in this browser until the demo opens here again; clear the site data to remove it at once. When you are ready to keep your notes, create a real vault at [use.privacynotes.app](https://use.privacynotes.app) and start fresh: copy out anything from the demo you want to take with you first."
       ]
     },
     "need-email": {
@@ -117,7 +117,7 @@
       "q": "What can PrivacyNotes see about my notes?",
       "a": [
         "Notes, titles, tags, and attachments are always encrypted, on your device and on the way to the server. [Under self-custody](/help/threat-model-levels), which every phrase sign-up starts with, no decryption key exists on our side. Signing up with Google, Apple, or GitHub asks where your key lives and starts on \"Keep it simple & convenient\", which stores your phrase on our server, encrypted under a key of ours. In that mode, our server can decrypt the phrase and therefore your notes. Settings > Account > Key custody shows your current mode and lets you switch.",
-        "What we can see is the information needed to run the service: the public key your phrase makes, how many items and how much encrypted storage you hold, how many devices you have linked, and sync timestamps. Our rate limits also see the IP address of each request, which we do not write into your account. If you use only your phrase and [have not connected a Google, Apple, or GitHub account](/help/connected-logins), we do not know your email address."
+        "What we can see is the information needed to run the service: the public key your phrase makes, how many items and how much encrypted storage you hold, how many devices you have linked, for each device its kind, app version and when it was last online, the order ids of your purchases, and sync timestamps. [SECURITY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md#what-we-measure) lists it all. Our rate limits also see the IP address of each request, which we do not write into your account. If you use only your phrase and [have not connected a Google, Apple, or GitHub account](/help/connected-logins), we do not know your email address."
       ]
     },
     "us-company": {
@@ -125,7 +125,7 @@
       "a": [
         "Your notes are encrypted on your device, and with [self-custody](/help/threat-model-levels) the server holds nothing that opens them. What you write reaches it only as ciphertext, so a legal order in any country gets only ciphertext, wherever the company is registered. Check it: the code is [open source on GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), and your browser's network tab shows your words leave only as ciphertext.",
         "Lifetime Labs LLC is a US company because that was the quickest way to put our projects under one name. Nobody on the team lives in the US, and your synced notes are stored in Zurich, Switzerland.",
-        "What the law can reach is the data the service needs: your public key, sync timestamps, storage size, short-lived server logs and, if you connect Google, Apple or GitHub, that email. With \"Keep it simple & convenient\", your recovery phrase is stored on our server too, and it opens your notes. Settings > Account > Key custody switches you to self-custody. [What PrivacyNotes can see](/help/what-can-you-see) lists more."
+        "What the law can reach is the data the service needs: your public key, sync timestamps, storage size, for each device its kind, app version and when it was last online, the order ids of your purchases, short-lived server logs and, if you connect Google, Apple or GitHub, that email. With \"Keep it simple & convenient\", your recovery phrase is stored on our server too, and it opens your notes. Settings > Account > Key custody switches you to self-custody. [What PrivacyNotes can see](/help/what-can-you-see) lists more."
       ]
     },
     "app-privacy-label": {
@@ -140,7 +140,7 @@
       "q": "Why a recovery phrase instead of a username and password?",
       "a": [
         "It can feel backwards at first, but a single recovery phrase is the stronger construction. With a username and password, the username is not a secret (it shows up in every breach dump), so all the security rests on the password, and human-chosen passwords average maybe 30 to 40 bits of entropy. [Your recovery phrase is a guaranteed 128 bits or more](/help/twelve-word-phrase), generated by your device, never chosen by a human, and never reused from another site.",
-        "There is also no password for us to lose. A password login means the server stores at least a password hash, which can be leaked, cracked, or phished. [Under self-custody](/help/threat-model-levels), your phrase never leaves your device: it derives your encryption keys locally, and the server only ever sees encrypted data. There is no hash to steal and no password reset flow for an attacker to abuse.",
+        "There is also no password for us to lose. A password login means the server stores at least a password hash, which can be leaked, cracked, or phished. [Under self-custody](/help/threat-model-levels), your phrase never leaves your device, unless you add [a sign-in passkey](/help/passkey-sign-in): then the server keeps a copy only that passkey opens. The phrase derives your encryption keys locally, and the server only ever sees encrypted data. It keeps only a hash of a sign-in credential your device derives from the phrase, which cannot be turned back into the phrase and opens no note, and there is no password reset flow for an attacker to abuse.",
         "If typing your phrase feels clunky: you can save the phrase to your password manager with one tap (Settings > Security > Phrase), and signing in feels like any other login. Prefer a familiar flow? [Sign in with Google, Apple, or GitHub works too](/help/signup-options): you still get a phrase under the hood, and you choose whether it stays on your device or we store it for you."
       ]
     },
@@ -149,9 +149,17 @@
       "a": [
         "Yes, deliberately. Not everyone is defending against the same threats, so the account model is a ladder rather than a single dogma. Every rung keeps your notes encrypted on your device; what changes is who holds the key and what we know about you.",
         "The convenient end: sign in with Google, Apple, or GitHub and leave \"Keep it simple & convenient\" selected when asked, which is where that screen starts. We store your recovery phrase for you, encrypted at rest on our server, so a new device can open your notes after provider sign-in and [an authenticator code if 2FA is enabled](/help/enable-2fa). In exchange we know the email behind that login, and our server can decrypt your phrase. Save your phrase in case you lose the provider account, and keep your 2FA backup key if you enable two-factor sign-in.",
-        "The middle: sign in with Google, Apple, or GitHub but pick \"Maximum security & privacy\". Your phrase never touches our servers, so the server holds nothing that opens your notes; new devices need the phrase or [a QR scan from a device that is already signed in](/help/add-second-device). We still know the email behind that login, and a legal order or a breach of our server can reach that email, never the content of your notes.",
+        "The middle: sign in with Google, Apple, or GitHub but pick \"Maximum security & privacy\". Your phrase never touches our servers (a sign-in passkey, if you add one, leaves a copy only that passkey opens), so the server holds nothing that opens your notes; new devices need the phrase or [a QR scan from a device that is already signed in](/help/add-second-device). We still know the email behind that login, and a legal order or a breach of our server can reach that email, never the content of your notes.",
         "The private end: skip the logins entirely and use only your recovery phrase. No email, no name, no identity, and paired with an [anonymous Pro purchase](/help/buy-pro-anonymously), even paying leaves no name anywhere. In exchange, key custody is entirely yours: lose the phrase with no signed-in device left, and nobody can help.",
         "Settings > Account > Key custody shows both modes with their tradeoffs and lets you switch. Leaving server custody deletes our stored copy after you confirm three words from your saved phrase. Switching back uploads the phrase again and requires an explicit choice. Both directions are signed with your account key and need a fresh authenticator code when 2FA is enabled. [A phrase account can connect a provider](/help/connected-logins) under Account > Accounts, then choose server custody separately; connecting the provider does not upload the phrase. Every mode can also use PIN app lock, biometric unlock and [per-note protection](/help/locked-vs-protected)."
+      ]
+    },
+    "stored-phrase": {
+      "q": "If my phrase is stored encrypted, how could a legal order reach my notes?",
+      "a": [
+        "Because our server holds the key to that encryption. With \"Keep it simple & convenient\", your recovery phrase is stored on our server, encrypted under a key the server keeps. That is what makes one-click sign-in work: when you sign in with Google, Apple or GitHub on a new device, the server opens the phrase and sends it to that device.",
+        "The encryption keeps the phrase unreadable to anyone with only a copy of the database. But the server can open it, and the phrase opens your notes, so a legal order or a breach of the server could reach them.",
+        "For a setup where nothing on our side can open your notes, switch to self-custody in Settings > Account > Key custody. That deletes the copy on our server, and your phrase stays only with you, so [keep it somewhere safe](/help/lost-phrase) first. [The privacy ladder](/help/threat-model-levels) compares both modes."
       ]
     },
     "twelve-word-phrase": {
@@ -168,7 +176,7 @@
       "a": [
         "No. Nobody can guess your recovery phrase, and nobody else ends up with the same one: no computer that exists, or that we can foresee, comes close. Only someone who gets your actual words can sign in, so keep them safe.",
         "Your device picks your phrase at random. For a 12-word phrase the number of possible phrases has 39 digits, and for a 24-word phrase 78. Guessing a 12-word phrase on the first try is less likely than winning a 1-in-300-million lottery jackpot four times in a row. A computer that tried a billion billion phrases every second would still need about 10 trillion years to try them all, far longer than the universe has existed. Even if all 8 billion people on Earth each had a phrase, the chance that any two of them match is smaller than winning that jackpot twice in a row.",
-        "The strength comes from that randomness, not from how the words look. Do not make up a phrase or add symbols to it: use the words exactly as the app gives them to you. Capital letters do not matter. The last word works as a check, so the app refuses a mistyped or made-up phrase."
+        "The strength comes from that randomness, not from how the words look. Do not make up a phrase or add symbols to it: use the words exactly as the app gives them to you. Capital letters do not matter. The last word works as a check, so the app refuses most mistyped or made-up phrases, about 15 of 16. One that passes is the phrase of a different, empty vault."
       ]
     },
     "same-phrase": {
@@ -181,8 +189,8 @@
     "enable-2fa": {
       "q": "How do I turn on two-factor authentication (2FA)?",
       "a": [
-        "Turn on optional two-factor sign-in in Settings > Security > 2FA. Update PrivacyNotes on your other devices first. Scan the QR code with an authenticator app, or enter the setup key manually. Save the 2FA backup key outside PrivacyNotes, confirm the saved copy, then enter a current code to finish.",
-        "After setup, a new server session needs your phrase or [a connected provider](/help/connected-logins), followed by an authenticator code. Self-custody users still need their phrase to decrypt notes. Manage provider accounts in Settings > Account > Accounts; connecting one [does not change key custody](/help/threat-model-levels).",
+        "Turn on optional two-factor sign-in in Settings > Security > 2FA. Scan the QR code with an authenticator app, or enter the setup key manually. Save the 2FA backup key outside PrivacyNotes, confirm the saved copy, then enter a current code to finish.",
+        "After setup, a new server session needs your phrase or [a connected provider](/help/connected-logins), followed by an authenticator code. Turning 2FA on disconnects the browser extension and the command line, so connect the extension again in Settings > Extension, and the command line in Settings > CLI. Self-custody users still need their phrase to decrypt notes. Manage provider accounts in Settings > Account > Accounts; connecting one [does not change key custody](/help/threat-model-levels).",
         "[If you lose the authenticator](/help/lost-2fa), add the saved 2FA backup key to another authenticator app. Losing both means we cannot restore server access. Notes already unlocked on a device remain readable and exportable. Two-factor sign-in does not add encryption or protect an already unlocked device."
       ]
     },
@@ -201,11 +209,18 @@
         "This follows from the architecture, not from a policy: [the server holds your notes only as ciphertext](/help/what-can-you-see) and runs no index over them. Search needs the text, and the text exists only on your devices."
       ]
     },
+    "website-icons": {
+      "q": "Does PrivacyNotes look up website icons, and what does that send?",
+      "a": [
+        "Yes, to show a site's logo next to your links and vault logins, and each lookup sends only the site's domain. It goes to our own server, which fetches the icon for you, so the icon services never see your device, your IP address or the rest of the link. No account, cookie or note content travels with it, and our server keeps no log of which domain it was asked for.",
+        "Once an icon is on your device, it stays there, encrypted with the rest of the app's local data, so the same site is not looked up again each time. To stop lookups, switch off **Website icons** in Settings > Lists > General: links and logins then show a letter tile instead. The switch applies to that device only, so turn it off on each device where you want it off."
+      ]
+    },
     "no-ai": {
       "q": "Does PrivacyNotes use AI on my notes?",
       "a": [
-        "No AI reads your notes unless you turn it on, and nothing you write ever goes to an AI service. There is no chatbot, no AI writing, no AI on our servers and no training on your content. Ninja and search are plain code on your device. [Your notes are always encrypted, on your device and on the way to the server](/help/what-can-you-see), and a cloud AI would take them out of that encryption, so no note ever goes to one.",
-        "The one exception is optional and stays on your device. Smart connections finds notes with the same meaning, even in other words or another language. It uses offline AI ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)) that runs only on this device. It writes nothing and answers nothing: it turns each note into a list of numbers and compares them. You download it once in Settings > Editor > Behavior > Smart connections, then it works without a connection. Its switch turns it off, and Remove takes it off the device. Nothing it works out about a note is saved or sent."
+        "No AI reads your notes unless you turn it on, and nothing you write ever goes to an AI service. There is no chatbot, no AI on our servers and no training on your content. Ninja and search are plain code on your device. [Your notes are always encrypted, on your device and on the way to the server](/help/what-can-you-see), and a cloud AI would take them out of that encryption, so no note ever goes to one.",
+        "The exceptions are optional plugins in Settings > Plugins, and they run only on your device. Smart connections finds notes with the same meaning. Text in pictures reads the text in a picture, scan or PDF. Translate notes translates a note. Voice to text turns a recording into text. You turn each one on yourself. It downloads once, or uses the engine built into your device, and then works without a connection; Remove takes it off the device. A plugin never changes a note by itself: you see its result first and choose to add it. Nothing it works out about a note is saved or sent."
       ]
     },
     "vibe-coded": {
@@ -245,8 +260,8 @@
       "q": "I lost my recovery phrase. Can you recover my account?",
       "a": [
         "If you are still signed in on any device: yes, you can recover it yourself. Open Settings > Security > Phrase and save it to your password manager right now.",
-        "If you have no signed-in device and no phrase, [it depends on who holds the key](/help/threat-model-levels). If you let us store it when you signed up with Google, Apple, or GitHub, sign in with that login and you are back in. Under self-custody, nobody can: your phrase never reaches our servers, so there is nothing to reset and no support ticket that can help. Any service that can restore your encrypted data after a total loss is holding your keys.",
-        "The fix costs ten seconds: store the phrase in a password manager the day you create your account. If it is already gone and you pay for a storage add-on, Paddle bills you directly and can cancel it without your phrase: see [changing or cancelling an add-on](/help/manage-storage-addon)."
+        "If you have no signed-in device and no phrase, [it depends on who holds the key](/help/threat-model-levels). If you let us store it when you signed up with Google, Apple, or GitHub, sign in with that login and you are back in. Under self-custody, only [a sign-in passkey](/help/passkey-sign-in) you added can: otherwise your phrase never reaches our servers, so there is nothing to reset and no support ticket that can help. Any service that can restore your encrypted data after a total loss is holding your keys.",
+        "The fix costs ten seconds: store the phrase in a password manager the day you create your account. If it is already gone and you pay for a storage add-on, Paddle bills you directly and can cancel it without your phrase: see [changing or canceling an add-on](/help/manage-storage-addon)."
       ]
     },
     "lost-2fa": {
@@ -254,7 +269,7 @@
       "a": [
         "Add your 2FA backup key to any authenticator app, then enter the code it shows when PrivacyNotes asks for one. The backup key is [the one you saved when you turned on 2FA](/help/enable-2fa), and it works every time you need it.",
         "If you lost both your phone and the backup key, we do not reset 2FA, and our support cannot help with it. The notes already on your devices stay readable.",
-        "To keep them, go to Settings > Backup > Manual on a device that still has them. Then create a new vault and [import the export there](/help/restore-backup)."
+        "To keep them, go to Settings > Backup > Manual on a device that still has them and choose \"Everything, not encrypted (.zip)\": the encrypted backups open only in the account that made them. Then create a new vault and [import the export there](/help/restore-backup)."
       ]
     },
     "oauth-recovery": {
@@ -275,8 +290,8 @@
       "q": "How do I delete my account?",
       "a": [
         "You can delete your account in the app or in a browser. In a browser, sign in at [use.privacynotes.app](https://use.privacynotes.app). Then open **Settings > Account**, choose **Delete account & data...**, select **Delete cloud data & account**, type DELETE and choose **Delete permanently**. If 2FA is on, the app asks for a fresh authenticator code. Deletion cannot be undone, so [export anything you want to keep first](/help/export) (Settings > Transfer).",
-        "**What is deleted:** your synced notes, tasks, journals, vault entries, files and images, note history, settings, devices, connected logins, the custodial copy of your recovery phrase if you chose one, your Pro record, and the account itself. The local data on the device you delete from is wiped too. [An active storage subscription must be cancelled first](/help/manage-storage-addon) under Settings > Storage; one already scheduled to cancel does not block deletion.",
-        "**What remains:** if you had a storage subscription, its records stay for billing and refunds. A minimal account identifier can also stay, so that old sign-in tokens keep being rejected. Neither contains your notes or files, and neither expires automatically. Our database host keeps logs and daily backups for seven days, so a backup taken before the deletion can hold your encrypted data for up to a week. Paddle, Apple and Google keep their own transaction records under their own policies. The [privacy policy](https://lifetimelabs.dev/privacy/) has the details and explains how to ask us to delete retained personal data."
+        "**What is deleted:** your synced notes, tasks, journals, vault entries, files and images, note history, settings, devices, connected logins, the custodial copy of your recovery phrase if you chose one, your Pro record, and the account itself. The local data on the device you delete from is wiped too. [An active storage subscription must be canceled first](/help/manage-storage-addon) under Settings > Storage; one already scheduled to cancel does not block deletion.",
+        "**What remains:** if you had a storage subscription, its records stay for billing and refunds. A minimal account identifier can also stay, so that old sign-in tokens keep being rejected. Neither contains your notes or files, and neither expires automatically. Our database host keeps logs and daily backups for seven days, so a backup taken before the deletion can hold your encrypted data for up to a week. Encrypted copies of your files can stay in our file trash and backups for up to 30 days. Paddle, Apple and Google keep their own transaction records under their own policies. The [privacy policy](https://lifetimelabs.dev/privacy/) has the details and explains how to ask us to delete retained personal data."
       ]
     },
     "what-syncs": {
@@ -309,8 +324,9 @@
     "data-location": {
       "q": "Where is my data stored?",
       "a": [
-        "On your device first, and that is the copy you work with: the app is local-first, so [your notes open and edit offline](/help/offline). The synced copy lives on servers in Zurich, Switzerland. What sits there is your public key, encrypted blobs of your notes, files and settings, plus the timestamps and sizes a sync needs. No titles, no text, no tags.",
-        "The country matters less than the encryption does. Everything is always encrypted, on your device and on the way to the server, so that copy is ciphertext wherever it sits, and with self-custody nothing on the server can open it. Switzerland is a bonus, not the promise. [What syncs](/help/what-syncs) lists it item by item.",
+        "On your device first, and that is the copy you work with: the app is local-first, so [your notes open and edit offline](/help/offline). The synced copy of your notes, journals, settings and the rest lives on servers in Zurich, Switzerland. New pictures and files from an up-to-date app are stored in the EU, and the rest move there over time. What sits on those servers is your public key, encrypted blobs of your notes, files and settings, plus the timestamps and sizes a sync needs. No titles, no text, no tags.",
+        "We also keep a second encrypted copy of the files stored in the EU at another provider in the EU, as a backup. A file you delete can stay in our file trash for up to 30 days and in that backup for up to 35 days.",
+        "The place matters less than the encryption does. Everything is always encrypted, on your device and on the way to the server, so that copy is ciphertext wherever it sits, and with self-custody nothing on the server can open it. The location is a bonus, not the promise. [What syncs](/help/what-syncs) lists it item by item.",
         "The copy on your device is encrypted too: [notes are sealed on disk](/help/data-on-disk) under a key derived from your recovery phrase when you unlock."
       ]
     },
@@ -348,7 +364,7 @@
       "q": "Can the Vault replace my password manager, like Bitwarden?",
       "a": [
         "Yes. The Vault holds your logins, cards and SSH keys, encrypted on your device. The free browser extension fills a login only on the site it belongs to. [A Bitwarden import](/help/import/bitwarden) moves your passwords over in one step.",
-        "Your [recovery phrase](/help/phrase-vs-password) is the master key, not your PIN. The PIN or passcode locks a device where you are already signed in, like the code on your phone. The extension has its own PIN or passcode, separate from the app's. After 10 wrong tries, the extension disconnects that browser.",
+        "Your [recovery phrase](/help/phrase-vs-password) is the master key, not your PIN. The PIN or passcode locks a device where you are already signed in, like the code on your phone. The extension has its own PIN or passcode, separate from the app's. After 10 wrong tries within 30 days, the extension disconnects that browser.",
         "For the strongest lock, choose a passcode instead of a 4-digit PIN in Settings > Security > PIN, and choose a passcode for the extension too. Keep your computer's disk encryption and screen lock on. The details are in our [threat model](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
@@ -379,6 +395,13 @@
       "a": [
         "Because the service is deliberately cheap to run. The app is local-first and notes are small encrypted blobs, so the server does little more than store them and relay them between your devices. No analytics of what you write, no pixels or third-party trackers, no AI running on our servers, no support department.",
         "The one cost that does grow over time is storage, and that is priced accordingly: storage beyond the included 500 MB is [a small yearly add-on](/help/storage-addons). One-time costs are priced once, recurring costs recur. The model only has to pay for itself, and it does."
+      ]
+    },
+    "discounts": {
+      "q": "Can I get a discount, a coupon or a Black Friday deal on Pro?",
+      "a": [
+        "No. Pro is fairly priced for everyone, and you pay it once: [Pro is a lifetime purchase](/help/one-time-pricing), not a subscription. We skip Black Friday, Thanksgiving and every other holiday sale, and we hand out no discount codes or coupons, so there is no better day to wait for.",
+        "Please do not email us or ask on Reddit, X or anywhere else for a discount: the answer is always this page, and the time those requests take comes out of the time we spend on the app. [The free plan](/help/free-vs-pro) has no time limit, so you can use the whole app on it first and buy Pro on the day you want it. Paying by credit or debit card, or through an app store, comes with [a 30-day refund](/help/refunds)."
       ]
     },
     "pro-cross-platform": {
@@ -412,7 +435,7 @@
     "pay-with-crypto": {
       "q": "Can I pay for Pro with Bitcoin or other crypto?",
       "a": [
-        "Yes, on the web and in the desktop app. In the Upgrade window, choose Pay with crypto, and pay with Bitcoin, Ethereum, Lightning, USDC or USDT. The price is the card price, paid once. The [app store builds](/help/store-purchases) sell Pro through Apple and Google only.",
+        "Yes, on the web and in the desktop app. In the Upgrade window, choose Pay with crypto, and pay with Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin or TON. The price is the card price, paid once. The [app store builds](/help/store-purchases) sell Pro through Apple and Google only.",
         "[BlockBee](https://blockbee.io) runs the payment page. It asks for no name and no email, and it never receives your Account ID. A crypto payment is public on its blockchain. Bitcoin turns Pro on when the network confirms the payment, usually in 10 to 60 minutes, and Ethereum and most stablecoins take about a minute. A banner in the app shows where the payment stands.",
         "Crypto payments are final: there is no refund. At checkout you agree that Pro starts at once, which ends the EU 14-day right of withdrawal, so try the free plan first. The page after the payment is your purchase confirmation. Save it as a PDF, because we have no email address to send it to."
       ]
@@ -561,7 +584,7 @@
       "q": "Can the browser extension read my notes?",
       "a": [
         "No. The extension never holds the key that opens your notes. It locks each clip before it leaves your browser, and one of your apps turns it into a note at its next sync.",
-        "If you turn on logins, the extension sees your logins, your cards, the public half of your SSH keys and your bookmarks, never a note's text and never a private key. They are protected by a PIN or passcode you set for the extension, separate from the app's. After 10 wrong tries the browser is disconnected, so a copy of your browser cannot be guessed open. Logins lock after the time you choose in the extension (15 minutes without use unless you change it), after 7 days at the latest, and always when the browser closes. The details are in our [threat model](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+        "If you turn on logins, the extension sees your logins and the passkeys saved in them, your cards, the public half of your SSH keys and your bookmarks, never a note's text and never an SSH private key. They are protected by a PIN or passcode you set for the extension, separate from the app's. After 10 wrong tries within 30 days the browser is disconnected, so a copy of your browser cannot be guessed open. Logins lock when the computer has had no keyboard or mouse input for the time you choose in the extension (15 minutes unless you change it), after 7 days at the latest, and always when the browser closes. The details are in our [threat model](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
     "contacts": {
@@ -606,6 +629,45 @@
       "a": [
         "\"Read-only\" (in the note options menu, Pro) locks a note against edits so a finished document cannot be mangled by accident; it hides nothing. \"Protect\" (same menu, Pro) hides a note's contents behind your PIN or [biometric unlock](/help/biometric-unlock), for the things you would rather not have visible on a screen others sometimes see. Its title stays visible in the list, so keep the secret out of the title. One unlock opens every protected note for the time you set in Settings > Security. To shut the open one sooner, choose **Lock** above its text or **Lock now** in its options menu; it stays shut until you unlock it again.",
         "Both are on-screen gates rather than a second layer of encryption. The flags travel inside the note's own encrypted data, and the note is deliberately not re-encrypted with your PIN, so [a forgotten PIN can never destroy data](/help/forgot-pin). The phrase stays the real boundary: protect it first, and use these gates for the screen that other people sometimes see."
+      ]
+    },
+    "protect-section": {
+      "q": "Can I lock only the Vault, or another section, with my PIN?",
+      "a": [
+        "Yes, and it is free. Right-click the Vault in the sidebar, or long-press it on a phone, and choose **Protect Vault**. Notes, Tasks, Drawings, Files, Journals, Calendar, Contacts, Bookmarks and Trash work the same way. If you have no PIN yet, the app asks you to set one first. You open the section with your PIN or [biometric unlock](/help/biometric-unlock).",
+        "While a section is locked, its items do not show anywhere else either: not in All, Home, search or Trash. One unlock opens every protected section and [every protected note](/help/locked-vs-protected) for the time you set in Settings > Security > Lock > \"Ask for the PIN again after\". To lock a section sooner, click the open lock beside its name, or choose **Lock now** in its menu.",
+        "The [browser extension](/help/browser-extension-security) has its own unlock, so it still fills your logins. Items you delete from a locked section still follow [Trash auto-delete](/help/trash-auto-delete), and **Empty** in the Trash asks for your PIN first."
+      ]
+    },
+    "lock-reload": {
+      "q": "Why does the page reload when PrivacyNotes locks?",
+      "a": [
+        "Because the reload is how a locked app lets go of your notes. With the app lock on, locking saves your last edit and then starts the app again behind the lock screen, so the locked app no longer holds your recovery phrase, its keys or the notes you had open. It happens when you choose **Lock app**, and when the app locks by itself after the time you set in Settings > Security > Lock > \"Lock again after\".",
+        "Unlock as usual with your PIN, passcode or [biometric unlock](/help/biometric-unlock), and the note you had open comes back. Nothing you wrote is lost. [Reminders](/help/reminders) still ring while the app is locked, as \"Reminder\" and the time."
+      ]
+    },
+    "passkey-unlock": {
+      "q": "Can I unlock PrivacyNotes with a passkey?",
+      "a": [
+        "Yes. In a browser, biometric unlock is a passkey. A passkey is a key that your device or your password manager keeps for one website and uses only after your fingerprint, face or device password. When you turn on biometric unlock, PrivacyNotes makes a passkey for itself, and that passkey confirms it is you each time you open the app. The passkey also holds the key of the biometric unlock; where your passkey app cannot do that, biometric unlock does not turn on. With the app lock on and biometric unlock tied to your passkey, a copy of the browser's storage then needs the passkey or your PIN or passcode, so choose a passcode: a 4-digit PIN can be guessed.",
+        "To turn it on, open Settings > Security > Lock and choose \"Enable biometric unlock\". Your browser or password manager asks for your fingerprint, face or device password and saves the passkey, and the tab says \"Biometric unlock is tied to your passkey.\" Set it up in each browser where you want it: even when the passkey syncs to your other devices, it unlocks only the browsers where you turned it on. Your PIN, passcode and recovery phrase keep working beside it. If you turn it off, the passkey stays in your passkey app until you delete it there.",
+        "The browser extension's biometric unlock is a passkey too. It is made for the extension alone and opens only your logins there. The apps for iPhone, Android and Mac use the device's own secure hardware instead of a passkey, and the Windows app uses Windows Hello, with the same switch in the same place."
+      ]
+    },
+    "passkey-sign-in": {
+      "q": "Can I sign in to PrivacyNotes with a passkey?",
+      "a": [
+        "Yes. In your browser at [use.privacynotes.app](https://use.privacynotes.app), a passkey can take the place of typing your [recovery phrase](/help/phrase-vs-password) on a new device. Choose \"Phrase login\", then \"Sign in with a passkey\". Your passkey app asks for your fingerprint, face or device password, then the sign-in goes on as for a typed phrase, so [two-factor sign-in](/help/enable-2fa) still asks for its code.",
+        "Add the passkey first, in a browser where you are signed in: open Settings > Security > Passkeys and choose \"Add a passkey\". It asks for your PIN or passcode if you set one, and for a current 2FA code if 2FA is on. You can add up to 10. Your phrase keeps working.",
+        "The server stores only a copy of your phrase encrypted on your device with a key from the passkey, and never receives that key. Keep the passkey in a passkey app only you can open."
+      ]
+    },
+    "vault-passkeys": {
+      "q": "Can PrivacyNotes save passkeys for other websites?",
+      "a": [
+        "Yes. With the [browser extension](/help/browser-extension), a website that offers a passkey can save it in your Vault, inside your login for that site, so one item holds the password, the passkey or both. The extension asks first. The next time the site asks for a passkey, the extension lists the logins that hold one, and you choose which to sign in with. \"Use another passkey app\" hands the request to your browser's own passkey app instead.",
+        "The extension saves and uses passkeys while it is unlocked and logins are on. In the app, the Passkeys chip in the Vault shows the logins that hold one, and you edit a login to remove its passkey. To stop the offers, turn off \"Offer passkeys\" in the extension's settings.",
+        "Each passkey is encrypted on your device like the rest of the Vault, and the extension opens it only while it is unlocked."
       ]
     },
     "biometric-unlock": {
@@ -669,7 +731,7 @@
     "backup-app-closed": {
       "q": "Does an automatic backup run when PrivacyNotes is closed?",
       "a": [
-        "On a computer, it runs while the app is open, and also while the window is closed to the tray. Turn that on in Settings > System > \"Keep running in the tray\". If a backup came due while the app was fully closed, it runs about a minute after you open it again.",
+        "On a computer, it runs while the app is open, and also while the window is closed to the tray. Turn that on in Settings > System > \"Keep running in the tray\". If a backup came due while the app was fully closed, it runs about a minute after you open it again, with or without internet. Only a device that has not synced yet since it was signed in waits for that first sync.",
         "A phone does not let an app run in the background for this, so on Android and iPhone the backup runs a few seconds after you open the app, when one is due. If you have not opened the app for a while, a phone notification tells you that a backup is overdue. In the browser, a backup runs only while PrivacyNotes is open in a tab."
       ]
     },
@@ -677,7 +739,7 @@
       "q": "Is sync not already a backup?",
       "a": [
         "No. Sync keeps every device the same, so when a note is deleted on one device, it is deleted on all of them. A mistake, a bug or a stolen device can remove notes everywhere at once, and sync cannot give them back.",
-        "A backup is a copy from an earlier day that sync does not touch. [Automatic backups](/help/automatic-backups) write that copy into a folder you pick and keep several days of copies. If a backup holds far fewer items than the one before, PrivacyNotes keeps the older copies until you confirm, so a vault that was emptied by accident does not push out your good backups."
+        "A backup is a copy from an earlier day that sync does not touch. [Automatic backups](/help/automatic-backups) write that copy into a folder you pick and keep several days of copies. If a backup holds far fewer items than the one before, and that one held 20 or more, PrivacyNotes keeps the older copies until you confirm, so a vault that was emptied by accident does not push out your good backups."
       ]
     },
     "backup-cloud-folder": {
@@ -705,14 +767,14 @@
       "q": "How do I know an automatic backup worked?",
       "a": [
         "Look at \"Recent backups\" in Settings > Backup > Automatic. A good backup has a green tick and the word \"Checked\": PrivacyNotes opened the file again with your key before it saved it, and then read the saved copy back from the folder to make sure it matches byte for byte.",
-        "A backup that fails a check is not kept, your older copies stay, and the app tells you why, for example that the folder is not there. \"No changes, nothing written\" means [nothing changed since the last backup](/help/backup-no-changes), so no new file was needed. To test a file yourself, [restore it](/help/restore-backup): a restore into the same account changes nothing."
+        "A backup that fails a check is not kept, your older copies stay, and the app tells you why, for example that the folder is not there. \"No changes, nothing written\" means [nothing changed since the last backup](/help/backup-no-changes), so no new file was needed. To test a file yourself, [restore it](/help/restore-backup): a restore into the same account changes nothing as long as you have not trashed or deleted anything since that backup."
       ]
     },
     "backup-no-changes": {
       "q": "Why does my automatic backup say \"No changes, nothing written\"?",
       "a": [
         "Because nothing in your vault changed since the last backup. The file from last time already holds everything, so PrivacyNotes does not write the same copy again. Your folder keeps more days of history this way, because an identical file never pushes out an older one. It counts as a good backup, and the next one is due one period later.",
-        "PrivacyNotes compares the number of items, the items in the trash, the time of your last edit, the settings a backup holds (such as your folders, themes and trackers), the backup type and the folder. If any of them changed, or if the last backup file is no longer in the folder, it writes a new file. \"Back up now\" checks the same way, so pressing it twice never fills the folder with copies of one day. To get a new file anyway, for example for a USB stick, use Settings > Backup > Manual > \"Everything, encrypted (.pnbackupz)\"."
+        "PrivacyNotes compares the number of items, the items in the trash, the edit time of every item, the settings a backup holds (such as your folders, themes and trackers), the backup type and the folder. If any of them changed, or if the last backup file is no longer in the folder, it writes a new file. \"Back up now\" checks the same way, so pressing it twice never fills the folder with copies of one day. To get a new file anyway, for example for a USB stick, use Settings > Backup > Manual > \"Everything, encrypted (.pnbackupz)\"."
       ]
     },
     "backup-time-name": {
@@ -760,7 +822,7 @@
     "image-quality": {
       "q": "Does PrivacyNotes change or compress my images?",
       "a": [
-        "Yes. Both settings are on by default because we love our users: we want you to [save storage space](/help/storage-usage) and keep your privacy. Space saver shrinks a large image to fit 2048 pixels and saves it as JPEG at 85% quality, which keeps all the detail a screen can show. Remove location data strips the EXIF metadata a camera writes into a photo, including the GPS location, before the image is saved. Both apply to every image in the app: pasted into a note, added as a file, or imported. Two exceptions: a GIF keeps its size so its animation still plays, and a file attached to a Vault item is kept exactly as it was.",
+        "Yes. Both settings are on by default because we love our users: we want you to [save storage space](/help/storage-usage) and keep your privacy. Space saver shrinks a large image to fit 2048 pixels and saves it as JPEG at 85% quality, which keeps all the detail a screen can show. Remove location data strips the EXIF metadata a camera writes into a photo, including the GPS location, before the image is saved. Both apply to every picture the app can read: pasted into a note, added as a file, or imported. A picture it cannot read, such as AVIF, SVG or one that does not open, is stored as it arrived when you add it as a file or import it, location data included. Two exceptions: a GIF keeps its size so its animation still plays, and a file attached to a Vault item is kept exactly as it was.",
         "Turn either off under **Settings > Storage > Images**, where contact photos have a third switch that keeps them at 512 pixels. The settings apply to new images only; files that are not images are stored exactly as they are. HEIC and TIFF images are converted to JPEG, because only Safari can show them. [A backup you restore](/help/restore-backup) is written back byte for byte."
       ]
     },
@@ -768,7 +830,7 @@
       "q": "What counts against my storage, and how do I free space?",
       "a": [
         "Everything you sync, at its encrypted size: note text, images, audio recordings, and file attachments. The bar under Settings > Storage shows the total; each note's own footprint is listed in its note options as \"Storage used\". [Trashed notes still count until the trash is emptied](/help/trash-auto-delete).",
-        "To free space fast, open Files, sort by Size, and [delete the biggest items](/help/storage-after-delete) - attachments dwarf text in almost every account. Then empty the trash: the Trash view shows how much space \"Empty\" will free. Text alone almost never fills a quota; even the free 50 MB holds tens of thousands of plain notes."
+        "To free space fast, open Files, sort by Size, and [delete the biggest items](/help/storage-after-delete) - attachments dwarf text in almost every account. Then empty the trash: the Trash view shows how much space \"Empty\" will free. Every plan holds up to 10,000 items, the Trash included: notes, tasks, logins and every other kind. Text alone almost never fills the bytes."
       ]
     },
     "upload-failed": {
@@ -788,22 +850,22 @@
     "dead-mans-switch": {
       "q": "What does the dead man's switch delete, and what stays on my devices?",
       "a": [
-        "Only the copy on the server. When the switch is on and none of your devices goes online for the period you chose, anywhere from 1 month to 5 years, the server deletes your encrypted notes, their history, your files and your settings. It waits two more weeks after the period ends before it deletes anything, as a safety margin: a device that goes online during those two weeks still stops the deletion. Your account stays, so your recovery phrase still signs you in, and Pro stays. A storage subscription stays too, and keeps renewing. There is no email warning, and the deletion cannot be undone.",
+        "Only the copy on the server. When the switch is on and none of your devices goes online, and no connected browser extension or command line is used, for the period you chose, anywhere from 1 month to 5 years, the server deletes your encrypted notes, their history, your files and your settings. It waits two more weeks after the period ends before it deletes anything (rarely up to three weeks, when many accounts are due at once), as a safety margin: a device that goes online during that time still stops the deletion. Your account stays, so your recovery phrase still signs you in, and Pro stays. A storage subscription stays too, and keeps renewing. There is no email warning, and the deletion cannot be undone. Encrypted copies of the deleted files can stay in our file trash and backups for up to 40 days.",
         "Your devices keep their notes. When a device comes back online after a deletion, it stops syncing and asks you first: download a backup of everything it holds, which you can [restore](/help/restore-backup) later, then remove the notes from that device. It signs out, and the next sign-in starts in the empty account. A file that this device never opened can already be gone from the server, and the backup then lists it as missing. Keep the app updated on every device, because an older version cannot ask first.",
-        "Turn it on in Settings > ID & Sync > \"Dead man's switch\" and choose the period. Opening the app online on any of your devices starts the time again, and the \"Deletes on\" date in that tab shows the earliest day the deletion can happen, with the two weeks included. Turn the switch off at any time to stop it."
+        "Turn it on in Settings > ID & Sync > \"Dead man's switch\" and choose the period. Opening the app online on any of your devices, or using a connected browser extension or command line, starts the time again, so remove a command line that saves by itself or the switch waits for it. The \"Deletes on\" date in that tab shows the earliest day the deletion can happen, with the two weeks included. Turn the switch off at any time to stop it."
       ]
     },
     "leaving": {
       "q": "How do I leave PrivacyNotes completely?",
       "a": [
         "[Export first](/help/export), delete second - both self-serve. Two pages cover every exit route. Settings > Backup > Manual has \"Everything, not encrypted (.zip)\" for a complete copy. Settings > Transfer > Export has \"Notes only (.zip)\" in Markdown and the HTML archive for your next notes app, and \"Vault export (.json)\" in Bitwarden-compatible format for your next password manager. Exports are generated on your device.",
-        "Then Settings > Account > \"Delete account & data...\": type DELETE, and your synced notes, files, devices, settings, and the account itself are permanently removed. Records of a storage subscription and a minimal security identifier stay, and backups taken before the deletion expire after seven days ([details](/help/delete-account)). [An active storage add-on must be cancelled first](/help/manage-storage-addon) under Settings > Storage. No dark patterns and no win-back emails - your data is yours, including on the way out."
+        "Then Settings > Account > \"Delete account & data...\": type DELETE, and your synced notes, files, devices, settings, and the account itself are permanently removed. Records of a storage subscription and a minimal security identifier stay, and backups taken before the deletion expire after seven days, encrypted copies of files after up to 30 days ([details](/help/delete-account)). [An active storage add-on must be canceled first](/help/manage-storage-addon) under Settings > Storage. No dark patterns and no win-back emails - your data is yours, including on the way out."
       ]
     },
     "data-rights": {
       "q": "How does PrivacyNotes handle GDPR and my data rights?",
       "a": [
-        "Mostly by holding as little as possible. Sign up with a phrase and there is no name, email, or identity on file to request: your data is ciphertext under a random public key, [hosted in Zurich, Switzerland](/help/data-location). Sign in with Google, Apple, or GitHub and that login's email and account ID are linked to that key. Payment details stay with [Paddle](https://www.paddle.com), Apple or Google; we keep the order and subscription records needed to grant and restore purchases.",
+        "Mostly by holding as little as possible. Sign up with a phrase and there is no name, email, or identity on file to request: your data is ciphertext under a random public key, [hosted in Zurich, Switzerland, and the EU](/help/data-location). Sign in with Google, Apple, or GitHub and that login's email and account ID are linked to that key. Payment details stay with [Paddle](https://www.paddle.com), Apple or Google; we keep the order and subscription records needed to grant and restore purchases.",
         "Most rights are self-serve, no request form needed: access and portability are Settings > Transfer ([full export in open formats](/help/export)), erasure is Settings > Account > \"Delete account & data...\" (some billing and security records remain, [see what deletion removes](/help/delete-account)), and rectification is editing your notes. The formal version, including how to reach us for anything the app cannot do itself, lives in the [privacy policy](https://lifetimelabs.dev/privacy/)."
       ]
     },
@@ -818,7 +880,7 @@
     "pro-not-active": {
       "q": "I paid for Pro but it is not active. What now?",
       "a": [
-        "Give it a minute, then reload the app. After checkout the app polls for about 20 seconds and unlocks by itself, and a reload re-checks Pro status on launch. A [crypto payment](/help/pay-with-crypto) takes longer, and a banner shows where it stands. If the payment landed but activation lags, a banner says \"Payment received but Pro activation is taking longer than usual\" - that state resolves itself in nearly all cases. [In store builds](/help/store-purchases), a purchase that fails to validate retries when you restart the app, and a purchase that never activates is refunded by the store automatically within 3 days.",
+        "Give it a minute, then reload the app. After checkout the app polls for about 20 seconds and unlocks by itself, and a reload re-checks Pro status on launch. A [crypto payment](/help/pay-with-crypto) takes longer, and a banner shows where it stands. If the payment landed but activation lags, a banner says \"Payment received but Pro activation is taking longer than usual\" - that state resolves itself in nearly all cases. [In store builds](/help/store-purchases), a purchase that fails to validate retries when you restart the app, and on Android a purchase that never activates is refunded by Google Play automatically within 3 days.",
         "Still locked? It is almost always an account mismatch: Pro attaches to the account that was signed in at purchase, so a different phrase - or a Google, Apple, or GitHub login instead of your phrase vault - is a different account. Compare the Account ID under Settings > ID & Sync on the device that bought it. If it is genuinely stuck, [report it](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) and include that Account ID: it identifies the purchase and reveals nothing about your notes."
       ]
     },
@@ -827,14 +889,14 @@
       "a": [
         "Settings > Storage is the control panel. Upgrading to a bigger package applies immediately. On the web, the confirmation shows the exact prorated amount charged today before you commit, and the renewal date does not move; in the Play Store and the App Store the store's own sheet shows the charge, and Apple refunds the unused part of your current year and starts a new one. \"Cancel storage\" keeps your extra space until the end of the period you already paid for. To move to a smaller package, cancel the current one and buy the smaller one when the period ends.",
         "If your data still fits the remaining cap after expiry, that is the end of it; if not, nothing is deleted and the [90-day over-quota lifecycle](/help/over-quota) begins. A failed renewal shows a banner with an \"Update card\" link to fix payment in Paddle.",
-        "Cancelling from outside the app works too, which is the answer when you cannot sign in. [Paddle is our merchant of record](/help/paddle-privacy) and bills you directly: use the \"Manage Subscription\" link in your receipt email, or the support chat at [paddle.net](https://paddle.net). [A store build is the same idea](/help/store-purchases), so cancel there in the store's own subscription settings."
+        "Canceling from outside the app works too, which is the answer when you cannot sign in. [Paddle is our merchant of record](/help/paddle-privacy) and bills you directly: use the \"Manage Subscription\" link in your receipt email, or the support chat at [paddle.net](https://paddle.net). [A store build is the same idea](/help/store-purchases), so cancel there in the store's own subscription settings."
       ]
     },
     "store-purchases": {
       "q": "Do purchases carry over between the web, Google Play, and the App Store?",
       "a": [
         "Yes. Pro and storage attach to your account, not to a platform or store. Buy on the web and every app you sign into is Pro, including store builds; buy inside a store build and the web and desktop apps unlock the same way. Signing in is the restore, because the entitlement follows the account. A store build carries a **Restore purchases** button under Settings > Account as well, which asks Apple or Google what you own and unlocks it again after a reinstall.",
-        "The one difference is who bills you. Web purchases run through Paddle and are [managed in the app](/help/manage-storage-addon) under Settings > Storage. Purchases made inside a store build (the App Store and [Google Play](/help/play-vs-apk)) are billed by that store: recurring storage is cancelled in the store's subscription settings, and refunds follow the store's process. Either way it is the same account and the same Pro everywhere - including platforms that do not exist yet."
+        "The one difference is who bills you. Web purchases run through Paddle and are [managed in the app](/help/manage-storage-addon) under Settings > Storage. Purchases made inside a store build (the App Store and [Google Play](/help/play-vs-apk)) are billed by that store: recurring storage is canceled in the store's subscription settings, and refunds follow the store's process. Either way it is the same account and the same Pro everywhere - including platforms that do not exist yet."
       ]
     },
     "play-vs-apk": {
@@ -886,6 +948,13 @@
         "A top-level folder belongs to one space, with everything inside it, and **Move to Work** or **Move to Personal** in its menu, or in the menu of any item, moves it across. An item in no folder is Personal, and so is anything you create while All is open. To stop using spaces, switch off Settings > Lists > Spaces: every item shows, nothing moves, and each folder keeps its space for when you switch it back on. Spaces need Pro."
       ]
     },
+    "hide-sections": {
+      "q": "Can I hide sections I do not use, like the calendar or the journal?",
+      "a": [
+        "Yes. Right-click a section in the sidebar, or long-press it on a phone, and clear **Show in sidebar**. The section leaves the sidebar and nothing in it is deleted: its items stay in your library, keep syncing, and come back when you show the section again. The eye beside the **Content** caption in the sidebar lists every section at once, with a box for each.",
+        "Settings > Lists > Sidebar and All holds the same choice as a table, plus a second one. The **Sidebar** column picks the sections the sidebar shows, and the **All** column picks which kinds of items the All list holds, so journal entries can leave All while Journals stays in the sidebar. Both choices follow your account to your other devices, and both are free. To keep Journals but drop the \"How are you today?\" card, hide it from [the check-in options](/help/daily-check-in)."
+      ]
+    },
     "note-links": {
       "q": "How do I link one note to another?",
       "a": [
@@ -910,7 +979,7 @@
     "add-second-device": {
       "q": "How do I sign in on a second device?",
       "a": [
-        "On the device you already use, open Settings > Security > Phrase. It shows the words of your phrase and a sign-in QR code. On the new device, choose \"Phrase login\", then scan that QR with the camera, upload a photo of it, or type the words in. Your notes arrive within seconds.",
+        "On the device you already use, open Settings > Security > Phrase. It shows the words of your phrase and a sign-in QR code. On the new device, choose \"Phrase login\", then \"Scan QR with camera\", upload a photo of the QR, or type the words in. Your notes arrive within seconds. Use the app's own scanner: a phone's camera app does not sign in with this QR. A QR you saved earlier still works here, but an older one is a link that a camera app can open, so choose **Save QR** again and delete the old image. If the scanner does not read the QR, update the app or type the words.",
         "[A free account covers 2 devices](/help/device-limit) and Pro covers as many as you like, and two browsers on one computer count as a single device. Treat the QR exactly like the phrase it carries: show it to nobody, and never let it land in a photo library that syncs to somebody else's cloud."
       ]
     },
@@ -918,7 +987,8 @@
       "q": "Can I stop a device from syncing without signing out?",
       "a": [
         "Yes. Open Settings > ID & Sync and press \"Pause sync\". That device stops sending anything to the server: notes, settings and files alike. You keep writing exactly as before, everything queues locally, and the moment you resume it all goes up.",
-        "The pause belongs to that device alone. It does not travel to your other devices and it never clears itself, because a switch that says \"this device talks to nobody\" must not be turned back on by anything except you. One thing keeps running on purpose: the small heartbeat that lets a removed device learn it was removed, which is how a [lost device](/help/lost-device) still wipes itself."
+        "The pause belongs to that device alone. It does not travel to your other devices and it never clears itself, because a switch that keeps your notes on this device must not be undone by anything except you. One thing keeps running on purpose: the small heartbeat that lets a removed device learn it was removed, which is how a [lost device](/help/lost-device) still wipes itself.",
+        "A new account starts this way when \"Sync across devices\" stays off at sign-up, the default for an account made with a phrase alone. Until you turn sync on, your notes exist only on that device: if you lose it or clear its browser data, neither your phrase nor your login can bring them back, so export a backup now and then."
       ]
     },
     "wifi-only": {
@@ -935,12 +1005,33 @@
         "So do two things. Check that the footer says \"Synced\" before you clear anything, and keep your phrase in a password manager, because a cleared browser cannot ask you nicely for it. [The desktop and mobile apps](/help/platforms) are not affected at all: [they keep their own storage](/help/data-on-disk), which a browser cleanup never touches."
       ]
     },
+    "phrase-not-saved": {
+      "q": "Why does a banner say reloading or closing this tab signs me out?",
+      "a": [
+        "Because this browser could not protect your recovery phrase, so PrivacyNotes did not save it on this device. The app does not store the phrase unprotected, so it keeps it only in the open tab, and a reload or a closed tab ends the sign-in. Your notes are safe: everything that synced comes back when you sign in again.",
+        "To stay signed in, turn on the app lock in Settings > Security > Lock. Your PIN or passcode then protects the phrase, the banner goes away, and the next visit shows the lock screen instead of the sign-in. Until then, keep [your recovery phrase](/help/lost-phrase) at hand. [The desktop and mobile apps](/help/platforms) protect the phrase with the device itself."
+      ]
+    },
+    "shared-computer": {
+      "q": "Can I use PrivacyNotes on a shared or public computer?",
+      "a": [
+        "Yes. Open the web app at https://use.privacynotes.app, sign in with your recovery phrase and clear **Trust this device** before you continue. The browser then keeps the sign-in in that tab only: closing the tab or the window signs you out, and the next visit asks for your full phrase again. There is nothing to install and nothing to carry on a USB drive.",
+        "Your notes are encrypted on the computer, and the phrase that opens them leaves with the tab. App lock and biometric unlock stay off there, because both keep a protected copy of your phrase on the device. The box shows only when you sign in with [your recovery phrase](/help/lost-phrase): a sign-in with Google, Apple or GitHub always trusts the device. When you are done, sign out, which also wipes the encrypted copy of your notes from that browser. On your own devices, leave the box ticked to stay signed in."
+      ]
+    },
     "android-backup": {
       "q": "Are my notes included in my Android phone backup?",
       "a": [
         "No. The Android app keeps its data out of the phone's cloud backup, so none of it reaches Google Drive. The reason is the key, not the notes: where you chose **Trust this device**, your recovery phrase is held on that device to keep you signed in, and a cloud backup is no place for the key that decrypts your notes.",
         "A new phone therefore starts empty: install the app, [sign in with your phrase](/help/add-second-device), and everything that synced arrives. Restore waits for that first sync, so a backup you bring is matched to what the account holds rather than added twice. What never synced lives only on the old phone, so check the footer reads \"Synced\" first, or carry a \"Everything, not encrypted (.zip)\" from Settings > Backup > Manual ([which backup to make](/help/backup-strategy)).",
         "A direct phone-to-phone transfer at setup is different: some phones move app data across, and Android gives an app no dependable way to refuse. That copy never leaves your two devices, so wipe the old phone afterwards."
+      ]
+    },
+    "ios-backup": {
+      "q": "Are my notes included in my iPhone backup?",
+      "a": [
+        "No. The iPhone app keeps its data out of the phone's backups, so none of it reaches iCloud Backup or a backup you make on a computer. That includes items you shared into the app that it has not taken in yet. The reason is the key, not the notes: where you chose **Trust this device**, your recovery phrase is held on that device to keep you signed in, and a backup is no place for the key that decrypts your notes.",
+        "A new iPhone therefore starts empty: install the app, [sign in with your phrase](/help/add-second-device), and everything that synced arrives. What never synced lives only on the old phone, so check the footer reads \"Synced\" first, or carry a \"Everything, not encrypted (.zip)\" from Settings > Backup > Manual ([which backup to make](/help/backup-strategy))."
       ]
     },
     "print": {
@@ -1003,8 +1094,8 @@
     "storage-after-delete": {
       "q": "I deleted files but my storage did not go down. Why?",
       "a": [
-        "Your space is already free. The moment the delete syncs, those bytes stop counting [against your quota](/help/storage-usage), on the server as much as on this device. If the bar still shows the old figure, press the refresh icon beside it: that recounts from the server and leaves out everything queued for deletion. A device that was offline keeps its own last count until it catches up.",
-        "The \"few days\" the app mentions is about the encrypted file itself, not about your quota, and that wait is deliberate. Deleting a file from storage is permanent, with no trash to fish it back out of. A device that has not finished syncing holds an incomplete picture of your notes, so it could delete an image that another note still shows. A file therefore waits at least 24 hours, and only a device that has completed a clean sync removes it. The patience costs you nothing, because the space was credited the day you deleted."
+        "The space comes back about a day after you delete. A deleted file keeps counting [against your quota](/help/storage-usage) until the encrypted file itself is removed from storage, on the server as much as on this device. Once it is, press the refresh icon beside the bar if it still shows the old figure: that recounts from the server. A device that was offline keeps its own last count until it catches up.",
+        "That wait for the encrypted file is deliberate. Deleting a file from storage is permanent, with no trash to fish it back out of. A device that has not finished syncing holds an incomplete picture of your notes, so it could delete an image that another note still shows. A file therefore waits at least 24 hours, and only a device that has completed a clean sync removes it. Until then it still counts, so delete early when you are close to your limit."
       ]
     },
     "spoiler-text": {
@@ -1048,7 +1139,7 @@
         "Yes. Open Settings > Editor and choose Sans, Serif or Mono under **Note font**. Then open **Font for Sans** (or Serif, or Mono) just below it and pick a font. Your notes change right away. Each of the three can have its own font. The choice stays on this device, because every computer has its own fonts, and nothing is written into your notes.",
         "The list only shows common fonts. Browsers do not tell a website which fonts you have, because that list could be used to track you. So the app tries a list of well-known fonts and shows the ones it finds. If your font is not in the list, it can still work:",
         "- Type the font's exact name in the search field, for example `Fira Code`, and choose the row that offers it. The name must match the font's name on your computer, spaces included.\n- In Chrome and Edge, choose **Show all fonts on this device** and allow it. The list then holds every font you have.\n- If the line under the field says the font was not found, check the spelling first. Safari only lets websites use the fonts that came with your Mac, not fonts you installed yourself.",
-        "A font picked in the toolbar still wins over this setting, and code blocks keep their own font."
+        "A font picked in the toolbar for some words still wins over this setting, and its Sans, Serif or Mono uses the font you set for it here. Code blocks keep their own font."
       ]
     },
     "format-bar": {
@@ -1114,7 +1205,7 @@
         "Yes. Type `=` in a table cell to pick a function, or write the formula yourself. The cell shows the answer instead of the text, and every answer updates the moment you change a cell it reads. Cells are named by column letter and row number, and the header counts as row 1, so your first row of data is row 2. The answers work on every account; picking from the menu is Pro.",
         "To try everything at once, download the example note, then open Settings > Transfer > Import, choose **Markdown files** and pick the file.",
         "[Example note (.md)](/marketing/table-formulas-examples.md)",
-        "These are the functions, and they combine with `+`, `-`, `*`, `/` and brackets:",
+        "These are the functions, and they combine with `+`, `-`, `*`, `/`, `^` for a power, and brackets:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` and `COUNT` work across a range, as in `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` and `LOG` work on one value, as in `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` and `PHI` are constants, and `RAND` gives a random number\n- `=B7-B2` subtracts one cell from another, and `=SUM(B2:B10)*0.2` takes a percentage of a total",
         "Click a cell that shows an answer and the formula comes back, ready to change. Your note stores the formula itself, never the result, so an export and any other Markdown app show `=SUM(B2:B10)` exactly as you wrote it."
       ]
@@ -1143,7 +1234,7 @@
     "share-into-app": {
       "q": "Can I share text or a link into PrivacyNotes from another app?",
       "a": [
-        "Yes, on iPhone, iPad and Android, as a beta. Tap the share button in any app and pick PrivacyNotes. [A web link becomes a bookmark](/help/bookmarks) with the page title, text becomes a new note, and pictures and files go to Files. A link you already saved is shown instead of saved twice. Shared items arrive without a folder or a tag, so you sort them when it suits you.",
+        "Yes, on iPhone, iPad and Android. Tap the share button in any app and pick PrivacyNotes. [A web link becomes a bookmark](/help/bookmarks) with the page title, text becomes a new note, and pictures and files go to Files. A link you already saved is shown instead of saved twice. Shared items arrive without a folder or a tag, so you sort them when it suits you.",
         "On Android the app asks first: it lists what arrived and saves it only when you choose **Save all**, or drops it with **Discard**. On iPhone and iPad a card confirms **Saved to PrivacyNotes**. Each file follows your [upload limit](/help/attachment-limits), and a share waits until you are signed in and the app is unlocked."
       ]
     },
@@ -1157,7 +1248,7 @@
     "session-expired": {
       "q": "Why does the app say \"Session expired\"?",
       "a": [
-        "It means our server no longer accepts this device's sign-in, so syncing stops. A weak connection or a server outage never causes it: the app checks with the server a second time before it shows the message. Your notes are safe on this device.",
+        "It means our server no longer accepts this device's sign-in, so syncing stops. A weak connection or a server outage never causes it: the app checks with the server a second time before it shows the message. A sign-in also ends when this device has not opened PrivacyNotes for 60 days. Your notes are safe on this device.",
         "Click **Sign in again**. The app first asks [whether you saved your recovery phrase](/help/lost-phrase), because you need it, or the login you signed up with, to come back in. Notes that have not synced yet stay on the device and sync once you are signed in. The same window warns you [if any files have not finished uploading](/help/upload-failed), because those are removed with the sign-out."
       ]
     },
@@ -1207,7 +1298,7 @@
       "q": "Can I subscribe to a Google, iCloud or Nextcloud calendar?",
       "a": [
         "Yes. Click the globe at the top of the [calendar](/help/calendar), paste the calendar's address and click Subscribe. Your calendar app gives you the address: in Google Calendar it is \"Secret address in iCal format\", in iCloud you share the calendar as a Public Calendar, and in Nextcloud you copy its subscription link.",
-        "The events show in your calendar with a globe. Each device checks for changes when the app opens, then every hour while it is open. A moved or cancelled meeting updates here too. Subscribed events are read-only and have no reminders. To change one, change it in the calendar it comes from. They are not saved as notes, so they take no storage and are not in search or backups. If you want copies you can edit, use Import instead.",
+        "The events show in your calendar with a globe. Each device checks for changes when the app opens, then every hour while it is open. A moved or canceled meeting updates here too. Subscribed events are read-only and have no reminders. To change one, change it in the calendar it comes from. They are not saved as notes, so they take no storage and are not in search or backups. If you want copies you can edit, use Import instead.",
         "To stop a subscription, click Remove in the same window. Its events disappear from all your devices. You can subscribe to up to 20 calendars, and it is free. Your calendar address is kept in your encrypted settings. In the web app, our server downloads the calendar for you and keeps nothing."
       ]
     },
@@ -1354,7 +1445,7 @@
     "tracker-privacy": {
       "q": "Who can read my tracker and medication data?",
       "a": [
-        "Your tracker values live inside your journal entries, which are encrypted on your device and stay encrypted when they sync. Your medication list and custom trackers live in your settings. They sync encrypted like your notes, but the copy this device keeps of them is not sealed yet, so your disk encryption and screen lock are what protect it there. Statistics, [the Doctor PDF](/help/doctor-pdf), [the AI prompt](/help/ai-prompt) and both downloads are computed on your device.",
+        "Your tracker values live inside your journal entries, which are encrypted on your device and stay encrypted when they sync. Your medication list and custom trackers live in your settings. They sync encrypted like your notes, and the copy this device keeps is sealed under a key from your phrase, as your notes are. Statistics, [the Doctor PDF](/help/doctor-pdf), [the AI prompt](/help/ai-prompt) and both downloads are computed on your device.",
         "[With self-custody](/help/threat-model-levels), the server holds nothing that opens them. If you signed up with Google, Apple or GitHub and chose \"Keep it simple & convenient\", your phrase is stored on our server under a key of ours; Settings > Account > Key custody shows your mode and lets you switch. More in [what PrivacyNotes can see](/help/what-can-you-see)."
       ]
     },
@@ -1362,7 +1453,7 @@
       "q": "What does a full backup include?",
       "a": [
         "Everything you made: notes, journal entries with every value you logged, tasks, events, vault items, bookmarks, contacts, drawings, pictures, audio and files, also the ones in the trash. It also holds what you set up by hand: folders and their colors, pinned tags, custom themes, your medications, custom trackers, factors and habit questions, the trackers you turned on and their units, subscribed calendars and your Home layout.",
-        "It leaves out your app lock PIN, Note History, the list of your devices, and how the app looks, such as the theme and the text size. A [restore](/help/restore-backup) adds what your account is missing and never undoes a change you made after the backup. To keep your trackers in a file you can open, use **Download JSON** in Settings > Transfer > Trackers ([tracker files](/help/tracker-json-csv))."
+        "It leaves out your app lock PIN, Note History, the list of your devices, and how the app looks, such as the theme and the text size. A [restore](/help/restore-backup) adds what your account is missing and keeps your later edits. A note you moved to the Trash or deleted after the backup comes back. To keep your trackers in a file you can open, use **Download JSON** in Settings > Transfer > Trackers ([tracker files](/help/tracker-json-csv))."
       ]
     }
   }

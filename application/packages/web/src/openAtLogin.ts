@@ -11,6 +11,7 @@
 import { useSyncExternalStore } from 'react';
 import { createListeners } from './listeners';
 import { readFlag } from './localStore';
+import { getTrayMode } from './trayMode';
 
 const KEY = 'privacynotes.startMinimized';
 
@@ -38,10 +39,10 @@ export function useStartMinimized(): boolean {
   return useSyncExternalStore(subscribe, getStartMinimized);
 }
 
-/** At start, after the tray switch went to Rust: how a start at sign-in shows. Any other start ignores it. */
+/** At start: how a start at sign-in shows, with the tray switch, which Rust may not have yet. Any other start ignores it. */
 export function finishLoginStart(): void {
   void import('@tauri-apps/api/core')
-    .then(({ invoke }) => invoke('finish_login_start', { minimized: getStartMinimized() }))
+    .then(({ invoke }) => invoke('finish_login_start', { minimized: getStartMinimized(), tray: getTrayMode() }))
     .catch(() => {});
 }
 

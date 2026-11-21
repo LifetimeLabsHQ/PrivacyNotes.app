@@ -1,5 +1,6 @@
 // This page has no app bundle and no auth client. It hands a one-time PKCE
-// code only to its exact same-origin opener, or to an explicit local copy.
+// code only to its exact same-origin opener, or to an explicit local copy,
+// which a phone browser never gets (auth-phone.js).
 // tests/accountConnection.test.ts covers refusal and URL scrubbing.
 (function () {
   'use strict';
@@ -27,12 +28,30 @@
     if (missing) missing.hidden = false;
     return;
   }
+  var opener = false;
   try {
-    if (window.opener) window.opener.postMessage({ type: 'pn-account-connect', url: handoff.toString() }, url.origin);
-  } catch (e) { /* desktop and isolated popups use the explicit copy */ }
+    // A closed opener takes no message: it counts as none.
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage({ type: 'pn-account-connect', url: handoff.toString() }, url.origin);
+      opener = true;
+    }
+  } catch (e) {
+    /* No opener: on a computer the explicit copy below is the way back. A
+       phone browser gets no copy, so there the page says to connect from a
+       computer: starting again on the phone would end here again. */
+  }
   if (error) {
     var refused = role('missing');
     if (refused) refused.hidden = false;
+    return;
+  }
+  // A phone browser never shows the link or a Copy button: a hostile phone
+  // app can start a flow that returns here, and the app in front can read the
+  // clipboard. The post above still reaches an opener of the app; with no
+  // opener, the connection can finish only from a computer.
+  if (window.pnIsPhoneBrowser && window.pnIsPhoneBrowser()) {
+    var phone = role(opener ? 'phone' : 'phone-alone');
+    if (phone) phone.hidden = false;
     return;
   }
   var out = role('code');

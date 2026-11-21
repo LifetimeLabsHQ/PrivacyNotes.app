@@ -212,7 +212,12 @@ class MainActivity : TauriActivity() {
 
   /** Copies one stream into a staged .tmp- folder, or returns null. */
   private fun copySharedFile(uri: Uri, inbox: File): Pair<File, String>? {
-    if (uri.scheme != "content" || uri.authority == "$packageName.fileprovider") return null
+    // Android drops a user id in front (`0@authority`) before it looks the
+    // provider up, so the comparison is on what follows the last `@`, and any
+    // provider of this package is refused (beta issue 176).
+    val authority = uri.authority?.substringAfterLast('@')
+    if (uri.scheme != "content" || authority == null || authority == "$packageName.fileprovider" ||
+      packageManager.resolveContentProvider(authority, 0)?.packageName == packageName) return null
     val id = UUID.randomUUID().toString()
     val tmp = File(inbox, ".tmp-$id")
     var staged = false

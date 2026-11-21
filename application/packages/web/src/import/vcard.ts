@@ -56,7 +56,6 @@ import {
   BIRTHDAY_LABEL,
   buildContactBody,
   contactDisplayName,
-  contactFullName,
   emptyContact,
   type Contact,
 } from '../contactBody';
@@ -768,7 +767,7 @@ function unfold(raw: string): { lines: string[]; orphans: number } {
   return { lines, orphans };
 }
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:vcard.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:vcard.${key}`, options);
 
 export async function parseVcard(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
   onProgress?.(i18n.t('importExport:status.readingFile'));
@@ -802,9 +801,6 @@ export async function parseVcard(file: File, onProgress?: (msg: string) => void)
   const now = new Date().toISOString();
   const sink: PhotoSink = { blobs: new Map(), decoded: 0, failed: 0, links: 0 };
   const notes: ImportedNote[] = [];
-  const allTags = new Set<string>();
-  let empty = 0;
-  let untagged = 0;
 
   for (let i = 0; i < cards.length; i++) {
     const parsed: Line[] = [];
@@ -815,9 +811,6 @@ export async function parseVcard(file: File, onProgress?: (msg: string) => void)
     }
     const { contact, fn, tags, rev } = readCard(parsed, sink);
     const title = fn || contactDisplayName('', contact).trim();
-    if (!fn && !contactFullName(contact) && contact.phones.length === 0 && contact.emails.length === 0) empty++;
-    if (tags.length === 0) untagged++;
-    for (const t of tags) allTags.add(t);
     const stamp = revToIso(rev, now);
     notes.push({
       title,
@@ -853,12 +846,6 @@ export async function parseVcard(file: File, onProgress?: (msg: string) => void)
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: empty,
-      untaggedNotes: untagged,
-      uniqueTags: allTags.size,
-    },
     source: 'vcard',
     ...(sink.blobs.size > 0
       ? { blobs: sink.blobs, blobBytes: [...sink.blobs.values()].reduce((sum, b) => sum + b.data.length, 0) }

@@ -1,15 +1,17 @@
 import type JSZip from 'jszip';
 import i18n from '../i18n';
-import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
+import { mediaTooLargeWarning, zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
 import { normalizeTag } from '../notesRepo';
-import { linkifyMarkdown } from './linkify';
+import { withBareLinks } from './bareLinks';
+import { mapOutsideCode } from './codeSegments';
 import { importBlobs } from './blobImport';
+import { FileKeys, fileResolver, keyFileRefs, readKeyedFiles } from './fileRefs';
 import { isUntitledStem } from '../exportNames';
-import type { ImportedNote, ParsedImport } from './types';
+import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 import { isJunkEntry } from './importHelpers';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:appleNotes.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:appleNotes.${key}`, options);
 
 /**
  * Apple Notes importer.
@@ -130,12 +132,17 @@ function parseOneNote(
   // is usually deleted before anyone notices.
   const stamp = (zipDate ?? new Date()).toISOString();
 
-  // Title: first `# ` heading, fall back to filename
+  // Title: a `# ` heading that is the first line with text, else the
+  // filename. A heading further down is the note's own; taking it would
+  // drop the text above it.
   let title = '';
   let body = content;
 
-  const headingMatch = content.match(/^# (.+)$/m);
-  if (headingMatch) {
+  // From the top only, never the `m` flag: `^\s*` tried at every line of a
+  // run of blank lines is quadratic. A first heading with blank text above
+  // it is the same match either way.
+  const headingMatch = content.match(/^\s*# ([^\n\r\u2028\u2029]+)/);
+  if (headingMatch && !content.slice(0, headingMatch.index!).trim()) {
     title = headingMatch[1]!.trim();
     // Remove the heading line from body
     body = content.slice(headingMatch.index! + headingMatch[0].length).trim();
@@ -150,23 +157,25 @@ function parseOneNote(
   // Strip duplicate title line
   body = stripDuplicateTitle(title, body);
 
-  // Convert ++underline++ to HTML <u> tags (TipTap Underline extension)
-  const hadUnderline = /\+\+.+?\+\+/.test(body);
-  body = body.replace(/\+\+(.+?)\+\+/g, '<u>$1</u>');
-
-  // Convert ==highlight== to bold (no highlight extension)
-  body = body.replace(/==(.+?)==/g, '**$1**');
+  // Convert ++underline++ to HTML <u> tags (TipTap Underline extension),
+  // outside code and only as a mark around text: `i++ and j++` stays.
+  // ==highlight== stays as it is: the editor reads it as a highlight.
+  let hadUnderline = false;
+  body = mapOutsideCode(body, (prose) => prose.replace(/(?<![\w+])\+\+(?=\S)(.+?)(?<=\S)\+\+(?![\w+])/g, (_, inner: string) => {
+    hadUnderline = true;
+    return `<u>${inner}</u>`;
+  }));
 
   // NOTE: image/attachment references (images/... and Attachments/...)
-  // are left intact - the blob import step rewrites them to pn:img/ and
-  // pn:file/ URIs after uploading. If no blobs are present in the zip,
-  // orphan refs are cleaned up post-apply.
+  // are left intact here; parseZip resolves each against the note's own
+  // folder and gives it a fixed-width key (fileRefs.ts) that the blob
+  // import step rewrites to a pn:img/ or pn:file/ URI.
 
   // Tags from folder path
   const tags = tagsFromPath(relativePath, dropLeading);
 
-  // Linkify bare URLs
-  body = linkifyMarkdown(body.trim());
+  // Bare URLs become links after the parse (withBareLinks).
+  body = body.trim();
 
   return {
     title,
@@ -185,23 +194,10 @@ function parseOneNote(
 const MD_EXT = /\.md$/i;
 const ATTACHMENT_EXT = /\.(png|jpe?g|gif|webp|svg|bmp|pdf|mp3|mp4|webm|ogg|wav|m4a)$/i;
 
-/** MIME type from extension. */
-function mimeFromExt(path: string): string {
-  const ext = path.split('.').pop()?.toLowerCase() ?? '';
-  const map: Record<string, string> = {
-    png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
-    gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', bmp: 'image/bmp',
-    pdf: 'application/pdf',
-    mp3: 'audio/mpeg', m4a: 'audio/mp4', ogg: 'audio/ogg', wav: 'audio/wav',
-    mp4: 'video/mp4', webm: 'video/webm',
-  };
-  return map[ext] ?? 'application/octet-stream';
-}
-
 interface ParseZipResult {
   notes: ImportedNote[];
   strippedUnderline: number;
-  blobs: Map<string, { data: Uint8Array; mime: string; name: string }>;
+  blobs: Map<string, ImportBlob>;
   blobBytes: number;
   tooLarge: number;
 }
@@ -265,27 +261,22 @@ async function parseZip(
     }
   }
 
-  // Extract attachment/image blobs
-  const blobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
-  let blobBytes = 0;
-  let tooLarge = 0;
-  if (blobFiles.length > 0) {
-    onProgress?.(i18n.t('importLog:shared.extracting', { count: blobFiles.length }));
+  // Only the files a note names, each resolved from the note's own folder
+  // under a fixed-width key: `Recipes/images/a.jpg` and `iCloud/images/a.jpg`
+  // stay two pictures (beta #152).
+  const files = new Map(blobFiles);
+  const resolve = fileResolver(files.keys());
+  const keys = new FileKeys('anfile');
+  for (const [i, [rel]] of mdFiles.entries()) {
+    notes[i]!.body = keyFileRefs(notes[i]!.body, rel.slice(0, Math.max(0, rel.lastIndexOf('/'))), resolve, keys);
   }
-  for (let i = 0; i < blobFiles.length; i++) {
-    const [rel, entry] = blobFiles[i]!;
-    const data = await zipEntryMedia(entry);
-    if (!data) {
-      tooLarge++;
-      continue;
-    }
-    const name = rel.split('/').pop() ?? rel;
-    blobs.set(rel, { data, mime: mimeFromExt(rel), name });
-    blobBytes += data.length;
-    if ((i + 1) % 20 === 0) {
-      onProgress?.(i18n.t('importLog:shared.extracted', { done: i + 1, total: blobFiles.length }));
-    }
+  if (keys.size > 0) {
+    onProgress?.(i18n.t('importLog:shared.extracting', { count: keys.size }));
   }
+  const { blobs, tooLarge } = await readKeyedFiles(keys, files, notes, (done, total) =>
+    onProgress?.(i18n.t('importLog:shared.extracted', { done, total })),
+  );
+  const blobBytes = [...blobs.values()].reduce((sum, b) => sum + b.data.length, 0);
 
   return { notes, strippedUnderline, blobs, blobBytes, tooLarge };
 }
@@ -294,17 +285,13 @@ async function parseZip(
 /* Public importer                                                    */
 /* ------------------------------------------------------------------ */
 
-export async function parseAppleNotes(
+export const parseAppleNotes = withBareLinks(readAppleNotes);
+
+async function readAppleNotes(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
   const { notes, strippedUnderline, blobs, blobBytes, tooLarge } = await parseZip(file, onProgress);
-
-  const uniqueTags = new Set(notes.flatMap((n) => n.tags));
-  const emptyNotes = notes.filter(
-    (n) => !n.title.trim() && !n.body.trim()
-  ).length;
-  const untaggedNotes = notes.filter((n) => n.tags.length === 0).length;
 
   // Count images vs non-image attachments
   let imageCount = 0;
@@ -351,18 +338,11 @@ export async function parseAppleNotes(
       i18n.t('importLog:shared.foundAttachments', { count: attachmentCount })
     );
   }
-  transforms.push(i18n.t('importLog:shared.linkifiedBare'));
 
   return {
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes,
-      untaggedNotes,
-      uniqueTags: uniqueTags.size,
-    },
     source: 'apple-notes',
     blobBytes,
     blobs: blobs.size > 0 ? blobs : undefined,

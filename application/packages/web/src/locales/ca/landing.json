@@ -1,6 +1,5 @@
 {
   "header": {
-    "betaBadge": "beta",
     "downloads": "Baixades",
     "price": "Preu",
     "priceLine": "El que costen les teves apps, sumat",
@@ -290,7 +289,7 @@
   },
   "demoShot": {
     "kicker": "Mira-la en directe",
-    "caption": "L'aplicació de debò amb notes d'exemple, directament al teu navegador. No es desa res."
+    "caption": "L'aplicació de debò amb notes d'exemple, directament al teu navegador. El que escrius es queda al navegador."
   },
   "badges": {
     "privacyToolsAlt": "PrivacyNotes a PrivacyTools.io",
@@ -358,7 +357,7 @@
     "freeImport": "Importació i exportació, incloent-hi Keep i Obsidian",
     "freeAnon": "Inici de sessió anònim, sense correu",
     "earlyAdopterBadge": "Pioner",
-    "payMethods": "Paga amb targeta, o amb Bitcoin, Ethereum, Lightning, USDC o USDT."
+    "payMethods": "Paga amb targeta, o amb Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin o TON."
   },
   "underHood": {
     "heading": "Sota el capó",
@@ -498,7 +497,7 @@
     "noLockIn": "Lligams",
     "noEmail": "Correu obligatori",
     "noDarkPatterns": "Patrons foscos",
-    "noBackdoor": "Portes del darrere"
+    "noBackdoor": "Portes del darrere ocultes"
   },
   "noRecovery": {
     "heading": "La teva frase és la teva clau",
@@ -506,7 +505,7 @@
     "noRecoveryTerm": "Sense recuperació",
     "noRecoveryDesc": "Amb autocustòdia, si perds la frase, perds les notes",
     "deviceTerm": "Generada al dispositiu",
-    "deviceDesc": "Amb autocustòdia, la teva frase no toca mai els nostres servidors",
+    "deviceDesc": "Amb autocustòdia, la teva frase no toca mai els nostres servidors tret que afegeixis una clau d'accés d'inici de sessió",
     "zkTerm": "Coneixement zero",
     "zkDesc": "Amb autocustòdia, el servidor no guarda res que obri les teves notes",
     "writeTerm": "Escriu-la en paper",
@@ -521,7 +520,7 @@
     "heading": "La teva caixa forta està a punt en menys d'un minut.",
     "importNote": "Véns d'una altra aplicació? Exporta des de qualsevol d'aquestes i importa en pocs minuts:",
     "importDemoTitle": "Prova primer la teva importació a la demo",
-    "importDemoBody": "El teu fitxer es llegeix al navegador, no arriba res als nostres servidors, i en tancar la pestanya s'esborra."
+    "importDemoBody": "El teu fitxer es llegeix al navegador i no se'n puja res. Es queda en aquest navegador fins que la demo es torni a obrir aquí; esborra les dades del lloc per eliminar-lo abans."
   },
   "about": {
     "tabs": {
@@ -529,7 +528,7 @@
       "hotkeys": "Dreceres",
       "rating": "Valoració"
     },
-    "intro": "<brand/> reuneix les teves notes, tasques, contrasenyes, diari, fitxers, calendari, contactes i marcadors en un sol lloc, amb seguiment de l'estat d'ànim i de la medicació. Tot es xifra al teu dispositiu amb una clau creada a partir de la teva frase de recuperació, i continua xifrat als nostres servidors a <nowrap>Suïssa</nowrap>. Funciona fora de línia, i l'app és de codi obert.",
+    "intro": "<brand/> reuneix les teves notes, tasques, contrasenyes, diari, fitxers, calendari, contactes i marcadors en un sol lloc, amb seguiment de l'estat d'ànim i de la medicació. Tot es xifra al teu dispositiu amb una clau creada a partir de la teva frase de recuperació, i continua xifrat als nostres servidors a <nowrap>Suïssa</nowrap> i a la UE. Funciona fora de línia, i l'app és de codi obert.",
     "versionHeading": "Versió",
     "windowVersion": "Versió {{version}}",
     "windowHelp": "Centre d'ajuda",
@@ -549,7 +548,7 @@
     "openSourceLink": "Llegeix el codi a GitHub.com",
     "openSourceBody": "L'aplicació i el xifratge que porta dins estan publicats, així que qualsevol pot comprovar com es xifren les teves notes.",
     "dataStorageHeading": "Emmagatzematge de dades",
-    "dataStorageBody": "Blobs xifrats emmagatzemats a Zuric, <flag/> Suïssa.",
+    "dataStorageBody": "Les notes, els diaris i la resta, xifrats, emmagatzemats a Zuric, <flag/> Suïssa. Les imatges i els fitxers nous de l'app actual, emmagatzemats a la UE.",
     "faviconsHeading": "Icones dels llocs web",
     "faviconsBody1": "Les icones dels llocs web (favicons) provenen de DuckDuckGo i de Google, i les recupera el nostre servidor en nom teu. El teu navegador no contacta mai amb cap dels dos, així que veuen el nostre servidor demanant un domini i no et veuen mai a tu.",
     "faviconsBody2": "Les icones es desen a la memòria cau del teu dispositiu durant 90 dies. Cap petició no inclou la teva identitat, i pots desactivar les icones a Configuració > Llistes."
@@ -557,7 +556,7 @@
   "feedback": {
     "title": "Envia comentaris",
     "intro": "Els bugs i les peticions de funcions van a GitHub, així podem fer el seguiment de cadascun.",
-    "labelReportBug": "Informa d'un error",
+    "labelReportBug": "Informa d'un bug",
     "descReportBug": "Amb la teva versió ja emplenada",
     "descGithub": "Idees, preguntes, traduccions",
     "followHeading": "Segueix-nos",

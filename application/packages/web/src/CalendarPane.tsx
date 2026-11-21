@@ -1,12 +1,14 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Trans, useTranslation } from 'react-i18next';
-import { BellSimple, Calendar, Columns, Download, Gift, Globe, GridNine, List, ListDashes, Repeat } from './icons';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { BellSimple, Calendar, Columns, Download, Gear, Gift, Globe, GridNine, List, ListDashes, Repeat, Ruler } from './icons';
 import { SPACE_ICONS } from './SpaceSwitch';
 import { typeGlyph } from './NoteRow';
 import { Switch } from './Switch';
 import { HoverLabel } from './HoverLabel';
 import { keyText } from './shortcutMatch';
-import { CalendarHeader, MonthGrid, addDays, dayAtNoon, dayKindColor, monthCells, useWeekStart, weekCells } from './MonthGrid';
+import { CalendarHeader, MonthGrid, addDays, dayAtNoon, dayKindColor, monthCells, useWeekStart, weekCells, type DayCounter } from './MonthGrid';
+import { DayCountStrip } from './DayCountStrip';
+import { chooseEnd, countDays, pickDay, shownCount, startCount, swapDays, typeDays, type DayCountState } from './dayCount';
 import { CalendarGrid } from './CalendarGrid';
 import { DayChooser, timeLabel, useEntryLook } from './JournalCalendar';
 import { PathGlyph } from './looks/LookGlyph';
@@ -20,6 +22,8 @@ import type { DayEntry, DayIndex, DayKind } from './notesViewUtils';
 import type { Space } from './spaces';
 import type { CalendarPillar } from './notesView/useCalendarPillar';
 import { dayNumber } from './schedule';
+import { setHiddenKinds, useHiddenKinds } from './calendarLegend';
+import { DayMarks, TrackersMenu, type CalendarTrackers } from './CalendarTrackers';
 
 /**
  * The Calendar pillar's editor pane: Day, Week or Month over one index. The
@@ -44,30 +48,7 @@ type CalendarMove = { id: string; occurrence?: string; days: number; time?: stri
 const CHIP_PX = 18;
 const NUMBER_PX = 28;
 
-// ── The legend: which types show, per device ─────────────────────────
-
-const HIDDEN_KEY = 'privacynotes.calendarHiddenKinds';
-const legendListeners = new Set<() => void>();
-function readHidden(): string {
-  try {
-    return localStorage.getItem(HIDDEN_KEY) ?? '';
-  } catch {
-    return '';
-  }
-}
-function setHidden(kinds: readonly DayKind[]) {
-  try {
-    if (kinds.length) localStorage.setItem(HIDDEN_KEY, kinds.join(','));
-    else localStorage.removeItem(HIDDEN_KEY);
-  } catch {
-    // Storage refused: the legend resets on the next load.
-  }
-  legendListeners.forEach((l) => l());
-}
-function useHiddenKinds(): Set<DayKind> {
-  const raw = useSyncExternalStore((l) => { legendListeners.add(l); return () => { legendListeners.delete(l); }; }, readHidden);
-  return useMemo(() => new Set(raw.split(',').filter(Boolean) as DayKind[]), [raw]);
-}
+// ── The legend: which types show, per device (calendarLegend.ts) ─────
 
 const LEGEND: readonly DayKind[] = ['event', 'note', 'task', 'journal', 'contact'];
 
@@ -107,6 +88,13 @@ function EntryGlyph({ entry, size = 12 }: { entry: DayEntry; size?: number }) {
   return iconPaths
     ? <PathGlyph paths={iconPaths} size={size} className={className} style={style} />
     : <Glyph size={size} aria-hidden="true" className={className} style={style} />;
+}
+
+/** The repeat glyph of a bar or a timed card, in the item's color, beside
+ *  the stripes `.pn-repeat` draws (#811). */
+function RepeatGlyph({ entry }: { entry: DayEntry }) {
+  const { icon: ink } = useEntryLook(entry);
+  return <Repeat size={10} aria-hidden="true" className={`shrink-0 ${dayKindColor(entry.kind)}`} style={ink} />;
 }
 
 /** One item in a cell: its type's icon, the time in front of a timed one,
@@ -150,8 +138,11 @@ function Chip({ entry, day, mixed, onOpen, onMenu }: { entry: DayEntry; day: str
 }
 
 /** The bars of one week row: a filled pill per multi-day item in its lane,
- *  flat where it runs past the row, with a grip at its end to move the end day. */
-function Bars({ days, index, hidden, onOpen, onMenu, top, weekCol }: {
+ *  flat where it runs past the row, with a grip at its end to move the end day.
+ *  `passThrough` (the day counter is open): the bars take no pointer, so a
+ *  click on one reaches the day cell under it, as a chip's click does. */
+function Bars({ days, index, hidden, onOpen, onMenu, top, weekCol, passThrough = false }: {
+  passThrough?: boolean;
   onMenu: ItemMenu;
   days: readonly string[];
   index: DayIndex;
@@ -173,7 +164,7 @@ function Bars({ days, index, hidden, onOpen, onMenu, top, weekCol }: {
           <InkBox
             key={entryKey(b.entry)}
             entry={b.entry}
-            className={`absolute h-4 z-[1] px-0.5 ${color}`}
+            className={`absolute h-4 z-[1] px-0.5 ${passThrough ? 'pointer-events-none' : ''} ${color}`}
             style={{
               top: top + b.lane * CHIP_PX,
               insetInlineStart: `calc(${weekCol} + (100% - ${weekCol}) * ${b.startCol} / ${n})`,
@@ -181,7 +172,7 @@ function Bars({ days, index, hidden, onOpen, onMenu, top, weekCol }: {
             }}
           >
             <div
-              className={`h-full flex items-center bg-current/15 ${b.contStart ? 'rounded-s-none' : 'rounded-s'} ${b.contEnd ? 'rounded-e-none' : 'rounded-e'}`}
+              className={`h-full flex items-center bg-current/15 ${b.entry.repeating ? 'pn-repeat' : ''} ${b.contStart ? 'rounded-s-none' : 'rounded-s'} ${b.contEnd ? 'rounded-e-none' : 'rounded-e'}`}
             >
               <button
                 type="button"
@@ -202,6 +193,7 @@ function Bars({ days, index, hidden, onOpen, onMenu, top, weekCol }: {
               >
                 <span data-slot="icon" className="inline-flex shrink-0"><EntryGlyph entry={b.entry} size={11} /></span>
                 <span data-slot="title" dir="auto" className="min-w-0 truncate">{title}</span>
+                {b.entry.repeating && <RepeatGlyph entry={b.entry} />}
                 {b.entry.space === 'work' && <SPACE_ICONS.work size={10} aria-hidden="true" className="shrink-0 ms-auto text-pn-muted" />}
               </button>
               {!b.contEnd && b.entry.kind !== 'contact' && !b.entry.feed && (
@@ -269,8 +261,6 @@ type Props = {
   onResize: (id: string, occurrence: string | undefined, end: string) => void;
   /** List rows dropped on a day (and an hour). */
   onDropItems: (ids: string[], day: string, time?: string) => void;
-  /** The other space's switch, with Spaces on. */
-  otherSpace: { space: Space; shown: boolean; set: (on: boolean) => void } | null;
   weekNumbers: boolean;
   firstHour: number;
   /** Opens the drawer, below lg where the folded agenda took its button along. */
@@ -280,11 +270,14 @@ type Props = {
   agenda?: { open: boolean; toggle: () => void };
   /** Opens the Import tab, where the calendar file and webcal rows are. */
   onImport?: () => void;
-  /** Opens the Subscribe window (#619). */
-  onSubscribe?: () => void;
+  /** Opens Settings > Date & Time > Calendar, where the subscribed calendars
+   *  and the other calendar settings are (#811). */
+  onSettings?: () => void;
+  /** The trackers shown on the days, and the legend's switches for them. */
+  trackers?: CalendarTrackers | null;
 };
 
-export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayMenu, onAdd, onMove, onResize, onDropItems, otherSpace, weekNumbers, firstHour, onMenu, agenda, onImport, onSubscribe }: Props) {
+export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayMenu, onAdd, onMove, onResize, onDropItems, weekNumbers, firstHour, onMenu, agenda, onImport, onSettings, trackers = null }: Props) {
   const { t } = useTranslation(['shell', 'notes']);
   const { mode, setMode, focus, setFocus } = pillar;
   const hiddenKinds = useHiddenKinds();
@@ -323,6 +316,56 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
       else onDropItems(readItemDrag(e.dataTransfer), day);
     },
   };
+
+  // The day counter (#815). Its days live in the pillar; while it is picking,
+  // the day under the pointer is the preview, shown in place of the day that
+  // moves. A click locks the day: the pointer no longer moves it. The
+  // preview belongs to the screen it was taken on (the view, the day in
+  // focus, the tile pressed): a grid that goes away fires no mouseleave, and
+  // a touch screen none at all, so a preview from another screen is dropped.
+  // Spec: docs/internal/specs/calendar-pillar-spec.md (section 15)
+  const { count, setCount, countBoth, setCountBoth } = pillar;
+  const hoverKey = `${mode}|${focus}|${count?.end}|${count?.picking}`;
+  const [hover, setHover] = useState<{ day: string; key: string } | null>(null);
+  const update = (next: DayCountState | null) => { setCount(next); setHover(null); };
+  const closeCount = () => update(null);
+  useEscapeToClose(closeCount, count !== null, true);
+  const shownDays = count ? shownCount(count, hover?.key === hoverKey ? hover.day : null) : null;
+  const liveDays = shownDays?.to ? countDays(shownDays.from, shownDays.to, countBoth).days : 0;
+  const counter: DayCounter = {
+    active: count !== null,
+    lo: shownDays?.lo ?? null,
+    hi: shownDays?.hi ?? null,
+    // Nothing counts before To is picked.
+    hiCounted: countBoth && shownDays?.to != null,
+    // The day that moves wears its distance from the other one: +35, -35.
+    badge: shownDays?.moving && shownDays.anchor && liveDays > 0
+      ? { day: shownDays.moving, text: new Intl.NumberFormat(locale, { signDisplay: 'exceptZero' }).format(Math.sign(dayNumber(shownDays.moving) - dayNumber(shownDays.anchor) || 1) * liveDays) }
+      : null,
+    // A shift-click with no count open starts one from today.
+    pick: (day) => update(pickDay(count, day, today)),
+    hover: (day) => { if (count?.picking) setHover(day ? { day, key: hoverKey } : null); },
+  };
+  const countStrip = count && (
+    <DayCountStrip
+      count={count}
+      preview={shownDays?.preview ?? null}
+      both={countBoth}
+      onBoth={setCountBoth}
+      onEnd={(end) => update(chooseEnd(count, end))}
+      onDays={(days) => {
+        // A press on minus or plus (from the keyboard; a mouse has left the
+        // grid) while a day is previewed starts from the day on screen.
+        const base = shownDays?.preview ? pickDay(count, shownDays.preview, today) : count;
+        const next = typeDays(base, days, countBoth);
+        update(next);
+        setFocus(next[next.end] ?? focus);
+      }}
+      onSwap={() => update(swapDays(count))}
+      onClose={closeCount}
+    />
+  );
+  const countLabel = t('calendar.count.tool');
 
   // The segmented control of Settings (Auto, Light, Dark): the track, the
   // raised option, an icon each. A narrow header keeps the icons; the tip
@@ -363,7 +406,7 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
               type="button"
               aria-pressed={!off}
               aria-label={t(`calendar.kinds.${kind}`)}
-              onClick={() => setHidden(off ? [...hiddenKinds].filter((k) => k !== kind) : [...hiddenKinds, kind])}
+              onClick={() => setHiddenKinds(off ? [...hiddenKinds].filter((k) => k !== kind) : [...hiddenKinds, kind])}
               className={`inline-flex items-center gap-1 min-h-6 text-small text-pn-muted hover:text-pn transition ${off ? 'opacity-45 line-through' : ''}`}
             >
               <Glyph aria-hidden="true" className={dayKindColor(kind)} />
@@ -373,30 +416,43 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
           </HoverLabel>
         );
       })}
+      {trackers && trackers.choices.length > 0 && <TrackersMenu trackers={trackers} />}
     </div>
-      {otherSpace && (
-        <Switch
-          label={<Trans t={t} i18nKey={otherSpace.space === 'work' ? 'listPrefs.showWorkItems' : 'listPrefs.showPersonalItems'} components={{ b: <b className="font-semibold" /> }} />}
-          checked={otherSpace.shown}
-          onChange={otherSpace.set}
-          className="gap-2 ms-auto"
-          labelClassName="text-small text-pn-muted"
-        />
-      )}
     </div>
   );
 
   // Import mirrors the agenda button: the toolbar starts and ends with one
-  // square tool. It opens the Import tab, where the calendar rows are. In a
-  // header under 316px the top row has no room for it; Settings is the way in.
-  // Subscribe sits beside it, in the same look, and needs one tool's more
-  // room: under 352px it hides first.
+  // square tool. It opens the Import tab, where the calendar rows are.
+  // The gear sits beside it, in the same look, and opens Settings > Date &
+  // Time > Calendar, where the subscribed calendars are (#811: one place for
+  // them, in place of a Subscribe window of its own). The day counter's tool
+  // comes first and hides last (under 316px; a shift-click on a day and the
+  // day's menu still start it). Import shows from 636px and the gear from
+  // 672px: narrower, they took the month title's room (#815, measured with
+  // the view switch's labels); Settings is their way in.
   // Spec: docs/internal/issues/0548.md (Spec, the calendar's door), docs/internal/specs/calendar-pillar-spec.md (section 14)
-  const subscribeLabel = t('importExport:webcal.subscribeTitle');
-  const headerEnd = onImport || onSubscribe ? (
+  const settingsLabel = `${t('contextMenu.settings')}: ${t('notes:settings.dateLabel')}`;
+  // The day counter's tool comes first: it acts on the days on screen.
+  const countTool = (
+    <HoverLabel label={countLabel} position="below-end" className="hidden @min-[316px]/calhead:block">
+      <button
+        type="button"
+        onClick={() => (count ? closeCount() : update(startCount(today)))}
+        aria-label={countLabel}
+        aria-pressed={count !== null}
+        className={`shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-md border transition ${
+          count ? 'bg-accent/10 border-accent/40 text-accent' : 'border-divider text-pn-muted hover:border-accent hover:text-accent'
+        }`}
+      >
+        <Ruler aria-hidden="true" />
+      </button>
+    </HoverLabel>
+  );
+  const headerEnd = (
     <span className="flex items-center gap-2">
+      {countTool}
       {onImport && (
-        <HoverLabel label={t('calendar.importLabel')} position="below-end" className="hidden @min-[316px]/calhead:block">
+        <HoverLabel label={t('calendar.importLabel')} position="below-end" className="hidden @min-[636px]/calhead:block">
           <button
             type="button"
             onClick={onImport}
@@ -407,21 +463,21 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
           </button>
         </HoverLabel>
       )}
-      {onSubscribe && (
-        <HoverLabel label={subscribeLabel} position="below-end" className="hidden @min-[352px]/calhead:block">
+      {onSettings && (
+        <HoverLabel label={settingsLabel} position="below-end" className="hidden @min-[672px]/calhead:block">
           <button
             type="button"
-            onClick={onSubscribe}
-            aria-label={subscribeLabel}
+            onClick={onSettings}
+            aria-label={settingsLabel}
             className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-md border border-divider text-pn-muted hover:border-accent hover:text-accent transition"
           >
-            <Globe aria-hidden="true" />
+            <Gear aria-hidden="true" />
           </button>
         </HoverLabel>
       )}
       {viewSwitch}
     </span>
-  ) : viewSwitch;
+  );
   // The agenda button names what it does on hover, and wears the pressed
   // look while the agenda is open, so a folded agenda is never a secret.
   const agendaLabel = agenda ? t(agenda.open ? 'calendar.hideAgenda' : 'calendar.showAgenda') : '';
@@ -492,10 +548,14 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
         onToday={() => setFocus(today)}
         onAdd={(day) => onAdd(day)}
         headerEnd={headerEnd}
-        headerBelow={legend}
+        headerBelow={<>{legend}{countStrip}</>}
+        counter={counter}
         headerStart={headerStart}
         weekNumbers={weekNumbers}
         drop={drop}
+        {...(trackers && trackers.shown.length > 0 ? {
+          renderDayBadge: (day: string) => <DayMarks day={day} marks={trackers.marks(day)} onOpenEntry={trackers.onOpenEntry} onOpenStats={trackers.onOpenStats} cell />,
+        } : {})}
         renderDay={(day) => {
           const row = rowLanes.get(day);
           const lanes = row?.lanes ?? 0;
@@ -503,7 +563,7 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
           const fit = Math.max(0, Math.floor((cellH - NUMBER_PX - 4 - lanes * CHIP_PX) / CHIP_PX));
           return dayContent(day, shown.entriesOf(day), lanes, fit, row?.over.get(day) ?? 0);
         }}
-        renderWeek={(days) => <Bars days={days} index={shown} hidden={hidden} onOpen={open} onMenu={onItemMenu} top={NUMBER_PX} weekCol={weekCol} />}
+        renderWeek={(days) => <Bars days={days} index={shown} hidden={hidden} onOpen={open} onMenu={onItemMenu} top={NUMBER_PX} weekCol={weekCol} passThrough={count !== null} />}
       />
     );
   } else {
@@ -527,7 +587,7 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
           nextLabel={t(mode === 'week' ? 'monthGrid.nextWeek' : 'calendar.nextDay')}
           onToday={() => setFocus(today)}
           end={headerEnd}
-          below={legend}
+          below={<>{legend}{countStrip}</>}
           start={headerStart}
           focus={focus}
           onJump={setFocus}
@@ -539,10 +599,17 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
           firstHour={firstHour}
           scrollRef={pillar.hourScroll}
           renderAllDay={(day) => dayContent(day, shown.entriesOf(day).filter((e) => !e.time), bandLanes, 3, band.hidden.get(day) ?? 0)}
-          renderBars={(ds) => <Bars days={ds} index={shown} hidden={hidden} onOpen={open} onMenu={onItemMenu} top={4} weekCol="4rem" />}
+          {...(trackers && trackers.shown.length > 0 ? {
+            renderDayHead: (day: string) => {
+              const marks = trackers.marks(day);
+              return marks.length ? <DayMarks day={day} marks={marks} onOpenEntry={trackers.onOpenEntry} onOpenStats={trackers.onOpenStats} max={2} /> : null;
+            },
+          } : {})}
+          renderBars={(ds) => <Bars days={ds} index={shown} hidden={hidden} onOpen={open} onMenu={onItemMenu} top={4} weekCol="4rem" passThrough={count !== null} />}
           renderCard={(b: TimedBlock, day) => <TimedCard block={b} day={day} onOpen={open} onMenu={onItemMenu} />}
           onCreate={(day, start, end) => onAdd(day, start, end)}
           onPickDay={(day) => { setFocus(day); setMode('day'); }}
+          counter={counter}
           accepts={accepts}
           onDropAt={(e, day, time) => {
             const cal = readCalDrag(e);
@@ -580,13 +647,13 @@ function TimedCard({ block, day, onOpen, onMenu }: { block: TimedBlock; day: str
       onClick={() => onOpen(e)}
       onContextMenu={onMenu && !e.feed ? (ev) => onMenu(ev, e) : undefined}
       aria-label={[title, start && end ? `${start} - ${end}` : start, e.feed].filter(Boolean).join(', ')}
-      className={`pn-timed-card w-full h-full overflow-hidden rounded-md border-s-[3px] border-current bg-current/15 px-1.5 py-0.5 text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${dayKindColor(e.kind)}`}
+      className={`pn-timed-card w-full h-full overflow-hidden rounded-md border-s-[3px] border-current bg-current/15 px-1.5 py-0.5 text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${e.repeating ? 'border-dashed pn-repeat' : ''} ${dayKindColor(e.kind)}`}
     >
       <span className="flex items-center gap-1 text-meta font-semibold text-pn">
         <span data-slot="icon" className="inline-flex shrink-0"><EntryGlyph entry={e} size={11} /></span>
         <span dir="auto" className="min-w-0 truncate">{title}</span>
         {e.alerted && <BellSimple size={10} aria-hidden="true" className="shrink-0 text-pn-muted" />}
-        {e.repeating && <Repeat size={10} aria-hidden="true" className="shrink-0 text-pn-muted" />}
+        {e.repeating && <RepeatGlyph entry={e} />}
         {e.space === 'work' && <SPACE_ICONS.work size={10} aria-hidden="true" className="shrink-0 text-pn-muted" />}
       </span>
       {start && <span className="pn-timed-time block truncate text-meta text-pn-muted tabular-nums">{end ? `${start} - ${end}` : start}</span>}

@@ -8,7 +8,7 @@ import { changelogPagePlugin } from './changelog-page.ts';
 import { PUBLIC_CHANGELOG } from './src/publicChangelog.ts';
 import { helpPagePlugin } from './help-page.ts';
 import { roadmapPagePlugin } from './roadmap-page.ts';
-import { licensesPagePlugin } from './licenses-page.ts';
+import { licensesPagePlugin, licensesWorkerModules } from './licenses-page.ts';
 import { themesPagePlugin } from './themes-page.ts';
 import { searchCoreScriptPlugin } from './search-core-script.ts';
 import { footerLinesScriptPlugin } from './footer-lines-script.ts';
@@ -820,6 +820,59 @@ function chunkCycles(): Plugin {
   };
 }
 
+/**
+ * The CPU build of onnxruntime for every importer (`ppu-paddle-ocr` imports
+ * the bare name): the default entry is the WebGPU build, which loads a
+ * 29.5 MB `.wasm` we do not host.
+ * Spec: docs/internal/specs/plugins-files.md (section 0, item 1)
+ */
+function ortCpuBuild(): Plugin {
+  return {
+    name: 'pn-ort-cpu-build',
+    enforce: 'pre',
+    resolveId(id, importer) {
+      return id === 'onnxruntime-web' ? this.resolve('onnxruntime-web/wasm', importer, { skipSelf: true }) : null;
+    },
+  };
+}
+
+/**
+ * Drops the onnxruntime `.wasm` that its glue names with `new URL(...)`: the
+ * plugin worker gets that file's bytes from the plugin host, after their
+ * SHA-256 check (`env.wasm.wasmBinary`), so the glue never fetches it, and a
+ * copy in `dist` would be a second, unchecked source.
+ * tests/pluginWorkerHeaders.test.ts holds it.
+ * Spec: docs/internal/plans/plugins.md (section 4)
+ */
+function noOrtWasm(): Plugin {
+  return {
+    name: 'pn-no-ort-wasm',
+    generateBundle(_options, bundle) {
+      for (const name of Object.keys(bundle)) if (/(^|\/)ort-wasm[\w.-]*\.wasm$/.test(name)) delete bundle[name];
+    },
+  };
+}
+
+/**
+ * The Bergamot glue is Firefox's file, kept byte for byte (its hash is pinned
+ * in tests/bergamotGlue.test.ts). It is a classic script: one function,
+ * `loadBergamot`, and no export, and it writes the engine's functions onto
+ * `this`, which a module leaves undefined. The build gives the module worker
+ * an export and `globalThis` in place of that one `this`.
+ * Spec: docs/internal/specs/plugins-files.md (section 1.3)
+ */
+function bergamotGlue(): Plugin {
+  return {
+    name: 'pn-bergamot-glue',
+    transform(code, id) {
+      if (!id.endsWith('/plugins/bergamot/bergamot-translator.js')) return null;
+      const parts = code.split('var global_object = this;');
+      if (parts.length !== 2) throw new Error('pn-bergamot-glue: the glue changed; check it before you build');
+      return { code: `${parts.join('var global_object = globalThis;')}\nexport default loadBergamot;\n`, map: null };
+    },
+  };
+}
+
 export default defineConfig({
   // The platform the app is being BUILT for, straight from Tauri's own build
   // environment, so the client never has to infer it from a user-agent
@@ -840,6 +893,9 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    ortCpuBuild(),
+    noOrtWasm(),
+    bergamotGlue(),
     syncHelpQuestions(),
     emitVersionJson(),
     katexWoff2Only(),
@@ -869,9 +925,9 @@ export default defineConfig({
       // supabase.channel(). The stub keeps the constructor happy and
       // throws loudly the moment anything actually reaches for it.
       //
-      // Do NOT re-add a storage-js stub. attachmentStore.ts, imageStore.ts
-      // and NotesView.tsx hit supabase.storage.from('encrypted-images')
-      // directly (no app file imports @supabase/storage-js by name -
+      // Do NOT re-add a storage-js stub. blobStore.ts, the adapter every
+      // picture and file goes through, calls supabase.storage.from(...)
+      // (no app file imports @supabase/storage-js by name -
       // supabase-js re-exports it, which is how it looked "unused").
       // 0.264.0 stubbed it and every attachment upload/download threw
       // until 0.267.2 (#202).
@@ -882,6 +938,18 @@ export default defineConfig({
       '@excalidraw/mermaid-to-excalidraw': path.resolve(__dirname, 'stubs/mermaid-to-excalidraw.js'),
     },
   },
+  // Module workers that split their code: the plugin worker imports each
+  // engine on its first use, which the default `iife` format cannot do.
+  // Spec: docs/internal/plans/plugins.md (section 4)
+  // licensesWorkerModules: the /licenses page lists what ships only in a worker.
+  worker: { format: 'es', plugins: () => [ortCpuBuild(), noOrtWasm(), bergamotGlue(), ...(isAppBuild ? [] : [licensesWorkerModules()])] },
+  // The dev prebundle resolves imports without pn-ort-cpu-build, so it gave
+  // `ppu-paddle-ocr` the WebGPU build of onnxruntime: a second runtime that
+  // fetched its `.wasm` from a CDN and grew past 7 GB in WebKitGTK. Served
+  // as plain modules, its `onnxruntime-web` import goes through the plugin
+  // and reaches the same module as the worker's own import.
+  // Spec: docs/internal/plans/plugins.md (section 4)
+  optimizeDeps: { exclude: ['ppu-paddle-ocr', 'onnxruntime-web'] },
   build: {
     // Vite 8 raised the default transpile target to Baseline Widely Available
     // 2026 (chrome111/safari16.4). Pin vite 7's effective default instead so
@@ -923,8 +991,12 @@ export default defineConfig({
               name: 'shared',
               // The browser extension's crypto (X25519, Argon2id) is its own
               // entry, which the barrel never re-exports, so it stays out of
-              // this boot-path chunk and loads with the extension's code.
-              test: /[\\/](?:packages|node_modules)[\\/]shared[\\/]dist[\\/](?!extension\.js)/,
+              // this boot-path chunk and loads with the extension's code. The
+              // signed inbox row (ML-KEM-768) is another such entry, loaded
+              // only by a dynamic import (inbox-signed-hybrid.md section 4),
+              // and so is the minisign check (minisign.js, with BLAKE2b), which
+              // loads only when an update policy has a signature to check.
+              test: /[\\/](?:packages|node_modules)[\\/]shared[\\/]dist[\\/](?!extension\.js|inboxSigned\.js|minisign\.js)/,
             },
           ],
         },

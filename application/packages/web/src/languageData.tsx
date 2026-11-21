@@ -188,7 +188,9 @@ export function Flag({ code }: { code: string }): ReactNode {
     // Thailand: five bands in the ratio 1:1:2:1:1, the blue one double height.
     case 'th':
       return <svg {...FLAG_BOX}><rect width="60" height="40" fill="#A51931" /><rect y="6.67" width="60" height="26.66" fill="#F4F5F8" /><rect y="13.33" width="60" height="13.34" fill="#2D2A4A" /></svg>;
+    // English: the US flag, because the English catalogs use US spelling.
+    // Thirteen stripes, and the 50 stars drawn as white dots at this size.
     default:
-      return <svg {...FLAG_BOX}><rect width="60" height="40" fill="#012169" /><path d="M0,0 60,40 M60,0 0,40" stroke="#fff" strokeWidth="8" /><path d="M0,0 60,40 M60,0 0,40" stroke="#C8102E" strokeWidth="4" /><rect x="25" width="10" height="40" fill="#fff" /><rect y="15" width="60" height="10" fill="#fff" /><rect x="27" width="6" height="40" fill="#C8102E" /><rect y="17" width="60" height="6" fill="#C8102E" /></svg>;
+      return <svg {...FLAG_BOX}><rect width="60" height="40" fill="#fff" /><rect width="60" height="3.08" fill="#B22234" /><rect y="6.15" width="60" height="3.08" fill="#B22234" /><rect y="12.31" width="60" height="3.08" fill="#B22234" /><rect y="18.46" width="60" height="3.08" fill="#B22234" /><rect y="24.62" width="60" height="3.08" fill="#B22234" /><rect y="30.77" width="60" height="3.08" fill="#B22234" /><rect y="36.92" width="60" height="3.08" fill="#B22234" /><rect width="24" height="21.54" fill="#3C3B6E" /><path d="M2,2.15h0M6,2.15h0M10,2.15h0M14,2.15h0M18,2.15h0M22,2.15h0M4,4.31h0M8,4.31h0M12,4.31h0M16,4.31h0M20,4.31h0M2,6.46h0M6,6.46h0M10,6.46h0M14,6.46h0M18,6.46h0M22,6.46h0M4,8.62h0M8,8.62h0M12,8.62h0M16,8.62h0M20,8.62h0M2,10.77h0M6,10.77h0M10,10.77h0M14,10.77h0M18,10.77h0M22,10.77h0M4,12.92h0M8,12.92h0M12,12.92h0M16,12.92h0M20,12.92h0M2,15.08h0M6,15.08h0M10,15.08h0M14,15.08h0M18,15.08h0M22,15.08h0M4,17.23h0M8,17.23h0M12,17.23h0M16,17.23h0M20,17.23h0M2,19.39h0M6,19.39h0M10,19.39h0M14,19.39h0M18,19.39h0M22,19.39h0" stroke="#fff" strokeWidth="1.2" strokeLinecap="round" /></svg>;
   }
 }

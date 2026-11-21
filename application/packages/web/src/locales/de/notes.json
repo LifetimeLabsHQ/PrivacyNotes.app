@@ -28,9 +28,22 @@
   "tagChip": {
     "clear": "Tagfilter aufheben: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "Trackerfilter aufheben: {{tracker}}",
+    "anyTag": "Beliebiges Tag",
+    "tagLabel": "Tag von {{tracker}}",
+    "answerLabel": "Antwort von {{tracker}}",
+    "anyAnswer": "Beliebige Antwort"
+  },
+  "trackerFocus": {
+    "every_other": "etwa alle {{count}} Tage",
+    "last": "erfasst {{when}}",
+    "locked_other": "{{count}} PIN-geschützte Einträge werden nicht berücksichtigt",
+    "locked_one": "{{count}} PIN-geschützter Eintrag wird nicht berücksichtigt",
+    "every_one": "etwa jeden Tag"
+  },
   "vaultNew": {
     "ariaLabel": "Neuer Tresor-Eintrag",
-    "card": "Kreditkarte",
     "sshKey": "SSH-Schlüssel",
     "generator": "Passwort"
   },
@@ -49,7 +62,8 @@
   "vaultFilter": {
     "all": "Alle",
     "logins": "Logins",
-    "cards": "Kreditkarten",
+    "passkeys": "Passkeys",
+    "cards": "Karten",
     "keys": "Schlüssel"
   },
   "journal": {
@@ -61,7 +75,8 @@
   "trash": {
     "empty": "Leeren",
     "emptyHover": "Alle Notizen im Papierkorb löschen",
-    "autoDelete": "Nach 30 Tagen automatisch löschen"
+    "autoDelete": "Nach 30 Tagen automatisch löschen",
+    "replacedTitle": "Kopien gelöschter Notizen"
   },
   "search": {
     "sortOptions": "Sortier- und Ansichtsoptionen",
@@ -125,6 +140,7 @@
     "imageUploadFailed": "Bild-Upload fehlgeschlagen: {{error}}",
     "imageError": "Bildfehler: {{error}}",
     "uploadFailedFor": "Upload fehlgeschlagen für „{{filename}}“: {{error}}",
+    "uploadsHeld": "Du hast das heutige Upload-Limit erreicht. Deine Bilder und Dateien sind auf diesem Gerät sicher und werden nach {{time}} hochgeladen.",
     "importedSyncing_one": "{{count}} Notiz importiert. Wird synchronisiert…",
     "importedSyncing_other": "{{count}} Notizen importiert. Wird synchronisiert…",
     "addedTag_one": "#{{tag}} zu {{count}} Eintrag hinzugefügt",
@@ -137,6 +153,7 @@
   },
   "loadError": {
     "message": "Deine Notizen konnten nicht geladen werden. Die Verbindung zur lokalen Datenbank wurde unterbrochen. Das kann passieren, wenn die App eine Weile im Hintergrund war.",
+    "storageOff": "Deine Notizen konnten nicht geladen werden. Dieses Gerät hat den Speicher abgeschaltet, in dem PrivacyNotes sie ablegt. Das macht der Blockierungsmodus. Um das zu beheben, öffne Einstellungen, dann Datenschutz & Sicherheit, dann Blockierungsmodus, dann Websites anpassen, und deaktiviere PrivacyNotes. Deaktiviere in Safari unter Website-Einstellungen den Blockierungsmodus für diese Website.",
     "reload": "Neu laden"
   },
   "banner": {
@@ -189,6 +206,7 @@
   "editor": {
     "backToList": "Zurück zur Notizliste",
     "backToGrid": "Zurück zum Raster",
+    "closeSide": "Bereich schließen",
     "titlePlaceholder": "Ohne Titel (zum Bearbeiten klicken oder automatisch erstellen lassen)",
     "titlePlaceholderLogin": "z. B. GitHub",
     "titlePlaceholderCard": "z. B. Visa endend auf 4242",
@@ -197,10 +215,22 @@
     "lockNow": "Jetzt sperren",
     "lockNowHint": "Inhalt jetzt verbergen",
     "turnOffHint": "Änderungen wieder erlauben",
+    "turnOffForNowHint": "Diese Notiz bearbeiten, bis du sie verlässt",
     "unarchiveHint": "Wieder in deinen Listen anzeigen",
     "showFormatted": "Formatiert anzeigen",
+    "splitView": "Geteilte Ansicht",
+    "showSplitView": "Geteilte Ansicht anzeigen",
+    "hideSplitView": "Geteilte Ansicht ausblenden",
+    "splitViewNeedsWidth": "Fenster verbreitern, um die geteilte Ansicht einzuschalten",
+    "swapSides": "Seiten tauschen",
+    "formattedOnly": "{{name}} funktioniert in der formatierten Ansicht",
+    "formattedOnlyHint": "Formatierte Ansicht",
     "invisiblesShow": "Unsichtbare Zeichen anzeigen",
     "invisiblesHide": "Unsichtbare Zeichen ausblenden",
+    "lineNumbersShow": "Zeilennummern anzeigen",
+    "lineNumbersHide": "Zeilennummern ausblenden",
+    "footerPin": "Statistik anpinnen",
+    "footerUnpin": "Statistik lösen",
     "undo": "Rückgängig",
     "redo": "Wiederholen",
     "hide": "Verbergen",
@@ -274,6 +304,7 @@
     "accountLabel": "ID & Sync",
     "appearanceLabel": "Design",
     "editorLabel": "Editor",
+    "pluginsLabel": "Plugins",
     "formatBarLabel": "Formatleiste",
     "listsLabel": "Listen",
     "trackersLabel": "Tracker",
@@ -295,6 +326,10 @@
   "archiveConfirm": {
     "body_one": "<highlight>{{count}} Eintrag</highlight> archivieren? Er verschwindet aus deinen Listen und wartet in der Ansicht Archiv. Mit „Archivierung aufheben“ holst du ihn zurück.",
     "body_other": "<highlight>{{count}} Einträge</highlight> archivieren? Sie verschwinden aus deinen Listen und warten in der Ansicht Archiv. Mit „Archivierung aufheben“ holst du sie zurück."
+  },
+  "duplicateConfirm": {
+    "body_one": "<highlight>{{count}} Eintrag</highlight> duplizieren? Er bekommt eine eigene Kopie.",
+    "body_other": "<highlight>{{count}} Einträge</highlight> duplizieren? Jeder bekommt eine eigene Kopie."
   },
   "bulkTrash": {
     "body_one": "<highlight>{{count}} Eintrag</highlight> löschen? Verschiebe ihn in den Papierkorb, um ihn später wiederherzustellen, oder lösche ihn endgültig.",
@@ -341,6 +376,7 @@
     "title": "Verknüpfungen",
     "hide": "Verknüpfungen ausblenden",
     "linkedFrom": "Verlinkt von",
+    "usedIn": "Verwendet in",
     "linksTo": "Verlinkt auf",
     "missing": "Noch nicht erstellt",
     "protectedHidden_one": "{{count}} PIN-geschütztes Element wird nicht angezeigt",
@@ -351,9 +387,10 @@
     "relatedLinkedFrom": "Beide verlinkt von {{title}}",
     "relatedTag": "Beide mit Tag {{tag}}",
     "relatedMeaning": "Dieselbe Bedeutung",
+    "relatedMention": "Erwähnt {{name}}",
     "meaningDoor": "Intelligente Verknüpfungen: Notizen mit derselben Bedeutung finden, mit Offline-KI",
     "meaningDoorNo": "Nicht mehr anzeigen",
-    "meaningDoorHidden": "In allen Notizen ausgeblendet. Intelligente Verknüpfungen findest du weiter unter Einstellungen > Editor > Verhalten.",
+    "meaningDoorHidden": "In allen Notizen ausgeblendet. Intelligente Verknüpfungen findest du weiter unter Einstellungen > Plugins.",
     "hideSuggestions": "Vorgeschlagene Verknüpfungen ausblenden",
     "notRelated": "Kein Zusammenhang",
     "notRelatedDone": "Wird nicht mehr vorgeschlagen",
@@ -426,5 +463,31 @@
     "autoJournal": "Meinen Standort zu jedem neuen Tagebucheintrag hinzufügen",
     "autoDenied": "Der Standortzugriff ist für PrivacyNotes aus. Schalte ihn zuerst in den Einstellungen deines Telefons ein.",
     "autoOff": "Die Ortungsdienste sind auf diesem Telefon aus. Schalte sie zuerst ein."
+  },
+  "vaultPasskey": {
+    "forSite": "Passkey für {{rpId}}",
+    "hasPasskey": "Hat einen Passkey",
+    "removeTitle": "Passkey für {{rpId}} entfernen?",
+    "removeBody": "Du kannst dich damit nicht mehr aus PrivacyNotes bei {{rpId}} anmelden.",
+    "savedByExtension": "Passkeys werden von der PrivacyNotes-Browser-Erweiterung gespeichert, wenn eine Website einen anbietet.",
+    "removeBrowserWaiting": "Einige Einträge, die dieser Browser gesendet hat, sind noch nicht in deinem Tresor. Wenn du ihn jetzt entfernst, gehen sie verloren.",
+    "removeBrowserAnyway": "Trotzdem entfernen"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "Übersetzen",
+    "from": "Von",
+    "to": "Nach",
+    "saveAsNote": "Als neue Notiz speichern",
+    "needPair": "{{language}} herunterladen · {{size}}",
+    "noModel": "Diese Sprache kann noch nicht übersetzt werden.",
+    "nothing": "Diese Notiz enthält keine Wörter zum Übersetzen.",
+    "turnOn": "{{language}} einschalten",
+    "failed": "Diese Notiz konnte nicht übersetzt werden. Versuche es erneut.",
+    "untranslated_other": "{{count}} Zeilen konnten nicht übersetzt werden und bleiben unverändert.",
+    "untranslated_one": "{{count}} Zeile konnte nicht übersetzt werden und bleibt unverändert."
+  },
+  "tags": {
+    "suggestMove": "Nach {{folder}} verschieben"
   }
 }

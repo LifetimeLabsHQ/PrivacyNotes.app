@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "h",
+    "minutesSuffix": "m",
+    "hoursMinutes": "{{h}}h {{m}}m",
     "bpm": "bpm",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -142,6 +144,7 @@
     "takenCount_one": "{{count}} taken",
     "takenCount_other": "{{count}} taken",
     "namePlaceholder": "Medication name",
+    "nameMissing": "Give the medication a name.",
     "dosagePlaceholder": "Dosage (e.g. 50mg)",
     "editMedication": "Edit medication",
     "removeMedication": "Remove medication",
@@ -250,12 +253,18 @@
     "yes": "Yes",
     "no": "No",
     "unknownType": "This tracker needs a newer version of the app.",
+    "counterOf": "of {{limit}}",
+    "counterToday": "used today",
+    "counterReached": "You reached the limit of {{limit}}.",
+    "counterStartAgain": "Start {{name}} again from 0",
+    "counterStartAgainConfirm": "Start again?",
     "typeLabels": {
       "scale10": "Scale (0-10)",
       "scale5": "Scale (0-5)",
       "slider100": "Score (0-100)",
       "number": "Number",
       "pair": "Two numbers",
+      "counter": "Counter",
       "yesno": "Yes / No"
     }
   },
@@ -271,7 +280,7 @@
     "medicationCard": "Medication card",
     "medicationCardHelp": "\"Did you take your medication?\" on this device, only on a day a medication is due.",
     "customHelp": "Trackers you name yourself: a scale, a number or a yes or no. Up to {{max}}.",
-    "customHelpPair": "Trackers you name yourself: a scale, a number, two numbers or a yes or no. Up to {{max}}.",
+    "customHelpPair": "Trackers you name yourself: a scale, a number, two numbers, a counter or a yes or no. Up to {{max}}.",
     "yourCustomTrackers": "Your custom trackers",
     "categoryMoodMind": "Mood & mind",
     "categoryBodyHealth": "Body & health",
@@ -312,7 +321,10 @@
     "pairFirstPlaceholder": "Systolic",
     "pairSecondPlaceholder": "Diastolic",
     "pairUnit": "Unit (optional)",
-    "pairWaiting": "Saved once the first number is in."
+    "pairWaiting": "Saved once the first number is in.",
+    "nameMissing": "Give the tracker a name.",
+    "counterLimit": "Limit (optional)",
+    "counterHelp": "Adds up your uses across days. Set a limit, such as 30 for a razor blade, and start again when you reach it."
   },
   "factors": {
     "prompt": "What was part of your day?",
@@ -402,5 +414,6 @@
   "flow": {
     "finish": "Finish",
     "step": "Tracker {{n}} of {{total}}"
-  }
+  },
+  "showEveryDay": "Show every day with this"
 }

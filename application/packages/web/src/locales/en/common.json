@@ -37,7 +37,7 @@
   "storageBar": {
     "usage": "{{percent}}% used ({{used}} / {{max}})",
     "refresh": "Refresh storage",
-    "cleanupInfo": "Deleted items stop counting right away. The encrypted files themselves leave the server within a few days.",
+    "cleanupInfo": "Notes deleted for good stop counting right away. A deleted file counts until its encrypted copy leaves the server, about a day later.",
     "open": "Open storage settings"
   },
   "updateToast": {
@@ -310,6 +310,8 @@
     "commands": {
       "syncResume": "Resume sync",
       "lockProtected": "Lock this note",
+      "randomItem": "Open a random item",
+      "randomBookmark": "Open a random bookmark",
       "changelog": "What is new",
       "themesPage": "Community themes",
       "website": "PrivacyNotes website"

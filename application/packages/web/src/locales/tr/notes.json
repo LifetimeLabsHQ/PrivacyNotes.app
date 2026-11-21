@@ -28,9 +28,22 @@
   "tagChip": {
     "clear": "Etiket filtresini temizle: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "Takip filtresini temizle: {{tracker}}",
+    "anyTag": "Herhangi bir etiket",
+    "tagLabel": "{{tracker}} etiketi",
+    "answerLabel": "{{tracker}} yanıtı",
+    "anyAnswer": "Herhangi bir yanıt"
+  },
+  "trackerFocus": {
+    "every_other": "yaklaşık {{count}} günde bir",
+    "last": "{{when}} kaydedildi",
+    "locked_other": "PIN arkasındaki {{count}} kayıt dahil edilmedi",
+    "locked_one": "PIN arkasındaki {{count}} kayıt dahil edilmedi",
+    "every_one": "yaklaşık her gün"
+  },
   "vaultNew": {
     "ariaLabel": "Yeni kasa öğesi",
-    "card": "Kredi kartı",
     "sshKey": "SSH anahtarı",
     "generator": "Parola"
   },
@@ -49,7 +62,8 @@
   "vaultFilter": {
     "all": "Tümü",
     "logins": "Giriş bilgileri",
-    "cards": "Kredi kartları",
+    "passkeys": "Geçiş anahtarları",
+    "cards": "Kartlar",
     "keys": "Anahtarlar"
   },
   "journal": {
@@ -61,7 +75,8 @@
   "trash": {
     "empty": "Boşalt",
     "emptyHover": "Çöp kutusundaki tüm notları sil",
-    "autoDelete": "30 gün sonra otomatik olarak sil"
+    "autoDelete": "30 gün sonra otomatik olarak sil",
+    "replacedTitle": "Silinen notların kopyaları"
   },
   "search": {
     "sortOptions": "Sıralama ve görünüm seçenekleri",
@@ -125,6 +140,7 @@
     "imageUploadFailed": "Görsel yüklenemedi: {{error}}",
     "imageError": "Görsel hatası: {{error}}",
     "uploadFailedFor": "\"{{filename}}\" yüklenemedi: {{error}}",
+    "uploadsHeld": "Bugünkü yükleme sınırınıza ulaştınız. Görselleriniz ve dosyalarınız bu cihazda güvende ve {{time}} sonrasında yüklenecek.",
     "importedSyncing_one": "{{count}} not içe aktarıldı. Eşitleniyor…",
     "importedSyncing_other": "{{count}} not içe aktarıldı. Eşitleniyor…",
     "addedTag_one": "#{{tag}} etiketi {{count}} öğeye eklendi",
@@ -137,6 +153,7 @@
   },
   "loadError": {
     "message": "Notlarınız yüklenemedi. Yerel veritabanı bağlantısı kesildi. Bu, uygulama bir süre arka planda kaldıktan sonra olabilir.",
+    "storageOff": "Notlarınız yüklenemedi. Bu cihaz, PrivacyNotes'un notlarınızı sakladığı depolamayı kapattı. Kilit Modu bunu yapar. Düzeltmek için Ayarlar'ı, ardından Gizlilik ve Güvenlik'i, ardından Kilit Modu'nu, ardından Web Sitelerini Özelleştir'i açın ve PrivacyNotes'u kapatın. Safari'de Web Sitesi Ayarları'nda bu site için Kilit Modu'nu kapatın.",
     "reload": "Yeniden yükle"
   },
   "banner": {
@@ -189,6 +206,7 @@
   "editor": {
     "backToList": "Not listesine dön",
     "backToGrid": "Izgaraya dön",
+    "closeSide": "Bu tarafı kapat",
     "titlePlaceholder": "Başlıksız (düzenlemek için tıklayın veya kendiliğinden oluşmasına bırakın)",
     "titlePlaceholderLogin": "örn. GitHub",
     "titlePlaceholderCard": "örn. 4242 ile biten Visa",
@@ -197,10 +215,22 @@
     "lockNow": "Şimdi kilitle",
     "lockNowHint": "İçeriği şimdi gizle",
     "turnOffHint": "Yeniden düzenlemeye izin ver",
+    "turnOffForNowHint": "Bu notu, notten çıkana kadar düzenleyin",
     "unarchiveHint": "Listelerinizde yeniden göster",
     "showFormatted": "Biçimlendirilmiş halini göster",
+    "splitView": "Bölünmüş görünüm",
+    "showSplitView": "Bölünmüş görünümü göster",
+    "hideSplitView": "Bölünmüş görünümü gizle",
+    "splitViewNeedsWidth": "Bölünmüş görünümü açmak için pencereyi genişletin",
+    "swapSides": "Tarafları değiştir",
+    "formattedOnly": "{{name}} biçimlendirilmiş görünümde çalışır",
+    "formattedOnlyHint": "Biçimlendirilmiş görünüm",
     "invisiblesShow": "Görünmez karakterleri göster",
     "invisiblesHide": "Görünmez karakterleri gizle",
+    "lineNumbersShow": "Satır numaralarını göster",
+    "lineNumbersHide": "Satır numaralarını gizle",
+    "footerPin": "İstatistikleri sabitle",
+    "footerUnpin": "İstatistiklerin sabitlemesini kaldır",
     "undo": "Geri al",
     "redo": "Yinele",
     "hide": "Gizle",
@@ -274,6 +304,7 @@
     "accountLabel": "Kimlik ve eşitleme",
     "appearanceLabel": "Görünüm",
     "editorLabel": "Düzenleyici",
+    "pluginsLabel": "Eklentiler",
     "formatBarLabel": "Araç çubuğu",
     "listsLabel": "Listeler",
     "trackersLabel": "Takipler",
@@ -295,6 +326,10 @@
   "archiveConfirm": {
     "body_one": "<highlight>{{count}} öğe</highlight> arşivlensin mi? Öğe listelerinizden çıkar ve Arşiv görünümünde bekler. Arşivden çıkar seçeneği onu geri getirir.",
     "body_other": "<highlight>{{count}} öğe</highlight> arşivlensin mi? Öğeler listelerinizden çıkar ve Arşiv görünümünde bekler. Arşivden çıkar seçeneği onları geri getirir."
+  },
+  "duplicateConfirm": {
+    "body_one": "<highlight>{{count}} öğe</highlight> çoğaltılsın mı? Öğenin kendine ait bir kopyası oluşur.",
+    "body_other": "<highlight>{{count}} öğe</highlight> çoğaltılsın mı? Her birinin kendine ait bir kopyası oluşur."
   },
   "bulkTrash": {
     "body_one": "<highlight>{{count}} öğe</highlight> silinsin mi? Sonradan geri yüklemek için çöp kutusuna taşıyın veya kalıcı olarak silin.",
@@ -341,6 +376,7 @@
     "title": "Bağlantılar",
     "hide": "Bağlantıları gizle",
     "linkedFrom": "Buraya bağlantı verenler",
+    "usedIn": "Kullanıldığı yerler",
     "linksTo": "Bağlantı verilenler",
     "missing": "Henüz oluşturulmadı",
     "protectedHidden_one": "PIN korumalı {{count}} öğe gösterilmiyor",
@@ -351,9 +387,10 @@
     "relatedLinkedFrom": "İkisine de {{title}} notundan bağlantı veriliyor",
     "relatedTag": "İkisi de {{tag}} etiketli",
     "relatedMeaning": "Aynı anlam",
+    "relatedMention": "{{name}} adını anıyor",
     "meaningDoor": "Akıllı bağlantılar: aynı anlamdaki notları çevrimdışı yapay zekâ ile bulun",
     "meaningDoorNo": "Bir daha gösterme",
-    "meaningDoorHidden": "Tüm notlarda gizlendi. Akıllı bağlantılar Ayarlar > Düzenleyici > Davranış altında kalır.",
+    "meaningDoorHidden": "Tüm notlarda gizlendi. Akıllı bağlantılar Ayarlar > Eklentiler altında kalır.",
     "hideSuggestions": "Önerilen bağlantıları gizle",
     "notRelated": "İlgisiz",
     "notRelatedDone": "Artık önerilmiyor",
@@ -426,5 +463,31 @@
     "autoJournal": "Her yeni günlük kaydına konumumu ekle",
     "autoDenied": "PrivacyNotes için konum kapalı. Önce telefonunuzun ayarlarından açın.",
     "autoOff": "Bu telefonda konum servisleri kapalı. Önce bunları açın."
+  },
+  "vaultPasskey": {
+    "forSite": "{{rpId}} için geçiş anahtarı",
+    "hasPasskey": "Geçiş anahtarı var",
+    "removeTitle": "{{rpId}} için geçiş anahtarı kaldırılsın mı?",
+    "removeBody": "Artık PrivacyNotes'tan bununla {{rpId}} sitesine giriş yapamazsınız.",
+    "savedByExtension": "Bir site geçiş anahtarı sunduğunda, geçiş anahtarlarını PrivacyNotes tarayıcı uzantısı kaydeder.",
+    "removeBrowserWaiting": "Bu tarayıcının gönderdiği bazı öğeler henüz Kasanızda değil. Şimdi kaldırırsanız kaybolurlar.",
+    "removeBrowserAnyway": "Yine de kaldır"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "Çevir",
+    "from": "Kaynak dil",
+    "to": "Hedef dil",
+    "saveAsNote": "Yeni not olarak kaydet",
+    "needPair": "{{language}} indir · {{size}}",
+    "noModel": "Bu dil henüz çevrilemiyor.",
+    "nothing": "Bu notta çevrilecek kelime yok.",
+    "turnOn": "{{language}} dilini aç",
+    "failed": "Bu not çevrilemedi. Tekrar deneyin.",
+    "untranslated_other": "{{count}} satır çevrilemedi ve olduğu gibi kaldı.",
+    "untranslated_one": "{{count}} satır çevrilemedi ve olduğu gibi kaldı."
+  },
+  "tags": {
+    "suggestMove": "{{folder}} klasörüne taşı"
   }
 }

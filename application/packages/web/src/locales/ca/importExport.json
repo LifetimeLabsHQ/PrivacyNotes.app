@@ -61,7 +61,6 @@
     "import": "Importa",
     "downloading": "S'està baixant…",
     "subscribe": "Subscriu-t'hi",
-    "subscribeTitle": "Subscriu-te a un calendari",
     "subscribeDesc": "Enganxa una adreça de calendari, com ara un enllaç webcal:// de Google, iCloud, Proton, Outlook o Nextcloud. Els seus esdeveniments es mostren al teu calendari, només de lectura, i s'actualitzen mentre l'app és oberta.",
     "subscribed": "Calendaris subscrits",
     "updating": "S'està actualitzant…",
@@ -78,6 +77,7 @@
       "offline": "Estàs fora de línia. Connecta't i torna-ho a provar.",
       "limit": "Massa baixades en poc temps. Espera un minut i torna-ho a provar.",
       "failed": "No s'ha pogut baixar el calendari. Comprova l'adreça i torna-ho a provar.",
+      "insecure": "No s'ha pogut accedir a aquest calendari amb una connexió segura. Comprova l'adreça o torna-ho a provar més tard.",
       "full": "Et pots subscriure a {{max}} calendaris com a màxim. Elimina'n un primer."
     }
   },
@@ -88,6 +88,8 @@
     "lastpass": "A LastPass, tria Advanced options > Export > Export data for use anywhere. Els inicis de sessió conserven la clau 2FA, les notes segures i les targetes també s'importen, i les carpetes es converteixen en etiquetes.",
     "onePassword": "A l'app 1Password, tria File > Export, selecciona el teu compte i el format 1PUX. Els inicis de sessió conserven la clau 2FA, els llocs web addicionals i els camps personalitzats, les targetes, les notes i les identitats també s'importen, les etiquetes continuen sent etiquetes, i els preferits i els elements arxivats conserven el seu lloc. També funciona una exportació CSV, només amb els inicis de sessió.",
     "dashlane": "A Dashlane, tria Settings > Export data i el format CSV. Els inicis de sessió conserven la clau 2FA, les notes segures i les targetes també s'importen, i les categories es converteixen en etiquetes. Una exportació .dash està bloquejada amb una contrasenya i no es pot llegir.",
+    "msecure": "A mSecure, tria Settings > Backups > Export records to CSV file. Els inicis de sessió conserven la clau 2FA, els llocs web addicionals i els camps personalitzats, les targetes i les notes també s'importen, i les etiquetes continuen sent etiquetes.",
+    "raindrop": "A Raindrop.io, obre All bookmarks i tria Export > Get backup, i després baixa el CSV a Settings > Backups. Les col·leccions es converteixen en carpetes, les etiquetes continuen sent etiquetes, i cada marcador conserva la seva nota, l'extracte i els ressaltats.",
     "enpass": "A Enpass, tria File > Export i el format .json. Els inicis de sessió conserven la clau 2FA, els llocs web addicionals i els camps personalitzats, les targetes, les notes i les identitats també s'importen, les carpetes es converteixen en etiquetes, i els preferits i els elements arxivats conserven el seu lloc. Els elements de la paperera es queden fora.",
     "nordpass": "A NordPass, tria Settings > Export items. Els inicis de sessió conserven els llocs web addicionals i els camps personalitzats, les notes, les targetes i les identitats també s'importen, i les carpetes es converteixen en etiquetes.",
     "protonPass": "A Proton Pass, tria Settings > Export i selecciona ZIP. Els inicis de sessió conserven la clau 2FA, els llocs web addicionals, els camps personalitzats i les dates, i les notes, les targetes i les identitats també s'importen. També funciona una exportació CSV, amb menys contingut.",
@@ -109,13 +111,15 @@
     "bear": "A Bear, tria File > Backup Notes... i deixa anar aquí el fitxer .bear2bk. Hi vénen les etiquetes i les etiquetes niades, les notes fixades, l'arxiu, la paperera, els ressaltats amb els seus colors, els enllaços entre notes i els adjunts.",
     "joplin": "El fitxer .jex de File > Export all > \"JEX - Joplin Export File\". Les llibretes es converteixen en carpetes, i les etiquetes, les tasques pendents, els enllaços entre notes i els adjunts també hi vénen.",
     "anytype": "El .zip JSON d'Any-Block v1 de la configuració de l'espai > Export, amb els fitxers i els objectes arxivats inclosos. Les col·leccions es converteixen en carpetes, i les etiquetes, les tasques, els requadres destacats, les seccions plegables, les taules, els enllaços entre notes i els fitxers també hi vénen.",
+    "capacities": "El .zip de Capacities: Settings > Full Export > Manual Full Export, amb els mitjans inclosos. Els tipus d'objecte es converteixen en carpetes, i les etiquetes, les propietats, les dates, els enllaços entre objectes, les taules, les imatges i els fitxers també hi vénen.",
     "siyuan": "El Data.zip del menú de SiYuan > Data migration > Data.zip > Export, o una llibreta exportada com a SiYuan .sy.zip. Les llibretes i els documents niats es converteixen en carpetes, i les etiquetes, les referències de bloc, els requadres destacats, les matemàtiques, les taules i els recursos també hi vénen.",
+    "onenote": "El .onepkg de OneNote per a Windows: File > Export > Notebook > OneNote Package. També funciona un fitxer de secció (.one) o una carpeta de llibreta comprimida. Les seccions i els grups de seccions es converteixen en carpetes, i les subpàgines, les tasques pendents, les etiquetes de nota, les taules, els enllaços entre pàgines, les imatges i els fitxers adjunts també hi vénen.",
     "upnote": "A UpNote: Settings > Backup > Backup now, i després comprimeix tot el que hi ha a la carpeta de còpia de seguretat. Conserva les llibretes, les etiquetes, les notes fixades, els enllaços entre notes, el format i els adjunts. Les exportacions per nota des de les apps de mòbil també funcionen - tria «Export to HTML».",
     "markdownFolder": "Fitxers .md o .txt solts o dins d'un .zip. Una carpeta comprimida manté les subcarpetes i s'emporta les imatges i els adjunts.",
     "markdownApp": "Aquestes notes ja són fitxers Markdown dins d'una carpeta. Deixa anar aquesta carpeta en .zip i hi van les subcarpetes, les imatges i les #etiquetes.",
     "browserBookmarks": "El fitxer d’adreces d’interès (.html) que surt de \"Export bookmarks\" al teu navegador, o el .zip que escriu Safari. Chrome, Firefox, Safari, Edge, Opera, Brave i Vivaldi contenen tots el mateix fitxer. Les carpetes i les dates hi vénen.",
     "vcard": "El fitxer .vcf que exporta la teva agenda: iPhone i Mac mitjançant iCloud o Contactes, Android, Contactes de Google. Cada targeta s'importa, fotos incloses, i importar el mateix fitxer dues vegades omet les persones que ja tens.",
-    "bitwarden": "Exportació .json sense xifrar de Bitwarden (Tools > Export vault > .json). Inicis de sessió, targetes, claus SSH, notes segures i codis TOTP vénen tots.",
+    "bitwarden": "Exportació sense xifrar de la caixa forta de Bitwarden (Tools > Export vault > .json, o .zip (with attachments)). Inicis de sessió, targetes, claus SSH, notes segures, codis TOTP, claus d'accés i adjunts venen tots.",
     "browserPasswords": "El fitxer de contrasenyes (.csv) de Chrome, Edge, Brave, Opera, Vivaldi, Firefox o Safari, o el .zip que escriu Safari. Cada fila es converteix en un inici de sessió. Esborra el fitxer quan acabis - conté les teves contrasenyes en text pla."
   },
   "sourceLabel": {
@@ -179,6 +183,17 @@
     "storageLine": "Aquesta importació necessita uns {{needed}}. Tens {{available}} lliures.",
     "nothingWritten": "No es desa res fins que no premis Importa.",
     "whatComesIn": "Què s'importa",
+    "backupSettings": "Aquesta còpia de seguretat també porta configuració: {{list}}.",
+    "backupSetting": {
+      "calendarFeeds": "calendaris subscrits",
+      "dashboard": "la disposició de l'Inici",
+      "itemStyles": "colors i icones de carpetes, etiquetes i notes",
+      "customThemes": "temes personalitzats",
+      "favoriteTags": "etiquetes preferides",
+      "medications": "medicaments",
+      "trackers": "configuració dels seguiments",
+      "agentFolder": "la carpeta Agent"
+    },
     "oversizeAttachments_many": "{{count}} fitxers superen el límit de {{limit}} per fitxer del teu pla. S'importen en aquest dispositiu, però no se sincronitzaran amb els altres dispositius fins que no milloris a Pro."
   },
   "counts": {
@@ -252,7 +267,9 @@
     "missingFailed_one": "Aquest dispositiu no ha pogut baixar {{items}}, així que la teva exportació no l'inclou. Comprova la connexió i torna a exportar.",
     "missingFailed_other": "Aquest dispositiu no ha pogut baixar {{items}}, així que no s'inclouen en la teva exportació. Comprova la connexió i torna a exportar.",
     "missingNotFound_one": "{{items}} no és ni en aquest dispositiu ni al servidor, així que la teva exportació no l'inclou.",
-    "missingNotFound_other": "{{items}} no són ni en aquest dispositiu ni al servidor, així que no s'inclouen en la teva exportació."
+    "missingNotFound_other": "{{items}} no són ni en aquest dispositiu ni al servidor, així que no s'inclouen en la teva exportació.",
+    "bookmarksSkipped_other": "{{count}} marcadors tenen una adreça que no comença per http o https, així que no s'inclouen en la teva exportació.",
+    "bookmarksSkipped_one": "{{count}} marcador té una adreça que no comença per http o https, així que la teva exportació no l'inclou."
   },
   "missing": {
     "pictures_one": "{{count}} imatge",
@@ -345,8 +362,8 @@
     "typeFullHint": "Notes, caixa forta, imatges, àudio i fitxers, segellats amb la clau de la teva frase. Es pot desar en qualsevol lloc.",
     "rhythmHeading": "Ritme",
     "historyHeading": "Còpies de seguretat recents",
-    "runsHintDesktop": "Funciona mentre PrivacyNotes està obert o a la safata. Una còpia que tocava mentre l'app estava tancada es fa un minut després d'obrir-la.",
-    "runsHintWeb": "Funciona mentre PrivacyNotes està obert en aquest navegador. Una còpia que tocava mentre estava tancat es fa un minut després d'obrir-lo.",
+    "runsHintDesktop": "Funciona mentre PrivacyNotes està obert o a la safata. Una còpia que tocava mentre l'app estava tancada es fa un minut després d'obrir-la, també fora de línia un cop aquest dispositiu s'ha sincronitzat.",
+    "runsHintWeb": "Funciona mentre PrivacyNotes està obert en aquest navegador. Una còpia que tocava mentre estava tancat es fa un minut després d'obrir-lo, també fora de línia un cop aquest dispositiu s'ha sincronitzat.",
     "runsHintDownload": "PrivacyNotes només pot avisar que toca una còpia de seguretat mentre està obert en aquest navegador. Una còpia que tocava mentre estava tancat s'ofereix un minut després d'obrir-lo.",
     "runsHintPhone": "Un telèfon no pot fer una còpia de seguretat mentre PrivacyNotes està tancat. Es fa quan obres l'app i en toca una.",
     "sizeHint": "Uns {{size}} per a {{count}}.",

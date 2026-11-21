@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { clearPinFailures, getPinLockoutState, markPinUnlocked, pinCredentialStamp, pinIsPasscode, recordPinFailure, shouldPromptForPin, verifyPin } from '../pin';
+import { clearPinFailures, getPinLockoutState, holdPinSurface, markPinUnlocked, pinCredentialStamp, pinIsPasscode, recordPinFailure, shouldPromptForPin, verifyPin } from '../pin';
 import type { PinInputHandle } from '../PinInput';
 import { SecretInput } from '../PasscodeInput';
 import { secretReady, type SecretKind } from '../secretKind';
@@ -30,6 +30,9 @@ type Props = {
  * synced hasPin flag is authoritative even if the local PIN cache is late. */
 export function PhrasePinGate(props: Props) {
   const owner = `${props.pubkey}:${props.pinCredential ?? ''}:${props.hasPin}:${props.pinTimeoutMinutes}`;
+  // A PIN screen holding a proof of the secret: a held PIN rehash waits
+  // until it closes (pin-wrap-hardening.md section 3).
+  useEffect(() => holdPinSurface(), []);
   return <GateForOwner key={owner} {...props} />;
 }
 

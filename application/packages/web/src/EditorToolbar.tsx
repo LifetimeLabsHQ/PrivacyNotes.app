@@ -1,5 +1,4 @@
 import {
-  Fragment,
   lazy,
   Suspense,
   useCallback,
@@ -30,49 +29,55 @@ import {
   TextHSix,
   TextT as FontIcon,
   CaretDown as ChevronDownIcon,
-  CaretLineDown as HideKeyboardIcon,
   ListChecks as ListChecksIcon,
   Link as LinkIcon,
   BracketsSquare as BracketsIcon,
-  DotsThree as MoreIcon,
-  Plus as PlusIcon,
   Highlighter as HighlighterIcon,
   TextAlignLeft as TextAlignLeftIcon,
   TextAlignCenter as TextAlignCenterIcon,
   TextAlignRight as TextAlignRightIcon,
   TextAlignJustify as TextAlignJustifyIcon,
   Megaphone as MegaphoneIcon,
+  ArrowsInLineVertical,
+  ArrowsOutLineVertical,
 } from './icons';
 import { useEditorState, type Editor as TipTapEditor } from '@tiptap/react';
 import { triggerAttachmentUpload } from './EncryptedAttachment';
 import { insertFootnote } from './footnotes';
+import { foldSummary, setAllFolded } from './foldAll';
+import type { Icon } from './icons';
 import { copySelectionAs } from './clipboardSpacing';
 import { openPicturePicker } from './mediaRefs';
 import { HoverLabel } from './HoverLabel';
 import { AudioRecorder, type AudioRecordingState } from './AudioRecorder';
 import { isLinuxNative } from './devices';
 import { TEXT_COLORS, HIGHLIGHT_COLORS, DEFAULT_HIGHLIGHT } from './editorColors';
-import { usePopoverPosition } from './usePopoverPosition';
-import { suppressSoftKeyboard } from './softKeyboard';
+import { isSoftKeyboardDevice, suppressSoftKeyboard } from './softKeyboard';
 import { readColorPref } from './editorPrefs';
 import { toggleCodeBlockSmart, ALIGNMENT_VALUES, COPY_BOX_LANGUAGE } from './editorExtensions';
-import { useEscapeToClose } from './useEscapeToClose';
 import { bindingKeyText, keyText } from './shortcutMatch';
 import { insertDateText } from './editorCommands';
 import { insertKanbanBoard } from './KanbanBoard';
 import { LocationPanel } from './notesView/NoteLocationChip';
-import { Popover } from './ui';
+import { Popover, Snackbar } from './ui';
 import { PlaceMapNode } from './PlaceMapNode';
 import type { NoteLocation } from './noteLocation';
 import { FormatBarContext } from './formatBarContext';
-import { formatBarItem } from './formatBar';
-import { FORMAT_BAR_LOOK } from './formatBarItems';
+import { barForWidth, formatBarItem, isSeparatorKey } from './formatBar';
+import { FORMAT_BAR_HINT, FORMAT_BAR_LOOK } from './formatBarItems';
+import { ToolbarFrame } from './ToolbarFrame';
+import { sourcePreviewButtons, sourcePreviewMenuItems, type SourcePreviewControls } from './sourcePreviewButtons';
+import { pluginsShown } from './onDeviceAi';
+import { detectPlatform } from './devices';
+import { pluginFlagOn } from './plugins/pluginState';
+import { editorNote, openPluginSheet } from './plugins/pluginDoors';
+import { insertTextAfter, insertTextAt } from './plugins/insertText';
+import { isTouchOnly } from './touchOnly';
 import { indentListItem, indentText } from './editorIndent';
 
 const AttachIcon = FORMAT_BAR_LOOK.attachMenu!.Icon;
 import { useIsMobile, useIsTouchDevice } from './useIsMobile';
 import { useToolbarFit } from './useToolbarFit';
-import { useKeyboardOpen } from './useKeyboardOpen';
 import {
   ColorBar,
   TB_BTN_ACTIVE,
@@ -82,7 +87,6 @@ import {
   TB_ICON,
   TB_SPLIT_CARET,
   TB_SPLIT_MAIN,
-  TipSideContext,
   ToolbarBtn,
   endComposition,
   normalizeCssColor,
@@ -93,6 +97,7 @@ import { AlignPanel, CalloutPanel, FontPanel, HeadingPanel, HighlightPanel, Text
 import { insertInlineIcon } from './editorIcon';
 
 const LookPicker = lazy(() => import('./looks/LookPicker').then((m) => ({ default: m.LookPicker })));
+const ScanEditor = lazy(() => import('./scan/ScanEditor').then((m) => ({ default: m.ScanEditor })));
 
 // ------------------------------------------------------------------
 // Toolbar
@@ -136,28 +141,58 @@ type ToolbarProps = {
   audioStopRef?: MutableRefObject<(() => void) | null>;
   /** Switches the note to its Markdown view; absent where the note has none. */
   onShowMarkdown?: () => void;
+  /** The Split view item (Settings > Toolbar): it opens the Markdown view
+   *  with its preview. Absent in the phone layout and where the note has no
+   *  Markdown view. */
+  sourcePreview?: SourcePreviewControls;
 };
 
 // The heading button's glyph for the level the caret is in, 0 for body text.
 const HEADING_ICONS = [TextH, TextHOne, TextHTwo, TextHThree, TextHFour, TextHFive, TextHSix] as const;
 
-export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, linkBtnRef, onAudioStateChange, audioStopRef, hideEncryptedMedia = false, onInsertFiles, onShowMarkdown }: ToolbarProps) {
+export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, linkBtnRef, onAudioStateChange, audioStopRef, hideEncryptedMedia = false, onInsertFiles, onShowMarkdown, sourcePreview }: ToolbarProps) {
   const { t } = useTranslation('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
+  // Scan a page: the photo, then the corner editor (scan/ScanEditor.tsx).
+  // The result goes in where the cursor was when the scan began.
+  // Spec: docs/internal/plans/plugins.md (section 6.3)
+  const scanInputRef = useRef<HTMLInputElement>(null);
+  // The iOS app scans with Apple's document camera (VisionKit), whose page
+  // comes back flat as JPEG bytes; elsewhere a photo goes to our corner
+  // editor. A device with no camera (the Simulator) falls back to the photo.
+  // The camera cannot be held to one page and a scan keeps one (D11), so the
+  // count of pages it took says when the rest were left out (beta #242 item 4).
+  const startScan = () => {
+    if (detectPlatform() !== 'ios') {
+      scanInputRef.current?.click();
+      return;
+    }
+    void import('./plugins/appleEngines')
+      .then((m) => m.appleScanPages())
+      .then((answer) => {
+        if (answer) setScan({ file: new File([answer.jpeg.slice()], 'scan.jpg', { type: 'image/jpeg' }), pos: scanPos.current, flat: true, pages: answer.pages });
+      })
+      .catch(() => scanInputRef.current?.click());
+  };
+  const [scan, setScan] = useState<{ file: File; pos: number; flat?: boolean; pages?: number } | null>(null);
+  // "Only the first page was added", for a few seconds after the page goes in.
+  const [firstPageOnly, setFirstPageOnly] = useState(false);
+  useEffect(() => {
+    if (!firstPageOnly) return;
+    const timer = setTimeout(() => setFirstPageOnly(false), 6000);
+    return () => clearTimeout(timer);
+  }, [firstPageOnly]);
+  const scanPos = useRef(0);
   // The person's arrangement of the bar and the + menu, and the gear's door
   // to Settings > Toolbar. Spec: docs/internal/specs/format-bar.md
-  const { layout, onCustomize, position } = useContext(FormatBarContext);
+  const { layout: arranged, onCustomize, position } = useContext(FormatBarContext);
   // A touch screen gets one strip that scrolls sideways; a pointer gets the
   // measured row with the ••• overflow. The swipe decides it, not the width.
   const strip = useIsTouchDevice();
-  // The iOS app removes the system Done bar above the keyboard (GitHub #533),
-  // so the strip carries the only control that closes it. It sits outside
-  // the arrangeable items: a person who could hide it could lose the way out.
-  const keyboardUp = useKeyboardOpen();
-  // The gear needs room the phone bar does not have; there the door is the
-  // Settings row.
+  // A narrow window keeps the gear at the end of the row (barForWidth).
   const wide = !useIsMobile();
+  const layout = barForWidth(arranged, wide);
   // The person can put the bar at the bottom of the note (section 7 of the
   // plan): the last item of the editor's column, sticky to the bottom of the
   // scroll view, and on a phone above the keyboard. Its labels then open
@@ -214,6 +249,9 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
       fontSize: e.getAttributes('textStyle').fontSize ?? null,
       color: e.getAttributes('textStyle').color ?? null,
       highlightColor: e.getAttributes('highlight').color ?? null,
+      // Collapse all / Expand all: its label, and whether it does anything.
+      foldable: foldSummary(e.state).foldable,
+      foldOpen: foldSummary(e.state).open,
     }),
   });
 
@@ -313,7 +351,7 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
 
   // Highlight swatch popover. Twin of the text color one above, down to the
   // two-ref outside-click check, and it reuses the same `color.names.*`
-  // strings - HIGHLIGHT_COLORS carries the same nine names.
+  // strings - HIGHLIGHT_COLORS carries the same names.
   const { open: highlightOpen, setOpen: setHighlightOpen, wrapRef: highlightWrapRef, popoverRef: highlightPopoverRef, pos: highlightPos } =
     useToolbarPopover('wrap');
 
@@ -391,9 +429,6 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
   // Starts a recording from the attach menu, where no recorder button shows.
   const audioStartRef = useRef<(() => void) | null>(null);
 
-  // The '+' menu's wrapper, read by the menu's own outside-click check below.
-  const insertWrapRef = useRef<HTMLDivElement>(null);
-
   // Callout type picker. Same portal + outside-click pattern as the color
   // swatch so it escapes the toolbar's overflow clipping.
   //
@@ -406,32 +441,13 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
   const { open: calloutOpen, setOpen: setCalloutOpen, wrapRef: calloutWrapRef, btnRef: calloutBtnRef, popoverRef: calloutPopoverRef, pos: calloutPos } =
     useToolbarPopover('button');
 
-  // '+' insert menu: the newer marks (highlight, superscript, subscript)
-  // and math live in a labeled dropdown instead of growing the format
-  // row. Same portal + outside-click pattern as the pickers above.
-  const [insertOpen, setInsertOpen] = useState(false);
   // Insert > Icons & logos: the look picker, whose pick goes into the text.
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
-  const insertMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!insertOpen) return;
-    function handler(e: PointerEvent) {
-      const target = e.target as Node;
-      if (
-        insertWrapRef.current?.contains(target) ||
-        insertMenuRef.current?.contains(target)
-      ) return;
-      setInsertOpen(false);
-    }
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
-  }, [insertOpen]);
 
   // Escape closes whichever popover is open. Six of the seven register
-  // through useToolbarPopover; the '+' menu, anchored to the whole right
-  // cluster, registers here.
+  // through useToolbarPopover; the '+' menu (ToolbarInsertMenu.tsx),
+  // anchored to the whole right cluster, registers its own the same way.
   //
   // They each had an outside-pointerdown check and nothing else, so the one
   // key every other overlay in the app answers to did nothing here. The hook
@@ -447,24 +463,14 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
   // bar stays up. With every popover closed the hook is not listening, so that
   // swallow and the global Esc cascade behave exactly as they did before.
   //
-  // Registering here also hands these popovers to the Android back button,
+  // Registering also hands these popovers to the Android back button,
   // which walks the same stack via closeTopOverlay().
-  useEscapeToClose(() => setInsertOpen(false), insertOpen);
 
   // Row 1 shows as many buttons as fit; the rest wait behind the ••• in a
   // full-width row 2. On a touch screen it is one strip that scrolls.
   // Shared with the drawing canvas's toolbar (useToolbarFit.ts).
-  const barSig = layout.bar.join(',');
-  const fitState = useToolbarFit(strip, barSig);
-  const { visibleCount, hasOverflow, expanded: formatExpanded, setExpanded: setFormatExpanded } = fitState;
-  const formatRowRef = fitState.rowRef;
+  const fitState = useToolbarFit(strip, `${layout.bar.join(',')}${sourcePreview ? '+preview' : ''}`);
   const rightClusterRef = fitState.clusterRef;
-  const measuredSig = fitState.measured ? barSig : null;
-  // The insert menu is anchored to the whole right cluster, not to its own
-  // '+' button, and end-aligned: the menu is wider than the cluster, so this
-  // lines its right edge up with the media cluster (and the toolbar's right
-  // padding) instead of leaving it a few px short of the buttons above it.
-  const insertPos = usePopoverPosition(insertOpen, rightClusterRef, insertMenuRef, { align: 'end', shrink: true });
 
   // All six levels, menu and detection alike. The schema always allowed
   // every level (imports and ###### markdown produce H6) and detection
@@ -759,54 +765,77 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
     </ToolbarBtn>
   );
 
+  // Collapse all / Expand all (#779): it closes every callout and code block
+  // while one is open, and opens them all once every one is closed. With
+  // nothing to fold it stays dimmed on the bar and leaves the + menu.
+  const folds = foldSummary(editor.state);
+  const foldAllCloses = folds.open > 0 || folds.foldable === 0;
+  const foldAllLabel = t(foldAllCloses ? 'shell:folders.collapseAll' : 'shell:folders.expandAll');
+  const FoldAllIcon = foldAllCloses ? ArrowsInLineVertical : ArrowsOutLineVertical;
+  const runFoldAll = () => {
+    const tr = setAllFolded(editor.state, foldAllCloses);
+    if (tr) editor.view.dispatch(tr);
+  };
+  const foldAll = (
+    <ToolbarBtn key="foldAll" onClick={runFoldAll} disabled={folds.foldable === 0} label={foldAllLabel} tabIndex={mobileTabIndex}>
+      <FoldAllIcon size={TB_ICON} />
+    </ToolbarBtn>
+  );
+
   // What a press does for every item that can sit in the + menu, and for the
   // plain marks a person can move there. The look (icon, label) comes from
   // formatBarItems.tsx; the group from formatBar.ts. `hint` is the Markdown or
   // the key that does the same, which the menu shows beside the label.
-  type MenuAction = { hint: string | null; active: boolean; run: () => void };
+  // `label` and `Icon` replace the look's own for an item whose words follow
+  // the note (Collapse all / Expand all).
+  type MenuAction = { hint: string | null; active: boolean; run: () => void; label?: string; Icon?: Icon };
   const actions: Record<string, MenuAction> = {
-    bold: { hint: '**x**', active: isActive('bold'), run: () => editor.chain().focus().toggleBold().run() },
-    italic: { hint: '*x*', active: isActive('italic'), run: () => editor.chain().focus().toggleItalic().run() },
+    // As the tag row's pair does (handleHistory in NotesView.tsx): a touch
+    // screen keeps its keyboard down, where a focus would raise it.
+    undo: { hint: keyText('undo'), active: false, run: () => { const c = editor.chain(); if (!isSoftKeyboardDevice()) c.focus(); c.undo().run(); } },
+    redo: { hint: keyText('redo'), active: false, run: () => { const c = editor.chain(); if (!isSoftKeyboardDevice()) c.focus(); c.redo().run(); } },
+    bold: { hint: FORMAT_BAR_HINT.bold, active: isActive('bold'), run: () => editor.chain().focus().toggleBold().run() },
+    italic: { hint: FORMAT_BAR_HINT.italic, active: isActive('italic'), run: () => editor.chain().focus().toggleItalic().run() },
     underline: { hint: keyText('underline'), active: isActive('underline'), run: () => editor.chain().focus().toggleUnderline().run() },
-    tasks: { hint: '[]', active: isActive('taskList'), run: () => editor.chain().focus().toggleTaskList().run() },
-    notelink: { hint: '[[', active: false, run: () => { editor.chain().focus().insertContent('[[').run(); } },
+    tasks: { hint: FORMAT_BAR_HINT.tasks, active: isActive('taskList'), run: () => editor.chain().focus().toggleTaskList().run() },
+    notelink: { hint: FORMAT_BAR_HINT.notelink, active: false, run: () => { editor.chain().focus().insertContent('[[').run(); } },
     customize: { hint: null, active: false, run: () => onCustomize?.() },
     markdownView: { hint: keyText('markdownView'), active: false, run: () => onShowMarkdown?.() },
-    strike: { hint: '~~x~~', active: isActive('strike'), run: () => editor.chain().focus().toggleStrike().run() },
+    strike: { hint: FORMAT_BAR_HINT.strike, active: isActive('strike'), run: () => editor.chain().focus().toggleStrike().run() },
     // A header row is what a pipe table needs to exist at all: the markdown
     // serializer falls back to raw HTML for a table whose first row is plain
     // cells, so a headerless one is stored as a wall of markup and travels to
     // other apps as markup too. The bar under the table turns it off for
     // anyone who wants a grid instead.
     table: { hint: null, active: isActive('table'), run: () => editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run() },
-    hr: { hint: '---', active: false, run: () => editor.chain().focus().setHorizontalRule().run() },
+    hr: { hint: FORMAT_BAR_HINT.hr, active: false, run: () => editor.chain().focus().setHorizontalRule().run() },
     // The hint column teaches the list prefixes, and the prefix is faster
     // than any button.
-    bullets: { hint: '-', active: isActive('bulletList'), run: () => editor.chain().focus().toggleBulletList().run() },
-    numbered: { hint: '1.', active: isActive('orderedList'), run: () => editor.chain().focus().toggleOrderedList().run() },
+    bullets: { hint: FORMAT_BAR_HINT.bullets, active: isActive('bulletList'), run: () => editor.chain().focus().toggleBulletList().run() },
+    numbered: { hint: FORMAT_BAR_HINT.numbered, active: isActive('orderedList'), run: () => editor.chain().focus().toggleOrderedList().run() },
     // Tab and Shift+Tab for a phone, which has neither key (#614): the list
     // item moves a level, and elsewhere the line takes or loses spaces.
     indent: { hint: bindingKeyText({ key: 'Tab' }), active: false, run: () => { if (!indentListItem(editor, 1)) indentText(editor, 1); } },
     outdent: { hint: bindingKeyText({ shift: true, key: 'Tab' }), active: false, run: () => { if (!indentListItem(editor, -1)) indentText(editor, -1); } },
     date: { hint: keyText('insertDate'), active: false, run: () => insertDateText(editor, 'date') },
     dateTime: { hint: keyText('insertDateTime'), active: false, run: () => insertDateText(editor, 'dateTime') },
-    quote: { hint: '>', active: isActive('blockquote'), run: () => editor.chain().focus().toggleBlockquote().run() },
+    quote: { hint: FORMAT_BAR_HINT.quote, active: isActive('blockquote'), run: () => editor.chain().focus().toggleBlockquote().run() },
     codeblock: {
-      hint: '```',
+      hint: FORMAT_BAR_HINT.codeblock,
       active: isActive('codeBlock') && !isActive('codeBlock', { language: COPY_BOX_LANGUAGE }),
       run: () => toggleCodeBlockSmart(editor),
     },
     copybox: {
-      hint: '```copy',
+      hint: FORMAT_BAR_HINT.copybox,
       active: isActive('codeBlock', { language: COPY_BOX_LANGUAGE }),
       run: () => toggleCodeBlockSmart(editor, COPY_BOX_LANGUAGE),
     },
     kanban: { hint: null, active: false, run: () => insertKanbanBoard(editor, t) },
-    inlinecode: { hint: '`x`', active: isActive('code'), run: () => editor.chain().focus().toggleCode().run() },
+    inlinecode: { hint: FORMAT_BAR_HINT.inlinecode, active: isActive('code'), run: () => editor.chain().focus().toggleCode().run() },
     // The selected text becomes the formula. The insert commands do not
     // replace a selection, so it is deleted first.
     math: {
-      hint: '$x$',
+      hint: FORMAT_BAR_HINT.math,
       active: false,
       run: () => {
         const { from, to, empty } = editor.state.selection;
@@ -817,7 +846,7 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
     // Block math is its own node in @tiptap/extension-mathematics, so it has
     // its own entry.
     blockmath: {
-      hint: '$$x$$',
+      hint: FORMAT_BAR_HINT.blockmath,
       active: false,
       run: () => {
         const { from, to, empty } = editor.state.selection;
@@ -827,8 +856,8 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
     },
     superscript: { hint: null, active: isActive('superscript'), run: () => editor.chain().focus().toggleSuperscript().run() },
     subscript: { hint: null, active: isActive('subscript'), run: () => editor.chain().focus().toggleSubscript().run() },
-    spoiler: { hint: '||x||', active: isActive('spoiler'), run: () => editor.chain().focus().toggleSpoiler().run() },
-    footnote: { hint: '[^1]', active: false, run: () => insertFootnote(editor) },
+    spoiler: { hint: FORMAT_BAR_HINT.spoiler, active: isActive('spoiler'), run: () => editor.chain().focus().toggleSpoiler().run() },
+    footnote: { hint: FORMAT_BAR_HINT.footnote, active: false, run: () => insertFootnote(editor) },
     icon: { hint: null, active: false, run: () => setIconPickerOpen(true) },
     // The note's place window, prefilled; Insert map puts a map block at the caret.
     location: { hint: null, active: false, run: () => setLocationOpen(true) },
@@ -837,6 +866,9 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
     copyAsPlain: { hint: null, active: false, run: () => copySelectionAs(editor, 'plain') },
     copyAsMarkdown: { hint: null, active: false, run: () => copySelectionAs(editor, 'markdown') },
   };
+  if (folds.foldable > 0) {
+    actions.foldAll = { hint: null, active: false, run: runFoldAll, label: foldAllLabel, Icon: FoldAllIcon };
+  }
   // A picture already in Files, shown without a copy (#330). A modal, so the
   // menu closing under the press cannot close it. Absent where the media
   // buttons are: a Markdown folder cannot hold a reference to our encrypted
@@ -846,6 +878,16 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
   if (!hideEncryptedMedia || onInsertFiles) {
     actions.image = { hint: null, active: false, run: () => fileInputRef.current?.click() };
     actions.attach = { hint: null, active: false, run: () => attachmentInputRef.current?.click() };
+  }
+  if (!hideEncryptedMedia && pluginsShown()) {
+    actions.scan = {
+      hint: null,
+      active: false,
+      run: () => {
+        scanPos.current = editor.state.selection.from;
+        startScan();
+      },
+    };
   }
   if (!hideEncryptedMedia) {
     actions.fromFiles = {
@@ -869,15 +911,16 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
   // the folder takes their files (`onInsertFiles`). The Linux app has no
   // recorder (its WebKitGTK has no MediaRecorder; docs/contrib/gotchas.md). An item
   // this editor does not offer is left out wherever it was placed.
-  const MEDIA = new Set(onInsertFiles ? ['audio', 'fromFiles'] : ['image', 'attach', 'audio', 'fromFiles']);
+  const MEDIA = new Set(onInsertFiles ? ['audio', 'fromFiles', 'scan'] : ['image', 'attach', 'audio', 'fromFiles', 'scan']);
   // "Customize toolbar" is the door to Settings > Toolbar, where this bar is
   // arranged: an item like the others, so a person can hide it there. Only
   // where there is room for it; on a phone that tab is reached through
   // Settings. No Pro mark on it: the tab says what Pro adds.
   const offered = (key: string) =>
     !(hideEncryptedMedia && MEDIA.has(key)) && !(key === 'audio' && isLinuxNative()) &&
-    !(key === 'customize' && !(wide && onCustomize)) &&
-    !(key === 'markdownView' && !onShowMarkdown);
+    !(key === 'customize' && !onCustomize) &&
+    !(key === 'markdownView' && !onShowMarkdown) &&
+    !(key === 'splitView' && !sourcePreview);
 
   // What the attach menu offers here. Its items count only while the
   // paperclip is on the bar; with one item left, the paperclip gives way to
@@ -982,14 +1025,17 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
   );
   const rowControls: Record<string, ReactElement> = {
     bold, italic, underline, heading, tasks, link, notelink: noteLink,
-    color, align, font, highlight, callout, strike, audio: recorder,
-    separator1: separatorLine('separator1'), separator2: separatorLine('separator2'),
-    separator3: separatorLine('separator3'), separator4: separatorLine('separator4'),
+    color, align, font, highlight, callout, foldAll, strike, audio: recorder,
   };
+  // Split view, wherever the person placed it (sourcePreviewButtons.tsx).
   const controls = (keys: string[]) => keys
     .filter(offered)
-    .map((key) => (key === 'attachMenu' ? attachMenu : rowControls[key] ?? promoted(key)))
-    .filter((el): el is ReactElement => el !== null);
+    .flatMap((key) => {
+      if (key === 'splitView') return sourcePreview ? sourcePreviewButtons(t, sourcePreview, mobileTabIndex) : [];
+      if (isSeparatorKey(key)) return [separatorLine(key)];
+      const el = key === 'attachMenu' ? attachMenu : rowControls[key] ?? promoted(key);
+      return el ? [el] : [];
+    });
   const formatButtons = controls(layout.bar);
   // The end of the bar, after the '+': it never gives way behind the •••.
   // A hidden or moved-away recorder stays here while it records, so a change
@@ -1002,151 +1048,26 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
   // A recorder that sits in row 2 keeps row 2 open while it records: closing
   // the ••• would unmount it, and its button with it.
   const audioAt = formatButtons.indexOf(recorder);
-  const holdOpen = recording && audioAt >= 0 && measuredSig === barSig && audioAt >= visibleCount;
-  const rowTwoOpen = formatExpanded || holdOpen;
-  const menuKeys = layout.menu.filter((key) => actions[key] && offered(key));
+  const holdOpen = recording && audioAt >= 0 && fitState.measured && audioAt >= fitState.visibleCount;
+  const menuItems = layout.menu.filter(offered).flatMap((key) => {
+    if (key === 'splitView') return sourcePreview ? sourcePreviewMenuItems(t, sourcePreview) : [];
+    const action = actions[key];
+    return action ? [{ key, group: formatBarItem(key)!.group, Icon: FORMAT_BAR_LOOK[key]!.Icon, label: lookLabel(key), ...action }] : [];
+  });
 
   return (
-    <TipSideContext.Provider value={tipSide}>
-    <div className={`pn-editor-toolbar border-divider ${
-      atBottom ? 'pn-toolbar-bottom flex flex-col-reverse' : 'sticky z-10 -mx-4 sm:-mx-6 bg-surface-2/90 backdrop-blur [overscroll-behavior:contain] top-[var(--pn-tagrow-h,0px)] border-b'
-    }`}>
-      <div className="flex items-start gap-1.5 px-4 sm:px-6 py-1">
-        {/* Row 1 under a pointer: as many buttons as fit (measured), clipped
-            to a single line; the overflow lives in the full-width row 2 below.
-            overflow-x-clip (not -hidden) hides transient button spill during
-            resize measurement while letting the hover labels, which render
-            below the buttons, escape vertically. A label that would hang past
-            the clip moves back inside it as it shows (HoverLabel's fitTip).
-            On a touch screen it is one strip that scrolls (pn-format-strip in
-            index.css); touch shows no hover labels, so nothing needs to
-            escape it. */}
-        <div ref={formatRowRef} className={`pn-format-row flex-1 min-w-0 flex items-center gap-0.5 ${strip ? 'pn-format-strip' : 'overflow-x-clip'}`}>
-          {formatButtons.slice(0, measuredSig === barSig ? visibleCount : formatButtons.length)}
-        </div>
-
-        {/* Right cluster: ••• overflow toggle (only when something overflows)
-            + accent media cluster (image / attach / audio), always on row 1. */}
-        <div ref={rightClusterRef} className="shrink-0 flex items-center gap-1.5">
-          {/* The ••• sits next to the row it extends, before the '+'. */}
-          {hasOverflow && (
-            <ToolbarBtn
-              onClick={() => { if (!holdOpen) setFormatExpanded((v) => !v); }}
-              active={rowTwoOpen}
-              label={rowTwoOpen ? t('toolbar.fewerFormatting') : t('toolbar.moreFormatting')}
-              tabIndex={mobileTabIndex}
-            >
-              <MoreIcon size={TB_ICON} />
-            </ToolbarBtn>
-          )}
-          {/* '+' insert menu: block inserts (table, divider, code block, the
-              bullet and numbered lists) plus the rare notation marks (inline
-              code, sup/sub, math). Labeled entries with syntax hints - the
-              menu teaches while the format row keeps the marks a live
-              selection is waiting for. */}
-          {/* An empty menu has no button: everything is on the bar or hidden. */}
-          {menuKeys.length > 0 && (
-          <div ref={insertWrapRef} className="relative shrink-0">
-            <HoverLabel label={t('toolbar.insert')} position={tipSide}>
-              <button
-                type="button"
-                tabIndex={mobileTabIndex}
-                onMouseDown={(e) => e.preventDefault()}
-                // On touch the menu opens on the click after the tap. Opened
-                // on pointerdown, a menu placed over the button took the release
-                // of the same tap and ran the entry under the finger.
-                {...press(() => setInsertOpen((prev) => !prev))}
-                aria-label={t('toolbar.insert')}
-                className={`${TB_BTN_BASE} ${insertOpen ? TB_BTN_ACTIVE : TB_BTN_REST} shrink-0`}
-              >
-                <PlusIcon size={TB_ICON} />
-              </button>
-            </HoverLabel>
-            {insertOpen && createPortal(
-              <div
-                ref={insertMenuRef}
-                // An arranged menu can hold every movable item, so it scrolls
-                // rather than run off the screen.
-                className="fixed z-50 bg-surface-1 border border-divider rounded-lg shadow-lg py-1 w-56 overflow-y-auto overscroll-contain"
-                style={{
-                  top: insertPos?.top ?? 0,
-                  left: insertPos?.left ?? 0,
-                  maxHeight: insertPos?.maxHeight ?? `calc(100dvh - ${insertPos?.top ?? 0}px - 8px)`,
-                  visibility: insertPos ? 'visible' : 'hidden',
-                }}
-              >
-                {menuKeys.map((key, i, all) => {
-                  const item = { key, group: formatBarItem(key)!.group, Icon: FORMAT_BAR_LOOK[key]!.Icon, label: lookLabel(key), ...actions[key]! };
-                  return (
-                  <Fragment key={item.key}>
-                    {/* A header opens each run of entries sharing a group. The
-                        arrangement is grouped (resolveFormatBar), so comparing
-                        with the previous entry is enough, and a group with no
-                        entry left shows no header. */}
-                    {(i === 0 || formatBarItem(all[i - 1]!)!.group !== item.group) && (
-                      <div className="px-3 pt-2 pb-0.5 text-meta uppercase tracking-wide text-pn-muted">
-                        {t(`insertGroup.${item.group}`)}
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      // On touch a press that becomes a scroll of the menu
-                      // must not run an entry.
-                      {...press(() => {
-                        item.run();
-                        setInsertOpen(false);
-                      })}
-                      className={`w-full flex items-center gap-2.5 text-start px-3 py-1.5 text-body [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition ${
-                        item.active ? 'text-accent' : 'text-pn-soft'
-                      }`}
-                    >
-                      <item.Icon size={TB_ICON} />
-                      <span className="flex-1">{item.label}</span>
-                      {item.hint && (
-                        <span className="text-meta font-mono text-pn-muted">{item.hint}</span>
-                      )}
-                    </button>
-                  </Fragment>
-                  );
-                })}
-              </div>,
-              document.body,
-            )}
-          </div>
-          )}
-          {endButtons.length > 0 && (
-          <>
-          {/* Hairline, not a tinted box. An accent fill here would be the only
-              filled container in the editor's three control rows, reading as a
-              different kind of control rather than the last group in a row.
-              Spec: docs/internal/design/ui-patterns.md (section 80) */}
-          <span aria-hidden="true" className="shrink-0 mx-0.5 h-4 w-px bg-pn-muted/35" />
-          <div className="flex items-center gap-0.5">
-            {endButtons}
-          </div>
-          </>
-          )}
-          {strip && keyboardUp && (
-            <>
-              <span aria-hidden="true" className="shrink-0 mx-0.5 h-4 w-px bg-pn-muted/35" />
-              <ToolbarBtn onClick={() => editor.commands.blur()} label={t('toolbar.hideKeyboard')} tabIndex={mobileTabIndex}>
-                <HideKeyboardIcon size={TB_ICON} />
-              </ToolbarBtn>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Row 2: the overflow buttons, full width, revealed by •••. Only once
-          the fit has measured this arrangement: before that row 1 draws every
-          button, and drawing some of them here as well would mount a control
-          twice and leave its popover anchor empty. */}
-      {measuredSig === barSig && rowTwoOpen && hasOverflow && (
-        <div className={`flex flex-wrap items-center gap-0.5 px-4 sm:px-6 py-1 border-divider ${atBottom ? 'border-b' : 'border-t'}`}>
-          {formatButtons.slice(visibleCount)}
-        </div>
-      )}
-
+    <ToolbarFrame
+      fit={fitState}
+      row={formatButtons}
+      holdOpen={holdOpen}
+      menu={menuItems}
+      press={press}
+      end={endButtons}
+      atBottom={atBottom}
+      strip={strip}
+      onHideKeyboard={() => editor.commands.blur()}
+      tabIndex={mobileTabIndex}
+    >
       <input
         ref={fileInputRef}
         type="file"
@@ -1162,6 +1083,89 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
         className="hidden"
         onChange={handleAttachmentPick}
       />
+      {/* A phone opens its rear camera; the gallery stays one tap away. */}
+      <input
+        ref={scanInputRef}
+        type="file"
+        accept="image/*"
+        {...(isTouchOnly() ? { capture: 'environment' as const } : {})}
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = '';
+          if (file) setScan({ file, pos: scanPos.current });
+        }}
+      />
+      {/* On the body, as the snackbar below: inside the bar, its backdrop blur
+          held the window to the bar's own box, cut off under the header. */}
+      {scan && editor && createPortal(
+        <Suspense fallback={null}>
+          <ScanEditor
+            file={scan.file}
+            flat={scan.flat}
+            withTextOffer={pluginFlagOn('ocr')}
+            onRetake={startScan}
+            onClose={() => setScan(null)}
+            onDone={(result) => {
+              const view = editor.view;
+              setScan(null);
+              if ((scan.pages ?? 1) > 1) setFirstPageOnly(true);
+              // Text only: the sheet reads the page, and its "Add text to
+              // note" puts the words where the cursor was when the scan began.
+              if (result.kind === 'text') {
+                const at = scan.pos;
+                openPluginSheet({
+                  kind: 'ocr',
+                  source: 'picture',
+                  primary: 'add',
+                  noteId: editorNote(editor),
+                  load: async () => result.page,
+                  insert: (text) => insertTextAt(editor, at, text),
+                });
+                return;
+              }
+              // The placed picture's or PDF's address, once it is in the note.
+              let placed: string | null = null;
+              void (result.kind === 'picture'
+                ? import('./EncryptedImage').then(({ triggerImageUpload }) => triggerImageUpload(result.file, view, scan.pos))
+                : triggerAttachmentUpload(result.file, view)
+              ).then((src) => {
+                placed = src;
+              });
+              // "Also add the text": the Text in pictures sheet on the warped
+              // page, whose "Add text to note" puts it below the scan. The
+              // scan is found when the button is pressed: the cursor position
+              // from before the scan is not where it went, and edits move it
+              // (beta #240 item 5). Not there (yet, or any more): it throws,
+              // and the sheet points to Copy.
+              const page = result.page;
+              if (page) {
+                openPluginSheet({
+                  kind: 'ocr',
+                  source: 'picture',
+                  primary: 'add',
+                  noteId: editorNote(editor),
+                  load: async () => page,
+                  insert: (text) => {
+                    let at: number | null = null;
+                    if (placed) {
+                      editor.state.doc.descendants((node, pos) => {
+                        if (at === null && node.attrs.src === placed) at = pos;
+                        return at === null;
+                      });
+                    }
+                    if (at === null) throw new Error('gone');
+                    insertTextAfter(editor, at, text);
+                  },
+                });
+              }
+            }}
+          />
+        </Suspense>,
+        document.body,
+      )}
+      {/* On the body: the bar's backdrop blur would hold a fixed child to the bar. */}
+      {firstPageOnly && createPortal(<Snackbar>{t('media:scanFirstPageOnly')}</Snackbar>, document.body)}
       {editor && (
         <Popover
           open={locationOpen}
@@ -1201,7 +1205,6 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
           />
         </Suspense>
       )}
-    </div>
-    </TipSideContext.Provider>
+    </ToolbarFrame>
   );
 }

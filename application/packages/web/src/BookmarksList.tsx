@@ -12,6 +12,7 @@ import { ListPrefsPopover } from './ListPrefsPopover';
 import { ActiveFilterEntry, ActiveSearchEntry, FilteredEmpty, ListFilterChips } from './ListFilterChips';
 import { BookmarkRowActions } from './BookmarkRowActions';
 import { SelectionToolbar } from './SelectionToolbar';
+import type { ContextMenuItem } from './ContextMenu';
 import { SelectionCountStrip } from './SelectionCountStrip';
 import { HoverLabel } from './HoverLabel';
 import { ItemRow, ItemTile, applyCompactRows, type ListItem } from './listItem';
@@ -21,6 +22,7 @@ import { ImportPromptEntry, importPromptFor, type ImportOffer } from './ImportPr
 import { normalizeUrl, linkDomain, linkDedupeKey, duplicateBookmarkId } from './linkBody';
 import { textMatcher } from './textMatch';
 import { WEB_LINK, markdownLinks } from './linkScan';
+import { stripToPlainText } from './notesViewUtils';
 import { isImeComposing } from './imeComposing';
 import { Bookmark, Bookmarks, BookmarkSimple, FunnelSimple, Plus, Download, PILLAR_GLYPHS, NEW_GLYPHS } from './icons';
 import { NewButton } from './NewButton';
@@ -43,7 +45,9 @@ type DerivedLink = { url: string; name: string; noteId: string; noteType: LocalN
 /**
  * Extract http(s) URLs from a markdown body: named `[text](url)` links
  * first, then bare URLs not already captured. Trailing punctuation that
- * markdown prose glues onto a bare URL is trimmed.
+ * markdown prose glues onto a bare URL is trimmed. A link's text is the
+ * plain text the editor shows: a pasted link keeps its font as a `<span
+ * style>` and its marks, and the row printed them (GitHub #783).
  */
 function extractBodyLinks(body: string): { url: string; name: string }[] {
   // Substring test before either regex. This runs over every note in the
@@ -57,7 +61,7 @@ function extractBodyLinks(body: string): { url: string; name: string }[] {
   for (const { target: url, text } of markdownLinks(body, WEB_LINK)) {
     if (seen.has(url)) continue;
     seen.add(url);
-    out.push({ url, name: text.trim() });
+    out.push({ url, name: stripToPlainText(text) });
   }
   let m: RegExpExecArray | null;
   const bare = /(?:^|[\s<])(https?:\/\/[^\s)\]}>"']+)/g;
@@ -122,6 +126,7 @@ export function BookmarksList({
   onBulkTrash,
   foldersUnlocked,
   allTags,
+  selectionMore,
   viewMode,
   focusSignal,
 }: {
@@ -211,6 +216,8 @@ export function BookmarksList({
   onBulkTrash: () => void;
   foldersUnlocked: boolean;
   allTags: [string, number][];
+  /** The selection bar's More menu rows (contextMenus buildSelectionMore). */
+  selectionMore?: () => ContextMenuItem[];
   /** List rows or the shared NoteCard grid - the vault's exact pair. */
   viewMode: 'list' | 'grid';
   /** Bump to focus the quick-add bar (the "New Bookmark" entry points). */
@@ -369,6 +376,7 @@ export function BookmarksList({
           onRestore={() => {}}
           onDeleteForever={() => {}}
           allTags={allTags}
+          moreItems={selectionMore}
         />
       ) : (
       <div className="shrink-0 h-11 md:h-14 px-4 border-b border-divider flex items-center justify-between gap-3">
@@ -680,7 +688,7 @@ function DerivedLinkItem({ link: d, grid, showPreview, compact, onOpen, onOpenNo
     size: null,
     flags: [],
     chips: null,
-    ribbon: false,
+    ribbon: null,
     look: null,
   }, compact);
   const position = grid ? 'above-start' : 'start';
@@ -710,8 +718,8 @@ function DerivedLinkItem({ link: d, grid, showPreview, compact, onOpen, onOpenNo
           aria-label={t('bookmarks.saveAsBookmark')}
           className={button}
         >
-          {/* Filled accent, the same blue as the `.pn-ribbon` a saved bookmark
-              wears: the button says what the row will look like once it is
+          {/* Filled accent, the accent blue of a saved bookmark's type mark
+              (`.pn-watermark`): the button says what the row will look like once it is
               saved, and an outline glyph at 14px read as one more piece of
               grey chrome. */}
           <BookmarkSimple weight="fill" className="text-accent" />

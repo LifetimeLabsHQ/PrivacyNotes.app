@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from '../db';
+import type { View } from '../views';
+import { inSection } from '../sectionLock';
 import { BellSimple, Check } from '../icons';
 import { UpdateToast } from '../UpdateToast';
 import { formatInstant, toLocalIso } from '../intlFormat';
@@ -12,6 +14,7 @@ import { CHECK_IN_REMINDER_ID, checkInReminderItem } from '../checkIn';
 import { MEDICATION_REMINDER_PREFIX } from '../medicationReminders';
 import { BACKUP_REMINDER_ID } from '../autoBackup/reminder';
 import { mayWriteUnstamped } from '../liveSignIn';
+import { LOCKED_REMINDERS_KEY } from '../lockReloadKeys';
 import {
   keepUnseen,
   markUnseen,
@@ -589,7 +592,7 @@ async function showNow(title: string, body: string, onClick: () => void) {
 
 /** Ring one alert: mark it rung (for every tab), light the Calendar row's
  *  bell, and on a desktop or in a browser show the system notification. */
-function ringAlert(a: PlannedAlert & { title: string; body: string }, onClick: () => void) {
+function ringAlert(a: Pick<PlannedAlert, 'key' | 'itemId'> & { title: string; body: string }, onClick: () => void) {
   markFired(a.key);
   // The bell is the Calendar row's; the check-in has no item there.
   if (a.itemId !== CHECK_IN_REMINDER_ID && a.itemId !== BACKUP_REMINDER_ID && !a.itemId.startsWith(MEDICATION_REMINDER_PREFIX)) markUnseen(a.itemId);
@@ -604,21 +607,53 @@ function ringAlert(a: PlannedAlert & { title: string; body: string }, onClick: (
  * view leaves its plan here, in the form a lock screen may show: "Reminder"
  * and the time, never a title. App.tsx rings from it while the lock is up;
  * unlocking mounts the view again, which plans afresh. A change made while
- * locked (a snooze, a new day) waits for the unlock, as on a phone. Memory
- * only: it dies with the page, so a cold start that opens locked rings
- * nothing until the first unlock.
+ * locked (a snooze, a new day) waits for the unlock, as on a phone.
+ *
+ * A lock that reloads the page (lockReload.ts) hands the plan to the next page
+ * of this tab in sessionStorage (`keepLockedPlan`): the key, the time, the
+ * item id and the locked text, which holds no title. The view's next plan
+ * removes it. A cold start in a new tab has neither and rings nothing until
+ * the first unlock.
  * Spec: docs/internal/specs/calendar-pillar-spec.md (section 8)
+ * Spec: docs/internal/plans/phrase-lock-hardening.md (section 4 Q2)
  */
-let lockedPlan: readonly (PlannedAlert & { title: string; body: string })[] = [];
+type LockedAlert = Pick<PlannedAlert, 'key' | 'at' | 'itemId'> & { title: string; body: string };
+let lockedPlan: readonly LockedAlert[] = [];
+
+/** Write the plan for the page a lock's reload starts. */
+export function keepLockedPlan(): void {
+  const times = lockedPlan.map(({ key, at, itemId, title, body }) => ({ key, at, itemId, title, body }));
+  try {
+    // No plan, no key: the next page then loads nothing to ring.
+    if (times.length === 0) sessionStorage.removeItem(LOCKED_REMINDERS_KEY);
+    else sessionStorage.setItem(LOCKED_REMINDERS_KEY, JSON.stringify(times));
+  } catch {
+    /* the lock screen rings nothing until the unlock */
+  }
+}
+
+/** The plan a lock's reload left in this tab, or none. */
+function keptLockedPlan(): LockedAlert[] {
+  try {
+    const raw = JSON.parse(sessionStorage.getItem(LOCKED_REMINDERS_KEY) ?? '[]') as unknown;
+    if (!Array.isArray(raw)) return [];
+    return raw.filter((a): a is LockedAlert =>
+      !!a && typeof a === 'object' && typeof a.key === 'string' && typeof a.at === 'number'
+      && typeof a.itemId === 'string' && typeof a.title === 'string' && typeof a.body === 'string');
+  } catch {
+    return [];
+  }
+}
 
 /** Ring the last plan while the app is locked. Returns the teardown. A phone
  *  needs none: its OS holds the alerts. */
 export function ringWhileLocked(): () => void {
   if (NATIVE_MOBILE) return () => {};
+  const plan = lockedPlan.length > 0 ? lockedPlan : keptLockedPlan();
   let id: number | undefined;
   const arm = () => {
     const fired = firedAt();
-    const next = lockedPlan.find((a) => (fired[a.key] ?? -Infinity) < a.at - 60_000);
+    const next = plan.find((a) => (fired[a.key] ?? -Infinity) < a.at - 60_000);
     if (!next) return;
     const wait = Math.max(0, next.at - Date.now());
     id = window.setTimeout(() => {
@@ -633,11 +668,15 @@ export function ringWhileLocked(): () => void {
 // ── The hook ──────────────────────────────────────────────────────────
 
 const NO_ITEMS: readonly ReminderItem[] = [];
+const NO_VIEWS: readonly View[] = [];
 
 export function useReminders({
-  notes, loaded, titleOf, folderName, alertsUnlocked, titles, appLock, birthday, checkIn, medications = NO_ITEMS, backup = null, onOpen,
+  notes, protectedViews = NO_VIEWS, loaded, titleOf, folderName, alertsUnlocked, titles, appLock, birthday, checkIn, medications = NO_ITEMS, backup = null, onOpen,
 }: {
   notes: readonly LocalNote[];
+  /** Protected sections: an item in one rings as "Reminder" with no title,
+   *  as a protected note does. Spec: docs/internal/specs/section-lock.md */
+  protectedViews?: readonly View[];
   /** The first read of this device's items has landed. Before it the list is
    *  empty, and a plan made from it would cancel every alert on the phone,
    *  the ones Android still holds past their minute among them, which then
@@ -689,7 +728,7 @@ export function useReminders({
       let s: Schedule | null = null;
       let born: { month: number; day: number } | undefined;
       if (n.type === 'contact') {
-        if (!birthday || n.pinProtected === 1) continue;
+        if (!birthday || n.pinProtected === 1 || inSection(n, protectedViews)) continue;
         const b = contactBirthday(parseContactBody(n.body));
         if (!b) continue;
         // The days come from the birthday rule (planAlerts), so 29 February
@@ -702,12 +741,12 @@ export function useReminders({
       if (!s?.alerts?.length) continue;
       // A PIN-protected item shows "Reminder" and the time, locked or not:
       // a plan made while the gate is open outlives the gate on the OS.
-      const gated = n.pinProtected === 1;
+      const gated = n.pinProtected === 1 || inSection(n, protectedViews);
       out.push({ id: n.id, schedule: s, title: gated ? '' : titleOf(n), folder: gated ? undefined : folderName(n.folderId), gated, birthday: born });
     }
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notes, alertsUnlocked, birthday?.days, birthday?.at, checkIn?.time, checkIn?.done, backup?.schedule.day, backup?.schedule.time, medications, tick]);
+  }, [notes, protectedViews, alertsUnlocked, birthday?.days, birthday?.at, checkIn?.time, checkIn?.done, backup?.schedule.day, backup?.schedule.time, medications, tick]);
 
   const plan = useMemo(() => {
     const raw = planAlerts(items, Date.now(), readSnoozes());
@@ -751,9 +790,15 @@ export function useReminders({
     setShown((s) => (s && !ids.has(s.itemId) ? null : s));
   }, [items, loaded]);
 
-  // The plan the lock screen rings from (ringWhileLocked).
+  // The plan the lock screen rings from (ringWhileLocked). The view plans
+  // afresh, so a plan a lock's reload kept for this tab is spent.
   useEffect(() => {
     lockedPlan = plan.map((a) => ({ ...a, ...a.locked }));
+    try {
+      sessionStorage.removeItem(LOCKED_REMINDERS_KEY);
+    } catch {
+      /* nothing kept that could be read back either */
+    }
   }, [plan]);
 
   // The OS schedule on a phone, and the status line, from the items read.

@@ -316,21 +316,21 @@
       "app": "Bitwarden",
       "title": "Wyeksportuj swój sejf Bitwarden",
       "metaTitle": "Eksport sejfu Bitwarden - PrivacyNotes",
-      "lead": "Bitwarden eksportuje cały twój sejf jako jeden niezaszyfrowany plik .json, a PrivacyNotes układa każdy wpis tam, gdzie należy: loginy, karty, klucze SSH i bezpieczne notatki.",
+      "lead": "Bitwarden eksportuje cały twój sejf jako jeden niezaszyfrowany plik .json albo jako .zip z załącznikami, a PrivacyNotes układa każdy wpis tam, gdzie należy: loginy, karty, klucze SSH i bezpieczne notatki.",
       "sections": [
         {
           "h": "Wyeksportuj sejf z Bitwarden",
           "steps": [
             "Otwórz sejf webowy Bitwarden (albo aplikację desktopową) i zaloguj się.",
             "Przejdź do Tools, a potem „Export vault”.",
-            "Wybierz format pliku .json (ten zwykły, nie „.json (Encrypted)”).",
+            "Wybierz format pliku .json albo „.zip (with attachments)”, żeby przenieść też załączone pliki. Nie wybieraj „.json (Encrypted)”.",
             "Potwierdź hasłem głównym i pobierz plik."
           ]
         },
         {
           "h": "Gdzie co trafia",
           "p": [
-            "Loginy stają się [wpisami typu Login w Sejfie](/pl/help/vault) (razem z ikonami stron), karty stają się wpisami kart, klucze SSH wpisami kluczy SSH, a bezpieczne notatki i tożsamości trafiają jako czytelne notatki. Foldery Bitwarden mapują się na tagi, a ulubione przychodzą z gwiazdką. Klucze uwierzytelniające (TOTP) też jadą z tobą, więc [twoje kody 2FA nadal działają](/pl/help/vault-totp).",
+            "Loginy stają się [wpisami typu Login w Sejfie](/pl/help/vault) (razem z ikonami stron), karty stają się wpisami kart, klucze SSH wpisami kluczy SSH, a bezpieczne notatki i tożsamości trafiają jako czytelne notatki. Foldery Bitwarden mapują się na tagi, a ulubione przychodzą z gwiazdką. Klucze uwierzytelniające (TOTP) też jadą z tobą, więc [twoje kody 2FA nadal działają](/pl/help/vault-totp), podobnie jak passkey zapisane w Bitwarden. Z pliku .zip każdy załącznik trafia do swojego wpisu.",
             "Plik eksportu zawiera Twoje hasła jawnym tekstem, więc zaimportuj go, sprawdź, czy wszystko dotarło, a potem porządnie go usuń. Wewnątrz PrivacyNotes wszystko jest znów zaszyfrowane, na Twoim urządzeniu i w drodze na serwer."
           ]
         }
@@ -1115,6 +1115,31 @@
         }
       ]
     },
+    "msecure": {
+      "app": "mSecure",
+      "title": "Wyeksportuj swój sejf mSecure",
+      "metaTitle": "Jak wyeksportować sejf mSecure - PrivacyNotes",
+      "lead": "mSecure eksportuje Twoje rekordy jako jeden plik .csv ze swojej aplikacji na komputer, a PrivacyNotes zamienia je w loginy, karty i notatki w Sejfie, razem z polami własnymi.",
+      "sections": [
+        {
+          "h": "Wyeksportuj dane z mSecure",
+          "steps": [
+            "Otwórz mSecure na komputerze i odblokuj go.",
+            "Otwórz Settings i wybierz Backups.",
+            "W sekcji Import and Export records wybierz Export records to CSV file.",
+            "Wybierz Export all records. Zostaw opcję „Only export field data” wyłączoną, żeby plik zachował nazwę każdego pola.",
+            "Wybierz Export i zapisz plik .csv."
+          ]
+        },
+        {
+          "h": "Gdzie co trafia",
+          "p": [
+            "Każdy login staje się [wpisem typu Login w Sejfie](/pl/help/vault) razem z kluczem 2FA, więc [Twoje kody nadal działają](/pl/help/vault-totp), a jego dodatkowe strony i pola własne przychodzą razem ze swoimi nazwami. Tajne pole, takie jak PIN lub kod odzyskiwania, pozostaje ukryte. Karta staje się kartą. Bezpieczna notatka staje się notatką, a inne typy rekordów, takie jak tożsamość lub konto bankowe, stają się notatkami z listą swoich pól, oznaczonymi tagiem z typem rekordu. Twoje tagi zostają tagami. Plik nie zawiera dat ani ulubionych, więc każdy element dostaje dzień importu.",
+            "Eksport zawiera Twoje hasła jawnym tekstem. Zaimportuj go, sprawdź, czy wszystko dotarło, a potem usuń plik."
+          ]
+        }
+      ]
+    },
     "nordpass": {
       "app": "NordPass",
       "title": "Wyeksportuj swój sejf NordPass",
@@ -1163,6 +1188,36 @@
           "p": [
             "Każdy login staje się [wpisem typu Login w Sejfie](/pl/help/vault) razem z dodatkowymi stronami, polami własnymi i datami. Jego klucz 2FA też przychodzi, więc [Twoje kody nadal działają](/pl/help/vault-totp). Gdy element ma i adres e-mail, i nazwę użytkownika, nazwa użytkownika wypełnia login, a e-mail staje się polem. Notatki przychodzą jako notatki, karty jako karty, a tożsamości jako notatki, w których każdy szczegół ma własną linię. Każdy alias hide-my-email staje się notatką z adresem, więc zachowujesz listę, który adres trafił do której strony; Proton nadal przekazuje jego pocztę, dopóki Twoje konto Proton jest otwarte. Przy więcej niż jednym sejfie każdy sejf staje się tagiem. Elementy z kosza nie są importowane.",
             "Eksport zawiera Twoje hasła jawnym tekstem. Zaimportuj go, sprawdź, czy wszystko dotarło, a potem usuń plik."
+          ]
+        }
+      ]
+    },
+    "raindrop": {
+      "app": "Raindrop.io",
+      "title": "Wyeksportuj swoje zakładki z Raindrop.io",
+      "metaTitle": "Eksport zakładek z Raindrop.io - PrivacyNotes",
+      "lead": "Wyeksportuj zakładki z Raindrop.io jako jedną kopię zapasową .csv, a PrivacyNotes zamieni je w zakładki w tych samych kolekcjach, razem z Twoimi notatkami, fragmentami i podkreśleniami.",
+      "sections": [
+        {
+          "h": "Pobierz kopię zapasową wszystkiego",
+          "steps": [
+            "Otwórz Raindrop.io w przeglądarce albo w aplikacji i zaloguj się.",
+            "Otwórz All bookmarks i wybierz Export > Get backup.",
+            "Poczekaj na e-mail z informacją, że kopia zapasowa jest gotowa. Zwykle trwa to kilka minut.",
+            "Otwórz Settings > Backups i wybierz CSV przy nowej kopii zapasowej."
+          ]
+        },
+        {
+          "h": "Wybierz CSV, nie HTML",
+          "p": [
+            "Plik HTML zachowuje linki i Twoje notatki, ale pomija fragmenty i podkreślenia. Żeby przenieść tylko jedną kolekcję, otwórz ją i wybierz Export > CSV. Plik .zip z tego menu też się sprawdzi."
+          ]
+        },
+        {
+          "h": "Gdzie to trafia",
+          "p": [
+            "Każda zakładka trafia do folderu Bookmarks, do osobnego folderu dla każdej kolekcji, zagnieżdżonego tak jak u Ciebie. Zakładki bez kolekcji (Unsorted) lądują bezpośrednio w Bookmarks. Twoja notatka, fragment i każde podkreślenie wraz z karteczką trafiają do notatek zakładki, a ulubione zostają przypięte. Tagi zostają tagami, a każda zakładka zachowuje datę zapisania.",
+            "W pliku nie ma kosza, przypomnień ani kolorów podkreśleń, więc te rzeczy zostają. Obrazy okładek też zostają: zamiast nich każda zakładka pokazuje ikonę swojej strony."
           ]
         }
       ]
@@ -1288,6 +1343,83 @@
           "p": [
             "[Każdy wpis ląduje w Dziennikach](/pl/help/journal), z dniem, który wybrano dla niego w Journal. Każdy wpis zachowuje tytuł i tekst, a zdjęcia i filmy importują się jako obrazy i załączniki. Mapa we wpisie przychodzi jako obraz.",
             "Takeout nie zawiera nazw miejsc, podpowiedzi do pisania, zakładek ani refleksji z Journal, więc zostają w Journal. Podsumowanie importu o tym informuje."
+          ]
+        }
+      ]
+    },
+    "capacities": {
+      "app": "Capacities",
+      "title": "Wyeksportuj swoją przestrzeń z Capacities",
+      "metaTitle": "Eksport przestrzeni z Capacities - PrivacyNotes",
+      "lead": "Capacities eksportuje wszystkie przestrzenie naraz jako jeden zip z plikami Markdown i ich multimediami. Ten zip przenosi Twoje strony, notatki dzienne i własne obiekty razem z tagami, właściwościami, linkami, tabelami i obrazami.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/capacities-export.webp",
+            "alt": "Ustawienia Capacities, strona Full Export, sekcja Manual Full Export z włączoną opcją Include media i przyciskiem Export All Spaces.",
+            "width": 1576,
+            "height": 802
+          },
+          "h": "Zrób pełny eksport",
+          "steps": [
+            "Otwórz Capacities na komputerze i wejdź w Settings.",
+            "Wybierz Full Export.",
+            "W sekcji Manual Full Export otwórz Options i zostaw włączone „Include media”. Pozostałe dwie opcje możesz zostawić bez zmian: czytamy oba style linków i pomijamy nagłówek z tytułem.",
+            "Kliknij „Export All Spaces”. Capacities tworzy zip w tle i zapisuje go w folderze Pobrane, pod nazwą „Capacities” z datą i godziną.",
+            "Upuść ten plik .zip bez zmian."
+          ],
+          "p": [
+            "Capacities dodaje obrazy i pliki do zipa tylko wtedy, gdy są na Twoim urządzeniu. Jeśli czegoś brakuje, ustaw Settings > Offline & Sync > Media loading na „Everything”, poczekaj na pobranie i wyeksportuj ponownie."
+          ]
+        },
+        {
+          "h": "Co przechodzi razem z notatkami",
+          "p": [
+            "Każda strona, notatka dzienna i obiekt Twoich własnych typów staje się notatką z tagami i datami zapisanymi w Capacities. Każdy typ obiektu staje się folderem, więc Twoje strony trafiają do Pages, notatki dzienne do DailyNotes, a typ taki jak Books do osobnego folderu.",
+            "Nagłówki, listy, zadania, cytaty, kod z oznaczeniem języka, wzory matematyczne i tabele przechodzą w niezmienionej postaci. Capacities zapisuje formułę z tabeli w eksporcie jako jej wynik, więc liczby docierają, a formuła nie. [Nasze tabele obsługują te same formuły](/pl/help/table-formulas), z tymi samymi nazwami i odwołaniami do komórek, więc wpisz `=` w komórce, żeby ustawić ją na nowo. [Linki i wzmianki między obiektami stają się linkami do notatek](/pl/help/note-links), a obrazy i pliki są importowane do Twojej pamięci.",
+            "Właściwości własnego typu, takie jak ocena czy gatunek, są zapisane jako krótka lista na górze notatki. Zapytania to zapisane wyszukiwania bez tekstu, więc nie są przenoszone. Capacities nie eksportuje kosza, swoich kolekcji ani wyglądu bloków rozwijanych i kolorowych: bloki rozwijane przychodzą jako listy, a tekst w środku przechodzi razem z nimi."
+          ]
+        }
+      ]
+    },
+    "onenote": {
+      "app": "OneNote",
+      "title": "Wyeksportuj swoje notatniki z OneNote",
+      "metaTitle": "Eksport notatników z OneNote - PrivacyNotes",
+      "lead": "OneNote dla Windows eksportuje cały notatnik jako jeden plik OneNote Package (.onepkg). Ten plik przenosi Twoje sekcje, strony i podstrony razem z zadaniami, tabelami, obrazami i załącznikami.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/onenote-export.webp",
+            "alt": "OneNote dla Windows, File > Export, z wybranym Notebook w Export Current, wybranym OneNote Package w Select Format i przyciskiem Export.",
+            "width": 1576,
+            "height": 548
+          },
+          "h": "Wyeksportuj notatnik jako OneNote Package",
+          "steps": [
+            "Otwórz notatnik w OneNote dla Windows, czyli w aplikacji desktopowej. Notatniki przechowywane w OneDrive też się tam otwierają.",
+            "Wybierz File > Export.",
+            "W sekcji „Export Current” wybierz „Notebook”.",
+            "W sekcji „Select Format” wybierz „OneNote Package (*.onepkg)” i kliknij „Export”.",
+            "Wybierz folder i zapisz. OneNote zapisuje jeden plik .onepkg o nazwie notatnika.",
+            "Upuść ten plik .onepkg bez zmian."
+          ],
+          "p": [
+            "Jedna paczka zawiera jeden notatnik. Jeśli masz kilka notatników, wyeksportuj każdy i upuszczaj pliki jeden po drugim. OneNote w przeglądarce, na Macu i na telefonach nie ma eksportu, więc do tego kroku użyj komputera z Windowsem."
+          ]
+        },
+        {
+          "h": "Najpierw odblokuj chronione sekcje",
+          "p": [
+            "Sekcja z hasłem pozostaje zaszyfrowana w paczce i otworzy ją tylko OneNote. Odblokuj każdą w OneNote, usuń jej hasło w Review > Password > Remove Password i wyeksportuj ponownie. Podgląd importu wymienia każdą sekcję, którą musiał pominąć."
+          ]
+        },
+        {
+          "h": "Co przechodzi razem z notatkami",
+          "p": [
+            "Notatnik staje się folderem, a w nim folder dla każdej grupy sekcji i sekcji. Każda strona staje się notatką w folderze swojej sekcji z datą utworzenia w OneNote, a podstrona trafia do tego samego folderu zaraz za swoją stroną.",
+            "Nagłówki, pogrubienie, kursywa, podkreślenie, kolory, wyróżnienia, listy punktowane i numerowane, tabele oraz akapity z kodem przechodzą w niezmienionej postaci. Tag zadania staje się elementem listy zadań, zaznaczonym, jeśli zadanie było zrobione, a inne tagi notatek, takie jak Important czy Question, stają się tagami notatki. [Linki między stronami stają się linkami do notatek](/pl/help/note-links), a obrazy i załączone pliki są importowane do Twojej pamięci.",
+            "Działa też sam plik sekcji (.one) albo spakowany w zip folder notatnika. Rysunki wykonane piórem, nagrania audio i równania nie mają tu swojej postaci, więc podgląd importu je zlicza, a strony z kosza OneNote nie wchodzą do paczki."
           ]
         }
       ]

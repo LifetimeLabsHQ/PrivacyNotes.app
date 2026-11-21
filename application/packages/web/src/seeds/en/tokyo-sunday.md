@@ -13,7 +13,7 @@ trackers: {"mood":8,"emotions":["calm","relaxed","grateful"],"sleep":{"quality":
 
 > # <span style="font-family: ui-serif, Georgia, Cambria, serif">*No plan today. Best of the three days.*</span>
 
-Coffee, then a long walk through a neighbourhood whose name I could not read, then more coffee.
+Coffee, then a long walk through a neighborhood whose name I could not read, then more coffee.
 
 - [x] Konbini egg sandwich, finally
 

@@ -138,6 +138,13 @@ final class ShareViewController: UIViewController {
         let inbox = group.appendingPathComponent("ShareInbox", isDirectory: true)
         let limit = accountLimit(group)
         try? FileManager.default.createDirectory(at: inbox, withIntermediateDirectories: true, attributes: protectedFolder)
+        // Kept out of iCloud and computer backups of the phone, as Android keeps
+        // the app's data out of its backups. The app sets the same mark at each
+        // start (gen/apple/privacynotes_iOS/BackupExclusion.m).
+        var excluded = URLResourceValues()
+        excluded.isExcludedFromBackup = true
+        var inboxURL = inbox
+        try? inboxURL.setResourceValues(excluded)
         let providers = items.flatMap { $0.attachments ?? [] }
         // Safari puts the page title (or a selection) in the item's own text.
         let itemText = items.compactMap { ($0.attributedContentText ?? $0.attributedTitle)?.string }

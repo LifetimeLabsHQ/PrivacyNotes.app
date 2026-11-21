@@ -60,8 +60,7 @@ export function hasOpenOverlay(): boolean {
  * overlay keeps the Escape key itself (the drawing canvas, whose Escape also
  * finishes a text box or a line).
  */
-export function pushEscapeHandler(onEscape: () => void, inline = false, key = true): () => void {
-  const id = Symbol('esc');
+export function pushEscapeHandler(onEscape: () => void, inline = false, key = true, id = Symbol('esc')): () => void {
   escStack.push({ id, close: onEscape, inline });
   if (!key) {
     return () => {
@@ -92,14 +91,20 @@ export function pushEscapeHandler(onEscape: () => void, inline = false, key = tr
   };
 }
 
-export function useEscapeToClose(onClose: () => void, enabled = true, inline = false) {
+/** Returns a check that is true while this overlay is the topmost one, so a
+ *  gesture that walks it back (the Settings edge swipe, #839) never acts
+ *  under a dialog opened on top of it. */
+export function useEscapeToClose(onClose: () => void, enabled = true, inline = false): () => boolean {
   // Keep the latest callback in a ref so the effect only re-runs (and
   // re-orders the stack) when `enabled` flips, not on every render.
   const cbRef = useRef(onClose);
   cbRef.current = onClose;
+  const idRef = useRef(Symbol('esc'));
 
   useEffect(() => {
     if (!enabled) return;
-    return pushEscapeHandler(() => cbRef.current(), inline);
+    return pushEscapeHandler(() => cbRef.current(), inline, true, idRef.current);
   }, [enabled, inline]);
+
+  return () => escStack[escStack.length - 1]?.id === idRef.current;
 }

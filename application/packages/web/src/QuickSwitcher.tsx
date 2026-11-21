@@ -6,7 +6,7 @@ import type { DirectoryEntry } from './markdownFolder/fileAccess';
 import { editedAtOf, journalOn } from './notesViewUtils';
 import type { ContextMenuItem } from './ContextMenu';
 import { indexedPlaceText, searchIndexReady, searchNotes } from './search';
-import { CREATE_PREFIX, FOLDER_PREFIX, TAG_PREFIX, appendLines, asWebAddress, dayOfQuery, emptyMessage, quotePart, readSwitcherQuery, splitAppend, textHit, bodySnippet } from './switcherQuery';
+import { CREATE_PREFIX, FOLDER_PREFIX, TAG_PREFIX, appendLines, asWebAddress, dayOfQuery, spanOfQuery, emptyMessage, quotePart, readSwitcherQuery, splitAppend, textHit, bodySnippet } from './switcherQuery';
 import { typeGlyph } from './NoteRow';
 import i18n from './i18n';
 import { intlLocale } from './languages';
@@ -15,10 +15,12 @@ import { describeSchedule } from './scheduleText';
 import { useEscapeToClose } from './useEscapeToClose';
 import { isImeComposing } from './imeComposing';
 import { foldForMatch, textMatcher, type TextMatch } from './textMatch';
-import { formatDay, formatRelative, toLocalIso } from './intlFormat';
+import { formatDay, formatRelative, relativeDayName, toLocalIso } from './intlFormat';
+import { dayNumber } from './schedule';
+import { countDays } from './dayCount';
 import { hhmm } from './localDate';
 import { activeLocale, ensureSettingsSearchLoaded } from './i18n';
-import { NEW_GLYPHS, ArrowElbowDownRight, ArrowSquareOut, ArrowsHorizontal, BellSimple, Briefcase, CalendarBlank, CalendarDot, Check, Clock, DotsThreeOutlineVertical, ArrowLeft, Folder, Hash, ListChecks, MapPin, PencilSimple, Compass, MagnifyingGlass, Palette, Plus, Repeat, Sparkle, Terminal, X, type Icon, type IconProps } from './icons';
+import { NEW_GLYPHS, ArrowElbowDownRight, ArrowSquareOut, ArrowsHorizontal, BellSimple, Ruler, Briefcase, CalendarBlank, CalendarDot, Check, Clock, DotsThreeOutlineVertical, ArrowLeft, Folder, Hash, ListChecks, MapPin, PencilSimple, Compass, MagnifyingGlass, Palette, Plus, Repeat, Sparkle, Terminal, X, type Icon, type IconProps } from './icons';
 import { HoverLabel } from './HoverLabel';
 import { KATANA_LINE, NinjaIcon } from './NinjaIcon';
 import { isNinjaDragHandle } from './ninjaHost';
@@ -139,7 +141,7 @@ function Glyph({ as: C }: { as: ComponentType<IconProps> }) {
 }
 
 /** The words that ask for the themes: the reader's own, then the English ones. */
-function themeWords(t: (key: string, opts?: { lng: string }) => string): string[] {
+function themeWords(t: (...args: [key: string] | [key: string, opts: { lng: string }]) => string): string[] {
   const keys = ['palette.groups.themes', 'ninja.themes.word'];
   return [...new Set([...keys.map((k) => t(k)), ...keys.map((k) => t(k, { lng: 'en' }))])];
 }
@@ -196,6 +198,7 @@ type Row =
   | { kind: 'item'; n: LocalNote; m: Mark }
   | { kind: 'text'; n: LocalNote; snippet: Snippet; place?: true }
   | { kind: 'day'; day: string }
+  | { kind: 'count'; from: string; to: string }
   | { kind: 'append'; n: LocalNote; lines: string[]; asTasks: boolean }
   | { kind: 'appendNew'; title: string; lines: string[] }
   | { kind: 'appendHint'; text: string }
@@ -293,6 +296,8 @@ export default function QuickSwitcher({
   bodyOf,
   actionsOf,
   onGoToDay,
+  onCountDays,
+  countBoth = false,
   daySection,
   themes,
   remote,
@@ -313,6 +318,10 @@ export default function QuickSwitcher({
   actionsOf?: (n: LocalNote) => ContextMenuItem[];
   /** Opens the calendar at a day, for a query that is a date alone. */
   onGoToDay?: (day: string) => void;
+  /** Opens the calendar's day counter on two days (#815). */
+  onCountDays?: (from: string, to: string) => void;
+  /** The counter's "Include the end day", so the row says what the counter will. */
+  countBoth?: boolean;
   daySection?: { label: string; icon: Icon };
   /**
    * The themes ">" switches by name. A kept pick goes through `pickTheme`, as
@@ -842,6 +851,14 @@ export default function QuickSwitcher({
     return [{ kind: 'day', day }, ...(journal ? [{ kind: 'item', n: journal, m: null } as Row] : [])];
   }, [mode, actionsFor, q, readCtx, onGoToDay, notes]);
 
+  // A span and nothing else ("mar 3 to dec 25") counts the days between,
+  // and opens the calendar's day counter on them (#815).
+  const countRows = useMemo((): Row[] => {
+    if (mode !== 'jump' || actionsFor || !q || !readCtx || !onCountDays) return [];
+    const span = spanOfQuery(parseQuickAdd(q, { ...readCtx, today: toLocalIso(new Date()), folders: [] }));
+    return span ? [{ kind: 'count', ...span }] : [];
+  }, [mode, actionsFor, q, readCtx, onCountDays]);
+
   // "text >> name": the items the text can go into, best match first. With no
   // name yet, the day's journal entry and the task lists opened last.
   const appendRows = useMemo((): Row[] => {
@@ -966,13 +983,14 @@ export default function QuickSwitcher({
       ...(themesAsked ? [themeGroup] : []),
       // A date alone: the day first, before any title that holds the word.
       { header: t('quickSwitcher.goToDay'), rows: dayRows },
+      { header: tShell('calendar.count.tool'), rows: countRows },
       // With ">>", with or without the "+": the items the text can go into.
       { header: tShell('quickAdd.addTo'), rows: appendRows },
       // Under an empty quick add: Create, then what it reads, then the recent items.
       ...(creating
         ? [{ header: tShell('quickAdd.linkGroup'), rows: linkRows }, create, { header: tShell('quickAdd.examplesGroup'), rows: exampleRows }, { header: tShell('quickAdd.syntax.group'), rows: syntaxRows }]
         : []),
-      { header: q ? (creating || dayRows.length ? tShell('quickAdd.items') : undefined) : t('quickSwitcher.recent'), rows: items },
+      { header: q ? (creating || dayRows.length || countRows.length ? tShell('quickAdd.items') : undefined) : t('quickSwitcher.recent'), rows: items },
       { header: t('quickSwitcher.inText'), rows: textRows },
       tagGroup,
       folderGroup,
@@ -983,7 +1001,7 @@ export default function QuickSwitcher({
       // Explicit under the hits: Enter on a hit still opens the hit.
       ...(creating ? [] : [create]),
     ].filter((g) => g.rows.length);
-  }, [commandMode, scope, creatingFilter, q, items, tagRows, folderRows, newFilterRows, commandRows, themeRows, themesAsked, recentRows, topRows, entries, settings, t, tShell, createRows, exampleRows, syntaxRows, creating, actionsFor, actionRows, titleOf, dayRows, appendRows, textRows, makeRows, webAddress, append, createText]);
+  }, [commandMode, scope, creatingFilter, q, items, tagRows, folderRows, newFilterRows, commandRows, themeRows, themesAsked, recentRows, topRows, entries, settings, t, tShell, createRows, exampleRows, syntaxRows, creating, actionsFor, actionRows, titleOf, dayRows, countRows, appendRows, textRows, makeRows, webAddress, append, createText]);
 
   const searchRow = !!listSearch && !!q && !commandMode && !scope && !actionsFor && !creating;
   // "Search everything" is always offered; the open section's own search
@@ -1082,6 +1100,7 @@ export default function QuickSwitcher({
     onClose();
     if (row.kind === 'action') row.item.onSelect();
     else if (row.kind === 'day') onGoToDay!(row.day);
+    else if (row.kind === 'count') onCountDays!(row.from, row.to);
     else if (row.kind === 'append') quickAdd!.onAppend(row.n, row.lines, row.asTasks);
     else if (row.kind === 'appendNew') quickAdd!.onAppendNew(row.title, row.lines);
     else if (row.kind === 'make') quickAdd!.makers[row.maker.id]?.(row.text);
@@ -1255,7 +1274,20 @@ export default function QuickSwitcher({
       );
     }
     if (row.kind === 'day') {
-      return option(i, `day:${row.day}`, CalendarDot, formatDay(row.day, 'weekdayDate'), daySection?.label, { tone: toneOf('event') });
+      // How far the day is: "in 35 days", "3 days ago" (#815).
+      const away = relativeDayName(dayNumber(row.day) - dayNumber(toLocalIso(new Date())));
+      return option(i, `day:${row.day}`, CalendarDot, formatDay(row.day, 'weekdayDate'), [daySection?.label, away].filter(Boolean).join(' · '), { tone: toneOf('event') });
+    }
+    if (row.kind === 'count') {
+      const days = countDays(row.from, row.to, countBoth).days;
+      return option(
+        i,
+        `count:${row.from}:${row.to}`,
+        Ruler,
+        tShell('stats:wellness.week.range', { start: formatDay(row.from, 'weekdayDate'), end: formatDay(row.to, 'weekdayDate') }),
+        tShell('stats:wellness.units.days', { count: days }),
+        { tone: toneOf('event') },
+      );
     }
     if (row.kind === 'append') {
       const title = titleOf(row.n);

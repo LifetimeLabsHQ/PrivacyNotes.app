@@ -25,10 +25,12 @@ import { THEME_SHOT_DIR, themeShotFile } from './themeShotName.mjs';
 // code has no shot yet. Emitted as themes/index.html, so Cloudflare serves
 // it at /themes. English-only by the i18n tier policy, like /roadmap.
 //
-// The page ships zero inline scripts (script-src is 'self' only): the Copy
-// buttons ship hidden and /static-pages.js wires them (data-static-page
+// The page ships zero inline scripts (script-src is 'self' only):
+// /static-pages.js wires the viewer and Load more (data-static-page
 // "themes"), and the All, Light and Dark filter is three radio inputs and
-// CSS. Every code stays selectable without JavaScript. The Load more buttons
+// CSS. The page has no Copy code button, because every theme on it ships in
+// the app, and a pasted copy saved a second entry of it. Every code stays
+// selectable under Show code. The Load more buttons
 // ship hidden too: without JavaScript every card shows.
 // Spec: docs/contrib/color-themes.md (section 6)
 
@@ -37,7 +39,7 @@ const SRC = path.resolve(__dirname, 'src');
 const CANONICAL = 'https://privacynotes.app/themes';
 const TITLE = 'Themes - PrivacyNotes';
 const DESC =
-  'Color themes for PrivacyNotes, ready to copy. Copy a theme code and paste it into Settings, Appearance, Themes.';
+  'Color themes for PrivacyNotes. Find one you like and pick it in Settings, Design.';
 /** The theme form: a new discussion in the Themes category of the public
  *  repository, where each theme keeps an open thread. */
 const SUBMIT_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/discussions/new?category=themes';
@@ -79,12 +81,12 @@ const BUILTIN_DESCRIPTIONS: Record<'light' | 'dark', Record<string, string>> = {
   light: {
     'default': 'Clean white paper: near-black text with a deep blue accent.',
     'warm-cream': 'An old notebook page: warm cream paper with a royal blue accent.',
-    'slate': 'A cool grey desk: slate-tinted surfaces with an indigo accent.',
+    'slate': 'A cool gray desk: slate-tinted surfaces with an indigo accent.',
     'sage': 'A herb garden: pale sage greens with a deep forest-green accent.',
   },
   dark: {
-    'default': 'A warm evening: charcoal grey-brown with a soft sky-blue accent.',
-    'soft-dark': 'Dusk on a screen: muted blue-greys with a gentle light-blue accent.',
+    'default': 'A warm evening: charcoal gray-brown with a soft sky-blue accent.',
+    'soft-dark': 'Dusk on a screen: muted blue-grays with a gentle light-blue accent.',
     'navy-depths': 'The deep sea: dark navy surfaces with a periwinkle-blue accent.',
     'oled': 'True black for OLED screens with a calm blue accent.',
   },
@@ -214,8 +216,7 @@ const PUBLIC = path.resolve(__dirname, 'public');
 /** A Phosphor glyph (regular weight) as inline SVG, for the steps and filters. */
 const glyph = (d: string, size = 16) =>
   `<svg width="${size}" height="${size}" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="${d}"/></svg>`;
-const P_COPY = 'M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z';
-const P_CLIPBOARD = 'M168,152a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,152Zm-8-40H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm56-64V216a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V48A16,16,0,0,1,56,32H92.26a47.92,47.92,0,0,1,71.48,0H200A16,16,0,0,1,216,48ZM96,64h64a32,32,0,0,0-64,0ZM200,48H173.25A47.93,47.93,0,0,1,176,64v8a8,8,0,0,1-8,8H88a8,8,0,0,1-8-8V64a47.93,47.93,0,0,1,2.75-16H56V216H200Z';
+const P_SEARCH = 'M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z';
 const P_DISK = 'M219.31,72,184,36.69A15.86,15.86,0,0,0,172.69,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V83.31A15.86,15.86,0,0,0,219.31,72ZM168,208H88V152h80Zm40,0H184V152a16,16,0,0,0-16-16H88a16,16,0,0,0-16,16v56H48V48H172.69L208,83.31ZM160,72a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h56A8,8,0,0,1,160,72Z';
 const P_EXPAND = 'M216,48V96a8,8,0,0,1-16,0V67.31l-42.34,42.35a8,8,0,0,1-11.32-11.32L188.69,56H160a8,8,0,0,1,0-16h48A8,8,0,0,1,216,48ZM98.34,146.34,56,188.69V160a8,8,0,0,0-16,0v48a8,8,0,0,0,8,8H96a8,8,0,0,0,0-16H67.31l42.35-42.34a8,8,0,0,0-11.32-11.32ZM208,152a8,8,0,0,0-8,8v28.69l-42.34-42.35a8,8,0,0,0-11.32,11.32L188.69,200H160a8,8,0,0,0,0,16h48a8,8,0,0,0,8-8V160A8,8,0,0,0,208,152ZM67.31,56H96a8,8,0,0,0,0-16H48a8,8,0,0,0-8,8V96a8,8,0,0,0,16,0V67.31l42.34,42.35a8,8,0,0,0,11.32-11.32Z';
 const P_SUN = 'M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z';
@@ -223,10 +224,6 @@ const P_MOON = 'M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0
 const P_ARROW_UP = 'M205.66,117.66a8,8,0,0,1-11.32,0L136,59.31V216a8,8,0,0,1-16,0V59.31L61.66,117.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,205.66,117.66Z';
 const GITHUB_ICON =
   '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,104v8a56.06,56.06,0,0,1-48.44,55.47A39.8,39.8,0,0,1,176,192v40a8,8,0,0,1-8,8H104a8,8,0,0,1-8-8V216H72a40,40,0,0,1-40-40A24,24,0,0,0,8,152a8,8,0,0,1,0-16,40,40,0,0,1,40,40,24,24,0,0,0,24,24H96v-8a39.8,39.8,0,0,1,8.44-24.53A56.06,56.06,0,0,1,56,112v-8a58.14,58.14,0,0,1,7.69-28.32A59.78,59.78,0,0,1,69.07,28,8,8,0,0,1,76,24a59.75,59.75,0,0,1,48,24h24a59.75,59.75,0,0,1,48-24,8,8,0,0,1,6.93,4,59.74,59.74,0,0,1,5.37,47.68A58,58,0,0,1,216,104Z"/></svg>';
-const COPY_ICON =
-  '<svg data-ic class="ic-copy" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg>';
-const DONE_ICON =
-  '<svg data-ic class="ic-done" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>';
 /** The six colors a person picks, in the order the builder shows them. */
 const SWATCHES: [string, string][] = [
   ['accent', 'Accent'], ['surface-2', 'Background'], ['surface-0', 'Sidebar'],
@@ -251,8 +248,6 @@ function card(t: ThemeCard, i: number, discussionsUrl: string): string {
   const thread = t.discussion ? `${discussionsUrl}/${t.discussion}` : undefined;
   const creditHref = thread ?? `https://github.com/${t.author}`;
   // Votes happen on the thread; the count is the snapshot the page was built with.
-  // It sits beside Copy code; after a copy, the nudge under them shows and the
-  // button pulses (static-pages.js, nudgeUpvote).
   const vote = thread
     ? `<a class="vote" href="${thread}" target="_blank" rel="noopener noreferrer nofollow" data-thread="${t.discussion}" aria-label="${t.votes} ${t.votes === 1 ? 'vote' : 'votes'}, upvote on GitHub">${glyph(P_ARROW_UP, 16)}Upvote<span class="vc">${t.votes}</span></a>`
     : '';
@@ -272,8 +267,7 @@ function card(t: ThemeCard, i: number, discussionsUrl: string): string {
 <div class="tc-body">
 <div class="tc-head"><h2 dir="auto">${esc(t.name)}</h2><ul class="sw" aria-label="Colors">${dots}</ul></div>
 ${t.description ? `<p class="desc" dir="auto">${esc(t.description)}</p>\n` : ''}<p class="by">${by}</p>
-<div class="acts"><button class="cbtn" type="button" data-copy="${id}" data-copy-icon data-label-done="Copied" hidden>${COPY_ICON}${DONE_ICON}<span class="cl">Copy code</span></button>${vote}</div>
-${vote ? '<p class="nudge" role="status" hidden>Like it? An upvote on GitHub moves it up for everyone. It needs a free GitHub account, and the count updates within a day.</p>\n' : ''}<details class="cd"><summary>Show code</summary><code id="${id}" class="code" dir="ltr">${esc(t.code)}</code></details>
+${vote ? `<div class="acts">${vote}</div>\n` : ''}<details class="cd"><summary>Show code</summary><code id="${id}" class="code" dir="ltr">${esc(t.code)}</code></details>
 </div>
 </article>`;
 }
@@ -337,27 +331,14 @@ const PAGE_CSS = `.hero{display:flex;align-items:flex-end;justify-content:space-
 .desc{margin:-4px 0 0;font-size:var(--fs-body);line-height:1.45;color:var(--fg);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .by{margin:-4px 0 0;font-size:var(--fs-compact);color:var(--muted);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 10px}
-.acts{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.acts{display:grid}
 .vote{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border:1px solid var(--mark-fg);border-radius:9px;background:var(--imp-bg);color:var(--mark-fg);font-size:var(--fs-body);font-weight:600;text-decoration:none}
 .vote:hover{background:var(--card)}
 .vote:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .vote .vc{padding-left:8px;margin-left:2px;border-left:1px solid currentColor;font-variant-numeric:tabular-nums}
-.vote.pulse{animation:vote-pulse .6s ease-out 2}
-@keyframes vote-pulse{30%{transform:scale(1.08)}60%{transform:scale(.98)}}
-@media(prefers-reduced-motion:reduce){.vote.pulse{animation:none}}
-.nudge{margin:-2px 0 0;padding:9px 12px;border-radius:9px;background:var(--imp-bg);color:var(--mark-fg);font-size:var(--fs-compact);line-height:1.45}
-.nudge[hidden]{display:none}
 .tgrid.by-community .tc{order:var(--ov)}
 #so-new:checked~.tgrid.by-community .tc{order:var(--on)}
 #mb-team:checked~.filters .by-order{display:none}
-.cbtn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--accent);font-size:var(--fs-body);font-weight:600;cursor:pointer}
-.cbtn[hidden]{display:none}
-.cbtn:hover{border-color:var(--accent)}
-.cbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.cbtn .ic-done{display:none}
-.cbtn.on{color:var(--ok);border-color:var(--ok)}
-.cbtn.on .ic-copy{display:none}
-.cbtn.on .ic-done{display:block}
 .cd summary{font-size:var(--fs-small);color:var(--muted);cursor:pointer;width:max-content}
 .cd summary:hover{color:var(--fg)}
 .cd[open] summary{margin-bottom:6px}
@@ -416,12 +397,12 @@ ${LIGHTBOX_CSS}
 <div class="wrap">
 ${siteNav({ active: 'themes' })}
 <header class="hero">
-<div><h1>Themes</h1><p class="lead">Color themes for the app, ready to copy.</p></div>
+<div><h1>Themes</h1><p class="lead">Color themes for the app. Every one here is in it.</p></div>
 <a class="btn btn-tint hero-cta" href="${SUBMIT_URL}" target="_blank" rel="noopener noreferrer">${GITHUB_ICON}Submit a theme</a>
 </header>
 <ol class="steps" role="list">
-<li class="lead-step"><div class="st-top"><span class="st-ic">${glyph(P_COPY)}</span><span class="st-n">Step 1</span></div><span class="st-t">Copy a code</span><span class="st-d">Press Copy code on any theme below.</span></li>
-<li><div class="st-top"><span class="st-ic">${glyph(P_CLIPBOARD)}</span><span class="st-n">Step 2</span></div><span class="st-t">Paste it in the app</span><span class="st-d">Settings &rsaquo; Appearance &rsaquo; Themes</span></li>
+<li class="lead-step"><div class="st-top"><span class="st-ic">${glyph(P_EXPAND)}</span><span class="st-n">Step 1</span></div><span class="st-t">Find one you like</span><span class="st-d">Press a screenshot to see it full size.</span></li>
+<li><div class="st-top"><span class="st-ic">${glyph(P_SEARCH)}</span><span class="st-n">Step 2</span></div><span class="st-t">Search for it in the app</span><span class="st-d">Settings &rsaquo; Design, then type its name.</span></li>
 <li><div class="st-top"><span class="st-ic">${glyph(P_DISK)}</span><span class="st-n">Step 3</span></div><span class="st-t">Save it</span><span class="st-d">It shows at once. Saving needs Pro.</span></li>
 ${community.length > 0 ? `<li class="vote-step"><div class="st-top"><span class="st-ic">${glyph(P_ARROW_UP)}</span><span class="st-n">Step 4</span></div><span class="st-t">Upvote the ones you like</span><span class="st-d">Press Upvote, then the arrow on GitHub. The top themes come first.</span></li>
 ` : ''}</ol>

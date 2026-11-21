@@ -6,7 +6,7 @@ folder: PrivacyNotes
 order: 30
 ---
 
-A bifana is a Portuguese pork sandwich. Thin pork simmered in garlic, wine and beer, then piled into bread that soaks up the sauce. This is the PrivacyNotes founder's own recipe and his favourite meal, written down at last so it does not get lost.
+A bifana is a Portuguese pork sandwich. Thin pork simmered in garlic, wine and beer, then piled into bread that soaks up the sauce. This is the PrivacyNotes founder's own recipe and his favorite meal, written down at last so it does not get lost.
 
 ![A bifana on a crusty roll, with the sauce pooling on the plate.](/onboarding/bifana.webp)
 

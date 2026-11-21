@@ -30,7 +30,9 @@ function refusedFrame(view: Window): boolean {
     const sandbox = view.frameElement?.getAttribute('sandbox');
     if (sandbox != null && !(sandbox.includes('allow-scripts') && sandbox.includes('allow-same-origin'))) return true;
   } catch {
-    // A frame of another site cannot see its own frame element.
+    // A frame of another origin cannot see its own frame element (it reads
+    // null there): the background drops a sub-frame whose own scripts do not
+    // run (`scriptedFrames` in fillRun.ts, beta #217).
   }
   return view !== view.top && (view.innerWidth < MIN_FRAME_WIDTH || view.innerHeight < MIN_FRAME_HEIGHT);
 }

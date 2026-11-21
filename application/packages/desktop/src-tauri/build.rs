@@ -26,6 +26,11 @@ fn main() {
     // associations at all.
     if target_os == "macos" {
         println!("cargo:rustc-link-lib=framework=CoreServices");
+        // plugins/apple-ml links Swift on macOS, and a plugin's build script
+        // cannot add an rpath to the app: without it the app dies at launch
+        // (`Library not loaded: @rpath/libswift_Concurrency.dylib`).
+        // Spec: docs/internal/specs/plugins-apple.md (section 3, item 1)
+        println!("cargo:rustc-link-arg=-Wl,-rpath,/usr/lib/swift");
     }
 
     // The iOS sign-in sheet completes on an https return address only when
@@ -44,8 +49,81 @@ fn main() {
         claim_associated_domains();
     }
 
-    tauri_build::build()
+    // The app's own commands get an access list like the plugin commands
+    // (beta issue 167). Without an app manifest Tauri asks the ACL only for
+    // plugin commands, so the Ninja and About windows could call every
+    // command in lib.rs. With it, each command needs an `allow-<command>`
+    // grant for the calling window: capabilities/app-commands.json gives the
+    // main window every one, ninja.json gives the Ninja box `ninja_dismiss`,
+    // and the About window gets none. One list for every target, the union of
+    // the two `generate_handler!` lists in lib.rs; a grant for a command a
+    // target does not register reaches nothing there.
+    // tests/desktopCapabilities.test.ts holds this list to lib.rs and every
+    // command the web code invokes to a grant for the window that runs it.
+    let attributes =
+        tauri_build::Attributes::new().app_manifest(tauri_build::AppManifest::new().commands(APP_COMMANDS));
+    if let Err(error) = tauri_build::try_build(attributes) {
+        panic!("{error:#}");
+    }
 }
+
+const APP_COMMANDS: &[&str] = &[
+    "can_self_update",
+    "is_scoop_install",
+    "biometric_available",
+    "biometric_authenticate",
+    "biometric_key_create",
+    "biometric_key_open",
+    "biometric_key_delete",
+    "device_key_create",
+    "device_key_open",
+    "biometric_tpm_missing",
+    "print_html",
+    "take_pending_opens",
+    "read_opened_file",
+    "grant_file_picture",
+    "forget_folder_scope",
+    "markdown_assoc_status",
+    "markdown_assoc_claim",
+    "markdown_assoc_open_os_settings",
+    "text_assoc_status",
+    "text_assoc_claim",
+    "set_privacy_screen",
+    "set_capture_block",
+    "set_title_bar_colors",
+    "pasteboard_pictures",
+    "clip_fetch",
+    "decode_avif",
+    "cli_status",
+    "install_cli",
+    "set_tray_mode",
+    "set_ninja_shortcut",
+    "ninja_dismiss",
+    "autostart_enabled",
+    "set_autostart",
+    "finish_login_start",
+    "share_inbox_list",
+    "share_inbox_read",
+    "share_inbox_remove",
+    "share_limit_set",
+    "backup_dest_pick",
+    "backup_dest_status",
+    "backup_dest_begin",
+    "backup_dest_chunk",
+    "backup_dest_finish",
+    "backup_dest_abort",
+    "backup_dest_exists",
+    "backup_dest_delete",
+    "backup_dest_reveal",
+    "backup_dest_clear",
+    "backup_dest_metered",
+    "plugin_files_list",
+    "plugin_file_read",
+    "plugin_file_write",
+    "plugin_file_delete",
+    "plugin_files_clear",
+    "plugin_files_reveal",
+];
 
 /// The helper exists on a Mac host only, which is also the only host that
 /// builds iOS; the other hosts compile an empty function.

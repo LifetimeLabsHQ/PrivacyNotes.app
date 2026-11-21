@@ -7,8 +7,9 @@ import {
   CAFFEINE_UNITS, defaultTrackerSettings, readCustomTrackerTemplates, readFactors, readHabits, readMedicationTemplates,
   WATER_UNITS, WEIGHT_UNITS, type CustomTrackerTemplate, type FactorDef, type MedicationTemplate, type TrackerSettings,
 } from './trackerTypes';
-import { mergeCalendarFeeds, validateCalendarFeeds, type CalendarFeeds } from './calendarFeeds';
-import { mergeDashboardSettings, validateDashboardSetting, type DashboardSetting } from './dashboard/dashboardLayout';
+import { CALENDAR_FEED_MAX, liveCalendarFeeds, mergeCalendarFeeds, validateCalendarFeeds, type CalendarFeeds } from './calendarFeeds';
+import { clampFutureStamps } from './registers';
+import { hasAnyOwnHome, mergeDashboardSettings, readDashboardSetting, validateDashboardSetting, type DashboardSetting } from './dashboard/dashboardLayout';
 import type { ItemStyles } from './itemStyles';
 import type { CustomThemes } from './customThemes';
 import type { CustomHabitDef } from './habitList';
@@ -72,6 +73,34 @@ export function backupSettingsKey(s: UserSettings): string {
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
+/** A group of settings the restore preview names (`preview.backupSetting.*`). */
+export type BackupSettingName = 'calendarFeeds' | 'dashboard' | 'itemStyles' | 'customThemes' | 'favoriteTags' | 'medications' | 'trackers' | 'agentFolder';
+
+/**
+ * The settings a backup file brings, in the order the restore preview names
+ * them: each carried group that holds something a restore can take. A file is
+ * read as the restore reads it (the same validators), so a deleted calendar
+ * or a stock Home layout is not named, and the tracker setup only when it is
+ * not the setup of a new account.
+ */
+export function backupSettingsNames(raw: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown }): BackupSettingName[] {
+  const filled = (v: unknown) => Array.isArray(v) && v.length > 0;
+  const fresh = defaultTrackerSettings();
+  const setup = raw.trackerSetup && typeof raw.trackerSetup === 'object' ? (raw.trackerSetup as Record<string, unknown>) : null;
+  const setupChanged = !!setup && ((['activeBuiltins', 'habits', 'weightUnit', 'waterUnit', 'caffeineUnit'] as const).some((k) => k in setup && !same(setup[k], fresh[k])) || filled(setup.archivedMedications));
+  const has: Record<BackupSettingName, boolean> = {
+    calendarFeeds: liveCalendarFeeds(validateCalendarFeeds(raw.calendarFeeds)).length > 0,
+    dashboard: ((d) => readDashboardSetting(d) !== null || hasAnyOwnHome(d))(validateDashboardSetting(raw.dashboard)),
+    itemStyles: Object.keys(validateItemStyles(raw.itemStyles)).length > 0,
+    customThemes: Object.keys(validateCustomThemes(raw.customThemes)).length > 0,
+    favoriteTags: filled(raw.favoriteTags),
+    medications: filled(raw.medications),
+    trackers: filled(raw.factors) || filled(raw.customHabits) || filled(raw.customTrackers) || setupChanged,
+    agentFolder: typeof raw.agentFolder === 'string' && raw.agentFolder.length > 0,
+  };
+  return (Object.keys(has) as BackupSettingName[]).filter((k) => has[k]);
+}
+
 /**
  * The setup a backup carries, laid over the account's. A restore repairs
  * what is missing and never turns back what the person set since:
@@ -97,7 +126,14 @@ function restoredSetup(
     if (add.length > 0) out.favoriteTags = [...prev.favoriteTags, ...new Set(add)];
   }
   if (backup.calendarFeeds !== undefined) {
-    const merged = mergeCalendarFeeds(prev.calendarFeeds, validateCalendarFeeds(backup.calendarFeeds));
+    // The account's limit holds for a file too: its calendars come in, in
+    // the order they were added, only while there is room.
+    const incoming = validateCalendarFeeds(backup.calendarFeeds);
+    const own = new Set(liveCalendarFeeds(prev.calendarFeeds).map((f) => f.id));
+    let room = CALENDAR_FEED_MAX - own.size;
+    const fits = new Set(liveCalendarFeeds(incoming).filter((f) => own.has(f.id) || room-- > 0).map((f) => f.id));
+    const kept = Object.fromEntries(Object.entries(incoming).filter(([id, reg]) => reg.v === null || fits.has(id)));
+    const merged = mergeCalendarFeeds(prev.calendarFeeds, kept);
     if (!same(merged, prev.calendarFeeds)) out.calendarFeeds = merged;
   }
   if (backup.dashboard !== undefined) {
@@ -138,8 +174,11 @@ function restoredSetup(
  */
 export function settingsAfterRestore(
   prev: UserSettings,
-  backup: { folders?: unknown; itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown },
+  raw: { folders?: unknown; itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown },
 ): UserSettings {
+  // A file's stamps are never later than now, or its entries would win
+  // every later merge and the person could no longer change them.
+  const backup = clampFutureStamps(raw, Date.now()) as typeof raw;
   const folders = validateFolders(backup.folders);
   const looks = validateItemStyles(backup.itemStyles);
   const themes = validateCustomThemes(backup.customThemes);

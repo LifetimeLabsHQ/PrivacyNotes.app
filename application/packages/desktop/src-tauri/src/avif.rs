@@ -11,7 +11,10 @@
 //! Spec: docs/contrib/gotchas.md (AppImage AVIF)
 
 /// Guards against a hostile file, not product limits: a stored picture is far
-/// smaller, and a side of 16,384 px already decodes to 1 GB of pixels.
+/// smaller, and a side of 16,384 px is already 1 GB of pixels. The side limit
+/// bounds the PNG conversion only: `ImageReader::decode` applies it after
+/// `AvifDecoder::new`, which has already run dav1d over the whole picture
+/// (image 0.25), so the decode itself is bounded by the input size alone.
 const MAX_INPUT_BYTES: usize = 64 * 1024 * 1024;
 #[cfg(target_os = "linux")]
 const MAX_SIDE_PX: u32 = 16_384;

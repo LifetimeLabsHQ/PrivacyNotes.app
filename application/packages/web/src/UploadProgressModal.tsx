@@ -133,7 +133,7 @@ export function UploadProgressModal({ entries, isPro, hasStorageSub, onOpenUpgra
                       storage N bytes > limit M bytes") must never reach the
                       user (backlog #138, #143). */}
                   {entry.errorCode === 'storage-full'
-                    ? t('upload.errorStorageFull')
+                    ? `${t('upload.errorStorageFull')} ${t('notesChrome:quota.deletedSpace')}`
                     : entry.errorCode === 'storage-full-kept'
                       ? t('upload.errorStorageFullKept')
                       : entry.error && /quota exceeded/i.test(entry.error)

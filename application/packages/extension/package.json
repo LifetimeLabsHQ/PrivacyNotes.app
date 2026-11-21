@@ -17,18 +17,18 @@
     "@notes/clipper": "workspace:*",
     "@notes/shared": "workspace:*",
     "@phosphor-icons/react": "^2.1.7",
-    "i18next": "^26.7.2",
+    "i18next": "^27.1.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-i18next": "^17.1.13",
-    "tldts": "7.4.23"
+    "react-i18next": "^18.0.1",
+    "tldts": "7.5.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.3.0",
-    "postcss": "^8.5.32",
+    "postcss": "^8.5.33",
     "tailwindcss": "^4.3.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.8",

@@ -19,12 +19,12 @@ import type { UserSettings } from '../userSettings';
 import type { ExportStep } from '../export';
 import { sha256Hex } from '../sha256Hex';
 import { backupSettingsKey, carriedSettings } from '../backupRestore';
-import { restoreGateNow } from '../pullState';
+import { backupGateOpen, forgetPulledBefore } from '../pullState';
 import {
-  backupExists, clearDestination, connectionIsMetered, DestinationError, destinationKind, destinationStatus,
+  backupConfirmed, backupExists, clearDestination, connectionIsMetered, DestinationError, destinationKind, destinationStatus,
   isPhone, placeBackup, removeBackup,
 } from './destination';
-import { backupName, deviceSlug, fingerprint, isDue, isOverdue, isShrunk, mayRetry, pruneList, shrinkBaseline, SNOOZE_MS, stillThere } from './plan';
+import { backupName, deviceSlug, editsText, fingerprint, isDue, isOverdue, isShrunk, mayRetry, pruneList, shrinkBaseline, SNOOZE_MS, stillThere } from './plan';
 import { addLog, clearAutoBackup, getAutoBackup, patchConfig, setFiles, setPhoneDefaults, type FailureCause } from './store';
 
 /** What the runner reads from the vault. Functions, so a run always sees
@@ -38,6 +38,8 @@ export interface AutoBackupDeps {
   attachmentStore: () => AttachmentStore | null;
   settings: () => UserSettings;
   deviceName: () => string;
+  /** This device's id, for the file name of a device with no name. */
+  deviceId: () => string;
   /** A manual export has the progress window open. */
   exporting: () => boolean;
 }
@@ -67,6 +69,8 @@ let deps: AutoBackupDeps | null = null;
 let live: LiveState = { running: false };
 const liveListeners = new Set<() => void>();
 let abort: AbortController | null = null;
+/** Raised by every Stop, so a run that waits for the lock sees one (`runBackup`). */
+let stops = 0;
 const startedAt = Date.now();
 /** One message per cause per day, and one overdue message per start. */
 const told = new Map<string, number>();
@@ -150,10 +154,28 @@ async function buildChecked(
   return { bytes: sealed, missing };
 }
 
-/** True when the run ended well: a placed file, or "no changes". False when it did not start. */
+/**
+ * True when the run ended well: a placed file, or "no changes". False when it did not start.
+ *
+ * A run seals with a copy of the key that is its own. The array the app hands
+ * out is the account's live one, which a sign-out clears in place; a run can
+ * be between its first await and its seal at that moment, and the file's own
+ * check opens it with whatever sealed it. So the run copies the key while it
+ * is whole, never starts on one that is all zero, and clears its copy when it
+ * ends.
+ */
 async function runOnce(d: AutoBackupDeps, manual: boolean, signal: AbortSignal): Promise<boolean> {
-  const key = d.encryptionKey();
-  if (!key) return false;
+  const live = d.encryptionKey();
+  if (!live || live.every((byte) => byte === 0)) return false;
+  const key = Uint8Array.from(live);
+  try {
+    return await runWithKey(d, manual, signal, key);
+  } finally {
+    key.fill(0);
+  }
+}
+
+async function runWithKey(d: AutoBackupDeps, manual: boolean, signal: AbortSignal, key: Uint8Array): Promise<boolean> {
   const kind = destinationKind();
   const status = kind === 'download' ? null : await destinationStatus();
   if (kind !== 'download') {
@@ -175,13 +197,15 @@ async function runOnce(d: AutoBackupDeps, manual: boolean, signal: AbortSignal):
     destination: status?.path ?? status?.label ?? kind,
     live: items,
     trashed: rows.length - items,
-    newest: rows.reduce((max, n) => (n.updatedAt > max ? n.updatedAt : max), ''),
+    edits: await sha256Hex(new TextEncoder().encode(editsText(rows))),
     settings: await sha256Hex(new TextEncoder().encode(backupSettingsKey(d.settings()))),
   });
   const newest = files.reduce<(typeof files)[number] | undefined>((a, b) => (!a || b.at > a.at ? b : a), undefined);
   // Back up now checks too: an unchanged copy would push an older, different
   // backup out of Keep (owner, 2026-11-11). Export still writes a file.
-  if (print === config.lastFingerprint && newest && (await backupExists(newest.ref))) {
+  // Only a copy the place confirms counts: one it cannot answer for is
+  // written again, or a provider error would skip every run.
+  if (print === config.lastFingerprint && newest && (await backupConfirmed(newest.ref))) {
     patchConfig({ lastGood: Date.now(), lastFailure: undefined });
     addLog({ at: Date.now(), result: 'unchanged' });
     return true;
@@ -190,7 +214,7 @@ async function runOnce(d: AutoBackupDeps, manual: boolean, signal: AbortSignal):
   setLive({ running: true, step: undefined });
   const { bytes, missing } = await buildChecked(d, rows, key, signal);
   signal.throwIfAborted();
-  const name = backupName(new Date(), deviceSlug(d.deviceName(), kind === 'native' ? (isPhone() ? 'phone' : 'desktop') : 'web'), config.type);
+  const name = backupName(new Date(), deviceSlug(d.deviceName(), kind === 'native' ? (isPhone() ? 'phone' : 'desktop') : 'web', d.deviceId()), config.type);
   const placed = await placeBackup(name, bytes, signal);
   const now = Date.now();
 
@@ -210,7 +234,7 @@ async function runOnce(d: AutoBackupDeps, manual: boolean, signal: AbortSignal):
     patchConfig({ shrunk: { items, previous: before! } });
     tell({ kind: 'shrunk', items, previous: before! }, 'shrunk');
   } else {
-    for (const old of pruneList(kept, config.keep)) {
+    for (const old of pruneList(kept, config.keep, placed.ref)) {
       if (await removeBackup(old.ref)) kept = kept.filter((f) => f.ref !== old.ref);
       else if (!(await backupExists(old.ref))) kept = kept.filter((f) => f.ref !== old.ref);
     }
@@ -231,10 +255,20 @@ async function runOnce(d: AutoBackupDeps, manual: boolean, signal: AbortSignal):
 export async function runBackup(manual = false): Promise<boolean> {
   const d = deps;
   if (!d || live.running) return false;
-  abort = new AbortController();
-  const { signal } = abort;
+  // The lock is granted a task later, when no controller exists yet: a Stop
+  // in that gap moves this count, and the run ends as stopped (beta #200).
+  const asked = stops;
   const body = async (): Promise<boolean> => {
+    // Made after the lock, so a run that waits for no lock never replaces the
+    // controller of the run that holds it (beta #171).
+    const own = new AbortController();
+    abort = own;
+    const { signal } = own;
     try {
+      if (stops !== asked) {
+        addLog({ at: Date.now(), result: 'stopped' });
+        return false;
+      }
       return await runOnce(d, manual, signal);
     } catch (err) {
       if ((err as Error | null)?.name === 'AbortError') {
@@ -249,7 +283,7 @@ export async function runBackup(manual = false): Promise<boolean> {
       return false;
     } finally {
       setLive({ running: false, step: undefined });
-      abort = null;
+      if (abort === own) abort = null;
     }
   };
   // One tab at a time: two tabs of one browser share the folder and the list.
@@ -259,6 +293,7 @@ export async function runBackup(manual = false): Promise<boolean> {
 }
 
 export function stopBackup(): void {
+  stops++;
   abort?.abort();
 }
 
@@ -270,7 +305,8 @@ function mayStart(d: AutoBackupDeps, now: number): boolean {
     && d.loaded()
     && d.encryptionKey() !== null
     && !d.exporting()
-    && restoreGateNow() === 'open'
+    // A pull in this start or an earlier one, no wipe since (pullState.ts).
+    && backupGateOpen()
     && isDue(config.lastGood, config.period, now)
     && mayRetry(config.lastFailure, startedAt, now);
 }
@@ -330,6 +366,7 @@ export function destinationChanged(): void {
 export async function forgetAutoBackup(): Promise<void> {
   stopBackup();
   clearAutoBackup();
+  forgetPulledBefore();
   await clearDestination();
 }
 
@@ -347,6 +384,7 @@ export function useAutoBackupRunner(d: AutoBackupDeps): void {
       attachmentStore: () => ref.current.attachmentStore(),
       settings: () => ref.current.settings(),
       deviceName: () => ref.current.deviceName(),
+      deviceId: () => ref.current.deviceId(),
       exporting: () => ref.current.exporting(),
     };
     const first = window.setTimeout(() => void checkBackup(), isPhone() ? FIRST_CHECK_PHONE_MS : FIRST_CHECK_MS);

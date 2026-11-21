@@ -36,7 +36,7 @@
   "storageBar": {
     "usage": "{{percent}}% 사용 중 ({{used}} / {{max}})",
     "refresh": "저장 공간 새로고침",
-    "cleanupInfo": "삭제한 항목은 바로 용량에서 빠져요. 암호화된 파일 자체는 며칠 안에 서버에서 삭제돼요.",
+    "cleanupInfo": "영구 삭제한 노트는 바로 용량에서 빠져요. 삭제한 파일은 암호화된 사본이 서버에서 사라질 때까지, 약 하루 뒤까지 용량에 포함돼요.",
     "open": "저장 공간 설정 열기"
   },
   "updateToast": {
@@ -318,6 +318,8 @@
     "commands": {
       "syncResume": "동기화 재개",
       "lockProtected": "이 노트 잠그기",
+      "randomItem": "무작위 항목 열기",
+      "randomBookmark": "무작위 북마크 열기",
       "changelog": "새로운 기능",
       "themesPage": "커뮤니티 테마",
       "website": "PrivacyNotes 웹사이트"

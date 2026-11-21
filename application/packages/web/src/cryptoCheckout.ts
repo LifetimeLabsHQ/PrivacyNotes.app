@@ -2,13 +2,15 @@
  * The client side of the crypto checkout: the calls to the `crypto-checkout`
  * edge function, the order the app is waiting on, and how a coin is named.
  *
- * The app makes a random order id, registers it with its session (so the
- * order can only ever pay for this account), and opens /crypto-checkout on
- * the apex with it and the pubkey. The page asks the server to open a
- * BlockBee checkout for that order, and the app polls the same order until
- * the payment confirms. The order id travels to BlockBee in the return
- * address; nothing the server answers for an order id names the account, so
- * the page shows the Account ID it was opened with.
+ * The app makes a random order id and a random secret beside it, registers
+ * both with its session (so the order can only ever pay for this account),
+ * and opens /crypto-checkout on the apex with them and the pubkey. The page
+ * asks the server to open a BlockBee checkout for that order, and the app
+ * polls the same order until the payment confirms. The order id travels to
+ * BlockBee in the return address; nothing the server answers for an order id
+ * names the account, so the page shows the Account ID it was opened with.
+ * The secret never goes to BlockBee: every call that names the Account ID
+ * sends it, so an order id alone cannot test a guessed Account ID (beta #172).
  *
  * Nothing here names Paddle: the crypto route stays separate from theirs.
  * In the demo no call is made at all (docs/internal/agent-rules.md, section 4).
@@ -67,40 +69,54 @@ async function call<T>(body: Record<string, unknown>, accessToken?: string): Pro
 }
 
 /**
- * The /crypto-checkout page with this query. It lives on the apex, apart
- * from the app origin like the card checkout. A web dev build uses its own
- * origin, so the flow can be tried on localhost before the apex serves it.
+ * The /crypto-checkout page link for an order: its id, the Account ID and the
+ * order's secret (none for an order an older app made). The secret goes only
+ * here and to `register`, never into BlockBee's return address, which names
+ * the order only (beta #172). The page lives on the apex, apart from the app
+ * origin like the card checkout. A web dev build uses its own origin, so the
+ * flow can be tried on localhost before the apex serves it.
  */
-export function cryptoCheckoutPage(query: string): string {
+export function cryptoCheckoutLink(order: string, pubkey: string, secret: string | null): string {
   const origin = detectPlatform() === 'web' && import.meta.env.DEV ? window.location.origin : APEX_ORIGIN;
+  const query = new URLSearchParams({ order, pubkey, ...(secret ? { secret } : {}) });
   return `${origin}/crypto-checkout?${query}`;
 }
 
-/** A fresh order id: 16 random bytes, base64url, 22 characters. */
+/** A fresh order id, and the order's secret too: 16 random bytes, base64url, 22 characters. */
 export function newCryptoOrderId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-/** Same rule as the server and the table. */
+/** Same rule as the server and the table. An order's secret has the same shape. */
 export const isCryptoOrderId = (s: string | null | undefined): s is string => !!s && /^[A-Za-z0-9_-]{22,64}$/.test(s);
 
 export const quoteCryptoPrice = () => call<{ amount_cents: number; currency: string }>({ action: 'quote' });
 
-/** The app, signed in: the order pays for the session's account and nobody else's. */
-export const registerCryptoOrder = (order: string, accessToken: string) =>
-  call<{ order: string; expires_at: string }>({ action: 'register', order }, accessToken);
+/** The app, signed in: the order pays for the session's account and nobody else's. The server keeps only a hash of `secret`. */
+export const registerCryptoOrder = (order: string, secret: string | null, accessToken: string) =>
+  call<{ order: string; expires_at: string }>({ action: 'register', order, ...(secret ? { secret } : {}) }, accessToken);
 
 /**
  * The page, after the confirm step. `order` in the answer can be another one
  * of this account's: the one whose checkout is already open, never a second.
  */
-export const createCryptoCheckout = (order: string, pubkey: string) =>
-  call<{ order: string; payment_url: string }>({ action: 'create', order, pubkey });
+export const createCryptoCheckout = (order: string, pubkey: string, secret: string | null) =>
+  call<{ order: string; payment_url: string }>({ action: 'create', order, pubkey, ...(secret ? { secret } : {}) });
 
-/** With `pubkey`, the server refuses (`order_taken`) an order that pays for another account. */
-export async function cryptoCheckoutStatus(order: string, pubkey?: string | null): Promise<CryptoResult<CryptoStatus>> {
-  const res = await call<CryptoStatus>(pubkey ? { action: 'status', order, pubkey } : { action: 'status', order });
+/**
+ * With `pubkey`, the order's secret goes too: a wrong Account ID or secret
+ * reads as `none`, like an unknown order (beta #172). With no pubkey, the
+ * state alone.
+ */
+export async function cryptoCheckoutStatus(
+  order: string,
+  pubkey?: string | null,
+  secret?: string | null,
+): Promise<CryptoResult<CryptoStatus>> {
+  const res = await call<CryptoStatus>(
+    pubkey ? { action: 'status', order, pubkey, ...(secret ? { secret } : {}) } : { action: 'status', order },
+  );
   if (res.ok && !STATES.includes(res.data?.state)) return { ok: false, code: 'bad_answer' };
   return res;
 }
@@ -108,9 +124,9 @@ export async function cryptoCheckoutStatus(order: string, pubkey?: string | null
 // ── The order the app waits on ──────────────────────────────────────
 //
 // Kept in this device's storage so that closing and opening the app keeps
-// the wait going. It holds the order id, the account it pays for, whether
-// the server took the registration, and when its link closes as last heard;
-// nothing about the payment. It goes when the order is paid or expired, on
+// the wait going. It holds the order id, its secret, the account it pays
+// for, whether the server took the registration, and when its link closes as
+// last heard; nothing about the payment. It goes when the order is paid or expired, on
 // sign-out (authStorage.ts), or when another account is signed in.
 
 const PENDING_KEY = 'privacynotes.cryptoOrder';
@@ -132,6 +148,8 @@ const MAX_WAIT_MS = 60 * 60 * 1000 + 24 * 60 * 60 * 1000 + WAIT_AFTER_EXPIRY_MS;
 
 type PendingOrder = {
   order: string;
+  /** Made beside the order id (beta #172); null for an order an older app remembered. */
+  secret: string | null;
   pubkey: string;
   startedAt: number;
   /** The server took the registration. Until then the banner registers it. */
@@ -164,9 +182,9 @@ function readPending(): Partial<PendingOrder> | null {
   return parsed ?? sessionOrder;
 }
 
-export function rememberCryptoOrder(order: string, pubkey: string): void {
+export function rememberCryptoOrder(order: string, secret: string | null, pubkey: string): void {
   if (isDemoMode()) return;
-  store({ order, pubkey, startedAt: Date.now(), registered: false, expiresAt: null });
+  store({ order, secret, pubkey, startedAt: Date.now(), registered: false, expiresAt: null });
   window.dispatchEvent(new Event(CRYPTO_ORDER_EVENT));
 }
 
@@ -177,6 +195,7 @@ export function noteCryptoOrder(order: string, expiresAt: string | null | undefi
   const at = expiresAt ? Date.parse(expiresAt) : NaN;
   store({
     order,
+    secret: isCryptoOrderId(current.secret) ? current.secret : null,
     pubkey: current.pubkey,
     startedAt: current.startedAt,
     registered: true,
@@ -195,6 +214,7 @@ export function pendingCryptoOrder(pubkey: string | null | undefined): PendingOr
   }
   return {
     order: parsed.order,
+    secret: isCryptoOrderId(parsed.secret) ? parsed.secret : null,
     pubkey,
     startedAt: parsed.startedAt,
     registered: parsed.registered === true,
@@ -236,7 +256,7 @@ export function cryptoWaitGoesOn(status: CryptoStatus): boolean {
 /** The coins the BlockBee page takes, as the Pro window names them: tickers,
  *  the same in every language. Add a coin here when it is turned on in the
  *  BlockBee dashboard. Spec: docs/internal/plans/crypto-payments.md (11b) */
-export const CRYPTO_TICKERS = ['BTC', 'ETH', 'LN', 'USDC', 'USDT'] as const;
+export const CRYPTO_TICKERS = ['BTC', 'ETH', 'LN', 'USDC', 'USDT', 'LTC', 'BCH', 'DOGE', 'TON'] as const;
 
 // ── How a coin is named ─────────────────────────────────────────────
 //

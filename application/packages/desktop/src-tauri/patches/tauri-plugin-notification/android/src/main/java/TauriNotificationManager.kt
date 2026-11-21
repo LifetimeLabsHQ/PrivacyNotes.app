@@ -66,6 +66,7 @@ class TauriNotificationManager(
     if (isRemovable) {
       notificationStorage.deleteNotification(notificationId.toString())
     }
+    notificationStorage.forgetShown(listOf(notificationId))
     val dataJson = JSObject()
     val results = RemoteInput.getResultsFromIntent(data)
     val input = results?.getCharSequence(REMOTE_INPUT_KEY)
@@ -199,6 +200,7 @@ class TauriNotificationManager(
     }
     mBuilder.setVisibility(notification.visibility ?: NotificationCompat.VISIBILITY_PRIVATE)
     mBuilder.setOnlyAlertOnce(true)
+    notification.shownAt?.let { mBuilder.setWhen(it).setShowWhen(true).setSilent(true) }
     mBuilder.setSmallIcon(notification.getSmallIcon(context, getDefaultSmallIcon(context)))
     mBuilder.setLargeIcon(notification.getLargeIcon(context))
     val iconColor = notification.getIconColor(config?.iconColor ?: "")
@@ -320,6 +322,7 @@ class TauriNotificationManager(
     )
     notificationIntent.putExtra(NOTIFICATION_INTENT_KEY, request.id)
     notificationIntent.putExtra(TimedNotificationPublisher.NOTIFICATION_KEY, notification)
+    notificationIntent.putExtra(TimedNotificationPublisher.SHOWN_KEY, shownRecord(request).toString())
     var flags = PendingIntent.FLAG_CANCEL_CURRENT
     if (SDK_INT >= Build.VERSION_CODES.S) {
       flags = flags or PendingIntent.FLAG_MUTABLE
@@ -389,6 +392,48 @@ class TauriNotificationManager(
       cancelTimerForNotification(id)
       storage.deleteNotification(id.toString())
     }
+    storage.forgetShown(notifications)
+  }
+
+  /** What keepShown records: the fields that draw the notification again. */
+  private fun shownRecord(request: Notification): JSONObject {
+    val record = JSONObject()
+    record.put("id", request.id)
+    record.put("title", request.title)
+    record.put("body", request.body)
+    record.put("largeBody", request.largeBody)
+    record.put("summary", request.summary)
+    record.put("actionTypeId", request.actionTypeId)
+    record.put("channelId", request.channelId)
+    record.put("group", request.group)
+    record.put("autoCancel", request.isAutoCancel)
+    record.put("visibility", request.visibility)
+    return record
+  }
+
+  /** Shows again, without sound, what keepShown recorded (an app update
+   *  removed it from the screen). */
+  fun showAgain(records: List<JSONObject>) {
+    val notificationManager = NotificationManagerCompat.from(context)
+    for (record in records) {
+      try {
+        val notification = Notification()
+        notification.id = record.getInt("id")
+        notification.title = record.optString("title").takeIf { record.has("title") }
+        notification.body = record.optString("body").takeIf { record.has("body") }
+        notification.largeBody = record.optString("largeBody").takeIf { record.has("largeBody") }
+        notification.summary = record.optString("summary").takeIf { record.has("summary") }
+        notification.actionTypeId = record.optString("actionTypeId").takeIf { record.has("actionTypeId") }
+        notification.channelId = record.optString("channelId").takeIf { record.has("channelId") }
+        notification.group = record.optString("group").takeIf { record.has("group") }
+        notification.isAutoCancel = record.optBoolean("autoCancel")
+        notification.visibility = if (record.has("visibility")) record.getInt("visibility") else null
+        notification.shownAt = record.getLong("when")
+        buildNotification(notificationManager, notification)
+      } catch (ex: Exception) {
+        Logger.error(Logger.tags("Notification"), "Could not show a notification again", ex)
+      }
+    }
   }
 
   private fun cancelTimerForNotification(notificationId: Int) {
@@ -457,10 +502,11 @@ class NotificationDismissReceiver : BroadcastReceiver() {
       Logger.error(Logger.tags("Notification"), "Invalid notification dismiss operation", null)
       return
     }
+    val notificationStorage = NotificationStorage(context, ObjectMapper())
+    notificationStorage.forgetShown(listOf(intExtra))
     val isRemovable =
       intent.getBooleanExtra(NOTIFICATION_IS_REMOVABLE_KEY, true)
     if (isRemovable) {
-      val notificationStorage = NotificationStorage(context, ObjectMapper())
       notificationStorage.deleteNotification(intExtra.toString())
     }
   }
@@ -494,6 +540,12 @@ class TimedNotificationPublisher : BroadcastReceiver() {
     }
 
     notificationManager.notify(id, notification)
+    intent.getStringExtra(SHOWN_KEY)?.let {
+      try {
+        storage.keepShown(id, JSONObject(it), notification?.`when` ?: System.currentTimeMillis())
+      } catch (_: JSONException) {
+      }
+    }
     if (!rescheduleNotificationIfNeeded(context, intent, id)) {
       storage.deleteNotification(id.toString())
     }
@@ -535,6 +587,7 @@ class TimedNotificationPublisher : BroadcastReceiver() {
   companion object {
     var NOTIFICATION_KEY = "NotificationPublisher.notification"
     var CRON_KEY = "NotificationPublisher.cron"
+    var SHOWN_KEY = "NotificationPublisher.shown"
   }
 }
 
@@ -548,6 +601,20 @@ class LocalNotificationRestoreReceiver : BroadcastReceiver() {
       if (um == null || !um.isUserUnlocked) return
     }
     val storage = NotificationStorage(context, ObjectMapper())
+    var config: PluginConfig? = null
+    try {
+      config = PluginManager.loadConfig(context, "notification", PluginConfig::class.java)
+    } catch (ex: Exception) {
+      ex.printStackTrace()
+    }
+    // An update removes the app's notifications from the screen but keeps
+    // its alarms: show again what was on screen (beta issue #808).
+    if (intent.action == Intent.ACTION_MY_PACKAGE_REPLACED) {
+      TauriNotificationManager(storage, null, context, config).showAgain(storage.getShown())
+      return
+    }
+    // A restart clears the screen too, and nothing is shown again after it.
+    storage.forgetAllShown()
     val ids = storage.getSavedNotificationIds()
     val notifications = mutableListOf<Notification>()
     val updatedNotifications = mutableListOf<Notification>()
@@ -569,12 +636,6 @@ class LocalNotificationRestoreReceiver : BroadcastReceiver() {
       storage.appendNotifications(updatedNotifications)
     }
 
-    var config: PluginConfig? = null
-    try {
-      config = PluginManager.loadConfig(context, "notification", PluginConfig::class.java)
-    } catch (ex: Exception) {
-      ex.printStackTrace()
-    }
     val notificationManager = TauriNotificationManager(storage, null, context, config)
     notificationManager.schedule(notifications)
   }

@@ -34,7 +34,7 @@ export function useTagActions({
 }: {
   /** The items of the open space; every count and check reads these. */
   activeNotes: LocalNote[];
-  /** Every live item, whatever the space. */
+  /** Every live item, whatever the space, a shut section's items included. */
   liveNotes: LocalNote[];
   /** The open space while Spaces is on: every tag write stays inside it.
    *  Spec: docs/internal/specs/spaces.md (section 8) */

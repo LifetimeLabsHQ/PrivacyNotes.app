@@ -39,7 +39,7 @@
   "storageBar": {
     "usage": "Użyto {{percent}}% ({{used}} / {{max}})",
     "refresh": "Odśwież użycie miejsca",
-    "cleanupInfo": "Usunięte elementy od razu przestają się liczyć. Same zaszyfrowane pliki znikają z serwera w ciągu kilku dni.",
+    "cleanupInfo": "Notatki usunięte na zawsze od razu przestają się liczyć. Usunięty plik liczy się, dopóki jego zaszyfrowana kopia nie zniknie z serwera, mniej więcej dzień później.",
     "open": "Otwórz ustawienia pamięci"
   },
   "updateToast": {
@@ -334,6 +334,8 @@
     "commands": {
       "syncResume": "Wznów synchronizację",
       "lockProtected": "Zablokuj tę notatkę",
+      "randomItem": "Otwórz losowy element",
+      "randomBookmark": "Otwórz losową zakładkę",
       "changelog": "Nowości",
       "themesPage": "Motywy społeczności",
       "website": "Strona PrivacyNotes"

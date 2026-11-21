@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type ComponentProps, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowsOutSimple, BellSimple, Calendar, Gift, Globe, Repeat } from './icons';
@@ -13,7 +13,8 @@ import { MonthGrid, dayAtNoon, dayKindColor } from './MonthGrid';
 import type { DayEntry, DayIndex } from './notesViewUtils';
 import type { Space } from './spaces';
 import { dayNumber } from './schedule';
-import { PathGlyph, useItemLook } from './looks/LookGlyph';
+import { PathGlyph, useFeedLook, useItemLook } from './looks/LookGlyph';
+import { feedIdOf } from './calendarFeeds';
 import { SelectBox, itemStateClass } from './listItem';
 import { useToday } from './ListGroupHeader';
 
@@ -131,7 +132,7 @@ export function timeLabel(day: string, time: string): string {
 
 /** What an item's row says about its time on a day: "day 2 of 3" for a
  *  multi-day item, its time or its time range, or nothing for an all-day one. */
-function entryWhen(entry: DayEntry, day: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
+function entryWhen(entry: DayEntry, day: string, t: (...args: [key: string] | [key: string, opts: Record<string, unknown>]) => string): string {
   if (entry.span) {
     return t('notes:noteRow.dayOf', {
       n: dayNumber(day) - dayNumber(entry.span.start) + 1,
@@ -153,9 +154,12 @@ function entryWhen(entry: DayEntry, day: string, t: (key: string, opts?: Record<
  */
 const NO_TAGS: readonly string[] = [];
 
-/** A calendar item's look (useItemLook), from the tags and folder the entry carries. */
+/** A calendar item's look (useItemLook), from the tags and folder the entry
+ *  carries; an event of a subscribed calendar wears its calendar's (#811). */
 export function useEntryLook(entry: DayEntry) {
-  return useItemLook(entry.id, entry.tags ?? NO_TAGS, entry.folderId ?? null);
+  const item = useItemLook(entry.id, entry.tags ?? NO_TAGS, entry.folderId ?? null);
+  const feed = useFeedLook(entry.feed ? feedIdOf(entry.id) : null);
+  return feed ?? item;
 }
 
 export function CalendarItemRow({ entry, day, mixed, onOpen, onMenu, onKeyDown, rowRef, size = 'small', dragProps, select }: {
@@ -383,27 +387,6 @@ const moodLook = (() => {
 export const useJournalCalendarMood = moodLook.use;
 export const setJournalCalendarMood = moodLook.set;
 
-const otherSpaceSwitches: Record<Space, [() => boolean, (on: boolean) => void]> = {
-  personal: deviceSwitch('privacynotes.calendarOtherSpace.personal'),
-  work: deviceSwitch('privacynotes.calendarOtherSpace.work'),
-};
-
-/** Whether the calendars show the other space's items while `open` is the
- *  open space, so Work can hide Personal while Personal shows Work. On by
- *  default: an item in the other space is the one people think lost.
- *  Device-local, switched in the list options ("Show Work items" or "Show
- *  Personal items", named for the space that is not open), shown only with
- *  Spaces on. Spec: docs/internal/specs/note-date.md (section 4) */
-export function useCalendarShowsOther(open: Space): boolean {
-  const personal = otherSpaceSwitches.personal[0]();
-  const work = otherSpaceSwitches.work[0]();
-  return open === 'work' ? work : personal;
-}
-
-export function setCalendarShowsOther(open: Space, on: boolean): void {
-  otherSpaceSwitches[open][1](on);
-}
-
 /** Week or month, as this device last chose. Every screen starts on the
  *  week, so the list keeps its room. Device-local, like the screen it is about. */
 function readSize(): 1 | 6 {
@@ -485,11 +468,14 @@ export type CalendarCardExtras = {
   weekNumbers?: boolean;
 };
 
-export function JournalCalendarCard({ grid, home = false, onExpand, drop, weekNumbers, moodOf, style, className, controls, reorderId, ...handlers }: DayHandlers & CalendarCardExtras & {
+export function JournalCalendarCard({ grid, home = false, onExpand, drop, weekNumbers, moodOf, marks, style, className, controls, reorderId, ...handlers }: DayHandlers & CalendarCardExtras & {
   grid: boolean;
   /** On Home: the layout sets the tile's box, and the month shows when it fits there. */
   home?: boolean;
   moodOf?: (day: string) => number | 'written' | undefined;
+  /** The dots in place of the day's items: the days of the tracker in focus
+   *  in Journals, each in the tone of its value. The day panel keeps every item. */
+  marks?: ComponentProps<typeof MonthGrid>['marked'];
   /** Home's placement of the tile in its grid. */
   style?: CSSProperties;
   /** Home's state of the tile: the fade while it is dragged, the ring while it is resized. */
@@ -550,10 +536,10 @@ export function JournalCalendarCard({ grid, home = false, onExpand, drop, weekNu
       }
     >
       <MonthGrid
-        marked={handlers.entries}
+        marked={marks ?? handlers.entries}
         selected={choosing ?? undefined}
         onPick={pick}
-        wide={!grid}
+        wide={!grid || home}
         weeks={shown}
         onToggleWeeks={toggle}
         focus={month}

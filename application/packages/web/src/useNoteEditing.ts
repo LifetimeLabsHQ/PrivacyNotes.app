@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { SupabaseClient } from '@notes/shared';
 import type { LocalNote } from './db';
 import type { JournalTrackerData } from './trackerTypes';
@@ -38,7 +38,7 @@ interface UseNoteEditingArgs {
   onStaleEditorWrite?: (current: LocalNote, body: string | null) => Promise<string | null>;
 }
 
-interface UseNoteEditingReturn {
+export interface UseNoteEditingReturn {
   handleTitleChange: (id: string, title: string) => Promise<void>;
   /** Remember the title a note carries, so a later blur can tell whether
    *  it was renamed. Call from the title field's focus handler. */
@@ -91,7 +91,7 @@ let editorMounts = 0;
 /** A key for one editor mount, passed with each of its saves. Unique per
  *  mount, so a replaced editor's late flush is never taken for the editor
  *  that replaced it, even when both show the same note. */
-export function newEditorKey(noteId: string): string {
+function newEditorKey(noteId: string): string {
   editorMounts += 1;
   return `${noteId}#${editorMounts}`;
 }
@@ -785,6 +785,62 @@ export function useNoteEditing({
     versionSavesSettled,
     flushEditingBody,
     editingBodyRef,
+  };
+}
+
+/**
+ * The open note's editing session, as the editor pane holds it: the one owner
+ * of the text the editor has, between the keystroke and the notes array.
+ * - `key`: the key this editor mount saves under. A new mount (another note,
+ *   a remount, the other editor mode, the editor coming back from behind the
+ *   PIN gate) takes a new key, and records the body it mounted with, so a
+ *   save from an editor whose row was rewritten under it is refused (#497).
+ *   Later bodies reach the record through the editor's own saves.
+ * - `onChange`: the editor's change. It saves under `key` (the keystroke
+ *   buffer, `editingBodyRef`, which the sync side reads) and keeps the text
+ *   for `liveBody`.
+ * - `liveBody`: the text the editor shows: the last body this mount sent,
+ *   else the note's own. The word count, the Connections pill, an event's
+ *   card and the "..." menu read it, with no flush.
+ * - `flush`: the keystroke buffer into the notes array (`flushEditingBody`).
+ */
+export interface EditorSession {
+  key: string;
+  onChange: (body: string) => void;
+  liveBody: string;
+  flush: () => void;
+}
+
+/**
+ * The session of the editor mount the pane shows. `mount` names everything
+ * that remounts the editor besides the note (its revision, its mode, whether
+ * it shows at all); `registers` is false where nothing saves under the key.
+ */
+export function useEditorSession(
+  note: LocalNote,
+  mount: string,
+  registers: boolean,
+  editing: Pick<UseNoteEditingReturn, 'handleBodyChange' | 'registerEditorBody' | 'flushEditingBody'>,
+): EditorSession {
+  const of = `${note.id}|${mount}`;
+  const mountRef = useRef<{ of: string; key: string } | null>(null);
+  if (mountRef.current?.of !== of) mountRef.current = { of, key: newEditorKey(note.id) };
+  const key = mountRef.current.key;
+  useLayoutEffect(() => {
+    if (registers) editing.registerEditorBody(key, note.body);
+  // The body is read at the mount only.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  const [live, setLive] = useState<{ key: string; body: string } | null>(null);
+  return {
+    key,
+    onChange: (body) => {
+      void editing.handleBodyChange(note.id, body, key);
+      setLive({ key, body });
+    },
+    // An emptied body shows the note's own, as the word count always did.
+    liveBody: (live?.key === key ? live.body : '') || note.body,
+    flush: editing.flushEditingBody,
   };
 }
 

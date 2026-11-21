@@ -48,22 +48,21 @@
  * left the pass records that for the account and epoch and asks no more.
  * Spec: docs/internal/plans/phrase-change.md (6.4)
  */
-import { base64ToBytes, bytesToBase64, decryptBlob, encryptBlob, type SupabaseClient } from '@notes/shared';
+import { NOTE_BIND_REQUIRED_FROM, base64ToBytes, bindStamp, bytesToBase64, checkNoteBind, decryptBlob, encryptBlob, type SupabaseClient } from '@notes/shared';
 import { db } from './db';
 import { isDemoMode } from './demo';
-import { currentKeyEpoch, epochOf, holdsEpoch, holdsEveryEpoch, isRingKey, openWithRingAt } from './keyRing';
+import { currentKeyEpoch, epochOf, holdsEpoch, holdsEveryEpoch, isRingKey, noteKeyRingRotatedAt, openWithRingAt } from './keyRing';
 import { runAtRestSweep } from './localSweep';
+import { BlobError, blobBackend } from './blobStore';
 import { isPhraseReplacedRefusal, reportPhraseReplaced } from './phraseReplaced';
 import { setReencryptProgress } from './reencryptProgress';
-import { isQuotaError } from './sync';
+import { NOTE_MAX_STORED_BYTES, clientBindColumn, isClientBindMissing, isNoteTooLargeError, isQuotaError } from './sync';
 import { isSyncing } from './syncingStore';
 import { isServerWriteBlocked } from './syncPause';
 import { uploadsHeldForWifi } from './wifiOnly';
 
-// Images and attachments share one bucket (imageStore.ts, attachmentStore.ts).
-const BUCKET = 'encrypted-images';
 const PAGE = 100;
-// What one Storage listing returns at most (imageStore.ts LIST_PAGE).
+// What one store listing returns at most (imageStore.ts LIST_PAGE).
 const LIST_PAGE = 1000;
 const WRITERS = 4;
 /** A file first written up to this long after the change can still be
@@ -220,13 +219,13 @@ async function inTurns<T>(items: T[], work: (item: T) => Promise<void>): Promise
 /** The plaintext bytes of a server ciphertext (no associated data, as
  *  encryptNote and encryptJson write it), and the epoch whose key opened
  *  them. The same bytes under the current key have the same length. */
-function reopenRow(ciphertext: string, nonce: string, key: Uint8Array, declared: number): { value: Uint8Array; epoch: number } {
+function reopenRow(ciphertext: string, nonce: string, key: Uint8Array, declared: number, writtenAt?: number): { value: Uint8Array; epoch: number } {
   const n = base64ToBytes(nonce);
   const ct = base64ToBytes(ciphertext);
   const combined = new Uint8Array(n.length + ct.length);
   combined.set(n, 0);
   combined.set(ct, n.length);
-  return openWithRingAt('sync', key, (k) => decryptBlob(combined, k), declared);
+  return openWithRingAt('sync', key, (k) => decryptBlob(combined, k), declared, writtenAt);
 }
 
 function sealRow(plain: Uint8Array, key: Uint8Array): { ciphertext: string; nonce: string } {
@@ -235,19 +234,60 @@ function sealRow(plain: Uint8Array, key: Uint8Array): { ciphertext: string; nonc
 }
 
 type Table = 'notes' | 'note_versions';
-type ServerRow = { id: string; ciphertext: string; nonce: string; key_epoch?: number };
+/** `changed_at`: a note's server change time. A replaced key's note changed
+ *  after the phrase change is never written again under the current key,
+ *  which would make it every device's (beta #205 item 2). */
+type ServerRow = { id: string; ciphertext: string; nonce: string; key_epoch?: number; changed_at?: string; updated_at?: string };
+
+const utf8In = new TextDecoder();
+const utf8Out = new TextEncoder();
+
+/**
+ * A live note's payload with no row binding gets one as it is written again:
+ * the write moves the row's server change time, and past the switch a row
+ * changed with no binding is refused (`NOTE_BIND_REQUIRED_FROM`). The stamp is
+ * the row's own `updated_at`, which the write keeps (the update is guarded on
+ * it). A payload that has one, or a row already past the switch, is left as
+ * it is. Spec: docs/internal/plans/payload-row-binding.md (section 3, item 5)
+ */
+/** A legacy note the binding would take over the ceiling, past the switch. */
+class TooLargeToBind extends Error {}
+
+function withNoteBind(plain: Uint8Array, row: ServerRow): Uint8Array {
+  if (row.updated_at === undefined) return plain;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(utf8In.decode(plain));
+  } catch {
+    return plain;
+  }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed) || 'bind' in parsed) return plain;
+  if (checkNoteBind(undefined, { id: row.id, kind: 'note' }, row.changed_at) !== 'legacy') return plain;
+  const bind = { id: row.id.toLowerCase(), kind: 'note', at: bindStamp(row.updated_at) };
+  const bound = utf8Out.encode(JSON.stringify({ ...(parsed as Record<string, unknown>), bind }));
+  // A note the binding would take over the server's 1 MB ceiling stays as it
+  // is (a residual: payload-row-binding.md, section 13), and past the switch
+  // it is not written at all: written unbound, its new change time would
+  // have every device refuse it.
+  if (4 * Math.ceil((bound.length + 16) / 3) <= NOTE_MAX_STORED_BYTES) return bound;
+  if (NOTE_BIND_REQUIRED_FROM !== null) throw new TooLargeToBind();
+  return plain;
+}
 
 /**
  * One row, encrypted again, or why not: 'left' (its epoch's key has not
  * arrived, or no key opens it while one may still arrive) or 'damaged' (no
  * key opens it and this device holds every epoch's, so nothing can).
  */
-function rewrite(row: ServerRow, key: Uint8Array): { ciphertext: string; nonce: string } | 'left' | 'damaged' {
+function rewrite(row: ServerRow, key: Uint8Array, table: Table): { ciphertext: string; nonce: string } | 'left' | 'damaged' {
   const declared = epochOf(row.key_epoch);
   if (!holdsEpoch(declared)) return 'left';
   try {
-    return sealRow(reopenRow(row.ciphertext, row.nonce, key, declared).value, key);
-  } catch {
+    const writtenAt = row.changed_at ? Date.parse(row.changed_at) : undefined;
+    const plain = reopenRow(row.ciphertext, row.nonce, key, declared, writtenAt).value;
+    return sealRow(table === 'notes' ? withNoteBind(plain, row) : plain, key);
+  } catch (err) {
+    if (err instanceof TooLargeToBind) return 'left';
     return holdsEveryEpoch() ? 'damaged' : 'left';
   }
 }
@@ -261,12 +301,13 @@ async function countBelow(opts: ReencryptOptions, table: Table, epoch: number): 
 }
 
 async function pageBelow(opts: ReencryptOptions, table: Table, epoch: number, after: string | null): Promise<ServerRow[]> {
-  let q = opts.supabase.from(table).select('id, ciphertext, nonce, key_epoch').eq('user_pubkey', opts.pubkey).lt('key_epoch', epoch);
+  const columns: string = table === 'notes' ? 'id, ciphertext, nonce, key_epoch, changed_at, updated_at' : 'id, ciphertext, nonce, key_epoch';
+  let q = opts.supabase.from(table).select(columns).eq('user_pubkey', opts.pubkey).lt('key_epoch', epoch);
   if (table === 'notes') q = q.is('deleted_at', null);
   if (after !== null) q = q.gt('id', after);
   const { data, error } = await q.order('id', { ascending: true }).limit(PAGE);
   if (error) throw stopOn(error);
-  return (data ?? []) as ServerRow[];
+  return (data ?? []) as unknown as ServerRow[];
 }
 
 /** Count a row that needs no write: damaged, or left for a later pass. */
@@ -287,19 +328,29 @@ async function rewriteNotes(opts: ReencryptOptions, epoch: number, t: Tally): Pr
       const key = liveKey(opts.syncKey);
       if (!key) throw new Stop();
       try {
-        const next = rewrite(row, key);
+        const next = rewrite(row, key, 'notes');
         if (next === 'left' || next === 'damaged') return notWritten(t, 'notes', next);
-        const { data, error } = await opts.supabase
+        let write = opts.supabase
           .from('notes')
-          .update({ ...next, key_epoch: epoch })
+          .update({ ...next, key_epoch: epoch, ...clientBindColumn() })
           .eq('id', row.id)
           .eq('user_pubkey', opts.pubkey)
           .eq('nonce', row.nonce)
-          .eq('key_epoch', epochOf(row.key_epoch))
+          .eq('key_epoch', epochOf(row.key_epoch));
+        // The binding sealed the row's stamp: the write lands only while the
+        // row still carries it.
+        if (row.updated_at !== undefined) write = write.eq('updated_at', row.updated_at);
+        const { data, error } = await write
           .is('deleted_at', null)
           .select('id');
         if (error && isQuotaError(error)) {
           t.quota = true;
+          t.left++;
+          return;
+        }
+        // A server without the flag's column, or a row the binding would
+        // take over the 1 MB ceiling: left for a later pass, never a stop.
+        if (error && (isClientBindMissing(error) || isNoteTooLargeError(error))) {
           t.left++;
           return;
         }
@@ -330,7 +381,7 @@ async function rewriteVersions(opts: ReencryptOptions, epoch: number, t: Tally):
       const key = liveKey(opts.syncKey);
       if (!key) throw new Stop();
       try {
-        const next = rewrite(row, key);
+        const next = rewrite(row, key, 'note_versions');
         if (next === 'left' || next === 'damaged') return notWritten(t, 'note_versions', next);
         const { data, error, status } = await opts.supabase.rpc('reencrypt_note_version', {
           p_id: row.id,
@@ -357,27 +408,26 @@ async function rewriteVersions(opts: ReencryptOptions, epoch: number, t: Tally):
   }
 }
 
-type Listed = { id?: string | null; name: string; created_at?: string; updated_at?: string };
 type Candidate = { name: string };
 
 /** The files that may be under an earlier key and that this device has not
  *  found current or rewritten yet. */
 async function fileCandidates(opts: ReencryptOptions, epoch: number, rotatedAt: number | null, done: Set<string>): Promise<Candidate[]> {
+  const backend = blobBackend(opts.supabase, opts.pubkey);
   const out: Candidate[] = [];
-  for (let offset = 0; ; offset += LIST_PAGE) {
+  for (let after: string | null = null; ; ) {
     await waitTurn(opts, epoch);
-    const { data, error } = await opts.supabase.storage.from(BUCKET).list(opts.pubkey, { limit: LIST_PAGE, offset });
-    if (error) throw stopOn(error);
-    const page = (data ?? []) as Listed[];
+    const page = await backend.list(after, LIST_PAGE);
+    if (!page) throw new Stop();
     for (const o of page) {
-      // A folder entry has no object id.
-      if (o.id === null || done.has(o.name)) continue;
-      const created = Date.parse(o.created_at ?? '');
-      const at = Date.parse(o.updated_at ?? o.created_at ?? '');
+      if (done.has(o.uuid)) continue;
+      const created = Date.parse(o.createdAt ?? '');
+      const at = Date.parse(o.updatedAt ?? o.createdAt ?? '');
       if (rotatedAt !== null && Number.isFinite(at) && Number.isFinite(created) && at > created && at >= rotatedAt) continue;
-      if (rotatedAt === null || !Number.isFinite(at) || at < rotatedAt + FILE_MARGIN_MS) out.push({ name: o.name });
+      if (rotatedAt === null || !Number.isFinite(at) || at < rotatedAt + FILE_MARGIN_MS) out.push({ name: o.uuid });
     }
     if (page.length < LIST_PAGE) return out;
+    after = page[page.length - 1]!.uuid;
   }
 }
 
@@ -410,18 +460,26 @@ async function rewriteFiles(opts: ReencryptOptions, epoch: number, files: Candid
       await saveFilesDone(opts.pubkey, epoch, done);
     }
   };
+  const backend = blobBackend(opts.supabase, opts.pubkey);
   try {
     for (const file of files) {
       await waitTurn(opts, epoch);
-      const path = `${opts.pubkey}/${file.name}`;
       const key = liveKey(opts.syncKey);
       if (!key) throw new Stop();
       try {
-        const { data, error } = await opts.supabase.storage.from(BUCKET).download(path);
-        if (error || !data) {
+        let data: Blob | null;
+        try {
+          data = await backend.get(file.name);
+        } catch (err) {
+          if (!(err instanceof BlobError)) throw err;
           // A file deleted since the listing needs nothing.
-          if (/not.?found|404/i.test(error?.message ?? '')) await remember(file.name);
+          if (err.kind === 'not_found') await remember(file.name);
           else t.left++;
+          continue;
+        }
+        if (!data) {
+          // The store has no such object.
+          await remember(file.name);
           continue;
         }
         const bytes = new Uint8Array(await data.arrayBuffer());
@@ -440,11 +498,11 @@ async function rewriteFiles(opts: ReencryptOptions, epoch: number, files: Candid
         const next = encryptBlob(opened.value, key);
         opened.value.fill(0);
         t.tried++;
-        const { error: upErr } = await opts.supabase.storage
-          .from(BUCKET)
-          .upload(path, next, { upsert: true, contentType: 'application/octet-stream' });
-        if (upErr) {
-          if (isPhraseReplacedRefusal(upErr)) throw stopOn(upErr);
+        try {
+          await backend.overwrite(file.name, next);
+        } catch (upErr) {
+          if (!(upErr instanceof BlobError)) throw upErr;
+          if (upErr.kind === 'phrase_replaced') throw stopOn(upErr.cause);
           // This file is left for a later pass; the next one may go through.
           t.left++;
           t.refused++;
@@ -506,6 +564,8 @@ export async function runReencryptPass(opts: ReencryptOptions): Promise<Reencryp
       if (answer?.epoch !== epoch) return outcome('skipped');
       const parsed = typeof answer.rotated_at === 'string' ? Date.parse(answer.rotated_at) : NaN;
       const rotatedAt = Number.isFinite(parsed) ? parsed : null;
+      // The key ring takes it too: no ring key opens a record changed after it.
+      noteKeyRingRotatedAt(rotatedAt);
 
       // Without 0124 only the notes have a door: history and files wait.
       const doors = await has0124(opts, epoch);

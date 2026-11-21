@@ -4,11 +4,17 @@
  * of the content key, so P and the extensions' halves are never plain fields
  * of the settings or of their local cache.
  *
- * Two kinds of entry, one register each (registers.ts), merged per entry at
+ * Four kinds of entry, one register each (registers.ts), merged per entry at
  * every sync point like the device labels:
  *   p:<tag>      P itself, for the key tag the server holds.
  *   k:<tokenId>  the browser half Kext of one connected extension, so a new
  *                P can be split for every extension that stays.
+ *   s:<keyId>    the sender key of one connection paired with a version 2
+ *                code: who signs its inbox rows. A tombstone is a removed
+ *                connection, whose rows are refused.
+ *   c:inbox      the account takes no unsigned inbox row any more. Written
+ *                once, never cleared.
+ *                Spec: docs/internal/plans/inbox-signed-hybrid.md (section 5.2)
  * An entry is never edited in place: a new P has a new tag and a new entry,
  * and Kext never changes for an extension. This module
  * only merges and clears entries, so the settings code loads no crypto at
@@ -25,7 +31,7 @@ import {
 
 export type ExtensionKeys = RegisterMap;
 
-const KEY_PATTERN = /^(p:[0-9a-f]{32}|k:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
+const KEY_PATTERN = /^(p:[0-9a-f]{32}|s:[0-9a-f]{32}|c:inbox|k:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
 // A wrapped entry is a nonce, a tag and at most a hundred bytes, in base64.
 const ENTRY_MAX = 256;
 
@@ -48,4 +54,12 @@ export function withoutEntries(keys: ExtensionKeys, names: readonly string[]): E
     out[name] = { v: null, at: stampAfter(out[name]?.at) };
   }
   return out;
+}
+
+/** Whether the logins key of this tag was retired: its entry is a tombstone
+ *  (`withoutEntries`), so no app will hold it again. A tag with no entry is
+ *  one not seen yet. Spec: docs/contrib/passkeys.md (section 16, finding 1) */
+export function isRetiredLoginsKey(keys: ExtensionKeys, tag: string): boolean {
+  const entry = keys[`p:${tag}`];
+  return !!entry && entry.v === null;
 }

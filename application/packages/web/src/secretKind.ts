@@ -75,6 +75,18 @@ export function isValidPasscode(value: string): boolean {
   return r.longEnough && r.notOnlyDigits && r.notTooLong;
 }
 
+// The PINs people pick most. The browser extension refuses them for a new
+// PIN, because its wrong tries a month would reach them first (beta #202 item 3).
+const COMMON_PINS: ReadonlySet<string> = new Set([
+  '1234', '1111', '0000', '1212', '7777', '1004', '2000', '4444', '2222', '6969',
+  '9999', '3333', '5555', '6666', '1122', '1313', '8888', '4321', '2001', '1010',
+]);
+
+/** True for a 4-digit PIN on the common list; a passcode is never one. */
+export function isCommonPin(secret: string): boolean {
+  return COMMON_PINS.has(secret);
+}
+
 /** Whether a typed secret of this kind is complete enough to check. */
 export function secretReady(kind: SecretKind, value: string): boolean {
   return kind === 'pin' ? value.length === 4 : value.length > 0;

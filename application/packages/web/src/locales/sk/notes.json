@@ -29,9 +29,24 @@
   "tagChip": {
     "clear": "Zrušiť filter značky: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "Zrušiť filter sledovanej hodnoty: {{tracker}}",
+    "anyTag": "Akákoľvek značka",
+    "tagLabel": "Značka sledovanej hodnoty {{tracker}}",
+    "answerLabel": "Odpoveď sledovanej hodnoty {{tracker}}",
+    "anyAnswer": "Akákoľvek odpoveď"
+  },
+  "trackerFocus": {
+    "every_one": "približne každý {{count}} deň",
+    "every_few": "približne každé {{count}} dni",
+    "every_other": "približne každých {{count}} dní",
+    "last": "zapísané {{when}}",
+    "locked_one": "{{count}} záznam chránený PIN-om je vynechaný",
+    "locked_few": "{{count}} záznamy chránené PIN-om sú vynechané",
+    "locked_other": "{{count}} záznamov chránených PIN-om je vynechaných"
+  },
   "vaultNew": {
     "ariaLabel": "Nová položka trezoru",
-    "card": "Kreditná karta",
     "sshKey": "Kľúč SSH",
     "generator": "Heslo"
   },
@@ -50,7 +65,8 @@
   "vaultFilter": {
     "all": "Všetko",
     "logins": "Prihlasovacie údaje",
-    "cards": "Kreditné karty",
+    "passkeys": "Prístupové kľúče",
+    "cards": "Karty",
     "keys": "Kľúče"
   },
   "journal": {
@@ -62,7 +78,8 @@
   "trash": {
     "empty": "Vyprázdniť",
     "emptyHover": "Odstrániť všetky poznámky v koši",
-    "autoDelete": "Automatické odstránenie po 30 dňoch"
+    "autoDelete": "Automatické odstránenie po 30 dňoch",
+    "replacedTitle": "Kópie odstránených poznámok"
   },
   "search": {
     "sortOptions": "Možnosti zoradenia a zobrazenia",
@@ -138,6 +155,7 @@
     "imageUploadFailed": "Nahratie obrázka zlyhalo: {{error}}",
     "imageError": "Chyba obrázka: {{error}}",
     "uploadFailedFor": "Nahratie súboru „{{filename}}“ zlyhalo: {{error}}",
+    "uploadsHeld": "Dnešný limit nahrávania je vyčerpaný. Tvoje obrázky a súbory sú v bezpečí v tomto zariadení a nahrajú sa po {{time}}.",
     "importedSyncing_one": "Importovala sa {{count}} poznámka. Synchronizuje sa…",
     "importedSyncing_few": "Importovali sa {{count}} poznámky. Synchronizuje sa…",
     "importedSyncing_many": "Importovalo sa {{count}} poznámky. Synchronizuje sa…",
@@ -154,6 +172,7 @@
   },
   "loadError": {
     "message": "Poznámky sa nepodarilo načítať. Pripojenie k lokálnej databáze sa prerušilo. Môže sa to stať, keď bola aplikácia dlhší čas na pozadí.",
+    "storageOff": "Poznámky sa nepodarilo načítať. Toto zariadenie vyplo úložisko, v ktorom ich PrivacyNotes uchováva, a presne to robí Režim blokovania. Ak to chceš opraviť, otvor „Nastavenia“, potom „Súkromie a bezpečnosť“, potom „Režim blokovania“, potom „Prispôsobiť webové stránky“ a vypni PrivacyNotes. V Safari vypni Režim blokovania pre túto stránku v ponuke „Nastavenia webovej stránky“.",
     "reload": "Načítať znova"
   },
   "banner": {
@@ -206,6 +225,7 @@
   "editor": {
     "backToList": "Späť na zoznam poznámok",
     "backToGrid": "Späť na mriežku",
+    "closeSide": "Zavrieť tento panel",
     "titlePlaceholder": "Bez názvu (klikni a uprav, alebo nechaj vygenerovať automaticky)",
     "titlePlaceholderLogin": "napr. GitHub",
     "titlePlaceholderCard": "napr. Visa končiaca na 4242",
@@ -214,10 +234,22 @@
     "lockNow": "Zamknúť teraz",
     "lockNowHint": "Skryť obsah teraz",
     "turnOffHint": "Znova povoliť úpravy",
+    "turnOffForNowHint": "Upravovať túto poznámku, kým ju neopustíš",
     "unarchiveHint": "Znova zobraziť v zoznamoch",
     "showFormatted": "Zobraziť formátovaný text",
+    "splitView": "Rozdelené zobrazenie",
+    "showSplitView": "Zobraziť rozdelené zobrazenie",
+    "hideSplitView": "Skryť rozdelené zobrazenie",
+    "splitViewNeedsWidth": "Rozšír okno a zapneš rozdelené zobrazenie",
+    "swapSides": "Vymeniť strany",
+    "formattedOnly": "{{name}} funguje vo formátovanom zobrazení",
+    "formattedOnlyHint": "Formátované zobrazenie",
     "invisiblesShow": "Zobraziť neviditeľné znaky",
     "invisiblesHide": "Skryť neviditeľné znaky",
+    "lineNumbersShow": "Zobraziť čísla riadkov",
+    "lineNumbersHide": "Skryť čísla riadkov",
+    "footerPin": "Pripnúť štatistiky",
+    "footerUnpin": "Odopnúť štatistiky",
     "undo": "Vrátiť späť",
     "redo": "Znova",
     "hide": "Skryť",
@@ -292,6 +324,7 @@
     "accountLabel": "ID a synchronizácia",
     "appearanceLabel": "Vzhľad",
     "editorLabel": "Editor",
+    "pluginsLabel": "Pluginy",
     "formatBarLabel": "Panel nástrojov",
     "listsLabel": "Zoznamy",
     "trackersLabel": "Sledované hodnoty",
@@ -314,6 +347,11 @@
     "body_one": "Archivovať <highlight>{{count}} položku</highlight>? Zmizne z tvojich zoznamov a počká v zobrazení Archív. Príkaz Zrušiť archiváciu ju vráti späť.",
     "body_few": "Archivovať <highlight>{{count}} položky</highlight>? Zmiznú z tvojich zoznamov a počkajú v zobrazení Archív. Príkaz Zrušiť archiváciu ich vráti späť.",
     "body_other": "Archivovať <highlight>{{count}} položiek</highlight>? Zmiznú z tvojich zoznamov a počkajú v zobrazení Archív. Príkaz Zrušiť archiváciu ich vráti späť."
+  },
+  "duplicateConfirm": {
+    "body_one": "Duplikovať <highlight>{{count}} položku</highlight>? Dostane vlastnú kópiu.",
+    "body_few": "Duplikovať <highlight>{{count}} položky</highlight>? Každá dostane vlastnú kópiu.",
+    "body_other": "Duplikovať <highlight>{{count}} položiek</highlight>? Každá dostane vlastnú kópiu."
   },
   "bulkTrash": {
     "body_one": "Odstrániť <highlight>{{count}} položku</highlight>? Presuň ju do koša, ak ju chceš neskôr obnoviť, alebo ju odstráň navždy.",
@@ -374,6 +412,7 @@
     "title": "Prepojenia",
     "hide": "Skryť prepojenia",
     "linkedFrom": "Odkazujú sem",
+    "usedIn": "Použité v",
     "linksTo": "Odkazuje na",
     "missing": "Zatiaľ nevytvorená",
     "protectedHidden_one": "{{count}} položka chránená PIN-om sa nezobrazuje",
@@ -385,9 +424,10 @@
     "relatedLinkedFrom": "Na obe odkazuje {{title}}",
     "relatedTag": "Obe majú značku {{tag}}",
     "relatedMeaning": "Rovnaký význam",
+    "relatedMention": "Zmienka: {{name}}",
     "meaningDoor": "Inteligentné prepojenia: nájdi poznámky s rovnakým významom pomocou offline AI",
     "meaningDoorNo": "Už nezobrazovať",
-    "meaningDoorHidden": "Skryté vo všetkých poznámkach. Inteligentné prepojenia zostávajú v časti Nastavenia > Editor > Správanie.",
+    "meaningDoorHidden": "Skryté vo všetkých poznámkach. Inteligentné prepojenia zostávajú v časti Nastavenia > Pluginy.",
     "hideSuggestions": "Skryť navrhované prepojenia",
     "notRelated": "Nesúvisí",
     "notRelatedDone": "Už sa nenavrhuje",
@@ -460,5 +500,32 @@
     "autoJournal": "Pridať moju polohu do každého nového záznamu v denníku",
     "autoDenied": "Poloha je pre PrivacyNotes vypnutá. Najprv ju zapni v nastaveniach telefónu.",
     "autoOff": "Polohové služby sú na tomto telefóne vypnuté. Najprv ich zapni."
+  },
+  "vaultPasskey": {
+    "forSite": "Prístupový kľúč pre {{rpId}}",
+    "hasPasskey": "Má prístupový kľúč",
+    "removeTitle": "Odobrať prístupový kľúč pre {{rpId}}?",
+    "removeBody": "Už sa ním do {{rpId}} z PrivacyNotes neprihlásiš.",
+    "savedByExtension": "Prístupové kľúče ukladá rozšírenie prehliadača PrivacyNotes, keď ich stránka ponúkne.",
+    "removeBrowserWaiting": "Niektoré položky, ktoré tento prehliadač poslal, ešte nie sú v tvojom Trezore. Ak ho teraz odoberieš, stratia sa.",
+    "removeBrowserAnyway": "Aj tak odobrať"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "Preložiť",
+    "from": "Z",
+    "to": "Do",
+    "saveAsNote": "Uložiť ako novú poznámku",
+    "needPair": "Stiahnuť: {{language}} · {{size}}",
+    "noModel": "Z tohto jazyka sa zatiaľ nedá prekladať.",
+    "nothing": "Táto poznámka neobsahuje žiadne slová na preklad.",
+    "turnOn": "Zapnúť: {{language}}",
+    "failed": "Túto poznámku sa nepodarilo preložiť. Skús to znova.",
+    "untranslated_one": "{{count}} riadok sa nepodarilo preložiť a zostáva bez zmeny.",
+    "untranslated_few": "{{count}} riadky sa nepodarilo preložiť a zostávajú bez zmeny.",
+    "untranslated_other": "{{count}} riadkov sa nepodarilo preložiť a zostávajú bez zmeny."
+  },
+  "tags": {
+    "suggestMove": "Presunúť do priečinka {{folder}}"
   }
 }

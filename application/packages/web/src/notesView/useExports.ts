@@ -199,7 +199,11 @@ export function useExports({
   const exportVault = (ns: LocalNote[]) =>
     runExport('vault', async () => (await loadExport()).exportVaultBitwarden(ns, userSettings.folders));
   const exportBookmarks = (ns: LocalNote[]) =>
-    runExport('bookmarks', async () => (await loadExport()).exportBookmarksHtml(ns, userSettings.folders));
+    runExport('bookmarks', async () => {
+      // Addresses other than http and https stay out of the file; the window says how many.
+      const skipped = await (await loadExport()).exportBookmarksHtml(ns, userSettings.folders);
+      if (skipped) setExportProgress({ status: skipped, done: true });
+    });
   const exportContacts = (ns: LocalNote[]) =>
     runExport('contacts', async () => (await loadExport()).exportContactsVcf(ns));
   const exportCalendar = (ns: LocalNote[]) =>
@@ -248,7 +252,6 @@ export function useExports({
       })),
       warnings: [],
       transforms: [],
-      stats: { totalNotes: backup.notes.length, emptyNotes: 0, untaggedNotes: 0, uniqueTags: 0 },
       source: 'markdown-folder' as const,
     };
     await ensureImportLogLoaded();

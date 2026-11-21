@@ -74,8 +74,8 @@
     "try-before-signup": {
       "q": "Kan jag testa PrivacyNotes utan att skapa ett konto?",
       "a": [
-        "Ja. Demon på [try.privacynotes.app](https://try.privacynotes.app) är hela appen med exempelinnehåll: ingen registrering, ingen e-post, och ingenting du skriver sparas. Den körs helt i din webbläsare och skickar aldrig något till våra servrar.",
-        "Stänger du fliken försvinner allt, och det är hela poängen. När du är redo att behålla dina anteckningar skapar du ett riktigt valv på [use.privacynotes.app](https://use.privacynotes.app) och börjar om på nytt: kopiera först ut det du vill ta med dig från demon."
+        "Ja. Demon på [try.privacynotes.app](https://try.privacynotes.app) är hela appen med exempelinnehåll: ingen registrering, ingen e-post och inget konto. Ingenting du skriver skickas: en sida du klipper eller en kalender du prenumererar på laddas ner via vår server, och en karta läses från vår kartvärd.",
+        "Det du lägger in i demon stannar i den här webbläsaren tills demon öppnas här igen; rensa webbplatsens data för att ta bort det direkt. När du är redo att behålla dina anteckningar skapar du ett riktigt valv på [use.privacynotes.app](https://use.privacynotes.app) och börjar om på nytt: kopiera först ut det du vill ta med dig från demon."
       ]
     },
     "need-email": {
@@ -117,7 +117,7 @@
       "q": "Vad kan PrivacyNotes se om mina anteckningar?",
       "a": [
         "Anteckningar, titlar, taggar och bilagor är alltid krypterade, på din enhet och på väg till servern. [Med egen nyckelförvaring](/sv/help/threat-model-levels), som varje registrering med fras börjar med, har vi ingen dekrypteringsnyckel. Registrerar du dig med Google, Apple eller GitHub får du välja var din nyckel ska förvaras. Förvalet är ”Håll det enkelt och bekvämt”, som lagrar din fras på vår server, krypterad med en nyckel som vi har. I det läget kan vår server dekryptera frasen och därmed dina anteckningar. Inställningar > Konto > Nyckelförvaring visar ditt aktuella läge och låter dig byta.",
-        "Vi kan se den information som behövs för att driva tjänsten: den publika nyckel som din fras skapar, hur många objekt och hur mycket krypterat lagringsutrymme du har, hur många enheter du har anslutit och tidsstämplar för synkronisering. Våra hastighetsgränser ser också IP-adressen för varje begäran, som vi inte skriver in i ditt konto. Om du bara använder din fras och inte [har anslutit ett Google-, Apple- eller GitHub-konto](/sv/help/connected-logins) känner vi inte till din e-postadress."
+        "Vi kan se den information som behövs för att driva tjänsten: den publika nyckel som din fras skapar, hur många objekt och hur mycket krypterat lagringsutrymme du har, hur många enheter du har anslutit, för varje enhet dess typ, appversion och när den senast var online, orderid:n för dina köp och tidsstämplar för synkronisering. [SECURITY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md#what-we-measure) listar allt. Våra hastighetsgränser ser också IP-adressen för varje begäran, som vi inte skriver in i ditt konto. Om du bara använder din fras och inte [har anslutit ett Google-, Apple- eller GitHub-konto](/sv/help/connected-logins) känner vi inte till din e-postadress."
       ]
     },
     "us-company": {
@@ -125,7 +125,7 @@
       "a": [
         "Dina anteckningar är krypterade på din enhet, och med [egen förvaring](/sv/help/threat-model-levels) har servern inget som öppnar dem. Det du skriver når den bara som chiffertext, så ett rättsligt beslut i vilket land som helst ger bara chiffertext, oavsett var företaget är registrerat. Kontrollera själv: koden har [öppen källkod på GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), och webbläsarens nätverksflik visar att dina ord bara lämnar enheten som chiffertext.",
         "Lifetime Labs LLC är ett amerikanskt företag eftersom det var det snabbaste sättet att samla våra projekt under ett namn. Ingen i teamet bor i USA, och dina synkade anteckningar lagras i Zürich i Schweiz.",
-        "Det lagen kan komma åt är de data som tjänsten behöver: din publika nyckel, tidsstämplar för synk, lagringsstorlek, kortlivade serverloggar och, om du kopplar Google, Apple eller GitHub, den e-postadressen. Med ”Håll det enkelt och bekvämt” lagras även din återställningsfras på vår server, och den öppnar dina anteckningar. Inställningar > Konto > Nyckelförvaring byter till egen förvaring. [Vad PrivacyNotes kan se](/sv/help/what-can-you-see) listar mer."
+        "Det lagen kan komma åt är de data som tjänsten behöver: din publika nyckel, tidsstämplar för synk, lagringsstorlek, för varje enhet dess typ, appversion och när den senast var online, orderid:n för dina köp, kortlivade serverloggar och, om du kopplar Google, Apple eller GitHub, den e-postadressen. Med ”Håll det enkelt och bekvämt” lagras även din återställningsfras på vår server, och den öppnar dina anteckningar. Inställningar > Konto > Nyckelförvaring byter till egen förvaring. [Vad PrivacyNotes kan se](/sv/help/what-can-you-see) listar mer."
       ]
     },
     "app-privacy-label": {
@@ -140,7 +140,7 @@
       "q": "Varför en återställningsfras i stället för användarnamn och lösenord?",
       "a": [
         "Det kan kännas bakvänt först, men en enda återställningsfras är den starkare konstruktionen. Med användarnamn och lösenord är användarnamnet ingen hemlighet (det dyker upp i varje läcka), så hela säkerheten vilar på lösenordet, och lösenord som människor väljer landar på kanske 30 till 40 bitars entropi. [Din återställningsfras ger garanterat 128 bitar eller mer](/sv/help/twelve-word-phrase), genererade av din enhet, aldrig valda av en människa och aldrig återanvända från en annan sajt.",
-        "Det finns inte heller något lösenord för oss att förlora. En lösenordsinloggning innebär att servern lagrar åtminstone en lösenordshash, och den kan läcka, knäckas eller nätfiskas. [Med egen förvaring](/sv/help/threat-model-levels) lämnar din fras aldrig din enhet: den härleder dina krypteringsnycklar lokalt, och servern ser bara krypterade data. Det finns ingen hash att stjäla och inget flöde för lösenordsåterställning som en angripare kan utnyttja.",
+        "Det finns inte heller något lösenord för oss att förlora. En lösenordsinloggning innebär att servern lagrar åtminstone en lösenordshash, och den kan läcka, knäckas eller nätfiskas. [Med egen förvaring](/sv/help/threat-model-levels) lämnar din fras aldrig din enhet, om du inte lägger till [en passkey för inloggning](/sv/help/passkey-sign-in): då behåller servern en kopia som bara den passkeyn öppnar. Frasen härleder dina krypteringsnycklar lokalt, och servern ser bara krypterade data. Den behåller bara en hash av en inloggningsuppgift som din enhet härleder från frasen, som inte går att göra om till frasen och inte öppnar någon anteckning, och det finns inget flöde för lösenordsåterställning som en angripare kan utnyttja.",
         "Känns det klumpigt att skriva in frasen? Du kan spara frasen i din lösenordshanterare med ett tryck (Inställningar > Säkerhet > Fras), och då känns inloggningen som vilken annan som helst. Vill du hellre ha ett välbekant flöde? [Inloggning med Google, Apple eller GitHub fungerar också](/sv/help/signup-options): du får ändå en fras under huven, och du väljer själv om den stannar på din enhet eller om vi förvarar den åt dig."
       ]
     },
@@ -149,9 +149,17 @@
       "a": [
         "Ja, helt medvetet. Alla försvarar sig inte mot samma hot, så kontomodellen är en stege snarare än en enda dogm. Varje steg håller dina anteckningar krypterade på din enhet; det som ändras är vem som har nyckeln och vad vi vet om dig.",
         "Den bekväma änden: logga in med Google, Apple eller GitHub och låt ”Håll det enkelt och bekvämt” vara valt när du får frågan. Det är förvalet på den skärmen. Vi förvarar din återställningsfras krypterad på vår server, så att en ny enhet kan öppna dina anteckningar efter inloggning hos leverantören och [en autentiseringskod om 2FA är aktiverat](/sv/help/enable-2fa). I utbyte känner vi till e-postadressen bakom inloggningen och vår server kan dekryptera din fras. Spara din fras ifall du förlorar leverantörskontot och behåll reservnyckeln för 2FA om du aktiverar tvåfaktorsinloggning.",
-        "Mitten: logga in med Google, Apple eller GitHub men välj ”Maximal säkerhet och integritet”. Din fras rör aldrig våra servrar, så servern har inget som öppnar dina anteckningar; nya enheter behöver frasen eller [en QR-skanning från en enhet som redan är inloggad](/sv/help/add-second-device). Vi känner fortfarande till e-postadressen bakom den inloggningen, och en rättslig order eller ett intrång i vår server kan nå den e-postadressen, aldrig innehållet i dina anteckningar.",
+        "Mitten: logga in med Google, Apple eller GitHub men välj ”Maximal säkerhet och integritet”. Din fras rör aldrig våra servrar (en passkey för inloggning, om du lägger till en, lämnar en kopia som bara den passkeyn öppnar), så servern har inget som öppnar dina anteckningar; nya enheter behöver frasen eller [en QR-skanning från en enhet som redan är inloggad](/sv/help/add-second-device). Vi känner fortfarande till e-postadressen bakom den inloggningen, och en rättslig order eller ett intrång i vår server kan nå den e-postadressen, aldrig innehållet i dina anteckningar.",
         "Den privata änden: hoppa över inloggningarna helt och använd bara din återställningsfras. Ingen e-post, inget namn, ingen identitet, och i kombination med ett [anonymt Pro-köp](/sv/help/buy-pro-anonymously) lämnar inte ens betalningen något namn någonstans. I utbyte ligger nyckelansvaret helt hos dig: tappar du frasen utan någon inloggad enhet kvar kan ingen hjälpa dig.",
         "Inställningar > Konto > Nyckelförvaring visar båda lägena med deras för- och nackdelar och låter dig byta. När du lämnar serverförvaring raderar vi vår kopia efter att du bekräftat tre ord från din sparade fras. Att byta tillbaka laddar upp frasen igen och kräver ett uttryckligt val. Båda ändringarna signeras med din kontonyckel och kräver en ny autentiseringskod om 2FA är aktiverat. [Ett fraskonto kan ansluta en leverantör](/sv/help/connected-logins) under Konto > Konton och sedan välja serverförvaring separat; anslutningen laddar inte upp frasen. Alla lägen kan också använda PIN-lås för appen, biometrisk upplåsning och [skydd per anteckning](/sv/help/locked-vs-protected)."
+      ]
+    },
+    "stored-phrase": {
+      "q": "Om min fras lagras krypterad, hur kan då ett rättsligt beslut nå mina anteckningar?",
+      "a": [
+        "Eftersom vår server har nyckeln till den krypteringen. Med ”Håll det enkelt och bekvämt” lagras din återställningsfras på vår server, krypterad med en nyckel som servern förvarar. Det är därför inloggning med ett klick fungerar: när du loggar in med Google, Apple eller GitHub på en ny enhet öppnar servern frasen och skickar den till enheten.",
+        "Krypteringen gör att frasen inte går att läsa för den som bara har en kopia av databasen. Men servern kan öppna den, och frasen öppnar dina anteckningar, så ett rättsligt beslut eller ett intrång i servern skulle kunna nå dem.",
+        "Vill du ha en lösning där inget hos oss kan öppna dina anteckningar, byter du till egen förvaring under Inställningar > Konto > Nyckelförvaring. Då raderas kopian på vår server och din fras finns bara hos dig, så [förvara den på ett säkert ställe](/sv/help/lost-phrase) först. [Integritetsstegen](/sv/help/threat-model-levels) jämför de två lägena."
       ]
     },
     "twelve-word-phrase": {
@@ -168,7 +176,7 @@
       "a": [
         "Nej. Ingen kan gissa din återställningsfras, och ingen annan får samma: ingen dator som finns, eller som vi kan förutse, kommer i närheten. Bara den som får tag i dina faktiska ord kan logga in, så förvara dem säkert.",
         "Din enhet väljer din fras slumpmässigt. För en fras på 12 ord har antalet möjliga fraser 39 siffror, och för en fras på 24 ord 78. Att gissa en fras på 12 ord på första försöket är mindre sannolikt än att vinna en jackpot med 1 chans på 300 miljoner fyra gånger i rad. En dator som provade en miljard miljarder fraser i sekunden skulle ändå behöva runt 10 biljoner år för att prova alla, långt längre än universum har funnits. Även om alla 8 miljarder människor på jorden hade var sin fras är chansen att två av dem är likadana mindre än att vinna den jackpotten två gånger i rad.",
-        "Styrkan kommer från den slumpen, inte från hur orden ser ut. Hitta inte på en egen fras och lägg inte till symboler: använd orden exakt som appen ger dig dem. Versaler spelar ingen roll. Sista ordet fungerar som en kontroll, så appen avvisar en felskriven eller påhittad fras."
+        "Styrkan kommer från den slumpen, inte från hur orden ser ut. Hitta inte på en egen fras och lägg inte till symboler: använd orden exakt som appen ger dig dem. Versaler spelar ingen roll. Sista ordet fungerar som en kontroll, så appen avvisar de flesta felskrivna eller påhittade fraser, ungefär 15 av 16. En som går igenom är frasen för ett annat, tomt valv."
       ]
     },
     "same-phrase": {
@@ -181,8 +189,8 @@
     "enable-2fa": {
       "q": "Hur aktiverar jag tvåfaktorsautentisering (2FA)?",
       "a": [
-        "Aktivera valfri tvåfaktorsinloggning i Inställningar > Säkerhet > 2FA. Uppdatera först PrivacyNotes på dina andra enheter. Skanna QR-koden med en autentiseringsapp eller ange konfigurationsnyckeln manuellt. Spara reservnyckeln för 2FA utanför PrivacyNotes, bekräfta den sparade kopian och ange en aktuell kod för att slutföra.",
-        "Efter inställningen kräver en ny serversession din fras eller [en ansluten leverantör](/sv/help/connected-logins), följt av en autentiseringskod. Med egen förvaring behöver du fortfarande frasen för att dekryptera anteckningar. Hantera leverantörer i Inställningar > Konto > Konton; att ansluta en leverantör [ändrar inte nyckelförvaringen](/sv/help/threat-model-levels).",
+        "Aktivera valfri tvåfaktorsinloggning i Inställningar > Säkerhet > 2FA. Skanna QR-koden med en autentiseringsapp eller ange konfigurationsnyckeln manuellt. Spara reservnyckeln för 2FA utanför PrivacyNotes, bekräfta den sparade kopian och ange en aktuell kod för att slutföra.",
+        "Efter inställningen kräver en ny serversession din fras eller [en ansluten leverantör](/sv/help/connected-logins), följt av en autentiseringskod. När du slår på 2FA kopplas webbläsartillägget och kommandoraden bort, så anslut tillägget igen under Inställningar > Tillägg, och kommandoraden under Inställningar > CLI. Med egen förvaring behöver du fortfarande frasen för att dekryptera anteckningar. Hantera leverantörer i Inställningar > Konto > Konton; att ansluta en leverantör [ändrar inte nyckelförvaringen](/sv/help/threat-model-levels).",
         "[Om du förlorar autentiseringsappen](/sv/help/lost-2fa) kan du lägga till den sparade reservnyckeln för 2FA i en annan autentiseringsapp. Om du förlorar båda kan vi inte återställa åtkomsten till servern. Anteckningar som redan är upplåsta på en enhet går fortfarande att läsa och exportera. Tvåfaktorsinloggning lägger inte till kryptering och skyddar inte en enhet som redan är upplåst."
       ]
     },
@@ -201,11 +209,18 @@
         "Det här följer av arkitekturen, inte av en policy: [servern har dina anteckningar bara som chiffertext](/sv/help/what-can-you-see) och kör inget index över dem. Sökning behöver texten, och texten finns bara på dina enheter."
       ]
     },
+    "website-icons": {
+      "q": "Slår PrivacyNotes upp webbplatsikoner, och vad skickas då?",
+      "a": [
+        "Ja, för att visa en webbplatslogga bredvid dina länkar och Valv-inloggningar, och varje uppslag skickar bara webbplatsens domän. Den går till vår egen server, som hämtar ikonen åt dig, så ikontjänsterna ser aldrig din enhet, din IP-adress eller resten av länken. Inget konto, ingen cookie och inget anteckningsinnehåll följer med, och vår server loggar inte vilken domän den fick frågan om.",
+        "När en ikon väl finns på din enhet blir den kvar där, krypterad tillsammans med appens övriga lokala data, så samma webbplats slås inte upp på nytt varje gång. Vill du stoppa uppslagen stänger du av **Webbplatsikoner** under Inställningar > Listor > Allmänt: länkar och inloggningar visar då en bokstavsbricka i stället. Reglaget gäller bara den enheten, så stäng av det på varje enhet där du vill ha det avstängt."
+      ]
+    },
     "no-ai": {
       "q": "Använder PrivacyNotes AI på mina anteckningar?",
       "a": [
-        "Ingen AI läser dina anteckningar om du inte slår på det, och ingenting du skriver går någonsin till en AI-tjänst. Det finns ingen chattbot, ingen AI som skriver åt dig, ingen AI på våra servrar och ingen träning på ditt innehåll. Ninja och sökningen är vanlig kod på din enhet. [Dina anteckningar är alltid krypterade, på din enhet och på vägen till servern](/sv/help/what-can-you-see), och en moln-AI skulle ta dem ur den krypteringen, så ingen anteckning går någonsin till en.",
-        "Det enda undantaget är frivilligt och stannar på din enhet. Smarta kopplingar hittar anteckningar med samma innebörd, även med andra ord eller på ett annat språk. Funktionen använder offline-AI ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)) som bara körs på den här enheten. Den skriver ingenting och svarar inte på något: den gör om varje anteckning till en lista med tal och jämför dem. Du laddar ner den en gång under Inställningar > Redigerare > Beteende > Smarta kopplingar, och sedan fungerar den utan uppkoppling. Med dess reglage stänger du av den, och Ta bort tar bort den från enheten. Inget den räknar ut om en anteckning sparas eller skickas."
+        "Ingen AI läser dina anteckningar om du inte slår på det, och ingenting du skriver går någonsin till en AI-tjänst. Det finns ingen chattbot, ingen AI på våra servrar och ingen träning på ditt innehåll. Ninja och sökningen är vanlig kod på din enhet. [Dina anteckningar är alltid krypterade, på din enhet och på vägen till servern](/sv/help/what-can-you-see), och en moln-AI skulle ta dem ur den krypteringen, så ingen anteckning går någonsin till en.",
+        "Undantagen är frivilliga plugins under Inställningar > Plugins, och de körs bara på din enhet. Smarta kopplingar hittar anteckningar med samma innebörd. Text i bilder läser texten i en bild, en skanning eller en PDF. Översätt anteckningar översätter en anteckning. Tal till text gör om en inspelning till text. Du slår på vart och ett själv. Det laddas ner en gång, eller använder motorn som är inbyggd i din enhet, och fungerar sedan utan uppkoppling; Ta bort tar bort det från enheten. Ett plugin ändrar aldrig en anteckning på egen hand: du ser resultatet först och väljer att lägga till det. Inget det räknar ut om en anteckning sparas eller skickas."
       ]
     },
     "vibe-coded": {
@@ -245,7 +260,7 @@
       "q": "Jag har tappat bort min återställningsfras. Kan ni återställa mitt konto?",
       "a": [
         "Är du fortfarande inloggad på någon enhet: ja, då kan du hämta den själv. Öppna Inställningar > Säkerhet > Fras och spara den i din lösenordshanterare på en gång.",
-        "Har du varken en inloggad enhet eller frasen [beror det på vem som har nyckeln](/sv/help/threat-model-levels). Lät du oss förvara den när du registrerade dig med Google, Apple eller GitHub, logga in med den inloggningen så är du inne igen. Med egen förvaring kan ingen: din fras når aldrig våra servrar, så det finns ingenting att återställa och inget supportärende som hjälper. Varje tjänst som kan återskapa dina krypterade data efter en total förlust sitter på dina nycklar.",
+        "Har du varken en inloggad enhet eller frasen [beror det på vem som har nyckeln](/sv/help/threat-model-levels). Lät du oss förvara den när du registrerade dig med Google, Apple eller GitHub, logga in med den inloggningen så är du inne igen. Med egen förvaring kan bara [en passkey för inloggning](/sv/help/passkey-sign-in) som du har lagt till hjälpa: annars når din fras aldrig våra servrar, så det finns ingenting att återställa och inget supportärende som hjälper. Varje tjänst som kan återskapa dina krypterade data efter en total förlust sitter på dina nycklar.",
         "Åtgärden tar tio sekunder: lägg frasen i en lösenordshanterare samma dag du skapar ditt konto. Är den redan borta och du betalar för ett lagringstillägg fakturerar Paddle dig direkt och kan avsluta det utan din fras: se [ändra eller avsluta ett tillägg](/sv/help/manage-storage-addon)."
       ]
     },
@@ -254,7 +269,7 @@
       "a": [
         "Lägg till din reservnyckel för 2FA i valfri autentiseringsapp och ange sedan koden den visar när PrivacyNotes ber om en. Reservnyckeln är [den du sparade när du slog på 2FA](/sv/help/enable-2fa), och den fungerar varje gång du behöver den.",
         "Om du har förlorat både telefonen och reservnyckeln återställer vi inte 2FA, och vår support kan inte hjälpa till med det. Anteckningarna som redan finns på dina enheter går fortfarande att läsa.",
-        "För att behålla dem går du till Inställningar > Säkerhetskopiering > Manuellt på en enhet som fortfarande har dem. Skapa sedan ett nytt valv och [importera exporten där](/sv/help/restore-backup)."
+        "För att behålla dem går du till Inställningar > Säkerhetskopiering > Manuellt på en enhet som fortfarande har dem. Välj där ”Allt, inte krypterat (.zip)”: de krypterade säkerhetskopiorna öppnas bara i kontot som gjorde dem. Skapa sedan ett nytt valv och [importera exporten där](/sv/help/restore-backup)."
       ]
     },
     "oauth-recovery": {
@@ -276,7 +291,7 @@
       "a": [
         "Du kan radera ditt konto i appen eller i en webbläsare. I en webbläsare loggar du in på [use.privacynotes.app](https://use.privacynotes.app). Öppna sedan **Inställningar > Konto**, välj **Radera konto och data...**, välj **Radera molndata och konto**, skriv DELETE och välj **Radera permanent**. Om 2FA är på ber appen om en ny kod från din autentiseringsapp. Raderingen kan inte ångras, så [exportera först det du vill behålla](/sv/help/export) (Inställningar > Överföring).",
         "**Det här raderas:** dina synkade anteckningar, uppgifter, dagböcker, valvposter, filer och bilder, anteckningshistorik, inställningar, enheter, anslutna inloggningar, den förvarade kopian av din återställningsfras om du valde en, din Pro-post och själva kontot. De lokala data som finns på enheten du raderar från rensas också. [En aktiv lagringsprenumeration måste avslutas först](/sv/help/manage-storage-addon) under Inställningar > Lagring; en som redan är inställd på att avslutas hindrar inte raderingen.",
-        "**Det här finns kvar:** om du hade en lagringsprenumeration finns dess poster kvar för fakturering och återbetalningar. En minimal kontoidentifierare kan också finnas kvar, så att gamla inloggningstoken fortsätter att avvisas. Ingen av dem innehåller dina anteckningar eller filer, och ingen av dem löper ut automatiskt. Vår databasleverantör sparar loggar och dagliga säkerhetskopior i sju dagar, så en säkerhetskopia som togs före raderingen kan innehålla dina krypterade data i upp till en vecka. Paddle, Apple och Google behåller sina egna transaktionsposter enligt sina egna villkor. [Integritetspolicyn](https://lifetimelabs.dev/privacy/) har detaljerna och förklarar hur du ber oss radera personuppgifter som sparats."
+        "**Det här finns kvar:** om du hade en lagringsprenumeration finns dess poster kvar för fakturering och återbetalningar. En minimal kontoidentifierare kan också finnas kvar, så att gamla inloggningstoken fortsätter att avvisas. Ingen av dem innehåller dina anteckningar eller filer, och ingen av dem löper ut automatiskt. Vår databasleverantör sparar loggar och dagliga säkerhetskopior i sju dagar, så en säkerhetskopia som togs före raderingen kan innehålla dina krypterade data i upp till en vecka. Krypterade kopior av dina filer kan finnas kvar i vår papperskorg för filer och i säkerhetskopior i upp till 30 dagar. Paddle, Apple och Google behåller sina egna transaktionsposter enligt sina egna villkor. [Integritetspolicyn](https://lifetimelabs.dev/privacy/) har detaljerna och förklarar hur du ber oss radera personuppgifter som sparats."
       ]
     },
     "what-syncs": {
@@ -309,8 +324,9 @@
     "data-location": {
       "q": "Var lagras mina data?",
       "a": [
-        "På din enhet först, och det är den kopian du arbetar med: appen är lokal först, så [dina anteckningar öppnas och redigeras offline](/sv/help/offline). Synkkopian ligger på servrar i Zürich i Schweiz. Där finns din publika nyckel, krypterade blobbar av dina anteckningar, filer och inställningar, plus tidsstämplarna och storlekarna som en synk behöver. Inga titlar, ingen text, inga taggar.",
-        "Landet betyder mindre än krypteringen. Allt är alltid krypterat, på din enhet och på vägen till servern, så den kopian är chiffertext var den än ligger, och med egen förvaring kan inget på servern öppna den. Schweiz är en bonus, inte löftet. [Vad som synkas](/sv/help/what-syncs) räknar upp det punkt för punkt.",
+        "På din enhet först, och det är den kopian du arbetar med: appen är lokal först, så [dina anteckningar öppnas och redigeras offline](/sv/help/offline). Synkkopian av dina anteckningar, dagböcker, inställningar och resten ligger på servrar i Zürich i Schweiz. Nya bilder och filer från en uppdaterad app lagras i EU, och resten flyttas dit med tiden. På de servrarna finns din publika nyckel, krypterade blobbar av dina anteckningar, filer och inställningar, plus tidsstämplarna och storlekarna som en synk behöver. Inga titlar, ingen text, inga taggar.",
+        "Vi har också en andra krypterad kopia av filerna som lagras i EU hos en annan leverantör i EU, som säkerhetskopia. En fil som du raderar kan finnas kvar i vår papperskorg för filer i upp till 30 dagar och i den säkerhetskopian i upp till 35 dagar.",
+        "Platsen betyder mindre än krypteringen. Allt är alltid krypterat, på din enhet och på vägen till servern, så den kopian är chiffertext var den än ligger, och med egen förvaring kan inget på servern öppna den. Platsen är en bonus, inte löftet. [Vad som synkas](/sv/help/what-syncs) räknar upp det punkt för punkt.",
         "Kopian på din enhet är krypterad den också: [anteckningarna förseglas på disken](/sv/help/data-on-disk) med en nyckel som härleds ur din återställningsfras när du låser upp."
       ]
     },
@@ -348,7 +364,7 @@
       "q": "Kan Valvet ersätta min lösenordshanterare, som Bitwarden?",
       "a": [
         "Ja. Valvet rymmer dina inloggningar, kort och SSH-nycklar, krypterade på din enhet. Det kostnadsfria webbläsartillägget fyller i en inloggning bara på den webbplats den hör till. [En Bitwarden-import](/sv/help/import/bitwarden) flyttar över dina lösenord i ett steg.",
-        "Din [återställningsfras](/sv/help/phrase-vs-password) är huvudnyckeln, inte din PIN-kod. PIN-koden eller lösenkoden låser en enhet där du redan är inloggad, som koden på din telefon. Tillägget har sin egen PIN-kod eller lösenkod, skild från appens. Efter 10 felaktiga försök kopplar tillägget bort den webbläsaren.",
+        "Din [återställningsfras](/sv/help/phrase-vs-password) är huvudnyckeln, inte din PIN-kod. PIN-koden eller lösenkoden låser en enhet där du redan är inloggad, som koden på din telefon. Tillägget har sin egen PIN-kod eller lösenkod, skild från appens. Efter 10 felaktiga försök inom 30 dagar kopplar tillägget bort den webbläsaren.",
         "För det starkaste låset väljer du en lösenkod i stället för en fyrsiffrig PIN i Inställningar > Säkerhet > PIN, och väljer en lösenkod för tillägget också. Låt datorns diskkryptering och skärmlås vara på. Detaljerna finns i vår [hotmodell](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
@@ -379,6 +395,13 @@
       "a": [
         "För att tjänsten är medvetet billig att driva. Appen är lokal först och anteckningar är små krypterade block, så servern gör knappt mer än att lagra dem och skicka dem vidare mellan dina enheter. Ingen analys av det du skriver, inga pixlar eller spårare från tredje part, ingen AI som körs på våra servrar, ingen supportavdelning.",
         "Den enda kostnaden som växer över tid är lagring, och den är prissatt därefter: lagring utöver de 500 MB som ingår är [ett litet årligt tillägg](/sv/help/storage-addons). Engångskostnader prissätts en gång, återkommande kostnader återkommer. Modellen behöver bara betala för sig själv, och det gör den."
+      ]
+    },
+    "discounts": {
+      "q": "Kan jag få rabatt, en kupong eller ett Black Friday-erbjudande på Pro?",
+      "a": [
+        "Nej. Pro har ett rättvist pris för alla, och du betalar det en gång: [Pro är ett engångsköp](/sv/help/one-time-pricing), inte en prenumeration. Vi hoppar över Black Friday, Thanksgiving och alla andra helgrea, och vi delar inte ut några rabattkoder eller kuponger, så det finns ingen bättre dag att vänta på.",
+        "Mejla oss alltså inte och fråga inte på Reddit, X eller någon annanstans efter rabatt: svaret är alltid den här sidan, och tiden som de förfrågningarna tar går ut över tiden vi lägger på appen. [Gratisplanen](/sv/help/free-vs-pro) har ingen tidsgräns, så du kan använda hela appen på den först och köpa Pro den dag du vill ha det. Betalar du med kredit- eller betalkort, eller via en appbutik, ingår [30 dagars återbetalning](/sv/help/refunds)."
       ]
     },
     "pro-cross-platform": {
@@ -412,7 +435,7 @@
     "pay-with-crypto": {
       "q": "Kan jag betala för Pro med Bitcoin eller annan krypto?",
       "a": [
-        "Ja, på webben och i skrivbordsappen. Välj Betala med krypto i uppgraderingsfönstret och betala med Bitcoin, Ethereum, Lightning, USDC eller USDT. Priset är kortpriset, betalat en gång. [Butiksversionerna](/sv/help/store-purchases) säljer Pro endast via Apple och Google.",
+        "Ja, på webben och i skrivbordsappen. Välj Betala med krypto i uppgraderingsfönstret och betala med Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin eller TON. Priset är kortpriset, betalat en gång. [Butiksversionerna](/sv/help/store-purchases) säljer Pro endast via Apple och Google.",
         "[BlockBee](https://blockbee.io) driver betalningssidan. Den frågar inte efter något namn eller någon e-postadress och får aldrig ditt konto-ID. En kryptobetalning är offentlig på sin blockkedja. Bitcoin aktiverar Pro när nätverket bekräftar betalningen, vanligtvis inom 10 till 60 minuter, och Ethereum och de flesta stablecoins tar ungefär en minut. En banner i appen visar hur betalningen ligger till.",
         "Kryptobetalningar är slutgiltiga: ingen återbetalning är möjlig. I kassan godkänner du att Pro startar direkt, vilket upphäver EU:s ångerrätt på 14 dagar, så testa gratisplanen först. Sidan efter betalningen är din köpbekräftelse. Spara den som PDF, eftersom vi inte har någon e-postadress att skicka den till."
       ]
@@ -561,7 +584,7 @@
       "q": "Kan webbläsartillägget läsa mina anteckningar?",
       "a": [
         "Nej. Tillägget har aldrig nyckeln som öppnar dina anteckningar. Det låser varje klipp innan det lämnar din webbläsare, och en av dina appar gör om det till en anteckning vid nästa synk.",
-        "Om du slår på inloggningar ser tillägget dina inloggningar, dina kort, den publika halvan av dina SSH-nycklar och dina bokmärken, aldrig en anteckningstext och aldrig en privat nyckel. De skyddas av en PIN-kod eller lösenkod som du ställer in för tillägget, skild från appens. Efter 10 felaktiga försök kopplas webbläsaren bort, så en kopia av din webbläsare går inte att gissa upp. Inloggningar låses efter den tid du väljer i tillägget (15 minuter utan användning om du inte ändrar det), senast efter 7 dagar, och alltid när webbläsaren stängs. Detaljerna finns i vår [hotmodell](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+        "Om du slår på inloggningar ser tillägget dina inloggningar och de passkeys som sparats i dem, dina kort, den publika halvan av dina SSH-nycklar och dina bokmärken, aldrig en anteckningstext och aldrig en privat SSH-nyckel. De skyddas av en PIN-kod eller lösenkod som du ställer in för tillägget, skild från appens. Efter 10 felaktiga försök inom 30 dagar kopplas webbläsaren bort, så en kopia av din webbläsare går inte att gissa upp. Inloggningar låses när datorn inte har haft någon tangentbords- eller musinmatning under den tid du väljer i tillägget (15 minuter om du inte ändrar det), senast efter 7 dagar, och alltid när webbläsaren stängs. Detaljerna finns i vår [hotmodell](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
     "contacts": {
@@ -606,6 +629,45 @@
       "a": [
         "”Skrivskyddad” (i anteckningens alternativmeny, Pro) låser en anteckning mot redigering så att ett färdigt dokument inte kan förstöras av misstag; den döljer ingenting. ”Skydda” (samma meny, Pro) döljer anteckningens innehåll bakom din PIN-kod eller [biometriska upplåsning](/sv/help/biometric-unlock), för sådant du helst inte har synligt på en skärm som andra ibland ser. Titeln syns fortfarande i listan, så håll hemligheten utanför titeln. En upplåsning öppnar alla skyddade anteckningar under den tid du anger i Inställningar > Säkerhet. Vill du stänga den öppna tidigare väljer du **Lås** ovanför texten eller **Lås nu** i anteckningens alternativmeny; den förblir låst tills du låser upp den igen.",
         "Båda är grindar för skärmen, inte ett andra lager kryptering. Flaggorna färdas inuti anteckningens krypterade data, och anteckningen krypteras medvetet inte om med din PIN: [på så sätt kan en glömd PIN aldrig förstöra data](/sv/help/forgot-pin). Frasen förblir den verkliga gränsen: skydda den först, och använd de här grindarna för skärmen som andra ibland ser."
+      ]
+    },
+    "protect-section": {
+      "q": "Kan jag låsa bara Valv, eller ett annat avsnitt, med min PIN?",
+      "a": [
+        "Ja, och det är gratis. Högerklicka på Valv i sidofältet, eller tryck länge på det på en telefon, och välj **Skydda Valv**. Anteckningar, Uppgifter, Teckningar, Filer, Dagböcker, Kalender, Kontakter, Bokmärken och Papperskorgen fungerar på samma sätt. Om du inte har någon PIN än ber appen dig att skapa en först. Du öppnar avsnittet med din PIN eller med [biometrisk upplåsning](/sv/help/biometric-unlock).",
+        "Medan ett avsnitt är låst visas dess objekt inte heller någon annanstans: inte i Alla, Hem, sökningen eller Papperskorgen. En upplåsning öppnar alla skyddade avsnitt och [alla skyddade anteckningar](/sv/help/locked-vs-protected) under den tid du ställer in i Inställningar > Säkerhet > Lås > ”Fråga efter PIN-koden igen efter”. Vill du låsa ett avsnitt tidigare klickar du på det öppna låset bredvid dess namn, eller väljer **Lås nu** i dess meny.",
+        "[Webbläsartillägget](/sv/help/browser-extension-security) har en egen upplåsning, så det fyller fortfarande i dina inloggningar. Objekt som du raderar från ett låst avsnitt följer fortfarande [automatisk radering i papperskorgen](/sv/help/trash-auto-delete), och **Töm** i Papperskorgen ber om din PIN först."
+      ]
+    },
+    "lock-reload": {
+      "q": "Varför laddas sidan om när PrivacyNotes låser sig?",
+      "a": [
+        "Omladdningen är hur en låst app släpper taget om dina anteckningar. När applåset är på sparar låsningen din senaste ändring och startar sedan om appen bakom låsskärmen, så att den låsta appen inte längre håller din återställningsfras, dess nycklar eller de anteckningar du hade öppna. Det sker när du väljer **Lås appen**, och när appen låser sig själv efter den tid du har ställt in under Inställningar > Säkerhet > Lås > \"Lås igen efter\".",
+        "Lås upp som vanligt med din PIN-kod, lösenkod eller [biometrisk upplåsning](/sv/help/biometric-unlock), så kommer anteckningen du hade öppen tillbaka. Inget du skrivit går förlorat. [Påminnelser](/sv/help/reminders) ringer fortfarande medan appen är låst, som \"Påminnelse\" och klockslaget."
+      ]
+    },
+    "passkey-unlock": {
+      "q": "Kan jag låsa upp PrivacyNotes med en passkey?",
+      "a": [
+        "Ja. I en webbläsare är biometrisk upplåsning en passkey. En passkey är en nyckel som din enhet eller din lösenordshanterare sparar för en enda webbplats och använder först efter ditt fingeravtryck, ditt ansikte eller enhetens lösenord. När du slår på biometrisk upplåsning skapar PrivacyNotes en passkey åt sig själv, och den passkeyn bekräftar att det är du varje gång du öppnar appen. Passkeyn håller också nyckeln för den biometriska upplåsningen; där din passkey-app inte kan det slås biometrisk upplåsning inte på. Med applåset på och biometrisk upplåsning knuten till din passkey kräver en kopia av webbläsarens lagring då passkeyn eller din PIN-kod eller lösenkod, så välj en lösenkod: en PIN på 4 siffror går att gissa.",
+        "För att slå på den öppnar du Inställningar > Säkerhet > Lås och väljer \"Aktivera biometrisk upplåsning\". Din webbläsare eller lösenordshanterare ber om ditt fingeravtryck, ditt ansikte eller enhetens lösenord och sparar passkeyn, och på fliken står det \"Biometrisk upplåsning är knuten till din passkey.\" Ställ in den i varje webbläsare där du vill ha den: även när passkeyn synkas till dina andra enheter låser den bara upp de webbläsare där du slog på den. Din PIN, din lösenkod och din återställningsfras fungerar fortfarande vid sidan av den. Om du stänger av den ligger passkeyn kvar i din passkey-app tills du raderar den där.",
+        "Webbläsartilläggets biometriska upplåsning är också en passkey. Den görs enbart för tillägget och öppnar bara dina inloggningar där. Apparna för iPhone, Android och Mac använder i stället enhetens egen säkra maskinvara i stället för en passkey, och Windows-appen använder Windows Hello, med samma reglage på samma plats."
+      ]
+    },
+    "passkey-sign-in": {
+      "q": "Kan jag logga in i PrivacyNotes med en passkey?",
+      "a": [
+        "Ja. I din webbläsare på [use.privacynotes.app](https://use.privacynotes.app) kan en passkey ersätta att skriva in din [återställningsfras](/sv/help/phrase-vs-password) på en ny enhet. Välj \"Logga in med fras\" och sedan \"Logga in med en passkey\". Din passkey-app ber om ditt fingeravtryck, ditt ansikte eller enhetens lösenord, och sedan fortsätter inloggningen som med en inskriven fras, så [tvåfaktorsinloggning](/sv/help/enable-2fa) frågar fortfarande efter sin kod.",
+        "Lägg först till passkeyn i en webbläsare där du är inloggad: öppna Inställningar > Säkerhet > Passkeys och välj \"Lägg till en passkey\". Den frågar efter din PIN eller lösenkod om du har satt en, och efter en aktuell 2FA-kod om 2FA är på. Du kan lägga till upp till 10. Din fras fortsätter att fungera.",
+        "Servern lagrar bara en kopia av din fras som är krypterad på din enhet med en nyckel från passkeyn, och får aldrig den nyckeln. Förvara passkeyn i en passkey-app som bara du kan öppna."
+      ]
+    },
+    "vault-passkeys": {
+      "q": "Kan PrivacyNotes spara passkeys för andra webbplatser?",
+      "a": [
+        "Ja. Med [webbläsartillägget](/sv/help/browser-extension) kan en webbplats som erbjuder en passkey spara den i ditt Valv, i din inloggning för den webbplatsen, så att ett objekt håller lösenordet, passkeyn eller båda. Tillägget frågar först. Nästa gång webbplatsen ber om en passkey listar tillägget de inloggningar som har en, och du väljer vilken du loggar in med. \"Använd en annan passkey-app\" lämnar i stället över begäran till webbläsarens egen passkey-app.",
+        "Tillägget sparar och använder passkeys medan det är upplåst och inloggningar är på. I appen visar brickan Passkeys i Valvet de inloggningar som har en, och du redigerar en inloggning för att ta bort dess passkey. För att slippa erbjudandena stänger du av \"Erbjud passkeys\" i tilläggets inställningar.",
+        "Varje passkey är krypterad på din enhet som resten av Valvet, och tillägget öppnar den bara medan det är upplåst."
       ]
     },
     "biometric-unlock": {
@@ -669,7 +731,7 @@
     "backup-app-closed": {
       "q": "Körs en automatisk säkerhetskopia när PrivacyNotes är stängt?",
       "a": [
-        "På en dator körs den medan appen är öppen, och även medan fönstret är stängt till systemfältet. Slå på det under Inställningar > System > ”Fortsätt köra i systemfältet”. Om en säkerhetskopia skulle ha gjorts medan appen var helt stängd körs den ungefär en minut efter att du öppnar appen igen.",
+        "På en dator körs den medan appen är öppen, och även medan fönstret är stängt till systemfältet. Slå på det under Inställningar > System > ”Fortsätt köra i systemfältet”. Om en säkerhetskopia skulle ha gjorts medan appen var helt stängd körs den ungefär en minut efter att du öppnar appen igen, med eller utan internet. Bara en enhet som ännu inte har synkat sedan den loggades in väntar på den första synken.",
         "En telefon låter inte en app köra i bakgrunden för detta, så på Android och iPhone körs säkerhetskopian några sekunder efter att du öppnar appen, när en ska göras. Om du inte har öppnat appen på ett tag talar en aviseringsnotis på telefonen om att en säkerhetskopia är försenad. I webbläsaren körs en säkerhetskopia bara medan PrivacyNotes är öppet i en flik."
       ]
     },
@@ -677,7 +739,7 @@
       "q": "Är inte synk redan en säkerhetskopia?",
       "a": [
         "Nej. Synk håller varje enhet likadan, så när en anteckning raderas på en enhet raderas den på alla. Ett misstag, en bugg eller en stulen enhet kan ta bort anteckningar överallt på en gång, och synk kan inte ge tillbaka dem.",
-        "En säkerhetskopia är en kopia från en tidigare dag som synk inte rör. [Automatiska säkerhetskopior](/sv/help/automatic-backups) skriver den kopian i en mapp du väljer och sparar flera dagars kopior. Om en säkerhetskopia innehåller långt färre poster än den före den, behåller PrivacyNotes de äldre kopiorna tills du bekräftar, så ett valv som tömts av misstag inte trycker ut dina goda säkerhetskopior."
+        "En säkerhetskopia är en kopia från en tidigare dag som synk inte rör. [Automatiska säkerhetskopior](/sv/help/automatic-backups) skriver den kopian i en mapp du väljer och sparar flera dagars kopior. Om en säkerhetskopia innehåller långt färre poster än den före den, och den hade 20 eller fler, behåller PrivacyNotes de äldre kopiorna tills du bekräftar, så ett valv som tömts av misstag inte trycker ut dina goda säkerhetskopior."
       ]
     },
     "backup-cloud-folder": {
@@ -705,14 +767,14 @@
       "q": "Hur vet jag att en automatisk säkerhetskopia lyckades?",
       "a": [
         "Titta på ”Senaste säkerhetskopior” under Inställningar > Säkerhetskopiering > Automatiskt. En lyckad säkerhetskopia har en grön bock och ordet ”Kontrollerad”: PrivacyNotes öppnade filen igen med din nyckel innan den sparades och läste sedan tillbaka den sparade kopian från mappen för att se att den stämmer byte för byte.",
-        "En säkerhetskopia som inte klarar en kontroll sparas inte, dina äldre kopior finns kvar, och appen talar om varför, till exempel att mappen inte finns. ”Inga ändringar, ingenting skrevs” betyder att [inget har ändrats sedan den senaste säkerhetskopian](/sv/help/backup-no-changes), så ingen ny fil behövdes. Vill du testa en fil själv, [återställ den](/sv/help/restore-backup): en återställning till samma konto ändrar ingenting."
+        "En säkerhetskopia som inte klarar en kontroll sparas inte, dina äldre kopior finns kvar, och appen talar om varför, till exempel att mappen inte finns. ”Inga ändringar, ingenting skrevs” betyder att [inget har ändrats sedan den senaste säkerhetskopian](/sv/help/backup-no-changes), så ingen ny fil behövdes. Vill du testa en fil själv, [återställ den](/sv/help/restore-backup): en återställning till samma konto ändrar ingenting så länge du inte har lagt något i papperskorgen eller raderat något sedan den säkerhetskopian."
       ]
     },
     "backup-no-changes": {
       "q": "Varför står det ”Inga ändringar, ingenting skrevs” på min automatiska säkerhetskopia?",
       "a": [
         "För att inget i ditt valv har ändrats sedan den senaste säkerhetskopian. Filen från förra gången innehåller redan allt, så PrivacyNotes skriver inte samma kopia igen. Din mapp behåller fler dagars historik på det sättet, eftersom en identisk fil aldrig trycker ut en äldre. Det räknas som en lyckad säkerhetskopia, och nästa ska göras en period senare.",
-        "PrivacyNotes jämför antalet poster, posterna i papperskorgen, tiden för din senaste ändring, de inställningar en säkerhetskopia innehåller (som dina mappar, teman och mätvärden), typen av säkerhetskopia och mappen. Om något av dem har ändrats, eller om den senaste säkerhetskopian inte längre finns i mappen, skriver den en ny fil. ”Säkerhetskopiera nu” kontrollerar på samma sätt, så om du trycker två gånger fylls mappen aldrig med kopior av en och samma dag. Vill du ändå få en ny fil, till exempel till ett USB-minne, använd Inställningar > Säkerhetskopiering > Manuellt > ”Allt, krypterat (.pnbackupz)”."
+        "PrivacyNotes jämför antalet poster, posterna i papperskorgen, ändringstiden för varje post, de inställningar en säkerhetskopia innehåller (som dina mappar, teman och mätvärden), typen av säkerhetskopia och mappen. Om något av dem har ändrats, eller om den senaste säkerhetskopian inte längre finns i mappen, skriver den en ny fil. ”Säkerhetskopiera nu” kontrollerar på samma sätt, så om du trycker två gånger fylls mappen aldrig med kopior av en och samma dag. Vill du ändå få en ny fil, till exempel till ett USB-minne, använd Inställningar > Säkerhetskopiering > Manuellt > ”Allt, krypterat (.pnbackupz)”."
       ]
     },
     "backup-time-name": {
@@ -739,7 +801,7 @@
     "restore-new-device": {
       "q": "Hur återställer jag en automatisk säkerhetskopia på en ny enhet?",
       "a": [
-        "Logga in på den nya enheten med samma återställningsfras, eller samma inloggning med Google, Apple eller GitHub, och vänta tills sidfoten visar ”Synced”. De flesta av dina anteckningar är då redan tillbaka, genom synk.",
+        "Logga in på den nya enheten med samma återställningsfras, eller samma inloggning med Google, Apple eller GitHub, och vänta tills sidfoten visar ”Synkat”. De flesta av dina anteckningar är då redan tillbaka, genom synk.",
         "Öppna sedan Inställningar > Säkerhetskopiering > Återställ, välj ”Krypterad säkerhetskopia (.pnbackup, .pnbackupz)” och välj den senaste filen i [din säkerhetskopiemapp](/sv/help/automatic-backups). Återställningen lägger till det som kontot saknar och behåller det som redan finns ([så fungerar en återställning](/sv/help/restore-backup)). En krypterad säkerhetskopia öppnas bara i kontot som gjorde den."
       ]
     },
@@ -760,7 +822,7 @@
     "image-quality": {
       "q": "Ändrar eller komprimerar PrivacyNotes mina bilder?",
       "a": [
-        "Ja. Båda inställningarna är på som standard eftersom vi älskar våra användare: vi vill att du [sparar lagringsutrymme](/sv/help/storage-usage) och behåller din integritet. Utrymmessparare krymper en stor bild till 2048 pixlar och sparar den som JPEG med 85 % kvalitet, vilket behåller alla detaljer som en skärm kan visa. Ta bort platsdata rensar EXIF-metadata som en kamera skriver in i ett foto, inklusive GPS-positionen, innan bilden sparas. Båda gäller varje bild i appen: inklistrad i en anteckning, tillagd som fil eller importerad. Två undantag: en GIF behåller sin storlek så att animationen fortfarande spelas, och en fil som är bifogad till en valvpost behålls exakt som den var.",
+        "Ja. Båda inställningarna är på som standard eftersom vi älskar våra användare: vi vill att du [sparar lagringsutrymme](/sv/help/storage-usage) och behåller din integritet. Utrymmessparare krymper en stor bild till 2048 pixlar och sparar den som JPEG med 85 % kvalitet, vilket behåller alla detaljer som en skärm kan visa. Ta bort platsdata rensar EXIF-metadata som en kamera skriver in i ett foto, inklusive GPS-positionen, innan bilden sparas. Båda gäller varje bild som appen kan läsa: inklistrad i en anteckning, tillagd som fil eller importerad. En bild som den inte kan läsa, till exempel AVIF, SVG eller en som inte går att öppna, sparas som den kom när du lägger till den som fil eller importerar den, platsdata inräknade. Två undantag: en GIF behåller sin storlek så att animationen fortfarande spelas, och en fil som är bifogad till en valvpost behålls exakt som den var.",
         "Stäng av endera under **Inställningar > Lagring > Bilder**, där kontaktfoton har en tredje brytare som håller dem på 512 pixlar. Inställningarna gäller bara nya bilder; filer som inte är bilder sparas exakt som de är. HEIC- och TIFF-bilder konverteras till JPEG, eftersom bara Safari kan visa dem. [En säkerhetskopia du återställer](/sv/help/restore-backup) skrivs tillbaka byte för byte."
       ]
     },
@@ -768,7 +830,7 @@
       "q": "Vad räknas mot min lagring, och hur frigör jag utrymme?",
       "a": [
         "Allt du synkar, i sin krypterade storlek: anteckningstext, bilder, ljudinspelningar och filbilagor. Mätaren under Inställningar > Lagring visar totalen; varje antecknings eget avtryck står i dess alternativmeny som ”Använt utrymme”. [Anteckningar i papperskorgen räknas tills den töms](/sv/help/trash-auto-delete).",
-        "För att frigöra utrymme snabbt: öppna Filer, sortera efter Storlek och [radera de största posterna](/sv/help/storage-after-delete) - bilagor är vida större än texten i nästan varje konto. Töm sedan papperskorgen: vyn Papperskorgen visar hur mycket ”Töm” frigör. Text ensam når nästan aldrig lagringsgränsen; till och med de 50 MB som ingår gratis rymmer tiotusentals vanliga anteckningar."
+        "För att frigöra utrymme snabbt: öppna Filer, sortera efter Storlek och [radera de största posterna](/sv/help/storage-after-delete) - bilagor är vida större än texten i nästan varje konto. Töm sedan papperskorgen: vyn Papperskorgen visar hur mycket ”Töm” frigör. Varje plan rymmer upp till 10 000 objekt, papperskorgen inräknad: anteckningar, uppgifter, inloggningar och alla andra slag. Text ensam fyller nästan aldrig byten."
       ]
     },
     "upload-failed": {
@@ -788,22 +850,22 @@
     "dead-mans-switch": {
       "q": "Vad raderar död mans grepp, och vad finns kvar på mina enheter?",
       "a": [
-        "Bara kopian på servern. När funktionen är på och ingen av dina enheter går online under den tid du valde, allt från 1 månad till 5 år, raderar servern dina krypterade anteckningar, deras historik, dina filer och dina inställningar. Den väntar två veckor till efter att tiden har gått ut innan den raderar något, som säkerhetsmarginal: en enhet som går online under de två veckorna stoppar fortfarande raderingen. Ditt konto finns kvar, så din återställningsfras loggar fortfarande in dig, och Pro finns kvar. En eventuell lagringsprenumeration finns också kvar och fortsätter att förnyas. Ingen varning skickas via e-post, och raderingen går inte att ångra.",
+        "Bara kopian på servern. När funktionen är på och ingen av dina enheter går online, och inget anslutet webbläsartillägg eller ingen kommandorad används, under den tid du valde, allt från 1 månad till 5 år, raderar servern dina krypterade anteckningar, deras historik, dina filer och dina inställningar. Den väntar två veckor till efter att tiden har gått ut innan den raderar något (i sällsynta fall upp till tre veckor, när många konton står på tur samtidigt), som säkerhetsmarginal: en enhet som går online under den tiden stoppar fortfarande raderingen. Ditt konto finns kvar, så din återställningsfras loggar fortfarande in dig, och Pro finns kvar. En eventuell lagringsprenumeration finns också kvar och fortsätter att förnyas. Ingen varning skickas via e-post, och raderingen går inte att ångra. Krypterade kopior av de raderade filerna kan finnas kvar i vår papperskorg för filer och i säkerhetskopior i upp till 40 dagar.",
         "Dina enheter behåller sina anteckningar. När en enhet är online igen efter en radering slutar den synka och frågar dig först: ladda ner en säkerhetskopia av allt den har, som du kan [återställa](/sv/help/restore-backup) senare, och ta sedan bort anteckningarna från enheten. Den loggar ut, och nästa inloggning börjar i det tomma kontot. En fil som den här enheten aldrig har öppnat kan redan vara borta från servern, och då listas den som saknad i säkerhetskopian. Håll appen uppdaterad på alla enheter, eftersom en äldre version inte kan fråga först.",
-        "Slå på det under Inställningar > ID & Sync > ”Död mans grepp” och välj tiden. När du öppnar appen online på någon av dina enheter startar tiden om, och datumet ”Raderas den” på den fliken visar den tidigaste dag raderingen kan ske, med de två veckorna inräknade. Stäng av funktionen när som helst för att stoppa den."
+        "Slå på det under Inställningar > ID & Sync > ”Död mans grepp” och välj tiden. När du öppnar appen online på någon av dina enheter, eller använder ett anslutet webbläsartillägg eller en kommandorad, startar tiden om, så ta bort en kommandorad som sparar av sig själv, annars väntar funktionen på den. Datumet ”Raderas den” på den fliken visar den tidigaste dag raderingen kan ske, med de två veckorna inräknade. Stäng av funktionen när som helst för att stoppa den."
       ]
     },
     "leaving": {
       "q": "Hur lämnar jag PrivacyNotes helt?",
       "a": [
         "[Exportera först](/sv/help/export), radera sedan - båda sköter du själv. Två sidor täcker varje väg ut. För en komplett kopia finns ”Allt, inte krypterat (.zip)” under Inställningar > Säkerhetskopiering > Manuellt. För ”Endast anteckningar (.zip)” i Markdown och HTML-arkivet till din nästa anteckningsapp, och ”Valvexport (.json)” i Bitwarden-kompatibelt format till din nästa lösenordshanterare, gå till Inställningar > Överföring > Exportera. Exporterna skapas på din enhet.",
-        "Sedan Inställningar > Konto > ”Radera konto och data...”: skriv DELETE, så tas dina synkade anteckningar, filer, enheter, inställningar och själva kontot bort permanent. Poster om en lagringsprenumeration och en minimal säkerhetsidentifierare finns kvar, och säkerhetskopior som togs före raderingen löper ut efter sju dagar ([detaljer](/sv/help/delete-account)). [Ett aktivt lagringstillägg måste avslutas först](/sv/help/manage-storage-addon) under Inställningar > Lagring. Inga mörka mönster och inga vinn-tillbaka-mejl, dina data är dina, även på vägen ut."
+        "Sedan Inställningar > Konto > ”Radera konto och data...”: skriv DELETE, så tas dina synkade anteckningar, filer, enheter, inställningar och själva kontot bort permanent. Poster om en lagringsprenumeration och en minimal säkerhetsidentifierare finns kvar, och säkerhetskopior som togs före raderingen löper ut efter sju dagar, krypterade kopior av filer efter upp till 30 dagar ([detaljer](/sv/help/delete-account)). [Ett aktivt lagringstillägg måste avslutas först](/sv/help/manage-storage-addon) under Inställningar > Lagring. Inga mörka mönster och inga vinn-tillbaka-mejl, dina data är dina, även på vägen ut."
       ]
     },
     "data-rights": {
       "q": "Hur hanterar PrivacyNotes GDPR och mina datarättigheter?",
       "a": [
-        "Mest genom att hålla så lite som möjligt. Registrera dig med en fras så finns det inget namn, ingen e-postadress och ingen identitet att begära ut: dina data är chiffertext under en slumpmässig publik nyckel, [lagrad i Zürich i Schweiz](/sv/help/data-location). Loggar du in med Google, Apple eller GitHub kopplas den inloggningens e-postadress och konto-ID till den nyckeln. Betaluppgifter stannar hos [Paddle](https://www.paddle.com), Apple eller Google; vi sparar de order- och prenumerationsposter som behövs för att bevilja och återställa köp.",
+        "Mest genom att hålla så lite som möjligt. Registrera dig med en fras så finns det inget namn, ingen e-postadress och ingen identitet att begära ut: dina data är chiffertext under en slumpmässig publik nyckel, [lagrad i Zürich i Schweiz och i EU](/sv/help/data-location). Loggar du in med Google, Apple eller GitHub kopplas den inloggningens e-postadress och konto-ID till den nyckeln. Betaluppgifter stannar hos [Paddle](https://www.paddle.com), Apple eller Google; vi sparar de order- och prenumerationsposter som behövs för att bevilja och återställa köp.",
         "De flesta rättigheter sköter du själv, utan blankett: tillgång och dataportabilitet är Inställningar > Överföring ([fullständig export i öppna format](/sv/help/export)), radering är Inställningar > Konto > ”Radera konto och data...” (vissa fakturerings- och säkerhetsposter finns kvar, [se vad raderingen tar bort](/sv/help/delete-account)), och rättelse är att redigera dina anteckningar. Den formella versionen, inklusive hur du når oss för sådant appen inte kan göra själv, finns i [integritetspolicyn](https://lifetimelabs.dev/privacy/)."
       ]
     },
@@ -818,7 +880,7 @@
     "pro-not-active": {
       "q": "Jag har betalat för Pro men det är inte aktivt. Vad gör jag nu?",
       "a": [
-        "Ge det en minut och ladda sedan om appen. Efter kassan pollar appen i ungefär 20 sekunder och låser upp av sig själv, och en omladdning kontrollerar Pro-statusen på nytt vid start. En [kryptobetalning](/sv/help/pay-with-crypto) tar längre tid, och en banner visar hur den ligger till. Om betalningen gick igenom men aktiveringen släpar efter visas en banner: ”Betalningen är mottagen, men Pro-aktiveringen tar längre tid än vanligt” - det läget löser sig självt i nästan alla fall. [I butiksversioner](/sv/help/store-purchases) görs ett nytt försök när du startar om appen om ett köp inte kunde valideras, och ett köp som aldrig aktiveras återbetalas automatiskt av butiken inom 3 dagar.",
+        "Ge det en minut och ladda sedan om appen. Efter kassan pollar appen i ungefär 20 sekunder och låser upp av sig själv, och en omladdning kontrollerar Pro-statusen på nytt vid start. En [kryptobetalning](/sv/help/pay-with-crypto) tar längre tid, och en banner visar hur den ligger till. Om betalningen gick igenom men aktiveringen släpar efter visas en banner: ”Betalningen är mottagen, men Pro-aktiveringen tar längre tid än vanligt” - det läget löser sig självt i nästan alla fall. [I butiksversioner](/sv/help/store-purchases) görs ett nytt försök när du startar om appen om ett köp inte kunde valideras, och på Android återbetalas ett köp som aldrig aktiveras automatiskt av Google Play inom 3 dagar.",
         "Fortfarande låst? Det handlar nästan alltid om fel konto: Pro knyts till kontot som var inloggat vid köpet, så en annan fras - eller en Google-, Apple- eller GitHub-inloggning i stället för ditt frasvalv - är ett annat konto. Jämför konto-ID under Inställningar > ID & Sync på enheten där köpet gjordes. Har det verkligen fastnat, [rapportera det](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) och ta med det konto-ID:t: det identifierar köpet och avslöjar ingenting om dina anteckningar."
       ]
     },
@@ -841,7 +903,7 @@
       "q": "Obtainium, direkt APK eller Google Play: vilken Android-nedladdning?",
       "a": [
         "Ta Google Play om du vill gå den vanliga vägen: den installerar och uppdaterar appen som vilken annan app som helst, och köp i appen faktureras av Google. Ta [Obtainium](/sv/help/obtainium) om du vill att appen ska hålla sig aktuell av sig själv utan ett Google-konto, och [den direkta APK-filen](/sv/help/android-updates) om du hellre slipper köra en andra app för det. Obtainium och APK-filen ger dig samma fil signerad med samma nyckel, så du kan byta mellan de två när som helst: Obtainium tar över en APK du redan sidoladdat, och webbplatsens APK installeras över en från Obtainium. Play-versionen är signerad med en annan nyckel, så ett byte mellan Play och någon av de andra två kräver att du avinstallerar först.",
-        "Du kan ändra dig senare utan krångel. Före varje byte som kräver att du avinstallerar först, bekräfta att appen visar \"Synced\" och ha din återställningsfras eller [en inloggnings-QR från en annan enhet](/sv/help/add-second-device) redo, för avinstallationen rensar den lokala kopian."
+        "Du kan ändra dig senare utan krångel. Före varje byte som kräver att du avinstallerar först, bekräfta att appen visar \"Synkat\" och ha din återställningsfras eller [en inloggnings-QR från en annan enhet](/sv/help/add-second-device) redo, för avinstallationen rensar den lokala kopian."
       ]
     },
     "markdown-folder": {
@@ -886,6 +948,13 @@
         "En mapp på översta nivån hör till ett utrymme, med allt innehåll, och **Flytta till Arbete** eller **Flytta till Privat** i dess meny, eller i menyn för vilket objekt som helst, flyttar över den. Ett objekt utan mapp hör till Privat, och det gör också allt du skapar medan Alla är öppet. För att sluta använda utrymmen stänger du av Inställningar > Listor > Utrymmen: alla objekt visas, inget flyttas, och varje mapp behåller sitt utrymme till den dag du slår på det igen. Utrymmen kräver Pro."
       ]
     },
+    "hide-sections": {
+      "q": "Kan jag dölja avsnitt jag inte använder, som kalendern eller dagboken?",
+      "a": [
+        "Ja. Högerklicka på ett avsnitt i sidofältet, eller tryck länge på det på en mobil, och avmarkera **Visa i sidofältet**. Avsnittet försvinner från sidofältet och inget i det raderas: objekten finns kvar i ditt bibliotek, synkas fortfarande och kommer tillbaka när du visar avsnittet igen. Ögat bredvid rubriken **Innehåll** i sidofältet listar alla avsnitt på en gång, med en ruta för varje.",
+        "Inställningar > Listor > Sidofält och Alla har samma val som en tabell, plus ett till. Kolumnen **Sidofält** väljer vilka avsnitt sidofältet visar, och kolumnen **Alla** väljer vilka typer av objekt listan Alla innehåller, så dagboksinlägg kan lämna Alla medan Dagböcker finns kvar i sidofältet. Båda valen följer ditt konto till dina andra enheter, och båda är gratis. Vill du behålla Dagböcker men slippa kortet ”Hur mår du i dag?” döljer du det under [alternativen för incheckning](/sv/help/daily-check-in)."
+      ]
+    },
     "note-links": {
       "q": "Hur länkar jag en anteckning till en annan?",
       "a": [
@@ -910,7 +979,7 @@
     "add-second-device": {
       "q": "Hur loggar jag in på en andra enhet?",
       "a": [
-        "På enheten du redan använder, öppna Inställningar > Säkerhet > Fras. Där står orden i din fras och en QR-kod för inloggning. På den nya enheten väljer du \"Logga in med fras\" och skannar QR-koden med kameran, laddar upp ett foto av den, eller skriver in orden. Dina anteckningar är på plats inom sekunder.",
+        "På enheten du redan använder, öppna Inställningar > Säkerhet > Fras. Där står orden i din fras och en QR-kod för inloggning. På den nya enheten väljer du \"Logga in med fras\" och sedan \"Skanna QR med kameran\", laddar upp ett foto av QR-koden eller skriver in orden. Dina anteckningar är på plats inom sekunder. Använd appens egen skanner: en telefons kameraapp loggar inte in med den här QR-koden. En QR-kod du sparade tidigare fungerar fortfarande här, men en äldre är en länk som en kameraapp kan öppna, så välj **Spara QR** igen och radera den gamla bilden. Om skannern inte läser QR-koden, uppdatera appen eller skriv in orden.",
         "[Ett gratiskonto täcker 2 enheter](/sv/help/device-limit) och Pro hur många du vill, och två webbläsare på samma dator räknas som en enda enhet. Behandla QR-koden precis som frasen den bär: visa den inte för någon, och låt den aldrig hamna i ett fotobibliotek som synkar till någon annans moln."
       ]
     },
@@ -918,7 +987,8 @@
       "q": "Kan jag stoppa en enhet från att synka utan att logga ut?",
       "a": [
         "Ja. Öppna Inställningar > ID & Sync och tryck \"Pausa synkning\". Enheten slutar då skicka något alls till servern: anteckningar, inställningar och filer. Du skriver precis som förut, allt samlas lokalt, och i samma stund du återupptar går allt upp.",
-        "Pausen hör bara till den enheten. Den reser inte till dina andra enheter och släpper aldrig av sig själv, för en brytare som säger \"den här enheten pratar inte med någon\" får inte slås på igen av något annat än dig. En sak fortsätter med flit: den lilla pulsen som låter en borttagen enhet få veta att den togs bort. Så raderar en [borttappad enhet](/sv/help/lost-device) sig själv ändå."
+        "Pausen hör bara till den enheten. Den reser inte till dina andra enheter och släpper aldrig av sig själv, för en brytare som behåller dina anteckningar på den här enheten får inte ångras av något annat än dig. En sak fortsätter med flit: den lilla pulsen som låter en borttagen enhet få veta att den togs bort. Så raderar en [borttappad enhet](/sv/help/lost-device) sig själv ändå.",
+        "Ett nytt konto börjar så när \"Synka mellan enheter\" är avstängt vid registreringen, som standard för ett konto som skapats med bara en fras. Tills du slår på synk finns dina anteckningar bara på den enheten: förlorar du den eller rensar webbläsarens data kan varken din fras eller din inloggning få tillbaka dem, så exportera en säkerhetskopia då och då."
       ]
     },
     "wifi-only": {
@@ -932,15 +1002,36 @@
       "q": "Vad händer om jag rensar webbläsardata eller kakor?",
       "a": [
         "Webbappen håller dina anteckningar i webbläsarens eget lagringsutrymme, så att rensa webbplatsdata för PrivacyNotes sopar bort den lokala kopian och loggar ut dig. Allt som redan synkat är i säkerhet: logga in med din återställningsfras så kommer det tillbaka. Det som inte hunnit synka är borta, för vi hade aldrig någon kopia av det.",
-        "Gör därför två saker. Kolla att sidfoten säger \"Synced\" innan du rensar något, och håll frasen i en lösenordshanterare, för en tömd webbläsare kan inte be dig snällt om den. [Skrivbords- och mobilapparna](/sv/help/platforms) berörs inte alls: [de har eget lagringsutrymme](/sv/help/data-on-disk), som en webbläsarstädning aldrig rör."
+        "Gör därför två saker. Kolla att sidfoten säger \"Synkat\" innan du rensar något, och håll frasen i en lösenordshanterare, för en tömd webbläsare kan inte be dig snällt om den. [Skrivbords- och mobilapparna](/sv/help/platforms) berörs inte alls: [de har eget lagringsutrymme](/sv/help/data-on-disk), som en webbläsarstädning aldrig rör."
+      ]
+    },
+    "phrase-not-saved": {
+      "q": "Varför står det i en banner att jag loggas ut om jag laddar om eller stänger fliken?",
+      "a": [
+        "För att den här webbläsaren inte kunde skydda din återställningsfras, så PrivacyNotes sparade den inte på den här enheten. Appen lagrar inte frasen oskyddad, så den finns bara i den öppna fliken, och en omladdning eller en stängd flik avslutar inloggningen. Dina anteckningar är säkra: allt som hann synkas kommer tillbaka när du loggar in igen.",
+        "För att förbli inloggad, slå på applåset under Inställningar > Säkerhet > Lås. Din PIN-kod eller lösenkod skyddar då frasen, bannern försvinner och nästa besök visar låsskärmen i stället för inloggningen. Tills dess, ha [din återställningsfras](/sv/help/lost-phrase) nära till hands. [Skrivbords- och mobilapparna](/sv/help/platforms) skyddar frasen med själva enheten."
+      ]
+    },
+    "shared-computer": {
+      "q": "Kan jag använda PrivacyNotes på en delad eller offentlig dator?",
+      "a": [
+        "Ja. Öppna webbappen på https://use.privacynotes.app, logga in med din återställningsfras och avmarkera **Lita på den här enheten** innan du fortsätter. Webbläsaren behåller då inloggningen bara i den fliken: när du stänger fliken eller fönstret loggas du ut, och nästa besök frågar efter hela frasen igen. Inget behöver installeras och inget behöver bäras med på ett USB-minne.",
+        "Dina anteckningar är krypterade på datorn, och frasen som öppnar dem försvinner med fliken. Applås och biometrisk upplåsning är avstängda där, eftersom båda sparar en skyddad kopia av din fras på enheten. Rutan visas bara när du loggar in med [din återställningsfras](/sv/help/lost-phrase): en inloggning med Google, Apple eller GitHub litar alltid på enheten. När du är klar loggar du ut, vilket också rensar den krypterade kopian av dina anteckningar från den webbläsaren. På dina egna enheter låter du rutan vara ikryssad för att förbli inloggad."
       ]
     },
     "android-backup": {
       "q": "Ingår mina anteckningar i säkerhetskopian av min Android-telefon?",
       "a": [
         "Nej. Android-appen håller sina data utanför telefonens molnsäkerhetskopia, så inget av det hamnar i Google Drive. Skälet är nyckeln, inte anteckningarna: där du valde **Lita på den här enheten** ligger din återställningsfras kvar på den enheten för att hålla dig inloggad, och en molnsäkerhetskopia är ingen plats för nyckeln som dekrypterar dina anteckningar.",
-        "En ny telefon börjar därför tom: installera appen, [logga in med din fras](/sv/help/add-second-device), och allt som synkats kommer in. Återställningen väntar på den första synkningen, så en säkerhetskopia du tar med matchas mot det kontot redan har i stället för att läggas till två gånger. Det som aldrig synkats finns bara på den gamla telefonen, så kolla först att sidfoten säger \"Synced\", eller ta med en ”Allt, inte krypterat (.zip)” från Inställningar > Säkerhetskopiering > Manuellt ([vilken säkerhetskopia du ska ta](/sv/help/backup-strategy)).",
+        "En ny telefon börjar därför tom: installera appen, [logga in med din fras](/sv/help/add-second-device), och allt som synkats kommer in. Återställningen väntar på den första synkningen, så en säkerhetskopia du tar med matchas mot det kontot redan har i stället för att läggas till två gånger. Det som aldrig synkats finns bara på den gamla telefonen, så kolla först att sidfoten säger \"Synkat\", eller ta med en ”Allt, inte krypterat (.zip)” från Inställningar > Säkerhetskopiering > Manuellt ([vilken säkerhetskopia du ska ta](/sv/help/backup-strategy)).",
         "En direkt överföring från telefon till telefon under installationen är något annat: vissa telefoner flyttar appdata då, och Android ger ingen app något pålitligt sätt att tacka nej. Den kopian lämnar aldrig dina två enheter, så radera den gamla telefonen efteråt."
+      ]
+    },
+    "ios-backup": {
+      "q": "Ingår mina anteckningar i säkerhetskopian av min iPhone?",
+      "a": [
+        "Nej. iPhone-appen håller sina data utanför telefonens säkerhetskopior, så inget av det hamnar i iCloud-säkerhetskopian eller i en säkerhetskopia du tar på en dator. Det gäller också saker du delat in i appen som den ännu inte har tagit emot. Skälet är nyckeln, inte anteckningarna: där du valde **Lita på den här enheten** ligger din återställningsfras kvar på den enheten för att hålla dig inloggad, och en säkerhetskopia är ingen plats för nyckeln som dekrypterar dina anteckningar.",
+        "En ny iPhone börjar därför tom: installera appen, [logga in med din fras](/sv/help/add-second-device), och allt som synkats kommer in. Det som aldrig synkats finns bara på den gamla telefonen, så kolla först att sidfoten säger ”Synkat”, eller ta med en ”Allt, inte krypterat (.zip)” från Inställningar > Säkerhetskopiering > Manuellt ([vilken säkerhetskopia du ska ta](/sv/help/backup-strategy))."
       ]
     },
     "print": {
@@ -1003,8 +1094,8 @@
     "storage-after-delete": {
       "q": "Jag raderade filer men lagringen sjönk inte. Varför?",
       "a": [
-        "Ditt utrymme är redan ledigt. I samma stund raderingen synkar slutar dessa byte räknas [mot din lagring](/sv/help/storage-usage), på servern lika väl som på den här enheten. Visar mätaren fortfarande den gamla siffran, tryck på uppdateringsikonen bredvid: den räknar om från servern och utelämnar allt som redan står i kö för radering. En enhet som varit offline håller kvar sin egen senaste räkning tills den kommit ikapp.",
-        "De \"några dagar\" appen nämner handlar om själva den krypterade filen, inte om ditt lagringsutrymme, och den väntan är avsiktlig. Att radera en fil ur lagringen är oåterkalleligt, det finns ingen papperskorg att fiska upp den ur. En enhet som inte synkat klart har en ofullständig bild av dina anteckningar och skulle kunna radera en bild som en annan anteckning fortfarande visar. Därför väntar en fil minst 24 timmar, och bara en enhet med en rent avslutad synkning tar bort den. Det tålamodet kostar dig inget, eftersom utrymmet krediterades den dag du raderade."
+        "Utrymmet kommer tillbaka ungefär ett dygn efter att du raderat. En raderad fil räknas fortfarande [mot din lagring](/sv/help/storage-usage) tills själva den krypterade filen har tagits bort ur lagringen, på servern lika väl som på den här enheten. När det har skett, tryck på uppdateringsikonen bredvid mätaren om den fortfarande visar den gamla siffran: den räknar om från servern. En enhet som varit offline håller kvar sin egen senaste räkning tills den kommit ikapp.",
+        "Den väntan på den krypterade filen är avsiktlig. Att radera en fil ur lagringen är oåterkalleligt, det finns ingen papperskorg att fiska upp den ur. En enhet som inte synkat klart har en ofullständig bild av dina anteckningar och skulle kunna radera en bild som en annan anteckning fortfarande visar. Därför väntar en fil minst 24 timmar, och bara en enhet med en rent avslutad synkning tar bort den. Fram till dess räknas den fortfarande, så radera tidigt när du är nära din gräns."
       ]
     },
     "spoiler-text": {
@@ -1034,7 +1125,7 @@
         "Ja. Skriv `=` i en tabellcell för att välja en funktion, eller skriv formeln själv. Cellen visar svaret i stället för texten, och varje svar uppdateras i samma stund som du ändrar en cell som det läser. Celler namnges med kolumnbokstav och radnummer, och rubriken räknas som rad 1, så din första rad med data är rad 2. Svaren fungerar på alla konton; att välja från menyn är Pro.",
         "Om du vill prova allt på en gång laddar du ner exempelanteckningen, öppnar sedan Inställningar > Överföring > Importera, väljer **Markdown-filer** och pekar ut filen.",
         "[Exempelanteckning (.md)](/marketing/table-formulas-examples.md)",
-        "Det här är funktionerna, och de kan kombineras med `+`, `-`, `*`, `/` och parenteser:",
+        "Det här är funktionerna, och de kan kombineras med `+`, `-`, `*`, `/`, `^` för en potens och parenteser:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` och `COUNT` fungerar över ett område, som i `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` och `LOG` fungerar på ett enskilt värde, som i `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` och `PHI` är konstanter, och `RAND` ger ett slumptal\n- `=B7-B2` drar en cell från en annan, och `=SUM(B2:B10)*0.2` tar en procentandel av en summa",
         "Klicka på en cell som visar ett svar så kommer formeln tillbaka, redo att ändras. Din anteckning lagrar själva formeln, aldrig resultatet, så en export och vilken annan Markdown-app som helst visar `=SUM(B2:B10)` precis som du skrev den."
       ]
@@ -1066,7 +1157,7 @@
         "Ja. Öppna Inställningar > Redigerare och välj Sans, Serif eller Mono under **Teckensnitt för anteckningar**. Öppna sedan **Teckensnitt för Sans** (eller Serif, eller Mono) strax under och välj ett teckensnitt. Dina anteckningar ändras direkt. Var och en av de tre kan ha sitt eget teckensnitt. Valet stannar på den här enheten, eftersom varje dator har sina egna teckensnitt, och inget skrivs in i dina anteckningar.",
         "Listan visar bara vanliga teckensnitt. Webbläsare berättar inte för en webbplats vilka teckensnitt du har, eftersom en sådan lista skulle kunna användas för att spåra dig. Därför provar appen en lista med välkända teckensnitt och visar dem den hittar. Finns ditt teckensnitt inte i listan kan det ändå fungera:",
         "- Skriv teckensnittets exakta namn i sökfältet, till exempel `Fira Code`, och välj raden som erbjuder det. Namnet måste stämma med teckensnittets namn på din dator, mellanslag inräknade.\n- I Chrome och Edge väljer du **Visa alla teckensnitt på den här enheten** och tillåter det. Listan innehåller då alla teckensnitt du har.\n- Om raden under fältet säger att teckensnittet inte hittades, kontrollera stavningen först. Safari låter bara webbplatser använda de teckensnitt som följde med din Mac, inte teckensnitt du har installerat själv.",
-        "Ett teckensnitt som valts i verktygsfältet gäller fortfarande före den här inställningen, och kodblock behåller sitt eget teckensnitt."
+        "Ett teckensnitt som valts i verktygsfältet för vissa ord gäller fortfarande före den här inställningen, och dess Sans, Serif eller Mono använder det teckensnitt du har valt för det här. Kodblock behåller sitt eget teckensnitt."
       ]
     },
     "format-bar": {
@@ -1326,7 +1417,7 @@
     "tracker-privacy": {
       "q": "Vem kan läsa mina mätvärden och min medicindata?",
       "a": [
-        "Dina mätvärden ligger inuti dina dagboksinlägg, som är krypterade på din enhet och förblir krypterade när de synkas. Din medicinlista och dina egna mätvärden ligger i dina inställningar. De synkas krypterade precis som dina anteckningar, men kopian som den här enheten behåller av dem är inte förseglad än, så det är din diskkryptering och ditt skärmlås som skyddar den där. Statistiken, [Läkar-PDF:en](/sv/help/doctor-pdf), [AI-prompten](/sv/help/ai-prompt) och båda nedladdningarna räknas ut på din enhet.",
+        "Dina mätvärden ligger inuti dina dagboksinlägg, som är krypterade på din enhet och förblir krypterade när de synkas. Din medicinlista och dina egna mätvärden ligger i dina inställningar. De synkas krypterade precis som dina anteckningar, och kopian som den här enheten behåller är förseglad under en nyckel från din fras, precis som dina anteckningar. Statistiken, [Läkar-PDF:en](/sv/help/doctor-pdf), [AI-prompten](/sv/help/ai-prompt) och båda nedladdningarna räknas ut på din enhet.",
         "[Med egen förvaring](/sv/help/threat-model-levels) har servern inget som öppnar dem. Om du registrerade dig med Google, Apple eller GitHub och valde ”Håll det enkelt och bekvämt” lagras din fras på vår server under en nyckel som vi har; Inställningar > Konto > Nyckelförvaring visar ditt läge och låter dig byta. Mer i [vad PrivacyNotes kan se](/sv/help/what-can-you-see)."
       ]
     },
@@ -1334,13 +1425,13 @@
       "q": "Vad ingår i en fullständig säkerhetskopia?",
       "a": [
         "Allt du har gjort: anteckningar, dagboksinlägg med varje värde du loggade, uppgifter, händelser, valvposter, bokmärken, kontakter, teckningar, bilder, ljud och filer, även de som ligger i papperskorgen. Den innehåller också det du har ställt in för hand: mappar och deras färger, fästa taggar, egna teman, dina mediciner, egna mätvärden, faktorer och vanefrågor, de mätvärden du har slagit på och deras enheter, prenumererade kalendrar och din Hem-layout.",
-        "Den lämnar utanför din PIN-kod för applåset, Anteckningshistorik, listan över dina enheter och hur appen ser ut, till exempel temat och textstorleken. En [återställning](/sv/help/restore-backup) lägger till det som ditt konto saknar och ångrar aldrig en ändring du gjort efter säkerhetskopian. Vill du ha dina mätvärden i en fil du kan öppna, använd **Ladda ner JSON** under Inställningar > Överföring > Mätvärden ([mätvärdesfiler](/sv/help/tracker-json-csv))."
+        "Den lämnar utanför din PIN-kod för applåset, Anteckningshistorik, listan över dina enheter och hur appen ser ut, till exempel temat och textstorleken. En [återställning](/sv/help/restore-backup) lägger till det som ditt konto saknar och behåller dina senare ändringar. En anteckning du flyttade till papperskorgen eller raderade efter säkerhetskopian kommer tillbaka. Vill du ha dina mätvärden i en fil du kan öppna, använd **Ladda ner JSON** under Inställningar > Överföring > Mätvärden ([mätvärdesfiler](/sv/help/tracker-json-csv))."
       ]
     },
     "session-expired": {
       "q": "Varför säger appen \"Sessionen har gått ut\"?",
       "a": [
-        "Det betyder att vår server inte längre godkänner den här enhetens inloggning, så synkningen stoppas. En svag anslutning eller ett serveravbrott orsakar det aldrig: appen kontrollerar med servern en andra gång innan meddelandet visas. Dina anteckningar är säkra på den här enheten.",
+        "Det betyder att vår server inte längre godkänner den här enhetens inloggning, så synkningen stoppas. En svag anslutning eller ett serveravbrott orsakar det aldrig: appen kontrollerar med servern en andra gång innan meddelandet visas. En inloggning tar också slut när den här enheten inte har öppnat PrivacyNotes på 60 dagar. Dina anteckningar är säkra på den här enheten.",
         "Klicka på **Logga in igen**. Appen frågar först [om du har sparat din återställningsfras](/sv/help/lost-phrase), eftersom du behöver den, eller inloggningssättet du registrerade dig med, för att komma in igen. Anteckningar som inte har synkats ännu stannar på enheten och synkas när du är inloggad. Samma fönster varnar dig [om några filer inte är färdiguppladdade](/sv/help/upload-failed), eftersom de tas bort vid utloggningen."
       ]
     },
@@ -1354,7 +1445,7 @@
     "share-into-app": {
       "q": "Kan jag dela text eller en länk till PrivacyNotes från en annan app?",
       "a": [
-        "Ja, på iPhone, iPad och Android, som beta. Tryck på delningsknappen i valfri app och välj PrivacyNotes. [En webblänk blir ett bokmärke](/sv/help/bookmarks) med sidans titel, text blir en ny anteckning, och bilder och filer hamnar i Filer. En länk du redan har sparat visas i stället för att sparas två gånger. Delade objekt kommer utan mapp eller tagg, så du sorterar dem när det passar dig.",
+        "Ja, på iPhone, iPad och Android. Tryck på delningsknappen i valfri app och välj PrivacyNotes. [En webblänk blir ett bokmärke](/sv/help/bookmarks) med sidans titel, text blir en ny anteckning, och bilder och filer hamnar i Filer. En länk du redan har sparat visas i stället för att sparas två gånger. Delade objekt kommer utan mapp eller tagg, så du sorterar dem när det passar dig.",
         "På Android frågar appen först: den listar det som kom in och sparar det först när du väljer **Spara alla**, eller kastar det med **Släng**. På iPhone och iPad bekräftar ett kort **Sparat i PrivacyNotes**. Varje fil följer din [uppladdningsgräns](/sv/help/attachment-limits), och en delning väntar tills du är inloggad och appen är upplåst."
       ]
     },

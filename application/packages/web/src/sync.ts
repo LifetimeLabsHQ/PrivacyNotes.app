@@ -4,6 +4,9 @@ import {
   decryptNote,
   bytesToBase64,
   base64ToBytes,
+  bindStamp,
+  checkNoteBind,
+  type NoteBind,
   type SupabaseClient,
 } from '@notes/shared';
 import { logAuthEvent } from './authDiag';
@@ -30,6 +33,7 @@ import {
   mergeNoteFields,
   resolveConflictFields,
   serverFieldsOf,
+  serverStamp,
   trustedBase,
   type MergeSide,
   type NoteFields,
@@ -41,7 +45,8 @@ import { normalizeSchedule } from './schedule';
 import { sameContent } from './editStamp';
 import { isServerWriteBlocked } from './syncPause';
 import { heldTombstones, holdTombstones, noteRefusedDelete, releaseTombstoneHold } from './massDelete';
-import { keepReplacedCopies, type PullReplacement } from './replacedCopies';
+import { keepCurrentText, keepReplacedCopies, type PullReplacement } from './replacedCopies';
+import { recordUnopenedRows } from './unopenedRows';
 import { isUuid } from './uuid';
 import { checkTombstoneSeal, sealTombstone, type SealVerdict } from './tombstoneSeal';
 
@@ -71,7 +76,7 @@ export interface NoteConflict {
   /** The server version's "last edited" stamp, when its payload carries one. */
   serverEditedAt?: string;
   /** The encrypted row from the server (for re-push after resolution). */
-  serverRow: { ciphertext: string; nonce: string; updated_at: string };
+  serverRow: { ciphertext: string; nonce: string; updated_at: string; changed_at?: string };
 }
 
 const LAST_SYNC_KEY = 'privacynotes.lastSync';
@@ -117,6 +122,9 @@ const KEYSET_HEAL_KEY = 'privacynotes.keysetHeal';
 /** One-time full re-pull that records every row's server generation and
  *  base. See the heal block below. */
 const BASE_HEAL_KEY = 'privacynotes.baseHeal';
+/** Set once the cursor-in-the-future check has run on this device. See the
+ *  safety valve below. */
+const FUTURE_CURSOR_CHECK_KEY = 'privacynotes.futureCursorChecked';
 
 /**
  * The guard a push uses for a row that records no server generation (never
@@ -215,10 +223,13 @@ function copyUnderNewId(local: LocalNote): LocalNote {
   return { ...rest, id: crypto.randomUUID(), dirty: 1, syncBase: undefined };
 }
 
-/** A note this device still shows that a tombstone would remove with no copy
- *  kept: the only kind the mass delete guard counts (massDelete.ts). */
+/** A note this device holds, shown or in the Trash, that a tombstone would
+ *  remove with no copy kept: the only kind judged by its seal and counted by
+ *  the mass delete guard (massDelete.ts). A note in the Trash is judged too: a
+ *  session with no key could replay a trashed payload over every row, then
+ *  tombstone them, and every device let them go unasked (beta #203 item 2). */
 function removedByTombstone(local: LocalNote | undefined): boolean {
-  return local !== undefined && local.deleted !== 1 && local.trashed !== 1 && tombstoneCopy(local) === null;
+  return local !== undefined && local.deleted !== 1 && tombstoneCopy(local) === null;
 }
 
 /** Delete tombstoned rows, keeping each unsynced edit as a new note. Call it
@@ -232,7 +243,8 @@ async function applyTombstones(ids: string[]): Promise<void> {
 
 /**
  * The tombstones of one pull, by their seals (tombstoneSeal.ts). Only a
- * tombstone that would remove a note this device still shows is judged. A
+ * tombstone that would remove a note this device holds, shown or in the
+ * Trash, is judged (removedByTombstone). A
  * valid seal goes. A bad seal was not made with this account's key: the note
  * stays and goes back to the server under keptId, and the person is told
  * once. No seal (an app before 0130, or a session alone) meets the mass
@@ -370,7 +382,7 @@ export async function pushConflictAnswer(
   supabase: SupabaseClient,
   pubkey: string,
   conflict: NoteConflict,
-  seal: (payload: Omit<NoteFields, 'archived'> & { archived?: boolean; editedAt?: string }) => { ciphertext: string; nonce: string },
+  seal: (payload: Omit<NoteFields, 'archived'> & { archived?: boolean; editedAt?: string }, bind: NoteBind) => { ciphertext: string; nonce: string },
 ): Promise<'stale' | 'pushed' | 'not-landed' | 'deferred'> {
   const { noteId } = conflict;
   const serverNonce = conflict.serverRow.nonce;
@@ -396,27 +408,31 @@ export async function pushConflictAnswer(
         dirty: 1,
         updatedAt: nextStamp(laterStamp(cur.updatedAt, conflict.serverUpdatedAt)),
         syncedNonce: serverNonce,
-        syncBase: buildSyncBase(server.fields, serverNonce),
+        syncBase: buildSyncBase(server.fields, serverNonce, conflict.serverUpdatedAt),
       });
       return true;
     });
     return kept ? 'deferred' : 'stale';
   }
   const leaveOut = archiveUnknownOf(fresh) && conflict.serverArchiveAbsent === true && !fields.archived;
-  const { ciphertext, nonce } = seal({ ...fields, ...(leaveOut ? { archived: undefined } : {}), editedAt });
+  const { ciphertext, nonce } = seal({ ...fields, ...(leaveOut ? { archived: undefined } : {}), editedAt }, { id: noteId, kind: 'note', at: stamp });
   rememberSent(noteId, nonce, fresh);
   // `.select('id')` is how a write that did not land shows: supabase-js
   // reports network and HTTP failures through `error` without throwing, and
   // a write to a row tombstoned while the dialog was open is dropped by the
   // 0034 trigger with zero rows. Either one recorded as synced would strand
   // the kept version on this device under a green check.
-  const { data: forced, error: forceErr } = await supabase
+  const send = () => supabase
     .from('notes')
-    .update({ ciphertext, nonce, updated_at: stamp, ...keyEpochColumn() })
+    .update({ ciphertext, nonce, updated_at: stamp, ...keyEpochColumn(), ...clientBindColumn() })
     .eq('id', noteId)
     .eq('user_pubkey', pubkey)
     .eq('nonce', serverNonce)
     .select('id');
+  let { data: forced, error: forceErr } = await send();
+  // A refusal over the bind flag's column (missing, or required after all)
+  // sets the flag right, and the answer goes once more at once.
+  if (isClientBindMissing(forceErr)) ({ data: forced, error: forceErr } = await send());
   if (isPhraseReplacedRefusal(forceErr)) reportPhraseReplaced('write');
   if (forceErr || !forced || forced.length === 0) {
     console.error('[conflict] keep-mine push did not land for', noteId, forceErr);
@@ -433,7 +449,7 @@ export async function pushConflictAnswer(
         dirty: 0,
         updatedAt: stamp,
         syncedNonce: nonce,
-        syncBase: buildSyncBase(fields, nonce),
+        syncBase: buildSyncBase(fields, nonce, stamp),
       });
     }
   });
@@ -478,7 +494,7 @@ export async function writeConflictAnswer(
   try {
     const { data, error } = await supabase
       .from('notes')
-      .select('ciphertext, nonce, updated_at, deleted_at')
+      .select('ciphertext, nonce, updated_at, deleted_at, changed_at')
       .eq('id', noteId)
       .eq('user_pubkey', pubkey)
       .maybeSingle();
@@ -492,6 +508,14 @@ export async function writeConflictAnswer(
         const ct = base64ToBytes(data.ciphertext);
         const nonce = base64ToBytes(data.nonce);
         const payload = openWithRing('sync', encryptionKey, (key) => decryptNote(ct, nonce, key));
+        // A payload written for another row, or a row older than the one
+        // this device synced (a rollback), is not the server's version:
+        // the shown one stands in, as for an unreadable row.
+        // Spec: docs/internal/plans/payload-row-binding.md (section 4.2)
+        const verdict = checkNoteBind(payload.bind, { id: noteId, kind: 'note', updatedAt: data.updated_at }, data.changed_at);
+        const live = await db.notes.get(noteId);
+        const olderThanShown = compareStamps(shown.updatedAt, data.updated_at) > 0;
+        if (verdict === 'moved' || olderThanShown || (live && olderThanSynced(noteBaseOf(live), data.updated_at))) throw new Error('not the server version');
         current = {
           fields: fieldsOfPayload(payload, shown.fields.archived),
           updatedAt: data.updated_at,
@@ -504,11 +528,15 @@ export async function writeConflictAnswer(
     console.warn('[conflict] could not read the server version for', noteId, err);
   }
   const server = current ?? shown;
-  const serverBase = buildSyncBase(server.fields, server.nonce);
-  const written = await db.transaction('rw', db.notes, async () => {
+  const serverBase = buildSyncBase(server.fields, server.nonce, server.updatedAt);
+  const written = await db.transaction('rw', db.notes, db.replacedCopies, async () => {
     const cur = await db.notes.get(noteId);
     if (!stillOpen(conflict, cur)) return false;
     if (keepCopy) await keepCopy(cur);
+    // "Use the other version" writes the server's text over a text this
+    // device never sent, so no History version holds it: it goes to the
+    // note's replaced copies for 30 days first (beta #197 item 3).
+    if (choice === 'server') await keepCurrentText(cur);
     const { fields, sameAsServer, editedAt } = answerFields(cur, server, choice);
     await db.notes.update(noteId, {
       ...localPatchOf(fields),
@@ -532,6 +560,12 @@ function archiveUnknownOf(note: Pick<LocalNote, 'archived' | 'archivedUnknown'>)
 
 /** Mutex - prevents overlapping sync calls from racing on dirty-flag clears. */
 let syncInFlight = false;
+
+/** Whether a pass runs now: a lock that reloads the page waits for it
+ *  (lockReload.ts). */
+export function syncPassRunning(): boolean {
+  return syncInFlight;
+}
 
 /** Bumped by suspendSync(). A pass captures the value at start and
  * refuses to persist its cursor or consume heal flags if it changed:
@@ -606,15 +640,6 @@ export class DeviceRevokedError extends Error {
   constructor() {
     super('device_revoked');
     this.name = 'DeviceRevokedError';
-  }
-}
-
-/** Error thrown when a push fails due to storage quota being exceeded.
- * The caller should show a user-facing notification. */
-export class QuotaExceededError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'QuotaExceededError';
   }
 }
 
@@ -757,7 +782,7 @@ export function isQuotaError(err: { message?: string } | null): boolean {
  * triggers but is NOT an account-storage problem - this one note is too
  * big. Must route to the per-note retry banner, never the global
  * "Storage full" banner. */
-function isNoteTooLargeError(err: { code?: string; message?: string } | null): boolean {
+export function isNoteTooLargeError(err: { code?: string; message?: string } | null): boolean {
   return err?.code === '23514' && !!err.message?.includes('notes_ciphertext_max_1mb');
 }
 
@@ -773,11 +798,101 @@ export function rowPayloadOf(note: LocalNote) {
   return { ...fieldsOfLocal(note), ...(archiveUnknownOf(note) ? { archived: undefined } : {}), editedAt: note.editedAt };
 }
 
+/** The `updated_at` a push sends for the note, in the one form its binding
+ *  seals, so the two always match.
+ *  Spec: docs/internal/plans/payload-row-binding.md (section 2, one form) */
+function sentStampOf(note: Pick<LocalNote, 'updatedAt'>): string {
+  return bindStamp(serverStamp(note.updatedAt));
+}
+
+/** The binding a push seals for the note: its row and the stamp it sends. */
+export function rowBindOf(note: Pick<LocalNote, 'id' | 'updatedAt'>): NoteBind {
+  return { id: note.id, kind: 'note', at: sentStampOf(note) };
+}
+
+/** Sent with every write of a note's content: this app seals the row
+ *  binding. The server's gate (0173, `notes_client_bind`) refuses a content
+ *  write without it once the switch is on, so an old app that writes no
+ *  binding cannot sync a note then. The server never stores it.
+ *  Spec: docs/internal/plans/payload-row-binding.md (section 5) */
+const CLIENT_BIND = { client_bind: 1 } as const;
+
+/** The server has no `client_bind` yet (0173 not applied): this tab writes
+ *  without it, so notes still sync. The gate is off on such a server. */
+let clientBindMissing = false;
+
+/** The flag a note write carries: CLIENT_BIND, or nothing on a server
+ *  without the column. */
+export function clientBindColumn(): { client_bind?: 1 } {
+  return clientBindMissing ? {} : CLIENT_BIND;
+}
+
+/** A write refused because the server has no `client_bind` column (PostgREST
+ *  PGRST204, Postgres 42703). Later writes of this tab leave it out; the
+ *  refused write goes again, at once or on the next pass. */
+export function isClientBindMissing(err: { code?: string; message?: string } | null | undefined): boolean {
+  if (!err) return false;
+  // The gate refused a write without the flag: the column is there after all
+  // (a schema cache that was stale), so the flag goes back on.
+  if ((err.message ?? '').includes('note_bind_required')) {
+    clientBindMissing = false;
+    return true;
+  }
+  if ((err.code !== 'PGRST204' && err.code !== '42703') || !(err.message ?? '').includes('client_bind')) return false;
+  clientBindMissing = true;
+  return true;
+}
+
+/** Whether a server row is older than the generation this device last
+ *  synced: a rollback (payload-row-binding.md, section 4.2). Needs a base
+ *  that knows its stamp. */
+function olderThanSynced(base: SyncBase | undefined, rowUpdatedAt: string): boolean {
+  return base?.a !== undefined && compareStamps(base.a, rowUpdatedAt) > 0;
+}
+
+/** Notes this tab is sending back over a rollback, so the fault is recorded
+ *  only once the push lands (recordPushed, the merge write); every other end
+ *  of that push forgets it (pushOne). */
+const sentBack = new Set<string>();
+
+/**
+ * The server holds an older generation of a note than the clean copy here,
+ * and not this device's own: a rollback. Send this copy back, the way
+ * "send this device's copy again" does: over that generation only, so a
+ * newer write in between goes to the conflict read.
+ * - The copy keeps its own stamp: a device that holds a newer generation
+ *   still reads it as older and sends its own back, so the server ends at
+ *   the newest one any device holds, never at whichever device came first.
+ * - Its base is its own content under that generation, so a miss (a page
+ *   another tab read before this device's later push) finds the same content
+ *   and writes nothing, and an edit since merges field by field.
+ * Decided against the row as it is now. Stamps compare in the form the
+ * server holds (sentStampOf), so a stamp with no zone is not read as local
+ * time.
+ * Spec: docs/internal/plans/payload-row-binding.md (section 4.1, decision D1)
+ */
+async function sendBackOver(rows: Array<{ id: string; nonce: string; updatedAt: string }>): Promise<void> {
+  await db.transaction('rw', db.notes, async () => {
+    const current = await db.notes.bulkGet(rows.map((r) => r.id));
+    for (const [i, r] of rows.entries()) {
+      const c = current[i];
+      if (!c || c.dirty !== 0 || c.deleted === 1 || c.syncedNonce === r.nonce) continue;
+      if (compareStamps(sentStampOf(c), r.updatedAt) <= 0) continue;
+      await db.notes.update(r.id, {
+        syncedNonce: r.nonce,
+        syncBase: buildSyncBase(fieldsOfLocal(c), r.nonce, sentStampOf(c)),
+        dirty: 1,
+      });
+      sentBack.add(r.id);
+    }
+  });
+}
+
 /** The exact length of the base64 ciphertext a push sends for the note, the
  *  number the server's CHECK compares, without encrypting it: the sealed JSON
  *  plus the 16-byte tag, then base64. */
 export function storedNoteBytes(note: LocalNote): number {
-  const sealed = notePlaintext(rowPayloadOf(note)).length + 16;
+  const sealed = notePlaintext(rowPayloadOf(note), rowBindOf(note)).length + 16;
   return 4 * Math.ceil(sealed / 3);
 }
 
@@ -915,6 +1030,7 @@ export async function sync(
       pushed: inner.pushed ?? 0,
       pulled: inner.pulled ?? 0,
       ...(inner.halted ? { halted: inner.halted } : {}),
+      ...(inner.quotaRefused ? { quotaRefused: true } : {}),
     };
   } finally {
     passKey.fill(0);
@@ -953,6 +1069,14 @@ export type SyncResult = {
    *  raises no per-note error, so this is the only record the pass keeps
    *  of the rows it left behind. */
   halted?: PushHalt;
+  /** True when the server refused one or more note writes on the account's
+   *  storage limit. The pass still ran to its end: every other row was sent,
+   *  and the pull is as complete as `pullOk` says, so the caller shows the
+   *  "Storage full" banner and goes on with the rest of its pass (the
+   *  settings, the blob sweep that frees the space, the quota read). The
+   *  refused rows stay dirty for the next pass (beta #204 items 1 and 2).
+   *  Spec: docs/contrib/over-quota-lifecycle.md */
+  quotaRefused?: true;
 };
 
 /** How a push phase stopped short of its queue. */
@@ -980,7 +1104,7 @@ async function syncInner(
   onPushError?: (noteId: string, message: string) => void,
   onConflict?: (conflict: NoteConflict) => void,
   opts?: { flushOnly?: boolean },
-): Promise<{ pullOk: boolean; changed: boolean; pushed?: number; pulled?: number; halted?: PushHalt }> {
+): Promise<{ pullOk: boolean; changed: boolean; pushed?: number; pulled?: number; halted?: PushHalt; quotaRefused?: boolean }> {
   // Flush-only mode (sign-out rescue): no heartbeat, no pull, no cursor
   // advance - jump straight to the push phase. See sync() docs.
   const flushOnly = opts?.flushOnly === true;
@@ -1235,12 +1359,18 @@ async function syncInner(
   // (idempotent), a fast one just leaves the clamp idle - and the
   // device that IS fast never victimises itself, only its peers, whose
   // normal clocks catch this. 5 minutes of slack for ordinary skew.
+  // The clock comparison runs once per device, like the other one-time
+  // heals: every cursor saved since 0066 is server time, and on a device
+  // more than 5 minutes slow every one of them looked like the future, so
+  // each pass reset it and read the whole account again (beta #197 item 8).
   if (cursorAt > EPOCH_CURSOR) {
     const atMs = Date.parse(cursorAt);
-    // A cursor that does not parse is reset too: the server could still
-    // read it, so the device would pull nothing newer for good and keep
-    // saying Synced (external report, 2026-10-24).
-    if (!Number.isFinite(atMs) || atMs > Date.now() + 5 * 60 * 1000) {
+    const checkClock = !localStorage.getItem(FUTURE_CURSOR_CHECK_KEY);
+    if (checkClock) localStorage.setItem(FUTURE_CURSOR_CHECK_KEY, '1');
+    // A cursor that does not parse is reset on every pass: the server could
+    // still read it, so the device would pull nothing newer for good and
+    // keep saying Synced (external report, 2026-10-24).
+    if (!Number.isFinite(atMs) || (checkClock && atMs > Date.now() + 5 * 60 * 1000)) {
       console.warn('[sync] cursor is unreadable or in the future - resetting for a full re-read');
       cursorAt = EPOCH_CURSOR;
       cursorId = null;
@@ -1279,12 +1409,19 @@ async function syncInner(
     failedIds: string[];
     /** Rows of a key epoch this device holds no key for. */
     heldIds: Set<string>;
+    /** Rows that carry the generation this device last synced: its own. */
+    echoIds: Set<string>;
+    /** Rows older than this device's clean copy and not its own generation:
+     *  a rollback, which this device sends its copy back over (applyPage). */
+    rollbacks: Array<{ id: string; nonce: string; updatedAt: string }>;
   }> {
     const toPut: PulledRow[] = [];
     const tombstoneIds: string[] = [];
     const healIds = new Set<string>();
     const failedIds: string[] = [];
     const heldIds = new Set<string>();
+    const echoIds = new Set<string>();
+    const rollbacks: Array<{ id: string; nonce: string; updatedAt: string }> = [];
     // Bulk-fetch local copies to avoid N sequential db.notes.get() calls.
     const ids = rows.map((r) => r.id);
     const locals = await db.notes.bulkGet(ids);
@@ -1298,17 +1435,25 @@ async function syncInner(
       // (applyTombstones), because the server kept none of it.
       if (row.deleted_at) {
         tombstoneIds.push(row.id);
-        passSeals.set(row.id, checkTombstoneSeal(row.delete_seal, pubkey, row.id, encryptionKey));
+        passSeals.set(row.id, checkTombstoneSeal(row.delete_seal, pubkey, row.id, encryptionKey, Date.parse(row.changed_at)));
         continue;
       }
       const local = localMap.get(row.id);
+      if (local?.syncedNonce === row.nonce) echoIds.add(row.id);
       // Both dirty values win over a pull: 1 is a plaintext-era unsynced
       // edit, 2 is a sealed unsynced edit (the value old bundles cannot
       // see). Spec: docs/internal/specs/local-at-rest.md (5.2, the dirty fence)
       if (local && (local.dirty === 1 || local.dirty === 2)) continue;
       const heal = healBases && local !== undefined && noteBaseOf(local) === undefined;
+      // A row older than the clean copy here is skipped, as before, unless it
+      // may be a rollback: then it is opened first, so its binding decides.
+      // This device's own generation is never one.
+      // Spec: docs/internal/plans/payload-row-binding.md (section 4.1)
+      // In the form the server holds, so a stamp with no zone is not read as
+      // this device's local time.
+      const older = local !== undefined && compareStamps(sentStampOf(local), row.updated_at) > 0;
       if (heal) healIds.add(row.id);
-      else if (local && compareStamps(local.updatedAt, row.updated_at) > 0) continue;
+      else if (older && local.syncedNonce === row.nonce) continue;
       // Equal stamps: our own pushed generation echoing back carries the
       // nonce we recorded at push time - skip it, it is our own echo. A
       // DIFFERENT nonce under an equal stamp is another device's write
@@ -1322,13 +1467,29 @@ async function syncInner(
       if (
         !heal &&
         local &&
-        compareStamps(local.updatedAt, row.updated_at) === 0 &&
+        compareStamps(sentStampOf(local), row.updated_at) === 0 &&
         (local.syncedNonce == null || local.syncedNonce === row.nonce)
       ) continue;
       try {
         const ct = base64ToBytes(row.ciphertext);
         const nonce = base64ToBytes(row.nonce);
-        const decrypted = openWithRing('sync', encryptionKey, (key) => decryptNote(ct, nonce, key), epochOf(row.key_epoch));
+        const decrypted = openWithRing('sync', encryptionKey, (key) => decryptNote(ct, nonce, key), epochOf(row.key_epoch), Date.parse(row.changed_at));
+        const verdict = checkNoteBind(decrypted.bind, { id: row.id, kind: 'note', updatedAt: row.updated_at }, row.changed_at);
+        // A payload written for another row, table or stamp is handled as a
+        // row that does not open: nothing here changes, and the row goes on
+        // the retry list and the list of notes this device cannot open.
+        if (verdict === 'moved') {
+          healIds.delete(row.id);
+          failedIds.push(row.id);
+          console.error('[sync] payload bound to another row for', row.id);
+          recordSyncFault({ step: 'pull', code: 'bind' });
+          continue;
+        }
+        if (older && !(heal && (verdict === 'legacy' || local.syncedNonce === row.nonce))) {
+          healIds.delete(row.id);
+          if (local.syncedNonce !== row.nonce) rollbacks.push({ id: row.id, nonce: row.nonce, updatedAt: row.updated_at });
+          continue;
+        }
         const pulled = fieldsOfPayload(decrypted, local?.archived === 1);
         // A writer that predates Archive dropped the flag this device holds.
         // Keeping it here is not enough: a device without the row, or one on
@@ -1373,7 +1534,7 @@ async function syncInner(
           syncedNonce: row.nonce,
           // The version this device now holds is the server's: the base
           // any later conflict on this row merges against.
-          syncBase: buildSyncBase(pulled, row.nonce),
+          syncBase: buildSyncBase(pulled, row.nonce, row.updated_at),
         });
       } catch (err) {
         healIds.delete(row.id);
@@ -1387,7 +1548,7 @@ async function syncInner(
         recordSyncFault({ step: 'pull', code: 'decrypt' });
       }
     }
-    return { toPut, tombstoneIds, healIds, failedIds, heldIds };
+    return { toPut, tombstoneIds, healIds, failedIds, heldIds, echoIds, rollbacks };
   }
 
   if (!flushOnly) {
@@ -1511,9 +1672,18 @@ async function syncInner(
         // way: local storage that another account now owns must not
         // receive this account's decrypted rows.
         if (generation !== syncGeneration || !ownsLocalData(pubkey)) return;
-        const { toPut, tombstoneIds, healIds, failedIds, heldIds } = await processBatch(rows);
+        const { toPut, tombstoneIds, healIds, failedIds, heldIds, echoIds, rollbacks } = await processBatch(rows);
         for (const row of rows) decryptFailed.delete(row.id);
         for (const id of failedIds) decryptFailed.add(id);
+        // A row that does not open leaves this device's copy as it is, and
+        // goes on the list a later screen reads (unopenedRows.ts); one that
+        // opens, carries this device's own generation again or is a
+        // tombstone leaves it (beta #203, option A).
+        const failedSet = new Set(failedIds);
+        await recordUnopenedRows({
+          failed: rows.filter((r) => failedSet.has(r.id)).map((r) => ({ id: r.id, nonce: r.nonce })),
+          settled: [...toPut.map((n) => n.id), ...echoIds, ...tombstoneIds],
+        });
         // A held row fetched by id stays on the retry list; one met by the
         // sweep stops the cursor below.
         if (!moveCursor) for (const id of heldIds) decryptFailed.add(id);
@@ -1537,9 +1707,11 @@ async function syncInner(
               // Same predicate processBatch applied, re-evaluated against
               // the live row: strictly newer, or the equal-stamp
               // foreign-nonce case (#156).
+              // In the form the server holds (sentStampOf): a stamp with no
+              // zone is not read as this device's local time.
               return (
-                compareStamps(c.updatedAt, n.updatedAt) < 0 ||
-                (compareStamps(c.updatedAt, n.updatedAt) === 0 &&
+                compareStamps(sentStampOf(c), n.updatedAt) < 0 ||
+                (compareStamps(sentStampOf(c), n.updatedAt) === 0 &&
                   c.syncedNonce != null &&
                   c.syncedNonce !== n.syncedNonce)
               );
@@ -1560,6 +1732,7 @@ async function syncInner(
             pulledCount += safe.length;
           });
         }
+        if (rollbacks.length > 0) await sendBackOver(rollbacks);
         if (heldIds.size > 0) sweepHeld = true;
         // The cursor stops before the first held row, and the sweep ends.
         const firstHeld = moveCursor ? rows.findIndex((r) => heldIds.has(r.id)) : -1;
@@ -1636,6 +1809,8 @@ async function syncInner(
             break;
           }
           await applyPage((again ?? []) as RemoteRow[], false);
+          const returned = new Set(((again ?? []) as RemoteRow[]).map((r) => r.id));
+          await recordUnopenedRows({ failed: [], settled: ids.filter((id) => !returned.has(id)) });
         }
       }
     }
@@ -1882,15 +2057,16 @@ async function syncInner(
    *  `fieldsOfLocal(note)`, the same fields a base recorded for this push
    *  describes, plus the "last edited" stamp when the row has one. */
   const buildRow = (note: LocalNote) => {
-    const { ciphertext, nonce } = encryptNote(rowPayloadOf(note), encryptionKey);
+    const { ciphertext, nonce } = encryptNote(rowPayloadOf(note), encryptionKey, rowBindOf(note));
     return {
       id: note.id,
       user_pubkey: pubkey,
       ciphertext: bytesToBase64(ciphertext),
       nonce: bytesToBase64(nonce),
-      created_at: note.createdAt,
-      updated_at: note.updatedAt,
+      created_at: serverStamp(note.createdAt),
+      updated_at: sentStampOf(note),
       ...keyEpochColumn(),
+      ...clientBindColumn(),
     };
   };
 
@@ -1903,8 +2079,11 @@ async function syncInner(
   const recordPushed = async (pushed: Array<{ note: LocalNote; nonce: string }>) => {
     const synced = pushed.map(({ note, nonce }) => ({
       note,
-      patch: { syncedNonce: nonce, syncBase: buildSyncBase(fieldsOfLocal(note), nonce) },
+      patch: { syncedNonce: nonce, syncBase: buildSyncBase(fieldsOfLocal(note), nonce, sentStampOf(note)) },
     }));
+    for (const { note } of pushed) {
+      if (sentBack.delete(note.id)) recordSyncFault({ step: 'push', code: 'rollback', ref: note.id });
+    }
     await db.transaction('rw', db.notes, async () => {
       for (const { note, patch } of synced) {
         const current = await db.notes.get(note.id);
@@ -1934,12 +2113,15 @@ async function syncInner(
   // else falls through to the per-note path completely unchanged, so
   // conflict detection for real edits is untouched.
   let pending = toUpsert;
-  // A quota refusal of a new note does not stop the edits: the server
-  // refuses only a write that grows the count or the bytes, so an account
-  // at its limit can still save every note it holds. The refusal is
-  // remembered, the per-note path runs for the rows the server already
-  // has, and it is thrown once that pool drains.
-  let bulkQuotaRefusal: QuotaExceededError | null = null;
+  // A quota refusal does not stop the other rows: the server refuses only a
+  // write that grows the count or the bytes, so an account at its limit can
+  // still save every note it holds, and a shorter edit or a move to the
+  // Trash behind a refused one is what makes the room. The refusal is
+  // remembered (a refused new note in bulk, or any refused row of the
+  // per-note path), every worker goes on to the end of the queue, and the
+  // pass reports it in its result instead of throwing (beta #204 items 1
+  // and 2). The cost is one refused request per grown note on each pass.
+  let quotaRefused = false;
   if (toUpsert.length > 1 && !pushEnded) {
     const PROBE_CHUNK = 200;
     const INSERT_CHUNK = 50;
@@ -1991,14 +2173,24 @@ async function syncInner(
           sendable.push(note);
         }
         if (rows.length === 0) continue;
+        // Remembered before the send, as the per-note path does: an insert
+        // whose answer is lost has landed, and the per-note path that retries
+        // it must read the row as this device's own (beta #197 item 9).
+        sendable.forEach((note, k) => rememberSent(note.id, rows[k]!.nonce));
         const { error, status: insertStatus } = await supabase.from('notes').insert(rows);
         if (error) {
+          // A server without the flag's column: the per-note path below
+          // sends these rows again without it.
+          if (isClientBindMissing(error)) {
+            retry.push(...sendable);
+            continue;
+          }
           recordSyncFault({ step: 'push', status: insertStatus, code: error.code || undefined });
           if (isMfaRefusal(error)) throw new MfaRequiredError();
           if (isPhraseReplacedRefusal(error)) throw phraseReplacedStop('write');
           if (isAuthError(error)) throw new SessionExpiredError();
           if (isQuotaError(error)) {
-            bulkQuotaRefusal = new QuotaExceededError(error.message);
+            quotaRefused = true;
             break;
           }
           if (isRlsError(error)) {
@@ -2016,7 +2208,7 @@ async function syncInner(
       }
       // After a quota refusal the new notes wait, the ones retried per note
       // included: each insert would only meet the same refusal.
-      pending = toUpsert.filter((n) => known.has(n.id)).concat(bulkQuotaRefusal ? [] : retry);
+      pending = toUpsert.filter((n) => known.has(n.id)).concat(quotaRefused ? [] : retry);
     }
   }
 
@@ -2053,6 +2245,7 @@ async function syncInner(
         nonce: row.nonce,
         updated_at: row.updated_at,
         ...keyEpochColumn(),
+        ...clientBindColumn(),
       })
       .eq('id', note.id)
       .eq('user_pubkey', pubkey)
@@ -2060,12 +2253,18 @@ async function syncInner(
       .select('id');
 
     if (updateErr) {
+      // A server without the flag's column: the note stays dirty, and the
+      // next pass sends it without the flag.
+      if (isClientBindMissing(updateErr)) return;
       // The too-large refusal is the "Not backed up" list's to report.
       if (!isNoteTooLargeError(updateErr)) recordSyncFault({ step: 'push', status: updateStatus, code: updateErr.code || undefined, ref: note.id });
       if (isMfaRefusal(updateErr)) throw new MfaRequiredError();
       if (isPhraseReplacedRefusal(updateErr)) throw phraseReplacedStop('write');
       if (isAuthError(updateErr)) throw new SessionExpiredError();
-      if (isQuotaError(updateErr)) throw new QuotaExceededError(updateErr.message);
+      if (isQuotaError(updateErr)) {
+        quotaRefused = true;
+        return;
+      }
       // One oversized note breaching the per-note 1 MB CHECK is not an
       // account-storage problem - surface the per-note retry banner, not
       // the global "Storage full" banner.
@@ -2098,7 +2297,7 @@ async function syncInner(
     // generation, or the note does not exist there yet (first push).
     const { data: existing, error: fetchErr, status: fetchStatus } = await supabase
       .from('notes')
-      .select('ciphertext, nonce, updated_at, deleted_at')
+      .select('ciphertext, nonce, updated_at, deleted_at, changed_at')
       .eq('id', note.id)
       .eq('user_pubkey', pubkey)
       .maybeSingle();
@@ -2123,12 +2322,16 @@ async function syncInner(
     if (!existing) {
       // No row on server - first-time insert.
       const { error: insertErr, status: insertStatus } = await supabase.from('notes').insert(row);
+      if (isClientBindMissing(insertErr)) return;
       if (insertErr) {
         if (!isNoteTooLargeError(insertErr)) recordSyncFault({ step: 'push', status: insertStatus, code: insertErr.code || undefined, ref: note.id });
         if (isMfaRefusal(insertErr)) throw new MfaRequiredError();
         if (isPhraseReplacedRefusal(insertErr)) throw phraseReplacedStop('write');
         if (isAuthError(insertErr)) throw new SessionExpiredError();
-        if (isQuotaError(insertErr)) throw new QuotaExceededError(insertErr.message);
+        if (isQuotaError(insertErr)) {
+          quotaRefused = true;
+          return;
+        }
         if (isNoteTooLargeError(insertErr)) {
           if (onPushError) onPushError(note.id, NOTE_TOO_LARGE_MSG);
           return;
@@ -2152,10 +2355,34 @@ async function syncInner(
 
     // ── Conflict: the server holds a generation this device never synced ──
     console.warn('[sync] conflict detected for note', note.id);
+    // A send-back that missed: the base it wrote knows its stamp, so a true
+    // rollback met here is still recorded, by the rollback check below.
+    sentBack.delete(note.id);
     try {
       const existingCt = base64ToBytes(existing.ciphertext);
       const existingNonce = base64ToBytes(existing.nonce);
-      const serverPayload = openWithRing('sync', encryptionKey, (key) => decryptNote(existingCt, existingNonce, key));
+      let serverPayload: ReturnType<typeof decryptNote>;
+      try {
+        serverPayload = openWithRing('sync', encryptionKey, (key) => decryptNote(existingCt, existingNonce, key));
+      } catch (err) {
+        // A row that does not open over an unsynced note joins the list of
+        // notes this device cannot open, as a clean one does at the pull.
+        // Spec: docs/internal/plans/payload-row-binding.md (section 4.2)
+        if (!(err instanceof KeyEpochUnknown)) await recordUnopenedRows({ failed: [{ id: note.id, nonce: existing.nonce }], settled: [] });
+        throw err;
+      }
+      // A payload written for another row is not this note's server version:
+      // nothing merges with it, the note stays unsynced here, and the row
+      // goes on the list of notes this device cannot open, whose answers
+      // settle it ("send this device's copy again" lands over that row).
+      // Spec: docs/internal/plans/payload-row-binding.md (section 4.2)
+      if (checkNoteBind(serverPayload.bind, { id: note.id, kind: 'note', updatedAt: existing.updated_at }, existing.changed_at) === 'moved') {
+        console.error('[sync] server payload bound to another row for', note.id);
+        recordSyncFault({ step: 'push', code: 'bind', ref: note.id });
+        await recordUnopenedRows({ failed: [{ id: note.id, nonce: existing.nonce }], settled: [] });
+        if (onPushError) onPushError(note.id, 'conflict resolution failed');
+        return;
+      }
       const serverFields = fieldsOfPayload(serverPayload, note.archived === 1);
       // A note the mass delete guard restored (keepHeldNotes) that meets
       // another device's restore of the same note. Either can be the newer
@@ -2175,7 +2402,7 @@ async function syncInner(
             dirty: 0,
             updatedAt: existing.updated_at,
             syncedNonce: existing.nonce,
-            syncBase: buildSyncBase(serverFields, existing.nonce),
+            syncBase: buildSyncBase(serverFields, existing.nonce, existing.updated_at),
           });
         });
         return;
@@ -2186,14 +2413,21 @@ async function syncInner(
       // made while it was in flight: what it grew from is the base, so only
       // what was typed since counts as this device's.
       const echo = sentNonces.get(note.id)?.find((e) => e.nonce === existing.nonce);
+      // A server row older than the generation this device last synced is a
+      // rollback: this device's note goes up over it, and no field of the old
+      // generation is merged into it.
+      // Spec: docs/internal/plans/payload-row-binding.md (section 4.2)
+      const rollback = !echo && olderThanSynced(noteBaseOf(note), existing.updated_at);
       // Field by field against the version this device last synced: a
       // field only one side changed takes that side, whichever stamp is
       // newer, and only a body both sides changed is left to the user.
-      const { rest, body } = mergeNoteFields(
-        echo ? (echo.base ?? buildSyncBase(serverFields, existing.nonce)) : noteBaseOf(note),
-        local,
-        server,
-      );
+      const { rest, body } = rollback
+        ? { rest: local.fields, body: local.fields.body }
+        : mergeNoteFields(
+          echo ? (echo.base ?? buildSyncBase(serverFields, existing.nonce)) : noteBaseOf(note),
+          local,
+          server,
+        );
 
       if (body === null) {
         if (onConflict) {
@@ -2241,7 +2475,7 @@ async function syncInner(
         // on the server, or yielded to a later change of the same field: the
         // server's generation is the result, so record it as synced without
         // a write.
-        const base = buildSyncBase(serverFields, existing.nonce);
+        const base = buildSyncBase(serverFields, existing.nonce, existing.updated_at);
         await db.transaction('rw', db.notes, async () => {
           const current = await db.notes.get(note.id);
           if (current && unchangedSince(current, note)) {
@@ -2267,6 +2501,7 @@ async function syncInner(
       const { ciphertext: mergedCt, nonce: mergedNonceBytes } = encryptNote(
         { ...merged, ...(keepUnknown ? { archived: undefined } : {}), editedAt },
         encryptionKey,
+        { id: note.id, kind: 'note', at: mergedAt },
       );
       const mergedNonce = bytesToBase64(mergedNonceBytes);
       rememberSent(note.id, mergedNonce, note);
@@ -2282,13 +2517,15 @@ async function syncInner(
           nonce: mergedNonce,
           updated_at: mergedAt,
           ...keyEpochColumn(),
+          ...clientBindColumn(),
         })
         .eq('id', note.id)
         .eq('user_pubkey', pubkey)
         .eq('nonce', existing.nonce)
         .select('id');
       if (!mergeErr && mergedRows && mergedRows.length > 0) {
-        const base = buildSyncBase(merged, mergedNonce);
+        if (rollback) recordSyncFault({ step: 'push', code: 'rollback', ref: note.id });
+        const base = buildSyncBase(merged, mergedNonce, mergedAt);
         await db.transaction('rw', db.notes, async () => {
           const current = await db.notes.get(note.id);
           // Every merged field lands locally: the row is about to match the
@@ -2310,6 +2547,8 @@ async function syncInner(
         });
         pushedCount += 1;
         console.log('[sync] merged note', note.id);
+      } else if (isClientBindMissing(mergeErr)) {
+        console.warn('[sync] merge sent again next pass without the bind flag for', note.id);
       } else if (mergeErr) {
         if (!isNoteTooLargeError(mergeErr)) recordSyncFault({ step: 'push', status: mergeStatus, code: mergeErr.code || undefined, ref: note.id });
         if (isMfaRefusal(mergeErr)) throw new MfaRequiredError();
@@ -2354,7 +2593,7 @@ async function syncInner(
   // Spec: docs/internal/design-decisions.md (sync push concurrency)
   const PUSH_CONCURRENCY = 8;
 
-  // The first SessionExpiredError or QuotaExceededError wins and stops
+  // The first SessionExpiredError (or another throw) wins and stops
   // the workers from picking up further notes, mirroring the sequential
   // loop's throw. Requests already in flight are allowed to settle
   // instead of being abandoned: each carries the same per-note guards
@@ -2383,7 +2622,6 @@ async function syncInner(
     ),
   );
   if (pushAbort !== null) throw pushAbort;
-  if (bulkQuotaRefusal !== null) throw bulkQuotaRefusal;
   // A stop also leaves every note no worker claimed: the whole per-note
   // queue when an earlier stage stopped, since no worker starts after it.
   if (pushEnded) {
@@ -2399,5 +2637,6 @@ async function syncInner(
     pushed: pushedCount,
     pulled: pulledCount,
     ...(pushEnded ? { halted: { reason: haltReason, unreached: unreachedIds.size } } : {}),
+    ...(quotaRefused ? { quotaRefused: true } : {}),
   };
 }

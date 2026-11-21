@@ -3,9 +3,10 @@
  * the page under Copy login), the address-bar keyword, the queue's retry
  * alarm, the clipboard clear, the keyboard commands (fill, save as note,
  * bookmark, new note, lock, generate), the idle lock, and the saves the popup
- * hands over. It reads a page only when the person clips
- * it, by injecting the capture script into that one tab, and writes into a
- * page only when the person fills a login (`src/fillRun.ts`).
+ * hands over. It reads a page when the person clips it from the menu or the
+ * keyboard, by injecting the capture script into that one tab (the popup
+ * reads the page in front when it opens on the Clip tab, `ClipView.tsx`), and
+ * writes into a page only when the person fills a login (`src/fillRun.ts`).
  * Spec: docs/internal/plans/browser-extension-build.md (sections 3.3, 3.4 and 5)
  */
 import { browser, type Browser } from 'wxt/browser';
@@ -17,8 +18,8 @@ import { capturePage, type CapturedPage } from '../src/capture';
 import { buildClip, clippable, escapeMarkup, type Built, type ClipMode } from '../src/clipping';
 import { CLEAR_ALARM, clearIfStill, clearLater, copySecret, offscreen, writeClipboard } from '../src/clipboard';
 import { FLUSH_ALARM, flashBadge, flush } from '../src/queue';
-import { saveClip, saveLogin, saveNote, type SaveResult } from '../src/save';
-import { fetchPublic } from '../src/publicFetch';
+import { saveClip, saveLogin, saveLoginEdit, saveNote, type SaveResult } from '../src/save';
+import { fetchLinkedPage } from '../src/publicFetch';
 import { readPrefs } from '../src/prefs';
 import { startI18n, t } from '../src/i18n';
 import { readConnection } from '../src/connection';
@@ -29,8 +30,12 @@ import { fillLoginShortcut, onFillProbe, runFill } from '../src/fillRun';
 import type { BackgroundMessage } from '../src/messages';
 import { ROUTE_KEY, type PopupRoute } from '../src/route';
 import { readShortcuts, withKeys } from '../src/shortcuts';
-import { clearSiteCounts, onMarkEnd, showSiteCount } from '../src/badge';
+import { clearSiteCounts, onMarkEnd, showLocked, showSiteCount } from '../src/badge';
 import { activeTab } from '../src/tabs';
+import { passkeysReleased } from '../src/passkeyRelease';
+import { closeStorageToPageScripts } from '../src/storageAccess';
+import { dropTabRequests, onPasskeyAbort, onPasskeyRequest, onPromptGone, onUvpaQuery, passkeyScriptsWanted, PASSKEY_COUNT_KEY, PROMPT_PORT, restorePopup, savePasskeyFor, syncPasskeyScripts, type DoorDeps, type StoredRequest } from '../src/passkeyDoor';
+import { fromOwnPage, PASSKEY_EXCLUDES, PASSKEY_MATCHES, type PasskeyAbortMessage, type PasskeyRequestMessage } from '../src/passkeyWire';
 
 const MENU_ROOT = 'pn';
 const COPY_MENU = 'login-copy';
@@ -100,13 +105,16 @@ async function buildMenus(): Promise<void> {
   const connection = await readConnection();
   if (!connection?.logins) {
     hideFill();
+    void showLocked(false);
     return void clearSiteCounts();
   }
   if (!(await isUnlocked())) {
+    void showLocked(true);
     void clearSiteCounts();
     fillMenuLocked = true;
     return menuItem(`${COPY_MENU}:unlock`, t('vault.unlockToCopy'), ALL_CONTEXTS, COPY_MENU);
   }
+  void showLocked(false);
   const tab = await activeTab();
   const found = tab?.url ? await allEntries() : null;
   // The login filled last here comes first, as in the window and for the key.
@@ -187,14 +195,7 @@ async function fillFromMenu(menuId: string, tab?: Browser.tabs.Tab): Promise<voi
  *  Escape closes. Called before any await, while the click counts. */
 function openPopupOn(view: PopupRoute['view'], url: string, query?: string): void {
   void browser.storage.session.set({ [ROUTE_KEY]: { view, url, query, at: Date.now() } satisfies PopupRoute });
-  const fallback = async () => {
-    const width = 400;
-    const height = 640;
-    const win = await browser.windows.getLastFocused().catch(() => null);
-    const left = win?.left != null && win.width != null ? Math.max(0, win.left + win.width - width - 16) : undefined;
-    const top = win?.top != null ? win.top + 72 : undefined;
-    await browser.windows.create({ url: browser.runtime.getURL('/popup.html?window=1' as '/'), type: 'popup', width, height, left, top, focused: true });
-  };
+  const fallback = () => openPopupWindow('');
   try {
     const opened = browser.action.openPopup?.();
     if (opened) void opened.catch(() => void fallback());
@@ -203,6 +204,48 @@ function openPopupOn(view: PopupRoute['view'], url: string, query?: string): voi
     void fallback();
   }
 }
+
+/** The popup's page as a small window at the top end of the browser window,
+ *  where the browser does not open the toolbar popup. `extra` adds URL
+ *  parameters (`&passkey=<id>`). */
+async function openPopupWindow(extra: string): Promise<void> {
+  const width = 400;
+  const height = 640;
+  const win = await browser.windows.getLastFocused().catch(() => null);
+  const left = win?.left != null && win.width != null ? Math.max(0, win.left + win.width - width - 16) : undefined;
+  const top = win?.top != null ? win.top + 72 : undefined;
+  await browser.windows.create({ url: browser.runtime.getURL(`/popup.html?window=1${extra}` as '/'), type: 'popup', width, height, left, top, focused: true });
+}
+
+/** A passkey prompt: the toolbar popup of the asking tab opens on the
+ *  request, by its id in the address (never the one-slot route, review 7),
+ *  or the same page in a small window. No click is needed for either. */
+function openPasskeyPrompt(req: StoredRequest, tab: Browser.tabs.Tab): void {
+  void (async () => {
+    try {
+      await browser.action.setPopup({ tabId: req.tabId, popup: `popup.html?passkey=${req.id}` });
+      await browser.action.openPopup({ windowId: tab.windowId });
+    } catch {
+      await restorePopup(req.tabId);
+      await openPopupWindow(`&passkey=${req.id}`).catch(() => onPromptGone(req.id));
+    }
+  })();
+}
+
+const doorDeps: DoorDeps = {
+  chrome: !import.meta.env.FIREFOX,
+  logins: async () => (await readConnection())?.logins === true,
+  offer: async () => (await readPrefs()).offerPasskeys,
+  inFront: async (tab) => tab.active === true && (await browser.windows.get(tab.windowId).catch(() => null))?.focused === true,
+  passkeys: async () => {
+    if (!(await isUnlocked())) return null;
+    const found = await allEntries();
+    return found ? loginsOf(found.entries).flatMap((l) => l.passkeys ?? []) : null;
+  },
+  count: async () => Number((await browser.storage.local.get(PASSKEY_COUNT_KEY))[PASSKEY_COUNT_KEY]) || 0,
+  openPrompt: openPasskeyPrompt,
+  now: () => Date.now(),
+};
 
 /** The clip engine needs a DOM: Firefox's background has one, Chrome's
  *  worker borrows the offscreen document. */
@@ -220,18 +263,11 @@ async function capture(tabId: number): Promise<CapturedPage | null> {
   }
 }
 
-/** A page the person never opened (a link): fetched without cookies, and
- *  only from the public web (`fetchPublic`). */
+/** A page the person never opened (a link): fetched without cookies, only
+ *  from the public web, within 20 seconds and 5 MB (`fetchLinkedPage`). */
 async function fetchPage(url: string): Promise<CapturedPage | null> {
-  try {
-    const res = await fetchPublic(url, { credentials: 'omit', referrerPolicy: 'no-referrer' }, true);
-    const type = res?.headers.get('content-type') ?? '';
-    if (!res?.ok || !/text\/html|application\/xhtml/.test(type)) return null;
-    const html = (await res.text()).slice(0, 5_000_000);
-    return { url: res.url || url, title: '', html, selectionHtml: '' };
-  } catch {
-    return null;
-  }
+  const page = await fetchLinkedPage(url);
+  return page ? { ...page, title: '', selectionHtml: '' } : null;
 }
 
 function report(result: SaveResult): void {
@@ -371,6 +407,13 @@ async function onMessage(msg: BackgroundMessage): Promise<unknown> {
       return saveClip(msg.request);
     case 'saveLogin':
       return saveLogin(msg.request);
+    case 'saveLoginEdit':
+      return passkeysReleased() ? saveLoginEdit({ ...msg.request, mustSend: false }) : null;
+    case 'savePasskey':
+      // The page gets the credential only once the row is on the server (P24).
+      return passkeysReleased()
+        ? savePasskeyFor(msg.id, { kind: 'credential', credential: msg.credential }, () => saveLoginEdit({ ...msg.request, mustSend: true }), { state: 'failed' as const })
+        : null;
     case 'saveNote':
       return saveNote(msg.request);
     case 'flush':
@@ -384,11 +427,23 @@ async function onMessage(msg: BackgroundMessage): Promise<unknown> {
 }
 
 export default defineBackground(() => {
+  // Before anything else: the stored connection and keys are for the
+  // extension's own pages and this worker, not for its scripts in pages.
+  closeStorageToPageScripts();
+  // The passkey scripts exist on pages only while the switch is on (review 9),
+  // this browser is connected with logins and "Offer passkeys" is on. A change
+  // of the setting or of the connection applies at once, to pages loaded after it.
+  const syncScripts = () =>
+    void Promise.all([readConnection(), readPrefs()])
+      .then(([connection, prefs]) => syncPasskeyScripts(passkeyScriptsWanted(passkeysReleased(), connection, prefs), PASSKEY_MATCHES, PASSKEY_EXCLUDES))
+      .catch(() => undefined);
+  syncScripts();
   // The chosen lock time drives the idle detection (the browser's default
   // is one minute); a change of the choice applies at once.
   void applyLockTime();
   browser.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && 'prefs' in changes) void applyLockTime();
+    if (area === 'local' && ('prefs' in changes || 'connection' in changes)) syncScripts();
     // The vault opened, closed, pulled or disconnected: the Copy login rows follow.
     if ((area === 'session' && SESSION_KEY in changes) || (area === 'local' && (ROWS_KEY in changes || 'connection' in changes))) refreshMenus();
   });
@@ -400,9 +455,24 @@ export default defineBackground(() => {
   });
   // The page in front changed: its logins go under Copy login.
   browser.tabs.onActivated.addListener(() => refreshMenus());
-  browser.tabs.onUpdated.addListener((_id, change, tab) => {
+  browser.tabs.onUpdated.addListener((id, change, tab) => {
     if (change.url && tab.active) refreshMenus();
+    // A page that went away takes its passkey request with it. Firefox names
+    // no document, so a new load of the tab stands in (Chrome: the door).
+    if (import.meta.env.FIREFOX && change.status === 'loading' && passkeysReleased()) void dropTabRequests(id);
   });
+  if (passkeysReleased()) {
+    browser.tabs.onRemoved.addListener((id) => void dropTabRequests(id));
+    // The popup holds a port for the request it shows: a window closed with
+    // no answer is a dismissal, answered here (section 5.4).
+    browser.runtime.onConnect.addListener((port) => {
+      // An own page by its address: a popup window carries `sender.tab` too.
+      const own = fromOwnPage(port.sender, browser.runtime.id, browser.runtime.getURL('/'));
+      if (!own || !port.name.startsWith(PROMPT_PORT)) return;
+      const id = port.name.slice(PROMPT_PORT.length);
+      port.onDisconnect.addListener(() => void onPromptGone(id));
+    });
+  }
   browser.windows.onFocusChanged.addListener((id) => {
     if (id !== browser.windows.WINDOW_ID_NONE) refreshMenus();
   });
@@ -414,6 +484,18 @@ export default defineBackground(() => {
     // The fill script's answer to a probe: it comes from inside a site, so
     // it has its own door, which checks it against the run that asked.
     if ((msg as { type?: string } | null)?.type === 'fillProbe') return void onFillProbe(msg, sender);
+    // The passkey relay's request and abort come from inside a site too:
+    // their door checks the sender as the browser reports it. Off until the
+    // release switch is on, so the relay's call finds no answer.
+    if (passkeysReleased() && (msg as { type?: string } | null)?.type === 'passkey') {
+      void onPasskeyRequest(msg as unknown as PasskeyRequestMessage, sender, doorDeps).then(sendResponse, () => sendResponse({ kind: 'fallback' }));
+      return true;
+    }
+    if (passkeysReleased() && (msg as { type?: string } | null)?.type === 'passkey-abort') return void onPasskeyAbort((msg as unknown as PasskeyAbortMessage).id, sender);
+    if (passkeysReleased() && (msg as { type?: string } | null)?.type === 'passkey-uvpa') {
+      void onUvpaQuery(sender, doorDeps).then(sendResponse, () => sendResponse({ available: false }));
+      return true;
+    }
     if (msg?.target === 'offscreen' || !own) return;
     void onMessage(msg).then(sendResponse, (err: unknown) => {
       console.warn('[privacynotes] message failed:', err instanceof Error ? err.message : 'unknown');

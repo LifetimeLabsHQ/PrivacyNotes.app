@@ -64,8 +64,12 @@ function later(a: Register, b: Register): Register {
   const tb = Date.parse(b.at);
   if (ta !== tb) return ta > tb ? a : b;
   if (a.v === b.v) return a.at >= b.at ? a : b;
-  if (a.v === null) return b;
-  if (b.v === null) return a;
+  // At the last time a stamp can hold, a removal cannot be stamped later
+  // than the value it removes, so there it wins the tie; else Remove of a
+  // calendar stamped there was undone by the next merge (beta #199 item 9).
+  const removalWins = ta === LAST_TIME;
+  if (a.v === null) return removalWins ? a : b;
+  if (b.v === null) return removalWins ? b : a;
   return a.v > b.v ? a : b;
 }
 
@@ -111,5 +115,31 @@ export function newRegisterId(): string {
 export function stampAfter(prev: string | undefined): string {
   const now = Date.now();
   const cur = prev ? Date.parse(prev) : Number.NaN;
-  return new Date(Number.isFinite(cur) && cur >= now ? cur + 1 : now).toISOString();
+  // The last time a Date can hold: one past it is an Invalid Date, and
+  // toISOString throws on that.
+  return new Date(Number.isFinite(cur) && cur >= now ? Math.min(cur + 1, LAST_TIME) : now).toISOString();
 }
+
+const LAST_TIME = 8.64e15;
+
+/** `raw` with every `at` stamp later than `now` set to now. A register read
+ *  from a file (a backup) has not been written yet, so it cannot be later
+ *  than now; one stamped in the far future would win every merge after it,
+ *  the person's own changes included. Notes from a file get the same rule
+ *  in import/apply.ts. */
+export function clampFutureStamps(raw: unknown, now: number, depth = 0): unknown {
+  // A register is a few levels deep. Below this the value is kept as it is:
+  // a stranger's file nested a million levels would run out of stack, after
+  // the notes were applied and before the settings were.
+  if (depth >= STAMP_DEPTH) return raw;
+  if (Array.isArray(raw)) return raw.map((x) => clampFutureStamps(x, now, depth + 1));
+  if (!raw || typeof raw !== 'object') return raw;
+  return Object.fromEntries(Object.entries(raw).map(([key, value]) => [
+    key,
+    key === 'at' && typeof value === 'string' && Date.parse(value) > now
+      ? new Date(now).toISOString()
+      : clampFutureStamps(value, now, depth + 1),
+  ]));
+}
+
+const STAMP_DEPTH = 64;

@@ -26,7 +26,7 @@ export interface TeamTheme {
 export const TEAM_THEMES: TeamTheme[] = [
   { id: 'midnightink0', code: 'pn1:Midnight:0B0B0B,000000,262626,E6E6E6,8A8A8A,E0A458', description: "Ink at midnight: black and charcoal with a warm amber accent." },
   { id: 'rosewater000', code: 'pn1:Rose:FDF8F8,F2E4E4,E6D3D3,2A1A1F,6B4E57,A33A5A', description: "Rose petals: soft blush pinks with a deep raspberry accent." },
-  { id: 'frost0000000', code: 'pn1:Frost:3B4252,2E3440,434C5E,ECEFF4,B8C0CE,88C0D0', description: "A frozen fjord: cool polar greys with an icy blue accent." },
+  { id: 'frost0000000', code: 'pn1:Frost:3B4252,2E3440,434C5E,ECEFF4,B8C0CE,88C0D0', description: "A frozen fjord: cool polar grays with an icy blue accent." },
   { id: 'papermint000', code: 'pn1:Mint:FBFCFA,EEF3EF,DCE5DE,1C2620,55665B,286E50', description: "Fresh mint leaves: off-white paper with a deep mint-green accent." },
   { id: 'espresso0000', code: 'pn1:Espresso:2A211C,211A16,3D312A,EDE3D9,B5A597,D99A5B', description: "A dark roast: espresso browns with a caramel crema accent." },
   { id: 'lavender0000', code: 'pn1:Lavender:FAF8FD,EFEBF7,DDD6EC,221D2E,5F5874,6B46C1', description: "A lavender field: pale lilac surfaces with a deep violet accent." },

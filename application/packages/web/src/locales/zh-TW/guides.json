@@ -316,21 +316,21 @@
       "app": "Bitwarden",
       "title": "匯出你的 Bitwarden 密碼庫",
       "metaTitle": "如何匯出 Bitwarden 密碼庫 - PrivacyNotes",
-      "lead": "Bitwarden 會把整個密碼庫匯出成一個未加密的 .json 檔，PrivacyNotes 再把每一筆內容歸位：登入資訊、卡片、SSH 金鑰與安全筆記。",
+      "lead": "Bitwarden 會把整個密碼庫匯出成一個未加密的 .json 檔，或連同附件匯出成一個 .zip，PrivacyNotes 再把每一筆內容歸位：登入資訊、卡片、SSH 金鑰與安全筆記。",
       "sections": [
         {
           "h": "從 Bitwarden 匯出密碼庫",
           "steps": [
             "開啟 Bitwarden 網頁版密碼庫（或桌面應用程式）並登入。",
             "前往「Tools」，再選「Export vault」。",
-            "檔案格式選擇 .json（一般版本，不是「.json (Encrypted)」）。",
+            "檔案格式選擇 .json，或選「.zip (with attachments)」把附加的檔案也一起帶過來。不要選「.json (Encrypted)」。",
             "輸入主密碼確認，然後下載檔案。"
           ]
         },
         {
           "h": "東西會落在哪裡",
           "p": [
-            "登入項目會成為[保險庫的登入資訊項目](/tw/help/vault)（連同網站圖示），卡片成為卡片項目，SSH 金鑰成為 SSH 金鑰項目，安全筆記與身分則會變成可讀的筆記。Bitwarden 的資料夾對應為標籤，最愛項目抵達時也保持標記。驗證金鑰（TOTP）也會一併帶過來，[你的 2FA 驗證碼可以繼續使用](/tw/help/vault-totp)。",
+            "登入資訊會成為[保險庫的登入資訊項目](/tw/help/vault)（連同網站圖示），卡片成為卡片項目，SSH 金鑰成為 SSH 金鑰項目，安全筆記與身分則會變成可讀的筆記。Bitwarden 的資料夾對應為標籤，最愛項目抵達時也保持標記。驗證金鑰（TOTP）也會一併帶過來，[你的 2FA 驗證碼可以繼續使用](/tw/help/vault-totp)，你存在 Bitwarden 的密碼金鑰也一樣。從 .zip 匯入時，每個附件都會放到所屬的項目上。",
             "匯出檔以明文保存你的密碼，所以匯入、確認一切到齊之後，請把檔案徹底刪除。進到 PrivacyNotes 之後，一切又重新加密，無論是在你的裝置上，還是傳往伺服器的途中。"
           ]
         }
@@ -1115,6 +1115,31 @@
         }
       ]
     },
+    "msecure": {
+      "app": "mSecure",
+      "title": "匯出你的 mSecure 保險庫",
+      "metaTitle": "如何匯出 mSecure 保險庫 - PrivacyNotes",
+      "lead": "mSecure 會從它的電腦版應用程式把你的紀錄匯出成一個 .csv 檔，PrivacyNotes 會把它們變成保險庫的登入資訊、卡片與筆記，自訂欄位也包含在內。",
+      "sections": [
+        {
+          "h": "從 mSecure 匯出",
+          "steps": [
+            "在你的電腦上開啟 mSecure 並解鎖。",
+            "開啟「Settings」，並選擇「Backups」。",
+            "在「Import and Export records」下方，選擇「Export records to CSV file」。",
+            "選擇「Export all records」。讓「Only export field data」保持關閉，檔案才會保留每個欄位的名稱。",
+            "選擇「Export」，並儲存 .csv 檔案。"
+          ]
+        },
+        {
+          "h": "東西會落在哪裡",
+          "p": [
+            "每筆登入資訊都會成為帶有 2FA 金鑰的[保險庫登入資訊](/tw/help/vault)，所以[你的驗證碼可以繼續使用](/tw/help/vault-totp)，其他網站與自訂欄位也會連同名稱一起帶過來。機密欄位，例如 PIN 碼或復原碼，會維持隱藏。卡片會變成卡片。安全筆記會變成筆記，其他類型的紀錄，例如身分或銀行帳號，則會變成列出其欄位的筆記，並以紀錄類型作為標籤。你的標籤仍會是標籤。檔案中沒有日期或最愛，所以每個項目都會以你匯入的那一天為準。",
+            "匯出檔以明文保存你的密碼。匯入後請確認一切都已到齊，再把檔案刪除。"
+          ]
+        }
+      ]
+    },
     "nordpass": {
       "app": "NordPass",
       "title": "匯出你的 NordPass 保險庫",
@@ -1163,6 +1188,36 @@
           "p": [
             "每個登入都會成為[保險庫登入資訊](/tw/help/vault)，連同額外的網站、自訂欄位與日期。它的 2FA 金鑰也會一併過來，所以[你的驗證碼可以繼續使用](/tw/help/vault-totp)。當一個項目同時有電子郵件與使用者名稱時，使用者名稱會填入登入資訊，電子郵件則成為一個欄位。筆記會匯入為筆記，卡片匯入為卡片，身分則成為筆記，每項細節各佔一行。每個 hide-my-email 別名都會成為一篇附有地址的筆記，讓你保有「哪個地址給了哪個網站」的清單；只要你的 Proton 帳號仍然有效，Proton 就會繼續轉寄它的郵件。如果有多個保險庫，每個保險庫都會變成一個標籤。垃圾桶中的項目不會帶過來。",
             "匯出檔以明文保存你的密碼。匯入後請確認一切都已到齊，再把檔案刪除。"
+          ]
+        }
+      ]
+    },
+    "raindrop": {
+      "app": "Raindrop.io",
+      "title": "匯出你的 Raindrop.io 書籤",
+      "metaTitle": "如何匯出 Raindrop.io 書籤 - PrivacyNotes",
+      "lead": "把 Raindrop.io 書籤匯出成一個 .csv 備份檔，PrivacyNotes 就會把它們變成書籤，放進同樣的收藏集，連你的筆記、摘錄和螢光標記都會一起帶過來。",
+      "sections": [
+        {
+          "h": "取得全部內容的備份",
+          "steps": [
+            "在瀏覽器或應用程式中開啟 Raindrop.io 並登入。",
+            "開啟 All bookmarks，然後選擇 Export > Get backup。",
+            "等待那封通知備份已準備好的電子郵件，通常只要幾分鐘。",
+            "開啟 Settings > Backups，在新的備份旁選擇 CSV。"
+          ]
+        },
+        {
+          "h": "請選 CSV，不要選 HTML",
+          "p": [
+            "HTML 檔會保留連結和你的筆記，但不含摘錄和螢光標記。如果只想轉移單一收藏集，請開啟它，然後選擇 Export > CSV。該選單匯出的 .zip 也可以使用。"
+          ]
+        },
+        {
+          "h": "各項內容會放在哪裡",
+          "p": [
+            "每個書籤都會放在 Bookmarks 底下，每個收藏集各有一個資料夾，巢狀層級和你原本的一樣。Unsorted 的書籤會直接放在 Bookmarks 底下。你的筆記、摘錄，以及每則螢光標記和它的便利貼，都會放進書籤的筆記中，已加入最愛的書籤仍維持釘選。標籤仍是標籤，每個書籤也都保留你儲存它的日期。",
+            "這個檔案沒有垃圾桶、提醒或螢光標記的顏色，所以這些內容不會過來。封面圖片也不會過來：每個書籤會改為顯示其網站的圖示。"
           ]
         }
       ]
@@ -1288,6 +1343,83 @@
           "p": [
             "[每一則紀錄都會進到「日誌」](/tw/help/journal)，日期是你在 Journal 中為它選定的那一天。每則紀錄都保有標題與文字，照片與影片會匯入成圖片與附件。紀錄上的地圖會以圖片形式帶過來。",
             "Takeout 不含地點名稱、寫作提示、書籤或 Journal 的回顧，所以這些內容會留在 Journal 中。匯入摘要會說明這一點。"
+          ]
+        }
+      ]
+    },
+    "capacities": {
+      "app": "Capacities",
+      "title": "匯出你的 Capacities 空間",
+      "metaTitle": "如何匯出你的 Capacities 空間 - PrivacyNotes",
+      "lead": "Capacities 會一次把所有空間匯出成一個 zip，裡面是 Markdown 檔案和它們的媒體。這個 zip 會把你的頁面、每日筆記和自訂物件連同標籤、屬性、連結、表格與圖片一起帶過來。",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/capacities-export.webp",
+            "alt": "Capacities 設定的「Full Export」頁面，「Manual Full Export」已開啟「Include media」，並標出「Export All Spaces」按鈕。",
+            "width": 1576,
+            "height": 802
+          },
+          "h": "進行完整匯出",
+          "steps": [
+            "在電腦上開啟 Capacities，然後開啟「Settings」。",
+            "選擇「Full Export」。",
+            "在「Manual Full Export」下開啟「Options」，並讓「Include media」保持開啟。另外兩個選項維持原樣即可：我們兩種連結樣式都能讀取，也會去掉開頭的標題。",
+            "按一下「Export All Spaces」。Capacities 會在背景建立 zip，並存到你的「下載項目」資料夾，檔名是「Capacities」加上日期和時間。",
+            "把那個 .zip 原封不動拖進來。"
+          ],
+          "p": [
+            "Capacities 只會把存放在你裝置上的圖片和檔案放進 zip。如果有些內容缺少，請把「Settings > Offline & Sync > Media loading」設為「Everything」，等它下載完成，再匯出一次。"
+          ]
+        },
+        {
+          "h": "哪些內容會跟著過來",
+          "p": [
+            "每個頁面、每日筆記和你自己類型的物件，都會變成一篇筆記，並保留標籤和 Capacities 儲存的日期。每種物件類型會變成一個資料夾，所以你的頁面會放進 Pages，每日筆記放進 DailyNotes，而像 Books 這樣的類型則有自己的資料夾。",
+            "標題、清單、待辦事項、引用、帶語言的程式碼、數學公式和表格都會照原樣過來。Capacities 會把表格公式以計算結果寫進匯出內容，所以數字會到，公式則不會。[我們的表格支援相同的公式](/tw/help/table-formulas)，名稱和儲存格參照都一樣，所以在儲存格裡輸入 `=` 就能重新設定。[物件之間的連結和提及會變成筆記連結](/tw/help/note-links)，圖片和檔案則會匯入你的儲存空間。",
+            "自訂類型的屬性，例如評分或類別，會以一小段清單寫在筆記的最上方。查詢是沒有文字的已儲存搜尋，所以不會帶過來。Capacities 不會匯出垃圾桶、它的集合，以及摺疊區塊和彩色區塊的外觀：摺疊區塊會變成清單，裡面的文字會一併帶過來。"
+          ]
+        }
+      ]
+    },
+    "onenote": {
+      "app": "OneNote",
+      "title": "匯出你的 OneNote 筆記本",
+      "metaTitle": "如何匯出你的 OneNote 筆記本 - PrivacyNotes",
+      "lead": "Windows 版 OneNote 會把整本筆記本匯出成一個 OneNote 封裝檔（.onepkg）。這個檔案會把你的節、頁面和子頁面連同待辦事項、表格、圖片和附件一起帶過來。",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/onenote-export.webp",
+            "alt": "Windows 版 OneNote 的「File > Export」，在「Export Current」下選了「Notebook」，在「Select Format」下選了「OneNote Package」，並標出「Export」按鈕。",
+            "width": 1576,
+            "height": 548
+          },
+          "h": "把筆記本匯出成 OneNote 封裝檔",
+          "steps": [
+            "在 Windows 版 OneNote（桌面應用程式）中開啟筆記本。存放在 OneDrive 的筆記本也能在那裡開啟。",
+            "選擇「File > Export」。",
+            "在「Export Current」下選擇「Notebook」。",
+            "在「Select Format」下選擇「OneNote Package (*.onepkg)」，然後按一下「Export」。",
+            "選擇一個資料夾並儲存。OneNote 會寫出一個以筆記本命名的 .onepkg 檔案。",
+            "把那個 .onepkg 原封不動拖進來。"
+          ],
+          "p": [
+            "一個封裝檔只含一本筆記本。如果你有好幾本筆記本，請逐本匯出，再一個接一個把檔案拖進來。網頁版、Mac 版和手機版的 OneNote 都沒有匯出功能，所以這一步請用 Windows 電腦。"
+          ]
+        },
+        {
+          "h": "先解除受保護節的鎖定",
+          "p": [
+            "有密碼的節在封裝檔裡仍然是加密的，只有 OneNote 能開啟。請在 OneNote 中逐一解鎖，在「Review > Password > Remove Password」下移除密碼，然後再匯出一次。匯入預覽會列出任何不得不略過的節。"
+          ]
+        },
+        {
+          "h": "哪些內容會跟著過來",
+          "p": [
+            "筆記本會變成一個資料夾，裡面為每個節群組和節各有一個資料夾。每個頁面會變成其節資料夾中的一篇筆記，日期為 OneNote 建立它的時間，子頁面則和它的頁面放在同一個資料夾。",
+            "標題、粗體、斜體、底線、顏色、螢光標示、項目符號與編號清單、表格和程式碼段落都會照原樣過來。待辦標記會變成核取清單項目，完成的會勾選，而其他筆記標記，例如 Important 或 Question，會變成筆記上的標籤。[頁面之間的連結會變成筆記連結](/tw/help/note-links)，圖片和附加的檔案則會匯入你的儲存空間。",
+            "單獨的節檔案（.one），或壓縮過的筆記本資料夾，也都可以。用筆繪製的圖畫、錄音和方程式在這裡沒有對應的形式，所以匯入預覽會列出它們的數量，而 OneNote 資源回收筒裡的頁面不屬於封裝檔的內容。"
           ]
         }
       ]

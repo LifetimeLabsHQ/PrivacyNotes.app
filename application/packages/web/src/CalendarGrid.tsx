@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatInstant, toLocalIso, weekdayDate, weekdayLabel } from './intlFormat';
-import { dayAtNoon } from './MonthGrid';
+import { dayAtNoon, type DayCounter } from './MonthGrid';
 import { timedBlocks, type TimedBlock } from './calendarLayout';
 import type { DayEntry, DayIndex } from './notesViewUtils';
 import { shiftDay, timeFromMinutes, weekdayOf } from './schedule';
@@ -31,6 +31,9 @@ type Props = {
   /** A kept scroll position, so Back returns to it. */
   scrollRef: { current: number | null };
   renderAllDay: (day: string) => ReactNode;
+  /** Under a day's number in its header: the values and strip of the trackers
+   *  the Calendar shows. Spec: docs/internal/specs/tracker-focus-771.md (section 6) */
+  renderDayHead?: (day: string) => ReactNode;
   renderBars: (days: readonly string[]) => ReactNode;
   /** The band's height in lanes of bars, so the chips start under them. */
   renderCard: (block: TimedBlock, day: string) => ReactNode;
@@ -39,9 +42,11 @@ type Props = {
   /** A card dropped on an hour: the item's id and the drop's day and time. */
   onDropAt?: (e: React.DragEvent, day: string, time: string) => void;
   accepts?: (e: React.DragEvent) => boolean;
+  /** The day counter (#815), on the day headers: the same rules as the month's. */
+  counter?: DayCounter;
 };
 
-export function CalendarGrid({ days, index, hidden, firstHour, scrollRef, renderAllDay, renderBars, renderCard, onCreate, onPickDay, onDropAt, accepts }: Props) {
+export function CalendarGrid({ days, index, hidden, firstHour, scrollRef, renderAllDay, renderDayHead, renderBars, renderCard, onCreate, onPickDay, onDropAt, accepts, counter }: Props) {
   const { t } = useTranslation('shell');
   const scroller = useRef<HTMLDivElement | null>(null);
   const today = toLocalIso(new Date());
@@ -70,8 +75,17 @@ export function CalendarGrid({ days, index, hidden, firstHour, scrollRef, render
     return Math.max(0, Math.min(1440 - SNAP, Math.floor(raw / SNAP) * SNAP));
   };
 
+  // The day counter takes a click anywhere in a day's column, as the month's
+  // cells do: the header, the all-day row and the hours, cards included. An
+  // hour clicked while counting starts no new event.
+  const countClick = (day: string) => (counter
+    ? (e: React.MouseEvent) => { if (counter.active || e.shiftKey) { e.preventDefault(); e.stopPropagation(); counter.pick(day); } }
+    : undefined);
+  const countHover = (day: string) => (counter?.active ? (e: React.PointerEvent) => { if (e.pointerType === 'mouse') counter.hover(day); } : undefined);
+
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>, day: string) {
     if (e.button !== 0 || e.target !== e.currentTarget) return;
+    if (counter && (counter.active || e.shiftKey)) return;
     const col = e.currentTarget;
     const from = minutesAt(e, col);
     setDraft({ day, from, to: from + 60 });
@@ -95,32 +109,55 @@ export function CalendarGrid({ days, index, hidden, firstHour, scrollRef, render
   }
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col select-none">
+    <div className="flex-1 min-h-0 flex flex-col select-none" onPointerLeave={counter?.active ? () => counter.hover(null) : undefined}>
       {/* The three rows reserve the same scrollbar gutter, or the hour grid's
           scrollbar narrows its columns and they drift from the day headers. */}
       <div className="shrink-0 grid border-b border-divider overflow-y-hidden [scrollbar-gutter:stable]" style={cols}>
         <div />
-        {days.map((day) => (
-          <button
-            key={day}
-            type="button"
-            onClick={() => onPickDay(day)}
-            data-day={day}
-            aria-label={formatInstant(dayAtNoon(day), 'date')}
-            aria-current={day === today ? 'date' : undefined}
-            className="flex flex-col items-center py-1 text-pn-muted hover:bg-pn/5 transition"
-          >
-            <span className="text-meta">{weekdayLabel(weekdayDate(weekdayOf(day)), 'short')}</span>
-            <span className={`text-row font-semibold tabular-nums rounded-md px-1.5 ${day === today ? 'bg-accent-fill text-white' : 'text-pn'}`}>
-              {dayAtNoon(day).getDate()}
-            </span>
-          </button>
-        ))}
+        {days.map((day) => {
+          const counting = counter?.active ?? false;
+          const countEnd = counting && (day === counter?.lo || day === counter?.hi);
+          const countOpen = countEnd && !counter?.hiCounted && (day !== counter?.lo || counter.lo === counter.hi);
+          const inCount = counting && counter?.lo != null && counter.hi != null && day > counter.lo && day < counter.hi;
+          const badge = counting && counter?.badge?.day === day ? counter.badge.text : null;
+          const head = renderDayHead?.(day);
+          return (
+            <div key={day} className="min-w-0 flex flex-col items-stretch">
+            <button
+              type="button"
+              onClickCapture={countClick(day)}
+              onClick={() => onPickDay(day)}
+              onPointerEnter={countHover(day)}
+              data-day={day}
+              aria-label={formatInstant(dayAtNoon(day), 'date')}
+              aria-current={day === today ? 'date' : undefined}
+              aria-pressed={counting ? (countEnd && !countOpen) || inCount : undefined}
+              className={`relative flex flex-col items-center py-1 text-pn-muted transition-colors ${
+                countOpen ? 'ring-2 ring-inset ring-accent hover:bg-pn/5'
+                  : countEnd ? 'ring-2 ring-inset ring-accent bg-accent/25' : inCount ? 'bg-accent/[0.16]' : 'hover:bg-pn/5'
+              }`}
+            >
+              <span className="text-meta">{weekdayLabel(weekdayDate(weekdayOf(day)), 'short')}</span>
+              <span className={`text-row font-semibold tabular-nums rounded-md px-1.5 ${day === today ? 'bg-accent-fill text-white' : 'text-pn'}`}>
+                {dayAtNoon(day).getDate()}
+              </span>
+              {badge && <span className="absolute top-1 end-1 px-1 rounded bg-accent-fill text-white text-meta font-semibold tabular-nums">{badge}</span>}
+            </button>
+            {/* Beside the button, never inside it: the trackers' own button. */}
+            {head && <div className="flex justify-center pb-1 min-w-0">{head}</div>}
+            </div>
+          );
+        })}
       </div>
       <div className="shrink-0 relative grid border-b border-divider max-h-[30%] overflow-y-auto [scrollbar-gutter:stable]" style={cols}>
         <div className="text-meta text-pn-muted text-end pe-1.5 pt-1.5">{t('calendar.allDay')}</div>
         {days.map((day) => (
-          <div key={day} className={`relative min-w-0 min-h-9 p-1 flex flex-col gap-px border-s border-divider ${day === today ? 'bg-accent/5' : ''}`}>
+          <div
+            key={day}
+            onClickCapture={countClick(day)}
+            onPointerEnter={countHover(day)}
+            className={`relative min-w-0 min-h-9 p-1 flex flex-col gap-px border-s border-divider ${counter?.active ? 'cursor-pointer' : ''} ${day === today ? 'bg-accent/5' : ''}`}
+          >
             {renderAllDay(day)}
           </div>
         ))}
@@ -143,11 +180,13 @@ export function CalendarGrid({ days, index, hidden, firstHour, scrollRef, render
                 key={day}
                 data-hours={day}
                 onPointerDown={(e) => onPointerDown(e, day)}
+                onClickCapture={countClick(day)}
+                onPointerEnter={countHover(day)}
                 onDragEnter={onDropAt ? (e) => { if (accepts?.(e)) { e.preventDefault(); setDropAt({ day, minutes: minutesAt(e, e.currentTarget) }); } } : undefined}
                 onDragOver={onDropAt ? (e) => { if (accepts?.(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setDropAt({ day, minutes: minutesAt(e, e.currentTarget) }); } } : undefined}
                 onDragLeave={onDropAt ? (e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropAt(null); } : undefined}
                 onDrop={onDropAt ? (e) => { if (accepts?.(e)) { e.preventDefault(); setDropAt(null); onDropAt(e, day, timeFromMinutes(minutesAt(e, e.currentTarget))); } } : undefined}
-                className={`relative border-s border-divider cursor-cell ${day === today ? 'bg-accent/5' : ''}`}
+                className={`relative border-s border-divider ${counter?.active ? 'cursor-pointer' : 'cursor-cell'} ${day === today ? 'bg-accent/5' : ''}`}
                 style={{ backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_PX - 1}px, var(--color-divider) ${HOUR_PX - 1}px, var(--color-divider) ${HOUR_PX}px)` }}
               >
                 {blocks.map((b) => (

@@ -25,6 +25,8 @@ const RETRY_AFTER_MS = 6 * HOUR;
 export const SNOOZE_MS = 20 * HOUR;
 // Spec: docs/internal/plans/auto-backup.md (section 8, Shrink guard)
 const SHRINK_FLOOR = 20;
+// Spec: docs/internal/plans/auto-backup.md (section 5, the device part of the name)
+const DEVICE_ID_PART = 4;
 
 const EXTENSION: Record<BackupType, string> = { full: 'pnbackupz', text: 'pnbackup' };
 
@@ -69,12 +71,16 @@ export function mayRetry(lastFailure: number | undefined, startedAt: number, now
 const pad = (n: number) => (n < 10 ? `0${n}` : String(n));
 
 /** The device part of a file name: lower-case letters, digits and hyphens,
- *  at most 40, never empty. The native side checks the same shape. */
-export function deviceSlug(deviceName: string, fallback: string): string {
+ *  at most 40, never empty. The native side checks the same shape. A device
+ *  with no name gets the platform and the start of its device id, so two
+ *  unnamed computers that share a folder never write one name (beta #171). */
+export function deviceSlug(deviceName: string, fallback: string, deviceId = ''): string {
   // Not `slugify` (exportNames.ts): that one answers 'untitled' for a name
   // with no letter in it, and here the platform name is the better fallback.
   const clean = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40).replace(/-+$/, '');
-  return clean(deviceName) || clean(fallback) || 'device';
+  const id = clean(deviceId).replace(/-/g, '').slice(0, DEVICE_ID_PART);
+  const base = clean(fallback) || 'device';
+  return clean(deviceName) || (id ? `${base}-${id}` : base);
 }
 
 /** `privacynotes-backup-2026-11-11-0902-macbook.pnbackupz`, in local time. */
@@ -90,11 +96,20 @@ export function fingerprint(v: {
   destination: string;
   live: number;
   trashed: number;
-  newest: string;
+  /** A hash over every live row's id, edit time and trash state
+   *  (`editsText`): an older edit pulled in from another device changes it
+   *  as surely as a new one (beta #171). */
+  edits: string;
   /** A hash of what the backup carries of the settings (backupSettingsKey). */
   settings: string;
 }): string {
-  return [v.type, v.destination, v.live, v.trashed, v.newest, v.settings].join('|');
+  return [v.type, v.destination, v.live, v.trashed, v.edits, v.settings].join('|');
+}
+
+/** The text `fingerprint` hashes for `edits`: one line per row, sorted, so
+ *  the order the vault lists them in never counts as a change. */
+export function editsText(rows: readonly { id: string; updatedAt: string; trashed?: number }[]): string {
+  return rows.map((n) => `${n.id}|${n.updatedAt}|${n.trashed === 1 ? 1 : 0}`).sort().join('\n');
 }
 
 /** A backup with far fewer items than the one before it: fewer than half,
@@ -122,9 +137,12 @@ export async function stillThere(files: readonly PlacedFile[], exists: (ref: str
 }
 
 /** The files that go so that `keep` stay, oldest first. Only files from this
- *  device's own list; the folder is never read to choose. */
-export function pruneList(files: readonly PlacedFile[], keep: BackupKeep): PlacedFile[] {
+ *  device's own list; the folder is never read to choose. `placedNow` is the
+ *  file the run has just placed. It is never one of them, whatever its stamp
+ *  says: the stamp is the device's clock, and on a clock that is behind the
+ *  newest copy would read as the oldest. */
+export function pruneList(files: readonly PlacedFile[], keep: BackupKeep, placedNow?: string): PlacedFile[] {
   if (keep === 0 || files.length <= keep) return [];
-  const oldestFirst = [...files].sort((a, b) => a.at - b.at);
+  const oldestFirst = files.filter((f) => f.ref !== placedNow).sort((a, b) => a.at - b.at);
   return oldestFirst.slice(0, files.length - keep);
 }

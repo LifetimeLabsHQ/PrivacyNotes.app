@@ -24,10 +24,14 @@ import { NodeSelection, Plugin, PluginKey, type Selection, type Transaction } fr
 import type { EditorView } from '@tiptap/pm/view';
 import type { Node as ProseMirrorNode, Slice } from '@tiptap/pm/model';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import { ArrowsOutSimple, Check, Copy, Download, Notches, iconCopy, iconDownload } from './icons';
+import { ArrowsOutSimple, Check, Copy, Download, Notches, TextAlignLeft, TextT, iconCopy, iconDownload } from './icons';
+import { pluginsShown } from './onDeviceAi';
+import { canAddText, editorNote, openPluginSheet } from './plugins/pluginDoors';
+import { planIsPro } from './plugins/pluginState';
+import { insertTextAfter, type TextTarget } from './plugins/insertText';
 import { ContextMenu, isTouchContextMenu, useContextMenu } from './ContextMenu';
 import { detectPlatform } from './devices';
-import { DeleteButton, IconButton } from './ui';
+import { Button, DeleteButton, IconButton } from './ui';
 import { IMAGE_WIDTH_MAX, IMAGE_WIDTH_MIN, clampImageWidth } from './imageWidth';
 import { TextField } from './ui/fields';
 import { HoverLabel } from './HoverLabel';
@@ -154,9 +158,10 @@ type ImageNodeViewProps = {
   selected: boolean;
   editor: {
     isEditable: boolean;
-    commands: { setNodeSelection: (pos: number) => boolean };
+    commands: { setNodeSelection: (pos: number) => boolean } & TextTarget['commands'];
     view: { focus: () => void; dom: HTMLElement };
     state: { doc: ProseMirrorNode };
+    schema: { nodes: Record<string, unknown> };
   };
   /** Document position of this image, or undefined once the node is gone. */
   getPos: () => number | undefined;
@@ -248,6 +253,7 @@ function ImageToolbar({
   onView,
   onDownload,
   onDelete,
+  onText,
 }: {
   width: number;
   onResize: (w: number) => void;
@@ -256,6 +262,8 @@ function ImageToolbar({
   onView: () => void;
   onDownload: (() => void) | null;
   onDelete: () => void;
+  /** Text in pictures: opens "Copy text" and "Add text to note" below the button (absent before its release). */
+  onText: ((anchor: HTMLElement) => void) | null;
 }) {
   const { t } = useTranslation('media');
   return (
@@ -289,6 +297,17 @@ function ImageToolbar({
       >
         {copied ? <Check /> : <Copy />}
       </IconButton>
+      {/* One labelled button, not two bare icons: nobody found those (owner, 2026-11-18). */}
+      {onText && (
+        <Button
+          variant="accent"
+          icon={<TextT />}
+          onPointerDown={keepEditorFocus}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onText(e.currentTarget); }}
+        >
+          {t('text')}
+        </Button>
+      )}
       <div className="pn-image-toolbar-divider" />
       <IconButton
         label={t('image.viewAria')}
@@ -584,9 +603,43 @@ const EncryptedImageView = memo(function EncryptedImageView({
     if (typeof pos === 'number') openMediaViewerInDoc(editor.state.doc, pos);
   }, [editor, getPos]);
 
+  // Text in pictures: the sheet reads the picture's decrypted bytes, and
+  // "Add text to note" puts the text below it. Spec: docs/internal/plans/plugins.md (section 6.4)
+  const handleText = useCallback((primary: 'copy' | 'add') => {
+    if (!objectUrl) return;
+    const url = objectUrl;
+    openPluginSheet({
+      kind: 'ocr',
+      source: 'picture',
+      primary,
+      noteId: editorNote(editor),
+      load: async () => new Uint8Array(await (await fetch(url)).arrayBuffer()),
+      // A note that cannot be edited has no place for the text: it would show and never be saved (beta #240 item 3).
+      ...(canAddText(editor)
+        ? {
+            insert: (text: string) => {
+              const pos = getPos();
+              if (typeof pos !== 'number') throw new Error('gone');
+              insertTextAfter(editor, pos, text);
+            },
+          }
+        : {}),
+    });
+  }, [objectUrl, editor, getPos]);
+
   const handleDelete = useCallback(() => {
     deleteNode();
   }, [deleteNode]);
+
+  // The picture bar's Text button: the two rows of the right-click menu, below it.
+  const textRows = () => [
+    { label: t('copyText'), icon: <TextT size={14} />, pro: !planIsPro(), onSelect: () => handleText('copy') },
+    ...(canAddText(editor) ? [{ label: t('addText'), icon: <TextAlignLeft size={14} />, pro: !planIsPro(), onSelect: () => handleText('add') }] : []),
+  ];
+  const openTextMenu = (anchor: HTMLElement) => {
+    const r = anchor.getBoundingClientRect();
+    menu.open({ clientX: r.left, clientY: r.bottom + 4, preventDefault: () => {}, stopPropagation: () => {} }, textRows());
+  };
 
   // In the desktop app a right click on a picture opens this menu, not the
   // webview's. The webview's Copy image puts the picture's object URL in the
@@ -603,6 +656,7 @@ const EncryptedImageView = memo(function EncryptedImageView({
     menu.open(e, [
       { label: t('image.copyAria'), icon: iconCopy(), onSelect: handleCopy },
       { label: t('image.viewAria'), icon: <ArrowsOutSimple size={14} />, onSelect: handleView },
+      ...(pluginsShown() ? textRows() : []),
       ...(canSave ? [{ label: t('image.downloadAria'), icon: iconDownload(), onSelect: () => { void handleDownload(); } }] : []),
     ]);
   };
@@ -827,6 +881,7 @@ const EncryptedImageView = memo(function EncryptedImageView({
             onView={handleView}
             onDownload={canSave ? handleDownload : null}
             onDelete={handleDelete}
+            onText={pluginsShown() ? openTextMenu : null}
           />
         )}
         {(selected || tapped) && saveFailed && (
@@ -1061,11 +1116,11 @@ async function handleImageUpload(
   file: File,
   view: EditorView,
   pos: number,
-): Promise<void> {
+): Promise<string | null> {
   // A Markdown folder note keeps its pictures as files beside it, never in
   // the encrypted store. The guard sits on the upload itself, so every door
   // into it is covered. Spec: docs/internal/specs/paste-pictures.md (section 3.3)
-  if (plaintextViews.has(view)) return;
+  if (plaintextViews.has(view)) return null;
   // The placeholder tells the user something is happening while the
   // picture is decoded and encrypted, so it is drawn from inside the
   // pipeline and taken down again however the pipeline ends.
@@ -1075,24 +1130,25 @@ async function handleImageUpload(
   });
   const placeholderPos = placeholderId ? findPlaceholderPos(view, placeholderId) : null;
   if (placeholderId) removePlaceholder(view, placeholderId);
-  if (!stored) return;
-  placeImage(view, `${IMAGE_URI_PREFIX}${stored.uuid}`, stored.name, placeholderPos ?? view.state.selection.to);
+  if (!stored) return null;
+  const src = `${IMAGE_URI_PREFIX}${stored.uuid}`;
+  return placeImage(view, src, stored.name, placeholderPos ?? view.state.selection.to) ? src : null;
 }
 
 /**
  * Put a picture node at `targetPos`, by the rules every picture insert uses:
  * an empty paragraph is replaced rather than left above it, a table cell
  * keeps the picture inside the cell, and anywhere else it goes after the
- * current block.
+ * current block. Says whether it placed one.
  */
-function placeImage(view: EditorView, src: string, alt: string, targetPos: number): void {
+function placeImage(view: EditorView, src: string, alt: string, targetPos: number): boolean {
   // An upload ends after an await, by which time the note may have turned
   // read-only or closed. Nothing is placed then; a picture stored for it is
   // named by no note, and the orphan reconcile (imageGC.ts) reclaims it.
-  if (!view.editable || view.isDestroyed) return;
+  if (!view.editable || view.isDestroyed) return false;
   const { schema, doc } = view.state;
   const imageNode = schema.nodes['image'];
-  if (!imageNode) return;
+  if (!imageNode) return false;
   const node = imageNode.create({ src, alt });
 
   const $pos = doc.resolve(Math.min(targetPos, doc.content.size));
@@ -1127,6 +1183,7 @@ function placeImage(view: EditorView, src: string, alt: string, targetPos: numbe
     const tr = view.state.tr.insert(insertAfter, node);
     view.dispatch(tr.scrollIntoView());
   }
+  return true;
 }
 
 /**
@@ -1142,13 +1199,14 @@ export function insertPictureRef(view: EditorView, ref: MediaRef): void {
 
 /**
  * Public entry point for the toolbar file picker. Same pipeline as
- * paste/drop - process, encrypt, upload, insert.
+ * paste/drop - process, encrypt, upload, insert. Gives the placed picture's
+ * `src`, or null when none was placed.
  */
 export async function triggerImageUpload(
   file: File,
   view: EditorView,
   pos: number,
-): Promise<void> {
+): Promise<string | null> {
   return handleImageUpload(file, view, pos);
 }
 
@@ -1875,7 +1933,16 @@ export const EncryptedImage = Node.create<{ plaintextOnly: boolean }>({
     // through here, so with the ref only in `src` the clipboard held a
     // 1x1 GIF, sanitizePastedHtml threw it out as a foreign image, and
     // cut-and-paste inside a note silently did nothing (GitHub #239).
-    if (typeof attrs.src === 'string' && isBlobRef(attrs.src)) {
+    //
+    // The same for a source the picture rule refuses (a desktop asset
+    // address that note text spells). The React view draws nothing for it,
+    // but this rule also runs where there is no view: ProseMirror redraws
+    // every node through it when the editor's content unmounts and its node
+    // views are taken away, and it builds the element in the page's own
+    // document, where an `<img>` asks for its `src` as soon as it is set.
+    // So leaving a note asked for the address the open note had refused.
+    // Test: tests/imageRenderRule.test.ts
+    if (typeof attrs.src === 'string' && (isBlobRef(attrs.src) || !allowedImageSource(attrs.src))) {
       attrs[IMAGE_REF_ATTR] = attrs.src;
       attrs.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
     }

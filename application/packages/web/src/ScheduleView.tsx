@@ -82,8 +82,8 @@ const FIELD = 'w-[5.5rem] h-8 rounded-md border border-divider bg-surface-1 px-2
 const SELECT = 'h-8 rounded-md border border-divider bg-surface-1 px-1.5 text-compact text-pn focus:border-accent outline-none';
 
 /** A time field of this view: its box, and a cleared field clears the time. */
-function TimeField({ day, value, onCommit, label }: { day: string; value: string | undefined; onCommit: (time: string | null) => void; label: string }) {
-  return <TimeInput day={day} value={value} label={label} onCommit={onCommit} className={FIELD} clearable />;
+function TimeField({ day, value, onCommit, onDraft, label }: { day: string; value: string | undefined; onCommit: (time: string | null) => void; onDraft?: (time: string | null) => void; label: string }) {
+  return <TimeInput day={day} value={value} label={label} onCommit={onCommit} onDraft={onDraft} className={FIELD} clearable />;
 }
 
 export default function ScheduleView({
@@ -284,6 +284,9 @@ function AlertsView({ ui, day, timed, alerts, onBack, onChange }: { ui: MenuUi; 
   const [amount, setAmount] = useState('1');
   const [unit, setUnit] = useState<'minutes' | 'hours' | 'days' | 'weeks'>(timed ? 'hours' : 'days');
   const [at, setAt] = useState(allDayAt);
+  // The time still being typed: Add follows it, since a click on Add first
+  // blurs the field and commits it (#833).
+  const [typedAt, setTypedAt] = useState<string | null>(null);
   const set = (next: Alert[]) => {
     if (next.length > alerts.length) askForRemindersOnce();
     onChange([...next].sort((a, b) => alertOrder(a) - alertOrder(b)));
@@ -291,7 +294,7 @@ function AlertsView({ ui, day, timed, alerts, onBack, onChange }: { ui: MenuUi; 
   const n = Math.max(0, Math.min(999, Number(amount) || 0));
   const candidate: Alert = timed
     ? { before: n * { minutes: 1, hours: 60, days: 1440, weeks: 10080 }[unit] }
-    : { days: Math.min(28, n * (unit === 'weeks' ? 7 : 1)), at: isTime(at) ? at : '09:00' };
+    : { days: Math.min(28, n * (unit === 'weeks' ? 7 : 1)), at: typedAt ?? (isTime(at) ? at : '09:00') };
   // An alert that is already on (a preset with its check, or a custom row)
   // cannot be added twice, so Add waits for a different amount.
   const taken = held.has(key(candidate));
@@ -344,7 +347,7 @@ function AlertsView({ ui, day, timed, alerts, onBack, onChange }: { ui: MenuUi; 
           {!timed && (
             <>
               <span className="shrink-0 text-pn-muted">{t('alerts.at')}</span>
-              <TimeField day={day} value={at} label={t('alerts.at')} onCommit={(v) => v && setAt(v)} />
+              <TimeField day={day} value={at} label={t('alerts.at')} onCommit={(v) => v && setAt(v)} onDraft={setTypedAt} />
             </>
           )}
         </div>

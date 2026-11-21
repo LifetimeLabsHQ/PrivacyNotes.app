@@ -6,13 +6,13 @@ import { buildFolderTree } from './folderImport';
 import { FRONT_MATTER } from '../markdownFolder/adapter';
 import { HIGHLIGHT_COLORS } from '../editorColors';
 import { noteLinkTarget } from '../noteLinks';
-import { linkifyMarkdown } from './linkify';
+import { withBareLinks } from './bareLinks';
 import i18n from '../i18n';
 import { mapOutsideCode, proseOnly, stripHtmlComments } from './codeSegments';
 import { isBlobReferenced, mimeFromExt } from './blobImport';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 
-const msg = (key: string, options?: Record<string, unknown>): string =>
+const msg = (key: string, options: Record<string, unknown> = {}): string =>
   i18n.t(`importLog:bear.${key}`, options);
 
 /**
@@ -216,7 +216,9 @@ async function readNotes(file: File): Promise<{ notes: RawNote[]; files: Map<str
   return { notes, files };
 }
 
-export async function parseBear(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
+export const parseBear = withBareLinks(readBear);
+
+async function readBear(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
   onProgress?.(i18n.t('importExport:status.readingFile'));
   const { notes: raws, files } = await readNotes(file);
   if (raws.length === 0) {
@@ -261,9 +263,7 @@ export async function parseBear(file: File, onProgress?: (msg: string) => void):
   let underlined = 0;
   let droppedState = 0;
   let missingFiles = 0;
-  let linkified = 0;
   let headingLinks = 0;
-  let empty = 0;
   let untagged = 0;
   let shortened = 0;
   const out: ImportedNote[] = [];
@@ -331,18 +331,16 @@ export async function parseBear(file: File, onProgress?: (msg: string) => void):
         }),
     );
 
-    const linked = linkifyMarkdown(body.replace(/\n{3,}$/, '\n'));
-    if (linked !== body) linkified++;
+    const kept = body.replace(/\n{3,}$/, '\n');
     const seen = new Set<string>();
     const normTags = tags.filter((t) => t && !seen.has(t.toLowerCase()) && seen.add(t.toLowerCase()));
     if (normTags.length === 0) untagged++;
-    if (!linked.trim()) empty++;
 
     const info = raw.info;
     const createdAt = infoDate(info, 'creationDate') ?? raw.fileDate?.toISOString() ?? now;
     out.push({
       title,
-      body: linked,
+      body: kept,
       tags: normTags,
       createdAt,
       updatedAt: infoDate(info, 'modificationDate') ?? createdAt,
@@ -389,7 +387,6 @@ export async function parseBear(file: File, onProgress?: (msg: string) => void):
   if (colored > 0) transforms.push(msg('colored', { count: colored }));
   if (underlined > 0) transforms.push(msg('underlined', { count: underlined }));
   if (headingLinks > 0) transforms.push(msg('headingLinks', { count: headingLinks }));
-  if (linkified > 0) transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkified }));
   if (droppedState > 0) {
     warnings.push(msg('droppedState', { count: droppedState }));
   }
@@ -404,12 +401,6 @@ export async function parseBear(file: File, onProgress?: (msg: string) => void):
     notes: out,
     warnings,
     transforms,
-    stats: {
-      totalNotes: out.length,
-      emptyNotes: empty,
-      untaggedNotes: untagged,
-      uniqueTags: new Set(out.flatMap((n) => n.tags)).size,
-    },
     source: 'bear',
   };
   if (folders.length > 0) parsed.folders = folders;

@@ -6,7 +6,11 @@
  * username is pointed out before it is saved twice. Save seals it into the
  * inbox, and the app adds it to the Vault at its next sync. Save says Saved
  * for a moment, then the footer says where the login went (pattern 177).
- * Spec: docs/internal/plans/browser-extension-build.md (section 3.4, Add login)
+ *
+ * Edit mode (`edit`): the same form on a login of the copy, with the five
+ * fields the copy carries (name, website, username, password, 2FA key; no
+ * notes, P31). Save sends only the fields that changed, as a `loginedit` row.
+ * Spec: docs/internal/plans/browser-extension-build.md (section 3.4, Add login); docs/contrib/passkeys.md (section 6)
  */
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -23,7 +27,8 @@ import { SETTINGS_HELP } from '@web/settingsUI';
 import { copyAndClear } from '../../src/copy';
 import { displayHost } from '../../src/favicon';
 import { matchLogins } from '../../src/match';
-import type { SaveResult } from '../../src/save';
+import type { LoginEditResult, SaveResult } from '../../src/save';
+import { loginEditBase, type LoginEditSet } from '../../src/pending';
 import type { Notice } from './Footer';
 import { GeneratorView } from './GeneratorView';
 import { DONE_HOLD_MS, SaveButton } from './SaveButton';
@@ -45,21 +50,27 @@ function knownUsernames(logins: LoginCopyEntry[]): string[] {
   return [...count].sort((a, b) => b[1] - a[1]).map(([name]) => name).slice(0, 20);
 }
 
-export function AddLoginView({ url, logins, pro, onDone }: {
+/** What the website field becomes: an address with its scheme. */
+const siteValue = (text: string) => (text.trim() ? (/^https?:\/\//i.test(text.trim()) ? text.trim() : `https://${text.trim()}`) : '');
+
+export function AddLoginView({ url, logins, pro, onDone, edit }: {
   url: string;
   logins: LoginCopyEntry[];
   pro: boolean;
+  /** The login to change; none adds a new one. */
+  edit?: LoginCopyEntry;
   /** Back to the popup, with the footer message of a save. */
   onDone: (notice: Notice | null) => void;
 }) {
   const { t } = useTranslation('extension');
-  const [name, setName] = useState(displayHost(url));
-  const [site, setSite] = useState(originOf(url));
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const editSite = edit ? loginEditBase(edit).url : '';
+  const [name, setName] = useState(edit ? edit.name : displayHost(url));
+  const [site, setSite] = useState(edit ? editSite : originOf(url));
+  const [username, setUsername] = useState(edit?.username ?? '');
+  const [password, setPassword] = useState(edit?.password ?? '');
   const [reveal, setReveal] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [totp, setTotp] = useState('');
+  const [totp, setTotp] = useState(edit?.totp ?? '');
   const [notes, setNotes] = useState('');
   const [generating, setGenerating] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -67,10 +78,38 @@ export function AddLoginView({ url, logins, pro, onDone }: {
   const [error, setError] = useState<string | null>(null);
 
   const usernames = useMemo(() => knownUsernames(logins), [logins]);
-  const twin = username.trim() !== '' && matchLogins(logins, site || url).some((l) => l.username.trim().toLowerCase() === username.trim().toLowerCase());
+  const twin = username.trim() !== '' && matchLogins(logins, site || url).some((l) => l.item !== edit?.item && l.username.trim().toLowerCase() === username.trim().toLowerCase());
+  // Edit sends only what changed (P31).
+  const changed: LoginEditSet = {};
+  if (edit) {
+    if (name !== edit.name) changed.name = name.trim();
+    if (site !== editSite) changed.url = siteValue(site);
+    if (username !== edit.username) changed.username = username;
+    if (password !== edit.password) changed.password = password;
+    if (totp !== edit.totp) changed.totp = totp.trim();
+  }
+  const unchanged = !!edit && Object.keys(changed).length === 0;
   const totpBad = totp.trim() !== '' && !parseTotpInput(totp);
 
+  const saveEdit = async (login: LoginCopyEntry) => {
+    setBusy(true);
+    setError(null);
+    const request = { item: login.item, set: changed, addPasskeys: [], base: loginEditBase(login) };
+    const result = (await browser.runtime.sendMessage({ type: 'saveLoginEdit', request }).catch(() => null)) as LoginEditResult | null;
+    setBusy(false);
+    if (result && (result.state === 'sent' || result.state === 'queued')) {
+      setDone(true);
+      const sent = result.state === 'sent';
+      window.setTimeout(() => onDone(sent
+        ? { title: t('logins.saved'), detail: t('notice.vaultNextSync') }
+        : { tone: 'info', title: t('notice.savedHere'), detail: t('notice.goesOutOnline') }), DONE_HOLD_MS);
+      return;
+    }
+    setError(result?.state === 'full' ? t('clip.queueFull') : t('clip.failed'));
+  };
+
   const save = async () => {
+    if (edit) return saveEdit(edit);
     setBusy(true);
     setError(null);
     const request = { name: name.trim(), url: originOf(site.trim()) || (site.trim() ? `https://${site.trim()}` : ''), username, password, totp: totp.trim(), notes };
@@ -108,10 +147,10 @@ export function AddLoginView({ url, logins, pro, onDone }: {
       className="space-y-3 p-3 pt-0 [&>header]:-mx-3"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!busy && !done && (username || password) && !totpBad) void save();
+        if (!busy && !done && (username || password) && !totpBad && !unchanged) void save();
       }}
     >
-      <SheetHeader title={t('menu.addLogin')} onBack={() => onDone(null)} />
+      <SheetHeader title={edit ? t('logins.editTitle') : t('menu.addLogin')} onBack={() => onDone(null)} />
       <div>
         <FieldLabel icon={<Tag />} htmlFor="pn-name">{t('shell:vaultItem.fieldName')}</FieldLabel>
         <input id="pn-name" value={name} onChange={(e) => setName(e.target.value)} className={FIELD_CLASS} dir="auto" />
@@ -180,10 +219,13 @@ export function AddLoginView({ url, logins, pro, onDone }: {
           <p className={`mt-1 ${SETTINGS_HELP}`}>{t('auth:loginForm.totpProNote')}</p>
         ) : null}
       </div>
-      <div>
-        <FieldLabel icon={<NotePencil />} htmlFor="pn-notes">{t('common:cardForm.notes')}</FieldLabel>
-        <textarea id="pn-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={`${FIELD_CLASS} resize-y`} dir="auto" />
-      </div>
+      {/* The copy carries no notes, so an edit cannot show or send them (P31). */}
+      {!edit && (
+        <div>
+          <FieldLabel icon={<NotePencil />} htmlFor="pn-notes">{t('common:cardForm.notes')}</FieldLabel>
+          <textarea id="pn-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={`${FIELD_CLASS} resize-y`} dir="auto" />
+        </div>
+      )}
       {error && <Callout look="card" tone="danger">{error}</Callout>}
       <div className="grid grid-cols-2 gap-2">
         <Button action="cancel" onClick={() => onDone(null)} disabled={busy || done} />
@@ -191,7 +233,7 @@ export function AddLoginView({ url, logins, pro, onDone }: {
           type="submit"
           variant="primary"
           state={done ? 'done' : busy ? 'busy' : 'idle'}
-          disabled={(!username && !password) || totpBad}
+          disabled={(!username && !password) || totpBad || unchanged}
           icon={<FloppyDisk aria-hidden="true" />}
           label={t('common:actions.save')}
           busyLabel={t('common:state.saving')}

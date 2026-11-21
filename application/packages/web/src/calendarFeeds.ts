@@ -80,3 +80,11 @@ export function feedItemId(feedId: string, n: number): string {
 export function isFeedItemId(id: string): boolean {
   return id.startsWith(ITEM_PREFIX);
 }
+
+/** The feed an event of a subscribed calendar comes from, or null for an
+ *  item's id. */
+export function feedIdOf(id: string): string | null {
+  if (!isFeedItemId(id)) return null;
+  const end = id.lastIndexOf(':');
+  return end > ITEM_PREFIX.length ? id.slice(ITEM_PREFIX.length, end) : null;
+}

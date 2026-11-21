@@ -233,6 +233,8 @@
       "prevYear": "이전 연도",
       "nextYear": "다음 연도"
     },
+    "seeEntries": "항목 보기",
+    "showInCalendar": "캘린더에 표시",
     "trackers": {
       "tapHint": "탭하면 탐색이 열려요",
       "stopped": "중지됨",

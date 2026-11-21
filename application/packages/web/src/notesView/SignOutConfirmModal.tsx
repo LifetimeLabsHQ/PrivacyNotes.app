@@ -1,5 +1,8 @@
+import { useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
+import { liveQuery } from 'dexie';
 import { useEscapeToClose } from '../useEscapeToClose';
+import { countUnopenedCopiesHere } from '../unopenedNotes';
 import { WarningCircle } from '../icons';
 import { CloseButton } from '../ui';
 
@@ -20,7 +23,21 @@ import { CloseButton } from '../ui';
  * count forces this modal open even for users who opted out of the phrase
  * reminder (maySkipSignOutConfirm): they consented to skipping a
  * reminder, not to data loss. Same principle as #121.
+ *
+ * It also counts, live, the notes whose server row this device cannot open
+ * (unopenedNotes.ts, beta #203): no sign-out sends them, so a voluntary one
+ * deletes the copy here, which may be the only good one, and a forced one
+ * keeps it.
  */
+function useUnopenedCopiesHere(): number {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const sub = liveQuery(countUnopenedCopiesHere).subscribe({ next: setCount, error: () => setCount(0) });
+    return () => sub.unsubscribe();
+  }, []);
+  return count;
+}
+
 export function SignOutConfirmModal({
   dontRemind,
   onDontRemindChange,
@@ -53,13 +70,15 @@ export function SignOutConfirmModal({
   const { t } = useTranslation('notesChrome');
   // With unsynced rows or files at stake, every dismissal keeps the
   // session; the phrase escape hatch stays as an explicit button.
+  const unopened = useUnopenedCopiesHere();
   const filesAtRisk = unsyncedFiles > 0 && !unsyncedKept;
-  const risky = (unsyncedCount > 0 && !unsyncedKept) || filesAtRisk;
+  const lostNotes = unsyncedCount + (unsyncedKept ? 0 : unopened);
+  const risky = (lostNotes > 0 && !unsyncedKept) || filesAtRisk;
   const loseLabel = !filesAtRisk
-    ? t('signOutConfirm.signOutLose', { count: unsyncedCount })
-    : unsyncedCount > 0
+    ? t('signOutConfirm.signOutLose', { count: lostNotes })
+    : lostNotes > 0
       ? t('signOutConfirm.signOutLoseBoth', {
-          count: unsyncedCount,
+          count: lostNotes,
           files: t('signOutConfirm.fileCount', { count: unsyncedFiles }),
         })
       : t('signOutConfirm.signOutLoseFiles', { count: unsyncedFiles });
@@ -88,7 +107,7 @@ export function SignOutConfirmModal({
             components={{ only: <strong />, action: <strong /> }}
           />
         </p>
-        {(unsyncedCount > 0 || filesAtRisk) && (
+        {(unsyncedCount > 0 || filesAtRisk || unopened > 0) && (
           <div className="flex items-start gap-2 rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-compact leading-snug p-3">
             <WarningCircle className="shrink-0 mt-0.5" />
             <div className="space-y-2">
@@ -100,6 +119,7 @@ export function SignOutConfirmModal({
                 </p>
               )}
               {filesAtRisk && <p>{t('signOutConfirm.unsyncedFilesWarn', { count: unsyncedFiles })}</p>}
+              {unopened > 0 && <p>{t(unsyncedKept ? 'signOutConfirm.unopenedKept' : 'signOutConfirm.unopenedWarn', { count: unopened })}</p>}
               {risky && shown.length > 0 && (
                 <div>
                   <p className="font-medium">{t('signOutConfirm.neverBackedUp', { count: neverBackedUp.length })}</p>

@@ -1,5 +1,7 @@
 import {
   forwardRef,
+  lazy,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -72,13 +74,15 @@ import {
 import { Spoiler } from './editorSpoiler';
 import { InlineCodeCopy, inlineCodeHint } from './editorCodeCopy';
 import { AddLineBetweenBlocks } from './editorAddLine';
-import { LINK_MARKDOWN, LINK_TITLE_ATTRIBUTE, LinkModifierOpen, MarkdownLinkTyping, SelfLinkTyping, linkHrefAt, linkSelectionIfUrl, openLinkHref } from './editorLinks';
+import { Folds, openFoldsAt } from './editorFolds';
+import { LINK_ATTRIBUTE_FROM_SETTINGS, LINK_MARKDOWN, LINK_TITLE_ATTRIBUTE, LinkModifierOpen, MarkdownLinkTyping, SelfLinkTyping, linkHrefAt, linkSelectionIfUrl, openLinkHref } from './editorLinks';
 import { createLongPressGuard } from './softKeyboard';
 import { planLineSort } from './sortLines';
 import { activeLocale } from './i18n';
+import { setEditorNote } from './plugins/pluginDoors';
 import { readColorPref } from './editorPrefs';
 import { DEFAULT_HIGHLIGHT, HIGHLIGHT_COLORS } from './editorColors';
-import { useTheme, readLineSpacing, readCopyFormat } from './theme';
+import { useTheme, readCopyFormat } from './theme';
 import { SearchHighlight, setSearchQuery, getSearchInfo, clearSearch } from './editorSearch';
 import { FindBar } from './FindBar';
 import { ReplaceBar } from './ReplaceBar';
@@ -89,6 +93,9 @@ import { useEditorPanels } from './useEditorPanels';
 import { NodeViewMount } from './editorNodeViewMount';
 import { APP_KEYS, matchesKey } from './shortcutMatch';
 import { useDebouncedMarkdownSave } from './useDebouncedMarkdownSave';
+import { lineGutter, NUMBER_GAP, NUMBER_GAP_FOLDS } from './lineNumbers';
+// Line numbers are off by default: their layer loads on demand, off the boot path.
+const BlockLineNumbers = lazy(() => import('./BlockLineNumbers').then((m) => ({ default: m.BlockLineNumbers })));
 import {
   TextStyleMarkdown,
   TaskListInputRule,
@@ -126,6 +133,7 @@ import {
   InlineIcon,
 } from './editorExtensions';
 import { FocusClickCaret } from './editorFocusCaret';
+import type { SourcePreviewControls } from './sourcePreviewButtons';
 
 type Props = {
   /** Initial markdown content. Only read on mount - use a `key` prop to force reload. */
@@ -135,6 +143,9 @@ type Props = {
   /** Id of the note being edited - enables the synchronous close-flush
    *  stash (flushStash.ts) so a tab closed mid-debounce loses nothing. */
   noteId?: string;
+  /** Spell check is off for this note. It only takes the device switch away.
+   *  Spec: docs/internal/specs/note-spell-check.md */
+  noSpellcheck?: boolean;
   /** When true, nothing edits the note: no toolbar, no "Add a line at
    *  the top" zone, no replace. Find and the outline stay, because they only read it. */
   readOnly?: boolean;
@@ -145,6 +156,9 @@ type Props = {
    * second bar.
    */
   preview?: boolean;
+  /** The other side of two items side by side: no keys, no commands
+   *  (useEditorPanels.ts). Spec: docs/internal/plans/side-by-side-notes.md (section 6) */
+  idle?: boolean;
   /** Called when the editor gains or loses focus. */
   onFocusChange?: (focused: boolean) => void;
   /**
@@ -189,6 +203,12 @@ type Props = {
   toolbarSlot?: HTMLElement | null;
   /** The format bar's "Show markdown"; absent where the note has no Markdown view. */
   onShowMarkdown?: () => void;
+  /** The preview button beside "Show markdown" (sourcePreviewButtons.tsx). */
+  sourcePreview?: SourcePreviewControls;
+  /** Line numbers beside the blocks (BlockLineNumbers.tsx). `true`: count
+   *  the note as it saves and mark the caret's block. The split view's
+   *  preview passes the text it shows and the Markdown caret's line. */
+  lineNumbers?: boolean | { text: string; caretLine: number | null };
   /** The note's own place: Insert > Location opens prefilled with it. */
   place?: NoteLocation;
   /**
@@ -277,11 +297,17 @@ export type EditorHandle = {
 const TOUCH_HANDLE_HEIGHT = 32;
 
 const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }>(function EditorInner(
-  { value, onChange, readOnly = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, notice, connections, toolbarSlot, onShowMarkdown, place, onRenameFile, fileNote = false, preview = false, sinkCheckedTasks = true, typedSymbols = false, placeholder, onReady },
+  { value, onChange, readOnly = false, noSpellcheck = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, notice, connections, toolbarSlot, onShowMarkdown, sourcePreview, lineNumbers, place, onRenameFile, fileNote = false, preview = false, idle = false, sinkCheckedTasks = true, typedSymbols = false, placeholder, onReady },
   ref
 ) {
   const { t } = useTranslation('editor');
-  const { onUpdate, useFlushOnExit, flushNow } = useDebouncedMarkdownSave({ value, onChange, readOnly, noteId });
+  // Each saved Markdown also goes to the line numbers, which count it.
+  const savedTap = useRef<((markdown: string) => void) | null>(null);
+  const saveChange = (md: string) => {
+    onChange(md);
+    savedTap.current?.(md);
+  };
+  const { onUpdate, useFlushOnExit, flushNow } = useDebouncedMarkdownSave({ value, onChange: saveChange, readOnly, noteId });
 
   /**
    * Back-reference to the editor, for callbacks declared above `useEditor`.
@@ -310,9 +336,56 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
   onOpenUpgradeRef.current = onOpenUpgrade;
 
   const isMobile = useIsMobile();
-  const { spellcheck, invisibles, favicons } = useTheme();
+  const { spellcheck: deviceSpellcheck, invisibles, favicons } = useTheme();
+  const spellcheck = deviceSpellcheck && !noSpellcheck;
   const barAtBottom = useContext(FormatBarContext).position === 'bottom';
   const rootRef = useRef<HTMLDivElement>(null);
+  // The pinned notice row's height, measured because the row wraps on a
+  // narrow pane, so an outline jump parks a heading under it (index.css,
+  // scroll-margin-top reads --pn-notice-h).
+  // An open find or replace bar floats on the same row: the hints keep its
+  // width free when the widest fits beside it, and drop below it when not
+  // (a phone, a narrow pane), so the bar never covers Turn off.
+  const [noticeEl, setNoticeEl] = useState<HTMLDivElement | null>(null);
+  const [barSlotEl, setBarSlotEl] = useState<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    if (!noticeEl) {
+      root.style.removeProperty('--pn-notice-h');
+      return;
+    }
+    const hints = noticeEl.firstElementChild?.firstElementChild as HTMLElement | null;
+    const apply = () => {
+      const barBox = barSlotEl?.firstElementChild as HTMLElement | null;
+      let end = '0px';
+      let top = '0px';
+      if (barBox && hints) {
+        const style = getComputedStyle(barBox);
+        const barW = barBox.offsetWidth + (parseFloat(style.marginInlineEnd) || 0) + 8;
+        const room = noticeEl.clientWidth - barW
+          - (parseFloat(getComputedStyle(noticeEl).paddingInlineStart) || 0)
+          - (parseFloat(getComputedStyle(noticeEl).paddingInlineEnd) || 0);
+        // The hints wrap, so the widest one decides.
+        const need = Math.max(0, ...[...hints.children].map((k) => (k as HTMLElement).scrollWidth));
+        if (need <= room) end = `${barW}px`;
+        else top = `${barBox.offsetHeight + (parseFloat(style.marginTop) || 0)}px`;
+      }
+      root.style.setProperty('--pn-notice-bar-w', end);
+      root.style.setProperty('--pn-notice-bar-h', top);
+      root.style.setProperty('--pn-notice-h', `${noticeEl.offsetHeight}px`);
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(noticeEl);
+    if (hints) ro.observe(hints);
+    if (barSlotEl?.firstElementChild) ro.observe(barSlotEl.firstElementChild);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty('--pn-notice-bar-w');
+      root.style.removeProperty('--pn-notice-bar-h');
+    };
+  }, [noticeEl, barSlotEl]);
   // Long-press keyboard guard for the body. See the handleDOMEvents block in
   // editorProps; the note title owns a second one in NotesView.
   const longPress = useMemo(createLongPressGuard, []);
@@ -589,7 +662,17 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // link still get auto-linked - this only stops the mark from
         // silently bleeding into adjacent text.
         inclusive() { return false; },
-        addAttributes() { return { ...this.parent?.(), title: LINK_TITLE_ATTRIBUTE }; },
+        // class, rel and target come from the settings below and never from
+        // a document: see LINK_ATTRIBUTE_FROM_SETTINGS.
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            title: LINK_TITLE_ATTRIBUTE,
+            class: LINK_ATTRIBUTE_FROM_SETTINGS,
+            rel: LINK_ATTRIBUTE_FROM_SETTINGS,
+            target: LINK_ATTRIBUTE_FROM_SETTINGS,
+          };
+        },
         addStorage() { return { ...this.parent?.(), markdown: LINK_MARKDOWN }; },
       }).configure({
         // Who opens a clicked link is decided in one place, and it is not
@@ -703,6 +786,9 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       Spoiler,
       InlineCodeCopy,
       AddLineBetweenBlocks,
+      // Heading and list folds: decorations only, never in the history
+      // preview, which draws a saved version as it is - see editorFolds.
+      ...(preview ? [] : [Folds.configure({ noteId })]),
       // <sup>/<sub> marks (Mod+. / Mod+,). Same inline-HTML round-trip.
       Superscript,
       // Subscript keeps its toolbar button but loses its default Mod-,
@@ -781,7 +867,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // engine's, not ours)
         ...(spellcheck ? {} : { spellcheck: 'false' }),
       },
-      // Copying to another app: lines of unformatted text as they show, and
+      // Copying to another app: lines of unformatted text as typed, and
       // anything else as the note's markdown, with its line breaks written as
       // two trailing spaces instead of a backslash and only the escapes its
       // text needs (editorClipboard.ts). tiptap-markdown
@@ -806,7 +892,6 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         return markdownForClipboard(
           footnotes ? slice.content.append(Fragment.from(footnotes)) : slice.content,
           (fragment) => ser.serialize(fragment),
-          readLineSpacing() !== 'normal',
           readCopyFormat(),
           md.parser ? clipboardRenderer(md.parser) : undefined,
         );
@@ -948,6 +1033,11 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
+  // The plugin doors inside (pictures, PDF and audio chips) give their job this note (beta #240 item 4).
+  useEffect(() => {
+    if (editor) setEditorNote(editor, noteId ?? '');
+  }, [editor, noteId]);
+
   // Sync readOnly prop to TipTap's editable state. The editor is keyed by
   // note id so it doesn't remount when `locked` toggles - this effect
   // makes prevent-editing take effect immediately.
@@ -1010,7 +1100,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
     toggleReplace,
     swapBar,
     swapTerm,
-  } = useEditorPanels({ rootRef, editorRef, editor, readOnly, preview, toolbarVisible, isPro, onOpenUpgrade });
+  } = useEditorPanels({ rootRef, editorRef, editor, readOnly, preview, toolbarVisible, isPro, onOpenUpgrade, idle });
 
   /**
    * Put a new empty line above everything else in the note and the caret on
@@ -1037,6 +1127,11 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
   // The zone needs more room than the body's 16px top gap to hold its label
   // clear of the line above (pn-top-line-pad in index.css).
   const showTopLine = !readOnly && !preview && needsTopLine;
+  // Line numbers: the text they count, and the room past the fold chevron
+  // where this view draws one at the line's start (not on a touch screen).
+  const numberText = !lineNumbers ? null : typeof lineNumbers === 'object' ? lineNumbers.text : value;
+  const isTouchScreen = typeof matchMedia === 'function' && matchMedia('(hover: none)').matches;
+  const numberGap = preview || isTouchScreen ? NUMBER_GAP : NUMBER_GAP_FOLDS;
 
   const addLineAtTop = useCallback(() => {
     const ed = editorRef.current;
@@ -1071,6 +1166,9 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       if (editor.isDestroyed) return;
       const found = find();
       if (found < 0) { onMissing?.(); return; }
+      // A target inside a folded section is drawn first, or there is
+      // nothing to scroll to.
+      openFoldsAt(editor.view, found);
       const dom = editor.view.nodeDOM(found);
       if (!(dom instanceof HTMLElement)) return;
       // Keep the target centered until layout settles: on a freshly
@@ -1229,6 +1327,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           hideEncryptedMedia={hideEncryptedMedia}
           onInsertFiles={onInsertFiles}
           onShowMarkdown={onShowMarkdown}
+          sourcePreview={sourcePreview}
         />,
         toolbarSlot,
       )}
@@ -1244,6 +1343,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           hideEncryptedMedia={hideEncryptedMedia}
           onInsertFiles={onInsertFiles}
           onShowMarkdown={onShowMarkdown}
+          sourcePreview={sourcePreview}
         />
       )}
       {/* Where the link panel falls back to when the link button is not on
@@ -1259,12 +1359,16 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         />
       )}
       {/* Find or replace bar, pinned top-right just under the toolbar. The
-          zero-height sticky wrapper keeps it floating over the note content
-          (no reserved row) and pinned on scroll; the inner bar handles
-          pointer events. Sticky top = tag row + measured toolbar height. */}
+          sticky wrapper keeps its row in the flow, so the note starts below
+          the bar and a hit on the first line is never under it (#835); on
+          scroll it stays pinned over the content. With a notice line the
+          wrapper has no height: the bar floats on that row, which makes room
+          for it. The inner bar handles pointer events. Sticky top = tag row
+          + measured toolbar height. */}
       {bar !== 'none' && !preview && editor && (
         <div
-          className="sticky z-[5] flex h-0 items-start justify-end overflow-visible pointer-events-none"
+          ref={setBarSlotEl}
+          className={`sticky z-[5] flex ${notice ? 'h-0 ' : ''}items-start justify-end overflow-visible pointer-events-none`}
           style={{ top: 'calc(var(--pn-tagrow-h, 0px) + var(--pn-editor-toolbar-h, 0px))' }}
         >
           {bar === 'find' ? (
@@ -1310,12 +1414,26 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           </div>
         </div>
       )}
+      {/* The notice pins under the tag row and the toolbar, on the row of
+          the corner pills, so a long read-only note still says it is
+          read-only after a scroll (#830). It bleeds into the gutters as the
+          toolbar does, so text scrolling under it never shows at its sides. */}
       {notice && (
         <div
-          className="flex min-w-0 items-center"
-          style={{ minHeight: SLOT_PILL_HEIGHT, paddingInlineEnd: 'var(--pn-outline-fw, 0px)' }}
+          ref={setNoticeEl}
+          className="pn-notice-row sticky z-[4] -mx-4 sm:-mx-6 px-4 sm:px-6 bg-surface-1/95 backdrop-blur"
+          style={{ top: 'calc(var(--pn-tagrow-h, 0px) + var(--pn-editor-toolbar-h, 0px))' }}
         >
-          {notice}
+          <div
+            className="flex min-w-0 items-center"
+            style={{
+              minHeight: SLOT_PILL_HEIGHT,
+              paddingInlineEnd: 'max(var(--pn-outline-fw, 0px), var(--pn-notice-bar-w, 0px))',
+              paddingTop: 'var(--pn-notice-bar-h, 0px)',
+            }}
+          >
+            {notice}
+          </div>
         </div>
       )}
       {audioState !== 'idle' && (
@@ -1353,7 +1471,21 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           </button>
         </div>
       )}
-      <EditorContent editor={editor} />
+      <EditorContent
+        editor={editor}
+        style={numberText !== null ? { paddingInlineStart: lineGutter(numberText.split('\n').length, numberGap) } : undefined}
+      />
+      {editor && numberText !== null && (
+        <Suspense fallback={null}>
+          <BlockLineNumbers
+            editor={editor}
+            text={numberText}
+            tap={typeof lineNumbers === 'object' ? undefined : savedTap}
+            caretLine={typeof lineNumbers === 'object' ? lineNumbers.caretLine : undefined}
+            gap={numberGap}
+          />
+        </Suspense>
+      )}
       <LinkAddressPill rootRef={rootRef} />
       {/* Always mounted, hidden by itself until the caret is in a table: a
           gate read here would only be as fresh as the last render of this

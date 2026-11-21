@@ -13,13 +13,14 @@ import type { NotesIndexOps } from './searchIndexSync';
 type RelatedModule = {
   index: NotesIndexOps;
   relatedNotes: typeof import('./relatedNotes').relatedNotes;
+  plainNoteText: typeof import('./relatedNotes').plainNoteText;
 };
 
 let loaded: RelatedModule | null = null;
 let loading: Promise<RelatedModule> | null = null;
 
 function loadRelated(): Promise<RelatedModule> {
-  loading ??= import('./relatedNotes').then((m) => (loaded = { index: m.RELATED_INDEX, relatedNotes: m.relatedNotes }));
+  loading ??= import('./relatedNotes').then((m) => (loaded = { index: m.RELATED_INDEX, relatedNotes: m.relatedNotes, plainNoteText: m.plainNoteText }));
   return loading;
 }
 

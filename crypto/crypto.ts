@@ -11,8 +11,11 @@
  * Seed and private keys never leave the device.
  */
 
+import { readBind, type NoteBind } from './noteBind.js';
 import {
+  entropyToMnemonic,
   generateMnemonic,
+  mnemonicToEntropy,
   validateMnemonic,
   mnemonicToSeedSync,
 } from '@scure/bip39';
@@ -49,6 +52,17 @@ export function generatePhrase(words: 12 | 24 = 12): string {
 /** True if the phrase is a valid BIP-39 mnemonic (checksum verified). */
 export function isValidPhrase(phrase: string): boolean {
   return validateMnemonic(phrase.trim().toLowerCase(), wordlist);
+}
+
+/** The BIP-39 entropy of a valid phrase: 16 bytes for 12 words, 32 for 24.
+ *  Throws on an invalid phrase. */
+export function phraseToEntropy(phrase: string): Uint8Array {
+  return mnemonicToEntropy(phrase.trim().toLowerCase(), wordlist);
+}
+
+/** The phrase of 16 to 32 bytes of BIP-39 entropy (a multiple of 4). */
+export function entropyToPhrase(entropy: Uint8Array): string {
+  return entropyToMnemonic(entropy, wordlist);
 }
 
 /** 64-byte BIP-39 seed - single source of truth for all key derivation. */
@@ -104,18 +118,68 @@ export function deriveLocalDataKey(seed: Uint8Array): Uint8Array {
   );
 }
 
+/**
+ * The key that seals the stored sign-in session while the app lock is armed
+ * (web `sessionSeal.ts`). From the phrase's BIP-39 entropy, not the seed, so
+ * it is ready before the seed's PBKDF2 at an unlock: every door of the lock
+ * gives the phrase, and only the phrase gives this key. Never stored.
+ * Spec: docs/internal/plans/session-under-app-lock.md (section 2.1)
+ */
+export function deriveSessionSealKey(phrase: string): Uint8Array {
+  return hkdf(sha256, phraseToEntropy(phrase), undefined, utf8.encode('privacynotes-session-seal-v1'), 32);
+}
+
 // Challenge signing - proves pubkey ownership to link-pubkey edge function.
 
 /**
- * Sign `link:<authUid>` with the ed25519 private key.
- * Binding authUid prevents replay across different users.
+ * A stamp from an edge function: the server's time and its HMAC, digits, one
+ * dot and 64 lower-case hex characters. A stamped text ends in
+ * `:<digest>:<stamp>`, and the server takes it for two minutes. Every
+ * part is checked before anything is signed, so a server can never have the
+ * key sign another text.
+ * Spec: docs/internal/plans/challenge-expiry.md (section 3.3)
+ */
+const STAMP_SHAPE = /^\d{1,12}\.[0-9a-f]{64}$/;
+
+/** The three challenges that end in a stamp. */
+type StampedChallenge = 'link' | 'register-device' | 'manage-storage-sub';
+
+/**
+ * SHA-256 hex of `["<purpose>-v2", <value>]`: the body fields a stamped
+ * challenge signs besides its old text. The same array as `challengeDigest`
+ * in packages/supabase/functions/_shared/challengeStamp.ts;
+ * tests/challengeExpiry.test.ts runs both.
+ */
+function challengeDigest(purpose: StampedChallenge, value: string | boolean | null): string {
+  return bytesToHex(sha256(utf8.encode(JSON.stringify([`${purpose}-v2`, value]))));
+}
+
+/** `:<digest>:<stamp>` for a stamp of the right shape; the empty string for none (the old text, kept for its tests). */
+function stampSuffix(purpose: StampedChallenge, stamped: { stamp: string; value: string | boolean | null } | undefined): string {
+  if (stamped === undefined) return '';
+  if (!STAMP_SHAPE.test(stamped.stamp)) throw new Error('challenge stamp malformed');
+  return `:${challengeDigest(purpose, stamped.value)}:${stamped.stamp}`;
+}
+
+/**
+ * Sign `link:<authUid>:<digest>:<stamp>` with the ed25519 private key, the
+ * stamp from link-pubkey `link-stamp` and the digest over the credential the
+ * link attaches (null for none). Binding authUid prevents replay across
+ * different users; the stamp ends a signature's use after two minutes.
+ * Without `stamped` it signs the old `link:<authUid>`, which the server takes
+ * only while LEGACY_UNSTAMPED_SIGNATURE_ACCEPTED is on: kept for the tests of
+ * that path.
  */
 export async function signLinkChallenge(
   privateKey: Uint8Array,
-  authUid: string
+  authUid: string,
+  stamped?: { stamp: string; authPassword: string | null },
 ): Promise<Uint8Array> {
-  const message = utf8.encode(`link:${authUid}`);
-  return ed.signAsync(message, privateKey);
+  if (stamped && (!UUID_SHAPE.test(authUid) || (stamped.authPassword !== null && !HEX32_KEY.test(stamped.authPassword)))) {
+    throw new Error('link challenge malformed');
+  }
+  const suffix = stampSuffix('link', stamped && { stamp: stamped.stamp, value: stamped.authPassword });
+  return ed.signAsync(utf8.encode(`link:${authUid}${suffix}`), privateKey);
 }
 
 /** The account action has already validated the server nonce and recomputed
@@ -185,6 +249,94 @@ export async function signRotatePhraseChallenge(privateKey: Uint8Array, challeng
   return ed.signAsync(utf8.encode(`rotate-phrase:${nonceId}:${authUid}:${sessionId}:${account}:${epoch}:${newSigningPubkey}:${bodyDigest}`), privateKey);
 }
 
+/**
+ * Sign `passkey-slot:<nonceId>:<authUid>:<sessionId>:<account>:<operation>:<bodyDigest>`
+ * for the edge function `passkey-slot`, which adds or removes a sign-in
+ * passkey's slot only under the account's signing key, over a server nonce,
+ * this session and a digest of the whole request body. The text is built here
+ * from checked parts, so a server can never have the key sign another
+ * function's challenge. Spec: docs/contrib/passkeys.md (P19, section 4.2)
+ */
+export async function signPasskeySlotChallenge(privateKey: Uint8Array, challenge: {
+  nonceId: string; authUid: string; sessionId: string; account: string;
+  operation: 'passkey-add' | 'passkey-remove'; bodyDigest: string;
+}): Promise<Uint8Array> {
+  const { nonceId, authUid, sessionId, account, operation, bodyDigest } = challenge;
+  if (![nonceId, authUid, sessionId].every((v) => UUID_SHAPE.test(v)) || ![account, bodyDigest].every((v) => HEX32_KEY.test(v))
+    || (operation !== 'passkey-add' && operation !== 'passkey-remove')) {
+    throw new Error('passkey-slot challenge malformed');
+  }
+  return ed.signAsync(utf8.encode(`passkey-slot:${nonceId}:${authUid}:${sessionId}:${account}:${operation}:${bodyDigest}`), privateKey);
+}
+
+/** A custody change: store the phrase with the server, or delete that copy. */
+export type CustodyAction = 'custody-store' | 'custody-delete';
+
+/**
+ * The digest a custody nonce is bound to and the request signs: SHA-256 over
+ * `["<action>-v1", <phrase or null>]`, the phrase trimmed as the server
+ * stores it. The same array as `custodyBodyDigest` in
+ * packages/supabase/functions/_shared/custodyProof.ts; tests/review181Server.test.ts runs both.
+ */
+export async function custodyBodyDigest(action: CustodyAction, phrase: string | null): Promise<string> {
+  const text = JSON.stringify([`${action}-v1`, action === 'custody-store' ? (phrase ?? '').trim() : null]);
+  return bytesToHex(sha256(utf8.encode(text)));
+}
+
+/**
+ * Sign `<action>:<nonceId>:<authUid>:<sessionId>:<account>:<bodyDigest>` for
+ * `store-custodial-phrase` (`custody-store`) or `delete-custodial-phrase`
+ * (`custody-delete`). The nonce is one use (account_consume_nonce), so a saved
+ * request cannot be sent again later; the session and the digest bind it to
+ * this sign-in and this phrase. The text is built here from checked parts, so
+ * a server can never have the key sign another function's challenge.
+ * Spec: docs/contrib/custodial-key-spec.md (One use: the custody nonce)
+ */
+export async function signCustodyChallenge(privateKey: Uint8Array, challenge: {
+  action: CustodyAction; nonceId: string; authUid: string; sessionId: string; account: string; bodyDigest: string;
+}): Promise<Uint8Array> {
+  const { action, nonceId, authUid, sessionId, account, bodyDigest } = challenge;
+  if (![nonceId, authUid, sessionId].every((v) => UUID_SHAPE.test(v)) || ![account, bodyDigest].every((v) => HEX32_KEY.test(v))
+    || (action !== 'custody-store' && action !== 'custody-delete')) {
+    throw new Error('custody challenge malformed');
+  }
+  return ed.signAsync(utf8.encode(`${action}:${nonceId}:${authUid}:${sessionId}:${account}:${bodyDigest}`), privateKey);
+}
+
+/** `delete-account` and `revoke-device` over a one-use nonce (beta.privacynotes.app #227 item 10). */
+export type AccountAction = 'account-delete' | 'device-revoke';
+
+/**
+ * The digest an account action's nonce is bound to: SHA-256 over
+ * `["<action>-v1", <target device or null>]`. The same array as
+ * `accountActionDigest` in packages/supabase/functions/_shared/custodyProof.ts;
+ * tests/review0152to0153Server.test.ts runs both.
+ */
+export function accountActionDigest(action: AccountAction, targetDeviceId: string | null): string {
+  const text = JSON.stringify([`${action}-v1`, action === 'device-revoke' ? targetDeviceId : null]);
+  return bytesToHex(sha256(utf8.encode(text)));
+}
+
+/**
+ * Sign `<action>:<nonceId>:<authUid>:<sessionId>:<account>:<bodyDigest>` for
+ * `delete-account` (`account-delete`) or `revoke-device` (`device-revoke`).
+ * The nonce is one use, so a captured request cannot delete the account or
+ * remove a device again later; the session and the digest bind it to this
+ * sign-in and, for a removal, the device. Built here from checked parts, as
+ * signCustodyChallenge is.
+ * Spec: docs/contrib/custodial-key-spec.md (One use: the custody nonce)
+ */
+export async function signAccountActionChallenge(privateKey: Uint8Array, challenge: {
+  action: AccountAction; nonceId: string; authUid: string; sessionId: string; account: string; bodyDigest: string;
+}): Promise<Uint8Array> {
+  const { action, nonceId, authUid, sessionId, account, bodyDigest } = challenge;
+  if (![nonceId, authUid, sessionId].every((v) => UUID_SHAPE.test(v)) || ![account, bodyDigest].every((v) => HEX32_KEY.test(v))
+    || (action !== 'account-delete' && action !== 'device-revoke')) {
+    throw new Error('account action challenge malformed');
+  }
+  return ed.signAsync(utf8.encode(`${action}:${nonceId}:${authUid}:${sessionId}:${account}:${bodyDigest}`), privateKey);
+}
+
 // ------------------------------------------------------------------
 // Device identity
 // ------------------------------------------------------------------
@@ -221,17 +373,34 @@ export function deriveDeviceId(
   return bytesToHex(bytes);
 }
 
-/** Sign the device-registration challenge. authUid binding prevents cross-session replay. */
+/**
+ * Sign the device-registration challenge,
+ * `register-device:<authUid>:<deviceId>:<digest>:<stamp>`, the stamp from
+ * register-device `stamp` and the digest over the `reactivate` the body
+ * sends (null when it sends none). The stamp ends a signature's use after two
+ * minutes, and the digest keeps an automatic start from being sent on as a
+ * sign-in by hand, so a copy cannot bring a removed device back. Without
+ * `stamped` it signs the old text, as signLinkChallenge does.
+ */
 export async function signDeviceRegisterChallenge(
   privateKey: Uint8Array,
   authUid: string,
   deviceId: string,
+  stamped?: { stamp: string; reactivate: boolean | null },
 ): Promise<Uint8Array> {
-  const message = utf8.encode(`register-device:${authUid}:${deviceId}`);
-  return ed.signAsync(message, privateKey);
+  if (stamped && (!UUID_SHAPE.test(authUid) || !/^[0-9a-f]{32}$/.test(deviceId))) {
+    throw new Error('register-device challenge malformed');
+  }
+  const suffix = stampSuffix('register-device', stamped && { stamp: stamped.stamp, value: stamped.reactivate });
+  return ed.signAsync(utf8.encode(`register-device:${authUid}:${deviceId}${suffix}`), privateKey);
 }
 
-/** Sign the device-revocation challenge. Any device holding the phrase can revoke others. */
+/**
+ * Sign the old device-revocation challenge. It names no session and no
+ * nonce, so it can be sent again. The app signs signAccountActionChallenge
+ * now; the server takes this one only until the release floor
+ * (LEGACY_ACCOUNT_SIGNATURE_ACCEPTED). Kept for the tests of that path.
+ */
 export async function signDeviceRevokeChallenge(
   privateKey: Uint8Array,
   authUid: string,
@@ -241,7 +410,12 @@ export async function signDeviceRevokeChallenge(
   return ed.signAsync(message, privateKey);
 }
 
-/** Sign the account-deletion challenge. Proves caller holds the master key. */
+/**
+ * Sign the old account-deletion challenge, which can be sent again. The app
+ * signs signAccountActionChallenge now; the server takes this one only until
+ * the release floor (LEGACY_ACCOUNT_SIGNATURE_ACCEPTED). Kept for the tests
+ * of that path.
+ */
 export async function signDeleteAccountChallenge(
   privateKey: Uint8Array,
   authUid: string,
@@ -256,6 +430,11 @@ export async function signDeleteAccountChallenge(
  * alone cannot flip someone out of custodial mode. This challenge is
  * possible where the retrieval one is not: by the time a user can ask
  * to leave custodial mode they are signed in and hold the key.
+ *
+ * The old message: it names only the user, so it can be sent again. The app
+ * signs `signCustodyChallenge` now; the server takes this one only until the
+ * release floor (LEGACY_CUSTODY_SIGNATURE_ACCEPTED). Kept for the tests of
+ * that path.
  */
 export async function signCustodialReleaseChallenge(
   privateKey: Uint8Array,
@@ -263,6 +442,20 @@ export async function signCustodialReleaseChallenge(
 ): Promise<Uint8Array> {
   const message = utf8.encode(`delete-custodial-phrase:${authUid}`);
   return ed.signAsync(message, privateKey);
+}
+
+/**
+ * Sign a device's answer to a new sign-in that asks for the account's
+ * custodial phrase (custodial-release-decide, migration 0175). The text names
+ * the request, the answer, this login and this session, so the signature
+ * answers that one request from this device only.
+ * Spec: docs/internal/plans/custodial-release-hardening.md (section 13.2)
+ */
+export async function signCustodialDecideChallenge(privateKey: Uint8Array, challenge: {
+  requestId: string; allow: boolean; authUid: string; sessionId: string; account: string;
+}): Promise<Uint8Array> {
+  const { requestId, allow, authUid, sessionId, account } = challenge;
+  return ed.signAsync(utf8.encode(`custodial-release-decide:${requestId}:${allow ? 'allow' : 'deny'}:${authUid}:${sessionId}:${account}`), privateKey);
 }
 
 /**
@@ -278,6 +471,8 @@ export async function signCustodialReleaseChallenge(
  *
  * Usable on both callers, because link-pubkey runs before the store in
  * the signup flow, so the signing key exists by then.
+ *
+ * The old message, accepted only until the release floor, as above.
  */
 export async function signCustodialAdoptChallenge(
   privateKey: Uint8Array,
@@ -288,9 +483,14 @@ export async function signCustodialAdoptChallenge(
 }
 
 /**
- * Sign the storage-subscription management challenge. Binds the action and
- * (for a switch) the target price so a signature cannot be replayed against a
- * different subscription, action, or package. priceId is empty for cancel.
+ * Sign the storage-subscription management challenge,
+ * `manage-storage-sub:<authUid>:<subscriptionId>:<action>:<priceId>:<digest>:<stamp>`,
+ * the stamp from manage-storage-sub `stamp` and the digest over the quote the
+ * body sends (null for none). Binds the action and (for a switch) the target
+ * price so a signature cannot be replayed against a different subscription,
+ * action, or package; the stamp ends its use after two minutes, and the
+ * digest keeps the quote's price check in the request. priceId is empty for
+ * cancel. Without `stamped` it signs the old text, as signLinkChallenge does.
  */
 export async function signStorageManageChallenge(
   privateKey: Uint8Array,
@@ -298,9 +498,15 @@ export async function signStorageManageChallenge(
   subscriptionId: string,
   action: string,
   priceId: string,
+  stamped?: { stamp: string; quote: string | null },
 ): Promise<Uint8Array> {
+  if (stamped && (!UUID_SHAPE.test(authUid) || !/^sub_[a-zA-Z0-9]+$/.test(subscriptionId)
+    || !(action === 'cancel' ? priceId === '' : action === 'switch' && /^pri_[a-zA-Z0-9]+$/.test(priceId)))) {
+    throw new Error('manage-storage-sub challenge malformed');
+  }
+  const suffix = stampSuffix('manage-storage-sub', stamped && { stamp: stamped.stamp, value: stamped.quote });
   const message = utf8.encode(
-    `manage-storage-sub:${authUid}:${subscriptionId}:${action}:${priceId}`,
+    `manage-storage-sub:${authUid}:${subscriptionId}:${action}:${priceId}${suffix}`,
   );
   return ed.signAsync(message, privateKey);
 }
@@ -477,6 +683,16 @@ export function base64urlToBytes(b64url: string): Uint8Array {
   return base64ToBytes(b64);
 }
 
+/** Strict unpadded base64url, for a value from outside: only the one
+ *  spelling bytesToBase64url writes decodes (no padding, no other alphabet,
+ *  no set spare bits), so two texts never name the same bytes. Null for
+ *  anything else, or for more than `maxChars` characters. */
+export function base64urlToBytesStrict(text: unknown, maxChars: number): Uint8Array | null {
+  if (typeof text !== 'string' || text.length > maxChars || text.length % 4 === 1 || !/^[A-Za-z0-9_-]*$/.test(text)) return null;
+  const bytes = base64urlToBytes(text);
+  return bytesToBase64url(bytes) === text ? bytes : null;
+}
+
 // ------------------------------------------------------------------
 // Symmetric encryption - xchacha20poly1305 with per-call random nonce.
 // 24-byte nonces mean random nonces are safe forever (unlike AES-GCM).
@@ -504,7 +720,11 @@ export type EncryptedPayload = Pick<
  * bytes plus the 16-byte Poly1305 tag, so a caller can size a note's stored
  * row exactly without encrypting it.
  */
-export function notePlaintext(note: EncryptedPayload): Uint8Array {
+/** A decrypted payload: its fields, and the binding it carries
+ *  (`undefined` when it carries none). Spec: docs/internal/plans/payload-row-binding.md (section 4) */
+export type DecryptedPayload = EncryptedPayload & { bind: unknown };
+
+export function notePlaintext(note: EncryptedPayload, bind: NoteBind): Uint8Array {
   return utf8.encode(
     JSON.stringify({
       title: note.title,
@@ -523,17 +743,23 @@ export function notePlaintext(note: EncryptedPayload): Uint8Array {
       ...(note.archived === undefined ? {} : { archived: note.archived === true }),
       // Only when known, so a payload without it stays what it was.
       ...(note.editedAt ? { editedAt: note.editedAt } : {}),
+      // The row this payload is written for. Required by the type, so every
+      // writer names it; a caller outside the type check (an old writer in a
+      // test) that passes none writes a payload as before the binding.
+      // Spec: docs/internal/plans/payload-row-binding.md (section 2)
+      ...(bind ? { bind: { id: bind.id.toLowerCase(), kind: bind.kind, ...(bind.at !== undefined ? { at: bind.at } : {}) } } : {}),
     })
   );
 }
 
 export function encryptNote(
   note: EncryptedPayload,
-  key: Uint8Array
+  key: Uint8Array,
+  bind: NoteBind,
 ): { ciphertext: Uint8Array; nonce: Uint8Array } {
   const nonce = randomBytes(24);
   const cipher = xchacha20poly1305(key, nonce);
-  const plaintext = notePlaintext(note);
+  const plaintext = notePlaintext(note, bind);
   const ciphertext = cipher.encrypt(plaintext);
   return { ciphertext, nonce };
 }
@@ -551,11 +777,13 @@ export function decryptNote(
   ciphertext: Uint8Array,
   nonce: Uint8Array,
   key: Uint8Array
-): EncryptedPayload {
+): DecryptedPayload {
   const cipher = xchacha20poly1305(key, nonce);
   const plaintext = cipher.decrypt(ciphertext);
   const parsed = JSON.parse(utf8Decoder.decode(plaintext)) as Partial<EncryptedPayload>;
   return {
+    // Beside the fields, never one of them: checkNoteBind reads it.
+    bind: readBind(parsed as Record<string, unknown>),
     title: parsed.title ?? '',
     body: parsed.body ?? '',
     tags: parsed.tags ?? [],

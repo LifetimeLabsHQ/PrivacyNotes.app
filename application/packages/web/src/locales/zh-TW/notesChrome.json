@@ -6,10 +6,6 @@
     "error": "目前無法完成全部同步。請檢查連線後再試一次。",
     "conflict": "你有一篇筆記出現需要你決定的同步衝突。請在對話框中解決後再試一次。"
   },
-  "movedHint": {
-    "body": "這裡是應用程式的新家。請把書籤更新為 use.privacynotes.app，主畫面捷徑也請重新加入。",
-    "gotIt": "知道了"
-  },
   "moveScreen": {
     "title": "應用程式已搬家到 use.privacynotes.app",
     "bodySignIn": "請在那裡用你的復原助憶詞或「{{scanQr}}」登入。這台裝置會先同步，所以你所有的筆記都在那裡等你，這裡的東西也不會被刪除。",
@@ -30,6 +26,7 @@
       "configured": "儲存空間已滿，部分筆記無法同步。請釋出空間或加購儲存空間。",
       "unconfigured": "儲存空間已滿，部分筆記無法同步。請精簡筆記以釋出空間。"
     },
+    "deletedSpace": "已刪除檔案佔用的空間，會在刪除後大約一天釋出。",
     "manageStorage": "管理儲存空間",
     "viewUsage": "檢視用量"
   },
@@ -58,7 +55,9 @@
     "fileCount_other": "{{count}} 個檔案",
     "neverBackedUp_other": "只存在於這部裝置：",
     "moreNotes": "還有 {{count}} 則",
-    "appLockHint": "共用裝置？請到「設定 > 安全性」開啟應用程式鎖定。"
+    "appLockHint": "共用裝置？請到「設定 > 安全性」開啟應用程式鎖定。",
+    "unopenedWarn_other": "有 {{count}} 則筆記的伺服器副本無法在這台裝置上開啟。登出會刪除這裡的副本，而它們可能是僅存的完好副本。請先到「設定 > ID & Sync」重新傳送。",
+    "unopenedKept_other": "有 {{count}} 則筆記的伺服器副本無法在這台裝置上開啟。登出後，這裡的副本仍會保留。"
   },
   "signOutUpload": {
     "uploading": "正在上傳你最近的變更…",

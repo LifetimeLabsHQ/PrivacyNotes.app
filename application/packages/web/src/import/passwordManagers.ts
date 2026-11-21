@@ -6,6 +6,7 @@ import { isoFromStamp, readCsvTable } from './passwordCsv';
 import type { Importer } from './types';
 import { zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
+import { withBareLinks } from './bareLinks';
 
 /**
  * Importers for the password managers whose exports the lab made for real in
@@ -34,18 +35,21 @@ import { openZip } from './zipOpen';
  *               username; times are epoch seconds; `state` 2 is the trash.
  *               A hide-my-email alias is `type: "alias"` with its address in
  *               the item's own `aliasEmail` and an empty `content`; the
- *               mailbox it forwards to is not in the file.
+ *               mailbox it forwards to is not in the file. An SSH key is
+ *               `type: "sshKey"` with `privateKey` and `publicKey` in its
+ *               `content` (Proton's published format, not seen in a real
+ *               export yet).
  *               A .pgp export is encrypted and refused with a way out.
  *
  * Spec: docs/internal/plans/password-manager-importers.md (section 2)
  */
 
-const msg = (ns: string, key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:${ns}.${key}`, options);
+const msg = (ns: string, key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:${ns}.${key}`, options);
 const reading = () => i18n.t('importExport:status.readingFile');
 
 const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 
-export const lastpassImporter: Importer = {
+const lastpassImporterBase: Importer = {
   id: 'lastpass',
   label: 'LastPass',
   description: 'In LastPass: Advanced options > Export > Export data for use anywhere, then drop the .csv here.',
@@ -91,6 +95,9 @@ export const lastpassImporter: Importer = {
   },
 };
 
+/** The importer with the bare-link pass after its parse (bareLinks.ts). */
+export const lastpassImporter: Importer = { ...lastpassImporterBase, parse: withBareLinks(lastpassImporterBase.parse) };
+
 /** A LastPass typed note ("NoteType:Credit Card" then Key:Value lines). */
 function lastpassNoteFields(extra: string): { type: string; fields: Map<string, string> } | null {
   const lines = extra.replace(/\r\n?/g, '\n').split('\n');
@@ -106,7 +113,7 @@ function lastpassNoteFields(extra: string): { type: string; fields: Map<string, 
   return { type: lines[0].slice('NoteType:'.length).trim(), fields };
 }
 
-export const nordpassImporter: Importer = {
+const nordpassImporterBase: Importer = {
   id: 'nordpass',
   label: 'NordPass',
   description: 'In NordPass: Settings > Export Items, then drop the .csv here.',
@@ -143,7 +150,7 @@ export const nordpassImporter: Importer = {
           holder: cell(r, 'cardholdername'),
           number: cell(r, 'cardnumber'),
           cvv: cell(r, 'cvc'),
-          expMonth: month.trim().padStart(2, '0'),
+          expMonth: month,
           expYear: year.trim().length === 2 ? `20${year.trim()}` : year.trim(),
           zip: cell(r, 'zipcode'),
           notes: [common.notes, pin && `PIN: ${pin}`].filter(Boolean).join('\n\n'),
@@ -162,6 +169,9 @@ export const nordpassImporter: Importer = {
   },
 };
 
+/** The importer with the bare-link pass after its parse (bareLinks.ts). */
+export const nordpassImporter: Importer = { ...nordpassImporterBase, parse: withBareLinks(nordpassImporterBase.parse) };
+
 type ProtonItem = {
   state?: number;
   aliasEmail?: string | null;
@@ -177,7 +187,7 @@ type ProtonItem = {
   };
 };
 
-export const protonPassImporter: Importer = {
+const protonPassImporterBase: Importer = {
   id: 'proton-pass',
   label: 'Proton Pass',
   description: 'In Proton Pass: Settings > Export, choose ZIP, then drop the .zip here. A CSV export works too, with less in it.',
@@ -235,11 +245,16 @@ export const protonPassImporter: Importer = {
         if (d.type === 'login') {
           const urls = Array.isArray(c.urls) ? c.urls.filter((u): u is string => typeof u === 'string') : [];
           const { username, extra } = protonUser(str('itemUsername'), str('itemEmail'));
+          // A login's passkeys are not read; the summary counts them.
+          if (Array.isArray(c.passkeys) && c.passkeys.length > 0) items.lostPasskeys(c.passkeys.length);
           items.login({ ...common, url: urls[0] ?? '', extraUrls: urls.slice(1), username, password: str('password'), totp: str('totpUri'), fields: [...extra, ...fields] });
         } else if (d.type === 'creditCard') {
           protonCard(items, common, c, fields);
         } else if (d.type === 'identity') {
           items.identity({ ...common, identity: protonIdentity(c), extra: [...identityRest(c), ...fields] });
+        } else if (d.type === 'sshKey') {
+          const extra: Field[] = Object.entries(c).filter(([k, v]) => k !== 'privateKey' && k !== 'publicKey' && typeof v === 'string' && v).map(([k, v]) => ({ label: k, value: v as string, hidden: false }));
+          items.sshKey({ ...common, privateKey: str('privateKey'), publicKey: str('publicKey'), extra: [...extra, ...fields] });
         } else if (d.type === 'alias') {
           // Not a login: Proton forwards its mail. The record of which
           // address went to which site is what a person needs, so it
@@ -247,8 +262,8 @@ export const protonPassImporter: Importer = {
           aliases++;
           items.note({ ...common, extra: [{ label: msg('protonPass', 'aliasAddress'), value: item.aliasEmail ?? '', hidden: false }, ...fields] });
         } else {
-          // A note, or a type this build does not know (custom, SSH key,
-          // Wi-Fi): its text values become lines under the note.
+          // A note, or a type this build does not know (custom, Wi-Fi): its
+          // text values become lines under the note.
           const extra: Field[] = Object.entries(c).filter(([, v]) => typeof v === 'string' && v).map(([k, v]) => ({ label: k, value: v as string, hidden: false }));
           items.note({ ...common, extra: [...extra, ...fields] });
         }
@@ -259,6 +274,9 @@ export const protonPassImporter: Importer = {
     return items.result('proton-pass', fail);
   },
 };
+
+/** The importer with the bare-link pass after its parse (bareLinks.ts). */
+export const protonPassImporter: Importer = { ...protonPassImporterBase, parse: withBareLinks(protonPassImporterBase.parse) };
 
 /** The Proton CSV: less than the zip (no custom fields), same items. */
 async function protonCsv(file: File, items: ManagerItems): Promise<void> {

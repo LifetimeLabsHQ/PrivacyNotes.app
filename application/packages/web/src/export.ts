@@ -11,8 +11,9 @@ import {
   decodeZipBackup,
   BACKUP_TOO_SMALL,
   bytesToBase64,
+  base64urlToBytes,
 } from '@notes/shared';
-import type { BackupPayload } from '@notes/shared';
+import type { BackupPayload, SitePasskey } from '@notes/shared';
 import i18n from './i18n';
 import { trackerRows, trackerHeading } from './trackerExport';
 import { loadLocalSettings } from './userSettings';
@@ -48,7 +49,7 @@ import type { ItemStyles } from './itemStyles';
 import type { CustomThemes } from './customThemes';
 import type { CustomTrackerTemplate, FactorDef, MedicationTemplate } from './trackerTypes';
 import { linkExportMarkdown } from './linkBody';
-import { slugify, zipEntryStems } from './exportNames';
+import { slugify, windowsSafeFileName, zipEntryStems } from './exportNames';
 import { parseScene, toExcalidrawFile } from './drawing/scene';
 import { lineHeightCss, paragraphGapCss, readLineSpacing, readNestedNumbers } from './theme';
 import { isSameOriginPath } from './sameOriginPath';
@@ -316,7 +317,9 @@ function safeAttachmentName(name: string, ext: string): string {
     .replace(/[\x00-\x1f<>:"|?*]+/g, '')
     .replace(/\s+/g, ' ')
     .trim()
-    .replace(/^\.+/, '');
+    .replace(/^\.+/, '')
+    .trim();
+  safe = windowsSafeFileName(safe);
   if (!safe) safe = 'file';
   if (ext && !safe.toLowerCase().endsWith(`.${ext.toLowerCase()}`)) {
     safe = `${safe}.${ext}`;
@@ -773,9 +776,26 @@ export async function buildEncryptedFullBackup(
   settings: BackupSettings = {},
   signal?: AbortSignal,
 ): Promise<{ sealed: Uint8Array; zip: Uint8Array; missing: MissingBlob[] }> {
-  const { blob, missing } = await buildFullBackupZip(notes, imageStore, attachmentStore, onProgress, folders, settings, signal);
-  const zip = new Uint8Array(await blob.arrayBuffer());
-  return { sealed: encodeZipBackup(zip, encryptionKey), zip, missing };
+  // The key the app hands out is the account's live array, which a sign-out
+  // clears in place while this awaits the zip. Seal with a copy taken now
+  // (beta #195).
+  const key = sealingKeyCopy(encryptionKey);
+  try {
+    const { blob, missing } = await buildFullBackupZip(notes, imageStore, attachmentStore, onProgress, folders, settings, signal);
+    const zip = new Uint8Array(await blob.arrayBuffer());
+    return { sealed: encodeZipBackup(zip, key), zip, missing };
+  } finally {
+    key.fill(0);
+  }
+}
+
+/**
+ * A copy of the sealing key that is the caller's own, refused when the key is
+ * all zero: a file sealed with a cleared key opens for anyone.
+ */
+function sealingKeyCopy(encryptionKey: Uint8Array): Uint8Array {
+  if (encryptionKey.length === 0 || encryptionKey.every((byte) => byte === 0)) throw new Error('backup key unavailable');
+  return Uint8Array.from(encryptionKey);
 }
 
 /**
@@ -815,7 +835,7 @@ export async function exportAllJson(
 export async function exportBookmarksHtml(
   notes: LocalNote[],
   folders: FolderDef[]
-): Promise<void> {
+): Promise<string | undefined> {
   const bookmarks = notes.filter(
     (n) => n.type === 'link' && n.deleted !== 1 && n.trashed !== 1
   );
@@ -823,12 +843,16 @@ export async function exportBookmarksHtml(
   // reached by a click on the export row, and export.ts sits on the boot
   // path, where the chunk budget is measured.
   const { buildBookmarksHtml } = await import('./bookmarksNetscape');
-  const html = buildBookmarksHtml(bookmarks, folders);
+  const report = { skipped: 0 };
+  const html = buildBookmarksHtml(bookmarks, folders, report);
   const stamp = toLocalIso(new Date());
   await downloadBlob(
     new Blob([html], { type: 'text/html;charset=utf-8' }),
     `privacynotes-bookmarks-${stamp}.html`
   );
+  // An address other than http or https stays out of a file made for a
+  // browser (beta #157 part 3); the returned line says how many.
+  return report.skipped > 0 ? i18n.t('importExport:exportProgress.bookmarksSkipped', { count: report.skipped }) : undefined;
 }
 
 /**
@@ -1003,7 +1027,7 @@ function renderVaultHtml(vault: VaultContent): string {
  * and mails like the app does.
  */
 function renderContactHtml(title: string, c: Contact): string {
-  const t = (key: string, opts?: Record<string, unknown>) => i18n.t(`shell:contacts.${key}`, opts);
+  const t = (key: string, opts: Record<string, unknown> = {}) => i18n.t(`shell:contacts.${key}`, opts);
   const labelText = (raw: string) => (raw ? t(`labels.${raw}`, { defaultValue: raw }) : '');
   const row = (label: string, valueHtml: string) =>
     `<div class="contact-row"><dt>${escapeHtml(label)}</dt><dd dir="auto">${valueHtml}</dd></div>`;
@@ -1964,7 +1988,12 @@ export function buildEncryptedTextBackup(
   factors: FactorDef[] = [],
   customHabits: CustomHabitDef[] = [],
 ): Uint8Array {
-  return encodeBackup(buildBackupPayload(notes, folders, undefined, itemStyles, customThemes, factors, customHabits), encryptionKey);
+  const key = sealingKeyCopy(encryptionKey);
+  try {
+    return encodeBackup(buildBackupPayload(notes, folders, undefined, itemStyles, customThemes, factors, customHabits), key);
+  } finally {
+    key.fill(0);
+  }
 }
 
 /** Decoded .pnbackup contents. Alias of the shared format type; kept under
@@ -2062,6 +2091,61 @@ interface BwExportLogin {
   username: string;
   password: string;
   totp: string | null;
+  fido2Credentials?: BwExportFido2[];
+}
+
+/** A site passkey as Bitwarden's JSON export writes it: every value a string. */
+export interface BwExportFido2 {
+  credentialId: string;
+  keyType: 'public-key';
+  keyAlgorithm: 'ECDSA';
+  keyCurve: 'P-256';
+  keyValue: string;
+  rpId: string;
+  userHandle: string;
+  userName: string;
+  counter: '0';
+  userDisplayName: string;
+  discoverable: 'true';
+  creationDate: string;
+  /** Not Bitwarden's: the passkey's PRF secret, so a re-import into
+   *  PrivacyNotes gives a site the same PRF outputs. Bitwarden ignores it. */
+  prfSecret: string;
+}
+
+/**
+ * A login's site passkeys as Bitwarden `fido2Credentials`. Bitwarden reads a
+ * credential id as a GUID, or as `b64.` and base64url for any other length;
+ * ours are 16 bytes, so they go out as a GUID. The key is the stored PKCS#8 in
+ * unpadded base64url, the form Bitwarden itself writes and reads. The counter
+ * is 0: the extension does not count signatures. `prfSecret` is a field of
+ * our own beside the key, which the file already holds in the clear; the
+ * Bitwarden importer reads both back (code review 3, finding 11).
+ * Spec: docs/contrib/passkeys.md (P26, section 5.1 Exports; section 16, finding 11)
+ */
+export function bitwardenFido2Credentials(passkeys: readonly SitePasskey[]): BwExportFido2[] {
+  return passkeys.map((p) => ({
+    credentialId: bitwardenCredentialId(p.credentialId),
+    keyType: 'public-key',
+    keyAlgorithm: 'ECDSA',
+    keyCurve: 'P-256',
+    keyValue: p.key,
+    rpId: p.rpId,
+    userHandle: p.userHandle,
+    userName: p.userName,
+    counter: '0',
+    userDisplayName: p.displayName,
+    discoverable: 'true',
+    creationDate: p.created,
+    prfSecret: p.prfSecret,
+  }));
+}
+
+function bitwardenCredentialId(credentialId: string): string {
+  const bytes = base64urlToBytes(credentialId);
+  if (bytes.length !== 16) return `b64.${credentialId}`;
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 interface BwExportCard {
@@ -2119,12 +2203,14 @@ interface BwExportPayload {
 
 /**
  * Export vault items (logins, cards, SSH keys) in Bitwarden's
- * unencrypted JSON format. Non-vault notes are excluded. `folders` is the
- * account's folder tree, which names the folders the items sit in.
+ * unencrypted JSON format. Non-vault notes are excluded, and so is what sits
+ * in the Trash, as in the other exports of one kind: the format would write a
+ * deleted item as a live one. `folders` is the account's folder tree, which
+ * names the folders the items sit in.
  */
 export async function exportVaultBitwarden(notes: LocalNote[], folders: FolderDef[]): Promise<void> {
   const vaultNotes = notes.filter(
-    (n) => n.type === 'login' || n.type === 'card' || n.type === 'ssh-key',
+    (n) => n.deleted !== 1 && n.trashed !== 1 && (n.type === 'login' || n.type === 'card' || n.type === 'ssh-key'),
   );
 
   // Each folder an item sits in goes out under its full path, with every
@@ -2173,6 +2259,7 @@ export async function exportVaultBitwarden(notes: LocalNote[], folders: FolderDe
         username: login.username,
         password: login.password,
         totp: login.totp || null,
+        ...(login.passkeys.length ? { fido2Credentials: bitwardenFido2Credentials(login.passkeys) } : {}),
       };
     } else if (note.type === 'card') {
       const card = parseCardBody(note.body);

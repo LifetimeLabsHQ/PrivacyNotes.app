@@ -4,7 +4,8 @@
     "tabBiometricShort": "鎖定",
     "tabPhraseShort": "助憶詞",
     "tabPhrase": "你的助憶詞",
-    "tabTwoFactor": "2FA"
+    "tabTwoFactor": "2FA",
+    "tabTwoFactorPasskeys": "2FA / 密碼金鑰"
   },
   "pinTab": {
     "changeLost": "你的 PIN 碼變更沒有儲存：另一台裝置已先變更了 PIN 碼。",
@@ -70,7 +71,7 @@
     "browserRestart": "瀏覽器重新啟動時"
   },
   "pinInfo": {
-    "body": "啟用後，即使應用程式已解鎖，每次開啟這個項目都需要輸入 PIN 碼。適合用在離開座位時仍需保護的敏感項目。"
+    "body": "啟用後，這個項目開啟前會要求輸入 PIN 碼，除非你在「設定 > 安全性 > 鎖定」設定的時間內已輸入過 PIN 碼（預設為 5 分鐘，可自行更改）。適合用在你最敏感的項目。"
   },
   "removePinDialog": {
     "introWithBio": "輸入目前的 PIN 碼以確認移除。生物辨識解鎖仍會保持啟用，但之後唯一的備援就是你的復原助憶詞。",
@@ -119,6 +120,7 @@
     "hideQr": "隱藏 QR Code",
     "showQr": "顯示 QR Code",
     "saveQr": "儲存 QR Code",
+    "qrHint": "在新裝置的登入頁面上，選擇「{{scanQr}}」。",
     "copyPhrase": "複製助憶詞"
   },
   "custody": {
@@ -132,7 +134,7 @@
     "rowLostSelf": "若沒有其他已保存的副本，也沒有已解鎖的裝置，就無法還原筆記。",
     "rowKey": "你的助憶詞放在哪",
     "rowKeyCustodial": "我們的伺服器與你的裝置",
-    "rowKeySelf": "只在你的裝置上",
+    "rowKeySelf": "只在你的裝置上，除非你新增登入用的密碼金鑰",
     "releaseWarning": "請先將助憶詞保存在 PrivacyNotes 以外的地方。我們刪除副本後，你在新裝置上會需要它。",
     "challengePrompt": "從上方清單輸入這幾個單字，確認你已經保存下來。",
     "wordLabel": "第 {{position}} 個單字",
@@ -165,14 +167,18 @@
   "biometricTab": {
     "checkingSupport": "正在檢查生物辨識支援…",
     "description": "用指紋或臉部解鎖，不必輸入 PIN 碼。",
+    "descriptionWeb": "用指紋或臉部解鎖，不必輸入 PIN 碼。在瀏覽器中，這會在這台裝置上為 PrivacyNotes 建立一個密碼金鑰，由你的裝置或密碼管理器儲存。",
     "trustFirst": "請先啟用「信任此裝置」。生物辨識解鎖和應用程式鎖定都會在這台裝置上保留一份復原助憶詞，未信任的裝置不適合放這個。",
     "notAvailable": "這部裝置無法使用生物辨識解鎖。你的瀏覽器或硬體不支援平台驗證器（Touch ID、Face ID、Windows Hello）。",
     "enabledFlash": "生物辨識解鎖已啟用。",
     "enrolledOnDevice": "已在此裝置註冊",
     "boundStatus": "生物辨識解鎖已與你的密碼金鑰綁定。",
     "boundStatusNative": "生物辨識解鎖已與這台裝置的安全硬體綁定。",
+    "boundStatusWindows": "生物辨識解鎖已與這台電腦的 Windows Hello 綁定。",
+    "boundStatusWindowsSoftware": "生物辨識解鎖已與這台電腦的 Windows Hello 綁定。Windows 回報這台電腦沒有可用的安全晶片（TPM）。沒有安全晶片時，Windows Hello 會以軟體保管金鑰，只要取得這台電腦儲存空間的副本，任何人都能無限次嘗試 Windows Hello PIN 碼。",
     "setUpAgain": "重新設定以取得更強的鎖定",
     "unboundWeaker": "在這台裝置上，生物辨識解鎖只能擋住身邊的人，並不是真正的鎖：只要取得這台裝置儲存空間的副本，任何人都不需要你的指紋或臉孔就能開啟你的筆記。",
+    "noPrfRefused": "這個密碼金鑰應用程式無法保管生物辨識解鎖的金鑰，因此生物辨識解鎖會維持關閉。如果密碼金鑰是由密碼管理器儲存，請在那裡刪除它，關閉它的密碼金鑰選項，然後再試一次。",
     "cannotBind": "儲存這個密碼金鑰的密碼金鑰應用程式（通常是密碼管理器）無法建立完整的鎖定。在這台裝置上，生物辨識解鎖只能擋住身邊的人：只要取得這台裝置儲存空間的副本，任何人都不需要你的指紋或臉孔就能開啟你的筆記。如果你的密碼金鑰是由密碼管理器儲存，請關閉它的密碼金鑰選項，再將生物辨識解鎖關閉後重新開啟。",
     "bindOffer": "此裝置上的生物辨識解鎖尚未與你的密碼金鑰綁定，而這個瀏覽器可以完成綁定。請重新設定一次，讓解鎖金鑰改由你的密碼金鑰保管，而不是存放在這台裝置的儲存空間裡。",
     "bindOfferLater": "稍後再說",
@@ -183,18 +189,26 @@
     "lockOnOpenHint": "在這台裝置上開啟應用程式時要求 PIN 碼或指紋，閒置一段時間後也會再次要求。",
     "lockHidesOnSwitch": "切換應用程式時也會隱藏你的筆記。",
     "confirmPinForLock": "輸入 PIN 碼即可開啟這項功能。它會鎖住一份你的復原助憶詞副本，只有你的 PIN 碼能打開應用程式。",
+    "pinWeakCopy": "使用 4 位數 PIN 碼時，任何人只要有這台裝置儲存空間的副本，就能在幾分鐘到幾小時內找出 PIN 碼並打開你的筆記。通行碼難猜得多：請到「PIN 碼」分頁設定一組。",
     "confirmPasscodeForLock": "輸入通行碼即可開啟這項功能。它會鎖住一份你的復原助憶詞副本，只有你的通行碼能打開應用程式。",
     "setupTitle": "選擇解鎖方式",
     "setupPin": "PIN 碼可解鎖這裡的所有內容。",
     "setupBiometric": "指紋或臉部只能在這台裝置上解鎖應用程式。",
+    "setupBiometricWeb": "指紋或臉部透過密碼金鑰，只能在這台裝置上解鎖應用程式。",
     "setupBiometrics": "生物辨識",
-    "setupAddPinTitle": "為受保護的筆記新增 PIN 碼",
+    "setupAddPinTitle": "為鎖定與受保護的筆記新增 PIN 碼",
+    "fingerprintOnlyLock": "這個鎖定只能用你的指紋開啟。輸入你的 PIN 碼，把它加入為第二種解鎖方式。",
+    "fingerprintOnlyLockPasscode": "這個鎖定只能用你的指紋開啟。輸入你的通行碼，把它加入為第二種解鎖方式。",
+    "fingerprintOnlyLockAction": "輸入 PIN 碼",
+    "fingerprintOnlyLockActionPasscode": "輸入通行碼",
     "appLockHeading": "應用程式鎖定",
     "relockAgainAfter": "多久後再次鎖定",
     "notesHeading": "受保護的筆記",
     "reaskAfter": "多久後再次要求 PIN 碼",
-    "reaskHint": "適用於受保護的筆記和你的復原助憶詞。",
+    "reaskHint": "適用於受保護的筆記、受保護的區段和你的復原助憶詞。",
+    "sectionsHint": "從側邊欄中區段的選單，就能保護整個區段，例如保險庫。",
     "biometricHeading": "指紋或臉部",
+    "biometricHeadingWeb": "指紋或臉部（密碼金鑰）",
     "blockCapture": "在螢幕擷取時隱藏",
     "blockCaptureHint": "在裝置允許的範圍內，讓你的筆記不出現在截圖、螢幕錄影和螢幕分享中。僅適用於這台裝置。",
     "perDeviceNote": "生物辨識解鎖開啟的筆記和 PIN 碼相同。它只留在這部裝置上，永不同步。",
@@ -203,8 +217,30 @@
     "disableConfirmBody": "要在此裝置停用生物辨識解鎖嗎？",
     "disableConfirmBodyAppLock": "要在此裝置停用生物辨識解鎖嗎？應用程式鎖定也會一併關閉。"
   },
+  "passkeysTab": {
+    "intro": "在新裝置上用密碼金鑰登入，不必輸入你的復原助憶詞。你的助憶詞依然可以使用。",
+    "add": "新增密碼金鑰",
+    "adding": "正在新增…",
+    "lastUsed": "上次使用：{{date}}",
+    "neverUsed": "從未使用",
+    "removeTitle": "要移除這個密碼金鑰嗎？",
+    "removeBody": "你將無法再用它登入。密碼金鑰本身會留在你的密碼金鑰應用程式中，直到你在那裡刪除它。",
+    "retired": "建立於你更換助憶詞之前。請移除後重新新增。",
+    "noPrf": "這個密碼金鑰應用程式無法保護你的助憶詞，因此沒有新增這個密碼金鑰。請試試你裝置本身的密碼金鑰，或其他密碼管理器。",
+    "tooMany": "你已有 {{count}} 個用於登入的密碼金鑰。請移除一個才能新增其他的。",
+    "failed": "無法新增這個密碼金鑰。請檢查網路連線後再試一次。",
+    "appsOnly": "請在瀏覽器中前往 use.privacynotes.app 新增密碼金鑰。在應用程式中用它們登入的功能之後才會推出。",
+    "empty": "還沒有密碼金鑰。",
+    "loadFailed": "無法載入你的密碼金鑰。請檢查網路連線後再試一次。",
+    "removeFailed": "無法移除這個密碼金鑰。請檢查網路連線後再試一次。",
+    "pinPrompt": "輸入你的 4 位數 PIN 碼以新增密碼金鑰。",
+    "pinPromptPasscode": "輸入你的通行碼以新增密碼金鑰。"
+  },
   "appLock": {
-    "phraseNotSaved": "這台裝置無法儲存你的復原助憶詞，因此沒有任何變更。請再試一次。"
+    "phraseNotSaved": "這台裝置無法儲存你的復原助憶詞，因此沒有任何變更。請再試一次。",
+    "phraseInMemoryOnly": "這個瀏覽器無法保護你的復原助憶詞，因此不會儲存在這台裝置上。重新整理或關閉這個分頁就會登出，請把復原助憶詞放在手邊。若要在這裡保持登入，請到「設定 > 安全性 > 鎖定」開啟應用程式鎖定。",
+    "untrustedSignIn": "你沒有信任這台裝置，因此你的登入狀態不會儲存在這台裝置上。關閉或重新整理應用程式就會登出，請把復原助憶詞放在手邊。",
+    "presenceGateRemoved": "指紋或臉部解鎖已關閉：這個瀏覽器把它的金鑰存放在你的復原助憶詞旁邊。你的 PIN 碼或通行碼仍然可以解鎖應用程式。"
   },
   "pinSetup": {
     "description": "檢視復原助憶詞時將需要 4 位數 PIN 碼。可留待日後設定，但共用環境建議啟用。",
@@ -239,13 +275,21 @@
     "disableTitlePasscode": "輸入通行碼以停用保護",
     "verifySubtitlePasscode": "輸入通行碼以解鎖此項目。解鎖狀態會維持你在「安全性」中設定的時間。",
     "passcodeRequired": "需要通行碼",
-    "deleteSubtitlePasscode": "輸入通行碼以刪除此受保護項目。"
+    "deleteSubtitlePasscode": "輸入通行碼以刪除此受保護項目。",
+    "sectionTitle": "此區段受保護",
+    "sectionBiometricSubtitle": "用指紋或臉部開啟此區段。",
+    "sectionVerifySubtitle": "輸入 4 位數 PIN 碼以開啟此區段。解鎖狀態會維持你在「安全性」中設定的時間。",
+    "sectionVerifySubtitlePasscode": "輸入通行碼以開啟此區段。解鎖狀態會維持你在「安全性」中設定的時間。",
+    "sectionDisableSubtitle": "其中的項目留在原處，只有保護會解除。",
+    "sectionBootstrapSubtitle": "此區段受保護，但這部裝置尚未設定 PIN 碼。設定 4 位數 PIN 碼即可開啟；PIN 碼會同步到你所有的裝置。"
   },
   "lockScreen": {
     "unlockApp": "解鎖 <brand/>",
     "subtitleWithBio": "使用指紋、臉部或 PIN 碼繼續。",
     "subtitleNoBio": "輸入 PIN 碼繼續。",
     "biometricFailed": "生物辨識驗證失敗或已取消。",
+    "deviceKeyUnavailable": "這台裝置目前無法開啟它的鎖定，問題不在你輸入的內容。請使用下方的其他方式解鎖，例如你的復原助憶詞。",
+    "keyringCancelled": "請先解鎖你的鑰匙圈，然後再試一次。",
     "biometricUnopened": "生物辨識解鎖無法開啟你的筆記。請使用 PIN 碼或通行碼，或重新設定生物辨識解鎖。",
     "biometricGone": "生物辨識解鎖在這台裝置上已停止運作，必須重新設定。請先使用下方的其他方式進入，再到「設定」重新開啟生物辨識解鎖。",
     "verifying": "驗證中…",
@@ -273,9 +317,6 @@
     "upgradeHeading": "或升級至 Pro",
     "upgradeBody": "單次付款，免訂閱。無上限裝置，還有圖片、筆記歷史等更多功能。",
     "upgradeCta": "以 ${{price}} 升級 Pro",
-    "needMoreHeading": "需要更多裝置？",
-    "needMoreBody": "這個版本無法購買 Pro。如果你真的需要第三部裝置，聯絡我們，我們幫你處理。",
-    "contactSupport": "聯絡支援",
     "saveRecoveryHeading": "保存你的復原助憶詞",
     "saveRecoveryBody": "你是以 OAuth 登入的。也請把復原助憶詞抄下來：萬一 OAuth 失效，或你在所有裝置上都被鎖在門外，這就是你的備援。",
     "hide": "隱藏",
@@ -310,7 +351,7 @@
     "custodial": "我們保存你的助憶詞加密副本。請至少保留一個已連結的帳號，或在取消連結最後一個帳號前，切換至自我保管。",
     "selfCustody": "在新裝置上，即使使用已連結的帳號，仍需你的復原助憶詞才能開啟筆記。連結帳號不會把助憶詞交由我們保管。",
     "mfaRequired": "所有登入方式都會繼續使用雙因素登入。請保留驗證器或已保存的備份金鑰。",
-    "unavailable": "目前尚無法變更已連結的帳號。你原本的登入方式仍可使用。",
+    "unavailable": "已連結帳號的變更目前暫時關閉。你原本的登入方式仍可使用。",
     "loading": "正在檢查已連結的帳號...",
     "emailHidden": "未分享電子郵件地址",
     "disconnectAccount": "取消連結 {{provider}} 帳號 {{email}}",
@@ -379,7 +420,7 @@
     "signInAgain": "重新登入",
     "lostAuthenticator": "手機遺失了嗎？",
     "restore": "將備份金鑰加入任一驗證器應用程式，再到 PrivacyNotes 輸入它的代碼。",
-    "noBackup": "沒有手機，也沒有備份金鑰？我們不會重設 2FA，客服也無法協助。請匯出這台裝置上的筆記，再建立新的保險庫。",
+    "noBackup": "沒有手機，也沒有備份金鑰？我們不會重設 2FA，客服也無法協助。請將這台裝置上的筆記匯出為「全部內容，未加密（.zip）」，再建立新的保險庫。",
     "localNotes": "現在不方便？你可以繼續使用這台裝置上的筆記。輸入代碼後，同步就會恢復。",
     "useLocalNotes": "暫時略過"
   },
@@ -389,7 +430,7 @@
     "loading": "正在檢查 2FA...",
     "retry": "再試一次",
     "unavailable": "無法檢查 2FA。這台裝置上的筆記很安全。請檢查連線後再試一次。",
-    "notAvailable": "目前還無法使用 2FA。",
+    "notAvailable": "2FA 目前暫時關閉。請稍後再試。",
     "actionFailed": "操作沒有成功。請檢查連線後再試一次。這台裝置上的筆記很安全。",
     "warning": "請保管好你的手機或備份金鑰。如果兩者都遺失，你就無法在新裝置上登入。這是為了你的安全。我們不會重設 2FA，客服也無法協助。",
     "cannotEnroll": "請用助憶詞或已連結的帳號重新登入，才能設定 2FA。",
@@ -418,6 +459,7 @@
     "backupWarning": "手機遺失了？這個金鑰能找回你的代碼。請保存在 PrivacyNotes 以外的安全位置。",
     "savedAcknowledgment": "我已保存備份金鑰。",
     "confirmBackup": "再次輸入上一步的備份金鑰，然後輸入應用程式中的代碼。",
+    "disconnectsConnections": "開啟 2FA 會中斷瀏覽器擴充功能與命令列的連結。請到「設定 > 擴充功能」重新連結擴充功能，並到「設定 > CLI」重新連結命令列。",
     "codeLabel": "應用程式中的代碼",
     "cancelSetup": "取消",
     "enabled": "2FA 已開啟",
@@ -447,6 +489,7 @@
   },
   "phraseChange": {
     "lengthGroup": "助憶詞長度",
+    "lengthLater": "你之後可以在「設定 > 安全性 > 助憶詞」更換長度或助憶詞。",
     "badgeMargin": "額外餘裕",
     "rowWrite": "抄寫",
     "write12": "手抄很快。",
@@ -498,10 +541,22 @@
     "failed": "助憶詞沒有更換。",
     "failedTooMany": "你的助憶詞在過去 24 小時內已更換三次。請稍後再試。",
     "failedMoved": "你的設定在此期間已在另一台裝置上變更。請再試一次。",
+    "failedSettingsMoved": "你的設定在此期間已在另一台裝置上變更。請再試一次：這次更換助憶詞會取代那些設定，即使它們再次變更也一樣。",
     "failedTwoFactor": "2FA 代碼未被接受。請再試一次。",
     "failedKeyRing": "這台裝置沒有先前助憶詞的金鑰。請在擁有這些金鑰的裝置上進行更換。",
     "failedBiometric": "你的指紋或臉部是這台裝置唯一的鎖定方式。請先驗證它，才能進行更換。",
+    "failedCannotBind": "你的指紋或臉部是這台裝置唯一的鎖定方式，而在這台裝置上它無法保護新的助憶詞。請先到「設定 > 安全性 > PIN 碼」設定 PIN 碼或通行碼，再進行更換。",
     "failedUnsynced": "這台裝置上有些設定尚未同步。請稍候片刻再試一次。",
-    "failedOffline": "伺服器目前無法處理這項更換。請檢查網路連線後再試一次。"
+    "failedOffline": "伺服器目前無法處理這項更換。請檢查網路連線後再試一次。",
+    "signInPasskeysReset_other": "你的 {{count}} 個登入用密碼金鑰將無法使用。更換完成後請重新新增。"
+  },
+  "releaseNotice": {
+    "sent": "有新裝置在 {{when}} 登入了你的帳號。不是你嗎？請到「裝置」移除它。"
+  },
+  "releaseApproval": {
+    "ask": "{{when}} 有一個新的登入要求取得你的復原助憶詞（代碼 {{code}}）。只有在確定是你本人，而且新裝置顯示相同代碼時，才允許它。",
+    "waiting": "有一個新的登入要求取得你的復原助憶詞（代碼 {{code}}），除非你拒絕，否則它會在 {{when}} 之後取得。只有在確定是你本人，而且新裝置顯示相同代碼時，才允許它。",
+    "allow": "允許",
+    "deny": "拒絕"
   }
 }

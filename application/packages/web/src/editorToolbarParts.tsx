@@ -200,10 +200,13 @@ export function ToolbarBtn({
   keys,
   tabIndex,
   btnRef,
+  disabled,
   children,
 }: {
   onClick: () => void;
   active?: boolean;
+  /** Dimmed and inert, but it keeps its tip: `aria-disabled`, not `disabled`. */
+  disabled?: boolean;
   label: string;
   /** The shortcut of the same action, for the tip. */
   keys?: string;
@@ -220,9 +223,11 @@ export function ToolbarBtn({
         type="button"
         tabIndex={tabIndex}
         onMouseDown={(e) => e.preventDefault()}
-        onClick={onClick}
+        onClick={disabled ? undefined : onClick}
         aria-label={label}
-        className={`${TB_BTN_BASE} ${active ? TB_BTN_ACTIVE : TB_BTN_REST} shrink-0`}
+        aria-disabled={disabled || undefined}
+        // A dimmed button has no hover wash: nothing happens on a press.
+        className={`${TB_BTN_BASE} ${disabled ? 'text-pn-soft opacity-40 cursor-not-allowed' : active ? TB_BTN_ACTIVE : TB_BTN_REST} shrink-0`}
       >
         {children}
       </button>

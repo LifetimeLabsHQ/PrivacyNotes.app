@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { toLocalIso } from '../intlFormat';
 import type { View } from '../views';
 import { useToday } from '../ListGroupHeader';
+import { startCount, type DayCountState } from '../dayCount';
 
 /** The three layouts of the Calendar pillar's editor pane. */
 export type CalendarMode = 'day' | 'week' | 'month';
@@ -86,7 +87,21 @@ export function useCalendarPillar({ view, selectedId, setSelectedId, selectView 
   /** The day a new event takes: the focused one in the pillar, else today. */
   const newDay = useCallback(() => (view === 'calendar' ? focus : toLocalIso(new Date())), [view, focus]);
 
-  return { mode, setMode, focus, setFocus, occurrence, openItem, back, openAt, newDay, hourScroll };
+  // The day counter (#815): its days, and whether the end day counts too
+  // ("Include the end day"). Kept here, so the day menu and Ninja can start it, and Back
+  // from an item finds it as it was. The "both" choice outlives a count.
+  const [count, setCount] = useState<DayCountState | null>(null);
+  const [countBoth, setCountBoth] = useState(false);
+
+  /** The pillar with the counter from `from`, to `to` when given, at `to`'s month (Ninja's count row). */
+  const openCount = useCallback(async (from: string, to: string | null = null) => {
+    setCount(startCount(from, to));
+    if (to) setFocus(to);
+    await selectView('calendar');
+    setSelectedId(null);
+  }, [selectView, setSelectedId]);
+
+  return { mode, setMode, focus, setFocus, occurrence, openItem, back, openAt, newDay, hourScroll, count, setCount, countBoth, setCountBoth, openCount };
 }
 
 export type CalendarPillar = ReturnType<typeof useCalendarPillar>;

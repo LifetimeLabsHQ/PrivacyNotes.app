@@ -20,6 +20,7 @@
  * a person who arranged the bar still meets the new button.
  * Spec: docs/internal/specs/format-bar.md
  */
+import { pluginsShown } from './onDeviceAi';
 import {
   mergeRegisterMaps,
   registerMapsEqual,
@@ -48,18 +49,23 @@ const row = (key: string, menuAllowed = true): FormatBarItem => ({ key, home: 'b
 const menu = (key: string, group: FormatBarGroup, attachAllowed = false): FormatBarItem => ({ key, home: 'menu', group, menuAllowed: true, attachAllowed });
 const end = (key: string, menuAllowed = true): FormatBarItem => ({ key, home: 'end', group: 'insert', menuAllowed, attachAllowed: false });
 const attached = (key: string, menuAllowed = true): FormatBarItem => ({ key, home: 'attachMenu', group: 'insert', menuAllowed, attachAllowed: true });
-// A separator is a thin line on the bar. Each key exists once, so a person
-// who wants more than one line takes the next one.
-export const separator = (key: string): FormatBarItem => ({ key, home: 'hidden', group: 'format', menuAllowed: false, attachAllowed: false });
+// A divider (a thin line on the bar) is not in this list: a person places as
+// many as they like from the board's tile (isSeparatorKey).
 // Hidden until a person places it, on the bar or in the menu.
 const offered = (key: string, group: FormatBarGroup): FormatBarItem => ({ key, home: 'hidden', group, menuAllowed: true, attachAllowed: false });
 
 /** Stock order: the row, the menu, the attach menu, the end of the bar, hidden. */
 export const FORMAT_BAR_ITEMS: readonly FormatBarItem[] = [
+  // Undo and redo open the row, where every editor keeps them: a touch
+  // screen has no key for them, and a person who has the keys can hide or
+  // move them (owner, 2026-11-20).
+  row('undo'), row('redo'),
   row('bold'), row('italic'), row('underline'), row('heading', false), row('tasks'),
   row('link', false), row('notelink'),
   row('color', false), row('align', false), row('font', false),
-  row('highlight', false), row('callout', false), row('strike'),
+  row('highlight', false), row('callout', false),
+  // Collapse all / Expand all (#779): on the bar by stock, with the blocks it folds when moved to the menu.
+  { ...row('foldAll'), group: 'blocks' }, row('strike'),
   menu('table', 'insert'), menu('hr', 'insert'), menu('bullets', 'insert'), menu('numbered', 'insert'),
   menu('indent', 'insert'), menu('outdent', 'insert'),
   menu('fromFiles', 'insert', true), menu('date', 'insert'), menu('dateTime', 'insert'), menu('icon', 'insert'), menu('location', 'insert'), menu('doodle', 'insert'),
@@ -69,10 +75,14 @@ export const FORMAT_BAR_ITEMS: readonly FormatBarItem[] = [
   menu('footnote', 'notation'),
   // The attach menu's items come before the paperclip in stock order, so an
   // arrangement saved before the paperclip existed gets it after them.
-  attached('image'), attached('attach'), attached('audio', false),
-  end('attachMenu', false), end('customize'), end('markdownView'),
+  attached('image'), attached('attach'),
+  // Scan a page waits for the Plugins release switch (plugins.md D19).
+  ...(pluginsShown() ? [attached('scan')] : []),
+  attached('audio', false),
+  // Split view (the Markdown view with its preview, #727) stands right before
+  // the way between the views, where both bars draw it.
+  end('attachMenu', false), end('customize'), end('splitView'), end('markdownView'),
   offered('copyAsPlain', 'notation'), offered('copyAsMarkdown', 'notation'),
-  separator('separator1'), separator('separator2'), separator('separator3'), separator('separator4'),
 ];
 
 const FORMAT_BAR_GROUPS: readonly FormatBarGroup[] = ['format', 'insert', 'blocks', 'notation'];
@@ -101,6 +111,15 @@ function strings(raw: unknown): string[] {
 }
 
 /**
+ * A divider on a bar: `separator` and a number. A person can place any
+ * number of them, each from the board's one "Toolbar divider" tile; a divider
+ * taken off the bar is gone, never kept among the hidden (owner, 2026-11-20).
+ */
+export function isSeparatorKey(key: string): boolean {
+  return /^separator\d+$/.test(key);
+}
+
+/**
  * The rules of one arrangeable bar, over its own item list: the format bar
  * (below) and the drawing canvas's toolbar (`drawing/drawingBar.ts`), which
  * has no menus, so its items live on the bar, at its end, or hidden.
@@ -111,10 +130,20 @@ export function createBarModel(items: readonly FormatBarItem[], groups: readonly
   const BY_KEY = new Map(items.map((i) => [i.key, i]));
   const STOCK_INDEX = new Map(items.map((i, n) => [i.key, n]));
   const byStock = (a: string, b: string) => STOCK_INDEX.get(a)! - STOCK_INDEX.get(b)!;
-  const keepsBar = (k: string) => !sometimesAbsent.has(k);
+  // A divider is no button, so it never keeps a bar usable.
+  const keepsBar = (k: string) => !sometimesAbsent.has(k) && !isSeparatorKey(k);
 
+  /** An item of the list, or a divider of any number. */
   function item(key: string): FormatBarItem | undefined {
-    return BY_KEY.get(key);
+    const known = BY_KEY.get(key);
+    if (known || !isSeparatorKey(key)) return known;
+    return { key, home: 'hidden', group: groups[0]!, menuAllowed: false, attachAllowed: false };
+  }
+
+  /** The divider key the board's tile places next: one past the highest in use. */
+  function newSeparatorKey(r: ResolvedFormatBar): string {
+    const used = [...r.bar, ...r.end, ...r.menu, ...r.attachMenu, ...r.hidden].filter(isSeparatorKey).map((k) => Number(k.slice('separator'.length)));
+    return `separator${used.length > 0 ? Math.max(...used) + 1 : 1}`;
   }
 
   /** Menu order: by group, then the given order inside each group. */
@@ -141,7 +170,7 @@ export function createBarModel(items: readonly FormatBarItem[], groups: readonly
 
   function stock(): ResolvedFormatBar {
     const at = (home: FormatBarItem['home']) => items.filter((i) => i.home === home).map((i) => i.key);
-    return { bar: at('bar'), end: at('end'), menu: groupMenu(at('menu')), attachMenu: at('attachMenu'), hidden: at('hidden') };
+    return { bar: at('bar'), end: at('end'), menu: groupMenu(at('menu')), attachMenu: at('attachMenu'), hidden: at('hidden').filter((k) => !isSeparatorKey(k)) };
   }
 
   /**
@@ -152,7 +181,7 @@ export function createBarModel(items: readonly FormatBarItem[], groups: readonly
     if (!saved || typeof saved !== 'object') return stock();
     const seen = new Set<string>();
     const take = (raw: unknown) => strings(raw).filter((k) => {
-      if (!BY_KEY.has(k) || seen.has(k)) return false;
+      if (!item(k) || seen.has(k)) return false;
       seen.add(k);
       return true;
     });
@@ -160,21 +189,27 @@ export function createBarModel(items: readonly FormatBarItem[], groups: readonly
     const endList = take(saved.end);
     const menuList: string[] = [];
     for (const k of take(saved.menu)) {
-      // An item that cannot be in the menu goes back to the end of the bar.
-      if (BY_KEY.get(k)!.menuAllowed) menuList.push(k);
-      else endList.push(k);
+      // An item that cannot be in the menu goes back to the end of the bar;
+      // a divider there is dropped.
+      if (item(k)!.menuAllowed) menuList.push(k);
+      else if (!isSeparatorKey(k)) endList.push(k);
     }
     const attachList: string[] = [];
     for (const k of take(saved.attachMenu)) {
       // An item the attach menu cannot hold goes back to the end of the bar.
-      if (BY_KEY.get(k)!.attachAllowed) attachList.push(k);
-      else endList.push(k);
+      if (item(k)!.attachAllowed) attachList.push(k);
+      else if (!isSeparatorKey(k)) endList.push(k);
     }
-    const hidden = take(saved.hidden);
+    // A divider is never kept among the hidden: off the bar it is gone.
+    const hidden = take(saved.hidden).filter((k) => !isSeparatorKey(k));
+    // A layout that names no divider at all predates them, and takes the
+    // stock ones; any other keeps exactly the dividers it placed.
+    const namesDivider = (['bar', 'end', 'menu', 'attachMenu', 'hidden'] as const).some((list) => strings(saved[list]).some(isSeparatorKey));
 
     // Items no list names: a later version added them. Stock home, stock place.
     for (const i of items) {
       if (seen.has(i.key)) continue;
+      if (isSeparatorKey(i.key) && (namesDivider || i.home === 'hidden')) continue;
       if (i.home === 'bar') insertAtStockPlace(bar, i.key);
       else if (i.home === 'end') insertAtStockPlace(endList, i.key);
       else if (i.home === 'attachMenu') insertAtStockPlace(attachList, i.key);
@@ -198,7 +233,7 @@ export function createBarModel(items: readonly FormatBarItem[], groups: readonly
   }
 
   function refusal(r: ResolvedFormatBar, key: string, to: FormatBarHome): FormatBarRefusal {
-    const i = BY_KEY.get(key);
+    const i = item(key);
     if (!i) return null;
     if (to === 'menu' && !i.menuAllowed) return 'menuNotAllowed';
     if (to === 'attachMenu' && !i.attachAllowed) return 'attachNotAllowed';
@@ -215,7 +250,7 @@ export function createBarModel(items: readonly FormatBarItem[], groups: readonly
    * Returns the input unchanged when the move is refused.
    */
   function place(r: ResolvedFormatBar, key: string, to: FormatBarHome, beforeKey: string | null = null): ResolvedFormatBar {
-    const i = BY_KEY.get(key);
+    const i = item(key);
     if (!i || refusal(r, key, to)) return r;
     const out: ResolvedFormatBar = {
       bar: r.bar.filter((k) => k !== key),
@@ -224,6 +259,8 @@ export function createBarModel(items: readonly FormatBarItem[], groups: readonly
       attachMenu: r.attachMenu.filter((k) => k !== key),
       hidden: r.hidden.filter((k) => k !== key),
     };
+    // A divider taken off the bar is gone.
+    if (to === 'hidden' && isSeparatorKey(key)) return out;
     if (to === 'menu') {
       const sameGroup = (k: string) => BY_KEY.get(k)!.group === i.group;
       const at = beforeKey && sameGroup(beforeKey) ? out.menu.indexOf(beforeKey) : -1;
@@ -275,6 +312,7 @@ export function createBarModel(items: readonly FormatBarItem[], groups: readonly
   return {
     groups,
     item,
+    newSeparatorKey,
     stock,
     resolve,
     isStock,
@@ -297,11 +335,10 @@ export type BarModel = ReturnType<typeof createBarModel>;
  * Settings), only a note that has a Markdown view offers "Show markdown",
  * and the paperclip shows only while its menu holds something. None of them
  * counts as the button that keeps a bar usable, or that editor could draw an
- * empty bar. A separator is no button at all.
+ * empty bar. A divider is no button at all (createBarModel's keepsBar).
  */
 const SOMETIMES_ABSENT = new Set([
-  'fromFiles', 'image', 'attach', 'audio', 'customize', 'markdownView', 'attachMenu',
-  'separator1', 'separator2', 'separator3', 'separator4',
+  'fromFiles', 'image', 'attach', 'scan', 'audio', 'customize', 'splitView', 'markdownView', 'attachMenu',
 ]);
 
 /** The format bar's rules. */
@@ -315,6 +352,20 @@ export const refusalFor = FORMAT_BAR.refusalFor;
 export const placeItem = FORMAT_BAR.placeItem;
 export const stepItem = FORMAT_BAR.stepItem;
 export const canStep = FORMAT_BAR.canStep;
+
+/**
+ * The arrangement as a bar of this width draws it. A narrow window (below
+ * 1024 px, a phone too) has no room for the gear at the end of the bar, which
+ * always stays visible, so the gear moves to the end of the row: under a
+ * pointer it waits last in the ••• row, on a touch screen last in the strip.
+ * Settings > Toolbar stays one press away from the bar on every screen
+ * (owner, 2026-11-20). A gear the person put on the row, in the menu or among
+ * the hidden stays where it is.
+ */
+export function barForWidth(r: ResolvedFormatBar, wide: boolean): ResolvedFormatBar {
+  if (wide || !r.end.includes('customize')) return r;
+  return { ...r, bar: [...r.bar, 'customize'], end: r.end.filter((k) => k !== 'customize') };
+}
 
 /** The arrangement to save for what the board shows. */
 export function layoutOf(r: ResolvedFormatBar): FormatBarLayout {

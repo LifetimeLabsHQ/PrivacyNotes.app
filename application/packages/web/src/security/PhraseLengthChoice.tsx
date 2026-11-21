@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Ruler } from '../icons';
-import { SectionEyebrow } from '../settingsUI';
+import { SectionEyebrow, SETTINGS_HELP } from '../settingsUI';
 import { CompareTiles } from '../ui';
 import { usePhraseLengthTiles } from './phraseLengthTiles';
 
@@ -25,6 +25,7 @@ export function PhraseLengthChoice({ words, onChange }: { words: number; onChang
         tiles={tiles}
         onChange={(v) => onChange(v === '24' ? 24 : 12)}
       />
+      <p className={`${SETTINGS_HELP} leading-relaxed mt-2`}>{t('phraseChange.lengthLater')}</p>
     </div>
   );
 }

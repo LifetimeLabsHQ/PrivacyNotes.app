@@ -38,14 +38,17 @@ export function sealTombstone(pubkey: string, id: string, key: Uint8Array): stri
  * Check a pulled seal with every key this device holds (the current one, then
  * the ring of an earlier phrase). A seal no key opens is bad: a device whose
  * session predates a phrase change hears that from the heartbeat and writes
- * nothing, so a held key is never missing for a real delete.
+ * nothing, so a held key is never missing for a real delete. `changedAt`:
+ * the tombstone's server `changed_at` (ms); a seal under a replaced phrase's
+ * key on a delete made after the change is bad too, since only that phrase's
+ * holder can make it (beta #205 item 2, keyRing.ts).
  */
-export function checkTombstoneSeal(seal: unknown, pubkey: string, id: string, key: Uint8Array): SealVerdict {
+export function checkTombstoneSeal(seal: unknown, pubkey: string, id: string, key: Uint8Array, changedAt?: number): SealVerdict {
   if (seal === null || seal === undefined || seal === '') return 'none';
   if (typeof seal !== 'string' || !SHAPE.test(seal)) return 'bad';
   const [nonce, tag] = seal.split('.') as [string, string];
   try {
-    openWithRing('sync', key, (k) => decryptBytesAad(base64ToBytes(tag), base64ToBytes(nonce), k, aad(pubkey, id)));
+    openWithRing('sync', key, (k) => decryptBytesAad(base64ToBytes(tag), base64ToBytes(nonce), k, aad(pubkey, id)), undefined, changedAt);
     return 'valid';
   } catch {
     return 'bad';

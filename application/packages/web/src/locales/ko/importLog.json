@@ -18,6 +18,7 @@
     "filedNotes_other": "노트 {{count}}개 정리됨",
     "tags_other": "노트 {{count}}개의 태그를 유지했어요.",
     "droppedAlign": "편집기에서 정렬할 수 없는 블록은 정렬을 빼고 텍스트만 남겼어요.",
+    "lostPasskeys_other": "로그인 항목에 저장된 패스키 {{count}}개를 제외했어요. 이전 앱에 그대로 두거나, 해당 사이트에서 새 패스키를 추가하세요.",
     "foldersFromNotebooks_other": "노트북을 바탕으로 폴더 {{count}}개를 다시 만들었어요({{filed}}).",
     "parsingJson": "JSON 분석 중…",
     "buildingNotes": "노트 만드는 중…",
@@ -207,6 +208,11 @@
     "invalidJson": "이 파일은 올바른 JSON이 아니에요. 암호화되지 않은 \".json\"으로 내보냈는지 확인하세요.",
     "encryptedExport": "암호화된 Bitwarden 내보내기예요. \".json (Encrypted)\"가 아닌 일반 \".json\" 형식으로 다시 내보내 주세요.",
     "missingItems": "이 파일에는 있어야 할 \"items\" 배열이 없어요. Bitwarden 보관함 내보내기가 아니에요.",
+    "notZipExport": "이 zip의 최상위에 data.json이 없어요. Bitwarden \".zip (with attachments)\" 내보내기가 아니에요.",
+    "keptPasskeys_other": "패스키 {{count}}개를 각 로그인 항목에 그대로 두었어요.",
+    "passkeyOtherSite": "로그인 항목 \"{{name}}\"에 {{site}}의 패스키가 있는데, 이 사이트는 그 항목의 웹사이트가 아니에요. 로그인 항목과 함께 가져왔으니, 모르는 패스키라면 거기서 삭제하세요.",
+    "skippedPasskeys_other": "보관함에 담을 수 없는 패스키 {{count}}개를 제외했어요. 키가 P-256이 아니거나, 값이 WebAuthn이 허용하는 길이보다 길어요. 해당 사이트에서 새 패스키를 추가하세요.",
+    "unmatchedAttachments_other": "첨부 파일 {{count}}개를 하나의 항목에 연결하지 못했어요. 그 폴더 이름을 가진 항목이 없거나 여러 개이기 때문이에요. 이 파일들은 폴더 이름을 딴 노트에 들어 있어요.",
     "unknownType": "알 수 없는 유형 {{type}}인 항목 \"{{name}}\"을(를) 건너뛰었어요.",
     "importedCards_other": "카드 {{count}}개를 보관함 항목으로 가져왔어요.",
     "importedSecureNotes_other": "보안 메모 {{count}}개를 가져왔어요.",
@@ -409,6 +415,10 @@
     "notEnpass": "이 파일은 Enpass 내보내기가 아니에요. Enpass에서 File > Export를 선택하고 .json 형식을 고르세요.",
     "leftFiles_other": "첨부 파일 {{count}}개는 가져오지 않았어요. Enpass에서 저장한 뒤 여기서 항목에 첨부하세요."
   },
+  "msecure": {
+    "notMSecure": "mSecure 내보내기 파일이 아니에요. mSecure에서 Settings > Backups > Export records to CSV file을 선택하세요.",
+    "fieldDataOnly": "이 mSecure 내보내기에는 필드 이름이 없어서 필드를 서로 구분할 수 없어요. \"Only export field data\"를 끄고 다시 내보내세요."
+  },
   "nordpass": {
     "notNordPass": "이 파일은 NordPass 내보내기가 아니에요. NordPass에서 Settings > Export items를 선택하세요."
   },
@@ -423,6 +433,7 @@
     "kdbxFile": "이 파일은 잠겨 있는 KeePass 데이터베이스 자체예요. KeePass나 KeePassXC에서 XML로 내보낸 뒤 그 파일을 가져오세요.",
     "notKeePass": "이 파일은 KeePass XML 내보내기가 아니에요. KeePass에서는 File > Export > KeePass XML (2.x)을, KeePassXC에서는 Database > Export > XML File을 선택하세요.",
     "noEntries": "이 KeePass 파일에는 Recycle Bin 밖에 있는 항목이 없어요.",
+    "doctype": "이 파일은 DOCTYPE을 선언하고 있는데, KeePass 내보내기는 DOCTYPE을 쓰지 않아서 읽지 않았어요. KeePass에서 XML을 다시 내보낸 뒤 그 파일을 가져오세요.",
     "readingEntries": "항목 읽는 중…",
     "leftHistory_other": "항목의 이전 버전 {{count}}개는 가져오지 않았어요. 최신 버전만 함께 와요.",
     "missingFiles_other": "첨부 파일 {{count}}개는 내보내기에 없어서 가져오지 않았어요. KeePass에서 저장한 뒤 여기서 로그인 항목에 첨부하세요."
@@ -434,6 +445,13 @@
     "rebuiltFolders_other": "파일을 바탕으로 폴더 {{count}}개를 다시 만들었어요({{filed}}).",
     "broughtAcross": "폴더에서 {{parts}}을(를) 가져왔어요."
   },
+  "raindrop": {
+    "notRaindrop": "Raindrop.io 내보내기 파일이 아니에요. Export > CSV로 받은 .csv 파일이나 그 파일이 든 .zip이 필요해요.",
+    "noCsv": "이 zip 안에 .csv 파일이 없어요. Raindrop.io에서 CSV를 내보내고 그 파일을 고르세요.",
+    "highlightsHeading": "하이라이트",
+    "skipped_other": "주소가 웹 링크가 아닌 북마크 {{count}}개는 뺐어요.",
+    "covers_other": "커버 이미지 {{count}}개는 가져오지 않았어요. 북마크에는 대신 웹사이트 아이콘이 표시돼요."
+  },
   "browserBookmarks": {
     "notBookmarks": "북마크 내보내기가 아니에요. 브라우저가 내보내는 북마크 .html 파일이 필요해요.",
     "noBookmarks": "이 파일에서 북마크를 찾지 못했어요.",
@@ -443,7 +461,9 @@
     "mediaTooLarge_other": "{{size}}보다 큰 파일 {{count}}개를 건너뛰었어요. 어떤 플랜에서든 동기화할 수 있는 가장 큰 파일 크기예요.",
     "entryTooLarge": "{{name}}은(는) 압축을 풀면 가져오기가 한 번에 읽을 수 있는 {{limit}}을(를) 넘어요. 내보내기에서 이 파일을 빼고 다시 시도하세요.",
     "entryTooLargeKnown": "{{name}}은(는) 압축을 풀면 {{size}}이(가) 되어, 가져오기가 한 번에 읽을 수 있는 {{limit}}보다 커요. 내보내기에서 이 파일을 빼고 다시 시도하세요.",
-    "unreadable": "이 파일을 열 수 없어요. 파일이 불완전하거나 손상됐을 수 있어요. 다시 내보낸 다음 새 파일을 선택하세요."
+    "unreadable": "이 파일을 열 수 없어요. 파일이 불완전하거나 손상됐을 수 있어요. 다시 내보낸 다음 새 파일을 선택하세요.",
+    "importTooLarge": "이 파일은 압축을 풀면 {{limit}}을(를) 넘어서, 실제 내보내기 파일보다 커요. 다시 내보낸 다음 새 파일을 선택하세요.",
+    "tooManyEntries": "이 zip에는 파일이 {{max}}개보다 많이 들어 있어서, 실제 내보내기 파일보다 많아요. 다시 내보낸 다음 새 파일을 선택하세요."
   },
   "safariArchive": {
     "noEntry": "이 zip 안에 {{want}}이(가) 없어요.",
@@ -455,5 +475,33 @@
   },
   "apply": {
     "unknownWriteError": "로컬 데이터베이스에 쓰는 중 알 수 없는 오류가 발생했어요."
+  },
+  "onenote": {
+    "reading": "OneNote 노트북 읽는 중…",
+    "notOneNote": "OneNote 노트북이 아니에요. OneNote for Windows에서 File > Export > Notebook > OneNote Package를 선택하고 .onepkg 파일을 여기에 놓으세요.",
+    "cloudFormat": "이 섹션은 OneNote가 온라인에 보관하는 형식이라 OneNote만 읽을 수 있어요. OneNote for Windows에서 노트북을 열고 File > Export > Notebook > OneNote Package를 선택한 다음, 그 .onepkg 파일을 여기에 놓으세요.",
+    "splitPackage": "이 OneNote 패키지는 여러 파일로 나뉘어 있어요. 노트북을 하나의 OneNote Package로 다시 내보내고 그 파일을 여기에 놓으세요.",
+    "tooLarge": "이 OneNote 패키지는 너무 커서 한 번에 읽을 수 없어요. 섹션 그룹이나 섹션을 하나씩 내보내세요.",
+    "damaged": "이 OneNote 파일은 손상되어 읽을 수 없어요. OneNote에서 노트북을 다시 내보내고 그 파일로 시도해 보세요.",
+    "noPages": "이 OneNote 노트북에서 페이지를 찾지 못했어요.",
+    "allLocked": "이 노트북의 모든 섹션이 비밀번호로 보호되어 있어요. OneNote에서 섹션의 잠금을 해제하고 비밀번호를 제거한 다음, 다시 내보내고 새 파일을 여기에 놓으세요.",
+    "subpages_other": "하위 페이지 {{count}}개를 상위 페이지 옆에 노트로 유지했어요.",
+    "noteTags_other": "페이지 {{count}}개의 노트 태그를 태그로 유지했어요.",
+    "lockedSections_other": "비밀번호로 보호된 섹션 {{count}}개를 뺐어요. 이 섹션도 가져오려면 OneNote에서 비밀번호를 제거하고 다시 내보내세요.",
+    "unreadableSections_other": "읽을 수 없는 섹션 {{count}}개를 뺐어요.",
+    "unsupported_other": "여기에 대응하는 형식이 없는 그리기, 오디오 녹음, 수식 {{count}}개를 뺐어요.",
+    "missingFiles_other": "이미지 또는 파일 {{count}}개가 패키지에 없어서 뺐어요.",
+    "deadLinks_other": "OneNote 링크 {{count}}개가 이 노트북 밖을 가리켜요. 링크 텍스트만 유지돼요.",
+    "recycleBin_other": "노트북의 휴지통에 있던 페이지 {{count}}개를 뺐어요."
+  },
+  "capacities": {
+    "notCapacities": "Capacities 내보내기 파일이 아니에요. Capacities에서 Settings > Full Export를 열고 미디어를 포함해 Manual Full Export를 실행한 다음, 그 zip을 여기에 놓으세요.",
+    "noObjects": "이 Capacities 내보내기에서 텍스트가 있는 페이지나 다른 개체를 찾지 못했어요.",
+    "typeFolders_other": "개체 유형 {{count}}개를 폴더로 다시 만들었어요.",
+    "properties_other": "개체 {{count}}개의 속성을 각 노트 맨 위에 목록으로 적었어요.",
+    "mediaObjects_other": "이미지와 파일 {{count}}개를 별도의 노트 없이, 그것을 보여 주는 노트 안에 유지했어요.",
+    "queries_other": "쿼리 {{count}}개를 뺐어요. 쿼리는 Capacities의 저장된 검색이고, 자체 텍스트가 없어요.",
+    "collections_other": "컬렉션 목록 {{count}}개를 뺐어요. 그 안의 개체는 컬렉션 없이 함께 와요.",
+    "deadLinks_other": "링크 {{count}}개가 휴지통에 있는 개체처럼 내보내기에 없는 개체를 가리켜요. 링크 텍스트만 유지돼요."
   }
 }

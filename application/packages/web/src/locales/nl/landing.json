@@ -1,6 +1,5 @@
 {
   "header": {
-    "betaBadge": "beta",
     "downloads": "Downloads",
     "price": "Prijs",
     "priceLine": "Wat je apps kosten, bij elkaar opgeteld",
@@ -290,7 +289,7 @@
   },
   "demoShot": {
     "kicker": "Zie het live",
-    "caption": "De echte app met voorbeeldnotities, gewoon in je browser. Er wordt niets opgeslagen."
+    "caption": "De echte app met voorbeeldnotities, gewoon in je browser. Wat je typt, blijft daarin."
   },
   "badges": {
     "privacyToolsAlt": "PrivacyNotes op PrivacyTools.io",
@@ -358,7 +357,7 @@
     "freeImport": "Importeren en exporteren, waaronder Keep en Obsidian",
     "freeAnon": "Anoniem aanmelden, zonder e-mail",
     "earlyAdopterBadge": "Early Adopter",
-    "payMethods": "Betaal met een kaart, of met Bitcoin, Ethereum, Lightning, USDC of USDT."
+    "payMethods": "Betaal met een kaart, of met Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin of TON."
   },
   "underHood": {
     "heading": "Onder de motorkap",
@@ -376,7 +375,7 @@
     "sshDesc": "Ingebouwde Ed25519-generator",
     "pwgenDesc": "crypto.getRandomValues()",
     "opensourceTerm": "Open source",
-    "opensourceDesc": "Clients en encryptie op GitHub"
+    "opensourceDesc": "Clients en versleuteling op GitHub"
   },
   "mood": {
     "kicker": "Stemming & welzijn bijhouden",
@@ -482,12 +481,12 @@
   },
   "readIt": {
     "heading": "Geloof ons niet. Lees het na.",
-    "body": "De app die je nu gebruikt is gepubliceerd, samen met de encryptie erin. Begin met de controle van één minuut waar je niets voor nodig hebt, of ga meteen naar de code.",
+    "body": "De app die je nu gebruikt is gepubliceerd, samen met de versleuteling erin. Begin met de controle van één minuut waar je niets voor nodig hebt, of ga meteen naar de code.",
     "cta": "Bekijk de broncode op GitHub",
     "verify": "Controleer het zelf",
     "threatModel": "Wat een aanvaller kan",
     "security": "Wat de server ziet",
-    "crypto": "De encryptie zelf"
+    "crypto": "De versleuteling zelf"
   },
   "wontFind": {
     "kicker": "Bewust weggelaten",
@@ -498,7 +497,7 @@
     "noLockIn": "Lock-in",
     "noEmail": "Verplicht e-mailadres",
     "noDarkPatterns": "Dark patterns",
-    "noBackdoor": "Achterdeuren"
+    "noBackdoor": "Verborgen achterdeuren"
   },
   "noRecovery": {
     "heading": "Je herstelzin is je sleutel",
@@ -506,7 +505,7 @@
     "noRecoveryTerm": "Geen herstel",
     "noRecoveryDesc": "Bij eigen beheer: herstelzin kwijt, notities kwijt",
     "deviceTerm": "Gemaakt op je apparaat",
-    "deviceDesc": "Bij eigen beheer komt je herstelzin nooit op onze servers",
+    "deviceDesc": "Bij eigen beheer komt je herstelzin nooit op onze servers, tenzij je een passkey voor aanmelden toevoegt",
     "zkTerm": "Zero-knowledge",
     "zkDesc": "Bij eigen beheer heeft de server niets waarmee je notities opengaan",
     "writeTerm": "Schrijf hem op",
@@ -521,7 +520,7 @@
     "heading": "Je kluis staat in minder dan een minuut klaar.",
     "importNote": "Stap je over? Exporteer uit elk van deze en importeer in een paar minuten:",
     "importDemoTitle": "Probeer je eigen import eerst in de demo",
-    "importDemoBody": "Je bestand wordt in je browser gelezen, er gaat niets naar onze servers, en als je het tabblad sluit, is het weg."
+    "importDemoBody": "Je bestand wordt in je browser gelezen en er wordt niets uit geüpload. Het blijft in deze browser tot de demo hier weer opent; wis de sitegegevens om het eerder te verwijderen."
   },
   "about": {
     "tabs": {
@@ -529,7 +528,7 @@
       "hotkeys": "Sneltoetsen",
       "rating": "Beoordeling"
     },
-    "intro": "<brand/> bewaart je notities, taken, wachtwoorden, dagboek, bestanden, agenda, contacten en bladwijzers op één plek, en houdt ook je stemming en medicatie bij. Alles wordt op je apparaat versleuteld met een sleutel uit je herstelzin, en blijft versleuteld op onze servers in <nowrap>Zwitserland</nowrap>. Het werkt offline, en de app is open source.",
+    "intro": "<brand/> bewaart je notities, taken, wachtwoorden, dagboek, bestanden, agenda, contacten en bladwijzers op één plek, en houdt ook je stemming en medicatie bij. Alles wordt op je apparaat versleuteld met een sleutel uit je herstelzin, en blijft versleuteld op onze servers in <nowrap>Zwitserland</nowrap> en de EU. Het werkt offline, en de app is open source.",
     "versionHeading": "Versie",
     "windowVersion": "Versie {{version}}",
     "windowHelp": "Helpcentrum",
@@ -549,7 +548,7 @@
     "openSourceLink": "Lees de broncode op GitHub.com",
     "openSourceBody": "De app en de versleuteling erin zijn gepubliceerd, dus iedereen kan controleren hoe je notities worden versleuteld.",
     "dataStorageHeading": "Gegevensopslag",
-    "dataStorageBody": "Versleutelde blobs opgeslagen in Zürich, <flag/> Zwitserland.",
+    "dataStorageBody": "Versleutelde notities, dagboeken en de rest opgeslagen in Zürich, <flag/> Zwitserland. Nieuwe afbeeldingen en bestanden uit de huidige app opgeslagen in de EU.",
     "faviconsHeading": "Website-icoontjes",
     "faviconsBody1": "Website-icoontjes (favicons) komen van DuckDuckGo en Google, opgehaald door onze server namens jou. Je browser neemt met geen van beide rechtstreeks contact op, dus ze zien onze server om een domein vragen en zien jou nooit.",
     "faviconsBody2": "Icoontjes worden 90 dagen op je apparaat bewaard. Geen enkel verzoek bevat je identiteit, en je kunt icoontjes uitzetten bij Instellingen > Lijsten."

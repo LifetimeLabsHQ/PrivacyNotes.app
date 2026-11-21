@@ -39,16 +39,20 @@ function rankOf(frame: ProbedFrame, canCode: boolean): number | null {
 
 /**
  * The frame to fill, or none. `insecure` says that a frame would have been
- * filled but its page is `http:` while the login was saved for a secure page.
+ * filled but its page is `http:` while every address of the login that
+ * matches it is secure.
  */
 export function chooseFrame(frames: readonly ProbedFrame[], login: LoginCopyEntry, canCode: boolean): { frame?: ProbedFrame; insecure: boolean } {
-  const savedPlain = login.urls.some((u) => /^http:\/\//i.test(u.trim()));
   let insecure = false;
   const ranked: { frame: ProbedFrame; rank: number }[] = [];
   for (const frame of frames) {
     if (!matchLogins([login], frame.url).length) continue;
     const rank = rankOf(frame, canCode);
     if (rank === null) continue;
+    // Saved for plain http only by an http address that matches this frame:
+    // a printer's http address must not open the shop's https login to a
+    // plain page (beta #217 item 3).
+    const savedPlain = login.urls.some((u) => /^http:\/\//i.test(u.trim()) && matchLogins([{ ...login, urls: [u] }], frame.url).length > 0);
     if (!secure(frame.url) && !savedPlain) {
       insecure = true;
       continue;

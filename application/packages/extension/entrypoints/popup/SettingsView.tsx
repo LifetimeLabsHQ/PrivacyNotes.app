@@ -3,7 +3,8 @@
  * lives here (owner, 2026-11-11: settings spread over the
  * logo menu and this page confused). The page fits the 600 px with no scroll:
  * - Security: when the vault locks, fingerprint or face (where the computer
- *   has it; on asks the PIN once), and Change PIN or passcode (while unlocked).
+ *   has it; on asks the PIN once), Offer passkeys (passkeys.md P29), and
+ *   Change PIN or passcode (while unlocked).
  * - Keyboard shortcuts, in a card of its own.
  * - Display: the 2FA code lines, their moving countdown bar (calm for a
  *   person who finds it loud), and the website icons, which load through our
@@ -15,8 +16,9 @@
  */
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CaretDown, CaretRight, Fingerprint, Hourglass, Image, Keyboard, LockKey, Password, SignOut, Timer } from '@web/icons';
+import { CaretDown, CaretRight, Fingerprint, Hourglass, Image, Key, Keyboard, LockKey, Password, SignOut, Timer } from '@web/icons';
 import { Button } from '@web/ui/Button';
+import { Callout } from '@web/ui/feedback';
 import { Switch } from '@web/Switch';
 import { ROW_TITLE, SETTINGS_GROUP, SectionEyebrow } from '@web/settingsUI';
 import type { Prefs } from '../../src/prefs';
@@ -29,7 +31,7 @@ export const ViewPrefsProvider = ViewPrefsContext.Provider;
 /** What the rows show, as the settings have it. */
 export const useViewPrefs = () => useContext(ViewPrefsContext);
 
-const ROW = 'flex items-center gap-3 px-3 py-2.5';
+const ROW = 'flex items-center gap-3 px-3 py-1.5';
 
 /** A row that opens another screen, with the caret that says so. */
 function SampleBar({ off }: { off: boolean }) {
@@ -47,7 +49,7 @@ function NavRow({ icon, label, onClick }: { icon: ReactNode; label: string; onCl
   );
 }
 
-export function SettingsView({ prefs, onChange, vault, onShortcuts, onDisconnect }: {
+export function SettingsView({ prefs, onChange, vault, onShortcuts, onDisconnect, disconnectLoses }: {
   prefs: ViewPrefs;
   onChange: (patch: Partial<ViewPrefs>) => void;
   /** The vault's lock time, its menu, and Change PIN while unlocked; none without the vault. */
@@ -57,10 +59,14 @@ export function SettingsView({ prefs, onChange, vault, onShortcuts, onDisconnect
     changeSecret?: { label: string; open: () => void };
     /** Fingerprint or face, where this computer has it: on opens the PIN step, off forgets it. */
     biometric?: { on: boolean; set: (on: boolean) => void };
+    /** "Offer passkeys"; none while the release switch is off. */
+    passkeys?: { on: boolean; set: (on: boolean) => void };
   };
   onShortcuts: () => void;
   /** None before the browser is connected: then the row is not shown. */
   onDisconnect?: () => Promise<void>;
+  /** A passkey saved here is not in the Vault yet: Disconnect would lose it. */
+  disconnectLoses?: boolean;
 }) {
   const { t } = useTranslation('extension');
   const [asking, setAsking] = useState(false);
@@ -80,8 +86,13 @@ export function SettingsView({ prefs, onChange, vault, onShortcuts, onDisconnect
               </Button>
             </div>
             {vault.biometric && (
-              <div className="px-3 py-2.5">
+              <div className="px-3 py-1.5">
                 <Switch labelClassName={ROW_TITLE} icon={<Fingerprint className="text-accent" />} label={t('settings.biometric')} checked={vault.biometric.on} onChange={vault.biometric.set} />
+              </div>
+            )}
+            {vault.passkeys && (
+              <div className="px-3 py-1.5">
+                <Switch labelClassName={ROW_TITLE} icon={<Key className="text-accent" />} label={t('passkey.offer')} description={t('passkey.offerHelp')} checked={vault.passkeys.on} onChange={vault.passkeys.set} />
               </div>
             )}
             {vault.changeSecret && <NavRow icon={<LockKey className="shrink-0 text-accent" aria-hidden="true" />} label={vault.changeSecret.label} onClick={vault.changeSecret.open} />}
@@ -97,10 +108,10 @@ export function SettingsView({ prefs, onChange, vault, onShortcuts, onDisconnect
         <div className={SETTINGS_GROUP}>
           {vault && (
             <>
-              <div className="px-3 py-2.5">
+              <div className="px-3 py-1.5">
                 <Switch labelClassName={ROW_TITLE} icon={<Password className="text-accent" />} label={t('settings.codes')} description={t('settings.codesHelp')} checked={prefs.showTotp} onChange={(on) => onChange({ showTotp: on })} />
               </div>
-              <div className="relative px-3 py-2.5">
+              <div className="relative px-3 pt-1.5 pb-2.5">
                 <Switch labelClassName={ROW_TITLE} icon={<Hourglass className="text-accent" />} label={t('settings.bar')} description={t('settings.barHelp')} checked={prefs.totpBar} disabled={!prefs.showTotp} onChange={(on) => onChange({ totpBar: on })} />
                 {/* A live sample of the bar: a 30-second code's, still and dim
                     while off. In the row's bottom padding, so the page keeps
@@ -109,7 +120,7 @@ export function SettingsView({ prefs, onChange, vault, onShortcuts, onDisconnect
               </div>
             </>
           )}
-          <div className="px-3 py-2.5">
+          <div className="px-3 py-1.5">
             <Switch labelClassName={ROW_TITLE} icon={<Image className="text-accent" />} label={t('settings:appearance.faviconsTitle')} description={t('settings.iconsHelp')} checked={prefs.favicons} onChange={(on) => onChange({ favicons: on })} />
           </div>
         </div>
@@ -117,6 +128,11 @@ export function SettingsView({ prefs, onChange, vault, onShortcuts, onDisconnect
       {/* Disconnect, last and in a card of its own, with no heading (owner, 2026-11-11). */}
       {onDisconnect && (
       <div className={SETTINGS_GROUP}>
+        {asking && disconnectLoses && (
+          <div className="px-3 pt-2.5">
+            <Callout look="card" tone="warning">{t('account.pendingPasskey')}</Callout>
+          </div>
+        )}
         {asking ? (
           <div className={ROW}>
             <SignOut className="shrink-0 text-danger" aria-hidden="true" />

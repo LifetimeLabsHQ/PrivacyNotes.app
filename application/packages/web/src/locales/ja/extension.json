@@ -47,9 +47,10 @@
     "title": "ログイン情報を保護",
     "body": "このブラウザ用の PIN またはパスコードを決めてください。ここでログイン情報のロックを解除するのに必要です。アプリのものとは別です。",
     "biometric": "生体認証によるロック解除も使う",
-    "biometricHelp": "Touch ID または Windows Hello を、PIN またはパスコードに加えて使えます。PIN またはパスコードもいつでも使えます。",
+    "biometricHelp": "このブラウザ用のパスキーを通じて、Touch ID または Windows Hello を使えます。PIN またはパスコードもいつでも使えます。",
     "repeat": "もう一度入力",
-    "mismatch": "2つが一致しません。もう一度お試しください。"
+    "mismatch": "2つが一致しません。もう一度お試しください。",
+    "commonPin": "このPINは推測されやすすぎます。別のPINを選んでください。"
   },
   "clip": {
     "selection": "選択範囲",
@@ -81,7 +82,7 @@
     "unlockPin": "PIN を入力",
     "unlockPasscode": "パスコードを入力",
     "useBiometric": "生体認証によるロック解除を使う",
-    "wrong_other": "違います。あと{{count}}回間違えると、このブラウザの接続が解除されます。",
+    "wrong_other": "違います。今月の残り試行回数は{{count}}回です。使い切ると、このブラウザの接続が解除されます。",
     "forSite": "{{site}} 用",
     "none": "このサイトのログイン情報はありません。",
     "off": "このブラウザではログインがオフになっています。接続するときに「保管庫」をオンにしてください。",
@@ -96,12 +97,15 @@
     "search": "すべてのログインを検索",
     "noMatch": "一致するログインはありません。",
     "openSite": "サイトを開く",
-    "duplicate": "このサイトには、このユーザー名のログインがすでにあります。"
+    "duplicate": "このサイトには、このユーザー名のログインがすでにあります。",
+    "editTitle": "ログインを編集",
+    "saved": "変更を保存しました。"
   },
   "account": {
     "confirmDisconnect": "接続を解除しますか?",
     "revoked": "このブラウザは接続されていません",
-    "revokedBody": "アプリで新しいコードを作成して、もう一度接続してください。"
+    "revokedBody": "アプリで新しいコードを作成して、もう一度接続してください。",
+    "pendingPasskey": "このブラウザに保存したパスキーが、まだ保管庫にありません。先に PrivacyNotes を開いて同期させてください。そうしないと、パスキーは失われます。"
   },
   "badge": {
     "problem": "確認が必要な項目があります"
@@ -144,7 +148,8 @@
     "unlockToCopy": "ロックを解除してコピー",
     "omniboxDefault": "PrivacyNotes の保管庫で %s を検索",
     "omniboxUnlock": "PrivacyNotes のロックを解除して検索",
-    "moreOptions": "その他のオプション"
+    "moreOptions": "その他のオプション",
+    "editNotSaved": "{{name}} への変更は保管庫に届かなかったため、ログイン情報は以前の値のままです。変更を保存するには、もう一度編集してください。"
   },
   "shortcuts": {
     "notSet": "未設定",
@@ -191,5 +196,19 @@
     "biometricPin": "設定するには PIN を入力してください。",
     "biometricPasscode": "設定するにはパスコードを入力してください。",
     "biometricOff": "生体認証によるロック解除はオフです"
+  },
+  "passkey": {
+    "saveTitle": "{{site}} のパスキーを保存しますか?",
+    "useTitle": "{{site}} にサインイン",
+    "saveTo": "保存先",
+    "save": "PrivacyNotes に保存",
+    "other": "別のパスキーアプリを使う",
+    "already": "{{site}} のパスキーは、すでに PrivacyNotes にあります。",
+    "saved": "パスキーを保存しました。",
+    "notSaved": "パスキーを保存できませんでした。ブラウザ自身のパスキーアプリが代わりに処理します。",
+    "maybeSaved": "パスキーは保存された可能性があります。保管庫を確認してください。",
+    "unlockFirst": "パスキーを使うには、ロックを解除してください。",
+    "offer": "パスキーを提供",
+    "offerHelp": "ウェブサイトでパスキーを保存して使います。"
   }
 }

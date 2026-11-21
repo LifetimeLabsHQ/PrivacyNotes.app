@@ -29,6 +29,8 @@
     "tags_one": "Kept the tags on {{count}} note.",
     "tags_other": "Kept the tags on {{count}} notes.",
     "droppedAlign": "Dropped alignment on blocks the editor cannot align, keeping the text.",
+    "lostPasskeys_one": "Left out {{count}} passkey saved with a login. Keep it in your old app, or add a new passkey on that site.",
+    "lostPasskeys_other": "Left out {{count}} passkeys saved with logins. Keep them in your old app, or add new passkeys on those sites.",
     "foldersFromNotebooks_one": "Rebuilt {{count}} folder from your notebooks ({{filed}}).",
     "foldersFromNotebooks_other": "Rebuilt {{count}} folders from your notebooks ({{filed}}).",
     "parsingJson": "Parsing JSON…",
@@ -324,6 +326,14 @@
     "invalidJson": "That file is not valid JSON. Make sure you exported as \".json\" (not encrypted).",
     "encryptedExport": "This is an encrypted Bitwarden export. Please re-export using the plain \".json\" format (not \".json (Encrypted)\").",
     "missingItems": "This file is missing the expected \"items\" array. Not a Bitwarden vault export.",
+    "notZipExport": "This zip has no data.json at its top level. Not a Bitwarden \".zip (with attachments)\" export.",
+    "keptPasskeys_one": "Kept {{count}} passkey on its login.",
+    "keptPasskeys_other": "Kept {{count}} passkeys on their logins.",
+    "passkeyOtherSite": "The login \"{{name}}\" holds a passkey for {{site}}, which is not one of its websites. It came in with the login; delete it there if you do not know it.",
+    "skippedPasskeys_one": "Left out {{count}} passkey the Vault cannot hold: its key is not P-256, or a value is longer than WebAuthn permits. Add a new passkey on that site.",
+    "skippedPasskeys_other": "Left out {{count}} passkeys the Vault cannot hold: the key is not P-256, or a value is longer than WebAuthn permits. Add a new passkey on those sites.",
+    "unmatchedAttachments_one": "{{count}} attachment could not be matched to one item, because no item or several items have its folder name. It is in a note named after the folder.",
+    "unmatchedAttachments_other": "{{count}} attachments could not be matched to one item, because no item or several items have their folder name. They are in notes named after their folders.",
     "unknownType": "Skipped item \"{{name}}\" with unknown type {{type}}.",
     "importedCards_one": "Imported {{count}} card as a vault item.",
     "importedCards_other": "Imported {{count}} cards as vault items.",
@@ -485,8 +495,8 @@
     "repaired_other": "Repaired garbled characters in {{count}} events.",
     "emptyCalendars_one": "{{count}} calendar was empty and skipped.",
     "emptyCalendars_other": "{{count}} calendars were empty and skipped.",
-    "cancelled_one": "{{count}} cancelled event was skipped.",
-    "cancelled_other": "{{count}} cancelled events were skipped.",
+    "cancelled_one": "{{count}} canceled event was skipped.",
+    "cancelled_other": "{{count}} canceled events were skipped.",
     "declined_one": "{{count}} invitation you declined was skipped.",
     "declined_other": "{{count}} invitations you declined were skipped.",
     "noStart_one": "{{count}} event has no start and was skipped.",
@@ -627,6 +637,10 @@
     "leftFiles_one": "{{count}} attached file stayed behind. Save it from Enpass and attach it to the item here.",
     "leftFiles_other": "{{count}} attached files stayed behind. Save them from Enpass and attach them to the items here."
   },
+  "msecure": {
+    "notMSecure": "This file is not an mSecure export. In mSecure, choose Settings > Backups > Export records to CSV file.",
+    "fieldDataOnly": "This mSecure export has no field names, so its fields cannot be told apart. Export again with \"Only export field data\" turned off."
+  },
   "nordpass": {
     "notNordPass": "This file is not a NordPass export. In NordPass, choose Settings > Export items."
   },
@@ -643,6 +657,7 @@
     "kdbxFile": "This is the KeePass database itself, which is locked. In KeePass or KeePassXC, export it as XML, then import that file.",
     "notKeePass": "This file is not a KeePass XML export. In KeePass, choose File > Export > KeePass XML (2.x); in KeePassXC, Database > Export > XML File.",
     "noEntries": "That KeePass file has no entries outside the Recycle Bin.",
+    "doctype": "This file declares a DOCTYPE, which no KeePass export writes, so it was not read. Export the XML from KeePass again and import that file.",
     "readingEntries": "Reading the entries…",
     "leftHistory_one": "Left out {{count}} older version of an entry: only the newest comes along.",
     "leftHistory_other": "Left out {{count}} older versions of entries: only the newest comes along.",
@@ -659,6 +674,15 @@
     "rebuiltFolders_other": "Rebuilt {{count}} folders from your files ({{filed}}).",
     "broughtAcross": "Brought {{parts}} across from your folder."
   },
+  "raindrop": {
+    "notRaindrop": "Not a Raindrop.io export - expected the .csv file from Export > CSV, or the .zip that holds it.",
+    "noCsv": "No .csv file inside this zip. Export the CSV from Raindrop.io and pick that file.",
+    "highlightsHeading": "Highlights",
+    "skipped_one": "{{count}} bookmark was left out because its address is not a web link.",
+    "skipped_other": "{{count}} bookmarks were left out because their addresses are not web links.",
+    "covers_one": "{{count}} cover picture was not imported. The bookmark shows the website's icon instead.",
+    "covers_other": "{{count}} cover pictures were not imported. The bookmarks show the website's icons instead."
+  },
   "browserBookmarks": {
     "notBookmarks": "Not a bookmarks export - expected the bookmarks .html file a browser exports.",
     "noBookmarks": "No bookmarks found in this file.",
@@ -670,7 +694,9 @@
     "mediaTooLarge_other": "Skipped {{count}} files larger than {{size}}, the largest file any plan can sync.",
     "entryTooLarge": "{{name}} expands past the {{limit}} an import can read at once. Remove it from the export and try again.",
     "entryTooLargeKnown": "{{name}} expands to {{size}}, more than the {{limit}} an import can read at once. Remove it from the export and try again.",
-    "unreadable": "This file could not be opened. It may be incomplete or damaged. Export it again and pick the new file."
+    "unreadable": "This file could not be opened. It may be incomplete or damaged. Export it again and pick the new file.",
+    "importTooLarge": "This file expands to more than {{limit}}, more than any real export holds. Export it again and pick the new file.",
+    "tooManyEntries": "This zip lists more than {{max}} files, more than any real export holds. Export it again and pick the new file."
   },
   "safariArchive": {
     "noEntry": "No {{want}} inside this zip.",
@@ -682,5 +708,47 @@
   },
   "apply": {
     "unknownWriteError": "Unknown error while writing to local database."
+  },
+  "onenote": {
+    "reading": "Reading the OneNote notebook…",
+    "notOneNote": "This is not a OneNote notebook. In OneNote for Windows, pick File > Export > Notebook > OneNote Package, and drop the .onepkg file here.",
+    "cloudFormat": "This section is in the format OneNote keeps online, which only OneNote reads. Open the notebook in OneNote for Windows, pick File > Export > Notebook > OneNote Package, and drop that .onepkg file here.",
+    "splitPackage": "This OneNote package is split over several files. Export the notebook again as one OneNote Package and drop that file here.",
+    "tooLarge": "This OneNote package is too large to read in one go. Export one section group or section at a time.",
+    "damaged": "This OneNote file is damaged and cannot be read. Export the notebook again from OneNote and try that file.",
+    "noPages": "No pages found in this OneNote notebook.",
+    "allLocked": "Every section in this notebook is password protected. Unlock the sections in OneNote, remove their passwords, export again and drop the new file here.",
+    "subpages_one": "Kept {{count}} subpage as a note next to its page.",
+    "subpages_other": "Kept {{count}} subpages as notes next to their pages.",
+    "noteTags_one": "Kept the note tags of {{count}} page as tags.",
+    "noteTags_other": "Kept the note tags of {{count}} pages as tags.",
+    "lockedSections_one": "Left out {{count}} password-protected section. Remove its password in OneNote and export again to bring it along.",
+    "lockedSections_other": "Left out {{count}} password-protected sections. Remove their passwords in OneNote and export again to bring them along.",
+    "unreadableSections_one": "Left out {{count}} section that could not be read.",
+    "unreadableSections_other": "Left out {{count}} sections that could not be read.",
+    "unsupported_one": "Left out {{count}} drawing, audio clip or equation that has no form here.",
+    "unsupported_other": "Left out {{count}} drawings, audio clips and equations that have no form here.",
+    "missingFiles_one": "{{count}} picture or file was not in the package and is left out.",
+    "missingFiles_other": "{{count}} pictures or files were not in the package and are left out.",
+    "deadLinks_one": "{{count}} OneNote link points outside this notebook and keeps only its text.",
+    "deadLinks_other": "{{count}} OneNote links point outside this notebook and keep only their text.",
+    "recycleBin_one": "Left out {{count}} page from the notebook's recycle bin.",
+    "recycleBin_other": "Left out {{count}} pages from the notebook's recycle bin."
+  },
+  "capacities": {
+    "notCapacities": "This is not a Capacities export. In Capacities, open Settings > Full Export, run Manual Full Export with media included, and drop the zip here.",
+    "noObjects": "No pages or other objects with text found in this Capacities export.",
+    "typeFolders_one": "Rebuilt {{count}} object type as a folder.",
+    "typeFolders_other": "Rebuilt {{count}} object types as folders.",
+    "properties_one": "Kept the properties of {{count}} object as a list at the top of its note.",
+    "properties_other": "Kept the properties of {{count}} objects as a list at the top of their notes.",
+    "mediaObjects_one": "Kept {{count}} image or file inside the notes that show it, with no note of its own.",
+    "mediaObjects_other": "Kept {{count}} images and files inside the notes that show them, with no note of their own.",
+    "queries_one": "Left out {{count}} query. A query is a saved search in Capacities, with no text of its own.",
+    "queries_other": "Left out {{count}} queries. A query is a saved search in Capacities, with no text of its own.",
+    "collections_one": "Left out {{count}} collection list. The objects in it come along, without the collection.",
+    "collections_other": "Left out {{count}} collection lists. The objects in them come along, without the collections.",
+    "deadLinks_one": "{{count}} link points to an object that is not in the export, such as one in the trash, and keeps only its text.",
+    "deadLinks_other": "{{count}} links point to objects that are not in the export, such as ones in the trash, and keep only their text."
   }
 }

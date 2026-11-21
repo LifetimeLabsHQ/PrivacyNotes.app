@@ -19,9 +19,10 @@
  */
 
 import { answeredHabitIds, customHabitsNow } from './habitList';
-import { useCallback, useEffect, useRef, type ReactNode, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Gear, Plus } from './icons';
+import { FunnelSimple, Gear, Plus } from './icons';
+import { TrackerFocusLinkContext } from './trackerFocusStore';
 import type { TrackerSetupTab } from './TrackerConfig';
 import { HoverLabel } from './HoverLabel';
 import {
@@ -54,8 +55,9 @@ import {
   weightRange,
   weightToCanonical,
   weightToDisplay,
+  type CustomTrackerTemplate,
 } from './trackerTypes';
-import { caffeineText, waterText } from './trackerExport';
+import { caffeineText, sleepHoursText, waterText } from './trackerExport';
 import { TRACKER_ICONS } from './trackers/icons';
 import { ActivityPill } from './trackers/ActivityPill';
 import { CustomPill } from './trackers/CustomPill';
@@ -72,7 +74,9 @@ import { BloodPressurePill } from './trackers/BloodPressurePill';
 import { NumberInputPill } from './trackers/NumberInputPill';
 import { PillCloseOutsideContext, PillExpandContext } from './trackers/PillShell';
 import { proUnlocked } from './demo';
-import { useLastLogged } from './trackerLastLogged';
+import { useLastLogged, useTrackerHistory } from './trackerLastLogged';
+import { counterText, counterTotal } from './customCounter';
+import { toLocalIso } from './localDate';
 import { CustomTrackerGlyph } from './trackers/CustomTrackerGlyph';
 import { useIsTouchDevice } from './useIsMobile';
 import { Button } from './ui';
@@ -186,6 +190,9 @@ export function TrackerPills({
   const lastChange = useRef(0);
   const orderRef = useRef<string[]>([]);
   const filledRef = useRef<Set<string>>(new Set());
+  // A counter's pill shows its total, which the earlier days hold.
+  const history = useTrackerHistory();
+  const entryDay = typeof data.journalDate === 'string' ? data.journalDate : toLocalIso(new Date());
   const openNext = useCallback((from: string | null) => {
     const order = orderRef.current;
     const at = from ? order.indexOf(from) : -1;
@@ -231,6 +238,14 @@ export function TrackerPills({
   );
 
   const { activeBuiltins, customTrackers, weightUnit } = trackerSettings;
+  const focusLink = useContext(TrackerFocusLinkContext);
+  /** The registry id of the open pill, for the focus link; none for the
+   *  pills that hold several trackers (habits, medication). */
+  const expandedFocusId = expanded === null || expanded === 'habits' || expanded === 'medication' ? null
+    : expanded === 'sleep' ? 'sleepHours'
+    : expanded === 'bloodPressure' ? 'bpSystolic'
+    : expanded.startsWith('custom-') ? customFocusId(expanded.slice(7), customTrackers)
+    : expanded;
   const caffeineUnit = trackerSettings.caffeineUnit ?? 'cups';
   const caffeineIn = caffeineInput(caffeineUnit);
   const caffeineShown = data.caffeine != null ? caffeineToDisplay(data.caffeine, caffeineUnit) : undefined;
@@ -287,7 +302,7 @@ export function TrackerPills({
     }
     if (activeBuiltins.includes('sleep') && data.sleep) {
       const sq = t(`sleep.quality.${data.sleep.quality as SleepQuality}`);
-      const sh = `${data.sleep.hours ?? 7.5}${t('units.hoursSuffix')}`;
+      const sh = sleepHoursText(data.sleep.hours ?? 7.5);
       pills.push({ key: 'sleep', color: BUILTIN_TRACKER_COLORS.sleep, icon: TRACKER_ICONS.sleep, label: `${sq} (${sh})`, toggle: 'sleep' });
     }
     if (activeBuiltins.includes('sleepScore') && data.sleepScore != null) {
@@ -336,7 +351,9 @@ export function TrackerPills({
       for (const t of activeCustom) {
         const entry = data.customTrackers?.find((e) => e.trackerId === t.id);
         if (entry?.value != null) {
-          const label = t.type === 'pair' && typeof entry.value === 'number' ? pairText(entry.value, entry.value2, t.unit) : `${entry.value}`;
+          const label = t.type === 'pair' && typeof entry.value === 'number' ? pairText(entry.value, entry.value2, t.unit)
+            : t.type === 'counter' ? counterText(counterTotal(t.id, history, entryDay, entry), t.limit)
+            : `${entry.value}`;
           pills.push({ key: `c-${t.id}`, color: customTrackerColor(t) ?? '#888', icon: <CustomTrackerGlyph icon={t.icon} />, label, toggle: `custom-${t.id}` });
         }
       }
@@ -644,6 +661,19 @@ export function TrackerPills({
           template={ct}
           value={entry?.value}
           value2={entry?.value2}
+          entry={entry}
+          day={entryDay}
+          onEntryChange={(next) => {
+            const rest = (data.customTrackers ?? []).filter((e) => e.trackerId !== ct.id);
+            if (!next) {
+              update({ customTrackers: rest });
+              return;
+            }
+            const at = (data.customTrackers ?? []).findIndex((e) => e.trackerId === ct.id);
+            const list = [...rest];
+            list.splice(at >= 0 ? at : list.length, 0, next);
+            update({ customTrackers: list });
+          }}
           expanded={expanded === `custom-${ct.id}`}
           onToggle={() => toggle(`custom-${ct.id}`)}
           onChange={(value) => {
@@ -758,7 +788,16 @@ export function TrackerPills({
           {/* The card's Done sits here too, beside Next, so the card's own
               line keeps only its gear. On the last step Finish does its job. */}
           {/* The buttons wrap under the step name at the end when the card is narrow. */}
-          <div className="ms-auto flex shrink-0 gap-2">
+          <div className="ms-auto flex flex-wrap justify-end gap-2">
+            {/* The days with this tracker, in Journals: a quiet tool of the
+                open panel, beside Done and Next. The bar stops the
+                pointerdown, so the panel stays open until the press lands.
+                Spec: docs/internal/specs/tracker-focus-771.md (section 5) */}
+            {focusLink && expandedFocusId && (
+              <Button variant="secondary" icon={<FunnelSimple aria-hidden="true" />} onClick={() => focusLink(expandedFocusId)}>
+                {t('showEveryDay')}
+              </Button>
+            )}
             {(!flow || (card && hasNext)) && (
               <Button action="done" variant="secondary" onClick={finish}>
                 {t('common:actions.done')}
@@ -803,4 +842,9 @@ export function TrackerPills({
     </PillCloseOutsideContext.Provider>
     </PillExpandContext.Provider>
   );
+}
+
+/** A custom tracker's registry id: a Two numbers tracker is two descriptors, named by its first. */
+function customFocusId(id: string, list: readonly CustomTrackerTemplate[]): string {
+  return list.find((c) => c.id === id)?.type === 'pair' ? `${id}~1` : id;
 }

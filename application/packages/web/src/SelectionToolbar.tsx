@@ -9,10 +9,13 @@
  * so there's no vertical jump when it swaps in.
  *
  * The actions stand in priority order, lowest first. When the pane is too
- * narrow for all of them, they fold into a "more" menu from the left, so
- * Delete is always the last to go and every action stays one menu away.
- * At LIST_WIDTH_MIN (200 px) the row holds the exit X, the menu button,
- * Move and Delete. Spec: docs/internal/design/ui-patterns.md (toolbar icon-only buttons)
+ * narrow for all of them, they fold from the left into the More menu, whose
+ * button ends the row, so Delete is always the last to go and every action
+ * stays one menu away. At LIST_WIDTH_MIN (200 px) the row holds the exit X,
+ * Move, Delete and the menu button. A list that passes `moreItems` keeps the menu button on
+ * the bar at every width: below the folded actions it lists the bulk actions
+ * that have no button, such as Read-only, Protect and Duplicate.
+ * Spec: docs/internal/design/ui-patterns.md (toolbar icon-only buttons, section 194)
  */
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
@@ -21,7 +24,7 @@ import { HoverLabel } from './HoverLabel';
 import { keyText } from './shortcutMatch';
 import { TagPicker } from './TagPicker';
 import { IconUpgrade } from './UpgradeModal';
-import { ContextMenu, useContextMenu } from './ContextMenu';
+import { ContextMenu, useContextMenu, type ContextMenuItem } from './ContextMenu';
 import { X, PushPin, Tag, Folder, Download, Trash, ArrowCounterClockwise, DotsThreeOutlineVertical, iconArchive } from './icons';
 
 type Mode = 'normal' | 'trash';
@@ -50,6 +53,10 @@ type Props = {
   onDeleteForever: () => void;
   /** All existing tags with note counts, for the tag picker. */
   allTags?: [string, number][];
+  /** The bulk actions the bar has no button for, read when More opens. With
+   *  it, More is always on the bar in the normal mode, so a phone reaches
+   *  every action of the selection's right-click menu (#805). */
+  moreItems?: () => ContextMenuItem[];
 };
 
 type Action = {
@@ -68,11 +75,12 @@ const BUTTON = 32;
 const GAP = 4;
 
 /** How many actions stay on the bar, counted from the right, in a row whose
- *  inner width is `width`. The last action always stays. */
-function fittingCount(width: number, total: number): number {
+ *  inner width is `width`. The last action always stays. `more` says the
+ *  More button is there whatever folds, so its slot is always counted. */
+function fittingCount(width: number, total: number, more: boolean): number {
   const room = width - PAD - BUTTON - GAP;
   for (let k = total; k > 1; k--) {
-    const slots = k + (k < total ? 1 : 0);
+    const slots = k + (k < total || more ? 1 : 0);
     if (slots * BUTTON + (slots - 1) * GAP <= room) return k;
   }
   return 1;
@@ -93,6 +101,7 @@ export function SelectionToolbar({
   onRestore,
   onDeleteForever,
   allTags,
+  moreItems,
 }: Props) {
   const { t } = useTranslation('shell');
   const [tagOpen, setTagOpen] = useState(false);
@@ -145,15 +154,16 @@ export function SelectionToolbar({
 
   const [shown, setShown] = useState(actions.length);
   const total = actions.length;
+  const alwaysMore = mode === 'normal' && moreItems !== undefined;
   useLayoutEffect(() => {
     const el = rowRef.current;
     if (!el) return;
-    const measure = () => setShown(fittingCount(el.clientWidth, total));
+    const measure = () => setShown(fittingCount(el.clientWidth, total, alwaysMore));
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [total]);
+  }, [total, alwaysMore]);
 
   const folded = actions.slice(0, total - shown);
   const visible = actions.slice(total - shown);
@@ -161,15 +171,26 @@ export function SelectionToolbar({
   const openMore = () => {
     const r = moreRef.current?.getBoundingClientRect();
     if (!r) return;
+    const foldedItems: ContextMenuItem[] = folded.map((a) => ({
+      label: a.label,
+      icon: a.icon,
+      pro: a.pro,
+      // The tag picker toggles from the bar; from the menu it only opens.
+      onSelect: a.key === 'tag' ? () => setTagOpen(true) : a.onClick,
+    }));
+    const rest = alwaysMore ? moreItems() : [];
+    const items = foldedItems.length > 0 && rest.length > 0
+      ? [...foldedItems, { type: 'separator' } as const, ...rest]
+      : [...foldedItems, ...rest];
+    // The button ends the row, so the menu hangs from its end edge and
+    // stays over the list pane rather than spilling over the editor.
+    const rtl = document.documentElement.dir === 'rtl';
     menu.open(
-      { clientX: r.left, clientY: r.bottom + 4, preventDefault() {}, stopPropagation() {} },
-      folded.map((a) => ({
-        label: a.label,
-        icon: a.icon,
-        pro: a.pro,
-        // The tag picker toggles from the bar; from the menu it only opens.
-        onSelect: a.key === 'tag' ? () => setTagOpen(true) : a.onClick,
-      })),
+      { clientX: rtl ? r.left : r.right, clientY: r.bottom + 4, preventDefault() {}, stopPropagation() {} },
+      items,
+      false,
+      undefined,
+      true,
     );
   };
 
@@ -186,7 +207,10 @@ export function SelectionToolbar({
       </HoverLabel>
 
       <div className="shrink-0 flex items-center gap-1">
-        {folded.length > 0 && (
+        {visible.map((a) => (
+          <ToolbarButton key={a.key} label={a.label} onClick={a.onClick} icon={a.icon} tone={a.tone} pro={a.pro} />
+        ))}
+        {(folded.length > 0 || alwaysMore) && (
           <HoverLabel label={t('selectionToolbar.more')} position="below">
           <button
             ref={moreRef}
@@ -200,9 +224,6 @@ export function SelectionToolbar({
           </button>
           </HoverLabel>
         )}
-        {visible.map((a) => (
-          <ToolbarButton key={a.key} label={a.label} onClick={a.onClick} icon={a.icon} tone={a.tone} pro={a.pro} />
-        ))}
       </div>
 
       {tagOpen && (

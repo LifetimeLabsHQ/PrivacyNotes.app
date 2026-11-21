@@ -316,21 +316,21 @@
       "app": "Bitwarden",
       "title": "Je Bitwarden-kluis exporteren",
       "metaTitle": "Een Bitwarden-kluis exporteren - PrivacyNotes",
-      "lead": "Bitwarden exporteert je hele kluis als één onversleuteld .json-bestand, en PrivacyNotes zet elk item op zijn plek: logins, kaarten, SSH-sleutels en beveiligde notities.",
+      "lead": "Bitwarden exporteert je hele kluis als één onversleuteld .json-bestand, of als een .zip met je bijlagen, en PrivacyNotes zet elk item op zijn plek: logins, kaarten, SSH-sleutels en beveiligde notities.",
       "sections": [
         {
           "h": "Je kluis exporteren uit Bitwarden",
           "steps": [
             "Open de Bitwarden-webkluis (of de desktop-app) en meld je aan.",
             "Ga naar Tools en dan \"Export vault\".",
-            "Kies het bestandsformaat .json (de gewone, niet \".json (Encrypted)\").",
+            "Kies het bestandsformaat .json, of \".zip (with attachments)\" om ook je bijlagen mee te nemen. Kies niet \".json (Encrypted)\".",
             "Bevestig met je hoofdwachtwoord en download het bestand."
           ]
         },
         {
           "h": "Waar alles belandt",
           "p": [
-            "Logins worden [login-items in de Kluis](/nl/help/vault) (met de icoontjes van hun site), kaarten worden kaartitems, SSH-sleutels worden SSH-sleutelitems, en beveiligde notities plus identiteiten komen binnen als leesbare notities. Bitwarden-mappen worden tags, en favorieten komen met een ster binnen. Authenticator-sleutels (TOTP) komen ook mee, dus [je 2FA-codes blijven werken](/nl/help/vault-totp).",
+            "Logins worden [login-items in de Kluis](/nl/help/vault) (met de icoontjes van hun site), kaarten worden kaartitems, SSH-sleutels worden SSH-sleutelitems, en beveiligde notities plus identiteiten komen binnen als leesbare notities. Bitwarden-mappen worden tags, en favorieten komen met een ster binnen. Authenticator-sleutels (TOTP) komen ook mee, dus [je 2FA-codes blijven werken](/nl/help/vault-totp), en de passkeys die je in Bitwarden hebt bewaard ook. Uit een .zip komt elke bijlage bij zijn item terecht.",
             "Het exportbestand bevat je wachtwoorden in leesbare tekst, dus importeer het, controleer of alles goed is aangekomen en verwijder het bestand daarna netjes. Binnen PrivacyNotes is alles weer versleuteld, op je apparaat en onderweg naar de server."
           ]
         }
@@ -1115,6 +1115,31 @@
         }
       ]
     },
+    "msecure": {
+      "app": "mSecure",
+      "title": "Je mSecure-kluis exporteren",
+      "metaTitle": "Een mSecure-kluis exporteren - PrivacyNotes",
+      "lead": "mSecure exporteert je records vanuit de desktop-app als één .csv-bestand, en PrivacyNotes maakt er logins, kaarten en notities in de Kluis van, eigen velden inbegrepen.",
+      "sections": [
+        {
+          "h": "Exporteren uit mSecure",
+          "steps": [
+            "Open mSecure op je computer en ontgrendel het.",
+            "Open Settings en kies Backups.",
+            "Kies onder Import and Export records de optie Export records to CSV file.",
+            "Kies Export all records. Laat \"Only export field data\" uit staan, zodat het bestand de naam van elk veld bewaart.",
+            "Kies Export en bewaar het .csv-bestand."
+          ]
+        },
+        {
+          "h": "Waar alles belandt",
+          "p": [
+            "Elke login wordt een [login in de Kluis](/nl/help/vault) met zijn 2FA-sleutel, dus [je codes blijven werken](/nl/help/vault-totp), en zijn extra websites en eigen velden komen mee met hun namen. Een geheim veld, zoals een PIN of een herstelcode, blijft verborgen. Een kaart wordt een kaart. Een beveiligde notitie wordt een notitie, en andere soorten records, zoals een identiteit of een bankrekening, worden notities met hun velden, getagd met het soort record. Je tags blijven tags. Het bestand bevat geen datums of favorieten, dus elk item krijgt de dag waarop je importeert.",
+            "De export bevat je wachtwoorden in leesbare tekst. Importeer hem, controleer of alles is aangekomen en verwijder het bestand daarna."
+          ]
+        }
+      ]
+    },
     "nordpass": {
       "app": "NordPass",
       "title": "Je NordPass-kluis exporteren",
@@ -1163,6 +1188,36 @@
           "p": [
             "Elke login wordt een [login in de Kluis](/nl/help/vault) met zijn extra websites, aangepaste velden en datums. De 2FA-sleutel komt mee, dus [je codes blijven werken](/nl/help/vault-totp). Als een item zowel een e-mailadres als een gebruikersnaam heeft, vult de gebruikersnaam de login en wordt het e-mailadres een veld. Notities komen binnen als notities, kaarten als kaarten en identiteiten als notities met elk detail op een eigen regel. Elke hide-my-email-alias wordt een notitie met zijn adres, zodat je de lijst houdt van welk adres je aan welke site hebt gegeven; Proton blijft de mail doorsturen zolang je Proton-account actief is. Bij meer dan één kluis wordt elke kluis een tag. Items in de prullenbak blijven achter.",
             "De export bevat je wachtwoorden in leesbare tekst. Importeer hem, controleer of alles is aangekomen en verwijder het bestand daarna."
+          ]
+        }
+      ]
+    },
+    "raindrop": {
+      "app": "Raindrop.io",
+      "title": "Je Raindrop.io-bladwijzers exporteren",
+      "metaTitle": "Je Raindrop.io-bladwijzers exporteren - PrivacyNotes",
+      "lead": "Exporteer je Raindrop.io-bladwijzers als één .csv-back-up, en PrivacyNotes maakt er bladwijzers van in dezelfde collecties, met je notities, fragmenten en markeringen erbij.",
+      "sections": [
+        {
+          "h": "Een back-up van alles ophalen",
+          "steps": [
+            "Open Raindrop.io in je browser of in de app en meld je aan.",
+            "Open All bookmarks en kies Export > Get backup.",
+            "Wacht op de e-mail die zegt dat de back-up klaar is. Dat duurt meestal een paar minuten.",
+            "Open Settings > Backups en kies CSV bij de nieuwe back-up."
+          ]
+        },
+        {
+          "h": "Kies CSV, niet HTML",
+          "p": [
+            "Het HTML-bestand bewaart de links en je notities, maar laat fragmenten en markeringen weg. Wil je maar één collectie meenemen, open die dan en kies Export > CSV. De .zip uit dat menu werkt ook."
+          ]
+        },
+        {
+          "h": "Waar alles terechtkomt",
+          "p": [
+            "Elke bladwijzer komt onder Bookmarks, in een map per collectie, genest zoals je ze had. Bladwijzers zonder collectie (Unsorted) komen direct onder Bookmarks. Je notitie, het fragment en elke markering met haar plaknotitie gaan naar de notities van de bladwijzer, en favorieten blijven vastgezet. Tags blijven tags, en elke bladwijzer behoudt de dag waarop je hem bewaarde.",
+            "Het bestand bevat geen prullenbak, herinneringen of markeringskleuren, dus die blijven achter. Omslagafbeeldingen blijven ook achter: elke bladwijzer toont in plaats daarvan het icoon van zijn website."
           ]
         }
       ]
@@ -1288,6 +1343,83 @@
           "p": [
             "[Elk item belandt in Dagboeken](/nl/help/journal), op de dag die je er in Journal voor hebt gekozen. Elk item behoudt zijn titel en tekst, en foto's en video's worden geïmporteerd als afbeeldingen en bijlagen. Een kaart bij een item komt mee als afbeelding.",
             "Takeout bevat geen plaatsnamen, schrijfsuggesties, bladwijzers of reflecties van Journal, dus die blijven in Journal. De importsamenvatting meldt dat."
+          ]
+        }
+      ]
+    },
+    "capacities": {
+      "app": "Capacities",
+      "title": "Je Capacities-space exporteren",
+      "metaTitle": "Een Capacities-space exporteren - PrivacyNotes",
+      "lead": "Capacities exporteert alle spaces tegelijk als één zip met Markdown-bestanden en de bijbehorende media. Die zip brengt je pagina's, dagelijkse notities en aangepaste objecten mee, met hun tags, eigenschappen, links, tabellen en afbeeldingen.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/capacities-export.webp",
+            "alt": "De instellingen van Capacities, pagina Full Export, met onder Manual Full Export de optie Include media aangezet en de knop Export All Spaces.",
+            "width": 1576,
+            "height": 802
+          },
+          "h": "Een volledige export maken",
+          "steps": [
+            "Open Capacities op je computer en open Settings.",
+            "Kies Full Export.",
+            "Open onder Manual Full Export de Options en laat \"Include media\" aan staan. De andere twee opties mogen blijven zoals ze zijn: we lezen beide linkstijlen en laten de titelkop weg.",
+            "Klik op \"Export All Spaces\". Capacities bouwt de zip op de achtergrond en bewaart hem in je map Downloads, met de naam \"Capacities\" plus de datum en tijd.",
+            "Sleep die .zip erin zoals hij is."
+          ],
+          "p": [
+            "Capacities zet afbeeldingen en bestanden alleen in de zip als ze op je apparaat staan. Ontbreken er een paar, zet dan Settings > Offline & Sync > Media loading op \"Everything\", wacht tot de download klaar is en exporteer opnieuw."
+          ]
+        },
+        {
+          "h": "Wat er meekomt",
+          "p": [
+            "Elke pagina, dagelijkse notitie en elk object van je eigen types wordt een notitie met zijn tags en de datums die Capacities bewaarde. Elk objecttype wordt een map, dus je pagina's komen in Pages, je dagelijkse notities in DailyNotes en een type zoals Books in een eigen map.",
+            "Koppen, lijsten, to-do's, citaten, code met de taal erbij, wiskunde en tabellen komen mee zoals ze waren. Capacities schrijft een tabelformule als resultaat in de export, dus de getallen komen aan en de formule niet. [Onze tabellen gebruiken dezelfde formules](/nl/help/table-formulas), met dezelfde namen en celverwijzingen, dus typ `=` in de cel om er opnieuw een in te stellen. [Links en vermeldingen tussen objecten worden notitielinks](/nl/help/note-links), en afbeeldingen en bestanden worden in je opslag geïmporteerd.",
+            "De eigenschappen van een aangepast type, zoals een beoordeling of een genre, worden bovenaan de notitie als een korte lijst geschreven. Queries zijn opgeslagen zoekopdrachten zonder tekst, dus die blijven achter. Capacities exporteert de prullenbak, de collecties en het uiterlijk van toggles en gekleurde blokken niet: toggles komen als lijsten mee, en de tekst erin gaat mee."
+          ]
+        }
+      ]
+    },
+    "onenote": {
+      "app": "OneNote",
+      "title": "Je OneNote-notitieboeken exporteren",
+      "metaTitle": "Je OneNote-notitieboeken exporteren - PrivacyNotes",
+      "lead": "OneNote voor Windows exporteert een heel notitieboek als één OneNote Package-bestand (.onepkg). Dat bestand brengt je secties, pagina's en subpagina's mee, met hun to-do's, tabellen, afbeeldingen en bijlagen.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/onenote-export.webp",
+            "alt": "OneNote voor Windows, File > Export, met Notebook gekozen onder Export Current, OneNote Package gekozen onder Select Format en de knop Export.",
+            "width": 1576,
+            "height": 548
+          },
+          "h": "Het notitieboek exporteren als OneNote Package",
+          "steps": [
+            "Open het notitieboek in OneNote voor Windows, de desktop-app. Notitieboeken in OneDrive openen daar ook.",
+            "Kies File > Export.",
+            "Kies onder \"Export Current\" de optie \"Notebook\".",
+            "Kies onder \"Select Format\" de optie \"OneNote Package (*.onepkg)\" en klik op \"Export\".",
+            "Kies een map en sla het bestand op. OneNote schrijft één .onepkg-bestand met de naam van het notitieboek.",
+            "Sleep dat .onepkg-bestand erin zoals het is."
+          ],
+          "p": [
+            "Eén pakket bevat één notitieboek. Heb je meerdere notitieboeken, exporteer ze dan stuk voor stuk en sleep de bestanden er na elkaar in. OneNote op het web, op een Mac en op telefoons kan niet exporteren, dus gebruik voor deze stap een Windows-computer."
+          ]
+        },
+        {
+          "h": "Eerst beveiligde secties ontgrendelen",
+          "p": [
+            "Een sectie met een wachtwoord blijft in het pakket versleuteld, en alleen OneNote kan hem openen. Ontgrendel elke sectie in OneNote, verwijder het wachtwoord onder Review > Password > Remove Password en exporteer opnieuw. De importvoorvertoning noemt elke sectie die hij moest overslaan."
+          ]
+        },
+        {
+          "h": "Wat er meekomt",
+          "p": [
+            "Het notitieboek wordt een map, met daarin een map voor elke sectiegroep en sectie. Elke pagina wordt een notitie in de map van haar sectie, met de datum waarop OneNote haar maakte, en een subpagina staat in dezelfde map direct na haar pagina.",
+            "Koppen, vet, cursief, onderstreping, kleuren, markeringen, lijsten met opsommingstekens en nummers, tabellen en codealinea's komen mee zoals ze waren. Een to-do-tag wordt een item in een takenlijst, afgevinkt als het gedaan was, en andere notitietags zoals Important of Question worden tags op de notitie. [Links tussen pagina's worden notitielinks](/nl/help/note-links), en afbeeldingen en bijgevoegde bestanden worden in je opslag geïmporteerd.",
+            "Een los sectiebestand (.one) of een gezipte notitieboekmap werkt ook. Tekeningen met een pen, geluidsopnames en vergelijkingen hebben hier geen vorm, dus de importvoorvertoning telt ze, en pagina's in de prullenbak van OneNote horen niet bij het pakket."
           ]
         }
       ]

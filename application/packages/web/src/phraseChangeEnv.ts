@@ -37,6 +37,8 @@ import { ringKeyCopies } from './keyRing';
 import { signInStamp } from './liveSignIn';
 import { ensureLevel2, isMfaRefusal } from './mfaStep';
 import { appLockArmed, sealPhraseForDevice, unwrapStoredEnvelope } from './phraseAtRest';
+import { clearPinFailures, getPinLockoutState, recordPinFailure } from './pin';
+import { isSealedPinWrap, openSealedPinWrap, sealPinCiphertext, sealsPinWrapHere } from './pinWrapSeal';
 import { trustAwareStorage } from './trustStorage';
 import { readSettingsRowForChange } from './userSettings';
 
@@ -68,6 +70,13 @@ export const phraseChangeEnv = {
   appLockArmed,
   sealPhraseForDevice,
   unwrapStoredEnvelope,
+  clearPinFailures,
+  getPinLockoutState,
+  recordPinFailure,
+  isSealedPinWrap,
+  openSealedPinWrap,
+  sealPinCiphertext,
+  sealsPinWrapHere,
   trustAwareStorage,
   readSettingsRowForChange,
 };

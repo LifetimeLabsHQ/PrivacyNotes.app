@@ -3,7 +3,7 @@ import { Button } from './ui/Button';
 import { VaultFormActions } from './ui/VaultFormActions';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Info, Lock, Plus, Shield, Tag, Trash, User } from './icons';
+import { Fingerprint, Globe, Info, Lock, Plus, Shield, Tag, Trash, User } from './icons';
 import { hasPin } from './pin';
 import { PinInfoModal } from './PinInfoModal';
 import { HoverLabel } from './HoverLabel';
@@ -18,6 +18,9 @@ import { PasswordGeneratorModal } from './PasswordGenerator';
 import type { UpgradeTrigger } from './UpgradeModal';
 import { newLoginField, type LoginExtras, type LoginField } from './loginExtras';
 import { CustomFieldEditor } from './CustomFields';
+import { ConfirmModal } from './ConfirmModal';
+import { formatInstant } from './intlFormat';
+import type { SitePasskey } from '@notes/shared';
 
 /** The types a login's custom field can take. */
 const LOGIN_FIELD_TYPES = ['text', 'hidden'] as const;
@@ -239,6 +242,17 @@ export function LoginForm({
           )}
         </div>
 
+        {/* Site passkeys - the extension saves them; here each can only be
+            removed. Only for a login that holds one, so a login without
+            passkeys shows nothing new. Spec: docs/contrib/passkeys.md (section 5.2) */}
+        {data.passkeys.length > 0 && (
+          <SitePasskeyFields
+            passkeys={data.passkeys}
+            locked={locked}
+            onRemove={(credentialId) => updateBody({ passkeys: data.passkeys.filter((p) => p.credentialId !== credentialId) })}
+          />
+        )}
+
         {/* Website / URL - after the credentials, the same order the view
             shows: the title names the site, so the address is a detail. */}
         <div>
@@ -375,6 +389,56 @@ export function LoginForm({
 
         <VaultFormActions locked={locked} isNew={isNew} saveError={saveError} onSave={onSave} onCancel={onCancel} />
       </div>
+    </div>
+  );
+}
+
+/**
+ * A login's site passkeys in the form: the site, the account and the day each
+ * was added, and Remove behind a confirm. Never the key, never a copy button.
+ * The app cannot make a site passkey; the line under the rows says who does.
+ * Spec: docs/contrib/passkeys.md (section 5.2)
+ */
+function SitePasskeyFields({ passkeys, locked, onRemove }: {
+  passkeys: SitePasskey[];
+  locked: boolean;
+  onRemove: (credentialId: string) => void;
+}) {
+  const { t } = useTranslation('notes');
+  const [confirming, setConfirming] = useState<SitePasskey | null>(null);
+  return (
+    <div>
+      <div className="space-y-2">
+        {passkeys.map((p) => (
+          <div key={p.credentialId}>
+            <FieldLabel icon={<Fingerprint />}>{t('vaultPasskey.forSite', { rpId: p.rpId })}</FieldLabel>
+            <div className="flex gap-1.5">
+              <div className={`${FIELD_CLASS} min-w-0`} data-passkey-row="">
+                <span className="block truncate" dir="auto">{p.userName || p.displayName}</span>
+                <span className="block text-meta text-pn-muted">{t('security:twoFactor.addedOn', { date: formatInstant(p.created, 'date') })}</span>
+              </div>
+              {!locked && (
+                <HoverLabel label={t('common:actions.remove')} position="start">
+                  <button type="button" onClick={() => setConfirming(p)} aria-label={`${t('common:actions.remove')} ${t('vaultPasskey.forSite', { rpId: p.rpId })}`} className={FIELD_BUTTON}>
+                    <Trash />
+                  </button>
+                </HoverLabel>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-1 text-meta text-pn-muted">{t('vaultPasskey.savedByExtension')}</p>
+      {confirming && (
+        <ConfirmModal
+          title={t('vaultPasskey.removeTitle', { rpId: confirming.rpId })}
+          confirmLabel={t('common:actions.remove')}
+          onConfirm={() => onRemove(confirming.credentialId)}
+          onClose={() => setConfirming(null)}
+        >
+          {t('vaultPasskey.removeBody', { rpId: confirming.rpId })}
+        </ConfirmModal>
+      )}
     </div>
   );
 }

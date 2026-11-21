@@ -6,6 +6,7 @@ import { isoFromStamp, readCsvTable } from './passwordCsv';
 import type { Importer } from './types';
 import { zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
+import { withBareLinks } from './bareLinks';
 
 /**
  * 1Password import, from the real exports the lab made in 1Password 8.12 for
@@ -22,7 +23,10 @@ import { openZip } from './zipOpen';
  *           is an object with one key that says its kind: string, concealed,
  *           url, email {email_address}, phone, totp, date, monthYear
  *           (YYYYMM), address {street, city, state, zip, country},
- *           creditCardType, creditCardNumber, menu. A 2FA key is a `totp`
+ *           creditCardType, creditCardNumber, menu, and sshKey {privateKey,
+ *           metadata {privateKey, publicKey, fingerprint, keyType}} on an SSH
+ *           key item (1Password's published format, not seen in a real export
+ *           yet). A 2FA key is a `totp`
  *           field in a section, the bare base32 key as it was imported.
  *           The trash is not in the export. Every account's own vault holds
  *           a "1Password Account" login and an identity from its Starter Kit.
@@ -32,7 +36,7 @@ import { openZip } from './zipOpen';
  * Spec: docs/internal/plans/password-manager-importers.md (section 4)
  */
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:onePassword.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:onePassword.${key}`, options);
 
 type FieldValue = Record<string, unknown>;
 type OpField = { title?: string; id?: string; value?: FieldValue };
@@ -52,7 +56,7 @@ type OpItem = {
 };
 type OpData = { accounts?: { vaults?: { attrs?: { name?: string }; items?: OpItem[] }[] }[] };
 
-export const onePasswordImporter: Importer = {
+const onePasswordImporterBase: Importer = {
   id: '1password',
   label: '1Password',
   description: 'In the 1Password app: File > Export, pick your account and the 1PUX format, then drop the .1pux file here. A CSV export works too, with logins only.',
@@ -93,6 +97,9 @@ export const onePasswordImporter: Importer = {
   },
 };
 
+/** The importer with the bare-link pass after its parse (bareLinks.ts). */
+export const onePasswordImporter: Importer = { ...onePasswordImporterBase, parse: withBareLinks(onePasswordImporterBase.parse) };
+
 function addItem(items: ManagerItems, item: OpItem, vaultTags: string[]): void {
   const o = item.overview ?? {};
   const d = item.details ?? {};
@@ -107,8 +114,21 @@ function addItem(items: ManagerItems, item: OpItem, vaultTags: string[]): void {
   };
   const fields = (d.sections ?? []).flatMap((s) => s.fields ?? []);
   const cat = item.categoryUuid;
+  // An SSH key item: one field whose value is an `sshKey` object.
+  const sshField = fields.find((f) => valueKind(f.value) === 'sshKey');
 
-  if (cat === '001' || cat === '005') {
+  if (sshField) {
+    const key = (sshField.value!.sshKey ?? {}) as { privateKey?: unknown; metadata?: Record<string, unknown> };
+    const meta = key.metadata ?? {};
+    const text = (v: unknown) => (typeof v === 'string' ? v : '');
+    items.sshKey({
+      ...common,
+      privateKey: text(key.privateKey) || text(meta.privateKey),
+      publicKey: text(meta.publicKey),
+      label: text(meta.fingerprint),
+      extra: restOf(fields.filter((f) => f !== sshField), new Set()),
+    });
+  } else if (cat === '001' || cat === '005') {
     const designated = (name: string) => d.loginFields?.find((f) => f.designation === name)?.value ?? '';
     const urls = [o.url ?? '', ...(o.urls ?? []).map((u) => u.url ?? '')].map((u) => u.trim()).filter(Boolean);
     let totp = '';
@@ -186,6 +206,11 @@ function restOf(fields: OpField[], placed: Set<string>): Field[] {
     const v = valueOf(f.value);
     return v.text ? [{ label: f.title ?? '', value: v.text, hidden: v.hidden }] : [];
   });
+}
+
+/** The kind of a 1Password field value: its one key. */
+function valueKind(value: FieldValue | undefined): string {
+  return Object.keys(value ?? {})[0] ?? '';
 }
 
 /** A 1Password field value as text: its one key says what it is. */

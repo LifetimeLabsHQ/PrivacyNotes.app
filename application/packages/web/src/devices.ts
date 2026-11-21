@@ -17,20 +17,22 @@
  */
 
 import {
+  accountActionDigest,
   bytesToHex,
+  custodyBodyDigest,
   deriveDeviceId,
   generateDeviceSecret,
-  signCustodialAdoptChallenge,
-  signCustodialReleaseChallenge,
-  signDeleteAccountChallenge,
+  signAccountActionChallenge,
+  signCustodyChallenge,
   signDeviceRegisterChallenge,
-  signDeviceRevokeChallenge,
   signStorageManageChallenge,
+  type AccountAction,
   type SupabaseClient,
 } from '@notes/shared';
 import { collectFingerprint, detectDeviceOs, hashFingerprint } from './deviceFingerprint';
 import { isDemoMode } from './demo';
 import { isMfaRefusal } from './mfaStep';
+import { mfaSessionIdentity } from './sessionWriteGuard';
 import { reportPhraseReplaced } from './phraseReplaced';
 import { recordSyncFault } from './syncFaults';
 import { db } from './db';
@@ -395,33 +397,109 @@ export type RegisterDeviceArgs = {
  * without an extra round-trip. A removed device that asked without
  * `reactivate` gets { status: 'revoked' }.
  */
+// This (pubkey, device id) registered once: the server has had a row for it.
+// Unlike the 24 hour throttle marker it is not cleared on a failed handshake,
+// only on the sign-out wipe. A device that never registered (one that parked
+// at the device limit) sends no `reactivate` on an automatic start, so the
+// server shows it the limit again instead of the removed-device sign-out it
+// gives an unknown id with `reactivate: false` (beta #180).
+// Spec: docs/contrib/supabase.md (Edge functions, register-device)
+const DEVICE_EVER_REGISTERED_KEY = 'privacynotes.deviceEverRegistered';
+
+function everRegistered(pubkey: string, deviceId: string): boolean {
+  try {
+    if (window.localStorage.getItem(DEVICE_EVER_REGISTERED_KEY) === `${pubkey}:${deviceId}`) return true;
+  } catch {
+    return false;
+  }
+  // A build before this mark left the throttle marker of its last success
+  // (DEVICE_REGISTERED_KEY in authStorage.ts, read here by its name so this
+  // module keeps its light imports), whatever its age. A failed handshake
+  // deletes that marker, so the cached account flags of this account
+  // (ACCOUNT_FLAGS_KEY in authStorage.ts) count too: they are written only
+  // after a registration, never on a device parked at the limit, and a failed
+  // handshake leaves them. Either one is carried into the mark at once, so a
+  // removed device whose older marker went never reads as one that never
+  // registered (beta #201 item 1).
+  const carried = readsAsRegistered('privacynotes.deviceRegisteredAt', (v) => v.pubkey === pubkey && v.deviceId === deviceId)
+    || readsAsRegistered('privacynotes.accountFlags', (v) => v.pubkey === pubkey);
+  if (carried) markEverRegistered(pubkey, deviceId);
+  return carried;
+}
+
+function readsAsRegistered(key: string, matches: (value: { pubkey?: unknown; deviceId?: unknown }) => boolean): boolean {
+  try {
+    const raw = window.localStorage.getItem(key);
+    const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+    return !!parsed && typeof parsed === 'object' && matches(parsed as { pubkey?: unknown; deviceId?: unknown });
+  } catch {
+    return false;
+  }
+}
+
+function markEverRegistered(pubkey: string, deviceId: string): void {
+  try {
+    window.localStorage.setItem(DEVICE_EVER_REGISTERED_KEY, `${pubkey}:${deviceId}`);
+  } catch {
+    /* without storage the next automatic start omits the field: the old answer */
+  }
+}
+
+/** The sign-out wipe: a later sign-in on this install starts as a new device. */
+export function clearEverRegistered(): void {
+  try {
+    window.localStorage.removeItem(DEVICE_EVER_REGISTERED_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export async function registerDevice(args: RegisterDeviceArgs): Promise<RegisterResult> {
   const { supabase, accessToken, authUid, pubkey, signingPrivateKey, fpPepper, reactivate } = args;
   const deviceId = getDeviceId(pubkey);
-  const signature = await signDeviceRegisterChallenge(
-    signingPrivateKey,
-    authUid,
-    deviceId,
-  );
+  // Left out for an automatic start of a device that never registered. The
+  // signature covers what is sent.
+  const sentReactivate = reactivate || everRegistered(pubkey, deviceId) ? reactivate : null;
 
   // Spec: docs/internal/specs/device-fingerprint-hash.md (phase 2: hashes only, no raw)
   const fingerprintHashes = hashFingerprint(collectFingerprint(), fpPepper);
 
-  const { data, error } = await invokeFnWithRetry(supabase, 'register-device', {
-    headers: { Authorization: `Bearer ${accessToken}` },
-    body: {
-      device_id: deviceId,
-      device_name: buildDeviceName(),
-      platform: detectPlatform(),
-      app_version: VERSION,
-      signature: bytesToHex(signature),
-      fingerprint_hashes: fingerprintHashes,
-      reactivate,
-    },
-  });
+  const send = async () => {
+    let stamp: string | null;
+    try {
+      stamp = await fetchChallengeStamp(supabase, 'register-device', accessToken, true);
+    } catch (err) {
+      const { status, code } = err as { status?: number; code?: string };
+      recordSyncFault({ step: 'device', status, code: code ?? 'stamp' });
+      throw err;
+    }
+    // No stamp: a function before it, which takes the old text.
+    const signature = await signDeviceRegisterChallenge(signingPrivateKey, authUid, deviceId, stamp === null ? undefined : { stamp, reactivate: sentReactivate });
+    return invokeFnWithRetry(supabase, 'register-device', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: {
+        device_id: deviceId,
+        device_name: buildDeviceName(),
+        platform: detectPlatform(),
+        app_version: VERSION,
+        signature: bytesToHex(signature),
+        ...(stamp === null ? {} : { stamp }),
+        fingerprint_hashes: fingerprintHashes,
+        ...(sentReactivate === null ? {} : { reactivate: sentReactivate }),
+      },
+    });
+  };
+  // A stamp that aged past its two minutes on a slow link: nothing was
+  // written, so one more try with a new stamp is safe.
+  let { data, error } = await send();
+  let refusal = error ? await readFnErrorBody(error as FnError) : null;
+  if (error && (refusal as { error?: unknown } | null)?.error === 'stamp_invalid') {
+    ({ data, error } = await send());
+    refusal = error ? await readFnErrorBody(error as FnError) : null;
+  }
 
   if (error) {
-    const body = (await readFnErrorBody(error as FnError)) as
+    const body = refusal as
       | { error?: string; limit?: number; devices?: DeviceRow[] }
       | null;
     if (body?.error === 'device_limit_reached') {
@@ -438,32 +516,90 @@ export async function registerDevice(args: RegisterDeviceArgs): Promise<Register
     );
   }
 
+  markEverRegistered(pubkey, deviceId);
   const isPro = !!(data as { is_pro?: boolean } | null)?.is_pro;
   return { status: 'ok', isPro };
+}
+
+/**
+ * What each function answered a stamp request before it knew the stamp: the
+ * request reaches its first check of the signed call's body. A function that
+ * knows the stamp answers that request before the check, so it never gives
+ * this answer to it.
+ * Spec: docs/internal/plans/challenge-expiry.md (section 3.3)
+ */
+const NO_STAMP_ANSWER = {
+  'link-pubkey': 'invalid_op',
+  'register-device': 'invalid_device_id',
+  'manage-storage-sub': 'invalid_subscription_id',
+} as const;
+
+/**
+ * The stamp a challenge without a nonce signs: the server's time for
+ * this session, which the function takes for two minutes. Asked right before
+ * the signature, with the token the signed call goes with. `retry` asks again
+ * on a network failure, as invokeFnWithRetry does: the call changes nothing.
+ * Null when the function predates the stamp (its 400 of NO_STAMP_ANSWER): the
+ * caller then signs the old text, which such a function takes, so a deploy
+ * that comes after the app breaks no sign-in. The server alone decides what
+ * it accepts; a function that knows the stamp refuses the old text once
+ * LEGACY_UNSTAMPED_SIGNATURE_ACCEPTED is off. Any other failure throws
+ * `<fn> failed: <code>`, as the callers' own errors do, with the code the
+ * function answered (a dead token answers the stamp call as it answers the
+ * signed call).
+ * Spec: docs/internal/plans/challenge-expiry.md (section 3.3)
+ */
+export async function fetchChallengeStamp(
+  supabase: SupabaseClient,
+  fn: 'link-pubkey' | 'register-device' | 'manage-storage-sub',
+  accessToken: string,
+  retry: boolean,
+): Promise<string | null> {
+  const options = {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: fn === 'link-pubkey' ? { op: 'link-stamp' } : { action: 'stamp' },
+  };
+  const { data, error } = retry ? await invokeFnWithRetry(supabase, fn, options) : await supabase.functions.invoke(fn, options);
+  if (error) {
+    const body = (await readFnErrorBody(error as FnError)) as { error?: string } | null;
+    if ((error as FnError).context?.status === 400 && body?.error === NO_STAMP_ANSWER[fn]) return null;
+    // The function's error and its body ride along, read once: the
+    // handshake of auth.tsx judges a refused stamp call as it judges a
+    // refused link.
+    throw Object.assign(new Error(`${fn} failed: ${body?.error ?? (error as Error).message}`), {
+      code: body?.error,
+      status: (error as FnError).context?.status,
+      fnError: error as FnError,
+      fnBody: body,
+    });
+  }
+  const stamp = (data as { stamp?: unknown } | null)?.stamp;
+  if (typeof stamp !== 'string' || !/^\d{1,12}\.[0-9a-f]{64}$/.test(stamp)) throw new Error(`${fn} failed: stamp_unavailable`);
+  return stamp;
 }
 
 export type RevokeDeviceArgs = {
   supabase: SupabaseClient;
   accessToken: string;
   authUid: string;
+  /** The account id (the session's pubkey claim), which the signed text names. */
+  account: string;
   signingPrivateKey: Uint8Array;
   targetDeviceId: string;
 };
 
+/**
+ * Call revoke-device: a one-use nonce bound to the target device, then the
+ * removal signed over it and this session (signedAccountAction).
+ */
 export async function revokeDevice(args: RevokeDeviceArgs): Promise<void> {
-  const { supabase, accessToken, authUid, signingPrivateKey, targetDeviceId } = args;
-  const signature = await signDeviceRevokeChallenge(
-    signingPrivateKey,
-    authUid,
-    targetDeviceId,
-  );
-  const { error } = await invokeFnWithRetry(supabase, 'revoke-device', {
+  const { supabase, accessToken, targetDeviceId } = args;
+  const invoke = (body: Record<string, unknown>) => invokeFnWithRetry(supabase, 'revoke-device', {
     headers: { Authorization: `Bearer ${accessToken}` },
-    body: {
-      target_device_id: targetDeviceId,
-      signature: bytesToHex(signature),
-    },
+    body,
   });
+  const signed = await signedAccountAction('revoke-device', 'device-revoke', targetDeviceId, invoke, args);
+  const { error } = await invoke({ action: 'revoke', ...signed, target_device_id: targetDeviceId });
   if (error) {
     const body = (await readFnErrorBody(error as FnError)) as
       | { error?: string }
@@ -482,21 +618,26 @@ export type DeleteAccountArgs = {
   supabase: SupabaseClient;
   accessToken: string;
   authUid: string;
+  /** The account id (the session's pubkey claim), which the signed text names. */
+  account: string;
   signingPrivateKey: Uint8Array;
 };
 
 /**
  * Call the delete-account edge function to permanently remove all
- * server-side data (notes, settings, devices, quotas, images, auth).
- * The caller is responsible for wiping local data afterward.
+ * server-side data (notes, settings, devices, quotas, images, auth): a
+ * one-use nonce, then the deletion signed over it and this session
+ * (signedAccountAction). The caller is responsible for wiping local data
+ * afterward.
  */
 export async function deleteAccountServer(args: DeleteAccountArgs): Promise<void> {
-  const { supabase, accessToken, authUid, signingPrivateKey } = args;
-  const signature = await signDeleteAccountChallenge(signingPrivateKey, authUid);
-  const { error } = await supabase.functions.invoke('delete-account', {
+  const { supabase, accessToken } = args;
+  const invoke = (body: Record<string, unknown>) => supabase.functions.invoke('delete-account', {
     headers: { Authorization: `Bearer ${accessToken}` },
-    body: { signature: bytesToHex(signature) },
+    body,
   });
+  const signed = await signedAccountAction('delete-account', 'account-delete', null, invoke, args);
+  const { error } = await invoke({ action: 'delete', ...signed });
   if (error) {
     const body = (await readFnErrorBody(error as FnError)) as
       | { error?: string }
@@ -515,6 +656,8 @@ export type ReleaseCustodyArgs = {
   supabase: SupabaseClient;
   accessToken: string;
   authUid: string;
+  /** The account id (the session's pubkey claim), which the signed text names. */
+  account: string;
   signingPrivateKey: Uint8Array;
 };
 
@@ -543,11 +686,11 @@ export type ReleaseCustodyResult = {
 export async function releaseCustodyServer(
   args: ReleaseCustodyArgs,
 ): Promise<ReleaseCustodyResult> {
-  const { supabase, accessToken, authUid, signingPrivateKey } = args;
-  const signature = await signCustodialReleaseChallenge(signingPrivateKey, authUid);
+  const { supabase, accessToken } = args;
+  const body = await signedCustodyBody('delete-custodial-phrase', 'custody-delete', null, args);
   const { data, error } = await supabase.functions.invoke('delete-custodial-phrase', {
     headers: { Authorization: `Bearer ${accessToken}` },
-    body: { signature: bytesToHex(signature) },
+    body,
   });
   if (error) {
     const body = (await readFnErrorBody(error as FnError)) as
@@ -564,11 +707,78 @@ export async function releaseCustodyServer(
   };
 }
 
-export type AdoptCustodyArgs = {
-  supabase: SupabaseClient;
-  accessToken: string;
-  authUid: string;
-  signingPrivateKey: Uint8Array;
+/**
+ * The signed body of a custody change: a one-use nonce from the function,
+ * bound to the digest of this body, then a signature over the action, the
+ * nonce, this session and that digest. A saved request cannot be sent again
+ * (beta.privacynotes.app #181 item 3). Throws `<fn> failed: <code>` as the
+ * callers' own errors do.
+ * Spec: docs/contrib/custodial-key-spec.md (One use: the custody nonce)
+ */
+async function signedCustodyBody(
+  fn: 'store-custodial-phrase' | 'delete-custodial-phrase',
+  action: 'custody-store' | 'custody-delete',
+  phrase: string | null,
+  args: ReleaseCustodyArgs,
+): Promise<Record<string, unknown>> {
+  const { supabase, accessToken, authUid, account, signingPrivateKey } = args;
+  const bodyDigest = await custodyBodyDigest(action, phrase);
+  const { nonceId, sessionId } = await fnNonce(fn, (body) => supabase.functions.invoke(fn, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body,
+  }), accessToken, authUid, bodyDigest);
+  const signature = bytesToHex(await signCustodyChallenge(signingPrivateKey, { action, nonceId, authUid, sessionId, account, bodyDigest }));
+  return action === 'custody-store'
+    ? { action: 'store', nonceId, phrase, signature }
+    : { action: 'delete', nonceId, signature };
+}
+
+/**
+ * The nonce and signature of an account deletion or a device removal
+ * (beta.privacynotes.app #227 item 10): a one-use nonce from the function,
+ * bound to the digest of the action and the target device, then a signature
+ * over the action, the nonce, this session and that digest, so a captured
+ * request cannot be sent again. Throws `<fn> failed: <code>` as the callers'
+ * own errors do.
+ * Spec: docs/contrib/custodial-key-spec.md (One use: the custody nonce)
+ */
+async function signedAccountAction(
+  fn: 'delete-account' | 'revoke-device',
+  action: AccountAction,
+  targetDeviceId: string | null,
+  invoke: (body: Record<string, unknown>) => ReturnType<SupabaseClient['functions']['invoke']>,
+  args: { accessToken: string; authUid: string; account: string; signingPrivateKey: Uint8Array },
+): Promise<{ nonceId: string; signature: string }> {
+  const { accessToken, authUid, account, signingPrivateKey } = args;
+  const bodyDigest = accountActionDigest(action, targetDeviceId);
+  const { nonceId, sessionId } = await fnNonce(fn, invoke, accessToken, authUid, bodyDigest);
+  const signature = bytesToHex(await signAccountActionChallenge(signingPrivateKey, { action, nonceId, authUid, sessionId, account, bodyDigest }));
+  return { nonceId, signature };
+}
+
+/** The `nonce` action of a function that takes the one-use nonce, for this
+ *  session and bound to `bodyDigest`, and the session id the text signs. */
+async function fnNonce(
+  fn: string,
+  invoke: (body: Record<string, unknown>) => ReturnType<SupabaseClient['functions']['invoke']>,
+  accessToken: string,
+  authUid: string,
+  bodyDigest: string,
+): Promise<{ nonceId: string; sessionId: string }> {
+  const identity = mfaSessionIdentity({ access_token: accessToken, user: { id: authUid } });
+  const sessionId = identity?.slice(authUid.length + 1);
+  if (!sessionId) throw new Error(`${fn} failed: account_auth_required`);
+  const issued = await invoke({ action: 'nonce', bodyDigest });
+  if (issued.error) {
+    const body = (await readFnErrorBody(issued.error as FnError)) as { error?: string } | null;
+    throw new Error(`${fn} failed: ${body?.error ?? (issued.error as Error).message}`);
+  }
+  const nonceId = (issued.data as { nonceId?: unknown } | null)?.nonceId;
+  if (typeof nonceId !== 'string') throw new Error(`${fn} failed: service_unavailable`);
+  return { nonceId, sessionId };
+}
+
+export type AdoptCustodyArgs = ReleaseCustodyArgs & {
   /** The 12-word phrase to hand to the server. */
   phrase: string;
 };
@@ -583,7 +793,7 @@ export type AdoptCustodyArgs = {
  * action. Never call it silently, never call it as a fallback, and
  * never call it to "help" a user who is having sign-in trouble.
  *
- * Signed with signCustodialAdoptChallenge so a stolen session token
+ * Signed with signCustodyChallenge so a stolen session token
  * cannot plant a phrase the caller does not already hold.
  *
  * Returns already_stored when the server has a row for this account,
@@ -591,11 +801,11 @@ export type AdoptCustodyArgs = {
  * than as an error worth surfacing raw.
  */
 export async function adoptCustodyServer(args: AdoptCustodyArgs): Promise<void> {
-  const { supabase, accessToken, authUid, signingPrivateKey, phrase } = args;
-  const signature = await signCustodialAdoptChallenge(signingPrivateKey, authUid);
+  const { supabase, accessToken, phrase } = args;
+  const body = await signedCustodyBody('store-custodial-phrase', 'custody-store', phrase, args);
   const { error } = await supabase.functions.invoke('store-custodial-phrase', {
     headers: { Authorization: `Bearer ${accessToken}` },
-    body: { phrase, signature: bytesToHex(signature) },
+    body,
   });
   if (error) {
     const body = (await readFnErrorBody(error as FnError)) as
@@ -625,9 +835,14 @@ export type StorageSubRow = {
    *  actions route (Paddle edge function vs native store flows). Optional so
    *  the client tolerates a not-yet-migrated get_my_storage_subs (0060). */
   source?: string;
+  /** Bought without Pro: billed, but it adds no space until Pro is bought.
+   *  Optional, since get_my_storage_subs returns it only from migration 0142
+   *  on, and a row without it is not gated. */
+  gated?: boolean;
 };
 
-/** The caller's live storage subscriptions (active / past_due, not gated). */
+/** The caller's live storage subscriptions (active / past_due), the ones
+ *  that wait for Pro (`gated`) included, live ones first. */
 export async function fetchMyStorageSubs(
   supabase: SupabaseClient,
 ): Promise<StorageSubRow[]> {
@@ -664,25 +879,40 @@ export type ManageStorageArgs = {
  */
 export async function manageStorageSub(args: ManageStorageArgs): Promise<void> {
   const { supabase, accessToken, authUid, signingPrivateKey, subscriptionId, action, priceId, quote } = args;
-  const signature = await signStorageManageChallenge(
-    signingPrivateKey,
-    authUid,
-    subscriptionId,
-    action,
-    action === 'switch' ? (priceId ?? '') : '',
-  );
-  const { error } = await supabase.functions.invoke('manage-storage-sub', {
-    headers: { Authorization: `Bearer ${accessToken}` },
-    body: {
-      subscription_id: subscriptionId,
+  const sentQuote = action === 'switch' && quote ? quote : null;
+  const send = async () => {
+    const stamp = await fetchChallengeStamp(supabase, 'manage-storage-sub', accessToken, false);
+    const signature = await signStorageManageChallenge(
+      signingPrivateKey,
+      authUid,
+      subscriptionId,
       action,
-      ...(action === 'switch' ? { price_id: priceId } : {}),
-      ...(action === 'switch' && quote ? { quote } : {}),
-      signature: bytesToHex(signature),
-    },
-  });
+      action === 'switch' ? (priceId ?? '') : '',
+      // No stamp: a function before it, which takes the old text.
+      stamp === null ? undefined : { stamp, quote: sentQuote },
+    );
+    return supabase.functions.invoke('manage-storage-sub', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: {
+        subscription_id: subscriptionId,
+        action,
+        ...(action === 'switch' ? { price_id: priceId } : {}),
+        ...(sentQuote ? { quote: sentQuote } : {}),
+        signature: bytesToHex(signature),
+        ...(stamp === null ? {} : { stamp }),
+      },
+    });
+  };
+  // A refused stamp is refused before anything is charged, so one more try
+  // with a new stamp is safe; any other refusal is final, as before.
+  let { error } = await send();
+  let refusal = error ? await readFnErrorBody(error as FnError) : null;
+  if (error && (refusal as { error?: unknown } | null)?.error === 'stamp_invalid') {
+    ({ error } = await send());
+    refusal = error ? await readFnErrorBody(error as FnError) : null;
+  }
   if (error) {
-    const body = (await readFnErrorBody(error as FnError)) as
+    const body = refusal as
       | { error?: string }
       | null;
     throw Object.assign(
@@ -835,6 +1065,23 @@ export async function heartbeat(
     reportPhraseReplaced('heartbeat');
     return 'phrase_replaced';
   }
+  return data !== false;
+}
+
+/**
+ * Whether the owner still keeps this device, read without visiting it: the
+ * heartbeat's removal verdict from `device_registered` (migration 0154),
+ * which writes nothing. The lock screen asks this (lockRemovalCheck.ts): the
+ * heartbeat moves `devices.last_seen_at`, which the dead man's switch counts
+ * as activity, and a locked device that nobody unlocks is no activity.
+ * Only the server's explicit `false` is a removal; an error, a server
+ * without the function included, reads as registered, as for the heartbeat.
+ * Spec: docs/internal/specs/dead-mans-switch.md (section 3.3)
+ */
+export async function deviceRegistered(supabase: SupabaseClient, deviceId: string): Promise<boolean> {
+  if (isDemoMode()) return true;
+  const { data, error } = await supabase.rpc('device_registered', { p_device_id: deviceId });
+  if (error) return true;
   return data !== false;
 }
 

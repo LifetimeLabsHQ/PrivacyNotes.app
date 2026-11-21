@@ -15,7 +15,7 @@ import { ROW_TITLE, SectionEyebrow, SettingsSegmented, SETTINGS_HELP } from '@we
 import { SecretInput } from '@web/PasscodeInput';
 import type { PinInputHandle } from '@web/PinInput';
 import { Switch } from '@web/Switch';
-import { PASSCODE_MIN_CHARS } from '@web/secretKind';
+import { isCommonPin, PASSCODE_MIN_CHARS } from '@web/secretKind';
 import { readCode, redeem, type Connection, type SecretKind } from '../../src/connection';
 import { biometricPossible, startEnrollment } from '../../src/biometric';
 import { unlock } from '../../src/logins';
@@ -85,6 +85,12 @@ export function ConnectView({ onConnected }: { onConnected: (c: Connection, note
     if (!ready) return;
     if (first !== repeat) {
       setError(t('protect.mismatch'));
+      setSecond('');
+      return;
+    }
+    if (kind === 'pin' && isCommonPin(first)) {
+      setError(t('protect.commonPin'));
+      setFirst('');
       setSecond('');
       return;
     }

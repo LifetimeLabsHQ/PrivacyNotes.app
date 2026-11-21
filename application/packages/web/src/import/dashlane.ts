@@ -4,8 +4,9 @@ import type { BwIdentity } from './bitwarden';
 import { ManagerItems, tagsOf, type Field } from './managerItems';
 import { readCsvTable } from './passwordCsv';
 import type { Importer } from './types';
-import { zipEntryText } from './zipEntry';
+import { ImportTooLargeError, zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
+import { withBareLinks } from './bareLinks';
 
 /**
  * Dashlane import, from the real export the lab made in Dashlane's web vault
@@ -42,11 +43,16 @@ import { openZip } from './zipOpen';
  * Spec: docs/internal/plans/password-manager-importers.md (section 4)
  */
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:dashlane.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:dashlane.${key}`, options);
 
 type Table = Awaited<ReturnType<typeof readCsvTable>>;
 
-export const dashlaneImporter: Importer = {
+/** The tables a Dashlane zip holds, by name (above). Only these are parsed,
+ *  each once, so a crafted zip of other large tables costs nothing (beta
+ *  #155 part 2). */
+const TABLE_NAMES = new Set(['credentials.csv', 'securenotes.csv', 'payments.csv', 'ids.csv', 'personalinfo.csv']);
+
+const dashlaneImporterBase: Importer = {
   id: 'dashlane',
   label: 'Dashlane',
   description: 'In Dashlane: Settings > Export data, choose the CSV format, then drop the .zip here.',
@@ -64,12 +70,13 @@ export const dashlaneImporter: Importer = {
       let zip: JSZip;
       try {
         zip = await openZip(file);
-      } catch {
+      } catch (err) {
+        if (err instanceof ImportTooLargeError) throw err;
         throw new Error(msg('notDashlane'));
       }
       for (const entry of Object.values(zip.files)) {
         const name = entry.name.toLowerCase().replace(/^.*\//, '');
-        if (entry.dir || !name.endsWith('.csv')) continue;
+        if (entry.dir || !TABLE_NAMES.has(name) || tables.has(name)) continue;
         tables.set(name, await readCsvTable(new File([await zipEntryText(entry)], name)));
       }
     }
@@ -89,6 +96,9 @@ export const dashlaneImporter: Importer = {
     return items.result('dashlane', msg('noItems'));
   },
 };
+
+/** The importer with the bare-link pass after its parse (bareLinks.ts). */
+export const dashlaneImporter: Importer = { ...dashlaneImporterBase, parse: withBareLinks(dashlaneImporterBase.parse) };
 
 const cellOf = (t: Table) => (r: string[], name: string) => r[t.col(name)] ?? '';
 const folderTags = (category: string) => tagsOf(category.split('/'));
@@ -131,7 +141,7 @@ function payments(items: ManagerItems, t: Table): void {
         holder,
         number: cell(r, 'cc_number').replace(/\s+/g, ''),
         cvv: cell(r, 'code'),
-        expMonth: cell(r, 'expiration_month').trim().padStart(2, '0'),
+        expMonth: cell(r, 'expiration_month'),
         expYear: year.length === 2 ? `20${year}` : year,
         notes: [cell(r, 'note'), bank && `issuing_bank: ${bank}`].filter(Boolean).join('\n\n'),
       });

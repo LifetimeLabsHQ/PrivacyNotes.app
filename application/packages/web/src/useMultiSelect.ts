@@ -255,10 +255,14 @@ export function useMultiSelect({
   const [bulkTrashPending, setBulkTrashPending] = useState<TrashRequest | null>(null);
 
   /** Read-only items never reach the trash, so they are held back here and
-   *  counted, which is what lets the modal name how many stayed behind. */
+   *  counted, which is what lets the modal name how many stayed behind. An id
+   *  the list does not hold (an item of a shut section, still selected) is
+   *  dropped: its read-only and PIN checks cannot run on it.
+   *  Spec: docs/internal/specs/section-lock.md (section 6) */
   function splitTrashable(ids: string[]): TrashRequest {
-    const movable = ids.filter((id) => notes.find((n) => n.id === id)?.locked !== 1);
-    return { ids: movable, skipped: ids.length - movable.length };
+    const listed = ids.filter((id) => notes.some((n) => n.id === id));
+    const movable = listed.filter((id) => notes.find((n) => n.id === id)?.locked !== 1);
+    return { ids: movable, skipped: listed.length - movable.length };
   }
 
   /** Ask first, or trash at once when the person turned the question off.
@@ -267,6 +271,7 @@ export function useMultiSelect({
    *  Delete forever with the question turned off (#630). */
   function askOrTrash(ids: string[], ask = false) {
     const request = splitTrashable(ids);
+    if (request.ids.length === 0 && request.skipped === 0) return;
     if (!ask && !confirmTrash && request.ids.length > 0) void trashNow(request.ids);
     else setBulkTrashPending(request);
   }
@@ -452,6 +457,8 @@ export function useMultiSelect({
   async function handleBulkSetPinProtected(pinProtected: boolean) {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) return;
+    // A fresh protect gates at once, as the single-note switch does.
+    if (pinProtected) for (const id of ids) gateCopy(id);
     await bulkSetPinProtected(ids, pinProtected);
     await refresh();
     void runSync();

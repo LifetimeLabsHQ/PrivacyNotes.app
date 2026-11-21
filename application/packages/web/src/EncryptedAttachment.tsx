@@ -15,7 +15,7 @@
  * Markdown roundtrip is handled by custom serialize/parse hooks.
  */
 
-import { lazy, Suspense, useState, useCallback, useRef, useEffect } from 'react';
+import { lazy, Suspense, useState, useCallback, useRef, useEffect, useLayoutEffect } from 'react';
 import { estimateBlobBytes, mimeToLabel } from './notesViewUtils';
 import { useTranslation } from 'react-i18next';
 import { saveBlob } from './saveFile';
@@ -33,9 +33,15 @@ import { ContextMenu, useContextMenu, type ContextMenuItem } from './ContextMenu
 import { suppressSoftKeyboard } from './softKeyboard';
 import { useNearScreen } from './useNearScreen';
 import { useBlobQuotaBlocked } from './usePendingUploads';
-import { MusicNotes, VideoCamera, Image, Archive, File as FileGlyph, Pause, Play, Check, Copy, Download, DotsThree, Eye, PencilSimple, X, iconCopy, iconEditPencil } from './icons';
+import { MusicNotes, VideoCamera, Image, Archive, File as FileGlyph, Pause, Play, Check, Copy, Download, Eye, MagicWand, PencilSimple, TextAlignLeft, TextT, Waveform, X } from './icons';
+import { pluginsShown } from './onDeviceAi';
+import { canAddText, cleanupShown, cleanupSubjects, editorNote, openPluginSheet, voiceShown, type AudioAttrs } from './plugins/pluginDoors';
+import { cancelJob, dropJob, useJobs } from './plugins/jobs';
+import { timeLeft } from './plugins/timeLeft';
+import { planIsPro } from './plugins/pluginState';
+import { insertTextAfter } from './plugins/insertText';
 import { DeleteButton } from './ui/DeleteButton';
-import { Callout, FeedbackButton } from './ui/feedback';
+import { Callout, FeedbackButton, Snackbar, Spinner } from './ui/feedback';
 import { isBlobDamaged } from './blobDamaged';
 import { formatDuration } from './formatDuration';
 import {
@@ -46,9 +52,10 @@ import {
   subscribeToAttachmentNames,
   splitFileName,
 } from './fileNames';
-import i18n from './i18n';
+import i18n, { activeLocale } from './i18n';
 import { drawablePicture } from './avifDisplay';
 import { InlineRenameField } from './InlineRenameField';
+import { IconUpgrade } from './proMark';
 
 // ------------------------------------------------------------------
 // Constants
@@ -59,6 +66,8 @@ const FILE_URI_PREFIX = 'pn:file/';
 /** The narrowest the chip menu draws (ContextMenu's floor), so a menu opened
  *  from the chip's end lines its end edge up with the button. */
 const MENU_MIN_WIDTH_PX = 160;
+/** How long Undo stays after Remove noise swapped a recording; the note's history keeps the original after that. */
+const CLEAN_UNDO_MS = 10_000;
 
 // The glyph inside a chip button takes no pointer events, so a press on it
 // lands on the button itself. The editor ignores a press on a button and
@@ -112,17 +121,6 @@ function claimPendingRename(uuid: string | null): boolean {
   }
   pendingRename = null;
   return true;
-}
-
-/** Extract UUIDs of all pn:file/ references in a markdown body. */
-export function extractAttachmentIds(body: string): Set<string> {
-  const ids = new Set<string>();
-  const re = /pn:file\/([0-9a-f-]{36})/g;
-  let match: RegExpExecArray | null;
-  while ((match = re.exec(body)) !== null) {
-    ids.add(match[1]!);
-  }
-  return ids;
 }
 
 // ------------------------------------------------------------------
@@ -297,28 +295,89 @@ function ActionButton({ onClick, label, disabled, tip = 'above', children }: {
 }
 
 /**
- * The chip's one labelled action: View for what the viewer shows, Download
- * for every other file. A label reads as the thing to press where a row of
- * grey glyphs does not.
+ * A labeled tool: what the file is for (View, Text, Transcribe, Remove
+ * noise, or Download for a file nothing here shows). Accent-tinted so it
+ * reads ahead of the quiet file icons (owner, 2026-11-20). `compact` drops
+ * the label when the phone row has no room (`useFitsRow`); the hover label
+ * and the accessible name keep it. `busy` is a running job: a fill for how
+ * far it came, and a press cancels it.
  */
-function LabelledAction({ onClick, disabled, children }: {
-  onClick: () => void;
+function ToolButton({ icon, label, onClick, compact, pro, disabled, busy }: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  compact: boolean;
+  pro?: boolean;
   disabled?: boolean;
-  children: React.ReactNode;
+  busy?: { fraction?: number; cancelLabel: string };
 }) {
-  return (
+  const named = busy ? `${label} - ${busy.cancelLabel}` : label;
+  const button = (
     <button
       type="button"
       onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      onClick={(e) => { e.stopPropagation(); onClick(e); }}
       disabled={disabled}
-      className={`shrink-0 inline-flex items-center gap-1.5 h-[30px] px-2.5 me-1 rounded-lg bg-accent/10 dark:bg-accent/20 text-accent-strong text-small font-medium transition cursor-pointer select-none hover:bg-accent/15 dark:hover:bg-accent/30 ${BUTTON_CONTENT} ${
-        disabled ? 'opacity-50 pointer-events-none' : ''
-      }`}
+      aria-label={compact || busy ? named : undefined}
+      className={`relative overflow-hidden shrink-0 inline-flex items-center justify-center gap-1.5 h-8 rounded-lg bg-accent/10 dark:bg-accent/20 text-accent-strong text-small font-medium whitespace-nowrap transition cursor-pointer select-none hover:bg-accent/15 dark:hover:bg-accent/30 ${
+        compact ? 'w-8' : 'px-3'
+      } ${BUTTON_CONTENT} ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
     >
-      {children}
+      {busy?.fraction !== undefined && (
+        <span aria-hidden="true" className="absolute inset-y-0 start-0 bg-accent/20 transition-[width]" style={{ width: `${Math.round(busy.fraction * 100)}%` }} />
+      )}
+      <span className="relative inline-flex">
+        {icon}
+        {pro && compact && (
+          <span className="absolute -top-1.5 -end-2">
+            <IconUpgrade size={11} />
+          </span>
+        )}
+      </span>
+      {!compact && <span className="relative">{label}</span>}
+      {!compact && pro && <span className="relative inline-flex"><IconUpgrade size={12} /></span>}
+      {!compact && busy && <X className="relative" />}
     </button>
   );
+  return compact || busy ? <HoverLabel label={busy ? busy.cancelLabel : label} position="above">{button}</HoverLabel> : button;
+}
+
+/**
+ * How many labeled tools, counted from the end, show their icon only so the
+ * tool row fits: the last one drops its label first (Remove noise before
+ * Transcribe, Text before View). The width each step needed is kept, so a
+ * label comes back only once it fits, with no flicker at the edge, and a
+ * change in which tools show (`signature`) measures again. Measured, not a
+ * fixed breakpoint, because a label's length depends on the language.
+ */
+function useFitsRow(ref: React.RefObject<HTMLDivElement | null>, signature: string, labels: number): number {
+  const [dropped, setDropped] = useState(0);
+  const needs = useRef<number[]>([]);
+  useLayoutEffect(() => {
+    needs.current = [];
+    setDropped(0);
+  }, [signature]);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => {
+      if (el.clientWidth === 0) return;
+      setDropped((d) => {
+        if (el.scrollWidth > el.clientWidth + 1 && d < labels) {
+          needs.current[d] = el.scrollWidth;
+          return d + 1;
+        }
+        if (d > 0 && el.clientWidth >= (needs.current[d - 1] ?? Infinity)) return d - 1;
+        return d;
+      });
+    };
+    check();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref, dropped, signature, labels]);
+  return dropped;
 }
 
 // ------------------------------------------------------------------
@@ -502,7 +561,9 @@ function EncryptedAttachmentView({
   const [pdfCover, setPdfCover] = useState<PdfCoverImage | null>(() =>
     isPdfFile && uuid ? cachedPdfCover(uuid) : null,
   );
-  const pdfNear = useNearScreen(tileRef, isPdfFile && !showPreview && !pdfCover);
+  // On the file card too: the card's preview draws the same cover (one
+  // shared draw), and the meta line takes its page count.
+  const pdfNear = useNearScreen(tileRef, isPdfFile && !pdfCover);
   useEffect(() => {
     if (!pdfNear || !uuid || pdfCover) return;
     let alive = true;
@@ -512,6 +573,7 @@ function EncryptedAttachmentView({
   }, [pdfNear, uuid, pdfCover]);
 
   const menu = useContextMenu();
+  const toolRowRef = useRef<HTMLDivElement>(null);
 
   // Load thumbnail for image attachments. The URL belongs to the shared
   // cache, which the Files grid and the viewer read too, so it outlives this
@@ -753,12 +815,135 @@ function EncryptedAttachmentView({
   // select, drag and delete. On the file card the picture above is the trigger.
   const tileOpens = viewable && !showPreview;
 
-  // On a narrow chip Rename and Copy fold into this menu. Delete never does:
-  // its armed confirm lasts seconds and must appear where the click was.
-  const openMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const items: ContextMenuItem[] = [];
-    if (editable) items.push({ label: t('common:actions.rename'), icon: iconEditPencil(), onSelect: startRename });
-    items.push({ label: t('common:actions.copy'), icon: iconCopy(), onSelect: handleCopy });
+  // A plugin's text has a place only where the note can be edited and has
+  // paragraphs (`canAddText`); `editable` is tracked, so the rows follow it.
+  const addHere = editable && canAddText(editor);
+  const addText = addHere
+    ? {
+        insert: (text: string) => {
+          const pos = getPos();
+          if (typeof pos !== 'number') throw new Error('gone');
+          insertTextAfter(editor, pos, text);
+        },
+      }
+    : {};
+  // Text in pictures on a PDF: the sheet reads its text layer, and OCR only
+  // the pages without one. Spec: docs/internal/plans/plugins.md (section 6.4)
+  const pdfText = isPdfFile && uuid && pluginsShown()
+    ? (primary: 'copy' | 'add') => openPluginSheet({
+        kind: 'ocr',
+        source: 'pdf',
+        primary,
+        noteId: editorNote(editor),
+        load: async () => (await loadAttachmentData(uuid))?.data ?? null,
+        ...addText,
+      })
+    : null;
+  // Voice to text on a recording or an imported audio file (free, D25; not
+  // in iOS browsers, D24). Spec: docs/internal/plans/plugins.md (section 6.6)
+  const audioText = isAudio && uuid && voiceShown()
+    ? () => openPluginSheet({
+        kind: 'voice',
+        noteId: editorNote(editor),
+        load: async () => (await loadAttachmentData(uuid))?.data ?? null,
+        mimetype: mimetype || '',
+        ...addText,
+      })
+    : null;
+  // Remove noise (Pro): one tap cleans the recording and swaps it in, with
+  // Undo; no sheet and no preview (SE3). The job outlives the chip, so a
+  // chip that mounts again takes a result that ended while it was gone.
+  // Spec: docs/internal/specs/plugins-speech-enhancement.md (SE3, section 14)
+  const cleanJob = useJobs().find((j) => j.pluginId === 'cleanup' && uuid !== null && cleanupSubjects.get(j.id) === uuid);
+  const [cleanUndo, setCleanUndo] = useState<AudioAttrs | null>(null);
+  // A swap of the file stops the player first: it holds the old file's address.
+  const resetPlayer = () => {
+    audioRef.current?.pause();
+    audioRef.current = null;
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    audioUrlRef.current = null;
+    setPlaying(false);
+    setPosition(0);
+    setDuration(0);
+  };
+  const cleanStarted = useRef<{ at: number; done: number } | null>(null);
+  const audioClean = isAudio && uuid && editable && !cleanJob && cleanupShown()
+    ? () => openPluginSheet({
+        kind: 'cleanup',
+        noteId: editorNote(editor),
+        subject: uuid,
+        filename: filename || 'recording.m4a',
+        load: async () => (await loadAttachmentData(uuid))?.data ?? null,
+        store: storeAttachmentFile,
+      })
+    : null;
+  useEffect(() => {
+    if (!cleanJob || cleanJob.status !== 'done' || !editable) return;
+    const { attrs, uploaded } = cleanJob.result as { attrs: AudioAttrs; uploaded: Promise<void> };
+    const before = { src, filename, filesize, mimetype };
+    dropJob(cleanJob.id);
+    cleanupSubjects.delete(cleanJob.id);
+    cleanStarted.current = null;
+    resetPlayer();
+    updateAttributes(attrs);
+    setCleanUndo(before);
+    // A cleaned file that never reaches the server must not stay in the note.
+    uploaded.catch(() => {
+      try {
+        updateAttributes(before);
+      } catch {
+        // The chip is gone; the note keeps what it saved.
+      }
+    });
+    // The result once, when it arrives.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cleanJob?.status, editable]);
+  useEffect(() => {
+    if (!cleanUndo) return;
+    const timer = setTimeout(() => setCleanUndo(null), CLEAN_UNDO_MS);
+    return () => clearTimeout(timer);
+  }, [cleanUndo]);
+  const undoClean = () => {
+    if (!cleanUndo) return;
+    resetPlayer();
+    if (editable) updateAttributes(cleanUndo);
+    setCleanUndo(null);
+  };
+  const cleanProgress = cleanJob?.status === 'running' ? cleanJob.progress : undefined;
+  if (cleanProgress && cleanStarted.current === null) cleanStarted.current = { at: performance.now(), done: cleanProgress.done };
+  const cleanStart = cleanStarted.current;
+  const cleanLeft = cleanProgress && cleanStart && cleanProgress.done > cleanStart.done
+    ? (((performance.now() - cleanStart.at) / (cleanProgress.done - cleanStart.done)) * (cleanProgress.total - cleanProgress.done)) / 1000
+    : null;
+  // A failed run says why under the chip; a running one shows in its button.
+  const cleanNotice = cleanJob && cleanJob.status === 'error' ? (
+      <Callout
+        tone="danger"
+        action={
+          <FeedbackButton
+            action="done"
+            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              dropJob(cleanJob.id);
+              cleanupSubjects.delete(cleanJob.id);
+            }}
+            className={BUTTON_CONTENT}
+          />
+        }
+      >
+        {t(cleanJob.error === 'audio-format' ? 'audioFormat' : cleanJob.error === 'worker-died' ? 'lowMemory' : 'cleanFailed')}
+      </Callout>
+  ) : null;
+  // Text in pictures has its own labelled button (owner, 2026-11-18): in the
+  // menu nobody found it.
+  const openTextMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!pdfText) return;
+    const items: ContextMenuItem[] = [{ label: t('copyText'), icon: <TextT size={14} />, pro: !planIsPro(), onSelect: () => pdfText('copy') }];
+    if (addHere) items.push({ label: t('addText'), icon: <TextAlignLeft size={14} />, pro: !planIsPro(), onSelect: () => pdfText('add') });
+    openBelow(e, items);
+  };
+  function openBelow(e: React.MouseEvent<HTMLButtonElement>, items: ContextMenuItem[]) {
     const r = e.currentTarget.getBoundingClientRect();
     const rtl = document.documentElement.dir === 'rtl';
     menu.open(
@@ -770,7 +955,7 @@ function EncryptedAttachmentView({
       },
       items,
     );
-  };
+  }
 
   // On the file card the frame carries the border and the row becomes its
   // footer; everywhere else the row is the whole chip.
@@ -778,10 +963,10 @@ function EncryptedAttachmentView({
     ? 'border-accent'
     : error ? 'border-red-300 dark:border-red-800' : 'border-divider';
   const rowClass = showPreview
-    ? `flex flex-wrap items-center gap-2.5 gap-y-1 px-3.5 py-2.5 border-t transition ${
+    ? `px-3.5 py-3 border-t transition ${
         selected ? 'border-accent bg-accent/10 dark:bg-accent/20' : 'border-divider'
       }`
-    : `flex flex-wrap items-center gap-3 gap-y-1 ps-2 pe-3 py-2 rounded-xl border transition ${
+    : `p-3 rounded-xl border transition ${
         selected
           ? 'border-accent bg-accent/10 dark:bg-accent/20'
           : 'border-divider bg-surface-2'
@@ -802,22 +987,6 @@ function EncryptedAttachmentView({
       draggable={false}
       className="block max-w-[40px] max-h-[40px] !m-0 bg-white border border-divider"
     />
-  ) : playable ? (
-    <HoverLabel label={playing ? t('attachment.pause') : t('attachment.play')} position="above">
-    <button
-      type="button"
-      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-      onClick={(e) => { e.stopPropagation(); handlePlayPause(); }}
-      aria-label={playing ? t('attachment.pause') : t('attachment.play')}
-      className={`rounded p-0.5 text-accent hover:text-accent-hover transition ${BUTTON_CONTENT}`}
-    >
-      {playing ? (
-        <Pause size={20} />
-      ) : (
-        <Play size={20} weight="fill" />
-      )}
-    </button>
-    </HoverLabel>
   ) : (
     <FileTypeIcon
       mime={mimetype || (isPdfFile ? 'application/pdf' : 'application/octet-stream')}
@@ -826,22 +995,78 @@ function EncryptedAttachmentView({
   );
   const tileFace = 'w-full h-full rounded-lg bg-track flex items-center justify-center text-pn-muted';
 
+  // ---- Tools ----
+  // Two kinds (owner, 2026-11-20). Labeled tools say what the file is for;
+  // file tools (Download, Rename, Copy, Delete) are quiet icons, beside the
+  // name on a wide chip and at the end of the tool row on a narrow one, so
+  // nothing wraps and nothing hides in a menu. Spec: pattern 108.
+  const primaryDownload = !viewable && !playable;
+  const proMark = !planIsPro();
+  const cleaning = !!cleanJob && (cleanJob.status === 'waiting' || cleanJob.status === 'running');
+  const toolSignature = [viewable, pdfText, primaryDownload, audioText, audioClean, cleaning, editable].map((v) => (v ? 1 : 0)).join('');
+  const labelCount = [viewable, pdfText, primaryDownload, audioText, cleaning || audioClean].filter(Boolean).length;
+  const dropped = useFitsRow(toolRowRef, toolSignature, labelCount);
+  // The tool at `index` (0-based, in row order) shows its icon only.
+  const iconOnly = (index: number) => index >= labelCount - dropped;
+  const labeled: React.ReactNode[] = [];
+  if (viewable) labeled.push(<ToolButton key="view" icon={<Eye />} label={t('attachment.view')} compact={iconOnly(labeled.length)} onClick={openViewer} />);
+  if (pdfText) labeled.push(<ToolButton key="text" icon={<TextT />} label={t('text')} pro={proMark} compact={iconOnly(labeled.length)} onClick={openTextMenu} />);
+  if (primaryDownload) labeled.push(<ToolButton key="download" icon={<Download />} label={t('common:updateToast.download')} compact={iconOnly(labeled.length)} disabled={downloading} onClick={() => void handleDownload()} />);
+  if (audioText) labeled.push(<ToolButton key="voice" icon={<Waveform />} label={t('transcribe')} compact={iconOnly(labeled.length)} onClick={audioText} />);
+  if (cleaning && cleanJob) {
+    labeled.push(
+      <ToolButton
+        key="clean"
+        icon={<Spinner />}
+        label={cleanJob.status === 'waiting'
+          ? t('importExport:upload.statusWaiting')
+          : cleanLeft !== null
+            ? `${t('removingNoise')} · ${t('timeLeft', { time: timeLeft(cleanLeft, activeLocale()) })}`
+            : t('removingNoise')}
+        compact={iconOnly(labeled.length)}
+        busy={{ fraction: cleanProgress && cleanProgress.total > 0 ? cleanProgress.done / cleanProgress.total : undefined, cancelLabel: t('common:actions.cancel') }}
+        onClick={() => {
+          cancelJob(cleanJob.id);
+          cleanupSubjects.delete(cleanJob.id);
+          cleanStarted.current = null;
+        }}
+      />,
+    );
+  } else if (audioClean) {
+    labeled.push(<ToolButton key="clean" icon={<MagicWand />} label={t('settings:plugins.cleanup.title')} pro={proMark} compact={iconOnly(labeled.length)} onClick={audioClean} />);
+  }
+  const fileTools = (
+    <>
+      {!primaryDownload && (
+        <ActionButton onClick={() => void handleDownload()} disabled={downloading} label={t('common:updateToast.download')}>
+          <Download />
+        </ActionButton>
+      )}
+      {editable && (
+        <ActionButton onClick={startRename} label={t('common:actions.rename')}>
+          <PencilSimple />
+        </ActionButton>
+      )}
+      <ActionButton onClick={handleCopy} label={copied ? t('auth:createPhrase.copied') : t('common:actions.copy')} tip={editable ? 'above' : 'above-end'}>
+        {copied ? <Check className="text-success" /> : <Copy />}
+      </ActionButton>
+      {editable && (
+        <>
+          <span aria-hidden="true" className="w-px h-4 mx-1 bg-divider" />
+          <DeleteButton label={t('common:actions.delete')} confirmLabel={t('common:actions.deleteConfirm')} onConfirm={deleteNode} />
+        </>
+      )}
+    </>
+  );
+
   const row = (
-      <div
-        // Wrapping, with a floor under the name block and another under the
-        // action cluster: on a chip too narrow for one row the cluster drops
-        // to a second line and the name takes the full width, rather than
-        // truncating to nothing behind the buttons. The floors measure the
-        // CHIP, so an editor pane dragged narrow wraps at the same point a
-        // phone does, and the cluster's floor is what stops the chip
-        // un-wrapping mid-edit when its three actions become two.
-        className={rowClass}
-      >
-        {/* ---- Preview tile ----
-            A picture or a PDF opens from here, the way a thumbnail does
-            everywhere. The View button beside the name is the same action
-            for the keyboard and a screen reader, so the tile keeps out of
-            the tab order and out of the accessibility tree. */}
+    <div className={rowClass}>
+      {/* ---- Header: tile, name, file tools (wide) ---- */}
+      <div className="flex items-center gap-3">
+        {/* A picture or a PDF opens from its tile, the way a thumbnail does
+            everywhere; View is the same action for the keyboard and a
+            screen reader, so that tile keeps out of the tab order. A
+            recording's tile is its Play button. */}
         <div
           ref={tileRef}
           aria-hidden={tileOpens ? 'true' : undefined}
@@ -862,13 +1087,24 @@ function EncryptedAttachmentView({
                 {tileContent}
               </button>
             </HoverLabel>
+          ) : playable ? (
+            <HoverLabel label={playing ? t('attachment.pause') : t('attachment.play')} position="above" className="w-full h-full">
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onClick={(e) => { e.stopPropagation(); handlePlayPause(); }}
+                aria-label={playing ? t('attachment.pause') : t('attachment.play')}
+                className={`w-full h-full rounded-lg flex items-center justify-center bg-accent/10 dark:bg-accent/20 text-accent hover:bg-accent/15 dark:hover:bg-accent/30 transition cursor-pointer ${BUTTON_CONTENT}`}
+              >
+                {playing ? <Pause size={22} /> : <Play size={22} weight="fill" />}
+              </button>
+            </HoverLabel>
           ) : (
             <div className={tileFace}>{tileContent}</div>
           )}
         </div>
 
-        {/* ---- Filename + meta ---- */}
-        <div className="flex-1 min-w-[170px]">
+        <div className="flex-1 min-w-0">
           {renaming ? (
             <div className="flex items-baseline gap-1">
               <InlineRenameField
@@ -934,16 +1170,37 @@ function EncryptedAttachmentView({
             </div>
           )}
 
+        </div>
+
+        {renaming ? (
+          <div className="shrink-0 flex items-center gap-0.5">
+            <ActionButton onClick={commitRename} label={t('attachment.saveName')}>
+              <Check className="text-accent" />
+            </ActionButton>
+            <ActionButton onClick={cancelRename} label={t('common:actions.cancel')} tip="above-end">
+              <X />
+            </ActionButton>
+          </div>
+        ) : (
+          <div className="hidden @[30rem]/chip:flex shrink-0 items-center gap-0.5">{fileTools}</div>
+        )}
+      </div>
+
           {/* ---- Seek (audio only) ----
               Rendered at rest rather than on first play, so the note does
               not reflow under the reader. It is inert until the file is
               loaded, because filling it in advance would mean decrypting
               every recording in the note on open. */}
           {playable && (
-            <div className="flex items-center gap-2 mt-1.5">
+            <div className="flex items-center gap-2 mt-2.5">
               <span className="shrink-0 text-meta text-pn-muted tabular-nums">
                 {formatDuration(position)}
               </span>
+              {/* Before the first play the length is unknown: a bare track,
+                  not a disabled grey thumb parked at 0. */}
+              {duration <= 0 ? (
+                <div aria-hidden="true" className="flex-1 h-1 rounded-full bg-track" />
+              ) : (
               <input
                 type="range"
                 min={0}
@@ -968,71 +1225,25 @@ function EncryptedAttachmentView({
                 className="flex-1 h-1.5 cursor-pointer disabled:cursor-default disabled:opacity-50"
                 style={{ accentColor: 'rgb(var(--pn-accent))' }}
               />
+              )}
               <span className="shrink-0 text-meta text-pn-muted tabular-nums">
                 {duration > 0 ? formatDuration(duration) : '--:--'}
               </span>
             </div>
           )}
-        </div>
 
-        {/* ---- Actions ----
-            One labelled action (View, or Download for a file the viewer
-            cannot show; a recording plays from its tile), Download beside
-            it, and the menu. The minimum width holds the wrap decision
-            steady while the rename field is open with two buttons. */}
-        <div className="shrink-0 flex items-center justify-end gap-0.5 min-w-[166px] ms-auto">
-          {renaming ? (
-            <>
-              <ActionButton onClick={commitRename} label={t('attachment.saveName')}>
-                <Check className="text-accent" />
-              </ActionButton>
-              <ActionButton onClick={cancelRename} label={t('common:actions.cancel')} tip="above-end">
-                <X />
-              </ActionButton>
-            </>
-          ) : (
-            <>
-              {viewable ? (
-                <LabelledAction onClick={openViewer}>
-                  <Eye />
-                  {t('attachment.view')}
-                </LabelledAction>
-              ) : playable ? null : (
-                <LabelledAction onClick={() => void handleDownload()} disabled={downloading}>
-                  <Download />
-                  {t('common:updateToast.download')}
-                </LabelledAction>
-              )}
-              {(viewable || playable) && (
-                <ActionButton onClick={() => void handleDownload()} disabled={downloading} label={t('common:updateToast.download')}>
-                  <Download />
-                </ActionButton>
-              )}
-              {/* Rename and Copy show in the row when the chip has room, and fold into the menu when it has not. */}
-              <span className="hidden @[30rem]/chip:contents">
-                {editable && (
-                  <ActionButton onClick={startRename} label={t('common:actions.rename')}>
-                    <PencilSimple />
-                  </ActionButton>
-                )}
-                <ActionButton onClick={handleCopy} label={copied ? t('auth:createPhrase.copied') : t('common:actions.copy')} tip="above-end">
-                  {copied ? <Check className="text-success" /> : <Copy />}
-                </ActionButton>
-              </span>
-              <span className="contents @[30rem]/chip:hidden">
-                <ActionButton onClick={openMenu} label={copied ? t('auth:createPhrase.copied') : t('shell:selectionToolbar.more')} tip="above-end">
-                  {copied ? (
-                    <Check className="text-success" />
-                  ) : (
-                    <DotsThree weight="bold" />
-                  )}
-                </ActionButton>
-              </span>
-              {editable && <DeleteButton label={t('common:actions.delete')} confirmLabel={t('common:actions.deleteConfirm')} onConfirm={deleteNode} />}
-            </>
-          )}
+      {/* ---- Tool row: labeled tools, then the file tools on a narrow chip ---- */}
+      {!renaming && (
+        <div
+          ref={toolRowRef}
+          className={`flex items-center gap-1.5 mt-2.5 ${labeled.length ? '' : '@[30rem]/chip:hidden'}`}
+        >
+          {labeled}
+          <span className="flex-1" />
+          <div className="flex @[30rem]/chip:hidden shrink-0 items-center gap-0.5">{fileTools}</div>
         </div>
-      </div>
+      )}
+    </div>
   );
 
   const damagedNotice = (
@@ -1078,6 +1289,12 @@ function EncryptedAttachmentView({
           {row}
           {damaged && <div className="mt-2">{damagedNotice}</div>}
         </>
+      )}
+      {cleanNotice && <div className="mt-2">{cleanNotice}</div>}
+      {cleanUndo && (
+        <Snackbar actionLabel={t('notes:editor.undo')} onAction={undoClean}>
+          {t('noiseRemoved')}
+        </Snackbar>
       )}
       <ContextMenu state={menu.state} onClose={menu.close} />
     </NodeViewWrapper>
@@ -1198,6 +1415,31 @@ export function cachedPdfCover(uuid: string): PdfCoverImage | null {
   return pdfCovers.get(uuid) ?? null;
 }
 
+/** The file card's further pages (2 and 3), drawn only for a card with
+ *  several pages; the chip and Files need only the cover. */
+const pdfStripDraws = new Map<string, Promise<string[]>>();
+const pdfStrips = new Map<string, string[]>();
+
+export function loadPdfStrip(uuid: string, last: number): Promise<string[]> {
+  let pending = pdfStripDraws.get(uuid);
+  if (!pending) {
+    pending = (async () => {
+      const [{ drawStrip }, att] = await Promise.all([import('./PdfPages'), loadAttachmentData(uuid)]);
+      if (!att) throw new Error('missing');
+      const urls = await drawStrip(new Uint8Array(att.data), last);
+      pdfStrips.set(uuid, urls);
+      return urls;
+    })();
+    pdfStripDraws.set(uuid, pending);
+    pending.catch(() => pdfStripDraws.delete(uuid));
+  }
+  return pending;
+}
+
+export function cachedPdfStrip(uuid: string): string[] | null {
+  return pdfStrips.get(uuid) ?? null;
+}
+
 // ------------------------------------------------------------------
 // Upload handler
 // ------------------------------------------------------------------
@@ -1215,19 +1457,20 @@ export function setAttachmentUploadContext(ctx: AttachmentUploadContext | null) 
   _uploadContext = ctx;
 }
 
-async function handleAttachmentUpload(
-  file: File,
-  view: EditorView,
-  opts: AttachmentUploadOptions = {},
-): Promise<void> {
-  if (!_uploadContext) return;
+/**
+ * Checks, prepares and stores one file as an encrypted attachment, without
+ * putting it into a note: the size cap, the image switches, the quota, then
+ * the store. Null when it was refused (the reason is already shown).
+ */
+async function storeAttachment(file: File, opts: AttachmentUploadOptions = {}): Promise<{ uuid: string; meta: AttachmentMeta; uploaded: Promise<void> } | null> {
+  if (!_uploadContext) return null;
 
   // Validate file size (storage-sub holders get a larger per-file cap).
   const maxBytes = _uploadContext.getQuota?.()?.maxBytes ?? 0;
   const validation = validateAttachment(file, _uploadContext.isPro, maxBytes > 500 * 1000 * 1000);
   if (!validation.ok) {
     alert(validation.error);
-    return;
+    return null;
   }
 
   // An image through the paperclip is still a file chip, but its bytes
@@ -1250,18 +1493,12 @@ async function handleAttachmentUpload(
     const q = _uploadContext.getQuota();
     if (q && q.usedBytes + estimateBlobBytes(upload.size) > q.maxBytes) {
       _uploadContext.onQuotaExceeded?.();
-      return;
+      return null;
     }
   }
 
-  let uuid: string;
-  let meta: AttachmentMeta;
-  let uploaded: Promise<void>;
   try {
-    const result = await _uploadContext.attachmentStore.uploadAttachment(upload);
-    uuid = result.uuid;
-    meta = result.meta;
-    uploaded = result.uploaded;
+    return await _uploadContext.attachmentStore.uploadAttachment(upload);
   } catch (err) {
     const msg = err instanceof Error ? err.message : '';
     if (msg.includes('Quota exceeded')) {
@@ -1269,8 +1506,28 @@ async function handleAttachmentUpload(
     } else {
       alert(i18n.t('media:attachment.uploadFailed', { message: msg || i18n.t('media:attachment.unknownError') }));
     }
-    return;
+    return null;
   }
+}
+
+/** Remove noise: the cleaned recording stored as an attachment of its own, as the chip's new attributes. */
+async function storeAttachmentFile(file: File): Promise<{ attrs: AudioAttrs; uploaded: Promise<void> } | null> {
+  const stored = await storeAttachment(file);
+  if (!stored) return null;
+  return {
+    attrs: { src: `${FILE_URI_PREFIX}${stored.uuid}`, filename: stored.meta.name, filesize: formatFileSize(stored.meta.size), mimetype: stored.meta.mime },
+    uploaded: stored.uploaded,
+  };
+}
+
+async function handleAttachmentUpload(
+  file: File,
+  view: EditorView,
+  opts: AttachmentUploadOptions = {},
+): Promise<string | null> {
+  const stored = await storeAttachment(file, opts);
+  if (!stored) return null;
+  const { uuid, meta, uploaded } = stored;
 
   // The note may have turned read-only, or closed, while the file was
   // stored. Nothing is inserted then; the stored blob is named by no note,
@@ -1278,7 +1535,7 @@ async function handleAttachmentUpload(
   // upload then has no node to take out, only a rejection to settle.
   if (!view.editable || view.isDestroyed) {
     uploaded.catch(() => {});
-    return;
+    return null;
   }
 
   // Insert attachment node. If the cursor is in an empty paragraph,
@@ -1287,7 +1544,7 @@ async function handleAttachmentUpload(
   // gets inserted at an inline position.
   const { schema } = view.state;
   const attachmentNode = schema.nodes['attachment'];
-  if (!attachmentNode) return;
+  if (!attachmentNode) return null;
 
   const attachmentSrc = `${FILE_URI_PREFIX}${uuid}`;
   const node = attachmentNode.create({
@@ -1329,18 +1586,19 @@ async function handleAttachmentUpload(
     });
     if (found) view.dispatch(tr);
   });
+  return attachmentSrc;
 }
 
 /** How one upload treats its file. `keepOriginal` skips the image
  *  switches, so a picture keeps its bytes, name and MIME. */
 type AttachmentUploadOptions = { keepOriginal?: boolean };
 
-/** Public entry point for toolbar file picker. */
+/** Public entry point for toolbar file picker. Gives the placed chip's `src`, or null when none was placed. */
 export async function triggerAttachmentUpload(
   file: File,
   view: EditorView,
   opts: AttachmentUploadOptions = {},
-): Promise<void> {
+): Promise<string | null> {
   return handleAttachmentUpload(file, view, opts);
 }
 

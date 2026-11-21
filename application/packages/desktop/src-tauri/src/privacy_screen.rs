@@ -114,10 +114,63 @@ pub fn set_capture_block<R: tauri::Runtime>(app: &tauri::AppHandle<R>, enabled: 
 /// capture, so a screenshot, a recording or a shared screen shows what is
 /// behind the window. Linux has no such property and the switch is not
 /// offered there, so this call is a no-op on it.
+///
+/// A hidden window only keeps the value: `flush` applies it right before the
+/// window shows. On Windows, `SetWindowDisplayAffinity` on a window that has
+/// never been shown makes the compositor fade in a copy of it, white inside,
+/// with no window under it: clicks go to the desktop, so it cannot be moved,
+/// minimized or closed. The page pushes the switch at every start, and a start
+/// at sign-in with Start minimized and Keep running in the tray keeps the
+/// window hidden, so that copy stayed on the desktop (#774).
+#[cfg(desktop)]
+static PENDING_BLOCK: std::sync::Mutex<Option<bool>> = std::sync::Mutex::new(None);
+
+/// The switch as the page last pushed it, for the windows other than `main`
+/// (the Ninja box, About on macOS): each applies it when it shows, through
+/// `protect`. The box shows note titles and the text of a quick note, so the
+/// switch has to cover it as well as the main window.
+#[cfg(desktop)]
+static CAPTURE_ON: AtomicBool = AtomicBool::new(false);
+
 #[cfg(desktop)]
 pub fn set_capture_block<R: tauri::Runtime>(app: &tauri::AppHandle<R>, enabled: bool) {
     use tauri::Manager;
-    if let Some(window) = app.get_webview_window("main") {
+    CAPTURE_ON.store(enabled, Ordering::Relaxed);
+    for (label, window) in app.webview_windows() {
+        let visible = window.is_visible().unwrap_or(false);
+        if visible {
+            let _ = window.set_content_protected(enabled);
+        } else if label == "main" {
+            if let Ok(mut pending) = PENDING_BLOCK.lock() {
+                *pending = Some(enabled);
+            }
+        }
+        // A hidden window other than main gets the value from `protect` when
+        // it shows next.
+    }
+}
+
+/// The capture block for a window other than `main`, called right before it
+/// shows, so its first frame is covered. Never on a window that has not been
+/// shown yet (the Windows copy described above): the Ninja box shows itself
+/// once off screen when it is made (`prime` in ninja.rs).
+#[cfg(desktop)]
+pub fn protect<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) {
+    let _ = window.set_content_protected(CAPTURE_ON.load(Ordering::Relaxed));
+}
+
+/// The switch as last pushed, for a window built visible (About on macOS).
+#[cfg(target_os = "macos")]
+pub fn capture_on() -> bool {
+    CAPTURE_ON.load(Ordering::Relaxed)
+}
+
+/// Apply the capture block a hidden main window was given. Every path that
+/// shows the main window calls this first.
+#[cfg(desktop)]
+pub fn flush<R: tauri::Runtime>(window: &tauri::WebviewWindow<R>) {
+    let pending = PENDING_BLOCK.lock().ok().and_then(|mut p| p.take());
+    if let Some(enabled) = pending {
         let _ = window.set_content_protected(enabled);
     }
 }

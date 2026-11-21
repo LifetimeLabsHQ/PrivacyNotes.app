@@ -16,7 +16,14 @@
  *     cache is derived, rebuildable, and capped at 12 rows.
  *  3. imageCache and attachmentCache - unsealed rows seal one row per
  *     transaction (a single blob can be tens of MB).
- *  4. After a phrase change only (key epoch above 1): every sealed row,
+ *  4. dayLedger - counts only, one row a day: unsealed rows seal in one
+ *     transaction with an in-transaction read.
+ *  5. replacedCopies - converted like the notes, in step 1's pages.
+ *     Steps 1 and 5 also move the row type into the blob of a sealed row
+ *     while the move is on (localSeal.ts `sealPending`, `lateFields`); a row
+ *     that does not open is passed by with a breadcrumb, never the pass.
+ *     Spec: docs/internal/plans/row-type-seal.md (3.4)
+ *  6. After a phrase change only (key epoch above 1): every sealed row,
  *     the kept stash slots and the sealed settings cache whose envelope a
  *     key of an earlier epoch sealed are sealed again under the current
  *     key, plain fields untouched. A read that opens such an envelope
@@ -37,7 +44,7 @@
  */
 import { db, openRawDb } from './db';
 import type { LocalNote } from './db';
-import { isSealedRow, LocalSealKeyMissing, onStaleSealRead, resealPending, resealRow, sealedTableNames, sealRow } from './localSeal';
+import { isSealedRow, LocalSealKeyMissing, noteInstalledSchema, onStaleSealRead, resealPending, resealRow, sealedTableNames, sealPending, sealRow } from './localSeal';
 import { localDataKeyCopy } from './localKey';
 import { currentKeyEpoch } from './keyRing';
 import { resealStashSlots } from './flushStash';
@@ -64,13 +71,14 @@ function keyGone(): boolean {
   return false;
 }
 
-async function sweepNotes(): Promise<void> {
+async function sweepRows(name: 'notes' | 'replacedCopies'): Promise<void> {
+  const table = raw()[name] as unknown as ReturnType<typeof openRawDb>['notes'];
   let last: string | null = null;
   for (;;) {
     if (keyGone()) throw new Error('key cleared mid-sweep');
     const page = (await (last === null
-      ? raw().notes.orderBy(':id').limit(PAGE_ROWS).toArray()
-      : raw().notes.where(':id').above(last).limit(PAGE_ROWS).toArray())) as LocalNote[];
+      ? table.orderBy(':id').limit(PAGE_ROWS).toArray()
+      : table.where(':id').above(last).limit(PAGE_ROWS).toArray())) as LocalNote[];
     if (page.length === 0) return;
     last = page[page.length - 1]!.id;
     // Byte-capped chunks: 200 unbounded rows could be 100+ MB of
@@ -79,9 +87,9 @@ async function sweepNotes(): Promise<void> {
     let bytes = 0;
     const chunks: string[][] = [];
     for (const row of page) {
-      if (isSealedRow(row)) continue;
+      if (!sealPending(name, row as never)) continue;
       chunk.push(row.id);
-      bytes += (row.body?.length ?? 0) + (row.title?.length ?? 0);
+      bytes += isSealedRow(row) ? sealedBytes(row as never) : (row.body?.length ?? 0) + (row.title?.length ?? 0);
       if (chunk.length >= PAGE_ROWS || bytes >= PAGE_BYTES) {
         chunks.push(chunk);
         chunk = [];
@@ -90,20 +98,47 @@ async function sweepNotes(): Promise<void> {
     }
     if (chunk.length) chunks.push(chunk);
     for (const ids of chunks) {
-      await raw().transaction('rw', raw().notes, async () => {
+      if (keyGone()) throw new Error('key cleared mid-sweep');
+      await raw().transaction('rw', table, async () => {
+        // The gate from this connection: an older bundle may have added the
+        // type index back since the app's connection last opened.
+        noteInstalledSchema(raw().core.schema);
         // Re-read inside the transaction: an autosave or a pull can
         // land between the page read and this write; the fresh row
         // wins and an already-sealed row is skipped.
-        const fresh = await raw().notes.bulkGet(ids);
+        const fresh = await table.bulkGet(ids);
         const updates: LocalNote[] = [];
         for (const row of fresh) {
-          if (!row || isSealedRow(row)) continue;
-          updates.push(sealRow('notes', row as never) as unknown as LocalNote);
+          if (!row || !sealPending(name, row as never)) continue;
+          if (!isSealedRow(row)) {
+            updates.push(sealRow(name, row as never) as unknown as LocalNote);
+            continue;
+          }
+          // Moving a late field opens the blob: a row that does not open
+          // stays as it is, and the pass goes on.
+          try {
+            updates.push(sealRow(name, row as never) as unknown as LocalNote);
+          } catch (err) {
+            if (err instanceof LocalSealKeyMissing) throw err;
+            logAuthEvent('seal:move-skipped', { message: name });
+          }
         }
-        if (updates.length) await raw().notes.bulkPut(updates);
+        if (updates.length) await table.bulkPut(updates);
       });
     }
   }
+}
+
+async function sweepDayLedger(): Promise<void> {
+  if (keyGone()) throw new Error('key cleared mid-sweep');
+  // A small table (one row per day of writing): read and seal it in one
+  // transaction, so a count written meanwhile lands before or after, never
+  // under a stale copy.
+  await raw().transaction('rw', raw().dayLedger, async () => {
+    const rows = (await raw().dayLedger.toArray()) as unknown as Record<string, unknown>[];
+    const updates = rows.filter((r) => !isSealedRow(r)).map((r) => sealRow('dayLedger', r as never));
+    if (updates.length) await raw().dayLedger.bulkPut(updates as never);
+  });
 }
 
 async function sweepDocCache(): Promise<void> {
@@ -172,6 +207,7 @@ async function resealOlderEpochs(): Promise<void> {
       for (const keys of chunks) {
         if (keyGone()) throw new Error('key cleared mid-sweep');
         await db0.transaction('rw', table, async () => {
+          noteInstalledSchema(db0.core.schema);
           const rows = await table.bulkGet(keys);
           const updates: unknown[] = [];
           for (const row of rows) {
@@ -194,10 +230,12 @@ async function resealOlderEpochs(): Promise<void> {
 }
 
 async function sweepOnce(): Promise<void> {
-  await sweepNotes();
+  await sweepRows('notes');
+  await sweepRows('replacedCopies');
   await sweepDocCache();
   await sweepBlobTable('imageCache');
   await sweepBlobTable('attachmentCache');
+  await sweepDayLedger();
   // An account that never changed its phrase has nothing of an earlier
   // epoch, and this step reads nothing for it. After a re-seal finished at
   // this epoch, only a read that met an earlier key asks for another one:

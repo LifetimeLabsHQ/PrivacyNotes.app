@@ -4,9 +4,9 @@ import { ArrowCircleDown, ArrowCircleUp, ArrowsOutSimple, ChartBar, Gear, LockKe
 import { JournalCalendarButton, type JournalCalendarHandlers } from '../JournalCalendar';
 import type { LocalNote } from '../db';
 import { detectPlatform } from '../devices';
-import { exemptOpts } from '../i18nExempt';
 import { HoverLabel } from '../HoverLabel';
 import { SyncStatus } from '../SyncStatus';
+import { QuotaRingButton } from '../QuotaRing';
 import { IconUpgrade } from '../UpgradeModal';
 import { hotkeyKeys, hotkeyLabel, isMacPlatform } from '../notesViewUtils';
 import { DESKTOP_APP, keyText } from '../shortcutMatch';
@@ -35,7 +35,7 @@ function StatsReadout({ stats, labels }: { stats: FooterStats; labels: 'wide' | 
   const { t } = useTranslation('notes');
   const num = (n: number) => <span className="tabular-nums font-medium">{n.toLocaleString(intlLocale())}</span>;
   const name = (text: string) =>
-    labels === 'wide' ? <span className="hidden xl:inline">{' '}{text}</span> : <>{' '}{text}</>;
+    labels === 'wide' ? <span className="hidden @[16rem]/stats:inline">{' '}{text}</span> : <>{' '}{text}</>;
   return (
     <span>
       {num(stats.count)}{name(stats.label)}
@@ -59,6 +59,30 @@ export type NoteJump = {
 /** What the footer's journal calendar opens and creates. */
 export type FooterCalendar = JournalCalendarHandlers;
 
+/** What the storage ring needs; absent until the quota has loaded (or in demo). */
+export type FooterStorage = { usedBytes: number; maxBytes: number; onOpen: () => void };
+
+/**
+ * The status pair of every footer: the storage ring (#791) and the sync
+ * icon, icons only, each with its tip and its own place to open.
+ * Spec: docs/internal/design/ui-patterns.md section 205
+ */
+function FooterStatus({ ready, onOpenSync, storage, size = 20, tipPosition, tipHostClassName }: {
+  ready: boolean;
+  onOpenSync: () => void;
+  storage?: FooterStorage;
+  size?: number;
+  tipPosition?: 'above-start' | 'above';
+  tipHostClassName?: string;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      {storage && <QuotaRingButton usedBytes={storage.usedBytes} maxBytes={storage.maxBytes} onOpen={storage.onOpen} size={size} tipPosition={tipPosition} tipHostClassName={tipHostClassName} />}
+      <SyncStatus ready={ready} onOpen={onOpenSync} size={size} tipPosition={tipPosition} tipHostClassName={tipHostClassName} />
+    </span>
+  );
+}
+
 export function FullFooter({
   zenMode,
   setZenMode,
@@ -68,6 +92,7 @@ export function FullFooter({
   selected,
   openSyncVerify,
   localReadDone,
+  storage,
   footerStats,
   calendar,
   auth,
@@ -88,6 +113,7 @@ export function FullFooter({
   openSyncVerify: () => void;
   /** The first read of this device's vault has finished (see SyncStatus's ready). */
   localReadDone: boolean;
+  storage?: FooterStorage;
   footerStats: FooterStats;
   calendar: FooterCalendar;
   auth: { isPro: boolean };
@@ -118,17 +144,16 @@ export function FullFooter({
         {!zenMode && (
           <div className={`pn-sidebar shrink-0 self-stretch hidden lg:flex ${sidebarCollapsed ? 'w-[52px]' : `w-[var(--pn-sidebar-render)] ${gridMode && selected ? 'min-[1400px]:w-[var(--pn-sidebar-render-dock)]' : ''}`}`}>
             <div className={`flex flex-1 min-w-0 items-center gap-2 px-5 py-1 ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
-              <HoverLabel label={t('footer.settings', exemptOpts('notes:footer.settings'))} keys={keyText('openSettings')} position="above-start" className="pn-sb-tip flex">
+              <HoverLabel label={t('footer.settings')} keys={keyText('openSettings')} position="above-start" className="flex">
                 <button
                   onClick={() => setShowSettings(true)}
-                  aria-label={t('footer.settings', exemptOpts('notes:footer.settings'))}
-                  className="inline-flex items-center gap-2 text-pn hover:text-accent transition"
+                  aria-label={t('footer.settings')}
+                  className="inline-flex items-center justify-center rounded-md p-1 text-accent hover:bg-pn/5 transition"
                 >
-                  <Gear className="text-accent" />
-                  {!sidebarCollapsed && <span className="pn-sb-wide text-body font-medium">{t('footer.settings', exemptOpts('notes:footer.settings'))}</span>}
+                  <Gear size={22} />
                 </button>
               </HoverLabel>
-              {!sidebarCollapsed && <SyncStatus ready={localReadDone} onOpen={openSyncVerify} />}
+              {!sidebarCollapsed && <FooterStatus ready={localReadDone} onOpenSync={openSyncVerify} storage={storage} />}
             </div>
           </div>
         )}
@@ -141,20 +166,24 @@ export function FullFooter({
                 At lg+ the sidebar-width zone above takes over. */}
             {!zenMode && (
               <span className="flex lg:hidden items-center gap-4">
-                <button
-                  onClick={() => setShowSettings(true)}
-                  aria-label={t('footer.settings', exemptOpts('notes:footer.settings'))}
-                  className="inline-flex items-center gap-2 text-pn hover:text-accent transition"
-                >
-                  <Gear className="text-accent" />
-                  <span className="text-body font-medium">{t('footer.settings', exemptOpts('notes:footer.settings'))}</span>
-                </button>
-                <SyncStatus ready={localReadDone} onOpen={openSyncVerify} />
+                <HoverLabel label={t('footer.settings')} keys={keyText('openSettings')} position="above-start" className="flex">
+                  <button
+                    onClick={() => setShowSettings(true)}
+                    aria-label={t('footer.settings')}
+                    className="inline-flex items-center justify-center rounded-md p-1 text-accent hover:bg-pn/5 transition"
+                  >
+                    <Gear size={22} />
+                  </button>
+                </HoverLabel>
+                <FooterStatus ready={localReadDone} onOpenSync={openSyncVerify} storage={storage} />
               </span>
             )}
             {(zenMode || sidebarCollapsed) && (
-              <span className={zenMode ? 'flex' : 'hidden lg:flex'}><SyncStatus ready={localReadDone} onOpen={openSyncVerify} /></span>
+              <span className={zenMode ? 'flex' : 'hidden lg:flex'}><FooterStatus ready={localReadDone} onOpenSync={openSyncVerify} storage={storage} /></span>
             )}
+            {/* The shortcut list: "New" and its keys. A touch screen has no
+                keys, so the button is not there (GitHub #743, #777). */}
+            {!touch && (
             <HoverLabel label={t('footer.viewShortcuts')} keys={keyText('help')} position="above">
               <button
                 onClick={openHotkeys}
@@ -162,7 +191,6 @@ export function FullFooter({
                 className="inline-flex items-center gap-2 whitespace-nowrap text-body font-medium text-pn hover:text-accent transition cursor-pointer"
               >
               <span>{t('footer.newNote')}</span>
-              {!touch && (<>
               <span dir="ltr" className="hidden xl:inline-flex items-center gap-1"> {/* rtl-ok: modifier-key sequence never reorders */}
                 {hotkeyKeys.map((k) => (
                   <kbd
@@ -181,11 +209,16 @@ export function FullFooter({
                   ? t(isMacPlatform ? 'footer.newNoteHintMacDesktop' : 'footer.newNoteHintOtherDesktop')
                   : t(isMacPlatform ? 'footer.newNoteHintMac' : 'footer.newNoteHintOther')})
               </span>
-              </>)}
               </button>
             </HoverLabel>
+            )}
           </div>
-          <div className="hidden lg:flex items-center gap-1.5">
+          {/* The free space between the two groups, not the window width,
+              decides what shows: a size container that takes that space and
+              centers the stats in it, as justify-between did. Numbers from
+              12rem, their labels from 16rem, nothing below. */}
+          <div className="@container/stats flex flex-1 min-w-0 justify-center">
+          <div className="hidden @[12rem]/stats:flex items-center gap-1.5">
           <HoverLabel label={t('footer.openStats')} position="above">
             <button
               onClick={() => setShowStats(true)}
@@ -197,6 +230,7 @@ export function FullFooter({
             </button>
           </HoverLabel>
           <JournalCalendarButton {...calendar} />
+          </div>
           </div>
           <div className="flex items-center gap-1">
             {/* Borderless text-style controls (the boxes read as a toolbar
@@ -302,6 +336,7 @@ export function MiniFooter({
   selected,
   openSyncVerify,
   localReadDone,
+  storage,
   footerStats,
   calendar,
   auth,
@@ -320,6 +355,7 @@ export function MiniFooter({
   openSyncVerify: () => void;
   /** The first read of this device's vault has finished (see SyncStatus's ready). */
   localReadDone: boolean;
+  storage?: FooterStorage;
   footerStats: FooterStats;
   calendar: FooterCalendar;
   auth: { isPro: boolean };
@@ -336,9 +372,9 @@ export function MiniFooter({
   handleLockClick: () => void;
 }) {
   const { t } = useTranslation('notes');
-  const settingsLabel = t('footer.settings', exemptOpts('notes:footer.settings'));
+  const settingsLabel = t('footer.settings');
   return (
-      <footer className={`[@media(min-width:768px)_and_(min-height:501px)]:hidden shrink-0 flex items-center justify-between gap-2 px-2 py-0.5 ${IS_DESKTOP_APP ? 'pb-0.5' : 'pb-[max(0.125rem,env(safe-area-inset-bottom))]'} md:pb-0.5 border-t border-divider text-compact text-pn-muted [@media(max-height:320px)]:hidden`}>
+      <footer className={`[@media(min-width:768px)_and_(min-height:501px)]:hidden shrink-0 flex items-center justify-between gap-2 px-2 py-0.5 ${IS_DESKTOP_APP ? 'pb-0.5' : 'pb-[max(0.125rem,var(--pn-safe-bottom))]'} md:pb-0.5 border-t border-divider text-compact text-pn-muted [@media(max-height:320px)]:hidden`}>
         {/* Settings, Design and Lock app hold the start of the bar on every screen, so
             they never move under the thumb. The end holds the one action of
             the screen on show: New on a list, Zen in an open item, where New
@@ -365,7 +401,7 @@ export function MiniFooter({
           </span>
         </div>
         <span className="shrink-0">
-          <SyncStatus ready={localReadDone} onOpen={openSyncVerify} tipPosition="above" tipHostClassName="flex h-11 items-center" />
+          <FooterStatus ready={localReadDone} onOpenSync={openSyncVerify} storage={storage} size={22} tipPosition="above" tipHostClassName="flex h-11 items-center" />
         </span>
         {/* Stats readout - md+ only. Below md the phone row is too tight;
             at md-lg the same three phone controls span a tablet-width row,

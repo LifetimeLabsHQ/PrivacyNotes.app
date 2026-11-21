@@ -4,6 +4,7 @@ import { ensureSettingsSearchLoaded } from './i18n';
 import { isImeComposing } from './imeComposing';
 import { APP_KEYS, keyText, matchesKey } from './shortcutMatch';
 import { useEscapeToClose } from './useEscapeToClose';
+import { useEdgeSwipe, EDGE_START_PX } from './useEdgeSwipe';
 import { useIsMobile } from './useIsMobile';
 import { detectPlatform } from './devices';
 import { ArrowLeft, ArrowSquareOut, ArrowsIn, ArrowsLeftRight, ArrowsOut, CaretRight, SidebarSimple, X } from './icons';
@@ -285,7 +286,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
   // Docked, the app beside the panel stays live (#741), so the panel is not
   // on the overlay stack: the app's shortcuts and its own Escape keep working.
   // Escape reaches the panel only from inside it (`onDockedKey`).
-  useEscapeToClose(onEscape, !docked);
+  const onTop = useEscapeToClose(onEscape, !docked);
   const dockRef = useRef<HTMLDivElement | null>(null);
   function onDockedKey(e: ReactKeyboardEvent<HTMLDivElement>) {
     if (e.key !== 'Escape' || e.defaultPrevented || isImeComposing(e)) return;
@@ -332,6 +333,23 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
   }, [stacked, activeId, desktopLanding]);
 
   const active = categories.find((c) => c.id === activeId && !c.href) ?? null;
+
+  // Phone: a swipe from the left edge goes back from a page to the list, as
+  // the arrow does (#839) and as Android Back does through `onEscape`. Only
+  // while Settings is the topmost overlay, and never from a field or a slider.
+  useEdgeSwipe(
+    () => {
+      if (!onTop()) return;
+      setLanding(null);
+      setActiveId(null);
+    },
+    isMobile && !docked && !!active,
+    (t) => {
+      if (t.clientX > EDGE_START_PX) return false;
+      const el = t.target instanceof Element ? t.target : null;
+      return !el?.closest('input, textarea, select, [contenteditable="true"], [role="slider"]');
+    }
+  );
 
   function onFieldKey(e: ReactKeyboardEvent<HTMLInputElement>) {
     if (isImeComposing(e) || !hits || !searching) return;
@@ -515,7 +533,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
   // and the list, so the open note stays in view.
   const phoneFill = docked
     ? `pointer-events-auto w-[480px] max-w-full h-full flex flex-col text-pn bg-surface-2 ${edge === 'end' ? 'border-s' : 'border-e'} border-divider shadow-lg outline-none`
-    : `w-full flex flex-col text-pn bg-surface-2 ${phoneHeight} pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:pt-0 sm:pb-0 sm:max-w-2xl sm:h-[92vh] sm:max-h-[960px] sm:rounded-lg sm:border sm:border-divider`;
+    : `w-full flex flex-col text-pn bg-surface-2 ${phoneHeight} pt-[var(--pn-safe-top)] pb-[var(--pn-safe-bottom)] sm:pt-0 sm:pb-0 sm:max-w-2xl sm:h-[92vh] sm:max-h-[960px] sm:rounded-lg sm:border sm:border-divider`;
   // The docked panel takes the focus and its own Escape (see `onDockedKey`).
   const dockProps = docked ? { ref: dockRef, tabIndex: -1, onKeyDown: onDockedKey } : {};
   if (stacked) {

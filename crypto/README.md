@@ -17,11 +17,11 @@ the difference is a bug worth reporting.
 [`../VERIFY.md`](../VERIFY.md) walks through what to check here and what a
 backdoor would look like, which is more useful than reading top to bottom.
 
-## Licence history
+## License history
 
 This repository is AGPL-3.0 today. Earlier releases of these two files were
-published under the MIT licence.
+published under the MIT license.
 
 That earlier grant still stands for anyone who already holds a copy of those
-releases. A licence change applies going forward and is not retroactive, and
+releases. A license change applies going forward and is not retroactive, and
 we would rather write that down than let anyone assume otherwise.

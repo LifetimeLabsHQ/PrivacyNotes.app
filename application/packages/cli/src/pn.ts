@@ -12,7 +12,7 @@ import { hostname, homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { INBOX_NOTE_LIMITS } from '@notes/shared/extension';
-import { buildNote, CliError, EXIT, forget, HELP, login, notConnected, parseArgs, parseConnection, save, type Connection, type Fetch } from './core';
+import { buildNote, CliError, EXIT, forget, HELP, login, notConnected, parseArgs, parseConnection, save, type Connection, type Fetch, type PendingLogin, type PendingStore } from './core';
 import { handleMcpLine } from './mcp';
 import { ago, chips, kilobytes, kv, renderCard, sizeBar, wantsColor, type Card, type Style } from './ui';
 
@@ -45,6 +45,26 @@ function writeConnection(c: Connection): void {
 function removeConnection(): void {
   rmSync(configPath(), { force: true });
 }
+
+/** The token of a login that got no answer, beside the config file with the
+ *  same mode, so `privacynotes login` with the same code sends it again. */
+const pendingLogin: PendingStore = {
+  read: () => {
+    try {
+      const got = JSON.parse(readFileSync(join(dirname(configPath()), 'login-pending.json'), 'utf8')) as Partial<PendingLogin>;
+      return typeof got.code === 'string' && typeof got.token === 'string' ? { code: got.code, token: got.token } : null;
+    } catch {
+      return null;
+    }
+  },
+  write: (pending) => {
+    const path = join(dirname(configPath()), 'login-pending.json');
+    if (!pending) return rmSync(path, { force: true });
+    mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
+    writeFileSync(path, `${JSON.stringify(pending)}\n`, { mode: 0o600 });
+    if (process.platform !== 'win32') chmodSync(path, 0o600);
+  },
+};
 
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];
@@ -107,7 +127,7 @@ async function main(argv: string[], json: { on: boolean }): Promise<number> {
   if (args.command === 'login') {
     const code = await readCode();
     const label = `Command line on ${hostname() || 'this computer'}`;
-    const c = await login(fetchFn, FUNCTIONS_URL, code, label, __PN_VERSION__, (n) => new Uint8Array(randomBytes(n)));
+    const c = await login(fetchFn, FUNCTIONS_URL, code, label, __PN_VERSION__, (n) => new Uint8Array(randomBytes(n)), pendingLogin);
     writeConnection(c);
     show(args.json, { connected: true, label: c.label }, {
       tone: 'ok',

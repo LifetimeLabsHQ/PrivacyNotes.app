@@ -55,7 +55,9 @@ export function Callout({ tone = 'info', title, action, look = 'tint', className
   }
   return (
     <div role={tone === 'danger' ? 'alert' : undefined} className={`flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-small leading-relaxed text-pn ${BOX[tone]}${className ? ` ${className}` : ''}`}>
-      <div className="flex min-w-0 flex-[1_1_12rem] items-start gap-2">
+      {/* The message keeps 20rem before the action goes beside it, so on a
+          phone the action wraps below instead of squeezing the text. */}
+      <div className="flex min-w-0 flex-[1_1_20rem] items-start gap-2">
         <Glyph className={`mt-0.5 shrink-0 ${INK[tone]}`} aria-hidden="true" />
         <div className="min-w-0 flex-1">
           {title && <p className="font-semibold">{title}</p>}
@@ -82,11 +84,13 @@ export function Banner({ tone = 'warning', action, onDismiss, dismissLabel, chil
   const Glyph = GLYPH[tone];
   return (
     <div role="status" className={`flex flex-wrap items-center gap-3 border-b px-4 py-2 text-compact text-pn ${BOX[tone]}`}>
-      <div className="flex min-w-0 flex-[1_1_12rem] items-start gap-3">
+      {/* As in Callout: on a phone the buttons wrap below the message and
+          line up with its text. */}
+      <div className="flex min-w-0 flex-[1_1_20rem] items-start gap-3">
         <Glyph className={`mt-0.5 shrink-0 ${INK[tone]}`} aria-hidden="true" />
         <div className="min-w-0 flex-1">{children}</div>
       </div>
-      {(action || onDismiss) && <div className="ms-auto flex max-w-full flex-wrap items-center gap-2">
+      {(action || onDismiss) && <div className="ms-7 flex max-w-full flex-wrap items-center gap-2 sm:ms-auto">
         {onDismiss && (
           <FeedbackButton action="cancel" onClick={onDismiss}>{dismissLabel}</FeedbackButton>
         )}

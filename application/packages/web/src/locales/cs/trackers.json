@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "h",
+    "minutesSuffix": "min",
+    "hoursMinutes": "{{h}} h {{m}} min",
     "bpm": "tep/min",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -149,6 +151,7 @@
     "takenCount_many": "{{count}} užito",
     "takenCount_other": "{{count}} užito",
     "namePlaceholder": "Název léku",
+    "nameMissing": "Zadej název léku.",
     "dosagePlaceholder": "Dávkování (např. 50 mg)",
     "editMedication": "Upravit lék",
     "removeMedication": "Odebrat lék",
@@ -271,12 +274,18 @@
     "yes": "Ano",
     "no": "Ne",
     "unknownType": "Tato sledovaná hodnota potřebuje novější verzi aplikace.",
+    "counterOf": "z {{limit}}",
+    "counterToday": "použito dnes",
+    "counterReached": "Limit {{limit}} je dosažen.",
+    "counterStartAgain": "{{name}}: začít znovu od 0",
+    "counterStartAgainConfirm": "Začít znovu?",
     "typeLabels": {
       "scale10": "Stupnice (0-10)",
       "scale5": "Stupnice (0-5)",
       "slider100": "Skóre (0-100)",
       "number": "Číslo",
       "pair": "Dvě čísla",
+      "counter": "Počítadlo",
       "yesno": "Ano / Ne"
     }
   },
@@ -292,7 +301,7 @@
     "medicationCard": "Karta léků",
     "medicationCardHelp": "„Jsou dnešní léky užité?“ na tomto zařízení, jen v den, kdy je na řadě nějaký lék.",
     "customHelp": "Sledované hodnoty, které si pojmenuješ: stupnice, číslo nebo ano či ne. Až {{max}}.",
-    "customHelpPair": "Sledované hodnoty, které si pojmenuješ: stupnice, číslo, dvě čísla nebo ano či ne. Až {{max}}.",
+    "customHelpPair": "Sledované hodnoty, které si pojmenuješ: stupnice, číslo, dvě čísla, počítadlo nebo ano či ne. Až {{max}}.",
     "yourCustomTrackers": "Tvoje vlastní sledované hodnoty",
     "categoryMoodMind": "Nálada a mysl",
     "categoryBodyHealth": "Tělo a zdraví",
@@ -333,7 +342,10 @@
     "pairFirstPlaceholder": "Systolický tlak",
     "pairSecondPlaceholder": "Diastolický tlak",
     "pairUnit": "Jednotka (volitelné)",
-    "pairWaiting": "Uloží se, jakmile zadáš první číslo."
+    "pairWaiting": "Uloží se, jakmile zadáš první číslo.",
+    "nameMissing": "Pojmenuj sledovanou hodnotu.",
+    "counterLimit": "Limit (volitelné)",
+    "counterHelp": "Sčítá tvá použití napříč dny. Nastav limit, třeba 30 u žiletky, a když ho dosáhneš, začni znovu."
   },
   "factors": {
     "prompt": "Co patřilo k tvému dni?",
@@ -424,5 +436,6 @@
   "flow": {
     "finish": "Dokončit",
     "step": "Sledovaná hodnota {{n}} z {{total}}"
-  }
+  },
+  "showEveryDay": "Zobrazit každý den s touto hodnotou"
 }

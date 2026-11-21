@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "sa",
+    "minutesSuffix": "dk",
+    "hoursMinutes": "{{h}}sa {{m}}dk",
     "bpm": "atım/dk",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -142,6 +144,7 @@
     "takenCount_one": "{{count}} alındı",
     "takenCount_other": "{{count}} alındı",
     "namePlaceholder": "İlaç adı",
+    "nameMissing": "İlaca bir ad verin.",
     "dosagePlaceholder": "Doz (örn. 50mg)",
     "editMedication": "İlacı düzenle",
     "removeMedication": "İlacı kaldır",
@@ -250,12 +253,18 @@
     "yes": "Evet",
     "no": "Hayır",
     "unknownType": "Bu takip, uygulamanın daha yeni bir sürümünü gerektiriyor.",
+    "counterOf": "/ {{limit}}",
+    "counterToday": "bugün kullanıldı",
+    "counterReached": "{{limit}} sınırına ulaştınız.",
+    "counterStartAgain": "{{name}} için 0'dan yeniden başla",
+    "counterStartAgainConfirm": "Yeniden başlansın mı?",
     "typeLabels": {
       "scale10": "Ölçek (0-10)",
       "scale5": "Ölçek (0-5)",
       "slider100": "Puan (0-100)",
       "number": "Sayı",
       "pair": "İki sayı",
+      "counter": "Sayaç",
       "yesno": "Evet / Hayır"
     }
   },
@@ -271,7 +280,7 @@
     "medicationCard": "İlaç kartı",
     "medicationCardHelp": "Bu cihazda, yalnızca ilaç alınması gereken bir günde \"İlacınızı aldınız mı?\" sorusu.",
     "customHelp": "Kendi adlandırdığınız takipler: bir ölçek, bir sayı ya da evet veya hayır. En fazla {{max}} tane.",
-    "customHelpPair": "Kendi adlandırdığınız takipler: bir ölçek, bir sayı, iki sayı ya da evet veya hayır. En fazla {{max}} tane.",
+    "customHelpPair": "Kendi adlandırdığınız takipler: bir ölçek, bir sayı, iki sayı, bir sayaç ya da evet veya hayır. En fazla {{max}} tane.",
     "yourCustomTrackers": "Özel takipleriniz",
     "categoryMoodMind": "Ruh hali ve zihin",
     "categoryBodyHealth": "Beden ve sağlık",
@@ -312,7 +321,10 @@
     "pairFirstPlaceholder": "Sistolik",
     "pairSecondPlaceholder": "Diyastolik",
     "pairUnit": "Birim (isteğe bağlı)",
-    "pairWaiting": "Birinci sayı girilince kaydedilir."
+    "pairWaiting": "Birinci sayı girilince kaydedilir.",
+    "nameMissing": "Takibe bir ad verin.",
+    "counterLimit": "Sınır (isteğe bağlı)",
+    "counterHelp": "Kullanımlarınızı günler boyunca toplar. Bir jilet için 30 gibi bir sınır belirleyin ve sınıra ulaştığınızda yeniden başlayın."
   },
   "factors": {
     "prompt": "Gününüzün parçası neydi?",
@@ -402,5 +414,6 @@
   "flow": {
     "finish": "Bitir",
     "step": "Takip {{n}} / {{total}}"
-  }
+  },
+  "showEveryDay": "Bunu içeren her günü göster"
 }

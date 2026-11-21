@@ -4,7 +4,7 @@ import { Globe, ShieldCheck, Terminal } from '../icons';
 import { useAuth } from '../auth';
 import { useAccountLogins } from '../accountLogins';
 import { isDemoMode } from '../demo';
-import { pinIsPasscode } from '../pin';
+import { getPinLockoutState, pinIsPasscode } from '../pin';
 import { SecretInput } from '../PasscodeInput';
 import { secretReady } from '../secretKind';
 import { SectionEyebrow, SETTINGS_HELP } from '../settingsUI';
@@ -25,6 +25,7 @@ const DEMO_STATE: ChangeState = {
     { id: 'demo-browser', label: 'Chrome', client: 'browser' },
     { id: 'demo-cli', label: 'privacynotes', client: 'cli' },
   ],
+  signInPasskeys: 0,
   settings: { nonce: null, keyEpoch: 1, plain: null, localRev: 0 },
 };
 
@@ -33,10 +34,12 @@ const PROVIDER = { google: 'Google', apple: 'Apple', github: 'GitHub' } as const
 /** The refusal codes the wizard names; any other reads as "did not change". */
 function failureKey(code: string): string {
   if (code === 'phrase_change_too_many') return 'phraseChange.failedTooMany';
-  if (code === 'phrase_change_settings_moved' || code === 'phrase_change_conflict') return 'phraseChange.failedMoved';
+  if (code === 'phrase_change_settings_moved') return 'phraseChange.failedSettingsMoved';
+  if (code === 'phrase_change_conflict') return 'phraseChange.failedMoved';
   if (code.startsWith('mfa_') || code === 'phrase_change_keep_factor') return 'phraseChange.failedTwoFactor';
   if (code === 'key_ring_incomplete') return 'phraseChange.failedKeyRing';
   if (code === 'biometric_required') return 'phraseChange.failedBiometric';
+  if (code === 'biometric_cannot_bind') return 'phraseChange.failedCannotBind';
   if (code === 'settings_unsynced') return 'phraseChange.failedUnsynced';
   if (code === 'phrase_change_unavailable_now' || code === 'account_unavailable' || code === 'settings_unavailable') return 'phraseChange.failedOffline';
   return 'phraseChange.failed';
@@ -82,6 +85,9 @@ export function PhraseChangeWizard({ words, reason, onClose, onOpenTwoFactor }: 
   const prepared = useRef<PreparedChange | null>(null);
   const sent = useRef(false);
   const attempted = useRef(false);
+  // The last refusal was "the settings moved": the person's retry then
+  // replaces them (signed in the change, #181 item 1). Never set otherwise.
+  const settingsMoved = useRef(false);
   const alive = useRef(true);
   const check = usePhraseCheck(newPhrase);
 
@@ -175,6 +181,7 @@ export function PhraseChangeWizard({ words, reason, onClose, onOpenTwoFactor }: 
         phrase: newPhrase,
         pin: needsPin ? pin : undefined,
         biometric: { reason: t('phraseChange.titleChange'), cancelLabel: t('common:actions.cancel') },
+        replaceSettings: settingsMoved.current,
       });
       prepared.current = made;
       if (!alive.current) return;
@@ -200,9 +207,13 @@ export function PhraseChangeWizard({ words, reason, onClose, onOpenTwoFactor }: 
     // A refusal sends nothing more under this preparation: the retry
     // prepares again (sendChange also zeroed its new private key).
     discardUnsent();
-    if (code === 'pin_wrong' || code === 'pin_required') {
+    settingsMoved.current = code === 'phrase_change_settings_moved';
+    if (code === 'pin_wrong' || code === 'pin_required' || code === 'pin_locked') {
       setPin('');
-      setPinError(kind === 'passcode' ? t('pinTab.incorrectPasscode') : t('pinTab.incorrectPin'));
+      const lockout = getPinLockoutState();
+      setPinError(lockout.locked
+        ? t('lockScreen.tooManyAttempts', { seconds: lockout.secondsLeft })
+        : kind === 'passcode' ? t('pinTab.incorrectPasscode') : t('pinTab.incorrectPin'));
       setStep('pin');
       return;
     }
@@ -296,6 +307,7 @@ export function PhraseChangeWizard({ words, reason, onClose, onOpenTwoFactor }: 
             <p className={SETTINGS_HELP}>{t('phraseChange.connectionsHelp')}</p>
           </div>
         )}
+        {state.signInPasskeys > 0 && <Callout tone="warning">{t('phraseChange.signInPasskeysReset', { count: state.signInPasskeys })}</Callout>}
         {reason === 'leak' && state.factors.length === 0 && <Callout tone="info">{t('phraseChange.leakTwoFactor')}</Callout>}
       </div>
     );

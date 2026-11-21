@@ -1,0 +1,40 @@
+{
+  // The test suite (tests/ at the repo root), checked with the app's own
+  // settings. Run by `pnpm typecheck:tests` (tools/check-test-types.mjs), which
+  // reports only the errors in tests/: the app files a test imports keep their
+  // own checks. It lives here, not in tests/, so `vite/client` and the web
+  // package's dependencies resolve, and so vitest's esbuild transform never
+  // picks it up as the nearest tsconfig of a test file.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // A test imports a few tools/*.mjs checks; their types are inferred.
+    "allowJs": true,
+    // tests/setup/importLog.ts imports i18next's ESM build by path, a .js file
+    // with no declaration beside it; this infers its type from that file.
+    "maxNodeModuleJsDepth": 1,
+    // vitest.config.mts resolves these for the runner; the same targets here.
+    // @notes/shared is its source, as vitest reads it, so no build is needed
+    // first and a stale dist cannot hide an error.
+    "paths": {
+      "@notes/shared": ["../shared/src/index.ts"],
+      "@notes/shared/extension": ["../shared/src/extension.ts"],
+      "@notes/shared/inbox-signed": ["../shared/src/inboxSigned.ts"],
+      "@notes/shared/minisign": ["../shared/src/minisign.ts"],
+      "@notes/clipper": ["../clipper/src/index.ts"],
+      "@web/*": ["./src/*"],
+      "@noble/*": ["../shared/node_modules/@noble/*"],
+      "@scure/*": ["../shared/node_modules/@scure/*"],
+      "@tiptap/*": ["./node_modules/@tiptap/*"],
+      "react": ["./node_modules/@types/react"],
+      "react/*": ["./node_modules/@types/react/*"],
+      "react-dom": ["./node_modules/@types/react-dom"],
+      "react-dom/*": ["./node_modules/@types/react-dom/*"],
+      "jszip": ["./node_modules/jszip"],
+      "dompurify": ["./node_modules/dompurify"],
+      "tiptap-markdown": ["./node_modules/tiptap-markdown"],
+      "i18next": ["./node_modules/i18next"],
+      "vite": ["./node_modules/vite/dist/node/index.d.ts"]
+    }
+  },
+  "include": ["src/**/*.d.ts", "../../tests/**/*.ts"]
+}

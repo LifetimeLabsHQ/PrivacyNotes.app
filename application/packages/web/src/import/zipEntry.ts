@@ -23,6 +23,17 @@
  *
  * The UpNote snapshot is compressed twice, a gzip member inside the zip, and
  * the inner layer declares no size, so it is counted the same way.
+ *
+ * A bound per entry does not bound the file: a backup zip of under 100 KB
+ * held a few hundred entries that each stayed under it and together came to
+ * 48 MiB of note bodies (beta #155 part 2). So each import also carries one
+ * `ImportBudget` across the whole file. `openZip` gives every entry of a zip
+ * the same budget and refuses a zip that lists more than `IMPORT_ENTRY_LIMIT`
+ * entries; every text read of those entries spends from it, and the import
+ * stops once it passes `IMPORT_TEXT_LIMIT`. Pictures and files keep their own
+ * bound per file and do not spend from it, because a journal export with
+ * years of photos is real and is read one file at a time; an importer that
+ * holds every file at once (KeePass XML) spends its own budget for them.
  */
 
 import type JSZip from 'jszip';
@@ -30,10 +41,19 @@ import { perFileLimit } from '../attachmentValidation';
 import { formatBytes } from '../formatBytes';
 import i18n from '../i18n';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:zipEntry.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:zipEntry.${key}`, options);
 
 /** The most text one zip entry may expand to before the import refuses it. */
 const ZIP_TEXT_ENTRY_LIMIT = 256 * 1024 * 1024;
+
+/**
+ * The most text one import may read across the whole file, and the most
+ * entries one zip may list. Both sit far above any real export: the largest
+ * real backups in the importer lab hold a few tens of MB of text in a few
+ * tens of thousands of entries. They bound a crafted file, not a person's.
+ */
+const IMPORT_TEXT_LIMIT = 1024 * 1024 * 1024;
+export const IMPORT_ENTRY_LIMIT = 500_000;
 
 /** The chunked read jszip's own `async()` is built on; absent from its typings. */
 type EntryStream = {
@@ -62,6 +82,37 @@ export class ImportFileError extends Error {
 /** Thrown before or during an inflation that would exceed the limit; an importer must not swallow it. */
 export class ImportTooLargeError extends Error {}
 
+/** The whole file is past its budget. Never a skip: the import stops. */
+export class ImportBudgetError extends ImportTooLargeError {}
+
+/** What one import may read across the whole file (see the header). */
+export class ImportBudget {
+  private spent = 0;
+  constructor(private readonly limit = IMPORT_TEXT_LIMIT) {}
+
+  /** Counts `bytes` read; throws once the total passes the limit. */
+  spend(bytes: number): void {
+    this.spent += bytes;
+    if (this.spent > this.limit) throw new ImportBudgetError(msg('importTooLarge', { limit: formatBytes(this.limit) }));
+  }
+}
+
+/** The budget `openZip` gave each entry of the zip it opened. */
+const entryBudgets = new WeakMap<JSZip.JSZipObject, ImportBudget>();
+
+/** One budget for every entry of `zip`, refused past `IMPORT_ENTRY_LIMIT` entries. */
+export function budgetZip(zip: JSZip, budget = new ImportBudget()): JSZip {
+  const entries = Object.values(zip.files);
+  refuseEntryCount(entries.length);
+  for (const entry of entries) entryBudgets.set(entry, budget);
+  return zip;
+}
+
+/** Refuses a zip that lists more entries than any real export. */
+export function refuseEntryCount(count: number): void {
+  if (count > IMPORT_ENTRY_LIMIT) throw new ImportBudgetError(msg('tooManyEntries', { max: IMPORT_ENTRY_LIMIT }));
+}
+
 function tooLarge(name: string, limit: number, size?: number): ImportTooLargeError {
   return new ImportTooLargeError(
     size === undefined
@@ -81,7 +132,7 @@ function refuseOverLimit(entry: JSZip.JSZipObject, limit: number): void {
  * block; the block in flight still arrives and is dropped, so the overshoot
  * is bounded by what one compressed block can expand to.
  */
-function inflateBounded(entry: JSZip.JSZipObject, limit: number): Promise<Uint8Array<ArrayBuffer>> {
+function inflateBounded(entry: JSZip.JSZipObject, limit: number, budget?: ImportBudget): Promise<Uint8Array<ArrayBuffer>> {
   refuseOverLimit(entry, limit);
   return new Promise((resolve, reject) => {
     const chunks: Uint8Array[] = [];
@@ -96,6 +147,14 @@ function inflateBounded(entry: JSZip.JSZipObject, limit: number): Promise<Uint8A
           settled = true;
           stream.pause();
           reject(tooLarge(entry.name, limit));
+          return;
+        }
+        try {
+          budget?.spend(chunk.byteLength);
+        } catch (err) {
+          settled = true;
+          stream.pause();
+          reject(err);
           return;
         }
         chunks.push(chunk);
@@ -123,7 +182,7 @@ function inflateBounded(entry: JSZip.JSZipObject, limit: number): Promise<Uint8A
 /** The text of one entry, refused when it declares or produces more than `limit`. */
 export async function zipEntryText(entry: JSZip.JSZipObject, limit = ZIP_TEXT_ENTRY_LIMIT): Promise<string> {
   // A byte-order mark stays in the text, which is how jszip's own decoder reads it.
-  return new TextDecoder('utf-8', { ignoreBOM: true }).decode(await inflateBounded(entry, limit));
+  return new TextDecoder('utf-8', { ignoreBOM: true }).decode(await inflateBounded(entry, limit, entryBudgets.get(entry)));
 }
 
 /**
@@ -131,7 +190,7 @@ export async function zipEntryText(entry: JSZip.JSZipObject, limit = ZIP_TEXT_EN
  * member, a zip inside the zip), bounded the same way.
  */
 export async function zipEntryBytes(entry: JSZip.JSZipObject, limit = ZIP_TEXT_ENTRY_LIMIT): Promise<Uint8Array<ArrayBuffer>> {
-  return inflateBounded(entry, limit);
+  return inflateBounded(entry, limit, entryBudgets.get(entry));
 }
 
 /** The largest picture or file an import reads; nothing past it can upload on any plan. */
@@ -145,7 +204,7 @@ export async function zipEntryMedia(entry: JSZip.JSZipObject): Promise<Uint8Arra
   try {
     return await inflateBounded(entry, mediaEntryLimit());
   } catch (err) {
-    if (err instanceof ImportTooLargeError) return null;
+    if (err instanceof ImportTooLargeError && !(err instanceof ImportBudgetError)) return null;
     throw err;
   }
 }
@@ -175,12 +234,14 @@ export async function gunzipText(
 /**
  * The bytes of one gzip-compressed picture or file (a KeePass attachment), or
  * null when it produces more than the largest upload, as `zipEntryMedia`.
+ * With a `budget`, every byte it produces spends from it, and a spent budget
+ * throws instead of skipping.
  */
-export async function gunzipMedia(data: Uint8Array<ArrayBuffer>, name: string): Promise<Uint8Array<ArrayBuffer> | null> {
+export async function gunzipMedia(data: Uint8Array<ArrayBuffer>, name: string, budget?: ImportBudget): Promise<Uint8Array<ArrayBuffer> | null> {
   try {
-    return await gunzipBounded(data, name, mediaEntryLimit());
+    return await gunzipBounded(data, name, mediaEntryLimit(), budget);
   } catch (err) {
-    if (err instanceof ImportTooLargeError) return null;
+    if (err instanceof ImportTooLargeError && !(err instanceof ImportBudgetError)) return null;
     throw err;
   }
 }
@@ -190,7 +251,7 @@ export function mediaTooLarge(bytes: number): boolean {
   return bytes > mediaEntryLimit();
 }
 
-async function gunzipBounded(data: Uint8Array<ArrayBuffer>, name: string, limit: number): Promise<Uint8Array<ArrayBuffer>> {
+async function gunzipBounded(data: Uint8Array<ArrayBuffer>, name: string, limit: number, budget?: ImportBudget): Promise<Uint8Array<ArrayBuffer>> {
   const src = new ReadableStream<BufferSource>({
     start(controller) {
       controller.enqueue(data);
@@ -206,6 +267,7 @@ async function gunzipBounded(data: Uint8Array<ArrayBuffer>, name: string, limit:
       if (done) break;
       total += value.byteLength;
       if (total > limit) throw tooLarge(name, limit);
+      budget?.spend(value.byteLength);
       chunks.push(value);
     }
   } finally {

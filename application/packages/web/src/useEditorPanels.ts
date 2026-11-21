@@ -27,6 +27,46 @@ const EDITOR_TOP_PAD_PX = 16;
 /** Which bar holds the editor's top-right slot. */
 type EditorBar = 'none' | 'find' | 'replace';
 
+/**
+ * The two panels of the top-right corner, the outline and Connections: one
+ * at a time, each remembered on this device. `onOpen` runs when Connections
+ * opens (the formatted editor closes its find bar there; the outline's
+ * callers close it themselves). Shared by the formatted editor and the
+ * preview beside the Markdown view (SourcePreviewPane.tsx).
+ */
+export function useCornerPanels(onOpen?: () => void) {
+  const [outlineOpen, setOutlineOpenRaw] = useState(readOutlinePref);
+  const [connectionsOpen, setConnectionsOpenRaw] = useState(() => !readOutlinePref() && readConnectionsPref());
+  const onOpenRef = useRef(onOpen);
+  onOpenRef.current = onOpen;
+  const setOutlineOpen = useCallback((next: boolean | ((v: boolean) => boolean)) => {
+    setOutlineOpenRaw((v) => {
+      const open = typeof next === 'function' ? next(v) : next;
+      if (open) setConnectionsOpenRaw(false);
+      return open;
+    });
+  }, []);
+  const setConnectionsOpen = useCallback((open: boolean) => {
+    setConnectionsOpenRaw(open);
+    if (open) {
+      setOutlineOpenRaw(false);
+      onOpenRef.current?.();
+    }
+  }, []);
+  const closePanels = useCallback(() => {
+    setOutlineOpenRaw(false);
+    setConnectionsOpenRaw(false);
+  }, []);
+  // Persist the open/closed choices.
+  useEffect(() => {
+    writeOutlinePref(outlineOpen);
+  }, [outlineOpen]);
+  useEffect(() => {
+    writeConnectionsPref(connectionsOpen);
+  }, [connectionsOpen]);
+  return { outlineOpen, setOutlineOpen, connectionsOpen, setConnectionsOpen, closePanels };
+}
+
 export function useEditorPanels({
   rootRef,
   editorRef,
@@ -36,6 +76,7 @@ export function useEditorPanels({
   toolbarVisible,
   isPro,
   onOpenUpgrade,
+  idle = false,
 }: {
   rootRef: RefObject<HTMLDivElement | null>;
   editorRef: RefObject<TipTapEditor | null>;
@@ -47,6 +88,10 @@ export function useEditorPanels({
   isPro: boolean;
   /** Opens the upgrade modal when a free account asks for replace. */
   onOpenUpgrade?: (trigger: 'replace') => void;
+  /** The other side of two items side by side: its bars stay, but it takes
+   *  no keys and registers no commands, so they reach the focused side only.
+   *  Spec: docs/internal/plans/side-by-side-notes.md (section 6) */
+  idle?: boolean;
 }) {
   // The find bar (Cmd/Ctrl+F) and the replace bar (Option/Alt+Cmd/Ctrl+F).
   // One value rather than two flags: the bars share the slot and the
@@ -63,24 +108,9 @@ export function useEditorPanels({
   const [swapTerm, setSwapTerm] = useState('');
   // Document outline panel. Opened via the top-right toggle or Cmd/Ctrl+Shift+O;
   // shares the top-right slot with the find bar, so only one is open at a time.
-  const [outlineOpen, setOutlineOpenRaw] = useState(readOutlinePref);
-  // The Connections panel (backlinks) is the slot's third panel. One panel
-  // at a time: opening any of the three closes the other two.
-  const [connectionsOpen, setConnectionsOpenRaw] = useState(() => !readOutlinePref() && readConnectionsPref());
-  const setOutlineOpen = useCallback((next: boolean | ((v: boolean) => boolean)) => {
-    setOutlineOpenRaw((v) => {
-      const open = typeof next === 'function' ? next(v) : next;
-      if (open) setConnectionsOpenRaw(false);
-      return open;
-    });
-  }, []);
-  const setConnectionsOpen = useCallback((open: boolean) => {
-    setConnectionsOpenRaw(open);
-    if (open) {
-      setOutlineOpenRaw(false);
-      setBar('none');
-    }
-  }, []);
+  // The Connections panel opens there too, and closes the bar.
+  const { outlineOpen, setOutlineOpen, connectionsOpen, setConnectionsOpen, closePanels } =
+    useCornerPanels(useCallback(() => setBar('none'), []));
   // The row of corner pills (find, the outline), measured so the note's
   // first lines wrap beside it instead of under it. The footprint is the
   // collapsed row whether the outline is open or not: the open panel covers
@@ -137,9 +167,8 @@ export function useEditorPanels({
     setSwapTerm(term);
     setBar('find');
     setBarFocusTick((t) => t + 1);
-    setOutlineOpen(false);
-    setConnectionsOpenRaw(false);
-  }, [setOutlineOpen]);
+    closePanels();
+  }, [closePanels]);
 
   /**
    * Open the find bar on a word the list search matched in this note, so the
@@ -151,9 +180,8 @@ export function useEditorPanels({
   const openFindWith = useCallback((term: string) => {
     setFindSeed((s) => ({ term, tick: (s?.tick ?? 0) + 1 }));
     setBar('find');
-    setOutlineOpen(false);
-    setConnectionsOpenRaw(false);
-  }, [setOutlineOpen]);
+    closePanels();
+  }, [closePanels]);
 
   /** Mirror of `findSeed` for closeSeededFind, which fires from an effect in
    *  NotesView and must not re-subscribe on every seed. */
@@ -188,9 +216,8 @@ export function useEditorPanels({
     setSwapTerm(term);
     setBar('replace');
     setBarFocusTick((t) => t + 1);
-    setOutlineOpen(false);
-    setConnectionsOpenRaw(false);
-  }, [readOnly, isPro, onOpenUpgrade, setOutlineOpen]);
+    closePanels();
+  }, [readOnly, isPro, onOpenUpgrade, closePanels]);
 
   // Turning read-only on under an open replace bar closes it. The find bar
   // stays: finding is reading, and a read-only note keeps it.
@@ -227,7 +254,7 @@ export function useEditorPanels({
   // mode offers a command only while it is registered, so a read-only note,
   // which refuses replace, does not offer it.
   useEffect(() => {
-    if (preview) return;
+    if (preview || idle) return;
     const off = [
       registerEditorCommand('find', toggleFind),
       ...(readOnly ? [] : [registerEditorCommand('findReplace', toggleReplace)]),
@@ -239,19 +266,19 @@ export function useEditorPanels({
       ),
     ];
     return () => off.forEach((f) => f());
-  }, [preview, readOnly, toggleFind, toggleReplace]);
+  }, [preview, idle, readOnly, toggleFind, toggleReplace]);
 
   // The date inserts, while the note can be edited. The Markdown source view
   // registers its own (MarkdownSourceEditor.tsx), since this editor is not
   // mounted there.
   useEffect(() => {
-    if (preview || readOnly || !editor) return;
+    if (preview || idle || readOnly || !editor) return;
     const off = [
       registerEditorCommand('insertDate', () => insertDateText(editor, 'date')),
       registerEditorCommand('insertDateTime', () => insertDateText(editor, 'dateTime')),
     ];
     return () => off.forEach((f) => f());
-  }, [preview, readOnly, editor]);
+  }, [preview, idle, readOnly, editor]);
 
   // Cmd/Ctrl+F opens find, Option/Alt+Cmd/Ctrl+F opens replace, and
   // Cmd/Ctrl+Shift+O toggles the outline. One document-level capture listener
@@ -260,7 +287,7 @@ export function useEditorPanels({
   // in some other input/textarea (e.g. the note-list search) so we don't hijack
   // their shortcuts; our own UI lives inside rootRef so it still counts.
   useEffect(() => {
-    if (preview) return;
+    if (preview || idle) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (isImeComposing(e)) return;
       const root = rootRef.current;
@@ -356,15 +383,8 @@ export function useEditorPanels({
     };
     document.addEventListener('keydown', onKeyDown, true);
     return () => document.removeEventListener('keydown', onKeyDown, true);
-  }, [preview, toggleFind, toggleReplace]);
+  }, [preview, idle, toggleFind, toggleReplace]);
 
-  // Persist the outline open/closed choice.
-  useEffect(() => {
-    writeOutlinePref(outlineOpen);
-  }, [outlineOpen]);
-  useEffect(() => {
-    writeConnectionsPref(connectionsOpen);
-  }, [connectionsOpen]);
 
   // The pill row's footprint becomes a top-right spacer (see
   // .ProseMirror::before), so the first line wraps beside it. The spacer

@@ -1,0 +1,15 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "apple-ml",
+  "description": "Apple's on-device engines for Settings > Plugins (plugins/apple-ml): Vision reads the text of a picture, VisionKit's document camera scans a page on iOS, and SpeechAnalyzer turns a recording into text (speech_install has the OS download a language's model from Apple). All of them take and give bytes in memory, never a file. The page calls them: a Web Worker has no Tauri IPC. macOS and iOS only; every other platform's app has no such plugin. Spec: docs/internal/plans/plugins.md (section 6.7).",
+  "platforms": [
+    "macOS",
+    "iOS"
+  ],
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "apple-ml:default"
+  ]
+}

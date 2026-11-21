@@ -1,11 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { pairText, type CustomTrackerTemplate, type CustomTrackerType, type JournalTrackerData } from '../trackerTypes';
-import { useLastLogged } from '../trackerLastLogged';
+import { COUNTER_DAY_MAX, pairText, type CustomTrackerEntry, type CustomTrackerTemplate, type CustomTrackerType, type JournalTrackerData } from '../trackerTypes';
+import { useLastLogged, useTrackerHistory } from '../trackerLastLogged';
+import { counterSetDay, counterStartAgain, counterText, counterTotal } from '../customCounter';
+import { toLocalIso } from '../localDate';
+import { ArrowCounterClockwise } from '../icons';
+import { DeleteButton, ProgressBar } from '../ui';
 import { PillShell } from './PillShell';
 import { CustomTrackerGlyph } from './CustomTrackerGlyph';
 import { ScaleTiles } from '../MoodScale';
-import { ChoiceGrid, NumberStepper, PanelQuestion } from './panelUI';
+import { ChoiceGrid, NumberStepper, PanelQuestion, ReadingPair } from './panelUI';
 
 // Spec: docs/internal/design-decisions.md (number tracker bounds - prevents scientific-notation display)
 const MAX_NUMBER = 1e12;
@@ -32,12 +36,21 @@ export function CustomPill({
   onToggle,
   onChange,
   onPairChange,
+  entry,
+  day,
+  onEntryChange,
   readOnly,
 }: {
   template: CustomTrackerTemplate;
   value?: number | boolean | string;
   /** A `pair`: the second number. */
   value2?: number;
+  /** A `counter`: the day's whole entry, and the day it belongs to (today
+   *  when absent). */
+  entry?: CustomTrackerEntry;
+  day?: string;
+  /** A `counter`: the day's new entry; `undefined` removes it. */
+  onEntryChange?: (e: CustomTrackerEntry | undefined) => void;
   expanded: boolean;
   onToggle: () => void;
   /** `undefined` removes the value. */
@@ -53,6 +66,9 @@ export function CustomPill({
   };
   const last = useLastLogged(readOwn);
   const last2 = useLastLogged((d) => d.customTrackers?.find((e) => e.trackerId === template.id)?.value2);
+  const history = useTrackerHistory();
+  const counterDay = day ?? toLocalIso(new Date());
+  const total = template.type === 'counter' ? counterTotal(template.id, history, counterDay, entry) : 0;
 
   const filledLabel = useMemo(() => {
     if (value == null) return undefined;
@@ -60,8 +76,9 @@ export function CustomPill({
     if (template.type === 'slider100') return `${value}`;
     if (template.type === 'number') return `${value}`;
     if (template.type === 'pair') return typeof value === 'number' ? pairText(value, value2, template.unit) : `${value}`;
+    if (template.type === 'counter') return counterText(total, template.limit);
     return `${value}/${template.type === 'scale5' ? 5 : 10}`;
-  }, [value, value2, template.type, template.unit, t]);
+  }, [value, value2, template.type, template.unit, template.limit, total, t]);
   const num = typeof value === 'number' ? value : null;
 
   return (
@@ -74,8 +91,20 @@ export function CustomPill({
       icon={<CustomTrackerGlyph icon={template.icon} />}
       readOnly={readOnly}
     >
-      <div className="max-w-[420px]">
-        {template.type === 'pair' ? (
+      {/* A pair sets its own width: its two numbers sit side by side where they fit. */}
+      <div className={template.type === 'pair' ? undefined : 'max-w-[420px]'}>
+        {template.type === 'counter' ? (<>
+          <PanelQuestion>{template.name}</PanelQuestion>
+          <CounterInput
+            name={template.name}
+            total={total}
+            limit={template.limit}
+            uses={typeof entry?.value === 'number' ? entry.value : undefined}
+            onUses={(n) => onEntryChange?.(counterSetDay(template.id, entry, n))}
+            onStartAgain={() => onEntryChange?.(counterStartAgain(template.id, entry))}
+            expanded={expanded}
+          />
+        </>) : template.type === 'pair' ? (
           <PairInput
             labels={template.pairLabels}
             unit={template.unit}
@@ -194,7 +223,7 @@ export function PairInput({ labels, unit, value, value2, onChange, expanded, sta
   const first = labels?.[0]?.trim() || t('config.pairFirst');
   const second = labels?.[1]?.trim() || t('config.pairSecond');
   return (
-    <div className="flex flex-col gap-4">
+    <ReadingPair>
       <div>
         <PanelQuestion>{first}</PanelQuestion>
         <NumberStepper
@@ -233,6 +262,62 @@ export function PairInput({ labels, unit, value, value2, onChange, expanded, sta
           <p className="mt-1.5 text-small text-pn-muted">{t('config.pairWaiting')}</p>
         )}
       </div>
+    </ReadingPair>
+  );
+}
+
+/**
+ * A `counter` tracker's input (GitHub #812): the total so far against the
+ * limit, with a bar, the day's uses as a stepper ("3 today"), and Start
+ * again, a two-step button, for a new blade or a new pack. The pill and the
+ * setup's preview both draw it.
+ * Spec: docs/internal/mood-wellness-tracker.md section 16.1 (Counter)
+ */
+export function CounterInput({ name, total, limit, uses, onUses, onStartAgain, expanded }: {
+  name: string;
+  /** The uses that count, this day's included. */
+  total: number;
+  limit?: number;
+  /** The day's uses; undefined while the day has none. */
+  uses: number | undefined;
+  onUses: (n: number) => void;
+  onStartAgain: () => void;
+  expanded: boolean;
+}) {
+  const { t } = useTranslation('trackers');
+  const reached = limit !== undefined && total >= limit;
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <p className="flex-1 min-w-0 text-compact text-pn-soft tabular-nums" aria-live="polite">
+          <span className="text-heading font-semibold text-pn">{total}</span>
+          {limit !== undefined && <span>{' '}{t('custom.counterOf', { limit })}</span>}
+        </p>
+        <DeleteButton
+          kind="remove"
+          icon={ArrowCounterClockwise}
+          label={t('custom.counterStartAgain', { name })}
+          confirmLabel={t('custom.counterStartAgainConfirm')}
+          onConfirm={onStartAgain}
+          position="above-end"
+        />
+      </div>
+      {limit !== undefined && <ProgressBar value={total / limit} label={name} tone={reached ? 'warning' : 'info'} />}
+      <NumberStepper
+        value={uses ?? null}
+        onChange={(n) => onUses(n)}
+        onClear={() => onUses(0)}
+        min={0}
+        max={COUNTER_DAY_MAX}
+        step={1}
+        start={0}
+        unit={t('custom.counterToday')}
+        placeholder="0"
+        expanded={expanded}
+      />
+      {/* Under the stepper, so the line coming in never moves the plus
+          button away from a finger that taps it again. */}
+      {reached && <p className="text-small text-warning">{t('custom.counterReached', { limit })}</p>}
     </div>
   );
 }

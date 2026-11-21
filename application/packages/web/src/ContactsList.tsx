@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ItemList, useContextTarget, useItemList } from './itemList';
 import type { LocalNote } from './db';
@@ -11,6 +11,7 @@ import { ListSearchInput } from './ListSearchInput';
 import { ListPrefsPopover } from './ListPrefsPopover';
 import { ActiveFilterEntry, ActiveSearchEntry, FilteredEmpty, ListFilterChips } from './ListFilterChips';
 import { SelectionToolbar } from './SelectionToolbar';
+import type { ContextMenuItem } from './ContextMenu';
 import { SelectionCountStrip } from './SelectionCountStrip';
 import { HoverLabel } from './HoverLabel';
 import { ImportPromptEntry, importPromptFor, type ImportOffer } from './ImportPrompt';
@@ -72,6 +73,7 @@ export function ContactsList({
   onBulkTrash,
   foldersUnlocked,
   allTags,
+  selectionMore,
   viewMode,
 }: {
   /** The view and space this list draws, so a return lands where it was;
@@ -130,6 +132,8 @@ export function ContactsList({
   onBulkTrash: () => void;
   foldersUnlocked: boolean;
   allTags: [string, number][];
+  /** The selection bar's More menu rows (contextMenus buildSelectionMore). */
+  selectionMore?: () => ContextMenuItem[];
   /** List rows or the shared NoteCard grid - the vault's exact pair. */
   viewMode: 'list' | 'grid';
 }) {
@@ -154,6 +158,13 @@ export function ContactsList({
 
   const showSearchEntry = !!q && contacts.length === 0 && !selectionMode;
   const list = useItemList([search, activeFolderName, activeTag], contacts.length, place);
+  // Draw the list down to the open contact, as NotesList does: a contact
+  // opened from outside the list (a note-link, Ninja's random item) can sit
+  // past the revealed slice, and its row would not exist to scroll to.
+  const { ensure } = list.reveal;
+  useEffect(() => {
+    if (selectedId) ensure(contacts.findIndex((n) => n.id === selectedId));
+  }, [contacts, selectedId, ensure]);
   const showFilterEntry =
     !selectionMode &&
     (activeFolderName !== null || activeTag !== null) &&
@@ -180,6 +191,7 @@ export function ContactsList({
           onRestore={() => {}}
           onDeleteForever={() => {}}
           allTags={allTags}
+          moreItems={selectionMore}
         />
       ) : (
       <div className="shrink-0 h-11 md:h-14 px-4 border-b border-divider flex items-center justify-between gap-3">

@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { THEME_SCRIPT_TAG, THEME_TOGGLE_CSS, themeVarsCss, WASHI_DARK, WASHI_LIGHT } from './static-page-theme.ts';
+import { STATIC_TIP_CSS } from './src/staticTip.ts';
 import { SEARCH_CORE_SCRIPT_TAG } from './search-core-script.ts';
 import { foldText } from './src/textFold.ts';
 import { loadShots, type Shot } from './changelog-shots.ts';
@@ -54,7 +55,7 @@ const MD_PATH = '/changelog.md';
 // Spec: docs/internal/design/ui-patterns.md section 58 (changelog rail + reveal)
 const PAGE_SIZE = 25;
 
-type ChangelogItem = { type: 'new' | 'improved' | 'fixed'; text: string; shot?: string | string[] };
+type ChangelogItem = { type: 'new' | 'improved' | 'fixed'; text: string; shot?: string | string[]; link?: { phrase: string; href: string } };
 type ChangelogRelease = {
   version: string;
   date: string;
@@ -108,9 +109,16 @@ const PAST_LABELS = {
   ui: ['Your Phrase', 'Text and layout'],
 };
 
-function itemHtml(text: string, vocab: ReturnType<typeof loadPathVocab>): string {
+function itemHtml(item: ChangelogItem, vocab: ReturnType<typeof loadPathVocab>): string {
   const drawn: string[] = [];
-  return restorePaths(esc(markPaths(text, vocab, 'en', drawn)), drawn);
+  return withLink(restorePaths(esc(markPaths(item.text, vocab, 'en', drawn)), drawn), item);
+}
+
+/** The item's `link` phrase, already escaped in `html`, as an outside link. */
+function withLink(html: string, item: ChangelogItem): string {
+  if (!item.link) return html;
+  const phrase = esc(item.link.phrase);
+  return html.replace(phrase, `<a href="${esc(item.link.href)}" target="_blank" rel="noopener noreferrer">${phrase}</a>`);
 }
 
 function fmtDate(iso: string): string {
@@ -254,7 +262,7 @@ function renderReleases(releases: ChangelogRelease[], shotMap: ShotMap): string 
           const issues = (it.issues ?? [])
             .map((num) => ` <a class="issuechip" href="${ISSUES_URL}/${num}" target="_blank" rel="noopener noreferrer">#${num}</a>`)
             .join('');
-          return `<li class="item" data-t="${it.type}"${n < 0 ? '' : ' data-shot'}><span class="tag tag-${it.type}">${LABEL[it.type]}</span><span class="txt">${itemHtml(it.text, vocab)}${issues}${chip}</span></li>`;
+          return `<li class="item" data-t="${it.type}"${n < 0 ? '' : ' data-shot'}><span class="tag tag-${it.type}">${LABEL[it.type]}</span><span class="txt">${itemHtml(it, vocab)}${issues}${chip}</span></li>`;
         })
         .join('');
       const gallery = shots.length ? renderGallery(shots) : '';
@@ -268,7 +276,7 @@ function renderReleases(releases: ChangelogRelease[], shotMap: ShotMap): string 
       const latest = index === 0 ? '<span class="latest">Latest</span>' : '';
       return `${monthHead}<article class="release" id="v${esc(r.version)}" data-m="${key}" data-s="${esc(haystack(r))}">
 <div class="meta"><span class="vpill">v${esc(r.version)}</span><div class="date">${fmtDate(r.date)}</div>${latest}</div>
-<div class="body"><div class="rhead"><h3>${esc(r.title)}</h3><button type="button" class="perma" data-v="v${esc(r.version)}" aria-label="Copy link to v${esc(r.version)}" title="Copy link" hidden>${LINK_ICON}</button></div>${gallery}<ul class="items">${items}</ul></div>
+<div class="body"><div class="rhead"><h3>${esc(r.title)}</h3><button type="button" class="perma tip tip-start" data-v="v${esc(r.version)}" aria-label="Copy link to v${esc(r.version)}" data-tip="Copy link" hidden>${LINK_ICON}</button></div>${gallery}<ul class="items">${items}</ul></div>
 </article>`;
     })
     .join('\n');
@@ -366,6 +374,7 @@ ${MENU_PATH_CSS}
 .release:hover .perma,.perma:focus-visible{opacity:1}
 .perma:hover{color:var(--accent)}
 .perma.done{opacity:1;color:var(--new-fg)}
+${STATIC_TIP_CSS}
 .rail-next,.rail-extra{margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}
 .rail-note{margin:0 4px 8px;font-size:var(--fs-compact);line-height:1.5;color:var(--muted)}
 /* The only red control on the site's static pages: it is the only one that
@@ -529,7 +538,7 @@ export function renderMd(releases: ChangelogRelease[], shotMap: ShotMap = new Ma
       const items = r.items
         .map((i, n) => {
           const s = shots.find((x) => x.item === n);
-          return `- ${LABEL[i.type]}: ${i.text}${s ? `\n  Screenshot: ${ORIGIN}${s.src}` : ''}`;
+          return `- ${LABEL[i.type]}: ${i.link ? i.text.replace(i.link.phrase, `[${i.link.phrase}](${i.link.href})`) : i.text}${s ? `\n  Screenshot: ${ORIGIN}${s.src}` : ''}`;
         })
         .join('\n');
       return `## v${r.version} - ${r.title}\nSource: ${ORIGIN}/changelog\nReleased ${r.date}.\n\n${items}`;
@@ -583,7 +592,7 @@ export function renderFeed(releases: ChangelogRelease[], shotMap: ShotMap = new 
       const hero = shotMap.get(r.version)?.[0];
       const img = hero ? `<p><img src="${ORIGIN}${hero.src}" width="${css(hero.w)}" height="${css(hero.h)}" alt="${esc(hero.alt)}"></p>` : '';
       const body = `<h3>${esc(r.title)}</h3>${img}<ul>${r.items
-        .map((i) => `<li><strong>${LABEL[i.type]}</strong> ${esc(i.text)}</li>`)
+        .map((i) => `<li><strong>${LABEL[i.type]}</strong> ${withLink(esc(i.text), i)}</li>`)
         .join('')}</ul>`;
       return `<item>
 <title>${esc(`v${r.version} - ${r.title}`)}</title>

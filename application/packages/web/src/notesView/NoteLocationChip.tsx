@@ -290,7 +290,7 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
       return (
         <>
           <div className="min-h-0 flex-1"><ShownMap place={place} scrollZoom bleed height="100%" /></div>
-          <div className="flex shrink-0 flex-col gap-1.5 px-4 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="flex shrink-0 flex-col gap-1.5 px-4 pt-2 pb-[max(0.75rem,var(--pn-safe-bottom))]">
             {/* On a phone the coordinates take their own line, so the actions stay one row. */}
             <div className="flex flex-wrap items-center gap-1.5">
               <div className="max-sm:w-full">{coordinates}</div>

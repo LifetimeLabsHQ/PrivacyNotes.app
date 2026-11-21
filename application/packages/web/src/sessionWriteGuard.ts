@@ -18,7 +18,7 @@ export function mfaSessionIdentity(session: { access_token?: string; user?: { id
 }
 
 export class MfaCancelledError extends Error {
-  constructor() { super('Two-factor sign-in was cancelled. Your local notes have not been removed.'); this.name = 'MfaCancelledError'; }
+  constructor() { super('Two-factor sign-in was canceled. Your local notes have not been removed.'); this.name = 'MfaCancelledError'; }
 }
 
 const pendingVerifications = new Map<string, number>();

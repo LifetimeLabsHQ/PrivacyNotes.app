@@ -5,13 +5,12 @@ import { normalizeTag } from '../notesRepo';
 import { base64ToBytes } from '@notes/shared';
 import i18n from '../i18n';
 import { mimeFromExt } from './blobImport';
-import { linkifyMarkdown } from './linkify';
-import { gunzipMedia, mediaTooLarge, mediaTooLargeWarning } from './zipEntry';
+import { gunzipMedia, ImportBudget, ImportBudgetError, mediaTooLarge, mediaTooLargeWarning } from './zipEntry';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 // The log lines Bitwarden already has for the same outcome (rule AD).
 import { msg as bw } from './bitwarden';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:keepass.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:keepass.${key}`, options);
 
 /**
  * KeePass XML import: the "KeePass XML (2.x)" file that KeePass 2 writes
@@ -37,6 +36,10 @@ const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`
  * `files` key `importBlobs` rewrites), a secure note's as file links at the
  * end of its body. One past the largest upload, or one whose `Ref` names no
  * binary, stays behind with a line in the log; history stays behind too.
+ * A file that declares a DOCTYPE is refused before it is parsed: no export
+ * writes one, and its entities let a 110 KB file expand to 200 million
+ * characters inside the parser (beta #155 part 2). The attachments, held all
+ * at once, spend from one `ImportBudget` for the file.
  * Spec: docs/internal/plans/password-manager-importers.md (section 3)
  */
 
@@ -58,7 +61,9 @@ export async function parseKeePassXml(file: File, source: 'keepass' | 'keepassxc
   const bytes = new Uint8Array(await file.slice(0, 4).arrayBuffer());
   if (KDBX_MAGIC.every((b, i) => bytes[i] === b)) throw new Error(msg('kdbxFile'));
 
-  const doc = new DOMParser().parseFromString(await file.text(), 'application/xml');
+  const xml = await file.text();
+  if (/<!DOCTYPE/i.test(xml)) throw new Error(msg('doctype'));
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
   const root = doc.documentElement;
   if (!root || root.nodeName !== 'KeePassFile' || doc.getElementsByTagName('parsererror').length > 0) {
     throw new Error(msg('notKeePass'));
@@ -69,6 +74,7 @@ export async function parseKeePassXml(file: File, source: 'keepass' | 'keepassxc
   if (!top) throw new Error(msg('notKeePass'));
 
   const binaries = readBinaries(meta);
+  const budget = new ImportBudget();
 
   onProgress?.(msg('readingEntries'));
   const items: Item[] = [];
@@ -96,7 +102,7 @@ export async function parseKeePassXml(file: File, source: 'keepass' | 'keepassxc
   const files = { missing: 0, tooLarge: 0 };
   for (const it of items) {
     history += it.history;
-    const keys = await attachFiles(it.files, binaries, blobs, files);
+    const keys = await attachFiles(it.files, binaries, blobs, files, budget);
     const s = (k: string) => it.strings.get(k)?.value ?? '';
     const otp = s('otp') || timeOtpUri(it.strings, it.title);
     const urls = [s('URL').trim(), ...[...it.strings.keys()].filter((k) => EXTRA_URL.test(k)).sort().map((k) => s(k).trim())].filter(Boolean);
@@ -117,7 +123,7 @@ export async function parseKeePassXml(file: File, source: 'keepass' | 'keepassxc
       fields += custom.length;
       // `importBlobs` swaps each `[file](KEY)` for the file's own link.
       const links = keys.map((key) => `[file](${key})`);
-      notes.push({ title: it.title, body: [linkifyMarkdown(body), ...links].filter(Boolean).join('\n\n'), tags: it.tags, ...dates, type: 'note' });
+      notes.push({ title: it.title, body: [body, ...links].filter(Boolean).join('\n\n'), tags: it.tags, ...dates, type: 'note' });
       continue;
     }
     logins++;
@@ -165,12 +171,6 @@ export async function parseKeePassXml(file: File, source: 'keepass' | 'keepassxc
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: 0,
-      untaggedNotes: notes.length - tagged,
-      uniqueTags: new Set(notes.flatMap((n) => n.tags)).size,
-    },
     source,
     ...(blobs.size > 0 ? { blobs } : {}),
   } satisfies ParsedImport;
@@ -221,7 +221,7 @@ function readBinaries(meta: Element | null): Map<string, Binary> {
 /** Decoded once per binary: two entries can name the same one. */
 const decoded = new WeakMap<Binary, Promise<Uint8Array<ArrayBuffer> | null | 'bad'>>();
 
-function decode(bin: Binary): Promise<Uint8Array<ArrayBuffer> | null | 'bad'> {
+function decode(bin: Binary, budget: ImportBudget): Promise<Uint8Array<ArrayBuffer> | null | 'bad'> {
   let p = decoded.get(bin);
   if (!p) {
     p = (async () => {
@@ -230,8 +230,10 @@ function decode(bin: Binary): Promise<Uint8Array<ArrayBuffer> | null | 'bad'> {
       if (!bin.compressed && mediaTooLarge(Math.floor(bin.data.length * 3 / 4))) return null;
       try {
         const raw = base64ToBytes(bin.data) as Uint8Array<ArrayBuffer>;
-        return bin.compressed ? await gunzipMedia(raw, 'attachment') : raw;
-      } catch {
+        if (!bin.compressed) budget.spend(raw.byteLength);
+        return bin.compressed ? await gunzipMedia(raw, 'attachment', budget) : raw;
+      } catch (err) {
+        if (err instanceof ImportBudgetError) throw err;
         return 'bad';
       }
     })();
@@ -247,11 +249,12 @@ async function attachFiles(
   binaries: Map<string, Binary>,
   blobs: Map<string, ImportBlob>,
   counts: { missing: number; tooLarge: number },
+  budget: ImportBudget,
 ): Promise<string[]> {
   const keys: string[] = [];
   for (const { name, ref } of list) {
     const bin = binaries.get(ref);
-    const data = bin ? await decode(bin) : 'bad';
+    const data = bin ? await decode(bin, budget) : 'bad';
     if (data === 'bad') { counts.missing++; continue; }
     if (data === null) { counts.tooLarge++; continue; }
     const key = `keepassfile:${blobs.size}`;

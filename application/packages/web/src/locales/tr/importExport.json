@@ -61,7 +61,6 @@
     "import": "İçe aktar",
     "downloading": "İndiriliyor…",
     "subscribe": "Abone ol",
-    "subscribeTitle": "Bir takvime abone ol",
     "subscribeDesc": "Bir takvim adresi yapıştırın; örneğin Google, iCloud, Proton, Outlook veya Nextcloud'dan alınan bir webcal:// bağlantısı. Etkinlikleri takviminizde salt okunur olarak görünür ve uygulama açıkken güncellenir.",
     "subscribed": "Abone olunan takvimler",
     "updating": "Güncelleniyor…",
@@ -78,6 +77,7 @@
       "offline": "Çevrimdışısınız. Bağlanıp yeniden deneyin.",
       "limit": "Kısa sürede çok fazla indirme yapıldı. Bir dakika bekleyip yeniden deneyin.",
       "failed": "Takvim indirilemedi. Adresi kontrol edip yeniden deneyin.",
+      "insecure": "Bu takvime güvenli bir bağlantı üzerinden ulaşılamadı. Adresi kontrol edin veya daha sonra yeniden deneyin.",
       "full": "En fazla {{max}} takvime abone olabilirsiniz. Önce birini kaldırın."
     }
   },
@@ -88,6 +88,8 @@
     "lastpass": "LastPass'te Advanced options > Export > Export data for use anywhere seçeneğini seçin. Giriş bilgileri 2FA anahtarlarını korur, güvenli notlar ve kartlar da gelir, klasörler etiket olur.",
     "onePassword": "1Password uygulamasında File > Export seçeneğini seçin, hesabınızı ve 1PUX biçimini seçin. Giriş bilgileri 2FA anahtarlarını, ek web sitelerini ve özel alanlarını korur, kartlar, notlar ve kimlikler de gelir, etiketler etiket olarak kalır, favoriler ve arşivlenmiş öğeler de yerlerini korur. CSV dışa aktarımı da çalışır, ancak yalnızca giriş bilgileriyle.",
     "dashlane": "Dashlane'de Settings > Export data seçeneğini ve CSV biçimini seçin. Giriş bilgileri 2FA anahtarlarını korur, güvenli notlar ve kartlar da gelir, kategoriler etiket olur. .dash dışa aktarımı bir parolayla kilitlidir ve okunamaz.",
+    "msecure": "mSecure'da Settings > Backups > Export records to CSV file seçeneğini seçin. Giriş bilgileri 2FA anahtarlarını, ek web sitelerini ve özel alanlarını korur, kartlar ve notlar da gelir, etiketler etiket olarak kalır.",
+    "raindrop": "Raindrop.io'da All bookmarks'ı açın ve Export > Get backup seçeneğini seçin, ardından Settings > Backups altındaki CSV dosyasını indirin. Koleksiyonlar klasör olur, etiketler etiket olarak kalır ve her yer imi notunu, özetini ve vurgularını korur.",
     "enpass": "Enpass'te File > Export seçeneğini ve .json biçimini seçin. Giriş bilgileri 2FA anahtarlarını, ek web sitelerini ve özel alanlarını korur, kartlar, notlar ve kimlikler de gelir, klasörler etiket olur, favoriler ve arşivlenmiş öğeler de yerlerini korur. Çöp kutusundaki öğeler aktarılmaz.",
     "nordpass": "NordPass'te Settings > Export items seçeneğini seçin. Giriş bilgileri ek web sitelerini ve özel alanlarını korur, notlar, kartlar ve kimlikler de gelir, klasörler etiket olur.",
     "protonPass": "Proton Pass'te Settings > Export seçeneğini seçin ve ZIP'i seçin. Giriş bilgileri 2FA anahtarlarını, ek web sitelerini, özel alanlarını ve tarihlerini korur, notlar, kartlar ve kimlikler de gelir. CSV dışa aktarımı da çalışır, ancak daha az bilgi içerir.",
@@ -109,13 +111,15 @@
     "bear": "Bear'da File > Backup Notes... seçeneğini seçin ve .bear2bk dosyasını buraya bırakın. Etiketler ve iç içe etiketler, sabitlemeler, arşiv, çöp kutusu, renkleriyle vurgular, not bağlantıları ve ekler de gelir.",
     "joplin": "File > Export all > \"JEX - Joplin Export File\" ile alınan .jex dosyası. Not defterleri klasöre dönüşür; etiketler, yapılacaklar, not bağlantıları ve ekler de gelir.",
     "anytype": "Space settings > Export ile alınan, dosyaları ve arşivlenmiş nesneleri içeren Any-Block v1 JSON .zip dosyası. Koleksiyonlar klasöre dönüşür; etiketler, görevler, bilgi kutuları, katlanır bölümler, tablolar, not bağlantıları ve dosyalar da gelir.",
+    "capacities": "Capacities'ten Settings > Full Export > Manual Full Export ile, medya dahil alınan .zip dosyası. Nesne türleri klasöre dönüşür; etiketler, özellikler, tarihler, nesneler arası bağlantılar, tablolar, görseller ve dosyalar da gelir.",
     "siyuan": "SiYuan menu > Data migration > Data.zip > Export ile alınan Data.zip ya da SiYuan .sy.zip olarak dışa aktarılmış bir not defteri. Not defterleri ve iç içe belgeler klasöre dönüşür; etiketler, blok referansları, bilgi kutuları, matematik, tablolar ve varlık dosyaları da gelir.",
+    "onenote": "Windows için OneNote'tan File > Export > Notebook > OneNote Package ile alınan .onepkg dosyası. Bir bölüm dosyası (.one) ya da ziplenmiş bir not defteri klasörü de olur. Bölümler ve bölüm grupları klasöre dönüşür; alt sayfalar, yapılacaklar, not etiketleri, tablolar, sayfa bağlantıları, görseller ve ekli dosyalar da gelir.",
     "upnote": "UpNote'ta: Settings > Backup > Backup now, ardından yedek klasöründeki her şeyi zipleyin. Not defterlerini, etiketleri, sabitlemeleri, not bağlantılarını, biçimlendirmeyi ve ekleri korur. Telefon uygulamalarından tekil not dışa aktarmaları da çalışır - \"Export to HTML\" seçin.",
     "markdownFolder": "Tek tek ya da bir .zip içinde .md veya .txt dosyaları. Ziplenmiş bir klasör alt klasörlerini korur, görsellerini ve eklerini de birlikte getirir.",
     "markdownApp": "Bu notlar zaten bir klasördeki Markdown dosyaları. Klasörü .zip olarak bırakın; alt klasörleri, görselleri ve #etiketleri de birlikte gelsin.",
     "browserBookmarks": "Tarayıcınızdaki \"Export bookmarks\" ile oluşan yer imi dosyası (.html) ya da Safari'nin yazdığı .zip. Chrome, Firefox, Safari, Edge, Opera, Brave ve Vivaldi aynı dosyayı içerir. Klasörler ve tarihler de gelir.",
     "vcard": "Adres defterinizin dışa aktardığı .vcf dosyası: iCloud veya Kişiler üzerinden iPhone ve Mac, Android, Google Kişiler. Her kart fotoğraflarıyla birlikte aktarılır ve aynı dosyayı ikinci kez içe aktarmak zaten sahip olduğunuz kişileri atlar.",
-    "bitwarden": "Bitwarden'dan şifrelenmemiş .json dışa aktarımı (Tools > Export vault > .json). Oturum bilgileri, kartlar, SSH anahtarları, güvenli notlar ve TOTP kodları hep birlikte gelir.",
+    "bitwarden": "Bitwarden'dan şifrelenmemiş kasa dışa aktarımı (Tools > Export vault > .json ya da .zip (with attachments)). Giriş bilgileri, kartlar, SSH anahtarları, güvenli notlar, TOTP kodları, geçiş anahtarları ve ekler hep birlikte gelir.",
     "browserPasswords": "Chrome, Edge, Brave, Opera, Vivaldi, Firefox ya da Safari'den gelen parola dosyası (.csv) ya da Safari'nin yazdığı .zip. Her satır bir oturum bilgisine dönüşür. İşiniz bitince dosyayı silin - parolalarınızı düz metin olarak taşır."
   },
   "sourceLabel": {
@@ -178,7 +182,18 @@
     "sourceTagDesc": "Kapalı: kaynak için etiket eklenmez. Notlarda zaten bulunan etiketler her durumda aktarılır.",
     "storageLine": "Bu içe aktarma yaklaşık {{needed}} gerektiriyor. {{available}} boş alanınız var.",
     "nothingWritten": "İçe aktar'a basana kadar hiçbir şey yazılmaz.",
-    "whatComesIn": "Neler aktarılacak"
+    "whatComesIn": "Neler aktarılacak",
+    "backupSettings": "Bu yedek ayarları da getirir: {{list}}.",
+    "backupSetting": {
+      "calendarFeeds": "abone olunan takvimler",
+      "dashboard": "Ana sayfa düzeni",
+      "itemStyles": "klasörlerin, etiketlerin ve notların renkleri ve simgeleri",
+      "customThemes": "özel temalar",
+      "favoriteTags": "favori etiketler",
+      "medications": "ilaçlar",
+      "trackers": "takip ayarları",
+      "agentFolder": "Agent klasörü"
+    }
   },
   "counts": {
     "note_one": "not",
@@ -246,7 +261,9 @@
     "missingFailed_one": "Bu cihaz şunu indiremedi: {{items}}. Bu yüzden dışa aktarmanızda yok. Bağlantınızı kontrol edip yeniden dışa aktarın.",
     "missingFailed_other": "Bu cihaz şunları indiremedi: {{items}}. Bu yüzden dışa aktarmanızda yok. Bağlantınızı kontrol edip yeniden dışa aktarın.",
     "missingNotFound_one": "{{items}} ne bu cihazda ne de sunucuda var, bu yüzden dışa aktarmanızda yok.",
-    "missingNotFound_other": "{{items}} ne bu cihazda ne de sunucuda var, bu yüzden dışa aktarmanızda yok."
+    "missingNotFound_other": "{{items}} ne bu cihazda ne de sunucuda var, bu yüzden dışa aktarmanızda yok.",
+    "bookmarksSkipped_one": "{{count}} yer iminin adresi http veya https ile başlamıyor, bu yüzden dışa aktarmanızda yok.",
+    "bookmarksSkipped_other": "{{count}} yer iminin adresi http veya https ile başlamıyor, bu yüzden dışa aktarmanızda yok."
   },
   "missing": {
     "pictures_one": "{{count}} görsel",
@@ -337,8 +354,8 @@
     "typeFullHint": "Notlar, kasa, görseller, ses ve dosyalar, ifade anahtarınızla mühürlenmiş hâlde. İstediğiniz yerde saklayabilirsiniz.",
     "rhythmHeading": "Sıklık",
     "historyHeading": "Son yedekler",
-    "runsHintDesktop": "PrivacyNotes açıkken veya sistem tepsisindeyken çalışır. Uygulama kapalıyken zamanı gelen bir yedek, uygulama açıldıktan bir dakika sonra alınır.",
-    "runsHintWeb": "PrivacyNotes bu tarayıcıda açıkken çalışır. Kapalıyken zamanı gelen bir yedek, açıldıktan bir dakika sonra alınır.",
+    "runsHintDesktop": "PrivacyNotes açıkken veya sistem tepsisindeyken çalışır. Uygulama kapalıyken zamanı gelen bir yedek, uygulama açıldıktan bir dakika sonra alınır; bu cihaz eşitlendiyse çevrimdışıyken de.",
+    "runsHintWeb": "PrivacyNotes bu tarayıcıda açıkken çalışır. Kapalıyken zamanı gelen bir yedek, açıldıktan bir dakika sonra alınır; bu cihaz eşitlendiyse çevrimdışıyken de.",
     "runsHintDownload": "PrivacyNotes, bir yedeğin zamanının geldiğini yalnızca bu tarayıcıda açıkken bildirebilir. Kapalıyken zamanı gelen bir yedek, açıldıktan bir dakika sonra önerilir.",
     "runsHintPhone": "Bir telefon, PrivacyNotes kapalıyken yedek alamaz. Uygulamayı açtığınızda ve bir yedeğin zamanı geldiyse çalışır.",
     "sizeHint": "{{count}} için yaklaşık {{size}}.",

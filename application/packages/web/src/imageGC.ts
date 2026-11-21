@@ -21,7 +21,8 @@
  * a real, unrecoverable data loss. So:
  *
  * - Phase 1 (here, at GC time): local cache + dedup rows are removed
- *   and quota is decremented right away, but the Supabase Storage
+ *   (the server counts the file until phase 2 removes it, migration
+ *   0136), but the Supabase Storage
  *   object is left alone. The uuid is enqueued in db.blobGC instead -
  *   see ImageStore.deferDelete / AttachmentStore.deferDelete. A blob
  *   whose upload is still pending keeps its local rows: they are its
@@ -34,8 +35,8 @@
  *   trashed and not-yet-confirmed tombstoned ones (an unconfirmed
  *   tombstone means the server may still be serving that note
  *   elsewhere), and against every History version of the account.
- *   Still-referenced entries are cancelled and their quota
- *   re-credited; the rest have their Storage object actually removed,
+ *   Still-referenced entries are cancelled (they never stopped
+ *   counting); the rest have their Storage object actually removed,
  *   along with any local rows phase 1 kept.
  *
  * The actual object deletion depends on db.blobGC, which is device-local
@@ -47,9 +48,9 @@
  * not on that list: gcOnNotesDelete excludes the whole batch from the
  * reference check, so a shared blob cannot hide behind a batch-mate. The
  * server-side pending_blob_gc set (migration 0068, re-asserted by every
- * sweep pass) keeps the QUOTA honest through all of it, and the nightly
- * purge-pending-blobs edge function deletes pending objects no surviving
- * device ever swept. reconcileOrphanBlobs (below) is the backstop that
+ * sweep pass) is what the nightly purge-pending-blobs edge function reads
+ * to delete pending objects no surviving device ever swept; since
+ * migration 0136 the quota counts every stored file, queued or not. reconcileOrphanBlobs (below) is the backstop that
  * reclaims blobs nothing enqueued at all.
  *
  * The caller (NotesView / notesRepo integration) is responsible for
@@ -58,7 +59,7 @@
  */
 
 import { extractImageIds } from './imageProcessing';
-import { extractAttachmentIds } from './EncryptedAttachment';
+import { extractAttachmentIds } from './mediaRefs';
 import type { ImageStore } from './imageStore';
 import type { AttachmentStore } from './attachmentStore';
 import { hasQueuedVersions, listNoteVersions } from './noteVersions';
@@ -68,20 +69,20 @@ import { openWithRing } from './keyRing';
 import { isDemoMode } from './demo';
 import { isServerWriteBlocked } from './syncPause';
 import { fetchQuotaUsage, recalculateQuota } from './devices';
+import { blobBackend, type BlobEntry } from './blobStore';
 
 // Guards against overlapping sweeps: sweepBlobGC is fired unawaited after
 // every successful sync pass, so a slow sweep could still be running when
 // the next one starts. Two overlapping sweeps can both read the same
-// still-referenced entry before either cancels it, and both re-credit
-// quota for it - a double refund.
+// entry before either settles it, and both act on it.
 let sweepInFlight = false;
 
 /** Grace period a deferred blob sits in the queue before it becomes
- * eligible for actual Storage removal. 24h:
- * the pending exclusion keeps the displayed figure honest from the moment
- * of the delete, so the grace only has to cover the cross-device restore
- * race, and one day of clean pulls is enough for any device that is
- * actually alive. Spec: docs/internal/design-decisions.md (deferred blob GC). */
+ * eligible for actual Storage removal. 24h: it only has to cover the
+ * cross-device restore race, and one day of clean pulls is enough for any
+ * device that is actually alive. The server counts a queued file until
+ * this removal (migration 0136), so the freed bytes show after it.
+ * Spec: docs/internal/design-decisions.md (deferred blob GC; file bytes, 2026-11-16). */
 const BLOB_GC_GRACE_MS = 24 * 60 * 60 * 1000;
 
 /** How old an unreferenced object must be before the orphan reconcile takes
@@ -420,6 +421,36 @@ async function uploadAgainWhatIsMissing(inBucket: ReadonlySet<string>): Promise<
   await uploadAgainWhatThePurgeTook(missing);
 }
 
+/** Every object the store holds for the account, or null when the listing
+ *  failed part way. */
+async function listBucket(supabase: SupabaseClient, pubkey: string): Promise<BlobEntry[] | null> {
+  const backend = blobBackend(supabase, pubkey);
+  const objects: BlobEntry[] = [];
+  for (let after: string | null = null; ; ) {
+    const page = await backend.list(after, LIST_PAGE);
+    if (!page) return null;
+    objects.push(...page);
+    if (page.length < LIST_PAGE) return objects;
+    after = page[page.length - 1]!.uuid;
+  }
+}
+
+/**
+ * Right after a restore of our own backup, one bucket listing, outside the
+ * reconcile's gates (its first gate waits while notes are unsent, which a
+ * restore always leaves). A restore skips a blob this device already caches,
+ * and the server can lack it: another device deleted the note and later
+ * removed the file, or an earlier restore stopped between its two writes.
+ * Nothing else reads such a blob as waiting until the next daily reconcile,
+ * and a sign-out before then loses it (beta #197 item 1). A failed listing
+ * leaves it to that reconcile.
+ */
+export async function uploadAgainAfterRestore(supabase: SupabaseClient, pubkey: string): Promise<void> {
+  if (isDemoMode() || navigator.onLine === false) return;
+  const objects = await listBucket(supabase, pubkey);
+  if (objects) await uploadAgainWhatIsMissing(new Set(objects.map((o) => o.uuid)));
+}
+
 /**
  * Phase 2 of deferred blob GC: actually remove Storage objects for
  * queue entries that have cleared the grace period, after re-checking
@@ -590,12 +621,8 @@ function markReconcileTried(pubkey: string): void {
  * than delete on an incomplete reference set. */
 const VERSION_SCAN_MAX = 50000;
 
-/** One page of a Supabase Storage listing. */
+/** One page of a store listing. */
 const LIST_PAGE = 1000;
-
-/** Storage list rows carry only the fields we need; the client types them
- * loosely, so narrow here rather than casting at each use. */
-type StorageObject = { name: string; created_at?: string | null };
 
 /**
  * Reclaim Supabase Storage blobs that nothing references any more.
@@ -685,6 +712,16 @@ export async function reconcileOrphanBlobs(
     const foreign = pending.filter((uuid) => !ownQueue.has(uuid));
     if (foreign.length > 0) {
       const inUse = await findRefsAnywhere(foreign);
+      // A History version holds a picture too: a row whose file only a
+      // version shows is cancelled as well, and so is every one while the
+      // versions cannot be read, since a cancel only keeps a file. The device
+      // that queued it reads History before it removes, but a sign-out clears
+      // its queue, and the server purge checks nothing (beta #197 item 2).
+      const rest = foreign.filter((uuid) => !inUse.has(uuid));
+      if (rest.length > 0) {
+        const versionRefs = await collectVersionBlobRefs(supabase, pubkey, encryptionKey);
+        for (const uuid of rest) if (!versionRefs || versionRefs.has(uuid)) inUse.add(uuid);
+      }
       if (inUse.size > 0) {
         const taken = await imageStore.cancelPendingGC([...inUse]);
         if (taken === null) return;
@@ -730,20 +767,9 @@ export async function reconcileOrphanBlobs(
     }
 
     // Everything currently in the bucket under our prefix.
-    const objects: StorageObject[] = [];
-    for (let offset = 0; ; offset += LIST_PAGE) {
-      const { data, error } = await supabase.storage
-        .from('encrypted-images')
-        .list(pubkey, { limit: LIST_PAGE, offset });
-      if (error) {
-        console.warn('[imageGC] reconcile listing failed:', error.message);
-        return;
-      }
-      const page = (data ?? []) as StorageObject[];
-      objects.push(...page);
-      if (page.length < LIST_PAGE) break;
-    }
-    await uploadAgainWhatIsMissing(new Set(objects.map((o) => o.name)));
+    const objects = await listBucket(supabase, pubkey);
+    if (!objects) return;
+    await uploadAgainWhatIsMissing(new Set(objects.map((o) => o.uuid)));
     if (objects.length === 0) {
       markReconcileDone();
       return;
@@ -752,7 +778,7 @@ export async function reconcileOrphanBlobs(
     // Gates 3 and 5, plus the blobGC hand-off.
     const cutoff = serverNow - RECONCILE_GRACE_MS;
     const aged = objects.filter((o) => {
-      const created = o.created_at ? Date.parse(o.created_at) : NaN;
+      const created = o.createdAt ? Date.parse(o.createdAt) : NaN;
       return Number.isFinite(created) && created < cutoff;
     });
     if (aged.length === 0) {
@@ -763,10 +789,10 @@ export async function reconcileOrphanBlobs(
     const activity = versionActivity;
     const queued = new Set((await db.blobGC.toArray()).map((e) => e.uuid));
     const referenced = await findRefsAnywhere(
-      aged.map((o) => o.name).filter((n) => !queued.has(n)),
+      aged.map((o) => o.uuid).filter((n) => !queued.has(n)),
     );
     let candidates = aged
-      .map((o) => o.name)
+      .map((o) => o.uuid)
       .filter((n) => !queued.has(n) && !referenced.has(n) && !heldForVersion(n));
     if (candidates.length === 0) {
       markReconcileDone();

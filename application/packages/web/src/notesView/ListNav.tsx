@@ -22,7 +22,7 @@ import { isViewShown, type View } from '../views';
  * follow-up.
  *
  * IMPORTANT - the safe-area inset. The retired bar owned
- * `pt-[max(0.5rem,env(safe-area-inset-top))]`; the app root carries it now
+ * `pt-[max(0.5rem,var(--pn-safe-top))]`; the app root carries it now
  * (NotesView), because the topmost element on a phone is no longer a single
  * fixed bar - it is whichever of the banners, the list pane, or the editor
  * happens to render first. Keep it on the root, not here.

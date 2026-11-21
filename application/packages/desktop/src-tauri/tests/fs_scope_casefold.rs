@@ -308,7 +308,7 @@ fn only_what_the_user_picked_is_reachable() {
     all_are(&saved, Decision::Allowed);
     all_are(&s.home.join("Downloads/other.zip"), Decision::NotAllowed);
 
-    // A double-clicked file (take_pending_opens in src/lib.rs): the file and
+    // A double-clicked file (take_pending_opens in src/opened_file.rs): the file and
     // its staging path, nothing else in its folder.
     let opened = s.home.join("Desktop/todo.md");
     s.runtime.allow_file(&opened).unwrap();

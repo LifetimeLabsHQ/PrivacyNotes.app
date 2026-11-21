@@ -57,7 +57,9 @@ export function QuotaExceededBanner({
         ? 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-800 text-red-800 dark:text-red-300'
         : 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300'
     }`}>
-      <span>{message}</span>
+      {/* The server counts a deleted file until its object is removed, a day
+          later (imageGC.ts, BLOB_GC_GRACE_MS; beta #204 item 3). */}
+      <span>{message} {t('quota.deletedSpace')}</span>
       <div className="flex items-center gap-2 shrink-0">
         <button
           type="button"

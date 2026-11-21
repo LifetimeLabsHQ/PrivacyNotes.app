@@ -26,6 +26,15 @@
  * keeps the ring. So whoever installs a ring registers the local key first,
  * and installs it before any reader runs, because until then this device
  * reads as epoch 1 with every key held.
+ *
+ * A ring key opens only what was written before it was replaced. A reader
+ * that knows when the server last changed a record (`writtenAt`, a time the
+ * server sets and a session cannot, such as a note's `changed_at`) gets no
+ * ring key for a record changed after the account's last phrase change
+ * (`account_key_ring.rotated_at`): only the replaced phrase's holder writes
+ * such a record, and every device would take it as the owner's (beta #205
+ * item 2). Every ring key was replaced at or before that time, so the rule
+ * never refuses an older key's genuine record.
  * Spec: docs/internal/plans/phrase-change.md (6.1, 6.2, 6.6)
  */
 import { onLocalDataKeyCleared, onLocalDataKeyReplaced } from './localKey';
@@ -39,6 +48,9 @@ const ring = new Map<number, EpochKeys>();
 // record another tab wrote. Above `current`, the account changed its phrase
 // after this device took its keys (section 7).
 let seenEpoch = 1;
+// When the account's current epoch began, on the server's clock (ms); null
+// while this device does not know it.
+let rotatedAt: number | null = null;
 const epochListeners = new Set<() => void>();
 
 /** A record names an epoch this device holds no key for, and no key it
@@ -143,26 +155,43 @@ function setEpoch(epoch: number): void {
 }
 
 /**
+ * The server's time of the account's last phrase change (ms), from
+ * `account_key_ring`: from then on no ring key opens a record that names when
+ * the server changed it. A time that does not parse leaves the one known.
+ */
+export function noteKeyRingRotatedAt(at: number | null | undefined): void {
+  if (typeof at === 'number' && Number.isFinite(at)) rotatedAt = at;
+}
+
+/** The time noteKeyRingRotatedAt took, or null. */
+export function keyRingRotatedAt(): number | null {
+  return rotatedAt;
+}
+
+/**
  * Install the opened ring and the epoch of the current keys. The ring holds
  * earlier epochs only; each key is copied in, and every key held before is
- * zeroed.
+ * zeroed. `at`: when the current epoch began, when the caller knows it.
  */
-export function installKeyRing(epoch: number, entries: ReadonlyMap<number, EpochKeys>): void {
+export function installKeyRing(epoch: number, entries: ReadonlyMap<number, EpochKeys>, at?: number | null): void {
   if (!Number.isSafeInteger(epoch) || epoch < 1) throw new Error('a key epoch is a whole number from 1');
   for (const e of entries.keys()) {
     if (!Number.isSafeInteger(e) || e < 1 || e >= epoch) throw new Error('a key ring holds earlier epochs only');
   }
   zeroRing();
+  if (epoch !== current) rotatedAt = null;
   for (const [e, keys] of entries) {
     ring.set(e, { sync: new Uint8Array(keys.sync), local: new Uint8Array(keys.local), inbox: new Uint8Array(keys.inbox) });
   }
   setEpoch(epoch);
+  noteKeyRingRotatedAt(at);
 }
 
 /** Forget the ring and every epoch this device has seen. */
 export function clearKeyRing(): void {
   zeroRing();
   seenEpoch = 1;
+  rotatedAt = null;
   setEpoch(1);
 }
 onLocalDataKeyCleared(clearKeyRing);
@@ -191,18 +220,21 @@ function readingOrder(declared: number | undefined): number[] {
  * hold and no key opened it; otherwise the current key's own error, as
  * before the ring.
  */
-export function openWithRing<T>(kind: KeyKind, currentKey: Uint8Array, open: (key: Uint8Array) => T, declared?: number): T {
-  return openWithRingAt(kind, currentKey, open, declared).value;
+export function openWithRing<T>(kind: KeyKind, currentKey: Uint8Array, open: (key: Uint8Array) => T, declared?: number, writtenAt?: number): T {
+  return openWithRingAt(kind, currentKey, open, declared, writtenAt).value;
 }
 
 /**
  * openWithRing, and the epoch whose key opened the record. The background
  * pass reads it for a record that names no epoch (a blob): opened by the
  * current key, it is already current; by a ring key, it is rewritten.
+ * `writtenAt`: when the server last changed the record (ms, its own clock);
+ * past the last phrase change, no ring key is tried (see the head).
  * Spec: docs/internal/plans/phrase-change.md (6.4)
  */
-export function openWithRingAt<T>(kind: KeyKind, currentKey: Uint8Array, open: (key: Uint8Array) => T, declared?: number): { value: T; epoch: number } {
+export function openWithRingAt<T>(kind: KeyKind, currentKey: Uint8Array, open: (key: Uint8Array) => T, declared?: number, writtenAt?: number): { value: T; epoch: number } {
   if (declared !== undefined && declared > current) noteAccountEpoch(declared);
+  const ringClosed = writtenAt !== undefined && Number.isFinite(writtenAt) && rotatedAt !== null && writtenAt > rotatedAt;
   let currentErr: unknown;
   for (const e of readingOrder(declared)) {
     if (e === current) {
@@ -213,6 +245,7 @@ export function openWithRingAt<T>(kind: KeyKind, currentKey: Uint8Array, open: (
       }
       continue;
     }
+    if (ringClosed) continue;
     const copy = new Uint8Array(ring.get(e)![kind]);
     try {
       return { value: open(copy), epoch: e };

@@ -3,9 +3,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { CaretDown, Check, EyeSlash, FileText, Warning, iconCopy, iconDownload } from '../icons';
 import { buildPhraseFile, PHRASE_FILE_NAME } from '../phraseFile';
-import { buildSignInUrl } from '../qrSignIn';
+import { buildSignInCode } from '../qrSignIn';
 import { RevealGate } from '../RevealGate';
+import { useSecretOnScreen } from '../privacyScreen';
 import { saveBlob, type SaveResult } from '../saveFile';
+import { SETTINGS_HELP } from '../ui';
 
 /**
  * Phrase display - words-first layout: a full-width 2-column word grid
@@ -75,6 +77,8 @@ export function PhraseView({
   // Starts covered whenever the caller gates it. Everything that can put
   // the phrase on screen, in the clipboard or in a file hangs off this.
   const [sealed, setSealed] = useState(gated);
+  // The words and the QR exist only while not sealed: no capture of them.
+  useSecretOnScreen(!sealed);
   const [secondsLeft, setSecondsLeft] = useState(AUTO_HIDE_SECONDS);
   const qrWrapperRef = useRef<HTMLDivElement | null>(null);
 
@@ -266,9 +270,14 @@ export function PhraseView({
               ref={qrWrapperRef}
               className="flex items-center justify-center bg-white p-2 rounded-lg border border-divider dark:border-transparent"
             >
-              <QRCodeCanvas value={buildSignInUrl(phrase)} size={long ? 240 : 180} level="M" marginSize={4} />
+              <QRCodeCanvas value={buildSignInCode(phrase)} size={long ? 240 : 180} level="M" marginSize={4} />
             </div>
           </div>
+          {showQR && (
+            <p className={`${SETTINGS_HELP} text-center`}>
+              {t('phraseView.qrHint', { scanQr: t('auth:importPhrase.scanQr') })}
+            </p>
+          )}
 
           {/* Save QR + Copy - 2-column */}
           <div className="grid grid-cols-2 gap-2">

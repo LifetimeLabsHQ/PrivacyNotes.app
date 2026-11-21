@@ -10,7 +10,7 @@ import { DESKTOP_APP } from './shortcutMatch';
 
 export interface CliStatus {
   installed: boolean;
-  /** Where the launcher is: `~/.local/bin/pn`, or `pn.cmd` on Windows. */
+  /** Where the launcher is: `~/.local/bin/privacynotes`, or `privacynotes.cmd` on Windows. */
   command: string;
   onPath: boolean;
   /** The shell line that puts the launcher's folder on PATH. */

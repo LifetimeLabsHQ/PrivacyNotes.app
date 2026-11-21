@@ -1,5 +1,6 @@
 /**
- * The size of the whole desktop window, as a scale on every pixel in it.
+ * App size: the whole app, as a scale on every pixel in it, on desktop and
+ * on phones (#834).
  *
  * The desktop app runs in a webview, so the engine under the page can scale
  * the page the way a browser does. That is what makes this reach the app
@@ -15,6 +16,15 @@
  * nothing can read back, so after one keypress the Appearance row would state
  * a size the window no longer has. On macOS and Linux that level also lives
  * in an injected script, which forgets it on every start.
+ *
+ * Phones have no such engine call, so there the level goes into the viewport
+ * tag instead: `initial-scale` without a width makes the layout viewport the
+ * screen width divided by the level, and the engine scales it back up. That
+ * is a phone browser's own page zoom, so vh units, touch points, popovers and
+ * the keyboard all agree with no component aware of it. CSS `zoom` on the
+ * root was tried first and dropped: every 100dvh in the app overflowed by the
+ * level. The one leak is the safe-area insets, which the engine reports
+ * unscaled; `--pn-page-scale` divides them back (index.css).
  *
  * Device-local, like the editor text size, and for the same reason: a 13 inch
  * laptop and a 27 inch monitor want different answers, so one synced value
@@ -44,14 +54,36 @@ const KEY = 'privacynotes.appZoom';
  * not. A higher step would make the narrow layout the normal result at
  * every window size rather than an edge of the range.
  */
-export const APP_ZOOM_LEVELS = [0.8, 0.9, 1, 1.25, 1.5, 2] as const;
-export type AppZoom = (typeof APP_ZOOM_LEVELS)[number];
+const DESKTOP_LEVELS = [0.8, 0.9, 1, 1.25, 1.5, 2] as const;
+
+/**
+ * The phone ladder. Small steps, because on a phone every step costs width:
+ * the layout viewport is the screen width divided by the level, so 1.5 on a
+ * 402 point iPhone lays the app out in 268. A higher step would squeeze the
+ * phone layout below what it is built for; the phone's own text size setting
+ * is the way past it. Nothing below 1: Android's webview refuses a page scale
+ * under 1 (it keeps the page at the screen width), so a 90% step did nothing
+ * there, and the phone row is for going bigger.
+ */
+const PHONE_LEVELS = [1, 1.1, 1.2, 1.3, 1.4, 1.5] as const;
+
+/** True in the iOS and Android builds, which scale through the viewport tag. */
+function isPhoneBuild(): boolean {
+  return __PN_BUILD_PLATFORM__ === 'ios' || __PN_BUILD_PLATFORM__ === 'android';
+}
+
+export type AppZoom = (typeof DESKTOP_LEVELS)[number] | (typeof PHONE_LEVELS)[number];
+
+/** The ladder this build offers. */
+export const APP_ZOOM_LEVELS: readonly AppZoom[] = isPhoneBuild() ? PHONE_LEVELS : DESKTOP_LEVELS;
 
 /** The level a fresh install and a Reset to defaults both land on. */
 export const DEFAULT_APP_ZOOM: AppZoom = 1;
 
 /**
- * True in a desktop build and nowhere else.
+ * True in a desktop build and nowhere else. Other desktop-only rows (System,
+ * the tray, the Ninja key) gate on this too, so it keeps that meaning; the App
+ * size row itself gates on `appSizeSupported`.
  *
  * `__PN_BUILD_PLATFORM__` is baked in at build time, so on the web the
  * Appearance row, the key handler and the dynamic import behind them never
@@ -66,6 +98,14 @@ export function appZoomSupported(): boolean {
     __PN_BUILD_PLATFORM__ !== 'ios' &&
     __PN_BUILD_PLATFORM__ !== 'android'
   );
+}
+
+/**
+ * True where Settings > Design draws the App size row: the desktop and phone
+ * apps. Not on the web, where the browser's own zoom does the job.
+ */
+export function appSizeSupported(): boolean {
+  return appZoomSupported() || isPhoneBuild();
 }
 
 function isAppZoom(v: unknown): v is AppZoom {
@@ -92,6 +132,26 @@ async function pushToWebview(level: AppZoom): Promise<void> {
   await getCurrentWebview().setZoom(level);
 }
 
+/** The viewport tag index.html ships, kept so level 1 restores it exactly. */
+let shippedViewport: string | null = null;
+
+/**
+ * Scale the page through the viewport tag. Minimum and maximum pin the scale,
+ * so a pinch cannot leave it, as the shipped tag does at 1. Width is left out
+ * on purpose: with only a scale, the engine derives the width from the screen,
+ * so a rotation or an iPad window resize keeps the level.
+ */
+function pushToViewport(level: AppZoom): void {
+  const tag = document.querySelector('meta[name="viewport"]');
+  if (!tag) return;
+  shippedViewport ??= tag.getAttribute('content');
+  const rest = 'user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content';
+  tag.setAttribute('content', level === 1 && shippedViewport
+    ? shippedViewport
+    : `initial-scale=${level}, minimum-scale=${level}, maximum-scale=${level}, ${rest}`);
+  document.documentElement.style.setProperty('--pn-page-scale', String(level));
+}
+
 const { subscribe, notify } = createListeners();
 
 function snapshot(): AppZoom {
@@ -103,6 +163,7 @@ export function applyAppZoom(level: AppZoom): void {
   activeAppZoom = level;
   try { localStorage.setItem(KEY, String(level)); } catch { /* private mode */ }
   if (appZoomSupported()) void pushToWebview(level).catch(() => { /* no webview */ });
+  else if (isPhoneBuild()) pushToViewport(level);
   notify();
 }
 
@@ -116,7 +177,7 @@ export function applyAppZoom(level: AppZoom): void {
  * describes a window somebody else scaled.
  */
 export function initAppZoom(): void {
-  if (!appZoomSupported()) return;
+  if (!appSizeSupported()) return;
   applyAppZoom(getStoredAppZoom());
 }
 

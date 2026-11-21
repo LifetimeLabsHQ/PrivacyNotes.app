@@ -36,7 +36,7 @@
   "storageBar": {
     "usage": "已使用 {{percent}}%（{{used}} / {{max}}）",
     "refresh": "重新整理儲存空間",
-    "cleanupInfo": "已刪除的項目會立即不再計入。加密檔案本身會在幾天內從伺服器移除。",
+    "cleanupInfo": "永久刪除的筆記會立即不再計入。已刪除的檔案會持續計入，直到它的加密副本從伺服器移除，大約在一天後。",
     "open": "開啟儲存空間設定"
   },
   "updateToast": {
@@ -318,6 +318,8 @@
     "commands": {
       "syncResume": "恢復同步",
       "lockProtected": "鎖定這篇筆記",
+      "randomItem": "隨機開啟一個項目",
+      "randomBookmark": "隨機開啟一個書籤",
       "changelog": "新功能",
       "themesPage": "社群佈景主題",
       "website": "PrivacyNotes 網站"

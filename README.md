@@ -29,7 +29,7 @@ Signed apps for [**macOS**](https://privacynotes.app/en#downloads), [**Windows**
 </a>
 
 <em>This screenshot is a link. It opens the <a href="https://try.privacynotes.app">live demo</a> in your browser:<br>
-no account, nothing saved, the real app with the real encryption.</em>
+no account and nothing synced: the real app, whose notes stay in this browser,<br>unencrypted, until the demo opens here again.</em>
 
 <br>
 
@@ -59,7 +59,7 @@ No title, no body, no tags. Just bytes that only your phrase opens.</em>
 
 ## What PrivacyNotes is
 
-A notes, tasks and journal app for macOS, Windows, Linux, Android, iOS and the browser, encrypted on your device. You get a 12-word phrase instead of an account, and everything you write is encrypted on your device under a key derived from it, on disk and on the way to us. Under self-custody, that key is yours alone. Notes, journal entries, tasks, a password vault, and file attachments all live under that one key.
+A notes, tasks and journal app for macOS, Windows, Linux, Android, iOS and the browser, encrypted on your device. You get a 12-word phrase instead of an account, and everything you write is encrypted on your device under a key derived from it, on disk and on the way to us. The few exceptions, such as the domain of a link the app fetches an icon for, are listed in [VERIFY.md](VERIFY.md) and [THREAT_MODEL.md](THREAT_MODEL.md). Under self-custody, that key is yours alone. Notes, journal entries, tasks, a password vault, and file attachments all live under that one key.
 
 ---
 
@@ -71,13 +71,13 @@ Three claims we make, and where to check each one without taking our word for it
 
 | The claim | Check it here |
 | :--- | :--- |
-| Under self-custody, your phrase never leaves your device | [`crypto/crypto.ts`](crypto/crypto.ts), and the derivation strings in the live bundle |
+| Under self-custody, your phrase never leaves your device, unless you add a sign-in passkey: then our server keeps a copy that only that passkey opens | [`crypto/crypto.ts`](crypto/crypto.ts), and the derivation strings in the live bundle |
 | Your notes are encrypted on your device, at rest and on the way to us | [`crypto/crypto.ts`](crypto/crypto.ts), the XChaCha20-Poly1305 path |
 | The server stores only ciphertext | [VERIFY.md](VERIFY.md) tier 1: watch your own notes leave in your browser's network tab |
 
 If any of those stops holding, the claim is broken and you can prove it. That is the entire point of this repo.
 
-The first claim holds under self-custody, which every phrase sign-up uses. Its exception is [custodial mode](#custodial-mode-the-exception-to-the-first-claim), which a sign-up with Google, Apple or GitHub preselects.
+The first claim holds under self-custody, which every phrase sign-up uses. Its exception is [custodial mode](#custodial-mode-the-exception-to-the-first-claim), which a sign-up with Google, Apple or GitHub preselects, and a sign-in passkey you add keeps an encrypted copy of the phrase that only that passkey opens.
 
 ---
 
@@ -86,13 +86,13 @@ The first claim holds under self-custody, which every phrase sign-up uses. Its e
 | Path | What it is |
 | :--- | :--- |
 | [`application/`](application/) | The client applications, as we build them: the web app, the desktop and mobile shells, and the shared crypto package. `cd application && pnpm install && pnpm build`. |
-| [`crypto/crypto.ts`](crypto/crypto.ts) | Key derivation and note encryption, about 650 lines, commented step by step. Not a reference implementation. The production code, copied here so the link is short; the canonical file is `application/packages/shared/src/crypto.ts`. Attachments and images use the same cipher through [`crypto/blob.ts`](crypto/blob.ts), which is another 50 lines. |
+| [`crypto/crypto.ts`](crypto/crypto.ts) | Key derivation and note encryption, about 890 lines, commented step by step. Not a reference implementation. The production code, copied here so the link is short; the canonical file is `application/packages/shared/src/crypto.ts`. Attachments and images use the same cipher through [`crypto/blob.ts`](crypto/blob.ts), which is another 50 lines. |
 | [`SECURITY.md`](SECURITY.md) | What we protect against, what we do not, and what the server can see. Written for users. |
 | [`THREAT_MODEL.md`](THREAT_MODEL.md) | Trust boundaries, cryptographic detail, and known limitations, including the unflattering ones. Written for auditors. **Start here if you are reviewing the project.** |
 
 ### The design in brief
 
-**Identity and key derivation.** A 12-word BIP-39 mnemonic (128 bits of entropy) is generated on your device and turned into a 64-byte seed via the standard BIP-39 PBKDF2 path. Every key comes out of that seed via HKDF-SHA256, each under its own domain-separated info string so that no two uses share key material:
+**Identity and key derivation.** A 12-word BIP-39 mnemonic (128 bits of entropy) is generated on your device and turned into a 64-byte seed via the standard BIP-39 PBKDF2 path. The keys below come out of that seed via HKDF-SHA256, each under its own domain-separated info string so that no two uses share key material:
 
 | Info string | Produces | Used for |
 | :--- | :--- | :--- |
@@ -100,13 +100,14 @@ The first claim holds under self-custody, which every phrase sign-up uses. Its e
 | `privacynotes-encryption-v1` | 32-byte symmetric key | Note, attachment and image encryption |
 | `privacynotes-local-at-rest-v1` | 32-byte symmetric key | Seals note content at rest in the device's own storage; never stored, never transmitted |
 | `privacynotes-auth-password-v1` | 32-byte secret | The password for the anonymous account that carries your session |
-| `privacynotes-fp-pepper-v1` | 32-byte pepper | Hashes the device-grouping signals described in SECURITY.md, so the server never sees the raw values |
+| `privacynotes-fp-pepper-v1` | 32-byte pepper | Hashes the device-grouping signals described in SECURITY.md, so the server never sees the raw GPU, core count or language values |
+| `privacynotes-clip-inbox-v1` | X25519 key pair | Opens what the browser extension and the command line seal for your apps |
 
 **Note encryption.** Each note is encrypted with XChaCha20-Poly1305 under a random 24-byte nonce. The plaintext payload includes title, body, tags, and metadata such as trashed and starred state. The server sees none of it. The 24-byte nonce is what makes random generation safe without collision risk, unlike AES-GCM's 12 bytes.
 
-**Challenge signing.** Pubkey-to-account binding uses Ed25519 signatures over structured challenges (`link:<authUid>`). Device registration and revocation use the same shape. Every signature binds to the session's auth UID, so a captured signature cannot be replayed into another session.
+**Challenge signing.** Pubkey-to-account binding uses Ed25519 signatures over structured challenges (`link:<authUid>`). Device registration, device removal and account deletion use the same shape. Every signature names the operation and the account's auth UID, so it cannot be moved to another operation or another account. Custody changes, device removal and account deletion also sign a one-use nonce bound to the session. Linking and device registration do not, and while older app versions are supported the server also accepts the older signatures of the others, so a captured one can be used again in a later session of the same account ([THREAT_MODEL.md](THREAT_MODEL.md#challenge-response-authentication)).
 
-**Dependencies**, all from the [@noble](https://github.com/paulmillr/noble-hashes) and [@scure](https://github.com/paulmillr/scure-bip39) families: `@scure/bip39`, `@noble/hashes`, `@noble/ed25519`, `@noble/ciphers`. Zero dependencies each, written to be auditable, deployed in production by major wallets.
+**Dependencies**, all from the [@noble](https://github.com/paulmillr/noble-hashes) and [@scure](https://github.com/paulmillr/scure-bip39) families: `@scure/bip39`, `@noble/hashes`, `@noble/ed25519`, `@noble/curves`, `@noble/ciphers`. No dependencies beyond each other, written to be auditable, deployed in production by major wallets.
 
 ---
 
@@ -146,7 +147,7 @@ Two lines of that output are the ones that matter. `Deterministic: true` says th
 
 **Diff it against production.** The bundle is minified, so a textual diff is not practical, but the derivation is falsifiable anyway. Open the JavaScript served at PrivacyNotes.app and search it for `privacynotes-signing-v1` and `privacynotes-encryption-v1`, the HKDF-SHA256 construction, and XChaCha20-Poly1305 with 24-byte nonces. They are in there right now. If they ever are not, we are lying and you can show it.
 
-**Watch the wire.** The strongest check needs no source at all. Open your browser's network tab, type a word into a note, and read what the app sends: a ciphertext, a nonce, a public key and timestamps. No title, no body, nothing you typed. [VERIFY.md](VERIFY.md) walks it in about a minute. It beats reading our table definitions, because it measures what actually leaves your machine rather than what we say we store.
+**Watch the wire.** The strongest check needs no source at all. Open your browser's network tab, type a word into a note, and read what the app sends: a ciphertext, a nonce, the note's id, a public key and timestamps. No title, no body, nothing you typed. [VERIFY.md](VERIFY.md) walks it in about a minute. It beats reading our table definitions, because it measures what actually leaves your machine rather than what we say we store.
 
 ---
 
@@ -180,15 +181,15 @@ If you cannot use GitHub, email **sec@lifetimelabs.dev** as a backup. That addre
 <!-- credits:start -->
 ## Credits
 
-PrivacyNotes is shaped by the people who report bugs and ask for features in our issues. 111 people have opened an issue, and 485 reports are now fixed or built.
+PrivacyNotes is shaped by the people who report bugs and ask for features in our issues. 112 people have opened an issue, and 502 reports are now fixed or built.
 
 <p align="center">
-<a href="https://github.com/tech2-user" title="tech2-user, 81 shipped"><img src="https://github.com/tech2-user.png?size=112" width="56" height="56" alt="tech2-user"></a>
+<a href="https://github.com/tech2-user" title="tech2-user, 82 shipped"><img src="https://github.com/tech2-user.png?size=112" width="56" height="56" alt="tech2-user"></a>
 <a href="https://github.com/harishbewe" title="harishbewe, 38 shipped"><img src="https://github.com/harishbewe.png?size=112" width="56" height="56" alt="harishbewe"></a>
-<a href="https://github.com/scamidge" title="scamidge, 28 shipped"><img src="https://github.com/scamidge.png?size=112" width="56" height="56" alt="scamidge"></a>
-<a href="https://github.com/Real-Fruit-Snacks" title="Real-Fruit-Snacks, 27 shipped"><img src="https://github.com/Real-Fruit-Snacks.png?size=112" width="56" height="56" alt="Real-Fruit-Snacks"></a>
+<a href="https://github.com/Real-Fruit-Snacks" title="Real-Fruit-Snacks, 29 shipped"><img src="https://github.com/Real-Fruit-Snacks.png?size=112" width="56" height="56" alt="Real-Fruit-Snacks"></a>
+<a href="https://github.com/scamidge" title="scamidge, 29 shipped"><img src="https://github.com/scamidge.png?size=112" width="56" height="56" alt="scamidge"></a>
 <a href="https://github.com/AndreFeliciano" title="AndreFeliciano, 24 shipped"><img src="https://github.com/AndreFeliciano.png?size=112" width="56" height="56" alt="AndreFeliciano"></a>
-<a href="https://github.com/MrJarvisHere" title="MrJarvisHere, 18 shipped"><img src="https://github.com/MrJarvisHere.png?size=112" width="56" height="56" alt="MrJarvisHere"></a>
+<a href="https://github.com/MrJarvisHere" title="MrJarvisHere, 19 shipped"><img src="https://github.com/MrJarvisHere.png?size=112" width="56" height="56" alt="MrJarvisHere"></a>
 <a href="https://github.com/shriganesh" title="shriganesh, 13 shipped"><img src="https://github.com/shriganesh.png?size=112" width="56" height="56" alt="shriganesh"></a>
 <a href="https://github.com/les-incompetent" title="les-incompetent, 11 shipped"><img src="https://github.com/les-incompetent.png?size=112" width="56" height="56" alt="les-incompetent"></a>
 <a href="https://github.com/mburr" title="mburr, 11 shipped"><img src="https://github.com/mburr.png?size=112" width="56" height="56" alt="mburr"></a>
@@ -197,19 +198,20 @@ PrivacyNotes is shaped by the people who report bugs and ask for features in our
 <a href="https://github.com/block6791" title="block6791, 10 shipped"><img src="https://github.com/block6791.png?size=112" width="56" height="56" alt="block6791"></a>
 <a href="https://github.com/javaskript" title="javaskript, 10 shipped"><img src="https://github.com/javaskript.png?size=112" width="56" height="56" alt="javaskript"></a>
 <a href="https://github.com/deftly1970" title="deftly1970, 9 shipped"><img src="https://github.com/deftly1970.png?size=112" width="56" height="56" alt="deftly1970"></a>
+<a href="https://github.com/KamikazeWolf" title="KamikazeWolf, 9 shipped"><img src="https://github.com/KamikazeWolf.png?size=112" width="56" height="56" alt="KamikazeWolf"></a>
+<a href="https://github.com/amirhafez69" title="amirhafez69, 9 shipped"><img src="https://github.com/amirhafez69.png?size=112" width="56" height="56" alt="amirhafez69"></a>
 <a href="https://github.com/grub-basket" title="grub-basket, 9 shipped"><img src="https://github.com/grub-basket.png?size=112" width="56" height="56" alt="grub-basket"></a>
-<a href="https://github.com/amirhafez69" title="amirhafez69, 8 shipped"><img src="https://github.com/amirhafez69.png?size=112" width="56" height="56" alt="amirhafez69"></a>
 <a href="https://github.com/snogglefromp" title="snogglefromp, 8 shipped"><img src="https://github.com/snogglefromp.png?size=112" width="56" height="56" alt="snogglefromp"></a>
 <a href="https://github.com/TheArtForm" title="TheArtForm, 8 shipped"><img src="https://github.com/TheArtForm.png?size=112" width="56" height="56" alt="TheArtForm"></a>
+<a href="https://github.com/thediamondgeezer" title="thediamondgeezer, 7 shipped"><img src="https://github.com/thediamondgeezer.png?size=112" width="56" height="56" alt="thediamondgeezer"></a>
 <a href="https://github.com/pdmcgeejr" title="pdmcgeejr, 7 shipped"><img src="https://github.com/pdmcgeejr.png?size=112" width="56" height="56" alt="pdmcgeejr"></a>
+<a href="https://github.com/RuinTD" title="RuinTD, 7 shipped"><img src="https://github.com/RuinTD.png?size=112" width="56" height="56" alt="RuinTD"></a>
 <a href="https://github.com/thecoffeebin" title="thecoffeebin, 7 shipped"><img src="https://github.com/thecoffeebin.png?size=112" width="56" height="56" alt="thecoffeebin"></a>
-<a href="https://github.com/thediamondgeezer" title="thediamondgeezer, 6 shipped"><img src="https://github.com/thediamondgeezer.png?size=112" width="56" height="56" alt="thediamondgeezer"></a>
-<a href="https://github.com/RuinTD" title="RuinTD, 6 shipped"><img src="https://github.com/RuinTD.png?size=112" width="56" height="56" alt="RuinTD"></a>
-<a href="https://github.com/KamikazeWolf" title="KamikazeWolf, 5 shipped"><img src="https://github.com/KamikazeWolf.png?size=112" width="56" height="56" alt="KamikazeWolf"></a>
 <a href="https://github.com/gijs-epping" title="gijs-epping, 5 shipped"><img src="https://github.com/gijs-epping.png?size=112" width="56" height="56" alt="gijs-epping"></a>
 <a href="https://github.com/BackupSFG" title="BackupSFG, 4 shipped"><img src="https://github.com/BackupSFG.png?size=112" width="56" height="56" alt="BackupSFG"></a>
 <a href="https://github.com/michaeldurland" title="michaeldurland, 4 shipped"><img src="https://github.com/michaeldurland.png?size=112" width="56" height="56" alt="michaeldurland"></a>
 <a href="https://github.com/ajgraves" title="ajgraves, 4 shipped"><img src="https://github.com/ajgraves.png?size=112" width="56" height="56" alt="ajgraves"></a>
+<a href="https://github.com/AstroByteOne" title="AstroByteOne, 4 shipped"><img src="https://github.com/AstroByteOne.png?size=112" width="56" height="56" alt="AstroByteOne"></a>
 <a href="https://github.com/FrostyLime" title="FrostyLime, 4 shipped"><img src="https://github.com/FrostyLime.png?size=112" width="56" height="56" alt="FrostyLime"></a>
 <a href="https://github.com/gitglub" title="gitglub, 4 shipped"><img src="https://github.com/gitglub.png?size=112" width="56" height="56" alt="gitglub"></a>
 <a href="https://github.com/GregHabiskis" title="GregHabiskis, 4 shipped"><img src="https://github.com/GregHabiskis.png?size=112" width="56" height="56" alt="GregHabiskis"></a>

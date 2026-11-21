@@ -18,6 +18,8 @@
     "filedNotes_other": "{{count}} Notizen einsortiert",
     "tags_other": "Die Tags von {{count}} Notizen behalten.",
     "droppedAlign": "Ausrichtung bei Blöcken, die der Editor nicht ausrichten kann, entfernt; der Text bleibt erhalten.",
+    "lostPasskeys_one": "{{count}} Passkey ausgelassen, der mit einem Login gespeichert war. Behalte ihn in deiner alten App, oder lege auf dieser Website einen neuen Passkey an.",
+    "lostPasskeys_other": "{{count}} Passkeys ausgelassen, die mit Logins gespeichert waren. Behalte sie in deiner alten App, oder lege auf diesen Websites neue Passkeys an.",
     "foldersFromNotebooks_other": "{{count}} Ordner aus deinen Notizbüchern neu aufgebaut ({{filed}}).",
     "parsingJson": "JSON wird gelesen…",
     "buildingNotes": "Notizen werden erstellt…",
@@ -324,6 +326,14 @@
     "invalidJson": "Diese Datei ist kein gültiges JSON. Achte darauf, dass du als \".json\" exportiert hast (nicht verschlüsselt).",
     "encryptedExport": "Das ist ein verschlüsselter Bitwarden-Export. Exportiere bitte erneut im einfachen Format \".json\" (nicht \".json (Encrypted)\").",
     "missingItems": "In dieser Datei fehlt das erwartete Array \"items\". Kein Bitwarden-Vault-Export.",
+    "notZipExport": "Dieses Zip enthält auf oberster Ebene keine data.json. Kein Bitwarden-Export im Format \".zip (with attachments)\".",
+    "keptPasskeys_one": "{{count}} Passkey an seinem Login behalten.",
+    "keptPasskeys_other": "{{count}} Passkeys an ihren Logins behalten.",
+    "passkeyOtherSite": "Der Login \"{{name}}\" enthält einen Passkey für {{site}}, das keine seiner Websites ist. Er kam mit dem Login herein; lösche ihn dort, wenn du ihn nicht kennst.",
+    "skippedPasskeys_one": "{{count}} Passkey ausgelassen, den der Tresor nicht speichern kann: Sein Schlüssel ist kein P-256-Schlüssel, oder ein Wert ist länger, als WebAuthn erlaubt. Lege auf dieser Website einen neuen Passkey an.",
+    "skippedPasskeys_other": "{{count}} Passkeys ausgelassen, die der Tresor nicht speichern kann: Der Schlüssel ist kein P-256-Schlüssel, oder ein Wert ist länger, als WebAuthn erlaubt. Lege auf diesen Websites einen neuen Passkey an.",
+    "unmatchedAttachments_one": "{{count}} Anhang konnte keinem einzelnen Eintrag zugeordnet werden, weil kein Eintrag oder mehrere Einträge den Namen seines Ordners tragen. Er liegt in einer Notiz, die nach dem Ordner benannt ist.",
+    "unmatchedAttachments_other": "{{count}} Anhänge konnten keinem einzelnen Eintrag zugeordnet werden, weil kein Eintrag oder mehrere Einträge den Namen ihres Ordners tragen. Sie liegen in Notizen, die nach ihren Ordnern benannt sind.",
     "unknownType": "Eintrag \"{{name}}\" mit unbekanntem Typ {{type}} übersprungen.",
     "importedCards_other": "{{count}} Karten als Tresor-Einträge importiert.",
     "importedSecureNotes_other": "{{count}} sichere Notizen importiert.",
@@ -627,6 +637,10 @@
     "leftFiles_other": "{{count}} angehängte Dateien sind zurückgeblieben. Speichere sie aus Enpass und hänge sie hier an die Einträge an.",
     "leftFiles_one": "{{count}} angehängte Datei ist zurückgeblieben. Speichere sie aus Enpass und hänge sie hier an den Eintrag an."
   },
+  "msecure": {
+    "notMSecure": "Das ist kein mSecure-Export. Wähle in mSecure Settings > Backups > Export records to CSV file.",
+    "fieldDataOnly": "Dieser mSecure-Export enthält keine Feldnamen, daher lassen sich seine Felder nicht auseinanderhalten. Exportiere noch einmal und schalte dabei \"Only export field data\" aus."
+  },
   "nordpass": {
     "notNordPass": "Diese Datei ist kein NordPass-Export. Wähle in NordPass Settings > Export items."
   },
@@ -643,6 +657,7 @@
     "kdbxFile": "Das ist die KeePass-Datenbank selbst, und sie ist gesperrt. Exportiere sie in KeePass oder KeePassXC als XML und importiere dann diese Datei.",
     "notKeePass": "Diese Datei ist kein KeePass-XML-Export. Wähle in KeePass File > Export > KeePass XML (2.x), in KeePassXC Database > Export > XML File.",
     "noEntries": "Diese KeePass-Datei hat keine Einträge, die nicht im Recycle Bin liegen.",
+    "doctype": "Diese Datei deklariert einen DOCTYPE, den kein KeePass-Export schreibt, deshalb wurde sie nicht gelesen. Exportiere das XML erneut aus KeePass und importiere diese Datei.",
     "readingEntries": "Einträge werden gelesen…",
     "leftHistory_other": "{{count}} ältere Versionen von Einträgen weggelassen: Nur die neueste kommt mit.",
     "missingFiles_other": "{{count}} angehängte Dateien waren nicht im Export und sind zurückgeblieben. Speichere sie aus KeePass und hänge sie hier an die Logins an.",
@@ -659,6 +674,15 @@
     "readHashtags_one": "Als #Hashtags geschriebene Tags in {{count}} Notiz gelesen.",
     "foundFiles_one": "{{count}} Markdown-Datei gefunden..."
   },
+  "raindrop": {
+    "notRaindrop": "Das ist kein Raindrop.io-Export - erwartet wurde die .csv-Datei aus Export > CSV oder die .zip, die sie enthält.",
+    "noCsv": "In dieser Zip ist keine .csv-Datei. Exportiere die CSV aus Raindrop.io und wähle diese Datei.",
+    "highlightsHeading": "Hervorhebungen",
+    "skipped_other": "{{count}} Lesezeichen wurden ausgelassen, weil ihre Adressen keine Weblinks sind.",
+    "covers_other": "{{count}} Titelbilder wurden nicht importiert. Die Lesezeichen zeigen stattdessen die Symbole der Websites.",
+    "covers_one": "{{count}} Titelbild wurde nicht importiert. Das Lesezeichen zeigt stattdessen das Symbol der Website.",
+    "skipped_one": "{{count}} Lesezeichen wurde ausgelassen, weil seine Adresse kein Weblink ist."
+  },
   "browserBookmarks": {
     "notBookmarks": "Kein Lesezeichen-Export - erwartet wurde die Lesezeichen-Datei (.html), die ein Browser exportiert.",
     "noBookmarks": "In dieser Datei wurden keine Lesezeichen gefunden.",
@@ -670,6 +694,8 @@
     "entryTooLarge": "{{name}} wird beim Entpacken größer als die {{limit}}, die ein Import auf einmal lesen kann. Entferne die Datei aus dem Export und versuche es erneut.",
     "entryTooLargeKnown": "{{name}} wird beim Entpacken {{size}} groß, mehr als die {{limit}}, die ein Import auf einmal lesen kann. Entferne die Datei aus dem Export und versuche es erneut.",
     "unreadable": "Diese Datei konnte nicht geöffnet werden. Sie ist möglicherweise unvollständig oder beschädigt. Exportiere sie erneut und wähle die neue Datei aus.",
+    "importTooLarge": "Diese Datei wird beim Entpacken größer als {{limit}}, mehr als ein echter Export enthält. Exportiere sie erneut und wähle die neue Datei aus.",
+    "tooManyEntries": "Dieses Zip listet mehr als {{max}} Dateien auf, mehr als ein echter Export enthält. Exportiere es erneut und wähle die neue Datei aus.",
     "mediaTooLarge_one": "{{count}} Datei größer als {{size}} übersprungen, die größte Datei, die ein Tarif synchronisieren kann."
   },
   "safariArchive": {
@@ -682,5 +708,47 @@
   },
   "apply": {
     "unknownWriteError": "Unbekannter Fehler beim Schreiben in die lokale Datenbank."
+  },
+  "onenote": {
+    "reading": "OneNote-Notizbuch wird gelesen…",
+    "notOneNote": "Das ist kein OneNote-Notizbuch. Wähle in OneNote für Windows File > Export > Notebook > OneNote Package und lege die .onepkg-Datei hier ab.",
+    "cloudFormat": "Dieser Abschnitt liegt in dem Format vor, das OneNote online speichert und das nur OneNote lesen kann. Öffne das Notizbuch in OneNote für Windows, wähle File > Export > Notebook > OneNote Package und lege diese .onepkg-Datei hier ab.",
+    "splitPackage": "Dieses OneNote-Paket ist auf mehrere Dateien verteilt. Exportiere das Notizbuch noch einmal als ein einziges OneNote Package und lege diese Datei hier ab.",
+    "tooLarge": "Dieses OneNote-Paket ist zu groß, um es in einem Durchgang zu lesen. Exportiere jeweils eine Abschnittsgruppe oder einen Abschnitt.",
+    "damaged": "Diese OneNote-Datei ist beschädigt und kann nicht gelesen werden. Exportiere das Notizbuch noch einmal aus OneNote und versuche es mit dieser Datei.",
+    "noPages": "In diesem OneNote-Notizbuch wurden keine Seiten gefunden.",
+    "allLocked": "Jeder Abschnitt in diesem Notizbuch ist kennwortgeschützt. Entsperre die Abschnitte in OneNote, entferne ihre Kennwörter, exportiere erneut und lege die neue Datei hier ab.",
+    "subpages_other": "{{count}} Unterseiten als Notizen neben ihren Seiten behalten.",
+    "noteTags_other": "Die OneNote-Tags von {{count}} Seiten als Tags behalten.",
+    "lockedSections_other": "{{count}} kennwortgeschützte Abschnitte ausgelassen. Entferne ihre Kennwörter in OneNote und exportiere erneut, um sie mitzunehmen.",
+    "unreadableSections_other": "{{count}} Abschnitte ausgelassen, die nicht gelesen werden konnten.",
+    "unsupported_other": "{{count}} Zeichnungen, Audioclips und Formeln ausgelassen, die hier keine Entsprechung haben.",
+    "missingFiles_other": "{{count}} Bilder oder Dateien waren nicht im Paket und wurden ausgelassen.",
+    "deadLinks_other": "{{count}} OneNote-Links zeigen außerhalb dieses Notizbuchs und behalten nur ihren Text.",
+    "recycleBin_other": "{{count}} Seiten aus dem Papierkorb des Notizbuchs ausgelassen.",
+    "recycleBin_one": "{{count}} Seite aus dem Papierkorb des Notizbuchs ausgelassen.",
+    "deadLinks_one": "{{count}} OneNote-Link zeigt außerhalb dieses Notizbuchs und behält nur seinen Text.",
+    "missingFiles_one": "{{count}} Bild oder Datei war nicht im Paket und wurde ausgelassen.",
+    "unsupported_one": "{{count}} Zeichnung, Audioclip oder Formel ausgelassen, die hier keine Entsprechung hat.",
+    "unreadableSections_one": "{{count}} Abschnitt ausgelassen, der nicht gelesen werden konnte.",
+    "lockedSections_one": "{{count}} kennwortgeschützten Abschnitt ausgelassen. Entferne sein Kennwort in OneNote und exportiere erneut, um ihn mitzunehmen.",
+    "noteTags_one": "Die OneNote-Tags von {{count}} Seite als Tags behalten.",
+    "subpages_one": "{{count}} Unterseite als Notiz neben ihrer Seite behalten."
+  },
+  "capacities": {
+    "notCapacities": "Das ist kein Capacities-Export. Öffne in Capacities Settings > Full Export, führe Manual Full Export mit Medien aus und lege die Zip hier ab.",
+    "noObjects": "In diesem Capacities-Export wurden keine Seiten oder anderen Objekte mit Text gefunden.",
+    "typeFolders_other": "{{count}} Objekttypen als Ordner neu aufgebaut.",
+    "properties_other": "Die Eigenschaften von {{count}} Objekten als Liste oben in ihre Notizen geschrieben.",
+    "mediaObjects_other": "{{count}} Bilder und Dateien in den Notizen behalten, die sie zeigen, ohne eigene Notiz.",
+    "queries_other": "{{count}} Queries ausgelassen. Eine Query ist eine gespeicherte Suche in Capacities, ohne eigenen Text.",
+    "collections_other": "{{count}} Collection-Listen ausgelassen. Die Objekte darin kommen mit, ohne die Collections.",
+    "deadLinks_other": "{{count}} Links zeigen auf Objekte, die nicht im Export sind, etwa solche im Papierkorb, und behalten nur ihren Text.",
+    "deadLinks_one": "{{count}} Link zeigt auf ein Objekt, das nicht im Export ist, etwa eines im Papierkorb, und behält nur seinen Text.",
+    "collections_one": "{{count}} Collection-Liste ausgelassen. Die Objekte darin kommen mit, ohne die Collection.",
+    "queries_one": "{{count}} Query ausgelassen. Eine Query ist eine gespeicherte Suche in Capacities, ohne eigenen Text.",
+    "mediaObjects_one": "{{count}} Bild oder Datei in den Notizen behalten, die es zeigen, ohne eigene Notiz.",
+    "properties_one": "Die Eigenschaften von {{count}} Objekt als Liste oben in seine Notiz geschrieben.",
+    "typeFolders_one": "{{count}} Objekttyp als Ordner neu aufgebaut."
   }
 }

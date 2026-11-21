@@ -4,6 +4,7 @@ import { UpdateToast } from './UpdateToast';
 import { detectPlatform } from './devices';
 import { APP_STORE_URL, PLAY_STORE_URL, RELEASES_ORIGIN } from './hosts';
 import { knownVersionFloor, reportVersionFloor, useBelowVersionFloor } from './versionFloor';
+import { fetchPolicy } from './policySignature';
 
 /**
  * Release-floor check for the STORE builds (Google Play, iOS App Store).
@@ -20,9 +21,10 @@ import { knownVersionFloor, reportVersionFloor, useBelowVersionFloor } from './v
  * the downloads page, which is a lie on a store install - same reason web
  * never sets it).
  *
- * Only a published `minVersion` changes the floor. An unreachable, missing
- * (404) or malformed policy keeps the floor already held, so a CDN error
- * never lifts a pause; a floor is lowered by publishing a lower one. With no
+ * Only a published `minVersion` changes the floor, and only from a policy
+ * the release signed for this channel (policySignature.ts). An unreachable,
+ * missing (404), malformed or unsigned policy keeps the floor already held, so
+ * a CDN error never lifts a pause; a floor is lowered by publishing a lower one. With no
  * floor held yet, the first check runs at once and a failed one retries
  * within a minute, so a first launch is not left unguarded for a full poll.
  *
@@ -71,16 +73,16 @@ export function StoreUpdateToast() {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
-    /** True when the policy was read and carried a floor. */
+    /** True when the policy was read, signed, and carried a floor. */
     async function check(): Promise<boolean> {
       if (cancelled) return false;
       lastCheckRef.current = Date.now();
       try {
-        const res = await fetch(`${POLICY_URL}?t=${Date.now()}`, { cache: 'no-store' });
-        if (cancelled || !res.ok) return false;
-        const p = (await res.json()) as { minVersion?: string };
-        if (cancelled || typeof p?.minVersion !== 'string') return false;
-        reportVersionFloor(p.minVersion);
+        const fetched = await fetchPolicy(POLICY_URL, IS_IOS ? 'ios' : 'play');
+        if (cancelled || !fetched?.signed) return false;
+        const { minVersion } = fetched.policy;
+        if (typeof minVersion !== 'string') return false;
+        reportVersionFloor(minVersion, fetched.issued);
         return true;
       } catch {
         // Offline or blocked: keep whatever versionFloor.ts already holds.

@@ -29,9 +29,24 @@
   "tagChip": {
     "clear": "Usuń filtr tagu: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "Usuń filtr trackera: {{tracker}}",
+    "anyTag": "Dowolny tag",
+    "tagLabel": "Tag trackera {{tracker}}",
+    "answerLabel": "Odpowiedź trackera {{tracker}}",
+    "anyAnswer": "Dowolna odpowiedź"
+  },
+  "trackerFocus": {
+    "every_one": "mniej więcej codziennie",
+    "last": "zapisano {{when}}",
+    "locked_one": "Pominięto {{count}} wpis chroniony PIN-em",
+    "locked_few": "Pominięto {{count}} wpisy chronione PIN-em",
+    "locked_many": "Pominięto {{count}} wpisów chronionych PIN-em",
+    "every_few": "mniej więcej co {{count}} dni",
+    "every_many": "mniej więcej co {{count}} dni"
+  },
   "vaultNew": {
     "ariaLabel": "Nowy element sejfu",
-    "card": "Karta kredytowa",
     "sshKey": "Klucz SSH",
     "generator": "Hasło"
   },
@@ -50,6 +65,7 @@
   "vaultFilter": {
     "all": "Wszystko",
     "logins": "Loginy",
+    "passkeys": "Passkey",
     "cards": "Karty",
     "keys": "Klucze"
   },
@@ -62,7 +78,8 @@
   "trash": {
     "empty": "Opróżnij",
     "emptyHover": "Usuń wszystkie notatki z kosza",
-    "autoDelete": "Automatycznie usuwaj po 30 dniach"
+    "autoDelete": "Automatycznie usuwaj po 30 dniach",
+    "replacedTitle": "Kopie usuniętych notatek"
   },
   "search": {
     "sortOptions": "Opcje sortowania i widoku",
@@ -138,6 +155,7 @@
     "imageUploadFailed": "Przesyłanie obrazu nie powiodło się: {{error}}",
     "imageError": "Błąd obrazu: {{error}}",
     "uploadFailedFor": "Przesyłanie nie powiodło się dla „{{filename}}”: {{error}}",
+    "uploadsHeld": "Osiągnięto dzisiejszy limit przesyłania. Twoje obrazy i pliki są bezpieczne na tym urządzeniu i zostaną przesłane po {{time}}.",
     "importedSyncing_one": "Zaimportowano {{count}} notatkę. Synchronizowanie…",
     "importedSyncing_other": "Zaimportowano {{count}} notatki. Synchronizowanie…",
     "addedTag_one": "Dodano #{{tag}} do {{count}} elementu",
@@ -154,6 +172,7 @@
   },
   "loadError": {
     "message": "Nie udało się wczytać Twoich notatek. Połączenie z lokalną bazą danych zostało przerwane. Może się to zdarzyć, gdy aplikacja przez dłuższy czas działała w tle.",
+    "storageOff": "Nie udało się wczytać Twoich notatek. To urządzenie wyłączyło pamięć, w której PrivacyNotes je przechowuje, a tak działa Tryb blokady. Aby to naprawić, otwórz „Ustawienia”, potem „Prywatność i ochrona”, potem „Tryb blokady”, potem „Dostosuj witryny” i wyłącz PrivacyNotes. W Safari wyłącz Tryb blokady dla tej witryny w menu „Ustawienia dot. witryny”.",
     "reload": "Odśwież"
   },
   "banner": {
@@ -206,6 +225,7 @@
   "editor": {
     "backToList": "Wróć do listy notatek",
     "backToGrid": "Wróć do siatki",
+    "closeSide": "Zamknij ten panel",
     "titlePlaceholder": "Bez tytułu (kliknij, aby edytować, lub zostaw do wygenerowania)",
     "titlePlaceholderLogin": "np. GitHub",
     "titlePlaceholderCard": "np. Visa kończąca się na 4242",
@@ -214,10 +234,22 @@
     "lockNow": "Zablokuj teraz",
     "lockNowHint": "Ukryj teraz zawartość",
     "turnOffHint": "Zezwól ponownie na edycję",
+    "turnOffForNowHint": "Edytuj tę notatkę, dopóki jej nie opuścisz",
     "unarchiveHint": "Pokaż ponownie na listach",
     "showFormatted": "Pokaż sformatowane",
+    "splitView": "Widok podzielony",
+    "showSplitView": "Pokaż widok podzielony",
+    "hideSplitView": "Ukryj widok podzielony",
+    "splitViewNeedsWidth": "Poszerz okno, aby włączyć widok podzielony",
+    "swapSides": "Zamień strony",
+    "formattedOnly": "{{name}} działa w widoku sformatowanym",
+    "formattedOnlyHint": "Widok sformatowany",
     "invisiblesShow": "Pokaż znaki niedrukowalne",
     "invisiblesHide": "Ukryj znaki niedrukowalne",
+    "lineNumbersShow": "Pokaż numery wierszy",
+    "lineNumbersHide": "Ukryj numery wierszy",
+    "footerPin": "Przypnij statystyki",
+    "footerUnpin": "Odepnij statystyki",
     "undo": "Cofnij",
     "redo": "Ponów",
     "hide": "Ukryj",
@@ -292,6 +324,7 @@
     "accountLabel": "ID i synchronizacja",
     "appearanceLabel": "Wygląd",
     "editorLabel": "Edytor",
+    "pluginsLabel": "Wtyczki",
     "formatBarLabel": "Pasek formatowania",
     "listsLabel": "Listy",
     "trackersLabel": "Trackery",
@@ -315,6 +348,11 @@
     "body_few": "Zarchiwizować <highlight>{{count}} elementy</highlight>? Znikną z Twoich list i poczekają w widoku Archiwum. Opcja Przywróć z archiwum je przywraca.",
     "body_many": "Zarchiwizować <highlight>{{count}} elementów</highlight>? Znikną z Twoich list i poczekają w widoku Archiwum. Opcja Przywróć z archiwum je przywraca.",
     "body_other": "Zarchiwizować <highlight>{{count}} elementu</highlight>? Znikną z Twoich list i poczekają w widoku Archiwum. Opcja Przywróć z archiwum je przywraca."
+  },
+  "duplicateConfirm": {
+    "body_one": "Zduplikować <highlight>{{count}} element</highlight>? Otrzyma własną kopię.",
+    "body_few": "Zduplikować <highlight>{{count}} elementy</highlight>? Każdy z nich otrzyma własną kopię.",
+    "body_many": "Zduplikować <highlight>{{count}} elementów</highlight>? Każdy z nich otrzyma własną kopię."
   },
   "bulkTrash": {
     "body_one": "Usunąć <highlight>{{count}} element</highlight>? Przenieś go do kosza, aby później go przywrócić, albo usuń go na zawsze.",
@@ -375,6 +413,7 @@
     "title": "Powiązania",
     "hide": "Ukryj powiązania",
     "linkedFrom": "Linki przychodzące",
+    "usedIn": "Używane w",
     "linksTo": "Linki wychodzące",
     "missing": "Jeszcze nie utworzono",
     "protectedHidden_one": "{{count}} element chroniony PIN-em nie jest wyświetlany",
@@ -384,9 +423,10 @@
     "relatedLinkedFrom": "Do obu prowadzi link z notatki {{title}}",
     "relatedTag": "Obie mają tag {{tag}}",
     "relatedMeaning": "To samo znaczenie",
+    "relatedMention": "Wzmianka: {{name}}",
     "meaningDoor": "Inteligentne powiązania: znajduj notatki o tym samym znaczeniu dzięki AI offline",
     "meaningDoorNo": "Nie pokazuj ponownie",
-    "meaningDoorHidden": "Ukryto we wszystkich notatkach. Inteligentne powiązania znajdziesz dalej w Ustawienia > Edytor > Zachowanie.",
+    "meaningDoorHidden": "Ukryto we wszystkich notatkach. Inteligentne powiązania znajdziesz dalej w Ustawienia > Wtyczki.",
     "hideSuggestions": "Ukryj sugerowane powiązania",
     "notRelated": "Niepowiązane",
     "notRelatedDone": "Usunięto z sugestii",
@@ -461,5 +501,32 @@
     "autoJournal": "Dodawaj moją lokalizację do każdego nowego wpisu w dzienniku",
     "autoDenied": "Lokalizacja jest wyłączona dla PrivacyNotes. Najpierw włącz ją w ustawieniach telefonu.",
     "autoOff": "Usługi lokalizacji są wyłączone na tym telefonie. Najpierw je włącz."
+  },
+  "vaultPasskey": {
+    "forSite": "Passkey dla {{rpId}}",
+    "hasPasskey": "Ma passkey",
+    "removeTitle": "Usunąć passkey dla {{rpId}}?",
+    "removeBody": "Nie zalogujesz się już nim do {{rpId}} z PrivacyNotes.",
+    "savedByExtension": "Passkey zapisuje rozszerzenie przeglądarki PrivacyNotes, gdy strona go proponuje.",
+    "removeBrowserWaiting": "Niektórych elementów wysłanych przez tę przeglądarkę nie ma jeszcze w twoim Sejfie. Jeśli usuniesz ją teraz, przepadną.",
+    "removeBrowserAnyway": "Usuń mimo to"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "Przetłumacz",
+    "from": "Z",
+    "to": "Na",
+    "saveAsNote": "Zapisz jako nową notatkę",
+    "needPair": "Pobierz {{language}} · {{size}}",
+    "noModel": "Z tego języka nie można jeszcze tłumaczyć.",
+    "nothing": "Ta notatka nie zawiera słów do przetłumaczenia.",
+    "turnOn": "Włącz {{language}}",
+    "failed": "Nie udało się przetłumaczyć tej notatki. Spróbuj ponownie.",
+    "untranslated_one": "{{count}} wiersz nie został przetłumaczony i pozostaje bez zmian.",
+    "untranslated_few": "{{count}} wiersze nie zostały przetłumaczone i pozostają bez zmian.",
+    "untranslated_many": "{{count}} wierszy nie zostało przetłumaczonych i pozostaje bez zmian."
+  },
+  "tags": {
+    "suggestMove": "Przenieś do folderu {{folder}}"
   }
 }

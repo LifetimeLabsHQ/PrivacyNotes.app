@@ -149,7 +149,9 @@ export function DeviceLimitModal() {
           </div>
         )}
 
-        {configured ? (
+        {/* No Paddle (a self-hosted or dev build): no upgrade box; Remove and
+            Sign out still lead out. There is no user support to send people to. */}
+        {configured && (
           <div className="rounded-md border border-accent/40 bg-accent/5 dark:bg-accent/10 p-4 space-y-2">
             <div className="text-body font-medium">{t('deviceLimit.upgradeHeading')}</div>
             <p className="text-small text-pn-muted leading-relaxed">
@@ -187,24 +189,6 @@ export function DeviceLimitModal() {
             >
               {checkoutLoading ? t('billing:upgrade.ctaOpening') : t('deviceLimit.upgradeCta', { price: isBetaPricing() ? EARLY_PRICE : PRO_PRICE })}
             </button>
-          </div>
-        ) : (
-          // Paddle isn't configured (e.g. self-host, dev environment).
-          // Without this fallback the modal is a dead end: revoke or
-          // sign out, no third option. See gap #24.
-          <div className="rounded-md border border-divider bg-surface-1 p-4 space-y-2">
-            <div className="text-body font-medium">{t('deviceLimit.needMoreHeading')}</div>
-            <p className="text-small text-pn-muted leading-relaxed">
-              {t('deviceLimit.needMoreBody')}
-            </p>
-            <a
-              href="https://lifetimelabs.dev/contact/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full text-center rounded-md border border-divider hover:bg-pn/5 text-body font-medium px-3 py-2 transition"
-            >
-              {t('deviceLimit.contactSupport')}
-            </a>
           </div>
         )}
 

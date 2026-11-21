@@ -12,6 +12,7 @@ import { writeColorPref } from './editorPrefs';
 import type { ALIGNMENT_VALUES } from './editorExtensions';
 import type { PopoverPos } from './usePopoverPosition';
 import { setCellFill } from './editorTables';
+import { noteFontStack, useTheme, type NoteFont } from './theme';
 import { TB_BTN_ACTIVE, TB_BTN_BASE, TB_BTN_REST, TB_ICON, normalizeCssColor, runOnCaretWord, smartToggleHeading } from './editorToolbarParts';
 
 // The panels the toolbar's popovers open. Each is portaled to document.body
@@ -98,8 +99,8 @@ export function TextColorPanel({ popoverRef, pos, onClose, editor, currentColor,
 }) {
   const { t } = useTranslation('editor');
   return (
-    <ToolbarPanel popoverRef={popoverRef} pos={pos} className="bg-surface-1 border border-divider rounded-lg shadow-lg p-2 w-[168px]">
-      <div className="grid grid-cols-5 gap-1.5">
+    <ToolbarPanel popoverRef={popoverRef} pos={pos} className="bg-surface-1 border border-divider rounded-lg shadow-lg p-2 w-[220px]">
+      <div className="grid grid-cols-7 gap-1.5">
         {TEXT_COLORS.map((c) => (
           <ColorSwatch
             key={c.value}
@@ -185,10 +186,15 @@ export function FontPanel({ popoverRef, pos, onClose, editor, currentFontFamily,
   currentFontSize: string | undefined;
 }) {
   const { t } = useTranslation('editor');
+  const { customFonts } = useTheme();
   return (
-    <ToolbarPanel popoverRef={popoverRef} pos={pos} className="bg-surface-1 border border-divider rounded-lg shadow-lg py-1 w-44">
+    <ToolbarPanel popoverRef={popoverRef} pos={pos} className="bg-surface-1 border border-divider rounded-lg shadow-lg py-1 min-w-44 max-w-72">
       {FONT_FAMILIES.map((f) => {
         const selected = currentFontFamily === f.value;
+        // The reader's own font for this choice (Settings > Editor), which
+        // the mark draws in on this device (#809); the mark keeps f.value.
+        const font = f.name.toLowerCase() as NoteFont;
+        const custom = customFonts[font];
         return (
           <button
             key={f.value}
@@ -200,12 +206,12 @@ export function FontPanel({ popoverRef, pos, onClose, editor, currentFontFamily,
               else editor.chain().focus().setFontFamily(f.value).run();
               onClose();
             }}
-            className={`w-full flex items-center justify-between text-start px-3 py-1.5 text-body [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition ${
+            className={`w-full flex items-center justify-between gap-3 text-start px-3 py-1.5 text-body [@media(hover:hover)]:hover:bg-pn/5 active:bg-pn/5 transition ${
               selected ? 'text-accent' : 'text-pn-soft'
             }`}
-            style={{ fontFamily: f.value }}
           >
-            {t(`font.families.${f.name.toLowerCase()}`)}
+            <span style={{ fontFamily: custom ? noteFontStack(font, customFonts) : f.value }}>{t(`font.families.${font}`)}</span>
+            {custom && <span className="min-w-0 truncate text-meta text-pn-muted">{custom}</span>}
           </button>
         );
       })}
@@ -308,7 +314,7 @@ function HighlightSwatchGrid({ isSelected, onPick, noneLabel, noneSelected, onNo
 }) {
   const { t } = useTranslation('editor');
   return (
-    <div className="grid grid-cols-5 gap-1.5">
+    <div className="grid grid-cols-7 gap-1.5">
       {HIGHLIGHT_COLORS.map((c) => (
         <ColorSwatch
           key={c.name}
@@ -351,7 +357,7 @@ export function HighlightPanel({ popoverRef, pos, onClose, editor, highlightOn, 
 }) {
   const { t } = useTranslation('editor');
   return (
-    <ToolbarPanel popoverRef={popoverRef} pos={pos} className="bg-surface-1 border border-divider rounded-lg shadow-lg p-2 w-[168px]">
+    <ToolbarPanel popoverRef={popoverRef} pos={pos} className="bg-surface-1 border border-divider rounded-lg shadow-lg p-2 w-[220px]">
       <HighlightSwatchGrid
         // A swatch is selected only when the run is actually
         // highlighted: without that check the palette's first entry
@@ -394,7 +400,7 @@ export function CellFillPanel({ popoverRef, pos, onClose, editor, current }: {
 }) {
   const { t } = useTranslation('editor');
   return (
-    <ToolbarPanel popoverRef={popoverRef} pos={pos} role="group" aria-label={t('table.cellColor')} className="bg-surface-1 border border-divider rounded-lg shadow-lg p-2 w-[168px]">
+    <ToolbarPanel popoverRef={popoverRef} pos={pos} role="group" aria-label={t('table.cellColor')} className="bg-surface-1 border border-divider rounded-lg shadow-lg p-2 w-[220px]">
       <HighlightSwatchGrid
         isSelected={(c) => current === c.name.toLowerCase()}
         onPick={(c) => {

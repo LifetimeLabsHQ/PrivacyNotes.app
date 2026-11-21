@@ -115,10 +115,13 @@
       "red": "Rouge",
       "orange": "Orange",
       "yellow": "Jaune",
+      "lime": "Citron vert",
       "green": "Vert",
       "teal": "Turquoise",
       "blue": "Bleu",
+      "indigo": "Indigo",
       "purple": "Violet",
+      "grape": "Raisin",
       "pink": "Rose"
     }
   },
@@ -241,6 +244,8 @@
     "words_other": "{{formatted}} mots",
     "characters_one": "{{formatted}} caractère",
     "characters_other": "{{formatted}} caractères",
+    "lines_one": "{{formatted}} ligne",
+    "lines_other": "{{formatted}} lignes",
     "tasksChecked_one": "{{done}} sur {{formatted}} coché",
     "tasksChecked_other": "{{done}} sur {{formatted}} cochés",
     "syncLimit": " · {{share}} de la limite de synchronisation de 1 Mo",
@@ -276,6 +281,10 @@
     "collapse": "Replier le bloc de code",
     "expand": "Déplier le bloc de code",
     "placeholder": "Tape ou colle du code. Pour les couleurs, choisis un langage au-dessus."
+  },
+  "fold": {
+    "collapse": "Replier la section",
+    "expand": "Déplier la section"
   },
   "math": {
     "sourceLabel": "Source LaTeX"
@@ -313,7 +322,7 @@
     "hiddenNote": "Ils fonctionnent toujours par raccourci et en Markdown.",
     "hiddenDrop": "Dépose un bouton ici pour le masquer.",
     "arrangeTitle": "Boutons",
-    "markdownViewNote": "La vue Markdown garde son propre jeu de boutons fixe.",
+    "markdownViewNote": "La vue Markdown affiche les mêmes boutons. Ceux qui ont besoin de la vue mise en forme y sont grisés et fonctionnent toujours dans la vue mise en forme.",
     "hiddenEmpty": "Rien n'est masqué.",
     "alwaysVisible": "Toujours visibles",
     "pinned": "Ouvre un panneau, reste donc dans la barre ou masqué",
@@ -340,7 +349,7 @@
       "notelink": "Lien de note",
       "audio": "Enregistrement",
       "attachMenu": "Joindre",
-      "separator": "Séparateur vertical",
+      "separator": "Séparateur de barre d'outils",
       "markdownView": "Afficher le markdown"
     },
     "positionTitle": "Position de la barre",

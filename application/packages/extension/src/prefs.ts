@@ -38,6 +38,9 @@ export interface Prefs {
   totpBar: boolean;
   /** Website icons through our favicon proxy; off shows the letter. */
   favicons: boolean;
+  /** "Offer passkeys": off, every passkey request goes to the browser.
+   *  Spec: docs/contrib/passkeys.md (P29) */
+  offerPasskeys: boolean;
 }
 
 const KEY = 'prefs';
@@ -55,6 +58,7 @@ export async function readPrefs(): Promise<Prefs> {
     showTotp: got?.showTotp !== false,
     totpBar: got?.totpBar !== false,
     favicons: got?.favicons !== false,
+    offerPasskeys: got?.offerPasskeys !== false,
   };
 }
 

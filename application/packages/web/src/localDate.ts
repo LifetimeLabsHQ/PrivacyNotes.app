@@ -17,6 +17,12 @@ export function parseDay(iso: string): Date {
   return new Date(y!, m! - 1, d!);
 }
 
+/** Whole days from `older` to `newer`, both local ISO days; a daylight
+ *  saving change never makes a gap of 2.96 days. */
+export function daysApart(newer: string, older: string): number {
+  return Math.round((parseDay(newer).getTime() - parseDay(older).getTime()) / 86_400_000);
+}
+
 /** `HH:MM` of an instant, local. */
 export function hhmm(d: Date): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;

@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "h",
+    "minutesSuffix": "min",
+    "hoursMinutes": "{{h}}h {{m}}min",
     "bpm": "bpm",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -142,6 +144,7 @@
     "takenCount_one": "{{count}} eingenommen",
     "takenCount_other": "{{count}} eingenommen",
     "namePlaceholder": "Name des Medikaments",
+    "nameMissing": "Gib dem Medikament einen Namen.",
     "dosagePlaceholder": "Dosierung (z. B. 50 mg)",
     "editMedication": "Medikament bearbeiten",
     "removeMedication": "Medikament entfernen",
@@ -250,12 +253,18 @@
     "yes": "Ja",
     "no": "Nein",
     "unknownType": "Dieser Tracker braucht eine neuere Version der App.",
+    "counterOf": "von {{limit}}",
+    "counterToday": "heute benutzt",
+    "counterReached": "Du hast das Limit von {{limit}} erreicht.",
+    "counterStartAgain": "{{name}} wieder bei 0 beginnen",
+    "counterStartAgainConfirm": "Neu beginnen?",
     "typeLabels": {
       "scale10": "Skala (0-10)",
       "scale5": "Skala (0-5)",
       "slider100": "Wert (0-100)",
       "number": "Zahl",
       "pair": "Zwei Zahlen",
+      "counter": "Zähler",
       "yesno": "Ja / Nein"
     }
   },
@@ -271,7 +280,7 @@
     "medicationCard": "Medikationskarte",
     "medicationCardHelp": "„Hast du deine Medikamente genommen?“ auf diesem Gerät, nur an einem Tag, an dem ein Medikament fällig ist.",
     "customHelp": "Tracker, die du selbst benennst: eine Skala, eine Zahl oder ja oder nein. Bis zu {{max}}.",
-    "customHelpPair": "Tracker, die du selbst benennst: eine Skala, eine Zahl, zwei Zahlen oder ja oder nein. Bis zu {{max}}.",
+    "customHelpPair": "Tracker, die du selbst benennst: eine Skala, eine Zahl, zwei Zahlen, ein Zähler oder ja oder nein. Bis zu {{max}}.",
     "yourCustomTrackers": "Deine eigenen Tracker",
     "categoryMoodMind": "Stimmung und Geist",
     "categoryBodyHealth": "Körper und Gesundheit",
@@ -312,7 +321,10 @@
     "pairFirstPlaceholder": "Systolisch",
     "pairSecondPlaceholder": "Diastolisch",
     "pairUnit": "Einheit (optional)",
-    "pairWaiting": "Wird gespeichert, sobald die erste Zahl eingetragen ist."
+    "pairWaiting": "Wird gespeichert, sobald die erste Zahl eingetragen ist.",
+    "nameMissing": "Gib dem Tracker einen Namen.",
+    "counterLimit": "Limit (optional)",
+    "counterHelp": "Zählt deine Nutzungen über die Tage zusammen. Lege ein Limit fest, etwa 30 für eine Rasierklinge, und beginne neu, wenn du es erreichst."
   },
   "factors": {
     "prompt": "Was gehörte zu deinem Tag?",
@@ -402,5 +414,6 @@
   "flow": {
     "finish": "Abschließen",
     "step": "Tracker {{n}} von {{total}}"
-  }
+  },
+  "showEveryDay": "Jeden Tag damit anzeigen"
 }

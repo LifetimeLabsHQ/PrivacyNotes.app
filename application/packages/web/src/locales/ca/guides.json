@@ -316,21 +316,21 @@
       "app": "Bitwarden",
       "title": "Exporta la teva caixa forta de Bitwarden",
       "metaTitle": "Exportar una caixa forta de Bitwarden - PrivacyNotes",
-      "lead": "Bitwarden exporta tota la teva caixa forta en un sol fitxer .json sense xifrar, i PrivacyNotes endreça cada element al seu lloc: inicis de sessió, targetes, claus SSH i notes segures.",
+      "lead": "Bitwarden exporta tota la teva caixa forta en un sol fitxer .json sense xifrar, o en un .zip amb els teus adjunts, i PrivacyNotes endreça cada element al seu lloc: inicis de sessió, targetes, claus SSH i notes segures.",
       "sections": [
         {
           "h": "Exporta la caixa forta des de Bitwarden",
           "steps": [
             "Obre la caixa forta web de Bitwarden (o l'aplicació d'escriptori) i inicia la sessió.",
             "Ves a «Tools» i després a «Export vault».",
-            "Tria el format de fitxer .json (el normal, no pas «.json (Encrypted)»).",
+            "Tria el format de fitxer .json, o «.zip (with attachments)» per endur-te també els fitxers adjunts. No triïs «.json (Encrypted)».",
             "Confirma-ho amb la contrasenya mestra i baixa el fitxer."
           ]
         },
         {
           "h": "On va a parar cada cosa",
           "p": [
-            "Els inicis de sessió es converteixen en [entrades d'inici de sessió de la Caixa forta](/ca/help/vault) (amb la icona del lloc web), les targetes en entrades de targeta i les claus SSH en entrades de clau SSH, i les notes segures i les identitats arriben com a notes llegibles. Les carpetes de Bitwarden es transformen en etiquetes, i els preferits arriben amb estrella. Les claus d'autenticació (TOTP) també venen amb tu, així que [els teus codis 2FA continuen funcionant](/ca/help/vault-totp).",
+            "Els inicis de sessió es converteixen en [entrades d'inici de sessió de la Caixa forta](/ca/help/vault) (amb la icona del lloc web), les targetes en entrades de targeta i les claus SSH en entrades de clau SSH, i les notes segures i les identitats arriben com a notes llegibles. Les carpetes de Bitwarden es transformen en etiquetes, i els preferits arriben amb estrella. Les claus d'autenticació (TOTP) també venen, així que [els teus codis 2FA continuen funcionant](/ca/help/vault-totp), i també les claus d'accés que vas desar a Bitwarden. Des d'un .zip, cada adjunt arriba al seu element.",
             "El fitxer d'exportació conté les teves contrasenyes en text clar, així que importa'l, comprova que tot hagi arribat i després suprimeix el fitxer com cal. Dins de PrivacyNotes torna a quedar tot xifrat, al teu dispositiu i de camí al servidor."
           ]
         }
@@ -1115,6 +1115,31 @@
         }
       ]
     },
+    "msecure": {
+      "app": "mSecure",
+      "title": "Exporta la teva caixa forta de mSecure",
+      "metaTitle": "Com exportar la teva caixa forta de mSecure - PrivacyNotes",
+      "lead": "mSecure exporta els teus registres en un sol fitxer .csv des de la seva app d'escriptori, i PrivacyNotes els converteix en inicis de sessió, targetes i notes de la Caixa forta, camps personalitzats inclosos.",
+      "sections": [
+        {
+          "h": "Exporta des de mSecure",
+          "steps": [
+            "Obre mSecure a l'ordinador i desbloqueja'l.",
+            "Obre Settings i tria Backups.",
+            "A Import and Export records, tria Export records to CSV file.",
+            "Tria Export all records. Deixa «Only export field data» desactivat, perquè el fitxer conservi el nom de cada camp.",
+            "Tria Export i desa el fitxer .csv."
+          ]
+        },
+        {
+          "h": "On va a parar cada cosa",
+          "p": [
+            "Cada inici de sessió es converteix en un [inici de sessió de la Caixa forta](/ca/help/vault) amb la seva clau 2FA, així que [els teus codis continuen funcionant](/ca/help/vault-totp), i els seus llocs web addicionals i camps personalitzats hi arriben amb els seus noms. Un camp secret, com ara un PIN o un codi de recuperació, continua amagat. Una targeta es converteix en una targeta. Una nota segura es converteix en una nota, i els altres tipus de registre, com ara una identitat o un compte bancari, es converteixen en notes que en llisten els camps, etiquetades amb el tipus de registre. Les teves etiquetes continuen sent etiquetes. El fitxer no té dates ni preferits, així que cada element pren el dia en què l'importes.",
+            "L'exportació conté les teves contrasenyes en text clar. Importa-la, comprova que tot hagi arribat i després suprimeix el fitxer."
+          ]
+        }
+      ]
+    },
     "nordpass": {
       "app": "NordPass",
       "title": "Exporta la teva caixa forta de NordPass",
@@ -1163,6 +1188,36 @@
           "p": [
             "Cada inici de sessió es converteix en un [inici de sessió de la Caixa forta](/ca/help/vault) amb els seus llocs web addicionals, camps personalitzats i dates. La seva clau 2FA també hi arriba, així que [els teus codis continuen funcionant](/ca/help/vault-totp). Quan un element té tant un correu electrònic com un nom d'usuari, el nom d'usuari omple l'inici de sessió i el correu es converteix en un camp. Les notes arriben com a notes, les targetes com a targetes, i les identitats com a notes amb cada detall en la seva pròpia línia. Cada àlies hide-my-email es converteix en una nota amb la seva adreça, així que conserves la llista de quina adreça vas donar a cada lloc; Proton continua reenviant-ne el correu mentre el teu compte de Proton és obert. Si tens més d'una caixa forta, cadascuna es converteix en una etiqueta. Els elements de la paperera es queden enrere.",
             "L'exportació conté les teves contrasenyes en text clar. Importa-la, comprova que tot hagi arribat i després suprimeix el fitxer."
+          ]
+        }
+      ]
+    },
+    "raindrop": {
+      "app": "Raindrop.io",
+      "title": "Exporta els teus marcadors de Raindrop.io",
+      "metaTitle": "Com exportar els teus marcadors de Raindrop.io - PrivacyNotes",
+      "lead": "Exporta els teus marcadors de Raindrop.io en una sola còpia de seguretat .csv, i PrivacyNotes els converteix en marcadors a les mateixes col·leccions, amb les teves notes, extractes i ressaltats.",
+      "sections": [
+        {
+          "h": "Obtén una còpia de seguretat de tot",
+          "steps": [
+            "Obre Raindrop.io al navegador o a la seva app i inicia la sessió.",
+            "Obre All bookmarks i tria Export > Get backup.",
+            "Espera el correu que diu que la còpia de seguretat és a punt. Normalment triga uns minuts.",
+            "Obre Settings > Backups i tria CSV al costat de la còpia nova."
+          ]
+        },
+        {
+          "h": "Tria CSV, no HTML",
+          "p": [
+            "El fitxer HTML conserva els enllaços i les teves notes, però deixa fora els extractes i els ressaltats. Per moure només una col·lecció, obre-la i tria Export > CSV. El .zip d'aquest menú també serveix."
+          ]
+        },
+        {
+          "h": "On va a parar cada cosa",
+          "p": [
+            "Cada marcador va a parar a Bookmarks, dins d'una carpeta per a cada col·lecció, aniuada tal com la tenies. Els marcadors sense classificar van directament sota Bookmarks. La teva nota, l'extracte i cada ressaltat amb la seva nota adhesiva passen a les notes del marcador, i els preferits continuen fixats. Les etiquetes continuen sent etiquetes, i cada marcador conserva el dia en què el vas desar.",
+            "El fitxer no té paperera, recordatoris ni colors de ressaltat, així que això es queda enrere. Les imatges de portada també es queden enrere: cada marcador mostra la icona del seu lloc web."
           ]
         }
       ]
@@ -1288,6 +1343,83 @@
           "p": [
             "[Cada entrada va a Diaris](/ca/help/journal), el dia que li has assignat a Journal. Cada entrada conserva el seu títol i el seu text, i les fotos i els vídeos s'importen com a imatges i adjunts. Un mapa d'una entrada hi arriba com a imatge.",
             "Takeout no inclou noms de llocs, suggeriments d'escriptura, marcadors ni les reflexions de Journal, així que es queden a Journal. El resum de la importació ho indica."
+          ]
+        }
+      ]
+    },
+    "capacities": {
+      "app": "Capacities",
+      "title": "Exporta el teu espai de Capacities",
+      "metaTitle": "Com exportar el teu espai de Capacities - PrivacyNotes",
+      "lead": "Capacities exporta tots els espais alhora en un sol zip de fitxers Markdown amb els seus continguts multimèdia. Aquest zip porta les teves pàgines, notes diàries i objectes personalitzats amb les seves etiquetes, propietats, enllaços, taules i imatges.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/capacities-export.webp",
+            "alt": "Settings de Capacities, pàgina Full Export, Manual Full Export amb Include media activat i el botó Export All Spaces.",
+            "width": 1576,
+            "height": 802
+          },
+          "h": "Fes una exportació completa",
+          "steps": [
+            "Obre Capacities a l'ordinador i obre Settings.",
+            "Tria Full Export.",
+            "A Manual Full Export, obre Options i deixa «Include media» activat. Les altres dues opcions poden quedar com estan: llegim els dos estils d'enllaç i traiem l'encapçalament amb el títol.",
+            "Fes clic a «Export All Spaces». Capacities genera el zip en segon pla i el desa a la carpeta Baixades, amb el nom «Capacities» seguit de la data i l'hora.",
+            "Deixa anar aquest .zip tal com és."
+          ],
+          "p": [
+            "Capacities només posa al zip les imatges i els fitxers que són al teu dispositiu. Si en falten, posa Settings > Offline & Sync > Media loading a «Everything», espera que acabi la baixada i torna a exportar."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "Cada pàgina, nota diària i objecte dels teus propis tipus es converteix en una nota amb les seves etiquetes i les dates que Capacities havia desat. Cada tipus d'objecte es converteix en una carpeta: les pàgines van a Pages, les notes diàries a DailyNotes, i un tipus com Books a una carpeta pròpia.",
+            "Els encapçalaments, les llistes, les tasques, les cites, el codi amb el seu llenguatge, les matemàtiques i les taules arriben tal com eren. Capacities escriu a l'exportació la fórmula d'una taula com el seu resultat, així que els números arriben i la fórmula no. [Les nostres taules admeten les mateixes fórmules](/ca/help/table-formulas), amb els mateixos noms i referències de cel·la, així que escriu `=` a la cel·la per tornar-ne a configurar una. [Els enllaços i les mencions entre objectes es converteixen en enllaços entre notes](/ca/help/note-links), i les imatges i els fitxers s'importen al teu emmagatzematge.",
+            "Les propietats d'un tipus personalitzat, com una valoració o un gènere, s'escriuen com una llista breu al capdamunt de la nota. Les consultes són cerques desades sense text, així que es queden enrere. Capacities no exporta la paperera, les seves col·leccions ni l'aspecte dels desplegables i dels blocs de color: els desplegables arriben com a llistes, i el text que contenen també hi arriba."
+          ]
+        }
+      ]
+    },
+    "onenote": {
+      "app": "OneNote",
+      "title": "Exporta els teus quaderns de OneNote",
+      "metaTitle": "Com exportar els teus quaderns de OneNote - PrivacyNotes",
+      "lead": "OneNote per a Windows exporta un quadern sencer com un únic fitxer OneNote Package (.onepkg). Aquest fitxer porta les teves seccions, pàgines i subpàgines amb les seves tasques, taules, imatges i adjunts.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/onenote-export.webp",
+            "alt": "OneNote per a Windows, File > Export, amb Notebook triat a Export Current, OneNote Package triat a Select Format i el botó Export.",
+            "width": 1576,
+            "height": 548
+          },
+          "h": "Exporta el quadern com a OneNote Package",
+          "steps": [
+            "Obre el quadern a OneNote per a Windows, l'aplicació d'escriptori. Els quaderns desats a OneDrive també s'hi obren.",
+            "Tria File > Export.",
+            "A «Export Current», tria «Notebook».",
+            "A «Select Format», tria «OneNote Package (*.onepkg)» i fes clic a «Export».",
+            "Tria una carpeta i desa. OneNote escriu un sol fitxer .onepkg amb el nom del quadern.",
+            "Deixa anar aquest .onepkg tal com és."
+          ],
+          "p": [
+            "Un paquet conté un quadern. Si tens diversos quaderns, exporta'ls un per un i deixa anar els fitxers l'un darrere l'altre. OneNote a la web, al Mac i als telèfons no té exportació, així que fes servir un ordinador amb Windows per a aquest pas."
+          ]
+        },
+        {
+          "h": "Desbloqueja primer les seccions protegides",
+          "p": [
+            "Una secció amb contrasenya es manté xifrada dins del paquet, i només OneNote la pot obrir. Desbloqueja-les una per una a OneNote, treu-ne la contrasenya a Review > Password > Remove Password i torna a exportar. La previsualització de la importació indica qualsevol secció que hagi hagut de deixar fora."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "El quadern es converteix en una carpeta, amb una carpeta a dins per a cada grup de seccions i cada secció. Cada pàgina es converteix en una nota a la carpeta de la seva secció amb la data en què OneNote la va crear, i una subpàgina segueix la seva pàgina a la mateixa carpeta.",
+            "Els encapçalaments, la negreta, la cursiva, el subratllat, els colors, els ressaltats, les llistes amb punts i numerades, les taules i els paràgrafs de codi arriben tal com eren. Una etiqueta de tasca es converteix en un element de llista de tasques, marcat si estava fet, i les altres etiquetes de nota com Important o Question es converteixen en etiquetes de la nota. [Els enllaços entre pàgines es converteixen en enllaços entre notes](/ca/help/note-links), i les imatges i els fitxers adjunts s'importen al teu emmagatzematge.",
+            "Un fitxer de secció (.one) sol, o una carpeta de quadern en zip, també funciona. Els dibuixos fets amb llapis, les gravacions d'àudio i les equacions no tenen equivalent aquí, així que la previsualització de la importació els compta, i les pàgines de la paperera de OneNote no formen part del paquet."
           ]
         }
       ]

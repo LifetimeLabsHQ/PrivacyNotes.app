@@ -6,10 +6,6 @@
     "error": "Nie udało się teraz wszystkiego zsynchronizować. Sprawdź połączenie i spróbuj ponownie.",
     "conflict": "Jedna z Twoich notatek ma konflikt synchronizacji, który wymaga Twojej decyzji. Rozwiąż go w oknie, a potem spróbuj ponownie."
   },
-  "movedHint": {
-    "body": "To nowy dom aplikacji. Zaktualizuj zakładkę na use.privacynotes.app i dodaj ponownie skróty na ekranie głównym.",
-    "gotIt": "Rozumiem"
-  },
   "moveScreen": {
     "title": "Aplikacja przeniosła się na use.privacynotes.app",
     "bodySignIn": "Zaloguj się tam swoją frazą odzyskiwania albo przez „{{scanQr}}”. To urządzenie najpierw synchronizuje, więc wszystkie Twoje notatki tam na Ciebie czekają, a tutaj nic nie jest usuwane.",
@@ -36,6 +32,7 @@
       "configured": "Pamięć zapełniona. Części notatek nie udało się zsynchronizować. Zwolnij miejsce lub dokup pamięć.",
       "unconfigured": "Pamięć zapełniona. Części notatek nie udało się zsynchronizować. Zwolnij miejsce, usuwając część notatek."
     },
+    "deletedSpace": "Miejsce po usuniętych plikach wraca mniej więcej dzień po ich usunięciu.",
     "manageStorage": "Zarządzaj pamięcią",
     "viewUsage": "Zobacz zużycie"
   },
@@ -91,7 +88,13 @@
     "neverBackedUp_many": "Tylko na tym urządzeniu:",
     "neverBackedUp_other": "Tylko na tym urządzeniu:",
     "moreNotes": "i jeszcze {{count}}",
-    "appLockHint": "Współdzielone urządzenie? Włącz blokadę aplikacji w Ustawienia > Bezpieczeństwo."
+    "appLockHint": "Współdzielone urządzenie? Włącz blokadę aplikacji w Ustawienia > Bezpieczeństwo.",
+    "unopenedWarn_one": "1 notatka ma kopię na serwerze, której to urządzenie nie może otworzyć. Wylogowanie usuwa kopię z tego urządzenia, a może to być jedyna dobra kopia. Najpierw wyślij ją ponownie w Ustawienia > ID & Sync.",
+    "unopenedKept_one": "1 notatka ma kopię na serwerze, której to urządzenie nie może otworzyć. Kopia na tym urządzeniu zostaje po wylogowaniu.",
+    "unopenedKept_few": "{{count}} notatki mają kopię na serwerze, której to urządzenie nie może otworzyć. Kopie na tym urządzeniu zostają po wylogowaniu.",
+    "unopenedKept_many": "{{count}} notatek ma kopię na serwerze, której to urządzenie nie może otworzyć. Kopie na tym urządzeniu zostają po wylogowaniu.",
+    "unopenedWarn_few": "{{count}} notatki mają kopię na serwerze, której to urządzenie nie może otworzyć. Wylogowanie usuwa kopie z tego urządzenia, a mogą to być jedyne dobre kopie. Najpierw wyślij je ponownie w Ustawienia > ID & Sync.",
+    "unopenedWarn_many": "{{count}} notatek ma kopię na serwerze, której to urządzenie nie może otworzyć. Wylogowanie usuwa kopie z tego urządzenia, a mogą to być jedyne dobre kopie. Najpierw wyślij je ponownie w Ustawienia > ID & Sync."
   },
   "signOutUpload": {
     "uploading": "Przesyłanie ostatnich zmian…",

@@ -81,3 +81,19 @@ export function countWords(md: string): number {
 export function countChars(md: string): number {
   return stripMarkdown(md).trim().replace(/\s+/g, ' ').length;
 }
+
+/** Lines of text the note shows: each paragraph, heading, list item, table
+ *  row and code line is one. Blank lines between blocks, code fence markers
+ *  and a table's `|---|` row are markdown syntax, not lines of the note, so
+ *  the number is close to what the reader sees in both editor modes. */
+export function countLines(md: string): number {
+  let n = 0;
+  for (const line of md.split('\n')) {
+    const s = line.trim();
+    if (!s) continue;
+    if (/^(```|~~~)/.test(s)) continue;
+    if (/^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?$/.test(s) && s.includes('|')) continue;
+    n += 1;
+  }
+  return n;
+}

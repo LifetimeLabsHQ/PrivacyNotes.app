@@ -91,3 +91,32 @@ export function consumeOAuthPending(
   if (started === null) return 'missing';
   return now - started <= OAUTH_PENDING_TTL_MS ? 'ok' : 'stale';
 }
+
+/** Whether a provider sign-in this install started is still in time, without
+ *  taking the marker. */
+export function hasOAuthPending(store: PendingStore | null = defaultStore(), now: number = Date.now()): boolean {
+  let started = inMemory;
+  try {
+    const raw = store?.getItem(PENDING_KEY);
+    const n = raw ? Number(raw) : NaN;
+    if (Number.isFinite(n)) started = Math.max(started ?? 0, n);
+  } catch {
+    /* unreadable: the in-memory copy alone */
+  }
+  return started !== null && now - started <= OAUTH_PENDING_TTL_MS;
+}
+
+/**
+ * Drop the marker without a verdict: a sign-in went live another way (the
+ * phrase, a QR, a stored session), so a provider return that arrives later
+ * belongs to a flow the person left, and is refused in silence as one this
+ * install never asked for (beta.privacynotes.app #213 item 5).
+ */
+export function dropOAuthPending(store: PendingStore | null = defaultStore()): void {
+  inMemory = null;
+  try {
+    store?.removeItem(PENDING_KEY);
+  } catch {
+    // Nothing left to clear.
+  }
+}

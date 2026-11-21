@@ -58,6 +58,23 @@ export const LINK_TITLE_ATTRIBUTE = {
   renderHTML: (attrs: { title?: string | null }) => (attrs.title ? { 'data-title': attrs.title } : {}),
 };
 
+/**
+ * A link's `class`, `rel` and `target` are the editor's, never the
+ * document's. TipTap's Link reads all three from the element it parses and
+ * writes them after the configured ones, so a link in a note body, a paste,
+ * a drop or an imported file could name the app's own layout classes
+ * (`fixed inset-0 z-50`) and cover the window (beta #233), put its own `rel`
+ * in place of ours, or name `target="_self"` and take the app's own tab to
+ * the address from a read-only note (beta #216 item 2). With this on each of
+ * the three, the mark reads none from an element and writes none from a
+ * node: the page gets the values `Editor.tsx` configures and nothing else.
+ */
+export const LINK_ATTRIBUTE_FROM_SETTINGS = {
+  default: null,
+  parseHTML: () => null,
+  renderHTML: () => ({}),
+};
+
 type LinkMarkdownState = { inAutolink?: boolean };
 
 /**
@@ -161,6 +178,18 @@ export const LinkModifierOpen = Extension.create<object, LinkOpenStorage>({
             if (!clickOpensLink(view.editable)) return false;
             openExternal(href);
             return true;
+          },
+          // `handleClick` runs on mouseup, so answering true there cancels
+          // the mouseup and not the browser's own `click`, which follows the
+          // anchor in a read-only note: a second tab, or with `_self` the
+          // app's own tab (beta #216 item 2). A link in the editor opens
+          // through `handleClick` alone, so its click is always cancelled.
+          handleDOMEvents: {
+            click: (view, event) => {
+              const anchor = event.target instanceof Element ? event.target.closest('a[href]') : null;
+              if (anchor && view.dom.contains(anchor)) event.preventDefault();
+              return false;
+            },
           },
         },
       }),

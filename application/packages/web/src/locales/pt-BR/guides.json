@@ -316,21 +316,21 @@
       "app": "Bitwarden",
       "title": "Exporte o seu cofre do Bitwarden",
       "metaTitle": "Exportar um cofre do Bitwarden - PrivacyNotes",
-      "lead": "O Bitwarden exporta o seu cofre inteiro em um único arquivo .json não criptografado, e o PrivacyNotes arquiva cada item no seu lugar: logins, cartões, chaves SSH e notas seguras.",
+      "lead": "O Bitwarden exporta o seu cofre inteiro em um único arquivo .json não criptografado, ou em um .zip com os seus anexos, e o PrivacyNotes arquiva cada item no seu lugar: logins, cartões, chaves SSH e notas seguras.",
       "sections": [
         {
           "h": "Exporte seu cofre do Bitwarden",
           "steps": [
             "Abra o cofre web do Bitwarden (ou o app de desktop) e faça login.",
             "Vá em Tools e depois \"Export vault\".",
-            "Escolha o formato de arquivo .json (o simples, não \".json (Encrypted)\").",
+            "Escolha o formato de arquivo .json, ou \".zip (with attachments)\" para trazer também os arquivos anexados. Não escolha \".json (Encrypted)\".",
             "Confirme com sua senha mestra e baixe o arquivo."
           ]
         },
         {
           "h": "Onde as coisas aterrissam",
           "p": [
-            "Logins viram [entradas de Login do Cofre](/br/help/vault) (com os ícones dos sites), cartões viram entradas de cartão, chaves SSH viram entradas de chave SSH, e notas seguras mais identidades chegam como notas legíveis. Pastas do Bitwarden viram etiquetas, e favoritos chegam com estrela. As chaves de autenticação (TOTP) vêm junto, então [seus códigos 2FA continuam funcionando](/br/help/vault-totp).",
+            "Logins viram [entradas de Login do Cofre](/br/help/vault) (com os ícones dos sites), cartões viram entradas de cartão, chaves SSH viram entradas de chave SSH, e notas seguras mais identidades chegam como notas legíveis. Pastas do Bitwarden viram etiquetas, e favoritos chegam com estrela. As chaves de autenticação (TOTP) vêm junto, então [seus códigos 2FA continuam funcionando](/br/help/vault-totp), e as passkeys que você salvou no Bitwarden também. A partir de um .zip, cada anexo vai para o seu item.",
             "O arquivo exportado contém suas senhas em texto puro, então importe, confira se chegou tudo e depois apague o arquivo de vez. Dentro do PrivacyNotes tudo volta a ser criptografado, no seu dispositivo e a caminho do servidor."
           ]
         }
@@ -1115,6 +1115,31 @@
         }
       ]
     },
+    "msecure": {
+      "app": "mSecure",
+      "title": "Exporte o seu cofre do mSecure",
+      "metaTitle": "Como exportar o seu cofre do mSecure - PrivacyNotes",
+      "lead": "O mSecure exporta seus registros em um único arquivo .csv pelo app para desktop, e o PrivacyNotes os transforma em logins, cartões e notas do Cofre, com os campos personalizados.",
+      "sections": [
+        {
+          "h": "Exporte do mSecure",
+          "steps": [
+            "Abra o mSecure no computador e desbloqueie-o.",
+            "Abra Settings e escolha Backups.",
+            "Em Import and Export records, escolha Export records to CSV file.",
+            "Selecione Export all records. Deixe \"Only export field data\" desativado, para que o arquivo mantenha o nome de cada campo.",
+            "Escolha Export e salve o arquivo .csv."
+          ]
+        },
+        {
+          "h": "Onde as coisas aterrissam",
+          "p": [
+            "Cada login vira um [login do Cofre](/br/help/vault) com a sua chave 2FA, então [seus códigos continuam funcionando](/br/help/vault-totp), e os sites extras e os campos personalizados vêm junto, com seus nomes. Um campo secreto, como um PIN ou um código de recuperação, continua oculto. Um cartão vira um cartão. Uma nota segura vira uma nota, e os outros tipos de registro, como uma identidade ou uma conta bancária, viram notas que listam seus campos, com uma etiqueta do tipo de registro. Suas etiquetas continuam etiquetas. O arquivo não tem datas nem favoritos, então cada item fica com o dia em que você o importar.",
+            "O arquivo exportado contém suas senhas em texto puro. Importe, confira se chegou tudo e depois apague o arquivo."
+          ]
+        }
+      ]
+    },
     "nordpass": {
       "app": "NordPass",
       "title": "Exporte o seu cofre do NordPass",
@@ -1163,6 +1188,36 @@
           "p": [
             "Cada login vira um [login do Cofre](/br/help/vault) com seus sites extras, campos personalizados e datas. A chave 2FA vem junto, então [seus códigos continuam funcionando](/br/help/vault-totp). Quando um item tem e-mail e nome de usuário, o nome de usuário preenche o login e o e-mail vira um campo. Notas chegam como notas, cartões como cartões, e identidades como notas com cada detalhe em sua própria linha. Cada alias do Hide My Email vira uma nota com o endereço do alias, para você guardar a lista de qual endereço você deu a cada site; o Proton continua encaminhando os e-mails enquanto sua conta do Proton estiver ativa. Com mais de um cofre, cada cofre vira uma etiqueta. Itens da lixeira ficam para trás.",
             "O arquivo exportado contém suas senhas em texto puro. Importe, confira se chegou tudo e depois apague o arquivo."
+          ]
+        }
+      ]
+    },
+    "raindrop": {
+      "app": "Raindrop.io",
+      "title": "Exporte os seus marcadores do Raindrop.io",
+      "metaTitle": "Como exportar os seus marcadores do Raindrop.io - PrivacyNotes",
+      "lead": "Exporte os seus marcadores do Raindrop.io como um único backup em .csv, e o PrivacyNotes os transforma em marcadores nas mesmas coleções, com as suas notas, trechos e destaques.",
+      "sections": [
+        {
+          "h": "Pegue um backup de tudo",
+          "steps": [
+            "Abra o Raindrop.io no navegador ou no app e entre na sua conta.",
+            "Abra All bookmarks e escolha Export > Get backup.",
+            "Espere o e-mail avisando que o backup está pronto. Em geral leva alguns minutos.",
+            "Abra Settings > Backups e escolha CSV ao lado do novo backup."
+          ]
+        },
+        {
+          "h": "Escolha CSV, não HTML",
+          "p": [
+            "O arquivo HTML guarda os links e as suas notas, mas deixa de fora os trechos e os destaques. Para levar só uma coleção, abra-a e escolha Export > CSV. O .zip desse menu também funciona."
+          ]
+        },
+        {
+          "h": "Onde as coisas vão parar",
+          "p": [
+            "Cada marcador vai para dentro de Bookmarks, em uma pasta para cada coleção, aninhada do jeito que você tinha. Os marcadores sem coleção (Unsorted) vão direto para Bookmarks. A sua nota, o trecho e cada destaque com o seu post-it vão para as notas do marcador, e os favoritos continuam fixados. As etiquetas continuam etiquetas, e cada marcador guarda o dia em que você o salvou.",
+            "O arquivo não traz lixeira, lembretes nem cores de destaque, então isso fica para trás. As imagens de capa também ficam: cada marcador mostra o ícone do seu site no lugar."
           ]
         }
       ]
@@ -1288,6 +1343,83 @@
           "p": [
             "[Cada entrada vai parar em Diários](/br/help/journal), no dia que você escolheu para ela no Journal. Cada entrada mantém o título e o texto, e fotos e vídeos são importados como imagens e anexos. Um mapa em uma entrada vem junto como imagem.",
             "O Takeout não traz nomes de lugares, sugestões de escrita, marcadores nem as reflexões do Journal, então isso fica no Journal. O resumo da importação avisa."
+          ]
+        }
+      ]
+    },
+    "capacities": {
+      "app": "Capacities",
+      "title": "Exporte o seu espaço do Capacities",
+      "metaTitle": "Como exportar o seu espaço do Capacities - PrivacyNotes",
+      "lead": "O Capacities exporta todos os espaços de uma vez em um único zip de arquivos Markdown com a mídia. Esse zip leva as suas páginas, notas diárias e objetos personalizados com as etiquetas, propriedades, links, tabelas e imagens.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/capacities-export.webp",
+            "alt": "As configurações do Capacities, página Full Export, Manual Full Export com Include media ativado e o botão Export All Spaces.",
+            "width": 1576,
+            "height": 802
+          },
+          "h": "Faça uma exportação completa",
+          "steps": [
+            "Abra o Capacities no computador e abra Settings.",
+            "Escolha Full Export.",
+            "Em Manual Full Export, abra Options e deixe \"Include media\" ativado. As outras duas opções podem ficar como estão: lemos os dois estilos de link e descartamos o cabeçalho com o título.",
+            "Clique em \"Export All Spaces\". O Capacities cria o zip em segundo plano e o salva na sua pasta Downloads, com o nome \"Capacities\" seguido da data e da hora.",
+            "Solte esse .zip do jeito que está."
+          ],
+          "p": [
+            "O Capacities só coloca imagens e arquivos no zip quando eles estão no seu dispositivo. Se alguns estiverem faltando, defina Settings > Offline & Sync > Media loading como \"Everything\", espere o download terminar e exporte de novo."
+          ]
+        },
+        {
+          "h": "O que vem junto",
+          "p": [
+            "Cada página, nota diária e objeto dos seus próprios tipos vira uma nota com as suas etiquetas e as datas que o Capacities guardou. Cada tipo de objeto vira uma pasta: suas páginas vão para Pages, suas notas diárias para DailyNotes, e um tipo como Books para uma pasta própria.",
+            "Títulos, listas, tarefas, citações, código com a sua linguagem, matemática e tabelas chegam como estavam. O Capacities grava a fórmula de uma tabela na exportação como o seu resultado, então os números chegam e a fórmula não. [As nossas tabelas aceitam as mesmas fórmulas](/br/help/table-formulas), com os mesmos nomes e referências de células, então digite `=` na célula para configurar uma de novo. [Links e menções entre objetos viram links entre notas](/br/help/note-links), e as imagens e os arquivos são importados para o seu armazenamento.",
+            "As propriedades de um tipo personalizado, como uma avaliação ou um gênero, são gravadas como uma lista curta no topo da nota. As consultas são buscas salvas sem texto, então ficam para trás. O Capacities não exporta a lixeira, as suas coleções nem o visual de toggles e blocos coloridos: os toggles chegam como listas, e o texto dentro deles vem junto."
+          ]
+        }
+      ]
+    },
+    "onenote": {
+      "app": "OneNote",
+      "title": "Exporte os seus cadernos do OneNote",
+      "metaTitle": "Como exportar os seus cadernos do OneNote - PrivacyNotes",
+      "lead": "O OneNote para Windows exporta um caderno inteiro como um único arquivo OneNote Package (.onepkg). Esse arquivo leva as suas seções, páginas e subpáginas com as tarefas, tabelas, imagens e anexos.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/onenote-export.webp",
+            "alt": "O OneNote para Windows, File > Export, com Notebook escolhido em Export Current, OneNote Package escolhido em Select Format e o botão Export.",
+            "width": 1576,
+            "height": 548
+          },
+          "h": "Exporte o caderno como um OneNote Package",
+          "steps": [
+            "Abra o caderno no OneNote para Windows, o app de computador. Os cadernos guardados no OneDrive também abrem nele.",
+            "Escolha File > Export.",
+            "Em \"Export Current\", escolha \"Notebook\".",
+            "Em \"Select Format\", escolha \"OneNote Package (*.onepkg)\" e clique em \"Export\".",
+            "Escolha uma pasta e salve. O OneNote grava um único arquivo .onepkg com o nome do caderno.",
+            "Solte esse .onepkg do jeito que está."
+          ],
+          "p": [
+            "Um pacote contém um caderno. Se você tem vários cadernos, exporte cada um e solte os arquivos um depois do outro. O OneNote na web, no Mac e no celular não tem exportação, então use um computador com Windows para esta etapa."
+          ]
+        },
+        {
+          "h": "Desbloqueie antes as seções protegidas",
+          "p": [
+            "Uma seção com senha continua criptografada dentro do pacote, e só o OneNote consegue abri-la. Desbloqueie cada uma no OneNote, remova a senha em Review > Password > Remove Password e exporte de novo. A prévia da importação cita qualquer seção que precisou ser deixada de fora."
+          ]
+        },
+        {
+          "h": "O que vem junto",
+          "p": [
+            "O caderno vira uma pasta, com uma pasta dentro dela para cada grupo de seções e cada seção. Cada página vira uma nota na pasta da sua seção, com a data em que o OneNote a criou, e uma subpágina vem logo depois da sua página na mesma pasta.",
+            "Títulos, negrito, itálico, sublinhado, cores, destaques, listas com marcadores e numeradas, tabelas e parágrafos de código chegam como estavam. Uma etiqueta de tarefa vira um item de lista de tarefas, marcado quando estava concluído, e outras etiquetas de nota, como Important ou Question, viram etiquetas da nota. [Links entre páginas viram links entre notas](/br/help/note-links), e as imagens e os arquivos anexados são importados para o seu armazenamento.",
+            "Um arquivo de seção (.one) sozinho, ou uma pasta de caderno compactada, também funciona. Desenhos feitos com caneta, gravações de áudio e equações não têm forma aqui, então a prévia da importação os conta, e as páginas da lixeira do OneNote não fazem parte do pacote."
           ]
         }
       ]

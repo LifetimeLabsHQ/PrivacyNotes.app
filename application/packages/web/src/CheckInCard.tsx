@@ -63,6 +63,10 @@ type Props = {
   reorderId?: string;
   /** The live items of the open space; the card finds the day's entry here. */
   notes: readonly LocalNote[];
+  /** The entry of the day the card shows, from where `onSave` looks it up:
+   *  with Journals shut that is the whole store, so another day's hidden
+   *  entry draws as its lock and no tap writes over it (beta #198). */
+  entryOn?: (day: string) => LocalNote | undefined;
   /** Whether the PIN guards an entry right now. */
   isGated: (n: LocalNote) => boolean;
   settings: CheckInSettings;
@@ -223,7 +227,7 @@ export function CheckInCard(p: Props) {
   if (notice && notice !== 'cleared') return shell(noticeLine, true);
   if (skipped) return null;
 
-  const entry = checkInEntry(p.notes, day);
+  const entry = p.entryOn ? p.entryOn(day) : checkInEntry(p.notes, day);
   const guarded = !!entry && (p.isGated(entry) || entry.locked === 1);
   const data = (entry && !guarded ? (entry.trackers as JournalTrackerData | undefined) : undefined) ?? {};
   // While the medication card shows, the doses are that card's: a dose

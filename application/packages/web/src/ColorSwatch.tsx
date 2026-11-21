@@ -96,7 +96,10 @@ export function ColorSwatchRow({
   onPick: (color: LookColor | null) => void;
 }) {
   return (
-    <div className="flex flex-wrap gap-1 [@media(hover:none)]:gap-0.5">
+    // One line with a mouse (13 x 24 px and their gaps, 360 px). On a touch
+    // screen seven to a row: "no color" and the twelve colors make two even
+    // rows, and a phone fits seven finger-sized swatches.
+    <div className="flex gap-1 [@media(hover:none)]:grid [@media(hover:none)]:grid-cols-[repeat(7,max-content)] [@media(hover:none)]:gap-0.5">
       <ColorSwatch
         label={noneLabel}
         none
@@ -124,3 +127,11 @@ export function ColorSwatchRow({
 }
 
 const TOUCH_SWATCH = '[@media(hover:none)]:w-11 [@media(hover:none)]:h-11';
+
+/**
+ * The width of a menu whose view is a ColorSwatchRow, with the menu's px-4
+ * and border: the one line of swatches (360 px) needs 394 px with a mouse,
+ * and seven finger-sized ones (7 x 44 px and their gaps, 320 px) 354 px on a
+ * touch screen. LookPicker's dialog takes the same 394 px.
+ */
+export const COLOR_MENU_WIDTH = 'w-[394px] [@media(hover:none)]:w-[354px]';

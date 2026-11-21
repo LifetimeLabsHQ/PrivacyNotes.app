@@ -1,8 +1,12 @@
 /**
  * Standalone /crypto-checkout page: Pro paid in crypto through BlockBee's
  * hosted checkout. The app opens it in a new tab (web) or the system browser
- * (desktop), with `?order=<id>&pubkey=<hex>`; BlockBee sends the buyer back
- * with `?order=<id>` and its own parameters, which the page ignores.
+ * (desktop), with `?order=<id>&pubkey=<hex>&secret=<order secret>`; BlockBee
+ * sends the buyer back with `?order=<id>` and its own parameters, which the
+ * page ignores. The secret never goes to BlockBee: the page keeps it with the
+ * Account ID across the visit, and sends it with every call that names the
+ * Account ID, so an order id alone cannot test a guessed one (beta #172). A
+ * link from an older app has no secret.
  *
  *   1. confirm  - product, the server's price, the full Account ID, and a
  *                 required consent: Pro starts at once, crypto payments are
@@ -14,9 +18,9 @@
  *                 purchase confirmation, which the buyer saves as a PDF.
  *
  * Rendered outside AuthProvider (main.tsx pathname routing): it needs no
- * session, only the order (which the signed-in app registered) and the
- * pubkey. The server never answers the pubkey, and refuses an order that
- * pays for another one, so every view that names an account or offers a
+ * session, only the order (which the signed-in app registered), the pubkey
+ * and the secret. The server never answers the pubkey, and refuses an order
+ * that pays for another one, so every view that names an account or offers a
  * payment link names the one in the address. In the demo it calls nothing.
  * Spec: docs/internal/plans/crypto-payments.md (section 11b)
  */
@@ -49,9 +53,12 @@ const TERMS_URL = 'https://lifetimelabs.dev/terms/';
 /** How often the page asks about an order it is waiting on. */
 const POLL_MS = 10_000;
 
+/** The Account ID the page vouches for, and the order's secret (null on a link from an older app). */
+type Account = { pubkey: string; secret: string | null };
+
 type View =
   | { kind: 'loading' }
-  | { kind: 'confirm'; order: string; pubkey: string; priceCents: number | null }
+  | { kind: 'confirm'; order: string; account: Account; priceCents: number | null }
   | { kind: 'opening' }
   | { kind: 'waiting'; order: string; status: CryptoStatus; pubkey: string | null }
   | { kind: 'paid'; status: CryptoStatus; pubkey: string | null }
@@ -71,34 +78,38 @@ export default function CryptoCheckoutLauncher() {
     poll.current = null;
   };
 
-  // One status read, and the view it leads to. `pubkey` is the Account ID
-  // the page was opened with (or kept across the visit to BlockBee): the
-  // server answers no pubkey, and refuses an order that pays for another
-  // account, so the page never shows or offers one it cannot vouch for.
-  const follow = useCallback(async (order: string, pubkey: string | null) => {
+  // One status read, and the view it leads to. `account` is the Account ID
+  // and secret the page was opened with (or kept across the visit to
+  // BlockBee): the server answers no pubkey, and answers an order that pays
+  // for another account, or a wrong secret, as `none`, like an unknown one
+  // (beta #172), so the page never follows one; its create step then fails
+  // as for an unknown order. `order_taken` is what a server before that
+  // answered.
+  const follow = useCallback(async (order: string, account: Account | null) => {
     stopPolling();
-    const res = await cryptoCheckoutStatus(order, pubkey);
+    const res = await cryptoCheckoutStatus(order, account?.pubkey, account?.secret);
     if (!res.ok) {
       if (res.code === 'demo') return setView({ kind: 'demo' });
       if (res.code === 'order_taken') return setView({ kind: 'invalid' });
-      return setView({ kind: 'error', retry: () => void follow(order, pubkey) });
+      return setView({ kind: 'error', retry: () => void follow(order, account) });
     }
-    if (pubkey) keepAccount(order, pubkey);
+    if (account) keepAccount(order, account);
+    const pubkey = account?.pubkey ?? null;
     const status = res.data;
     // 'none': the app's registration may still be on its way; the server
     // refuses the create step until it has landed.
     if (status.state === 'none' || status.state === 'new') {
-      if (!pubkey) return setView({ kind: 'invalid' });
-      setView({ kind: 'confirm', order, pubkey, priceCents: null });
+      if (!account) return setView({ kind: 'invalid' });
+      setView({ kind: 'confirm', order, account, priceCents: null });
       const quote = await quoteCryptoPrice();
-      if (quote.ok) setView({ kind: 'confirm', order, pubkey, priceCents: quote.data.amount_cents });
-      else setView({ kind: 'error', retry: () => void follow(order, pubkey) });
+      if (quote.ok) setView({ kind: 'confirm', order, account, priceCents: quote.data.amount_cents });
+      else setView({ kind: 'error', retry: () => void follow(order, account) });
       return;
     }
     if (status.state === 'paid') return setView({ kind: 'paid', status, pubkey });
     if (status.state === 'expired') return setView({ kind: 'expired' });
     setView({ kind: 'waiting', order, status, pubkey });
-    poll.current = window.setTimeout(() => void follow(order, pubkey), POLL_MS);
+    poll.current = window.setTimeout(() => void follow(order, account), POLL_MS);
   }, []);
 
   useEffect(() => {
@@ -109,36 +120,41 @@ export default function CryptoCheckoutLauncher() {
     const params = new URLSearchParams(window.location.search);
     const order = params.get('order');
     const pubkey = params.get('pubkey');
-    if (!isCryptoOrderId(order) || (pubkey !== null && !HEX32_KEY.test(pubkey))) {
+    const secret = params.get('secret');
+    if (!isCryptoOrderId(order) || (pubkey !== null && !HEX32_KEY.test(pubkey)) || (secret !== null && !isCryptoOrderId(secret))) {
       setView({ kind: 'invalid' });
       return;
     }
-    void follow(order, pubkey ?? keptAccount(order));
+    void follow(order, pubkey ? { pubkey, secret } : keptAccount(order));
     return stopPolling;
   }, [follow]);
 
-  async function pay(order: string, pubkey: string): Promise<void> {
+  async function pay(order: string, account: Account): Promise<void> {
     setView({ kind: 'opening' });
-    const res = await createCryptoCheckout(order, pubkey);
+    const res = await createCryptoCheckout(order, account.pubkey, account.secret);
     if (res.ok) {
       // Leaves for BlockBee's page. The answer can name this account's other
       // order, the one whose checkout is open; BlockBee returns to that one.
-      // Back on this page, the status read shows where the payment stands.
-      keepAccount(res.data.order, pubkey);
+      // Back on this page, the status read shows where the payment stands;
+      // the server takes this order's secret for that one too.
+      keepAccount(res.data.order, account);
       window.location.assign(res.data.payment_url);
       return;
     }
     if (res.code === 'already_pro') return setView({ kind: 'alreadyPro' });
     if (res.code === 'expired') return setView({ kind: 'expired' });
-    if (res.code === 'order_taken') return setView({ kind: 'invalid' });
+    // `unknown_order`: an order this account did not register, often another
+    // account's, which the status read answered as `none` (beta #172). A
+    // retry would read `none` and offer the same confirm step again, forever.
+    if (res.code === 'order_taken' || res.code === 'unknown_order') return setView({ kind: 'invalid' });
     if (res.code === 'demo') return setView({ kind: 'demo' });
-    setView({ kind: 'error', retry: () => void follow(order, pubkey) });
+    setView({ kind: 'error', retry: () => void follow(order, account) });
   }
 
   return (
     <CheckoutPaper>
       {view.kind === 'confirm' ? (
-        <ConfirmStep view={view} onPay={() => void pay(view.order, view.pubkey)} />
+        <ConfirmStep view={view} onPay={() => void pay(view.order, view.account)} />
       ) : view.kind === 'paid' ? (
         <Confirmation status={view.status} pubkey={view.pubkey} />
       ) : view.kind === 'waiting' ? (
@@ -199,7 +215,7 @@ function ConfirmStep({ view, onPay }: { view: Extract<View, { kind: 'confirm' }>
         {/* No feature list here: the buyer comes from the Upgrade window,
             which just showed it. "Final" is said once, in the consent below. */}
         <p className="mt-3 text-start text-small leading-relaxed text-[#3F3A33]">{t('cryptoCheckout.coins')}</p>
-        <AccountBlock pubkey={view.pubkey} />
+        <AccountBlock pubkey={view.account.pubkey} />
         {/* The consent EU law asks for before a digital good starts at once.
             Spec: docs/internal/plans/crypto-payments.md (section 8, refunds) */}
         <div className="mt-4 border-t border-[#E0D7BD] pt-3 text-start">
@@ -233,24 +249,26 @@ const format = {
 };
 
 /**
- * The Account ID this tab opened an order with, kept across the visit to
- * BlockBee, whose return address names the order only. Per tab, and only the
- * last order. Storage blocked: the page shows the state without the account.
+ * The Account ID and order secret this tab opened an order with, kept across
+ * the visit to BlockBee, whose return address names the order only. Per tab,
+ * and only the last order. Storage blocked: the page shows the state without
+ * the account.
  */
 const ACCOUNT_KEY = 'privacynotes.cryptoCheckoutAccount';
 
-function keepAccount(order: string, pubkey: string): void {
+function keepAccount(order: string, account: Account): void {
   try {
-    sessionStorage.setItem(ACCOUNT_KEY, JSON.stringify({ order, pubkey }));
+    sessionStorage.setItem(ACCOUNT_KEY, JSON.stringify({ order, pubkey: account.pubkey, secret: account.secret }));
   } catch {
     // See above.
   }
 }
 
-function keptAccount(order: string): string | null {
+function keptAccount(order: string): Account | null {
   try {
-    const kept = JSON.parse(sessionStorage.getItem(ACCOUNT_KEY) ?? 'null') as { order?: unknown; pubkey?: unknown } | null;
-    return kept?.order === order && typeof kept.pubkey === 'string' && HEX32_KEY.test(kept.pubkey) ? kept.pubkey : null;
+    const kept = JSON.parse(sessionStorage.getItem(ACCOUNT_KEY) ?? 'null') as { order?: unknown; pubkey?: unknown; secret?: unknown } | null;
+    if (kept?.order !== order || typeof kept.pubkey !== 'string' || !HEX32_KEY.test(kept.pubkey)) return null;
+    return { pubkey: kept.pubkey, secret: typeof kept.secret === 'string' && isCryptoOrderId(kept.secret) ? kept.secret : null };
   } catch {
     return null;
   }

@@ -28,9 +28,22 @@
   "tagChip": {
     "clear": "Rensa taggfilter: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "Rensa mätvärdesfilter: {{tracker}}",
+    "anyTag": "Valfri tagg",
+    "tagLabel": "Tagg för {{tracker}}",
+    "answerLabel": "Svar för {{tracker}}",
+    "anyAnswer": "Valfritt svar"
+  },
+  "trackerFocus": {
+    "every_other": "ungefär var {{count}}:e dag",
+    "last": "loggat {{when}}",
+    "locked_other": "{{count}} inlägg bakom en PIN-kod utelämnas",
+    "locked_one": "{{count}} inlägg bakom en PIN-kod utelämnas",
+    "every_one": "ungefär varje dag"
+  },
   "vaultNew": {
     "ariaLabel": "Nytt objekt i valvet",
-    "card": "Kreditkort",
     "sshKey": "SSH-nyckel",
     "generator": "Lösenord"
   },
@@ -49,7 +62,8 @@
   "vaultFilter": {
     "all": "Alla",
     "logins": "Inloggningar",
-    "cards": "Kreditkort",
+    "passkeys": "Passkeys",
+    "cards": "Kort",
     "keys": "Nycklar"
   },
   "journal": {
@@ -61,7 +75,8 @@
   "trash": {
     "empty": "Töm",
     "emptyHover": "Radera alla anteckningar i papperskorgen",
-    "autoDelete": "Radera automatiskt efter 30 dagar"
+    "autoDelete": "Radera automatiskt efter 30 dagar",
+    "replacedTitle": "Kopior av raderade anteckningar"
   },
   "search": {
     "sortOptions": "Sorterings- och visningsalternativ",
@@ -125,6 +140,7 @@
     "imageUploadFailed": "Bilduppladdningen misslyckades: {{error}}",
     "imageError": "Bildfel: {{error}}",
     "uploadFailedFor": "Uppladdningen misslyckades för ”{{filename}}”: {{error}}",
+    "uploadsHeld": "Du har nått dagens uppladdningsgräns. Dina bilder och filer är säkra på den här enheten och laddas upp efter {{time}}.",
     "importedSyncing_one": "Importerade {{count}} anteckning. Synkar…",
     "importedSyncing_other": "Importerade {{count}} anteckningar. Synkar…",
     "addedTag_one": "Lade till #{{tag}} på {{count}} objekt",
@@ -137,6 +153,7 @@
   },
   "loadError": {
     "message": "Det gick inte att läsa in dina anteckningar. Anslutningen till den lokala databasen avbröts. Det kan hända efter att appen har legat i bakgrunden en stund.",
+    "storageOff": "Det gick inte att läsa in dina anteckningar. Den här enheten har stängt av lagringen som PrivacyNotes sparar dem i, vilket Låst läge gör. Åtgärda det genom att öppna Inställningar, sedan Integritet och säkerhet, sedan Låst läge, sedan Anpassa webbplatser, och stänga av PrivacyNotes. I Safari stänger du av Låst läge för den här webbplatsen i Webbplatsinställningar.",
     "reload": "Ladda om"
   },
   "banner": {
@@ -189,6 +206,7 @@
   "editor": {
     "backToList": "Tillbaka till anteckningslistan",
     "backToGrid": "Tillbaka till rutnätet",
+    "closeSide": "Stäng den här sidan",
     "titlePlaceholder": "Utan titel (klicka för att redigera, eller låt den skapas automatiskt)",
     "titlePlaceholderLogin": "t.ex. GitHub",
     "titlePlaceholderCard": "t.ex. Visa som slutar på 4242",
@@ -197,10 +215,22 @@
     "lockNow": "Lås nu",
     "lockNowHint": "Dölj innehållet nu",
     "turnOffHint": "Tillåt redigering igen",
+    "turnOffForNowHint": "Redigera den här anteckningen tills du lämnar den",
     "unarchiveHint": "Visa i dina listor igen",
     "showFormatted": "Visa formaterat",
+    "splitView": "Delad vy",
+    "showSplitView": "Visa delad vy",
+    "hideSplitView": "Dölj delad vy",
+    "splitViewNeedsWidth": "Gör fönstret bredare för att använda delad vy",
+    "swapSides": "Byt sida",
+    "formattedOnly": "{{name}} fungerar i den formaterade vyn",
+    "formattedOnlyHint": "Formaterad vy",
     "invisiblesShow": "Visa osynliga tecken",
     "invisiblesHide": "Dölj osynliga tecken",
+    "lineNumbersShow": "Visa radnummer",
+    "lineNumbersHide": "Dölj radnummer",
+    "footerPin": "Fäst statistik",
+    "footerUnpin": "Lossa statistik",
     "undo": "Ångra",
     "redo": "Gör om",
     "hide": "Dölj",
@@ -274,6 +304,7 @@
     "accountLabel": "ID och synk",
     "appearanceLabel": "Utseende",
     "editorLabel": "Redigerare",
+    "pluginsLabel": "Plugins",
     "formatBarLabel": "Formatfält",
     "listsLabel": "Listor",
     "trackersLabel": "Mätvärden",
@@ -295,6 +326,10 @@
   "archiveConfirm": {
     "body_one": "Arkivera <highlight>{{count}} objekt</highlight>? Det lämnar dina listor och väntar i vyn Arkiv. Ta ur arkivet hämtar tillbaka det.",
     "body_other": "Arkivera <highlight>{{count}} objekt</highlight>? De lämnar dina listor och väntar i vyn Arkiv. Ta ur arkivet hämtar tillbaka dem."
+  },
+  "duplicateConfirm": {
+    "body_one": "Duplicera <highlight>{{count}} objekt</highlight>? Det får en egen kopia.",
+    "body_other": "Duplicera <highlight>{{count}} objekt</highlight>? Vart och ett får en egen kopia."
   },
   "bulkTrash": {
     "body_one": "Radera <highlight>{{count}} objekt</highlight>? Flytta det till papperskorgen för att återställa det senare, eller radera det för alltid.",
@@ -341,6 +376,7 @@
     "title": "Kopplingar",
     "hide": "Dölj kopplingar",
     "linkedFrom": "Länkas från",
+    "usedIn": "Används i",
     "linksTo": "Länkar till",
     "missing": "Inte skapad än",
     "protectedHidden_one": "{{count}} PIN-skyddat objekt visas inte",
@@ -351,9 +387,10 @@
     "relatedLinkedFrom": "Båda länkas från {{title}}",
     "relatedTag": "Båda taggade {{tag}}",
     "relatedMeaning": "Samma innebörd",
+    "relatedMention": "Nämner {{name}}",
     "meaningDoor": "Smarta kopplingar: hitta anteckningar med samma innebörd, med offline-AI",
     "meaningDoorNo": "Visa inte igen",
-    "meaningDoorHidden": "Dolt i alla anteckningar. Smarta kopplingar finns kvar under Inställningar > Redigerare > Beteende.",
+    "meaningDoorHidden": "Dolt i alla anteckningar. Smarta kopplingar finns kvar under Inställningar > Plugins.",
     "hideSuggestions": "Dölj föreslagna kopplingar",
     "notRelated": "Inte relaterad",
     "notRelatedDone": "Föreslås inte längre",
@@ -426,5 +463,31 @@
     "autoJournal": "Lägg till min plats i varje nytt dagboksinlägg",
     "autoDenied": "Platstjänster är avstängda för PrivacyNotes. Slå på dem i telefonens inställningar först.",
     "autoOff": "Platstjänster är avstängda på den här telefonen. Slå på dem först."
+  },
+  "vaultPasskey": {
+    "forSite": "Passkey för {{rpId}}",
+    "hasPasskey": "Har en passkey",
+    "removeTitle": "Ta bort passkeyn för {{rpId}}?",
+    "removeBody": "Du kan inte längre logga in på {{rpId}} med den från PrivacyNotes.",
+    "savedByExtension": "Passkeys sparas av webbläsartillägget för PrivacyNotes när en webbplats erbjuder en.",
+    "removeBrowserWaiting": "Vissa objekt som den här webbläsaren skickade finns inte i ditt Valv än. Om du tar bort den nu går de förlorade.",
+    "removeBrowserAnyway": "Ta bort ändå"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "Översätt",
+    "from": "Från",
+    "to": "Till",
+    "saveAsNote": "Spara som ny anteckning",
+    "needPair": "Ladda ner {{language}} · {{size}}",
+    "noModel": "Det här språket kan inte översättas än.",
+    "nothing": "Den här anteckningen har inga ord att översätta.",
+    "turnOn": "Slå på {{language}}",
+    "failed": "Det gick inte att översätta den här anteckningen. Försök igen.",
+    "untranslated_other": "{{count}} rader kunde inte översättas och står kvar som de var.",
+    "untranslated_one": "{{count}} rad kunde inte översättas och står kvar som den var."
+  },
+  "tags": {
+    "suggestMove": "Flytta till {{folder}}"
   }
 }

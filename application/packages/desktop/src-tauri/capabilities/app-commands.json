@@ -1,0 +1,271 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "app-commands",
+  "description": "The app's own commands (lib.rs, generate_handler) for the main window, which calls every one of them. build.rs declares them in an app manifest (beta issue 167), so Tauri asks the access list for an app command as it does for a plugin command, and a window holds only the commands a capability grants it: the Ninja box gets ninja_dismiss (ninja.json), the About window none. No platforms, because the list is the union of the desktop and phone lists and a grant for a command a target does not register reaches nothing there. read_opened_file carries the deny list every fs grant carries, because it reads a path as fs:allow-read-file does (opened_file.rs); grant_file_picture carries it too, for the opened file and the picture it names (file_pictures.rs). The backup_dest_* commands also refuse any window other than main in Rust (main_only in backup_dest.rs) as a second layer, and so do the plugin_files_* commands (main_only in plugin_files.rs). Pinned by tests/desktopCapabilities.test.ts, which also holds every command the web code invokes to a grant for the window that runs it.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "allow-can-self-update",
+    "allow-is-scoop-install",
+    "allow-biometric-available",
+    "allow-biometric-authenticate",
+    "allow-biometric-key-create",
+    "allow-biometric-key-open",
+    "allow-biometric-key-delete",
+    "allow-device-key-create",
+    "allow-device-key-open",
+    "allow-biometric-tpm-missing",
+    "allow-print-html",
+    "allow-take-pending-opens",
+    {
+      "identifier": "allow-read-opened-file",
+      "deny": [
+        {
+          "path": "$HOME/.ssh/**"
+        },
+        {
+          "path": "$HOME/.gnupg/**"
+        },
+        {
+          "path": "$HOME/.aws/**"
+        },
+        {
+          "path": "$HOME/.kube/**"
+        },
+        {
+          "path": "$HOME/.docker/**"
+        },
+        {
+          "path": "$HOME/.config/gh/**"
+        },
+        {
+          "path": "$HOME/.local/share/keyrings/**"
+        },
+        {
+          "path": "$HOME/Library/LaunchAgents"
+        },
+        {
+          "path": "$HOME/Library/LaunchAgents/**"
+        },
+        {
+          "path": "$HOME/Applications"
+        },
+        {
+          "path": "$HOME/Applications/**"
+        },
+        {
+          "path": "$HOME/bin"
+        },
+        {
+          "path": "$HOME/bin/**"
+        },
+        {
+          "path": "$HOME/AppData"
+        },
+        {
+          "path": "$HOME/AppData/**"
+        },
+        {
+          "path": "$HOME/Documents/WindowsPowerShell"
+        },
+        {
+          "path": "$HOME/Documents/WindowsPowerShell/**"
+        },
+        {
+          "path": "$HOME/Documents/PowerShell"
+        },
+        {
+          "path": "$HOME/Documents/PowerShell/**"
+        },
+        {
+          "path": "$HOME/Library/Application Support/app.privacynotes"
+        },
+        {
+          "path": "$HOME/Library/Application Support/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/Library/Caches/app.privacynotes"
+        },
+        {
+          "path": "$HOME/Library/Caches/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/Library/Logs/app.privacynotes"
+        },
+        {
+          "path": "$HOME/Library/Logs/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/Library/WebKit"
+        },
+        {
+          "path": "$HOME/Library/WebKit/**"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes/**"
+        }
+      ]
+    },
+    {
+      "identifier": "allow-grant-file-picture",
+      "deny": [
+        {
+          "path": "$HOME/.ssh/**"
+        },
+        {
+          "path": "$HOME/.gnupg/**"
+        },
+        {
+          "path": "$HOME/.aws/**"
+        },
+        {
+          "path": "$HOME/.kube/**"
+        },
+        {
+          "path": "$HOME/.docker/**"
+        },
+        {
+          "path": "$HOME/.config/gh/**"
+        },
+        {
+          "path": "$HOME/.local/share/keyrings/**"
+        },
+        {
+          "path": "$HOME/Library/LaunchAgents"
+        },
+        {
+          "path": "$HOME/Library/LaunchAgents/**"
+        },
+        {
+          "path": "$HOME/Applications"
+        },
+        {
+          "path": "$HOME/Applications/**"
+        },
+        {
+          "path": "$HOME/bin"
+        },
+        {
+          "path": "$HOME/bin/**"
+        },
+        {
+          "path": "$HOME/AppData"
+        },
+        {
+          "path": "$HOME/AppData/**"
+        },
+        {
+          "path": "$HOME/Documents/WindowsPowerShell"
+        },
+        {
+          "path": "$HOME/Documents/WindowsPowerShell/**"
+        },
+        {
+          "path": "$HOME/Documents/PowerShell"
+        },
+        {
+          "path": "$HOME/Documents/PowerShell/**"
+        },
+        {
+          "path": "$HOME/Library/Application Support/app.privacynotes"
+        },
+        {
+          "path": "$HOME/Library/Application Support/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/Library/Caches/app.privacynotes"
+        },
+        {
+          "path": "$HOME/Library/Caches/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/Library/Logs/app.privacynotes"
+        },
+        {
+          "path": "$HOME/Library/Logs/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/Library/WebKit"
+        },
+        {
+          "path": "$HOME/Library/WebKit/**"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.config/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.local/share/app.privacynotes/**"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes"
+        },
+        {
+          "path": "$HOME/.cache/app.privacynotes/**"
+        }
+      ]
+    },
+    "allow-forget-folder-scope",
+    "allow-markdown-assoc-status",
+    "allow-markdown-assoc-claim",
+    "allow-markdown-assoc-open-os-settings",
+    "allow-text-assoc-status",
+    "allow-text-assoc-claim",
+    "allow-set-privacy-screen",
+    "allow-set-capture-block",
+    "allow-set-title-bar-colors",
+    "allow-pasteboard-pictures",
+    "allow-clip-fetch",
+    "allow-decode-avif",
+    "allow-cli-status",
+    "allow-install-cli",
+    "allow-set-tray-mode",
+    "allow-set-ninja-shortcut",
+    "allow-ninja-dismiss",
+    "allow-autostart-enabled",
+    "allow-set-autostart",
+    "allow-finish-login-start",
+    "allow-share-inbox-list",
+    "allow-share-inbox-read",
+    "allow-share-inbox-remove",
+    "allow-share-limit-set",
+    "allow-backup-dest-pick",
+    "allow-backup-dest-status",
+    "allow-backup-dest-begin",
+    "allow-backup-dest-chunk",
+    "allow-backup-dest-finish",
+    "allow-backup-dest-abort",
+    "allow-backup-dest-exists",
+    "allow-backup-dest-delete",
+    "allow-backup-dest-reveal",
+    "allow-backup-dest-clear",
+    "allow-backup-dest-metered",
+    "allow-plugin-files-list",
+    "allow-plugin-file-read",
+    "allow-plugin-file-write",
+    "allow-plugin-file-delete",
+    "allow-plugin-files-clear",
+    "allow-plugin-files-reveal"
+  ]
+}

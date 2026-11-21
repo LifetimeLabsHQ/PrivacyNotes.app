@@ -10,10 +10,11 @@
 //! claimed "not available on this device" on hardware that very much has it.
 //! Spec: docs/contrib/biometric-unlock.md (section 3.2 native path), backlog #101.
 //!
-//! Security level is unchanged from the web path by design: biometrics are a
-//! *presence gate*, not a key source. The phrase stays wrapped with a random
-//! AES-GCM key held in the webview's localStorage (packages/web/src/biometric.ts);
-//! this module only decides whether that unwrap is allowed to proceed.
+//! Two levels. Where the device can bind, the wrap key comes from a key held in
+//! its secure hardware (the bound key, below). Where it cannot, biometrics are a
+//! *presence gate*, not a key source: the phrase stays wrapped with a random
+//! AES-GCM key held in the webview's localStorage (packages/web/src/biometric.ts),
+//! and `authenticate` only decides whether that unwrap may proceed.
 //!
 //! build.rs sets the `native_biometric` cfg for exactly the targets below, so
 //! lib.rs never repeats the target list and Linux keeps reporting "unavailable"
@@ -36,13 +37,28 @@
 //! app locked. `Err` means no prompt could be shown at all.
 
 #[cfg(target_os = "android")]
-pub use android::{authenticate, available, key_create, key_delete, key_open};
+pub use android::{authenticate, available, device_create, device_open, key_create, key_delete, key_open};
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 pub use apple::{authenticate, available};
 #[cfg(any(target_os = "macos", target_os = "ios"))]
-pub use apple_key::{key_create, key_delete, key_open};
+pub use apple_key::{device_create, device_open, key_create, key_delete, key_open};
 #[cfg(target_os = "windows")]
-pub use windows_hello::{authenticate, available, key_create, key_delete, key_open};
+pub use windows_hello::{
+    authenticate, available, device_create, device_open, key_create, key_delete, key_open, tpm_missing,
+};
+
+// The device key: a key the OS keeps out of the app's own storage, opened
+// with no prompt, that wraps the stored phrase while the app lock is off.
+// Each backend implements:
+//
+//   device_create(&AppHandle) -> Result<(handle, secret), KeyFailure>
+//   device_open(&AppHandle, handle) -> Result<secret, KeyFailure>
+//
+// The same handle and secret shape as the bound key below: the web side
+// stores the handle in the envelope and derives the wrap key from the
+// secret. `create` answers Unsupported where the device has no such store,
+// and the web side keeps its own key.
+// Spec: docs/internal/plans/device-bound-phrase-key.md (section 3)
 
 // ---------------------------------------------------------------------------
 // The bound key. The presence gate above only decides whether
@@ -59,7 +75,7 @@ pub use windows_hello::{authenticate, available, key_create, key_delete, key_ope
 // opens). `handle` is opaque to the web side and is all it stores; the secret
 // never touches storage: the web side derives the wrap key from it and drops
 // it. `create` answers Unsupported before any prompt where the device cannot
-// bind, and the web side then keeps the presence gate. `open` answers Gone only
+// bind, and the web side then enrolls nothing (#842). `open` answers Gone only
 // when the OS has destroyed the key for good, which the lock screen turns into
 // "set up again" while the PIN and the phrase stay.
 // Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
@@ -201,17 +217,23 @@ mod apple {
 }
 
 /// macOS + iOS: the bound key. A Secure Enclave P-256 key whose private half
-/// is usable only after a biometric check (`.biometryAny`: any enrolled finger
-/// or face, so adding one keeps the key and removing all of them locks it), in
-/// the `WhenPasscodeSetThisDeviceOnly` class, so removing the device passcode
-/// destroys it. The key is never put in the keychain: the notarized macOS build
+/// is usable only after a biometric check by the fingers or faces enrolled
+/// when it was made (`.biometryCurrentSet`: adding or removing one, or a Face
+/// ID reset, makes it unusable for good), in the `WhenPasscodeSetThisDeviceOnly`
+/// class, so removing the device passcode destroys it. The enclave gives no
+/// documented error for a changed set, so the handle also carries the set's
+/// hash (`evaluatedPolicyDomainState`, per app, no secret): when it differs,
+/// a failed open answers Gone instead of a failure the lock screen retries.
+/// The hash is only a hint; the enclave's rule is what refuses a new finger,
+/// and a key that still opens under a changed hash opens. The key is never put in the keychain: the notarized macOS build
 /// carries no keychain entitlement, and a permanent enclave key fails there
 /// with -34018. The enclave hands back its own sealed copy of the key (the
 /// `toid` attribute, the same bytes CryptoKit calls `dataRepresentation`),
 /// which only this device's enclave can use and only under the biometric rule,
 /// and the handle carries that copy with the ECIES-GCM ciphertext of a random
 /// 32-byte secret. The iOS Simulator refuses a biometric enclave key (LAError
-/// -1020), so it answers Unsupported there and keeps the presence gate.
+/// -1020), so it answers Unsupported there, and the web side enrolls nothing
+/// (#842).
 /// Raw `msg_send!` and Security calls, for the reason the presence gate gives:
 /// no new package.
 #[cfg(any(target_os = "macos", target_os = "ios"))]
@@ -237,6 +259,7 @@ mod apple_key {
         static kSecAttrIsPermanent: CFTypeRef;
         static kSecAttrAccessControl: CFTypeRef;
         static kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly: CFTypeRef;
+        static kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly: CFTypeRef;
         static kSecUseAuthenticationContext: CFTypeRef;
         static kSecKeyAlgorithmECIESEncryptionCofactorVariableIVX963SHA256AESGCM: CFTypeRef;
         fn SecAccessControlCreateWithFlags(
@@ -268,12 +291,22 @@ mod apple_key {
         fn CFRelease(cf: CFTypeRef);
     }
 
-    /// `kSecAccessControlBiometryAny | kSecAccessControlPrivateKeyUsage`.
-    const ACCESS_FLAGS: usize = (1 << 1) | (1 << 30);
+    /// `kSecAccessControlPrivateKeyUsage`.
+    const PRIVATE_KEY_USAGE: usize = 1 << 30;
+    /// `kSecAccessControlBiometryCurrentSet | kSecAccessControlPrivateKeyUsage`.
+    /// Spec: docs/internal/plans/biometric-new-finger.md (section 2.1)
+    const ACCESS_FLAGS: usize = (1 << 3) | PRIVATE_KEY_USAGE;
     const LA_POLICY_BIOMETRICS: isize = 1;
     const SECRET_BYTES: usize = 32;
-    /// The handle's version prefix; a handle without it opens nothing.
-    const HANDLE_PREFIX: &str = "se1.";
+    /// The handle's version prefix: `se2.<sealed>.<ciphertext>.<set hash>`.
+    /// A handle with neither prefix opens nothing.
+    const HANDLE_PREFIX: &str = "se2.";
+    /// A key made under `.biometryAny`, before the current-set rule. It still
+    /// opens, and the web side replaces it at its next unlock.
+    const ANY_SET_HANDLE_PREFIX: &str = "se1.";
+    /// The device key's handle prefix (`device_create`), so neither kind of
+    /// handle opens through the other kind's call.
+    const DEVICE_HANDLE_PREFIX: &str = "sd1.";
 
     // LAError codes (LAError.h).
     const LA_AUTHENTICATION_FAILED: isize = -1;
@@ -370,6 +403,54 @@ mod apple_key {
         can.err().map(|e| e.code())
     }
 
+    /// The hash of the biometric set enrolled now, filled by a
+    /// `canEvaluatePolicy` that passed (`biometric_blocker`), so it needs no
+    /// prompt. Empty where the OS gives none.
+    fn enrolled_set(context: &AnyObject) -> Vec<u8> {
+        let state: Option<Retained<AnyObject>> = unsafe { msg_send![context, evaluatedPolicyDomainState] };
+        state.map(|d| bytes_of(&d)).unwrap_or_default()
+    }
+
+    /// A sealed `se2.` handle with the set hash it was made under appended.
+    fn with_set(handle: String, set: &[u8]) -> String {
+        format!("{handle}.{}", to_hex(set))
+    }
+
+    /// What the set hashes say about a key before its prompt.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum SetCheck {
+        /// An `se1.` key: any biometric opens it, there is no set to compare.
+        AnySet,
+        Same,
+        Changed,
+        /// A side without a hash: nothing is known.
+        Unknown,
+    }
+
+    fn set_check(at_create: Option<&[u8]>, now: &[u8]) -> SetCheck {
+        match at_create {
+            None => SetCheck::AnySet,
+            Some(made) if made.is_empty() || now.is_empty() => SetCheck::Unknown,
+            Some(made) if made == now => SetCheck::Same,
+            Some(_) => SetCheck::Changed,
+        }
+    }
+
+    /// A current-set key that did not open. `Cancelled` is every prompt answer
+    /// that says nothing about the key (a cancel, missed touches, a lockout, see
+    /// `classify`) and stays one, because the hash can change with no set change
+    /// (LAContext.h: "exceptionally between major OS versions"). Any other
+    /// failure under a changed set is the enclave refusing a dead key: Gone.
+    /// With no hash to compare it reads as Unenrolled (the lock screen's line,
+    /// the record kept), so it never becomes a prompt the lock screen repeats.
+    fn after_set_check(failure: KeyFailure, check: SetCheck) -> KeyFailure {
+        match (check, failure) {
+            (SetCheck::Changed, KeyFailure::Failed) => KeyFailure::Gone,
+            (SetCheck::Unknown, KeyFailure::Failed) => KeyFailure::Unenrolled,
+            _ => failure,
+        }
+    }
+
     /// The common part of the key attributes: an enclave P-256 key, never stored.
     fn key_attributes() -> Retained<AnyObject> {
         let attrs = dictionary();
@@ -390,7 +471,13 @@ mod apple_key {
         if biometric_blocker(&context).is_some() {
             return Err(KeyFailure::Unsupported);
         }
-        let (handle, secret) = seal_new_secret()?;
+        let set = enrolled_set(&context);
+        let (handle, secret) = seal_new_secret(
+            unsafe { kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly },
+            ACCESS_FLAGS,
+            HANDLE_PREFIX,
+        )?;
+        let handle = with_set(handle, &set);
         // The read-back: the prompt the person answers, and the proof that the
         // enclave opens what was sealed to it.
         match open_secret(&handle, &reason) {
@@ -402,15 +489,15 @@ mod apple_key {
     }
 
     /// A fresh enclave key and a random secret sealed to its public half, as
-    /// a handle. No prompt: only the private half carries the biometric rule.
-    fn seal_new_secret() -> Result<(String, [u8; SECRET_BYTES]), KeyFailure> {
+    /// a handle under `prefix`. No prompt: only the private half carries the
+    /// rule in `flags`.
+    fn seal_new_secret(
+        protection: CFTypeRef,
+        flags: usize,
+        prefix: &str,
+    ) -> Result<(String, [u8; SECRET_BYTES]), KeyFailure> {
         let access = Owned::new(unsafe {
-            SecAccessControlCreateWithFlags(
-                std::ptr::null(),
-                kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
-                ACCESS_FLAGS,
-                std::ptr::null_mut(),
-            )
+            SecAccessControlCreateWithFlags(std::ptr::null(), protection, flags, std::ptr::null_mut())
         })
         .ok_or(KeyFailure::Unsupported)?;
 
@@ -458,8 +545,51 @@ mod apple_key {
             take_error(err);
             return Err(KeyFailure::Unsupported);
         };
-        let handle = format!("{HANDLE_PREFIX}{}.{}", to_hex(&sealed), to_hex(&bytes_of(ciphertext.obj())));
+        let handle = format!("{prefix}{}.{}", to_hex(&sealed), to_hex(&bytes_of(ciphertext.obj())));
         Ok((handle, secret))
+    }
+
+    // The device key: the same enclave key without the biometric rule, in
+    // the `AfterFirstUnlockThisDeviceOnly` class, so it opens with no prompt
+    // from the first unlock after a restart on (a locked screen or a later
+    // background start does not stop it) and never leaves this device's
+    // enclave. Its open carries a context that may not interact, so it can
+    // never show a prompt, whatever handle it is given.
+    // It wraps the stored phrase while the app lock is off, so a copy of the
+    // app's storage, or a backup restored on another device, holds only
+    // ciphertext. A Mac without a Secure Enclave answers Unsupported, and
+    // the web side keeps its own key.
+    // Spec: docs/internal/plans/device-bound-phrase-key.md (section 3)
+
+    pub fn device_create(_app: &tauri::AppHandle) -> Result<(String, String), KeyFailure> {
+        create_device_key()
+    }
+
+    pub fn device_open(_app: &tauri::AppHandle, handle: String) -> Result<String, KeyFailure> {
+        device_open_secret(&handle).map(|secret| to_hex(&secret))
+    }
+
+    fn create_device_key() -> Result<(String, String), KeyFailure> {
+        let (handle, secret) = seal_new_secret(
+            unsafe { kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly },
+            PRIVATE_KEY_USAGE,
+            DEVICE_HANDLE_PREFIX,
+        )?;
+        // The read-back: a key that cannot open what it sealed is no key.
+        match device_open_secret(&handle) {
+            Ok(opened) if opened == secret => Ok((handle, to_hex(&secret))),
+            _ => Err(KeyFailure::Unsupported),
+        }
+    }
+
+    /// Every failure is `Failed`: the device path has no prompt to cancel and
+    /// no door to lose. A biometric key relabelled `sd1.` meets the context
+    /// that may not interact and opens nothing.
+    fn device_open_secret(handle: &str) -> Result<Vec<u8>, KeyFailure> {
+        let (sealed, ciphertext) = parse_handle_with(handle, DEVICE_HANDLE_PREFIX).ok_or(KeyFailure::Failed)?;
+        let context = new_context().ok_or(KeyFailure::Failed)?;
+        let _: () = unsafe { msg_send![&*context, setInteractionNotAllowed: Bool::YES] };
+        decrypt_with_sealed_key(&sealed, &ciphertext, Some(&*context)).map_err(|_| KeyFailure::Failed)
     }
 
     pub fn key_open(
@@ -474,8 +604,25 @@ mod apple_key {
     /// Nothing to delete: the key lives only in the handle the web side drops.
     pub fn key_delete(_app: &tauri::AppHandle, _handle: String) {}
 
-    fn parse_handle(handle: &str) -> Option<(Vec<u8>, Vec<u8>)> {
-        let (sealed, ciphertext) = handle.strip_prefix(HANDLE_PREFIX)?.split_once('.')?;
+    /// A bound handle: the sealed key, the ciphertext, and the set hash of a
+    /// current-set key (None for an `se1.` key, which has no set to compare).
+    #[allow(clippy::type_complexity)]
+    fn parse_handle(handle: &str) -> Option<(Vec<u8>, Vec<u8>, Option<Vec<u8>>)> {
+        if let Some(rest) = handle.strip_prefix(HANDLE_PREFIX) {
+            let (pair, set) = rest.rsplit_once('.')?;
+            let (sealed, ciphertext) = parse_pair(pair)?;
+            return Some((sealed, ciphertext, Some(from_hex(set)?)));
+        }
+        let (sealed, ciphertext) = parse_handle_with(handle, ANY_SET_HANDLE_PREFIX)?;
+        Some((sealed, ciphertext, None))
+    }
+
+    fn parse_handle_with(handle: &str, prefix: &str) -> Option<(Vec<u8>, Vec<u8>)> {
+        parse_pair(handle.strip_prefix(prefix)?)
+    }
+
+    fn parse_pair(pair: &str) -> Option<(Vec<u8>, Vec<u8>)> {
+        let (sealed, ciphertext) = pair.split_once('.')?;
         let sealed = from_hex(sealed)?;
         let ciphertext = from_hex(ciphertext)?;
         (!sealed.is_empty() && !ciphertext.is_empty()).then_some((sealed, ciphertext))
@@ -484,11 +631,12 @@ mod apple_key {
     /// Rebuild the enclave key from its sealed copy and decrypt the secret.
     /// Blocks while the biometric prompt is up, so never on the main thread.
     fn open_secret(handle: &str, reason: &str) -> Result<Vec<u8>, KeyFailure> {
-        let (sealed, ciphertext) = parse_handle(handle).ok_or(KeyFailure::Failed)?;
+        let (sealed, ciphertext, made_for) = parse_handle(handle).ok_or(KeyFailure::Failed)?;
         let context = new_context().ok_or(KeyFailure::Failed)?;
         // No passcode: its removal destroyed the key's protection class. No
-        // finger or face enrolled: the key cannot open now, but `.biometryAny`
-        // opens it again once one is. Lockout is a wait, not a loss.
+        // finger or face enrolled: the key cannot open now; an `se1.` key
+        // opens again once one is, a current-set key answers Gone below then.
+        // Lockout is a wait, not a loss.
         match biometric_blocker(&context) {
             None => {}
             Some(LA_PASSCODE_NOT_SET) => return Err(KeyFailure::Gone),
@@ -496,20 +644,33 @@ mod apple_key {
             Some(LA_BIOMETRY_LOCKOUT) => return Err(KeyFailure::Cancelled),
             Some(_) => return Err(KeyFailure::Failed),
         }
+        let check = set_check(made_for.as_deref(), &enrolled_set(&context));
         unsafe {
             let _: () = msg_send![&*context, setLocalizedReason: &*NSString::from_str(reason)];
             // An empty title hides the "Enter Password" button: the app's own
             // PIN and phrase are the fallback, and the rule refuses a password.
             let _: () = msg_send![&*context, setLocalizedFallbackTitle: &*NSString::from_str("")];
         }
+        decrypt_with_sealed_key(&sealed, &ciphertext, Some(&*context)).map_err(|failure| after_set_check(failure, check))
+    }
 
+    /// Rebuild an enclave key from its sealed copy and decrypt `ciphertext`
+    /// with it. `context` carries the biometric prompt for a bound key; the
+    /// device key has no rule and takes none.
+    fn decrypt_with_sealed_key(
+        sealed: &[u8],
+        ciphertext: &[u8],
+        context: Option<&AnyObject>,
+    ) -> Result<Vec<u8>, KeyFailure> {
         let attrs = key_attributes();
         let private = dictionary();
         unsafe {
             set(&private, kSecAttrIsPermanent, &number_bool(false));
             set(&attrs, kSecPrivateKeyAttrs, &private);
-            set(&attrs, kSecUseAuthenticationContext, &context);
-            let _: () = msg_send![&*attrs, setObject: &*data(&sealed), forKey: &*NSString::from_str("toid")];
+            if let Some(context) = context {
+                set(&attrs, kSecUseAuthenticationContext, context);
+            }
+            let _: () = msg_send![&*attrs, setObject: &*data(sealed), forKey: &*NSString::from_str("toid")];
         }
         let mut err: CFErrorRef = std::ptr::null_mut();
         let key = Owned::new(unsafe {
@@ -524,7 +685,7 @@ mod apple_key {
             return Err(KeyFailure::Failed);
         };
 
-        let input = data(&ciphertext);
+        let input = data(ciphertext);
         let mut err: CFErrorRef = std::ptr::null_mut();
         let plaintext = Owned::new(unsafe {
             SecKeyCreateDecryptedData(
@@ -571,13 +732,52 @@ mod apple_key {
         #[test]
         #[ignore = "needs a Secure Enclave; CI's macOS runners are VMs without one"]
         fn a_sealed_secret_round_trips_through_its_handle() {
-            let (handle, secret) = seal_new_secret().expect("this Mac has a Secure Enclave");
-            let (sealed, ciphertext) = parse_handle(&handle).expect("the handle parses");
+            let bound = || unsafe {
+                seal_new_secret(kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly, ACCESS_FLAGS, HANDLE_PREFIX)
+            };
+            let (handle, secret) = bound().expect("this Mac has a Secure Enclave");
+            let (sealed, ciphertext, _) = parse_handle(&with_set(handle.clone(), &[])).expect("the handle parses");
             assert!(sealed.len() > 100, "the enclave's sealed key is in the handle");
             assert!(ciphertext.len() > SECRET_BYTES);
             assert!(!handle.contains(&to_hex(&secret)), "the secret is not in the handle");
-            let (_, other) = seal_new_secret().unwrap();
+            let (_, other) = bound().unwrap();
             assert_ne!(secret, other, "every key seals a fresh secret");
+        }
+
+        #[test]
+        #[ignore = "needs a Secure Enclave; CI's macOS runners are VMs without one"]
+        fn the_device_key_opens_with_no_prompt() {
+            let open = |h: &str| device_open_secret(h).map(|s| to_hex(&s));
+            let (handle, secret) = create_device_key().expect("this Mac has a Secure Enclave");
+            assert!(handle.starts_with(DEVICE_HANDLE_PREFIX));
+            assert!(!handle.contains(&secret), "the secret is not in the handle");
+            assert_eq!(open(&handle), Ok(secret.clone()));
+            // A flipped byte of the sealed key or the ciphertext opens nothing.
+            let mut flipped = handle.into_bytes();
+            let last = flipped.len() - 1;
+            flipped[last] = if flipped[last] == b'0' { b'1' } else { b'0' };
+            assert!(open(&String::from_utf8(flipped).unwrap()).is_err());
+            let (_, other) = create_device_key().unwrap();
+            assert_ne!(secret, other, "every key seals a fresh secret");
+        }
+
+        #[test]
+        #[ignore = "needs a Secure Enclave; CI's macOS runners are VMs without one"]
+        fn a_relabelled_biometric_key_opens_nothing_and_never_prompts() {
+            let (handle, _) = unsafe {
+                seal_new_secret(kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly, ACCESS_FLAGS, HANDLE_PREFIX)
+            }
+            .expect("this Mac has a Secure Enclave");
+            let relabelled = handle.replacen(HANDLE_PREFIX, DEVICE_HANDLE_PREFIX, 1);
+            // A prompt here would hang the test; the context forbids one.
+            assert_eq!(device_open_secret(&relabelled), Err(KeyFailure::Failed));
+        }
+
+        #[test]
+        fn the_two_kinds_of_handle_never_cross() {
+            assert!(parse_handle("sd1.00.00").is_none());
+            assert!(parse_handle_with("se1.00.00", DEVICE_HANDLE_PREFIX).is_none());
+            assert_eq!(device_open_secret("se1.00.00"), Err(KeyFailure::Failed));
         }
 
         #[test]
@@ -589,10 +789,82 @@ mod apple_key {
 
         #[test]
         fn a_malformed_handle_opens_nothing() {
-            for bad in ["", "se1.", "se1.zz.00", "se2.00.00", "se1.00", "se1..00", "se1.0.00"] {
+            for bad in [
+                "", "se1.", "se1.zz.00", "se1.00", "se1..00", "se1.0.00", "se1.00.00.00", "se3.00.00.00",
+                "se2.", "se2.00.00", "se2.00.00.0", "se2.00.00.zz", "se2..00.00", "se2.00..00", "se2.00.00.00.00",
+            ] {
                 assert!(parse_handle(bad).is_none(), "{bad:?} parsed");
             }
             assert_eq!(open_secret("se1.zz.00", "reason"), Err(KeyFailure::Failed));
+            assert_eq!(open_secret("se2.00.00.zz", "reason"), Err(KeyFailure::Failed));
+        }
+
+        #[test]
+        fn a_current_set_handle_carries_its_set_and_an_older_one_has_none() {
+            assert_eq!(parse_handle("se2.0a.0b.0c"), Some((vec![0x0a], vec![0x0b], Some(vec![0x0c]))));
+            assert_eq!(parse_handle("se2.0a.0b."), Some((vec![0x0a], vec![0x0b], Some(vec![]))));
+            assert_eq!(parse_handle("se1.0a.0b"), Some((vec![0x0a], vec![0x0b], None)));
+            let made = with_set("se2.0a.0b".to_owned(), &[0xce, 0x84]);
+            assert_eq!(parse_handle(&made), Some((vec![0x0a], vec![0x0b], Some(vec![0xce, 0x84]))));
+        }
+
+        #[test]
+        fn new_keys_take_only_the_biometric_set_enrolled_now() {
+            // kSecAccessControlBiometryAny and kSecAccessControlBiometryCurrentSet
+            // (SecAccessControl.h), written out here so a change of
+            // ACCESS_FLAGS cannot carry its test along.
+            const BIOMETRY_ANY: usize = 1 << 1;
+            const BIOMETRY_CURRENT_SET: usize = 1 << 3;
+            assert_eq!(ACCESS_FLAGS & BIOMETRY_CURRENT_SET, BIOMETRY_CURRENT_SET);
+            assert_eq!(ACCESS_FLAGS & BIOMETRY_ANY, 0);
+            assert_eq!(ACCESS_FLAGS & PRIVATE_KEY_USAGE, PRIVATE_KEY_USAGE);
+        }
+
+        #[test]
+        fn only_a_different_set_on_both_sides_reads_as_changed() {
+            assert_eq!(set_check(Some(&[1, 2]), &[1, 3]), SetCheck::Changed);
+            assert_eq!(set_check(Some(&[1, 2]), &[1, 2]), SetCheck::Same);
+            assert_eq!(set_check(None, &[1, 2]), SetCheck::AnySet);
+            assert_eq!(set_check(Some(&[]), &[1, 2]), SetCheck::Unknown);
+            assert_eq!(set_check(Some(&[1, 2]), &[]), SetCheck::Unknown);
+        }
+
+        #[test]
+        fn a_dead_current_set_key_never_reads_as_a_failure_to_retry() {
+            use KeyFailure::*;
+            let la = |code| Some(("com.apple.LocalAuthentication".to_owned(), code));
+            let open = |error, check| after_set_check(classify(error), check);
+            // A changed set: the enclave's refusal is the dead key.
+            assert_eq!(open(Some(("CryptoTokenKit".to_owned(), -9)), SetCheck::Changed), Gone);
+            assert_eq!(open(None, SetCheck::Changed), Gone);
+            // A prompt answer that says nothing about the key stays a cancel,
+            // also under a changed hash: the hash can drift with no set change.
+            for code in [LA_USER_CANCEL, LA_SYSTEM_CANCEL, LA_APP_CANCEL, LA_USER_FALLBACK,
+                LA_AUTHENTICATION_FAILED, LA_BIOMETRY_LOCKOUT, LA_NOT_INTERACTIVE]
+            {
+                assert_eq!(open(la(code), SetCheck::Changed), Cancelled, "LAError {code}");
+            }
+            // No hash to compare: the line, and the record stays.
+            assert_eq!(open(None, SetCheck::Unknown), Unenrolled);
+            assert_eq!(open(la(LA_USER_CANCEL), SetCheck::Unknown), Cancelled);
+            // The same set, and an older key: as before.
+            assert_eq!(open(None, SetCheck::Same), Failed);
+            assert_eq!(open(None, SetCheck::AnySet), Failed);
+            assert_eq!(open(la(LA_BIOMETRY_NOT_ENROLLED), SetCheck::Changed), Unenrolled);
+            assert_eq!(open(la(LA_PASSCODE_NOT_SET), SetCheck::Same), Gone);
+        }
+
+        #[test]
+        #[ignore = "needs Touch ID enrolled on this Mac"]
+        fn the_enrolled_set_is_read_with_no_prompt_and_is_stable() {
+            let read = || {
+                let context = new_context().expect("LocalAuthentication is linked");
+                assert_eq!(biometric_blocker(&context), None, "Touch ID is enrolled");
+                enrolled_set(&context)
+            };
+            let first = read();
+            assert!(!first.is_empty());
+            assert_eq!(first, read());
         }
 
         #[test]
@@ -872,6 +1144,220 @@ mod windows_hello {
         }
     }
 
+    // The device key. First the PC's TPM: one RSA-2048 key per Windows
+    // account under a fixed name in the Microsoft Platform Crypto Provider,
+    // whose private half never leaves the chip, seals a random 32-byte secret
+    // with RSA-OAEP (SHA-256). A copy of the disk or of the profile opens
+    // nothing on another PC, even with the Windows password. A PC without a
+    // usable TPM gets DPAPI in user scope instead, which ties the secret to
+    // the Windows account: a copy opens nothing on another machine or under
+    // another account, unless it comes with that account's password. No
+    // prompt either way (NCRYPT_SILENT_FLAG, CRYPTPROTECT_UI_FORBIDDEN). Code
+    // that runs as this user can use both, as it can use the app itself. A
+    // cleared TPM loses the key: the open answers `failed`, and the app asks
+    // for the phrase once.
+    // Spec: docs/internal/plans/device-bound-phrase-key.md (section 3)
+    use windows::Win32::Foundation::{LocalFree, HLOCAL, NTE_BAD_KEYSET, TBS_E_TPM_NOT_FOUND};
+    use windows::Win32::System::TpmBaseServices::{Tbsi_GetDeviceInfo, TPM_DEVICE_INFO};
+    use windows::Win32::Security::Cryptography::{
+        CryptProtectData, CryptUnprotectData, NCryptCreatePersistedKey, NCryptDecrypt, NCryptDeleteKey,
+        NCryptEncrypt, NCryptFinalizeKey, NCryptFreeObject, NCryptOpenKey, NCryptOpenStorageProvider,
+        NCryptSetProperty, BCRYPT_OAEP_PADDING_INFO, BCRYPT_RSA_ALGORITHM, BCRYPT_SHA256_ALGORITHM, CERT_KEY_SPEC,
+        CRYPTPROTECT_UI_FORBIDDEN, CRYPT_INTEGER_BLOB, MS_PLATFORM_CRYPTO_PROVIDER, NCRYPT_FLAGS, NCRYPT_HANDLE,
+        NCRYPT_KEY_HANDLE, NCRYPT_LENGTH_PROPERTY, NCRYPT_PAD_OAEP_FLAG, NCRYPT_PROV_HANDLE, NCRYPT_SILENT_FLAG,
+    };
+
+    const TPM_HANDLE_PREFIX: &str = "tp1.";
+    /// One key per Windows account (NCrypt keys are per user without
+    /// NCRYPT_MACHINE_KEY_FLAG); every handle seals its own secret with it.
+    const TPM_KEY_NAME: PCWSTR = w!("PrivacyNotes-device-1");
+    const TPM_KEY_BITS: u32 = 2048;
+    const DEVICE_HANDLE_PREFIX: &str = "dp1.";
+    const DEVICE_SECRET_BYTES: usize = 32;
+    /// DPAPI's optional entropy: another program that unseals the blob must
+    /// also pass it.
+    const DEVICE_ENTROPY: &[u8] = b"privacynotes-device-wrap-v1";
+
+    fn blob(bytes: &[u8]) -> CRYPT_INTEGER_BLOB {
+        CRYPT_INTEGER_BLOB { cbData: bytes.len() as u32, pbData: bytes.as_ptr() as *mut u8 }
+    }
+
+    /// Copies a blob DPAPI allocated, then frees it.
+    fn take_blob(out: CRYPT_INTEGER_BLOB) -> Vec<u8> {
+        if out.pbData.is_null() {
+            return Vec::new();
+        }
+        let bytes = unsafe { std::slice::from_raw_parts(out.pbData, out.cbData as usize) }.to_vec();
+        unsafe {
+            let _ = LocalFree(Some(HLOCAL(out.pbData as *mut _)));
+        }
+        bytes
+    }
+
+    fn unprotect(sealed: &[u8]) -> Option<Vec<u8>> {
+        let input = blob(sealed);
+        let entropy = blob(DEVICE_ENTROPY);
+        let mut out = CRYPT_INTEGER_BLOB::default();
+        unsafe {
+            CryptUnprotectData(&input, None, Some(&entropy), None, None, CRYPTPROTECT_UI_FORBIDDEN, &mut out)
+        }
+        .ok()?;
+        Some(take_blob(out))
+    }
+
+    pub fn device_create(_app: &tauri::AppHandle) -> Result<(String, String), KeyFailure> {
+        tpm_create().or_else(|_| dpapi_create())
+    }
+
+    pub fn device_open(_app: &tauri::AppHandle, handle: String) -> Result<String, KeyFailure> {
+        let secret = if let Some(sealed) = handle.strip_prefix(TPM_HANDLE_PREFIX) {
+            tpm_open(&from_hex(sealed).filter(|s| !s.is_empty()).ok_or(KeyFailure::Failed)?)?
+        } else {
+            let sealed = handle
+                .strip_prefix(DEVICE_HANDLE_PREFIX)
+                .and_then(from_hex)
+                .filter(|s| !s.is_empty())
+                .ok_or(KeyFailure::Failed)?;
+            unprotect(&sealed).ok_or(KeyFailure::Failed)?
+        };
+        if secret.len() != DEVICE_SECRET_BYTES {
+            return Err(KeyFailure::Failed);
+        }
+        Ok(to_hex(&secret))
+    }
+
+    /// An NCrypt provider or key handle, freed on drop.
+    struct NCrypt(usize);
+    impl Drop for NCrypt {
+        fn drop(&mut self) {
+            if self.0 != 0 {
+                let _ = unsafe { NCryptFreeObject(NCRYPT_HANDLE(self.0)) };
+            }
+        }
+    }
+
+    fn platform_provider() -> Option<NCrypt> {
+        let mut provider = NCRYPT_PROV_HANDLE::default();
+        unsafe { NCryptOpenStorageProvider(&mut provider, MS_PLATFORM_CRYPTO_PROVIDER, 0) }.ok()?;
+        Some(NCrypt(provider.0))
+    }
+
+    /// Whether this PC offers Windows no TPM: the TPM service finds none, or
+    /// the Microsoft Platform Crypto Provider, which the device key uses, does
+    /// not open. Windows Hello then keeps its keys in software. The service is
+    /// asked first because an open alone may succeed with no TPM (Chromium's
+    /// `crypto/unexportable_key_win.cc` asks it first too). No prompt, nothing
+    /// made or stored. Not `GetAttestationAsync`: a TPM without an attestation
+    /// certificate (the Windows 11 test VM's) holds keys but cannot attest, so
+    /// a failed attestation does not prove a software key.
+    /// Spec: docs/internal/plans/hello-tpm-status.md (section 3.1)
+    pub fn tpm_missing() -> bool {
+        let mut info = TPM_DEVICE_INFO::default();
+        let found = unsafe {
+            Tbsi_GetDeviceInfo(size_of::<TPM_DEVICE_INFO>() as u32, (&mut info as *mut TPM_DEVICE_INFO).cast())
+        };
+        found == TBS_E_TPM_NOT_FOUND.0 as u32 || platform_provider().is_none()
+    }
+
+    /// The account's TPM key, made on first use. `made` says whether this
+    /// call made it, so a key that fails its first read-back can go.
+    fn tpm_key(provider: &NCrypt) -> Result<(NCrypt, bool), KeyFailure> {
+        let prov = NCRYPT_PROV_HANDLE(provider.0);
+        let mut key = NCRYPT_KEY_HANDLE::default();
+        match unsafe { NCryptOpenKey(prov, &mut key, TPM_KEY_NAME, CERT_KEY_SPEC(0), NCRYPT_SILENT_FLAG) } {
+            Ok(()) => return Ok((NCrypt(key.0), false)),
+            Err(e) if e.code() == NTE_BAD_KEYSET => {}
+            Err(_) => return Err(KeyFailure::Unsupported),
+        }
+        unsafe {
+            NCryptCreatePersistedKey(prov, &mut key, BCRYPT_RSA_ALGORITHM, TPM_KEY_NAME, CERT_KEY_SPEC(0), NCRYPT_FLAGS(0))
+        }
+        .map_err(|_| KeyFailure::Unsupported)?;
+        let key = NCrypt(key.0);
+        let handle = NCRYPT_KEY_HANDLE(key.0);
+        unsafe {
+            NCryptSetProperty(NCRYPT_HANDLE(key.0), NCRYPT_LENGTH_PROPERTY, &TPM_KEY_BITS.to_le_bytes(), NCRYPT_FLAGS(0))
+        }
+        .map_err(|_| KeyFailure::Unsupported)?;
+        unsafe { NCryptFinalizeKey(handle, NCRYPT_SILENT_FLAG) }.map_err(|_| KeyFailure::Unsupported)?;
+        Ok((key, true))
+    }
+
+    fn oaep() -> BCRYPT_OAEP_PADDING_INFO {
+        BCRYPT_OAEP_PADDING_INFO { pszAlgId: BCRYPT_SHA256_ALGORITHM, pbLabel: std::ptr::null_mut(), cbLabel: 0 }
+    }
+
+    /// RSA-OAEP through NCrypt, sized by a first call with no output buffer.
+    fn rsa(key: &NCrypt, input: &[u8], decrypt: bool) -> Option<Vec<u8>> {
+        let key = NCRYPT_KEY_HANDLE(key.0);
+        let padding = oaep();
+        let pad = Some(&padding as *const BCRYPT_OAEP_PADDING_INFO as *const core::ffi::c_void);
+        let flags = NCRYPT_PAD_OAEP_FLAG | NCRYPT_SILENT_FLAG;
+        let call = |out: Option<&mut [u8]>, len: &mut u32| unsafe {
+            if decrypt {
+                NCryptDecrypt(key, Some(input), pad, out, len, flags)
+            } else {
+                NCryptEncrypt(key, Some(input), pad, out, len, flags)
+            }
+        };
+        let mut len = 0u32;
+        call(None, &mut len).ok()?;
+        let mut out = vec![0u8; len as usize];
+        call(Some(&mut out), &mut len).ok()?;
+        out.truncate(len as usize);
+        Some(out)
+    }
+
+    fn tpm_create() -> Result<(String, String), KeyFailure> {
+        let provider = platform_provider().ok_or(KeyFailure::Unsupported)?;
+        let (key, made) = tpm_key(&provider)?;
+        let secret = random(DEVICE_SECRET_BYTES as u32)?;
+        let sealed = rsa(&key, &secret, false);
+        // The read-back: a key that cannot open what it sealed is no key. A
+        // key this call made and that fails here holds no envelope yet, so
+        // it goes; an older key may, and stays.
+        let opened = sealed.as_deref().and_then(|s| rsa(&key, s, true));
+        match (sealed, opened) {
+            (Some(sealed), Some(opened)) if opened == secret => {
+                Ok((format!("{TPM_HANDLE_PREFIX}{}", to_hex(&sealed)), to_hex(&secret)))
+            }
+            _ => {
+                if made {
+                    let doomed = std::mem::ManuallyDrop::new(key);
+                    // NCryptDeleteKey frees the handle itself.
+                    let _ = unsafe { NCryptDeleteKey(NCRYPT_KEY_HANDLE(doomed.0), 0) };
+                }
+                Err(KeyFailure::Unsupported)
+            }
+        }
+    }
+
+    fn tpm_open(sealed: &[u8]) -> Result<Vec<u8>, KeyFailure> {
+        let provider = platform_provider().ok_or(KeyFailure::Failed)?;
+        let mut key = NCRYPT_KEY_HANDLE::default();
+        unsafe { NCryptOpenKey(NCRYPT_PROV_HANDLE(provider.0), &mut key, TPM_KEY_NAME, CERT_KEY_SPEC(0), NCRYPT_SILENT_FLAG) }
+            .map_err(|_| KeyFailure::Failed)?;
+        let key = NCrypt(key.0);
+        rsa(&key, sealed, true).ok_or(KeyFailure::Failed)
+    }
+
+    fn dpapi_create() -> Result<(String, String), KeyFailure> {
+        let secret = random(DEVICE_SECRET_BYTES as u32)?;
+        let input = blob(&secret);
+        let entropy = blob(DEVICE_ENTROPY);
+        let mut out = CRYPT_INTEGER_BLOB::default();
+        unsafe {
+            CryptProtectData(&input, PCWSTR::null(), Some(&entropy), None, None, CRYPTPROTECT_UI_FORBIDDEN, &mut out)
+        }
+        .map_err(|_| KeyFailure::Unsupported)?;
+        let sealed = take_blob(out);
+        // The read-back: a seal that does not open is no key.
+        if unprotect(&sealed).as_deref() != Some(&secret[..]) {
+            return Err(KeyFailure::Unsupported);
+        }
+        Ok((format!("{DEVICE_HANDLE_PREFIX}{}", to_hex(&sealed)), to_hex(&secret)))
+    }
+
     /// WinRT activation needs an initialized apartment, and this runs on a pooled
     /// blocking thread that has none. MTA keeps the wait off any message loop;
     /// `RPC_E_CHANGED_MODE` only means the thread was already initialized, which
@@ -969,5 +1455,18 @@ mod android {
 
     pub fn key_delete(app: &tauri::AppHandle, handle: String) {
         app.biometric_key().delete(&handle);
+    }
+
+    // The device key: a Keystore AES key that needs no user, in the same
+    // plugin (`deviceCreate`, `deviceOpen`).
+    pub fn device_create(app: &tauri::AppHandle) -> Result<(String, String), super::KeyFailure> {
+        app.biometric_key()
+            .device_create()
+            .map(|created| (created.handle, created.secret))
+            .map_err(failure)
+    }
+
+    pub fn device_open(app: &tauri::AppHandle, handle: String) -> Result<String, super::KeyFailure> {
+        app.biometric_key().device_open(&handle).map_err(failure)
     }
 }

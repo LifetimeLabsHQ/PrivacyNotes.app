@@ -4,7 +4,8 @@
     "tabBiometricShort": "Slot",
     "tabPhraseShort": "Herstelzin",
     "tabPhrase": "Je herstelzin",
-    "tabTwoFactor": "2FA"
+    "tabTwoFactor": "2FA",
+    "tabTwoFactorPasskeys": "2FA / Passkeys"
   },
   "pinTab": {
     "changeLost": "Je PIN-wijziging is niet opgeslagen: de PIN was eerst op een ander apparaat gewijzigd.",
@@ -70,7 +71,7 @@
     "browserRestart": "Bij herstart van de browser"
   },
   "pinInfo": {
-    "body": "Als dit aanstaat, wordt je PIN elke keer gevraagd als je dit item opent, ook als de app al ontgrendeld is. Gebruik het voor gevoelige items die beschermd moeten blijven als je even wegloopt."
+    "body": "Als dit aanstaat, vraagt dit item om je PIN voordat het opent, tenzij je de PIN hebt ingevoerd binnen de tijd die is ingesteld onder Instellingen > Beveiliging > Slot (5 minuten, tenzij je dat wijzigt). Gebruik het voor je meest gevoelige items."
   },
   "removePinDialog": {
     "introWithBio": "Voer je huidige PIN in om het verwijderen te bevestigen. Biometrisch ontgrendelen blijft actief, maar je enige terugvaloptie wordt dan je herstelzin.",
@@ -121,6 +122,7 @@
     "hideQr": "QR-code verbergen",
     "showQr": "QR-code tonen",
     "saveQr": "QR opslaan",
+    "qrHint": "Kies op het nieuwe apparaat “{{scanQr}}” op het aanmeldscherm.",
     "copyPhrase": "Herstelzin kopiëren"
   },
   "custody": {
@@ -134,7 +136,7 @@
     "rowLostSelf": "Zonder een andere opgeslagen kopie of een ontgrendeld apparaat kunnen de notities niet worden hersteld.",
     "rowKey": "Waar je herstelzin staat",
     "rowKeyCustodial": "Op onze server en je apparaten",
-    "rowKeySelf": "Alleen op je apparaten",
+    "rowKeySelf": "Alleen op je apparaten, tenzij je een passkey voor aanmelden toevoegt",
     "releaseWarning": "Bewaar je herstelzin eerst buiten PrivacyNotes. Nadat we onze kopie hebben verwijderd, heb je de herstelzin nodig op nieuwe apparaten.",
     "challengePrompt": "Typ deze woorden over uit de lijst hierboven om te bevestigen dat je ze hebt.",
     "wordLabel": "Woord {{position}}",
@@ -167,14 +169,18 @@
   "biometricTab": {
     "checkingSupport": "Biometrische ondersteuning controleren...",
     "description": "Ontgrendel met je vingerafdruk of gezicht in plaats van de PIN te typen.",
+    "descriptionWeb": "Ontgrendel met je vingerafdruk of gezicht in plaats van de PIN te typen. In een browser maakt dit een passkey voor PrivacyNotes op dit apparaat, opgeslagen door je apparaat of je wachtwoordmanager.",
     "trustFirst": "Zet eerst \"Dit apparaat vertrouwen\" aan. Biometrisch ontgrendelen en de app-vergrendeling bewaren allebei een kopie van je herstelzin op dit apparaat, en daar is een niet-vertrouwd apparaat niet voor bedoeld.",
     "notAvailable": "Biometrisch ontgrendelen is niet beschikbaar op dit apparaat. Je browser of hardware ondersteunt geen platform-authenticator (Touch ID, Face ID, Windows Hello).",
     "enabledFlash": "Biometrisch ontgrendelen ingeschakeld.",
     "enrolledOnDevice": "Ingesteld op dit apparaat",
     "boundStatus": "Biometrisch ontgrendelen is gekoppeld aan je passkey.",
     "boundStatusNative": "Biometrisch ontgrendelen is gekoppeld aan de beveiligde hardware van dit apparaat.",
+    "boundStatusWindows": "Biometrisch ontgrendelen is gekoppeld aan Windows Hello op deze pc.",
+    "boundStatusWindowsSoftware": "Biometrisch ontgrendelen is gekoppeld aan Windows Hello op deze pc. Windows meldt hier geen beveiligingschip (TPM) dat het kan gebruiken. Zonder zo'n chip bewaart Windows Hello de sleutel in software, en iemand met een kopie van de opslag van deze pc kan onbeperkt Windows Hello-PIN-codes proberen.",
     "setUpAgain": "Opnieuw instellen voor een sterker slot",
     "unboundWeaker": "Op dit apparaat is biometrisch ontgrendelen een drempel voor mensen in de buurt, geen slot: iemand met een kopie van de opslag van dit apparaat kan je notities openen zonder je vingerafdruk of gezicht.",
+    "noPrfRefused": "Deze passkey-app kan de sleutel van biometrisch ontgrendelen niet bewaren, dus biometrisch ontgrendelen blijft uit. Als een wachtwoordmanager de passkey heeft opgeslagen, verwijder hem daar, zet de passkey-optie daarvan uit en probeer het opnieuw.",
     "cannotBind": "De passkey-app die deze passkey heeft opgeslagen, vaak een wachtwoordmanager, kan het volledige slot niet maken. Op dit apparaat houdt biometrisch ontgrendelen alleen mensen in de buurt tegen: iemand met een kopie van de opslag van dit apparaat kan je notities openen zonder je vingerafdruk of gezicht. Als een wachtwoordmanager je passkeys opslaat, zet dan de passkey-optie daarvan uit en zet daarna biometrisch ontgrendelen uit en weer aan.",
     "bindOffer": "Biometrisch ontgrendelen op dit apparaat is nog niet gekoppeld aan je passkey, en deze browser kan het koppelen. Stel het één keer opnieuw in, zodat de sleutel bij je passkey blijft in plaats van in de opslag van dit apparaat.",
     "bindOfferLater": "Niet nu",
@@ -185,18 +191,26 @@
     "lockOnOpenHint": "Vraagt om je PIN of vingerafdruk wanneer de app op dit apparaat opent, en opnieuw nadat hij een tijd niet is gebruikt.",
     "lockHidesOnSwitch": "Verbergt je notities ook wanneer je van app wisselt.",
     "confirmPinForLock": "Voer je PIN in om dit aan te zetten. Die vergrendelt een kopie van je herstelzin, zodat alleen je PIN de app kan openen.",
+    "pinWeakCopy": "Met een PIN van 4 cijfers kan iemand met een kopie van de opslag van dit apparaat de PIN in minuten tot uren vinden en je notities openen. Een toegangscode is veel moeilijker te raden: stel er een in op het tabblad PIN.",
     "confirmPasscodeForLock": "Voer je toegangscode in om dit aan te zetten. Die vergrendelt een kopie van je herstelzin, zodat alleen je toegangscode de app kan openen.",
     "setupTitle": "Kies hoe je ontgrendelt",
     "setupPin": "Een PIN ontgrendelt hier alles.",
     "setupBiometric": "Een vingerafdruk of gezicht ontgrendelt de app alleen op dit apparaat.",
+    "setupBiometricWeb": "Een vingerafdruk of gezicht ontgrendelt de app alleen op dit apparaat, via een passkey.",
     "setupBiometrics": "Biometrie",
-    "setupAddPinTitle": "Voeg een PIN toe voor beveiligde notities",
+    "setupAddPinTitle": "Voeg een PIN toe voor het slot en beveiligde notities",
+    "fingerprintOnlyLock": "Dit slot gaat alleen open met je vingerafdruk. Voer je PIN in om die als tweede manier toe te voegen.",
+    "fingerprintOnlyLockPasscode": "Dit slot gaat alleen open met je vingerafdruk. Voer je toegangscode in om die als tweede manier toe te voegen.",
+    "fingerprintOnlyLockAction": "PIN invoeren",
+    "fingerprintOnlyLockActionPasscode": "Toegangscode invoeren",
     "appLockHeading": "App-vergrendeling",
     "relockAgainAfter": "Opnieuw vergrendelen na",
     "notesHeading": "Beveiligde notities",
     "reaskAfter": "Opnieuw om de PIN vragen na",
-    "reaskHint": "Voor beveiligde notities en je herstelzin.",
+    "reaskHint": "Voor beveiligde notities, beveiligde secties en je herstelzin.",
+    "sectionsHint": "Beveilig een hele sectie, zoals de Kluis, via het menu ervan in de zijbalk.",
     "biometricHeading": "Vingerafdruk of gezicht",
+    "biometricHeadingWeb": "Vingerafdruk of gezicht (passkey)",
     "blockCapture": "Verbergen bij schermopnames",
     "blockCaptureHint": "Houdt je notities buiten screenshots, opnames en schermdeling, voor zover je apparaat dat toestaat. Geldt alleen voor dit apparaat.",
     "perDeviceNote": "Biometrisch ontgrendelen opent dezelfde notities als je PIN. Het blijft op dit apparaat en synchroniseert nooit.",
@@ -205,8 +219,30 @@
     "disableConfirmBody": "Biometrisch ontgrendelen op dit apparaat uitschakelen?",
     "disableConfirmBodyAppLock": "Biometrisch ontgrendelen op dit apparaat uitschakelen? De app-vergrendeling gaat dan ook uit."
   },
+  "passkeysTab": {
+    "intro": "Meld je op een nieuw apparaat aan met een passkey in plaats van je herstelzin te typen. Je herstelzin blijft werken.",
+    "add": "Een passkey toevoegen",
+    "adding": "Toevoegen...",
+    "lastUsed": "Laatst gebruikt {{date}}",
+    "neverUsed": "Nooit gebruikt",
+    "removeTitle": "Deze passkey verwijderen?",
+    "removeBody": "Je kunt je er niet meer mee aanmelden. De passkey zelf blijft in je passkey-app tot je hem daar verwijdert.",
+    "retired": "Gemaakt voordat je herstelzin wijzigde. Verwijder hem en voeg hem opnieuw toe.",
+    "noPrf": "Deze passkey-app kan je herstelzin niet beschermen, dus de passkey is niet toegevoegd. Probeer de eigen passkeys van je apparaat, of een andere wachtwoordmanager.",
+    "tooMany": "Je hebt {{count}} passkeys om je aan te melden. Verwijder er een om een andere toe te voegen.",
+    "failed": "De passkey kon niet worden toegevoegd. Controleer je verbinding en probeer het opnieuw.",
+    "appsOnly": "Voeg passkeys toe in je browser op use.privacynotes.app. Je ermee aanmelden in de apps komt later.",
+    "empty": "Nog geen passkeys.",
+    "loadFailed": "Je passkeys konden niet worden geladen. Controleer je verbinding en probeer het opnieuw.",
+    "removeFailed": "De passkey kon niet worden verwijderd. Controleer je verbinding en probeer het opnieuw.",
+    "pinPrompt": "Voer je PIN van 4 cijfers in om een passkey toe te voegen.",
+    "pinPromptPasscode": "Voer je toegangscode in om een passkey toe te voegen."
+  },
   "appLock": {
-    "phraseNotSaved": "Dit apparaat kon je herstelzin niet opslaan, dus er is niets veranderd. Probeer het opnieuw."
+    "phraseNotSaved": "Dit apparaat kon je herstelzin niet opslaan, dus er is niets veranderd. Probeer het opnieuw.",
+    "phraseInMemoryOnly": "Deze browser kon je herstelzin niet beveiligen, dus die is niet op dit apparaat opgeslagen. Als je dit tabblad herlaadt of sluit, word je afgemeld, dus houd je herstelzin bij de hand. Om hier aangemeld te blijven, zet je de app-vergrendeling aan in Instellingen > Beveiliging > Slot.",
+    "untrustedSignIn": "Je hebt dit apparaat niet vertrouwd, dus je aanmelding is er niet op opgeslagen. Als je de app sluit of herlaadt, word je afgemeld, dus houd je herstelzin bij de hand.",
+    "presenceGateRemoved": "Ontgrendelen met vingerafdruk of gezicht staat uit: deze browser bewaarde de sleutel ervan naast je herstelzin. Je PIN of toegangscode ontgrendelt de app nog steeds."
   },
   "pinSetup": {
     "description": "Een PIN van 4 cijfers is nodig om je herstelzin te bekijken. Optioneel, maar aan te raden op gedeelde plekken.",
@@ -241,13 +277,21 @@
     "disableTitlePasscode": "Voer je toegangscode in om de beveiliging uit te schakelen",
     "verifySubtitlePasscode": "Voer je toegangscode in om dit item te ontgrendelen. Het blijft ontgrendeld zo lang als je bij Beveiliging hebt ingesteld.",
     "passcodeRequired": "Toegangscode vereist",
-    "deleteSubtitlePasscode": "Voer je toegangscode in om dit beveiligde item te verwijderen."
+    "deleteSubtitlePasscode": "Voer je toegangscode in om dit beveiligde item te verwijderen.",
+    "sectionTitle": "Deze sectie is beveiligd",
+    "sectionBiometricSubtitle": "Gebruik je vingerafdruk of gezicht om deze sectie te openen.",
+    "sectionVerifySubtitle": "Voer je PIN van 4 cijfers in om deze sectie te openen. Het blijft ontgrendeld zo lang als je bij Beveiliging hebt ingesteld.",
+    "sectionVerifySubtitlePasscode": "Voer je toegangscode in om deze sectie te openen. Het blijft ontgrendeld zo lang als je bij Beveiliging hebt ingesteld.",
+    "sectionDisableSubtitle": "De items blijven staan waar ze staan. Alleen de beveiliging gaat eraf.",
+    "sectionBootstrapSubtitle": "Deze sectie is beveiligd, maar op dit apparaat is geen PIN ingesteld. Stel een PIN van 4 cijfers in om die te openen. Je PIN synchroniseert naar al je apparaten."
   },
   "lockScreen": {
     "unlockApp": "<brand/> ontgrendelen",
     "subtitleWithBio": "Gebruik je vingerafdruk, gezicht of PIN om verder te gaan.",
     "subtitleNoBio": "Voer je PIN in om verder te gaan.",
     "biometricFailed": "Biometrische verificatie is mislukt of geannuleerd.",
+    "deviceKeyUnavailable": "Dit apparaat kan zijn slot nu niet openen, en wat je hebt ingetypt is niet het probleem. Ontgrendel hieronder op een andere manier, bijvoorbeeld met je herstelzin.",
+    "keyringCancelled": "Ontgrendel je sleutelbos en probeer het daarna opnieuw.",
     "biometricUnopened": "Biometrisch ontgrendelen kon je notities niet openen. Gebruik je PIN of toegangscode, of stel biometrisch ontgrendelen opnieuw in.",
     "biometricGone": "Biometrisch ontgrendelen werkt niet meer op dit apparaat en moet opnieuw worden ingesteld. Gebruik hieronder een andere manier om binnen te komen en zet biometrisch ontgrendelen daarna weer aan in Instellingen.",
     "verifying": "Controleren...",
@@ -275,9 +319,6 @@
     "upgradeHeading": "Of upgrade naar Pro",
     "upgradeBody": "Eenmalige betaling, geen abonnement. Onbeperkt veel apparaten plus afbeeldingen, notitiegeschiedenis en meer.",
     "upgradeCta": "Upgrade naar Pro voor ${{price}}",
-    "needMoreHeading": "Meer apparaten nodig?",
-    "needMoreBody": "Upgraden naar Pro kan niet in deze versie. Heb je echt een derde apparaat nodig, neem dan contact op en we lossen het op.",
-    "contactSupport": "Contact opnemen",
     "saveRecoveryHeading": "Bewaar je herstelzin",
     "saveRecoveryBody": "Je hebt je met OAuth aangemeld. Schrijf ook je herstelzin op. Dat is je terugvaloptie als OAuth ooit hapert of je op al je apparaten buitengesloten raakt.",
     "hide": "Verbergen",
@@ -315,7 +356,7 @@
     "custodial": "We bewaren een versleutelde kopie van je herstelzin. Houd minstens één account gekoppeld of kies eigen sleutelbeheer voordat je het laatste account ontkoppelt.",
     "selfCustody": "Op een nieuw apparaat heeft een gekoppeld account nog steeds je herstelzin nodig om je notities te openen. Een account koppelen slaat de herstelzin niet bij ons op.",
     "mfaRequired": "Aanmelden in twee stappen blijft aan voor alle aanmeldmethoden. Bewaar je authenticator of de opgeslagen reservesleutel.",
-    "unavailable": "Gekoppelde accounts wijzigen is nog niet beschikbaar. Je bestaande aanmelding blijft werken.",
+    "unavailable": "Gekoppelde accounts wijzigen is tijdelijk uitgeschakeld. Je bestaande aanmelding blijft werken.",
     "loading": "Gekoppelde accounts controleren...",
     "emailHidden": "E-mailadres niet gedeeld",
     "disconnectAccount": "{{provider}}-account {{email}} ontkoppelen",
@@ -384,7 +425,7 @@
     "signInAgain": "Opnieuw aanmelden",
     "lostAuthenticator": "Telefoon kwijt?",
     "restore": "Voeg je reservesleutel toe aan een willekeurige authenticator-app en voer daarna de code in PrivacyNotes in.",
-    "noBackup": "Geen telefoon en geen reservesleutel? We resetten 2FA niet, en onze support kan daar niet bij helpen. Exporteer de notities op dit apparaat en begin een nieuwe kluis.",
+    "noBackup": "Geen telefoon en geen reservesleutel? We resetten 2FA niet, en onze support kan daar niet bij helpen. Exporteer de notities op dit apparaat als \"Alles, niet versleuteld (.zip)\" en begin een nieuwe kluis.",
     "localNotes": "Niet nu? Blijf de notities op dit apparaat gebruiken. Synchronisatie start weer zodra je een code invoert.",
     "useLocalNotes": "Nu overslaan"
   },
@@ -394,7 +435,7 @@
     "loading": "2FA controleren...",
     "retry": "Opnieuw proberen",
     "unavailable": "2FA kon niet worden gecontroleerd. Je notities op dit apparaat zijn veilig. Controleer je verbinding en probeer het opnieuw.",
-    "notAvailable": "2FA is nog niet beschikbaar.",
+    "notAvailable": "2FA is tijdelijk uitgeschakeld. Probeer het later opnieuw.",
     "actionFailed": "Dat werkte niet. Controleer je verbinding en probeer het opnieuw. Je notities op dit apparaat zijn veilig.",
     "warning": "Bewaar je telefoon of je reservesleutel. Raak je allebei kwijt, dan kun je je niet meer aanmelden op een nieuw apparaat. Dit is voor je eigen veiligheid. We resetten 2FA niet, en onze support kan daar niet bij helpen.",
     "cannotEnroll": "Meld je opnieuw aan met je herstelzin of een gekoppeld account om 2FA in te stellen.",
@@ -423,6 +464,7 @@
     "backupWarning": "Telefoon kwijt? Met deze sleutel krijg je je codes terug. Bewaar hem op een veilige plek, buiten PrivacyNotes.",
     "savedAcknowledgment": "Ik heb de reservesleutel opgeslagen.",
     "confirmBackup": "Typ je reservesleutel uit de vorige stap opnieuw en voer daarna de code uit je app in.",
+    "disconnectsConnections": "Als je 2FA aanzet, worden de browserextensie en de opdrachtregel losgekoppeld. Verbind de extensie opnieuw via Instellingen > Extensie, en de opdrachtregel via Instellingen > CLI.",
     "codeLabel": "Code uit je app",
     "cancelSetup": "Annuleren",
     "enabled": "2FA staat aan",
@@ -452,6 +494,7 @@
   },
   "phraseChange": {
     "lengthGroup": "Lengte van de herstelzin",
+    "lengthLater": "Je kunt de lengte of de herstelzin later wijzigen in Instellingen > Beveiliging > Herstelzin.",
     "badgeMargin": "Extra marge",
     "rowWrite": "Opschrijven",
     "write12": "Snel met de hand over te schrijven.",
@@ -506,10 +549,23 @@
     "failed": "De herstelzin is niet gewijzigd.",
     "failedTooMany": "Je herstelzin is de afgelopen 24 uur drie keer gewijzigd. Probeer het later opnieuw.",
     "failedMoved": "Je instellingen zijn intussen op een ander apparaat gewijzigd. Probeer het opnieuw.",
+    "failedSettingsMoved": "Je instellingen zijn intussen op een ander apparaat gewijzigd. Probeer het opnieuw: deze keer vervangt de wijziging van de herstelzin ze, ook als ze opnieuw veranderen.",
     "failedTwoFactor": "De 2FA-code werd niet geaccepteerd. Probeer het opnieuw.",
     "failedKeyRing": "Dit apparaat heeft de sleutels van een eerdere herstelzin niet. Doe de wijziging op een apparaat dat ze wel heeft.",
     "failedBiometric": "Je vingerafdruk of gezicht is het enige slot van dit apparaat. Bevestig die om de wijziging te doen.",
+    "failedCannotBind": "Je vingerafdruk of gezicht is het enige slot van dit apparaat, en op dit apparaat kan die de nieuwe herstelzin niet beveiligen. Stel eerst een PIN of toegangscode in via Instellingen > Beveiliging > PIN en doe daarna de wijziging.",
     "failedUnsynced": "Sommige instellingen op dit apparaat zijn nog niet gesynchroniseerd. Wacht even en probeer het dan opnieuw.",
-    "failedOffline": "De server kon de wijziging nu niet verwerken. Controleer je verbinding en probeer het opnieuw."
+    "failedOffline": "De server kon de wijziging nu niet verwerken. Controleer je verbinding en probeer het opnieuw.",
+    "signInPasskeysReset_other": "Je {{count}} passkeys om je aan te melden werken niet meer. Voeg ze na de wijziging opnieuw toe.",
+    "signInPasskeysReset_one": "Je passkey om je aan te melden werkt niet meer. Voeg hem na de wijziging opnieuw toe."
+  },
+  "releaseNotice": {
+    "sent": "Op {{when}} heeft een nieuw apparaat zich aangemeld bij je account. Was jij dit niet? Verwijder het in Apparaten."
+  },
+  "releaseApproval": {
+    "ask": "Een nieuwe aanmelding van {{when}} vraagt om je herstelzin (code {{code}}). Sta het alleen toe als jij het bent en het nieuwe apparaat dezelfde code toont.",
+    "waiting": "Een nieuwe aanmelding vraagt om je herstelzin (code {{code}}) en krijgt die na {{when}}, tenzij je het weigert. Sta het alleen toe als jij het bent en het nieuwe apparaat dezelfde code toont.",
+    "allow": "Toestaan",
+    "deny": "Weigeren"
   }
 }

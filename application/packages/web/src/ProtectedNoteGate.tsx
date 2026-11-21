@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Fingerprint, Lock, ShieldSlash } from './icons';
 import { PinInput, type PinInputHandle } from './PinInput';
@@ -34,16 +34,11 @@ import { saveCredential, type UserSettings } from './userSettings';
  * because the hash is synced and every screen that changes it asks for the
  * old one. Spec: docs/internal/specs/pin-recovery.md
  */
-export function ProtectedNoteGate({
-  phrase,
-  onUnlock,
-  onRemoveProtection,
-  onCancel,
-  initialIntent = 'unlock',
-  onExitRemove,
-  userSettings,
-  onSettingsChange,
-}: {
+/**
+ * A whole protected section behind the gate: the same checks, worded for a
+ * section instead of one item. Spec: docs/internal/specs/section-lock.md (section 7)
+ */
+type GateProps = {
   /** The account's phrase, so a forgotten PIN has a way out. */
   phrase: string;
   onUnlock: () => void;
@@ -65,7 +60,31 @@ export function ProtectedNoteGate({
   /** `base` is the copy this surface was rendered with; the parent applies
    *  only the credential keys that differ between it and `next`. */
   onSettingsChange: (next: UserSettings, base: UserSettings) => void;
+};
+
+const SectionWordsContext = createContext(false);
+
+export function ProtectedNoteGate({ section = false, ...props }: GateProps & {
+  /** Word the screens for a protected section rather than one item. */
+  section?: boolean;
 }) {
+  return (
+    <SectionWordsContext.Provider value={section}>
+      <GateBody {...props} />
+    </SectionWordsContext.Provider>
+  );
+}
+
+function GateBody({
+  phrase,
+  onUnlock,
+  onRemoveProtection,
+  onCancel,
+  initialIntent = 'unlock',
+  onExitRemove,
+  userSettings,
+  onSettingsChange,
+}: GateProps) {
   const { t } = useTranslation('security');
   const pinIsSet = hasPin();
   const kind: SecretKind = pinIsPasscode() ? 'passcode' : 'pin';
@@ -217,6 +236,7 @@ function BiometricMode({
   compact?: boolean;
 }) {
   const { t } = useTranslation('security');
+  const section = useContext(SectionWordsContext);
   const [err, setErr] = useState<string | null>(null);
   const { busy, run } = useBiometricUnlock(setErr);
   const offersRemove = Boolean(onStartRemove && onRemoveProtection);
@@ -224,10 +244,10 @@ function BiometricMode({
   return (
     <div className={`max-w-sm mx-auto ${compact ? '' : 'mt-16 '}space-y-4 text-center`}>
       <GateHeader
-        title={removing ? t('protectedGate.disableProtection') : t('protectedGate.protectedItem')}
+        title={removing ? t('protectedGate.disableProtection') : section ? t('protectedGate.sectionTitle') : t('protectedGate.protectedItem')}
         subtitle={removing
           ? t('protectedGate.disableBiometricSubtitle')
-          : t('protectedGate.biometricSubtitle')}
+          : section ? t('protectedGate.sectionBiometricSubtitle') : t('protectedGate.biometricSubtitle')}
         icon={removing ? 'removeProtection' : 'biometric'}
       />
       <div className="flex flex-col gap-2">
@@ -330,6 +350,7 @@ function VerifyMode({
   onForgotPin?: () => void;
 }) {
   const { t } = useTranslation('security');
+  const section = useContext(SectionWordsContext);
   const [value, setValue] = useState('');
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -399,10 +420,12 @@ function VerifyMode({
       <GateHeader
         title={removing
           ? kind === 'passcode' ? t('protectedGate.disableTitlePasscode') : t('protectedGate.disableTitle')
-          : t('protectedGate.protectedItem')}
+          : section ? t('protectedGate.sectionTitle') : t('protectedGate.protectedItem')}
         subtitle={removing
-          ? t('protectedGate.disableSubtitle')
-          : kind === 'passcode' ? t('protectedGate.verifySubtitlePasscode') : t('protectedGate.verifySubtitle')}
+          ? section ? t('protectedGate.sectionDisableSubtitle') : t('protectedGate.disableSubtitle')
+          : section
+            ? kind === 'passcode' ? t('protectedGate.sectionVerifySubtitlePasscode') : t('protectedGate.sectionVerifySubtitle')
+            : kind === 'passcode' ? t('protectedGate.verifySubtitlePasscode') : t('protectedGate.verifySubtitle')}
         icon={removing ? 'removeProtection' : 'lock'}
       />
       <SecretInput
@@ -504,6 +527,7 @@ function BootstrapMode({
   onSettingsChange: (next: UserSettings, base: UserSettings) => void;
 }) {
   const { t } = useTranslation('security');
+  const section = useContext(SectionWordsContext);
   const [pin, setNewPin] = useState('');
   const [confirm, setConfirm] = useState('');
   const [err, setErr] = useState<string | null>(null);
@@ -553,7 +577,7 @@ function BootstrapMode({
     <div className="max-w-sm mx-auto mt-12 space-y-4">
       <GateHeader
         title={t('protectedGate.bootstrapTitle')}
-        subtitle={t('protectedGate.bootstrapSubtitle')}
+        subtitle={section ? t('protectedGate.sectionBootstrapSubtitle') : t('protectedGate.bootstrapSubtitle')}
       />
       <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 text-warning text-small leading-relaxed px-3 py-2">
         {t('protectedGate.bootstrapWarning')}

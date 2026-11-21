@@ -18,9 +18,10 @@
 // highlight classes lives in index.css.
 
 import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view';
 import type { Node as PMNode } from '@tiptap/pm/model';
+import { scrollParentOf } from './scrollParent';
 
 type SearchMatch = {
   from: number;
@@ -240,10 +241,27 @@ export function getSearchInfo(view: EditorView): SearchInfo {
   return { active: st.active, total: st.matches.length, activeIsNode: st.matches[st.active]?.node === true };
 }
 
-/** Center the current match in the scroll viewport (clear of sticky bars). */
+/**
+ * Center `hit` in the note's own scroll column. Never `scrollIntoView`: it
+ * scrolls every ancestor, the window too. On iOS with the keyboard up the
+ * window moved 44 to 54 px on each keystroke, `useKeyboardOpen` put it back,
+ * the settle loop below moved it again every frame, and the web view's
+ * process died under the fight (GitHub #509 is the same fight with the
+ * caret). The column is the one thing that should move. A page with no
+ * scrolling column (nothing to center in) is left alone.
+ */
+function centerHit(hit: HTMLElement): void {
+  const col = scrollParentOf(hit);
+  if (col === document.scrollingElement || col === document.documentElement) return;
+  const box = col.getBoundingClientRect();
+  const r = hit.getBoundingClientRect();
+  col.scrollTop += r.top + r.height / 2 - (box.top + box.height / 2);
+}
+
+/** Center the current match in the note's scroll column. */
 export function scrollToCurrentMatch(view: EditorView): void {
   const hit = view.dom.querySelector('.pn-search-hit-current') as HTMLElement | null;
-  hit?.scrollIntoView({ block: 'center', inline: 'nearest' });
+  if (hit) centerHit(hit);
 }
 
 /**
@@ -266,7 +284,7 @@ export function scrollToCurrentMatchUntilSettled(view: EditorView): void {
     if (Math.abs(top - lastTop) < 1) stableFrames++;
     else stableFrames = 0;
     lastTop = top;
-    hit.scrollIntoView({ block: 'center', inline: 'nearest' });
+    centerHit(hit);
     if (stableFrames >= 5 || performance.now() - start > 1200) return;
     requestAnimationFrame(step);
   };
@@ -279,7 +297,13 @@ export function scrollToCurrentMatchUntilSettled(view: EditorView): void {
  * looking at instead of leaving it wherever it was before the search started.
  */
 export function getActiveMatchRange(view: EditorView): { from: number; to: number } | null {
-  const st = searchPluginKey.getState(view.state);
+  return activeMatchRange(view.state);
+}
+
+/** The same range read off a state, for a plugin that has no view at hand
+ *  (the folds open on the match the bar steps to, editorFolds.ts). */
+export function activeMatchRange(state: EditorState): { from: number; to: number } | null {
+  const st = searchPluginKey.getState(state);
   if (!st || st.active < 0) return null;
   const hit = st.matches[st.active];
   return hit ? { from: hit.from, to: hit.to } : null;

@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "h",
+    "minutesSuffix": "min",
+    "hoursMinutes": "{{h}} h {{m}} min",
     "bpm": "ppm",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -144,6 +146,7 @@
     "takenCount_many": "{{count}} presos",
     "takenCount_other": "{{count}} presos",
     "namePlaceholder": "Nom del medicament",
+    "nameMissing": "Posa un nom al medicament.",
     "dosagePlaceholder": "Dosi (p. ex. 50mg)",
     "editMedication": "Edita el medicament",
     "removeMedication": "Elimina el medicament",
@@ -252,12 +255,18 @@
     "yes": "Sí",
     "no": "No",
     "unknownType": "Aquest seguiment necessita una versió més nova de l'app.",
+    "counterOf": "de {{limit}}",
+    "counterToday": "usos avui",
+    "counterReached": "Has arribat al límit de {{limit}}.",
+    "counterStartAgain": "Torna a començar {{name}} des de 0",
+    "counterStartAgainConfirm": "Vols tornar a començar?",
     "typeLabels": {
       "scale10": "Escala (0-10)",
       "scale5": "Escala (0-5)",
       "slider100": "Puntuació (0-100)",
       "number": "Número",
       "pair": "Dos números",
+      "counter": "Comptador",
       "yesno": "Sí / No"
     }
   },
@@ -273,7 +282,7 @@
     "medicationCard": "Targeta de medicació",
     "medicationCardHelp": "«Has pres la medicació?» en aquest dispositiu, només els dies que toca prendre un medicament.",
     "customHelp": "Seguiments als quals poses nom tu mateix: una escala, un número o un sí o no. Fins a {{max}}.",
-    "customHelpPair": "Seguiments als quals poses nom tu mateix: una escala, un número, dos números o un sí o no. Fins a {{max}}.",
+    "customHelpPair": "Seguiments als quals poses nom tu mateix: una escala, un número, dos números, un comptador o un sí o no. Fins a {{max}}.",
     "yourCustomTrackers": "Els teus seguiments personalitzats",
     "categoryMoodMind": "Ànim i ment",
     "categoryBodyHealth": "Cos i salut",
@@ -314,7 +323,10 @@
     "pairFirstPlaceholder": "Sistòlica",
     "pairSecondPlaceholder": "Diastòlica",
     "pairUnit": "Unitat (opcional)",
-    "pairWaiting": "Es desa quan escriguis el primer número."
+    "pairWaiting": "Es desa quan escriguis el primer número.",
+    "nameMissing": "Posa un nom al seguiment.",
+    "counterLimit": "Límit (opcional)",
+    "counterHelp": "Suma els usos de tots els dies. Posa un límit, com ara 30 per a una fulla d'afaitar, i torna a començar quan hi arribis."
   },
   "factors": {
     "prompt": "Què ha format part del teu dia?",
@@ -404,5 +416,6 @@
   "flow": {
     "finish": "Acaba",
     "step": "Seguiment {{n}} de {{total}}"
-  }
+  },
+  "showEveryDay": "Mostra cada dia amb això"
 }

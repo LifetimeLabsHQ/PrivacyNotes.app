@@ -15,9 +15,10 @@
  *   visitors' browsers; the caps are what stop a script.
  * Anything else gets a 401 with no body.
  *
- * What it refuses, on every redirect hop: a scheme other than http or https,
- * a user name or password in the address, a host that names or resolves to a
- * private, local or reserved address, and a hop from https down to http.
+ * What it refuses, on every redirect hop: a scheme other than http or https
+ * (https only for a calendar), a user name or password in the address, a host
+ * that names or resolves to a private, local or reserved address, and a hop
+ * from https down to http.
  * A Worker cannot pin its connection to
  * the address it looked up, so the lookup is a second fence; the first is
  * that Cloudflare's network does not route to private ranges.
@@ -71,6 +72,16 @@ const USER_AGENT =
 const DEMO_ORIGINS = new Set(['https://try.privacynotes.app', 'https://use.privacynotes.app']);
 /** The local dev server, accepted only when the Worker itself runs locally. */
 const DEV_ORIGIN = 'http://localhost:5173';
+/** The beta site is static (Cloudflare Pages, no Worker), so it calls this
+ *  route on the app host, cross-origin (GitHub #849). Only this origin gets
+ *  the CORS answer. Spec: docs/internal/repos-runbook.md (section 2, CORS) */
+const BETA_ORIGIN = 'https://beta.privacynotes.app';
+/** What the beta page may send and read across origins. */
+const BETA_CORS: Record<string, string> = {
+  'Access-Control-Allow-Origin': BETA_ORIGIN,
+  'Access-Control-Expose-Headers': 'X-Clip-Error, X-Clip-Status, X-Clip-Url, X-Clip-Type',
+  Vary: 'Origin',
+};
 
 /** A window in seconds and the most it holds: requests, or bytes for a
  *  budget rule, whose hits carry an amount. */
@@ -83,18 +94,49 @@ const LIMITS = {
     { name: 'page-day', window: 86_400, limit: 600 },
   ],
   image: [{ name: 'image-minute', window: 60, limit: 300 }],
+  // Calendars are downloaded by a timer, not by a person, so they keep
+  // counters of their own and never spend the clipper's. An account holds
+  // up to 20 feeds (CALENDAR_FEED_MAX), each downloaded when the app opens
+  // and then hourly, a failing one backing off (10 minutes, 1 hour, 6
+  // hours). The minute rule takes three full rounds at once (two tabs and
+  // a reload); the day rule takes 20 feeds hourly on three web devices or
+  // tabs (1,440) with room for subscribing and retries.
+  // Spec: docs/internal/specs/calendar-pillar-spec.md (section 14)
+  calendar: [
+    { name: 'calendar-minute', window: 60, limit: 60 },
+    { name: 'calendar-day', window: 86_400, limit: 1_600 },
+  ],
   badToken: [{ name: 'bad-token-minute', window: 60, limit: 20 }],
   demoPage: [{ name: 'demo-page-hour', window: 3_600, limit: 10 }],
   demoImage: [{ name: 'demo-image-hour', window: 3_600, limit: 100 }],
+  // A /48 (IPv4: a /24) holds many /64s, each a visitor of its own above,
+  // so one line could use up the whole demo-wide cap alone and close the
+  // demo's clipper for everyone until midnight UTC (beta #235 item 2). Each
+  // wide block gets a tenth of the demo-wide cap a day.
+  demoWidePage: [{ name: 'demo-wide-page-day', window: 86_400, limit: 500 }],
+  demoWideImage: [{ name: 'demo-wide-image-day', window: 86_400, limit: 2_000 }],
   demoGlobal: [{ name: 'demo-page-day', window: 86_400, limit: 5_000 }],
   demoImageGlobal: [{ name: 'demo-image-day', window: 86_400, limit: 20_000 }],
   // Checked before a download and charged with its size after it, so the
   // download that crosses the budget goes and the next one is refused.
   accountBytes: [{ name: 'bytes-day', window: 86_400, limit: 2_000_000_000 }],
+  // Calendars have a byte budget of their own, so feeds downloaded by a
+  // timer never use up the clipper's (beta #199 item 5). 20 feeds of 2 MB
+  // hourly on one device are about 1 GB a day.
+  // Spec: docs/internal/specs/calendar-pillar-spec.md (section 14)
+  calendarBytes: [{ name: 'calendar-bytes-day', window: 86_400, limit: 1_000_000_000 }],
+  // GET /favicon in worker.ts, per address, spent only when the edge cache
+  // has no answer and the Worker asks DuckDuckGo or Google. The app asks at
+  // most five at a time and keeps every icon (faviconQueue.ts), so a large
+  // vault's first look fits; a script asking for new domains does not (beta #218).
+  favicon: [
+    { name: 'favicon-minute', window: 60, limit: 600 },
+    { name: 'favicon-day', window: 86_400, limit: 5_000 },
+  ],
 } satisfies Record<string, Rule[]>;
 
-/** A calendar download counts against the page limits: one request each,
- *  started by a person. */
+/** A calendar download has limits of its own; in the demo it counts as a
+ *  page. */
 type Kind = 'page' | 'image' | 'calendar';
 
 /** An empty answer with an opaque reason code; never the address asked for. */
@@ -103,6 +145,25 @@ function refuse(status: number, code: string, extra: Record<string, string> = {}
 }
 
 export async function handleClipFetch(request: Request, url: URL, env: ClipEnv): Promise<Response> {
+  if (request.headers.get('Origin') !== BETA_ORIGIN) return answer(request, url, env);
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        ...BETA_CORS,
+        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-PN-Demo',
+        'Access-Control-Max-Age': '600',
+      },
+    });
+  }
+  const res = await answer(request, url, env);
+  const out = new Response(res.body, res);
+  for (const [k, v] of Object.entries(BETA_CORS)) out.headers.set(k, v);
+  return out;
+}
+
+async function answer(request: Request, url: URL, env: ClipEnv): Promise<Response> {
   if (request.method !== 'POST') return refuse(405, 'method', { Allow: 'POST' });
   if (!env.CLIP_LIMITS || !env.SUPABASE_URL) return refuse(503, 'unavailable');
 
@@ -114,7 +175,7 @@ export async function handleClipFetch(request: Request, url: URL, env: ClipEnv):
   // counters of its visitors' addresses.
   const origin = request.headers.get('Origin');
   const local = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
-  const ourOrigin = origin !== null && (DEMO_ORIGINS.has(origin) || (local && origin === DEV_ORIGIN));
+  const ourOrigin = origin !== null && (DEMO_ORIGINS.has(origin) || origin === BETA_ORIGIN || (local && origin === DEV_ORIGIN));
   if (origin !== null && !ourOrigin) return new Response(null, { status: 401 });
 
   let subject: string;
@@ -145,19 +206,25 @@ export async function handleClipFetch(request: Request, url: URL, env: ClipEnv):
 
   const isDemo = subject.startsWith('demo:');
   const pageLike = kind !== 'image';
-  const rules = isDemo ? (pageLike ? LIMITS.demoPage : LIMITS.demoImage) : pageLike ? LIMITS.page : LIMITS.image;
-  // The demo-wide cap is read before the visitor's counter moves, so a
-  // request the cap refuses does not use up the visitor's own allowance
-  // (GitHub #657). Two requests racing past the read can still both count.
+  const rules = isDemo ? (pageLike ? LIMITS.demoPage : LIMITS.demoImage) : LIMITS[kind];
+  // The wide block's cap and the demo-wide cap are read before the
+  // visitor's counter moves, so a request either refuses does not use up the
+  // visitor's own allowance (GitHub #657), and are counted only after it.
+  // Two requests racing past a read can still both count.
+  const wideSubject = `demo-wide:${wideAddress(request)}`;
+  const wideRules = pageLike ? LIMITS.demoWidePage : LIMITS.demoWideImage;
   const globalRules = pageLike ? LIMITS.demoGlobal : LIMITS.demoImageGlobal;
+  if (isDemo && !(await allowed(env.CLIP_LIMITS, wideSubject, wideRules, false))) return refuse(429, 'limit');
   if (isDemo && !(await allowed(env.CLIP_LIMITS, 'demo-global', globalRules, false))) return refuse(429, 'demo-cap');
   if (!(await allowed(env.CLIP_LIMITS, subject, rules, true))) return refuse(429, 'limit');
+  if (isDemo && !(await allowed(env.CLIP_LIMITS, wideSubject, wideRules, true))) return refuse(429, 'limit');
   if (isDemo && !(await allowed(env.CLIP_LIMITS, 'demo-global', globalRules, true))) return refuse(429, 'demo-cap');
-  if (!isDemo && !(await allowed(env.CLIP_LIMITS, subject, LIMITS.accountBytes, false))) return refuse(429, 'limit');
+  const byteRules = kind === 'calendar' ? LIMITS.calendarBytes : LIMITS.accountBytes;
+  if (!isDemo && !(await allowed(env.CLIP_LIMITS, subject, byteRules, false))) return refuse(429, 'limit');
 
   try {
     const res = await download(body.url, kind);
-    if (!isDemo) await allowed(env.CLIP_LIMITS, subject, LIMITS.accountBytes, true, Number(res.headers.get('Content-Length')) || 0);
+    if (!isDemo) await allowed(env.CLIP_LIMITS, subject, byteRules, true, Number(res.headers.get('Content-Length')) || 0);
     return res;
   } catch (err) {
     if (err instanceof ClipRefusal) return refuse(err.status, err.code, err.headers);
@@ -216,23 +283,28 @@ export function clientAddress(request: Request): string {
   return ip.parts.slice(0, 4).map((g) => g.toString(16)).join(':');
 }
 
+/** The caller's wide block, for the demo's second address limit: an IPv4
+ *  address by its /24, an IPv6 address by its /48, the block one home line
+ *  or small site is usually given. As `addressBucketWide` of the edge
+ *  functions cuts it, which the Worker cannot import. */
+export function wideAddress(request: Request): string {
+  const raw = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+  const ip = parseIp(raw);
+  if (!ip) return raw;
+  if (ip.v === 4) return `${ip.parts.slice(0, 3).join('.')}.0/24`;
+  return `${ip.parts.slice(0, 3).map((g) => g.toString(16)).join(':')}::/48`;
+}
+
 // ── Downloading ────────────────────────────────────────────────
 
 async function download(raw: string, kind: Kind): Promise<Response> {
   const signal = AbortSignal.timeout(DEADLINE_MS);
   let target = checkUrl(raw);
   for (let hop = 0; ; hop++) {
+    // A calendar goes over https only, on every hop (beta #159).
+    if (kind === 'calendar' && target.protocol !== 'https:') throw new ClipRefusal(422, 'bad-url');
     await checkHost(target, signal);
-    const res = await fetch(target.href, {
-      method: 'GET',
-      redirect: 'manual',
-      cache: 'no-store',
-      signal,
-      headers: {
-        'User-Agent': USER_AGENT,
-        Accept: kind === 'calendar' ? 'text/calendar,*/*;q=0.5' : 'text/html,application/xhtml+xml,image/*;q=0.9,*/*;q=0.5',
-      },
-    });
+    const res = await fetchHop(target, kind, signal);
     // A 3xx with no Location (300, 304) points nowhere: it falls through to
     // the status refusal below, which names the status (GitHub #657).
     const location = res.headers.get('Location');
@@ -274,6 +346,34 @@ async function download(raw: string, kind: Kind): Promise<Response> {
       },
     });
   }
+}
+
+/** One request. A calendar whose server takes no https connection, or fails
+ *  the TLS handshake (Cloudflare's 525 and 526), is refused as `no-https`;
+ *  the deadline still reads as a timeout. */
+async function fetchHop(target: URL, kind: Kind, signal: AbortSignal): Promise<Response> {
+  let res: Response;
+  try {
+    res = await fetch(target.href, {
+      method: 'GET',
+      redirect: 'manual',
+      cache: 'no-store',
+      signal,
+      headers: {
+        'User-Agent': USER_AGENT,
+        Accept: kind === 'calendar' ? 'text/calendar,*/*;q=0.5' : 'text/html,application/xhtml+xml,image/*;q=0.9,*/*;q=0.5',
+      },
+    });
+  } catch (err) {
+    const late = err instanceof Error && (err.name === 'TimeoutError' || err.name === 'AbortError');
+    if (kind === 'calendar' && !late) throw new ClipRefusal(502, 'no-https');
+    throw err;
+  }
+  if (kind === 'calendar' && (res.status === 525 || res.status === 526)) {
+    await res.body?.cancel();
+    throw new ClipRefusal(502, 'no-https');
+  }
+  return res;
 }
 
 export function checkUrl(raw: string): URL {
@@ -447,6 +547,14 @@ export async function verifySession(token: string, base: string): Promise<string
 }
 
 // ── Limits ─────────────────────────────────────────────────────
+
+/** Whether the caller's address may send one more /favicon lookup upstream,
+ *  counted by the clip route's limiter under a subject of its own. With no
+ *  limiter bound (a local Worker without it), icons are not held back. */
+export async function faviconAllowed(request: Request, env: ClipEnv): Promise<boolean> {
+  if (!env.CLIP_LIMITS) return true;
+  return allowed(env.CLIP_LIMITS, `favicon:${clientAddress(request)}`, LIMITS.favicon, true);
+}
 
 /** Ask the subject's counter whether `rules` allow one more request, and
  *  count it when `count` is true and every rule allows it. */

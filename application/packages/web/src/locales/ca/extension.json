@@ -47,9 +47,10 @@
     "title": "Protegeix els teus inicis de sessió",
     "body": "Tria un PIN o un codi d'accés per a aquest navegador. El necessites per desbloquejar aquí els teus inicis de sessió. És independent del de l'app.",
     "biometric": "Fes servir també el desbloqueig biomètric",
-    "biometricHelp": "Touch ID o Windows Hello, a més del PIN o el codi d'accés, que també funcionen sempre.",
+    "biometricHelp": "Touch ID o Windows Hello, mitjançant una clau d'accés per a aquest navegador. El PIN o el codi d'accés també funcionen sempre.",
     "repeat": "Torna'l a introduir",
-    "mismatch": "No coincideixen. Torna-ho a provar."
+    "mismatch": "No coincideixen. Torna-ho a provar.",
+    "commonPin": "Aquest PIN és massa fàcil d'endevinar. Tria'n un altre."
   },
   "clip": {
     "selection": "Selecció",
@@ -83,7 +84,7 @@
     "unlockPin": "Introdueix el teu PIN",
     "unlockPasscode": "Introdueix el teu codi d'accés",
     "useBiometric": "Fes servir el desbloqueig biomètric",
-    "wrong_other": "Incorrecte. Queden {{count}} intents abans que aquest navegador es desconnecti.",
+    "wrong_other": "Incorrecte. Queden {{count}} intents aquest mes abans que aquest navegador es desconnecti.",
     "forSite": "Per a {{site}}",
     "none": "No hi ha inicis de sessió per a aquest lloc.",
     "off": "Els inicis de sessió estan desactivats en aquest navegador. Activa Caixa forta quan el connectis.",
@@ -99,12 +100,15 @@
     "noMatch": "Cap inici de sessió coincideix.",
     "openSite": "Obre el lloc",
     "duplicate": "Ja tens un inici de sessió per a aquest lloc amb aquest nom d'usuari.",
-    "wrong_one": "Incorrecte. Queda {{count}} intent abans que aquest navegador es desconnecti."
+    "editTitle": "Edita l'inici de sessió",
+    "saved": "Canvis desats.",
+    "wrong_one": "Incorrecte. Queda {{count}} intent aquest mes abans que aquest navegador es desconnecti."
   },
   "account": {
     "confirmDisconnect": "Vols desconnectar-lo?",
     "revoked": "Aquest navegador ja no està connectat",
-    "revokedBody": "Torna'l a connectar amb un codi nou de l'app."
+    "revokedBody": "Torna'l a connectar amb un codi nou de l'app.",
+    "pendingPasskey": "Una clau d'accés desada en aquest navegador encara no és a la teva Caixa forta. Obre PrivacyNotes i deixa que se sincronitzi primer, o la clau d'accés es perdrà."
   },
   "badge": {
     "problem": "Hi ha alguna cosa que requereix la teva atenció"
@@ -147,7 +151,8 @@
     "unlockToCopy": "Desbloqueja per copiar",
     "omniboxDefault": "Cerca %s a la teva caixa forta de PrivacyNotes",
     "omniboxUnlock": "Desbloqueja PrivacyNotes per cercar",
-    "moreOptions": "Més opcions"
+    "moreOptions": "Més opcions",
+    "editNotSaved": "El teu canvi a {{name}} no ha arribat mai a la Caixa forta, així que l'inici de sessió conserva els valors antics. Torna'l a editar per desar el canvi."
   },
   "shortcuts": {
     "notSet": "Sense definir",
@@ -194,5 +199,19 @@
     "biometricPin": "Introdueix el teu PIN per configurar-lo.",
     "biometricPasscode": "Introdueix el teu codi d'accés per configurar-lo.",
     "biometricOff": "El desbloqueig biomètric està desactivat"
+  },
+  "passkey": {
+    "saveTitle": "Vols desar una clau d'accés per a {{site}}?",
+    "useTitle": "Inicia la sessió a {{site}}",
+    "saveTo": "Desa a",
+    "save": "Desa a PrivacyNotes",
+    "other": "Fes servir una altra app de claus d'accés",
+    "already": "Ja tens una clau d'accés per a {{site}} a PrivacyNotes.",
+    "saved": "Clau d'accés desada.",
+    "notSaved": "No s'ha pogut desar la clau d'accés. Se n'encarrega l'app de claus d'accés del teu navegador.",
+    "maybeSaved": "Pot ser que la clau d'accés s'hagi desat. Comprova la Caixa forta.",
+    "unlockFirst": "Desbloqueja per fer servir les teves claus d'accés.",
+    "offer": "Ofereix claus d'accés",
+    "offerHelp": "Desa i fes servir claus d'accés als llocs web."
   }
 }

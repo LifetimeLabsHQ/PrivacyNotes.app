@@ -37,7 +37,7 @@
   "storageBar": {
     "usage": "{{percent}} % utilisé ({{used}} / {{max}})",
     "refresh": "Actualiser le stockage",
-    "cleanupInfo": "Les éléments supprimés ne sont plus comptés immédiatement. Les fichiers chiffrés eux-mêmes quittent le serveur en quelques jours.",
+    "cleanupInfo": "Les notes supprimées définitivement ne sont plus comptées immédiatement. Un fichier supprimé compte jusqu'à ce que sa copie chiffrée quitte le serveur, environ un jour plus tard.",
     "open": "Ouvrir les paramètres de stockage"
   },
   "updateToast": {
@@ -325,6 +325,8 @@
     "commands": {
       "syncResume": "Reprendre la synchro",
       "lockProtected": "Verrouiller cette note",
+      "randomItem": "Ouvrir un élément au hasard",
+      "randomBookmark": "Ouvrir un signet au hasard",
       "changelog": "Nouveautés",
       "themesPage": "Thèmes de la communauté",
       "website": "Site web de PrivacyNotes"

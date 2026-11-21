@@ -26,7 +26,7 @@
 // Design rationale + the CJK unlock: docs/internal/specs/i18n-cjk-plan.md section 3.
 import { activeLocale } from './i18n';
 
-export const FORCE_EN = { lng: 'en' } as const;
+const FORCE_EN = { lng: 'en' } as const;
 
 const CJK = ['ja', 'ko', 'zh-TW'] as const;
 // The target locales whose labels are measured slot by slot: Latin script,
@@ -49,15 +49,13 @@ const allBut = (...tooWide: string[]): readonly string[] => [
 // The per-locale lists were measured in-browser on 2026-07-21 by injecting each
 // translation into the real slot and checking for truncation and wrap, INCLUDING
 // the Tags|Folders toggle. `upload` translates everywhere; `import` everywhere
-// but Dutch. The three footer/rail slots below (Settings, sync pill, Import &
-// Export) are English in all Latin because their slots are too tight to measure
-// reliably. Spec: docs/contrib/i18n-spec.md section 10b.
+// but Dutch. The footer Settings word and sync words were English in all Latin until
+// the footer became icons only (2026-11-21). Spec: docs/contrib/i18n-spec.md section 10b.
 const RENDER_TRANSLATED: Record<string, readonly string[]> = {
   // Product terms and dev-facing jargon: English in every locale, CJK included.
   'notes:vaultNew.sshKey': [], // "SSH Key" in the vault New menu
   'shell:vaultItem.badgeSshKey': [], // "SSH Key" vault row badge
   'notes:settings.accountLabel': [], // "ID & Sync" - product term
-  'settings:syncStatus.notSynced': [], // footer pill word; the slot is narrow and ID & Sync carries the translation
   'notes:vaultFilter.keys': [], // Vault "Keys" filter chip, pairs with the SSH badge
   'shell:tagsRail.viewAuto': [], // "Auto" view mode
   'settings:appearance.viewAuto': [], // "Auto" view mode
@@ -97,23 +95,10 @@ const RENDER_TRANSLATED: Record<string, readonly string[]> = {
   // sk "Na stiahnutie" (13, two words) joins it too.
   'shell:tagsRail.downloads': allBut('fr', 'pt-PT', 'sv', 'sk', 'uk'),
 
-  // The footer Settings label and the sync-status pill beside it are English
-  // in EVERY Latin locale (translated in CJK only). The footer row is too
-  // tight to translate reliably per-locale - long words wrap or crowd the sync
-  // icon at narrower window widths, so a measured allow list is fragile.
-  // Decided 2026-07-21. The settings rail's "Import & Export" was on this list
-  // until it became the one-word "Transfer" (2026-11-11), which translates.
-  'notes:footer.settings': CJK,
-  'settings:syncStatus.synced': CJK,
-  'settings:syncStatus.notSaved': CJK,
-  'settings:syncStatus.offline': CJK,
-  'settings:syncStatus.syncing': CJK,
-  'settings:syncStatus.uploading': CJK,
-  // "Storage full" pill state (backlog #143): same slot, same call. The CJK
-  // forms (容量不足 / 저장 공간 부족 / 儲存空間已滿) are shorter than the
-  // already-approved uploading forms; Latin ones (Almacenamiento lleno,
-  // Armazenamento cheio) are exactly the overflow class this map exists for.
-  'settings:syncStatus.storageFull': CJK,
+  // The footer Settings word and the sync-status words were English in every
+  // Latin locale for the width of the footer slot (2026-07-21). Since
+  // 2026-11-21 the footer shows icons only and the words live in tips and
+  // labels, which have room, so they translate (#791, ui-patterns.md 205).
 };
 
 function fits(allow: readonly string[]): boolean {
@@ -129,11 +114,12 @@ function fits(allow: readonly string[]): boolean {
 
 /**
  * Options for t() on an overflow-prone key: FORCE_EN when the active locale
- * would overflow this slot, otherwise undefined (render the real translation).
+ * would overflow this slot, otherwise no options (render the real translation).
+ * An empty object, not undefined: i18next 27's t() refuses `undefined` there.
  */
-export function exemptOpts(qualifiedKey: string): typeof FORCE_EN | undefined {
+export function exemptOpts(qualifiedKey: string): { lng?: string } {
   const allow = RENDER_TRANSLATED[qualifiedKey];
   // A key not in the map is not exempt at all: render its real translation.
   // (Only keys listed above are ever forced to English.)
-  return allow === undefined || fits(allow) ? undefined : FORCE_EN;
+  return allow === undefined || fits(allow) ? {} : FORCE_EN;
 }

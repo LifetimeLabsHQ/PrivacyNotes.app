@@ -18,6 +18,8 @@
     "filedNotes_other": "{{count}} anteckningar sorterade i mappar",
     "tags_other": "Behöll taggarna på {{count}} anteckningar.",
     "droppedAlign": "Tog bort justeringen på block som redigeraren inte kan justera, men behöll texten.",
+    "lostPasskeys_other": "Utelämnade {{count}} passkeys som sparats med inloggningar. Behåll dem i din gamla app, eller lägg till nya passkeys på de webbplatserna.",
+    "lostPasskeys_one": "Utelämnade {{count}} passkey som sparats med en inloggning. Behåll den i din gamla app, eller lägg till en ny passkey på den webbplatsen.",
     "foldersFromNotebooks_other": "Återskapade {{count}} mappar från dina anteckningsböcker ({{filed}}).",
     "parsingJson": "Tolkar JSON…",
     "buildingNotes": "Skapar anteckningar…",
@@ -324,6 +326,14 @@
     "invalidJson": "Den filen är inte giltig JSON. Kontrollera att du exporterade som \".json\" (inte krypterad).",
     "encryptedExport": "Det här är en krypterad export från Bitwarden. Exportera igen i det vanliga formatet \".json\" (inte \".json (Encrypted)\").",
     "missingItems": "Den här filen saknar den förväntade listan \"items\". Det är inte en valvexport från Bitwarden.",
+    "notZipExport": "Den här zip-filen har ingen data.json på översta nivån. Det är inte en export från Bitwarden i formatet \".zip (with attachments)\".",
+    "keptPasskeys_other": "Behöll {{count}} passkeys på sina inloggningar.",
+    "passkeyOtherSite": "Inloggningen \"{{name}}\" innehåller en passkey för {{site}}, som inte är en av dess webbplatser. Den följde med inloggningen; radera den där om du inte känner igen den.",
+    "skippedPasskeys_other": "Utelämnade {{count}} passkeys som Valvet inte kan lagra: nyckeln är inte P-256, eller ett värde är längre än WebAuthn tillåter. Lägg till en ny passkey på de webbplatserna.",
+    "unmatchedAttachments_other": "{{count}} bilagor kunde inte kopplas till ett enda objekt, eftersom inget objekt eller flera objekt har deras mappnamn. De ligger i anteckningar som heter som sina mappar.",
+    "unmatchedAttachments_one": "{{count}} bilaga kunde inte kopplas till ett enda objekt, eftersom inget objekt eller flera objekt har dess mappnamn. Den ligger i en anteckning som heter som mappen.",
+    "skippedPasskeys_one": "Utelämnade {{count}} passkey som Valvet inte kan lagra: dess nyckel är inte P-256, eller ett värde är längre än WebAuthn tillåter. Lägg till en ny passkey på den webbplatsen.",
+    "keptPasskeys_one": "Behöll {{count}} passkey på sin inloggning.",
     "unknownType": "Hoppade över objektet \"{{name}}\" med okänd typ {{type}}.",
     "importedCards_other": "Importerade {{count}} kort som valvobjekt.",
     "importedSecureNotes_other": "Importerade {{count}} säkra anteckningar.",
@@ -627,6 +637,10 @@
     "leftFiles_other": "{{count}} bifogade filer lämnades kvar. Spara dem från Enpass och bifoga dem till objekten här.",
     "leftFiles_one": "{{count}} bifogad fil lämnades kvar. Spara den från Enpass och bifoga den till objektet här."
   },
+  "msecure": {
+    "notMSecure": "Det här är inte en export från mSecure. Välj Settings > Backups > Export records to CSV file i mSecure.",
+    "fieldDataOnly": "Den här exporten från mSecure har inga fältnamn, så dess fält kan inte skiljas åt. Exportera igen med \"Only export field data\" avstängt."
+  },
   "nordpass": {
     "notNordPass": "Den här filen är inte en export från NordPass. Välj Settings > Export items i NordPass."
   },
@@ -643,6 +657,7 @@
     "kdbxFile": "Det här är själva KeePass-databasen, och den är låst. Exportera den som XML i KeePass eller KeePassXC och importera sedan den filen.",
     "notKeePass": "Den här filen är inte en XML-export från KeePass. Välj File > Export > KeePass XML (2.x) i KeePass, eller Database > Export > XML File i KeePassXC.",
     "noEntries": "Den KeePass-filen har inga poster utanför Recycle Bin.",
+    "doctype": "Den här filen deklarerar en DOCTYPE, vilket ingen export från KeePass skriver, så den lästes inte. Exportera XML-filen från KeePass igen och importera den filen.",
     "readingEntries": "Läser posterna…",
     "leftHistory_other": "Lämnade kvar {{count}} äldre versioner av poster: bara den nyaste följer med.",
     "missingFiles_other": "{{count}} bifogade filer fanns inte i exporten och lämnades kvar. Spara dem från KeePass och bifoga dem till inloggningarna här.",
@@ -659,6 +674,15 @@
     "readHashtags_one": "Läste taggar skrivna som #hashtaggar i {{count}} anteckning.",
     "foundFiles_one": "Hittade {{count}} markdown-fil..."
   },
+  "raindrop": {
+    "notRaindrop": "Inte en Raindrop.io-export - .csv-filen från Export > CSV, eller .zip-filen som innehåller den, förväntades.",
+    "noCsv": "Den här .zip-filen innehåller ingen .csv-fil. Exportera CSV-filen från Raindrop.io och välj den filen.",
+    "highlightsHeading": "Överstrykningar",
+    "skipped_other": "{{count}} bokmärken utelämnades eftersom deras adresser inte är webblänkar.",
+    "covers_other": "{{count}} omslagsbilder importerades inte. Bokmärkena visar webbplatsernas ikoner i stället.",
+    "covers_one": "{{count}} omslagsbild importerades inte. Bokmärket visar webbplatsens ikon i stället.",
+    "skipped_one": "{{count}} bokmärke utelämnades eftersom dess adress inte är en webblänk."
+  },
   "browserBookmarks": {
     "notBookmarks": "Inte en bokmärkesexport - bokmärkesfilen i .html som en webbläsare exporterar förväntades.",
     "noBookmarks": "Inga bokmärken hittades i den här filen.",
@@ -670,6 +694,8 @@
     "entryTooLarge": "{{name}} blir större än de {{limit}} som en import kan läsa på en gång när den packas upp. Ta bort den från exporten och försök igen.",
     "entryTooLargeKnown": "{{name}} blir {{size}} när den packas upp, mer än de {{limit}} som en import kan läsa på en gång. Ta bort den från exporten och försök igen.",
     "unreadable": "Den här filen kunde inte öppnas. Den kan vara ofullständig eller skadad. Exportera den igen och välj den nya filen.",
+    "importTooLarge": "Den här filen blir större än {{limit}} när den packas upp, mer än någon riktig export innehåller. Exportera den igen och välj den nya filen.",
+    "tooManyEntries": "Den här zip-filen listar fler än {{max}} filer, fler än någon riktig export innehåller. Exportera den igen och välj den nya filen.",
     "mediaTooLarge_one": "Hoppade över {{count}} fil som är större än {{size}}, den största fil som någon plan kan synka."
   },
   "safariArchive": {
@@ -682,5 +708,47 @@
   },
   "apply": {
     "unknownWriteError": "Okänt fel när den lokala databasen skrevs."
+  },
+  "onenote": {
+    "reading": "Läser OneNote-anteckningsboken…",
+    "notOneNote": "Det här är inte en OneNote-anteckningsbok. Välj File > Export > Notebook > OneNote Package i OneNote för Windows och släpp .onepkg-filen här.",
+    "cloudFormat": "Det här avsnittet har formatet som OneNote använder online, och det kan bara OneNote läsa. Öppna anteckningsboken i OneNote för Windows, välj File > Export > Notebook > OneNote Package och släpp den .onepkg-filen här.",
+    "splitPackage": "Det här OneNote-paketet är uppdelat på flera filer. Exportera anteckningsboken igen som ett enda OneNote Package och släpp den filen här.",
+    "tooLarge": "Det här OneNote-paketet är för stort för att läsas på en gång. Exportera en avsnittsgrupp eller ett avsnitt i taget.",
+    "damaged": "Den här OneNote-filen är skadad och kan inte läsas. Exportera anteckningsboken igen från OneNote och prova den filen.",
+    "noPages": "Inga sidor hittades i den här OneNote-anteckningsboken.",
+    "allLocked": "Varje avsnitt i den här anteckningsboken är lösenordsskyddat. Lås upp avsnitten i OneNote, ta bort deras lösenord, exportera igen och släpp den nya filen här.",
+    "subpages_other": "Behöll {{count}} undersidor som anteckningar bredvid sina sidor.",
+    "noteTags_other": "Behöll OneNote-taggarna på {{count}} sidor som taggar.",
+    "lockedSections_other": "Utelämnade {{count}} lösenordsskyddade avsnitt. Ta bort deras lösenord i OneNote och exportera igen för att ta med dem.",
+    "unreadableSections_other": "Utelämnade {{count}} avsnitt som inte kunde läsas.",
+    "unsupported_other": "Utelämnade {{count}} teckningar, ljudklipp och ekvationer som inte har någon motsvarighet här.",
+    "missingFiles_other": "{{count}} bilder eller filer fanns inte i paketet och utelämnades.",
+    "deadLinks_other": "{{count}} OneNote-länkar pekar utanför den här anteckningsboken och behåller bara sin text.",
+    "recycleBin_other": "Utelämnade {{count}} sidor från anteckningsbokens papperskorg.",
+    "recycleBin_one": "Utelämnade {{count}} sida från anteckningsbokens papperskorg.",
+    "deadLinks_one": "{{count}} OneNote-länk pekar utanför den här anteckningsboken och behåller bara sin text.",
+    "missingFiles_one": "{{count}} bild eller fil fanns inte i paketet och utelämnades.",
+    "unsupported_one": "Utelämnade {{count}} teckning, ljudklipp eller ekvation som inte har någon motsvarighet här.",
+    "unreadableSections_one": "Utelämnade {{count}} avsnitt som inte kunde läsas.",
+    "lockedSections_one": "Utelämnade {{count}} lösenordsskyddat avsnitt. Ta bort dess lösenord i OneNote och exportera igen för att ta med det.",
+    "noteTags_one": "Behöll OneNote-taggarna på {{count}} sida som taggar.",
+    "subpages_one": "Behöll {{count}} undersida som en anteckning bredvid sin sida."
+  },
+  "capacities": {
+    "notCapacities": "Det här är inte en export från Capacities. Öppna Settings > Full Export i Capacities, kör Manual Full Export med media medtagna och släpp zip-filen här.",
+    "noObjects": "Inga sidor eller andra objekt med text hittades i den här Capacities-exporten.",
+    "typeFolders_other": "Återskapade {{count}} objekttyper som mappar.",
+    "properties_other": "Behöll egenskaperna för {{count}} objekt som en lista överst i deras anteckningar.",
+    "mediaObjects_other": "Behöll {{count}} bilder och filer i anteckningarna som visar dem, utan egna anteckningar.",
+    "queries_other": "Utelämnade {{count}} frågor. En fråga är en sparad sökning i Capacities, utan egen text.",
+    "collections_other": "Utelämnade {{count}} samlingslistor. Objekten i dem följer med, men inte samlingarna.",
+    "deadLinks_other": "{{count}} länkar pekar på objekt som inte finns i exporten, till exempel sådana i papperskorgen, och behåller bara sin text.",
+    "deadLinks_one": "{{count}} länk pekar på ett objekt som inte finns i exporten, till exempel ett i papperskorgen, och behåller bara sin text.",
+    "collections_one": "Utelämnade {{count}} samlingslista. Objekten i den följer med, men inte samlingen.",
+    "queries_one": "Utelämnade {{count}} fråga. En fråga är en sparad sökning i Capacities, utan egen text.",
+    "mediaObjects_one": "Behöll {{count}} bild eller fil i anteckningarna som visar den, utan egen anteckning.",
+    "properties_one": "Behöll egenskaperna för {{count}} objekt som en lista överst i dess anteckning.",
+    "typeFolders_one": "Återskapade {{count}} objekttyp som mapp."
   }
 }

@@ -21,13 +21,15 @@ import type { ContextMenuItem } from '../ContextMenu';
 import type { LocalNote } from '../db';
 import {
   iconBookmark, iconCheckbox, iconCopy, iconDownload, iconEditPencil,
-  iconExternal, iconFlame, iconFolder, iconHome, iconOpenInTab,
+  iconExternal, iconFlame, iconFolder, iconHome, iconOpenInTab, iconSideBySide,
   iconNewJournal, iconNewLogin, iconNewTask,
   iconArchive, iconNote, iconPin, iconReadOnly, iconRestore, iconSettings, iconTag,
   iconShield, iconSidebar,
   iconSignOut, iconTrash, iconUpload, iconZen, LinkSimple, NEW_GLYPHS, EXPORT_GLYPHS,
+  CreditCard, Key, Translate,
 } from '../icons';
-import { bulkActionGuards, noteActionGuards } from '../noteActionGuards';
+import { ACTIONS } from '../ui/actions';
+import { bulkActionGuards, canTranslate, noteActionGuards } from '../noteActionGuards';
 import { isMac } from '../devices';
 import { detectDeviceOs } from '../deviceFingerprint';
 import type { ImageStore } from '../imageStore';
@@ -67,6 +69,8 @@ export type ContextMenuDeps = {
   onNewBookmark: () => void;
   onNewContact: () => void;
   onQuickAdd: () => void;
+  /** The password generator, as the Vault's own New menu opens it. */
+  onOpenGenerator: () => void;
   // Bookmark row actions (type 'link')
   onOpenBookmark: (n: LocalNote) => void;
   onCopyBookmarkUrl: (n: LocalNote) => void;
@@ -82,6 +86,10 @@ export type ContextMenuDeps = {
   /** Open these items as tabs above the editor, or show the tab one already
    *  has. Absent where the strip is not drawn. Spec: docs/internal/specs/note-tabs.md */
   onOpenInTab?: (ids: string[]) => void;
+  /** Two items side by side; absent where it cannot be offered. `offers`
+   *  is false for an item already on screen.
+   *  Spec: docs/internal/plans/side-by-side-notes.md (section 2) */
+  sideBySide?: { offers: (n: LocalNote) => boolean; open: (n: LocalNote) => void };
   /** Home: whether a note widget shows this item, and the row that adds or
    *  removes it. Absent while the layout cannot be written.
    *  Spec: docs/internal/specs/dashboard.md (section 6) */
@@ -126,6 +134,8 @@ export type ContextMenuDeps = {
   /** Open Security > PIN, for a protect attempt with no PIN set. */
   onSetPin: () => void;
   handleDuplicate: (id: string) => Promise<void> | void;
+  /** Opens Translate notes on one note; null while Plugins is not released. */
+  translateNote: ((n: LocalNote) => void) | null;
   handleTrash: (id: string) => Promise<void> | void;
   /** Trash one note through the shared confirm modal, the same question a
    *  whole selection gets. */
@@ -151,7 +161,9 @@ export type ContextMenuDeps = {
  */
 export function createContextMenuBuilders(deps: ContextMenuDeps): {
   buildGlobalMenu: () => ContextMenuItem[];
+  newForView: (view: View) => ContextMenuItem[];
   buildNoteMenu: (n: LocalNote, opts?: { alone?: boolean }) => ContextMenuItem[];
+  buildSelectionMore: () => ContextMenuItem[];
 } {
   // Each "New X" switches to the matching pillar and then creates the
   // item. handleNew accepts an overrideView so it creates the correct
@@ -168,6 +180,73 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
   // Order MUST match the sidebar pillar nav (TagsRail.tsx) and the "New" dropdown
   // (NotesList.tsx allNewOptions): Note, Task, Kanban board, Login, File, Journal, Event, Contact, Bookmark.
   // Spec: docs/internal/design/ui-patterns.md section 45 (New-menu order invariant)
+  // The "New" entry of each section, for the global menu below and for a
+  // sidebar row's own menu (newForView). Spec: docs/internal/specs/section-lock.md (section 4)
+  const newEntries = {
+    all: {
+      label: i18n.t('shell:contextMenu.newNote'),
+      icon: iconNote(),
+      onSelect: createInPillar('all'),
+    },
+    tasks: {
+      label: i18n.t('shell:contextMenu.newTask'),
+      icon: iconNewTask(),
+      onSelect: createInPillar('tasks'),
+    },
+    drawings: {
+      label: i18n.t('shell:contextMenu.newDrawing'),
+      icon: <NEW_GLYPHS.drawing size={14} />,
+      onSelect: () => {
+        void deps.handleSelectView('drawings');
+        void deps.handleNew(undefined, 'drawings');
+      },
+    },
+    vault: {
+      label: i18n.t('shell:contextMenu.newLogin'),
+      icon: iconNewLogin(),
+      onSelect: createInPillar('vault'),
+    },
+    files: {
+      label: i18n.t('shell:contextMenu.newFile'),
+      icon: iconUpload(),
+      onSelect: () => deps.onNewFile(),
+    },
+    journal: {
+      label: i18n.t('shell:contextMenu.newJournal'),
+      icon: iconNewJournal(),
+      onSelect: createInPillar('journal'),
+    },
+    calendar: {
+      label: i18n.t('shell:contextMenu.newEvent'),
+      icon: <NEW_GLYPHS.event />,
+      // An event is made in the quick add, which shows what it can read.
+      onSelect: () => deps.onQuickAdd(),
+    },
+    contacts: {
+      label: i18n.t('shell:contextMenu.newContact'),
+      icon: <NEW_GLYPHS.contact />,
+      onSelect: () => deps.onNewContact(),
+    },
+    bookmarks: {
+      label: i18n.t('shell:bookmarks.newBookmark'),
+      icon: iconBookmark(),
+      onSelect: () => deps.onNewBookmark(),
+    },
+  } satisfies Partial<Record<View, ContextMenuItem>>;
+  // The Vault row offers every type its own New menu offers (NotesList.tsx
+  // vaultNewOptions); the global menu keeps the one Login entry.
+  const GeneratorIcon = ACTIONS.generate.icon;
+  const vaultExtras: ContextMenuItem[] = [
+    { label: i18n.t('shell:contextMenu.newCard'), icon: <CreditCard />, onSelect: () => { void deps.handleSelectView('vault'); void deps.handleNew('card', 'vault'); } },
+    { label: i18n.t('shell:contextMenu.newSshKey'), icon: <Key />, onSelect: () => { void deps.handleSelectView('vault'); void deps.handleNew('ssh-key', 'vault'); } },
+    { label: i18n.t('auth:loginForm.generatePassword'), icon: <GeneratorIcon />, onSelect: () => deps.onOpenGenerator() },
+  ];
+  const newForView = (view: View): ContextMenuItem[] => {
+    const one = (newEntries as Partial<Record<View, ContextMenuItem>>)[view];
+    if (!one) return [];
+    return view === 'vault' ? [one, ...vaultExtras] : [one];
+  };
+
   const buildGlobalMenu = (): ContextMenuItem[] => [
     {
       label: i18n.t('shell:quickAdd.label'),
@@ -175,16 +254,8 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
       shortcut: keyText('quickAdd'),
       onSelect: () => deps.onQuickAdd(),
     },
-    {
-      label: i18n.t('shell:contextMenu.newNote'),
-      icon: iconNote(),
-      onSelect: createInPillar('all'),
-    },
-    {
-      label: i18n.t('shell:contextMenu.newTask'),
-      icon: iconNewTask(),
-      onSelect: createInPillar('tasks'),
-    },
+    newEntries.all,
+    newEntries.tasks,
     {
       label: i18n.t('shell:contextMenu.newKanban'),
       icon: <NEW_GLYPHS.kanban size={14} />,
@@ -193,45 +264,13 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
         void deps.handleNew(undefined, 'tasks', undefined, undefined, 'kanban');
       },
     },
-    {
-      label: i18n.t('shell:contextMenu.newDrawing'),
-      icon: <NEW_GLYPHS.drawing size={14} />,
-      onSelect: () => {
-        void deps.handleSelectView('drawings');
-        void deps.handleNew(undefined, 'drawings');
-      },
-    },
-    {
-      label: i18n.t('shell:contextMenu.newLogin'),
-      icon: iconNewLogin(),
-      onSelect: createInPillar('vault'),
-    },
-    {
-      label: i18n.t('shell:contextMenu.newFile'),
-      icon: iconUpload(),
-      onSelect: () => deps.onNewFile(),
-    },
-    {
-      label: i18n.t('shell:contextMenu.newJournal'),
-      icon: iconNewJournal(),
-      onSelect: createInPillar('journal'),
-    },
-    {
-      label: i18n.t('shell:contextMenu.newEvent'),
-      icon: <NEW_GLYPHS.event />,
-      // An event is made in the quick add, which shows what it can read.
-      onSelect: () => deps.onQuickAdd(),
-    },
-    {
-      label: i18n.t('shell:contextMenu.newContact'),
-      icon: <NEW_GLYPHS.contact />,
-      onSelect: () => deps.onNewContact(),
-    },
-    {
-      label: i18n.t('shell:bookmarks.newBookmark'),
-      icon: iconBookmark(),
-      onSelect: () => deps.onNewBookmark(),
-    },
+    newEntries.drawings,
+    newEntries.vault,
+    newEntries.files,
+    newEntries.journal,
+    newEntries.calendar,
+    newEntries.contacts,
+    newEntries.bookmarks,
     { type: 'separator' },
     {
       label: deps.zenMode ? i18n.t('shell:contextMenu.exitZenMode') : i18n.t('shell:contextMenu.zenMode'),
@@ -321,6 +360,9 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
     shortcut?: () => string;
     /** Rows that belong to certain items only, such as the bookmark verbs. */
     when?: (s: Scope) => boolean;
+    /** The selection bar draws this row as a button of its own, so the
+     *  bar's More menu leaves it out (#805). */
+    onBar?: true;
     one: (n: LocalNote) => void;
     many: ((ids: string[]) => void) | OneItemOnly;
   };
@@ -394,6 +436,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
       ? i18n.t('notes:selection.deselectAll')
       : s.isSelected ? i18n.t('shell:contextMenu.deselect') : i18n.t('shell:contextMenu.select'),
     icon: () => iconCheckbox(),
+    onBar: true,
     one: (n) => deps.onToggleSelected(n.id),
     many: () => deps.onClearSelection(),
   };
@@ -447,6 +490,13 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
         many: (ids) => deps.onOpenInTab?.(ids),
       },
       {
+        label: () => i18n.t('shell:contextMenu.openSideBySide'),
+        icon: () => iconSideBySide(),
+        when: (s) => s.kind === 'one' && !!deps.sideBySide?.offers(s.note),
+        one: (n) => deps.sideBySide?.open(n),
+        many: oneItemOnly('two items side by side take one item at a time'),
+      },
+      {
         label: (s) => s.kind === 'one' && deps.onHome?.has(s.note.id)
           ? i18n.t('shell:dashboard.removeFromHome')
           : i18n.t('shell:dashboard.showOnHome'),
@@ -463,6 +513,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
           ? i18n.t('shell:contextMenu.unpin')
           : i18n.t('shell:contextMenu.pin'),
         icon: (s) => iconPin(s.kind === 'many' ? deps.selectionAllStarred : s.note.starred === 1),
+        onBar: true,
         one: (n) => void deps.handleToggleStar(n.id, n.starred !== 1),
         many: () => deps.onBulkFavorite(),
       },
@@ -471,31 +522,39 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
           ? i18n.t('shell:contextMenu.unarchive')
           : i18n.t('shell:contextMenu.archive'),
         icon: (s) => iconArchive(s.kind === 'many' ? deps.selectionAllArchived : s.note.archived === 1),
+        onBar: true,
         one: (n) => void deps.handleToggleArchive(n.id, n.archived !== 1),
         many: () => deps.onBulkArchive(),
       },
       {
         label: () => i18n.t('shell:selectionToolbar.tag'),
         icon: () => iconTag(),
+        onBar: true,
         one: (n) => deps.onTagPicker([n.id]),
         many: (ids) => deps.onTagPicker(ids),
       },
-      // Both labels come from the "..." options menu, because they name the
-      // same two switches and one wording for a thing is enough. A trailing
-      // check says which way a switch is set, the way a native menu does.
+      // For one note both labels come from the "..." options menu, because
+      // they name the same two switches, and a trailing check says which way
+      // a switch is set, the way a native menu does. A selection can be
+      // mixed, where a check says nothing about what a click does, so there
+      // the row names its effect, as Pin and Unpin do (#805).
       {
-        label: () => i18n.t('notes:noteRow.readOnly'),
+        label: (s) => s.kind === 'one'
+          ? i18n.t('notes:noteRow.readOnly')
+          : deps.selectionAllLocked ? i18n.t('shell:contextMenu.makeEditable') : i18n.t('shell:contextMenu.makeReadOnly'),
         icon: () => iconReadOnly(),
         pro: !deps.isPro,
-        checked: (s) => s.kind === 'many' ? deps.selectionAllLocked : s.note.locked === 1,
+        checked: (s) => s.kind === 'one' && s.note.locked === 1,
         one: (n) => noteGuards(n).toggleLock(),
         many: () => bulkGuards().toggleLock(),
       },
       {
-        label: () => i18n.t('shell:noteOptionsMenu.protect'),
+        label: (s) => s.kind === 'one' || !deps.selectionAllProtected
+          ? i18n.t('shell:noteOptionsMenu.protect')
+          : i18n.t('shell:contextMenu.removeProtection'),
         icon: () => iconShield(),
         pro: !deps.isPro,
-        checked: (s) => s.kind === 'many' ? deps.selectionAllProtected : s.note.pinProtected === 1,
+        checked: (s) => s.kind === 'one' && s.note.pinProtected === 1,
         one: (n) => noteGuards(n).toggleProtect(),
         many: () => bulkGuards().toggleProtect(),
       },
@@ -508,9 +567,18 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
         many: () => deps.onBulkDuplicate(),
       },
       {
+        label: () => i18n.t('notes:translate.action'),
+        icon: () => <Translate aria-hidden="true" />,
+        pro: !deps.isPro,
+        when: (s) => s.kind === 'one' && !!deps.translateNote && canTranslate(s.note),
+        one: (n) => deps.translateNote?.(n),
+        many: oneItemOnly('a translation is one new note from one note'),
+      },
+      {
         label: () => i18n.t('shell:contextMenu.moveToFolder'),
         icon: () => iconFolder(),
         pro: !deps.isPro,
+        onBar: true,
         one: (n) => {
           if (!deps.foldersUnlocked) { deps.onOpenUpgrade('folders'); return; }
           deps.onMoveToFolder(n.id);
@@ -538,6 +606,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
         label: () => i18n.t('shell:contextMenu.exportAsMarkdown'),
         when: notADrawing,
         icon: () => <EXPORT_GLYPHS.markdown aria-hidden="true" />,
+        onBar: true,
         one: (n) => void deps.exportSingleMarkdown(n),
         many: () => deps.onBulkExportMarkdown(),
       },
@@ -568,6 +637,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
         label: () => i18n.t('common:actions.delete'),
         icon: () => iconTrash(),
         destructive: true,
+        onBar: true,
         one: (n) => deps.requestTrash([n.id]),
         many: (ids) => deps.requestTrash(ids),
       },
@@ -583,6 +653,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
         label: () => i18n.t('shell:contextMenu.restore'),
         icon: () => iconRestore(),
         success: true,
+        onBar: true,
         one: (n) => void deps.handleRestore(n.id),
         many: () => deps.onBulkRestore(),
       },
@@ -592,6 +663,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
         label: () => i18n.t('shell:contextMenu.deleteForever'),
         icon: () => iconTrash(),
         destructive: true,
+        onBar: true,
         one: (n) => deps.requestDeleteConfirm(n.id, n.title || ''),
         many: () => deps.onBulkDelete(),
       },
@@ -627,7 +699,19 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
     return renderRows(groups, { kind: 'one', note: n, isSelected });
   };
 
-  return { buildGlobalMenu, buildNoteMenu };
+  /**
+   * The selection bar's More menu: every row the selection menu offers that
+   * the bar does not draw as a button. It is the same list as the right-click
+   * menu, so a phone, which has no right-click, reaches every bulk action,
+   * and a row added to the list reaches both places (#805).
+   */
+  const buildSelectionMore = (): ContextMenuItem[] => {
+    if (deps.selectedIds.size === 0) return [];
+    const groups = (deps.view === 'trash' ? TRASH_GROUPS : NOTE_GROUPS).map((g) => g.filter((r) => !r.onBar));
+    return renderRows(groups, { kind: 'many', ids: Array.from(deps.selectedIds) });
+  };
+
+  return { buildGlobalMenu, newForView, buildNoteMenu, buildSelectionMore };
 }
 
 /**

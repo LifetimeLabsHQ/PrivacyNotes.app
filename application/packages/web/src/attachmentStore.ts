@@ -18,14 +18,16 @@ import { encryptBlob, decryptBlob } from '@notes/shared';
 import { db } from './db';
 import { openWithRing } from './keyRing';
 import { isDemoMode } from './demo';
-import { recordStorageFault, recordSyncFault } from './syncFaults';
+import { recordSyncFault } from './syncFaults';
 import { isServerWriteBlocked } from './syncPause';
 import { uploadsHeldForWifi } from './wifiOnly';
-import { claimRemoval, isAlreadyExists, markIfPending } from './blobUploadRecovery';
+import { claimRemoval, markIfPending } from './blobUploadRecovery';
 import { PENDING_GC_WAIT_MS, settleWithin } from './pendingGcWait';
-import { BlobStoreBase, BUCKET, UPLOAD_REFUSED, isBlobQuotaError, isPermanentUploadError } from './blobStoreBase';
+import { BlobStoreBase, UPLOAD_REFUSED, isBlobQuotaError, isPermanentUploadError } from './blobStoreBase';
+import { BlobError } from './blobStore';
 import { sha256Hex } from './sha256Hex';
 import { BlobDamagedError } from './blobDamaged';
+import { attachmentHeaderFits, isBoundBlobId, newBlobId } from './blobBind';
 
 /** Metadata stored alongside the file, encrypted in the blob header. */
 export interface AttachmentMeta {
@@ -55,6 +57,13 @@ function packAttachment(meta: AttachmentMeta, data: Uint8Array): Uint8Array {
   combined.set(data, 4 + headerLen);
 
   return combined;
+}
+
+/** The header an object holds: the metadata, and its id when the id is a
+ *  bound one. Spec: docs/internal/plans/payload-row-binding.md (section 6) */
+function headerOf(meta: AttachmentMeta, uuid: string): AttachmentMeta & { id?: string } {
+  const { name, mime, size } = meta;
+  return isBoundBlobId(uuid) ? { name, mime, size, id: uuid.toLowerCase() } : { name, mime, size };
 }
 
 /** Unpack a decrypted blob into metadata + file data. */
@@ -94,8 +103,8 @@ export class AttachmentStore extends BlobStoreBase<DecryptedAttachment> {
   }
   /** An object holds the packed form, metadata header and bytes, not the
    *  cache row's bytes alone. */
-  protected plaintextOf(cached: DecryptedAttachment): Uint8Array {
-    return packAttachment(cached.meta, cached.data);
+  protected plaintextOf(cached: DecryptedAttachment, uuid: string): Uint8Array {
+    return packAttachment(headerOf(cached.meta, uuid), cached.data);
   }
   protected retryUpload(uuid: string, cached: DecryptedAttachment, encrypted: Uint8Array): Promise<void> {
     return this._backgroundUpload(uuid, cached.meta.name, encrypted);
@@ -125,7 +134,9 @@ export class AttachmentStore extends BlobStoreBase<DecryptedAttachment> {
       size: file.size,
     };
 
-    const packed = packAttachment(meta, data);
+    // The id first: a bound object carries it in its header (blobBind.ts).
+    const uuid = newBlobId();
+    const packed = packAttachment(headerOf(meta, uuid), data);
     // signOut can zero this.encryptionKey mid-upload. This is a
     // user-initiated path, not a background retry - throw rather than
     // silently encrypt with a dead key; callers already handle upload
@@ -136,7 +147,6 @@ export class AttachmentStore extends BlobStoreBase<DecryptedAttachment> {
     }
     const encrypted = encryptBlob(packed, passKey);
     passKey.fill(0);
-    const uuid = crypto.randomUUID();
 
     // --- Local-first: cache + dedup record, return immediately ---
     await db.attachmentCache.put({
@@ -197,28 +207,24 @@ export class AttachmentStore extends BlobStoreBase<DecryptedAttachment> {
     }
     this.uploading.add(uuid);
     try {
-      const path = `${this.pubkey}/${uuid}`;
-
       // A removal claimed after this moment can be of the object a 409
       // below proves, so the settle compares against it.
       const attemptAt = Date.now();
-      const { error } = await this.supabase.storage
-        .from(BUCKET)
-        .upload(path, encrypted, {
-          contentType: 'application/octet-stream',
-          // Create-only, same as images: a 409 is an earlier attempt of ours,
-          // settled by blobUploadRecovery.ts.
-          upsert: false,
-        });
-
-      if (error) {
-        const msg = error.message || '';
-        if (isAlreadyExists(error)) {
-          await this._settleExistingObject(uuid, path, encrypted, attemptAt);
+      try {
+        // Create-only, same as images: a taken name is an earlier attempt of
+        // ours, settled by blobUploadRecovery.ts.
+        await this.backend.put(uuid, encrypted);
+      } catch (error) {
+        if (!(error instanceof BlobError)) throw error;
+        const msg = error.message;
+        if (error.kind === 'exists') {
+          await this._settleExistingObject(uuid, encrypted, attemptAt);
           return;
         }
-        recordStorageFault('file-up', error, uuid);
-        if (isPermanentUploadError(msg)) {
+        if (this.waitsForLater(error)) return;
+        // By kind first, the message as before: the Worker's answers and
+        // Storage's own text both reach the same branch.
+        if (error.kind === 'too_large' || isPermanentUploadError(msg)) {
           // Keep local cache so restored attachments remain viewable offline,
           // and mark the row refused so the doomed upload is never retried.
           const dedup = await db.attachmentDedup.where('uuid').equals(uuid).first();
@@ -229,7 +235,7 @@ export class AttachmentStore extends BlobStoreBase<DecryptedAttachment> {
           console.error('[attachmentStore] permanent upload failure, kept local cache:', uuid, msg);
           throw new Error(msg);
         }
-        if (isBlobQuotaError(msg)) {
+        if (error.kind === 'quota' || isBlobQuotaError(msg)) {
           // Retryable - pendingUpload stays 1, but still toast the user now.
           // quotaBlocked keeps the retry sweep off the wire while the blob
           // cannot fit (backlog #143).
@@ -255,7 +261,7 @@ export class AttachmentStore extends BlobStoreBase<DecryptedAttachment> {
           // wait for real headroom instead of re-uploading the full blob
           // just to land back here (backlog #143).
           if (await claimRemoval(db.attachmentDedup, uuid)) {
-            await this.supabase.storage.from(BUCKET).remove([path]).catch(() => {});
+            await this.backend.remove([uuid]).catch(() => {});
           }
           await markIfPending(db.attachmentDedup, uuid, { quotaBlocked: 1 });
           this.onBackgroundError?.(filename, msg);
@@ -266,7 +272,7 @@ export class AttachmentStore extends BlobStoreBase<DecryptedAttachment> {
           // Remove the remote blob we just uploaded; the local cache stays,
           // refused, as the only copy.
           if (await claimRemoval(db.attachmentDedup, uuid)) {
-            await this.supabase.storage.from(BUCKET).remove([path]).catch(() => {});
+            await this.backend.remove([uuid]).catch(() => {});
           }
           await markIfPending(db.attachmentDedup, uuid, { pendingUpload: UPLOAD_REFUSED });
           this.onBackgroundError?.(filename, msg);
@@ -305,9 +311,8 @@ export class AttachmentStore extends BlobStoreBase<DecryptedAttachment> {
       return { meta: cached.meta, data: cached.data };
     }
 
-    // Download from Supabase Storage, with one retry on auth errors.
-    const path = `${this.pubkey}/${uuid}`;
-    const result = await this._downloadWithRetry(path);
+    // Download from the store, with one retry on auth errors.
+    const result = await this._downloadWithRetry(uuid);
     if (!result) return null;
 
     const encrypted = new Uint8Array(await result.arrayBuffer());
@@ -319,6 +324,11 @@ export class AttachmentStore extends BlobStoreBase<DecryptedAttachment> {
     } catch {
       throw new BlobDamagedError(uuid);
     }
+    // A header written for another object is not this file: damaged, the
+    // same way. The cache keeps the header without its id.
+    const { id: _id, ...meta } = attachment.meta as AttachmentMeta & { id?: unknown };
+    if (!attachmentHeaderFits(uuid, attachment.meta as { id?: unknown })) throw new BlobDamagedError(uuid);
+    attachment = { meta, data: attachment.data };
 
     // Cache for next time.
     await db.attachmentCache.put({
@@ -334,9 +344,9 @@ export class AttachmentStore extends BlobStoreBase<DecryptedAttachment> {
 
   /**
    * Defer deletion of multiple attachments: remove local cache + dedup
-   * rows and decrement quota immediately, but leave the Supabase
-   * Storage object in place. The uuid is enqueued in db.blobGC so
-   * sweepBlobGC (imageGC.ts) can remove the remote object later, once
+   * rows immediately, but leave the Supabase Storage object in place (it
+   * counts toward the quota until it leaves Storage). The uuid is
+   * enqueued in db.blobGC so sweepBlobGC (imageGC.ts) can remove the remote object later, once
    * a clean sync pull has proven the local mirror is complete enough
    * to trust the reference re-check. See imageGC.ts for the full
    * two-phase design.
@@ -392,9 +402,9 @@ export class AttachmentStore extends BlobStoreBase<DecryptedAttachment> {
       PENDING_GC_WAIT_MS,
     );
 
-    // Decrement image_bytes quota (best-effort) - the blob still counts
-    // against Storage until the sweep removes it, but the user's quota
-    // must reflect the delete now.
+    // Report the delete (best-effort). A server with migration 0136 counts
+    // files itself and ignores a negative report: the blob counts until the
+    // sweep removes it from Storage. An older server decrements here.
     if (!this.ownershipLost() && totalSize > 0) {
       this.supabase
         .rpc('adjust_blob_bytes', { delta: -totalSize })
@@ -405,32 +415,14 @@ export class AttachmentStore extends BlobStoreBase<DecryptedAttachment> {
   }
 
   /**
-   * Remove Storage objects only - no local row deletion, no quota
-   * adjustment (deferDelete settled quota when it queued the uuid, and
+   * Remove Storage objects only - no local row deletion and no quota
+   * report (the server takes a file's bytes off when its object goes, and
    * sweepBlobGC drops any local rows it kept). Used by sweepBlobGC once
    * a queued uuid has cleared the grace period and the reference re-check.
-   *
-   * The Supabase JS client's storage.remove() reports one aggregate
-   * error for the whole batch, not per-path, so on error we can't tell
-   * which paths actually failed. Treat a "not found" style aggregate
-   * error as success (the blobs are already gone, which is the desired
-   * end state); treat any other error as every uuid failing, so the
-   * sweep retries the whole batch next time.
+   * The store answers for the batch as a whole (blobStore.ts), so a failure
+   * fails every uuid and the sweep retries the whole batch next time.
    */
-  async removeRemoteOnly(uuids: string[]): Promise<{ removed: string[]; failed: string[] }> {
-    if (uuids.length === 0) return { removed: [], failed: [] };
-
-    const paths = uuids.map((uuid) => `${this.pubkey}/${uuid}`);
-    const { error } = await this.supabase.storage.from(BUCKET).remove(paths);
-
-    if (!error) return { removed: uuids, failed: [] };
-
-    if (error.message?.includes('not found') || error.message?.includes('404')) {
-      return { removed: uuids, failed: [] };
-    }
-
-    recordStorageFault('file-delete', error);
-    console.warn('[attachmentStore] sweepBlobGC remote removal failed:', error.message);
-    return { removed: [], failed: uuids };
+  removeRemoteOnly(uuids: string[]): Promise<{ removed: string[]; failed: string[] }> {
+    return this.backend.remove(uuids);
   }
 }

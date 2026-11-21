@@ -6,10 +6,6 @@
     "error": "Kon nu niet alles synchroniseren. Controleer je verbinding en probeer het opnieuw.",
     "conflict": "Een van je notities heeft een synchronisatieconflict dat een beslissing van jou vraagt. Los het op in het venster en probeer het daarna opnieuw."
   },
-  "movedHint": {
-    "body": "Dit is het nieuwe thuis van de app. Werk je bladwijzer bij naar use.privacynotes.app en voeg snelkoppelingen op je beginscherm opnieuw toe.",
-    "gotIt": "Begrepen"
-  },
   "moveScreen": {
     "title": "De app is verhuisd naar use.privacynotes.app",
     "bodySignIn": "Meld je daar aan met je herstelzin of via \"{{scanQr}}\". Dit apparaat synchroniseert eerst, dus al je notities staan daar klaar, en hier wordt niets verwijderd.",
@@ -32,6 +28,7 @@
       "configured": "Opslag vol. Sommige notities konden niet synchroniseren. Maak ruimte vrij of neem meer opslag.",
       "unconfigured": "Opslag vol. Sommige notities konden niet synchroniseren. Maak ruimte vrij door notities op te ruimen."
     },
+    "deletedSpace": "Ruimte van verwijderde bestanden komt ongeveer een dag nadat je ze verwijdert terug.",
     "manageStorage": "Opslag beheren",
     "viewUsage": "Gebruik bekijken"
   },
@@ -69,7 +66,11 @@
     "neverBackedUp_one": "Alleen op dit apparaat:",
     "neverBackedUp_other": "Alleen op dit apparaat:",
     "moreNotes": "en nog {{count}}",
-    "appLockHint": "Gedeeld apparaat? Zet de app-vergrendeling aan onder Instellingen > Beveiliging."
+    "appLockHint": "Gedeeld apparaat? Zet de app-vergrendeling aan onder Instellingen > Beveiliging.",
+    "unopenedWarn_other": "{{count}} notities hebben een kopie op de server die dit apparaat niet kan openen. Afmelden verwijdert de kopieën hier, en dat zijn misschien de enige goede. Stuur ze eerst opnieuw via Instellingen > ID & Sync.",
+    "unopenedKept_other": "{{count}} notities hebben een kopie op de server die dit apparaat niet kan openen. De kopieën hier blijven staan nadat je je afmeldt.",
+    "unopenedKept_one": "1 notitie heeft een kopie op de server die dit apparaat niet kan openen. De kopie hier blijft staan nadat je je afmeldt.",
+    "unopenedWarn_one": "1 notitie heeft een kopie op de server die dit apparaat niet kan openen. Afmelden verwijdert de kopie hier, en dat is misschien de enige goede. Stuur hem eerst opnieuw via Instellingen > ID & Sync."
   },
   "signOutUpload": {
     "uploading": "Je laatste wijzigingen uploaden…",

@@ -116,10 +116,20 @@ export function TableControls({ editor, formulasUnlocked, onUpgrade }: { editor:
 
     place();
     editor.on('transaction', schedule);
+    // The view can be unmounted here for a moment (React's development
+    // double effects, or an editor born inside a boundary that suspends):
+    // TipTap's `view` then throws on `dom`, so watch it once it mounts.
     const observer = new ResizeObserver(schedule);
-    observer.observe(editor.view.dom);
+    const observe = () => {
+      if (editor.isDestroyed || !(editor.view as any).docView) return;
+      observer.observe(editor.view.dom);
+      schedule();
+    };
+    observe();
+    editor.on('mount', observe);
     return () => {
       editor.off('transaction', schedule);
+      editor.off('mount', observe);
       observer.disconnect();
       if (frame) cancelAnimationFrame(frame);
     };

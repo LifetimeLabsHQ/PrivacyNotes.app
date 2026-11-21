@@ -6,7 +6,7 @@ import { ArrowSquareOut, Bug, CalendarBlank, Check, Clock as ClockIcon, TextAUnd
 import { HelpChip } from './HelpChip';
 import { Switch } from './Switch';
 import { useTheme } from './theme';
-import { EYEBROW_ICON_ROW, EyebrowGlyph, ROW_TITLE, RowTitle, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_ROW, SETTINGS_TRACK, settingsSegClass, ResetDefaultsButton } from './settingsUI';
+import { DeviceOnlyTip, EYEBROW_ICON_ROW, EyebrowGlyph, ROW_TITLE, RowTitle, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_ROW, SETTINGS_TRACK, settingsSegClass, ResetDefaultsButton } from './settingsUI';
 import { JournalTitles, type JournalTitlesProps } from './JournalsSheet';
 import { journalTitle } from './notesViewUtils';
 import { defaultSettings } from './userSettingsShape';
@@ -81,6 +81,7 @@ export function LanguageSheet({ embedded = false }: Props) {
       <div data-setting="language.spellCheck" className="border-b border-divider pb-1">
         <Switch
           label={t('appearance.spellCheckTitle')}
+          hint={<DeviceOnlyTip />}
           icon={<TextAUnderline className="text-accent" />}
           labelClassName={ROW_TITLE}
           description={t('appearance.spellCheckDesc')}

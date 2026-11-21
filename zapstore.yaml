@@ -20,7 +20,7 @@ pubkey: npub1dhzrs20zh3eehq96fe8ewgatfr8u4gjzdh97z6p8n5qurkwqt7wsl7z3k9
 match: '^PrivacyNotes-[0-9.]+\.apk$'
 
 name: PrivacyNotes
-summary: Notes. Tasks. Files. Vault. Zero knowledge.
+summary: Notes. Tasks. Files. Vault. Encrypted on your device.
 
 # The copy below is the homepage, not a second version of it. Every line has a
 # source in packages/web/src/locales/en/landing.json: the opening is hero.subhead,
@@ -38,7 +38,7 @@ summary: Notes. Tasks. Files. Vault. Zero knowledge.
 # left out for the same reason: the renderer turns "- " into a list item and
 # prints "**" as two asterisks, so emphasis reads as punctuation.
 description: |
-  One encrypted place for everything you'd never post. Encrypted on your device; hold your own key and we couldn't read it if we tried.
+  One encrypted place for everything you'd never post. Your notes are encrypted on your device, and with self-custody the server holds nothing that opens them.
 
   - Notes: rich live editor, tags, instant search.
   - Tasks: every checkbox, one view.
@@ -47,9 +47,9 @@ description: |
   - Files: encrypted images, docs, audio, and video.
   - Bookmark Sync: saved links with website icons. Import your browser bookmarks.
 
-  The app and the encryption inside it are published, so anyone can check our zero-knowledge claims.
+  The app and the encryption inside it are published, so anyone can check how your notes are encrypted.
 
-  Free forever. No credit card. Sign in with Google, Apple, or just a 12-word phrase.
+  Free forever. No credit card. Sign in with Google, Apple, GitHub, or just a recovery phrase.
 
 # Tags drive where the store files this app, and the vocabulary is whatever
 # publishers already use rather than a fixed list, so these are chosen to match

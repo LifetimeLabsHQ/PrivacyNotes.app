@@ -37,6 +37,47 @@ type Held = { bytes: Uint8Array; contentType: string } | { failure: 'limit' | 'f
 
 const engine = () => import('@notes/clipper');
 
+/**
+ * The elements the app's renderer draws for the Markdown a clip is made of,
+ * with the attributes it gives them. A clip it draws with anything else was
+ * read as raw HTML by the renderer, where markdown-it saw text or code: the
+ * second check after `isSafeMarkdown`, which still holds when the two
+ * parsers drift apart (beta #216 item 1).
+ */
+const CLIP_DRAWN: Record<string, readonly string[]> = {
+  p: ['dir'], h1: ['dir'], h2: ['dir'], h3: ['dir'], h4: ['dir'], h5: ['dir'], h6: ['dir'],
+  a: ['href', 'target', 'rel', 'title'],
+  img: ['src', 'alt', 'width', 'height', 'style', 'onerror'],
+  em: [], strong: [], del: [], s: [], code: [], pre: [], mark: [], br: [], hr: [],
+  span: ['class', 'style', 'tabindex'],
+  ul: ['dir', 'style'], ol: ['dir', 'style', 'start'], li: ['dir', 'style'],
+  input: ['type', 'disabled', 'checked', 'style'],
+  blockquote: ['dir'],
+  table: ['style', 'dir'], colgroup: [], col: ['style'], thead: [], tbody: [], tr: [], th: ['style'], td: ['style'],
+};
+
+/** Whether `html`, the renderer's output for a clip, holds only what a
+ *  clip's Markdown draws. KaTeX's MathML is the renderer's own (a block's
+ *  `math` is removed), so its inside is not read. */
+function drawsOnlyClipMarkup(html: string): boolean {
+  const doc = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
+  for (const el of Document.prototype.querySelectorAll.call(doc, 'body *') as NodeListOf<Element>) {
+    if (el.closest('math')) continue;
+    const kept = Object.hasOwn(CLIP_DRAWN, el.localName) ? CLIP_DRAWN[el.localName]! : null;
+    if (!kept || [...el.attributes].some((a) => !kept.includes(a.name))) return false;
+  }
+  return true;
+}
+
+/** The renderer's check of a clip's Markdown, loaded with the renderer.
+ *  The renderer needs a page; outside one (the sync tests under Node) there
+ *  is nothing that draws the clip, so there is nothing to ask. */
+async function rendererCheck(): Promise<(markdown: string) => boolean> {
+  if (typeof DOMParser === 'undefined') return () => true;
+  const { renderMarkdownSafe } = await import('./markdownRender');
+  return (markdown) => drawsOnlyClipMarkup(renderMarkdownSafe(markdown));
+}
+
 export async function downloadPage(url: string, token: TokenSource): Promise<ClipSource> {
   const page = await clipDownload(url, 'page', token);
   const source = { html: decodePage(page.bytes, page.contentType), url: page.url };
@@ -52,8 +93,8 @@ export async function downloadPage(url: string, token: TokenSource): Promise<Cli
 /** The clip of a downloaded page in one mode, or null when that mode finds
  *  no text. */
 export async function clipOf(source: ClipSource, mode: ClipMode): Promise<Clip | null> {
-  const { clipHtml } = await engine();
-  return clipHtml(source.html, source.url, mode);
+  const [{ clipHtml }, drawsAsText] = await Promise.all([engine(), rendererCheck()]);
+  return clipHtml(source.html, source.url, mode, drawsAsText);
 }
 
 /** Whether a clip's text fits in one note, whatever happens to its pictures. */
@@ -111,7 +152,7 @@ export async function finishClip(
   onProgress?: (done: number, total: number) => void,
   storePicture?: StorePicture,
 ): Promise<SavedClip> {
-  const { bodyFits, clipNoteBody, countFailures, isSafeMarkdown, placePictures } = await engine();
+  const [{ bodyFits, clipNoteBody, countFailures, isSafeMarkdown, placePictures }, drawsAsText] = await Promise.all([engine(), rendererCheck()]);
   const store = storePicture ?? (await import('./EncryptedImage')).storePictureQuietly;
   const outcomes: PictureOutcome[] = [];
   let full = false;
@@ -144,7 +185,7 @@ export async function finishClip(
   // The pictures already stored stay as orphans when this refuses, and the
   // orphan reconcile (imageGC.ts) reclaims them.
   if (!bodyFits(body)) throw new ClipError('too-large');
-  if (!isSafeMarkdown(body)) throw new ClipError('failed');
+  if (!isSafeMarkdown(body) || !drawsAsText(body)) throw new ClipError('failed');
   const counts = countFailures(outcomes);
   return { title: draft.clip.title, body, saved: counts.saved, storageFull: counts.storage, failed: counts.other };
 }

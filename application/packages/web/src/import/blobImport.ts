@@ -9,7 +9,7 @@ import { hasVaultFiles, storedVaultKeys } from '../vaultBody';
 import i18n from '../i18n';
 import type { ImportBlob, ImportedNote, StagedBlob } from './types';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:blobImport.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:blobImport.${key}`, options);
 
 /* ------------------------------------------------------------------ */
 /* Shared MIME-from-extension lookup                                   */
@@ -158,9 +158,10 @@ export function isBlobReferenced(key: string, text: string): boolean {
  *
  * Blob map keys are opaque strings that must appear literally in the
  * markdown bodies produced by the importer's parse step. Examples:
- *   - Apple Notes: `"SomeFolder/Attachments/UUID.jpeg"`
+ *   - Apple Notes: `"anfile:000001"` (a path-keyed import resolves its
+ *     links itself, fileRefs.ts)
  *   - Google Keep: `"keepimg:photo.jpg"`
- *   - Samsung Notes: `"samsungimg:rId2"`
+ *   - Samsung Notes: `"samsungimg:000001"`
  *
  * Returns the rewritten notes, the staged blobs, and counts of the images
  * and attachments the notes name.
@@ -290,6 +291,9 @@ function rewriteVaultFiles(
   return changed ? JSON.stringify({ ...keys, files }) : null;
 }
 
+/** A placeholder key (`keepimg:a.png`, `mdfile:000001`), never a bare path. */
+const KEY_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
+
 /**
  * Swap every stored blob key inside `body` for the `pn:` URI it landed
  * under. Returns null when the body names none of them, so the caller can
@@ -310,8 +314,11 @@ function rewriteBlobRefs(
     if (isImage) {
       // Images: pn:img/<uuid> carries only the uuid, so a literal swap of
       // the key inside ![alt](key) preserves the alt text. Covers keepimg:
-      // style placeholders and any scheme where the key appears literally.
-      if (out.includes(key)) {
+      // style placeholders, which a drawing also names inside its JSON.
+      // Only a key with a scheme: a path key (`icon.png`) sits inside
+      // another (`favicon.png`) and inside plain text, so it is swapped in
+      // link targets alone (beta #152).
+      if (KEY_SCHEME.test(key) && out.includes(key)) {
         out = out.split(key).join(uri);
         changed = true;
         continue;
@@ -330,8 +337,10 @@ function rewriteBlobRefs(
     // link text (e.g. Apple's "New Recording") is discarded in favour of
     // the real attachment name.
     const blob = blobs.get(key);
+    // The name goes through `cleanFileName`, as a vault item's does: a pipe
+    // in it would split the label (beta #199 item 6).
     const linkText = blob
-      ? `${blob.name}|${formatFileSize(blob.data.length)}|${blob.mime}`
+      ? `${cleanFileName(blob.name, 'Attachment')}|${formatFileSize(blob.data.length)}|${blob.mime}`
       : 'Attachment||';
     const replacement = `[${linkText}](${uri})`;
     for (const search of candidates) {

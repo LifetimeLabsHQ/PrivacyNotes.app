@@ -6,10 +6,6 @@
     "error": "No se pudo sincronizar todo ahora mismo. Comprueba tu conexión e inténtalo de nuevo.",
     "conflict": "Una de tus notas tiene un conflicto de sincronización que necesita tu decisión. Resuélvelo en el diálogo y vuelve a intentarlo."
   },
-  "movedHint": {
-    "body": "Este es el nuevo hogar de la app. Actualiza tu marcador a use.privacynotes.app y vuelve a añadir cualquier acceso directo de la pantalla de inicio.",
-    "gotIt": "Entendido"
-  },
   "moveScreen": {
     "title": "La app se ha mudado a use.privacynotes.app",
     "bodySignIn": "Inicia sesión allí con tu frase de recuperación o con \"{{scanQr}}\". Este dispositivo sincroniza primero, así que todas tus notas te esperan allí, y aquí no se borra nada.",
@@ -32,6 +28,7 @@
       "configured": "Almacenamiento lleno. Algunas notas no se pudieron sincronizar. Libera espacio o añade más almacenamiento.",
       "unconfigured": "Almacenamiento lleno. Algunas notas no se pudieron sincronizar. Libera espacio recortando notas."
     },
+    "deletedSpace": "El espacio de los archivos eliminados vuelve alrededor de un día después de eliminarlos.",
     "manageStorage": "Gestionar almacenamiento",
     "viewUsage": "Ver uso"
   },
@@ -69,7 +66,11 @@
     "neverBackedUp_one": "Solo en este dispositivo:",
     "neverBackedUp_other": "Solo en este dispositivo:",
     "moreNotes": "y {{count}} más",
-    "appLockHint": "¿Dispositivo compartido? Activa el bloqueo de la app en Ajustes > Seguridad."
+    "appLockHint": "¿Dispositivo compartido? Activa el bloqueo de la app en Ajustes > Seguridad.",
+    "unopenedWarn_other": "{{count}} notas tienen una copia en el servidor que este dispositivo no puede abrir. Al cerrar sesión se eliminan las copias de aquí, que quizá sean las únicas en buen estado. Vuelve a enviarlas primero en Ajustes > ID & Sync.",
+    "unopenedKept_other": "{{count}} notas tienen una copia en el servidor que este dispositivo no puede abrir. Las copias de aquí se quedan después de cerrar sesión.",
+    "unopenedKept_one": "1 nota tiene una copia en el servidor que este dispositivo no puede abrir. La copia de aquí se queda después de cerrar sesión.",
+    "unopenedWarn_one": "1 nota tiene una copia en el servidor que este dispositivo no puede abrir. Al cerrar sesión se elimina la copia de aquí, que quizá sea la única en buen estado. Vuelve a enviarla primero en Ajustes > ID & Sync."
   },
   "signOutUpload": {
     "uploading": "Subiendo tus últimos cambios…",

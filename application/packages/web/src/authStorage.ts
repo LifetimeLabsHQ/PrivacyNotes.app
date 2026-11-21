@@ -9,7 +9,7 @@ import { clearSyncLog } from './syncLog';
 import { clearSyncFaults } from './syncFaults';
 import { clearPlaces } from './notesView/listPlace';
 import { phraseSignsFor } from './identity';
-import { trustAwareStorage } from './trustStorage';
+import { tabSecrets, trustAwareStorage } from './trustStorage';
 import { settingsLocalKey } from './settingsLocalKey';
 import { forgetCryptoOrder } from './cryptoCheckout';
 
@@ -186,7 +186,7 @@ export function ownsLocalData(pubkey: string): boolean {
  * this is.
  */
 export function clearSupabaseAuthKeys(): void {
-  for (const store of [localStorage, sessionStorage]) {
+  for (const store of [localStorage, tabSecrets, sessionStorage]) {
     try {
       for (let i = store.length - 1; i >= 0; i--) {
         const key = store.key(i);
@@ -221,16 +221,21 @@ export function clearAccountScopedUiState(): void {
     // Legacy: milestone state moved to UserSettings.milestonesSeen (synced).
     // Still cleared so a pre-move install does not leave it behind.
     localStorage.removeItem('privacynotes.milestonesSeen');
-    // Armed by the account that completed a domain-move handoff; the
-    // next account on this install must not see its bookmark hint.
-    localStorage.removeItem('privacynotes.movedFromApex'); // migrate.ts / MoveBanner.tsx
+    // A flag an earlier build set after the move to the app host. No build
+    // reads it now; an install that still carries it loses it here.
+    localStorage.removeItem('privacynotes.movedFromApex');
     // When this account last verified its sync, and how many rows matched.
     localStorage.removeItem('privacynotes.verifyStamp'); // verifyStamp.ts
     // Which items this account had open as tabs: ids only, but this account's.
     localStorage.removeItem('privacynotes.openTabs'); // notesView/useOpenTabs.ts
-    // The note this account had open at its last quit, and where it was in
-    // each list and note this session.
+    // The notes this account turned spell check off for: ids only.
+    localStorage.removeItem('privacynotes.spellcheckOffNotes'); // theme.ts
+    // The sections this account folded, keyed by note id.
+    localStorage.removeItem('privacynotes.editor.folds'); // editorPrefs.ts
+    // The note and the list this account had open at its last quit, and
+    // where it was in each list and note this session.
     localStorage.removeItem('privacynotes.lastOpen'); // notesView/listPlace.ts
+    localStorage.removeItem('privacynotes.lastList'); // notesView/listPlace.ts
     clearPlaces();
     // Which offers this account dismissed: the site announcement, and the
     // per-pillar import prompt keys an older build wrote. The import prompt
@@ -256,12 +261,48 @@ export function clearAccountScopedUiState(): void {
     // The space this account had open, and the commands it ran last in ">".
     localStorage.removeItem('privacynotes.ui.activeSpace'); // spaces.ts
     localStorage.removeItem('privacynotes.ninja.recentCommands'); // ninjaFeatures.ts
+    // The dead man's switch record (the account id, whether it is armed,
+    // when this device last asked), the logins memo (one entry per login,
+    // card, SSH key and bookmark) and the stamp of the last blob reconcile.
+    // Each names the account, and the next pass rebuilds it
+    // (beta.privacynotes.app #214 item 1). The account id itself
+    // (PUBKEY_OWNER_KEY) and the sign-in log stay, on purpose.
+    localStorage.removeItem('privacynotes.dms'); // dms.ts STORAGE_KEY
+    localStorage.removeItem('privacynotes.extensionLoginsCopy'); // extensionSync.ts FP_KEY
+    localStorage.removeItem('privacynotes.blobReconcileTriedAt'); // imageGC.ts RECONCILE_TRIED_KEY
     // The sync pause and the folded list groups stay: they are this device's
     // switch and layout, and name nothing of the account.
+  } catch { /* ignore */ }
+  try {
+    // What a lock's reload handed this tab: the open note and the times-only
+    // reminder plan, both of this account.
+    sessionStorage.removeItem(credentialKey('privacynotes.lockReopenNote')); // lockReloadKeys.ts REOPEN_NOTE_KEY
+    sessionStorage.removeItem(credentialKey('privacynotes.lockReminders')); // lockReloadKeys.ts LOCKED_REMINDERS_KEY
   } catch { /* ignore */ }
   // A crypto order names the account and the order, and its status answers
   // with the payment (cryptoCheckout.ts).
   forgetCryptoOrder();
+}
+
+/**
+ * The device switches one person turned on that must not pass to another
+ * account signing in here (beta.privacynotes.app #214 items 5 and 6): the
+ * place added to new notes, and Smart connections and the other plugins,
+ * whose model loads, or downloads, at start for a Pro account. A sign-out
+ * keeps them for the same person coming back; an account switch drops them
+ * (wipePriorLocalData in auth.tsx).
+ */
+export function clearPriorAccountChoices(): void {
+  try {
+    localStorage.removeItem('privacynotes.location.auto'); // autoLocation.ts KEY
+    localStorage.removeItem('privacynotes.onDeviceAi.meaning'); // plugins/pluginState.ts MEANING_FLAG
+    const plugins: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('privacynotes.plugin.')) plugins.push(key); // plugins/pluginState.ts flagKey
+    }
+    for (const key of plugins) localStorage.removeItem(key);
+  } catch { /* ignore */ }
 }
 
 /**

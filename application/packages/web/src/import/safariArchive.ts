@@ -17,7 +17,7 @@ import i18n from '../i18n';
 import { zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:safariArchive.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:safariArchive.${key}`, options);
 
 /** Directories, hidden files and the junk a Mac leaves in a zip. */
 function isJunk(path: string): boolean {

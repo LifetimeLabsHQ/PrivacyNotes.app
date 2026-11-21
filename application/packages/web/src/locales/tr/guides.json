@@ -316,21 +316,21 @@
       "app": "Bitwarden",
       "title": "Bitwarden kasanızı dışa aktarın",
       "metaTitle": "Bitwarden kasasını dışa aktarma - PrivacyNotes",
-      "lead": "Bitwarden bütün kasanızı tek bir şifrelenmemiş .json dosyası olarak dışa aktarır, PrivacyNotes da her kaydı olması gereken yere yerleştirir: giriş bilgileri, kartlar, SSH anahtarları ve güvenli notlar.",
+      "lead": "Bitwarden bütün kasanızı tek bir şifrelenmemiş .json dosyası ya da eklerinizi içeren bir .zip olarak dışa aktarır, PrivacyNotes da her kaydı olması gereken yere yerleştirir: giriş bilgileri, kartlar, SSH anahtarları ve güvenli notlar.",
       "sections": [
         {
           "h": "Kasanızı Bitwarden'dan dışa aktarın",
           "steps": [
             "Bitwarden web kasasını (ya da masaüstü uygulamasını) açıp oturum açın.",
             "Tools (araçlar) bölümüne, ardından \"Export vault\" seçeneğine gidin.",
-            ".json dosya biçimini seçin (düz olanı, \".json (Encrypted)\" değil).",
+            ".json dosya biçimini ya da ekli dosyalarınızı da getirmek için \".zip (with attachments)\" biçimini seçin. \".json (Encrypted)\" seçmeyin.",
             "Ana parolanızla onaylayın ve dosyayı indirin."
           ]
         },
         {
           "h": "Neler nereye iniyor",
           "p": [
-            "Giriş bilgileri [Kasa'daki giriş kayıtlarına](/tr/help/vault) (site simgeleriyle birlikte), kartlar kart kayıtlarına, SSH anahtarları SSH anahtarı kayıtlarına dönüşür; güvenli notlar ve kimlikler ise okunabilir not olarak gelir. Bitwarden klasörleri etiketlere eşlenir, favoriler de yıldızlı gelir. Kimlik doğrulama anahtarları (TOTP) da birlikte gelir, böylece [2FA kodlarınız çalışmaya devam eder](/tr/help/vault-totp).",
+            "Giriş bilgileri [Kasa'daki giriş kayıtlarına](/tr/help/vault) (site simgeleriyle birlikte), kartlar kart kayıtlarına, SSH anahtarları SSH anahtarı kayıtlarına dönüşür; güvenli notlar ve kimlikler ise okunabilir not olarak gelir. Bitwarden klasörleri etiketlere eşlenir, favoriler de yıldızlı gelir. Kimlik doğrulama anahtarları (TOTP) da birlikte gelir, böylece [2FA kodlarınız çalışmaya devam eder](/tr/help/vault-totp); Bitwarden'a kaydettiğiniz geçiş anahtarları da gelir. Bir .zip'ten içe aktarıldığında her ek kendi öğesine yerleşir.",
             "Dışa aktarılan dosya parolalarınızı düz metin olarak tutar, bu yüzden içe aktarın, her şeyin geldiğini doğrulayın, sonra dosyayı düzgünce silin. PrivacyNotes içinde her şey yeniden şifrelenir, hem cihazınızda hem de sunucuya giderken."
           ]
         }
@@ -1115,6 +1115,31 @@
         }
       ]
     },
+    "msecure": {
+      "app": "mSecure",
+      "title": "mSecure kasanızı dışa aktarın",
+      "metaTitle": "mSecure kasası nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "mSecure kayıtlarınızı masaüstü uygulamasından tek bir .csv dosyası olarak dışa aktarır, PrivacyNotes da bunları özel alanları dahil Kasa giriş bilgilerine, kartlara ve notlara dönüştürür.",
+      "sections": [
+        {
+          "h": "mSecure'dan dışa aktarın",
+          "steps": [
+            "Bilgisayarınızda mSecure'u açın ve kilidini açın.",
+            "Settings'i açın ve Backups'ı seçin.",
+            "Import and Export records altında Export records to CSV file seçeneğini seçin.",
+            "Export all records seçeneğini seçin. \"Only export field data\" seçeneğini kapalı bırakın, böylece dosya her alanın adını korur.",
+            "Export'u seçin ve .csv dosyasını kaydedin."
+          ]
+        },
+        {
+          "h": "Neler nereye iniyor",
+          "p": [
+            "Her giriş bilgisi 2FA anahtarıyla birlikte bir [Kasa giriş bilgisi](/tr/help/vault) olur, böylece [kodlarınız çalışmaya devam eder](/tr/help/vault-totp); ek web siteleri ve özel alanları da adlarıyla birlikte gelir. PIN ya da kurtarma kodu gibi gizli bir alan gizli kalır. Bir kart, kart olur. Güvenli bir not, not olur; kimlik ya da banka hesabı gibi diğer kayıt türleri de alanlarını listeleyen ve kayıt türüyle etiketlenen notlar olur. Etiketleriniz etiket olarak kalır. Dosyada tarih ya da favori yoktur, bu yüzden her öğe içe aktardığınız günün tarihini alır.",
+            "Dışa aktarılan dosya parolalarınızı düz metin olarak tutar. İçe aktarın, her şeyin geldiğini kontrol edin, sonra dosyayı silin."
+          ]
+        }
+      ]
+    },
     "nordpass": {
       "app": "NordPass",
       "title": "NordPass kasanızı dışa aktarın",
@@ -1163,6 +1188,36 @@
           "p": [
             "Her giriş bilgisi, ek web siteleri, özel alanları ve tarihleriyle birlikte bir [Kasa giriş bilgisi](/tr/help/vault) olur. 2FA anahtarı da gelir, böylece [kodlarınız çalışmaya devam eder](/tr/help/vault-totp). Bir kaydın hem e-postası hem kullanıcı adı varsa giriş bilgisini kullanıcı adı doldurur, e-posta ise bir alan olur. Notlar not, kartlar kart olarak gelir; kimlikler her ayrıntısı kendi satırında olan notlar olur. Her hide-my-email takma adı, adresiyle birlikte bir not olur; böylece hangi adresi hangi siteye verdiğinizin listesi sizde kalır. Proton, Proton hesabınız açık olduğu sürece e-postaları iletmeye devam eder. Birden fazla kasa varsa her kasa bir etiket olur. Çöp kutusundaki kayıtlar geride kalır.",
             "Dışa aktarılan dosya parolalarınızı düz metin olarak tutar. İçe aktarın, her şeyin geldiğini kontrol edin, sonra dosyayı silin."
+          ]
+        }
+      ]
+    },
+    "raindrop": {
+      "app": "Raindrop.io",
+      "title": "Raindrop.io yer imlerinizi dışa aktarın",
+      "metaTitle": "Raindrop.io yer imlerini dışa aktarma - PrivacyNotes",
+      "lead": "Raindrop.io yer imlerinizi tek bir .csv yedeği olarak dışa aktarın; PrivacyNotes onları aynı koleksiyonlarda yer imlerine dönüştürür, notlarınız, özetleriniz ve vurgularınızla birlikte.",
+      "sections": [
+        {
+          "h": "Her şeyin yedeğini alın",
+          "steps": [
+            "Raindrop.io'yu tarayıcınızda ya da uygulamasında açın ve giriş yapın.",
+            "All bookmarks'ı açın ve Export > Get backup seçeneğini seçin.",
+            "Yedeğin hazır olduğunu bildiren e-postayı bekleyin. Genellikle birkaç dakika sürer.",
+            "Settings > Backups sayfasını açın ve yeni yedeğin yanındaki CSV seçeneğini seçin."
+          ]
+        },
+        {
+          "h": "HTML değil, CSV seçin",
+          "p": [
+            "HTML dosyası bağlantıları ve notlarınızı korur, ama özetleri ve vurguları dışarıda bırakır. Yalnızca tek bir koleksiyonu taşımak için onu açın ve Export > CSV seçeneğini seçin. O menüdeki .zip de işe yarar."
+          ]
+        },
+        {
+          "h": "Neler nereye gelir",
+          "p": [
+            "Her yer imi, Bookmarks altında, her koleksiyon için bir klasörde ve sizdeki iç içe düzenle gelir. Unsorted yer imleri doğrudan Bookmarks altına gelir. Notunuz, özet ve yapışkan notuyla her vurgu, yer iminin notlarına girer; favoriler sabitlenmiş kalır. Etiketler etiket olarak kalır ve her yer imi kaydettiğiniz günü korur.",
+            "Dosyada çöp kutusu, hatırlatıcılar ya da vurgu renkleri yoktur; bunlar geride kalır. Kapak görselleri de geride kalır: her yer imi bunun yerine web sitesinin simgesini gösterir."
           ]
         }
       ]
@@ -1288,6 +1343,83 @@
           "p": [
             "[Her kayıt Günlükler'e iner](/tr/help/journal), Journal'da ona seçtiğiniz günde. Her kayıt başlığını ve metnini korur; fotoğraflar ve videolar görsel ve ek olarak içe aktarılır. Bir kayıttaki harita görsel olarak gelir.",
             "Takeout yer adlarını, yazma önerilerini, yer imlerini ve Journal'ın düşünme önerilerini taşımaz; bu yüzden onlar Journal'da kalır. İçe aktarma özeti bunu belirtir."
+          ]
+        }
+      ]
+    },
+    "capacities": {
+      "app": "Capacities",
+      "title": "Capacities alanınızı dışa aktarın",
+      "metaTitle": "Capacities alanı nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "Capacities tüm alanlarınızı tek seferde, Markdown dosyalarını ve medyalarını içeren tek bir zip olarak dışa aktarır. Bu zip sayfalarınızı, günlük notlarınızı ve özel nesnelerinizi etiketleri, özellikleri, bağlantıları, tabloları ve görselleriyle birlikte taşır.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/capacities-export.webp",
+            "alt": "Capacities ayarları, Full Export sayfası: Manual Full Export altında Include media açık ve Export All Spaces düğmesi.",
+            "width": 1576,
+            "height": 802
+          },
+          "h": "Tam dışa aktarma yapın",
+          "steps": [
+            "Bilgisayarınızda Capacities'i açın ve Settings bölümüne gidin.",
+            "Full Export'u seçin.",
+            "Manual Full Export altında Options'ı açın ve \"Include media\" seçeneğini açık bırakın. Diğer iki seçenek olduğu gibi kalabilir: iki bağlantı biçimini de okuyoruz ve başlık satırını atıyoruz.",
+            "\"Export All Spaces\" düğmesine tıklayın. Capacities zip'i arka planda hazırlar ve adında tarih ve saat bulunan \"Capacities\" adlı bir dosya olarak İndirilenler klasörünüze kaydeder.",
+            "O .zip dosyasını olduğu gibi bırakın."
+          ],
+          "p": [
+            "Capacities görselleri ve dosyaları zip'e yalnızca cihazınızda bulunuyorlarsa koyar. Bazıları eksikse Settings > Offline & Sync > Media loading ayarını \"Everything\" yapın, indirmenin bitmesini bekleyin ve yeniden dışa aktarın."
+          ]
+        },
+        {
+          "h": "Neler geliyor",
+          "p": [
+            "Her sayfa, günlük not ve kendi türlerinize ait nesne, etiketleri ve Capacities'in sakladığı tarihlerle birlikte bir not olur. Her nesne türü bir klasör olur: sayfalarınız Pages klasörüne, günlük notlarınız DailyNotes klasörüne yerleşir, Books gibi bir tür de kendi klasörüne girer.",
+            "Başlıklar, listeler, görevler, alıntılar, dili belirtilmiş kod, matematik ve tablolar olduğu gibi gelir. Capacities bir tablo formülünü dışa aktarmaya sonucuyla yazar; yani sayılar gelir, formül gelmez. [Tablolarımız aynı formülleri](/tr/help/table-formulas), aynı adlar ve hücre başvurularıyla destekler; birini yeniden kurmak için hücreye `=` yazın. [Nesneler arasındaki bağlantılar ve bahsetmeler not bağlantılarına dönüşür](/tr/help/note-links), görseller ve dosyalar da depolama alanınıza aktarılır.",
+            "Özel bir türün özellikleri, örneğin bir puan ya da bir tarz, notun en üstüne kısa bir liste olarak yazılır. Sorgular metni olmayan kayıtlı aramalardır, bu yüzden geride kalır. Capacities çöp kutusunu, koleksiyonlarını ve katlanır ile renkli blokların görünümünü dışa aktarmaz: katlanır bloklar liste olarak gelir ve içlerindeki metin de korunur."
+          ]
+        }
+      ]
+    },
+    "onenote": {
+      "app": "OneNote",
+      "title": "OneNote defterlerinizi dışa aktarın",
+      "metaTitle": "OneNote defterleri nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "Windows için OneNote, bir defterin tamamını tek bir OneNote Package dosyası (.onepkg) olarak dışa aktarır. Bu dosya bölümlerinizi, sayfalarınızı ve alt sayfalarınızı görevleri, tabloları, görselleri ve ekleriyle birlikte taşır.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/onenote-export.webp",
+            "alt": "Windows için OneNote, File > Export: Export Current altında Notebook, Select Format altında OneNote Package seçili ve Export düğmesi.",
+            "width": 1576,
+            "height": 548
+          },
+          "h": "Defteri OneNote Package olarak dışa aktarın",
+          "steps": [
+            "Defteri masaüstü uygulaması olan Windows için OneNote'ta açın. OneDrive'da tutulan defterler de orada açılır.",
+            "File > Export'u seçin.",
+            "\"Export Current\" altında \"Notebook\" seçeneğini seçin.",
+            "\"Select Format\" altında \"OneNote Package (*.onepkg)\" seçeneğini seçin ve \"Export\" düğmesine tıklayın.",
+            "Bir klasör seçip kaydedin. OneNote, defterin adını taşıyan tek bir .onepkg dosyası yazar.",
+            "O .onepkg dosyasını olduğu gibi bırakın."
+          ],
+          "p": [
+            "Bir paket tek bir defter içerir. Birden çok defteriniz varsa her birini dışa aktarın ve dosyaları birbiri ardına bırakın. Web'de, Mac'te ve telefonlarda OneNote'un dışa aktarma özelliği yoktur, bu yüzden bu adım için bir Windows bilgisayar kullanın."
+          ]
+        },
+        {
+          "h": "Önce korumalı bölümlerin kilidini açın",
+          "p": [
+            "Parolalı bir bölüm paketin içinde şifreli kalır ve yalnızca OneNote onu açabilir. Her birinin kilidini OneNote'ta açın, parolasını Review > Password > Remove Password altından kaldırın ve yeniden dışa aktarın. İçe aktarma önizlemesi, dışarıda bırakmak zorunda kaldığı bölümleri adlarıyla gösterir."
+          ]
+        },
+        {
+          "h": "Neler geliyor",
+          "p": [
+            "Defter bir klasör olur; içinde her bölüm grubu ve bölüm için bir klasör bulunur. Her sayfa, bölümünün klasöründe OneNote'un oluşturduğu tarihle bir not olur ve bir alt sayfa aynı klasörde sayfasının ardından gelir.",
+            "Başlıklar, kalın, italik, altı çizili, renkler, vurgular, madde işaretli ve numaralı listeler, tablolar ve kod paragrafları olduğu gibi gelir. Bir to-do etiketi, yapıldıysa işaretli bir görev listesi öğesi olur; Important veya Question gibi diğer not etiketleri notun etiketleri olur. [Sayfalar arasındaki bağlantılar not bağlantılarına dönüşür](/tr/help/note-links), görseller ve ekli dosyalar da depolama alanınıza aktarılır.",
+            "Tek başına bir bölüm dosyası (.one) ya da zipli bir defter klasörü de işe yarar. Kalemle yapılmış çizimlerin, ses kayıtlarının ve denklemlerin burada karşılığı yoktur; içe aktarma önizlemesi bunları sayar. OneNote'un geri dönüşüm kutusundaki sayfalar paketin parçası değildir."
           ]
         }
       ]

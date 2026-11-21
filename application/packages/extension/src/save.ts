@@ -5,22 +5,26 @@
  * Spec: docs/internal/plans/browser-extension-build.md (sections 3.3 and 3.4, step 6)
  */
 import { browser } from 'wxt/browser';
-import { base64ToBytes } from '@notes/shared';
 import {
   hashHex,
   inboxNoteTitle,
+  loginEditProof,
   packInboxPicture,
   parseInboxNote,
   padInboxJson,
-  sealInbox,
   type InboxClip,
+  parseInboxLoginEdit,
   type InboxKind,
   type InboxLogin,
+  type InboxLoginEdit,
   type InboxNote,
 } from '@notes/shared/extension';
 import { inboxNoteFits, type Clip } from '@notes/clipper';
-import { readConnection, type Connection } from './connection';
-import { enqueue, flashBadge, flush, type Queued } from './queue';
+import { serverClock } from './api';
+import { readConnection, sealRow, type Connection } from './connection';
+import { acceptedAt, enqueue, flashBadge, flush, postNow, type Queued } from './queue';
+import { countPasskeys, lastPullAt, loginsKey } from './logins';
+import { addPending } from './pending';
 import { fetchPictures } from './pictures';
 
 export type SaveRequest =
@@ -35,7 +39,7 @@ export type SaveResult =
 function seal(connection: Connection, kind: InboxKind, id: string, plain: Uint8Array): Queued {
   return {
     id, kind, group: id,
-    payload: sealInbox(plain, base64ToBytes(connection.inboxPublic), { account: connection.account, id, kind }),
+    payload: sealRow(connection, kind, id, plain),
   };
 }
 
@@ -117,6 +121,75 @@ export async function saveLogin(req: LoginRequest): Promise<SaveResult> {
   try {
     const state = await sendRows([seal(connection, 'login', id, padInboxJson(payload))], id);
     return state === 'sent' || state === 'queued' ? { state, failedPictures: 0 } : { state };
+  } catch {
+    return { state: 'failed' };
+  }
+}
+
+export type LoginEditRequest = Omit<InboxLoginEdit, 'v' | 'id' | 'queuedAt'> & {
+  /** A site passkey: the row must reach the server now, or nothing is made
+   *  (P24); never left in the queue. */
+  mustSend?: boolean;
+};
+
+/** `unknown`: a row that must reach the server now got no answer in its
+ *  time, so the server may have taken it (`postNow`, beta #125). */
+export type LoginEditResult = { state: 'sent' | 'queued' } | { state: 'invalid' | 'full' | 'notConnected' | 'notAllowed' | 'revoked' | 'failed' | 'unknown' };
+
+/**
+ * A change to a login, or a new login with a site passkey: the inbox kind
+ * `loginedit`, with the logins permission. Checked with the app's own shape
+ * check before it is sealed. Once the row is sent (or, for an edit without
+ * a passkey, queued) it goes into the pending store, so the popup shows it
+ * before the next pull.
+ * Spec: docs/contrib/passkeys.md (sections 5.4 Saving and 6)
+ */
+export async function saveLoginEdit(req: LoginEditRequest): Promise<LoginEditResult> {
+  const connection = await readConnection();
+  if (!connection) return { state: 'notConnected' };
+  if (!connection.logins) return { state: 'notAllowed' };
+  const id = crypto.randomUUID();
+  const { mustSend, ...fields } = req;
+  // The queue time, sealed in the row and kept as the queue's `at`
+  // (beta #140 item 1).
+  const queuedAt = Date.now();
+  const edit = parseInboxLoginEdit({ v: 1, id, ...fields, queuedAt }, id);
+  if (!edit) return { state: 'invalid' };
+  const key = await loginsKey();
+  // A change to a login that exists carries the proof that this extension
+  // was unlocked; without it the app makes a new login (section 16, finding 1).
+  if (edit.item) {
+    if (!key) return { state: 'failed' };
+    edit.proof = { tag: key.tag, mac: loginEditProof(key.p, key.account, id, edit.item) };
+  }
+  const row = seal(connection, 'loginedit', id, padInboxJson(edit));
+  if (row.payload.length > ROW_MAX) return { state: 'invalid' };
+  // A row that may wait in the queue carries the server's time from before
+  // it, so its age is counted on the server's clock (queue.ts, beta #129).
+  // The newest server answer, not the last completed pull: an old pull with
+  // a fresh unlock would date the row past the 80 days (410 too_old).
+  const since = mustSend ? undefined : Math.max((await serverClock()) ?? 0, (await lastPullAt()) ?? 0) || undefined;
+  if (since !== undefined) row.since = since;
+  row.at = queuedAt;
+  try {
+    const state = mustSend ? await postNow(row) : await sendRows([row], id);
+    if (state !== 'sent' && state !== 'queued') return { state };
+    if (key) {
+      await addPending({
+        row: id,
+        item: edit.item ?? null,
+        // The server's clock where it answered; a queued row's own time
+        // otherwise, which a later change of its login still passes.
+        at: acceptedAt(id) ?? Date.now(),
+        set: edit.set,
+        addPasskeys: edit.addPasskeys,
+        base: edit.base ?? { name: edit.set.name ?? '', username: edit.set.username ?? '', url: edit.set.url ?? '' },
+      }, key.p, key.tag, key.account).catch(() => undefined);
+      // A locked door reads the count: the passkey just saved must be in it
+      // before the next pull.
+      if (edit.addPasskeys.length) await countPasskeys().catch(() => undefined);
+    }
+    return { state };
   } catch {
     return { state: 'failed' };
   }

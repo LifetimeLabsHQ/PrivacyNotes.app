@@ -2,10 +2,11 @@ import { withMfaAwareTimeout } from './mfaStep';
 import { lazy, Suspense, useState, useEffect, useRef, type ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { generatePhrase, isValidPhrase } from '@notes/shared';
-import { ArrowLeft, ArrowRight, CaretDown, Check, Copy, FileText, KeyReturn, Lock, Password, QrCode, Scales, Scan, Upload, Warning } from './icons';
+import { ArrowLeft, ArrowRight, CaretDown, Check, Copy, FileText, Fingerprint, KeyReturn, Lock, Password, QrCode, Scales, Scan, Upload, Warning } from './icons';
 import { QRCodeCanvas } from 'qrcode.react';
 import { buildPhraseFile, PHRASE_FILE_NAME } from './phraseFile';
-import { buildSignInUrl, extractPhraseFromScan } from './qrSignIn';
+import { buildSignInCode, extractPhraseFromScan } from './qrSignIn';
+import { passkeySignInAvailable, signInPasskeyPhrase, type SignInPasskeyResult } from './passkeySignIn';
 import { saveBlob } from './saveFile';
 import { useAuth } from './auth';
 import type { OAuthProvider } from './auth';
@@ -14,7 +15,8 @@ import { TurnstileWidget } from './TurnstileWidget';
 import { readResumablePhrase } from './phraseAtRest';
 import { isTrustedDevice } from './trustStorage';
 import { detectPlatform, warmAuthEdgeFunctions } from './devices';
-import { isAppHost } from './hosts';
+import { useSecretOnScreen } from './privacyScreen';
+import { isAppHost, isBetaHost } from './hosts';
 import { applyStoredTheme } from './theme';
 import { ConfirmModal } from './ConfirmModal';
 import { switchWouldWipe } from './authStorage';
@@ -24,7 +26,8 @@ import { LogoIcon } from './LogoIcon';
 import { Brand } from './Brand';
 import { PrivacyLadder } from './PrivacyLadder';
 import { PHRASE_CHANGE_PREVIEW } from './phraseLaunch';
-import { Badge } from './ui';
+import { isSyncPaused, setSyncPaused } from './syncPause';
+import { Badge, Button } from './ui';
 import { isImeComposing } from './imeComposing';
 import { AppleIcon, GithubIcon, GoogleIcon, PROVIDER_CONTINUE_KEY, PROVIDER_ORDER } from './providerIcons';
 
@@ -77,6 +80,9 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
   const [pendingPhrase, setPendingPhrase] = useState<string | null>(null);
   // When false, session data goes into sessionStorage (cleared on tab close).
   const [trustDevice, setTrustDevice] = useState(true);
+  // Whether a new phrase account syncs (GitHub #821): a phrase sign-up
+  // starts on this device only, and SignInStep applies it as the sync pause.
+  const [syncOn, setSyncOn] = useState(false);
 
   // True while hydration is still running after an OAuth redirect. Shows
   // the setup screen with a spinner immediately so the user doesn't stare
@@ -236,6 +242,8 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
           onBack={() => setMode('choose')}
           trustDevice={trustDevice}
           onTrustDeviceChange={setTrustDevice}
+          syncOn={syncOn}
+          onSyncOnChange={setSyncOn}
         />
       ) : mode === 'import' ? (
         <ImportPhrase
@@ -245,7 +253,7 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
           onTrustDeviceChange={setTrustDevice}
         />
       ) : pendingPhrase ? (
-        <SignInStep phrase={pendingPhrase} trustDevice={trustDevice} freshVault={preSignInMode === 'create'} onBack={handleSignInBack} />
+        <SignInStep phrase={pendingPhrase} trustDevice={trustDevice} freshVault={preSignInMode === 'create'} syncOn={preSignInMode === 'create' ? syncOn : undefined} onBack={handleSignInBack} />
       ) : null}
     </LandingPage>
   );
@@ -337,6 +345,29 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
     });
     return () => { cancelled = true; };
   }, []);
+  // In the apps the phrase can sit under a device key whose store failed for
+  // a moment at boot (busy, or a keyring still locked). Coming back to the
+  // window asks again, silently, so the resume button appears once it opens.
+  // Spec: docs/internal/plans/device-bound-phrase-key.md (section 4)
+  useEffect(() => {
+    if (resumable) return;
+    let cancelled = false;
+    function recheck(): void {
+      if (document.visibilityState !== 'visible') return;
+      void readResumablePhrase().then((p) => {
+        if (cancelled || !p) return;
+        setResumable(p);
+        warmAuthEdgeFunctions();
+      });
+    }
+    window.addEventListener('focus', recheck);
+    document.addEventListener('visibilitychange', recheck);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', recheck);
+      document.removeEventListener('visibilitychange', recheck);
+    };
+  }, [resumable]);
 
   // Reset "Redirecting..." state when the user navigates back via browser
   // Back button. The OAuth redirect navigates away entirely; if the user
@@ -389,9 +420,11 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
     // trust decision. A failure leaves the offer in place and says why.
     // The stored phrase, not one typed: a device the owner removed is signed
     // out rather than brought back (register-device `reactivate`).
-    const ok = await signInWithPhrase(resumable, isTrustedDevice(), false, undefined, false);
+    // The answer is an object, never falsy: its `ok` says whether it worked
+    // (beta.privacynotes.app #213 item 7).
+    const result = await signInWithPhrase(resumable, isTrustedDevice(), false, undefined, false);
     setResumeBusy(false);
-    if (!ok) setOauthError(t('chooseMode.resumeFailed'));
+    if (!result.ok) setOauthError(result.error || t('chooseMode.resumeFailed'));
   }
 
   async function handlePastedCode() {
@@ -503,7 +536,7 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
                 <button
                   key={p}
                   type="button"
-                  disabled={oauthPending !== null}
+                  disabled={OAUTH_OFF || oauthPending !== null}
                   onClick={() => handleOAuth(p)}
                   className="w-full rounded-lg border border-[var(--wl-line)] bg-[var(--wl-card)] px-4 py-3 font-medium text-[var(--wl-ink)] flex items-center justify-center gap-2.5 hover:bg-[var(--wl-tint)] transition disabled:opacity-60 disabled:cursor-not-allowed"
                 >
@@ -593,6 +626,11 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
 /** Sign-in order: one list for every screen that offers the providers. */
 const OAUTH_ORDER = PROVIDER_ORDER;
 
+/** The provider logins return to use.privacynotes.app, never to the beta
+ *  site, so on beta the buttons stay disabled and only the phrase signs in
+ *  (GitHub #847). Spec: docs/internal/repos-runbook.md (section 2) */
+const OAUTH_OFF = isBetaHost();
+
 const OAUTH_META: Record<OAuthProvider, {
   Icon: () => ReactNode;
   labelKey: string;
@@ -643,11 +681,18 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
   // The phrase length, for self-custody only: a custodial person never
   // writes the phrase down, so the default 12 words serve them.
   const [words, setWords] = useState<12 | 24>(12);
+  // A provider login starts with sync on: its login restores the notes only
+  // while they sync (GitHub #821).
+  const [syncOn, setSyncOn] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const provider = useSessionProvider();
 
   async function handleContinue() {
+    // The pause is set before the account opens, so the first sync never
+    // runs for a local choice; a failed sign-up puts the old value back.
+    const pausedBefore = isSyncPaused();
+    setSyncPaused(!syncOn);
     if (choice === 'self-custody') {
       // Generate phrase and authenticate, then show backup screen.
       setBusy(true);
@@ -655,6 +700,7 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
       const result = await completeCustodyChoice('self-custody', words);
       setBusy(false);
       if (!result.ok) {
+        setSyncPaused(pausedBefore);
         setError(result.error);
         return;
       }
@@ -670,6 +716,7 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
     const result = await completeCustodyChoice('custodial');
     setBusy(false);
     if (!result.ok) {
+      setSyncPaused(pausedBefore);
       setError(result.error);
     }
     // On success, auth state transitions to 'authenticated' and
@@ -771,6 +818,8 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
         <Suspense fallback={null}><PhraseLengthChoice words={words} onChange={setWords} /></Suspense>
       )}
 
+      <SyncCheckbox syncOn={syncOn} onSyncOnChange={setSyncOn} restoreBy={choice === 'custodial' ? 'login' : 'phrase'} />
+
       {error && (
         <p className="text-body text-danger">{error}</p>
       )}
@@ -805,6 +854,33 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
  */
 const PhraseLengthChoice = lazy(() => import('./security/PhraseLengthChoice').then((m) => ({ default: m.PhraseLengthChoice })));
 
+/** A sign-up option: a checkbox with a bold label and one line under it. */
+function OptionCheckbox({ checked, onChange, label, description, tone }: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+  description: string;
+  /** A line that names a risk (warning) or a safe state (success). */
+  tone?: 'warning' | 'success';
+}) {
+  return (
+    <label className="flex items-start gap-2 text-body text-[var(--wl-ink)] cursor-pointer rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+      />
+      <span>
+        <span className="font-medium">{label}</span>
+        <span className={`block text-small mt-0.5 leading-relaxed text-pretty ${tone === 'warning' ? 'text-warning' : tone === 'success' ? 'text-success' : 'text-[var(--wl-sub)]'}`}>
+          {description}
+        </span>
+      </span>
+    </label>
+  );
+}
+
 function TrustDeviceCheckbox({
   trustDevice,
   onTrustDeviceChange,
@@ -813,22 +889,24 @@ function TrustDeviceCheckbox({
   onTrustDeviceChange: (v: boolean) => void;
 }) {
   const { t } = useTranslation('auth');
-  return (
-    <label className="flex items-start gap-2 text-body text-[var(--wl-ink)] cursor-pointer rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3">
-      <input
-        type="checkbox"
-        checked={trustDevice}
-        onChange={(e) => onTrustDeviceChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
-      />
-      <span>
-        <span className="font-medium">{t('trustDevice.label')}</span>
-        <span className="block text-small text-[var(--wl-sub)] mt-0.5 leading-relaxed">
-          {t('trustDevice.description')}
-        </span>
-      </span>
-    </label>
-  );
+  return <OptionCheckbox checked={trustDevice} onChange={onTrustDeviceChange} label={t('trustDevice.label')} description={t('trustDevice.description')} />;
+}
+
+/**
+ * Whether a new account's notes sync (GitHub #821), set as the sync pause
+ * before the sign-in. The line under it says what each state means: off, the
+ * notes live only in this browser or app; on, `restoreBy` brings them back.
+ * Spec: docs/internal/plans/sync-choice-821.md
+ */
+function SyncCheckbox({ syncOn, onSyncOnChange, restoreBy }: {
+  syncOn: boolean;
+  onSyncOnChange: (v: boolean) => void;
+  restoreBy: 'phrase' | 'login';
+}) {
+  const { t } = useTranslation('auth');
+  const off = detectPlatform() === 'web' ? 'syncChoice.offWeb' : 'syncChoice.offApp';
+  const on = restoreBy === 'login' ? 'syncChoice.onLogin' : 'syncChoice.onPhrase';
+  return <OptionCheckbox checked={syncOn} onChange={onSyncOnChange} label={t('syncChoice.label')} description={t(syncOn ? on : off)} tone={syncOn ? 'success' : 'warning'} />;
 }
 
 function CreatePhrase({
@@ -836,14 +914,20 @@ function CreatePhrase({
   onBack,
   trustDevice,
   onTrustDeviceChange,
+  syncOn,
+  onSyncOnChange,
 }: {
   onReady: (phrase: string) => void;
   onBack: () => void;
   trustDevice: boolean;
   onTrustDeviceChange: (v: boolean) => void;
+  syncOn: boolean;
+  onSyncOnChange: (v: boolean) => void;
 }) {
   const { t } = useTranslation('auth');
   const [phrase, setPhrase] = useState(() => generatePhrase());
+  // The new phrase is on screen for as long as this step is: no capture of it.
+  useSecretOnScreen(true);
   const [confirmed, setConfirmed] = useState(false);
   const [copied, setCopied] = useState(false);
   // The phrase files whose last save failed. A failed native save can leave an
@@ -986,7 +1070,7 @@ function CreatePhrase({
           it. marginSize=4 bakes a spec-compliant quiet zone into the
           canvas pixels (see PhraseView for the full rationale). */}
       <div className="hidden" ref={qrWrapperRef} aria-hidden="true">
-        <QRCodeCanvas value={buildSignInUrl(phrase)} size={320} level="M" marginSize={4} />
+        <QRCodeCanvas value={buildSignInCode(phrase)} size={320} level="M" marginSize={4} />
       </div>
 
       <label className="flex items-start gap-2 text-body text-[var(--wl-ink)] cursor-pointer rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3">
@@ -1000,6 +1084,8 @@ function CreatePhrase({
           {t('createPhrase.stored')}
         </span>
       </label>
+
+      <SyncCheckbox syncOn={syncOn} onSyncOnChange={onSyncOnChange} restoreBy="phrase" />
 
       <TrustDeviceCheckbox
         trustDevice={trustDevice}
@@ -1028,6 +1114,16 @@ function CreatePhrase({
   );
 }
 
+/** The line under the passkey button for each failure. A cancelled prompt
+ *  shows nothing. Spec: docs/contrib/passkeys.md (4.5) */
+const PASSKEY_FAILURE = {
+  no_prf: 'passkeySignIn.noPrf',
+  not_found: 'passkeySignIn.notFound',
+  retired: 'passkeySignIn.retired',
+  rate_limited: 'passkeySignIn.rateLimited',
+  network: 'passkeySignIn.failed',
+} as const;
+
 function ImportPhrase({
   onReady,
   onBack,
@@ -1040,11 +1136,36 @@ function ImportPhrase({
   onTrustDeviceChange: (v: boolean) => void;
 }) {
   const { t } = useTranslation('auth');
+  const { supabase } = useAuth();
   const [input, setInput] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [scanning, setScanning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  // Passkey sign-in: the passkey opens the phrase, and the phrase goes on
+  // through the same onReady as a typed one (sign-in step, captcha, "Trust
+  // this device", 2FA). Spec: docs/contrib/passkeys.md (4.3, P8)
+  const [passkeyOffered] = useState(() => passkeySignInAvailable());
+  const [passkeyBusy, setPasskeyBusy] = useState(false);
+  const [passkeyError, setPasskeyError] = useState<string | null>(null);
+
+  async function handlePasskey() {
+    setPasskeyError(null);
+    setPasskeyBusy(true);
+    let result: SignInPasskeyResult;
+    try {
+      result = await signInPasskeyPhrase(supabase);
+    } catch {
+      result = { ok: false, reason: 'network' };
+    }
+    setPasskeyBusy(false);
+    if (result.ok) {
+      onReady(result.phrase);
+      return;
+    }
+    if (result.reason === 'cancelled' || result.reason === 'unavailable') return;
+    setPasskeyError(t(PASSKEY_FAILURE[result.reason]));
+  }
 
   function handleSubmit() {
     const trimmed = input.trim().toLowerCase();
@@ -1112,6 +1233,19 @@ function ImportPhrase({
         className="w-full rounded-md bg-[var(--wl-bg)] border border-[var(--wl-line)] text-[var(--wl-ink)] focus:border-accent p-3 text-body font-mono focus:outline-none placeholder:text-[var(--wl-muted)]"
         autoFocus
       />
+      {passkeyOffered && (
+        <div className="space-y-1.5">
+          <Button
+            icon={<Fingerprint aria-hidden="true" />}
+            onClick={() => void handlePasskey()}
+            disabled={passkeyBusy}
+            className="w-full"
+          >
+            {passkeyBusy ? t('passkeySignIn.working') : t('passkeySignIn.button')}
+          </Button>
+          {passkeyError && <p className="text-body text-danger">{passkeyError}</p>}
+        </div>
+      )}
       <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
         <button
           type="button"
@@ -1187,6 +1321,7 @@ function SignInStep({
   phrase,
   trustDevice,
   freshVault,
+  syncOn,
   onBack,
 }: {
   phrase: string;
@@ -1194,6 +1329,10 @@ function SignInStep({
   /** True when this phrase was generated by the create flow, so the
    *  vault is provably new and may seed its onboarding notes. */
   freshVault: boolean;
+  /** A new phrase account's sync choice, set as the sync pause before the
+   *  sign-in so a local account never pushes. Absent for a phrase that signs
+   *  in to an account that exists: that device keeps its pause. */
+  syncOn?: boolean;
   onBack: () => void;
 }) {
   const { t } = useTranslation('auth');
@@ -1273,6 +1412,8 @@ function SignInStep({
     }
     setBusy(true);
     setError(null);
+    const pausedBefore = isSyncPaused();
+    if (syncOn !== undefined) setSyncPaused(!syncOn);
 
     try {
       const result = await withMfaAwareTimeout(
@@ -1286,6 +1427,7 @@ function SignInStep({
         () => ({ ok: false as const, error: t('signIn.timedOut') }),
       );
       if (!result.ok) {
+        if (syncOn !== undefined) setSyncPaused(pausedBefore);
         // The token is single-use and now spent (or stale) - drop it so
         // the retry path gets a fresh challenge instead of resubmitting
         // a dead token.
@@ -1313,6 +1455,7 @@ function SignInStep({
         );
       }
     } catch (err) {
+      if (syncOn !== undefined) setSyncPaused(pausedBefore);
       captchaTokenRef.current = null;
       setError((err as Error).message || t('signIn.failedUnexpectedly'));
       setBusy(false);

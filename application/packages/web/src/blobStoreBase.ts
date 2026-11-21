@@ -8,27 +8,17 @@
 
 import { decryptBlob, encryptBlob, type SupabaseClient } from '@notes/shared';
 import { db } from './db';
-import { openWithRing } from './keyRing';
+import { currentKeyEpoch, isRingKey, openWithRingAt } from './keyRing';
 import { isDemoMode } from './demo';
 import { ownsLocalData } from './authStorage';
 import { logAuthEvent } from './authDiag';
-import { recordStorageFault } from './syncFaults';
 import { isServerWriteBlocked } from './syncPause';
 import { uploadsHeldForWifi } from './wifiOnly';
 import { fetchQuotaUsage, recalculateQuota } from './devices';
 import { markIfPending, sameBytes, settleUnlessClaimed } from './blobUploadRecovery';
+import { BlobError, blobBackend, uploadsHeldUntil, type BlobBackend } from './blobStore';
 
-/** One bucket for every encrypted blob, pictures and files alike. */
-export const BUCKET = 'encrypted-images';
-
-/** Errors that will never succeed on retry - mark the row refused. */
-export function isPermanentUploadError(msg: string): boolean {
-  return (
-    msg.includes('exceeded the maximum allowed size') ||
-    msg.includes('Payload too large') ||
-    msg.includes('413')
-  );
-}
+export { isBlobQuotaError, isPermanentUploadError } from './blobStore';
 
 /**
  * pendingUpload value for a blob the server refused for good. The retry
@@ -39,18 +29,14 @@ export function isPermanentUploadError(msg: string): boolean {
  */
 export const UPLOAD_REFUSED = 2;
 
-/** A blob refused for storage quota: retryable once the user frees space or
- *  upgrades. Only "Quota exceeded": the 90-day freeze ("Sync frozen", see
- *  isQuotaError in sync.ts) covers the notes table, not blobs. */
-export function isBlobQuotaError(msg: string): boolean {
-  return msg.includes('Quota exceeded');
-}
-
 /** The dedup rows of both stores have this one shape (db.ts). */
 type DedupTable = typeof db.imageDedup;
 
 export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
   protected supabase: SupabaseClient;
+  /** The object store. Every read, write and removal of an object goes
+   *  through it; `supabase` is for the account's tables and functions. */
+  protected backend: BlobBackend;
   protected encryptionKey: Uint8Array;
   protected pubkey: string;
   /**
@@ -75,6 +61,10 @@ export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
   private probed = new Set<string>();
   private ownershipLogged = false;
 
+  /** Called when the day's upload limit holds this account's new uploads,
+   *  with the time the hold ends. The UI says so in one line. */
+  onUploadsHeld?: (until: number) => void;
+
   /** The store's name in logs: `imageStore` or `attachmentStore`. */
   protected abstract readonly logName: string;
   /** The word that starts a download error: `Image` or `Attachment`. */
@@ -83,7 +73,9 @@ export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
   /** The cached row for a uuid. */
   protected abstract cached(uuid: string): Promise<Cached | undefined>;
   /** The plaintext an object holds for a cached row: what the upload encrypts. */
-  protected abstract plaintextOf(cached: Cached): Uint8Array;
+  /** The bytes an object holds for a cache row, with its row binding when
+   *  `uuid` is a bound id (blobBind.ts). */
+  protected abstract plaintextOf(cached: Cached, uuid: string): Uint8Array;
   /** Upload a pending row again, from its cached row and a fresh encryption. */
   protected abstract retryUpload(uuid: string, cached: Cached, encrypted: Uint8Array): Promise<void>;
 
@@ -93,6 +85,7 @@ export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
     pubkey: string,
   ) {
     this.supabase = supabase;
+    this.backend = blobBackend(supabase, pubkey);
     this.encryptionKey = encryptionKey;
     this.pubkey = pubkey;
   }
@@ -141,10 +134,14 @@ export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
    * the name is already taken by bytes that are not ours, no write of ours
    * can ever land there, and the local copy becomes the only copy - the same
    * standing as a blob the server refused on size.
+   *
+   * An object that is ours but sealed under a key of an earlier phrase is
+   * written again under the current key before the row is cleared
+   * (_rewriteUnderCurrentKey), and stays pending while that write fails.
    */
-  protected async _settleExistingObject(uuid: string, path: string, encrypted: Uint8Array | null, attemptAt: number): Promise<void> {
+  protected async _settleExistingObject(uuid: string, encrypted: Uint8Array | null, attemptAt: number): Promise<void> {
     const cached = await this.cached(uuid);
-    const remote = await this._downloadWithRetry(path);
+    const remote = await this._downloadWithRetry(uuid);
     if (!remote) {
       // The object answered 409 and will not download. Nothing is proven, so
       // nothing is cleared; the next sweep asks again.
@@ -154,6 +151,8 @@ export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
     const remoteBytes = new Uint8Array(await remote.arrayBuffer());
     // A probe has no ciphertext of its own to compare, only the plaintext.
     let matches = encrypted !== null && sameBytes(remoteBytes, encrypted);
+    // Ours, and opened by a key of an earlier phrase instead of the current one.
+    let underEarlierKey = false;
     if (!matches && cached) {
       // The retry re-encrypted with a fresh nonce, so identical plaintext
       // produces different ciphertext. Compare what the bytes mean (for a
@@ -167,7 +166,11 @@ export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
         return;
       }
       try {
-        matches = sameBytes(openWithRing('sync', passKey, (key) => decryptBlob(remoteBytes, key)), this.plaintextOf(cached));
+        const opened = openWithRingAt('sync', passKey, (key) => decryptBlob(remoteBytes, key));
+        matches = sameBytes(opened.value, this.plaintextOf(cached, uuid));
+        // A store that still holds an earlier phrase's key reads its own
+        // epoch as the current one, so its key is asked too.
+        underEarlierKey = matches && (opened.epoch !== currentKeyEpoch() || isRingKey('sync', passKey));
       } catch {
         matches = false;
       } finally {
@@ -181,6 +184,12 @@ export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
       const dedup = await this.dedup.where('uuid').equals(uuid).first();
       if (dedup) await this.dedup.update(dedup.hash, { pendingUpload: UPLOAD_REFUSED });
       console.error(`[${this.logName}] blob name holds different content, kept local cache:`, uuid);
+      return;
+    }
+    if (underEarlierKey && cached && !await this._rewriteUnderCurrentKey(uuid, cached)) {
+      // The probe of a row with no headroom asks once per instance. This one
+      // found the object and could not finish, so it must ask again.
+      this.probed.delete(uuid);
       return;
     }
     // The object is right. Whether its bytes were ever counted is unknown, so
@@ -202,6 +211,70 @@ export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
   }
 
   /**
+   * The stored object is ours and sealed under a key of an earlier phrase:
+   * an attempt stored it before the phrase changed and lost its answer. The
+   * phrase change pass rewrites a file a ring key opens (reencryptPass.ts),
+   * but it can have finished before the object was on any listing, and it
+   * never looks again. So the settle writes the object under the current
+   * key itself: the same name and the same size, the cached plaintext
+   * sealed now with the key this method checked. Never the ciphertext the
+   * attempt brought: nothing here proves which key sealed that.
+   * Two rewrites of one object, this one and the pass's, leave the bytes of
+   * whichever landed last, both under the current key.
+   *
+   * False when nothing was written (a sign-out in progress, a store that
+   * holds an earlier phrase's key, a refused or failed write): the caller
+   * leaves the row pending, and the next sweep comes back here.
+   * Spec: docs/internal/plans/phrase-change.md (6.4)
+   */
+  private async _rewriteUnderCurrentKey(uuid: string, cached: Cached): Promise<boolean> {
+    if (this.ownershipLost()) return false;
+    const passKey = this.keyCopy();
+    if (!passKey) {
+      console.warn(`[${this.logName}] sign-out in progress - blob rewrite deferred:`, uuid);
+      return false;
+    }
+    let sealed: Uint8Array;
+    try {
+      if (isRingKey('sync', passKey)) return false;
+      sealed = encryptBlob(this.plaintextOf(cached, uuid), passKey);
+    } finally {
+      passKey.fill(0);
+    }
+    try {
+      await this.backend.overwrite(uuid, sealed);
+      return true;
+    } catch (err) {
+      if (!(err instanceof BlobError)) throw err;
+      console.warn(`[${this.logName}] blob under an earlier key not rewritten, will retry:`, uuid, err.message);
+      return false;
+    }
+  }
+
+  /**
+   * A put the store must not count as failed: the day's upload limit
+   * (`upload_limit`, held by the adapter until the limit ends) or the
+   * Worker's rate limit after its waits (`rate_limited`). The row stays
+   * pending for a later pass, and the caller returns without a throw, so
+   * nothing that waits for the upload takes it for lost. The line about the
+   * hold is said on the Worker's own answer, not on a put the hold refused
+   * without a request.
+   */
+  protected waitsForLater(error: BlobError): boolean {
+    if (error.kind === 'upload_limit') {
+      const until = uploadsHeldUntil(this.pubkey);
+      if (error.status !== undefined && until !== null) this.onUploadsHeld?.(until);
+      console.warn(`[${this.logName}] upload held for the day's upload limit`);
+      return true;
+    }
+    if (error.kind === 'rate_limited') {
+      console.warn(`[${this.logName}] upload rate limited, will retry`);
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * Settle an object an earlier attempt stored, without uploading again.
    * True when the object is there, or when Storage did not answer, so the
    * caller leaves the row unmarked and the next sweep asks again; false only
@@ -211,19 +284,13 @@ export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
     if (this.uploading.has(uuid)) return true;
     this.uploading.add(uuid);
     try {
-      const path = `${this.pubkey}/${uuid}`;
       const attemptAt = Date.now();
-      let stored: boolean;
-      try {
-        const { data } = await this.supabase.storage.from(BUCKET).exists(path);
-        stored = data === true;
-      } catch {
-        return true;
-      }
+      const stored = await this.backend.exists(uuid);
+      if (stored === null) return true;
       this.probed.add(uuid);
       if (!stored) return false;
       if (this.ownershipLost()) return true;
-      await this._settleExistingObject(uuid, path, null, attemptAt);
+      await this._settleExistingObject(uuid, null, attemptAt);
       return true;
     } finally {
       this.uploading.delete(uuid);
@@ -237,7 +304,8 @@ export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
    */
   async processPendingUploads(): Promise<void> {
     // Blocked or held: pending rows survive and upload once the block lifts.
-    if (isDemoMode() || isServerWriteBlocked() || uploadsHeldForWifi()) return;
+    // The day's upload limit holds them too, so no sweep asks before it ends.
+    if (isDemoMode() || isServerWriteBlocked() || uploadsHeldForWifi() || uploadsHeldUntil(this.pubkey) !== null) return;
     if (this.ownershipLost()) return;
     // Single-flight: the post-sync retry hook can fire again before a
     // previous sweep has finished walking the pending rows. Let the
@@ -277,6 +345,8 @@ export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
       }
       try {
         for (const record of pending) {
+          // The day's upload limit met mid-sweep holds every row left.
+          if (uploadsHeldUntil(this.pubkey) !== null) break;
           try {
             // Already being uploaded by another in-flight call (e.g. the
             // initial upload) - skip the pointless re-encrypt.
@@ -310,7 +380,7 @@ export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
               freeBytes -= cached.data.length;
             }
 
-            const encrypted = encryptBlob(this.plaintextOf(cached), passKey);
+            const encrypted = encryptBlob(this.plaintextOf(cached, record.uuid), passKey);
             await this.retryUpload(record.uuid, cached, encrypted);
           } catch (err) {
             console.warn(`[${this.logName}] pending retry failed:`, record.uuid, err);
@@ -325,45 +395,16 @@ export abstract class BlobStoreBase<Cached extends { data: Uint8Array }> {
   }
 
   /**
-   * Download a blob from Storage. If the error is "Bucket not found"
-   * (Supabase returns this for private buckets when the JWT is expired
-   * or invalid - it's an auth error, not a missing-file error), refresh
-   * the session once and retry. Returns null only when the object
-   * genuinely doesn't exist.
+   * Download a blob from the store, which refreshes the session once when
+   * the store answers an expired one (blobStore.ts). Returns null only when
+   * the object genuinely doesn't exist.
    */
-  protected async _downloadWithRetry(path: string): Promise<Blob | null> {
-    const { data, error } = await this.supabase.storage
-      .from(BUCKET)
-      .download(path);
-
-    if (!error) return data ?? null;
-
-    // "Bucket not found" = auth/session issue, not a missing file.
-    if (error.message?.includes('Bucket not found')) {
-      const { error: refreshErr } = await this.supabase.auth.refreshSession();
-      if (refreshErr) {
-        recordStorageFault('file-down', refreshErr, path.slice(path.lastIndexOf('/') + 1));
-        throw new Error(`${this.noun} download failed (session refresh failed): ${refreshErr.message}`);
-      }
-      const retry = await this.supabase.storage.from(BUCKET).download(path);
-      if (retry.error) {
-        if (retry.error.message?.includes('not found') || retry.error.message?.includes('404')) {
-          recordStorageFault('file-down', retry.error, path.slice(path.lastIndexOf('/') + 1));
-          return null;
-        }
-        recordStorageFault('file-down', retry.error, path.slice(path.lastIndexOf('/') + 1));
-        throw new Error(`${this.noun} download failed: ${retry.error.message}`);
-      }
-      return retry.data ?? null;
+  protected async _downloadWithRetry(uuid: string): Promise<Blob | null> {
+    try {
+      return await this.backend.get(uuid);
+    } catch (err) {
+      if (err instanceof BlobError) throw new Error(`${this.noun} download failed: ${err.message}`);
+      throw err;
     }
-
-    // Genuine "object not found".
-    if (error.message?.includes('not found') || error.message?.includes('404')) {
-      recordStorageFault('file-down', error, path.slice(path.lastIndexOf('/') + 1));
-      return null;
-    }
-
-    recordStorageFault('file-down', error, path.slice(path.lastIndexOf('/') + 1));
-    throw new Error(`${this.noun} download failed: ${error.message}`);
   }
 }

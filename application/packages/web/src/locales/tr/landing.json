@@ -1,6 +1,5 @@
 {
   "header": {
-    "betaBadge": "beta",
     "downloads": "İndirmeler",
     "price": "Fiyat",
     "priceLine": "Uygulamalarınızın toplam maliyeti",
@@ -290,7 +289,7 @@
   },
   "demoShot": {
     "kicker": "Canlı görün",
-    "caption": "Örnek notlarla gerçek uygulama, doğrudan tarayıcınızda. Hiçbir şey kaydedilmez."
+    "caption": "Örnek notlarla gerçek uygulama, doğrudan tarayıcınızda. Yazdıklarınız bu tarayıcıda kalır."
   },
   "badges": {
     "privacyToolsAlt": "PrivacyTools.io'da PrivacyNotes",
@@ -358,7 +357,7 @@
     "freeImport": "İçe ve dışa aktarma, Keep ve Obsidian dâhil",
     "freeAnon": "Anonim giriş, e-posta olmadan",
     "earlyAdopterBadge": "Erken Kullanıcı",
-    "payMethods": "Kartla veya Bitcoin, Ethereum, Lightning, USDC ya da USDT ile ödeyin."
+    "payMethods": "Kartla veya Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin ya da TON ile ödeyin."
   },
   "underHood": {
     "heading": "Kaputun altında",
@@ -498,7 +497,7 @@
     "noLockIn": "Platforma bağımlılık",
     "noEmail": "Zorunlu e-posta",
     "noDarkPatterns": "Aldatıcı tasarımlar",
-    "noBackdoor": "Arka kapılar"
+    "noBackdoor": "Gizli arka kapılar"
   },
   "noRecovery": {
     "heading": "İfadeniz anahtarınızdır",
@@ -506,7 +505,7 @@
     "noRecoveryTerm": "Kurtarma yok",
     "noRecoveryDesc": "Kendi saklamanızda ifadenizi kaybederseniz notlarınızı da kaybedersiniz",
     "deviceTerm": "Cihazda üretilir",
-    "deviceDesc": "Kendi saklamanızda ifadeniz sunucularımıza hiç uğramaz",
+    "deviceDesc": "Kendi saklamanızda, giriş için bir geçiş anahtarı eklemediğiniz sürece ifadeniz sunucularımıza hiç uğramaz",
     "zkTerm": "Sıfır bilgi",
     "zkDesc": "Kendi saklamanızda sunucuda notlarınızı açan hiçbir şey yoktur",
     "writeTerm": "Bir yere yazın",
@@ -521,7 +520,7 @@
     "heading": "Kasanız bir dakikadan kısa sürede hazır.",
     "importNote": "Uygulama mı değiştiriyorsunuz? Bunların herhangi birinden dışa aktarın, dakikalar içinde içe aktarın:",
     "importDemoTitle": "Kendi içe aktarmanızı önce demoda deneyin",
-    "importDemoBody": "Dosyanız tarayıcınızda okunur, sunucularımıza hiçbir şey gitmez ve sekmeyi kapatınca silinir."
+    "importDemoBody": "Dosyanız tarayıcınızda okunur ve içindeki hiçbir şey yüklenmez. Demo burada yeniden açılana kadar bu tarayıcıda kalır; daha önce kaldırmak için site verilerini temizleyin."
   },
   "about": {
     "tabs": {
@@ -529,7 +528,7 @@
       "hotkeys": "Kısayollar",
       "rating": "Değerlendirme"
     },
-    "intro": "<brand/>, notlarınızı, görevlerinizi, parolalarınızı, günlüğünüzü, dosyalarınızı, takviminizi, kişilerinizi ve yer imlerinizi tek bir yerde tutar; ruh hali ve ilaç takibiyle birlikte. Her şey cihazınızda kurtarma ifadenizden oluşturulan bir anahtarla şifrelenir ve <nowrap>İsviçre'deki</nowrap> sunucularımızda da şifreli kalır. Çevrimdışı çalışır ve uygulama açık kaynaktır.",
+    "intro": "<brand/>, notlarınızı, görevlerinizi, parolalarınızı, günlüğünüzü, dosyalarınızı, takviminizi, kişilerinizi ve yer imlerinizi tek bir yerde tutar; ruh hali ve ilaç takibiyle birlikte. Her şey cihazınızda kurtarma ifadenizden oluşturulan bir anahtarla şifrelenir ve <nowrap>İsviçre'deki</nowrap> ve AB'deki sunucularımızda da şifreli kalır. Çevrimdışı çalışır ve uygulama açık kaynaktır.",
     "versionHeading": "Sürüm",
     "windowVersion": "Sürüm {{version}}",
     "windowHelp": "Yardım Merkezi",
@@ -549,7 +548,7 @@
     "openSourceLink": "Kaynağı GitHub.com'da okuyun",
     "openSourceBody": "Uygulama ve içindeki şifreleme yayımlandı, böylece notlarınızın nasıl şifrelendiğini herkes kontrol edebilir.",
     "dataStorageHeading": "Veri Saklama",
-    "dataStorageBody": "Şifreli veri blokları Zürih, <flag/> İsviçre'de saklanır.",
+    "dataStorageBody": "Şifreli notlar, günlükler ve geri kalan her şey Zürih, <flag/> İsviçre'de saklanır. Güncel uygulamadan gelen yeni görseller ve dosyalar AB'de saklanır.",
     "faviconsHeading": "Site simgeleri",
     "faviconsBody1": "Site simgeleri (favicon) DuckDuckGo ve Google'dan gelir ve sizin adınıza sunucumuz tarafından alınır. Tarayıcınız ikisiyle de hiç doğrudan iletişim kurmaz, böylece ikisi de bir alan adı soran sunucumuzu görür, sizi asla görmez.",
     "faviconsBody2": "Simgeler cihazınızda 90 gün önbelleğe alınır. Hiçbir istek kimliğinizi içermez ve simgeleri Ayarlar > Listeler altında kapatabilirsiniz."

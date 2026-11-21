@@ -28,7 +28,7 @@ export type Announcement = {
 export const ANNOUNCEMENTS: Announcement[] = [
   {
     id: 'oss-launch',
-    surface: 'both',
+    surface: 'site',
     textKey: 'announcement.ossText',
     textNarrowKey: 'announcement.ossTextNarrow',
     ctaKey: 'announcement.ossCta',

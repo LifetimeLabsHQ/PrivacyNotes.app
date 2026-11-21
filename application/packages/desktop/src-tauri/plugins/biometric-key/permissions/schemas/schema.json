@@ -319,6 +319,30 @@
           "markdownDescription": "Denies the delete command without any pre-configured scope."
         },
         {
+          "description": "Enables the deviceCreate command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-deviceCreate",
+          "markdownDescription": "Enables the deviceCreate command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the deviceCreate command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-deviceCreate",
+          "markdownDescription": "Denies the deviceCreate command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the deviceOpen command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-deviceOpen",
+          "markdownDescription": "Enables the deviceOpen command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the deviceOpen command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-deviceOpen",
+          "markdownDescription": "Denies the deviceOpen command without any pre-configured scope."
+        },
+        {
           "description": "Enables the open command without any pre-configured scope.",
           "type": "string",
           "const": "allow-open",

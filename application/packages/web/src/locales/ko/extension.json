@@ -47,9 +47,10 @@
     "title": "로그인 항목 보호",
     "body": "이 브라우저에서 쓸 PIN이나 패스코드를 정하세요. 여기서 로그인 항목의 잠금을 해제할 때 필요해요. 앱의 것과는 별개예요.",
     "biometric": "생체 인증 잠금 해제도 사용",
-    "biometricHelp": "PIN이나 패스코드에 더해 Touch ID나 Windows Hello를 쓸 수 있어요. PIN이나 패스코드도 언제나 작동해요.",
+    "biometricHelp": "이 브라우저용 패스키를 통해 Touch ID나 Windows Hello를 쓸 수 있어요. PIN이나 패스코드도 언제나 작동해요.",
     "repeat": "한 번 더 입력하세요",
-    "mismatch": "두 값이 일치하지 않아요. 다시 시도하세요."
+    "mismatch": "두 값이 일치하지 않아요. 다시 시도하세요.",
+    "commonPin": "이 PIN은 너무 쉽게 추측할 수 있어요. 다른 PIN을 고르세요."
   },
   "clip": {
     "selection": "선택한 내용",
@@ -81,7 +82,7 @@
     "unlockPin": "PIN을 입력하세요",
     "unlockPasscode": "패스코드를 입력하세요",
     "useBiometric": "생체 인증 잠금 해제 사용",
-    "wrong_other": "틀렸어요. {{count}}번 더 틀리면 이 브라우저의 연결이 해제돼요.",
+    "wrong_other": "틀렸어요. 이번 달에 {{count}}번 더 틀리면 이 브라우저의 연결이 해제돼요.",
     "forSite": "{{site}}용",
     "none": "이 사이트의 로그인 항목이 없어요.",
     "off": "이 브라우저에서는 로그인 항목이 꺼져 있어요. 연결할 때 보관함을 켜세요.",
@@ -96,12 +97,15 @@
     "search": "모든 로그인 항목 검색",
     "noMatch": "일치하는 로그인 항목이 없어요.",
     "openSite": "사이트 열기",
-    "duplicate": "이 사이트에 이 사용자 이름으로 된 로그인 항목이 이미 있어요."
+    "duplicate": "이 사이트에 이 사용자 이름으로 된 로그인 항목이 이미 있어요.",
+    "editTitle": "로그인 항목 편집",
+    "saved": "변경 사항을 저장했어요."
   },
   "account": {
     "confirmDisconnect": "연결을 해제할까요?",
     "revoked": "이 브라우저는 더 이상 연결되어 있지 않아요",
-    "revokedBody": "앱에서 새 코드를 받아 다시 연결하세요."
+    "revokedBody": "앱에서 새 코드를 받아 다시 연결하세요.",
+    "pendingPasskey": "이 브라우저에 저장한 패스키가 아직 보관함에 없어요. 먼저 PrivacyNotes를 열고 동기화되게 하세요. 그러지 않으면 패스키를 잃어요."
   },
   "badge": {
     "problem": "확인이 필요한 문제가 있어요"
@@ -144,7 +148,8 @@
     "unlockToCopy": "잠금 해제하고 복사",
     "omniboxDefault": "PrivacyNotes 보관함에서 %s 검색",
     "omniboxUnlock": "검색하려면 PrivacyNotes 잠금을 해제하세요",
-    "moreOptions": "옵션 더 보기"
+    "moreOptions": "옵션 더 보기",
+    "editNotSaved": "{{name}}에 대한 변경 사항이 보관함에 전달되지 않아서 로그인 항목은 이전 값을 그대로 유지해요. 변경 사항을 저장하려면 다시 편집하세요."
   },
   "shortcuts": {
     "notSet": "설정 안 됨",
@@ -191,5 +196,19 @@
     "biometricPin": "설정하려면 PIN을 입력하세요.",
     "biometricPasscode": "설정하려면 패스코드를 입력하세요.",
     "biometricOff": "생체 인증 잠금 해제가 꺼져 있어요"
+  },
+  "passkey": {
+    "saveTitle": "{{site}}의 패스키를 저장할까요?",
+    "useTitle": "{{site}}에 로그인",
+    "saveTo": "저장 위치",
+    "save": "PrivacyNotes에 저장",
+    "other": "다른 패스키 앱 사용",
+    "already": "PrivacyNotes에 {{site}}의 패스키가 이미 있어요.",
+    "saved": "패스키를 저장했어요.",
+    "notSaved": "패스키를 저장하지 못했어요. 브라우저의 자체 패스키 앱이 대신 처리해요.",
+    "maybeSaved": "패스키가 저장됐을 수도 있어요. 보관함을 확인하세요.",
+    "unlockFirst": "패스키를 사용하려면 잠금을 해제하세요.",
+    "offer": "패스키 제안",
+    "offerHelp": "웹사이트에서 패스키를 저장하고 사용해요."
   }
 }

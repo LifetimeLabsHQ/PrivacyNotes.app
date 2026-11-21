@@ -18,6 +18,8 @@
     "filedNotes_other": "{{count}} notes classificades",
     "tags_other": "S'han conservat les etiquetes de {{count}} notes.",
     "droppedAlign": "S'ha descartat l'alineació dels blocs que l'editor no pot alinear, i s'ha conservat el text.",
+    "lostPasskeys_other": "S'han deixat fora {{count}} claus d'accés desades amb inicis de sessió. Conserva-les a la teva app antiga, o afegeix claus d'accés noves en aquells llocs web.",
+    "lostPasskeys_one": "S'ha deixat fora {{count}} clau d'accés desada amb un inici de sessió. Conserva-la a la teva app antiga, o afegeix una clau d'accés nova en aquell lloc web.",
     "foldersFromNotebooks_other": "S'han refet {{count}} carpetes a partir de les teves llibretes ({{filed}}).",
     "parsingJson": "S'està analitzant el JSON…",
     "buildingNotes": "S'estan creant les notes…",
@@ -324,6 +326,14 @@
     "invalidJson": "Aquest fitxer no és un JSON vàlid. Assegura't que has exportat en «.json» (sense xifrar).",
     "encryptedExport": "Aquesta és una exportació xifrada de Bitwarden. Torna a exportar en el format «.json» simple (no «.json (Encrypted)»).",
     "missingItems": "A aquest fitxer li falta la llista «items» esperada. No és una exportació d'una caixa forta de Bitwarden.",
+    "notZipExport": "Aquest zip no té cap data.json al nivell superior. No és una exportació «.zip (with attachments)» de Bitwarden.",
+    "keptPasskeys_one": "S'ha conservat {{count}} clau d'accés al seu inici de sessió.",
+    "keptPasskeys_other": "S'han conservat {{count}} claus d'accés als seus inicis de sessió.",
+    "passkeyOtherSite": "L'inici de sessió «{{name}}» conté una clau d'accés per a {{site}}, que no és cap dels seus llocs web. S'ha importat amb l'inici de sessió; suprimeix-la d'allà si no la reconeixes.",
+    "skippedPasskeys_one": "S'ha deixat fora {{count}} clau d'accés que la Caixa forta no pot guardar: la seva clau no és P-256, o un valor és més llarg del que permet WebAuthn. Afegeix una clau d'accés nova en aquell lloc web.",
+    "skippedPasskeys_other": "S'han deixat fora {{count}} claus d'accés que la Caixa forta no pot guardar: la clau no és P-256, o un valor és més llarg del que permet WebAuthn. Afegeix una clau d'accés nova en aquells llocs web.",
+    "unmatchedAttachments_one": "{{count}} adjunt no s'ha pogut associar a un sol element, perquè cap element o diversos elements tenen el nom de la seva carpeta. És en una nota amb el nom de la carpeta.",
+    "unmatchedAttachments_other": "{{count}} adjunts no s'han pogut associar a un sol element, perquè cap element o diversos elements tenen el nom de la seva carpeta. Són en notes amb el nom de les seves carpetes.",
     "unknownType": "S'ha omès l'element «{{name}}», de tipus desconegut {{type}}.",
     "importedCards_other": "S'han importat {{count}} targetes com a elements de la Caixa forta.",
     "importedSecureNotes_other": "S'han importat {{count}} notes segures.",
@@ -627,6 +637,10 @@
     "leftFiles_other": "S'han quedat fora {{count}} fitxers adjunts. Desa'ls des d'Enpass i adjunta'ls als elements aquí.",
     "leftFiles_one": "S'ha quedat fora {{count}} fitxer adjunt. Desa'l des d'Enpass i adjunta'l a l'element aquí."
   },
+  "msecure": {
+    "notMSecure": "Això no és una exportació de mSecure. A mSecure, tria Settings > Backups > Export records to CSV file.",
+    "fieldDataOnly": "Aquesta exportació de mSecure no té noms de camp, així que no es poden distingir els camps. Torna a exportar amb «Only export field data» desactivat."
+  },
   "nordpass": {
     "notNordPass": "Aquest fitxer no és una exportació de NordPass. A NordPass, tria Settings > Export items."
   },
@@ -643,6 +657,7 @@
     "kdbxFile": "Aquest fitxer és la base de dades de KeePass mateixa, que està bloquejada. A KeePass o KeePassXC, exporta-la com a XML i després importa aquest fitxer.",
     "notKeePass": "Aquest fitxer no és una exportació XML de KeePass. A KeePass, tria File > Export > KeePass XML (2.x); a KeePassXC, Database > Export > XML File.",
     "noEntries": "Aquest fitxer de KeePass no té cap entrada fora de la Recycle Bin.",
+    "doctype": "Aquest fitxer declara un DOCTYPE, que cap exportació de KeePass escriu, així que no s'ha llegit. Torna a exportar l'XML des de KeePass i importa aquell fitxer.",
     "readingEntries": "S'estan llegint les entrades…",
     "leftHistory_other": "S'han deixat fora {{count}} versions anteriors d'entrades: només s'importa la més recent.",
     "missingFiles_other": "{{count}} fitxers adjunts no eren a l'exportació i s'han quedat fora. Desa'ls des de KeePass i adjunta'ls als inicis de sessió aquí.",
@@ -659,6 +674,15 @@
     "readHashtags_one": "S'han llegit les etiquetes escrites com a #etiquetes a {{count}} nota.",
     "foundFiles_one": "S'ha trobat {{count}} fitxer Markdown..."
   },
+  "raindrop": {
+    "notRaindrop": "Això no és una exportació de Raindrop.io: s'esperava el fitxer .csv d'Export > CSV, o el .zip que el conté.",
+    "noCsv": "No hi ha cap fitxer .csv dins d'aquest zip. Exporta el CSV de Raindrop.io i tria aquell fitxer.",
+    "highlightsHeading": "Ressaltats",
+    "skipped_other": "S'han deixat fora {{count}} marcadors perquè la seva adreça no és un enllaç web.",
+    "covers_other": "No s'han importat {{count}} imatges de portada. Els marcadors mostren la icona del lloc web en lloc seu.",
+    "covers_one": "No s'ha importat {{count}} imatge de portada. El marcador mostra la icona del lloc web en lloc seu.",
+    "skipped_one": "S'ha deixat fora {{count}} marcador perquè la seva adreça no és un enllaç web."
+  },
   "browserBookmarks": {
     "notBookmarks": "No és una exportació de marcadors: s'esperava el fitxer .html de marcadors que exporta un navegador.",
     "noBookmarks": "No s'han trobat marcadors en aquest fitxer.",
@@ -670,6 +694,8 @@
     "entryTooLarge": "{{name}} ocupa, descomprimit, més dels {{limit}} que una importació pot llegir de cop. Treu-lo de l'exportació i torna-ho a provar.",
     "entryTooLargeKnown": "{{name}} ocupa {{size}} descomprimit, més dels {{limit}} que una importació pot llegir de cop. Treu-lo de l'exportació i torna-ho a provar.",
     "unreadable": "No s'ha pogut obrir aquest fitxer. Pot ser que estigui incomplet o malmès. Torna'l a exportar i tria el fitxer nou.",
+    "importTooLarge": "Aquest fitxer ocupa, descomprimit, més de {{limit}}, més del que conté cap exportació real. Torna'l a exportar i tria el fitxer nou.",
+    "tooManyEntries": "Aquest zip conté més de {{max}} fitxers, més del que conté cap exportació real. Torna'l a exportar i tria el fitxer nou.",
     "mediaTooLarge_one": "S'ha omès {{count}} fitxer de més de {{size}}, el fitxer més gran que pot sincronitzar qualsevol pla."
   },
   "safariArchive": {
@@ -682,5 +708,47 @@
   },
   "apply": {
     "unknownWriteError": "Error desconegut en escriure a la base de dades local."
+  },
+  "onenote": {
+    "reading": "S'està llegint la llibreta de OneNote…",
+    "notOneNote": "Això no és una llibreta de OneNote. A OneNote per a Windows, tria File > Export > Notebook > OneNote Package i deixa anar aquí el fitxer .onepkg.",
+    "cloudFormat": "Aquesta secció és en el format que OneNote fa servir en línia, que només OneNote pot llegir. Obre la llibreta a OneNote per a Windows, tria File > Export > Notebook > OneNote Package i deixa anar aquí aquell fitxer .onepkg.",
+    "splitPackage": "Aquest paquet de OneNote està dividit en diversos fitxers. Torna a exportar la llibreta com un sol OneNote Package i deixa anar aquí aquell fitxer.",
+    "tooLarge": "Aquest paquet de OneNote és massa gran per llegir-lo d'un cop. Exporta un grup de seccions o una secció cada vegada.",
+    "damaged": "Aquest fitxer de OneNote està malmès i no es pot llegir. Torna a exportar la llibreta des de OneNote i prova amb aquell fitxer.",
+    "noPages": "No s'han trobat pàgines en aquesta llibreta de OneNote.",
+    "allLocked": "Totes les seccions d'aquesta llibreta estan protegides amb contrasenya. Desbloqueja les seccions a OneNote, treu-ne les contrasenyes, torna a exportar i deixa anar aquí el fitxer nou.",
+    "subpages_other": "S'han conservat {{count}} subpàgines com a notes al costat de les seves pàgines.",
+    "noteTags_other": "S'han conservat com a etiquetes les etiquetes de nota de {{count}} pàgines.",
+    "lockedSections_other": "S'han omès {{count}} seccions protegides amb contrasenya. Treu-ne les contrasenyes a OneNote i torna a exportar per portar-les.",
+    "unreadableSections_other": "S'han omès {{count}} seccions que no s'han pogut llegir.",
+    "unsupported_other": "S'han omès {{count}} dibuixos, clips d'àudio i equacions que aquí no tenen equivalent.",
+    "missingFiles_other": "{{count}} imatges o fitxers no eren al paquet i s'han deixat fora.",
+    "deadLinks_other": "{{count}} enllaços de OneNote apunten fora d'aquesta llibreta i només en conserven el text.",
+    "recycleBin_other": "S'han omès {{count}} pàgines de la paperera de reciclatge de la llibreta.",
+    "recycleBin_one": "S'ha omès {{count}} pàgina de la paperera de reciclatge de la llibreta.",
+    "deadLinks_one": "{{count}} enllaç de OneNote apunta fora d'aquesta llibreta i només en conserva el text.",
+    "missingFiles_one": "{{count}} imatge o fitxer no era al paquet i s'ha deixat fora.",
+    "unsupported_one": "S'ha omès {{count}} dibuix, clip d'àudio o equació que aquí no té equivalent.",
+    "unreadableSections_one": "S'ha omès {{count}} secció que no s'ha pogut llegir.",
+    "lockedSections_one": "S'ha omès {{count}} secció protegida amb contrasenya. Treu-ne la contrasenya a OneNote i torna a exportar per portar-la.",
+    "noteTags_one": "S'han conservat com a etiquetes les etiquetes de nota de {{count}} pàgina.",
+    "subpages_one": "S'ha conservat {{count}} subpàgina com a nota al costat de la seva pàgina."
+  },
+  "capacities": {
+    "notCapacities": "Això no és una exportació de Capacities. A Capacities, obre Settings > Full Export, executa Manual Full Export amb els mitjans inclosos i deixa anar aquí el zip.",
+    "noObjects": "No s'han trobat pàgines ni altres objectes amb text en aquesta exportació de Capacities.",
+    "typeFolders_other": "S'han refet {{count}} tipus d'objecte com a carpetes.",
+    "properties_other": "S'han conservat les propietats de {{count}} objectes com una llista a dalt de les seves notes.",
+    "mediaObjects_other": "S'han conservat {{count}} imatges i fitxers dins de les notes que els mostren, sense nota pròpia.",
+    "queries_other": "S'han omès {{count}} consultes. Una consulta és una cerca desada a Capacities, sense text propi.",
+    "collections_other": "S'han omès {{count}} llistes de col·lecció. Els objectes que contenen hi vénen, sense les col·leccions.",
+    "deadLinks_other": "{{count}} enllaços apunten a objectes que no són a l'exportació, com ara els de la paperera, i només en conserven el text.",
+    "deadLinks_one": "{{count}} enllaç apunta a un objecte que no és a l'exportació, com ara un de la paperera, i només en conserva el text.",
+    "collections_one": "S'ha omès {{count}} llista de col·lecció. Els objectes que conté hi vénen, sense la col·lecció.",
+    "queries_one": "S'ha omès {{count}} consulta. Una consulta és una cerca desada a Capacities, sense text propi.",
+    "mediaObjects_one": "S'ha conservat {{count}} imatge o fitxer dins de les notes que el mostren, sense nota pròpia.",
+    "properties_one": "S'han conservat les propietats de {{count}} objecte com una llista a dalt de la seva nota.",
+    "typeFolders_one": "S'ha refet {{count}} tipus d'objecte com a carpeta."
   }
 }

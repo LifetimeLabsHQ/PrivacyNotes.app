@@ -6,10 +6,6 @@
     "error": "Teď se nepodařilo synchronizovat všechno. Zkontroluj připojení a zkus to znovu.",
     "conflict": "Jedna z tvých poznámek má konflikt synchronizace, který vyžaduje tvé rozhodnutí. Vyřeš ho v dialogu a zkus to znovu."
   },
-  "movedHint": {
-    "body": "Tady je nový domov aplikace. Uprav si záložku na use.privacynotes.app a znovu si přidej případnou zkratku na domovské obrazovce.",
-    "gotIt": "Rozumím"
-  },
   "moveScreen": {
     "title": "Aplikace se přestěhovala na use.privacynotes.app",
     "bodySignIn": "Přihlas se tam svou obnovovací frází nebo přes „{{scanQr}}“. Toto zařízení se nejdřív synchronizuje, takže tam na tebe čekají všechny tvoje poznámky, a tady se nic nemaže.",
@@ -36,6 +32,7 @@
       "configured": "Úložiště je plné. Některé poznámky se nepodařilo synchronizovat. Uvolni místo, nebo si přidej další úložiště.",
       "unconfigured": "Úložiště je plné. Některé poznámky se nepodařilo synchronizovat. Uvolni místo promazáním poznámek."
     },
+    "deletedSpace": "Místo po smazaných souborech se vrátí zhruba den po jejich smazání.",
     "manageStorage": "Správa úložiště",
     "viewUsage": "Zobrazit využití"
   },
@@ -91,7 +88,13 @@
     "neverBackedUp_many": "Jen na tomto zařízení:",
     "neverBackedUp_other": "Jen na tomto zařízení:",
     "moreNotes": "a dalších {{count}}",
-    "appLockHint": "Sdílené zařízení? Zapni zámek aplikace v Nastavení > Zabezpečení."
+    "appLockHint": "Sdílené zařízení? Zapni zámek aplikace v Nastavení > Zabezpečení.",
+    "unopenedWarn_one": "1 poznámka má na serveru kopii, kterou toto zařízení nedokáže otevřít. Odhlášením se kopie tady smaže, a ta může být jediná dobrá. Nejdřív ji znovu odešli v Nastavení > ID & Sync.",
+    "unopenedWarn_few": "{{count}} poznámky mají na serveru kopii, kterou toto zařízení nedokáže otevřít. Odhlášením se kopie tady smažou, a ty můžou být jediné dobré. Nejdřív je znovu odešli v Nastavení > ID & Sync.",
+    "unopenedWarn_other": "{{count}} poznámek má na serveru kopii, kterou toto zařízení nedokáže otevřít. Odhlášením se kopie tady smažou, a ty můžou být jediné dobré. Nejdřív je znovu odešli v Nastavení > ID & Sync.",
+    "unopenedKept_one": "1 poznámka má na serveru kopii, kterou toto zařízení nedokáže otevřít. Kopie tady po odhlášení zůstane.",
+    "unopenedKept_few": "{{count}} poznámky mají na serveru kopii, kterou toto zařízení nedokáže otevřít. Kopie tady po odhlášení zůstanou.",
+    "unopenedKept_other": "{{count}} poznámek má na serveru kopii, kterou toto zařízení nedokáže otevřít. Kopie tady po odhlášení zůstanou."
   },
   "signOutUpload": {
     "uploading": "Nahrávají se tvoje poslední změny…",

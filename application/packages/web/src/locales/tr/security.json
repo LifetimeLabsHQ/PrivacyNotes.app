@@ -4,7 +4,8 @@
     "tabBiometricShort": "Kilit",
     "tabPhraseShort": "İfade",
     "tabPhrase": "Kurtarma ifadeniz",
-    "tabTwoFactor": "2FA"
+    "tabTwoFactor": "2FA",
+    "tabTwoFactorPasskeys": "2FA / Geçiş anahtarları"
   },
   "pinTab": {
     "changeLost": "PIN değişikliğiniz kaydedilmedi: PIN önce başka bir cihazda değiştirildi.",
@@ -70,7 +71,7 @@
     "browserRestart": "Tarayıcı yeniden başlatıldığında"
   },
   "pinInfo": {
-    "body": "Bu açıkken, uygulama zaten kilidi açık olsa bile bu ögeyi her açtığınızda PIN istenir. Başınızdan ayrıldığınızda korunmaya devam etmesi gereken hassas ögeler için kullanın."
+    "body": "Bu açıkken, bu öge açılmadan önce PIN'inizi ister; PIN'i Ayarlar > Güvenlik > Kilit bölümünde belirlenen süre içinde (siz değiştirmedikçe 5 dakika) girdiyseniz istemez. En hassas ögeleriniz için kullanın."
   },
   "removePinDialog": {
     "introWithBio": "Kaldırmayı onaylamak için mevcut PIN'inizi girin. Biyometrik kilit açma etkin kalır, ancak tek yedek yönteminiz kurtarma ifadeniz olur.",
@@ -121,6 +122,7 @@
     "hideQr": "QR kodunu gizle",
     "showQr": "QR kodunu göster",
     "saveQr": "QR'ı kaydet",
+    "qrHint": "Yeni cihazda giriş ekranından “{{scanQr}}” seçeneğini seçin.",
     "copyPhrase": "İfadeyi kopyala"
   },
   "custody": {
@@ -134,7 +136,7 @@
     "rowLostSelf": "Başka bir kayıtlı kopya veya kilidi açık bir cihaz yoksa notlar kurtarılamaz.",
     "rowKey": "İfadeniz nerede duruyor",
     "rowKeyCustodial": "Sunucumuzda ve cihazlarınızda",
-    "rowKeySelf": "Yalnızca cihazlarınızda",
+    "rowKeySelf": "Giriş için bir geçiş anahtarı eklemediğiniz sürece yalnızca cihazlarınızda",
     "releaseWarning": "Önce ifadenizi PrivacyNotes dışında kaydedin. Kopyamızı sildikten sonra yeni cihazlarda ona ihtiyacınız olacak.",
     "challengePrompt": "Kelimelerin sizde olduğunu doğrulamak için yukarıdaki listeden şunları yazın.",
     "wordLabel": "{{position}}. kelime",
@@ -167,14 +169,18 @@
   "biometricTab": {
     "checkingSupport": "Biyometrik desteği kontrol ediliyor...",
     "description": "PIN yazmak yerine parmak izinizle veya yüzünüzle kilidi açın.",
+    "descriptionWeb": "PIN yazmak yerine parmak izinizle veya yüzünüzle kilidi açın. Bir tarayıcıda bu, bu cihazda PrivacyNotes için cihazınızın veya parola yöneticinizin kaydettiği bir geçiş anahtarı oluşturur.",
     "trustFirst": "Önce “Bu cihaza güven” seçeneğini etkinleştirin. Biyometrik kilit açma da uygulama kilidi de kurtarma ifadenizin bir kopyasını bu cihazda tutar; güvenilmeyen bir cihaz bunun için değildir.",
     "notAvailable": "Bu cihazda biyometrik kilit açma kullanılamıyor. Tarayıcınız ya da donanımınız platform kimlik doğrulayıcısını (Touch ID, Face ID, Windows Hello) desteklemiyor.",
     "enabledFlash": "Biyometrik kilit açma etkinleştirildi.",
     "enrolledOnDevice": "Bu cihazda kayıtlı",
     "boundStatus": "Biyometrik kilit açma, geçiş anahtarınıza bağlı.",
     "boundStatusNative": "Biyometrik kilit açma, bu cihazın güvenli donanımına bağlı.",
+    "boundStatusWindows": "Biyometrik kilit açma, bu bilgisayardaki Windows Hello'ya bağlı.",
+    "boundStatusWindowsSoftware": "Biyometrik kilit açma, bu bilgisayardaki Windows Hello'ya bağlı. Windows burada kullanabileceği bir güvenlik çipi (TPM) bildirmiyor. Böyle bir çip olmadan Windows Hello anahtarı yazılımda tutar ve bu bilgisayarın depolamasının bir kopyasına sahip olan biri Windows Hello PIN'lerini sınırsız deneyebilir.",
     "setUpAgain": "Daha güçlü bir kilit için yeniden ayarla",
     "unboundWeaker": "Bu cihazda biyometrik kilit açma bir kilit değil, yakındaki kişilere karşı bir engeldir: bu cihazın depolamasının bir kopyasına sahip olan biri, notlarınızı parmak iziniz veya yüzünüz olmadan açabilir.",
+    "noPrfRefused": "Bu geçiş anahtarı uygulaması biyometrik kilit açmanın anahtarını tutamıyor, bu yüzden biyometrik kilit açma kapalı kalıyor. Geçiş anahtarını bir parola yöneticisi kaydettiyse, onu orada silin, parola yöneticisinin geçiş anahtarı seçeneğini kapatın ve tekrar deneyin.",
     "cannotBind": "Bu geçiş anahtarını kaydeden geçiş anahtarı uygulaması (çoğu zaman bir parola yöneticisi) tam kilidi oluşturamıyor. Bu cihazda biyometrik kilit açma yalnızca yakındaki kişileri durdurur: bu cihazın depolamasının bir kopyasına sahip olan biri, notlarınızı parmak iziniz veya yüzünüz olmadan açabilir. Geçiş anahtarlarınızı bir parola yöneticisi kaydediyorsa, onun geçiş anahtarı seçeneğini kapatın, ardından biyometrik kilit açmayı kapatıp yeniden açın.",
     "bindOffer": "Bu cihazdaki biyometrik kilit açma henüz geçiş anahtarınıza bağlı değil ve bu tarayıcı onu bağlayabilir. Bir kez yeniden ayarlayın; böylece anahtarı bu cihazın depolamasında değil, geçiş anahtarınızda kalır.",
     "bindOfferLater": "Şimdi değil",
@@ -185,18 +191,26 @@
     "lockOnOpenHint": "Uygulama bu cihazda açılırken ve bir süre boşta kaldıktan sonra yeniden PIN'inizi veya parmak izinizi ister.",
     "lockHidesOnSwitch": "Uygulama değiştirirken notlarınızı da gizler.",
     "confirmPinForLock": "Bunu açmak için PIN'inizi girin. Kurtarma ifadenizin bir kopyasını kilitler, böylece uygulamayı yalnızca PIN'iniz açabilir.",
+    "pinWeakCopy": "4 haneli bir PIN ile bu cihazın deposunun bir kopyasına sahip olan biri PIN'i dakikalar ile saatler arasında bulup notlarınızı açabilir. Geçiş kodunu tahmin etmek çok daha zordur: PIN sekmesinden bir tane belirleyin.",
     "confirmPasscodeForLock": "Bunu açmak için geçiş kodunuzu girin. Kurtarma ifadenizin bir kopyasını kilitler, böylece uygulamayı yalnızca geçiş kodunuz açabilir.",
     "setupTitle": "Kilidi nasıl açacağınızı seçin",
     "setupPin": "Buradaki her şeyin kilidini bir PIN açar.",
     "setupBiometric": "Parmak izi veya yüz, uygulamanın kilidini yalnızca bu cihazda açar.",
+    "setupBiometricWeb": "Parmak izi veya yüz, bir geçiş anahtarı aracılığıyla uygulamanın kilidini yalnızca bu cihazda açar.",
     "setupBiometrics": "Biyometri",
-    "setupAddPinTitle": "Korumalı notlar için bir PIN ekleyin",
+    "setupAddPinTitle": "Kilit ve korumalı notlar için bir PIN ekleyin",
+    "fingerprintOnlyLock": "Bu kilit yalnızca parmak izinizle açılır. İkinci bir açma yolu olarak eklemek için PIN'inizi girin.",
+    "fingerprintOnlyLockPasscode": "Bu kilit yalnızca parmak izinizle açılır. İkinci bir açma yolu olarak eklemek için geçiş kodunuzu girin.",
+    "fingerprintOnlyLockAction": "PIN gir",
+    "fingerprintOnlyLockActionPasscode": "Geçiş kodu gir",
     "appLockHeading": "Uygulama kilidi",
     "relockAgainAfter": "Şu süreden sonra yeniden kilitle",
     "notesHeading": "Korumalı notlar",
     "reaskAfter": "PIN'i şu süreden sonra yeniden iste",
-    "reaskHint": "Korumalı notlar ve kurtarma ifadeniz için.",
+    "reaskHint": "Korumalı notlar, korumalı bölümler ve kurtarma ifadeniz için.",
+    "sectionsHint": "Kasa gibi bütün bir bölümü kenar çubuğundaki menüsünden koruyun.",
     "biometricHeading": "Parmak izi veya yüz",
+    "biometricHeadingWeb": "Parmak izi veya yüz (geçiş anahtarı)",
     "blockCapture": "Ekran yakalamada gizle",
     "blockCaptureHint": "Cihazınızın izin verdiği ölçüde notlarınızı ekran görüntülerinin, kayıtların ve ekran paylaşımının dışında tutar. Yalnızca bu cihaz için geçerlidir.",
     "perDeviceNote": "Biyometrik kilit açma, PIN ile aynı notları açar. Bu cihazda kalır ve hiçbir zaman eşitlenmez.",
@@ -205,8 +219,30 @@
     "disableConfirmBody": "Bu cihazda biyometrik kilit açma devre dışı bırakılsın mı?",
     "disableConfirmBodyAppLock": "Bu cihazda biyometrik kilit açma devre dışı bırakılsın mı? Uygulama kilidi de kapatılacak."
   },
+  "passkeysTab": {
+    "intro": "Yeni bir cihazda kurtarma ifadenizi yazmak yerine bir geçiş anahtarıyla giriş yapın. İfadeniz de çalışmaya devam eder.",
+    "add": "Geçiş anahtarı ekle",
+    "adding": "Ekleniyor...",
+    "lastUsed": "Son kullanım: {{date}}",
+    "neverUsed": "Hiç kullanılmadı",
+    "removeTitle": "Bu geçiş anahtarı kaldırılsın mı?",
+    "removeBody": "Artık bununla giriş yapamazsınız. Geçiş anahtarının kendisi, siz orada silene kadar geçiş anahtarı uygulamanızda kalır.",
+    "retired": "İfadeniz değişmeden önce oluşturuldu. Kaldırıp yeniden ekleyin.",
+    "noPrf": "Bu geçiş anahtarı uygulaması ifadenizi koruyamıyor, bu yüzden geçiş anahtarı eklenmedi. Cihazınızın kendi geçiş anahtarlarını veya başka bir parola yöneticisini deneyin.",
+    "tooMany": "Giriş için {{count}} geçiş anahtarınız var. Yenisini eklemek için birini kaldırın.",
+    "failed": "Geçiş anahtarı eklenemedi. Bağlantınızı kontrol edip tekrar deneyin.",
+    "appsOnly": "Geçiş anahtarlarını tarayıcınızda use.privacynotes.app adresinden ekleyin. Uygulamalarda bunlarla giriş yapma daha sonra gelecek.",
+    "empty": "Henüz geçiş anahtarı yok.",
+    "loadFailed": "Geçiş anahtarlarınız yüklenemedi. Bağlantınızı kontrol edip tekrar deneyin.",
+    "removeFailed": "Geçiş anahtarı kaldırılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
+    "pinPrompt": "Geçiş anahtarı eklemek için 4 haneli PIN'inizi girin.",
+    "pinPromptPasscode": "Geçiş anahtarı eklemek için geçiş kodunuzu girin."
+  },
   "appLock": {
-    "phraseNotSaved": "Bu cihaz kurtarma ifadenizi kaydedemedi, bu yüzden hiçbir şey değişmedi. Yeniden deneyin."
+    "phraseNotSaved": "Bu cihaz kurtarma ifadenizi kaydedemedi, bu yüzden hiçbir şey değişmedi. Yeniden deneyin.",
+    "phraseInMemoryOnly": "Bu tarayıcı kurtarma ifadenizi koruyamadı, bu yüzden ifade bu cihaza kaydedilmedi. Bu sekmeyi yeniden yüklerseniz veya kapatırsanız çıkış yapılır, bu yüzden kurtarma ifadenizi elinizin altında tutun. Burada girişli kalmak için Ayarlar > Güvenlik > Kilit bölümünde uygulama kilidini açın.",
+    "untrustedSignIn": "Bu cihaza güvenmediniz, bu yüzden girişiniz bu cihaza kaydedilmiyor. Uygulamayı kapatırsanız veya yeniden yüklerseniz çıkış yapılır, bu yüzden kurtarma ifadenizi elinizin altında tutun.",
+    "presenceGateRemoved": "Parmak izi veya yüzle kilit açma kapalı: bu tarayıcı onun anahtarını kurtarma ifadenizin yanında tutuyordu. PIN'iniz veya geçiş kodunuz uygulamanın kilidini açmaya devam ediyor."
   },
   "pinSetup": {
     "description": "Kurtarma ifadenizi görüntülemek için 4 haneli bir PIN gerekecek. İsteğe bağlı, ama ortak alanlarda tavsiye edilir.",
@@ -241,13 +277,21 @@
     "disableTitlePasscode": "Korumayı devre dışı bırakmak için geçiş kodu girin",
     "verifySubtitlePasscode": "Bu öğenin kilidini açmak için geçiş kodunuzu girin. Kilit açma, Güvenlik'te belirlediğiniz süre boyunca geçerli olur.",
     "passcodeRequired": "Geçiş kodu gerekli",
-    "deleteSubtitlePasscode": "Bu korumalı öğeyi silmek için geçiş kodunuzu girin."
+    "deleteSubtitlePasscode": "Bu korumalı öğeyi silmek için geçiş kodunuzu girin.",
+    "sectionTitle": "Bu bölüm korumalı",
+    "sectionBiometricSubtitle": "Bu bölümü açmak için parmak izinizi veya yüzünüzü kullanın.",
+    "sectionVerifySubtitle": "Bu bölümü açmak için 4 haneli PIN'inizi girin. Kilit açma, Güvenlik'te belirlediğiniz süre boyunca geçerli olur.",
+    "sectionVerifySubtitlePasscode": "Bu bölümü açmak için geçiş kodunuzu girin. Kilit açma, Güvenlik'te belirlediğiniz süre boyunca geçerli olur.",
+    "sectionDisableSubtitle": "Öğeleri olduğu yerde kalır. Yalnızca koruma kalkar.",
+    "sectionBootstrapSubtitle": "Bu bölüm korumalı, ancak bu cihazda ayarlı bir PIN yok. Açmak için 4 haneli bir PIN oluşturun. PIN'iniz tüm cihazlarınızla eşitlenir."
   },
   "lockScreen": {
     "unlockApp": "<brand/> kilidini aç",
     "subtitleWithBio": "Devam etmek için parmak izinizi, yüzünüzü ya da PIN'inizi kullanın.",
     "subtitleNoBio": "Devam etmek için PIN'inizi girin.",
     "biometricFailed": "Biyometrik doğrulama başarısız oldu ya da iptal edildi.",
+    "deviceKeyUnavailable": "Bu cihaz şu anda kendi kilidini açamıyor ve sorun yazdığınız şeyde değil. Aşağıdaki başka bir yolla, örneğin kurtarma ifadenizle kilidi açın.",
+    "keyringCancelled": "Anahtarlığınızın kilidini açın, ardından tekrar deneyin.",
     "biometricUnopened": "Biyometrik kilit açma notlarınızı açamadı. PIN'inizi ya da geçiş kodunuzu kullanın veya biyometrik kilit açmayı yeniden ayarlayın.",
     "biometricGone": "Biyometrik kilit açma bu cihazda çalışmayı durdurdu ve yeniden ayarlanması gerekiyor. Aşağıdaki başka bir yolla giriş yapın, ardından biyometrik kilit açmayı Ayarlar'dan yeniden etkinleştirin.",
     "verifying": "Doğrulanıyor...",
@@ -275,9 +319,6 @@
     "upgradeHeading": "Ya da Pro'ya yükseltin",
     "upgradeBody": "Tek seferlik ödeme, abonelik yok. Sınırsız cihazın yanı sıra görseller, not geçmişi ve dahası.",
     "upgradeCta": "Pro'ya yükselt ({{price}} $)",
-    "needMoreHeading": "Daha fazla cihaz mı lazım?",
-    "needMoreBody": "Bu sürümde Pro yükseltmesi yapılamıyor. Gerçekten üçüncü bir cihaza ihtiyacınız varsa bize yazın, hallederiz.",
-    "contactSupport": "Destekle iletişime geç",
     "saveRecoveryHeading": "Kurtarma ifadenizi kaydedin",
     "saveRecoveryBody": "OAuth ile giriş yaptınız. Kurtarma ifadenizi de bir yere yazın. OAuth bir gün çalışmazsa ya da tüm cihazlarınızdan kilitlenirseniz yedek planınız o olacak.",
     "hide": "Gizle",
@@ -315,7 +356,7 @@
     "custodial": "İfadenizin şifrelenmiş bir kopyasını saklıyoruz. En az bir hesabı bağlı tutun veya son hesabın bağlantısını kaldırmadan önce kendi saklama moduna geçin.",
     "selfCustody": "Yeni bir cihazda, bağlı bir hesapla notlarınızı açmak için yine kurtarma ifadeniz gerekir. Hesap bağlamak ifadeyi bizde saklamaz.",
     "mfaRequired": "İki faktörlü giriş tüm giriş yöntemlerinde açık kalır. Doğrulama uygulamanızı veya kaydettiğiniz yedek anahtarını koruyun.",
-    "unavailable": "Bağlı hesap değişiklikleri henüz kullanılamıyor. Mevcut giriş yönteminiz çalışmaya devam ediyor.",
+    "unavailable": "Bağlı hesap değişiklikleri şimdilik kapalı. Mevcut giriş yönteminiz çalışmaya devam ediyor.",
     "loading": "Bağlı hesaplar kontrol ediliyor...",
     "emailHidden": "E-posta paylaşılmadı",
     "disconnectAccount": "{{provider}} hesabının bağlantısını kaldır: {{email}}",
@@ -384,7 +425,7 @@
     "signInAgain": "Yeniden giriş yap",
     "lostAuthenticator": "Telefonunuzu mu kaybettiniz?",
     "restore": "Yedek anahtarınızı herhangi bir doğrulama uygulamasına ekleyin, ardından kodunu PrivacyNotes'a girin.",
-    "noBackup": "Telefonunuz da yedek anahtarınız da yok mu? 2FA'yı sıfırlamıyoruz ve destek ekibimiz bu konuda yardımcı olamaz. Bu cihazdaki notları dışa aktarın ve yeni bir kasa başlatın.",
+    "noBackup": "Telefonunuz da yedek anahtarınız da yok mu? 2FA'yı sıfırlamıyoruz ve destek ekibimiz bu konuda yardımcı olamaz. Bu cihazdaki notları \"Her şey, şifresiz (.zip)\" olarak dışa aktarın ve yeni bir kasa başlatın.",
     "localNotes": "Daha sonra mı yapmak istiyorsunuz? Bu cihazdaki notları kullanmaya devam edin. Kodu girdikten sonra eşitleme yeniden başlar.",
     "useLocalNotes": "Şimdilik atla"
   },
@@ -394,7 +435,7 @@
     "loading": "2FA kontrol ediliyor...",
     "retry": "Tekrar dene",
     "unavailable": "2FA kontrol edilemedi. Bu cihazdaki notlarınız güvende. Bağlantınızı kontrol edip tekrar deneyin.",
-    "notAvailable": "2FA henüz kullanılamıyor.",
+    "notAvailable": "2FA şimdilik kapalı. Daha sonra tekrar deneyin.",
     "actionFailed": "Bu işe yaramadı. Bağlantınızı kontrol edip tekrar deneyin. Bu cihazdaki notlarınız güvende.",
     "warning": "Telefonunuzu veya yedek anahtarınızı saklayın. İkisini de kaybederseniz yeni bir cihazda giriş yapamazsınız. Bu sizin güvenliğiniz için. 2FA'yı sıfırlamıyoruz ve destek ekibimiz bu konuda yardımcı olamaz.",
     "cannotEnroll": "2FA'yı kurmak için ifadenizle veya bağlı bir hesapla yeniden giriş yapın.",
@@ -423,6 +464,7 @@
     "backupWarning": "Telefonunuzu mu kaybettiniz? Bu anahtar kodlarınızı geri getirir. PrivacyNotes dışında güvenli bir yerde saklayın.",
     "savedAcknowledgment": "Yedek anahtarı kaydettim.",
     "confirmBackup": "Önceki adımdaki yedek anahtarınızı tekrar yazın, ardından uygulamanızdaki kodu girin.",
+    "disconnectsConnections": "2FA'yı açmak tarayıcı uzantısının ve komut satırının bağlantısını keser. Uzantıyı Ayarlar > Uzantı bölümünden, komut satırını da Ayarlar > CLI bölümünden yeniden bağlayın.",
     "codeLabel": "Uygulamanızdaki kod",
     "cancelSetup": "İptal",
     "enabled": "2FA açık",
@@ -452,6 +494,7 @@
   },
   "phraseChange": {
     "lengthGroup": "İfade uzunluğu",
+    "lengthLater": "Uzunluğu veya ifadeyi daha sonra Ayarlar > Güvenlik > İfade bölümünde değiştirebilirsiniz.",
     "badgeMargin": "Ek pay",
     "rowWrite": "Yazıp saklamak",
     "write12": "Elle kopyalaması hızlı.",
@@ -503,13 +546,26 @@
     "failed": "İfade değişmedi.",
     "failedTooMany": "İfadeniz son 24 saatte üç kez değişti. Daha sonra tekrar deneyin.",
     "failedMoved": "Bu arada ayarlarınız başka bir cihazda değişti. Tekrar deneyin.",
+    "failedSettingsMoved": "Bu arada ayarlarınız başka bir cihazda değişti. Tekrar deneyin: bu kez ifade değişikliği, yeniden değişseler bile onların yerine geçer.",
     "failedTwoFactor": "2FA kodu kabul edilmedi. Tekrar deneyin.",
     "failedKeyRing": "Bu cihaz önceki bir ifadenin anahtarlarını tutmuyor. Değişikliği bunları tutan bir cihazda yapın.",
     "failedBiometric": "Bu cihazın tek kilidi parmak iziniz veya yüzünüz. Değişikliği yapmak için onaylayın.",
+    "failedCannotBind": "Bu cihazın tek kilidi parmak iziniz veya yüzünüz ve bu cihazda yeni ifadeyi koruyamıyor. Önce Ayarlar > Güvenlik > PIN bölümünde bir PIN veya geçiş kodu belirleyin, ardından değişikliği yapın.",
     "failedUnsynced": "Bu cihazdaki bazı ayarlar henüz eşitlenmedi. Biraz bekleyin, ardından tekrar deneyin.",
     "failedOffline": "Sunucu değişikliği şu anda alamadı. Bağlantınızı kontrol edip tekrar deneyin.",
+    "signInPasskeysReset_other": "Giriş için kullandığınız {{count}} geçiş anahtarı çalışmayı bırakır. Değişiklikten sonra onları yeniden ekleyin.",
+    "signInPasskeysReset_one": "Giriş için kullandığınız geçiş anahtarı çalışmayı bırakır. Değişiklikten sonra onu yeniden ekleyin.",
     "intro_one": "Yeni bir {{count}} kelimelik ifade, ifadenizin yerini alır. Eski ifade çalışmayı bırakır. Diğer cihazlarınız yeni ifadeyi bir kez ister. Pro, notlarınız, dosyalarınız, geçmişiniz ve Hesap kimliğiniz aynı kalır.",
     "changeTitle_one": "Yeni bir {{count}} kelimelik ifade oluştur",
     "switchTo_one": "{{count}} kelimeye geç"
+  },
+  "releaseNotice": {
+    "sent": "{{when}} tarihinde hesabınıza yeni bir cihaz giriş yaptı. Bu siz değil miydiniz? Cihazı Cihazlar bölümünden kaldırın."
+  },
+  "releaseApproval": {
+    "ask": "{{when}} tarihindeki yeni bir giriş, kurtarma ifadenizi istiyor (kod {{code}}). Yalnızca bu sizseniz ve yeni cihaz aynı kodu gösteriyorsa izin verin.",
+    "waiting": "Yeni bir giriş, kurtarma ifadenizi istiyor (kod {{code}}) ve siz reddetmezseniz {{when}} itibarıyla alır. Yalnızca bu sizseniz ve yeni cihaz aynı kodu gösteriyorsa izin verin.",
+    "allow": "İzin ver",
+    "deny": "Reddet"
   }
 }

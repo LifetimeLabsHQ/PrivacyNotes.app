@@ -1,13 +1,13 @@
 import type JSZip from 'jszip';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
-import { linkifyMarkdown } from './linkify';
+import { withBareLinks } from './bareLinks';
 import { importBlobs, mimeFromExt } from './blobImport';
 import type { Importer, ImportedNote, ParsedImport } from './types';
 import i18n from '../i18n';
-import { normalizeTagList } from './importHelpers';
+import { escapeTypedTags, normalizeTagList, str } from './importHelpers';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:googleKeep.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:googleKeep.${key}`, options);
 
 /**
  * Google Keep import adapter.
@@ -107,7 +107,7 @@ function keepColorKey(name: string): string | undefined {
   return Object.hasOwn(KEEP_COLORS, name) ? KEEP_COLORS[name]! : undefined;
 }
 
-export const googleKeepImporter: Importer = {
+const googleKeepImporterBase: Importer = {
   id: 'google-keep',
   label: 'Google Keep',
   description:
@@ -129,10 +129,7 @@ export const googleKeepImporter: Importer = {
     const warnings: string[] = [];
     if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
 
-    let emptyCount = 0;
-    let untaggedCount = 0;
     let missingTitleCount = 0;
-    let linkifiedCount = 0;
     let starredCount = 0;
     let trashedImportCount = 0;
     let archivedCount = 0;
@@ -158,7 +155,7 @@ export const googleKeepImporter: Importer = {
         continue;
       }
 
-      const rawTitle = (raw.title ?? '').trim();
+      const rawTitle = str(raw.title).trim();
 
       // Prefer textContentHtml when it carries real formatting (bold,
       // italic, underline, strikethrough). If the HTML is just a plain
@@ -166,17 +163,19 @@ export const googleKeepImporter: Importer = {
       // don't introduce structural noise.
       let rawTextBody: string;
       let noteHadFormatting = false;
-      const htmlBody = (raw.textContentHtml ?? '').trim();
+      const htmlBody = str(raw.textContentHtml).trim();
       if (htmlBody) {
         const { text, hadFormatting } = keepHtmlToMarkdown(htmlBody);
         if (hadFormatting) {
           rawTextBody = text;
           noteHadFormatting = true;
         } else {
-          rawTextBody = raw.textContent ?? '';
+          rawTextBody = escapeTypedTags(str(raw.textContent));
         }
       } else {
-        rawTextBody = raw.textContent ?? '';
+        // Keep's text stays Markdown, but a typed `<word>` is text, not a
+        // tag (beta #149).
+        rawTextBody = escapeTypedTags(str(raw.textContent));
       }
 
       const list = Array.isArray(raw.listContent) ? raw.listContent : [];
@@ -187,7 +186,7 @@ export const googleKeepImporter: Importer = {
       const listItems: Array<{ text: string; checked: boolean }> = [];
       let anyUnchecked = false;
       for (const item of list) {
-        const text = (item?.text ?? '').trim();
+        const text = escapeTypedTags(str(item?.text).trim());
         if (!text) continue;
         const checked = item?.isChecked === true;
         if (!checked) anyUnchecked = true;
@@ -230,7 +229,7 @@ export const googleKeepImporter: Importer = {
       const attachments = Array.isArray(raw.attachments) ? raw.attachments : [];
       let imagePart = '';
       for (const att of attachments) {
-        const fp = (att?.filePath ?? '').trim();
+        const fp = str(att?.filePath).trim();
         if (!fp) continue;
         const basename = fp.split('/').pop() ?? fp;
         if (imageBlobs.has(`keepimg:${basename}`)) {
@@ -256,8 +255,8 @@ export const googleKeepImporter: Importer = {
         continue;
       }
 
-      const rawTags = (raw.labels ?? [])
-        .map((l) => (l?.name ?? '').trim())
+      const rawTags = (Array.isArray(raw.labels) ? raw.labels : [])
+        .map((l) => str(l?.name).trim())
         .filter((n) => n.length > 0);
 
       const pinned = raw.isPinned === true;
@@ -265,18 +264,14 @@ export const googleKeepImporter: Importer = {
       const trashed = raw.isTrashed === true;
 
       if (!rawTitle) missingTitleCount++;
-      if (!rawBody.trim()) emptyCount++;
-      if (rawTags.length === 0) untaggedCount++;
       if (pinned) starredCount++;
       if (trashed) trashedImportCount++;
       if (archived) archivedCount++;
       if (noteHadFormatting) formattedCount++;
 
-      // Same linkify pass we run on every importer - Keep stores bare
-      // URLs as plain text, but we render markdown so we need to wrap
-      // them in autolink syntax so they click on first render.
-      const body = linkifyMarkdown(rawBody);
-      if (body !== rawBody) linkifiedCount++;
+      // Keep stores bare URLs as plain text: they become links after the
+      // parse (withBareLinks), like every importer's.
+      const body = rawBody;
 
       notes.push({
         // Pass title through verbatim - including empty. Google Keep
@@ -300,9 +295,6 @@ export const googleKeepImporter: Importer = {
     }
 
     const transforms: string[] = [];
-    if (linkifiedCount > 0) {
-      transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkifiedCount }));
-    }
     if (starredCount > 0) {
       transforms.push(i18n.t('importLog:shared.keptStarred', { count: starredCount }));
     }
@@ -340,9 +332,6 @@ export const googleKeepImporter: Importer = {
       warnings.push(msg('missingImages', { count: missingImageCount }));
     }
 
-    const uniqueTags = new Set<string>();
-    for (const n of notes) for (const t of n.tags) uniqueTags.add(t);
-
     // Compute blob byte total for quota preflight.
     let blobBytes = 0;
     for (const [, blob] of imageBlobs) blobBytes += blob.data.length;
@@ -351,18 +340,15 @@ export const googleKeepImporter: Importer = {
       notes,
       warnings,
       transforms,
-      stats: {
-        totalNotes: notes.length,
-        emptyNotes: emptyCount,
-        untaggedNotes: untaggedCount,
-        uniqueTags: uniqueTags.size,
-      },
       source: 'google-keep',
       ...(imageBlobs.size > 0 ? { blobs: imageBlobs, blobBytes } : {}),
     };
     return parsed;
   },
 };
+
+/** The importer with the bare-link pass after its parse (bareLinks.ts). */
+export const googleKeepImporter: Importer = { ...googleKeepImporterBase, parse: withBareLinks(googleKeepImporterBase.parse) };
 
 interface KeepBlob {
   name: string;
@@ -493,7 +479,7 @@ function keepHtmlToMarkdown(html: string): { text: string; hadFormatting: boolea
 
   function walk(node: Node): string {
     if (node.nodeType === Node.TEXT_NODE) {
-      return node.textContent ?? '';
+      return escapeTypedTags(node.textContent ?? '');
     }
     if (node.nodeType !== Node.ELEMENT_NODE) return '';
 

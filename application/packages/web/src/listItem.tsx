@@ -8,14 +8,15 @@
  * Both layouts keep the CSS hooks of `index.css` (`pn-row`, `pn-card`,
  * `pn-card-head`, `pn-card-icbox`, `pn-card-glyph`, `pn-card-title`,
  * `pn-card-titletext`, `pn-card-preview`, `pn-card-meta`, `pn-card-date`,
- * `pn-card-status`, `pn-card-actions`, `pn-ribbon`, `pn-card--select`,
+ * `pn-card-status`, `pn-card-actions`, `pn-watermark`, `pn-card--select`,
  * `pn-lazy-row`, `pn-lazy-card`), so the mini tile and the lazy-paint gate
  * work unchanged.
  * Spec: docs/internal/plans/list-grid-parity.md (section 5)
  */
 import type { CSSProperties, HTMLAttributes, ReactNode, RefCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Archive, Bell, Check, CloudSlash, Image, Paperclip, PencilSimpleSlash, PushPin, Shield, Warning, type Icon } from './icons';
+import { Archive, Bell, Check, CloudSlash, Image, PILLAR_GLYPHS, Paperclip, PencilSimpleSlash, PushPin, Shield, Warning, type Icon } from './icons';
+import { PILL_TONE, type PillTone } from './trackerTone';
 
 export type ItemFlag = 'notBackedUp' | 'pinned' | 'pinProtected' | 'readOnly' | 'archived' | 'localOnly';
 
@@ -64,11 +65,41 @@ export interface ListItem {
   counts?: Partial<Record<ItemCountKind, number>>;
   /** The folder chip and the tag chips, or null when the row shows none. */
   chips: ReactNode;
-  ribbon: boolean;
+  /** The corner mark naming the item's type, or null for none. */
+  ribbon: ItemMark | null;
   /** The tag or folder color, from `useNoteLook`. */
   look: { color?: string; style?: string; css?: CSSProperties } | null;
   /** Compact rows, set by `applyCompactRows`. */
   compact?: boolean;
+}
+
+/** The types that wear a corner mark. The vault stays bare (section 78). */
+export type ItemMark = 'link' | 'note' | 'task' | 'journal' | 'event' | 'drawing' | 'file' | 'contact';
+
+/** The sidebar glyph each type wears, so a row names its type with the very
+ *  icon its list has in the sidebar. Spec: docs/internal/design/ui-patterns.md
+ *  section 78 */
+const MARK_GLYPHS: Record<ItemMark, Icon> = {
+  link: PILLAR_GLYPHS.bookmarks,
+  note: PILLAR_GLYPHS.notes,
+  task: PILLAR_GLYPHS.tasks,
+  journal: PILLAR_GLYPHS.journals,
+  event: PILLAR_GLYPHS.calendar,
+  drawing: PILLAR_GLYPHS.drawings,
+  file: PILLAR_GLYPHS.files,
+  contact: PILLAR_GLYPHS.contacts,
+};
+
+/** The type mark: the type's glyph as a faint, tilted watermark behind the
+ *  item's end, cut off by its edge. It takes no room, so the title, the date
+ *  and the buttons keep their places. See `.pn-watermark` in index.css. */
+function TypeMark({ mark }: { mark: ItemMark }) {
+  const Glyph = MARK_GLYPHS[mark];
+  return (
+    <span data-slot="mark" data-mark={mark} className="pn-watermark" aria-hidden="true">
+      <Glyph size="100%" />
+    </span>
+  );
 }
 
 /**
@@ -128,7 +159,7 @@ export function ItemFlags({ flags, size, onImage = false }: { flags: readonly It
             key={f}
             size={size}
             className={`${onImage ? 'shrink-0 ' : ''}${tone}`.trim() || undefined}
-            aria-label={label ? t(label, ns ? { ns } : undefined) : undefined}
+            aria-label={label ? t(label, ns ? { ns } : {}) : undefined}
           />
         );
       })}
@@ -175,6 +206,9 @@ interface LayoutProps {
   /** Always-visible actions: at the end of the title line in a row, on the
    *  footer of a tile. */
   trailing?: ReactNode;
+  /** A short value that always shows: a row ends its title line with it, a
+   *  tile its head (the tracker in focus in Journals). */
+  badge?: ReactNode;
 }
 
 export function SelectBox({ selected, onToggle, layout, compact = false }: { selected: boolean; onToggle?: (e: React.MouseEvent) => void; layout: 'row' | 'tile'; compact?: boolean }) {
@@ -215,7 +249,7 @@ function rootAttrs(item: ListItem, state: ItemState) {
  * size are anchored to the date, never to the row's end, where a wide pane
  * would strand them (ui-patterns.md section 66).
  */
-export function ItemRow({ item, state, as: Root = 'li', rootProps, onToggleSelect, trailing }: LayoutProps) {
+export function ItemRow({ item, state, as: Root = 'li', rootProps, onToggleSelect, trailing, badge }: LayoutProps) {
   const onTitle = flagsOnTitle(item);
   const meta = !onTitle && (item.date || item.flags.length > 0 || item.size || hasCounts(item));
   const compact = !!item.compact;
@@ -227,13 +261,9 @@ export function ItemRow({ item, state, as: Root = 'li', rootProps, onToggleSelec
       // not also hand the WebView something to select. Spec: issue #208.
       className={`pn-row pn-lazy-row relative ${Root === 'button' ? 'block w-full text-start ' : ''}px-4 ${compact ? 'py-2' : 'py-2 md:py-3'} cursor-pointer border-b border-divider/50 transition [@media(hover:none)]:select-none ${itemStateClass(state, 'row')} ${state.selectionMode ? 'ps-10' : ''}`}
     >
-      {/* The saved-link marker, see the .pn-ribbon rules in index.css. */}
-      {item.ribbon && <span data-slot="ribbon" className="pn-ribbon" aria-hidden="true" />}
+      {item.ribbon && <TypeMark mark={item.ribbon} />}
       {state.selectionMode && <SelectBox selected={state.selected} onToggle={onToggleSelect} layout="row" compact={compact} />}
-      {/* A compact row's date, or a row's lone flags, end the title line, in
-          the corner the ribbon claims (16px from the end, 14px wide), so the
-          line stops short of it. */}
-      <div className={`flex items-center gap-2.5${(compact || onTitle) && item.ribbon ? ' pe-5' : ''}`}>
+      <div className="flex items-center gap-2.5">
         {item.icon && <span data-slot="icon" className="contents">{item.icon}</span>}
         <div data-slot="title" className="min-w-0 flex-1 text-body font-semibold truncate text-pn" dir="auto">
           {item.title}
@@ -251,6 +281,7 @@ export function ItemRow({ item, state, as: Root = 'li', rootProps, onToggleSelec
         {/* Compact rows carry the short date, the flags and the size at the
             end of the title line. */}
         {compact && meta && <MetaLine item={item} form="tile" />}
+        {badge}
         {trailing && <span className="pn-row-actions shrink-0 flex items-center gap-1">{trailing}</span>}
       </div>
       {item.preview && (
@@ -311,7 +342,7 @@ function MetaLine({ item, form }: { item: ListItem; form: 'row' | 'tile' }) {
  * bottom and dates line up across a grid row. On small tiles the container
  * query hides the boxed icon and shows the glyph beside the title.
  */
-export function ItemTile({ item, state, as: Root = 'li', rootProps, onToggleSelect, trailing }: LayoutProps) {
+export function ItemTile({ item, state, as: Root = 'li', rootProps, onToggleSelect, trailing, badge }: LayoutProps) {
   // A tile keeps its flags on the meta line even alone: floated into a mini
   // tile's wrapping title they pushed the first word below the glyph.
   const meta = item.date || item.flags.length > 0 || item.size || hasCounts(item);
@@ -323,9 +354,7 @@ export function ItemTile({ item, state, as: Root = 'li', rootProps, onToggleSele
         state.selectionMode ? 'pn-card--select ' : ''
       }${itemStateClass(state, 'tile')}`}
     >
-      {/* The ribbon owns the tile's top END corner, which is why the checkbox
-          sits at the START edge the way the row's does. */}
-      {item.ribbon && <span data-slot="ribbon" className="pn-ribbon" aria-hidden="true" />}
+      {item.ribbon && <TypeMark mark={item.ribbon} />}
       {state.selectionMode && <SelectBox selected={state.selected} onToggle={onToggleSelect} layout="tile" />}
       <div className="pn-card-head flex items-center gap-2.5 min-w-0">
         {item.icon && <span data-slot="icon" className="pn-card-icbox contents">{item.icon}</span>}
@@ -333,6 +362,7 @@ export function ItemTile({ item, state, as: Root = 'li', rootProps, onToggleSele
           {item.glyph}
           <span data-slot="title" className="pn-card-titletext truncate" dir="auto">{item.title}</span>
         </div>
+        {badge}
       </div>
       {item.preview && (
         <div data-slot="preview" className={`pn-card-preview${item.preview.long ? ' pn-preview-long' : ''} text-compact text-pn-muted leading-snug`} dir={item.preview.dir}>
@@ -349,5 +379,18 @@ export function ItemTile({ item, state, as: Root = 'li', rootProps, onToggleSele
           stays intact. */}
       {trailing && <span className="pn-card-actions flex items-center gap-1 pt-1">{trailing}</span>}
     </Root>
+  );
+}
+
+/** The tracker value a Journals row shows while a tracker is in focus, in
+ *  the tone of the Statistics pills. Spec: docs/internal/specs/tracker-focus-771.md (section 4) */
+export function ValueBadge({ text, tone, icon, name }: { text: string; tone: PillTone; icon?: ReactNode; name?: string }) {
+  // The tracker's icon says which value this is; its name rides as the tip.
+  return (
+    <span data-slot="value" title={name ? `${name}: ${text}` : undefined} className={`shrink-0 max-w-[45%] inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-small font-semibold tabular-nums ${PILL_TONE[tone]}`}>
+      {icon && <span className="inline-flex shrink-0" aria-hidden="true">{icon}</span>}
+      {name && <span className="sr-only">{name}: </span>}
+      <span className="truncate">{text}</span>
+    </span>
   );
 }

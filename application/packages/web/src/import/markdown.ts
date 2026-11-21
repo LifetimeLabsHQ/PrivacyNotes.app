@@ -3,21 +3,22 @@
 // (NotesView statically imports parseMarkdown for drag-and-drop).
 import type JSZip from 'jszip';
 import i18n from '../i18n';
-import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
+import { mediaTooLargeWarning, zipEntryText } from './zipEntry';
 import type { FolderDef } from '../folders';
 import { extractInlineTags, normalizeTag } from '../notesRepo';
 import { oneLineTitle } from '../oneLineTitle';
 import { FRONT_MATTER, SUPPORTED_EXT } from '../markdownFolder/adapter';
 import { isUntitledStem } from '../exportNames';
 import { parseTrackers, stripFrontMatterPadding, unescapeQuotes, unescapeSingleQuotes } from '../noteMarkdown';
-import { ATTACHMENT_EXT, isBlobReferenced, mimeFromExt } from './blobImport';
+import { ATTACHMENT_EXT } from './blobImport';
+import { FileKeys, fileResolver, keyFileRefs, readKeyedFiles } from './fileRefs';
 import { buildFolderTree, commonRootPrefix, parseFolderPath } from './folderImport';
-import { linkifyMarkdown } from './linkify';
+import { linkifyNote, withBareLinks } from './bareLinks';
 import { detailsToFold } from './detailsFold';
 import type { ImportedNote, ParsedImport } from './types';
 import { FRONT_MATTER_LOCATION, FRONT_MATTER_LOCATION_NAME, LOCATION_KEY, parseFrontMatterLocation } from '../noteLocation';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:markdown.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:markdown.${key}`, options);
 
 /**
  * Markdown importer - handles:
@@ -182,15 +183,12 @@ function parseOneMd(
     ...(carried ? { trackers: carried } : {}),
     ...(isJournal ? { type: 'journal' as const } : isTask ? { type: 'task' as const } : isEvent ? { type: 'event' as const } : {}),
     title,
-    // Bare URLs and emails come in as plain text: tiptap-markdown only builds
-    // link nodes from `<...>` autolinks and `[text](url)`, and the Link
-    // extension's own autolink only fires while TYPING. Without this pass an
-    // imported note's links are dead until you put the caret behind each one
-    // and press space. The Apple Notes, Bitwarden, Google Keep and Standard
-    // Notes importers run the same pass. Newline-only, not `.trim()`: trimming
-    // eats the leading spaces of a note that opens with an indented code
-    // block, demoting it to a paragraph (#148). See stripFrontMatterPadding.
-    body: linkifyMarkdown(detailsToFold(stripFrontMatterPadding(body))),
+    // Bare URLs and emails are made links after the parse (`withBareLinks`
+    // on parseMarkdown, `linkifyNote` in parseMarkdownFile). Newline-only,
+    // not `.trim()`: trimming eats the leading spaces of a note that opens
+    // with an indented code block, demoting it to a paragraph (#148). See
+    // stripFrontMatterPadding.
+    body: detailsToFold(stripFrontMatterPadding(body)),
     tags,
     createdAt,
     updatedAt,
@@ -271,30 +269,19 @@ async function parseZip(
   }
 
   // Only files a note actually links to, on the same reasoning as obsidian.ts:
-  // an unreferenced blob is storage quota spent to render nothing.
-  const bodies = notes.map((n) => n.body).join('\n');
-  const blobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
-  let skippedAttachments = 0;
-  let tooLarge = 0;
-  for (const [rel, entry] of attachments) {
-    if (!isBlobReferenced(rel, bodies)) {
-      skippedAttachments++;
-      continue;
-    }
-    if (blobs.size % 10 === 0) {
-      onProgress?.(i18n.t('importLog:shared.readingAttachments', { done: blobs.size + 1, total: attachments.length }));
-    }
-    const data = await zipEntryMedia(entry);
-    if (!data) {
-      tooLarge++;
-      continue;
-    }
-    blobs.set(rel, {
-      data,
-      mime: mimeFromExt(rel),
-      name: rel.split('/').pop() ?? rel,
-    });
+  // an unreferenced blob is storage quota spent to render nothing. Each link
+  // is resolved from the note's own folder and gets a fixed-width key
+  // (fileRefs.ts, beta #152).
+  const files = new Map(attachments);
+  const resolve = fileResolver(files.keys());
+  const keys = new FileKeys('mdfile');
+  for (const [i, [rel]] of mdFiles.entries()) {
+    notes[i]!.body = keyFileRefs(notes[i]!.body, dirOf(rel), resolve, keys);
   }
+  const { blobs, tooLarge } = await readKeyedFiles(keys, files, notes, (done, total) =>
+    onProgress?.(i18n.t('importLog:shared.readingAttachments', { done, total })),
+  );
+  const skippedAttachments = attachments.length - keys.size;
 
   return { notes, folders, blobs, skippedAttachments, tooLarge, fmCount, inlineTagCount };
 }
@@ -319,13 +306,16 @@ function parseSingleMd(file: File, text: string): ParsedOne {
  * nothing the user owns loses its front matter. A copy is a copy.
  */
 export function parseMarkdownFile(filename: string, content: string): ImportedNote {
-  const note = parseOneMd(content, filename, null).note;
+  // The bare-link pass runs here too: this door makes no import run.
+  const note = linkifyNote(parseOneMd(content, filename, null).note);
   // This door stores through createNote rather than applyImport, so it gives
   // the title the one-line rule applyImport gives every other import.
   return { ...note, title: oneLineTitle(note.title) };
 }
 
-export async function parseMarkdown(
+export const parseMarkdown = withBareLinks(readMarkdown);
+
+async function readMarkdown(
   file: File,
   onProgress?: (msg: string) => void
 ): Promise<ParsedImport> {
@@ -347,12 +337,6 @@ export async function parseMarkdown(
           inlineTagCount: one.hadInlineTags ? 1 : 0,
         };
       })();
-
-  const uniqueTags = new Set(notes.flatMap((n) => n.tags));
-  const emptyNotes = notes.filter(
-    (n) => !n.title.trim() && !n.body.trim()
-  ).length;
-  const untaggedNotes = notes.filter((n) => n.tags.length === 0).length;
 
   const transforms: string[] = [];
   if (fmCount > 0) {
@@ -392,12 +376,6 @@ export async function parseMarkdown(
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes,
-      untaggedNotes,
-      uniqueTags: uniqueTags.size,
-    },
     source: 'markdown-folder',
     folders: folders.length > 0 ? folders : undefined,
     blobs: blobs.size > 0 ? blobs : undefined,

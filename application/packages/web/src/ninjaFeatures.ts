@@ -1,6 +1,7 @@
 import type { SettingEntry } from './settingsSearch/registry';
 import type { TrackerSetupTab } from './TrackerConfig';
-import { Archive, ArrowsClockwise, ChartBar, GridFour, Heartbeat, LockSimple, Megaphone, PaintBrush, Palette, Password, Pill, Plus, Question, Repeat, Shield, Trash, Globe, type Icon } from './icons';
+import type { View } from './views';
+import { Archive, ArrowsClockwise, ChartBar, GridFour, Heartbeat, LockSimple, Megaphone, PaintBrush, Palette, Password, Pill, Plus, Question, Repeat, Shield, Shuffle, Trash, Globe, type Icon } from './icons';
 
 /**
  * Ninja's doors to the features that sit deep in Settings or in a dialog:
@@ -17,7 +18,7 @@ import { Archive, ArrowsClockwise, ChartBar, GridFour, Heartbeat, LockSimple, Me
  * Spec: docs/internal/specs/ninja-features.md
  */
 
-export type NinjaAction = 'passwordGenerator' | 'lock' | 'lockProtected' | 'syncNow' | 'syncPause' | 'emptyTrash';
+export type NinjaAction = 'passwordGenerator' | 'lock' | 'lockProtected' | 'syncNow' | 'syncPause' | 'emptyTrash' | 'randomItem';
 type NinjaPage = '/' | '/changelog' | '/help' | '/themes';
 
 export type NinjaDoor = {
@@ -57,6 +58,7 @@ export const NINJA_DOORS: readonly NinjaDoor[] = [
   { id: 'cmd:syncNow', group: 'commands', label: 'settings:syncPanel.syncNow', icon: ArrowsClockwise, to: { kind: 'action', id: 'syncNow' } },
   // Its label and icon follow the switch: Pause sync or Resume sync.
   { id: 'cmd:syncPause', group: 'commands', label: 'settings:syncPanel.pauseSync', icon: ArrowsClockwise, to: { kind: 'action', id: 'syncPause' } },
+  { id: 'cmd:randomItem', group: 'commands', label: 'common:ninja.commands.randomItem', icon: Shuffle, to: { kind: 'action', id: 'randomItem' } },
   { id: 'cmd:emptyTrash', group: 'commands', label: 'common:emptyTrash.title', icon: Trash, to: { kind: 'action', id: 'emptyTrash' } },
   { id: 'page:changelog', group: 'commands', label: 'common:ninja.commands.changelog', icon: Megaphone, to: { kind: 'page', path: '/changelog' } },
   { id: 'page:help', group: 'commands', label: 'notes:settings.helpLabel', icon: Question, to: { kind: 'page', path: '/help' } },
@@ -68,6 +70,47 @@ export const NINJA_DOORS: readonly NinjaDoor[] = [
 export const SECTIONS_IN_FEATURES: ReadonlySet<string> = new Set(
   NINJA_DOORS.flatMap((d) => (d.group === 'features' && d.to.kind === 'settings' && d.to.entry.startsWith('section.') ? [d.to.entry] : [])),
 );
+
+/**
+ * The views "Open a random item" picks in (#801). One rule: the list on
+ * screen, and the pick opens as a click on its row opens it. Home has no
+ * list and picks from the All list. Bookmarks is the one list where the pick
+ * is a bookmark, and it opens the website, under its own label ("Open a
+ * random bookmark"); every other list leaves its bookmarks out, so a pick
+ * there never opens a website (owner, 2026-11-19). Tasks picks from its
+ * items with tasks, Calendar from every item on the calendar. Not offered in
+ * Trash (deleted items are not there to read again), or in Files and
+ * Markdown, whose lists live inside their panes (owner, 2026-11-19: no new
+ * plumbing for this command).
+ * Spec: docs/internal/specs/ninja-features.md (section 10)
+ */
+const RANDOM_ITEM_VIEWS: ReadonlySet<View> = new Set<View>(['dashboard', 'home', 'all', 'starred', 'journal', 'tasks', 'calendar', 'contacts', 'drawings', 'vault', 'archive', 'bookmarks']);
+
+/**
+ * What "Open a random item" can open: the list on screen, as it is filtered
+ * (search, tag, folder, space, the vault kind, the read-only and protected
+ * switches; on Home the All list, in Tasks its items with tasks and in
+ * Calendar the items on the calendar, which the caller hands in as `shown`),
+ * less the open item, so every pick is a new one, and less an item behind a
+ * shut gate, which would open on a PIN prompt (a shut bookmark keeps its
+ * address behind the PIN). Bookmarks only in Bookmarks, none elsewhere.
+ * Empty in a view that is not in `RANDOM_ITEM_VIEWS`, and the command is not
+ * offered there.
+ */
+export function randomItemPool<T extends { id: string; type: string }>(
+  view: View,
+  shown: readonly T[],
+  openId: string | null,
+  gated: (item: T) => boolean,
+): T[] {
+  if (!RANDOM_ITEM_VIEWS.has(view)) return [];
+  return shown.filter((n) => n.id !== openId && (n.type === 'link') === (view === 'bookmarks') && !gated(n));
+}
+
+/** One item of the pool, each as likely; none from an empty pool. */
+export function pickRandom<T>(pool: readonly T[], random: () => number = Math.random): T | undefined {
+  return pool[Math.floor(random() * pool.length)];
+}
 
 const RECENT_KEY = 'privacynotes.ninja.recentCommands';
 /** How many commands ">" keeps as recent. */

@@ -40,7 +40,7 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
   });
 }
 
-function isSyncPaused(): boolean {
+export function isSyncPaused(): boolean {
   return paused;
 }
 

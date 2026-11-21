@@ -124,7 +124,8 @@ export function splitIndex(doc: ProseMirrorNode, pos: number): number | null {
 /** The stored size an imported note will have once it is a row. */
 export function importedNoteBytes(n: ImportedNote): number {
   const row = {
-    id: '', title: n.title, body: n.body, tags: n.tags, createdAt: n.createdAt, updatedAt: n.updatedAt,
+    // An id of the real length: the row's binding seals it.
+    id: '00000000-0000-4000-8000-000000000000', title: n.title, body: n.body, tags: n.tags, createdAt: n.createdAt, updatedAt: n.updatedAt,
     editedAt: n.editedAt ?? n.updatedAt, dirty: 1, deleted: 0, trashed: n.trashed ? 1 : 0,
     starred: n.starred ? 1 : 0, locked: n.locked ? 1 : 0, pinProtected: n.pinProtected ? 1 : 0,
     type: n.type ?? 'note', folderId: n.folderId ?? null, trackers: n.trackers, archived: n.archived ? 1 : 0,

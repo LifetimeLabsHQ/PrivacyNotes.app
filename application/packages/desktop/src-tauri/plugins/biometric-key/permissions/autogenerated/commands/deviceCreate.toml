@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-deviceCreate"
+description = "Enables the deviceCreate command without any pre-configured scope."
+commands.allow = ["deviceCreate"]
+
+[[permission]]
+identifier = "deny-deviceCreate"
+description = "Denies the deviceCreate command without any pre-configured scope."
+commands.deny = ["deviceCreate"]

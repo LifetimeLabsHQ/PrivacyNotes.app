@@ -1,6 +1,6 @@
 [package]
 name = "privacynotes"
-version = "0.780.9"
+version = "0.819.1"
 description = "PrivacyNotes - private notes, encrypted on your device"
 authors = ["Lifetime Labs LLC <hi@lifetimelabs.dev>"]
 homepage = "https://privacynotes.app"
@@ -72,9 +72,9 @@ base64 = "0.22"
 
 # Self-updater is desktop-only (macOS/Windows/Linux). iOS/Android update
 # through their app stores, and the plugin won't compile for those targets.
-# single-instance (with the deep-link feature) forwards privacynotes://
-# OAuth callbacks to the already-running instance so a second on-disk copy
-# of the app can't launch fresh and swallow the redirect.
+# single-instance (with the deep-link feature) forwards a privacynotes://
+# note link or a file path from a second launch to the running instance, so
+# a second copy of the app does not start fresh (lib.rs).
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
@@ -124,6 +124,12 @@ image = { version = "0.25", default-features = false, features = ["avif-native",
 # only with the X server's current time. Both are in the tree through Tauri.
 gtk = "0.18"
 gdkx11 = "0.18"
+# src/device_key_linux.rs: the device key in the Secret Service over D-Bus,
+# and HMAC-SHA256 for its per-handle secret. Both are in the tree already
+# (zbus through the notification and opener plugins, ring through rustls).
+# Spec: docs/internal/plans/device-bound-phrase-key.md (section 3)
+zbus = "5"
+ring = "0.17"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # geteuid, for the single-instance rendezvous owner check in lib.rs.
@@ -132,6 +138,9 @@ libc = "0.2"
 
 [target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 objc2 = "0.6"
+# Apple Vision and VisionKit for Settings > Plugins (plugins/apple-ml).
+# Spec: docs/internal/plans/plugins.md (section 6.7)
+tauri-plugin-apple-ml = { path = "plugins/apple-ml" }
 block2 = "0.6"
 # NSGeometry + objc2-core-foundation are for src/print.rs (view frames, and the
 # iPad popover anchor). Both are already in the tree via tao/wry, so this turns
@@ -159,8 +168,15 @@ windows = { version = "0.62", features = [
   "Win32_Foundation",
   # src/title_bar.rs: DwmSetWindowAttribute paints the title bar in the theme.
   "Win32_Graphics_Dwm",
+  # src/biometric.rs, the device key: DPAPI (CryptProtectData) seals the
+  # secret that wraps the stored phrase to this Windows account.
+  "Win32_Security_Cryptography",
   "Win32_System_Com",
   "Win32_System_WinRT",
+  # src/biometric.rs, tpm_missing: the TPM service says whether this PC has a
+  # TPM, so the Lock tab can say when Windows Hello keeps its key in software.
+  # Spec: docs/internal/plans/hello-tpm-status.md (section 3.1)
+  "Win32_System_TpmBaseServices",
   # src/file_assoc.rs: AssocQueryStringW reads which app owns .md, and
   # ShellExecuteW opens the Default apps page in Settings. Windows forbids an app
   # setting its own default, so reading and signposting is the whole surface.
@@ -235,9 +251,17 @@ swift-rs = { path = "patches/swift-rs" }
 # carries neither): a scheduled time is read as UTC, not in the device zone,
 # and a notification a previous launch scheduled no longer crashes the app
 # when it is delivered or tapped. It also adds `open_settings`, which opens
-# the OS page for this app's notifications on Android and iOS; a release that
-# carries both fixes still needs that command before the patch can go.
+# the OS page for this app's notifications on Android and iOS. On Android it
+# keeps a record of each reminder on screen and shows it again, without sound,
+# after an app update, which removes an app's notifications (beta issue #808).
+# A release that carries both fixes still needs the command and the Android
+# change before the patch can go.
 tauri-plugin-notification = { path = "patches/tauri-plugin-notification" }
+# patches/tauri-plugin-single-instance is 2.5.2 with the macOS socket moved
+# from the shared `/tmp` into the app's own data folder, where another account
+# on the Mac cannot create it (beta issue #174). Drop it once a release keeps
+# the socket out of `/tmp` or checks who answers before sending the arguments.
+tauri-plugin-single-instance = { path = "patches/tauri-plugin-single-instance" }
 
 [features]
 default = []

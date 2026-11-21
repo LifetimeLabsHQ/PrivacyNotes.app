@@ -411,7 +411,7 @@ ${footerColumns(faqHref, home)}
 </div>
 <div class="f-bottom">
 <div class="f-legal">
-<p>Data Stored in ${CH_FLAG} Switzerland. Encrypted on your device.</p>
+<p>Notes Stored in ${CH_FLAG} Switzerland. Encrypted on your device.</p>
 <p>No subscriptions. Just Software. Not a service. &copy; ${YEAR} <a href="https://lifetimelabs.dev" target="_blank" rel="noopener noreferrer">Lifetime Labs LLC</a>. All rights reserved. <a href="https://lifetimelabs.dev/contact/" target="_blank" rel="noopener noreferrer">Contact</a></p>
 </div>
 ${lang}

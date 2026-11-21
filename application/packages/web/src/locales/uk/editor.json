@@ -115,10 +115,13 @@
       "red": "Червоний",
       "orange": "Помаранчевий",
       "yellow": "Жовтий",
+      "lime": "Лаймовий",
       "green": "Зелений",
       "teal": "Бірюзовий",
       "blue": "Синій",
+      "indigo": "Індиго",
       "purple": "Фіолетовий",
+      "grape": "Виноградний",
       "pink": "Рожевий"
     }
   },
@@ -247,6 +250,10 @@
     "characters_few": "{{formatted}} символи",
     "characters_many": "{{formatted}} символів",
     "characters_other": "{{formatted}} символу",
+    "lines_one": "{{formatted}} рядок",
+    "lines_few": "{{formatted}} рядки",
+    "lines_many": "{{formatted}} рядків",
+    "lines_other": "{{formatted}} рядка",
     "tasksChecked_one": "Позначено {{done}} з {{formatted}}",
     "tasksChecked_few": "Позначено {{done}} з {{formatted}}",
     "tasksChecked_many": "Позначено {{done}} з {{formatted}}",
@@ -286,6 +293,10 @@
     "expand": "Розгорнути блок коду",
     "placeholder": "Введіть або вставте код. Щоб додати кольори, виберіть мову вгорі."
   },
+  "fold": {
+    "collapse": "Згорнути розділ",
+    "expand": "Розгорнути розділ"
+  },
   "math": {
     "sourceLabel": "Код LaTeX"
   },
@@ -322,7 +333,7 @@
     "hiddenNote": "Вони й далі працюють через скорочення та Markdown.",
     "hiddenDrop": "Перетягніть сюди кнопку, щоб приховати її.",
     "arrangeTitle": "Кнопки",
-    "markdownViewNote": "Подання Markdown має власний незмінний набір кнопок.",
+    "markdownViewNote": "Подання Markdown показує ті самі кнопки. Ті, яким потрібне подання з форматуванням, там приглушені, але й далі працюють у поданні з форматуванням.",
     "hiddenEmpty": "Нічого не приховано.",
     "alwaysVisible": "Завжди видимі",
     "pinned": "Відкриває панель, тому лишається на панелі або прихована",
@@ -349,7 +360,7 @@
       "notelink": "Посилання на нотатку",
       "audio": "Запис",
       "attachMenu": "Прикріпити",
-      "separator": "Вертикальний роздільник",
+      "separator": "Роздільник панелі інструментів",
       "markdownView": "Показати Markdown"
     },
     "positionTitle": "Розташування панелі",

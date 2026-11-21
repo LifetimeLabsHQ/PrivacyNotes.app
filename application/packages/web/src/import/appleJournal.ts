@@ -1,7 +1,8 @@
 import type JSZip from 'jszip';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
-import { linkifyMarkdown } from './linkify';
+import { withBareLinks } from './bareLinks';
+import { escapeTypedTags } from './importHelpers';
 import { currentImageOptions, processImage } from '../imageProcessing';
 import { EMOTION_TAGS } from '../trackerTypes';
 import { toLocalIso } from '../notesViewUtils';
@@ -9,7 +10,7 @@ import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 import i18n from '../i18n';
 import { LOCATION_KEY, MAP_FENCE, importedLocation, mapFenceBody, osmUrl, type NoteLocation } from '../noteLocation';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:appleJournal.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:appleJournal.${key}`, options);
 
 /**
  * Apple Journal importer.
@@ -100,7 +101,8 @@ function mimeFromExt(path: string): string {
     mov: 'video/quicktime', mp4: 'video/mp4', m4v: 'video/x-m4v',
     caf: 'audio/x-caf', m4a: 'audio/mp4', mp3: 'audio/mpeg', wav: 'audio/wav',
   };
-  return map[ext] ?? 'application/octet-stream';
+  // Own keys only: an extension like `constructor` names nothing here.
+  return Object.hasOwn(map, ext) ? map[ext]! : 'application/octet-stream';
 }
 
 /** ISO BMFF brands that mean "this is a HEIF image". */
@@ -379,7 +381,8 @@ function bodyToMarkdown(root: Element, styles: Map<string, SpanStyle>, flags: Co
   }
 
   function walk(node: Node, indent: string): string {
-    if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
+    // Typed text: a `<word>` in it is text, not a tag (beta #149).
+    if (node.nodeType === Node.TEXT_NODE) return escapeTypedTags(node.textContent ?? '');
     if (node.nodeType !== Node.ELEMENT_NODE) return '';
 
     const el = node as Element;
@@ -811,7 +814,9 @@ function assemble(grid: GridResult, body: string): string {
  *  compress step - otherwise they re-export and hit the same wall. */
 const exportHint = (): string => msg('exportHint');
 
-export async function parseAppleJournal(
+export const parseAppleJournal = withBareLinks(readAppleJournal);
+
+async function readAppleJournal(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
@@ -931,7 +936,7 @@ export async function parseAppleJournal(
 
     notes.push({
       title,
-      body: linkifyMarkdown(body),
+      body,
       tags: [],
       createdAt: when.toISOString(),
       updatedAt: when.toISOString(),
@@ -1010,18 +1015,11 @@ export async function parseAppleJournal(
   if (flags.quotes > 0) {
     transforms.push(msg('preservedQuotes', { count: flags.quotes }));
   }
-  transforms.push(i18n.t('importLog:shared.linkifiedBare'));
 
   return {
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: notes.filter((n) => !n.title.trim() && !n.body.trim()).length,
-      untaggedNotes: notes.length,
-      uniqueTags: 0,
-    },
     source: 'apple-journal',
     blobBytes,
     blobs: blobs.size > 0 ? blobs : undefined,

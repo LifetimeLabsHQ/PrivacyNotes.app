@@ -35,6 +35,7 @@
     "title": "Welkom bij de club",
     "proLine": "<brand/> Pro, eenmalig {{price}} $. Voor altijd van jou.",
     "storageLine": "<brand/> +{{gb}} GB opslag, {{price}} $ per jaar.",
+    "storagePayerNote": "De accounteigenaar kan het pakket later wijzigen. Deze kaart betaalt het verschil.",
     "benefitDevices": "Onbeperkt apparaten",
     "benefitDevicesSub": "Telefoon, tablet, laptop, alles in sync",
     "benefitStorage": "500 MB opslag",
@@ -63,7 +64,7 @@
     "openingBody": "Er hoort een Paddle-afrekenvenster te verschijnen. Gebeurt dat niet, dan heeft je browser de pop-up misschien geblokkeerd - herlaad deze pagina om het opnieuw te proberen."
   },
   "cryptoCheckout": {
-    "coins": "Je kiest Bitcoin, Ethereum, Lightning, USDC of USDT op de volgende pagina, die door BlockBee wordt beheerd. Die vraagt geen naam en geen e-mailadres. Een cryptobetaling is openbaar op de blockchain ervan.",
+    "coins": "Je kiest Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin of TON op de volgende pagina, die door BlockBee wordt beheerd. Die vraagt geen naam en geen e-mailadres. Een cryptobetaling is openbaar op de blockchain ervan.",
     "consent": "Ik wil dat Pro nu start. Ik begrijp dat cryptobetalingen definitief zijn en ik zie af van het herroepingsrecht van 14 dagen.",
     "consentNeeded": "Vink het vakje hierboven aan om verder te gaan.",
     "loadingTitle": "Je bestelling controleren...",

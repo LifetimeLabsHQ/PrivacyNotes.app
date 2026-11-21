@@ -115,10 +115,13 @@
       "red": "Červená",
       "orange": "Oranžová",
       "yellow": "Žltá",
+      "lime": "Limetková",
       "green": "Zelená",
       "teal": "Modrozelená",
       "blue": "Modrá",
+      "indigo": "Indigová",
       "purple": "Fialová",
+      "grape": "Hroznová",
       "pink": "Ružová"
     }
   },
@@ -247,6 +250,10 @@
     "characters_few": "{{formatted}} znaky",
     "characters_many": "{{formatted}} znaku",
     "characters_other": "{{formatted}} znakov",
+    "lines_one": "{{formatted}} riadok",
+    "lines_few": "{{formatted}} riadky",
+    "lines_many": "{{formatted}} riadka",
+    "lines_other": "{{formatted}} riadkov",
     "tasksChecked_one": "Zaškrtnuté: {{done}} z {{formatted}}",
     "tasksChecked_few": "Zaškrtnuté: {{done}} z {{formatted}}",
     "tasksChecked_many": "Zaškrtnuté: {{done}} z {{formatted}}",
@@ -286,6 +293,10 @@
     "expand": "Rozbaliť blok kódu",
     "placeholder": "Napíš alebo vlož kód. Pre farby vyber hore jazyk."
   },
+  "fold": {
+    "collapse": "Zbaliť sekciu",
+    "expand": "Rozbaliť sekciu"
+  },
   "math": {
     "sourceLabel": "Kód LaTeX"
   },
@@ -322,7 +333,7 @@
     "hiddenNote": "Naďalej fungujú cez skratku a Markdown.",
     "hiddenDrop": "Potiahni sem tlačidlo a skryješ ho.",
     "arrangeTitle": "Tlačidlá",
-    "markdownViewNote": "Zobrazenie Markdown má vlastnú pevnú sadu tlačidiel.",
+    "markdownViewNote": "Zobrazenie Markdown ukazuje rovnaké tlačidlá. Tie, ktoré potrebujú formátované zobrazenie, sú v ňom stlmené a naďalej fungujú vo formátovanom zobrazení.",
     "hiddenEmpty": "Nič nie je skryté.",
     "alwaysVisible": "Vždy viditeľné",
     "pinned": "Otvára panel, preto zostáva na lište alebo je skryté",
@@ -349,7 +360,7 @@
       "notelink": "Odkaz na poznámku",
       "audio": "Nahrávka",
       "attachMenu": "Priložiť",
-      "separator": "Zvislá čiara",
+      "separator": "Oddeľovač panela nástrojov",
       "markdownView": "Zobraziť markdown"
     },
     "positionTitle": "Poloha lišty",

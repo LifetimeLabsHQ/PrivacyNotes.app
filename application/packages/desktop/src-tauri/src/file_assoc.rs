@@ -183,11 +183,12 @@ pub fn open_os_settings() -> Result<(), String> {
 /// setting this process's environment already; the refusal is here because the
 /// writer cannot express the alternative, not because the caller is untrusted.
 ///
-/// Pinned by the tests at the end of this file. Compiled for Linux, which is
+/// Pinned by the tests at the end of this file. Also used by `autostart.rs`
+/// for the Open at login entry. Compiled for Linux, which is
 /// the only platform that writes one of these files, and for any test build,
 /// which is what lets the escaping be checked on a machine that is not Linux.
 #[cfg(any(test, not(any(target_os = "macos", target_os = "windows"))))]
-fn escape_exec_arg(path: &str) -> Option<String> {
+pub(crate) fn escape_exec_arg(path: &str) -> Option<String> {
     if path.contains(['\n', '\r']) {
         return None;
     }

@@ -1,8 +1,8 @@
 /**
  * Removing one account's copy of a credential, and nobody else's.
  *
- * A credential key can have a copy in this tab's sessionStorage and another in
- * the localStorage every tab shares (trustStorage.ts). The two can belong to
+ * A credential key can have a copy in this tab's own memory (a tab that is not
+ * trusted, trustStorage.ts) and another in the localStorage every tab shares (trustStorage.ts). The two can belong to
  * different accounts: a tab the person did not trust keeps its own, while the
  * shared one is another tab's. trustAwareStorage reads the tab copy first and
  * removes both, so a check made through it can authorize the removal of a copy
@@ -14,9 +14,13 @@
  * shares the origin with a real install, so it removes nothing here.
  */
 import { isDemoMode } from './demo';
+import { tabSecrets } from './trustStorage';
 
 function stores(): Storage[] {
   const out: Storage[] = [];
+  // The tab's own copy is in memory (trustStorage.ts); sessionStorage holds
+  // only what an older version left there.
+  out.push(tabSecrets);
   try { out.push(sessionStorage); } catch { /* unavailable */ }
   try { out.push(localStorage); } catch { /* unavailable */ }
   return out;

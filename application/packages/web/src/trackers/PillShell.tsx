@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Plus } from '../icons';
+import { HoverLabel } from '../HoverLabel';
 
 /**
  * Context providing the DOM node where expanded pill content renders inline
@@ -75,7 +76,9 @@ export function PillShell({
 
   return (
     <>
-      <div className="shrink-0">
+      {/* A filled pill shows its value, not its name: the name moves to the
+          hover tip, so the row still says which tracker each value is. */}
+      <HoverLabel label={label} position="above" disabled={!filled || expanded} className="shrink-0">
         <button
           ref={btnRef}
           type="button"
@@ -102,10 +105,12 @@ export function PillShell({
                 : 'border-dashed border-pn-muted/50 text-pn-muted hover:border-pn-muted hover:text-pn-soft'
           } ${filled && expanded ? 'ring-2 ring-accent ring-offset-1 ring-offset-surface-2' : ''} ${readOnly ? 'opacity-60 cursor-default' : 'cursor-pointer'}`}
         >
-          {filled ? (mark ?? icon) : <Plus size={11} aria-hidden="true" />}
+          {/* An empty pill shows its tracker's icon too, so the row reads the
+              same filled or not; the dashed outline says it is empty. */}
+          {filled ? (mark ?? icon) : (icon ?? <Plus size={11} aria-hidden="true" />)}
           <span className="truncate max-w-[200px]">{filled ? filledLabel ?? label : label}</span>
         </button>
-      </div>
+      </HoverLabel>
       {expanded && !readOnly && expandTarget && createPortal(
         <div
           ref={contentRef}

@@ -2,10 +2,11 @@ import { Paragraph } from '@tiptap/extension-paragraph';
 import { Heading } from '@tiptap/extension-heading';
 import { HardBreak } from '@tiptap/extension-hard-break';
 import { Text } from '@tiptap/extension-text';
-import { getHTMLFromFragment } from '@tiptap/core';
+import { getHTMLFromFragment, mergeAttributes } from '@tiptap/core';
 import { Fragment, type Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { KEY_OS } from './shortcutMatch';
 import { serializeAlignedBlock } from './editorAlignment';
+import { detectDeviceOs } from './deviceFingerprint';
 
 /**
  * Paragraph with the markdown spec declared the TipTap 3 way, so empty
@@ -92,7 +93,47 @@ function renderIndentedInline(state: any, node: ProseMirrorNode): void {
   state.renderInline(node.copy(Fragment.fromArray(children)));
 }
 
+/**
+ * On a phone the editor draws a paragraph as `<pn-p>`, not `<p>` (GitHub
+ * #345). A keyboard's own Select all and Copy keys (HeliBoard, WM Keyboard)
+ * read the text from the web engine and skip the copy handler. Chromium puts
+ * two line breaks after every `<p>`, and WebKit does so when its bottom margin
+ * is large (Relaxed), so one empty line came out as three. Any other block
+ * gives one break. Only the screen changes: saved notes, copy and export use
+ * the schema's renderHTML, which still writes `<p>`.
+ * Spec: docs/contrib/gotchas.md (a keyboard's own Copy key)
+ */
+const PHONE_PARAGRAPH_TAG = 'pn-p';
+const PHONE_OS = new Set(['Android', 'iPhone', 'iPad']);
+
 export const ParagraphWithMarkdown = Paragraph.extend({
+  parseHTML() {
+    return [...(this.parent?.() ?? []), { tag: PHONE_PARAGRAPH_TAG }];
+  },
+
+  addNodeView() {
+    if (!PHONE_OS.has(detectDeviceOs())) return null;
+    const own = this.options.HTMLAttributes;
+    return ({ node, HTMLAttributes }) => {
+      let current = node;
+      const dom = document.createElement(PHONE_PARAGRAPH_TAG);
+      dom.setAttribute('role', 'paragraph');
+      for (const [name, value] of Object.entries(mergeAttributes(own, HTMLAttributes))) {
+        if (value != null && value !== false) dom.setAttribute(name, String(value));
+      }
+      // A new alignment or indent draws the paragraph again; a text edit does not.
+      return {
+        dom,
+        contentDOM: dom,
+        update(next) {
+          if (!next.sameMarkup(current)) return false;
+          current = next;
+          return true;
+        },
+      };
+    };
+  },
+
   addStorage() {
     return {
       markdown: {
@@ -193,11 +234,60 @@ export const HardBreakWithMarkdown = HardBreak.extend({
  *   a space. A line of only `=` is escaped at a line start, where it would
  *   turn the line above into a heading.
  * - The text after a hard break starts a line too (see TextWithMarkdown).
+ * - A `$` or a `||` that would open a formula or a spoiler is escaped (see
+ *   escapeSyntaxPairs), and so is a `$$` at a line start, which opens a
+ *   formula block whose closing line may come much later (beta #240 item 10).
  */
 const ENTITY = /&(?=#\d+;|#x[0-9a-f]+;|[a-z][a-z0-9]*;)/gi;
 const ALNUM = /[A-Za-z0-9]/;
 
-function escapeMarkdownText(str: string, startOfLine: boolean): string {
+/** Whether `inlineMathRule` (editorInlineSyntax.ts) opens a formula at the `$` at `i`: its guards, read on the escaped line. */
+function opensInlineMath(s: string, i: number): boolean {
+  const start = i + 1;
+  if (s[start] === undefined || s[start] === '$' || /\s/.test(s[start]!)) return false;
+  let end = s.indexOf('$', start);
+  while (end >= 0 && s[end - 1] === '\\') end = s.indexOf('$', end + 1);
+  return end > start && !/\s/.test(s[end - 1]!) && !/\d/.test(s[end + 1] ?? '');
+}
+
+/** Whether `spoilerRule` (editorSpoiler.ts) opens a spoiler at the `||` at `i`: its guards, read on the escaped line. */
+function opensSpoiler(s: string, i: number): boolean {
+  if (i > 0 && /[|\\]/.test(s[i - 1]!)) return false;
+  const start = i + 2;
+  if (s[start] === undefined || /[\s|]/.test(s[start]!)) return false;
+  const end = s.indexOf('||', start);
+  return end >= 0 && !/[\s\\]/.test(s[end - 1]!) && s[end + 2] !== '|';
+}
+
+/**
+ * Escape the opening `$` of each pair the inline math rule would read, and
+ * the opening `||` of each pair the spoiler rule would read, walking the line
+ * as markdown-it does, so `from $5$ to $10$` and `||1234||` read back as text
+ * while a lone `$5`, `Total $5 and $10` and `a || b` stay as they are. Every
+ * backslash in `s` already starts an escape (the escapes above double a typed
+ * one), so it is skipped with the character it escapes. An escape can make an
+ * earlier delimiter open (`$a $b$`: once the `$` of `$b$` is escaped, the
+ * first `$` pairs with the last), so the walk starts over after each one and
+ * ends when the line opens nothing. A table cell escapes
+ * its own pipes afterwards (`escapeCellPipes` in editorTables.ts), so the
+ * spoiler escape is left out there. The rules read the whole paragraph and
+ * this only one text node, so a pair split across a mark is not seen.
+ */
+function escapeSyntaxPairs(s: string, spoilers: boolean): string {
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '\\') i++;
+    else if (s[i] === '$' && opensInlineMath(s, i)) {
+      s = s.slice(0, i) + '\\' + s.slice(i);
+      i = -1;
+    } else if (spoilers && s[i] === '|' && s[i + 1] === '|' && opensSpoiler(s, i)) {
+      s = s.slice(0, i) + '\\|\\|' + s.slice(i + 2);
+      i = -1;
+    }
+  }
+  return s;
+}
+
+function escapeMarkdownText(str: string, startOfLine: boolean, inTable = false): string {
   str = str.replace(ENTITY, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   str = str.replace(/[`*\\~[\]]/g, '\\$&');
   str = str.replace(/=(?==(?![\s=]))/g, '\\=');
@@ -210,9 +300,10 @@ function escapeMarkdownText(str: string, startOfLine: boolean): string {
       .replace(/^(\s*)(#{1,6})(\s|$)/, '$1\\$2$3')
       .replace(/^(\s*\d+)([.)])\s/, '$1\\$2 ')
       .replace(/^(\s*\d+)([.)])$/, '$1\\$2')
-      .replace(/^(\s*)(=+\s*)$/, '$1\\$2');
+      .replace(/^(\s*)(=+\s*)$/, '$1\\$2')
+      .replace(/^(\s*)\$\$/, '$1\\$$$$');
   }
-  return str;
+  return escapeSyntaxPairs(str, !inTable);
 }
 
 export const TextWithMarkdown = Text.extend({
@@ -228,7 +319,7 @@ export const TextWithMarkdown = Text.extend({
           const lines = node.text!.split('\n');
           for (let i = 0; i < lines.length; i++) {
             state.write();
-            state.out += escapeMarkdownText(lines[i]!, state.atBlockStart || (afterBreak && i === 0));
+            state.out += escapeMarkdownText(lines[i]!, state.atBlockStart || (afterBreak && i === 0), !!state.inTable);
             if (i !== lines.length - 1) state.out += '\n';
           }
         },

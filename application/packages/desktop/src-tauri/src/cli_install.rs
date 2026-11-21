@@ -106,6 +106,21 @@ pub fn refresh_at_launch(app: &AppHandle) {
     if p.stable.exists() {
         let _ = refresh_copy(&p.resource, &p.stable);
         rename_old_launcher(&p);
+        refresh_launcher(&p);
+    }
+}
+
+/// Write the launcher again when it is ours and this build writes other text,
+/// so a launcher fix reaches an install made by an earlier build. The Node
+/// path Install recorded is kept.
+fn refresh_launcher(p: &Places) {
+    let Ok(text) = fs::read_to_string(&p.launcher) else { return };
+    if !is_ours(text.as_bytes()) {
+        return;
+    }
+    let new = launcher_text(&p.stable, recorded_node(&text).as_deref());
+    if text != new {
+        let _ = write_launcher(&p.launcher, &new);
     }
 }
 
@@ -233,7 +248,11 @@ fn recorded_node(launcher: &str) -> Option<String> {
 }
 
 /// The `cmd` launcher. A Windows path holds no `"`; a `%` is doubled so cmd
-/// does not read it as a variable.
+/// does not read it as a variable. `cmd` looks for a bare `node` in the
+/// current folder before PATH, so a `node.cmd` in a cloned project would run
+/// in place of Node: `NoDefaultCurrentDirectoryInExePath` turns that off, and
+/// `setlocal` keeps the setting out of the caller's console (beta issue 170).
+/// The marker stays on the second line, where `is_ours` looks.
 #[cfg(windows)]
 fn launcher_text(stable: &Path, _node: Option<&str>) -> String {
     cmd_launcher(stable)
@@ -260,7 +279,7 @@ fn node_path() -> Option<String> {
 fn cmd_launcher(stable: &Path) -> String {
     let path = stable.to_string_lossy().replace('%', "%%");
     format!(
-        "@echo off\r\nrem {MARKER}; Settings > CLI replaces it.\r\nwhere node >nul 2>nul || (echo {NODE_HELP} 1>&2 & exit /b 127)\r\nnode \"{path}\" %*\r\nexit /b %errorlevel%\r\n"
+        "@echo off\r\nrem {MARKER}; Settings > CLI replaces it.\r\nsetlocal\r\nset \"NoDefaultCurrentDirectoryInExePath=1\"\r\nwhere node >nul 2>nul || (echo {NODE_HELP} 1>&2 & exit /b 127)\r\nnode \"{path}\" %*\r\nexit /b %errorlevel%\r\n"
     )
 }
 
@@ -619,6 +638,23 @@ mod tests {
         rename_old_launcher(&p);
         assert_eq!(fs::read_to_string(&p.launcher).unwrap(), installed);
         assert_eq!(recorded_node(&fs::read_to_string(&p.old_launcher).unwrap()).as_deref(), Some("/opt/homebrew/bin/node"));
+    }
+
+    /// A launcher an earlier build wrote is brought to this build's text at
+    /// launch, with its recorded Node path; one the app did not write is not.
+    #[cfg(not(windows))]
+    #[test]
+    fn a_launch_rewrites_an_older_launcher_of_ours() {
+        let d = temp("refresh-launcher");
+        let p = places_in(&d);
+        install_into(&p, Some("/opt/homebrew/bin/node")).unwrap();
+        let installed = fs::read_to_string(&p.launcher).unwrap();
+        fs::write(&p.launcher, format!("{installed}# an older build\n")).unwrap();
+        refresh_launcher(&p);
+        assert_eq!(fs::read_to_string(&p.launcher).unwrap(), installed);
+        fs::write(&p.launcher, "#!/bin/sh\necho someone else\n").unwrap();
+        refresh_launcher(&p);
+        assert_eq!(fs::read_to_string(&p.launcher).unwrap(), "#!/bin/sh\necho someone else\n");
     }
 
     /// The launcher from a system shortcut, with a short PATH

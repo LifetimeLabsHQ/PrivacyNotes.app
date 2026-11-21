@@ -316,21 +316,21 @@
       "app": "Bitwarden",
       "title": "Vyexportuj si trezor z Bitwardenu",
       "metaTitle": "Ako exportovať trezor z Bitwardenu - PrivacyNotes",
-      "lead": "Bitwarden exportuje celý tvoj trezor ako jeden nešifrovaný súbor .json a PrivacyNotes zaradí každú položku tam, kam patrí: prihlasovacie údaje, karty, kľúče SSH a zabezpečené poznámky.",
+      "lead": "Bitwarden exportuje celý tvoj trezor ako jeden nešifrovaný súbor .json alebo ako .zip s prílohami a PrivacyNotes zaradí každú položku tam, kam patrí: prihlasovacie údaje, karty, kľúče SSH a zabezpečené poznámky.",
       "sections": [
         {
           "h": "Export trezoru z Bitwardenu",
           "steps": [
             "Otvor webový trezor Bitwardenu (alebo desktopovú aplikáciu) a prihlás sa.",
             "Choď do Tools a potom na „Export vault“.",
-            "Ako formát súboru vyber .json (ten obyčajný, nie „.json (Encrypted)“).",
+            "Ako formát súboru vyber .json alebo „.zip (with attachments)“, aby sa preniesli aj priložené súbory. Nevyberaj „.json (Encrypted)“.",
             "Potvrď to hlavným heslom a súbor stiahni."
           ]
         },
         {
           "h": "Umiestnenie importovaných položiek",
           "p": [
-            "Z prihlasovacích údajov sa stanú [položky prihlasovacích údajov v Trezore](/sk/help/vault) (aj s ikonami webov), z kariet položky kariet, z kľúčov SSH položky kľúčov SSH a zabezpečené poznámky aj identity dorazia ako čitateľné poznámky. Priečinky z Bitwardenu sa premenia na značky a obľúbené položky dorazia s hviezdičkou. Prenesú sa aj kľúče overovacej aplikácie (TOTP), takže [tvoje kódy 2FA fungujú ďalej](/sk/help/vault-totp).",
+            "Z prihlasovacích údajov sa stanú [položky prihlasovacích údajov v Trezore](/sk/help/vault) (aj s ikonami webov), z kariet položky kariet, z kľúčov SSH položky kľúčov SSH a zabezpečené poznámky aj identity dorazia ako čitateľné poznámky. Priečinky z Bitwardenu sa premenia na značky a obľúbené položky dorazia s hviezdičkou. Prenesú sa aj kľúče overovacej aplikácie (TOTP), takže [tvoje kódy 2FA fungujú ďalej](/sk/help/vault-totp), a rovnako aj prístupové kľúče, ktoré máš uložené v Bitwardene. Zo súboru .zip sa každá príloha dostane k svojej položke.",
             "Exportovaný súbor obsahuje tvoje heslá v čitateľnej podobe, takže ho naimportuj, skontroluj, že všetko dorazilo, a potom ho poriadne odstráň. V PrivacyNotes je potom všetko zase zašifrované, na tvojom zariadení aj cestou na server."
           ]
         }
@@ -1115,6 +1115,31 @@
         }
       ]
     },
+    "msecure": {
+      "app": "mSecure",
+      "title": "Vyexportuj si trezor z mSecure",
+      "metaTitle": "Ako exportovať trezor z mSecure - PrivacyNotes",
+      "lead": "mSecure exportuje tvoje záznamy z aplikácie pre počítač ako jeden súbor .csv a PrivacyNotes z nich vytvorí prihlasovacie údaje, karty a poznámky v Trezore, aj s vlastnými poľami.",
+      "sections": [
+        {
+          "h": "Export z mSecure",
+          "steps": [
+            "Otvor mSecure v počítači a odomkni ho.",
+            "Otvor Settings a vyber Backups.",
+            "V časti Import and Export records vyber Export records to CSV file.",
+            "Zvoľ Export all records. Voľbu „Only export field data“ nechaj vypnutú, aby si súbor zachoval názov každého poľa.",
+            "Vyber Export a ulož súbor .csv."
+          ]
+        },
+        {
+          "h": "Umiestnenie importovaných položiek",
+          "p": [
+            "Každá položka prihlasovacích údajov sa stane [položkou prihlasovacích údajov v Trezore](/sk/help/vault) s kľúčom 2FA, takže [tvoje kódy fungujú ďalej](/sk/help/vault-totp), a prenesú sa aj jej ďalšie weby a vlastné polia s ich názvami. Tajné pole, napríklad PIN alebo obnovovací kód, zostane skryté. Karta sa stane kartou. Zabezpečená poznámka sa stane poznámkou a ostatné typy záznamov, napríklad identita alebo bankový účet, sa stanú poznámkami so zoznamom svojich polí, označenými značkou s typom záznamu. Tvoje značky zostanú značkami. Súbor neobsahuje dátumy ani obľúbené položky, takže každá položka dostane dátum dňa, keď ju naimportuješ.",
+            "Export obsahuje tvoje heslá v čitateľnej podobe. Naimportuj ho, skontroluj, že všetko dorazilo, a potom súbor odstráň."
+          ]
+        }
+      ]
+    },
     "nordpass": {
       "app": "NordPass",
       "title": "Vyexportuj si trezor z NordPassu",
@@ -1163,6 +1188,36 @@
           "p": [
             "Každá položka prihlasovacích údajov sa stane [položkou prihlasovacích údajov v Trezore](/sk/help/vault) aj s ďalšími webmi, vlastnými poľami a dátumami. Prenesie sa aj jej kľúč 2FA, takže [tvoje kódy fungujú ďalej](/sk/help/vault-totp). Keď má položka e-mail aj používateľské meno, používateľské meno vyplní prihlasovacie údaje a e-mail sa stane poľom. Poznámky dorazia ako poznámky, karty ako karty a identity ako poznámky s každým údajom na vlastnom riadku. Každý alias Hide-my-email sa stane poznámkou s adresou, takže ti zostane zoznam, ktorú adresu používaš na ktorom webe; Proton ďalej preposiela poštu z aliasu, kým je tvoj účet Proton otvorený. Pri viac než jednom trezore sa každý trezor stane značkou. Položky v koši sa neprenesú.",
             "Export obsahuje tvoje heslá v čitateľnej podobe. Naimportuj ho, skontroluj, že všetko dorazilo, a potom súbor odstráň."
+          ]
+        }
+      ]
+    },
+    "raindrop": {
+      "app": "Raindrop.io",
+      "title": "Exportuj si záložky z Raindrop.io",
+      "metaTitle": "Ako exportovať záložky z Raindrop.io - PrivacyNotes",
+      "lead": "Exportuj si záložky z Raindrop.io ako jednu zálohu vo formáte .csv a PrivacyNotes ich zmení na záložky v rovnakých kolekciách, spolu s tvojimi poznámkami, úryvkami a zvýraznenými časťami.",
+      "sections": [
+        {
+          "h": "Získaj zálohu všetkého",
+          "steps": [
+            "Otvor Raindrop.io v prehliadači alebo v aplikácii a prihlás sa.",
+            "Otvor All bookmarks a vyber Export > Get backup.",
+            "Počkaj na e-mail, že je záloha pripravená. Zvyčajne to trvá niekoľko minút.",
+            "Otvor Settings > Backups a pri novej zálohe vyber CSV."
+          ]
+        },
+        {
+          "h": "Vyber CSV, nie HTML",
+          "p": [
+            "Súbor HTML zachová odkazy a tvoje poznámky, ale vynechá úryvky a zvýraznené časti. Ak chceš presunúť iba jednu kolekciu, otvor ju a vyber Export > CSV. Funguje aj súbor .zip z tejto ponuky."
+          ]
+        },
+        {
+          "h": "Kam sa všetko dostane",
+          "p": [
+            "Každá záložka sa uloží pod Bookmarks, do priečinka pre každú kolekciu, vnoreného rovnako ako v Raindrop.io. Záložky bez kolekcie (Unsorted) idú priamo pod Bookmarks. Tvoja poznámka, úryvok a každé zvýraznenie s jeho lepiacou poznámkou sa dostanú do poznámok záložky a obľúbené zostanú pripnuté. Značky zostanú značkami a každá záložka si zachová dátum uloženia.",
+            "Súbor neobsahuje kôš, pripomienky ani farby zvýraznení, preto ostanú pozadu. Pozadu ostanú aj úvodné obrázky: každá záložka namiesto nich ukáže ikonu svojho webu."
           ]
         }
       ]
@@ -1288,6 +1343,83 @@
           "p": [
             "[Každý záznam skončí v Denníkoch](/sk/help/journal) v deň, ktorý má v Journale nastavený. Každý záznam si zachová názov a text a fotky a videá sa importujú ako obrázky a prílohy. Mapa pri zázname príde ako obrázok.",
             "Takeout neobsahuje názvy miest, podnety na písanie, záložky ani reflexie z Journalu, takže zostanú v Journale. Súhrn importu to uvádza."
+          ]
+        }
+      ]
+    },
+    "capacities": {
+      "app": "Capacities",
+      "title": "Vyexportuj si priestor z Capacities",
+      "metaTitle": "Ako exportovať priestor z Capacities - PrivacyNotes",
+      "lead": "Capacities exportuje všetky priestory naraz ako jeden zip so súbormi Markdown a ich médiami. Z tohto zipu sa prenesú tvoje stránky, denné poznámky a vlastné objekty spolu so značkami, vlastnosťami, odkazmi, tabuľkami a obrázkami.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/capacities-export.webp",
+            "alt": "Nastavenia Capacities, stránka Full Export, Manual Full Export so zapnutou možnosťou Include media a tlačidlom Export All Spaces.",
+            "width": 1576,
+            "height": 802
+          },
+          "h": "Vytvor úplný export",
+          "steps": [
+            "Otvor Capacities v počítači a otvor Settings.",
+            "Vyber Full Export.",
+            "V časti Manual Full Export otvor Options a nechaj zapnuté „Include media“. Ostatné dve možnosti môžu zostať, ako sú: čítame oba štýly odkazov a nadpis s názvom vynechávame.",
+            "Klikni na „Export All Spaces“. Capacities zostaví zip na pozadí a uloží ho do priečinka Stiahnuté súbory pod názvom „Capacities“ s dátumom a časom.",
+            "Ten súbor .zip presuň sem tak, ako je."
+          ],
+          "p": [
+            "Capacities vloží obrázky a súbory do zipu iba vtedy, keď sú v tvojom zariadení. Ak niektoré chýbajú, nastav Settings > Offline & Sync > Media loading na „Everything“, počkaj na stiahnutie a exportuj znova."
+          ]
+        },
+        {
+          "h": "Čo sa prenesie",
+          "p": [
+            "Každá stránka, denná poznámka a objekt tvojich vlastných typov sa zmení na poznámku so svojimi značkami a dátumami, ktoré Capacities uložilo. Každý typ objektu sa zmení na priečinok, takže stránky skončia v Pages, denné poznámky v DailyNotes a typ, napríklad Books, vo vlastnom priečinku.",
+            "Nadpisy, zoznamy, úlohy, citácie, kód aj s jazykom, matematika a tabuľky sa prenesú v pôvodnej podobe. Capacities zapíše vzorec v tabuľke do exportu ako jeho výsledok, takže čísla dorazia, no vzorec nie. [Naše tabuľky používajú tie isté vzorce](/sk/help/table-formulas), s rovnakými názvami a odkazmi na bunky, takže ho nastavíš znova napísaním `=` do bunky. [Odkazy a zmienky medzi objektmi sa zmenia na odkazy na poznámky](/sk/help/note-links) a obrázky a súbory sa importujú do tvojho úložiska.",
+            "Vlastnosti vlastného typu, napríklad hodnotenie alebo žáner, sa zapíšu ako krátky zoznam na začiatku poznámky. Dopyty sú uložené vyhľadávania bez textu, preto sa neprenesú. Capacities neexportuje kôš, svoje kolekcie ani vzhľad rozbaľovacích a farebných blokov: rozbaľovacie bloky dorazia ako zoznamy a text v nich sa prenesie."
+          ]
+        }
+      ]
+    },
+    "onenote": {
+      "app": "OneNote",
+      "title": "Vyexportuj si zápisníky z OneNotu",
+      "metaTitle": "Ako exportovať zápisníky z OneNotu - PrivacyNotes",
+      "lead": "OneNote pre Windows exportuje celý zápisník ako jeden súbor OneNote Package (.onepkg). Z tohto súboru sa prenesú tvoje sekcie, stránky a podstránky spolu s úlohami, tabuľkami, obrázkami a prílohami.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/onenote-export.webp",
+            "alt": "OneNote pre Windows, File > Export, s vybraným Notebook v časti Export Current, vybraným OneNote Package v časti Select Format a tlačidlom Export.",
+            "width": 1576,
+            "height": 548
+          },
+          "h": "Vyexportuj zápisník ako OneNote Package",
+          "steps": [
+            "Otvor zápisník v OneNote pre Windows, v desktopovej aplikácii. Zápisníky uložené v OneDrive sa v nej otvoria tiež.",
+            "Vyber File > Export.",
+            "V časti „Export Current“ vyber „Notebook“.",
+            "V časti „Select Format“ vyber „OneNote Package (*.onepkg)“ a klikni na „Export“.",
+            "Vyber priečinok a ulož. OneNote zapíše jeden súbor .onepkg pomenovaný podľa zápisníka.",
+            "Ten súbor .onepkg presuň sem tak, ako je."
+          ],
+          "p": [
+            "Jeden balík obsahuje jeden zápisník. Ak máš viac zápisníkov, exportuj každý a súbory presúvaj sem jeden po druhom. OneNote na webe, na Macu a v telefónoch export nemá, preto na tento krok použi počítač s Windowsom."
+          ]
+        },
+        {
+          "h": "Najprv odomkni chránené sekcie",
+          "p": [
+            "Sekcia s heslom zostáva v balíku zašifrovaná a otvoriť ju vie iba OneNote. Odomkni každú v OneNote, odstráň jej heslo cez Review > Password > Remove Password a exportuj znova. Náhľad importu pomenuje každú sekciu, ktorú musel vynechať."
+          ]
+        },
+        {
+          "h": "Čo sa prenesie",
+          "p": [
+            "Zápisník sa zmení na priečinok a v ňom je ďalší priečinok pre každú skupinu sekcií a sekciu. Každá stránka sa zmení na poznámku v priečinku svojej sekcie s dátumom, kedy ju OneNote vytvoril, a podstránka nasleduje svoju stránku v tom istom priečinku.",
+            "Nadpisy, tučné písmo, kurzíva, podčiarknutie, farby, zvýraznenia, odrážkové a číslované zoznamy, tabuľky a odseky s kódom sa prenesú v pôvodnej podobe. Značka úlohy sa zmení na položku zoznamu úloh, zaškrtnutú, ak bola hotová, a ostatné značky poznámok, napríklad Important alebo Question, sa zmenia na značky poznámky. [Odkazy medzi stránkami sa zmenia na odkazy na poznámky](/sk/help/note-links) a obrázky a priložené súbory sa importujú do tvojho úložiska.",
+            "Funguje aj samotný súbor sekcie (.one) alebo zabalený priečinok zápisníka. Kresby perom, zvukové nahrávky a rovnice tu nemajú obdobu, preto ich náhľad importu iba spočíta, a stránky z koša OneNotu nie sú súčasťou balíka."
           ]
         }
       ]

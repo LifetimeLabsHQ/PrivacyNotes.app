@@ -6,10 +6,6 @@
     "error": "Couldn't sync everything just now. Check your connection and try again.",
     "conflict": "One of your notes has a sync conflict that needs your decision. Resolve it in the dialog, then try again."
   },
-  "movedHint": {
-    "body": "This is the app's new home. Update your bookmark to use.privacynotes.app and re-add any home screen shortcut.",
-    "gotIt": "Got it"
-  },
   "moveScreen": {
     "title": "The app has moved to use.privacynotes.app",
     "bodySignIn": "Sign in there with your recovery phrase or “{{scanQr}}”. This device syncs first, so all your notes are waiting for you, and nothing here is deleted.",
@@ -32,6 +28,7 @@
       "configured": "Storage full. Some notes couldn't sync. Free up space or add more storage.",
       "unconfigured": "Storage full. Some notes couldn't sync. Free up space by trimming notes."
     },
+    "deletedSpace": "Space from deleted files comes back about a day after you delete them.",
     "manageStorage": "Manage storage",
     "viewUsage": "View usage"
   },
@@ -69,7 +66,11 @@
     "neverBackedUp_one": "Only on this device:",
     "neverBackedUp_other": "Only on this device:",
     "moreNotes": "and {{count}} more",
-    "appLockHint": "Shared device? Turn on app lock under Settings > Security."
+    "appLockHint": "Shared device? Turn on app lock under Settings > Security.",
+    "unopenedWarn_one": "1 note has a server copy this device can't open. Signing out deletes the copy here, which may be the only good one. Send it again in Settings > ID & Sync first.",
+    "unopenedWarn_other": "{{count}} notes have a server copy this device can't open. Signing out deletes the copies here, which may be the only good ones. Send them again in Settings > ID & Sync first.",
+    "unopenedKept_one": "1 note has a server copy this device can't open. The copy here stays after you sign out.",
+    "unopenedKept_other": "{{count}} notes have a server copy this device can't open. The copies here stay after you sign out."
   },
   "signOutUpload": {
     "uploading": "Uploading your last changes…",

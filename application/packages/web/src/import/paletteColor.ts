@@ -15,17 +15,21 @@ import { HIGHLIGHT_COLORS, TEXT_COLORS } from '../editorColors';
  * Hue bands in degrees, start inclusive, end exclusive; red wraps through 0.
  * Every palette value falls in its own band (tests/paletteColor.test.ts), so
  * the table and editorColors.ts cannot drift apart. The edges sit between the
- * palette hues, not on them: Open Color's yellow is at 35 and its purple at 255.
+ * palette hues, not on them: Open Color's yellow is at 35, lime at 85, indigo at
+ * 228, purple at 255 and grape at 288.
  */
 const HUE_BANDS: readonly [name: string, from: number, to: number][] = [
   ['Red', 345, 12],
   ['Orange', 12, 32],
   ['Yellow', 32, 70],
-  ['Green', 70, 155],
+  ['Lime', 70, 108],
+  ['Green', 108, 155],
   ['Teal', 155, 195],
-  ['Blue', 195, 245],
-  ['Purple', 245, 300],
-  ['Pink', 300, 345],
+  ['Blue', 195, 218],
+  ['Indigo', 218, 242],
+  ['Purple', 242, 272],
+  ['Grape', 272, 315],
+  ['Pink', 315, 345],
 ];
 
 /** Below this saturation a color reads as gray, whatever its hue. */

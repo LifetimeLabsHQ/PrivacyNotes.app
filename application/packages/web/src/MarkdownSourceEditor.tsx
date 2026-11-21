@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode, type Ref } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from './theme';
@@ -10,10 +10,16 @@ import { proUnlocked } from './demo';
 import { SourceSearchBar } from './SourceSearchBar';
 import { replaceAllText, type TextMatch } from './markdownSourceSearch';
 import { MarkdownSourceBar } from './MarkdownSourceBar';
+import type { SourcePreviewControls } from './sourcePreviewButtons';
 import { applySourceAction, type SourceAction } from './markdownSourceFormat';
+import { sourceFoldSummary } from './markdownSourceFolds';
+import { suppressSoftKeyboard } from './softKeyboard';
 import { EditorSlotPill } from './EditorSlotPill';
 import { useCopyToClipboard } from './clipboard';
 import { Check, Copy } from './icons';
+import { useLineNumbersPref } from './editorPrefs';
+import { useIsPhoneLayout } from './useIsMobile';
+import { lineGutter } from './lineNumbers';
 
 type Props = {
   /** Initial markdown content. Only read on mount - use a `key` prop to force reload. */
@@ -21,14 +27,33 @@ type Props = {
   /** Called with the latest markdown on every keystroke. */
   onChange: (markdown: string) => void;
   readOnly?: boolean;
+  /** Spell check is off for this note. It only takes the device switch away.
+   *  Spec: docs/internal/specs/note-spell-check.md */
+  noSpellcheck?: boolean;
   /** Turns on find (free) and replace (Pro) for this view, with the keys and
    *  the command entries the rich editor has. */
   search?: { isPro: boolean; onOpenUpgrade?: (trigger: 'replace') => void };
   /** The Markdown toolbar. `slot` is the pane's row under the note when the
    *  bar sits at the bottom; nothing is drawn there until it exists. */
-  toolbar?: { onShowFormatted: () => void; atBottom: boolean; slot: HTMLElement | null; mobileTabIndex?: number };
+  toolbar?: {
+    onShowFormatted: () => void;
+    atBottom: boolean;
+    slot: HTMLElement | null;
+    mobileTabIndex?: number;
+    /** The bar's preview and swap buttons; absent on a phone. */
+    preview?: SourcePreviewControls;
+  };
+  /** The formatted preview beside the text, given the text as typed and,
+   *  unless read only, `edit`, which replaces the text with an edit made in
+   *  the preview. The bar spans both columns.
+   *  Spec: docs/internal/plans/heading-folds-and-source-preview.md (Part 2) */
+  preview?: (text: string, caretLine: number | null, edit: ((markdown: string) => void) | undefined) => ReactNode;
   /** Focuses the text, so Tab from the tag field lands in the body here too. */
   ref?: Ref<MarkdownSourceHandle>;
+  /** The other side of two items side by side: it takes no keys and
+   *  registers no commands, so they reach the focused side only.
+   *  Spec: docs/internal/plans/side-by-side-notes.md (section 6) */
+  idle?: boolean;
 };
 
 export type MarkdownSourceHandle = { focus: () => boolean };
@@ -53,7 +78,7 @@ export type MarkdownSourceHandle = { focus: () => boolean };
  *
  * Spec: docs/internal/specs/editor-mode-toggle.md (no custom Tab-key handling in v1, deliberately)
  */
-export function MarkdownSourceEditor({ value, onChange, readOnly = false, search, toolbar, ref: handleRef }: Props) {
+export function MarkdownSourceEditor({ value, onChange, readOnly = false, noSpellcheck = false, search, toolbar, preview, ref: handleRef, idle = false }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
   useImperativeHandle(handleRef, () => ({
     focus: () => {
@@ -62,14 +87,52 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
     },
   }), []);
   const rootRef = useRef<HTMLDivElement>(null);
-  const { spellcheck } = useTheme();
+  const spellcheck = useTheme().spellcheck && !noSpellcheck;
   const [text, setText] = useState(value);
   const { t } = useTranslation('editor');
   const { copy: copyText, copied } = useCopyToClipboard();
+  // Line numbers (lineNumbers.ts), not in the phone layout. `caret` is the
+  // first and last line of the selection, whose numbers take the accent.
+  const lineNumbersOn = useLineNumbersPref();
+  const phoneLayout = useIsPhoneLayout();
+  const numbered = lineNumbersOn && !phoneLayout;
+  const [caret, setCaret] = useState<{ from: number; to: number; known: boolean }>({ from: -1, to: -1, known: false });
+  useEffect(() => {
+    if (!numbered && !preview) return;
+    const read = () => {
+      const el = ref.current;
+      if (!el || document.activeElement !== el) return;
+      const lineAt = (at: number) => {
+        let n = 0;
+        for (let i = el.value.indexOf('\n'); i !== -1 && i < at; i = el.value.indexOf('\n', i + 1)) n++;
+        return n;
+      };
+      const from = lineAt(el.selectionStart);
+      const to = el.selectionEnd === el.selectionStart ? from : lineAt(el.selectionEnd);
+      setCaret((c) => (c.from === from && c.to === to && c.known ? c : { from, to, known: true }));
+    };
+    document.addEventListener('selectionchange', read);
+    const el = ref.current;
+    el?.addEventListener('input', read);
+    return () => {
+      document.removeEventListener('selectionchange', read);
+      el?.removeEventListener('input', read);
+    };
+  }, [numbered, preview]);
 
   function change(markdown: string) {
     onChange(markdown);
     setText(markdown);
+  }
+
+  /** An edit made in the split view's preview, as Markdown. The field is
+   *  uncontrolled, so its value is set here too; it does not hold the caret,
+   *  and the preview keeps its own undo for the edit. */
+  function fromPreview(markdown: string) {
+    const el = ref.current;
+    if (!el || el.value === markdown) return;
+    el.value = markdown;
+    change(markdown);
   }
 
   /** Writes `insert` over [from, to) through the same change as typing, so the
@@ -172,7 +235,7 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
   const togglesRef = useRef({ toggleFind, toggleReplace });
   togglesRef.current = { toggleFind, toggleReplace };
 
-  const hasSearch = !!search;
+  const hasSearch = !!search && !idle;
   useEffect(() => {
     if (!hasSearch) return;
     const off = [
@@ -226,13 +289,13 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
   const insertRef = useRef(insertDate);
   insertRef.current = insertDate;
   useEffect(() => {
-    if (readOnly) return;
+    if (readOnly || idle) return;
     const off = [
       registerEditorCommand('insertDate', () => insertRef.current('date')),
       registerEditorCommand('insertDateTime', () => insertRef.current('dateTime')),
     ];
     return () => off.forEach((f) => f());
-  }, [readOnly]);
+  }, [readOnly, idle]);
 
   const textarea = (
     <textarea
@@ -243,7 +306,9 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
       data-pn-source
       defaultValue={value}
       readOnly={readOnly}
-      spellCheck={spellcheck}
+      // Only the off state is written (design-decisions, "Spell check is
+      // the engine's, not ours").
+      spellCheck={spellcheck ? undefined : false}
       onChange={(e) => change(e.target.value)}
       // The copy below gives the height, so the field never needs to scroll.
       // A caret moved into view in the frame before the copy catches up can
@@ -268,12 +333,30 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
     />
   );
 
+  /** The field's own undo history, as the tag row's pair drives it
+   *  (handleHistory in NotesView.tsx): a touch keyboard stays down. */
+  const history = (action: 'undo' | 'redo') => {
+    const el = ref.current;
+    if (!el) return;
+    suppressSoftKeyboard(el);
+    el.focus();
+    document.execCommand(action);
+  };
+  // Counted per change of the text, for the Collapse all / Expand all label.
+  const folds = useMemo(() => (showBar ? sourceFoldSummary(text) : { foldable: 0, open: 0 }), [showBar, text]);
+
   const sourceBar = showBar ? (
     <MarkdownSourceBar
       onAction={format}
+      onInsertDate={insertDate}
+      onHistory={history}
+      folds={folds}
+      onHideKeyboard={() => ref.current?.blur()}
       onShowFormatted={toolbar.onShowFormatted}
+      rootRef={barAtTop ? sourceBarRef : undefined}
       atBottom={toolbar.atBottom}
       mobileTabIndex={toolbar.mobileTabIndex}
+      preview={toolbar.preview}
     />
   ) : null;
 
@@ -286,35 +369,58 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
   // so each one sits exactly under its characters: a textarea has no
   // highlight of its own. The zero-width space gives a final newline the
   // empty line the textarea shows for it.
-  let copy: ReactNode = text;
+  // With line numbers, the copy draws each line as its own row, so each
+  // row's number (a CSS counter, index.css `.pn-source-lines`) sits level
+  // with the row's first wrap. A row wraps exactly as the same text in one
+  // block does: a newline in pre-wrap is a forced break.
+  const segments: Array<{ s: string; hit?: boolean; current?: boolean }> = [];
   if (search && bar !== 'none' && hits.matches.length > 0) {
-    const parts: ReactNode[] = [];
     let at = 0;
     hits.matches.forEach((m, i) => {
-      parts.push(text.slice(at, m.from));
-      parts.push(
-        <mark
-          key={m.from}
-          className={i === hits.active ? 'pn-search-hit pn-search-hit-current' : 'pn-search-hit'}
-          {...(i === hits.active ? { 'data-pn-hit-current': '' } : {})}
-        >
-          {text.slice(m.from, m.to)}
-        </mark>,
-      );
+      segments.push({ s: text.slice(at, m.from) });
+      segments.push({ s: text.slice(m.from, m.to), hit: true, current: i === hits.active });
       at = m.to;
     });
-    parts.push(text.slice(at));
-    copy = parts;
+    segments.push({ s: text.slice(at) });
+  } else {
+    segments.push({ s: text });
+  }
+  const drawSegment = (seg: { s: string; hit?: boolean; current?: boolean }, key: string) => (seg.hit ? (
+    <mark
+      key={key}
+      className={seg.current ? 'pn-search-hit pn-search-hit-current' : 'pn-search-hit'}
+      {...(seg.current ? { 'data-pn-hit-current': '' } : {})}
+    >
+      {seg.s}
+    </mark>
+  ) : seg.s);
+  let copy: ReactNode;
+  if (numbered) {
+    const rows: ReactNode[][] = [[]];
+    segments.forEach((seg, n) => {
+      seg.s.split('\n').forEach((part, p) => {
+        if (p > 0) rows.push([]);
+        if (part) rows[rows.length - 1]!.push(drawSegment({ ...seg, s: part }, `${n}.${p}`));
+      });
+    });
+    copy = rows.map((row, i) => (
+      <div key={i} {...(i >= caret.from && i <= caret.to ? { 'data-active': '' } : {})}>
+        {row}
+        {'\u200b'}
+      </div>
+    ));
+  } else {
+    copy = segments.map((seg, n) => drawSegment(seg, String(n)));
   }
   const marks = (
     <div
       aria-hidden="true"
       inert
       style={{ fontSize: 'calc(14px * var(--pn-text-scale))' }}
-      className="pn-source-marks pointer-events-none whitespace-pre-wrap break-words font-mono leading-relaxed text-transparent [grid-area:1/1]"
+      className={`pn-source-marks pointer-events-none whitespace-pre-wrap break-words font-mono leading-relaxed text-transparent [grid-area:1/1]${numbered ? ' pn-source-lines' : ''}`}
     >
       {copy}
-      {'​'}
+      {numbered ? null : '\u200b'}
     </div>
   );
 
@@ -328,10 +434,10 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
   // empty note or opening find moves nothing.
   // The find bar takes the rich editor's slot: a zero-height sticky row
   // pinned under the toolbar, floating over the text.
-  return (
-    <div ref={rootRef}>
-      {barAtTop && <div ref={sourceBarRef} className="sticky z-10 top-[var(--pn-tagrow-h,0px)]">{sourceBar}</div>}
-      {showBar && toolbar.atBottom && toolbar.slot && createPortal(sourceBar, toolbar.slot)}
+  // With the preview, the text and its pills keep the left column and the
+  // preview takes the right one; the bar above spans both.
+  const field = (
+    <>
       {/* The whole note as Markdown, for a chat or an email (#744). It has
           the rich editor's top-right slot to itself and gives it to the find
           bar while that is open. */}
@@ -373,10 +479,26 @@ export function MarkdownSourceEditor({ value, onChange, readOnly = false, search
           />
         </div>
       )}
-      <div className="relative mt-11 grid min-h-[60vh]">
+      <div
+        className="relative mt-11 grid min-h-[60vh]"
+        style={numbered ? { paddingInlineStart: lineGutter(text.split('\n').length, 12) } : undefined}
+      >
         {marks}
         {textarea}
       </div>
+    </>
+  );
+  return (
+    <div ref={rootRef} className={preview ? 'flex flex-1 flex-col' : undefined}>
+      {/* The bar pins itself under the tag row (ToolbarFrame). */}
+      {barAtTop && sourceBar}
+      {showBar && toolbar.atBottom && toolbar.slot && createPortal(sourceBar, toolbar.slot)}
+      {preview ? (
+        <div className="grid flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-x-6">
+          <div className="min-w-0">{field}</div>
+          {preview(text, numbered && caret.known ? caret.from : null, readOnly ? undefined : fromPreview)}
+        </div>
+      ) : field}
     </div>
   );
 }

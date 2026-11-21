@@ -37,7 +37,7 @@
   "storageBar": {
     "usage": "{{percent}} % belegt ({{used}} / {{max}})",
     "refresh": "Speicher aktualisieren",
-    "cleanupInfo": "Gelöschte Elemente zählen sofort nicht mehr mit. Die verschlüsselten Dateien selbst verschwinden innerhalb weniger Tage vom Server.",
+    "cleanupInfo": "Endgültig gelöschte Notizen zählen sofort nicht mehr mit. Eine gelöschte Datei zählt, bis ihre verschlüsselte Kopie den Server verlässt, etwa einen Tag später.",
     "open": "Speichereinstellungen öffnen"
   },
   "updateToast": {
@@ -324,6 +324,8 @@
     "commands": {
       "syncResume": "Synchronisierung fortsetzen",
       "lockProtected": "Diese Notiz sperren",
+      "randomItem": "Zufälligen Eintrag öffnen",
+      "randomBookmark": "Zufälliges Lesezeichen öffnen",
       "changelog": "Was ist neu",
       "themesPage": "Community-Designs",
       "website": "PrivacyNotes-Website"

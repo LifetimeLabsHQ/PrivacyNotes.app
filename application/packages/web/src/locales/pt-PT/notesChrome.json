@@ -6,10 +6,6 @@
     "error": "Não foi possível sincronizar tudo agora. Verifica a tua ligação e tenta novamente.",
     "conflict": "Uma das tuas notas tem um conflito de sincronização que precisa da tua decisão. Resolve-o na caixa e tenta novamente."
   },
-  "movedHint": {
-    "body": "Esta é a nova casa da app. Atualiza o teu marcador para use.privacynotes.app e volta a adicionar atalhos do ecrã principal.",
-    "gotIt": "Entendido"
-  },
   "moveScreen": {
     "title": "A app mudou-se para use.privacynotes.app",
     "bodySignIn": "Inicia sessão lá com a tua frase de recuperação ou com \"{{scanQr}}\". Este dispositivo sincroniza primeiro, por isso todas as tuas notas ficam à tua espera lá, e aqui nada é apagado.",
@@ -32,6 +28,7 @@
       "configured": "Armazenamento cheio. Algumas notas não conseguiram sincronizar. Liberta espaço ou adiciona mais armazenamento.",
       "unconfigured": "Armazenamento cheio. Algumas notas não conseguiram sincronizar. Liberta espaço reduzindo notas."
     },
+    "deletedSpace": "O espaço dos ficheiros eliminados volta cerca de um dia depois de os eliminares.",
     "manageStorage": "Gerir armazenamento",
     "viewUsage": "Ver utilização"
   },
@@ -69,7 +66,11 @@
     "neverBackedUp_one": "Só neste dispositivo:",
     "neverBackedUp_other": "Só neste dispositivo:",
     "moreNotes": "e mais {{count}}",
-    "appLockHint": "Dispositivo partilhado? Ativa o bloqueio da app em Definições > Segurança."
+    "appLockHint": "Dispositivo partilhado? Ativa o bloqueio da app em Definições > Segurança.",
+    "unopenedWarn_other": "{{count}} notas têm uma cópia no servidor que este dispositivo não consegue abrir. Terminar sessão elimina as cópias daqui, que podem ser as únicas boas. Envia-as de novo primeiro em Definições > ID & Sync.",
+    "unopenedKept_other": "{{count}} notas têm uma cópia no servidor que este dispositivo não consegue abrir. As cópias daqui ficam depois de terminares sessão.",
+    "unopenedKept_one": "1 nota tem uma cópia no servidor que este dispositivo não consegue abrir. A cópia daqui fica depois de terminares sessão.",
+    "unopenedWarn_one": "1 nota tem uma cópia no servidor que este dispositivo não consegue abrir. Terminar sessão elimina a cópia daqui, que pode ser a única boa. Envia-a de novo primeiro em Definições > ID & Sync."
   },
   "signOutUpload": {
     "uploading": "A enviar as tuas últimas alterações…",

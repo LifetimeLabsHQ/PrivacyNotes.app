@@ -115,10 +115,13 @@
       "red": "أحمر",
       "orange": "برتقالي",
       "yellow": "أصفر",
+      "lime": "أخضر ليموني",
       "green": "أخضر",
       "teal": "أزرق مخضر",
       "blue": "أزرق",
+      "indigo": "نيلي",
       "purple": "بنفسجي",
+      "grape": "عنبي",
       "pink": "وردي"
     }
   },
@@ -232,7 +235,7 @@
     "menuRemove": "إزالة الرابط"
   },
   "audio": {
-    "uploadingRecording": "جارٍ تحميل التسجيل...",
+    "uploadingRecording": "جارٍ رفع التسجيل...",
     "stopRecording": "إيقاف التسجيل",
     "recordAudio": "تسجيل صوتي",
     "savingRecording": "جارٍ حفظ التسجيل...",
@@ -253,6 +256,12 @@
     "characters_few": "{{formatted}} أحرف",
     "characters_many": "{{formatted}} حرفًا",
     "characters_other": "{{formatted}} حرف",
+    "lines_zero": "{{formatted}} أسطر",
+    "lines_one": "{{formatted}} سطر",
+    "lines_two": "{{formatted}} سطران",
+    "lines_few": "{{formatted}} أسطر",
+    "lines_many": "{{formatted}} سطرًا",
+    "lines_other": "{{formatted}} سطر",
     "tasksChecked_zero": "{{done}} من {{formatted}} محددة",
     "tasksChecked_one": "{{done}} من {{formatted}} محددة",
     "tasksChecked_two": "{{done}} من {{formatted}} محددة",
@@ -296,6 +305,10 @@
     "expand": "توسيع كتلة الكود",
     "placeholder": "اكتب الشفرة أو الصقها. للألوان، اختر لغة في الأعلى."
   },
+  "fold": {
+    "collapse": "طي القسم",
+    "expand": "توسيع القسم"
+  },
   "math": {
     "sourceLabel": "شيفرة LaTeX"
   },
@@ -332,7 +345,7 @@
     "hiddenNote": "تبقى تعمل باختصار لوحة المفاتيح وبصيغة Markdown.",
     "hiddenDrop": "أفلت زرًا هنا لإخفائه.",
     "arrangeTitle": "الأزرار",
-    "markdownViewNote": "يحتفظ عرض Markdown بمجموعة أزرار ثابتة خاصة به.",
+    "markdownViewNote": "يعرض عرض Markdown الأزرار نفسها. تظهر فيه الأزرار التي تحتاج إلى العرض المنسّق باهتة، وتبقى تعمل في العرض المنسّق.",
     "hiddenEmpty": "لا شيء مخفي.",
     "alwaysVisible": "ظاهرة دائمًا",
     "pinned": "يفتح لوحة، لذلك يبقى على الشريط أو مخفيًا",
@@ -359,7 +372,7 @@
       "notelink": "رابط بين الملاحظات",
       "audio": "تسجيل",
       "attachMenu": "إرفاق",
-      "separator": "فاصل عمودي",
+      "separator": "فاصل شريط الأدوات",
       "markdownView": "عرض Markdown"
     },
     "positionTitle": "موضع الشريط",

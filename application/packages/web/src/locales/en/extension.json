@@ -47,9 +47,10 @@
     "title": "Protect your logins",
     "body": "Choose a PIN or a passcode for this browser. You need it to unlock your logins here. It is separate from the app's.",
     "biometric": "Also use biometric unlock",
-    "biometricHelp": "Touch ID or Windows Hello, in addition to the PIN or passcode, which always works too.",
+    "biometricHelp": "Touch ID or Windows Hello, through a passkey for this browser. The PIN or passcode always works too.",
     "repeat": "Enter it again",
-    "mismatch": "The two do not match. Try again."
+    "mismatch": "The two do not match. Try again.",
+    "commonPin": "This PIN is too easy to guess. Choose another."
   },
   "clip": {
     "selection": "Selection",
@@ -83,8 +84,8 @@
     "unlockPin": "Enter your PIN",
     "unlockPasscode": "Enter your passcode",
     "useBiometric": "Use biometric unlock",
-    "wrong_one": "Wrong. {{count}} try left before this browser is disconnected.",
-    "wrong_other": "Wrong. {{count}} tries left before this browser is disconnected.",
+    "wrong_one": "Wrong. {{count}} try left this month before this browser is disconnected.",
+    "wrong_other": "Wrong. {{count}} tries left this month before this browser is disconnected.",
     "forSite": "For {{site}}",
     "none": "No logins for this site.",
     "off": "Logins are off for this browser. Turn on Vault when you connect it.",
@@ -99,12 +100,15 @@
     "search": "Search all logins",
     "noMatch": "No logins match.",
     "openSite": "Open the site",
-    "duplicate": "You already have a login for this site with this username."
+    "duplicate": "You already have a login for this site with this username.",
+    "editTitle": "Edit login",
+    "saved": "Changes saved."
   },
   "account": {
     "confirmDisconnect": "Disconnect?",
     "revoked": "This browser is no longer connected",
-    "revokedBody": "Connect it again with a new code from the app."
+    "revokedBody": "Connect it again with a new code from the app.",
+    "pendingPasskey": "A passkey saved in this browser is not in your Vault yet. Open PrivacyNotes and let it sync first, or the passkey is lost."
   },
   "badge": {
     "problem": "Something needs your attention"
@@ -147,7 +151,8 @@
     "unlockToCopy": "Unlock to copy",
     "omniboxDefault": "Search your PrivacyNotes vault for %s",
     "omniboxUnlock": "Unlock PrivacyNotes to search",
-    "moreOptions": "More options"
+    "moreOptions": "More options",
+    "editNotSaved": "Your change to {{name}} never reached your Vault, so the login keeps its old values. Edit it again to save the change."
   },
   "shortcuts": {
     "notSet": "Not set",
@@ -194,5 +199,19 @@
     "biometricPin": "Enter your PIN to set it up.",
     "biometricPasscode": "Enter your passcode to set it up.",
     "biometricOff": "Biometric unlock is off"
+  },
+  "passkey": {
+    "saveTitle": "Save a passkey for {{site}}?",
+    "useTitle": "Sign in to {{site}}",
+    "saveTo": "Save to",
+    "save": "Save in PrivacyNotes",
+    "other": "Use another passkey app",
+    "already": "You already have a passkey for {{site}} in PrivacyNotes.",
+    "saved": "Passkey saved.",
+    "notSaved": "The passkey could not be saved. Your browser's own passkey app takes over.",
+    "maybeSaved": "The passkey may have been saved. Check your Vault.",
+    "unlockFirst": "Unlock to use your passkeys.",
+    "offer": "Offer passkeys",
+    "offerHelp": "Save and use passkeys on websites."
   }
 }

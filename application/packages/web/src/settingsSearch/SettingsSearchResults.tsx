@@ -3,10 +3,10 @@ import { canReadPosition } from '../currentPosition';
 import { Trans, useTranslation } from 'react-i18next';
 import i18n, { activeLocale } from '../i18n';
 import { isNativeStoreBuild } from '../devices';
-import { appZoomSupported } from '../appZoom';
+import { appSizeSupported, appZoomSupported } from '../appZoom';
 import { captureBlockSupported } from '../privacyScreen';
 import { commandLineShown } from '../cliRelease';
-import { onDeviceAiShown } from '../onDeviceAi';
+import { pluginsShown } from '../onDeviceAi';
 import { isDemoMode } from '../demo';
 import { exemptOpts } from '../i18nExempt';
 import { ArrowSquareOut } from '../icons';
@@ -34,9 +34,10 @@ function isShown(entry: SettingEntry): boolean {
   if (entry.shownOn === 'paneLayout') return tabsFit();
   if (entry.shownOn === 'realAccount') return !isDemoMode();
   if (entry.shownOn === 'desktopApp') return appZoomSupported();
+  if (entry.shownOn === 'appSize') return appSizeSupported();
   if (entry.shownOn === 'captureBlock') return captureBlockSupported();
   if (entry.shownOn === 'commandLine') return commandLineShown();
-  if (entry.shownOn === 'onDeviceAi') return onDeviceAiShown();
+  if (entry.shownOn === 'plugins') return pluginsShown();
   if (entry.shownOn === 'phoneApp') return canReadPosition();
   return true;
 }

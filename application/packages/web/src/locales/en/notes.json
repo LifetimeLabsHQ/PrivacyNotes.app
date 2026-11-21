@@ -28,9 +28,22 @@
   "tagChip": {
     "clear": "Clear tag filter: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "Clear tracker filter: {{tracker}}",
+    "anyTag": "Any tag",
+    "tagLabel": "Tag of {{tracker}}",
+    "answerLabel": "Answer of {{tracker}}",
+    "anyAnswer": "Any answer"
+  },
+  "trackerFocus": {
+    "every_one": "about every day",
+    "every_other": "about every {{count}} days",
+    "last": "logged {{when}}",
+    "locked_one": "{{count}} entry behind a PIN is left out",
+    "locked_other": "{{count}} entries behind a PIN are left out"
+  },
   "vaultNew": {
     "ariaLabel": "New vault item",
-    "card": "Credit Card",
     "sshKey": "SSH Key",
     "generator": "Password"
   },
@@ -49,7 +62,8 @@
   "vaultFilter": {
     "all": "All",
     "logins": "Logins",
-    "cards": "Credit Cards",
+    "passkeys": "Passkeys",
+    "cards": "Cards",
     "keys": "Keys"
   },
   "journal": {
@@ -61,7 +75,8 @@
   "trash": {
     "empty": "Empty",
     "emptyHover": "Delete all notes in trash",
-    "autoDelete": "Auto-delete after 30 days"
+    "autoDelete": "Auto-delete after 30 days",
+    "replacedTitle": "Copies of deleted notes"
   },
   "search": {
     "sortOptions": "Sort and view options",
@@ -125,6 +140,7 @@
     "imageUploadFailed": "Image upload failed: {{error}}",
     "imageError": "Image error: {{error}}",
     "uploadFailedFor": "Upload failed for \"{{filename}}\": {{error}}",
+    "uploadsHeld": "You reached today's upload limit. Your pictures and files are safe on this device and upload after {{time}}.",
     "importedSyncing_one": "Imported {{count}} note. Syncing…",
     "importedSyncing_other": "Imported {{count}} notes. Syncing…",
     "addedTag_one": "Added #{{tag}} to {{count}} item",
@@ -137,6 +153,7 @@
   },
   "loadError": {
     "message": "Could not load your notes. The local database connection was interrupted. This can happen after the app has been in the background for a while.",
+    "storageOff": "Could not load your notes. This device turned off the storage PrivacyNotes keeps them in, which Lockdown Mode does. To fix it, open Settings, then Privacy & Security, then Lockdown Mode, then Customize Web Sites, and turn off PrivacyNotes. In Safari, turn off Lockdown Mode for this site in Website Settings.",
     "reload": "Reload"
   },
   "banner": {
@@ -189,6 +206,7 @@
   "editor": {
     "backToList": "Back to notes list",
     "backToGrid": "Back to grid",
+    "closeSide": "Close side",
     "titlePlaceholder": "Untitled (click to edit or let it autogenerate)",
     "titlePlaceholderLogin": "e.g. GitHub",
     "titlePlaceholderCard": "e.g. Visa ending in 4242",
@@ -197,10 +215,22 @@
     "lockNow": "Lock now",
     "lockNowHint": "Hide the contents now",
     "turnOffHint": "Allow edits again",
+    "turnOffForNowHint": "Edit this note until you leave it",
     "unarchiveHint": "Show in your lists again",
     "showFormatted": "Show formatted",
+    "splitView": "Split view",
+    "showSplitView": "Show split view",
+    "hideSplitView": "Hide split view",
+    "splitViewNeedsWidth": "Widen window to enable split view",
+    "swapSides": "Swap sides",
+    "formattedOnly": "{{name}} works in the formatted view",
+    "formattedOnlyHint": "Formatted view",
     "invisiblesShow": "Show invisible characters",
     "invisiblesHide": "Hide invisible characters",
+    "lineNumbersShow": "Show line numbers",
+    "lineNumbersHide": "Hide line numbers",
+    "footerPin": "Pin stats",
+    "footerUnpin": "Unpin stats",
     "undo": "Undo",
     "redo": "Redo",
     "hide": "Hide",
@@ -274,6 +304,7 @@
     "accountLabel": "ID & Sync",
     "appearanceLabel": "Design",
     "editorLabel": "Editor",
+    "pluginsLabel": "Plugins",
     "formatBarLabel": "Toolbar",
     "listsLabel": "Lists",
     "trackersLabel": "Trackers",
@@ -295,6 +326,10 @@
   "archiveConfirm": {
     "body_one": "Archive <highlight>{{count}} item</highlight>? It leaves your lists and waits in the Archive view. Unarchive brings it back.",
     "body_other": "Archive <highlight>{{count}} items</highlight>? They leave your lists and wait in the Archive view. Unarchive brings them back."
+  },
+  "duplicateConfirm": {
+    "body_one": "Duplicate <highlight>{{count}} item</highlight>? It gets a copy of its own.",
+    "body_other": "Duplicate <highlight>{{count}} items</highlight>? Each one gets a copy of its own."
   },
   "bulkTrash": {
     "body_one": "Delete <highlight>{{count}} item</highlight>? Move it to the trash to restore it later, or delete it forever.",
@@ -341,6 +376,7 @@
     "title": "Connections",
     "hide": "Hide connections",
     "linkedFrom": "Linked from",
+    "usedIn": "Used in",
     "linksTo": "Links to",
     "missing": "Not created yet",
     "protectedHidden_one": "{{count}} PIN-protected item not shown",
@@ -351,9 +387,10 @@
     "relatedLinkedFrom": "Both linked from {{title}}",
     "relatedTag": "Both tagged {{tag}}",
     "relatedMeaning": "Same meaning",
+    "relatedMention": "Mentions {{name}}",
     "meaningDoor": "Smart connections: find notes with the same meaning, with offline AI",
     "meaningDoorNo": "Don't show again",
-    "meaningDoorHidden": "Hidden in all notes. Smart connections stays in Settings > Editor > Behavior.",
+    "meaningDoorHidden": "Hidden in all notes. Smart connections stays in Settings > Plugins.",
     "hideSuggestions": "Hide suggested connections",
     "notRelated": "Not related",
     "notRelatedDone": "Not suggested anymore",
@@ -426,5 +463,31 @@
     "autoJournal": "Add my location to every new journal entry",
     "autoDenied": "Location is off for PrivacyNotes. Turn it on in your phone's settings first.",
     "autoOff": "Location services are off on this phone. Turn them on first."
+  },
+  "vaultPasskey": {
+    "forSite": "Passkey for {{rpId}}",
+    "hasPasskey": "Has a passkey",
+    "removeTitle": "Remove the passkey for {{rpId}}?",
+    "removeBody": "You can no longer sign in to {{rpId}} with it from PrivacyNotes.",
+    "savedByExtension": "Passkeys are saved by the PrivacyNotes browser extension when a site offers one.",
+    "removeBrowserWaiting": "Some items this browser sent are not in your Vault yet. If you remove it now, they are lost.",
+    "removeBrowserAnyway": "Remove anyway"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "Translate",
+    "from": "From",
+    "to": "To",
+    "saveAsNote": "Save as new note",
+    "needPair": "Download {{language}} · {{size}}",
+    "noModel": "This language cannot be translated yet.",
+    "nothing": "This note has no words to translate.",
+    "turnOn": "Turn on {{language}}",
+    "failed": "Could not translate this note. Try again.",
+    "untranslated_one": "{{count}} line could not be translated and stays as it was.",
+    "untranslated_other": "{{count}} lines could not be translated and stay as they were."
+  },
+  "tags": {
+    "suggestMove": "Move to {{folder}}"
   }
 }

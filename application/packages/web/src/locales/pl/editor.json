@@ -115,10 +115,13 @@
       "red": "Czerwony",
       "orange": "Pomarańczowy",
       "yellow": "Żółty",
+      "lime": "Limonkowy",
       "green": "Zielony",
       "teal": "Morski",
       "blue": "Niebieski",
+      "indigo": "Indygo",
       "purple": "Fioletowy",
+      "grape": "Winogronowy",
       "pink": "Różowy"
     }
   },
@@ -247,6 +250,9 @@
     "characters_few": "{{formatted}} znaki",
     "characters_many": "{{formatted}} znaków",
     "characters_other": "{{formatted}} znaku",
+    "lines_one": "{{formatted}} wiersz",
+    "lines_few": "{{formatted}} wiersze",
+    "lines_many": "{{formatted}} wierszy",
     "tasksChecked_one": "Zaznaczono {{done}} z {{formatted}}",
     "tasksChecked_few": "Zaznaczono {{done}} z {{formatted}}",
     "tasksChecked_many": "Zaznaczono {{done}} z {{formatted}}",
@@ -286,6 +292,10 @@
     "expand": "Rozwiń blok kodu",
     "placeholder": "Wpisz lub wklej kod. Aby dodać kolory, wybierz język powyżej."
   },
+  "fold": {
+    "collapse": "Zwiń sekcję",
+    "expand": "Rozwiń sekcję"
+  },
   "math": {
     "sourceLabel": "Kod LaTeX"
   },
@@ -322,7 +332,7 @@
     "hiddenNote": "Nadal działają przez skrót i Markdown.",
     "hiddenDrop": "Upuść tu przycisk, aby go ukryć.",
     "arrangeTitle": "Przyciski",
-    "markdownViewNote": "Widok Markdown ma własny, stały zestaw przycisków.",
+    "markdownViewNote": "Widok Markdown pokazuje te same przyciski. Te, które wymagają widoku sformatowanego, są tam przyciemnione i nadal działają w widoku sformatowanym.",
     "hiddenEmpty": "Nic nie jest ukryte.",
     "alwaysVisible": "Zawsze widoczne",
     "pinned": "Otwiera panel, więc zostaje na pasku albo jest ukryty",
@@ -349,7 +359,7 @@
       "notelink": "Link do notatki",
       "audio": "Nagranie",
       "attachMenu": "Załącz",
-      "separator": "Pionowa kreska",
+      "separator": "Separator na pasku narzędzi",
       "markdownView": "Pokaż markdown"
     },
     "positionTitle": "Położenie paska",

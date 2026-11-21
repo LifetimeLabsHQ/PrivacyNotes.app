@@ -3888,21 +3888,21 @@
       "path": "QR sign-in/scanning entry; native camera permission required"
     },
     {
-      "file": "QrSignInPrompt.tsx",
-      "line": 86,
+      "file": "QrLinkNotice.tsx",
+      "line": 16,
       "kind": "shared-modal",
-      "title": "{t('qrSignInPrompt.title')}",
+      "title": "{t('qrLinkNotice.title')}",
       "size": "max-w-md p-6 space-y-4",
-      "close": "{onCancel}",
-      "escape": "{!busy}",
-      "backdrop": "{!busy}",
+      "close": "{onClose}",
+      "escape": null,
+      "backdrop": null,
       "embedded": null,
       "layer": null,
       "hasEscapeHook": false,
       "hasCloseButton": false,
       "status": "source-discovered",
       "note": "Call-site evidence only. Caller guards, inherited behavior and runtime reachability require review.",
-      "path": "Sign-in QR flow; isolated auth fixture required"
+      "path": "Sign-in screen opened from an old #phrase= link (a camera app)"
     },
     {
       "file": "QuickSwitcher.tsx",

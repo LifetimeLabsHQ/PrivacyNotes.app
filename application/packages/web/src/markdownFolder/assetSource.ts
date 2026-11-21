@@ -8,10 +8,13 @@
  * network path (`\\host\share`) included, which connects to that host and
  * hands it the account's NTLM response. So text never chooses an asset
  * address: only `resolveTauriAsset` in `fileAccess.ts` makes one, for a path
- * it checked stays inside the opened Markdown folder, and it records each
- * address it hands out here. The editor's image node (`EncryptedImage.tsx`)
- * and the renderer (`sanitizeImageSrc` in `markdownRender.ts`) refuse every
- * other one.
+ * it checked stays inside the opened Markdown folder, and
+ * `resolveLoneTauriAsset` for a picture beside a file opened on its own,
+ * which the app checked natively; each records the address it hands out here. The editor's image node (`EncryptedImage.tsx`)
+ * and the renderer (`sanitizeImageSrc` for a Markdown picture, `cleanEditorHtml`
+ * for every loading attribute of a raw HTML block, both in `markdownRender.ts`)
+ * refuse every other one. A style kept in a raw HTML block names no address
+ * at all (`CSS_ADDRESS_FN` there).
  * Spec: docs/internal/specs/markdown-folder.md (section 8, media)
  */
 

@@ -50,10 +50,13 @@ export const LOOK_COLORS = [
   'red',
   'orange',
   'yellow',
+  'lime',
   'green',
   'teal',
   'blue',
+  'indigo',
   'purple',
+  'grape',
   'pink',
 ] as const;
 export type LookColor = (typeof LOOK_COLORS)[number];
@@ -74,6 +77,12 @@ export function tagLookKey(tag: string): string {
  *  their validator and merge pass through untouched. */
 export function noteLookKey(id: string): string {
   return `n:${id}`;
+}
+
+/** A subscribed calendar's own registers (its space, #772). A key kind older
+ *  builds do not know, which their validator and merge pass through. */
+export function feedLookKey(feedId: string): string {
+  return `c:${feedId}`;
 }
 
 /** The color value of a note that shows no color even where its tag or

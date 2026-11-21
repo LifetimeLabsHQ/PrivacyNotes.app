@@ -918,6 +918,10 @@ function feedbackBlock(prompt: string): string {
  */
 const CONTENT_BASELINE = '2026-08-26';
 const CONTENT_UPDATED: Record<string, string> = {
+  'lock-reload': '2026-11-19',
+  'phrase-not-saved': '2026-11-19',
+  'session-expired': '2026-11-19',
+  'add-second-device': '2026-11-19',
   'replace-password-manager': '2026-11-15',
   'vibe-coded': '2026-11-15',
   'feature-requests': '2026-11-15',
@@ -955,7 +959,6 @@ const CONTENT_UPDATED: Record<string, string> = {
   'find-in-note': '2026-10-08',
   'screen-capture': '2026-10-08',
   'connected-logins': '2026-10-08',
-  'session-expired': '2026-10-08',
   'archive': '2026-10-09',
   'share-into-app': '2026-10-08',
   'desktop-updates': '2026-10-08',

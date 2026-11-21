@@ -3,7 +3,7 @@ import { openZip } from './zipOpen';
 import { normalizeTag } from '../notesRepo';
 import { createFolder, type FolderDef } from '../folders';
 import { IMPORT_FOLDER_LIMIT } from './folderImport';
-import { linkifyMarkdown } from './linkify';
+import { withBareLinks } from './bareLinks';
 import { noteLinkTarget } from '../noteLinks';
 import { isBlobReferenced, mimeFromExt } from './blobImport';
 import { htmlNoteToMarkdown } from './notesnook';
@@ -13,7 +13,7 @@ import { toLocalIso } from '../notesViewUtils';
 import i18n from '../i18n';
 import { LOCATION_KEY, importedLocation } from '../noteLocation';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:joplin.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:joplin.${key}`, options);
 
 /**
  * Joplin importer.
@@ -177,7 +177,9 @@ function isoOr(value: string | undefined, fallback: string): string {
   return Number.isNaN(d.getTime()) ? fallback : d.toISOString();
 }
 
-export async function parseJoplin(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
+export const parseJoplin = withBareLinks(readJoplin);
+
+async function readJoplin(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
   onProgress?.(i18n.t('importExport:status.readingFile'));
   const lower = file.name.toLowerCase();
   const { files, tooLarge } = lower.endsWith('.zip')
@@ -336,7 +338,7 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
   /** Rewrite every `:/<id>` reference to a note-link or an imported file. */
   const rewriteRefs = (md: string): string =>
     md
-      .replace(/<img\b[^>]*?\bsrc=["']:\/([0-9a-fA-F]{32})["'][^>]*>/g, (tag, id: string) => {
+      .replace(/<img\b[^>]{0,2000}?\bsrc=["']:\/([0-9a-fA-F]{32})["'][^>]{0,2000}>/g, (tag, id: string) => {
         const key = keyFor(id.toLowerCase());
         if (!key) {
           missingResources++;
@@ -379,9 +381,6 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
   let htmlCount = 0;
   let trashedCount = 0;
   let conflictCount = 0;
-  let linkifiedCount = 0;
-  let emptyCount = 0;
-  let untaggedCount = 0;
   let placeCount = 0;
 
   for (const raw of notesRaw) {
@@ -403,9 +402,6 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
       todoCount++;
     }
 
-    const linked = linkifyMarkdown(body);
-    if (linked !== body) linkifiedCount++;
-
     const tags = [...(tagsByNote.get(p.id!) ?? [])];
     if (p.is_conflict === '1') {
       tags.push('conflict');
@@ -415,11 +411,9 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
     const normTags = tags
       .map((t) => normalizeTag(t))
       .filter((t) => t && !seen.has(t.toLowerCase()) && seen.add(t.toLowerCase()));
-    if (normTags.length === 0) untaggedCount++;
 
     const trashed = Number(p.deleted_time) > 0;
     if (trashed) trashedCount++;
-    if (!linked.trim()) emptyCount++;
 
     const createdAt = isoOr(p.user_created_time, isoOr(p.created_time, now));
     const parent = p.parent_id ?? '';
@@ -429,7 +423,7 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
     if (place) placeCount++;
     notes.push({
       title: raw.title.trim(),
-      body: linked,
+      body,
       tags: normTags,
       createdAt,
       updatedAt: isoOr(p.user_updated_time, isoOr(p.updated_time, createdAt)),
@@ -455,7 +449,6 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
   if (placeCount > 0) transforms.push(i18n.t('importLog:shared.places', { count: placeCount }));
   if (htmlCount > 0) transforms.push(msg('convertedHtml', { count: htmlCount }));
   if (trashedCount > 0) transforms.push(i18n.t('importLog:shared.restoredTrashed', { count: trashedCount }));
-  if (linkifiedCount > 0) transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkifiedCount }));
   if (conflictCount > 0) {
     warnings.push(msg('conflict', { count: conflictCount }));
   }
@@ -472,17 +465,10 @@ export async function parseJoplin(file: File, onProgress?: (msg: string) => void
     warnings.push(msg('droppedFolders', { count: droppedFolders }));
   }
 
-  const uniqueTags = new Set(notes.flatMap((n) => n.tags));
   const parsed: ParsedImport = {
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: emptyCount,
-      untaggedNotes: untaggedCount,
-      uniqueTags: uniqueTags.size,
-    },
     source: 'joplin',
   };
   if (folderDefs.length > 0) parsed.folders = folderDefs;

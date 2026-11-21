@@ -251,6 +251,8 @@
       "prevYear": "Predchádzajúci rok",
       "nextYear": "Nasledujúci rok"
     },
+    "seeEntries": "Zobraziť záznamy",
+    "showInCalendar": "Zobraziť v kalendári",
     "trackers": {
       "tapHint": "Ťuknutím otvoríš Preskúmať",
       "stopped": "Zastavené",

@@ -316,21 +316,21 @@
       "app": "Bitwarden",
       "title": "Deinen Bitwarden-Tresor exportieren",
       "metaTitle": "Den Bitwarden-Tresor exportieren - PrivacyNotes",
-      "lead": "Bitwarden exportiert deinen kompletten Tresor als eine unverschlüsselte .json-Datei, und PrivacyNotes sortiert jeden Eintrag dorthin, wo er hingehört: Logins, Karten, SSH-Schlüssel und sichere Notizen.",
+      "lead": "Bitwarden exportiert deinen kompletten Tresor als eine unverschlüsselte .json-Datei oder als .zip mit deinen Anhängen, und PrivacyNotes sortiert jeden Eintrag dorthin, wo er hingehört: Logins, Karten, SSH-Schlüssel und sichere Notizen.",
       "sections": [
         {
           "h": "Deinen Tresor aus Bitwarden exportieren",
           "steps": [
             "Öffne den Bitwarden-Web-Tresor (oder die Desktop-App) und melde dich an.",
             "Gehe zu Tools, dann \"Export vault\".",
-            "Wähle das Dateiformat .json (das einfache, nicht \".json (Encrypted)\").",
+            "Wähle das Dateiformat .json oder \".zip (with attachments)\", damit auch deine angehängten Dateien mitkommen. Wähle nicht \".json (Encrypted)\".",
             "Bestätige mit deinem Master-Passwort und lade die Datei herunter."
           ]
         },
         {
           "h": "Wo die Dinge landen",
           "p": [
-            "Logins werden zu [Tresor-Login-Einträgen](/de/help/vault) (mit ihren Website-Icons), Karten zu Karten-Einträgen, SSH-Schlüssel zu SSH-Schlüssel-Einträgen, und sichere Notizen plus Identitäten kommen als lesbare Notizen an. Bitwarden-Ordner werden zu Tags, Favoriten kommen mit Stern an. Authenticator-Schlüssel (TOTP) kommen ebenfalls mit, [deine 2FA-Codes funktionieren also weiter](/de/help/vault-totp).",
+            "Logins werden zu [Tresor-Login-Einträgen](/de/help/vault) (mit ihren Website-Icons), Karten zu Karten-Einträgen, SSH-Schlüssel zu SSH-Schlüssel-Einträgen, und sichere Notizen plus Identitäten kommen als lesbare Notizen an. Bitwarden-Ordner werden zu Tags, Favoriten kommen mit Stern an. Authenticator-Schlüssel (TOTP) kommen ebenfalls mit, [deine 2FA-Codes funktionieren also weiter](/de/help/vault-totp), und auch die Passkeys, die du in Bitwarden gespeichert hast. Aus einer .zip landet jeder Anhang bei seinem Eintrag.",
             "Die Export-Datei enthält deine Passwörter im Klartext. Importiere sie, prüfe, ob alles angekommen ist, und lösche die Datei dann endgültig. In PrivacyNotes ist wieder alles verschlüsselt, auf deinem Gerät und auf dem Weg zum Server."
           ]
         }
@@ -1115,6 +1115,31 @@
         }
       ]
     },
+    "msecure": {
+      "app": "mSecure",
+      "title": "Deinen mSecure-Tresor exportieren",
+      "metaTitle": "Deinen mSecure-Tresor exportieren - PrivacyNotes",
+      "lead": "mSecure exportiert deine Einträge aus seiner Desktop-App als eine .csv-Datei, und PrivacyNotes macht daraus Tresor-Logins, Karten und Notizen, eigene Felder eingeschlossen.",
+      "sections": [
+        {
+          "h": "Aus mSecure exportieren",
+          "steps": [
+            "Öffne mSecure auf deinem Computer und entsperre es.",
+            "Öffne Settings und wähle Backups.",
+            "Wähle unter Import and Export records den Punkt Export records to CSV file.",
+            "Wähle Export all records. Lass \"Only export field data\" ausgeschaltet, damit die Datei den Namen jedes Felds behält.",
+            "Wähle Export und sichere die .csv-Datei."
+          ]
+        },
+        {
+          "h": "Wo die Dinge landen",
+          "p": [
+            "Jedes Login wird zu einem [Tresor-Login](/de/help/vault) mit seinem 2FA-Schlüssel, [deine Codes funktionieren also weiter](/de/help/vault-totp), und seine weiteren Websites und eigenen Felder kommen mit ihren Namen mit. Ein geheimes Feld, etwa eine PIN oder ein Wiederherstellungscode, bleibt verborgen. Eine Karte wird zu einer Karte. Eine sichere Notiz wird zu einer Notiz, und andere Eintragsarten, etwa eine Identität oder ein Bankkonto, werden zu Notizen, die ihre Felder auflisten, mit der Eintragsart als Tag. Deine Tags bleiben Tags. Die Datei enthält keine Datumsangaben und keine Favoriten, jeder Eintrag bekommt also das Datum deines Imports.",
+            "Der Export enthält deine Passwörter im Klartext. Importiere ihn, prüfe, ob alles angekommen ist, und lösche die Datei dann."
+          ]
+        }
+      ]
+    },
     "nordpass": {
       "app": "NordPass",
       "title": "Deinen NordPass-Tresor exportieren",
@@ -1163,6 +1188,36 @@
           "p": [
             "Jedes Login wird zu einem [Tresor-Login](/de/help/vault) mit seinen weiteren Websites, eigenen Feldern und Datumsangaben. Sein 2FA-Schlüssel kommt mit, [deine Codes funktionieren also weiter](/de/help/vault-totp). Hat ein Eintrag sowohl eine E-Mail-Adresse als auch einen Benutzernamen, füllt der Benutzername das Login, und die E-Mail-Adresse wird zu einem Feld. Notizen kommen als Notizen an, Karten als Karten und Identitäten als Notizen mit jeder Angabe in einer eigenen Zeile. Jeder Hide-my-email-Alias wird zu einer Notiz mit seiner Adresse, so behältst du die Liste, welche Adresse du welcher Website gegeben hast; Proton leitet die Mails an den Alias weiter, solange dein Proton-Konto besteht. Bei mehr als einem Tresor wird jeder Tresor zu einem Tag. Einträge im Papierkorb bleiben zurück.",
             "Der Export enthält deine Passwörter im Klartext. Importiere ihn, prüfe, ob alles angekommen ist, und lösche die Datei dann."
+          ]
+        }
+      ]
+    },
+    "raindrop": {
+      "app": "Raindrop.io",
+      "title": "Deine Raindrop.io-Lesezeichen exportieren",
+      "metaTitle": "Raindrop.io-Lesezeichen exportieren - PrivacyNotes",
+      "lead": "Exportiere deine Raindrop.io-Lesezeichen als ein .csv-Backup, und PrivacyNotes macht daraus Lesezeichen in denselben Collections, mit deinen Notizen, Auszügen und Hervorhebungen.",
+      "sections": [
+        {
+          "h": "Ein Backup von allem holen",
+          "steps": [
+            "Öffne Raindrop.io in deinem Browser oder in der App und melde dich an.",
+            "Öffne \"All bookmarks\" und wähle \"Export\" > \"Get backup\".",
+            "Warte auf die E-Mail, die dir sagt, dass das Backup fertig ist. Das dauert meist ein paar Minuten.",
+            "Öffne \"Settings\" > \"Backups\" und wähle neben dem neuen Backup \"CSV\"."
+          ]
+        },
+        {
+          "h": "CSV wählen, nicht HTML",
+          "p": [
+            "Die HTML-Datei behält die Links und deine Notizen, lässt aber Auszüge und Hervorhebungen weg. Um nur eine Collection zu übertragen, öffne sie und wähle \"Export\" > \"CSV\". Die .zip aus diesem Menü funktioniert ebenfalls."
+          ]
+        },
+        {
+          "h": "Wo die Dinge landen",
+          "p": [
+            "Jedes Lesezeichen landet unter Bookmarks, in einem Ordner für jede Collection, so verschachtelt, wie du sie hattest. Lesezeichen aus \"Unsorted\" kommen direkt unter Bookmarks. Deine Notiz, der Auszug und jede Hervorhebung mit ihrer Haftnotiz kommen in die Notizen des Lesezeichens, und Favoriten bleiben angepinnt. Tags bleiben Tags, und jedes Lesezeichen behält den Tag, an dem du es gespeichert hast.",
+            "Die Datei enthält keinen Papierkorb, keine Erinnerungen und keine Farben der Hervorhebungen, deshalb bleiben sie zurück. Auch Titelbilder bleiben zurück: Jedes Lesezeichen zeigt stattdessen das Symbol seiner Website."
           ]
         }
       ]
@@ -1288,6 +1343,83 @@
           "p": [
             "[Jeder Eintrag landet in den Tagebüchern](/de/help/journal), an dem Tag, den du in Journal dafür gewählt hast. Jeder Eintrag behält Titel und Text, und Fotos und Videos werden als Bilder und Anhänge importiert. Eine Karte in einem Eintrag kommt als Bild mit.",
             "Takeout enthält keine Ortsnamen, Schreibanregungen, Lesezeichen oder Journal-Reflexionen, sie bleiben also in Journal. Die Import-Zusammenfassung weist darauf hin."
+          ]
+        }
+      ]
+    },
+    "capacities": {
+      "app": "Capacities",
+      "title": "Deinen Capacities-Space exportieren",
+      "metaTitle": "So exportierst du deinen Capacities-Space - PrivacyNotes",
+      "lead": "Capacities exportiert alle Spaces auf einmal als eine Zip aus Markdown-Dateien samt ihren Medien. Diese Zip bringt deine Seiten, Tagesnotizen und eigenen Objekte mit ihren Tags, Eigenschaften, Links, Tabellen und Bildern mit.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/capacities-export.webp",
+            "alt": "Capacities-Einstellungen, Seite Full Export, Manual Full Export mit eingeschaltetem Include media und der Schaltfläche Export All Spaces.",
+            "width": 1576,
+            "height": 802
+          },
+          "h": "Einen vollständigen Export erstellen",
+          "steps": [
+            "Öffne Capacities auf deinem Computer und gehe zu Settings.",
+            "Wähle Full Export.",
+            "Öffne unter Manual Full Export die Options und lass \"Include media\" eingeschaltet. Die anderen beiden Optionen kannst du lassen, wie sie sind: Wir lesen beide Link-Arten und lassen die Titelüberschrift weg.",
+            "Klicke auf \"Export All Spaces\". Capacities erstellt die Zip im Hintergrund und speichert sie in deinem Ordner Downloads, unter dem Namen \"Capacities\" mit Datum und Uhrzeit.",
+            "Ziehe diese .zip unverändert hinein."
+          ],
+          "p": [
+            "Capacities packt Bilder und Dateien nur dann in die Zip, wenn sie auf deinem Gerät liegen. Fehlen einige, stelle Settings > Offline & Sync > Media loading auf \"Everything\", warte auf den Download und exportiere noch einmal."
+          ]
+        },
+        {
+          "h": "Was mitkommt",
+          "p": [
+            "Jede Seite, jede Tagesnotiz und jedes Objekt deiner eigenen Typen wird zu einer Notiz mit ihren Tags und den Daten, die Capacities gespeichert hat. Jeder Objekttyp wird zu einem Ordner: Deine Seiten landen in Pages, deine Tagesnotizen in DailyNotes, und ein Typ wie Books bekommt einen eigenen Ordner.",
+            "Überschriften, Listen, Aufgaben, Zitate, Code mit seiner Sprache, Formeln und Tabellen kommen so an, wie sie waren. Capacities schreibt eine Tabellenformel als ihr Ergebnis in den Export, die Zahlen kommen also an, die Formel nicht. [Unsere Tabellen kennen dieselben Formeln](/de/help/table-formulas), mit denselben Namen und Zellbezügen: Tippe `=` in die Zelle, um sie neu einzurichten. [Links und Erwähnungen zwischen Objekten werden zu Notiz-Links](/de/help/note-links), und Bilder und Dateien werden in deinen Speicher importiert.",
+            "Die Eigenschaften eines eigenen Typs, etwa eine Bewertung oder ein Genre, werden als kurze Liste am Anfang der Notiz geschrieben. Abfragen sind gespeicherte Suchen ohne Text und bleiben deshalb zurück. Capacities exportiert weder den Papierkorb noch seine Sammlungen noch das Aussehen von Toggles und farbigen Blöcken: Toggles kommen als Listen an, und der Text darin kommt mit."
+          ]
+        }
+      ]
+    },
+    "onenote": {
+      "app": "OneNote",
+      "title": "Deine OneNote-Notizbücher exportieren",
+      "metaTitle": "So exportierst du deine OneNote-Notizbücher - PrivacyNotes",
+      "lead": "OneNote für Windows exportiert ein ganzes Notizbuch als eine OneNote-Package-Datei (.onepkg). Diese Datei bringt deine Abschnitte, Seiten und Unterseiten mit ihren Aufgaben, Tabellen, Bildern und Anhängen mit.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/onenote-export.webp",
+            "alt": "OneNote für Windows, File > Export, mit Notebook unter Export Current, OneNote Package unter Select Format und der Schaltfläche Export.",
+            "width": 1576,
+            "height": 548
+          },
+          "h": "Das Notizbuch als OneNote Package exportieren",
+          "steps": [
+            "Öffne das Notizbuch in OneNote für Windows, der Desktop-App. Auch Notizbücher in OneDrive öffnen sich dort.",
+            "Wähle File > Export.",
+            "Wähle unter \"Export Current\" den Eintrag \"Notebook\".",
+            "Wähle unter \"Select Format\" den Eintrag \"OneNote Package (*.onepkg)\" und klicke auf \"Export\".",
+            "Wähle einen Ordner und speichere. OneNote schreibt eine .onepkg-Datei, die nach dem Notizbuch benannt ist.",
+            "Ziehe diese .onepkg unverändert hinein."
+          ],
+          "p": [
+            "Ein Package enthält ein Notizbuch. Wenn du mehrere Notizbücher hast, exportiere jedes einzeln und ziehe die Dateien nacheinander hinein. OneNote im Web, auf dem Mac und auf Smartphones hat keinen Export, nutze für diesen Schritt also einen Windows-Computer."
+          ]
+        },
+        {
+          "h": "Geschützte Abschnitte zuerst entsperren",
+          "p": [
+            "Ein Abschnitt mit Passwort bleibt im Package verschlüsselt, und nur OneNote kann ihn öffnen. Entsperre jeden davon in OneNote, entferne sein Passwort unter Review > Password > Remove Password und exportiere noch einmal. Die Import-Vorschau nennt jeden Abschnitt, den sie auslassen musste."
+          ]
+        },
+        {
+          "h": "Was mitkommt",
+          "p": [
+            "Das Notizbuch wird zu einem Ordner, mit je einem Ordner darin für jede Abschnittsgruppe und jeden Abschnitt. Jede Seite wird zu einer Notiz im Ordner ihres Abschnitts, mit dem Datum, an dem OneNote sie erstellt hat, und eine Unterseite folgt ihrer Seite im selben Ordner.",
+            "Überschriften, Fett, Kursiv, Unterstrichen, Farben, Hervorhebungen, Aufzählungen, nummerierte Listen, Tabellen und Codeabsätze kommen so an, wie sie waren. Ein To-do-Tag wird zu einem Eintrag in einer Aufgabenliste, abgehakt, wenn er erledigt war, und andere Notiz-Tags wie Important oder Question werden zu Tags der Notiz. [Links zwischen Seiten werden zu Notiz-Links](/de/help/note-links), und Bilder und angehängte Dateien werden in deinen Speicher importiert.",
+            "Eine einzelne Abschnittsdatei (.one) oder ein gezippter Notizbuch-Ordner funktioniert ebenfalls. Mit dem Stift gemachte Zeichnungen, Audioaufnahmen und Gleichungen haben hier keine Entsprechung, die Import-Vorschau zählt sie deshalb, und Seiten im Papierkorb von OneNote gehören nicht zum Package."
           ]
         }
       ]

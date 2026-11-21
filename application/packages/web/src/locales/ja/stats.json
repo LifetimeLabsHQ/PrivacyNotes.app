@@ -233,6 +233,8 @@
       "prevYear": "前の年",
       "nextYear": "次の年"
     },
+    "seeEntries": "記録を見る",
+    "showInCalendar": "カレンダーに表示",
     "trackers": {
       "tapHint": "タップすると「探索」が開きます",
       "stopped": "停止中",

@@ -115,10 +115,13 @@
       "red": "สีแดง",
       "orange": "สีส้ม",
       "yellow": "สีเหลือง",
+      "lime": "สีเขียวมะนาว",
       "green": "สีเขียว",
       "teal": "สีเขียวอมฟ้า",
       "blue": "สีน้ำเงิน",
+      "indigo": "สีคราม",
       "purple": "สีม่วง",
+      "grape": "สีม่วงองุ่น",
       "pink": "สีชมพู"
     }
   },
@@ -238,6 +241,7 @@
   "wordCount": {
     "words_other": "{{formatted}} คำ",
     "characters_other": "{{formatted}} ตัวอักษร",
+    "lines_other": "{{formatted}} บรรทัด",
     "tasksChecked_other": "ทำเครื่องหมายแล้ว {{done}} จาก {{formatted}}",
     "syncLimit": " · ใช้ {{share}} ของขีดจำกัดการซิงค์ 1 MB",
     "overSyncLimit": " · เกินขีดจำกัดการซิงค์ 1 MB จึงอยู่บนอุปกรณ์นี้เท่านั้น",
@@ -270,6 +274,10 @@
     "collapse": "ย่อบล็อกโค้ด",
     "expand": "ขยายบล็อกโค้ด",
     "placeholder": "พิมพ์หรือวางโค้ด เลือกภาษาด้านบนเพื่อให้มีสี"
+  },
+  "fold": {
+    "collapse": "ยุบส่วน",
+    "expand": "ขยายส่วน"
   },
   "math": {
     "sourceLabel": "ซอร์ส LaTeX"
@@ -307,7 +315,7 @@
     "hiddenNote": "ยังใช้ได้ด้วยแป้นลัดและ Markdown",
     "hiddenDrop": "วางปุ่มที่นี่เพื่อซ่อน",
     "arrangeTitle": "ปุ่ม",
-    "markdownViewNote": "มุมมอง Markdown มีชุดปุ่มของตัวเองที่คงที่",
+    "markdownViewNote": "มุมมอง Markdown แสดงปุ่มชุดเดียวกัน ปุ่มที่ต้องใช้มุมมองแบบจัดรูปแบบจะแสดงเป็นสีจางที่นั่น และยังใช้ได้ในมุมมองแบบจัดรูปแบบ",
     "hiddenEmpty": "ไม่มีอะไรถูกซ่อน",
     "alwaysVisible": "แสดงเสมอ",
     "pinned": "เปิดแผง จึงอยู่บนแถบหรือซ่อนเท่านั้น",
@@ -334,7 +342,7 @@
       "notelink": "ลิงก์ระหว่างโน้ต",
       "audio": "การบันทึกเสียง",
       "attachMenu": "แนบ",
-      "separator": "เส้นคั่นแนวตั้ง",
+      "separator": "เส้นคั่นแถบเครื่องมือ",
       "markdownView": "แสดง Markdown"
     },
     "positionTitle": "ตำแหน่งแถบ",

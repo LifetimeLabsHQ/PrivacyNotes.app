@@ -67,7 +67,6 @@
     "import": "Importovat",
     "downloading": "Stahuji…",
     "subscribe": "Odebírat",
-    "subscribeTitle": "Odebírat kalendář",
     "subscribeDesc": "Vlož adresu kalendáře, třeba odkaz webcal:// z Googlu, iCloudu, Protonu, Outlooku nebo Nextcloudu. Jeho události se ukážou v tvém kalendáři jen pro čtení a aktualizují se, dokud je aplikace otevřená.",
     "subscribed": "Odebírané kalendáře",
     "updating": "Aktualizuji…",
@@ -85,6 +84,7 @@
       "offline": "Jsi offline. Připoj se a zkus to znovu.",
       "limit": "Příliš mnoho stahování v krátké době. Počkej minutu a zkus to znovu.",
       "failed": "Kalendář se nepodařilo stáhnout. Zkontroluj adresu a zkus to znovu.",
+      "insecure": "Tento kalendář se nepodařilo načíst přes zabezpečené připojení. Zkontroluj adresu, nebo to zkus později.",
       "full": "Odebírat můžeš nejvýš tolik kalendářů: {{max}}. Nejdřív jeden odeber."
     }
   },
@@ -95,6 +95,8 @@
     "lastpass": "V LastPassu zvol Advanced options > Export > Export data for use anywhere. Přihlašovací údaje si zachovají klíč 2FA, zabezpečené poznámky a karty přijdou s sebou a ze složek budou značky.",
     "onePassword": "V aplikaci 1Password zvol File > Export, vyber svůj účet a formát 1PUX. Přihlašovací údaje si zachovají klíč 2FA, další weby a vlastní pole, karty, poznámky a identity přijdou s sebou, značky zůstanou značkami a oblíbené a archivované položky zůstanou na svém místě. Funguje i export CSV, jen s přihlašovacími údaji.",
     "dashlane": "V Dashlane zvol Settings > Export data a formát CSV. Přihlašovací údaje si zachovají klíč 2FA, zabezpečené poznámky a karty přijdou s sebou a z kategorií budou značky. Export .dash je zamčený heslem a nejde přečíst.",
+    "msecure": "V mSecure zvol Settings > Backups > Export records to CSV file. Přihlašovací údaje si zachovají klíč 2FA, další weby a vlastní pole, karty a poznámky přijdou s sebou a značky zůstanou značkami.",
+    "raindrop": "V Raindrop.io otevři All bookmarks a zvol Export > Get backup, pak v Settings > Backups stáhni soubor CSV. Ze sbírek budou složky, značky zůstanou značkami a každá záložka si zachová poznámku, úryvek i zvýrazněné pasáže.",
     "enpass": "V Enpassu zvol File > Export a formát .json. Přihlašovací údaje si zachovají klíč 2FA, další weby a vlastní pole, karty, poznámky a identity přijdou s sebou, ze složek budou značky a oblíbené a archivované položky zůstanou na svém místě. Položky v koši zůstanou stranou.",
     "nordpass": "V NordPassu zvol Settings > Export items. Přihlašovací údaje si zachovají další weby a vlastní pole, poznámky, karty a identity přijdou s sebou a ze složek budou značky.",
     "protonPass": "V Proton Passu zvol Settings > Export a vyber ZIP. Přihlašovací údaje si zachovají klíč 2FA, další weby, vlastní pole a data a poznámky, karty a identity přijdou s sebou. Funguje i export CSV, jen je v něm méně.",
@@ -116,13 +118,15 @@
     "bear": "V Bearu zvol File > Backup Notes... a přetáhni sem soubor .bear2bk. Přejdou s ním značky i vnořené značky, připnutí, archiv, koš, zvýraznění s jejich barvami, odkazy na poznámky i přílohy.",
     "joplin": "Soubor .jex z File > Export all > „JEX - Joplin Export File“. Zápisníky se stanou složkami a značky, úkoly, odkazy na poznámky i přílohy přejdou s nimi.",
     "anytype": "Soubor .zip ve formátu Any-Block v1 JSON z nastavení prostoru > Export, včetně souborů a archivovaných objektů. Kolekce se stanou složkami a značky, úkoly, callouty, rozbalovací bloky, tabulky, odkazy na poznámky i soubory přejdou s nimi.",
+    "capacities": "Soubor .zip z Capacities: Settings > Full Export > Manual Full Export, včetně médií. Typy objektů se stanou složkami a značky, vlastnosti, data, odkazy mezi objekty, tabulky, obrázky i soubory přejdou s nimi.",
     "siyuan": "Soubor Data.zip z nabídky SiYuan > Data migration > Data.zip > Export, nebo zápisník exportovaný jako SiYuan .sy.zip. Zápisníky a vnořené dokumenty se stanou složkami a značky, odkazy na bloky, callouty, matematika, tabulky i soubory přejdou s nimi.",
+    "onenote": "Soubor .onepkg z OneNote pro Windows: File > Export > Notebook > OneNote Package. Funguje i soubor sekce (.one) nebo zápisník zabalený do zipu. Sekce a skupiny sekcí se stanou složkami a podstránky, úkoly, značky poznámek, tabulky, odkazy na stránky, obrázky i připojené soubory přejdou s nimi.",
     "upnote": "V UpNote: Settings > Backup > Backup now, pak zabal do zipu všechno ve složce se zálohou. Zachová zápisníky, značky, připnutí, note-linky, formátování a přílohy. Fungují i exporty jednotlivých poznámek z mobilních aplikací - zvol „Export to HTML“.",
     "markdownFolder": "Soubory .md nebo .txt jednotlivě, nebo jako .zip. Zabalená složka si udrží podsložky a vezme s sebou obrázky i přílohy.",
     "markdownApp": "Tyhle poznámky už jsou soubory Markdown ve složce. Přetáhni tu složku jako .zip a přijdou s ní podsložky, obrázky i #štítky.",
     "browserBookmarks": "Soubor se záložkami (.html) z \"Export bookmarks\" v tvém prohlížeči, nebo .zip, který zapíše Safari. Chrome, Firefox, Safari, Edge, Opera, Brave i Vivaldi obsahují stejný soubor. Složky a data přijdou s ním.",
     "vcard": "Soubor .vcf, který exportuje tvůj adresář: iPhone a Mac přes iCloud nebo Kontakty, Android, Kontakty Google. Každá vizitka se importuje, i s fotkami, a opakovaný import stejného souboru přeskočí lidi, které už máš.",
-    "bitwarden": "Nezašifrovaný export .json z Bitwardenu (Tools > Export vault > .json). Přihlášení, karty, SSH klíče, zabezpečené poznámky i kódy TOTP přijdou s sebou.",
+    "bitwarden": "Nezašifrovaný export trezoru z Bitwardenu (Tools > Export vault > .json, nebo .zip (with attachments)). Přihlašovací údaje, karty, SSH klíče, zabezpečené poznámky, kódy TOTP, přístupové klíče i přílohy přijdou s sebou.",
     "browserPasswords": "Soubor s hesly (.csv) z Chrome, Edge, Brave, Opery, Vivaldi, Firefoxu nebo Safari, nebo .zip, který zapíše Safari. Z každého řádku bude přihlášení. Až budeš hotový, soubor smaž - jsou v něm tvoje hesla v čitelné podobě."
   },
   "sourceLabel": {
@@ -190,6 +194,17 @@
     "storageLine": "Tento import potřebuje asi {{needed}}. Volné máš {{available}}.",
     "nothingWritten": "Nic se nezapíše, dokud nestiskneš Importovat.",
     "whatComesIn": "Co se naimportuje",
+    "backupSettings": "Tato záloha přináší také nastavení: {{list}}.",
+    "backupSetting": {
+      "calendarFeeds": "odebírané kalendáře",
+      "dashboard": "rozvržení Domova",
+      "itemStyles": "barvy a ikony složek, značek a poznámek",
+      "customThemes": "vlastní témata",
+      "favoriteTags": "oblíbené značky",
+      "medications": "léky",
+      "trackers": "nastavení sledovaných hodnot",
+      "agentFolder": "složka Agent"
+    },
     "oversizeAttachments_few": "{{count}} soubory jsou větší než limit {{limit}} na soubor v tvém plánu. Naimportují se do tohoto zařízení, ale nesynchronizují se s tvými dalšími zařízeními, dokud nepřejdeš na vyšší tarif.",
     "oversizeAttachments_many": "{{count}} souboru je větší než limit {{limit}} na soubor v tvém plánu. Naimportuje se do tohoto zařízení, ale nesynchronizuje se s tvými dalšími zařízeními, dokud nepřejdeš na vyšší tarif."
   },
@@ -276,7 +291,10 @@
     "missingNotFound_one": "{{items}} není ani na tomto zařízení, ani na serveru, takže v exportu chybí.",
     "missingNotFound_few": "{{items}} nejsou ani na tomto zařízení, ani na serveru, takže v exportu chybí.",
     "missingNotFound_many": "{{items}} není ani na tomto zařízení, ani na serveru, takže v exportu chybí.",
-    "missingNotFound_other": "{{items}} není ani na tomto zařízení, ani na serveru, takže v exportu chybí."
+    "missingNotFound_other": "{{items}} není ani na tomto zařízení, ani na serveru, takže v exportu chybí.",
+    "bookmarksSkipped_one": "{{count}} záložka má adresu, která nezačíná na http ani https, takže v exportu chybí.",
+    "bookmarksSkipped_few": "{{count}} záložky mají adresu, která nezačíná na http ani https, takže v exportu chybí.",
+    "bookmarksSkipped_other": "{{count}} záložek má adresu, která nezačíná na http ani https, takže v exportu chybí."
   },
   "missing": {
     "pictures_one": "{{count}} obrázek",
@@ -377,8 +395,8 @@
     "typeFullHint": "Poznámky, trezor, obrázky, zvuk a soubory, zapečetěné klíčem z tvojí fráze. Můžeš ji bezpečně uložit kamkoli.",
     "rhythmHeading": "Interval",
     "historyHeading": "Poslední zálohy",
-    "runsHintDesktop": "Běží, když je PrivacyNotes otevřené nebo v oznamovací oblasti. Záloha, na kterou přišel čas, když byla aplikace zavřená, proběhne minutu po jejím otevření.",
-    "runsHintWeb": "Běží, když je PrivacyNotes otevřené v tomto prohlížeči. Záloha, na kterou přišel čas, když bylo zavřené, proběhne minutu po jeho otevření.",
+    "runsHintDesktop": "Běží, když je PrivacyNotes otevřené nebo v oznamovací oblasti. Záloha, na kterou přišel čas, když byla aplikace zavřená, proběhne minutu po jejím otevření, a jakmile se toto zařízení synchronizuje, tak i offline.",
+    "runsHintWeb": "Běží, když je PrivacyNotes otevřené v tomto prohlížeči. Záloha, na kterou přišel čas, když bylo zavřené, proběhne minutu po jeho otevření, a jakmile se toto zařízení synchronizuje, tak i offline.",
     "runsHintDownload": "PrivacyNotes dokáže upozornit, že je záloha na řadě, jen když je otevřené v tomto prohlížeči. Zálohu, na kterou přišel čas, když bylo zavřené, nabídne minutu po svém otevření.",
     "runsHintPhone": "Telefon nedokáže vytvořit zálohu, když je PrivacyNotes zavřené. Proběhne, až aplikaci otevřeš a záloha bude na řadě.",
     "sizeHint": "Asi {{size}} pro počet záloh: {{count}}.",

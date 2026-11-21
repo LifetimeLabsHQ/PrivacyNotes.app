@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "時間",
+    "minutesSuffix": "分",
+    "hoursMinutes": "{{h}}時間{{m}}分",
     "bpm": "bpm",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -137,6 +139,7 @@
     "emptyAdd": "飲んでいる薬を時刻と一緒に追加して、ここで記録しましょう。",
     "takenCount_other": "{{count}}件服用",
     "namePlaceholder": "薬の名前",
+    "nameMissing": "薬の名前を入力してください。",
     "dosagePlaceholder": "用量(例: 50mg)",
     "editMedication": "薬を編集",
     "removeMedication": "薬を削除",
@@ -231,12 +234,18 @@
     "yes": "はい",
     "no": "いいえ",
     "unknownType": "このトラッカーを使うには、新しいバージョンのアプリが必要です。",
+    "counterOf": "/ {{limit}}",
+    "counterToday": "回(今日の使用)",
+    "counterReached": "上限の{{limit}}に達しました。",
+    "counterStartAgain": "{{name}}を0からやり直す",
+    "counterStartAgainConfirm": "やり直しますか?",
     "typeLabels": {
       "scale10": "スケール(0〜10)",
       "scale5": "スケール(0〜5)",
       "slider100": "スコア(0〜100)",
       "number": "数値",
       "pair": "2つの数値",
+      "counter": "カウンター",
       "yesno": "はい / いいえ"
     }
   },
@@ -252,7 +261,7 @@
     "medicationCard": "服薬カード",
     "medicationCardHelp": "このデバイスで「薬を飲みましたか?」と尋ねます。薬の予定がある日だけ表示されます。",
     "customHelp": "自分で名前を付けるトラッカーです。スケール、数値、はい/いいえから選べます。最大{{max}}個まで。",
-    "customHelpPair": "自分で名前を付けるトラッカーです。スケール、数値、2つの数値、はい/いいえから選べます。最大{{max}}個まで。",
+    "customHelpPair": "自分で名前を付けるトラッカーです。スケール、数値、2つの数値、カウンター、はい/いいえから選べます。最大{{max}}個まで。",
     "yourCustomTrackers": "あなたのカスタムトラッカー",
     "categoryMoodMind": "気分とこころ",
     "categoryBodyHealth": "からだと健康",
@@ -293,7 +302,10 @@
     "pairFirstPlaceholder": "収縮期血圧",
     "pairSecondPlaceholder": "拡張期血圧",
     "pairUnit": "単位(任意)",
-    "pairWaiting": "1つ目の数値を入力すると保存されます。"
+    "pairWaiting": "1つ目の数値を入力すると保存されます。",
+    "nameMissing": "トラッカーに名前を付けてください。",
+    "counterLimit": "上限(任意)",
+    "counterHelp": "使った回数を日をまたいで合計します。カミソリの刃なら30回のように上限を設定し、上限に達したらやり直します。"
   },
   "factors": {
     "prompt": "今日はどんな日でしたか?",
@@ -382,5 +394,6 @@
   "flow": {
     "finish": "終了",
     "step": "トラッカー {{n}}/{{total}}"
-  }
+  },
+  "showEveryDay": "これがある日をすべて表示"
 }

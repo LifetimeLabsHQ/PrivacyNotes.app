@@ -2,7 +2,7 @@
 
 The extension is one package of a pnpm workspace. It is built with WXT and Vite, and it imports two sibling packages (`packages/shared`, `packages/clipper`) and a few files of `packages/web/src`. The source archive carries exactly those.
 
-Requirements: Node 22 or later and pnpm 9 or later.
+Requirements: Node 22 or later and pnpm 12 (the root `package.json` names the exact version in `packageManager`).
 
 ```
 pnpm install --frozen-lockfile

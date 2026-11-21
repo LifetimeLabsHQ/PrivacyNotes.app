@@ -30,16 +30,20 @@ import { stripFrontMatterPadding, unescapeQuotes, unescapeSingleQuotes } from '.
 import { FRONT_MATTER_LOCATION, FRONT_MATTER_LOCATION_NAME, LOCATION_KEY, parseFrontMatterLocation, type NoteLocation } from '../noteLocation';
 import { FRONT_MATTER } from '../markdownFolder/adapter';
 import type { ParsedImport, ImportedNote } from './types';
-import type { NoteType } from '@notes/shared';
+import type { NoteType, SupabaseClient } from '@notes/shared';
 import { db } from '../db';
-import { uploadAgainWhatThePurgeTook } from '../imageGC';
+import { uploadAgainAfterRestore, uploadAgainWhatThePurgeTook } from '../imageGC';
 import type { AttachmentMeta } from '../attachmentStore';
 import { sha256Hex } from '../sha256Hex';
 import { formatBytes } from '../formatBytes';
+import { hasVaultFiles } from '../vaultBody';
+import { normalizeTagList } from './importHelpers';
+import { isUuid } from '../uuid';
+import { cleanFileName } from '../fileNames';
 import { createFolder, type FolderDef } from '../folders';
 import { IMPORT_FOLDER_LIMIT, parseFolderPath } from './folderImport';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:privacynotes.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:privacynotes.${key}`, options);
 
 // ─── YAML frontmatter parser (minimal, no dependency) ────────────────
 
@@ -101,10 +105,15 @@ function withPlace(
 
 // ─── Body rewriting (import direction) ────────────────────────────────
 
-/** Rewrite relative paths back to pn:img/<uuid> refs. */
-function rewriteImagesForImport(body: string): string {
-  // images/<uuid>.<ext> → pn:img/<uuid>  (handles .webp, .jpg, .jpeg, .png)
-  return body.replace(/images\/([0-9a-f-]{36})\.[a-z]+/g, 'pn:img/$1');
+/** Rewrite relative paths back to pn:img/<uuid> refs: the inverse of the
+ *  exporter's `pn:img/<uuid>` -> `images/<uuid>.<ext>`. Only a path that
+ *  starts at `images/` (a web address that holds `/images/<uuid>.png` is
+ *  not one) and names a picture the manifest lists is the exporter's. */
+function rewriteImagesForImport(body: string, manifest: BackupManifest): string {
+  const images = manifest.images || {};
+  return body.replace(/(?<![\w./-])images\/([0-9a-f-]{36})\.[a-z]+/g, (match, uuid: string) =>
+    Object.hasOwn(images, uuid) ? `pn:img/${uuid}` : match,
+  );
 }
 
 /**
@@ -236,9 +245,6 @@ export async function parsePrivacyNotesBackup(
   // Parse all .md files in the zip root (not in subdirectories)
   const notes: ImportedNote[] = [];
   const warnings: string[] = [];
-  const allTags = new Set<string>();
-  let emptyNotes = 0;
-  let untaggedNotes = 0;
 
   const mdFiles = Object.keys(zip.files).filter(
     (name) => name.endsWith('.md') && !name.includes('/'),
@@ -255,28 +261,31 @@ export async function parsePrivacyNotesBackup(
     // user's own title and syncs it to every device (GitHub #337). The filename
     // answers only for a zip with no title line, which this app never writes.
     const title = 'title' in meta ? String(meta.title ?? '') : filename.replace(/\.md$/, '');
-    const tags = Array.isArray(meta.tags) ? (meta.tags as string[]) : [];
-    tags.forEach((t) => allTags.add(t));
-    if (tags.length === 0) untaggedNotes++;
+    // Front matter values come back typed (numbers, lists, objects): a tag
+    // is text through the tag rule, a time is text that parses, a type is
+    // a word. A newer build's type stays, as it does through sync.
+    const tags = Array.isArray(meta.tags)
+      ? normalizeTagList(meta.tags.filter((t) => typeof t === 'string' || typeof t === 'number').map(String))
+      : [];
+    const stamp = (v: unknown) => (typeof v === 'string' && !Number.isNaN(Date.parse(v)) ? v : new Date().toISOString());
 
-    // Rewrite body refs back to internal format
-    let importBody = rewriteImagesForImport(body);
+    // Rewrite body refs back to internal format. The exporter leaves a
+    // vault item's JSON body as it is, so its pictures have nothing to undo
+    // (a login's address can hold `images/<uuid>.png`).
+    const vaultJson = hasVaultFiles(typeof meta.type === 'string' ? meta.type : undefined);
+    let importBody = vaultJson ? body : rewriteImagesForImport(body, manifest);
     importBody = rewriteAttachmentsForImport(importBody, manifest);
-
-    if (!importBody.trim() && !title.trim()) {
-      emptyNotes++;
-    }
 
     const note: ImportedNote = {
       ...(typeof meta.id === 'string' && meta.id ? { id: meta.id } : {}),
       title,
       body: importBody,
       tags,
-      createdAt: (meta.created as string) || new Date().toISOString(),
-      updatedAt: (meta.updated as string) || new Date().toISOString(),
+      createdAt: stamp(meta.created),
+      updatedAt: stamp(meta.updated),
       starred: meta.starred === true,
       trashed: meta.trashed === true,
-      type: (meta.type as NoteType) || 'note',
+      type: typeof meta.type === 'string' && meta.type ? (meta.type as NoteType) : 'note',
       locked: meta.locked === true,
       pinProtected: meta.pinProtected === true,
       archived: meta.archived === true,
@@ -322,6 +331,7 @@ export async function parsePrivacyNotesBackup(
   // number is the fallback for an entry that is missing, where the restore
   // will skip the blob anyway.
   let blobBytes = 0;
+  const blobSizes: Record<string, number> = {};
   for (const [uuid, att] of Object.entries(manifest.attachments)) {
     const zipPath = att.file
       ? `${att.folder}/${att.file}`
@@ -329,18 +339,19 @@ export async function parsePrivacyNotesBackup(
     const entry = zip.files[zipPath] as unknown as
       | { _data?: { uncompressedSize?: number } }
       | undefined;
-    blobBytes += entry?._data?.uncompressedSize ?? att.size;
+    const size = entry?._data?.uncompressedSize ?? att.size;
+    blobBytes += size;
+    if (isUuid(uuid) && typeof size === 'number') blobSizes[uuid] = size;
   }
   // For images, sum uncompressed sizes from zip entry metadata.
   for (const [path, entry] of Object.entries(zip.files)) {
     if (!entry.dir && path.startsWith('images/')) {
       const internal = (entry as unknown as { _data?: { uncompressedSize?: number } })._data;
-      if (internal?.uncompressedSize) {
-        blobBytes += internal.uncompressedSize;
-      } else {
-        // Fallback: conservative estimate per image (200 KB average JPEG).
-        blobBytes += 200 * 1024;
-      }
+      // Fallback: conservative estimate per image (200 KB average JPEG).
+      const size = internal?.uncompressedSize || 200 * 1024;
+      blobBytes += size;
+      const uuid = path.slice('images/'.length).replace(/\.[^.]*$/, '');
+      if (isUuid(uuid)) blobSizes[uuid] = size;
     }
   }
 
@@ -354,15 +365,40 @@ export async function parsePrivacyNotesBackup(
     notes,
     warnings,
     transforms: [],
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes,
-      untaggedNotes,
-      uniqueTags: allTags.size,
-    },
     source: 'privacynotes',
     blobBytes,
+    blobSizes,
   };
+}
+
+/**
+ * What a restore of our own backup adds to the account, for the quota
+ * preflight: the notes whose id the vault lacks and the files in neither
+ * cache. The restore adds only what is missing (applyImport, restoreBlobs),
+ * so counting the whole backup as new kept a full backup from fitting an
+ * account more than half full (beta #197 item 7).
+ */
+export async function restoreAdds(parsed: ParsedImport): Promise<{ notes: ImportedNote[]; blobBytes: number }> {
+  const { localAccount, restoredId } = await import('./apply');
+  const account = localAccount();
+  const ids = parsed.notes.map((n) => n.id).filter((id): id is string => !!id);
+  // A note an earlier restore brought back sits under its derived id.
+  const derived = account ? await Promise.all(ids.map((id) => restoredId(account, id))) : [];
+  const [own, again] = await Promise.all([db.notes.bulkGet(ids), db.notes.bulkGet(derived)]);
+  const held = new Set<string>();
+  ids.forEach((id, i) => {
+    const row = own[i] ?? again[i];
+    if (row && row.deleted !== 1) held.add(id);
+  });
+  const notes = parsed.notes.filter((n) => !n.id || !held.has(n.id));
+  const uuids = Object.keys(parsed.blobSizes ?? {});
+  const cachedImg = await db.imageCache.bulkGet(uuids);
+  const cachedAtt = await db.attachmentCache.bulkGet(uuids);
+  let blobBytes = 0;
+  uuids.forEach((uuid, i) => {
+    if (!cachedImg[i] && !cachedAtt[i]) blobBytes += parsed.blobSizes![uuid]!;
+  });
+  return { notes, blobBytes };
 }
 
 // ─── Blob restoration (called after applyImport) ─────────────────────
@@ -382,6 +418,9 @@ export async function parsePrivacyNotesBackup(
 export async function restoreBlobs(
   file: File,
   onProgress?: (msg: string) => void,
+  /** The signed-in account: a blob this device already caches that the
+   *  server lacks goes up again (`uploadAgainAfterRestore`). */
+  account?: { supabase: SupabaseClient; pubkey: string },
 ): Promise<{ images: number; attachments: number; missing: Pick<MissingBlob, 'id' | 'kind'>[] }> {
   const zip = await openZip(await file.arrayBuffer());
   const manifestFile = zip.file('manifest.json');
@@ -396,6 +435,9 @@ export async function restoreBlobs(
   // Restore images
   const imageUuids = Object.keys(manifest.images || {});
   for (const uuid of imageUuids) {
+    // The id becomes a store key and a `pn:img/` reference: only a uuid,
+    // which is all the exporter writes.
+    if (!isUuid(uuid)) continue;
     // Try multiple extensions - the exporter names the file after the
     // stored format (.jpg, .png, or the source's own format when the space
     // saver was off); older backups used .webp.
@@ -422,18 +464,23 @@ export async function restoreBlobs(
     }
     const hash = await sha256Hex(data);
 
-    await db.imageCache.put({ id: uuid, data, cachedAt: now });
-    // Keyed by hash, so the same rule applies one table over: a dedup row
-    // the account already has points at a blob it can actually read. When
-    // it names another id (the same picture pasted on two devices is two
-    // blobs), this id still needs its own upload row: the upload sweep, the
-    // pending counts and a forced sign-out read only these rows.
-    const known = await db.imageDedup.get(hash);
-    if (!known) {
-      await db.imageDedup.put({ hash, uuid, encryptedSize: 0, pendingUpload: 1 });
-    } else if (known.uuid !== uuid) {
-      await uploadAgainWhatThePurgeTook([uuid]);
-    }
+    // The bytes and their upload row in one transaction: a restore that
+    // stopped between two writes left bytes no upload row named, and the
+    // next restore skipped the id as cached (beta #197 item 1).
+    await db.transaction('rw', [db.imageCache, db.imageDedup, db.attachmentCache, db.attachmentDedup], async () => {
+      await db.imageCache.put({ id: uuid, data, cachedAt: now });
+      // Keyed by hash, so the same rule applies one table over: a dedup row
+      // the account already has points at a blob it can actually read. When
+      // it names another id (the same picture pasted on two devices is two
+      // blobs), this id still needs its own upload row: the upload sweep, the
+      // pending counts and a forced sign-out read only these rows.
+      const known = await db.imageDedup.get(hash);
+      if (!known) {
+        await db.imageDedup.put({ hash, uuid, encryptedSize: 0, pendingUpload: 1 });
+      } else if (known.uuid !== uuid) {
+        await uploadAgainWhatThePurgeTook([uuid]);
+      }
+    });
     imgCount++;
     onProgress?.(msg('restoringImages', { done: imgCount, total: imageUuids.length }));
   }
@@ -441,6 +488,7 @@ export async function restoreBlobs(
   // Restore attachments
   const attEntries = Object.entries(manifest.attachments || {});
   for (const [uuid, info] of attEntries) {
+    if (!isUuid(uuid) || !info || typeof info.name !== 'string') continue;
     // v2 backups store the on-disk filename; v1 named files <uuid>.<ext>.
     const zipPath = info.file
       ? `${info.folder}/${info.file}`
@@ -462,15 +510,24 @@ export async function restoreBlobs(
     // and the per-file ceiling both consume it, and the archive declares its
     // own number. `blobImport` measures the bytes it just read for the same
     // reason.
-    const meta: AttachmentMeta = { name: info.name, mime: info.mime, size: data.length };
+    // The name and type are the manifest's word: the name is cleaned as
+    // every imported file name is (blobImport), and a type that is not text
+    // is none.
+    const meta: AttachmentMeta = {
+      name: cleanFileName(info.name, 'Attachment'),
+      mime: typeof info.mime === 'string' && info.mime ? info.mime : 'application/octet-stream',
+      size: data.length,
+    };
 
-    await db.attachmentCache.put({ id: uuid, meta, data, cachedAt: now });
-    const known = await db.attachmentDedup.get(hash);
-    if (!known) {
-      await db.attachmentDedup.put({ hash, uuid, encryptedSize: 0, pendingUpload: 1 });
-    } else if (known.uuid !== uuid) {
-      await uploadAgainWhatThePurgeTook([uuid]);
-    }
+    await db.transaction('rw', [db.imageCache, db.imageDedup, db.attachmentCache, db.attachmentDedup], async () => {
+      await db.attachmentCache.put({ id: uuid, meta, data, cachedAt: now });
+      const known = await db.attachmentDedup.get(hash);
+      if (!known) {
+        await db.attachmentDedup.put({ hash, uuid, encryptedSize: 0, pendingUpload: 1 });
+      } else if (known.uuid !== uuid) {
+        await uploadAgainWhatThePurgeTook([uuid]);
+      }
+    });
     attCount++;
     onProgress?.(msg('restoringFiles', { done: attCount, total: attEntries.length }));
   }
@@ -482,5 +539,6 @@ export async function restoreBlobs(
     }
   }
 
+  if (account) await uploadAgainAfterRestore(account.supabase, account.pubkey);
   return { images: imgCount, attachments: attCount, missing };
 }

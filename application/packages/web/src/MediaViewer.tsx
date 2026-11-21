@@ -15,7 +15,10 @@ import { Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } f
 import { lazyPart } from './chunkLoad';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { CaretLeft, CaretRight, Download, MagnifyingGlassMinus, MagnifyingGlassPlus, X, iconCopy, iconDownload } from './icons';
+import { CaretLeft, CaretRight, Download, MagnifyingGlassMinus, MagnifyingGlassPlus, TextT, X, iconCopy, iconDownload } from './icons';
+import { pluginsShown } from './onDeviceAi';
+import { openPluginSheet } from './plugins/pluginDoors';
+import { planIsPro } from './plugins/pluginState';
 import { ContextMenu, isTouchContextMenu, useContextMenu } from './ContextMenu';
 import { copyPictureToClipboard } from './EncryptedImage';
 import { detectPlatform } from './devices';
@@ -160,6 +163,16 @@ export function MediaViewer({ items, index: startIndex, onClose }: {
         onSelect: () => { void copyPictureToClipboard(item.src, url, item.name ?? '').then((ok) => setFailedCopy(ok ? null : item.src)); },
       },
       { label: t('image.downloadAria'), icon: iconDownload(), onSelect: () => { void save(); } },
+      // Text in pictures: the viewer has no place in the note, so Copy only.
+      // Spec: docs/internal/plans/plugins.md (section 6.4)
+      ...(pluginsShown()
+        ? [{
+            label: t('copyText'),
+            icon: <TextT size={14} />,
+            pro: !planIsPro(),
+            onSelect: () => openPluginSheet({ kind: 'ocr', source: 'picture', primary: 'copy', load: async () => new Uint8Array(await (await fetch(url)).arrayBuffer()) }),
+          }]
+        : []),
     ]);
   };
 
@@ -216,7 +229,7 @@ export function MediaViewer({ items, index: startIndex, onClose }: {
       className="fixed inset-0 z-50 flex flex-col bg-black/95 text-white outline-none"
     >
       <ContextMenu state={menu.state} onClose={menu.close} />
-      <div className="shrink-0 pt-[env(safe-area-inset-top)]">
+      <div className="shrink-0 pt-[var(--pn-safe-top)]">
         <div className="h-14 flex items-center gap-1 px-2 sm:px-4">
           <h2 className="flex-1 min-w-0 px-2 text-body font-medium truncate" dir="auto">{title}</h2>
           {/* A mail is text that scrolls; zoom is for pictures and pages. */}
@@ -261,7 +274,7 @@ export function MediaViewer({ items, index: startIndex, onClose }: {
           <p className="px-4 pb-2 text-small text-red-400">{t('image.copyFailed')}</p>
         )}
       </div>
-      <div data-backdrop="" className="flex-1 min-h-0 flex pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div data-backdrop="" className="flex-1 min-h-0 flex pb-[max(1rem,var(--pn-safe-bottom))]">
         <div data-backdrop="" className="hidden sm:flex w-16 shrink-0 items-center justify-center">
           {count > 1 && previous('end', true)}
         </div>

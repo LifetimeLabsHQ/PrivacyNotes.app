@@ -8,7 +8,7 @@ import { defaultTrackerSettings, type JournalTrackerData, type FactorDef, type M
 import { MonthGrid } from '../MonthGrid';
 import catalogIndex from './catalogIndex.json';
 import { PhraseChangeEnd } from '../security/PhraseChangeWizard';
-import { AppWindow, ArrowSquareOut, Article, Bell, BookmarkSimple, ChatText, CheckCircle, CheckFat, Clock, Copy, Fire, Folder, Gear, Globe, HardDrives, Info, MapPin, Moon, PencilSimple, Plus, PushPin, Scissors, SlidersHorizontal, Sparkle, Stethoscope, Sun, Trash, User, Warning } from '../icons';
+import { CreditCard, Key, Lock, AppWindow, ArrowSquareOut, Article, Bell, BookmarkSimple, ChatText, CheckCircle, CheckFat, Clock, Copy, Fire, Folder, Gear, Globe, HardDrives, Info, MapPin, Moon, PencilSimple, Plus, PushPin, Scissors, SlidersHorizontal, Sparkle, Stethoscope, Sun, Trash, User, Warning } from '../icons';
 import {
   Button,
   FeedbackButton,
@@ -40,6 +40,7 @@ import {
   Kbd,
   Popover,
   RowChip,
+  KindChips,
   ProgressBar,
   Snackbar,
   Spinner,
@@ -103,7 +104,7 @@ import {
 const patternGroups = {
   'Actions': ['Button', 'IconButton', 'DeleteButton', 'EditRow', 'Vault form actions', 'Vault field actions', 'Generation actions', 'Bookmark actions', 'useProGate', 'Class strings'],
   'Fields and settings': ['TextField and Select', 'FieldLabel, GroupHeading, FIELD_CLASS', 'Segmented', 'Setting row, Switch, heading', 'Tabs', 'ListSearchInput, InlineRenameField', 'ColorSwatch', 'Checkbox', 'CompareTiles', 'TaskCheckbox', 'SettingsCallout, ResetDefaultsButton, HelpChip'],
-  'Content and trackers': ['StatTile', 'MoodScale', 'ScaleTiles', 'Tracker panel parts', 'MonthGrid, StorageBar', 'GridCard', 'Detail pane kit', 'Badge, IconTile, Kbd', 'FeaturePitch', 'TerminalBlock', 'RowChip'],
+  'Content and trackers': ['StatTile', 'MoodScale', 'ScaleTiles', 'Tracker panel parts', 'MonthGrid, StorageBar', 'GridCard', 'Detail pane kit', 'Badge, IconTile, Kbd', 'FeaturePitch', 'TerminalBlock', 'RowChip', 'KindChips'],
   'Product flows': ['Guided tracker flow', 'Time input', 'Import workflow', 'Export progress', 'Phrase change, last screens', 'Upload progress', 'Flow reference map'],
   'Window contract': ['Window anatomy and behavior', 'Window sizing lab'],
   'App map': ['Replay recipes', 'Settings paths', 'Window implementation inventory'],
@@ -708,6 +709,21 @@ export default function Catalog() {
           </div>
         </Part>
 
+        <Part name="KindChips" note="the kind bar of a list: glyph and count per cell, the name slides open on hover, empty kinds hidden" source="ui/KindChips.tsx" usage="NotesList.tsx (Vault kinds), FilesList.tsx (file types, Unused)">
+          <div className="max-w-sm">
+            <KindChips
+              kinds={[
+                { key: 'all', label: 'All', Icon: null, count: 12 },
+                { key: 'login', label: 'Logins', Icon: Lock, count: 9 },
+                { key: 'card', label: 'Cards', Icon: CreditCard, count: 2 },
+                { key: 'ssh-key', label: 'Keys', Icon: Key, count: 1 },
+              ]}
+              value="all"
+              onChange={() => {}}
+            />
+          </div>
+        </Part>
+
         <Part name="Badge, IconTile, Kbd" note="a short status beside a name; the tinted tile; a key in text">
           <div className="flex flex-wrap items-center gap-2">
             <Badge>Default</Badge><Badge tone="success">Stronger</Badge><Badge tone="warning">Not backed up</Badge><Badge tone="danger">Expired</Badge><Badge tone="info">3</Badge>
@@ -722,7 +738,7 @@ export default function Catalog() {
           <div className="max-w-md">
             <FeaturePitch
               banner={{ tone: 'info', icon: <Sparkle />, title: 'Example feature', sub: 'One line on what it is', badge: <PitchBadge>Free</PitchBadge> }}
-              intro="One centred sentence on how it works."
+              intro="One centered sentence on how it works."
               chips={[{ icon: <Scissors />, label: 'Chip one' }, { icon: <Globe />, label: 'Chip two' }, { icon: <Clock />, label: 'Chip three' }]}
               uses={[{ icon: <Article />, label: 'A first use' }, { icon: <Bell />, label: 'A second use' }, { icon: <Folder />, label: 'A third use' }]}
               facts={[
@@ -862,7 +878,7 @@ function WindowLab() {
           {busy && <StatusLine busy>Local busy simulation. End it with the button above; X, Escape and outside click are disabled.</StatusLine>}
           {long && Array.from({ length: 16 }, (_, i) => <p key={i} className="text-body">Example paragraph {i + 1}. Long content belongs in the scrolling body while the title and actions remain reachable.</p>)}
         </div>
-        {!info && <ModalFooter bar><Button action="cancel" disabled={busy} onClick={() => close('Cancelled the local draft.')} /><Button action="save" disabled={busy || invalid} onClick={() => close('Saved the local fixture only.')} /></ModalFooter>}
+        {!info && <ModalFooter bar><Button action="cancel" disabled={busy} onClick={() => close('Canceled the local draft.')} /><Button action="save" disabled={busy || invalid} onClick={() => close('Saved the local fixture only.')} /></ModalFooter>}
         {child && <Modal title="Child window" layer="z-[60]" onClose={() => setChild(false)} className="max-w-sm p-6 space-y-4">
           <p className="text-body">Close this layer first. The parent window should remain open.</p>
           <ModalFooter><Button action="cancel" onClick={() => setChild(false)} /><Button action="done" onClick={() => setChild(false)} /></ModalFooter>

@@ -9,7 +9,7 @@ import type { LocalNote } from './db';
 import type { Space } from './spaces';
 import { indexedBodyText, indexedPlaceText, isPhraseQuery } from './search';
 import { foldForMatch, textMatcher } from './textMatch';
-import { MARKDOWN_NOTE_TYPES, isKnownNoteType } from './noteTypes';
+import { MARKDOWN_NOTE_TYPES, isKnownNoteType, traitsOf } from './noteTypes';
 import { SCHEDULE_KEYS, dayNumber, occurrencesOf, scheduleOf, shiftDay, spanLength, withSchedule, type Schedule } from './schedule';
 export { MARKDOWN_NOTE_TYPES, isKnownNoteType } from './noteTypes';
 import type { ListPrefs } from './listPrefs';
@@ -87,6 +87,9 @@ function estimateNoteCiphertextBytes(n: LocalNote): number {
   if (n.folderId) payload.folderId = n.folderId;
   payload.archived = n.archived === 1;
   if (n.editedAt) payload.editedAt = n.editedAt;
+  // The row binding every push seals (payload-row-binding.md, section 2).
+  // Its stamp is always 24 characters (bindStamp in @notes/shared).
+  payload.bind = { id: n.id, kind: 'note', at: '2026-01-01T00:00:00.000Z' };
   return estimateCiphertextBytes(payload);
 }
 
@@ -103,6 +106,7 @@ export function estimateNoteStoredBytes(
     title, body, tags,
     trashed: false, starred: false, locked: false, pinProtected: false,
     type: 'note', archived: false,
+    bind: { id: '00000000-0000-4000-8000-000000000000', kind: 'note', at: '2026-01-01T00:00:00.000Z' },
   });
 }
 
@@ -173,7 +177,8 @@ const NAMED_ENTITIES: Record<string, string> = { lt: '<', gt: '>', amp: '&', quo
  */
 function decodeEntities(line: string): string {
   return line.replace(/&(#\d{1,7}|#x[0-9a-f]{1,6}|[a-z]+);/gi, (ref, name: string) => {
-    if (name[0] !== '#') return NAMED_ENTITIES[name] ?? ref;
+    // `&constructor;` names an inherited member, so ask for an own key (rule S6).
+    if (name[0] !== '#') return Object.hasOwn(NAMED_ENTITIES, name) ? NAMED_ENTITIES[name]! : ref;
     const code = name[1] === 'x' || name[1] === 'X' ? parseInt(name.slice(2), 16) : parseInt(name.slice(1), 10);
     const valid = code > 0 && code <= 0x10ffff && (code < 0xd800 || code > 0xdfff);
     return String.fromCodePoint(valid ? code : 0xfffd);
@@ -244,11 +249,18 @@ export function fileCount(body: string): number {
   return markdownLinks(body, FILE_LINK).length;
 }
 
-/** Count the stored pictures in a note body (`pn:img/` or `pn:file/`), the
- *  inline ones `fileCount` leaves out. A picture from a web address is not
- *  stored with the note and does not count. Spec: issue #759. */
+/** A picture that ships with the app, on a path of its own site: the starter
+ *  notes show `/onboarding/welcome.webp`. Not `//host/...`, a web address. */
+const APP_PICTURE_PATH = /^\/(?!\/)\S/;
+
+/** Count the pictures of a note body: the stored ones (`pn:img/` or
+ *  `pn:file/`), the inline ones `fileCount` leaves out, and the ones that ship
+ *  with the app, which look the same in the note (issue #799). A picture from
+ *  a web address is not stored with the note and does not count. Spec: issue
+ *  #759. */
 export function pictureCount(body: string): number {
-  return markdownLinks(body, MEDIA_PICTURE).length;
+  return markdownLinks(body, MEDIA_PICTURE).length +
+    markdownLinks(body, ANY_PICTURE).filter((m) => APP_PICTURE_PATH.test(m.target)).length;
 }
 
 // Extract a human-friendly label from the first image in markdown body.
@@ -681,13 +693,16 @@ export function compareNotes(
   /** The Journals pillar: the `created` sort orders by the day each entry is
    *  for, then by the time it was written. */
   entryDays = false,
+  /** An item behind a shut gate sorts by the name its row shows, never by a
+   *  name its content spells (RFS #215). */
+  gated?: (n: LocalNote) => boolean,
 ): number {
   if (a.starred !== b.starred) return b.starred - a.starred;
   let cmp = 0;
   if (prefs.sortField === 'title') {
     // Sort on the displayed title so "Untitled (first body line)" notes
     // sort where the user sees them, not as blank strings.
-    cmp = titleCollator.compare(deriveDisplayTitle(a), deriveDisplayTitle(b));
+    cmp = titleCollator.compare(deriveDisplayTitle(a, gated?.(a)), deriveDisplayTitle(b, gated?.(b)));
   } else if (prefs.sortField === 'size') {
     // The same measure the row displays - see `noteSizeBytes`.
     cmp = noteSizeBytes(a) - noteSizeBytes(b);
@@ -703,6 +718,12 @@ export function compareNotes(
     const eb = editedAtOf(b);
     cmp = ea < eb ? -1 : ea > eb ? 1 : 0;
   }
+  // A tie never falls back to the order notes load in, which is `updatedAt`:
+  // a read-only switch, a pin or a move bumps it, and a note sharing its date
+  // with others (an import) jumped to the top (GitHub #817, #818). Creation,
+  // then the id, never move.
+  if (cmp === 0) cmp = a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0;
+  if (cmp === 0) cmp = a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
   return cmp * (prefs.sortDir === 'asc' ? 1 : -1);
 }
 
@@ -1169,8 +1190,9 @@ export function journalDatePatch(
  *  day (its creation day before the field), a note's, a task list's or an
  *  event's `journalDate`, or null. A contact is placed by its dates instead. */
 function itemDayOf(n: LocalNote): string | null {
-  if (n.type === 'journal') return entryDayOf(n);
-  if (n.type === 'note' || n.type === 'task' || n.type === 'event') return journalDateOf(n);
+  const { dated } = traitsOf(n.type);
+  if (dated === 'entry') return entryDayOf(n);
+  if (dated === 'schedule') return journalDateOf(n);
   return null;
 }
 
@@ -1219,11 +1241,13 @@ export function calendarIndex(
     /** The title of a birthday whose row has the year of birth, from the
      *  contact's title and the age that day ("Anna turns 30", #750). */
     birthdayTitle?: (name: string, age: number) => string;
-    spaceOf?: (n: LocalNote) => Space;
+    /** The space of an item, or null for one that shows in both (a
+     *  subscribed calendar set to All, #772). */
+    spaceOf?: (n: LocalNote) => Space | null;
     open?: Space;
     openOnly?: boolean;
     /** The calendar a subscribed event comes from, or null for an item.
-     *  Such an event shows in every space. Spec: docs/internal/specs/calendar-pillar-spec.md (section 14) */
+     *  Spec: docs/internal/specs/calendar-pillar-spec.md (section 14) */
     feedOf?: (n: LocalNote) => string | null;
   },
 ): DayIndex {
@@ -1235,7 +1259,10 @@ export function calendarIndex(
   const series: { n: LocalNote; s: Schedule; len: number }[] = [];
   for (const n of notes) {
     if (n.deleted !== 0 || n.trashed !== 0 || n.archived === 1) continue;
-    if (opts.openOnly && opts.spaceOf && !opts.feedOf?.(n) && opts.spaceOf(n) !== (opts.open ?? 'personal')) continue;
+    if (opts.openOnly && opts.spaceOf) {
+      const space = opts.spaceOf(n);
+      if (space !== null && space !== (opts.open ?? 'personal')) continue;
+    }
     if (n.type === 'contact') {
       if (opts.isGated(n)) continue;
       const c = parseContactBody(n.body);
@@ -1307,7 +1334,7 @@ export function calendarIndex(
         const entry: DayEntry & { at: string } = {
           id: n.id,
           kind: n.type as DayKind,
-          space: opts.spaceOf && !feed ? opts.spaceOf(n) : null,
+          space: opts.spaceOf ? opts.spaceOf(n) : null,
           title: opts.titleOf(n),
           at: n.createdAt,
           tags: n.tags,

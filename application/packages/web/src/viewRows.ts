@@ -169,3 +169,14 @@ export function resolveStartView(stored: View, hidden: View[] | undefined): View
   if (hidden?.includes(stored)) return 'home';
   return stored;
 }
+
+/**
+ * The view a cold start reopens when "Reopen where I left off" is on (#828):
+ * the one left at quit, when a start could open it (the rows above), else
+ * null, and the start view applies.
+ * Spec: docs/internal/specs/keep-my-place.md (section 3)
+ */
+export function reopenView(saved: string, hidden: View[] | undefined): View | null {
+  const keyOnly = ((key: string) => key) as unknown as TFunction;
+  return startViewRows(keyOnly, hidden).find((r) => r.key === saved)?.key ?? null;
+}

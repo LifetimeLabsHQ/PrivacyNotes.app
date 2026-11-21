@@ -40,6 +40,12 @@ export interface OpenedFileRef {
   /** Current on-disk fingerprint, or null when the platform cannot answer.
    *  A null must never be treated as "unchanged" - see `stampsMatch`. */
   stamp(): Promise<FileStamp | null>;
+  /** A file opened on its own in the desktop app (a double-click, the file
+   *  picker): a displayable URL for a picture it names beside it or below
+   *  it, which `grant_file_picture` checks and grants natively
+   *  (src-tauri/src/file_pictures.rs). Absent on a file of an opened folder,
+   *  whose pictures the folder resolves, and on the web. */
+  resolveAsset?(relPath: string): Promise<string | null>;
 }
 
 export interface DirectoryEntry {
@@ -168,7 +174,7 @@ export async function pickFile(): Promise<OpenedFileRef | null> {
       directory: false,
       filters: [{ name: 'Markdown', extensions: SUPPORTED_EXTENSIONS }],
     });
-    return typeof picked === 'string' ? tauriFileRef(fs, picked, picked) : null;
+    return typeof picked === 'string' ? loneTauriFileRef(fs, picked) : null;
   }
 
   const picker = (window as unknown as {
@@ -202,7 +208,13 @@ export async function pickFile(): Promise<OpenedFileRef | null> {
 export async function openPath(path: string): Promise<OpenedFileRef | null> {
   if (detectPlatform() !== 'desktop') return null;
   const fs = await import('@tauri-apps/plugin-fs');
-  return tauriFileRef(fs, path, path);
+  return loneTauriFileRef(fs, path);
+}
+
+/** A desktop file opened without its folder. Its fs grant is the file alone,
+ *  so a picture beside it is granted one at a time by the native check. */
+function loneTauriFileRef(fs: TauriFs, path: string): OpenedFileRef {
+  return { ...tauriFileRef(fs, path, path), resolveAsset: (rel) => resolveLoneTauriAsset(path, rel) };
 }
 
 /* ── Folder ───────────────────────────────────────────────────────── */
@@ -345,8 +357,9 @@ function sortByPath(entries: DirectoryEntry[]): DirectoryEntry[] {
  * shared vault or a single .md file a user was sent could otherwise address a
  * file anywhere on disk by walking up out of the folder. The web backend gets
  * this for free, because the File System Access API rejects `..` in
- * `getDirectoryHandle`; the Tauri backend joins a raw string and had no such
- * guard, next to an asset scope of `**`.
+ * `getDirectoryHandle`; the Tauri backend joins a raw string, and the asset
+ * scope reaches every folder the person opened, so this check keeps a
+ * picture inside the one the note belongs to.
  */
 export function isContainedRelPath(relPath: string): boolean {
   if (relPath === '') return false;
@@ -393,8 +406,24 @@ async function resolveTauriAsset(
     return null;
   }
   const { convertFileSrc } = await import('@tauri-apps/api/core');
-  // The one place an asset address is made; the picture renderers load no other.
+  // One of the two places an asset address is made (the other is
+  // `resolveLoneTauriAsset`); the picture renderers load no other.
   return issueAssetUrl(convertFileSrc(full));
+}
+
+/** A picture of a lone desktop file. `grant_file_picture` refuses all but a
+ *  picture at or under the file's folder with no link on the way, and grants
+ *  the asset scope that one file; the string test here only saves the call. */
+async function resolveLoneTauriAsset(file: string, relPath: string): Promise<string | null> {
+  if (!isContainedRelPath(relPath)) return null;
+  const { convertFileSrc, invoke } = await import('@tauri-apps/api/core');
+  let granted: string | null;
+  try {
+    granted = await invoke<string | null>('grant_file_picture', { path: file, picture: relPath });
+  } catch {
+    return null;
+  }
+  return granted ? issueAssetUrl(convertFileSrc(granted)) : null;
 }
 
 /**
@@ -526,7 +555,7 @@ async function writeHandleAsset(
  * with `requireLiteralLeadingDot` on, the `<root>/**` a picked folder is
  * granted does not reach a name starting with a dot, so the write would be
  * refused. A double-clicked file is granted this name beside it
- * (`take_pending_opens` in src-tauri/src/lib.rs). The scan skips it because `pn-tmp` is no extension it
+ * (`take_pending_opens` in src-tauri/src/opened_file.rs). The scan skips it because `pn-tmp` is no extension it
  * opens. One fixed name per target, because nothing here may delete a file:
  * a copy a crash leaves behind is overwritten and renamed away by that file's
  * next save.
@@ -744,8 +773,20 @@ function tauriFileRef(fs: TauriFs, path: string, location: string): OpenedFileRe
     name,
     location,
     read: async () => {
-      if ((await fs.stat(path)).size > TEXT_READ_MAX_BYTES) throw new FileOpenError('tooLarge');
-      return decodeText(await fs.readFile(path));
+      // One native read checks the opened handle is a regular file and stops
+      // one byte past the limit (opened_file.rs). A stat and then a read let
+      // a link to `/dev/zero`, a pipe or a Linux `/proc` file (regular, size
+      // 0) read without end, and the file could change between the two
+      // (beta issue 168). A link to an ordinary file still opens.
+      const { invoke } = await import('@tauri-apps/api/core');
+      let bytes: ArrayBuffer;
+      try {
+        bytes = await invoke<ArrayBuffer>('read_opened_file', { path, max: TEXT_READ_MAX_BYTES });
+      } catch (err) {
+        if (err === 'notText' || err === 'tooLarge') throw new FileOpenError(err);
+        throw err;
+      }
+      return decodeText(new Uint8Array(bytes));
     },
     write: (text) => replaceTauriFile(fs, path, text),
     stamp: async () => {

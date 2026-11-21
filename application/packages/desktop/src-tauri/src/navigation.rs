@@ -7,9 +7,10 @@
 //! app means to open go to the system browser through the opener plugin
 //! (`App.tsx`, `openExternal.ts`), which is not a navigation of the web view.
 //!
-//! Allowed: the app's own origin as each platform serves it (`tauri://localhost`
-//! on macOS, iOS and Linux, `http://tauri.localhost` on Windows and Android,
-//! `https://tauri.localhost` when a build sets `useHttpsScheme`), the configured
+//! Allowed: the app's own origin as the running platform serves it
+//! (`tauri://localhost` on macOS, iOS and Linux, `http://tauri.localhost` on
+//! Windows and Android, `https://tauri.localhost` there when a build sets
+//! `useHttpsScheme`; each only on its own platforms), the configured
 //! dev server in a debug build, and `about:blank` / `about:srcdoc` and the
 //! app's own `blob:` addresses, which WKWebView also passes here for frames.
 //! Never `asset.localhost`: an asset address serves a file from disk with no
@@ -23,6 +24,10 @@ pub(crate) fn is_app_url(url: &Url, dev_url: Option<&Url>) -> bool {
     match url.scheme() {
         "tauri" => url.host_str() == Some("localhost") && url.port().is_none(),
         "http" | "https" => {
+            // Only where the app is served that way. On macOS, iOS and Linux
+            // it is `tauri://localhost`, and an `http(s)://tauri.localhost`
+            // address there is an ordinary network address (beta issue 174).
+            #[cfg(any(windows, target_os = "android"))]
             if url.host_str() == Some("tauri.localhost") && url.port().is_none() {
                 return true;
             }
@@ -73,12 +78,18 @@ mod tests {
     fn allows_the_app_origin_of_every_platform() {
         assert!(ok("tauri://localhost/", None));
         assert!(ok("tauri://localhost/index.html?about-window=1", None));
-        assert!(ok("http://tauri.localhost/", None));
-        assert!(ok("https://tauri.localhost/index.html?ninja-window=1", None));
         assert!(ok("about:blank", None));
         assert!(ok("about:srcdoc", None));
         assert!(ok("blob:tauri://localhost/7f1c", None));
-        assert!(ok("blob:http://tauri.localhost/7f1c", None));
+    }
+
+    /// The web forms are the app on Windows and Android only.
+    #[test]
+    fn the_web_origin_only_where_the_app_is_served_there() {
+        let served = cfg!(any(windows, target_os = "android"));
+        assert_eq!(ok("http://tauri.localhost/", None), served);
+        assert_eq!(ok("https://tauri.localhost/index.html?ninja-window=1", None), served);
+        assert_eq!(ok("blob:http://tauri.localhost/7f1c", None), served);
     }
 
     #[test]

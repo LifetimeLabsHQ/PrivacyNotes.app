@@ -19,7 +19,7 @@
  */
 
 import { liveVotes, parseShipped, rankThemes } from './themeVotes';
-import { handleClipFetch, type ClipEnv } from './clipFetchRoute';
+import { faviconAllowed, handleClipFetch, type ClipEnv } from './clipFetchRoute';
 
 // The web clipper's counters live in a Durable Object, which the runtime
 // finds by its export from the main module.
@@ -104,9 +104,6 @@ const CACHE_TTL = 90 * 24 * 60 * 60;
 
 /** 24 hours - cache misses to avoid hammering upstream for unknown domains. */
 const MISS_TTL = 24 * 60 * 60;
-/** A lookup that failed upstream (network, 429, 5xx): the browser may keep it
- *  for five minutes, and the edge does not keep it at all. */
-const ERROR_TTL = 5 * 60;
 
 /**
  * Bump to invalidate every edge-cached favicon at once. Needed when the
@@ -129,13 +126,17 @@ const BADGE_TTL = 24 * 60 * 60;
 // One Worker serves every hostname of the zone. The apex is the marketing
 // site (and, during the domain-split transition, still serves the app);
 // use.privacynotes.app is the dedicated app host; try.privacynotes.app is
-// the demo. The Worker cannot import app code (separate bundle), so these
-// mirror src/hosts.ts by hand - keep them in sync.
+// the demo; pay.privacynotes.app is the card checkout and nothing else.
+// The Worker cannot import app code (separate bundle), so these mirror
+// src/hosts.ts by hand - keep them in sync (tests/payHost.test.ts holds
+// the checkout one).
 // Spec: docs/internal/domain-split.md
 const APEX_HOST = 'privacynotes.app';
 const APP_HOST = 'use.privacynotes.app';
 const DEMO_HOST = 'try.privacynotes.app';
 const APEX_ORIGIN = 'https://privacynotes.app';
+const PAY_HOST = 'pay.privacynotes.app';
+const PAY_ORIGIN = 'https://pay.privacynotes.app';
 
 /**
  * CSP as response header so Cloudflare can modify for managed challenges.
@@ -152,8 +153,26 @@ const APEX_ORIGIN = 'https://privacynotes.app';
  * per inline value and is not feasible for a runtime-styled SPA.
  * frame-ancestors 'none' mirrors X-Frame-Options: DENY.
  */
+const CSP = [
+  "default-src 'none'",
+  "script-src 'self' https://challenges.cloudflare.com",
+  "style-src 'self' 'unsafe-inline'",
+  // data: and blob: read bytes already on the device (a picture inside a
+  // paste) and can send nothing out. Spec: docs/internal/specs/paste-pictures.md (section 2)
+  "connect-src 'self' data: blob: https://sync.privacynotes.app https://files.privacynotes.app https://releases.privacynotes.app https://maps.privacynotes.app https://plugins.privacynotes.app https://challenges.cloudflare.com",
+  "img-src 'self' data: blob: https://sync.privacynotes.app",
+  "frame-src https://challenges.cloudflare.com",
+  "font-src 'self' data:",
+  "media-src 'self' blob:",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "base-uri 'none'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ');
+
 /**
- * Paddle is allowed on ONE page and nowhere else.
+ * Paddle is allowed on ONE page of ONE host and nowhere else.
  *
  * `/checkout` is the only thing that loads Paddle.js: CheckoutLauncher.tsx is
  * the only importer of the functions that fetch it, and every other Paddle
@@ -163,37 +182,33 @@ const APEX_ORIGIN = 'https://privacynotes.app';
  * /burn, which renders content written by a stranger - has no business
  * allowlisting a payment CDN, and does not.
  *
- * The allowlist is scoped per host and path rather than site-wide because a
- * site-wide policy could not drop the Paddle hosts without taking /checkout
- * down with them. Scoping removes them everywhere they are not needed and
- * leaves the policy on the apex /checkout unchanged, so it cannot break a
- * purchase. The host half is what keeps a payment CDN out of the origin that
- * stores the phrase envelope.
+ * The page lives on pay.privacynotes.app, an origin no version of the app
+ * ever ran on, so it stores no phrase, no wrap and no session. The apex
+ * cannot be that origin: the app ran there until 2026-08-25, and a browser
+ * that signed in there before the move still stores that sign-in (beta #224).
+ * This policy names only what the page and Paddle's overlay use: no sync
+ * host, no Turnstile, no map, release or plugin host, and a form may submit
+ * nowhere (the overlay's own forms live in Paddle's frame).
  *
  * Spec: docs/internal/design-decisions.md (native checkout: desktop opens the system
- * browser), docs/internal/domain-split.md
+ * browser), docs/internal/domain-split.md, docs/internal/billing-integration.md (checkout host)
  */
-const cspFor = (paddle: boolean): string =>
-  [
-    "default-src 'none'",
-    `script-src 'self' https://challenges.cloudflare.com${paddle ? ' https://cdn.paddle.com https://sandbox-cdn.paddle.com https://public.profitwell.com' : ''}`,
-    `style-src 'self' 'unsafe-inline'${paddle ? ' https://cdn.paddle.com https://sandbox-cdn.paddle.com' : ''}`,
-    // data: and blob: read bytes already on the device (a picture inside a
-    // paste) and can send nothing out. Spec: docs/internal/specs/paste-pictures.md (section 2)
-    `connect-src 'self' data: blob: https://sync.privacynotes.app https://releases.privacynotes.app https://maps.privacynotes.app https://challenges.cloudflare.com${paddle ? ' https://*.paddle.com https://*.profitwell.com' : ''}`,
-    `img-src 'self' data: blob: https://sync.privacynotes.app${paddle ? ' https://*.paddle.com' : ''}`,
-    `frame-src https://challenges.cloudflare.com${paddle ? ' https://*.paddle.com' : ''}`,
-    "font-src 'self' data:",
-    "media-src 'self' blob:",
-    "worker-src 'self' blob:",
-    "manifest-src 'self'",
-    "base-uri 'none'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-  ].join('; ');
+const CSP_CHECKOUT = [
+  "default-src 'none'",
+  "script-src 'self' https://cdn.paddle.com https://sandbox-cdn.paddle.com https://public.profitwell.com",
+  "style-src 'self' 'unsafe-inline' https://cdn.paddle.com https://sandbox-cdn.paddle.com",
+  "connect-src 'self' https://*.paddle.com https://*.profitwell.com",
+  "img-src 'self' data: https://*.paddle.com",
+  "frame-src https://*.paddle.com",
+  "font-src 'self' data:",
+  "manifest-src 'self'",
+  "base-uri 'none'",
+  "form-action 'none'",
+  "frame-ancestors 'none'",
+].join('; ');
 
-const CSP = cspFor(false);
-const CSP_CHECKOUT = cspFor(true);
+/** The checkout host asks for no camera, microphone or place; payment only for Paddle's frame. */
+const PERMISSIONS_CHECKOUT = 'camera=(), microphone=(), geolocation=(), payment=(self "https://buy.paddle.com")';
 
 /** The one path that may load Paddle. */
 const CHECKOUT_PATH = '/checkout';
@@ -272,7 +287,9 @@ const RASTER_TYPES: Record<string, string> = {
 
 /** The served type for an upstream content-type header, or null to refuse it. */
 function rasterType(contentType: string): string | null {
-  return RASTER_TYPES[contentType.split(';')[0]!.trim().toLowerCase()] ?? null;
+  const type = contentType.split(';')[0]!.trim().toLowerCase();
+  // Own keys only: `constructor` from upstream is no type of ours (beta #218).
+  return Object.hasOwn(RASTER_TYPES, type) ? RASTER_TYPES[type]! : null;
 }
 
 /** Upstream favicon sources. */
@@ -425,9 +442,23 @@ export default {
 async function route(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(request.url);
 
+  // ── The checkout host answers its one page and nothing else ──
+  if (url.hostname === PAY_HOST) return routePayHost(request, url, env);
+
+  // ── /checkout lives on the checkout host (301, query kept) ──
+  // Every host sends it there: shipped desktop builds open the apex
+  // address, and links Paddle has already emailed (`?_ptxn=`) name it too.
+  // The empty fragment drops whatever fragment the request carried, so a
+  // token never reaches the page that loads Paddle. The demo host keeps its
+  // own copy, which can load no payment script.
+  // Spec: docs/internal/billing-integration.md (checkout host)
+  if (url.pathname === CHECKOUT_PATH && (url.hostname === APEX_HOST || url.hostname === APP_HOST)) {
+    return Response.redirect(withEmptyFragment(`${PAY_ORIGIN}${CHECKOUT_PATH}${url.search}`), 301);
+  }
+
   // ── /favicon?domain=X ────────────────────────────────────────
   if (url.pathname === '/favicon') {
-    return handleFavicon(request, url, ctx);
+    return handleFavicon(request, url, env, ctx);
   }
 
   // ── /clip-fetch (the web clipper's download) ─────────────────
@@ -457,18 +488,12 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
   // in-app, and a 301 to the apex gets blocked by the document CSP
   // (img-src has no apex entry), rendering broken images.
   //
-  // /checkout goes too, and it is the one app route that does. It is the
-  // only page that loads a payment CDN, and this host is the one that
-  // stores the phrase envelope, so serving it here would put cdn.paddle.com
-  // and public.profitwell.com in script-src beside the phrase. Nothing
-  // legitimately opens it here: billing.ts targets the apex from every
-  // client, desktop binaries have the apex baked in, and Paddle's own
-  // default payment link points there.
+  // /crypto-checkout goes too (an empty fragment, like the card checkout
+  // above, which goes to its own host).
   // Spec: docs/internal/domain-split.md
   if (url.hostname === APP_HOST) {
     const p = url.pathname;
     if (
-      p === CHECKOUT_PATH ||
       p === CRYPTO_CHECKOUT_PATH ||
       LOCALE_SLUGS.has(p) ||
       p === '/help' ||
@@ -490,8 +515,7 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
       p.startsWith('/sitemap')
     ) {
       const target = `${APEX_ORIGIN}${p}${url.search}`;
-      const checkout = p === CHECKOUT_PATH || p === CRYPTO_CHECKOUT_PATH;
-      return Response.redirect(checkout ? withEmptyFragment(target) : target, 301);
+      return Response.redirect(p === CRYPTO_CHECKOUT_PATH ? withEmptyFragment(target) : target, 301);
     }
   }
 
@@ -523,7 +547,7 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
 
   // ── Renamed help entries (301) ──────────────────────────────
   const helpMatch = url.pathname.match(HELP_ENTRY);
-  const renamed = helpMatch?.[2] ? HELP_RENAMED[helpMatch[2]] : undefined;
+  const renamed = helpMatch?.[2] && Object.hasOwn(HELP_RENAMED, helpMatch[2]) ? HELP_RENAMED[helpMatch[2]] : undefined;
   if (helpMatch && renamed) {
     return Response.redirect(`${url.origin}${helpMatch[1]}${renamed}${helpMatch[3] ?? ''}${url.search}`, 301);
   }
@@ -569,12 +593,14 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
   // already has the Referer header, so it resolves here and injects the
   // result for the page to read on mount.
   // Spec: docs/internal/plans/partner-attribution.md (section 3b)
+  const referer = request.headers.get('Referer') ?? '';
   if (
     (url.hostname === APEX_HOST || url.hostname === DEMO_HOST) &&
     !url.searchParams.has('ref') &&
-    request.headers.get('Referer')
+    referer &&
+    !fromOwnSite(referer)
   ) {
-    const slug = resolveReferrer(request.headers.get('Referer') ?? '', await loadSources());
+    const slug = resolveReferrer(referer, await loadSources());
     if (slug) {
       const page = await env.ASSETS.fetch(request);
       return injectSource(withSecurityHeaders(await withThemeVotes(page, url, env, ctx), url), slug);
@@ -588,6 +614,34 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
   // and picks up the same headers.
   const response = await env.ASSETS.fetch(request);
   return withSecurityHeaders(await withThemeVotes(response, url, env, ctx), url);
+}
+
+/**
+ * pay.privacynotes.app: the card checkout, on an origin that holds nothing.
+ *
+ * The host serves `/checkout` (the app shell, which draws only the checkout
+ * page there, with CSP_CHECKOUT) and the files that page asks for: scripts,
+ * styles, icons, the manifest and `/.well-known/`. Any other page, the app
+ * shell at `/` included, 301s to the apex, so no sign-in ever starts on this
+ * origin and it never stores a phrase, a wrap or a session beside Paddle's
+ * script. No favicon proxy, clipper or badge here either.
+ * Spec: docs/internal/billing-integration.md (checkout host)
+ */
+async function routePayHost(request: Request, url: URL, env: Env): Promise<Response> {
+  if (url.pathname === CHECKOUT_PATH) {
+    const shell = await env.ASSETS.fetch(new Request(new URL('/', url).toString(), request));
+    return withSecurityHeaders(shell, url, 200);
+  }
+  if (url.pathname === '/robots.txt') {
+    return new Response(ROBOTS_BLOCKED, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'max-age=3600' },
+    });
+  }
+  // A file is served as it is; anything that answers with a page, a real
+  // one or the 404 page, belongs to the apex.
+  const file = await env.ASSETS.fetch(request);
+  if (!(file.headers.get('content-type') ?? '').includes('text/html')) return file;
+  return Response.redirect(`${APEX_ORIGIN}${url.pathname}${url.search}`, 301);
 }
 
 /**
@@ -645,11 +699,13 @@ function withSecurityHeaders(response: Response, url: URL, status?: number): Res
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) headers.set(k, v);
   // The one page that may load Paddle, on the one host that serves it.
   // Everything else keeps the policy above, which names no payment host at
-  // all. The host half matters as much as the path: the app host redirects
-  // this route away, and the demo host must never reach a payment CDN, so
-  // neither may widen its own script-src by being asked for /checkout.
-  if (url.hostname === APEX_HOST && url.pathname === CHECKOUT_PATH) {
+  // all. The host half matters as much as the path: the apex and the app
+  // host redirect this route away, and the demo host must never reach a
+  // payment CDN, so none may widen its own script-src by being asked for
+  // /checkout.
+  if (url.hostname === PAY_HOST && url.pathname === CHECKOUT_PATH) {
     headers.set('Content-Security-Policy', CSP_CHECKOUT);
+    headers.set('Permissions-Policy', PERMISSIONS_CHECKOUT);
   }
   // The crypto checkout gets its own, narrower policy on every host: it is
   // never the Paddle one, and the demo host's copy of the page calls nothing.
@@ -701,7 +757,11 @@ async function trySource(
   }
 }
 
-async function handleFavicon(request: Request, url: URL, ctx: ExecutionContext): Promise<Response> {
+async function handleFavicon(request: Request, url: URL, env: Env, ctx: ExecutionContext): Promise<Response> {
+  // A lookup only: any other method is refused before it can reach upstream (beta #218).
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return new Response(null, { status: 405, headers: { Allow: 'GET, HEAD', 'Cache-Control': 'no-store' } });
+  }
   const domain = url.searchParams.get('domain')?.toLowerCase().trim();
 
   if (!domain || !DOMAIN_RE.test(domain) || domain.length > 253) {
@@ -710,9 +770,17 @@ async function handleFavicon(request: Request, url: URL, ctx: ExecutionContext):
 
   // Check edge cache first.
   const cache = caches.default;
-  const cacheKey = new Request(`${url.origin}/favicon?domain=${domain}&_cv=${CACHE_VERSION}`, request);
+  // Always a GET key: the edge cache stores and matches GET only, and a HEAD
+  // shares the GET's answer.
+  const cacheKey = new Request(`${url.origin}/favicon?domain=${domain}&_cv=${CACHE_VERSION}`, { headers: request.headers });
   const cached = await cache.match(cacheKey);
-  if (cached) return cached;
+  if (cached) return keptByEdgeOnly(cached);
+
+  // A miss asks DuckDuckGo or Google, so it is counted per address; a refusal
+  // is never cached and the app shows its letter tile.
+  if (!(await faviconAllowed(request, env))) {
+    return new Response(null, { status: 429, headers: { 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' } });
+  }
 
   // Hash-based source assignment with fallback.
   const primary: SourceKey = hashDomain(domain) % 2 === 0 ? 'ddg' : 'google';
@@ -728,10 +796,10 @@ async function handleFavicon(request: Request, url: URL, ctx: ExecutionContext):
     // day (GitHub #657).
     const answered = first === 'miss' && result === 'miss';
     const miss = new Response(null, { status: 404 });
-    miss.headers.set('Cache-Control', `public, max-age=${answered ? MISS_TTL : ERROR_TTL}`);
+    miss.headers.set('Cache-Control', `public, max-age=${MISS_TTL}`);
     miss.headers.set('Access-Control-Allow-Origin', '*');
     if (answered) ctx.waitUntil(cache.put(cacheKey, miss.clone()));
-    return miss;
+    return keptByEdgeOnly(miss);
   }
 
   // Build a cacheable response.
@@ -754,7 +822,21 @@ async function handleFavicon(request: Request, url: URL, ctx: ExecutionContext):
 
   ctx.waitUntil(cache.put(cacheKey, response.clone()));
 
-  return response;
+  return keptByEdgeOnly(response);
+}
+
+/**
+ * The copy of a /favicon answer the browser gets. The edge copy keeps its
+ * `public, max-age` header; the browser is told to keep nothing, because its
+ * HTTP cache would hold each `?domain=` answer, and so the domains in the
+ * notes, past sign-out, which clears only the app's own icon store (beta
+ * issue 158, item 1). The app's icon store is the browser-side cache.
+ * Spec: docs/public/THREAT_MODEL.md (sign-out clears the favicon cache)
+ */
+function keptByEdgeOnly(response: Response): Response {
+  const forBrowser = new Response(response.body, response);
+  forBrowser.headers.set('Cache-Control', 'private, no-store');
+  return forBrowser;
 }
 
 /**
@@ -829,12 +911,22 @@ interface SourceRow {
 
 let sourcesCache: { at: number; rows: SourceRow[] } | null = null;
 const SOURCES_TTL_MS = 5 * 60 * 1000;
+/**
+ * How long a page waits for the list. The function answered in under 2 s in
+ * a normal quarter hour but once took 24 s (logs, 2026-11-17), and a page
+ * with a referrer on a fresh isolate waits on this read. A read cut short
+ * resolves nothing, the same as a failed one.
+ */
+const SOURCES_TIMEOUT_MS = 3000;
 
 async function loadSources(): Promise<SourceRow[]> {
   const now = Date.now();
   if (sourcesCache && now - sourcesCache.at < SOURCES_TTL_MS) return sourcesCache.rows;
   try {
-    const res = await fetch(SOURCES_URL, { cf: { cacheTtl: 300, cacheEverything: true } });
+    const res = await fetch(SOURCES_URL, {
+      cf: { cacheTtl: 300, cacheEverything: true },
+      signal: AbortSignal.timeout(SOURCES_TIMEOUT_MS),
+    });
     if (!res.ok) throw new Error(String(res.status));
     const body = (await res.json()) as { sources?: SourceRow[] };
     // The slug goes into page HTML (injectSource). The database CHECK keeps it
@@ -864,6 +956,20 @@ async function loadSources(): Promise<SourceRow[]> {
  * Anything unlisted resolves to NOTHING. There is deliberately no `other`
  * bucket: a raw referrer origin can name a person's employer.
  */
+/**
+ * A request that one of our own pages made: a click between pages, or a
+ * page's own pictures and fonts. No partner host is ours, so the list cannot
+ * name it, and skipping the read keeps these requests off it.
+ */
+function fromOwnSite(referer: string): boolean {
+  try {
+    const host = new URL(referer).hostname.toLowerCase();
+    return host === APEX_HOST || host.endsWith(`.${APEX_HOST}`);
+  } catch {
+    return false;
+  }
+}
+
 function resolveReferrer(referer: string, rows: SourceRow[]): string | null {
   if (!referer) return null;
   let host: string;
@@ -970,7 +1076,8 @@ async function handleCampaignRoute(
 
   if (kind === 'dl') {
     const platform = parts[1] ?? '';
-    const dest = DOWNLOAD_TARGETS[platform];
+    // Own keys only: `/dl/constructor` is no platform, and is not counted.
+    const dest = Object.hasOwn(DOWNLOAD_TARGETS, platform) ? DOWNLOAD_TARGETS[platform] : undefined;
     if (!dest) return Response.redirect(home, 302);
     // A download target is a store or a release host, and a fragment the link
     // arrived with has nothing to do there.

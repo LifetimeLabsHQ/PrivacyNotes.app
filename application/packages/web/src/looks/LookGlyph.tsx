@@ -17,6 +17,7 @@
 import { createContext, useContext, useMemo, type CSSProperties } from 'react';
 import { Folder, Hash, Star } from '../icons';
 import {
+  feedLookKey,
   folderColor,
   folderLookKey,
   isLookColor,
@@ -151,6 +152,23 @@ export function useItemLook(noteId: string, tags: readonly string[], folderId: s
   const look = useNoteLook(noteId, tags, folderId);
   const iconPaths = useNoteIconPaths(noteId, { tags, folderId });
   return { ...itemLookDraw(look), iconPaths };
+}
+
+/** A subscribed calendar's own icon and color, which its events wear (#811),
+ *  or null for an item (`feedId` null). The color is the calendar's mark, so
+ *  it shows as a tinted chip (the background strength) whatever the note
+ *  color setting says, as calendar apps draw a calendar's color.
+ *  Spec: docs/internal/specs/calendar-pillar-spec.md (section 14) */
+export function useFeedLook(feedId: string | null): (ItemLookDraw & { iconPaths: readonly string[] | null }) | null {
+  const { styles } = useContext(LooksContext);
+  const look = feedId ? lookOf(styles, feedLookKey(feedId)) : null;
+  const iconPaths = useLookPaths(look?.icon) ?? null;
+  const color = isLookColor(look?.color) ? look.color : null;
+  return useMemo(
+    () => (look ? { ...itemLookDraw(color ? { color, style: 'background' } : null), iconPaths } : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [!!look, color, iconPaths],
+  );
 }
 
 /** The same for a list that resolves many items in one render (the quick

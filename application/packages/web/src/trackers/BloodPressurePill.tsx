@@ -4,14 +4,15 @@ import { DIASTOLIC_RANGE, SYSTOLIC_RANGE, bloodPressureText, hasBloodPressure, t
 import { PillShell } from './PillShell';
 import { useLastLogged } from '../trackerLastLogged';
 import { TRACKER_ICONS } from './icons';
-import { NumberStepper, PanelQuestion } from './panelUI';
+import { NumberStepper, PanelQuestion, ReadingPair } from './panelUI';
 
 const QUICK_SYSTOLIC = [110, 120, 130, 140] as const;
 const QUICK_DIASTOLIC = [70, 80, 90] as const;
 
 /**
  * Blood pressure pill (GitHub #746) - one reading as two steppers in mmHg,
- * the top number and the bottom number. Each saves as it changes; a side
+ * the top number and the bottom number, side by side where the panel has
+ * room (`ReadingPair`). Each saves as it changes; a side
  * not logged yet shows as a dash on the pill. Clearing both removes the
  * reading.
  */
@@ -57,7 +58,7 @@ export function BloodPressurePill({
       icon={TRACKER_ICONS.bloodPressure}
       readOnly={readOnly}
     >
-      <div className="flex flex-col gap-4 max-w-[420px]">
+      <ReadingPair>
         <div>
           <PanelQuestion>{t('bloodPressure.systolic')}</PanelQuestion>
           <NumberStepper
@@ -90,7 +91,7 @@ export function BloodPressurePill({
             expanded={expanded}
           />
         </div>
-      </div>
+      </ReadingPair>
     </PillShell>
   );
 }

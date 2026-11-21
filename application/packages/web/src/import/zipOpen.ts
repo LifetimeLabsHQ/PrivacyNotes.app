@@ -16,6 +16,11 @@
  * Every failure to open becomes an `ImportFileError`, which carries a plain
  * sentence and keeps jszip's text as its detail.
  *
+ * Every zip it opens carries one `ImportBudget` (zipEntry.ts) across all its
+ * entries, and a zip whose end record lists more than `IMPORT_ENTRY_LIMIT`
+ * entries is refused before jszip builds an object for each (beta #155
+ * part 2).
+ *
  * Limits of the split read: entries go in offset order, which is the central
  * directory order of every zip written front to back; a zip with bytes before
  * its first entry (a self-extracting archive) is refused; and one entry of
@@ -23,7 +28,7 @@
  */
 
 import JSZip from 'jszip';
-import { ImportFileError, ImportTooLargeError } from './zipEntry';
+import { budgetZip, ImportBudget, ImportFileError, ImportTooLargeError, refuseEntryCount } from './zipEntry';
 
 /** jszip reads an offset as a signed 32-bit number, so this is the first offset it gets wrong. */
 const SIGNED_LIMIT = 2 ** 31;
@@ -43,11 +48,14 @@ type Source = Blob | ArrayBuffer | Uint8Array;
 type Read = (start: number, end: number) => Promise<Uint8Array>;
 type CentralRecord = { bytes: Uint8Array; offset: number };
 
-export async function openZip(input: Source): Promise<JSZip> {
+/** `budget` is the import's, made fresh by default; a test passes a small one. */
+export async function openZip(input: Source, budget = new ImportBudget()): Promise<JSZip> {
   try {
     const size = input instanceof Blob ? input.size : input.byteLength;
-    if (size < SIGNED_LIMIT) return await JSZip.loadAsync(input);
-    return await openZipInParts(input, PART_BYTES);
+    // An end record this read cannot find is left to jszip, whose own error
+    // the person then sees; the count is checked again once it has loaded.
+    refuseEntryCount(await readEndRecord(reader(input), size).then((end) => end.count, () => 0));
+    return budgetZip(size < SIGNED_LIMIT ? await JSZip.loadAsync(input) : await openZipInParts(input, PART_BYTES), budget);
   } catch (err) {
     if (err instanceof ImportTooLargeError || err instanceof ImportFileError) throw err;
     throw new ImportFileError(err);
@@ -56,10 +64,8 @@ export async function openZip(input: Source): Promise<JSZip> {
 
 /** Exported for the tests, which split a small zip with a small `partBytes`. */
 export async function openZipInParts(input: Source, partBytes: number): Promise<JSZip> {
-  const bytes = input instanceof Blob ? null : input instanceof Uint8Array ? input : new Uint8Array(input);
-  const size = input instanceof Blob ? input.size : bytes!.byteLength;
-  const read: Read = async (start, end) =>
-    bytes ? bytes.subarray(start, end) : new Uint8Array(await (input as Blob).slice(start, end).arrayBuffer());
+  const size = input instanceof Blob ? input.size : input.byteLength;
+  const read = reader(input);
 
   const { records, centralStart } = await readCentralDirectory(read, size);
   records.sort((a, b) => a.offset - b.offset);
@@ -76,6 +82,12 @@ export async function openZipInParts(input: Source, partBytes: number): Promise<
   const zip = parts[0] ?? new JSZip();
   for (const part of parts.slice(1)) Object.assign(zip.files, part.files);
   return zip;
+}
+
+function reader(input: Source): Read {
+  const bytes = input instanceof Blob ? null : input instanceof Uint8Array ? input : new Uint8Array(input);
+  return async (start, end) =>
+    bytes ? bytes.subarray(start, end) : new Uint8Array(await (input as Blob).slice(start, end).arrayBuffer());
 }
 
 function nextOffset(records: CentralRecord[], index: number, centralStart: number): number {
@@ -96,7 +108,8 @@ function u64(v: DataView, at: number): number {
   return Number(n);
 }
 
-async function readCentralDirectory(read: Read, size: number): Promise<{ records: CentralRecord[]; centralStart: number }> {
+/** The end record's entry count and central directory, ZIP64 included. */
+async function readEndRecord(read: Read, size: number): Promise<{ count: number; centralSize: number; centralStart: number }> {
   const tailStart = Math.max(0, size - 22 - MAX16 - 20);
   const tail = await read(tailStart, size);
   const tv = view(tail);
@@ -122,6 +135,11 @@ async function readCentralDirectory(read: Read, size: number): Promise<{ records
     centralSize = u64(rv, 40);
     centralStart = u64(rv, 48);
   }
+  return { count, centralSize, centralStart };
+}
+
+async function readCentralDirectory(read: Read, size: number): Promise<{ records: CentralRecord[]; centralStart: number }> {
+  const { count, centralSize, centralStart } = await readEndRecord(read, size);
   if (centralSize > CENTRAL_DIRECTORY_LIMIT || centralStart + centralSize > size) throw broken('central directory out of range');
 
   const central = await read(centralStart, centralStart + centralSize);

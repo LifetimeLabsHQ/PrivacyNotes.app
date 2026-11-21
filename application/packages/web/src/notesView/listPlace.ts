@@ -5,8 +5,8 @@
  *
  * Module state and never storage: it lives as long as the page, and an
  * anchor holds words of the note's text, which must not reach the disk in
- * the clear. The one thing that outlives the page is the id of the note last
- * open, which a cold start opens again.
+ * the clear. What outlives the page is the id of the note last open and the
+ * view and folder of the list last open, which a cold start opens again.
  * Spec: docs/internal/specs/keep-my-place.md
  */
 import { useCallback, useSyncExternalStore } from 'react';
@@ -80,9 +80,10 @@ function store(): Storage {
 }
 
 /**
- * Settings > Lists > General, "Reopen the last item": on by default, per
- * device like the id it gates. Off, a cold start shows the list with nothing
- * open (#761). Only an explicit '0' is off.
+ * Settings > Lists > General, "Reopen where I left off": on by default, per
+ * device like the ids it gates. Off, a cold start shows the start view with
+ * nothing open (#761); on, the list and item left at quit (#828). Only an
+ * explicit '0' is off.
  * Spec: docs/internal/specs/keep-my-place.md (section 3)
  */
 const REOPEN_KEY = 'privacynotes.reopenLastOpen';
@@ -122,4 +123,32 @@ export function writeLastOpen(id: string): void {
  *  the list (#770). Spec: docs/internal/specs/keep-my-place.md (section 3) */
 export function clearLastOpen(): void {
   try { store().removeItem(LAST_OPEN_KEY); } catch { /* storage unavailable */ }
+}
+
+/**
+ * The list open at the last quit (#828): its view and folder, ids only. A tag
+ * is a word the person wrote, which must not sit on the disk in the clear, so
+ * a tag is not kept. Read only while "Reopen where I left off" is on.
+ * Spec: docs/internal/specs/keep-my-place.md (section 3)
+ */
+const LAST_LIST_KEY = 'privacynotes.lastList';
+
+export type LastList = { view: string; folder: string | null };
+
+export function writeLastList(list: LastList): void {
+  try { store().setItem(LAST_LIST_KEY, JSON.stringify([list.view, list.folder])); } catch { /* storage unavailable */ }
+}
+
+export function readLastList(): LastList | null {
+  if (!readReopen()) return null;
+  try {
+    const raw: unknown = JSON.parse(store().getItem(LAST_LIST_KEY) ?? 'null');
+    if (!Array.isArray(raw) || raw.length !== 2) return null;
+    const [view, folder] = raw as unknown[];
+    if (typeof view !== 'string' || view.length > 32) return null;
+    if (folder !== null && (typeof folder !== 'string' || folder.length > 64)) return null;
+    return { view, folder };
+  } catch {
+    return null;
+  }
 }

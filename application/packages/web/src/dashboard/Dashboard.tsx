@@ -23,7 +23,7 @@ import { ProMark } from '../UpgradeModal';
 import {
   Button, ContextMenu, DropLine, EmptyState, GridCard, IconButton, Snackbar, DRAG_SOURCE, halfOf, useContextMenu, usePointerReorder,
 } from '../ui';
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CalendarCheck, ClockClockwise, DotsSix, NotePencil, Notches, PenNib, Plus, SquaresFour, Trash, PILLAR_GLYPHS } from '../icons';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Briefcase, CalendarCheck, House, ClockClockwise, DotsSix, NotePencil, Notches, PenNib, Plus, SquaresFour, Trash, PILLAR_GLYPHS } from '../icons';
 import { useSteppedWidth } from '../useElementSize';
 import { WIDGET_GLYPH, WidgetGlyph, widgetNameKey } from './widgetGlyphs';
 import { formatDay } from '../intlFormat';
@@ -32,7 +32,7 @@ import { toLocalIso } from '../notesViewUtils';
 import { trackerName } from '../stats/wellnessModel';
 import {
   HOME_GAP_PX, HOME_ROW_PX, LAYOUT_IDS, WIDGETS, addWidget, columnsFor, fillHoles, fitSize, fitsDashboard, isWidgetKind, layoutWidgets, moveWidget, packBoxes,
-  removeWidget, resizeWidget, retargetWidget, type Box, type LayoutId, type Widget, type WidgetDef, type WidgetKind,
+  removeWidget, resizeWidget, retargetWidget, type Box, type HomeSpace, type LayoutId, type Widget, type WidgetDef, type WidgetKind,
 } from './dashboardLayout';
 import { useDashboardEnv } from './env';
 import {
@@ -139,10 +139,14 @@ const sizeKey = (s: ReturnType<typeof sizeWidgets>) => `${s.cols}${s.narrow ? 'n
 
 const placeOf = (b: Box): CSSProperties => ({ gridColumn: `${b.x + 1} / span ${b.w}`, gridRow: `${b.y + 2} / span ${b.h}` });
 
-export default function Dashboard({ widgets, onWrite }: {
+export default function Dashboard({ widgets, onWrite, ownHome }: {
   widgets: Widget[];
   /** Saves a list; null is the stock layout (Reset). */
   onWrite: (next: Widget[] | null) => void;
+  /** Only while a space is open (not All): whether it has its own Home, and
+   *  the switch (a list turns it on with that list, null turns it off).
+   *  Spec: docs/internal/specs/dashboard.md (section 6) */
+  ownHome?: { space: HomeSpace; on: boolean; set: (list: Widget[] | null) => void };
 }) {
   // Every namespace a key below names, so each is loaded before Home draws.
   const { t } = useTranslation(['shell', 'common', 'editor', 'notes', 'stats', 'media']);
@@ -154,7 +158,10 @@ export default function Dashboard({ widgets, onWrite }: {
   const month = useBuildMonthModel();
   const trackers = useTrackerChoices(month);
   const menu = useContextMenu();
-  const [snack, setSnack] = useState<{ text: string; undo?: Widget[] } | null>(null);
+  // The undo is the write that puts things back, made where the change was
+  // made: it keeps the Home it belongs to across a space switch.
+  const [snack, setSnack] = useState<{ text: string; undo?: () => void } | null>(null);
+  const undoTo = (before: Widget[]) => () => onWrite(before);
   const [catalog, setCatalog] = useState(false);
   const [chooser, setChooser] = useState<{ kind: ChooserKind; widgetId?: string } | null>(null);
   // The list shell every pane uses: the grid class, and the scroll place
@@ -289,7 +296,7 @@ export default function Dashboard({ widgets, onWrite }: {
             focusAfter.current = { grip: (shown[at + 1] ?? shown[at - 1])?.i ?? null };
             const before = widgets;
             onWrite(removeWidget(widgets, w.i));
-            setSnack({ text: t('dashboard.removed'), undo: before });
+            setSnack({ text: t('dashboard.removed'), undo: undoTo(before) });
           },
         },
       ],
@@ -301,14 +308,33 @@ export default function Dashboard({ widgets, onWrite }: {
     const box = e.currentTarget.getBoundingClientRect();
     menu.open(
       { clientX: box.left, clientY: box.bottom + 4, preventDefault: () => e.preventDefault(), stopPropagation: () => e.stopPropagation() },
-      [...LAYOUT_IDS.map((id: LayoutId): ContextMenuItem => ({
+      [
+        ...(ownHome ? [
+          {
+            label: t(ownHome.space === 'work' ? 'dashboard.separateWorkHome' : 'dashboard.separatePersonalHome'),
+            icon: ownHome.space === 'work' ? <Briefcase aria-hidden="true" /> : <House aria-hidden="true" />,
+            checked: ownHome.on,
+            onSelect: () => {
+              const before = widgets;
+              if (ownHome.on) {
+                ownHome.set(null);
+                setSnack({ text: t('dashboard.separateHomeOff'), undo: () => ownHome.set(before) });
+              } else {
+                ownHome.set(before);
+                setSnack({ text: t(ownHome.space === 'work' ? 'dashboard.separateWorkHomeOn' : 'dashboard.separatePersonalHomeOn'), undo: () => ownHome.set(null) });
+              }
+            },
+          },
+          { type: 'separator' as const },
+        ] : []),
+        ...LAYOUT_IDS.map((id: LayoutId): ContextMenuItem => ({
         label: t(id === 'journal' ? 'notes:newMenu.journal' : `dashboard.layout.${id}`),
         icon: <LayoutGlyph id={id} />,
         checked: sameLayout(widgets, layoutWidgets(id)),
         onSelect: () => {
           const before = widgets;
           onWrite(id === 'everyday' ? null : layoutWidgets(id));
-          setSnack({ text: t('dashboard.layoutChanged'), undo: before });
+          setSnack({ text: t('dashboard.layoutChanged'), undo: undoTo(before) });
         },
       })),
         { type: 'separator' },
@@ -318,7 +344,7 @@ export default function Dashboard({ widgets, onWrite }: {
           onSelect: () => {
             const before = widgets;
             onWrite(null);
-            setSnack({ text: t('dashboard.layoutChanged'), undo: before });
+            setSnack({ text: t('dashboard.layoutChanged'), undo: undoTo(before) });
           },
         },
       ],
@@ -677,7 +703,7 @@ export default function Dashboard({ widgets, onWrite }: {
       {chooser && <TargetChooser kind={chooser.kind} trackers={trackers} onPick={chosen} onClose={() => setChooser(null)} />}
       {snack && (
         <Snackbar
-          {...(snack.undo ? { actionLabel: t('notes:editor.undo'), onAction: () => { onWrite(snack.undo!); setSnack(null); } } : {})}
+          {...(snack.undo ? { actionLabel: t('notes:editor.undo'), onAction: () => { snack.undo!(); setSnack(null); } } : {})}
         >
           {snack.text}
         </Snackbar>

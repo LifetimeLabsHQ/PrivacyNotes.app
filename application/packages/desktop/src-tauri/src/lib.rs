@@ -5,6 +5,12 @@
 #[cfg(native_biometric)]
 mod biometric;
 
+/// The device key on Linux: the Secret Service (GNOME Keyring, KDE Wallet).
+/// The other platforms keep theirs in `biometric`.
+/// Spec: docs/internal/plans/device-bound-phrase-key.md (section 3)
+#[cfg(target_os = "linux")]
+mod device_key_linux;
+
 /// Who the OS opens Markdown files with, and pointing it at us on the two
 /// platforms that permit it. Desktop only: neither mobile OS has user-settable
 /// file associations. Spec: docs/internal/specs/markdown-folder.md (section 11)
@@ -52,6 +58,8 @@ mod autostart;
 
 /// Every window stays on the app's own pages (beta issue 85).
 mod navigation;
+/// A policy on every script the app serves, so its workers run under one.
+mod script_csp;
 
 /// Links, text and files other apps shared into this one, waiting for the
 /// unlocked app to take them. Compiled everywhere so its tests run on the
@@ -82,179 +90,29 @@ mod backup_dest;
 mod cli_install;
 #[cfg(desktop)]
 use cli_install::{cli_status, install_cli};
-
-/// Files the OS asked us to open before the webview was ready to hear about it.
-///
-/// A cold start from a double-click delivers the path within milliseconds, long
-/// before the frontend has booted, let alone cleared the auth gate and the app
-/// lock. Emitting straight away would drop it on the floor and the user would
-/// be left staring at a login screen wondering why their file did not open, so
-/// the path waits here until the frontend says it is listening.
-/// Spec: docs/internal/specs/markdown-folder.md (section 11)
+/// The capped read of a file opened from outside the app (beta issue 168).
 #[cfg(desktop)]
-static PENDING_OPEN: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
-
-/// Extensions the bundle registers. Kept in step with `fileAssociations` in
-/// tauri.conf.json, and checked here because argv carries anything the shell
-/// felt like passing - flags, a deep link, a file we never claimed.
+mod opened_file;
+/// The pictures of a Markdown file opened without its folder.
 #[cfg(desktop)]
-const OPENABLE_EXT: [&str; 5] = ["md", "markdown", "mdown", "mkd", "txt"];
-
-/// The URL scheme the bundle registers, kept in step with `plugins.deep-link`
-/// in tauri.conf.json and asserted against it by
-/// `tests/desktopCapabilities.test.ts`.
+mod file_pictures;
+/// A forgotten Markdown folder leaves the persisted fs scope (beta #214 item 2).
 #[cfg(desktop)]
-const APP_SCHEME: &str = "privacynotes:";
-
-/// True when the argument is one of our own deep links.
-///
-/// Case-insensitively, because a scheme is case-insensitive and the shell
-/// hands over whatever the sender typed. Compared as bytes, because every
-/// launch argument reaches this, argv[0] included, and a range over a `str`
-/// panics when it ends inside a character: a per-user Windows install puts
-/// the profile folder name in argv[0], and for José or 田中 byte 13 is
-/// mid-character.
+mod folder_scope;
+/// The asset protocol reads only what the fs runtime scope holds.
 #[cfg(desktop)]
-fn announces_app_scheme(arg: &str) -> bool {
-    arg.as_bytes()
-        .get(..APP_SCHEME.len())
-        .is_some_and(|head| head.eq_ignore_ascii_case(APP_SCHEME.as_bytes()))
-}
-
+mod asset_scope;
+/// The files of Settings > Plugins in the app's data folder (plugin_files.rs).
 #[cfg(desktop)]
-fn is_openable(path: &str) -> bool {
-    std::path::Path::new(path)
-        .extension()
-        .and_then(|e| e.to_str())
-        .map(|e| OPENABLE_EXT.contains(&e.to_ascii_lowercase().as_str()))
-        .unwrap_or(false)
-}
+mod plugin_files;
 
-/// True when the argument announces a URL scheme, `file:` included.
-///
-/// Shape, not a parser, and deliberately. A bare Windows path such as
-/// `C:\notes\a.md` parses as a URL with scheme "c", so asking a parser what
-/// the scheme is would mangle every Windows double-click; a drive letter is
-/// one character and a scheme is at least two. And the colon has to come
-/// before any separator, because `/tmp/my:file.md` is a legal name on Unix.
-///
-/// The `://` form is not enough on its own: a scheme can carry an opaque
-/// value after a single colon, which is how `privacynotes:x|...` slipped
-/// past an earlier version of this test.
+/// A second launch that asks for the Ninja box. Never one that carries the
+/// app's own scheme: on Windows the single-instance forwarder joins argv with
+/// a pipe and splits it again, so the link `privacynotes:x|--ninja` arrives
+/// as two arguments, the second of them `--ninja` (beta issue 166).
 #[cfg(desktop)]
-fn has_url_scheme(arg: &str) -> bool {
-    let Some((scheme, _)) = arg.split_once(':') else { return false };
-    if scheme.len() < 2 || scheme.contains('/') || scheme.contains('\\') {
-        return false;
-    }
-    let mut chars = scheme.chars();
-    chars.next().is_some_and(|c| c.is_ascii_alphabetic())
-        && chars.all(|c| c.is_ascii_alphanumeric() || matches!(c, '+' | '-' | '.'))
-}
-
-/// Turn one argv entry into a filesystem path we claimed, or None.
-///
-/// The extension check is the obvious job. Two others are not.
-///
-/// A URL is not a file, whatever its last segment looks like: the app's own
-/// scheme arrives on this same argv, and `privacynotes://x/y.md` ends in a
-/// registered extension. The deep-link plugin owns those, and handing one to
-/// the filesystem is how a link somebody else wrote became a path the app
-/// opened.
-///
-/// The one exception is `file://`, which a Linux file manager launching a
-/// `%F` desktop entry may hand over instead of a bare path, and which needs a
-/// parser rather than a `strip_prefix` because `file:///home/a/my%20note.md`
-/// has to come back with a real space. It is scoped away from Windows, which
-/// never sends one: there the single-instance forwarder joins argv with a
-/// pipe and splits the payload on the same character, so one crafted deep
-/// link arrives as several arguments and the second of them was unwrapped
-/// into a path - a local file, or a UNC name pointing at a host of the
-/// sender's choosing.
-#[cfg(desktop)]
-fn openable_path(arg: &str) -> Option<String> {
-    #[cfg(not(target_os = "windows"))]
-    if arg.starts_with("file://") {
-        let path = tauri::Url::parse(arg)
-            .ok()?
-            .to_file_path()
-            .ok()?
-            .to_string_lossy()
-            .into_owned();
-        return is_openable(&path).then_some(path);
-    }
-    if has_url_scheme(arg) {
-        return None;
-    }
-    is_openable(arg).then_some(arg.to_owned())
-}
-
-/// Queue every openable path in an argv-style list. Windows and Linux deliver
-/// file opens this way, both on a cold start and through single-instance.
-#[cfg(desktop)]
-fn queue_from_args<I: IntoIterator<Item = String>>(args: I) {
-    let args: Vec<String> = args.into_iter().collect();
-    // A batch carrying one of our own deep links is a link delivery, not a
-    // file open, and the two must never be mixed. On Windows the
-    // single-instance forwarder joins argv with a pipe and the receiver
-    // splits the payload on the same character, so ONE crafted link arrives
-    // as several arguments and every argument after the first looks exactly
-    // like a file the shell handed over - a local path, or a network name
-    // whose owner learns who opened it.
-    //
-    // Nothing legitimate is lost, because the deep-link plugin refuses that
-    // same batch: it takes the argument after the binary only when there is
-    // no second one (tauri-plugin-deep-link-2.6.1/src/lib.rs:211-218), so a
-    // split payload is already dead as a link before our callback runs. This
-    // closes the delivery rather than the shape, which is why a double-click
-    // on a note that lives on a file server is still an ordinary open.
-    if args.iter().any(|a| announces_app_scheme(a)) {
-        return;
-    }
-    let mut queue = PENDING_OPEN.lock().unwrap();
-    for arg in args.into_iter().skip(1) {
-        if let Some(path) = openable_path(&arg) {
-            queue.push(path);
-        }
-    }
-}
-
-/// Drain the queue. Called by the frontend once it is ready to act on a path,
-/// which is why this is a command rather than an event: the frontend asks when
-/// it is ready, instead of us guessing when that is.
-#[tauri::command]
-#[cfg(desktop)]
-fn take_pending_opens(app: tauri::AppHandle) -> Vec<String> {
-    use tauri_plugin_fs::FsExt;
-
-    let paths = std::mem::take(&mut *PENDING_OPEN.lock().unwrap());
-    // Widen the fs scope to each path before the frontend ever sees it. The
-    // static capability grants carry no allow, and the only other
-    // runtime widening is the one the dialog plugin gives a picker - and a
-    // double-click never goes through a picker. Without this, every
-    // double-clicked file is ACL-denied the instant the frontend tries to read
-    // it, with nothing but a rejected promise in the webview console to say
-    // why. The staging path beside it (`stagingPath` in
-    // markdownFolder/fileAccess.ts) is granted too, so a save is staged and
-    // renamed over the file rather than written in place.
-    // Widening happens HERE rather than at queue time because this is the first
-    // point that has an AppHandle: the two queue sites are a plugin callback and
-    // `std::env::args()`.
-    // Spec: docs/internal/specs/markdown-folder.md (section 11)
-    if let Some(scope) = app.try_fs_scope() {
-        // The last one only, which is the one the frontend opens: a
-        // multi-select hands over several, and the widening this grants is
-        // process-wide and permanent, so granting the rest keeps whatever
-        // they name reachable for the life of the run and buys nothing.
-        // A path that cannot be granted is still worth returning: the read
-        // will fail with the frontend's own error state rather than being
-        // silently dropped here, which is the more debuggable of the two.
-        if let Some(path) = paths.last() {
-            let _ = scope.allow_file(path);
-            let _ = scope.allow_file(format!("{path}.pn-tmp"));
-        }
-    }
-    paths
+fn wants_ninja_box(args: &[String]) -> bool {
+    ninja::wants_box(args) && !opened_file::carries_app_link(args)
 }
 
 /// Which app the OS currently opens Markdown files with. Read-only, and cheap
@@ -300,8 +158,11 @@ fn markdown_assoc_open_os_settings() -> Result<(), String> {
 ///
 /// The desktop app answers "am I already running?" by seeing whether anything
 /// replies at a meeting point, and on macOS that meeting point is a Unix
-/// socket at a fixed path under `/tmp`, a directory every account on the
-/// machine can write to. The plugin's rule is that whatever replies there IS
+/// socket. The patched plugin (`patches/tauri-plugin-single-instance`, beta
+/// #174) keeps it in this user's own app data folder,
+/// `~/Library/Application Support/<identifier>/si.sock`, not in `/tmp`, which
+/// every account on the machine can write to. This check stays as a second
+/// line: the plugin's rule is that whatever replies there IS
 /// the running app: it hands that listener this launch's arguments and its
 /// working directory, then exits. So anything that gets there first stops the
 /// app from ever starting and reads the path of the file somebody tried to
@@ -319,8 +180,7 @@ fn markdown_assoc_open_os_settings() -> Result<(), String> {
 /// that point something is listening, and anything short of proof is refused:
 /// the plugin stays unregistered and the app starts. Losing second-launch
 /// forwarding for one run is a far smaller cost than a run that never
-/// happens, and `/tmp`'s sticky bit means removing a squatter's socket was
-/// never an option anyway.
+/// happens.
 ///
 /// The connection this makes carries nothing. Arguments and the working
 /// directory travel on the plugin's own connect, which happens after this has
@@ -328,9 +188,13 @@ fn markdown_assoc_open_os_settings() -> Result<(), String> {
 /// looked.
 #[cfg(all(desktop, target_os = "macos"))]
 fn rendezvous_is_ours(config: &tauri::Config) -> bool {
-    let identifier = config.identifier.replace(['.', '-'], "_");
+    let Some(home) = std::env::var_os("HOME") else { return false };
+    let socket = std::path::Path::new(&home)
+        .join("Library/Application Support")
+        .join(&config.identifier)
+        .join("si.sock");
     rendezvous_holder_matches(
-        &format!("/tmp/{identifier}_si.sock"),
+        &socket.to_string_lossy(),
         std::env::current_exe()
             .and_then(std::fs::canonicalize)
             .ok(),
@@ -481,6 +345,20 @@ fn rendezvous_is_ours(_config: &tauri::Config) -> bool {
     true
 }
 
+/// The launch environment names that make WebKitGTK open an inspector
+/// server. A build without `devtools` drops both at start.
+#[cfg(all(target_os = "linux", not(feature = "devtools")))]
+const LINUX_INSPECTOR_ENV: [&str; 2] = ["WEBKIT_INSPECTOR_SERVER", "WEBKIT_INSPECTOR_HTTP_SERVER"];
+
+/// True when NVIDIA's own kernel driver is loaded (the closed one or the
+/// open one: both are the `nvidia` module, and both pair with NVIDIA's EGL).
+/// nouveau is not it: that is Mesa, like AMD and Intel.
+#[cfg(target_os = "linux")]
+fn nvidia_driver_loaded() -> bool {
+    std::path::Path::new("/sys/module/nvidia").exists()
+        || std::path::Path::new("/proc/driver/nvidia/version").exists()
+}
+
 /// The arguments to restart with when a launch argument after argv[0] is
 /// not valid Unicode, or None when there is nothing to drop.
 ///
@@ -500,23 +378,6 @@ fn restart_without_non_unicode_args(
         }
     }
     dropped.then_some(kept)
-}
-
-/// Shows the hidden main window once: on its first finished page load, or from
-/// the fallback timer in `setup`, whichever comes first. A later reload must not
-/// show a window the user has hidden since.
-#[cfg(desktop)]
-pub(crate) fn show_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
-    use std::sync::atomic::{AtomicBool, Ordering};
-    use tauri::Manager;
-    static SHOWN: AtomicBool = AtomicBool::new(false);
-    if SHOWN.swap(true, Ordering::SeqCst) {
-        return;
-    }
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.show();
-        let _ = window.set_focus();
-    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -550,14 +411,25 @@ pub fn run() {
         }
     }
 
-    // WebKitGTK's DMA-BUF renderer paints nothing on some Linux GPUs (NVIDIA
-    // proprietary drivers, certain Wayland compositors): the window opens but
-    // stays blank. Force the stable render path. Must run before any GTK code,
-    // and stays overridable so a user can re-enable the fast path for debugging.
+    // WebKitGTK's DMA-BUF renderer can paint nothing with NVIDIA's own
+    // driver: the window opens but stays blank. There the app turns it off.
+    // Everywhere else it stays on: the fallback copies every frame through
+    // the CPU, and on AMD and Intel the app lagged badly with it (#806).
+    // Must run before any GTK code. A value the user set always wins.
     // Spec: docs/contrib/gotchas.md (Linux blank window / WebKitGTK DMA-BUF)
     #[cfg(target_os = "linux")]
-    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() && nvidia_driver_loaded() {
         std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
+
+    // A build without `devtools` has no inspector, but WebKitGTK still opens
+    // one when the launch environment names an inspector server. Drop both
+    // names before any thread or GTK call, so only a devtools build can
+    // have an inspector.
+    // Spec: docs/contrib/gotchas.md (Linux inspector environment variables)
+    #[cfg(all(target_os = "linux", not(feature = "devtools")))]
+    for name in LINUX_INSPECTOR_ENV {
+        std::env::remove_var(name);
     }
 
     // Built here rather than at the end of the chain: the rendezvous check
@@ -577,20 +449,19 @@ pub fn run() {
     let builder = if !rendezvous_is_ours(context.config()) {
         builder
     } else {
-        builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-        use tauri::Emitter;
+        builder.plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
         // `--ninja` is the Ninja key on Wayland, bound in the system settings.
-        if ninja::wants_box(&args) {
+        if wants_ninja_box(&args) {
             ninja::summon(app);
             return;
         }
         // A second launch carrying a file path is a double-click while we are
         // already running. The args were discarded here until file
         // associations existed; now they are the whole point of the callback.
-        queue_from_args(args);
+        opened_file::queue_args(args.into_iter().map(Into::into), Some(cwd.into()));
         // Also out of the tray, where the window is hidden (tray.rs).
         tray::reveal(app);
-            let _ = app.emit("markdown-open-pending", ());
+        opened_file::notify(app);
         }))
     };
 
@@ -622,7 +493,7 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(
             // VISIBLE stays out: the main window starts hidden and
-            // `show_main_window` shows it, and a restored "visible" would show
+            // `tray::show` shows it, and a restored "visible" would show
             // it before the page paints.
             tauri_plugin_window_state::Builder::default()
                 .with_denylist(&["about", "ninja"])
@@ -653,6 +524,12 @@ pub fn run() {
     #[cfg(mobile)]
     let builder = builder.plugin(tauri_plugin_backup_folder::init());
 
+    // Apple Vision (Text in pictures) and VisionKit (Scan a page) for
+    // Settings > Plugins; the page calls it (capabilities/apple-ml.json).
+    // Spec: docs/internal/plans/plugins.md (section 6.7)
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    let builder = builder.plugin(tauri_plugin_apple_ml::init());
+
     // In-app OAuth (ASWebAuthenticationSession sheet). iOS only - see the
     // Cargo.toml entry for why Android stays on the system browser.
     #[cfg(target_os = "ios")]
@@ -670,8 +547,12 @@ pub fn run() {
     #[cfg(target_os = "android")]
     let builder = builder.plugin(tauri_plugin_biometric_key::init());
 
-    // App-defined commands. These need no ACL/capability entry (only plugin
-    // commands do). The biometric pair is registered on every platform and
+    // App-defined commands. build.rs declares each one in an app manifest, so
+    // a window calls only the ones a capability grants it: the main window
+    // every one (capabilities/app-commands.json), the Ninja box ninja_dismiss
+    // (ninja.json), the About window none (beta issue 167). A command added
+    // here goes into APP_COMMANDS in build.rs and app-commands.json too, or
+    // the web view's call is refused. The biometric pair is registered on every platform and
     // answers "unavailable" where no OS gate exists (Linux), so the frontend can
     // always ask and fall back to WebAuthn on a false. The updater command is
     // desktop-only, which is the only reason there are two lists.
@@ -684,8 +565,14 @@ pub fn run() {
         biometric_key_create,
         biometric_key_open,
         biometric_key_delete,
+        device_key_create,
+        device_key_open,
+        biometric_tpm_missing,
         print_html,
-        take_pending_opens,
+        opened_file::take_pending_opens,
+        opened_file::read_opened_file,
+        file_pictures::grant_file_picture,
+        folder_scope::forget_folder_scope,
         markdown_assoc_status,
         markdown_assoc_claim,
         markdown_assoc_open_os_settings,
@@ -715,7 +602,13 @@ pub fn run() {
         backup_dest::backup_dest_delete,
         backup_dest::backup_dest_reveal,
         backup_dest::backup_dest_clear,
-        backup_dest::backup_dest_metered
+        backup_dest::backup_dest_metered,
+        plugin_files::plugin_files_list,
+        plugin_files::plugin_file_read,
+        plugin_files::plugin_file_write,
+        plugin_files::plugin_file_delete,
+        plugin_files::plugin_files_clear,
+        plugin_files::plugin_files_reveal
     ]);
     // Close and minimize go to the tray while that switch is on (tray.rs).
     // The Ninja box closes when it loses the focus (ninja.rs).
@@ -731,6 +624,8 @@ pub fn run() {
         biometric_key_create,
         biometric_key_open,
         biometric_key_delete,
+        device_key_create,
+        device_key_open,
         print_html,
         set_privacy_screen,
         set_capture_block,
@@ -757,7 +652,7 @@ pub fn run() {
     // is taken off again after each one. The status bar tap rides along: it
     // needs the web view, and adding it again does nothing; so does the page
     // scroll pin (scroll_pin.rs). On desktop the
-    // first finished load shows the main window (see `show_main_window`).
+    // first finished load shows the main window (`tray::show`).
     // One handler for both: a second `on_page_load` replaces the first.
     #[cfg(any(target_os = "ios", desktop))]
     let builder = builder.on_page_load(|webview, payload| {
@@ -768,11 +663,11 @@ pub fn run() {
                 status_bar_tap::listen_in(webview);
                 scroll_pin::pin_in(webview);
             }
-            // A start at sign-in waits for the web view (autostart.rs).
+            // A start at sign-in waits for the web view (tray.rs, `decide`).
             #[cfg(desktop)]
-            if webview.label() == "main" && !autostart::started_at_login() {
+            if webview.label() == "main" {
                 use tauri::Manager;
-                show_main_window(webview.app_handle());
+                tray::show(webview.app_handle(), tray::Ask::PageLoaded);
             }
         }
     });
@@ -814,7 +709,8 @@ pub fn run() {
                     .cloned()
                     .ok_or("tauri.conf.json has no main window")?;
                 let builder = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?
-                    .on_navigation(navigation::guard(app.handle()));
+                    .on_navigation(navigation::guard(app.handle()))
+                    .on_web_resource_request(script_csp::hook(app.handle()));
                 #[cfg(desktop)]
                 let builder = builder.visible(false);
                 builder.build()?;
@@ -825,10 +721,7 @@ pub fn run() {
                     let handle = app.handle().clone();
                     std::thread::spawn(move || {
                         std::thread::sleep(std::time::Duration::from_secs(5));
-                        // A start at sign-in that the web view already placed stays as it is.
-                        if !(autostart::started_at_login() && autostart::decided()) {
-                            show_main_window(&handle);
-                        }
+                        tray::show(&handle, tray::Ask::Timer);
                     });
                 }
             }
@@ -859,12 +752,27 @@ pub fn run() {
                 let handle = app.handle().clone();
                 std::thread::spawn(move || cli_install::refresh_at_launch(&handle));
             }
+            // A Markdown folder forgotten in this run stays out of the saved
+            // fs scope after every later grant (folder_scope.rs).
+            #[cfg(desktop)]
+            folder_scope::watch(app.handle());
+            // The asset protocol has no static allow: it reads what the fs
+            // scope holds, restored by persisted-scope above, and every later
+            // grant (asset_scope.rs).
+            #[cfg(desktop)]
+            asset_scope::watch(app.handle());
             #[cfg(target_os = "windows")]
             {
                 use tauri::Manager;
                 if let Some(window) = app.get_webview_window("main") {
                     disable_browser_accelerator_keys(&window);
                 }
+                autostart::refresh(app.handle());
+            }
+            // An entry an earlier build wrote names the AppImage unquoted.
+            #[cfg(target_os = "linux")]
+            {
+                autostart::refresh(app.handle());
             }
             // Bring the main window to the foreground on launch. After an
             // updater relaunch() the new process can otherwise come up behind
@@ -887,7 +795,10 @@ pub fn run() {
                 // takes a path as a `String`, so a replacement-character path
                 // could not be read anyway and would only fail later, in a
                 // place that does not name the cause.
-                queue_from_args(std::env::args_os().filter_map(|a| a.into_string().ok()));
+                //
+                // A relative path is read from the folder the start was typed
+                // in, as a second launch's is (beta #200, item 1).
+                opened_file::queue_args(std::env::args_os(), std::env::current_dir().ok());
                 // A start at sign-in must not raise the window (autostart.rs).
                 if let Some(window) = app.get_webview_window("main").filter(|_| !autostart::started_at_login()) {
                     let _ = window.set_focus();
@@ -1004,20 +915,8 @@ pub fn run() {
             // Spec: docs/internal/specs/markdown-folder.md (section 11)
             #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Opened { urls } = &_event {
-                use tauri::Emitter;
-                {
-                    let mut queue = PENDING_OPEN.lock().unwrap();
-                    for url in urls {
-                        if let Ok(path) = url.to_file_path() {
-                            if let Some(p) = path.to_str() {
-                                if is_openable(p) {
-                                    queue.push(p.to_string());
-                                }
-                            }
-                        }
-                    }
-                }
-                let _ = _app.emit("markdown-open-pending", ());
+                opened_file::queue_urls(urls);
+                opened_file::notify(_app);
             }
         });
 }
@@ -1075,6 +974,22 @@ fn disable_browser_accelerator_keys(window: &tauri::WebviewWindow) {
             let _ = settings.SetAreBrowserAcceleratorKeysEnabled(false);
         }
     });
+}
+
+/// Whether this PC offers Windows no TPM, so Windows Hello keeps the key of
+/// biometric unlock in software. No prompt. False on every other desktop.
+/// Spec: docs/internal/plans/hello-tpm-status.md (section 3)
+#[cfg(desktop)]
+#[tauri::command]
+async fn biometric_tpm_missing() -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        tauri::async_runtime::spawn_blocking(biometric::tpm_missing).await.unwrap_or(false)
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        false
+    }
 }
 
 #[cfg(desktop)]
@@ -1180,8 +1095,8 @@ struct BiometricKey {
 /// Makes a fresh key in the device's secure hardware (Secure Enclave, Android
 /// Keystore, Windows Hello), seals a secret to it, and opens it once behind
 /// the biometric prompt. Errors are the plain codes `unsupported` (said before
-/// any prompt: this device cannot bind, and the web side keeps the presence
-/// gate), `cancelled` and `failed`. A caller gets nothing it could not get by
+/// any prompt: this device cannot bind now, and the web side enrolls nothing,
+/// #842), `cancelled` and `failed`. A caller gets nothing it could not get by
 /// passing the prompt itself, and every call makes a new key under a new name,
 /// so no call can replace or open an existing enrollment.
 /// Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
@@ -1233,6 +1148,78 @@ async fn biometric_key_open(
     #[cfg(not(native_biometric))]
     {
         let _ = (app, handle, reason, cancel_label);
+        Err("unsupported".to_owned())
+    }
+}
+
+/// The device key: a key the OS keeps outside the app's own storage (Secure
+/// Enclave, Android Keystore, DPAPI), opened with no prompt. The web side
+/// wraps the stored phrase under a key it derives from `secret` while the app
+/// lock is off, and stores only `handle`, so a copy of the app's storage holds
+/// only ciphertext. On Linux the store is the Secret Service
+/// (`device_key_linux.rs`). Errors: `unsupported` (no such store here; the web
+/// side keeps its own key) and `failed`. Every call seals a fresh
+/// secret, so no call replaces or opens an existing one.
+/// Spec: docs/internal/plans/device-bound-phrase-key.md (section 3)
+#[tauri::command]
+async fn device_key_create(app: tauri::AppHandle) -> Result<BiometricKey, String> {
+    #[cfg(native_biometric)]
+    {
+        tauri::async_runtime::spawn_blocking(move || {
+            biometric::device_create(&app)
+                .map(|(handle, secret)| BiometricKey { handle, secret })
+                .map_err(|failure| failure.code().to_owned())
+        })
+        .await
+        .map_err(|_| "failed".to_owned())?
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let _ = app;
+        tauri::async_runtime::spawn_blocking(|| {
+            device_key_linux::create()
+                .map(|(handle, secret)| BiometricKey { handle, secret })
+                .map_err(str::to_owned)
+        })
+        .await
+        .map_err(|_| "failed".to_owned())?
+    }
+    #[cfg(not(any(native_biometric, target_os = "linux")))]
+    {
+        let _ = app;
+        Err("unsupported".to_owned())
+    }
+}
+
+/// Opens the secret of a handle `device_key_create` made. No prompt, except
+/// the system's unlock dialog for a locked Linux keyring when `interactive`
+/// (the boot); that dialog dismissed or left unanswered is `cancelled`.
+#[tauri::command]
+async fn device_key_open(app: tauri::AppHandle, handle: String, interactive: Option<bool>) -> Result<String, String> {
+    // Only the Linux keyring has a dialog to allow or forbid.
+    #[cfg(native_biometric)]
+    let _ = &interactive;
+    #[cfg(native_biometric)]
+    {
+        tauri::async_runtime::spawn_blocking(move || {
+            biometric::device_open(&app, handle).map_err(|failure| failure.code().to_owned())
+        })
+        .await
+        .map_err(|_| "failed".to_owned())?
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let _ = app;
+        let interactive = interactive.unwrap_or(false);
+        tauri::async_runtime::spawn_blocking(move || {
+            device_key_linux::open(&handle, interactive).map_err(str::to_owned)
+        })
+        .await
+        .map_err(|_| "failed".to_owned())?
+    }
+    #[cfg(not(any(native_biometric, target_os = "linux")))]
+    {
+        let _ = (app, handle, interactive);
         Err("unsupported".to_owned())
     }
 }
@@ -1344,6 +1331,7 @@ fn open_about_window(app: &tauri::AppHandle) {
         WebviewUrl::App("index.html?about-window=1".into()),
     )
     .on_navigation(crate::navigation::guard(app))
+    .on_web_resource_request(crate::script_csp::hook(app))
     .title("About PrivacyNotes")
     .inner_size(280.0, 441.0)
     .resizable(false)
@@ -1353,156 +1341,13 @@ fn open_about_window(app: &tauri::AppHandle) {
     .title_bar_style(TitleBarStyle::Overlay)
     .accept_first_mouse(true)
     .center()
+    .content_protected(privacy_screen::capture_on())
     .build();
 }
 
-/// The argv side of the file association, which is the only part of it that
-/// can be reached without an `AppHandle`.
-///
-/// Two refusals live here. A path is claimed
-/// on its extension alone, and a `file://` value is unwrapped through a URL
-/// parser, so a token that is neither still has to be refused. And the
-/// unwrapping is scoped to the platform that needs it: a Linux file manager
-/// launching a `%F` desktop entry may hand over a URL, while on Windows the
-/// same code turned an attacker-supplied deep link into a filesystem path,
-/// because the single-instance forwarder splits one argument into several.
 #[cfg(all(test, desktop))]
 mod tests {
     use super::*;
-
-    /// `PENDING_OPEN` is one queue for the whole process and the harness
-    /// runs tests on parallel threads, so every test that fills it holds
-    /// this for its whole run. Its poisoning is ignored: a test that fails
-    /// while holding it has already reported that failure.
-    static QUEUE: std::sync::Mutex<()> = std::sync::Mutex::new(());
-
-    #[test]
-    fn claims_the_registered_extensions_and_nothing_else() {
-        assert_eq!(openable_path("/tmp/a.md").as_deref(), Some("/tmp/a.md"));
-        assert_eq!(openable_path("/tmp/a.MD").as_deref(), Some("/tmp/a.MD"));
-        assert_eq!(openable_path("/tmp/a.txt").as_deref(), Some("/tmp/a.txt"));
-        assert!(openable_path("/tmp/a.pdf").is_none());
-        assert!(openable_path("--flag").is_none());
-        assert!(openable_path("/tmp/noextension").is_none());
-    }
-
-    #[test]
-    fn a_deep_link_is_not_a_file() {
-        // The scheme is the app's own, and the last segment ends in one of the
-        // registered extensions, which is all `is_openable` looks at.
-        assert!(openable_path("privacynotes://x/y.md").is_none());
-        // The opaque form, which is what the Windows forwarder splits.
-        assert!(openable_path("privacynotes:x|file:///tmp/a.md").is_none());
-        assert!(openable_path("https://example.com/a.md").is_none());
-    }
-
-    #[test]
-    fn a_path_that_merely_contains_a_colon_is_still_a_path() {
-        // One character before the colon is a Windows drive, not a scheme.
-        assert_eq!(openable_path("C:\\notes\\a.md").as_deref(), Some("C:\\notes\\a.md"));
-        // And a colon after a separator belongs to the file name.
-        assert_eq!(openable_path("/tmp/my:file.md").as_deref(), Some("/tmp/my:file.md"));
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    #[test]
-    fn unwraps_a_file_url_where_a_file_manager_sends_one() {
-        assert_eq!(openable_path("file:///tmp/a.md").as_deref(), Some("/tmp/a.md"));
-        // Percent-encoding is why this goes through a parser at all.
-        assert_eq!(
-            openable_path("file:///tmp/my%20note.md").as_deref(),
-            Some("/tmp/my note.md"),
-        );
-    }
-
-    /// The Windows refusal, pinned where every platform can run it.
-    ///
-    /// On Windows the `file://` unwrapping is compiled out, so such an
-    /// argument falls to the general rule below, and this is that rule. A
-    /// build for another platform cannot exercise the branch itself, so the
-    /// predicate it depends on is asserted instead.
-    #[test]
-    fn a_file_url_is_a_url_by_the_general_rule() {
-        assert!(has_url_scheme("file:///C:/Users/victim/notes/private.md"));
-        assert!(has_url_scheme("file://attacker.example/share/x.md"));
-        assert!(!has_url_scheme("C:\\notes\\a.md"));
-        assert!(!has_url_scheme("/tmp/my:file.md"));
-        assert!(!has_url_scheme("--flag"));
-    }
-
-    #[cfg(target_os = "windows")]
-    #[test]
-    fn refuses_a_file_url_on_windows() {
-        // Windows never delivers one, and the single-instance forwarder joins
-        // argv with a pipe and splits the payload on the same character, so
-        // one crafted deep link arrives as several arguments. Unwrapping here
-        // turned the second of them into a path the app then opened, local or
-        // a UNC name pointing at a host the sender chose.
-        assert!(openable_path("file:///C:/Users/victim/notes/private.md").is_none());
-        assert!(openable_path("file://attacker.example/share/x.md").is_none());
-    }
-
-    /// The third producer of the queue, and why it needs no scheme check.
-    ///
-    /// macOS delivers a double-click as an Apple Event rather than in argv,
-    /// so `RunEvent::Opened` pushes straight onto the queue without going
-    /// through `openable_path`. It calls `to_file_path()` first, which is a
-    /// stronger rule than the one above rather than a missing one: a URL that
-    /// is not a file URL has no file path to give. Asserted because the claim
-    /// is about a library, not about our code.
-    #[test]
-    fn a_non_file_url_has_no_file_path() {
-        let deep = tauri::Url::parse("privacynotes://x/y.md").unwrap();
-        assert!(deep.to_file_path().is_err());
-        let web = tauri::Url::parse("https://example.com/a.md").unwrap();
-        assert!(web.to_file_path().is_err());
-        let file = tauri::Url::parse("file:///tmp/a.md").unwrap();
-        assert!(file.to_file_path().is_ok());
-    }
-
-    #[test]
-    fn a_batch_carrying_the_app_scheme_queues_nothing() {
-        let _queue = QUEUE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        // What the Windows forwarder produces from one crafted link: the
-        // scheme token, then the payload, which announces nothing and ends in
-        // a registered extension. A UNC name is the sharp one - opening it is
-        // an outbound connection to a host the sender chose.
-        PENDING_OPEN.lock().unwrap().clear();
-        queue_from_args([
-            "app.exe".to_string(),
-            "privacynotes:x".to_string(),
-            "\\\\attacker.example\\share\\x.md".to_string(),
-        ]);
-        assert!(PENDING_OPEN.lock().unwrap().is_empty());
-
-        // And the same batch shape with a local path, which is the same
-        // injection with a quieter payload.
-        queue_from_args([
-            "app.exe".to_string(),
-            "privacynotes://auth-callback".to_string(),
-            "C:\\Users\\victim\\notes\\private.md".to_string(),
-        ]);
-        assert!(PENDING_OPEN.lock().unwrap().is_empty());
-        PENDING_OPEN.lock().unwrap().clear();
-    }
-
-    #[test]
-    fn a_network_path_still_opens_when_nobody_smuggled_it() {
-        let _queue = QUEUE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        // The refusal is about the delivery, not the shape: a double-click on
-        // a note that lives on a real file server is an ordinary open.
-        PENDING_OPEN.lock().unwrap().clear();
-        queue_from_args([
-            "app.exe".to_string(),
-            "\\\\fileserver\\team\\notes.md".to_string(),
-        ]);
-        assert_eq!(
-            PENDING_OPEN.lock().unwrap().clone(),
-            vec!["\\\\fileserver\\team\\notes.md"],
-        );
-        PENDING_OPEN.lock().unwrap().clear();
-    }
-
     /// What `readDir` reports for a symlink, which is the fact the folder
     /// scan's refusal rests on.
     ///
@@ -1552,45 +1397,6 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    #[test]
-    fn queue_skips_argv_zero_and_keeps_the_order_given() {
-        let _queue = QUEUE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        PENDING_OPEN.lock().unwrap().clear();
-        queue_from_args([
-            "/Applications/PrivacyNotes.app/Contents/MacOS/a.md".to_string(),
-            "/tmp/first.md".to_string(),
-            "--flag".to_string(),
-            "/tmp/second.txt".to_string(),
-        ]);
-        let queued = PENDING_OPEN.lock().unwrap().clone();
-        assert_eq!(queued, vec!["/tmp/first.md", "/tmp/second.txt"]);
-        PENDING_OPEN.lock().unwrap().clear();
-    }
-
-    /// Launch arguments whose byte 13, the scheme's length, falls inside a
-    /// character: argv[0] of a per-user Windows install under each of these
-    /// profile names, and a Linux note path. The first assertion pins that,
-    /// so the fixtures keep testing the boundary if the scheme changes.
-    #[test]
-    fn a_non_ascii_launch_argument_is_not_a_link() {
-        for arg in [
-            "C:\\Users\\José\\AppData\\Local\\PrivacyNotes\\privacynotes.exe",
-            "C:\\Users\\René\\AppData\\Local\\PrivacyNotes\\privacynotes.exe",
-            "C:\\Users\\María\\AppData\\Local\\PrivacyNotes\\privacynotes.exe",
-            "C:\\Users\\田中\\AppData\\Local\\PrivacyNotes\\privacynotes.exe",
-            "C:\\Users\\김철수\\AppData\\Local\\PrivacyNotes\\privacynotes.exe",
-            "C:\\Users\\さくら\\AppData\\Local\\PrivacyNotes\\privacynotes.exe",
-            "/home/wang/文档/note.md",
-        ] {
-            assert!(!arg.is_char_boundary(APP_SCHEME.len()), "{arg}");
-            assert!(!announces_app_scheme(arg), "{arg}");
-        }
-        // Still a scheme test: ASCII case is ignored, and an argument
-        // shorter than the scheme is never a link.
-        assert!(announces_app_scheme("PrivacyNotes://auth-callback"));
-        assert!(!announces_app_scheme("privacynote"));
-    }
-
     /// The restart decision `run()` acts on before the builder exists, one
     /// case per outcome.
     #[cfg(unix)]
@@ -1636,26 +1442,14 @@ mod tests {
         );
     }
 
-    /// The same launches end to end: a Windows cold start from a profile
-    /// folder named José, and a Linux double-click on a note in a folder
-    /// named in Cyrillic. Each has to queue its file, not abort the app.
+    /// Beta issue 166: a link that the Windows forwarder split into two
+    /// arguments must not open the Ninja box. The Wayland key still does.
     #[test]
-    fn a_non_ascii_launch_still_queues_its_file() {
-        let _queue = QUEUE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        PENDING_OPEN.lock().unwrap().clear();
-        queue_from_args([
-            "C:\\Users\\José\\AppData\\Local\\PrivacyNotes\\privacynotes.exe".to_string(),
-            "C:\\Users\\José\\Documents\\note.md".to_string(),
-        ]);
-        queue_from_args([
-            "/usr/bin/privacynotes".to_string(),
-            "/home/max/Документы/x.md".to_string(),
-        ]);
-        let queued = PENDING_OPEN.lock().unwrap().clone();
-        PENDING_OPEN.lock().unwrap().clear();
-        assert_eq!(
-            queued,
-            vec!["C:\\Users\\José\\Documents\\note.md", "/home/max/Документы/x.md"],
-        );
+    fn a_split_link_never_opens_the_ninja_box() {
+        let argv = |a: &[&str]| a.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+        assert!(wants_ninja_box(&argv(&["privacynotes", "--ninja"])));
+        assert!(!wants_ninja_box(&argv(&["privacynotes", "privacynotes:x", "--ninja"])));
+        assert!(!wants_ninja_box(&argv(&["privacynotes", "PRIVACYNOTES://x", "--ninja"])));
+        assert!(!wants_ninja_box(&argv(&["privacynotes", "notes.md"])));
     }
 }

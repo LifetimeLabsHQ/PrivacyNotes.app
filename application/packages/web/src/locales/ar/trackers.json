@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "س",
+    "minutesSuffix": "د",
+    "hoursMinutes": "{{h}} س {{m}} د",
     "bpm": "bpm",
     "mmHg": "ملم زئبقي",
     "kg": "kg",
@@ -162,6 +164,7 @@
     "takenCount_many": "{{count}} دواءً مأخوذًا",
     "takenCount_other": "{{count}} دواء مأخوذ",
     "namePlaceholder": "اسم الدواء",
+    "nameMissing": "أدخل اسمًا للدواء.",
     "dosagePlaceholder": "الجرعة (مثال: 50 ملغ)",
     "editMedication": "تعديل الدواء",
     "removeMedication": "إزالة الدواء",
@@ -326,12 +329,18 @@
     "yes": "نعم",
     "no": "لا",
     "unknownType": "يحتاج هذا المتتبع إلى إصدار أحدث من التطبيق.",
+    "counterOf": "من {{limit}}",
+    "counterToday": "استخدامات اليوم",
+    "counterReached": "بلغت الحد البالغ {{limit}}.",
+    "counterStartAgain": "البدء من جديد في {{name}} من 0",
+    "counterStartAgainConfirm": "البدء من جديد؟",
     "typeLabels": {
       "scale10": "مقياس (0-10)",
       "scale5": "مقياس (0-5)",
       "slider100": "درجة (0-100)",
       "number": "رقم",
       "pair": "رقمان",
+      "counter": "عدّاد",
       "yesno": "نعم / لا"
     }
   },
@@ -347,7 +356,7 @@
     "medicationCard": "بطاقة الدواء",
     "medicationCardHelp": "«هل تناولت دواءك؟» على هذا الجهاز، فقط في يوم يحين فيه موعد دواء.",
     "customHelp": "متتبعات تسمّيها بنفسك: مقياس أو رقم أو نعم ولا. حتى {{max}}.",
-    "customHelpPair": "متتبعات تسمّيها بنفسك: مقياس أو رقم أو رقمان أو نعم ولا. حتى {{max}}.",
+    "customHelpPair": "متتبعات تسمّيها بنفسك: مقياس أو رقم أو رقمان أو عدّاد أو نعم ولا. حتى {{max}}.",
     "yourCustomTrackers": "متتبعاتك المخصصة",
     "categoryMoodMind": "المزاج والذهن",
     "categoryBodyHealth": "الجسد والصحة",
@@ -388,7 +397,10 @@
     "pairFirstPlaceholder": "الانقباضي",
     "pairSecondPlaceholder": "الانبساطي",
     "pairUnit": "الوحدة (اختياري)",
-    "pairWaiting": "يُحفظ بعد إدخال الرقم الأول."
+    "pairWaiting": "يُحفظ بعد إدخال الرقم الأول.",
+    "nameMissing": "أدخل اسمًا للمتتبع.",
+    "counterLimit": "الحد (اختياري)",
+    "counterHelp": "يجمع مرات استخدامك عبر الأيام. حدّد حدًا، مثل 30 لشفرة حلاقة، وابدأ من جديد عندما تبلغه."
   },
   "factors": {
     "prompt": "ما الذي كان جزءًا من يومك؟",
@@ -482,5 +494,6 @@
   "flow": {
     "finish": "إنهاء",
     "step": "المتتبع {{n}} من {{total}}"
-  }
+  },
+  "showEveryDay": "إظهار كل يوم يحتوي على هذا"
 }

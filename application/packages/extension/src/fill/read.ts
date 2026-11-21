@@ -18,6 +18,9 @@ const MIN_HEIGHT = 8;
 const MIN_OPACITY = 0.1;
 /** What lies on a field may be this many times the field's size and still be its own decoration. */
 const DECOR_MAX_AREA = 4;
+/** A cover holds the field's box to within this many pixels, and paints at least this alpha. */
+const COVER_SLACK = 1;
+const COVER_MIN_ALPHA = 0.5;
 
 const FIELD_TYPES = new Set(['text', 'email', 'tel', 'number', 'url', 'password']);
 const DEV_ATTRS = ['data-testid', 'data-test', 'data-qa', 'data-cy', 'data-name', 'data-field', 'formcontrolname'];
@@ -160,22 +163,50 @@ function parentOf(el: Element): Element | null {
   return el.parentElement ?? (el.getRootNode() as ShadowRoot).host ?? null;
 }
 
-/** Shown at all: not `display: none`, not hidden, not transparent. */
+/** A number of a CSS value, `50%` as 0.5, at most 1. */
+function fraction(value: string, percent: string): number {
+  const n = Number(value) / (percent ? 100 : 1);
+  return Number.isFinite(n) ? Math.min(1, Math.max(0, n)) : 1;
+}
+
+/** How much of an element shows: its `opacity` times each `opacity()` of its `filter`. */
+function opacityOf(style: CSSStyleDeclaration): number {
+  let shown = style.opacity === '' ? 1 : fraction(style.opacity, '');
+  for (const m of (style.filter ?? '').matchAll(/opacity\(\s*([\d.]+)(%?)\s*\)/g)) shown *= fraction(m[1]!, m[2]!);
+  return shown;
+}
+
+/** The alpha of a computed color: `transparent`, `rgba()`, or a `/ alpha`. */
+function alphaOf(color: string): number {
+  const c = color.trim().toLowerCase();
+  if (!c || c === 'transparent') return 0;
+  const slash = /\/\s*([\d.]+)(%?)\s*\)$/.exec(c);
+  if (slash) return fraction(slash[1]!, slash[2]!);
+  const parts = /^rgba\(([^)]*)\)$/.exec(c)?.[1]?.split(',');
+  return parts?.length === 4 ? fraction(parts[3]!.trim(), '') : 1;
+}
+
+/**
+ * Shown at all: not `display: none`, not hidden, not transparent. The
+ * opacity counts up the whole parent chain, a `filter: opacity()` with it:
+ * a planted form under a parent at 0.01 is as hidden as a field at 0.01,
+ * and `checkVisibility` sees only a parent at exactly 0 (beta #217).
+ */
 function rendered(el: HTMLElement): boolean {
   const view = el.ownerDocument.defaultView;
   if (!view) return false;
   const check = (el as { checkVisibility?: (o: object) => boolean }).checkVisibility;
-  if (typeof check === 'function') {
-    if (!check.call(el, { opacityProperty: true, visibilityProperty: true, contentVisibilityAuto: true })) return false;
-  } else {
+  const native = typeof check === 'function';
+  if (native && !check.call(el, { opacityProperty: true, visibilityProperty: true, contentVisibilityAuto: true })) return false;
+  let shown = 1;
+  for (let a: Element | null = el; a; a = parentOf(a)) {
+    const style = view.getComputedStyle(a);
     // A browser without checkVisibility (the unit tests' jsdom).
-    for (let a: Element | null = el; a; a = parentOf(a)) {
-      const style = view.getComputedStyle(a);
-      if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || a.hasAttribute('hidden')) return false;
-    }
+    if (!native && (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || a.hasAttribute('hidden'))) return false;
+    shown *= opacityOf(style);
+    if (shown < MIN_OPACITY) return false;
   }
-  const opacity = Number(view.getComputedStyle(el).opacity);
-  return !(opacity < MIN_OPACITY);
+  return true;
 }
 
 function boxOf(el: Element): Box {
@@ -199,6 +230,9 @@ function onTop(el: HTMLInputElement, box: Box): boolean {
   for (let host = (el.getRootNode() as ShadowRoot).host; host; host = (host.getRootNode() as ShadowRoot).host) {
     if (host === top) return true;
   }
+  // Whatever it is, a thing that paints over the whole field hides it. A
+  // box around the field paints under it.
+  if (!top.contains(el) && hides(top, box)) return false;
   // A floating label.
   if (Array.from(el.labels ?? []).some((label) => label === top || label.contains(top))) return true;
   // Or a small thing the site draws on the field: an icon, a frame, a hint.
@@ -207,6 +241,18 @@ function onTop(el: HTMLInputElement, box: Box): boolean {
   if (!near?.contains(top)) return false;
   const over = top.getBoundingClientRect();
   return over.width * over.height <= DECOR_MAX_AREA * box.width * box.height;
+}
+
+/** `over` covers the whole of the field's box and paints a background of
+ *  its own: an opaque cover of the field's size, or a sheet inside its
+ *  wrapper. A floating label or an icon is smaller than the field, and a
+ *  frame drawn around it paints no background (beta #217). */
+function hides(over: Element, box: Box): boolean {
+  const r = over.getBoundingClientRect();
+  if (r.left > box.x + COVER_SLACK || r.top > box.y + COVER_SLACK || r.right < box.x + box.width - COVER_SLACK || r.bottom < box.y + box.height - COVER_SLACK) return false;
+  const style = over.ownerDocument.defaultView?.getComputedStyle(over);
+  if (!style || opacityOf(style) < COVER_MIN_ALPHA) return false;
+  return alphaOf(style.backgroundColor) >= COVER_MIN_ALPHA || (!!style.backgroundImage && style.backgroundImage !== 'none');
 }
 
 /** A person can see the field and reach it. */

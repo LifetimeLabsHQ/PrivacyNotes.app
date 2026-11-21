@@ -6,10 +6,6 @@
     "error": "Kunde inte synka allt just nu. Kontrollera din anslutning och försök igen.",
     "conflict": "En av dina anteckningar har en synkkonflikt som behöver ditt beslut. Lös den i dialogrutan och försök igen."
   },
-  "movedHint": {
-    "body": "Det här är appens nya hem. Uppdatera ditt bokmärke till use.privacynotes.app och lägg till genvägen på hemskärmen igen.",
-    "gotIt": "Uppfattat"
-  },
   "moveScreen": {
     "title": "Appen har flyttat till use.privacynotes.app",
     "bodySignIn": "Logga in där med din återställningsfras eller via ”{{scanQr}}”. Den här enheten synkar först, så alla dina anteckningar väntar på dig där, och inget raderas här.",
@@ -32,6 +28,7 @@
       "configured": "Lagringen är full. Vissa anteckningar kunde inte synkas. Frigör utrymme eller lägg till mer lagring.",
       "unconfigured": "Lagringen är full. Vissa anteckningar kunde inte synkas. Frigör utrymme genom att rensa anteckningar."
     },
+    "deletedSpace": "Utrymmet från raderade filer kommer tillbaka ungefär ett dygn efter att du har raderat dem.",
     "manageStorage": "Hantera lagring",
     "viewUsage": "Visa användning"
   },
@@ -69,7 +66,11 @@
     "neverBackedUp_one": "Bara på den här enheten:",
     "neverBackedUp_other": "Bara på den här enheten:",
     "moreNotes": "och {{count}} till",
-    "appLockHint": "Delad enhet? Slå på applåset under Inställningar > Säkerhet."
+    "appLockHint": "Delad enhet? Slå på applåset under Inställningar > Säkerhet.",
+    "unopenedWarn_other": "{{count}} anteckningar har en serverkopia som den här enheten inte kan öppna. Om du loggar ut raderas kopiorna här, och de kan vara de enda fungerande. Skicka dem först igen under Inställningar > ID & Sync.",
+    "unopenedKept_other": "{{count}} anteckningar har en serverkopia som den här enheten inte kan öppna. Kopiorna här finns kvar när du har loggat ut.",
+    "unopenedKept_one": "1 anteckning har en serverkopia som den här enheten inte kan öppna. Kopian här finns kvar när du har loggat ut.",
+    "unopenedWarn_one": "1 anteckning har en serverkopia som den här enheten inte kan öppna. Om du loggar ut raderas kopian här, och den kan vara den enda fungerande. Skicka den först igen under Inställningar > ID & Sync."
   },
   "signOutUpload": {
     "uploading": "Laddar upp dina senaste ändringar…",

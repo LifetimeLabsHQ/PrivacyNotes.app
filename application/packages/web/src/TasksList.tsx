@@ -37,8 +37,6 @@ export interface TasksListProps {
   /** The calendar card, while a task list in the open space has a day.
    *  Spec: docs/internal/specs/note-date.md (section 4) */
   calendar?: ({ entries: DayIndex; onOpen: (id: string, occurrence?: string) => void; onCreate: (isoDate: string) => void; onEvent: (isoDate: string) => void } & CalendarCardExtras) | null;
-  /** With Spaces on, the space that is not open, for the calendar switch. */
-  otherSpace?: Space | null;
   allTasks: TaskItem[];
   activeNotes: LocalNote[];
   selectedId: string | null;
@@ -104,6 +102,8 @@ export interface TasksListProps {
   onBulkExport: () => void;
   onBulkTrash: () => void;
   allTags?: [string, number][];
+  /** The selection bar's More menu rows (contextMenus buildSelectionMore). */
+  selectionMore?: () => ContextMenuItem[];
 }
 
 export default function TasksList({
@@ -161,8 +161,8 @@ export default function TasksList({
   onBulkExport,
   onBulkTrash,
   allTags,
+  selectionMore,
   calendar,
-  otherSpace = null,
 }: TasksListProps) {
   const taskActions = useRef({ onToggleTask, onOpenTaskSource });
   useLayoutEffect(() => { taskActions.current = { onToggleTask, onOpenTaskSource }; }, [onToggleTask, onOpenTaskSource]);
@@ -395,7 +395,7 @@ export default function TasksList({
 
   const taskNoteItems = (grid: boolean) =>
     grouping.entries
-      ? grouping.entries.slice(0, reveal.visible).map((e) => (e.kind === 'header' ? grouping.header(e, grid) : renderTaskNoteRow(e.note)))
+      ? grouping.entries.slice(0, reveal.visible).map((e) => (e.kind === 'header' ? grouping.header(e, grid) : e.kind === 'note' ? renderTaskNoteRow(e.note) : null))
       : taskContainingNotes.slice(0, reveal.visible).map(renderTaskNoteRow);
 
   // The task lines the budget still covers after the item rows, handed out
@@ -502,6 +502,7 @@ export default function TasksList({
           onRestore={() => {}}
           onDeleteForever={() => {}}
           allTags={allTags}
+          moreItems={selectionMore}
         />
       ) : (
       <div className="shrink-0 h-11 md:h-14 px-4 border-b border-divider flex items-center justify-between gap-3">
@@ -581,7 +582,6 @@ export default function TasksList({
             className="absolute start-3 top-full mt-1"
             pillar="tasks"
             calendarRows
-            otherSpace={otherSpace}
             showGroupsToggle
           />
         )}

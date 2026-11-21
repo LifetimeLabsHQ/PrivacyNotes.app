@@ -61,7 +61,6 @@
     "import": "Importar",
     "downloading": "Descargando…",
     "subscribe": "Suscribirse",
-    "subscribeTitle": "Suscribirse a un calendario",
     "subscribeDesc": "Pega una dirección de calendario, como un enlace webcal:// de Google, iCloud, Proton, Outlook o Nextcloud. Sus eventos aparecen en tu calendario, en solo lectura, y se actualizan mientras la app está abierta.",
     "subscribed": "Calendarios suscritos",
     "updating": "Actualizando…",
@@ -78,6 +77,7 @@
       "offline": "Estás sin conexión. Conéctate e inténtalo de nuevo.",
       "limit": "Demasiadas descargas en poco tiempo. Espera un minuto e inténtalo de nuevo.",
       "failed": "No se pudo descargar el calendario. Comprueba la dirección e inténtalo de nuevo.",
+      "insecure": "No se pudo acceder a este calendario con una conexión segura. Revisa la dirección o vuelve a intentarlo más tarde.",
       "full": "Puedes suscribirte a {{max}} calendarios como máximo. Quita uno primero."
     }
   },
@@ -88,6 +88,8 @@
     "lastpass": "En LastPass, elige Advanced options > Export > Export data for use anywhere. Los inicios de sesión conservan su clave 2FA, las notas seguras y las tarjetas vienen con ellos, y las carpetas se convierten en etiquetas.",
     "onePassword": "En la app de 1Password, elige File > Export, selecciona tu cuenta y el formato 1PUX. Los inicios de sesión conservan su clave 2FA, sus sitios web adicionales y sus campos personalizados, las tarjetas, las notas y las identidades vienen con ellos, las etiquetas siguen siendo etiquetas, y los favoritos y los elementos archivados conservan su lugar. También funciona una exportación CSV, solo con los inicios de sesión.",
     "dashlane": "En Dashlane, elige Settings > Export data y el formato CSV. Los inicios de sesión conservan su clave 2FA, las notas seguras y las tarjetas vienen con ellos, y las categorías se convierten en etiquetas. Una exportación .dash está bloqueada con una contraseña y no se puede leer.",
+    "msecure": "En mSecure, elige Settings > Backups > Export records to CSV file. Los inicios de sesión conservan su clave 2FA, sus sitios web adicionales y sus campos personalizados, las tarjetas y las notas vienen con ellos, y las etiquetas siguen siendo etiquetas.",
+    "raindrop": "En Raindrop.io, abre All bookmarks y elige Export > Get backup, y luego descarga el CSV en Settings > Backups. Las colecciones se convierten en carpetas, las etiquetas siguen siendo etiquetas, y cada marcador conserva su nota, su extracto y sus resaltados.",
     "enpass": "En Enpass, elige File > Export y el formato .json. Los inicios de sesión conservan su clave 2FA, sus sitios web adicionales y sus campos personalizados, las tarjetas, las notas y las identidades vienen con ellos, las carpetas se convierten en etiquetas, y los favoritos y los elementos archivados conservan su lugar. Los elementos de la papelera se quedan fuera.",
     "nordpass": "En NordPass, elige Settings > Export items. Los inicios de sesión conservan sus sitios web adicionales y sus campos personalizados, las notas, las tarjetas y las identidades vienen con ellos, y las carpetas se convierten en etiquetas.",
     "protonPass": "En Proton Pass, elige Settings > Export y selecciona ZIP. Los inicios de sesión conservan su clave 2FA, sus sitios web adicionales, sus campos personalizados y sus fechas, y las notas, las tarjetas y las identidades vienen con ellos. También funciona una exportación CSV, con menos contenido.",
@@ -109,13 +111,15 @@
     "bear": "En Bear, elige File > Backup Notes... y suelta aquí el archivo .bear2bk. Vienen con él las etiquetas y las etiquetas anidadas, las notas fijadas, el archivo, la papelera, los resaltados con sus colores, los enlaces entre notas y los adjuntos.",
     "joplin": "El archivo .jex de File > Export all > \"JEX - Joplin Export File\". Los cuadernos se convierten en carpetas, y las etiquetas, las tareas pendientes, los enlaces entre notas y los adjuntos vienen con ellos.",
     "anytype": "El .zip Any-Block v1 en JSON que sale de Export en los ajustes del espacio, con los archivos y los objetos archivados incluidos. Las colecciones se convierten en carpetas, y las etiquetas, las tareas, los avisos, los desplegables, las tablas, los enlaces entre notas y los archivos vienen con ellas.",
+    "capacities": "El .zip de Capacities: Settings > Full Export > Manual Full Export, con los archivos multimedia incluidos. Los tipos de objeto se convierten en carpetas, y las etiquetas, las propiedades, las fechas, los enlaces entre objetos, las tablas, las imágenes y los archivos vienen con ellos.",
     "siyuan": "El Data.zip del menú de SiYuan > Data migration > Data.zip > Export, o un cuaderno exportado como SiYuan .sy.zip. Los cuadernos y los documentos anidados se convierten en carpetas, y las etiquetas, las referencias de bloque, los avisos, las fórmulas matemáticas, las tablas y los recursos vienen con ellos.",
+    "onenote": "El .onepkg de OneNote para Windows: File > Export > Notebook > OneNote Package. También sirve un archivo de sección (.one) o una carpeta de cuaderno comprimida en un .zip. Las secciones y los grupos de secciones se convierten en carpetas, y las subpáginas, las tareas pendientes, las etiquetas de nota, las tablas, los enlaces entre páginas, las imágenes y los archivos adjuntos vienen con ellos.",
     "upnote": "En UpNote: Settings > Backup > Backup now, y luego comprime en un .zip todo lo que hay en la carpeta de backup. Conserva los cuadernos, las etiquetas, las notas fijadas, los enlaces entre notas, el formato y los adjuntos. Las exportaciones nota a nota desde las apps de móvil también funcionan: elige \"Export to HTML\".",
     "markdownFolder": "Archivos .md o .txt sueltos o dentro de un .zip. Una carpeta comprimida mantiene sus subcarpetas y trae sus imágenes y adjuntos.",
     "markdownApp": "Estas notas ya son archivos Markdown dentro de una carpeta. Suelta esa carpeta como .zip y vienen con ella sus subcarpetas, sus imágenes y sus #etiquetas.",
     "browserBookmarks": "El archivo de marcadores (.html) que sale de \"Export bookmarks\" en tu navegador, o el .zip que escribe Safari. Chrome, Firefox, Safari, Edge, Opera, Brave y Vivaldi contienen el mismo archivo. Las carpetas y las fechas vienen con él.",
     "vcard": "El archivo .vcf que exporta tu agenda: iPhone y Mac mediante iCloud o Contactos, Android, Contactos de Google. Cada tarjeta se importa, fotos incluidas, e importar el mismo archivo dos veces omite a las personas que ya tienes.",
-    "bitwarden": "Exportación .json sin cifrar de Bitwarden (Tools > Export vault > .json). Inicios de sesión, tarjetas, claves SSH, notas seguras y códigos TOTP vienen todos.",
+    "bitwarden": "Exportación sin cifrar de la caja fuerte de Bitwarden (Tools > Export vault > .json, o .zip (with attachments)). Inicios de sesión, tarjetas, claves SSH, notas seguras, códigos TOTP, passkeys y adjuntos vienen todos.",
     "browserPasswords": "El archivo de contraseñas (.csv) de Chrome, Edge, Brave, Opera, Vivaldi, Firefox o Safari, o el .zip que escribe Safari. Cada fila se convierte en un inicio de sesión. Borra el archivo cuando termines - lleva tus contraseñas en texto plano."
   },
   "sourceLabel": {
@@ -178,7 +182,18 @@
     "sourceTagDesc": "Desactivado: sin etiqueta para el origen. Las etiquetas que ya tienen las notas se importan igualmente.",
     "storageLine": "Esta importación necesita unos {{needed}}. Tienes {{available}} libres.",
     "nothingWritten": "No se escribe nada hasta que pulses Importar.",
-    "whatComesIn": "Qué se importa"
+    "whatComesIn": "Qué se importa",
+    "backupSettings": "Esta copia de seguridad también trae ajustes: {{list}}.",
+    "backupSetting": {
+      "calendarFeeds": "calendarios suscritos",
+      "dashboard": "la disposición de Inicio",
+      "itemStyles": "colores e iconos de carpetas, etiquetas y notas",
+      "customThemes": "temas personalizados",
+      "favoriteTags": "etiquetas favoritas",
+      "medications": "medicaciones",
+      "trackers": "configuración de registros",
+      "agentFolder": "la carpeta Agent"
+    }
   },
   "counts": {
     "note_one": "nota",
@@ -246,7 +261,10 @@
     "missingFailed_one": "Este dispositivo no pudo descargar {{items}}, así que no se incluye en tu exportación. Comprueba tu conexión y exporta de nuevo.",
     "missingFailed_other": "Este dispositivo no pudo descargar {{items}}, así que no se incluyen en tu exportación. Comprueba tu conexión y exporta de nuevo.",
     "missingNotFound_one": "{{items}} no está ni en este dispositivo ni en el servidor, así que no se incluye en tu exportación.",
-    "missingNotFound_other": "{{items}} no están ni en este dispositivo ni en el servidor, así que no se incluyen en tu exportación."
+    "missingNotFound_other": "{{items}} no están ni en este dispositivo ni en el servidor, así que no se incluyen en tu exportación.",
+    "bookmarksSkipped_one": "{{count}} marcador tiene una dirección que no empieza por http o https, así que no se incluye en tu exportación.",
+    "bookmarksSkipped_many": "{{count}} marcadores tienen una dirección que no empieza por http o https, así que no se incluyen en tu exportación.",
+    "bookmarksSkipped_other": "{{count}} marcadores tienen una dirección que no empieza por http o https, así que no se incluyen en tu exportación."
   },
   "missing": {
     "pictures_one": "{{count}} imagen",
@@ -338,8 +356,8 @@
     "typeFullHint": "Notas, bóveda, imágenes, audio y archivos, sellados con la clave de tu frase. Puedes guardarla en cualquier sitio.",
     "rhythmHeading": "Ritmo",
     "historyHeading": "Copias de seguridad recientes",
-    "runsHintDesktop": "Se ejecuta mientras PrivacyNotes está abierto o en la bandeja. Una copia que tocaba con la app cerrada se ejecuta un minuto después de abrirla.",
-    "runsHintWeb": "Se ejecuta mientras PrivacyNotes está abierto en este navegador. Una copia que tocaba con él cerrado se ejecuta un minuto después de abrirlo.",
+    "runsHintDesktop": "Se ejecuta mientras PrivacyNotes está abierto o en la bandeja. Una copia que tocaba con la app cerrada se ejecuta un minuto después de abrirla, también sin conexión una vez que este dispositivo se ha sincronizado.",
+    "runsHintWeb": "Se ejecuta mientras PrivacyNotes está abierto en este navegador. Una copia que tocaba con él cerrado se ejecuta un minuto después de abrirlo, también sin conexión una vez que este dispositivo se ha sincronizado.",
     "runsHintDownload": "PrivacyNotes solo puede avisar de que toca una copia de seguridad mientras está abierto en este navegador. Una copia que tocaba con él cerrado se ofrece un minuto después de abrirlo.",
     "runsHintPhone": "Un teléfono no puede hacer una copia de seguridad con PrivacyNotes cerrado. Se hace cuando abres la app y toca una.",
     "sizeHint": "Unos {{size}} para {{count}}.",

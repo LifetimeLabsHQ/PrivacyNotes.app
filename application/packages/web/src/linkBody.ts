@@ -9,12 +9,18 @@
  *     display falls back to the domain at render time (deriveDisplayTitle),
  *     never at save time, so an edited URL can never leave a stale name
  *     behind and user intent stays distinguishable from the default.
- *   - body:  JSON { url, keyword?, keywordTag? } - the normalized http(s)
- *     URL, and the Firefox address-bar keyword (SHORTCUTURL) when the
+ *   - body:  JSON { url, keyword?, keywordTag?, notes? } - the normalized
+ *     http(s) URL, and the Firefox address-bar keyword (SHORTCUTURL) when the
  *     bookmark came from a Firefox file. `keywordTag` is true when Firefox
  *     also had a tag of the keyword's name, so the export keeps that tag.
  *     Both are carried so the export can write them back; nothing in the app
- *     reads them otherwise.
+ *     reads them otherwise. `notes` is the Markdown of the Notes box, the
+ *     vault's NotesField.
+ *
+ * Every edit of a stored body goes through `updateLinkBody`, which keeps the
+ * keys it does not change, the ones this build does not know included. A
+ * build that rebuilt the body from the keys it knew erased a newer field on
+ * any URL edit.
  *
  * Spec: docs/internal/specs/bookmarks-pillar.md (section 2)
  */
@@ -25,15 +31,37 @@ import { domainFromUrlString } from './favicon';
  * Parsed bookmark body. `url` is '' when the body does not parse; `keyword`
  * is present only when the body carries a non-empty one.
  */
-export function parseLinkBody(body: string): { url: string; keyword?: string; keywordTag?: true } {
-  try {
-    const data = JSON.parse(body);
-    const url = typeof data.url === 'string' ? data.url : '';
-    if (typeof data.keyword !== 'string' || !data.keyword) return { url };
-    return data.keywordTag === true ? { url, keyword: data.keyword, keywordTag: true } : { url, keyword: data.keyword };
-  } catch {
-    return { url: '' };
+export function parseLinkBody(body: string): { url: string; keyword?: string; keywordTag?: true; notes?: string } {
+  const data = linkBodyObject(body);
+  const url = typeof data.url === 'string' ? data.url : '';
+  const out: { url: string; keyword?: string; keywordTag?: true; notes?: string } = { url };
+  if (typeof data.keyword === 'string' && data.keyword) {
+    out.keyword = data.keyword;
+    if (data.keywordTag === true) out.keywordTag = true;
   }
+  if (typeof data.notes === 'string' && data.notes) out.notes = data.notes;
+  return out;
+}
+
+/** The stored body as an object, or an empty one when it is not a JSON object. */
+function linkBodyObject(body: string): Record<string, unknown> {
+  try {
+    const data: unknown = JSON.parse(body);
+    return data && typeof data === 'object' && !Array.isArray(data) ? (data as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * The body with `patch` applied and every other key kept as stored. An empty
+ * `notes` is removed, so a bookmark without notes keeps its old `{ url }`.
+ * Spec: docs/internal/specs/bookmarks-pillar.md (section 10)
+ */
+export function updateLinkBody(body: string, patch: { url?: string; notes?: string }): string {
+  const data = { ...linkBodyObject(body), ...patch };
+  if (!data.notes) delete data.notes;
+  return JSON.stringify(data);
 }
 
 export function buildLinkBody(url: string, keyword?: string, keywordTag?: boolean): string {
@@ -80,13 +108,15 @@ export function linkDomain(url: string): string {
  * Markdown export prints it as text, and every surface that renders
  * markdown (HTML export, PDF/print, the burn viewer) turns it into a
  * clickable anchor - deliberately NOT the vault-fields table (2026-08-22
- * review: a one-URL table read as furniture). Returns null for anything
- * that is not a bookmark, so call sites can fall through unchanged.
+ * review: a one-URL table read as furniture). The notes follow the link as
+ * Markdown. Returns null for anything that is not a bookmark, so call sites
+ * can fall through unchanged.
  */
 export function linkExportMarkdown(note: { type?: string; body: string }): string | null {
   if (note.type !== 'link') return null;
-  const { url } = parseLinkBody(note.body);
-  return url ? `<${url}>` : null;
+  const { url, notes } = parseLinkBody(note.body);
+  if (!url) return notes ?? null;
+  return notes ? `<${url}>\n\n${notes}` : `<${url}>`;
 }
 
 /**

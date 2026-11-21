@@ -47,9 +47,10 @@
     "title": "Skydda dina inloggningar",
     "body": "Välj en PIN eller en lösenkod för den här webbläsaren. Du behöver den för att låsa upp dina inloggningar här. Den är skild från appens.",
     "biometric": "Använd även biometrisk upplåsning",
-    "biometricHelp": "Touch ID eller Windows Hello, utöver PIN-koden eller lösenkoden, som alltid fungerar också.",
+    "biometricHelp": "Touch ID eller Windows Hello, via en passkey för den här webbläsaren. PIN-koden eller lösenkoden fungerar alltid också.",
     "repeat": "Ange den igen",
-    "mismatch": "De två stämmer inte överens. Försök igen."
+    "mismatch": "De två stämmer inte överens. Försök igen.",
+    "commonPin": "Den här PIN-koden är för lätt att gissa. Välj en annan."
   },
   "clip": {
     "selection": "Markering",
@@ -83,8 +84,8 @@
     "unlockPin": "Ange din PIN",
     "unlockPasscode": "Ange din lösenkod",
     "useBiometric": "Använd biometrisk upplåsning",
-    "wrong_one": "Fel. {{count}} försök kvar innan den här webbläsaren kopplas bort.",
-    "wrong_other": "Fel. {{count}} försök kvar innan den här webbläsaren kopplas bort.",
+    "wrong_one": "Fel. {{count}} försök kvar denna månad innan den här webbläsaren kopplas bort.",
+    "wrong_other": "Fel. {{count}} försök kvar denna månad innan den här webbläsaren kopplas bort.",
     "forSite": "För {{site}}",
     "none": "Inga inloggningar för den här webbplatsen.",
     "off": "Inloggningar är avstängda för den här webbläsaren. Slå på Valv när du ansluter den.",
@@ -99,12 +100,15 @@
     "search": "Sök bland alla inloggningar",
     "noMatch": "Inga inloggningar matchar.",
     "openSite": "Öppna webbplatsen",
-    "duplicate": "Du har redan en inloggning för den här webbplatsen med det här användarnamnet."
+    "duplicate": "Du har redan en inloggning för den här webbplatsen med det här användarnamnet.",
+    "editTitle": "Redigera inloggning",
+    "saved": "Ändringarna sparades."
   },
   "account": {
     "confirmDisconnect": "Koppla bort?",
     "revoked": "Den här webbläsaren är inte längre ansluten",
-    "revokedBody": "Anslut den igen med en ny kod från appen."
+    "revokedBody": "Anslut den igen med en ny kod från appen.",
+    "pendingPasskey": "En passkey som sparats i den här webbläsaren finns inte i ditt Valv än. Öppna PrivacyNotes och låt den synka först, annars går passkeyn förlorad."
   },
   "badge": {
     "problem": "Något behöver din uppmärksamhet"
@@ -147,7 +151,8 @@
     "unlockToCopy": "Lås upp för att kopiera",
     "omniboxDefault": "Sök efter %s i ditt PrivacyNotes-valv",
     "omniboxUnlock": "Lås upp PrivacyNotes för att söka",
-    "moreOptions": "Fler alternativ"
+    "moreOptions": "Fler alternativ",
+    "editNotSaved": "Din ändring av {{name}} nådde aldrig ditt Valv, så inloggningen behåller sina gamla värden. Redigera den igen för att spara ändringen."
   },
   "shortcuts": {
     "notSet": "Inte inställt",
@@ -194,5 +199,19 @@
     "biometricPin": "Ange din PIN för att ställa in den.",
     "biometricPasscode": "Ange din lösenkod för att ställa in den.",
     "biometricOff": "Biometrisk upplåsning är av"
+  },
+  "passkey": {
+    "saveTitle": "Spara en passkey för {{site}}?",
+    "useTitle": "Logga in på {{site}}",
+    "saveTo": "Spara i",
+    "save": "Spara i PrivacyNotes",
+    "other": "Använd en annan passkey-app",
+    "already": "Du har redan en passkey för {{site}} i PrivacyNotes.",
+    "saved": "Passkeyn sparades.",
+    "notSaved": "Passkeyn kunde inte sparas. Webbläsarens egen passkey-app tar över.",
+    "maybeSaved": "Passkeyn kan ha sparats. Kontrollera ditt Valv.",
+    "unlockFirst": "Lås upp för att använda dina passkeys.",
+    "offer": "Erbjud passkeys",
+    "offerHelp": "Spara och använd passkeys på webbplatser."
   }
 }

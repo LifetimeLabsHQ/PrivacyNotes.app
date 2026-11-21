@@ -1,11 +1,12 @@
 import type JSZip from 'jszip';
 import { ImportTooLargeError, mediaTooLargeWarning, zipEntryBytes, zipEntryMedia, zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
-import { linkifyMarkdown } from './linkify';
+import { withBareLinks } from './bareLinks';
+import { escapeTypedTags } from './importHelpers';
 import i18n from '../i18n';
 import type { ImportedNote, ParsedImport } from './types';
 
-const msg = (key: string, options?: Record<string, unknown>): string =>
+const msg = (key: string, options: Record<string, unknown> = {}): string =>
   i18n.t(`importLog:samsungNotes.${key}`, options);
 
 /**
@@ -278,7 +279,7 @@ function docxToMarkdown(docXml: string, numDefs: Map<string, NumDef>): {
         // Text in the same run as a drawing - grab it
         const runTexts = run.getElementsByTagName(wTag('w:t'));
         for (let ti = 0; ti < runTexts.length; ti++) {
-          paraText += runTexts[ti]!.textContent ?? '';
+          paraText += escapeTypedTags(runTexts[ti]!.textContent ?? '');
         }
         continue;
       }
@@ -289,6 +290,9 @@ function docxToMarkdown(docXml: string, numDefs: Map<string, NumDef>): {
         runStr += runTexts[ti]!.textContent ?? '';
       }
       if (!runStr) continue;
+      // Typed text: a `<word>` in it is text, not a tag (beta #149). Before
+      // the marks, so the run's own `<u>` stays a tag.
+      runStr = escapeTypedTags(runStr);
 
       // Check run formatting
       const rPr = run.getElementsByTagName(wTag('w:rPr'))[0];
@@ -383,7 +387,8 @@ interface SamsungEntry {
     /** Pictures past the largest upload, left out (zipEntryMedia). */
     tooLarge: number;
   };
-  /** Image blobs extracted from a .docx, keyed by placeholder (e.g. "samsungimg:rId2"). */
+  /** Image blobs extracted from a .docx, keyed by placeholder (e.g. "samsungimg:rId2"),
+   *  numbered across the import when the entries are merged. */
   blobs?: Map<string, { data: Uint8Array; mime: string; name: string }>;
 }
 
@@ -395,7 +400,8 @@ function mimeFromMediaPath(path: string): string {
     gif: 'image/gif', webp: 'image/webp', bmp: 'image/bmp',
     svg: 'image/svg+xml',
   };
-  return map[ext] ?? 'application/octet-stream';
+  // Own keys only: `image1.constructor` named a function (beta #199 item 2).
+  return Object.hasOwn(map, ext) ? map[ext]! : 'application/octet-stream';
 }
 
 /**
@@ -581,7 +587,9 @@ async function extractEntries(
 /* Main parse function                                                */
 /* ------------------------------------------------------------------ */
 
-export async function parseSamsungNotes(
+export const parseSamsungNotes = withBareLinks(readSamsungNotes);
+
+async function readSamsungNotes(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
@@ -600,8 +608,6 @@ export async function parseSamsungNotes(
   const allBlobs = new Map<string, { data: Uint8Array; mime: string; name: string }>();
 
   let emptyCount = 0;
-  let untaggedCount = 0;
-  let linkifiedCount = 0;
   let bulletConvertCount = 0;
   let checkboxConvertCount = 0;
   let blankCollapseCount = 0;
@@ -629,14 +635,22 @@ export async function parseSamsungNotes(
       if (entry.docxMeta?.hadLists) bulletConvertCount++;
       if (entry.docxMeta?.hadCheckboxes) checkboxConvertCount++;
 
-      // Merge blobs from this entry into the aggregate map
+      // Merge blobs from this entry into the aggregate map. An rId counts
+      // inside one .docx only, so every file has its own `rId7`: each picture
+      // gets a number across the whole import instead. Fixed width, so no
+      // key is a prefix of another, and the swap matches the whole link
+      // target, so `rId1` never matches inside `rId10`.
       if (entry.blobs) {
-        for (const [key, blob] of entry.blobs) allBlobs.set(key, blob);
+        for (const [key, blob] of entry.blobs) {
+          const numbered = `samsungimg:${String(allBlobs.size + 1).padStart(6, '0')}`;
+          body = body.split(`(${key})`).join(`(${numbered})`);
+          allBlobs.set(numbered, blob);
+        }
       }
     } else {
       // .txt path - apply Samsung marker normalization
       txtCount++;
-      body = entry.body.trim();
+      body = escapeTypedTags(entry.body.trim());
 
       const hasBullets = /[•◦▪▫]/.test(body);
       // Both markers, matching what normalizeSamsungBody converts. Probing
@@ -656,13 +670,9 @@ export async function parseSamsungNotes(
 
     // Strip duplicate first line (Samsung often repeats the title)
     const firstLine = body.split('\n')[0]?.trim() ?? '';
-    if (firstLine && firstLine === title.trim()) {
+    if (firstLine && (firstLine === title.trim() || firstLine === escapeTypedTags(title.trim()))) {
       body = body.slice(body.indexOf('\n') + 1).trimStart();
     }
-
-    const linked = linkifyMarkdown(body);
-    if (linked !== body) linkifiedCount++;
-    body = linked;
 
     if (!body && !title) {
       emptyCount++;
@@ -676,7 +686,6 @@ export async function parseSamsungNotes(
       createdAt: iso,
       updatedAt: iso,
     });
-    untaggedCount++;
   }
 
   // --- Transforms & warnings ---
@@ -696,9 +705,6 @@ export async function parseSamsungNotes(
   }
   if (allBlobs.size > 0) {
     transforms.push(i18n.t('importLog:shared.foundImages', { count: allBlobs.size }));
-  }
-  if (linkifiedCount > 0) {
-    transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkifiedCount }));
   }
   if (blankCollapseCount > 0) {
     transforms.push(msg('whitespace', { count: blankCollapseCount }));
@@ -726,12 +732,6 @@ export async function parseSamsungNotes(
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: emptyCount,
-      untaggedNotes: untaggedCount,
-      uniqueTags: uniqueTags.size,
-    },
     source: 'samsung-notes',
     ...(allBlobs.size > 0 ? { blobs: allBlobs, blobBytes } : {}),
   };

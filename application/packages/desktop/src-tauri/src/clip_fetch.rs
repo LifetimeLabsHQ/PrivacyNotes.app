@@ -5,7 +5,8 @@
 //! The command fetches an address the person typed or a page named, so it is
 //! a door from the web view to the network. What keeps it from reaching
 //! anything but the public web:
-//! - only `http` and `https`, no user name or password in the address;
+//! - only `http` and `https` (only `https` for a calendar), no user name or
+//!   password in the address;
 //! - the host is resolved here, every answer is checked against the private
 //!   and local ranges, and the connection goes to the address that was
 //!   checked, so a second DNS answer cannot move it;
@@ -81,6 +82,13 @@ impl Kind {
                 "text/calendar" | "application/ics" | "text/plain" | "application/octet-stream" | "application/binary"
             ),
         }
+    }
+
+    /// A calendar is never downloaded over plain http: its address works like
+    /// a password, and its events would be readable and changeable on the
+    /// way (beta #159).
+    fn allows(self, url: &Url) -> bool {
+        self != Kind::Calendar || url.scheme() == "https"
     }
 
     fn accept_header(self) -> &'static str {
@@ -284,7 +292,9 @@ async fn request(url: &Url, addr: SocketAddr, kind: Kind) -> Result<reqwest::Res
         .header("accept", kind.accept_header())
         .send()
         .await
-        .map_err(|_| "network")
+        // A calendar's server that takes no https connection, or fails the
+        // TLS handshake, is named so the person learns why.
+        .map_err(|e| if kind == Kind::Calendar && e.is_connect() { "no-https" } else { "network" })
 }
 
 /// Download `raw` as `kind`, following redirects by hand.
@@ -298,6 +308,9 @@ pub async fn fetch(raw: &str, kind: Kind, guard: &Guard) -> Result<Fetched, Stri
 async fn fetch_inner(raw: &str, kind: Kind, guard: &Guard) -> Result<Fetched, String> {
     let mut url = check_url(raw)?;
     for hop in 0..=MAX_REDIRECTS {
+        if !kind.allows(&url) {
+            return Err("bad-url".into());
+        }
         let addr = resolve(&url, guard).await?;
         let mut response = request(&url, addr, kind).await?;
         let status = response.status();
@@ -505,6 +518,19 @@ mod tests {
             assert_eq!(got.body, b"<p>hi</p>");
             assert_eq!(got.url, format!("http://{addr}/a"));
             assert!(got.content_type.starts_with("text/html"));
+        });
+    }
+
+    #[test]
+    fn downloads_a_calendar_over_https_only() {
+        run(async {
+            let addr = serve(response("200 OK", &[("content-type", "text/calendar")], "BEGIN:VCALENDAR")).await;
+            let guard = Guard { allow: Some(addr) };
+            let err = fetch(&format!("http://{addr}/a.ics"), Kind::Calendar, &guard).await.err();
+            assert_eq!(err.as_deref(), Some("bad-url"));
+            // The test server speaks plain http, so the TLS handshake fails.
+            let err = fetch(&format!("https://{addr}/a.ics"), Kind::Calendar, &guard).await.err();
+            assert_eq!(err.as_deref(), Some("no-https"));
         });
     }
 

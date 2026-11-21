@@ -35,28 +35,28 @@
  *     says, so the export can write SHORTCUTURL back for Firefox.
  *   - The embedded ICON= data URIs are ignored: stale snapshots, and the
  *     live favicon proxy already does this job.
- *   - <DD> descriptions are NOT read. Firefox dropped the description
- *     field from its UI years ago, and a 539-bookmark real export
- *     (2026-08-22) carried zero of them.
+ *   - A <DD> description becomes the bookmark's notes. Firefox dropped
+ *     the field from its UI, but Raindrop writes its notes there, and our
+ *     own export writes the notes back the same way.
  *   - Only http(s) links import; place:, javascript:, chrome: and
  *     friends are counted into one warning.
  * Exact-URL dedupe against existing bookmarks happens in apply.ts, where
  * the local DB is in reach.
  */
 
-import { buildLinkBody, linkDomain } from '../linkBody';
+import { buildLinkBody, linkDomain, updateLinkBody } from '../linkBody';
 import { normalizeTag } from '../notesRepo';
 import i18n from '../i18n';
 import { buildFolderTree } from './folderImport';
 import { readArchiveEntry } from './safariArchive';
 import type { ImportedNote, ParsedImport } from './types';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:browserBookmarks.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:browserBookmarks.${key}`, options);
 
 /** Root folder every imported bookmark lands under. */
 const ROOT_FOLDER = 'Bookmarks';
 
-const TOKEN = /<DT[^>]*>\s*<H3([^>]*)>([\s\S]*?)<\/H3>|<DT[^>]*>\s*<A([^>]*)>([\s\S]*?)<\/A>|<\/DL>/gi;
+const TOKEN = /<DT[^>]*>\s*<H3([^>]*)>([\s\S]*?)<\/H3>|<DT[^>]*>\s*<A([^>]*)>([\s\S]*?)<\/A>|<DD>([^<]*)|<\/DL>/gi;
 
 const NAMED_ENTITY: Record<string, string> = {
   lt: '<',
@@ -165,8 +165,17 @@ export async function parseBrowserBookmarks(file: File): Promise<ParsedImport> {
 
   const path = () => stack.filter((seg): seg is string => seg !== null);
 
+  // The bookmark a <DD> right after it describes; any other token ends it.
+  let described: ImportedNote | null = null;
   let m: RegExpExecArray | null;
   while ((m = TOKEN.exec(text)) !== null) {
+    if (m[5] !== undefined) {
+      const description = decodeEntities(m[5]).trim();
+      if (described && description) described.body = updateLinkBody(described.body, { notes: description });
+      described = null;
+      continue;
+    }
+    described = null;
     if (m[0].toUpperCase() === '</DL>') {
       // The outermost </DL> closes the document's root list, which never
       // had a pushed segment - guard so a malformed file cannot underflow.
@@ -209,7 +218,7 @@ export async function parseBrowserBookmarks(file: File): Promise<ParsedImport> {
     // Whether Firefox ALSO had a tag of the keyword's name: the export leaves
     // out a tag that only the keyword made, and keeps this one.
     const keywordTag = !!keyword && (attr(attrs, 'TAGS') ?? '').split(',').some((t) => normalizeTag(t) === normalizeTag(keyword));
-    notes.push({
+    described = {
       title: name,
       body: buildLinkBody(href, keyword || undefined, keywordTag),
       tags: [],
@@ -218,7 +227,8 @@ export async function parseBrowserBookmarks(file: File): Promise<ParsedImport> {
       type: 'link',
       folderPath,
       ...(browserTags.length > 0 ? { browserTags } : {}),
-    });
+    };
+    notes.push(described);
   }
 
   if (notes.length === 0) {
@@ -245,12 +255,6 @@ export async function parseBrowserBookmarks(file: File): Promise<ParsedImport> {
     notes,
     warnings,
     transforms: [],
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: 0,
-      untaggedNotes: notes.length,
-      uniqueTags: 0,
-    },
     source: 'browser-bookmarks',
     folders,
   };

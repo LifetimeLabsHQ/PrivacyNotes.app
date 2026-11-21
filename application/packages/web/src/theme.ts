@@ -41,6 +41,8 @@ import { useCallback, useSyncExternalStore } from 'react';
 import { applyAppZoom, DEFAULT_APP_ZOOM } from './appZoom';
 import { paintCodeWrap, setCodeWrap } from './codeWrap';
 import { FONT_FAMILIES } from './editorColors';
+import { credentialKey } from './demo';
+import { readStringList } from './localStore';
 
 // ------------------------------------------------------------------
 // Light / dark axis
@@ -408,9 +410,25 @@ export function noteFontStack(font: NoteFont, custom: CustomFonts = activeCustom
   return name ? `"${name}", ${stack}` : stack;
 }
 
-/** Paint the custom font of the chosen note font, or clear it. */
+/**
+ * Paint the custom font of the chosen note font, or clear it. Each note
+ * font's own name also goes on <html> (`--pn-font-<font>` with
+ * `data-note-font-<font>`), so a Sans, Serif or Mono picked in the toolbar
+ * draws in the same font as the setting (#809). The note keeps the built-in
+ * stack, so another device still draws its own.
+ */
 function paintCustomFont(): void {
   const root = document.documentElement;
+  for (const font of NOTE_FONTS) {
+    const attr = `noteFont${font[0]!.toUpperCase()}${font.slice(1)}`;
+    if (activeCustomFonts[font]) {
+      root.style.setProperty(`--pn-font-${font}`, noteFontStack(font));
+      root.dataset[attr] = '';
+    } else {
+      root.style.removeProperty(`--pn-font-${font}`);
+      delete root.dataset[attr];
+    }
+  }
   if (activeCustomFonts[activeNoteFont]) {
     root.style.setProperty('--pn-note-font-custom', noteFontStack(activeNoteFont));
     root.dataset.noteFontCustom = '';
@@ -619,6 +637,39 @@ function applySpellcheck(on: boolean): void {
   localStorage.setItem(SPELLCHECK_KEY, on ? '1' : '0');
 }
 
+/**
+ * Spell check off for one note (#838), device-local for the same reason as
+ * the switch above. It only takes spell check away: the note menu's row
+ * shows only while the device switch is on. Note ids, this account's:
+ * cleared at sign-out (authStorage.ts).
+ * Spec: docs/internal/specs/note-spell-check.md
+ */
+export const SPELLCHECK_OFF_NOTES_KEY = 'privacynotes.spellcheckOffNotes';
+
+/** Whether spell check is off for this one note on this device. */
+export function isNoteSpellcheckOff(noteId: string): boolean {
+  return readStringList(credentialKey(SPELLCHECK_OFF_NOTES_KEY)).includes(noteId);
+}
+
+/** Turn spell check on (forget the note) or off for one note. */
+export function setNoteSpellcheck(noteId: string, on: boolean): void {
+  const key = credentialKey(SPELLCHECK_OFF_NOTES_KEY);
+  const ids = readStringList(key).filter((id) => id !== noteId);
+  if (!on) ids.push(noteId);
+  try {
+    if (ids.length) localStorage.setItem(key, JSON.stringify(ids));
+    else localStorage.removeItem(key);
+  } catch {
+    // Storage refused (a private window): the switch keeps its default.
+  }
+  emitThemeChange();
+}
+
+/** `isNoteSpellcheckOff`, redrawn when a switch changes. */
+export function useNoteSpellcheckOff(noteId: string): boolean {
+  return useSyncExternalStore(subscribeTheme, () => isNoteSpellcheckOff(noteId));
+}
+
 // ------------------------------------------------------------------
 // Copied text axis
 // ------------------------------------------------------------------
@@ -737,6 +788,34 @@ function applyLinkModifier(on: boolean): void {
 /** For the link click handlers, which run outside React. */
 export function readLinkModifier(): boolean {
   return activeLinkModifier;
+}
+
+// ------------------------------------------------------------------
+// Open read-only axis
+// ------------------------------------------------------------------
+
+const OPEN_READ_ONLY_KEY = 'privacynotes.openReadOnly';
+
+/**
+ * Whether a note opens read-only on this device (GitHub #824): no cursor, no
+ * keyboard, until "Turn off" on the note, which lasts until the note is left.
+ * A view over the note, never a write: the note's own Read-only flag stays
+ * apart and still wins. Default off. Device-local, so a phone can read while
+ * the desktop edits.
+ */
+function getStoredOpenReadOnly(): boolean {
+  try {
+    return localStorage.getItem(OPEN_READ_ONLY_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+let activeOpenReadOnly: boolean = getStoredOpenReadOnly();
+
+function applyOpenReadOnly(on: boolean): void {
+  activeOpenReadOnly = on;
+  localStorage.setItem(OPEN_READ_ONLY_KEY, on ? '1' : '0');
 }
 
 // ------------------------------------------------------------------
@@ -1221,6 +1300,7 @@ export function resetAppearance(): void {
     applyCopyFormat('markdown');
     applyPasteFormat('formatted');
     applyLinkModifier(false);
+    applyOpenReadOnly(false);
     setCodeWrap(true);
   } catch { /* ignore */ }
   emitThemeChange();
@@ -1297,6 +1377,7 @@ function getFaviconsSnapshot(): boolean { return activeFavicons; }
 function getCopyFormatSnapshot(): CopyFormat { return activeCopyFormat; }
 function getPasteFormatSnapshot(): PasteFormat { return activePasteFormat; }
 function getLinkModifierSnapshot(): boolean { return activeLinkModifier; }
+function getOpenReadOnlySnapshot(): boolean { return activeOpenReadOnly; }
 function getNoteFontSnapshot(): NoteFont { return activeNoteFont; }
 function getCustomFontsSnapshot(): CustomFonts { return activeCustomFonts; }
 
@@ -1370,6 +1451,7 @@ export function useTheme() {
   const copyFormat = useSyncExternalStore(subscribeTheme, getCopyFormatSnapshot);
   const pasteFormat = useSyncExternalStore(subscribeTheme, getPasteFormatSnapshot);
   const linkModifier = useSyncExternalStore(subscribeTheme, getLinkModifierSnapshot);
+  const openReadOnly = useSyncExternalStore(subscribeTheme, getOpenReadOnlySnapshot);
   const noteFont = useSyncExternalStore(subscribeTheme, getNoteFontSnapshot);
   const customFonts = useSyncExternalStore(subscribeTheme, getCustomFontsSnapshot);
 
@@ -1434,6 +1516,11 @@ export function useTheme() {
     emitThemeChange();
   }, []);
 
+  const setOpenReadOnly = useCallback((next: boolean) => {
+    applyOpenReadOnly(next);
+    emitThemeChange();
+  }, []);
+
   const setNoteFont = useCallback((next: NoteFont) => {
     applyNoteFont(next);
     emitThemeChange();
@@ -1450,5 +1537,5 @@ export function useTheme() {
     emitThemeChange();
   }, []);
 
-  return { theme, themeMode, toggle, setTheme, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, setCustomTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, cycleContentWidth, spellcheck, setSpellcheck, invisibles, setInvisibles, favicons, setFavicons, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, noteFont, setNoteFont, customFonts, setCustomFont };
+  return { theme, themeMode, toggle, setTheme, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, setCustomTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, cycleContentWidth, spellcheck, setSpellcheck, invisibles, setInvisibles, favicons, setFavicons, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, openReadOnly, setOpenReadOnly, noteFont, setNoteFont, customFonts, setCustomFont };
 }

@@ -3,6 +3,7 @@ import type { BwIdentity } from './bitwarden';
 import { ManagerItems, tagsOf, type Field, type ItemCommon } from './managerItems';
 import { isoFromStamp } from './passwordCsv';
 import type { Importer } from './types';
+import { withBareLinks } from './bareLinks';
 
 /**
  * Enpass import, from the real export the lab made in Enpass 6.12 for Windows
@@ -25,7 +26,7 @@ import type { Importer } from './types';
  * Spec: docs/internal/plans/password-manager-importers.md (section 4)
  */
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:enpass.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:enpass.${key}`, options);
 
 type EnField = { type?: string; label?: string; value?: string; sensitive?: number; deleted?: number; uid?: number };
 type EnItem = {
@@ -49,7 +50,7 @@ const PHONES = [149, 151, 140];
 /** A crafted file can loop its folder parents. */
 const MAX_FOLDER_DEPTH = 32;
 
-export const enpassImporter: Importer = {
+const enpassImporterBase: Importer = {
   id: 'enpass',
   label: 'Enpass',
   description: 'In Enpass: File > Export, pick the vault and the .json format, then drop the .json file here.',
@@ -102,6 +103,9 @@ export const enpassImporter: Importer = {
   },
 };
 
+/** The importer with the bare-link pass after its parse (bareLinks.ts). */
+export const enpassImporter: Importer = { ...enpassImporterBase, parse: withBareLinks(enpassImporterBase.parse) };
+
 function addLogin(items: ManagerItems, common: ItemCommon, fields: EnField[]): void {
   const first = (type: string) => fields.find((f) => f.type === type && f.value);
   const user = first('username');
@@ -133,7 +137,7 @@ function addCard(items: ManagerItems, common: ItemCommon, fields: EnField[]): vo
     holder: byType('ccName')?.value ?? '',
     number: (byType('ccNumber')?.value ?? '').replace(/\s+/g, ''),
     cvv: byType('ccCvc')?.value ?? '',
-    expMonth: month.trim().padStart(2, '0'),
+    expMonth: month,
     expYear: year.trim().length === 2 ? `20${year.trim()}` : year.trim(),
     notes: [common.notes ?? '', lines.join('\n')].filter(Boolean).join('\n\n'),
   });

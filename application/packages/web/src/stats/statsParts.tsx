@@ -1,8 +1,8 @@
-import { cloneElement, isValidElement, useMemo, useState, type ReactElement, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { CaretRight } from '../icons';
-import { TRACKER_ICONS } from '../trackers/icons';
+import { TrackerIcon } from '../trackers/TrackerIcon';
 import { MoodMark } from '../moodMark';
 import { moodWord as moodWordOf } from '../checkIn';
 import { MOOD_COLORS, moodColor } from '../moodColors';
@@ -12,6 +12,7 @@ import { toLocalIso } from '../notesViewUtils';
 import { Button, GlyphTile } from '../ui';
 import type { CompareResult, DaySeries, TrackerDescriptor, TrackerValue } from '../wellnessTypes';
 import { formatNumber, formatValue, hasData, levelLabel, trackerName, type WellnessModel } from './wellnessModel';
+import { PILL_TONE, type PillTone } from '../trackerTone';
 
 /**
  * The small parts of the Statistics page, in the look of the check-in card
@@ -38,11 +39,9 @@ export function changeTone(d: TrackerDescriptor, delta: number): 'good' | 'bad' 
 }
 export const TONE_TEXT = { good: 'text-success', bad: 'text-danger', neutral: 'text-pn-muted' } as const;
 
-/** The journal pill's glyph of a tracker, at a size; a custom tracker has none. */
+/** The tracker's icon at a size (`TrackerIcon`, one for every place a tracker is named). */
 function glyphOf(d: TrackerDescriptor, size: number): ReactNode {
-  const key = d.source === 'medication' ? 'medication' : d.id === 'sleepHours' || d.id === 'sleepQuality' ? 'sleep' : d.id === 'bpSystolic' || d.id === 'bpDiastolic' ? 'bloodPressure' : d.id;
-  const icon = TRACKER_ICONS[key];
-  return isValidElement(icon) ? cloneElement(icon as ReactElement<{ size?: number }>, { size }) : null;
+  return <TrackerIcon d={d} size={size} />;
 }
 
 /** A tracker's glyph on a soft tile of its own color, or its dot when it has no glyph. */
@@ -50,14 +49,6 @@ export function TrackerTile({ d, size = 26 }: { d: TrackerDescriptor; size?: num
   return <GlyphTile color={d.color} size={size}>{glyphOf(d, Math.round(size * 0.54))}</GlyphTile>;
 }
 
-/** The pill tints: the logged green, a worse value, a value in between, and no judgement. */
-const PILL_TONE = {
-  good: 'bg-success/10 text-success',
-  bad: 'bg-danger/10 text-danger',
-  warn: 'bg-warning/10 text-warning',
-  neutral: 'bg-surface-0 text-pn-soft',
-} as const;
-type PillTone = keyof typeof PILL_TONE;
 
 /** One logged pill, as on a journal entry: a glyph and a short value, never a control. `tint` paints it in a color of its own (a mood's band). */
 export function StatPill({ icon, children, muted = false, tone, tint }: { icon?: ReactNode; children: ReactNode; muted?: boolean; tone?: PillTone; tint?: string }) {
@@ -75,7 +66,7 @@ export function StatPill({ icon, children, muted = false, tone, tint }: { icon?:
 
 /** A tracker's pill: its glyph and a value. A neutral pill keeps the glyph in the tracker's own color. */
 export function TrackerPill({ d, children, muted, tone, icon, tint }: { d: TrackerDescriptor; children: ReactNode; muted?: boolean; tone?: PillTone; icon?: ReactNode; tint?: string }) {
-  const glyph = icon ?? glyphOf(d, 12) ?? <span className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />;
+  const glyph = icon ?? glyphOf(d, 12);
   const shown = tone === 'neutral' && !icon ? <span className="inline-flex" style={{ color: d.color }}>{glyph}</span> : glyph;
   return <StatPill icon={shown} muted={muted} tone={tone} tint={tint}>{children}</StatPill>;
 }
@@ -93,7 +84,7 @@ const HIGHER_LEVEL_IS_BETTER = new Set(['sleepQuality', 'activity']);
  * lower, 0 when the days do not show it. Built-ins with a known direction
  * never ask.
  */
-function learnedDirection(model: WellnessModel, d: TrackerDescriptor): 1 | -1 | 0 {
+export function learnedDirection(model: WellnessModel, d: TrackerDescriptor): 1 | -1 | 0 {
   const mood = model.byId('mood');
   if (!mood || d.id === 'mood') return 0;
   const r = compare(model.entries, d, mood, model.range, 0);
@@ -109,7 +100,7 @@ function learnedDirection(model: WellnessModel, d: TrackerDescriptor): 1 | -1 | 
  * as better for sleep quality and activity. What has no direction stays
  * neutral; a medication reads as taken, skipped or missed.
  */
-function dayTone(d: TrackerDescriptor, v: TrackerValue | undefined, series: DaySeries, dir: 1 | -1 | 0): PillTone {
+export function dayTone(d: TrackerDescriptor, v: TrackerValue | undefined, series: DaySeries, dir: 1 | -1 | 0): PillTone {
   if (d.kind === 'medication') return v === 'taken' ? 'good' : v === 'missed' ? 'bad' : v === 'skipped' ? 'warn' : 'neutral';
   if (typeof v === 'boolean') {
     if (dir === 0) return 'neutral';
@@ -268,7 +259,7 @@ export function MoodMix({ series }: { series: DaySeries }) {
 }
 
 /** A value of one day in words, by the tracker's kind. */
-function formatPoint(d: TrackerDescriptor, v: TrackerValue | undefined, t: TFunction): string {
+export function formatPoint(d: TrackerDescriptor, v: TrackerValue | undefined, t: TFunction): string {
   if (typeof v === 'boolean') return v ? t('trackers:custom.yes') : t('trackers:custom.no');
   if (typeof v === 'number') return d.kind === 'scale' && d.max ? `${formatNumber(v, 1)}/${d.max}` : formatValue(d, v, t);
   if (typeof v === 'string') return d.kind === 'medication' ? t(`stats:wellness.medCalendar.${v}`, { defaultValue: v }) : levelLabel(d, v, t);

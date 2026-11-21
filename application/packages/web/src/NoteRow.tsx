@@ -13,17 +13,20 @@ import { noteLinkTarget } from './noteLinks';
 import { setItemDragImage, writeItemDrag, type ItemDragPayload } from './itemDrag';
 import { Favicon } from './VaultItem';
 import { parseLoginBody } from './LoginForm';
+import { loginHasPasskey } from './loginBody';
+import { OverflowTip } from './OverflowTip';
 import { domainFromUrlString } from './favicon';
 import { parseLinkBody, linkDomain } from './linkBody';
 import { contactHue, contactInitials, contactInitialsFor, parseContactBody } from './contactBody';
 import { loadEncryptedImageUrl } from './EncryptedImage';
-import { Archive, Book, CalendarDots, CheckSquare, File, Image, MusicNotes, Key, CreditCard, Lock, Globe, BookmarkSimple, User, Scribble, type Icon } from './icons';
+import { Archive, Book, CalendarDots, CheckSquare, File, Fingerprint, Image, MusicNotes, Key, CreditCard, Lock, Globe, BookmarkSimple, User, Scribble, type Icon } from './icons';
 import { useFolderName } from './folderNames';
 import { ChipFilterContext } from './chipFilter';
 import { sortTags } from './notesRepo';
 import { usePushFailure } from './pushFailures';
 import { FolderGlyph, PathGlyph, TagMark, itemLookDraw, useNoteIconPaths, useNoteLook } from './looks/LookGlyph';
-import { ItemRow, applyCompactRows, type ItemFlag, type ItemRootProps, type ItemState, type ListItem } from './listItem';
+import { ItemRow, ValueBadge, applyCompactRows, type ItemFlag, type ItemMark, type ItemRootProps, type ItemState, type ListItem } from './listItem';
+import type { PillTone } from './trackerTone';
 import { isSameOriginPath } from './sameOriginPath';
 import { attachmentLinks } from './fileNames';
 import { useCompactRows } from './viewMode';
@@ -58,6 +61,10 @@ export interface NoteRowProps {
   /** The list holds one type only, so the type icon only repeats it and
    *  goes. An icon set on the note stays. Spec: issue #618. */
   hideTypeIcon?: boolean;
+  /** The list mixes types (All, Pinned, Archive, Trash), so a row whose
+   *  icon does not name its type wears a type mark that does.
+   *  Spec: docs/internal/design/ui-patterns.md section 78. */
+  typeMarks?: boolean;
   /** Use sortField-aware date label. Default false (always "Modified"). */
   sortAwareDate?: boolean;
   /** The Journals pillar: the created sort shows the day an entry is for. */
@@ -74,6 +81,13 @@ export interface NoteRowProps {
    * matching the derived-rows buttons exactly.
    */
   trailing?: ReactNode;
+  /** The value of the tracker in focus in Journals, and its tone; primitives,
+   *  so the memoized row skips a render when they do not change. */
+  valueBadge?: string;
+  valueTone?: PillTone;
+  /** The focused tracker's icon and name, the same for every row (one reference). */
+  valueIcon?: ReactNode;
+  valueName?: string;
   /**
    * Lets the item be dragged: into an editor as a `[[note-link]]`, and onto
    * a sidebar folder or tag by its id. Opt-in, because the Markdown folder
@@ -118,6 +132,7 @@ export function useNoteItem(p: NoteRowProps): ListItem {
     trashTint = false,
     showArchived = false,
     hideTypeIcon = false,
+    typeMarks = false,
   } = p;
   const { t } = useTranslation('notes');
   const compactRows = useCompactRows();
@@ -161,6 +176,10 @@ export function useNoteItem(p: NoteRowProps): ListItem {
    *  (the boxed chip drops the favicon there too, for the amber icon), and
    *  never behind the PIN, where the address is the content the gate keeps. */
   const faviconDomain = useMemo(() => (trashTint || locked ? '' : noteFaviconDomain(n)), [n, trashTint, locked]);
+  /** A login that holds a site passkey wears a small mark with the chips;
+   *  never behind the PIN, which keeps the body to itself.
+   *  Spec: docs/contrib/passkeys.md (section 5.2) */
+  const hasPasskey = useMemo(() => !locked && loginHasPasskey(n), [n, locked]);
   // In Journals the created sort is by the day each entry is for, and the
   // date line names that day.
   const created = sortAwareDate && listPrefs.sortField === 'created';
@@ -214,8 +233,10 @@ export function useNoteItem(p: NoteRowProps): ListItem {
     size: sizeText,
     flags,
     counts,
-    chips: listPrefs.showTags ? <TagChips tags={n.tags} folderId={n.folderId} /> : null,
-    ribbon: n.type === 'link',
+    chips: listPrefs.showTags || hasPasskey
+      ? <TagChips tags={listPrefs.showTags ? n.tags : []} folderId={listPrefs.showTags ? n.folderId : null} passkey={hasPasskey} />
+      : null,
+    ribbon: typeMarks ? typeMarkOf(n.type, compactRows || !!ownIcon || checkIn?.mood != null) : null,
     look: look ? { color: look.color, style: look.style, css: itemLookDraw(look).row } : null,
   }, compactRows);
 }
@@ -265,6 +286,7 @@ export default React.memo(function NoteRow(props: NoteRowProps) {
       rootProps={noteRootProps(props)}
       onToggleSelect={props.onToggleSelect}
       trailing={props.trailing}
+      badge={props.valueBadge ? <ValueBadge text={props.valueBadge} tone={props.valueTone ?? 'neutral'} icon={props.valueIcon} name={props.valueName} /> : undefined}
     />
   );
 });
@@ -626,14 +648,19 @@ function VaultRowIcon({ note, trashTint, locked, tall = false }: { note: LocalNo
 /** The tag chips a row shows before the "+N more" chip. */
 const TAG_CHIP_CAP = 4;
 
-export function TagChips({ tags, folderId }: { tags: string[]; folderId?: string | null }) {
+export function TagChips({ tags, folderId, passkey = false }: {
+  tags: string[];
+  folderId?: string | null;
+  /** The login holds a site passkey: its mark leads the row. */
+  passkey?: boolean;
+}) {
   const { t } = useTranslation('notes');
   const visible = useMemo(() => sortTags(tags), [tags]);
   const folderName = useFolderName(folderId);
   const filter = useContext(ChipFilterContext);
   const [expanded, setExpanded] = useState(false);
   const hidden = visible.length - TAG_CHIP_CAP;
-  if (visible.length === 0 && !folderName) return null;
+  if (visible.length === 0 && !folderName && !passkey) return null;
   const onPick = (run: (f: NonNullable<typeof filter>) => void) =>
     filter
       ? (e: React.MouseEvent) => {
@@ -645,6 +672,14 @@ export function TagChips({ tags, folderId }: { tags: string[]; folderId?: string
   const pickable = filter ? ' pn-chip-pick cursor-pointer transition' : '';
   return (
     <div data-slot="tags" className="mt-1 md:mt-1.5 flex flex-wrap gap-1">
+      {passkey && (
+        // The list row crops what spills out of it, so a CSS tip is cut; this tip is fixed.
+        <OverflowTip always text={t('vaultPasskey.hasPasskey')}>
+          <span data-slot="passkey" role="img" aria-label={t('vaultPasskey.hasPasskey')} className="inline-flex items-center text-meta px-1.5 py-0.5 rounded pn-chip text-accent-strong">
+            <Fingerprint size={11} aria-hidden="true" />
+          </span>
+        </OverflowTip>
+      )}
       {folderName && folderId && (
         <span
           data-slot="folder"
@@ -749,6 +784,29 @@ function CompactPicture({ note, domain, hidden }: { note: LocalNote; domain: str
     return photo ? <ContactChip name={note.title} photo={photo} size={COMPACT_PICTURE_PX} tile /> : null;
   }
   return domain ? <CompactSiteIcon domain={domain} /> : null;
+}
+
+/** The type mark for a row in a mixed list. A bookmark always wears it:
+ *  its icon is a favicon, which never names the type. The other
+ *  types wear theirs only when the icon does not show the type either - a
+ *  compact row (no type icon), an icon set on the note, a mood face. The
+ *  vault stays bare. Spec: docs/internal/design/ui-patterns.md
+ *  section 78. */
+function typeMarkOf(type: LocalNote['type'], typeHidden: boolean): ItemMark | null {
+  if (type === 'link') return 'link';
+  if (!typeHidden) return null;
+  switch (type) {
+    case 'note':
+    case 'task':
+    case 'journal':
+    case 'event':
+    case 'drawing':
+    case 'file':
+    case 'contact':
+      return type;
+    default:
+      return null;
+  }
 }
 
 /** A site icon at the Compact row size, gone while it has not loaded. */

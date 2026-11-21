@@ -4,7 +4,8 @@
     "tabBiometricShort": "Zámok",
     "tabPhraseShort": "Fráza",
     "tabPhrase": "Tvoja fráza",
-    "tabTwoFactor": "2FA"
+    "tabTwoFactor": "2FA",
+    "tabTwoFactorPasskeys": "2FA / Prístupové kľúče"
   },
   "pinTab": {
     "changeLost": "Zmena PIN sa neuložila: PIN bol skôr zmenený na inom zariadení.",
@@ -70,7 +71,7 @@
     "browserRestart": "Pri reštarte prehliadača"
   },
   "pinInfo": {
-    "body": "Keď je táto možnosť zapnutá, PIN sa vyžaduje pri každom otvorení tejto položky, aj keď je aplikácia už odomknutá. Použi ju pre citlivé položky, ktoré majú zostať chránené, keď od zariadenia odídeš."
+    "body": "Keď je táto možnosť zapnutá, položka si pred otvorením vypýta PIN, pokiaľ PIN nebol zadaný v rámci času nastaveného v Nastavenia > Zabezpečenie > Zámok (5 minút, ak to nezmeníš). Použi ju pre svoje najcitlivejšie položky."
   },
   "removePinDialog": {
     "introWithBio": "Zadaj svoj aktuálny PIN na potvrdenie odstránenia. Biometrické odomknutie zostane aktívne, ale jedinou záložnou možnosťou bude tvoja obnovovacia fráza.",
@@ -123,6 +124,7 @@
     "hideQr": "Skryť QR kód",
     "showQr": "Zobraziť QR kód",
     "saveQr": "Uložiť QR",
+    "qrHint": "V novom zariadení vyber „{{scanQr}}“ na prihlasovacej obrazovke.",
     "copyPhrase": "Kopírovať frázu"
   },
   "custody": {
@@ -136,7 +138,7 @@
     "rowLostSelf": "Bez ďalšej uloženej kópie alebo odomknutého zariadenia sa poznámky obnoviť nedajú.",
     "rowKey": "Kde je uložená tvoja fráza",
     "rowKeyCustodial": "Na našom serveri a v tvojich zariadeniach",
-    "rowKeySelf": "Iba v tvojich zariadeniach",
+    "rowKeySelf": "Iba v tvojich zariadeniach, pokiaľ nepridáš prístupový kľúč na prihlásenie",
     "releaseWarning": "Najprv si ulož svoju frázu mimo PrivacyNotes. Keď našu kópiu odstránime, budeš ju potrebovať v nových zariadeniach.",
     "challengePrompt": "Napíš tieto slová zo zoznamu vyššie a potvrď, že ich máš.",
     "wordLabel": "Slovo {{position}}",
@@ -169,14 +171,18 @@
   "biometricTab": {
     "checkingSupport": "Kontroluje sa podpora biometrie…",
     "description": "Odomykaj odtlačkom prsta alebo tvárou namiesto zadávania PIN-u.",
+    "descriptionWeb": "Odomykaj odtlačkom prsta alebo tvárou namiesto zadávania PIN-u. V prehliadači sa tým vytvorí prístupový kľúč pre PrivacyNotes v tomto zariadení, ktorý uloží tvoje zariadenie alebo tvoj správca hesiel.",
     "trustFirst": "Najprv zapni „Dôverovať tomuto zariadeniu“. Biometrické odomknutie aj zámok aplikácie uchovávajú kópiu tvojej obnovovacej frázy v tomto zariadení, a na to nedôveryhodné zariadenie neslúži.",
     "notAvailable": "Biometrické odomknutie nie je v tomto zariadení dostupné. Tvoj prehliadač alebo hardvér nepodporuje overovanie zariadením (Touch ID, Face ID, Windows Hello).",
     "enabledFlash": "Biometrické odomknutie je zapnuté.",
     "enrolledOnDevice": "Nastavené v tomto zariadení",
     "boundStatus": "Biometrické odomknutie je zviazané s tvojím prístupovým kľúčom.",
     "boundStatusNative": "Biometrické odomknutie je zviazané s bezpečným hardvérom tohto zariadenia.",
+    "boundStatusWindows": "Biometrické odomknutie je na tomto počítači zviazané s Windows Hello.",
+    "boundStatusWindowsSoftware": "Biometrické odomknutie je na tomto počítači zviazané s Windows Hello. Windows tu nehlási žiadny bezpečnostný čip (TPM), ktorý by mohol použiť. Bez neho Windows Hello uchováva kľúč v softvéri a niekto s kópiou úložiska tohto počítača môže skúšať PIN-y Windows Hello bez obmedzenia.",
     "setUpAgain": "Nastaviť znova pre silnejší zámok",
     "unboundWeaker": "V tomto zariadení je biometrické odomknutie prekážkou pre ľudí v okolí, nie zámkom: niekto s kópiou úložiska tohto zariadenia môže otvoriť tvoje poznámky bez tvojho odtlačku prsta či tváre.",
+    "noPrfRefused": "Táto aplikácia na prístupové kľúče nevie uchovať kľúč biometrického odomknutia, preto biometrické odomknutie zostáva vypnuté. Ak prístupový kľúč uložil správca hesiel, odstráň ho tam, vypni v ňom možnosť prístupových kľúčov a skús to znova.",
     "cannotBind": "Aplikácia na prístupové kľúče, ktorá uložila tento prístupový kľúč, často správca hesiel, nevie vytvoriť úplný zámok. V tomto zariadení biometrické odomknutie zastaví iba ľudí v okolí: niekto s kópiou úložiska tohto zariadenia môže otvoriť tvoje poznámky bez tvojho odtlačku prsta či tváre. Ak tvoje prístupové kľúče ukladá správca hesiel, vypni v ňom možnosť prístupových kľúčov a potom biometrické odomknutie vypni a znova zapni.",
     "bindOffer": "Biometrické odomknutie v tomto zariadení ešte nie je zviazané s tvojím prístupovým kľúčom a tento prehliadač ho vie zviazať. Nastav ho raz znova, aby jeho kľúč zostal pri tvojom prístupovom kľúči namiesto v úložisku tohto zariadenia.",
     "bindOfferLater": "Teraz nie",
@@ -187,18 +193,26 @@
     "lockOnOpenHint": "Vyžiada si tvoj PIN alebo odtlačok prsta, keď sa aplikácia v tomto zariadení otvorí, a znova, keď je chvíľu nečinná.",
     "lockHidesOnSwitch": "Skryje tvoje poznámky aj pri prepnutí do inej aplikácie.",
     "confirmPinForLock": "Zadaj svoj PIN a zapni to. Uzamkne kópiu tvojej obnovovacej frázy, takže aplikáciu otvorí iba tvoj PIN.",
+    "pinWeakCopy": "Pri 4-miestnom PIN dokáže ktokoľvek s kópiou úložiska tohto zariadenia zistiť PIN za niekoľko minút až hodín a otvoriť tvoje poznámky. Prístupový kód sa uhádne oveľa ťažšie: nastav si ho na karte PIN.",
     "confirmPasscodeForLock": "Zadaj svoj prístupový kód a zapni to. Uzamkne kópiu tvojej obnovovacej frázy, takže aplikáciu otvorí iba tvoj prístupový kód.",
     "setupTitle": "Vyber, ako odomykáš",
     "setupPin": "PIN tu odomkne všetko.",
     "setupBiometric": "Odtlačok prsta alebo tvár odomkne aplikáciu iba v tomto zariadení.",
+    "setupBiometricWeb": "Odtlačok prsta alebo tvár odomkne aplikáciu iba v tomto zariadení, cez prístupový kľúč.",
     "setupBiometrics": "Biometria",
-    "setupAddPinTitle": "Pridaj PIN pre chránené poznámky",
+    "setupAddPinTitle": "Pridaj PIN pre zámok a chránené poznámky",
+    "fingerprintOnlyLock": "Tento zámok sa otvára iba odtlačkom prsta. Zadaj PIN a pridaj ho ako druhý spôsob odomknutia.",
+    "fingerprintOnlyLockPasscode": "Tento zámok sa otvára iba odtlačkom prsta. Zadaj prístupový kód a pridaj ho ako druhý spôsob odomknutia.",
+    "fingerprintOnlyLockAction": "Zadať PIN",
+    "fingerprintOnlyLockActionPasscode": "Zadať prístupový kód",
     "appLockHeading": "Zámok aplikácie",
     "relockAgainAfter": "Znova zamknúť po",
     "notesHeading": "Chránené poznámky",
     "reaskAfter": "Znova vyžiadať PIN po",
-    "reaskHint": "Pre chránené poznámky a tvoju obnovovaciu frázu.",
+    "reaskHint": "Pre chránené poznámky, chránené sekcie a tvoju obnovovaciu frázu.",
+    "sectionsHint": "Celú sekciu, napríklad Trezor, môžeš chrániť z jej ponuky na bočnom paneli.",
     "biometricHeading": "Odtlačok prsta alebo tvár",
+    "biometricHeadingWeb": "Odtlačok prsta alebo tvár (prístupový kľúč)",
     "blockCapture": "Skryť pred snímaním obrazovky",
     "blockCaptureHint": "Nepustí tvoje poznámky do snímok obrazovky, nahrávok a zdieľania obrazovky, ak to tvoje zariadenie umožňuje. Platí iba pre toto zariadenie.",
     "perDeviceNote": "Biometrické odomknutie otvára rovnaké poznámky ako tvoj PIN. Zostáva v tomto zariadení a nikdy sa nesynchronizuje.",
@@ -207,8 +221,30 @@
     "disableConfirmBody": "Vypnúť biometrické odomknutie v tomto zariadení?",
     "disableConfirmBodyAppLock": "Vypnúť biometrické odomknutie v tomto zariadení? Vypne sa aj zámok aplikácie."
   },
+  "passkeysTab": {
+    "intro": "Prihlás sa v novom zariadení prístupovým kľúčom namiesto zadávania obnovovacej frázy. Tvoja fráza funguje aj naďalej.",
+    "add": "Pridať prístupový kľúč",
+    "adding": "Pridáva sa…",
+    "lastUsed": "Naposledy použitý: {{date}}",
+    "neverUsed": "Nikdy nepoužitý",
+    "removeTitle": "Odobrať tento prístupový kľúč?",
+    "removeBody": "Už sa ním neprihlásiš. Samotný prístupový kľúč zostane v tvojej aplikácii na prístupové kľúče, kým ho tam neodstrániš.",
+    "retired": "Vytvorený pred zmenou tvojej frázy. Odober ho a pridaj znova.",
+    "noPrf": "Táto aplikácia na prístupové kľúče nedokáže ochrániť tvoju frázu, preto prístupový kľúč nebol pridaný. Skús vlastné prístupové kľúče svojho zariadenia alebo iného správcu hesiel.",
+    "tooMany": "Počet prístupových kľúčov na prihlasovanie: {{count}}. Ak chceš pridať ďalší, jeden odober.",
+    "failed": "Prístupový kľúč sa nepodarilo pridať. Skontroluj pripojenie a skús to znova.",
+    "appsOnly": "Prístupové kľúče pridáš v prehliadači na use.privacynotes.app. Prihlasovanie nimi v aplikáciách príde neskôr.",
+    "empty": "Zatiaľ žiadne prístupové kľúče.",
+    "loadFailed": "Tvoje prístupové kľúče sa nepodarilo načítať. Skontroluj pripojenie a skús to znova.",
+    "removeFailed": "Prístupový kľúč sa nepodarilo odobrať. Skontroluj pripojenie a skús to znova.",
+    "pinPrompt": "Zadaj svoj 4-miestny PIN a pridaj prístupový kľúč.",
+    "pinPromptPasscode": "Zadaj svoj prístupový kód a pridaj prístupový kľúč."
+  },
   "appLock": {
-    "phraseNotSaved": "Toto zariadenie nedokázalo uložiť tvoju obnovovaciu frázu, preto sa nič nezmenilo. Skús to znova."
+    "phraseNotSaved": "Toto zariadenie nedokázalo uložiť tvoju obnovovaciu frázu, preto sa nič nezmenilo. Skús to znova.",
+    "phraseInMemoryOnly": "Tento prehliadač nedokázal ochrániť tvoju obnovovaciu frázu, preto nie je uložená v tomto zariadení. Opätovné načítanie alebo zatvorenie tejto karty ťa odhlási, preto maj obnovovaciu frázu poruke. Aby ťa tu neodhlásilo, zapni zámok aplikácie v Nastavenia > Zabezpečenie > Zámok.",
+    "untrustedSignIn": "Toto zariadenie nie je nastavené ako dôveryhodné, preto sa tvoje prihlásenie v ňom neukladá. Zatvorenie alebo opätovné načítanie aplikácie ťa odhlási, preto maj obnovovaciu frázu poruke.",
+    "presenceGateRemoved": "Odomknutie odtlačkom prsta alebo tvárou je vypnuté: tento prehliadač uchovával jeho kľúč vedľa tvojej obnovovacej frázy. Aplikáciu stále odomkneš svojím PIN-om alebo prístupovým kódom."
   },
   "pinSetup": {
     "description": "Na zobrazenie obnovovacej frázy sa bude vyžadovať 4-miestny PIN. Je voliteľný, ale odporúčame ho na zdieľaných miestach.",
@@ -243,13 +279,21 @@
     "disableTitlePasscode": "Zadaj prístupový kód na vypnutie ochrany",
     "verifySubtitlePasscode": "Zadaj svoj prístupový kód na odomknutie tejto položky. Odomknutie trvá tak dlho, ako si nastavíš v časti Zabezpečenie.",
     "passcodeRequired": "Vyžaduje sa prístupový kód",
-    "deleteSubtitlePasscode": "Zadaj svoj prístupový kód na odstránenie tejto chránenej položky."
+    "deleteSubtitlePasscode": "Zadaj svoj prístupový kód na odstránenie tejto chránenej položky.",
+    "sectionTitle": "Táto sekcia je chránená",
+    "sectionBiometricSubtitle": "Otvor túto sekciu odtlačkom prsta alebo tvárou.",
+    "sectionVerifySubtitle": "Zadaj svoj 4-miestny PIN na otvorenie tejto sekcie. Odomknutie trvá tak dlho, ako si nastavíš v časti Zabezpečenie.",
+    "sectionVerifySubtitlePasscode": "Zadaj svoj prístupový kód na otvorenie tejto sekcie. Odomknutie trvá tak dlho, ako si nastavíš v časti Zabezpečenie.",
+    "sectionDisableSubtitle": "Jej položky zostanú tam, kde sú. Odstráni sa iba ochrana.",
+    "sectionBootstrapSubtitle": "Táto sekcia je chránená, ale v tomto zariadení nie je nastavený žiadny PIN. Nastav 4-miestny PIN a otvor ju. Tvoj PIN sa synchronizuje do všetkých tvojich zariadení."
   },
   "lockScreen": {
     "unlockApp": "Odomknúť <brand/>",
     "subtitleWithBio": "Pokračuj odtlačkom prsta, tvárou alebo PIN-om.",
     "subtitleNoBio": "Zadaj svoj PIN a pokračuj.",
     "biometricFailed": "Biometrické overenie zlyhalo alebo bolo zrušené.",
+    "deviceKeyUnavailable": "Toto zariadenie momentálne nedokáže otvoriť svoj zámok a problém nie je v zadanom texte. Odomkni nižšie iným spôsobom, napríklad obnovovacou frázou.",
+    "keyringCancelled": "Odomkni zväzok kľúčov a skús to znova.",
     "biometricUnopened": "Biometrické odomknutie nedokázalo otvoriť tvoje poznámky. Použi PIN alebo prístupový kód, alebo biometrické odomknutie nastav znova.",
     "biometricGone": "Biometrické odomknutie v tomto zariadení prestalo fungovať a treba ho nastaviť znova. Použi nižšie iný spôsob vstupu a potom biometrické odomknutie znova zapni v Nastaveniach.",
     "verifying": "Overuje sa…",
@@ -277,9 +321,6 @@
     "upgradeHeading": "Alebo prejdi na Pro",
     "upgradeBody": "Jednorazová platba, žiadne predplatné. Neobmedzený počet zariadení, k tomu obrázky, história poznámky a ďalšie.",
     "upgradeCta": "Prejsť na Pro za ${{price}}",
-    "needMoreHeading": "Potrebuješ viac zariadení?",
-    "needMoreBody": "V tejto verzii aplikácie prechod na Pro nie je dostupný. Ak naozaj potrebuješ tretie zariadenie, ozvi sa a vyriešime to.",
-    "contactSupport": "Kontaktovať podporu",
     "saveRecoveryHeading": "Ulož si obnovovaciu frázu",
     "saveRecoveryBody": "Prihlásenie prebehlo cez OAuth. Zapíš si aj svoju obnovovaciu frázu. Je to tvoja záloha, ak OAuth niekedy zlyhá alebo sa nebudeš vedieť dostať do žiadneho zariadenia.",
     "hide": "Skryť",
@@ -320,7 +361,7 @@
     "custodial": "Uchovávame šifrovanú kópiu tvojej frázy. Ponechaj si aspoň jeden prepojený účet, alebo pred odpojením posledného prejdi na vlastnú správu.",
     "selfCustody": "V novom zariadení prepojený účet stále potrebuje tvoju obnovovaciu frázu, aby otvoril tvoje poznámky. Prepojenie účtu neukladá frázu u nás.",
     "mfaRequired": "Dvojfaktorové prihlásenie zostáva zapnuté pre všetky spôsoby prihlásenia. Uchovaj si overovaciu aplikáciu alebo jej uložený záložný kľúč.",
-    "unavailable": "Zmeny prepojených účtov zatiaľ nie sú dostupné. Tvoje doterajšie prihlásenie funguje ďalej.",
+    "unavailable": "Zmeny prepojených účtov sú zatiaľ vypnuté. Tvoje doterajšie prihlásenie funguje ďalej.",
     "loading": "Kontrolujú sa prepojené účty…",
     "emailHidden": "E-mail nie je zdieľaný",
     "disconnectAccount": "Odpojiť účet {{provider}} {{email}}",
@@ -389,7 +430,7 @@
     "signInAgain": "Prihlásiť sa znova",
     "lostAuthenticator": "Stratený telefón?",
     "restore": "Pridaj svoj záložný kľúč do ľubovoľnej overovacej aplikácie a potom zadaj jej kód v PrivacyNotes.",
-    "noBackup": "Nemáš telefón ani záložný kľúč? 2FA neresetujeme a naša podpora s tým pomôcť nevie. Exportuj poznámky z tohto zariadenia a založ nový trezor.",
+    "noBackup": "Nemáš telefón ani záložný kľúč? 2FA neresetujeme a naša podpora s tým pomôcť nevie. Exportuj poznámky z tohto zariadenia ako „Všetko, nešifrované (.zip)“ a založ nový trezor.",
     "localNotes": "Teraz nie? Pokračuj s poznámkami v tomto zariadení. Synchronizácia sa znova spustí, keď zadáš kód.",
     "useLocalNotes": "Zatiaľ preskočiť"
   },
@@ -399,7 +440,7 @@
     "loading": "Kontroluje sa 2FA…",
     "retry": "Skúsiť znova",
     "unavailable": "2FA sa nepodarilo overiť. Tvoje poznámky v tomto zariadení sú v bezpečí. Skontroluj pripojenie a skús to znova.",
-    "notAvailable": "2FA zatiaľ nie je dostupné.",
+    "notAvailable": "2FA je zatiaľ vypnuté. Skús to znova neskôr.",
     "actionFailed": "Nepodarilo sa to. Skontroluj pripojenie a skús to znova. Tvoje poznámky v tomto zariadení sú v bezpečí.",
     "warning": "Uchovaj si telefón alebo záložný kľúč. Ak stratíš oboje, v novom zariadení sa neprihlásiš. Je to pre tvoju vlastnú bezpečnosť. 2FA neresetujeme a naša podpora s tým pomôcť nevie.",
     "cannotEnroll": "Ak chceš nastaviť 2FA, prihlás sa znova svojou frázou alebo prepojeným účtom.",
@@ -428,6 +469,7 @@
     "backupWarning": "Stratený telefón? Tento kľúč ti vráti kódy. Uchovaj ho na bezpečnom mieste mimo PrivacyNotes.",
     "savedAcknowledgment": "Záložný kľúč mám uložený.",
     "confirmBackup": "Znova napíš záložný kľúč z predchádzajúceho kroku a potom zadaj kód z aplikácie.",
+    "disconnectsConnections": "Zapnutie 2FA odpojí rozšírenie prehliadača a príkazový riadok. Rozšírenie znova pripoj v Nastavenia > Rozšírenie, príkazový riadok v Nastavenia > CLI.",
     "codeLabel": "Kód z aplikácie",
     "cancelSetup": "Zrušiť",
     "enabled": "2FA je zapnuté",
@@ -457,6 +499,7 @@
   },
   "phraseChange": {
     "lengthGroup": "Dĺžka frázy",
+    "lengthLater": "Dĺžku alebo samotnú frázu môžeš neskôr zmeniť v Nastavenia > Zabezpečenie > Fráza.",
     "badgeMargin": "Rezerva navyše",
     "rowWrite": "Na zapísanie",
     "write12": "Rýchlo sa odpíše ručne.",
@@ -514,10 +557,24 @@
     "failed": "Fráza sa nezmenila.",
     "failedTooMany": "Tvoja fráza sa za posledných 24 hodín zmenila trikrát. Skús to neskôr.",
     "failedMoved": "Tvoje nastavenia sa medzitým zmenili v inom zariadení. Skús to znova.",
+    "failedSettingsMoved": "Tvoje nastavenia sa medzitým zmenili v inom zariadení. Skús to znova: tentoraz ich zmena frázy nahradí, aj keď sa znova zmenia.",
     "failedTwoFactor": "Kód 2FA nebol prijatý. Skús to znova.",
     "failedKeyRing": "Toto zariadenie nemá kľúče niektorej staršej frázy. Urob zmenu v zariadení, ktoré ich má.",
     "failedBiometric": "Tvoj odtlačok prsta alebo tvár je jediný zámok tohto zariadenia. Potvrď ho a zmena sa vykoná.",
+    "failedCannotBind": "Tvoj odtlačok prsta alebo tvár je jediný zámok tohto zariadenia a v tomto zariadení nedokáže ochrániť novú frázu. Najprv nastav PIN alebo prístupový kód v Nastavenia > Zabezpečenie > PIN a potom urob zmenu.",
     "failedUnsynced": "Niektoré nastavenia v tomto zariadení ešte nie sú synchronizované. Chvíľu počkaj a skús to znova.",
-    "failedOffline": "Server teraz nemohol zmenu prijať. Skontroluj pripojenie a skús to znova."
+    "failedOffline": "Server teraz nemohol zmenu prijať. Skontroluj pripojenie a skús to znova.",
+    "signInPasskeysReset_one": "Tvoj prístupový kľúč na prihlásenie prestane fungovať. Po zmene ho pridaj znova.",
+    "signInPasskeysReset_few": "Tvoje {{count}} prístupové kľúče na prihlásenie prestanú fungovať. Po zmene ich pridaj znova.",
+    "signInPasskeysReset_other": "Tvojich {{count}} prístupových kľúčov na prihlásenie prestane fungovať. Po zmene ich pridaj znova."
+  },
+  "releaseNotice": {
+    "sent": "Do tvojho účtu sa {{when}} prihlásilo nové zariadenie. Nie si to ty? Odober ho v sekcii Zariadenia."
+  },
+  "releaseApproval": {
+    "ask": "Nové prihlásenie z {{when}} žiada o tvoju obnovovaciu frázu (kód {{code}}). Povoľ ho, iba ak si to ty a nové zariadenie zobrazuje rovnaký kód.",
+    "waiting": "Nové prihlásenie žiada o tvoju obnovovaciu frázu (kód {{code}}) a dostane ju po {{when}}, ak ho nezamietneš. Povoľ ho, iba ak si to ty a nové zariadenie zobrazuje rovnaký kód.",
+    "allow": "Povoliť",
+    "deny": "Zamietnuť"
   }
 }

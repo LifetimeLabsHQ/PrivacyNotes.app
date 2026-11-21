@@ -106,8 +106,17 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
   const timed = doses.some((d) => d.time);
   const remindId = useId();
 
+  // Add and Save stay on; a press without a name says so under the field
+  // and puts the cursor there. Spec: docs/internal/design/ui-patterns.md section 197
+  const [nameMissing, setNameMissing] = useState(false);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const nameErrorId = useId();
   const save = () => {
-    if (!name.trim()) return;
+    if (!name.trim()) {
+      setNameMissing(true);
+      nameRef.current?.focus();
+      return;
+    }
     const n = Math.max(2, Math.min(99, Number(interval) || 2));
     const repeat: Repeat | undefined = kind === 'daily' ? undefined
       : kind === 'weekdays' ? { every: 'week', interval: 1, weekdays: [...weekdays].sort((a, b) => a - b) }
@@ -212,11 +221,16 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
             label: t('shell:filesList.sortName'),
             // The row's own tile, live: the form's glyph in the picked color.
             children: (
-              <div className="flex items-center gap-2">
-                <MarkTile color={color}>
-                  <MedicationGlyph form={form || undefined} size={18} style={color ? { color } : undefined} className={color ? 'shrink-0' : 'shrink-0 text-pn-muted'} />
-                </MarkTile>
-                <TextField size="sm" aria-label={t('shell:filesList.sortName')} value={name} maxLength={MED_NAME_MAX} onChange={(e) => setName(e.target.value)} placeholder={t('medication.namePlaceholder')} className="w-full" autoFocus={!!onCancel} />
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <MarkTile color={color}>
+                    <MedicationGlyph form={form || undefined} size={18} style={color ? { color } : undefined} className={color ? 'shrink-0' : 'shrink-0 text-pn-muted'} />
+                  </MarkTile>
+                  {/* The field keeps its own box: the error line goes under the
+                      row, so the field neither narrows nor mounts again. */}
+                  <TextField ref={nameRef} size="sm" aria-label={t('shell:filesList.sortName')} value={name} maxLength={MED_NAME_MAX} onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameMissing(false); }} placeholder={t('medication.namePlaceholder')} className={`w-full${nameMissing ? ' border-danger' : ''}`} autoFocus={!!onCancel} aria-invalid={nameMissing || undefined} aria-describedby={nameMissing ? nameErrorId : undefined} />
+                </div>
+                {nameMissing && <p id={nameErrorId} role="alert" className="text-small text-danger">{t('medication.nameMissing')}</p>}
               </div>
             ),
           }}
@@ -353,9 +367,9 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
         {/* Narrow, the footer's buttons share its full width. */}
         <div className="flex pt-3 border-t border-divider @lg:shrink-0 @lg:pt-0 @lg:border-0">
           {onCancel ? (
-            <EditRow onSave={save} onCancel={onCancel} canSave={!!name.trim()} className="w-full [&>*]:flex-1 @lg:w-auto @lg:[&>*]:flex-none" />
+            <EditRow onSave={save} onCancel={onCancel} className="w-full [&>*]:flex-1 @lg:w-auto @lg:[&>*]:flex-none" />
           ) : (
-            <Button action="add" onClick={save} disabled={!name.trim()} className="w-full @lg:w-auto" />
+            <Button action="add" onClick={save} className="w-full @lg:w-auto" />
           )}
         </div>
       </div>
@@ -422,7 +436,7 @@ export function MedicationGlyph({ form, size = 12, className, style }: { form?: 
 
 /** One line for a medication's row: the amount and how it is taken
  *  ("1 tablet, every day at 08:00", "As needed, at most 3 a day"). */
-export function describeMedication(med: MedicationTemplate, t: (key: string, o?: Record<string, unknown>) => string): string {
+export function describeMedication(med: MedicationTemplate, t: (...args: [key: string] | [key: string, o: Record<string, unknown>]) => string): string {
   if (med.asNeeded) {
     return [t('medication.asNeeded'), med.maxPerDay ? t('medication.summary.atMost', { count: med.maxPerDay }) : ''].filter(Boolean).join(', ');
   }

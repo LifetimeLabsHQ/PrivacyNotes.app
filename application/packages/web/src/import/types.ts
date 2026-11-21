@@ -8,12 +8,12 @@
  * existing sync pass encrypt + upload them.
  *
  * Adding a new importer:
- *   1. Create a new file in this folder (e.g. `obsidian.ts`) exporting
- *      an object that satisfies the `Importer` interface.
- *   2. Register it in `registry.ts`.
- *   3. Add its id to the list of the tab it belongs under, in
- *      `ImportModal.tsx` (`noteIds` for Import, `vaultIds` for
- *      Passwords). Give it an icon and a description key there too.
+ *   1. Create a new file in this folder (e.g. `obsidian.ts`) with a parser,
+ *      or an object that satisfies the `Importer` interface.
+ *   2. Register it in `registry.ts` as an `ImporterEntry`: the type checker
+ *      then asks for every fact its card shows (`ImporterCard`).
+ *   3. Add its id to its group in `ImportPickPhase` (`ImportModal.tsx`),
+ *      where the order of the cards is chosen by hand.
  */
 
 import type { AttachmentMeta } from '../attachmentStore';
@@ -105,19 +105,15 @@ export interface ParsedImport {
    * amber, so the user reads them as upgrades rather than warnings.
    */
   transforms: string[];
-  /** Stats for the preview pane. */
-  stats: {
-    totalNotes: number;
-    emptyNotes: number;
-    untaggedNotes: number;
-    uniqueTags: number;
-  };
   /** Machine id of the importer that produced this. */
   source: ImporterId;
   /** Total uncompressed size of image/attachment blobs in the backup.
    *  Only set for importers that restore blobs (privacynotes). Used by
    *  the quota preflight to avoid under-counting. */
   blobBytes?: number;
+  /** The same sizes per blob id (privacynotes), so a restore counts only
+   *  the blobs this device lacks (`restoreAdds`). */
+  blobSizes?: Record<string, number>;
   /**
    * Attachment/image blobs extracted during parsing.
    * Keyed by the relative path as referenced in the markdown body
@@ -150,8 +146,10 @@ export type ImporterId =
   | 'google-keep'
   | 'obsidian'
   | 'notesnook'
+  | 'onenote'
   | 'joplin'
   | 'anytype'
+  | 'capacities'
   | 'siyuan'
   | 'bear'
   | 'upnote'
@@ -182,6 +180,8 @@ export type ImporterId =
   | 'lastpass'
   | '1password'
   | 'enpass'
+  | 'msecure'
+  | 'raindrop'
   | 'dashlane'
   | 'nordpass'
   | 'proton-pass'
@@ -212,6 +212,40 @@ export interface Importer {
    */
   parse(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport>;
 }
+
+/** The mark on an importer's card: a picture from the /help/import guides
+ *  (`public/help/icons`), or a glyph for a source no single vendor owns. */
+type ImporterIcon = { src: string } | { glyph: 'address-book' | 'drawing' };
+
+/** What an importer's card in Settings > Transfer > Import shows, and what
+ *  the window says about it (`ImportModal.tsx`). Every field but `restore`
+ *  is required, so a new entry without one fails the type check. */
+interface ImporterCard {
+  /** The card's mark. Null for an importer with no card of its own: our
+   *  backup (the Restore tab) and the two browser families, which only the
+   *  browser cards open. */
+  icon: ImporterIcon | null;
+  /** The `importExport` key of a name that is our wording, not a brand.
+   *  Null: the brand `label`, which renders as written in every language. */
+  labelKey: string | null;
+  /** The `importExport` key of the card panel's description. Null: the
+   *  English `description`. */
+  descKey: string | null;
+  /** The file types under the card's name: the extensions the source's
+   *  export writes, so the card says which file to make before the click.
+   *  Extensions only, so the line needs no translation. An importer that
+   *  also takes another type only to refuse it with a message (Notesnook's
+   *  .nnbackupz) leaves that one out, so this is not `accept`. */
+  fileTypes: string;
+  /** The slug of its guide, `/help/import/<slug>`; null: none. */
+  guide: string | null;
+  /** Our own backup: it waits for the restore gate, keeps the backup's own
+   *  folders, and restores its pictures from the backup's list. */
+  restore?: true;
+}
+
+/** One row of `IMPORTERS`: the importer and its card. */
+export type ImporterEntry = Importer & ImporterCard;
 
 /** Result of writing a ParsedImport into the local DB. */
 /** What a restore of our own backup did, so the message can say it. */

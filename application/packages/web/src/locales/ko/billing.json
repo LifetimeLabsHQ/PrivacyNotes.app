@@ -35,6 +35,7 @@
     "title": "클럽에 오신 걸 환영해요",
     "proLine": "<brand/> Pro, {{price}}달러 1회 결제. 평생 내 것이에요.",
     "storageLine": "<brand/> +{{gb}} GB 저장 공간, 연 {{price}}달러예요.",
+    "storagePayerNote": "계정 소유자가 나중에 패키지를 바꿀 수 있어요. 차액은 이 카드로 결제돼요.",
     "benefitDevices": "기기 무제한",
     "benefitDevicesSub": "휴대폰, 태블릿, 노트북 모두 동기화",
     "benefitStorage": "500 MB 저장 공간",
@@ -63,7 +64,7 @@
     "openingBody": "Paddle 결제 창이 나타날 거예요. 보이지 않으면 브라우저가 팝업을 차단했을 수 있으니 이 페이지를 새로고침해 다시 시도하세요."
   },
   "cryptoCheckout": {
-    "coins": "다음 페이지에서 Bitcoin, Ethereum, Lightning, USDC 또는 USDT를 선택해요. 이 페이지는 BlockBee가 운영하며, 이름도 이메일도 묻지 않아요. 암호화폐 결제는 해당 블록체인에 공개돼요.",
+    "coins": "다음 페이지에서 Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin 또는 TON을 선택해요. 이 페이지는 BlockBee가 운영하며, 이름도 이메일도 묻지 않아요. 암호화폐 결제는 해당 블록체인에 공개돼요.",
     "consent": "지금 Pro를 시작해요. 암호화폐 결제는 최종 결제이며, 14일 청약철회권을 포기한다는 것을 이해해요.",
     "consentNeeded": "계속하려면 위의 체크박스를 선택하세요.",
     "loadingTitle": "주문 확인 중...",

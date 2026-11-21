@@ -129,11 +129,33 @@ export const PinInput = forwardRef<PinInputHandle, Props>(function PinInput(
   function commit(next: string[], focusIndex: number) {
     const joined = next.join('').slice(0, LENGTH);
     onChange(joined);
+    filled.current = joined.length;
     focusBox(inputs.current[Math.min(Math.max(focusIndex, 0), LENGTH - 1)]);
     if (joined.length === LENGTH) onComplete?.(joined);
   }
 
-  function handleChange(index: number, e: ChangeEvent<HTMLInputElement>) {
+  /**
+   * The value has no gaps: the digits are joined, so a digit typed in a box
+   * past the first empty one lands in that empty one. The write goes there,
+   * and focus follows it, so the box with the caret is always the box that
+   * takes the next digit.
+   */
+  function slotFor(index: number): number {
+    return Math.min(index, value.length);
+  }
+  // How many digits the value holds, ahead of the render: `commit` moves the
+  // focus before the new value comes back, and the focus check reads this.
+  const filled = useRef(value.length);
+  filled.current = value.length;
+  // The value was cleared or cut under the caret without a `clear()`: the
+  // caret moves back to the box the next digit fills.
+  useEffect(() => {
+    const at = inputs.current.indexOf(document.activeElement as HTMLInputElement);
+    if (at > value.length) focusBox(inputs.current[value.length]);
+  }, [value]);
+
+  function handleChange(box: number, e: ChangeEvent<HTMLInputElement>) {
+    const index = slotFor(box);
     const raw = e.target.value.replace(/\D/g, '');
     if (!raw) {
       const next = digits.slice();
@@ -159,6 +181,9 @@ export const PinInput = forwardRef<PinInputHandle, Props>(function PinInput(
   function handleKeyDown(index: number, e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Backspace') {
       if (digits[index]) {
+        // Ours, not the browser's too: the boxes after this one shift left on
+        // the re-render, and the browser's own delete took the shifted digit.
+        e.preventDefault();
         const next = digits.slice();
         next[index] = '';
         onChange(next.join(''));
@@ -178,7 +203,8 @@ export const PinInput = forwardRef<PinInputHandle, Props>(function PinInput(
     }
   }
 
-  function handlePaste(index: number, e: ClipboardEvent<HTMLInputElement>) {
+  function handlePaste(box: number, e: ClipboardEvent<HTMLInputElement>) {
+    const index = slotFor(box);
     const raw = e.clipboardData
       .getData('text')
       .replace(/\D/g, '')
@@ -222,7 +248,15 @@ export const PinInput = forwardRef<PinInputHandle, Props>(function PinInput(
             onChange={(e) => handleChange(i, e)}
             onKeyDown={(e) => handleKeyDown(i, e)}
             onPaste={(e) => handlePaste(i, e)}
-            onFocus={(e) => e.currentTarget.select()}
+            onFocus={(e) => {
+              // A click or Tab into a box past the first empty one: the caret
+              // goes to the box the next digit fills.
+              if (i > filled.current) focusBox(inputs.current[filled.current]);
+              else e.currentTarget.select();
+            }}
+            // One Tab stop for the group, at the box the next digit fills,
+            // so Tab leaves the group instead of meeting the focus redirect.
+            tabIndex={i === Math.min(value.length, LENGTH - 1) ? 0 : -1}
             disabled={disabled}
             style={mask ? HIDDEN_TEXT : undefined}
             aria-label={t('pinInput.digitAriaLabel', { index: i + 1 })}

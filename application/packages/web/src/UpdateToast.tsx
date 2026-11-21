@@ -58,7 +58,7 @@ export function UpdateToast({
       // Account for the iPhone home-indicator stripe (and any other bottom
       // safe-area inset). On platforms without a safe area env() returns 0,
       // so this collapses to a plain 1rem.
-      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+      style={{ bottom: 'calc(var(--pn-safe-bottom) + 1rem)' }}
     >
       <div
         // Two buttons leave a phone toast no room for its text: below sm the

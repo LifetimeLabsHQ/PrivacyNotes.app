@@ -27,9 +27,20 @@
   "tagChip": {
     "clear": "清除標籤篩選：{{tag}}"
   },
+  "trackerChip": {
+    "clear": "清除追蹤項目篩選：{{tracker}}",
+    "anyTag": "任何標籤",
+    "tagLabel": "{{tracker}} 的標籤",
+    "answerLabel": "{{tracker}} 的回答",
+    "anyAnswer": "任何回答"
+  },
+  "trackerFocus": {
+    "every_other": "大約每 {{count}} 天一次",
+    "last": "上次記錄：{{when}}",
+    "locked_other": "已排除 {{count}} 則受 PIN 碼保護的日誌紀錄"
+  },
   "vaultNew": {
     "ariaLabel": "新增保險庫項目",
-    "card": "信用卡",
     "sshKey": "SSH 金鑰",
     "generator": "密碼"
   },
@@ -48,7 +59,8 @@
   "vaultFilter": {
     "all": "全部",
     "logins": "登入資訊",
-    "cards": "信用卡",
+    "passkeys": "密碼金鑰",
+    "cards": "卡片",
     "keys": "金鑰"
   },
   "journal": {
@@ -60,7 +72,8 @@
   "trash": {
     "empty": "清空",
     "emptyHover": "刪除垃圾桶中的所有筆記",
-    "autoDelete": "30 天後自動刪除"
+    "autoDelete": "30 天後自動刪除",
+    "replacedTitle": "已刪除筆記的副本"
   },
   "search": {
     "sortOptions": "排序與檢視選項",
@@ -112,6 +125,7 @@
     "imageUploadFailed": "圖片上傳失敗：{{error}}",
     "imageError": "圖片錯誤：{{error}}",
     "uploadFailedFor": "「{{filename}}」上傳失敗：{{error}}",
+    "uploadsHeld": "你已達到今天的上傳上限。你的圖片和檔案安全地保存在這台裝置上，將於 {{time}} 後上傳。",
     "importedSyncing_other": "已匯入 {{count}} 篇筆記。同步中…",
     "addedTag_other": "已將 #{{tag}} 加入 {{count}} 個項目",
     "restoreSummary": "已還原。新增 {{added}} 個，更新 {{updated}} 個，{{unchanged}} 個已是最新。"
@@ -122,6 +136,7 @@
   },
   "loadError": {
     "message": "無法載入你的筆記。本機資料庫連線中斷；應用程式在背景待了一段時間後可能發生這種情況。",
+    "storageOff": "無法載入你的筆記。這台裝置關閉了 PrivacyNotes 存放筆記的儲存空間，「封閉模式」就會這樣做。若要修正，請打開「設定」，然後依序點一下「隱私權與安全性」、「封閉模式」、「自訂網站」，並關閉 PrivacyNotes。在 Safari 中，請在「網站設定」關閉這個網站的「封閉模式」。",
     "reload": "重新載入"
   },
   "banner": {
@@ -174,6 +189,7 @@
   "editor": {
     "backToList": "回到筆記清單",
     "backToGrid": "回到格狀檢視",
+    "closeSide": "關閉這一側",
     "titlePlaceholder": "未命名（點一下編輯，或留白自動產生）",
     "titlePlaceholderLogin": "例如 GitHub",
     "titlePlaceholderCard": "例如 4242 結尾的 Visa 卡",
@@ -182,10 +198,22 @@
     "lockNow": "立即鎖定",
     "lockNowHint": "立即隱藏內容",
     "turnOffHint": "重新允許編輯",
+    "turnOffForNowHint": "在離開這則筆記前都可以編輯",
     "unarchiveHint": "重新顯示在你的清單中",
     "showFormatted": "顯示排版結果",
+    "splitView": "分割檢視",
+    "showSplitView": "顯示分割檢視",
+    "hideSplitView": "隱藏分割檢視",
+    "splitViewNeedsWidth": "加寬視窗即可啟用分割檢視",
+    "swapSides": "左右互換",
+    "formattedOnly": "{{name}} 可在排版檢視中使用",
+    "formattedOnlyHint": "排版檢視",
     "invisiblesShow": "顯示編輯標記",
     "invisiblesHide": "隱藏編輯標記",
+    "lineNumbersShow": "顯示行號",
+    "lineNumbersHide": "隱藏行號",
+    "footerPin": "釘選統計",
+    "footerUnpin": "取消釘選統計",
     "undo": "復原",
     "redo": "重做",
     "hide": "隱藏",
@@ -258,6 +286,7 @@
     "accountLabel": "ID 與同步",
     "appearanceLabel": "外觀",
     "editorLabel": "編輯器",
+    "pluginsLabel": "外掛",
     "formatBarLabel": "工具列",
     "listsLabel": "清單",
     "trackersLabel": "追蹤項目",
@@ -278,6 +307,9 @@
   },
   "archiveConfirm": {
     "body_other": "要封存 <highlight>{{count}} 個項目</highlight>嗎？它們會離開你的清單，放在「封存」檢視中。選擇「取消封存」就能把它們移回來。"
+  },
+  "duplicateConfirm": {
+    "body_other": "要為 <highlight>{{count}} 個項目</highlight>建立副本嗎？每個項目都會有自己的副本。"
   },
   "bulkTrash": {
     "body_other": "要刪除 <highlight>{{count}} 個項目</highlight>嗎？移至垃圾桶之後仍可還原，或者永久刪除。",
@@ -317,6 +349,7 @@
     "title": "關聯",
     "hide": "隱藏關聯",
     "linkedFrom": "被以下項目連結",
+    "usedIn": "使用於",
     "linksTo": "連結至",
     "missing": "尚未建立",
     "protectedHidden_other": "有 {{count}} 個受 PIN 碼保護的項目未顯示",
@@ -326,9 +359,10 @@
     "relatedLinkedFrom": "都被 {{title}} 連結",
     "relatedTag": "都有標籤 {{tag}}",
     "relatedMeaning": "意思相同",
+    "relatedMention": "提到 {{name}}",
     "meaningDoor": "智慧關聯：用離線 AI 找出意思相同的筆記",
     "meaningDoorNo": "不再顯示",
-    "meaningDoorHidden": "已在所有筆記中隱藏。智慧關聯仍在設定 > 編輯器 > 行為中。",
+    "meaningDoorHidden": "已在所有筆記中隱藏。智慧關聯仍在設定 > 外掛中。",
     "hideSuggestions": "隱藏建議的關聯",
     "notRelated": "不相關",
     "notRelatedDone": "不會再建議",
@@ -401,5 +435,30 @@
     "autoJournal": "為每則新日誌紀錄加入我的位置",
     "autoDenied": "PrivacyNotes 的定位權限已關閉。請先在手機的「設定」中開啟。",
     "autoOff": "這支手機的定位服務已關閉。請先開啟。"
+  },
+  "vaultPasskey": {
+    "forSite": "{{rpId}} 的密碼金鑰",
+    "hasPasskey": "有密碼金鑰",
+    "removeTitle": "要移除 {{rpId}} 的密碼金鑰嗎？",
+    "removeBody": "你將無法再透過 PrivacyNotes 用它登入 {{rpId}}。",
+    "savedByExtension": "網站提供密碼金鑰時，PrivacyNotes 瀏覽器擴充功能會將它儲存。",
+    "removeBrowserWaiting": "這個瀏覽器傳送的部分項目還不在你的保險庫中。如果現在移除它，這些項目就會遺失。",
+    "removeBrowserAnyway": "仍要移除"
+  },
+  "translate": {
+    "newTitle": "{{title}}（{{language}}）",
+    "action": "翻譯",
+    "from": "來源語言",
+    "to": "目標語言",
+    "saveAsNote": "存成新筆記",
+    "needPair": "下載{{language}} · {{size}}",
+    "noModel": "目前還無法翻譯這種語言。",
+    "nothing": "這則筆記沒有可翻譯的文字。",
+    "turnOn": "開啟{{language}}",
+    "failed": "無法翻譯這則筆記。請再試一次。",
+    "untranslated_other": "有 {{count}} 行無法翻譯，維持原樣。"
+  },
+  "tags": {
+    "suggestMove": "移至「{{folder}}」"
   }
 }

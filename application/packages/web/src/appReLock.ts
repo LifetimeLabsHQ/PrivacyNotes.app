@@ -14,15 +14,22 @@
  * a check on return to the foreground covers the app sitting in the
  * background, where no timer can be trusted to run.
  *
- * The gate is the same casual-access gate the rest of the feature is: the
- * session stays authenticated and the notes stay decrypted in memory, and only
- * the UI is taken away. Re-locking does NOT re-wrap anything at rest. What it
- * buys is that a device left unattended stops showing the notes to whoever
- * holds it next, which is what the setting says on the tin.
+ * Two ways to lock. When the app lock is armed and no phrase is at rest, the
+ * lock reloads the page (`lockReloadsPage`, `reloadForLock` in lockReload.ts): the phrase, the
+ * keys and every decrypted note lose their last reference, and the page
+ * starts again behind the lock with nothing in memory, as a cold start does.
+ * A reload drops references; it does not overwrite the bytes, and the web
+ * view may keep its process. Everywhere else (the lock off, a phrase at rest,
+ * a browser that is offline, the demo, a job that holds the reload) the lock
+ * is a curtain: the session stays authenticated and the notes stay decrypted
+ * in memory, and only the UI is taken away. Neither way re-wraps anything at
+ * rest.
+ * Spec: docs/internal/plans/phrase-lock-hardening.md (section 3)
  */
 
 import { hasBiometricCredential, hasPinWrappedPhrase } from './biometric';
 import { credentialKey } from './demo';
+import { LOCKED_REMINDERS_KEY, REOPEN_NOTE_KEY } from './lockReloadKeys';
 import { hasPin } from './pin';
 import { loadLocalSettings } from './userSettings';
 
@@ -59,13 +66,13 @@ export type ReLockState = {
  * when it mounts again.
  *
  * A re-lock unmounts the whole notes view, so without this hand-off unlocking
- * would land on the home screen however deep the user had been. Module state
- * and not storage on purpose: a re-lock never reloads the page, so a variable
- * is enough, and it dies with the page - which is what keeps a cold start
- * showing the home screen rather than reopening whatever was last read.
- * `reopenNoteId` is armed only by an actual re-lock, so nothing else that
- * remounts the view (a sign-out and a sign-in as someone else) can pick up a
- * stale note.
+ * would land on the home screen however deep the user had been. A curtain
+ * keeps the id in this variable; a lock that reloads the page also writes it
+ * to this tab's sessionStorage (`REOPEN_NOTE_KEY`, an id and no content),
+ * because the variable dies with the page. `reopenNoteId` is armed only by an
+ * actual re-lock, so nothing else that remounts the view (a sign-out and a
+ * sign-in as someone else) can pick up a stale note; a sign-out removes the
+ * stored copy (`clearAccountScopedUiState`).
  */
 let openNoteId: string | null = null;
 let reopenNoteId: string | null = null;
@@ -75,11 +82,30 @@ export function rememberOpenNote(id: string | null): void {
   openNoteId = id;
 }
 
-/** Read once, by the notes view as it mounts. Null unless a re-lock armed it. */
-export function takeReopenNote(): string | null {
-  const id = reopenNoteId;
+/**
+ * The note to reopen, read by the notes view as it renders the first time.
+ * A read, not a take: the first render after a reload can suspend (its
+ * language files load) and React then runs the state initializer again, so
+ * the view forgets the note only once it has mounted (`clearReopenNote`).
+ * Null unless a re-lock armed it.
+ */
+export function reopenNote(): string | null {
+  if (reopenNoteId) return reopenNoteId;
+  try {
+    return sessionStorage.getItem(REOPEN_NOTE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** Called by the notes view once it has mounted with the note. */
+export function clearReopenNote(): void {
   reopenNoteId = null;
-  return id;
+  try {
+    sessionStorage.removeItem(REOPEN_NOTE_KEY);
+  } catch {
+    /* nothing kept that could be read back either */
+  }
 }
 
 /**
@@ -239,4 +265,22 @@ export function startReLockWatch(onLock: () => void): () => void {
     }
     document.removeEventListener('visibilitychange', onVisibility);
   };
+}
+
+/** Store the open note for the page a lock's reload starts (lockReload.ts). */
+export function keepReopenNote(): void {
+  try {
+    if (reopenNoteId) sessionStorage.setItem(REOPEN_NOTE_KEY, reopenNoteId);
+  } catch {
+    /* the unlock lands on the home screen */
+  }
+}
+
+/** Whether a lock's reload left a reminder plan for this tab to ring. */
+export function lockReloadKeptReminders(): boolean {
+  try {
+    return sessionStorage.getItem(LOCKED_REMINDERS_KEY) !== null;
+  } catch {
+    return false;
+  }
 }

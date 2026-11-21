@@ -1,6 +1,6 @@
 import type JSZip from 'jszip';
 import i18n from '../i18n';
-import { linkifyMarkdown } from './linkify';
+import { withBareLinks } from './bareLinks';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
 import { mimeFromExtOrBytes } from './blobImport';
@@ -10,7 +10,7 @@ import { ImportedFactors, blobKey, isoDay, untitledEntryTitle } from './journalI
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 import { cleanPath, num, str } from './importHelpers';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:daylio.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:daylio.${key}`, options);
 
 /**
  * Daylio importer.
@@ -94,7 +94,7 @@ function assemble(moodName: string, note: string, scales: string[], media: strin
   if (note.trim()) blocks.push(note.trim());
   if (scales.length > 0) blocks.push(scales.map((s) => `- ${s}`).join('\n'));
   if (media.length > 0) blocks.push(media.join('\n\n'));
-  return linkifyMarkdown(blocks.join('\n\n'));
+  return blocks.join('\n\n');
 }
 
 const MARK_TAGS = 'b,strong,i,em,u,s,strike,del';
@@ -292,7 +292,8 @@ async function parseBackup(zip: JSZip, onProgress?: (msg: string) => void): Prom
       const key = blobKey('dlblob', blobs.size);
       if (audio) {
         blobs.set(key, { data, mime: 'audio/mp4', name });
-        media.push(`[${name}](${key})`);
+        // No brackets in the label, or blobImport never finds the file.
+        media.push(`[${name.replace(/[[\]]/g, '')}](${key})`);
         counters.audio++;
       } else {
         blobs.set(key, { data, mime: mimeFromExtOrBytes(name, data), name });
@@ -359,12 +360,6 @@ function result(notes: ImportedNote[], warnings: string[], transforms: string[],
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: notes.filter((n) => !n.body.trim()).length,
-      untaggedNotes: notes.length,
-      uniqueTags: 0,
-    },
     source: 'daylio',
     ...(blobs.size > 0 ? { blobs, blobBytes } : {}),
     ...(added.length > 0 ? { settings: { factors: added } } : {}),
@@ -450,7 +445,9 @@ async function parseCsvExport(file: File): Promise<ParsedImport> {
   return result(notes, warnings, summary(notes.length, counters, added.length), new Map(), added);
 }
 
-export async function parseDaylio(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
+export const parseDaylio = withBareLinks(readDaylio);
+
+async function readDaylio(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
   if (/\.csv$/i.test(file.name)) return parseCsvExport(file);
   onProgress?.(i18n.t('importLog:shared.readingZip'));
   let zip: JSZip;

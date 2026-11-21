@@ -115,10 +115,13 @@
       "red": "빨강",
       "orange": "주황",
       "yellow": "노랑",
+      "lime": "연두",
       "green": "초록",
       "teal": "청록",
       "blue": "파랑",
+      "indigo": "남색",
       "purple": "보라",
+      "grape": "포도색",
       "pink": "분홍"
     }
   },
@@ -238,6 +241,7 @@
   "wordCount": {
     "words_other": "{{formatted}} 단어",
     "characters_other": "{{formatted}}자",
+    "lines_other": "{{formatted}}줄",
     "tasksChecked_other": "{{formatted}}개 중 {{done}}개 체크됨",
     "syncLimit": " · 1MB 동기화 한도의 {{share}}",
     "overSyncLimit": " · 1MB 동기화 한도를 넘어 이 기기에만 남아요",
@@ -270,6 +274,10 @@
     "collapse": "코드 블록 접기",
     "expand": "코드 블록 펼치기",
     "placeholder": "코드를 입력하거나 붙여 넣어요. 색을 넣으려면 위에서 언어를 골라요."
+  },
+  "fold": {
+    "collapse": "섹션 접기",
+    "expand": "섹션 펼치기"
   },
   "math": {
     "sourceLabel": "LaTeX 소스"
@@ -307,7 +315,7 @@
     "hiddenNote": "단축키와 Markdown으로 계속 쓸 수 있어요.",
     "hiddenDrop": "버튼을 여기에 놓으면 숨겨져요.",
     "arrangeTitle": "버튼",
-    "markdownViewNote": "markdown 보기에는 고정된 버튼 세트가 따로 있어요.",
+    "markdownViewNote": "markdown 보기에도 같은 버튼이 있어요. 서식 보기가 필요한 버튼은 그곳에서 흐리게 표시되고, 서식 보기에서는 그대로 작동해요.",
     "hiddenEmpty": "숨긴 항목이 없어요.",
     "alwaysVisible": "항상 표시",
     "pinned": "패널을 열기 때문에 도구 모음에 두거나 숨겨요",
@@ -334,7 +342,7 @@
       "notelink": "노트 링크",
       "audio": "녹음",
       "attachMenu": "첨부",
-      "separator": "세로 구분선",
+      "separator": "도구 모음 구분선",
       "markdownView": "markdown 보기"
     },
     "positionTitle": "도구 모음 위치",

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { NoteRowProps } from './NoteRow';
 import { noteItemState, noteRootProps, useNoteItem } from './NoteRow';
-import { ItemTile } from './listItem';
+import { ItemTile, ValueBadge } from './listItem';
 
 /**
  * The grid tile of a note: the item `NoteRow` shows, laid out by `ItemTile`.
@@ -21,6 +21,7 @@ export default React.memo(function NoteCard(props: NoteRowProps) {
       rootProps={noteRootProps(props)}
       onToggleSelect={props.onToggleSelect}
       trailing={props.trailing}
+      badge={props.valueBadge ? <ValueBadge text={props.valueBadge} tone={props.valueTone ?? 'neutral'} icon={props.valueIcon} name={props.valueName} /> : undefined}
     />
   );
 });

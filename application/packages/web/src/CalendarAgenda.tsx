@@ -12,6 +12,7 @@ import { dayNumber } from './schedule';
 import { ReminderPermissionHint } from './notesView/useReminders';
 import { useProgressiveReveal } from './useProgressiveReveal';
 import { routeItemClick } from './itemList';
+import { DayMarks, TrackersMenu, type CalendarTrackers } from './CalendarTrackers';
 
 /**
  * The Calendar pillar's list pane: the agenda. The coming days with their
@@ -32,6 +33,10 @@ const PULL_PX = 40;
 
 type Props = {
   index: DayIndex;
+  /** The trackers shown on the days: their values in each day's header, and
+   *  the Trackers switches beside the phone's strip, where the large month
+   *  and its legend never show. Spec: docs/internal/specs/tracker-focus-771.md (section 6) */
+  trackers?: CalendarTrackers | null;
   onOpen: (id: string, occurrence?: string) => void;
   search: string;
   /** The week strip above the agenda, on a phone. */
@@ -79,7 +84,7 @@ function dayHeader(day: string, today: string): { word: string | null; date: str
   return { word: null, date };
 }
 
-export default function CalendarAgenda({ index, onOpen, search, strip, weekNumbers, dragPayload, onItemMenu, selection }: Props) {
+export default function CalendarAgenda({ index, onOpen, search, strip, weekNumbers, dragPayload, onItemMenu, selection, trackers = null }: Props) {
   const { t } = useTranslation('shell');
   const today = toLocalIso(new Date());
   const [ahead, setAhead] = useState(AHEAD_DAYS);
@@ -88,6 +93,7 @@ export default function CalendarAgenda({ index, onOpen, search, strip, weekNumbe
   const [todayOut, setTodayOut] = useState<'above' | 'below' | null>(null);
   const scroller = useRef<HTMLDivElement | null>(null);
   const pending = useRef<string | null>(today);
+  const tail = useRef<HTMLDivElement | null>(null);
   const query = search.trim();
   const reveal = useProgressiveReveal();
 
@@ -140,6 +146,29 @@ export default function CalendarAgenda({ index, onOpen, search, strip, weekNumbe
     // A changed index keeps the reading position and revealed rows.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, today]);
+
+  // The space under the last day: enough for today's header to reach the top
+  // when few days follow it (GitHub #822). It never shrinks under the reading
+  // position: more days come in slices, and a shorter list would scroll up.
+  // Set on the node, so no re-render.
+  useLayoutEffect(() => {
+    const root = scroller.current;
+    const spacer = tail.current;
+    if (!root || !spacer) return;
+    const fit = () => {
+      // The spacer's top is the list's end; scrollHeight never reads below
+      // the pane's height, so it cannot measure a short list.
+      const el = root.querySelector<HTMLElement>(`[data-agenda-day="${today}"]`);
+      const end = spacer.offsetTop;
+      const below = end - (el?.offsetTop ?? 0);
+      const keep = root.scrollTop + root.clientHeight - end;
+      spacer.style.height = `${Math.max(0, root.clientHeight - below, keep)}px`;
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(root);
+    return () => ro.disconnect();
+  }, [days, reveal.visible, today, query]);
 
   // Scroll a day's header to the top: today on open, a picked strip day.
   useLayoutEffect(() => {
@@ -221,6 +250,7 @@ export default function CalendarAgenda({ index, onOpen, search, strip, weekNumbe
             weeks={weeks}
             onToggleWeeks={() => setWeeks((w) => (w === 6 ? 1 : 6))}
             onPick={(day) => { setStripDay(day); goTo(day); }}
+            {...(trackers && trackers.choices.length > 0 ? { headerEnd: <TrackersMenu trackers={trackers} /> } : {})}
           />
           <div
             role="presentation"
@@ -258,6 +288,7 @@ export default function CalendarAgenda({ index, onOpen, search, strip, weekNumbe
                       <div className="sticky top-0 z-10 bg-surface-1/95 backdrop-blur-sm border-b border-divider/50 px-4 pt-2.5 pb-1.5 flex items-baseline gap-2 min-w-0">
                         {word && <span className={`text-compact font-semibold shrink-0 ${tone}`}>{word}</span>}
                         <span className={`text-compact truncate ${word ? 'text-pn-muted' : `font-semibold ${tone}`}`}>{date}</span>
+                        {trackers && trackers.shown.length > 0 && <span className="ms-auto self-center min-w-0 flex"><DayMarks day={day} marks={trackers.marks(day)} onOpenEntry={trackers.onOpenEntry} onOpenStats={trackers.onOpenStats} max={6} /></span>}
                       </div>
                     );
                   })()}
@@ -304,6 +335,7 @@ export default function CalendarAgenda({ index, onOpen, search, strip, weekNumbe
             );
           })}
         </ul>
+        {!query && <div ref={tail} aria-hidden="true" />}
       </div>
       {todayOut && (
         <button

@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState, type MouseEvent, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type MouseEvent, type ReactNode } from 'react';
 import { HoverLabel } from './HoverLabel';
 import { AccentBar, HeadlineRule } from './settingsUI';
 import { openExternal } from './openExternal';
+import { noteLinkDisplayText } from './noteLinks';
 import { Check, Copy, PencilSimple } from './icons';
 
 /**
@@ -168,33 +169,68 @@ export function DetailLink({ href, children }: { href: string; children: string 
 
 /** The renderer, once loaded: it is the export chunk's, so the pane imports it
  *  only when Markdown notes show, and after sign-in it is usually prefetched. */
-type RenderNotes = (md: string) => string;
-let renderNotes: RenderNotes | null = null;
+type Renderer = typeof import('./markdownRender');
+let renderer: Renderer | null = null;
 
 /** The notes as HTML, or null until the renderer has loaded (or for plain
- *  notes). The function itself is the state, never a "loaded" flag beside the
- *  module variable: the two could disagree, and the notes then stay raw. */
-function useNotesHtml(md: string | null): string | null {
-  const [render, setRender] = useState<RenderNotes | null>(() => renderNotes);
+ *  notes). The module itself is the state, never a "loaded" flag beside the
+ *  module variable: the two could disagree, and the notes then stay raw.
+ *  With `noteLinks`, each `[[Note]]` is a link (`data-note-link`). */
+function useNotesHtml(md: string | null, noteLinks: boolean): string | null {
+  const [loaded, setLoaded] = useState<Renderer | null>(() => renderer);
   useEffect(() => {
-    if (md === null || render) return;
+    if (md === null || loaded) return;
     let live = true;
     void import('./markdownRender').then((m) => {
-      renderNotes = m.renderMarkdownSafe;
-      if (live) setRender(() => m.renderMarkdownSafe);
+      renderer = m;
+      if (live) setLoaded(() => m);
     });
     return () => { live = false; };
-  }, [md, render]);
-  return useMemo(() => (md !== null && render ? render(md) : null), [md, render]);
+  }, [md, loaded]);
+  return useMemo(() => {
+    if (md === null || !loaded) return null;
+    const text = loaded.keepBlankLines(md);
+    return noteLinks ? loaded.renderMarkdownWithNoteLinks(text) : loaded.renderMarkdownSafe(text);
+  }, [md, loaded, noteLinks]);
 }
 
-/** A link in rendered notes opens the way DetailLink does, out of the app. */
-function openNotesLink(e: MouseEvent<HTMLDivElement>) {
-  const a = (e.target as HTMLElement).closest('a[href]');
-  if (!a) return;
-  e.preventDefault();
-  const href = a.getAttribute('href')!;
-  if (href !== '#') openExternal(href);
+/** A link in rendered notes opens the way DetailLink does, out of the app;
+ *  a note-link opens its note in the app. */
+function notesLinkClick(onNoteLink?: (target: string) => void) {
+  return (e: MouseEvent<HTMLDivElement>) => {
+    const a = (e.target as HTMLElement).closest('a[href]');
+    if (!a) return;
+    e.preventDefault();
+    const target = a.getAttribute('data-note-link');
+    if (target !== null) {
+      onNoteLink?.(target);
+      return;
+    }
+    const href = a.getAttribute('href')!;
+    if (href !== '#') openExternal(href);
+  };
+}
+
+/**
+ * Plain notes (a contact's) with each `[[Note]]` or `[[Note|label]]` as a
+ * button that opens its note; the rest stays as written.
+ */
+function plainWithNoteLinks(text: string, onNoteLink: (target: string) => void): ReactNode[] {
+  const out: ReactNode[] = [];
+  const re = /\[\[([^\]\n|]+)(?:\|([^\]\n]+))?\]\]/g;
+  let last = 0;
+  for (let m = re.exec(text); m; m = re.exec(text)) {
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const target = m[1]!;
+    out.push(
+      <button key={m.index} type="button" className="text-accent hover:underline" onClick={() => onNoteLink(target)}>
+        {m[2] ?? noteLinkDisplayText(target)}
+      </button>,
+    );
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
 }
 
 /**
@@ -205,26 +241,37 @@ function openNotesLink(e: MouseEvent<HTMLDivElement>) {
  * title (`.pn-detail-notes` in index.css): a heading here is a label inside
  * one item, not the top of a page. The item view and the Notes box's
  * "Show formatted" (NotesField.tsx) both draw it, so the two cannot differ.
+ * With `onNoteLink`, a note-link in it opens its note (#852).
  */
-export function NotesText({ text, markdown, pad = 'py-2' }: { text: string; markdown?: boolean; pad?: string }) {
-  const html = useNotesHtml(markdown ? text : null);
+export function NotesText({ text, markdown, pad = 'py-2', onNoteLink }: { text: string; markdown?: boolean; pad?: string; onNoteLink?: (target: string) => void }) {
+  const html = useNotesHtml(markdown ? text : null, !!onNoteLink);
   return html !== null ? (
     <div
       className={`pn-detail-notes prose prose-pn max-w-none ${pad} text-body break-words [&>:first-child]:mt-0 [&>:last-child]:mb-0`}
       dir="auto"
-      onClick={openNotesLink}
+      onClick={notesLinkClick(onNoteLink)}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   ) : (
-    <div className={`${pad} text-body text-pn whitespace-pre-wrap break-words`} dir="auto">{text}</div>
+    <div className={`${pad} text-body text-pn whitespace-pre-wrap break-words`} dir="auto">
+      {onNoteLink && !markdown ? plainWithNoteLinks(text, onNoteLink) : text}
+    </div>
   );
 }
 
+/**
+ * How a note-link in an item's notes opens its note: the editor pane provides
+ * `navigateToNoteByTitle`, so a contact or a login can link to a note (#852).
+ * Without a provider (a history preview) a note-link stays plain text.
+ */
+export const NoteLinkOpenContext = createContext<((target: string) => void) | null>(null);
+
 /** The notes block: an eyebrow and the text (NotesText). */
 export function DetailNotes({ heading, children, markdown }: { heading: string; children: string; markdown?: boolean }) {
+  const onNoteLink = useContext(NoteLinkOpenContext) ?? undefined;
   return (
     <DetailGroup heading={heading}>
-      <NotesText text={children} markdown={markdown} />
+      <NotesText text={children} markdown={markdown} onNoteLink={onNoteLink} />
     </DetailGroup>
   );
 }

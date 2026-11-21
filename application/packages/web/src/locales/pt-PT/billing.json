@@ -35,6 +35,7 @@
     "title": "Bem-vindo ao clube",
     "proLine": "<brand/> Pro, {{price}} $ uma única vez. Teu para sempre.",
     "storageLine": "<brand/> +{{gb}} GB de armazenamento, {{price}} $ por ano.",
+    "storagePayerNote": "O titular da conta pode mudar o pacote mais tarde. Este cartão paga a diferença.",
     "benefitDevices": "Dispositivos ilimitados",
     "benefitDevicesSub": "Telemóvel, tablet, portátil, tudo sincronizado",
     "benefitStorage": "500 MB de armazenamento",
@@ -63,7 +64,7 @@
     "openingBody": "Deve aparecer uma janela de checkout do Paddle. Se não aparecer, o teu navegador pode ter bloqueado o pop-up - recarrega esta página para tentar de novo."
   },
   "cryptoCheckout": {
-    "coins": "Escolhes Bitcoin, Ethereum, Lightning, USDC ou USDT na página seguinte, gerida pela BlockBee. Não pede nome nem e-mail. Um pagamento em cripto é público na sua blockchain.",
+    "coins": "Escolhes Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin ou TON na página seguinte, gerida pela BlockBee. Não pede nome nem e-mail. Um pagamento em cripto é público na sua blockchain.",
     "consent": "Começar o Pro agora. Compreendo que os pagamentos em cripto são definitivos e abdico do direito de retratação de 14 dias.",
     "consentNeeded": "Assinala a caixa acima para continuar.",
     "loadingTitle": "A verificar a tua encomenda...",

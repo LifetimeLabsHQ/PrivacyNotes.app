@@ -11,7 +11,15 @@
  * route and its robots line) flipped with it; the steps are in the spec.
  * Spec: docs/internal/plans/crypto-payments.md (section 11d, release switch)
  */
+import { heldPasskeyFaqIds } from './passkeysRelease.ts';
+
 const CRYPTO_CHECKOUT_RELEASED = true;
+
+/** The switch itself, for the tests that ask whether the crypto checkout is
+ *  released: `hiddenFaqIds()` also holds the passkey entries, so its length
+ *  says nothing about crypto. Safe to read from Node.
+ *  Spec: docs/contrib/passkeys.md (section 9) */
+export const cryptoCheckoutReleasedConstant: boolean = CRYPTO_CHECKOUT_RELEASED;
 
 /** True where the app may offer the crypto checkout. Never read from Node
  *  (the help-site build): it reads `import.meta.env`. */
@@ -19,8 +27,10 @@ export function cryptoCheckoutReleased(): boolean {
   return CRYPTO_CHECKOUT_RELEASED || import.meta.env.DEV;
 }
 
-/** The help entries about the crypto checkout, left out of the help site
- *  until it is released. Safe to read from Node. */
+/** The help entries held off the help site until their feature is
+ *  released: the crypto checkout's, then the passkey ones
+ *  (passkeysRelease.ts). The one list help-page.ts and tools/check-llms.mjs
+ *  read. Safe to read from Node. */
 export function hiddenFaqIds(): readonly string[] {
-  return CRYPTO_CHECKOUT_RELEASED ? [] : ['pay-with-crypto'];
+  return [...(CRYPTO_CHECKOUT_RELEASED ? [] : ['pay-with-crypto']), ...heldPasskeyFaqIds()];
 }

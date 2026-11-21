@@ -37,7 +37,7 @@
   "storageBar": {
     "usage": "{{percent}}% usado ({{used}} / {{max}})",
     "refresh": "Atualizar armazenamento",
-    "cleanupInfo": "Itens excluídos deixam de contar na hora. Os arquivos criptografados em si saem do servidor em alguns dias.",
+    "cleanupInfo": "Notas excluídas para sempre deixam de contar na hora. Um arquivo excluído conta até a cópia criptografada dele sair do servidor, cerca de um dia depois.",
     "open": "Abrir configurações de armazenamento"
   },
   "updateToast": {
@@ -324,6 +324,8 @@
     "commands": {
       "syncResume": "Retomar sincronização",
       "lockProtected": "Bloquear esta nota",
+      "randomItem": "Abrir um item aleatório",
+      "randomBookmark": "Abrir um marcador aleatório",
       "changelog": "Novidades",
       "themesPage": "Temas da comunidade",
       "website": "Site do PrivacyNotes"

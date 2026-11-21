@@ -2,7 +2,8 @@
  * Home: the widgets a person keeps on it, their order and sizes, and how the
  * layout is stored.
  *
- * The layout is one stamped register in the settings blob, the format bar's
+ * The layout is a stamped register in the settings blob (the shared Home,
+ * and a space's own Home when a person asks for one), the format bar's
  * rule (formatBar.ts): the later save wins at every sync point, a reset is a
  * stamped null, and a device holding an older blob cannot take a newer
  * layout back. A widget kind this version does not know is kept through a
@@ -397,12 +398,17 @@ export function fillHoles(boxes: readonly Box[], cols: number): Box[] {
 // Storage: one register in the settings blob
 // ------------------------------------------------------------------
 
-/** The settings field: a register map with one key, `layout`. */
+/** The settings field: a register map. `layout` is the shared Home (All,
+ *  Spaces off, and a space without its own); `personal` and `work`, when they
+ *  hold a list, are that space's own Home.
+ *  Spec: docs/internal/specs/dashboard.md (section 7) */
 export type DashboardSetting = RegisterMap;
-const REGISTER = 'layout';
+export type HomeSpace = 'personal' | 'work';
+export type HomeKey = 'layout' | HomeSpace;
+const KEYS: ReadonlySet<string> = new Set<HomeKey>(['layout', 'personal', 'work']);
 
 export function validateDashboardSetting(raw: unknown, now = Date.now()): DashboardSetting {
-  return validateRegisterMap(raw, (k) => k === REGISTER, JSON_MAX, now);
+  return validateRegisterMap(raw, (k) => KEYS.has(k), JSON_MAX, now);
 }
 
 export function mergeDashboardSettings(local: DashboardSetting, remote: DashboardSetting, now = Date.now()): DashboardSetting {
@@ -411,9 +417,26 @@ export function mergeDashboardSettings(local: DashboardSetting, remote: Dashboar
 
 export const dashboardSettingsEqual = registerMapsEqual;
 
+/** Whether a space has its own Home: its register holds a list. A null there
+ *  (switched off) or no register is no own Home. */
+export function hasOwnHome(setting: DashboardSetting | undefined, space: HomeSpace): boolean {
+  return typeof setting?.[space]?.v === 'string';
+}
+
+/** Whether any space has its own Home. */
+export function hasAnyOwnHome(setting: DashboardSetting | undefined): boolean {
+  return hasOwnHome(setting, 'personal') || hasOwnHome(setting, 'work');
+}
+
+/** The register the open view's Home reads and writes: the open space's own
+ *  when it has one, else the shared one (All and Spaces off pass null). */
+export function homeKeyFor(setting: DashboardSetting | undefined, space: HomeSpace | null): HomeKey {
+  return space && hasOwnHome(setting, space) ? space : 'layout';
+}
+
 /** The saved list, or null for stock (no register, a reset, or a bad value). */
-export function readDashboardSetting(setting: DashboardSetting | undefined): Widget[] | null {
-  const v = setting?.[REGISTER]?.v;
+export function readDashboardSetting(setting: DashboardSetting | undefined, key: HomeKey = 'layout'): Widget[] | null {
+  const v = setting?.[key]?.v;
   if (typeof v !== 'string') return null;
   try {
     const parsed = JSON.parse(v) as unknown;
@@ -425,8 +448,8 @@ export function readDashboardSetting(setting: DashboardSetting | undefined): Wid
 }
 
 /** The list Home draws. */
-export function dashboardWidgets(setting: DashboardSetting | undefined): Widget[] {
-  return readDashboardSetting(setting) ?? stockDashboard();
+export function dashboardWidgets(setting: DashboardSetting | undefined, key: HomeKey = 'layout'): Widget[] {
+  return readDashboardSetting(setting, key) ?? stockDashboard();
 }
 
 /** Whether a list fits the register: the widget cap and the stored length. */
@@ -434,16 +457,27 @@ export function fitsDashboard(list: readonly Widget[]): boolean {
   return list.length <= MAX_WIDGETS && JSON.stringify({ w: list.map(toStored) }).length <= JSON_MAX;
 }
 
-/** Save a list; the stock list is saved as a reset. A list that does not fit
- *  is refused, never trimmed. Refused or unchanged comes back as the same
- *  object. */
-export function writeDashboardSetting(setting: DashboardSetting, next: readonly Widget[] | null): DashboardSetting {
-  const prev = setting[REGISTER];
+/** Save a list; null is the stock list. In the shared register the stock
+ *  list is saved as a reset (null). In a space's register a null means "no
+ *  own Home", so there the stock list is saved as a list. A list that does
+ *  not fit is refused, never trimmed. Refused or unchanged comes back as the
+ *  same object. */
+export function writeDashboardSetting(setting: DashboardSetting, next: readonly Widget[] | null, key: HomeKey = 'layout'): DashboardSetting {
+  const prev = setting[key];
+  const own = key !== 'layout';
+  const list = next ?? (own ? stockDashboard() : null);
   let v: string | null = null;
-  if (next && !isStockDashboard(next)) {
-    if (!fitsDashboard(next)) return setting;
-    v = JSON.stringify({ w: next.map(toStored) });
+  if (list && (own || !isStockDashboard(list))) {
+    if (!fitsDashboard(list)) return setting;
+    v = JSON.stringify({ w: list.map(toStored) });
   }
   if (prev ? prev.v === v : v === null) return setting;
-  return { ...setting, [REGISTER]: { v, at: stampAfter(prev?.at) } };
+  return { ...setting, [key]: { v, at: stampAfter(prev?.at) } };
+}
+
+/** A space's own Home off: a stamped null, so it shows the shared Home. */
+export function clearOwnHome(setting: DashboardSetting, space: HomeSpace): DashboardSetting {
+  const prev = setting[space];
+  if (!prev || prev.v === null) return setting;
+  return { ...setting, [space]: { v: null, at: stampAfter(prev.at) } };
 }

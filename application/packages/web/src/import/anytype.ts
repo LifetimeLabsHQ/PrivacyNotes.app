@@ -4,18 +4,19 @@ import { openZip } from './zipOpen';
 import { normalizeTag } from '../notesRepo';
 import { createFolder, type FolderDef } from '../folders';
 import { IMPORT_FOLDER_LIMIT } from './folderImport';
-import { linkifyMarkdown } from './linkify';
+import { withBareLinks } from './bareLinks';
 import { noteLinkTarget } from '../noteLinks';
 import { isBlobReferenced, mimeFromExt } from './blobImport';
+import { FileKeys, fileResolver, readKeyedFiles } from './fileRefs';
 import { detailsToFold } from './detailsFold';
 import { parseFrontMatterDate } from './markdown';
 import { escapeMarkdownText, guardMarkdownLineStart } from '../markdownEscape';
 import { HIGHLIGHT_COLORS, TEXT_COLORS } from '../editorColors';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 import i18n from '../i18n';
-import { num, str } from './importHelpers';
+import { num, splitFrontMatter, str } from './importHelpers';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:anytype.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:anytype.${key}`, options);
 
 /**
  * Anytype importer.
@@ -946,9 +947,6 @@ async function parseAnyBlock(entries: Map<string, JSZip.JSZipObject>, file: File
   const notes: ImportedNote[] = [];
   let starred = 0;
   let binned = 0;
-  let linkified = 0;
-  let empty = 0;
-  let untagged = 0;
   let tagged = 0;
   const fileTime = file.lastModified && file.lastModified <= nowMs ? new Date(file.lastModified).toISOString() : new Date(nowMs).toISOString();
 
@@ -1003,8 +1001,6 @@ async function parseAnyBlock(entries: Map<string, JSZip.JSZipObject>, file: File
     pendingFiles.clear();
 
     body = detailsToFold(body);
-    const linked = linkifyMarkdown(body);
-    if (linked !== body) linkified++;
 
     if (str(own(d, 'iconEmoji')) || str(own(d, 'iconImage'))) counts.icons++;
     if (str(own(d, 'coverId')) || (num(own(d, 'coverType')) ?? 0) > 0) counts.covers++;
@@ -1014,8 +1010,6 @@ async function parseAnyBlock(entries: Map<string, JSZip.JSZipObject>, file: File
       .map((id) => normalizeTag(options.get(id) ?? ''))
       .filter((t) => t && !seen.has(t.toLowerCase()) && seen.add(t.toLowerCase()));
     if (tags.length) tagged++;
-    else untagged++;
-    if (!linked.trim()) empty++;
 
     const createdAt = isoFromSeconds(own(d, 'createdDate'), nowMs) ?? fileTime;
     const updatedAt = isoFromSeconds(own(d, 'lastModifiedDate'), nowMs) ?? createdAt;
@@ -1027,7 +1021,7 @@ async function parseAnyBlock(entries: Map<string, JSZip.JSZipObject>, file: File
     const folder = folderOf.get(memberOf.get(o.id) ?? '');
     notes.push({
       title,
-      body: linked,
+      body,
       tags,
       createdAt,
       updatedAt,
@@ -1068,7 +1062,6 @@ async function parseAnyBlock(entries: Map<string, JSZip.JSZipObject>, file: File
   if (tagged) transforms.push(i18n.t('importLog:shared.tags', { count: tagged }));
   if (starred) transforms.push(i18n.t('importLog:shared.keptStarred', { count: starred }));
   if (binned) transforms.push(i18n.t('importLog:shared.restoredTrashed', { count: binned }));
-  if (linkified) transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkified }));
   if (counts.tooLarge) warnings.push(mediaTooLargeWarning(counts.tooLarge));
   w('missingFiles', counts.missingFiles);
   w('missingLinks', counts.missingLinks);
@@ -1087,12 +1080,6 @@ async function parseAnyBlock(entries: Map<string, JSZip.JSZipObject>, file: File
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: empty,
-      untaggedNotes: untagged,
-      uniqueTags: new Set(notes.flatMap((n) => n.tags)).size,
-    },
     source: 'anytype',
   };
   if (folderDefs.length) parsed.folders = folderDefs;
@@ -1117,57 +1104,6 @@ function fileObjectOf(d: Json, root: string): FileObject {
 
 /** Front matter keys Anytype writes about the object itself, not its content. */
 const MD_SYSTEM_KEYS = new Set(['Object type', 'Backlinks', 'Links', 'Created by', 'Last modified by', 'Last opened date', 'id', 'Creation date', 'Last modified date', 'Tag', 'Done', 'Cover image or color', 'Description', 'Name', 'Emoji', 'Image', 'Source']);
-
-interface FrontMatter {
-  values: Map<string, string[]>;
-  body: string;
-}
-
-function unquoteYaml(v: string): string {
-  const s = v.trim();
-  if (s.length >= 2 && s.startsWith('"') && s.endsWith('"')) {
-    // YAML's \U and \u escapes, which JSON does not have in that form.
-    const yaml = s.replace(/\\U([0-9a-fA-F]{8})|\\u([0-9a-fA-F]{4})/g, (whole, long: string | undefined, short: string | undefined) => {
-      const cp = parseInt(long ?? short ?? '', 16);
-      return cp <= 0x10ffff && !(cp >= 0xd800 && cp <= 0xdfff) ? String.fromCodePoint(cp) : whole;
-    });
-    if (yaml !== s) return yaml.slice(1, -1);
-    try {
-      const parsed: unknown = JSON.parse(s);
-      if (typeof parsed === 'string') return parsed;
-    } catch {
-      /* not JSON-shaped: strip the quotes only */
-    }
-    return s.slice(1, -1);
-  }
-  if (s.length >= 2 && s.startsWith("'") && s.endsWith("'")) return s.slice(1, -1).replace(/''/g, "'");
-  return s;
-}
-
-/** The YAML Anytype writes: `Key: value`, or `Key:` and a list of `- item` lines. */
-function splitFrontMatter(text: string): FrontMatter {
-  const values = new Map<string, string[]>();
-  const t = text.replace(/^﻿/, '').replace(/\r\n/g, '\n');
-  if (!t.startsWith('---\n')) return { values, body: t };
-  const end = t.indexOf('\n---\n', 3);
-  const endAtEof = end < 0 && t.endsWith('\n---') ? t.length - 4 : -1;
-  const stop = end >= 0 ? end : endAtEof;
-  if (stop < 0) return { values, body: t };
-  let key = '';
-  for (const line of t.slice(4, stop).split('\n')) {
-    if (/^\s*#/.test(line) || !line.trim()) continue;
-    const item = /^\s+-\s?(.*)$/.exec(line);
-    if (item && key) {
-      values.get(key)!.push(unquoteYaml(item[1]!));
-      continue;
-    }
-    const kv = /^([^:]+):\s*(.*)$/.exec(line);
-    if (!kv) continue;
-    key = kv[1]!.trim();
-    values.set(key, kv[2]!.trim() ? [unquoteYaml(kv[2]!)] : []);
-  }
-  return { values, body: t.slice(stop + 5) };
-}
 
 /**
  * Anytype ends every block with three spaces and puts no blank line between
@@ -1235,7 +1171,7 @@ async function parseAnytypeMarkdown(entries: Map<string, JSZip.JSZipObject>, fil
   if (mdPaths.length === 0) throw new Error(msg('noPages'));
 
   onProgress?.(msg('readingObjects'));
-  const parsedFiles: { path: string; fm: FrontMatter; title: string; body: string }[] = [];
+  const parsedFiles: { path: string; fm: ReturnType<typeof splitFrontMatter>; title: string; body: string }[] = [];
   for (const path of mdPaths) {
     const fm = splitFrontMatter(await zipEntryText(entries.get(path)!));
     let body = fm.body;
@@ -1252,9 +1188,11 @@ async function parseAnytypeMarkdown(entries: Map<string, JSZip.JSZipObject>, fil
 
   onProgress?.(i18n.t('importLog:shared.buildingNotes'));
   const counts = newCounts();
-  const blobs = new Map<string, ImportBlob>();
   const notes: ImportedNote[] = [];
-  let linkified = 0;
+  // A file a page links to gets a fixed-width key (fileRefs.ts, beta #152).
+  const files = new Map([...entries].filter(([path]) => !/\.md$/i.test(path) && !path.startsWith('schemas/')));
+  const resolve = fileResolver(files.keys());
+  const keys = new FileKeys('atfile');
   let tagged = 0;
 
   for (const p of parsedFiles) {
@@ -1281,7 +1219,8 @@ async function parseAnytypeMarkdown(entries: Map<string, JSZip.JSZipObject>, fil
         counts.noteLinks++;
         return !clean || clean === t ? `[[${t}]]` : `[[${t}|${clean}]]`;
       }
-      if (entries.has(path) && !/\.md$/i.test(path)) return `${bang}[${label}](${path})`;
+      const found = /\.md$/i.test(path) ? null : resolve(target.replace(/\\/g, '/'), dir.replace(/\/$/, ''));
+      if (found) return `${bang}[${label}](${keys.keyOf(found)})`;
       if (path.startsWith('files/') || /\\/.test(rawTarget)) {
         counts.missingFiles++;
         return `\`[file: ${(path.split('/').pop() ?? path).replace(/`/g, "'")} - not in the Anytype export]\``;
@@ -1318,15 +1257,13 @@ async function parseAnytypeMarkdown(entries: Map<string, JSZip.JSZipObject>, fil
     if (source) top.unshift(`[${escapeMarkdownText(p.title || first('Source'))}](${source})`);
     body = [...top, body].filter(Boolean).join('\n\n');
 
-    const linked = linkifyMarkdown(body);
-    if (linked !== body) linkified++;
     const seen = new Set<string>();
     const tags = (v.get('Tag') ?? []).map((x) => normalizeTag(x)).filter((x) => x && !seen.has(x.toLowerCase()) && seen.add(x.toLowerCase()));
     if (tags.length) tagged++;
     const createdAt = parseFrontMatterDate(first('Creation date')) ?? fileTime;
     notes.push({
       title: p.title,
-      body: linked,
+      body,
       tags,
       createdAt,
       updatedAt: parseFrontMatterDate(first('Last modified date')) ?? createdAt,
@@ -1335,17 +1272,8 @@ async function parseAnytypeMarkdown(entries: Map<string, JSZip.JSZipObject>, fil
   }
 
   // Only the files a note links to.
-  for (const [path, entry] of entries) {
-    if (/\.md$/i.test(path) || path.startsWith('schemas/')) continue;
-    if (!notes.some((n) => isBlobReferenced(path, n.body))) continue;
-    const data = await zipEntryMedia(entry);
-    if (!data) {
-      counts.tooLarge++;
-      continue;
-    }
-    const name = path.split('/').pop() ?? path;
-    blobs.set(path, { data: new Uint8Array(data), mime: mimeFromExt(name), name });
-  }
+  const { blobs, tooLarge } = await readKeyedFiles(keys, files, notes);
+  counts.tooLarge += tooLarge;
 
   const transforms: string[] = [];
   const warnings: string[] = [msg('markdownExport')];
@@ -1354,7 +1282,6 @@ async function parseAnytypeMarkdown(entries: Map<string, JSZip.JSZipObject>, fil
   if (counts.tasks) transforms.push(msg('tasks', { count: counts.tasks }));
   if (counts.properties) transforms.push(msg('properties', { count: counts.properties }));
   if (tagged) transforms.push(i18n.t('importLog:shared.tags', { count: tagged }));
-  if (linkified) transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkified }));
   if (counts.tooLarge) warnings.push(mediaTooLargeWarning(counts.tooLarge));
   if (counts.missingFiles) warnings.push(msg('missingFiles', { count: counts.missingFiles }));
   if (counts.missingLinks) warnings.push(msg('missingLinks', { count: counts.missingLinks }));
@@ -1365,12 +1292,6 @@ async function parseAnytypeMarkdown(entries: Map<string, JSZip.JSZipObject>, fil
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: notes.filter((n) => !n.title.trim() && !n.body.trim()).length,
-      untaggedNotes: notes.filter((n) => n.tags.length === 0).length,
-      uniqueTags: new Set(notes.flatMap((n) => n.tags)).size,
-    },
     source: 'anytype',
   };
   if (blobs.size) {
@@ -1384,7 +1305,9 @@ async function parseAnytypeMarkdown(entries: Map<string, JSZip.JSZipObject>, fil
 /* Entry point                                                         */
 /* ------------------------------------------------------------------ */
 
-export async function parseAnytype(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
+export const parseAnytype = withBareLinks(readAnytype);
+
+async function readAnytype(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
   onProgress?.(i18n.t('importLog:shared.readingZip'));
   let zip: JSZip;
   try {

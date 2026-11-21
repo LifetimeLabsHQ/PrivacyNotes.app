@@ -39,9 +39,10 @@ export interface Clip {
 
 /**
  * Clip `html`, downloaded from `finalUrl` (the address after redirects).
- * Returns null in `main` mode when no main text is found.
+ * Returns null in `main` mode when no main text is found. `drawsAsText`,
+ * when given, is asked of the Markdown after `isSafeMarkdown`.
  */
-export function clipHtml(html: string, finalUrl: string, mode: ClipMode): Clip | null {
+export function clipHtml(html: string, finalUrl: string, mode: ClipMode, drawsAsText?: (markdown: string) => boolean): Clip | null {
   const doc = parsePage(html, finalUrl);
   const meta = readMetadata(doc);
   cleanPage(doc);
@@ -61,7 +62,9 @@ export function clipHtml(html: string, finalUrl: string, mode: ClipMode): Clip |
   let { markdown, images } = toMarkdown(root, base, finalUrl);
   if (mode === 'main' && meta.isArticle) ({ markdown, images } = withLeadPicture(markdown, images, meta.image, base));
   // A page that slips markup past the conversion rules keeps its text only.
-  if (!isSafeMarkdown(markdown)) {
+  // `drawsAsText` is the app renderer's own answer, so the clip holds when
+  // that renderer and markdown-it read a line apart (beta #216 item 1).
+  if (!isSafeMarkdown(markdown) || (drawsAsText && !drawsAsText(markdown))) {
     markdown = plainMarkdown(textOf(root));
     images = [];
   }

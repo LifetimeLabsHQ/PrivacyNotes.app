@@ -164,7 +164,11 @@ class BackupFolderPlugin(private val activity: Activity) : Plugin(activity) {
         worker.execute {
             val document = ownDocument(invoke, args.ref) ?: return@execute
             val ret = JSObject()
-            ret.put("value", present(document))
+            try {
+                ret.put("value", presentOrThrow(document))
+            } catch (e: Exception) {
+                return@execute invoke.reject("Not checked", codeFor(e))
+            }
             invoke.resolve(ret)
         }
     }
@@ -175,7 +179,12 @@ class BackupFolderPlugin(private val activity: Activity) : Plugin(activity) {
         worker.execute {
             val document = ownDocument(invoke, args.ref) ?: return@execute
             val ret = JSObject()
-            if (!present(document)) {
+            val there = try {
+                presentOrThrow(document)
+            } catch (e: Exception) {
+                return@execute invoke.reject("Not checked", codeFor(e))
+            }
+            if (!there) {
                 ret.put("value", false)
                 return@execute invoke.resolve(ret)
             }
@@ -222,9 +231,21 @@ class BackupFolderPlugin(private val activity: Activity) : Plugin(activity) {
 
     /** Whether the provider has a row for the document. */
     private fun present(document: Uri): Boolean = try {
+        presentOrThrow(document)
+    } catch (e: Exception) {
+        false
+    }
+
+    /** The same, but only a missing row or a `FileNotFoundException` is
+     *  "not there": any other failure throws, so `exists` and `delete` reject.
+     *  The page then keeps the file on its list (`backupExists`), and does not
+     *  count it as the unchanged copy that lets a run skip (`backupConfirmed`
+     *  in autoBackup/destination.ts), so the run writes a new one. A provider
+     *  error must read as neither "gone" nor "there" (beta issue 175). */
+    private fun presentOrThrow(document: Uri): Boolean = try {
         resolver.query(document, arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID), null, null, null)
             ?.use { it.moveToFirst() } ?: false
-    } catch (e: Exception) {
+    } catch (e: FileNotFoundException) {
         false
     }
 

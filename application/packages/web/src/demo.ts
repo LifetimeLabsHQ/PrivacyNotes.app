@@ -16,7 +16,7 @@
  * isDemoMode() at construction time without a circular import.
  */
 
-import { APP_ORIGIN } from './hosts';
+import { APP_ORIGIN, BETA_ORIGIN, isBetaHost } from './hosts';
 
 const DEMO_HOSTNAME = 'try.privacynotes.app';
 
@@ -29,8 +29,10 @@ export const DEMO_DB_NAME = 'privacynotes-demo';
 
 /** Where every "sign up / unlock" CTA in demo sends the user. */
 // Demo conversions land on the app host, which boots signed-out
-// visitors straight onto its unified auth card.
-export const DEMO_APP_URL = APP_ORIGIN;
+// visitors straight onto its unified auth card. The beta's demo
+// (beta.privacynotes.app/?demo=1) sends them to the beta itself, so a
+// beta visitor stays on the beta (GitHub #848).
+export const DEMO_APP_URL = isBetaHost() ? BETA_ORIGIN : APP_ORIGIN;
 
 /**
  * Fixed BIP-39 mnemonic for the demo session. The keys derived from it

@@ -74,8 +74,8 @@
     "try-before-signup": {
       "q": "Kann ich PrivacyNotes ausprobieren, ohne ein Konto anzulegen?",
       "a": [
-        "Ja. Die Demo auf [try.privacynotes.app](https://try.privacynotes.app) ist die vollständige App mit Beispielinhalten: keine Registrierung, keine E-Mail, und nichts von dem, was du tippst, wird gespeichert. Sie läuft komplett in deinem Browser und sendet nichts an unsere Server.",
-        "Schließt du den Tab, ist alles weg - genau das ist der Punkt. Wenn du deine Notizen behalten willst, erstelle einen echten Tresor auf [use.privacynotes.app](https://use.privacynotes.app) und fang frisch an: Kopiere dir vorher heraus, was du aus der Demo mitnehmen möchtest."
+        "Ja. Die Demo auf [try.privacynotes.app](https://try.privacynotes.app) ist die vollständige App mit Beispielinhalten: keine Registrierung, keine E-Mail und kein Konto. Nichts, was du tippst, wird gesendet: Eine Seite, die du clippst, oder ein Kalender, den du abonnierst, wird über unseren Server heruntergeladen, und eine Karte wird von unserem Kartenserver gelesen.",
+        "Was du in die Demo eingibst, bleibt in diesem Browser, bis die Demo hier wieder geöffnet wird; lösche die Websitedaten, um es sofort zu entfernen. Wenn du deine Notizen behalten willst, erstelle einen echten Tresor auf [use.privacynotes.app](https://use.privacynotes.app) und fang frisch an: Kopiere dir vorher heraus, was du aus der Demo mitnehmen möchtest."
       ]
     },
     "need-email": {
@@ -117,7 +117,7 @@
       "q": "Was kann PrivacyNotes über meine Notizen sehen?",
       "a": [
         "Notizen, Titel, Tags und Anhänge sind immer verschlüsselt, auf deinem Gerät und auf dem Weg zum Server. [Bei Selbstverwahrung](/de/help/threat-model-levels), mit der jedes per Phrase erstellte Konto beginnt, haben wir keinen Entschlüsselungsschlüssel. Bei der Anmeldung mit Google, Apple oder GitHub wirst du gefragt, wo dein Schlüssel liegen soll. Vorausgewählt ist \"Einfach und bequem\": Dabei speichern wir deine Phrase auf unserem Server, verschlüsselt mit einem unserer Schlüssel. In diesem Modus kann unser Server die Phrase und damit auch deine Notizen entschlüsseln. Unter Einstellungen > Konto > Schlüsselverwaltung siehst du deinen aktuellen Modus und kannst ihn ändern.",
-        "Wir sehen die Informationen, die wir zum Betrieb des Dienstes brauchen: den öffentlichen Schlüssel, den deine Phrase erzeugt, wie viele Einträge und wie viel verschlüsselten Speicher du hast, wie viele Geräte du verknüpft hast und die Zeitpunkte der Synchronisierung. Unsere Ratenbegrenzungen sehen außerdem die IP-Adresse jeder Anfrage, die wir nicht in dein Konto schreiben. Wenn du nur deine Phrase nutzt und [kein Google-, Apple- oder GitHub-Konto verbunden hast](/de/help/connected-logins), kennen wir deine E-Mail-Adresse nicht."
+        "Wir sehen die Informationen, die wir zum Betrieb des Dienstes brauchen: den öffentlichen Schlüssel, den deine Phrase erzeugt, wie viele Einträge und wie viel verschlüsselten Speicher du hast, wie viele Geräte du verknüpft hast, zu jedem Gerät seine Art, App-Version und wann es zuletzt online war, die Bestell-IDs deiner Käufe und die Zeitpunkte der Synchronisierung. [SECURITY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md#what-we-measure) listet alles auf. Unsere Ratenbegrenzungen sehen außerdem die IP-Adresse jeder Anfrage, die wir nicht in dein Konto schreiben. Wenn du nur deine Phrase nutzt und [kein Google-, Apple- oder GitHub-Konto verbunden hast](/de/help/connected-logins), kennen wir deine E-Mail-Adresse nicht."
       ]
     },
     "us-company": {
@@ -125,7 +125,7 @@
       "a": [
         "Deine Notizen sind auf deinem Gerät verschlüsselt, und bei [Selbstverwahrung](/de/help/threat-model-levels) hält der Server nichts, was sie öffnet. Was du schreibst, kommt dort nur als Chiffretext an, also bekommt eine gerichtliche Anordnung in jedem Land nur Chiffretext, egal wo die Firma eingetragen ist. Prüf es nach: Der Code ist [Open Source auf GitHub](https://github.com/LifetimeLabsHQ/PrivacyNotes.app), und der Netzwerk-Tab deines Browsers zeigt, dass deine Worte nur als Chiffretext hinausgehen.",
         "Lifetime Labs LLC ist eine US-Firma, weil das der schnellste Weg war, unsere Projekte unter einem Namen zu bündeln. Niemand im Team lebt in den USA, und deine synchronisierten Notizen liegen in Zürich, Schweiz.",
-        "Erreichen kann das Gesetz die Daten, die der Dienst braucht: deinen öffentlichen Schlüssel, Sync-Zeitstempel, die Speichergröße, kurzlebige Server-Logs und, wenn du Google, Apple oder GitHub verbindest, diese E-Mail-Adresse. Mit „Einfach und bequem“ liegt auch deine Wiederherstellungsphrase auf unserem Server, und sie öffnet deine Notizen. Unter Einstellungen > Konto > Schlüsselverwaltung wechselst du zur Selbstverwahrung. [Was PrivacyNotes sehen kann](/de/help/what-can-you-see) listet mehr auf."
+        "Erreichen kann das Gesetz die Daten, die der Dienst braucht: deinen öffentlichen Schlüssel, Sync-Zeitstempel, die Speichergröße, zu jedem Gerät seine Art, App-Version und wann es zuletzt online war, die Bestell-IDs deiner Käufe, kurzlebige Server-Logs und, wenn du Google, Apple oder GitHub verbindest, diese E-Mail-Adresse. Mit \"Einfach und bequem\" liegt auch deine Wiederherstellungsphrase auf unserem Server, und sie öffnet deine Notizen. Unter Einstellungen > Konto > Schlüsselverwaltung wechselst du zur Selbstverwahrung. [Was PrivacyNotes sehen kann](/de/help/what-can-you-see) listet mehr auf."
       ]
     },
     "app-privacy-label": {
@@ -140,7 +140,7 @@
       "q": "Warum eine Wiederherstellungsphrase statt Benutzername und Passwort?",
       "a": [
         "Es fühlt sich zuerst verkehrt an, aber eine einzelne Wiederherstellungsphrase ist die stärkere Konstruktion. Bei Benutzername und Passwort ist der Benutzername kein Geheimnis (er taucht in jedem Breach-Dump auf), die ganze Sicherheit hängt also am Passwort - und von Menschen gewählte Passwörter kommen im Schnitt auf vielleicht 30 bis 40 Bit Entropie. [Deine Wiederherstellungsphrase kommt auf garantierte 128 Bit oder mehr](/de/help/twelve-word-phrase), von deinem Gerät generiert, nie von einem Menschen gewählt und nie von einer anderen Website wiederverwendet.",
-        "Es gibt bei uns auch kein Passwort zu verlieren. Ein Passwort-Login heißt, der Server speichert mindestens einen Passwort-Hash, der geleakt, geknackt oder gephisht werden kann. [Bei Selbstverwahrung](/de/help/threat-model-levels) verlässt deine Phrase dein Gerät nie: Sie leitet deine Verschlüsselungsschlüssel lokal ab, und der Server sieht immer nur verschlüsselte Daten. Es gibt keinen Hash zu stehlen und keinen Passwort-Reset, den ein Angreifer missbrauchen könnte.",
+        "Es gibt bei uns auch kein Passwort zu verlieren. Ein Passwort-Login heißt, der Server speichert mindestens einen Passwort-Hash, der geleakt, geknackt oder gephisht werden kann. [Bei Selbstverwahrung](/de/help/threat-model-levels) verlässt deine Phrase dein Gerät nie, es sei denn, du fügst [einen Anmelde-Passkey](/de/help/passkey-sign-in) hinzu: Dann hält der Server eine Kopie, die nur dieser Passkey öffnet. Die Phrase leitet deine Verschlüsselungsschlüssel lokal ab, und der Server sieht immer nur verschlüsselte Daten. Er speichert nur einen Hash einer Anmeldekennung, die dein Gerät aus der Phrase ableitet; sie lässt sich nicht in die Phrase zurückrechnen und öffnet keine Notiz, und es gibt keinen Passwort-Reset, den ein Angreifer missbrauchen könnte.",
         "Falls dir das Eintippen deiner Phrase umständlich vorkommt: Du kannst die Phrase mit einem Tipp in deinen Passwort-Manager übernehmen (Einstellungen > Sicherheit > Phrase), und die Anmeldung fühlt sich an wie jeder andere Login. Lieber der vertraute Weg? [Anmelden mit Google, Apple oder GitHub geht auch](/de/help/signup-options): Unter der Haube bekommst du trotzdem eine Phrase, und du entscheidest, ob sie auf deinem Gerät bleibt oder wir sie für dich verwahren."
       ]
     },
@@ -149,9 +149,17 @@
       "a": [
         "Ja, ganz bewusst. Nicht alle verteidigen sich gegen dieselben Bedrohungen, deshalb ist das Kontomodell eine Leiter statt eines einzigen Dogmas. Auf jeder Sprosse bleiben deine Notizen auf deinem Gerät verschlüsselt; was sich ändert, ist, wer den Schlüssel hält und was wir über dich wissen.",
         "Das bequeme Ende: Melde dich mit Google, Apple oder GitHub an und lass auf Nachfrage \"Einfach und bequem\" ausgewählt, das ist dort die Voreinstellung. Wir speichern deine Wiederherstellungsphrase verschlüsselt auf unserem Server. Ein neues Gerät kann deine Notizen nach der Anmeldung beim Anbieter öffnen; [bei aktivierter 2FA brauchst du zusätzlich einen Authenticator-Code](/de/help/enable-2fa). Im Gegenzug kennen wir die E-Mail-Adresse hinter dieser Anmeldung, und unser Server kann deine Phrase entschlüsseln. Sichere deine Phrase für den Fall, dass du den Zugang zum Anbieterkonto verlierst. Bewahre auch deinen 2FA-Sicherungsschlüssel auf, wenn du die Zwei-Faktor-Anmeldung aktivierst.",
-        "Die Mitte: Melde dich mit Google, Apple oder GitHub an, wähle aber \"Maximale Sicherheit und Privatsphäre\". Deine Phrase berührt unsere Server nie, der Server hält also nichts, was deine Notizen öffnet; neue Geräte brauchen die Phrase oder [einen QR-Scan von einem bereits angemeldeten Gerät](/de/help/add-second-device). Die E-Mail hinter diesem Login kennen wir weiterhin, und eine gerichtliche Anordnung oder ein Einbruch in unseren Server kann diese E-Mail erreichen, nie den Inhalt deiner Notizen.",
+        "Die Mitte: Melde dich mit Google, Apple oder GitHub an, wähle aber \"Maximale Sicherheit und Privatsphäre\". Deine Phrase berührt unsere Server nie (ein Anmelde-Passkey, falls du einen hinzufügst, hinterlässt eine Kopie, die nur dieser Passkey öffnet), der Server hält also nichts, was deine Notizen öffnet; neue Geräte brauchen die Phrase oder [einen QR-Scan von einem bereits angemeldeten Gerät](/de/help/add-second-device). Die E-Mail hinter diesem Login kennen wir weiterhin, und eine gerichtliche Anordnung oder ein Einbruch in unseren Server kann diese E-Mail erreichen, nie den Inhalt deiner Notizen.",
         "Das private Ende: Verzichte ganz auf die Logins und nutze nur deine Wiederherstellungsphrase. Keine E-Mail, kein Name, keine Identität - und kombiniert mit einem [anonymen Pro-Kauf](/de/help/buy-pro-anonymously) hinterlässt selbst das Bezahlen nirgendwo einen Namen. Im Gegenzug liegt die Schlüsselverwahrung komplett bei dir: Verlierst du die Phrase ohne ein angemeldetes Gerät, kann niemand helfen.",
         "Unter Einstellungen > Konto > Schlüsselverwaltung siehst du beide Modi mit ihren Vor- und Nachteilen und kannst wechseln. Wenn du die Speicherung auf dem Server beendest, löschen wir unsere Kopie, nachdem du drei Wörter aus deiner gesicherten Phrase bestätigt hast. Der Wechsel zurück lädt die Phrase erneut hoch und erfordert deine ausdrückliche Entscheidung. Beide Richtungen werden mit deinem Kontoschlüssel signiert und brauchen bei aktivierter 2FA einen aktuellen Authenticator-Code. [Mit einem Phrasen-Konto kannst du unter Konto > Konten einen Anbieter verbinden](/de/help/connected-logins) und die Speicherung auf dem Server danach separat wählen. Das Verbinden allein lädt die Phrase nicht hoch. Jeder Modus kann außerdem die PIN-App-Sperre, biometrisches Entsperren und [den Schutz einzelner Notizen](/de/help/locked-vs-protected) nutzen."
+      ]
+    },
+    "stored-phrase": {
+      "q": "Wenn meine Phrase verschlüsselt gespeichert ist, wie könnte dann eine behördliche Anordnung meine Notizen erreichen?",
+      "a": [
+        "Weil unser Server den Schlüssel zu dieser Verschlüsselung hat. Bei \"Einfach und bequem\" liegt deine Wiederherstellungsphrase auf unserem Server, verschlüsselt mit einem Schlüssel, den der Server behält. Genau das macht die Anmeldung mit einem Klick möglich: Meldest du dich auf einem neuen Gerät mit Google, Apple oder GitHub an, öffnet der Server die Phrase und schickt sie an dieses Gerät.",
+        "Die Verschlüsselung sorgt dafür, dass die Phrase für jeden unlesbar bleibt, der nur eine Kopie der Datenbank hat. Aber der Server kann sie öffnen, und die Phrase öffnet deine Notizen, daher könnten eine behördliche Anordnung oder ein Einbruch in den Server sie erreichen.",
+        "Für eine Einrichtung, in der nichts auf unserer Seite deine Notizen öffnen kann, wechsle unter Einstellungen > Konto > Schlüsselverwaltung zur Selbstverwahrung. Dabei wird die Kopie auf unserem Server gelöscht, und deine Phrase bleibt nur bei dir, also [bewahre sie vorher sicher auf](/de/help/lost-phrase). [Die Datenschutz-Leiter](/de/help/threat-model-levels) vergleicht beide Modi."
       ]
     },
     "twelve-word-phrase": {
@@ -168,7 +176,7 @@
       "a": [
         "Nein. Niemand kann deine Wiederherstellungsphrase erraten, und niemand sonst bekommt dieselbe: Kein Computer, den es gibt oder den wir absehen können, kommt auch nur in die Nähe. Anmelden kann sich nur, wer deine echten Wörter bekommt, also bewahre sie sicher auf.",
         "Dein Gerät wählt deine Phrase zufällig. Bei einer Phrase mit 12 Wörtern hat die Zahl der möglichen Phrasen 39 Stellen, bei einer mit 24 Wörtern 78. Eine Phrase mit 12 Wörtern beim ersten Versuch zu erraten ist unwahrscheinlicher, als viermal hintereinander einen Lotto-Jackpot mit einer Chance von 1 zu 300 Millionen zu gewinnen. Ein Computer, der jede Sekunde eine Trillion Phrasen ausprobiert, bräuchte immer noch rund 10 Billionen Jahre, um alle durchzugehen, weit länger, als es das Universum gibt. Selbst wenn alle 8 Milliarden Menschen auf der Erde je eine Phrase hätten, wäre die Chance, dass zwei davon gleich sind, kleiner, als diesen Jackpot zweimal hintereinander zu gewinnen.",
-        "Die Stärke kommt aus diesem Zufall, nicht daraus, wie die Wörter aussehen. Denk dir keine Phrase aus und füge keine Sonderzeichen hinzu: Nutze die Wörter genau so, wie die App sie dir gibt. Groß- und Kleinschreibung spielen keine Rolle. Das letzte Wort dient als Prüfung, deshalb lehnt die App eine vertippte oder ausgedachte Phrase ab."
+        "Die Stärke kommt aus diesem Zufall, nicht daraus, wie die Wörter aussehen. Denk dir keine Phrase aus und füge keine Sonderzeichen hinzu: Nutze die Wörter genau so, wie die App sie dir gibt. Groß- und Kleinschreibung spielen keine Rolle. Das letzte Wort dient als Prüfung, deshalb lehnt die App die meisten vertippten oder ausgedachten Phrasen ab, etwa 15 von 16. Eine, die durchgeht, ist die Phrase eines anderen, leeren Tresors."
       ]
     },
     "same-phrase": {
@@ -181,8 +189,8 @@
     "enable-2fa": {
       "q": "Wie aktiviere ich die Zwei-Faktor-Authentifizierung (2FA)?",
       "a": [
-        "Aktiviere die optionale Zwei-Faktor-Anmeldung unter Einstellungen > Sicherheit > 2FA. Aktualisiere PrivacyNotes zuerst auf deinen anderen Geräten. Scanne den QR-Code mit einer Authenticator-App oder gib den Einrichtungsschlüssel manuell ein. Bewahre den 2FA-Sicherungsschlüssel außerhalb von PrivacyNotes auf, bestätige deine gespeicherte Kopie und gib zum Abschluss einen aktuellen Code ein.",
-        "Nach der Einrichtung braucht eine neue Serversitzung deine Phrase oder [ein verbundenes Konto](/de/help/connected-logins), gefolgt von einem Authenticator-Code. Bei Selbstverwahrung brauchst du weiterhin deine Phrase, um Notizen zu entschlüsseln. Verwalte Anbieterkonten unter Einstellungen > Konto > Konten. [Das Verbinden eines Kontos ändert die Schlüsselverwaltung nicht](/de/help/threat-model-levels).",
+        "Aktiviere die optionale Zwei-Faktor-Anmeldung unter Einstellungen > Sicherheit > 2FA. Scanne den QR-Code mit einer Authenticator-App oder gib den Einrichtungsschlüssel manuell ein. Bewahre den 2FA-Sicherungsschlüssel außerhalb von PrivacyNotes auf, bestätige deine gespeicherte Kopie und gib zum Abschluss einen aktuellen Code ein.",
+        "Nach der Einrichtung braucht eine neue Serversitzung deine Phrase oder [ein verbundenes Konto](/de/help/connected-logins), gefolgt von einem Authenticator-Code. Wenn du 2FA einschaltest, werden die Browser-Erweiterung und die Kommandozeile getrennt. Verbinde die Erweiterung also erneut unter Einstellungen > Erweiterung, und die Kommandozeile unter Einstellungen > CLI. Bei Selbstverwahrung brauchst du weiterhin deine Phrase, um Notizen zu entschlüsseln. Verwalte Anbieterkonten unter Einstellungen > Konto > Konten. [Das Verbinden eines Kontos ändert die Schlüsselverwaltung nicht](/de/help/threat-model-levels).",
         "[Wenn du den Authenticator verlierst](/de/help/lost-2fa), füge den gespeicherten 2FA-Sicherungsschlüssel einer anderen Authenticator-App hinzu. Wenn du beides verlierst, können wir den Serverzugriff nicht wiederherstellen. Bereits entsperrte Notizen auf einem Gerät bleiben lesbar und exportierbar. Die Zwei-Faktor-Anmeldung fügt keine Verschlüsselung hinzu und schützt kein bereits entsperrtes Gerät."
       ]
     },
@@ -201,11 +209,18 @@
         "Das folgt aus der Architektur, nicht aus einer Richtlinie: [Der Server hält deine Notizen nur als Chiffretext](/de/help/what-can-you-see) und führt keinen Index darüber. Die Suche braucht den Text, und der Text existiert nur auf deinen Geräten."
       ]
     },
+    "website-icons": {
+      "q": "Ruft PrivacyNotes Website-Symbole ab, und was wird dabei gesendet?",
+      "a": [
+        "Ja, um das Logo einer Seite neben deinen Links und Tresor-Logins zu zeigen, und jede Abfrage sendet nur die Domain der Seite. Sie geht an unseren eigenen Server, der das Symbol für dich holt, daher sehen die Symboldienste weder dein Gerät noch deine IP-Adresse noch den Rest des Links. Kein Konto, kein Cookie und kein Notizinhalt reist mit, und unser Server führt kein Protokoll darüber, nach welcher Domain gefragt wurde.",
+        "Sobald ein Symbol auf deinem Gerät liegt, bleibt es dort, verschlüsselt wie die übrigen lokalen Daten der App, damit dieselbe Seite nicht jedes Mal neu abgefragt wird. Um Abfragen zu stoppen, schalte **Website-Symbole** unter Einstellungen > Listen > Allgemein aus: Links und Logins zeigen dann stattdessen eine Buchstabenkachel. Der Schalter gilt nur für dieses Gerät, schalte ihn also auf jedem Gerät aus, auf dem du ihn aus haben willst."
+      ]
+    },
     "no-ai": {
       "q": "Verarbeitet PrivacyNotes meine Notizen mit KI?",
       "a": [
-        "Keine KI liest deine Notizen, es sei denn, du schaltest sie ein, und nichts, was du schreibst, geht je an einen KI-Dienst. Es gibt keinen Chatbot, kein KI-Schreiben, keine KI auf unseren Servern und kein Training mit deinen Inhalten. Ninja und die Suche sind einfacher Code auf deinem Gerät. [Deine Notizen sind immer verschlüsselt, auf deinem Gerät und auf dem Weg zum Server](/de/help/what-can-you-see), und eine Cloud-KI würde sie aus dieser Verschlüsselung herausnehmen, deshalb geht keine Notiz an eine.",
-        "Die eine Ausnahme ist optional und bleibt auf deinem Gerät. Intelligente Verknüpfungen findet Notizen mit derselben Bedeutung, auch in anderen Worten oder einer anderen Sprache. Dafür nutzt es Offline-KI ([bekko-static](https://huggingface.co/hotchpotch/bekko-static-embedding-v1)), die nur auf diesem Gerät läuft. Sie schreibt nichts und beantwortet nichts: Sie macht aus jeder Notiz eine Liste von Zahlen und vergleicht sie. Du lädst sie einmal unter Einstellungen > Editor > Verhalten > Intelligente Verknüpfungen herunter, danach funktioniert sie ohne Verbindung. Mit dem Schalter schaltest du sie aus, und Entfernen nimmt sie vom Gerät. Nichts, was sie über eine Notiz herausfindet, wird gespeichert oder gesendet."
+        "Keine KI liest deine Notizen, es sei denn, du schaltest sie ein, und nichts, was du schreibst, geht je an einen KI-Dienst. Es gibt keinen Chatbot, keine KI auf unseren Servern und kein Training mit deinen Inhalten. Ninja und die Suche sind einfacher Code auf deinem Gerät. [Deine Notizen sind immer verschlüsselt, auf deinem Gerät und auf dem Weg zum Server](/de/help/what-can-you-see), und eine Cloud-KI würde sie aus dieser Verschlüsselung herausnehmen, deshalb geht keine Notiz an eine.",
+        "Die Ausnahmen sind optionale Plugins unter Einstellungen > Plugins, und sie laufen nur auf deinem Gerät. Intelligente Verknüpfungen finden Notizen mit derselben Bedeutung. Text in Bildern liest den Text in einem Bild, einem Scan oder einem PDF. Notizen übersetzen übersetzt eine Notiz. Sprache zu Text macht aus einer Aufnahme Text. Du schaltest jedes davon selbst ein. Es wird einmal heruntergeladen oder nutzt die Engine, die in dein Gerät eingebaut ist, und funktioniert danach ohne Verbindung; Entfernen nimmt es vom Gerät. Ein Plugin ändert nie von sich aus eine Notiz: Du siehst zuerst sein Ergebnis und entscheidest, ob du es hinzufügst. Nichts, was es über eine Notiz herausfindet, wird gespeichert oder gesendet."
       ]
     },
     "vibe-coded": {
@@ -245,7 +260,7 @@
       "q": "Ich habe meine Wiederherstellungsphrase verloren. Könnt ihr mein Konto wiederherstellen?",
       "a": [
         "Wenn du auf irgendeinem Gerät noch angemeldet bist: ja, das kannst du selbst. Öffne Einstellungen > Sicherheit > Phrase und speichere sie jetzt sofort in deinen Passwort-Manager.",
-        "Wenn du kein angemeldetes Gerät und keine Phrase mehr hast, [kommt es darauf an, wer den Schlüssel hält](/de/help/threat-model-levels). Hast du ihn bei der Registrierung mit Google, Apple oder GitHub bei uns speichern lassen, meldest du dich mit diesem Login an und bist wieder drin. Bei Selbstverwahrung kann das niemand: Deine Phrase erreicht unsere Server nie, es gibt also nichts zurückzusetzen und kein Support-Ticket, das helfen könnte. Jeder Dienst, der deine verschlüsselten Daten nach einem Totalverlust wiederherstellen kann, hält deine Schlüssel.",
+        "Wenn du kein angemeldetes Gerät und keine Phrase mehr hast, [kommt es darauf an, wer den Schlüssel hält](/de/help/threat-model-levels). Hast du ihn bei der Registrierung mit Google, Apple oder GitHub bei uns speichern lassen, meldest du dich mit diesem Login an und bist wieder drin. Bei Selbstverwahrung kann das nur [ein Anmelde-Passkey](/de/help/passkey-sign-in), den du hinzugefügt hast: Sonst erreicht deine Phrase unsere Server nie, es gibt also nichts zurückzusetzen und kein Support-Ticket, das helfen könnte. Jeder Dienst, der deine verschlüsselten Daten nach einem Totalverlust wiederherstellen kann, hält deine Schlüssel.",
         "Die Vorsorge kostet zehn Sekunden: Speichere die Phrase am Tag der Kontoerstellung in einem Passwort-Manager. Ist sie schon weg und du zahlst für ein Speicher-Add-on: Paddle rechnet direkt mit dir ab und kann es ohne deine Phrase kündigen, siehe [Add-on ändern oder kündigen](/de/help/manage-storage-addon)."
       ]
     },
@@ -254,7 +269,7 @@
       "a": [
         "Füge deinen 2FA-Sicherungsschlüssel in einer beliebigen Authenticator-App hinzu und gib den angezeigten Code ein, wenn PrivacyNotes danach fragt. Der Sicherungsschlüssel ist [der, den du beim Einschalten von 2FA gespeichert hast](/de/help/enable-2fa), und er funktioniert jedes Mal, wenn du ihn brauchst.",
         "Wenn du Handy und Sicherungsschlüssel verloren hast, setzen wir 2FA nicht zurück, und unser Support kann dabei nicht helfen. Die Notizen, die schon auf deinen Geräten sind, bleiben lesbar.",
-        "Um sie zu behalten, öffne auf einem Gerät, das sie noch hat, Einstellungen > Backup > Manuell. Erstelle dann einen neuen Tresor und [importiere den Export dort](/de/help/restore-backup)."
+        "Um sie zu behalten, öffne auf einem Gerät, das sie noch hat, Einstellungen > Backup > Manuell und wähle \"Alles, unverschlüsselt (.zip)\": Die verschlüsselten Backups öffnen sich nur in dem Konto, das sie erstellt hat. Erstelle dann einen neuen Tresor und [importiere den Export dort](/de/help/restore-backup)."
       ]
     },
     "oauth-recovery": {
@@ -276,7 +291,7 @@
       "a": [
         "Du kannst dein Konto in der App oder im Browser löschen. Im Browser meldest du dich unter [use.privacynotes.app](https://use.privacynotes.app) an. Öffne dann **Einstellungen > Konto**, wähle **Konto und Daten löschen...**, dann **Cloud-Daten und Konto löschen**, tippe DELETE und wähle **Dauerhaft löschen**. Ist 2FA aktiv, fragt die App nach einem frischen Authenticator-Code. Die Löschung lässt sich nicht rückgängig machen - [exportiere also vorher alles, was du behalten willst](/de/help/export) (Einstellungen > Transfer).",
         "**Was gelöscht wird:** deine synchronisierten Notizen, Aufgaben, Tagebücher, Tresor-Einträge, Dateien und Bilder, der Notizverlauf, die Einstellungen, Geräte, verbundenen Logins, die Server-Kopie deiner Wiederherstellungsphrase, falls du eine gewählt hast, dein Pro-Eintrag und das Konto selbst. Auch die lokalen Daten auf dem Gerät, von dem aus du löschst, werden gelöscht. [Ein aktives Speicher-Abo muss zuerst gekündigt werden](/de/help/manage-storage-addon), unter Einstellungen > Speicher; eines, das bereits zur Kündigung vorgemerkt ist, blockiert die Löschung nicht.",
-        "**Was bleibt:** Hattest du ein Speicher-Abo, bleiben dessen Datensätze für Abrechnung und Erstattungen erhalten. Zusätzlich kann eine minimale Konto-Kennung bleiben, damit alte Anmelde-Token weiter abgelehnt werden. Keiner der beiden Datensätze enthält deine Notizen oder Dateien, und keiner läuft automatisch ab. Unser Datenbank-Anbieter speichert Logs und tägliche Backups sieben Tage lang, ein vor der Löschung erstelltes Backup kann deine verschlüsselten Daten also bis zu eine Woche enthalten. Paddle, Apple und Google führen ihre eigenen Transaktionsaufzeichnungen nach ihren eigenen Richtlinien. Die [Datenschutzerklärung](https://lifetimelabs.dev/privacy/) nennt die Einzelheiten und erklärt, wie du uns bittest, aufbewahrte personenbezogene Daten zu löschen."
+        "**Was bleibt:** Hattest du ein Speicher-Abo, bleiben dessen Datensätze für Abrechnung und Erstattungen erhalten. Zusätzlich kann eine minimale Konto-Kennung bleiben, damit alte Anmelde-Token weiter abgelehnt werden. Keiner der beiden Datensätze enthält deine Notizen oder Dateien, und keiner läuft automatisch ab. Unser Datenbank-Anbieter speichert Logs und tägliche Backups sieben Tage lang, ein vor der Löschung erstelltes Backup kann deine verschlüsselten Daten also bis zu eine Woche enthalten. Verschlüsselte Kopien deiner Dateien können bis zu 30 Tage in unserem Datei-Papierkorb und in Backups bleiben. Paddle, Apple und Google führen ihre eigenen Transaktionsaufzeichnungen nach ihren eigenen Richtlinien. Die [Datenschutzerklärung](https://lifetimelabs.dev/privacy/) nennt die Einzelheiten und erklärt, wie du uns bittest, aufbewahrte personenbezogene Daten zu löschen."
       ]
     },
     "what-syncs": {
@@ -309,8 +324,9 @@
     "data-location": {
       "q": "Wo werden meine Daten gespeichert?",
       "a": [
-        "Zuerst auf deinem Gerät, und das ist die Kopie, mit der du arbeitest: Die App ist local-first, [deine Notizen lassen sich also auch offline öffnen und bearbeiten](/de/help/offline). Die Sync-Kopie liegt auf Servern in Zürich, Schweiz. Dort liegen dein öffentlicher Schlüssel, verschlüsselte Blobs deiner Notizen, Dateien und Einstellungen sowie die Zeitstempel und Größen, die ein Sync braucht. Keine Titel, kein Text, keine Tags.",
-        "Das Land zählt weniger als die Verschlüsselung. Alles ist immer verschlüsselt, auf deinem Gerät und auf dem Weg zum Server, diese Kopie ist also Chiffretext, egal wo sie liegt, und bei Selbstverwahrung kann nichts auf dem Server sie öffnen. Die Schweiz ist ein Bonus, nicht das Versprechen. [Was synchronisiert wird](/de/help/what-syncs) listet es Punkt für Punkt auf.",
+        "Zuerst auf deinem Gerät, und das ist die Kopie, mit der du arbeitest: Die App ist local-first, [deine Notizen lassen sich also auch offline öffnen und bearbeiten](/de/help/offline). Die Sync-Kopie deiner Notizen, Tagebücher, Einstellungen und allem anderen liegt auf Servern in Zürich, Schweiz. Neue Bilder und Dateien aus einer aktuellen App werden in der EU gespeichert, und der Rest zieht nach und nach dorthin um. Auf diesen Servern liegen dein öffentlicher Schlüssel, verschlüsselte Blobs deiner Notizen, Dateien und Einstellungen sowie die Zeitstempel und Größen, die ein Sync braucht. Keine Titel, kein Text, keine Tags.",
+        "Von den in der EU gespeicherten Dateien halten wir außerdem eine zweite verschlüsselte Kopie bei einem anderen Anbieter in der EU, als Backup. Eine Datei, die du löschst, kann bis zu 30 Tage in unserem Datei-Papierkorb und bis zu 35 Tage in diesem Backup bleiben.",
+        "Der Ort zählt weniger als die Verschlüsselung. Alles ist immer verschlüsselt, auf deinem Gerät und auf dem Weg zum Server, diese Kopie ist also Chiffretext, egal wo sie liegt, und bei Selbstverwahrung kann nichts auf dem Server sie öffnen. Der Standort ist ein Bonus, nicht das Versprechen. [Was synchronisiert wird](/de/help/what-syncs) listet es Punkt für Punkt auf.",
         "Die Kopie auf deinem Gerät ist ebenfalls verschlüsselt: [Notizen liegen versiegelt auf der Festplatte](/de/help/data-on-disk), unter einem Schlüssel, der beim Entsperren aus deiner Wiederherstellungsphrase abgeleitet wird."
       ]
     },
@@ -348,7 +364,7 @@
       "q": "Kann der Tresor meinen Passwortmanager ersetzen, zum Beispiel Bitwarden?",
       "a": [
         "Ja. Der Tresor enthält deine Logins, Karten und SSH-Schlüssel, auf deinem Gerät verschlüsselt. Die kostenlose Browser-Erweiterung füllt einen Login nur auf der Seite aus, zu der er gehört. [Ein Bitwarden-Import](/de/help/import/bitwarden) bringt deine Passwörter in einem Schritt hinüber.",
-        "Deine [Wiederherstellungsphrase](/de/help/phrase-vs-password) ist der eigentliche Schlüssel zu deinem Konto, nicht deine PIN. Die PIN oder der Passcode sperrt ein Gerät, auf dem du bereits angemeldet bist, wie der Code auf deinem Handy. Die Erweiterung hat ihre eigene PIN oder ihren eigenen Passcode, getrennt von dem der App. Nach 10 falschen Versuchen trennt die Erweiterung diesen Browser.",
+        "Deine [Wiederherstellungsphrase](/de/help/phrase-vs-password) ist der eigentliche Schlüssel zu deinem Konto, nicht deine PIN. Die PIN oder der Passcode sperrt ein Gerät, auf dem du bereits angemeldet bist, wie der Code auf deinem Handy. Die Erweiterung hat ihre eigene PIN oder ihren eigenen Passcode, getrennt von dem der App. Nach 10 falschen Versuchen innerhalb von 30 Tagen trennt die Erweiterung diesen Browser.",
         "Für die stärkste Sperre wähle unter Einstellungen > Sicherheit > PIN einen Passcode statt einer vierstelligen PIN, und wähle auch für die Erweiterung einen Passcode. Lass die Festplattenverschlüsselung und die Bildschirmsperre deines Computers eingeschaltet. Die Einzelheiten stehen in unserem [Bedrohungsmodell](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
@@ -379,6 +395,13 @@
       "a": [
         "Weil der Dienst bewusst günstig zu betreiben ist. Die App ist local-first und Notizen sind kleine verschlüsselte Blobs - der Server tut kaum mehr, als sie zu speichern und zwischen deinen Geräten weiterzureichen. Keine Analyse dessen, was du schreibst, keine Pixel oder Tracker von Drittanbietern, keine KI auf unseren Servern, keine Support-Abteilung.",
         "Der eine Kostenpunkt, der mit der Zeit wächst, ist Speicher - und genau so ist er bepreist: Speicher über die enthaltenen 500 MB hinaus ist [ein kleines Jahres-Add-on](/de/help/storage-addons). Einmalige Kosten werden einmal bezahlt, wiederkehrende Kosten wiederkehrend. Das Modell muss sich nur selbst tragen, und das tut es."
+      ]
+    },
+    "discounts": {
+      "q": "Kann ich einen Rabatt, einen Gutschein oder ein Black-Friday-Angebot für Pro bekommen?",
+      "a": [
+        "Nein. Pro hat für alle einen fairen Preis, und du zahlst ihn einmal: [Pro ist ein Lifetime-Kauf](/de/help/one-time-pricing), kein Abo. Wir verzichten auf Black Friday, Thanksgiving und jede andere Feiertagsaktion und verteilen keine Rabattcodes oder Gutscheine, es gibt also keinen besseren Tag, auf den du warten könntest.",
+        "Bitte schreib uns keine E-Mail und frag nicht auf Reddit, X oder anderswo nach einem Rabatt: Die Antwort ist immer diese Seite, und die Zeit, die solche Anfragen kosten, geht von der Zeit ab, die wir in die App stecken. [Der kostenlose Tarif](/de/help/free-vs-pro) hat kein Zeitlimit, du kannst also zuerst die ganze App damit nutzen und Pro an dem Tag kaufen, an dem du es willst. Bei Zahlung per Kredit- oder Debitkarte oder über einen App Store gilt [eine 30-tägige Rückerstattung](/de/help/refunds)."
       ]
     },
     "pro-cross-platform": {
@@ -412,7 +435,7 @@
     "pay-with-crypto": {
       "q": "Kann ich Pro mit Bitcoin oder anderer Krypto bezahlen?",
       "a": [
-        "Ja, im Web und in der Desktop-App. Wähle im Upgrade-Fenster Mit Krypto bezahlen und zahle mit Bitcoin, Ethereum, Lightning, USDC oder USDT. Der Preis ist der Kartenpreis, einmalig gezahlt. Die [App-Store-Builds](/de/help/store-purchases) verkaufen Pro nur über Apple und Google.",
+        "Ja, im Web und in der Desktop-App. Wähle im Upgrade-Fenster Mit Krypto bezahlen und zahle mit Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin oder TON. Der Preis ist der Kartenpreis, einmalig gezahlt. Die [App-Store-Builds](/de/help/store-purchases) verkaufen Pro nur über Apple und Google.",
         "[BlockBee](https://blockbee.io) betreibt die Zahlungsseite. Sie verlangt weder einen Namen noch eine E-Mail-Adresse und erhält nie deine Konto-ID. Eine Krypto-Zahlung ist auf ihrer Blockchain öffentlich. Bei Bitcoin wird Pro freigeschaltet, sobald das Netzwerk die Zahlung bestätigt, meist nach 10 bis 60 Minuten, Ethereum und die meisten Stablecoins brauchen etwa eine Minute. Ein Banner in der App zeigt, wo die Zahlung steht.",
         "Krypto-Zahlungen sind endgültig: Es gibt keine Rückerstattung. Beim Checkout stimmst du zu, dass Pro sofort beginnt, wodurch das 14-tägige EU-Widerrufsrecht endet. Probiere also zuerst den kostenlosen Tarif aus. Die Seite nach der Zahlung ist deine Kaufbestätigung. Speichere sie als PDF, denn wir haben keine E-Mail-Adresse, an die wir sie schicken könnten."
       ]
@@ -561,7 +584,7 @@
       "q": "Kann die Browser-Erweiterung meine Notizen lesen?",
       "a": [
         "Nein. Die Erweiterung hält nie den Schlüssel, der deine Notizen öffnet. Sie verschließt jeden Clip, bevor er deinen Browser verlässt, und eine deiner Apps macht daraus bei der nächsten Synchronisierung eine Notiz.",
-        "Wenn du Logins einschaltest, sieht die Erweiterung deine Logins, deine Karten, die öffentliche Hälfte deiner SSH-Schlüssel und deine Lesezeichen, nie den Text einer Notiz und nie einen privaten Schlüssel. Sie sind durch eine PIN oder einen Passcode geschützt, den du für die Erweiterung festlegst, getrennt von dem der App. Nach 10 falschen Versuchen wird der Browser getrennt, damit eine Kopie deines Browsers nicht aufgeraten werden kann. Logins sperren sich nach der Zeit, die du in der Erweiterung wählst (15 Minuten ohne Nutzung, solange du sie nicht änderst), spätestens nach 7 Tagen und immer beim Schließen des Browsers. Die Details stehen in unserem [Bedrohungsmodell](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
+        "Wenn du Logins einschaltest, sieht die Erweiterung deine Logins und die darin gespeicherten Passkeys, deine Karten, die öffentliche Hälfte deiner SSH-Schlüssel und deine Lesezeichen, nie den Text einer Notiz und nie einen privaten SSH-Schlüssel. Sie sind durch eine PIN oder einen Passcode geschützt, den du für die Erweiterung festlegst, getrennt von dem der App. Nach 10 falschen Versuchen innerhalb von 30 Tagen wird der Browser getrennt, damit eine Kopie deines Browsers nicht aufgeraten werden kann. Logins sperren sich, wenn der Computer so lange keine Tastatur- oder Mauseingabe hatte, wie du es in der Erweiterung wählst (15 Minuten, solange du es nicht änderst), spätestens nach 7 Tagen und immer beim Schließen des Browsers. Die Details stehen in unserem [Bedrohungsmodell](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/THREAT_MODEL.md)."
       ]
     },
     "contacts": {
@@ -606,6 +629,45 @@
       "a": [
         "\"Schreibgeschützt\" (im Notiz-Optionsmenü, Pro) sperrt eine Notiz gegen Änderungen, damit ein fertiges Dokument nicht aus Versehen zerpflückt wird; es verbirgt nichts. \"Schützen\" (dasselbe Menü, Pro) verbirgt den Inhalt einer Notiz hinter deiner PIN oder [deinem biometrischen Entsperren](/de/help/biometric-unlock), für die Dinge, die du lieber nicht auf einem Bildschirm sehen möchtest, auf den manchmal andere blicken. Ihr Titel bleibt in der Liste sichtbar, also lass das Geheimnis aus dem Titel heraus. Ein Entsperren öffnet alle geschützten Notizen für die Dauer, die du unter Einstellungen > Sicherheit festlegst. Um die offene Notiz früher zu schließen, wähle **Sperren** über ihrem Text oder **Jetzt sperren** in ihrem Optionsmenü; sie bleibt gesperrt, bis du sie wieder entsperrst.",
         "Beides sind Sperren für den Bildschirm, keine zweite Verschlüsselungsschicht. Die Markierungen reisen in den verschlüsselten Daten der Notiz mit, und die Notiz wird bewusst nicht mit deiner PIN neu verschlüsselt: [So kann eine vergessene PIN niemals Daten vernichten](/de/help/forgot-pin). Die Phrase bleibt die eigentliche Grenze - schütze sie zuerst und nutze diese Sperren für den Bildschirm, den andere manchmal sehen."
+      ]
+    },
+    "protect-section": {
+      "q": "Kann ich nur den Tresor oder einen anderen Abschnitt mit meiner PIN sperren?",
+      "a": [
+        "Ja, und das ist kostenlos. Klick mit der rechten Maustaste auf den Tresor in der Seitenleiste, oder halte ihn auf dem Handy gedrückt, und wähle **Tresor schützen**. Notizen, Aufgaben, Zeichnungen, Dateien, Tagebücher, Kalender, Kontakte, Lesezeichen und Papierkorb funktionieren genauso. Hast du noch keine PIN, bittet dich die App zuerst, eine festzulegen. Du öffnest den Abschnitt mit deiner PIN oder [deinem biometrischen Entsperren](/de/help/biometric-unlock).",
+        "Solange ein Abschnitt gesperrt ist, erscheinen seine Einträge auch nirgends sonst: nicht in Alle, auf der Startseite, in der Suche oder im Papierkorb. Ein Entsperren öffnet alle geschützten Abschnitte und [alle geschützten Notizen](/de/help/locked-vs-protected) für die Dauer, die du unter Einstellungen > Sicherheit > Sperre > \"PIN erneut abfragen nach\" festlegst. Um einen Abschnitt früher zu sperren, klick auf das offene Schloss neben seinem Namen, oder wähle **Jetzt sperren** in seinem Menü.",
+        "Die [Browser-Erweiterung](/de/help/browser-extension-security) hat ihr eigenes Entsperren und füllt deine Logins deshalb weiterhin aus. Einträge, die du aus einem gesperrten Abschnitt löschst, folgen weiterhin [dem automatischen Leeren des Papierkorbs](/de/help/trash-auto-delete), und **Leeren** im Papierkorb fragt zuerst nach deiner PIN."
+      ]
+    },
+    "lock-reload": {
+      "q": "Warum lädt sich die Seite neu, wenn PrivacyNotes sich sperrt?",
+      "a": [
+        "Weil sich eine gesperrte App durch das Neuladen von deinen Notizen löst. Bei aktiver App-Sperre speichert das Sperren deine letzte Änderung und startet die App dann hinter dem Sperrbildschirm neu. So hält die gesperrte App weder deine Wiederherstellungsphrase noch ihre Schlüssel noch die geöffneten Notizen fest. Das passiert, wenn du **App sperren** wählst und wenn sich die App nach der Zeit selbst sperrt, die du unter Einstellungen > Sicherheit > Sperre > \"Erneut sperren nach\" festgelegt hast.",
+        "Entsperre wie gewohnt mit deiner PIN, deinem Passcode oder per [biometrischer Entsperrung](/de/help/biometric-unlock), und die Notiz, die du geöffnet hattest, ist wieder da. Nichts, was du geschrieben hast, geht verloren. [Erinnerungen](/de/help/reminders) klingeln auch bei gesperrter App weiter, als \"Erinnerung\" mit der Uhrzeit."
+      ]
+    },
+    "passkey-unlock": {
+      "q": "Kann ich PrivacyNotes mit einem Passkey entsperren?",
+      "a": [
+        "Ja. In einem Browser ist die biometrische Entsperrung ein Passkey. Ein Passkey ist ein Schlüssel, den dein Gerät oder dein Passwort-Manager für eine einzelne Website aufbewahrt und erst nach deinem Fingerabdruck, deinem Gesicht oder dem Gerätepasswort verwendet. Wenn du die biometrische Entsperrung einschaltest, erstellt PrivacyNotes einen Passkey für sich selbst, und dieser Passkey bestätigt bei jedem Öffnen der App, dass du es bist. Der Passkey enthält außerdem den Schlüssel der biometrischen Entsperrung; wo deine Passkey-App das nicht kann, lässt sich die biometrische Entsperrung nicht einschalten. Bei eingeschalteter App-Sperre und an deinen Passkey gebundener biometrischer Entsperrung braucht eine Kopie des Browser-Speichers dann den Passkey oder deine PIN oder deinen Passcode, wähle also einen Passcode: Eine vierstellige PIN lässt sich erraten.",
+        "Zum Einschalten öffnest du Einstellungen > Sicherheit > Sperre und wählst \"Biometrische Entsperrung aktivieren\". Dein Browser oder Passwort-Manager fragt nach deinem Fingerabdruck, deinem Gesicht oder dem Gerätepasswort und speichert den Passkey, und im Tab steht \"Die biometrische Entsperrung ist an deinen Passkey gebunden.\" Richte sie in jedem Browser ein, in dem du sie haben willst: Auch wenn der Passkey mit deinen anderen Geräten synchronisiert wird, entsperrt er nur die Browser, in denen du sie eingeschaltet hast. Deine PIN, dein Passcode und deine Wiederherstellungsphrase funktionieren daneben weiter. Wenn du sie ausschaltest, bleibt der Passkey in deiner Passkey-App, bis du ihn dort löschst.",
+        "Auch die biometrische Entsperrung der Browser-Erweiterung ist ein Passkey. Er wird nur für die Erweiterung erstellt und öffnet dort ausschließlich deine Logins. Die Apps für iPhone, Android und Mac nutzen statt eines Passkeys die eigene sichere Hardware des Geräts, und die Windows-App nutzt Windows Hello, mit demselben Schalter an derselben Stelle."
+      ]
+    },
+    "passkey-sign-in": {
+      "q": "Kann ich mich mit einem Passkey bei PrivacyNotes anmelden?",
+      "a": [
+        "Ja. In deinem Browser unter [use.privacynotes.app](https://use.privacynotes.app) kann ein Passkey auf einem neuen Gerät das Tippen deiner [Wiederherstellungsphrase](/de/help/phrase-vs-password) ersetzen. Wähle \"Phrase-Login\" und dann \"Mit einem Passkey anmelden\". Deine Passkey-App fragt nach deinem Fingerabdruck, deinem Gesicht oder dem Gerätepasswort, dann läuft die Anmeldung wie bei einer getippten Phrase weiter, sodass die [Anmeldung mit Zwei-Faktor-Authentifizierung](/de/help/enable-2fa) weiterhin nach ihrem Code fragt.",
+        "Füge den Passkey zuerst in einem Browser hinzu, in dem du angemeldet bist: Öffne Einstellungen > Sicherheit > Passkeys und wähle \"Passkey hinzufügen\". Er fragt nach deiner PIN oder deinem Passcode, falls du einen eingerichtet hast, und nach einem aktuellen 2FA-Code, wenn 2FA an ist. Du kannst bis zu 10 hinzufügen. Deine Phrase funktioniert weiter.",
+        "Der Server speichert nur eine auf deinem Gerät verschlüsselte Kopie deiner Phrase, verschlüsselt mit einem Schlüssel aus dem Passkey, und erhält diesen Schlüssel nie. Bewahre den Passkey in einer Passkey-App auf, die nur du öffnen kannst."
+      ]
+    },
+    "vault-passkeys": {
+      "q": "Kann PrivacyNotes Passkeys für andere Websites speichern?",
+      "a": [
+        "Ja. Mit der [Browser-Erweiterung](/de/help/browser-extension) kann eine Website, die einen Passkey anbietet, ihn in deinem Tresor speichern, im Login für diese Website, sodass ein Element das Passwort, den Passkey oder beides enthält. Die Erweiterung fragt zuerst nach. Wenn die Website das nächste Mal einen Passkey verlangt, listet die Erweiterung die Logins auf, die einen enthalten, und du wählst, mit welchem du dich anmeldest. \"Andere Passkey-App verwenden\" übergibt die Anfrage stattdessen an die Passkey-App deines Browsers.",
+        "Die Erweiterung speichert und nutzt Passkeys, solange sie entsperrt ist und Logins eingeschaltet sind. In der App zeigt der Chip \"Passkeys\" im Tresor die Logins, die einen enthalten, und du bearbeitest ein Login, um seinen Passkey zu entfernen. Um die Angebote zu beenden, schalte \"Passkeys anbieten\" in den Einstellungen der Erweiterung aus.",
+        "Jeder Passkey ist auf deinem Gerät verschlüsselt wie der Rest des Tresors, und die Erweiterung öffnet ihn nur, solange sie entsperrt ist."
       ]
     },
     "biometric-unlock": {
@@ -669,7 +731,7 @@
     "backup-app-closed": {
       "q": "Läuft ein automatisches Backup, wenn PrivacyNotes geschlossen ist?",
       "a": [
-        "Auf einem Computer läuft es, solange die App geöffnet ist, und auch, während das Fenster im Infobereich geschlossen ist. Schalte das unter Einstellungen > System > \"Im Infobereich weiterlaufen lassen\" ein. Wurde ein Backup fällig, als die App ganz geschlossen war, läuft es etwa eine Minute nach dem nächsten Öffnen.",
+        "Auf einem Computer läuft es, solange die App geöffnet ist, und auch, während das Fenster im Infobereich geschlossen ist. Schalte das unter Einstellungen > System > \"Im Infobereich weiterlaufen lassen\" ein. Wurde ein Backup fällig, als die App ganz geschlossen war, läuft es etwa eine Minute nach dem nächsten Öffnen, mit oder ohne Internet. Nur ein Gerät, das seit der Anmeldung noch nicht synchronisiert hat, wartet auf diese erste Synchronisierung.",
         "Ein Smartphone lässt eine App dafür nicht im Hintergrund laufen, daher läuft das Backup auf Android und iPhone wenige Sekunden nach dem Öffnen der App, sobald eines fällig ist. Hast du die App länger nicht geöffnet, erinnert dich eine Mitteilung auf dem Smartphone daran, dass ein Backup überfällig ist. Im Browser läuft ein Backup nur, solange PrivacyNotes in einem Tab geöffnet ist."
       ]
     },
@@ -677,7 +739,7 @@
       "q": "Ist die Synchronisierung nicht schon ein Backup?",
       "a": [
         "Nein. Die Synchronisierung hält jedes Gerät auf demselben Stand, wird also eine Notiz auf einem Gerät gelöscht, ist sie auf allen gelöscht. Ein Versehen, ein Fehler in der App oder ein gestohlenes Gerät kann Notizen überall auf einmal entfernen, und die Synchronisierung bringt sie nicht zurück.",
-        "Ein Backup ist eine Kopie von einem früheren Tag, die die Synchronisierung nicht berührt. [Automatische Backups](/de/help/automatic-backups) schreiben diese Kopie in einen Ordner deiner Wahl und bewahren die Kopien mehrerer Tage auf. Enthält ein Backup weit weniger Einträge als das davor, behält PrivacyNotes die älteren Kopien, bis du bestätigst, damit ein versehentlich geleerter Tresor deine guten Backups nicht verdrängt."
+        "Ein Backup ist eine Kopie von einem früheren Tag, die die Synchronisierung nicht berührt. [Automatische Backups](/de/help/automatic-backups) schreiben diese Kopie in einen Ordner deiner Wahl und bewahren die Kopien mehrerer Tage auf. Enthält ein Backup weit weniger Einträge als das davor, und das davor enthielt 20 oder mehr, behält PrivacyNotes die älteren Kopien, bis du bestätigst, damit ein versehentlich geleerter Tresor deine guten Backups nicht verdrängt."
       ]
     },
     "backup-cloud-folder": {
@@ -705,14 +767,14 @@
       "q": "Woran erkenne ich, dass ein automatisches Backup funktioniert hat?",
       "a": [
         "Schau dir \"Letzte Backups\" unter Einstellungen > Backup > Automatisch an. Ein gutes Backup hat ein grünes Häkchen und das Wort \"Geprüft\": PrivacyNotes hat die Datei vor dem Speichern mit deinem Schlüssel erneut geöffnet und die gespeicherte Kopie danach aus dem Ordner zurückgelesen, um sicherzugehen, dass sie Byte für Byte übereinstimmt.",
-        "Ein Backup, das eine Prüfung nicht besteht, wird nicht behalten, deine älteren Kopien bleiben, und die App sagt dir, warum, zum Beispiel dass der Ordner nicht mehr da ist. \"Keine Änderungen, nichts geschrieben\" bedeutet, dass [sich seit dem letzten Backup nichts geändert hat](/de/help/backup-no-changes) und deshalb keine neue Datei nötig war. Um eine Datei selbst zu testen, [stelle sie wieder her](/de/help/restore-backup): Eine Wiederherstellung in dasselbe Konto ändert nichts."
+        "Ein Backup, das eine Prüfung nicht besteht, wird nicht behalten, deine älteren Kopien bleiben, und die App sagt dir, warum, zum Beispiel dass der Ordner nicht mehr da ist. \"Keine Änderungen, nichts geschrieben\" bedeutet, dass [sich seit dem letzten Backup nichts geändert hat](/de/help/backup-no-changes) und deshalb keine neue Datei nötig war. Um eine Datei selbst zu testen, [stelle sie wieder her](/de/help/restore-backup): Eine Wiederherstellung in dasselbe Konto ändert nichts, solange du seit diesem Backup nichts in den Papierkorb verschoben oder gelöscht hast."
       ]
     },
     "backup-no-changes": {
       "q": "Warum steht bei meinem automatischen Backup \"Keine Änderungen, nichts geschrieben\"?",
       "a": [
         "Weil sich in deinem Tresor seit dem letzten Backup nichts geändert hat. Die Datei von letztem Mal enthält bereits alles, daher schreibt PrivacyNotes dieselbe Kopie nicht noch einmal. So behält dein Ordner mehr Tage an Verlauf, denn eine identische Datei verdrängt nie eine ältere. Es zählt als gutes Backup, und das nächste ist einen Zeitraum später fällig.",
-        "PrivacyNotes vergleicht die Anzahl der Einträge, die Einträge im Papierkorb, den Zeitpunkt deiner letzten Änderung, die Einstellungen, die ein Backup enthält (etwa deine Ordner, Themes und Tracker), den Backup-Typ und den Ordner. Hat sich eines davon geändert oder ist die letzte Backup-Datei nicht mehr im Ordner, schreibt es eine neue Datei. \"Jetzt sichern\" prüft auf dieselbe Weise, deshalb füllt zweimaliges Drücken den Ordner nie mit Kopien eines einzigen Tages. Um trotzdem eine neue Datei zu bekommen, zum Beispiel für einen USB-Stick, nutze Einstellungen > Backup > Manuell > \"Alles, verschlüsselt (.pnbackupz)\"."
+        "PrivacyNotes vergleicht die Anzahl der Einträge, die Einträge im Papierkorb, den Änderungszeitpunkt jedes Eintrags, die Einstellungen, die ein Backup enthält (etwa deine Ordner, Themes und Tracker), den Backup-Typ und den Ordner. Hat sich eines davon geändert oder ist die letzte Backup-Datei nicht mehr im Ordner, schreibt es eine neue Datei. \"Jetzt sichern\" prüft auf dieselbe Weise, deshalb füllt zweimaliges Drücken den Ordner nie mit Kopien eines einzigen Tages. Um trotzdem eine neue Datei zu bekommen, zum Beispiel für einen USB-Stick, nutze Einstellungen > Backup > Manuell > \"Alles, verschlüsselt (.pnbackupz)\"."
       ]
     },
     "backup-time-name": {
@@ -739,7 +801,7 @@
     "restore-new-device": {
       "q": "Wie stelle ich ein automatisches Backup auf einem neuen Gerät wieder her?",
       "a": [
-        "Melde dich auf dem neuen Gerät mit derselben Wiederherstellungsphrase oder demselben Google-, Apple- oder GitHub-Login an und warte, bis die Fußzeile \"Synced\" anzeigt. Die meisten deiner Notizen sind dann über die Synchronisierung bereits zurück.",
+        "Melde dich auf dem neuen Gerät mit derselben Wiederherstellungsphrase oder demselben Google-, Apple- oder GitHub-Login an und warte, bis die Fußzeile \"Synchronisiert\" anzeigt. Die meisten deiner Notizen sind dann über die Synchronisierung bereits zurück.",
         "Öffne dann Einstellungen > Backup > Wiederherstellung, wähle \"Verschlüsseltes Backup (.pnbackup, .pnbackupz)\" und nimm die neueste Datei aus [deinem Backup-Ordner](/de/help/automatic-backups). Die Wiederherstellung fügt hinzu, was dem Konto fehlt, und behält, was schon da ist ([so funktioniert eine Wiederherstellung](/de/help/restore-backup)). Ein verschlüsseltes Backup lässt sich nur in dem Konto öffnen, das es erstellt hat."
       ]
     },
@@ -760,7 +822,7 @@
     "image-quality": {
       "q": "Verändert oder komprimiert PrivacyNotes meine Bilder?",
       "a": [
-        "Ja. Beide Einstellungen sind standardmäßig an, weil wir unsere Nutzer lieben: Du sollst [Speicherplatz sparen](/de/help/storage-usage) und deine Privatsphäre behalten. Platzsparer verkleinert ein großes Bild auf 2048 Pixel und speichert es als JPEG mit 85 % Qualität, was alle Details behält, die ein Bildschirm zeigen kann. Standortdaten entfernen streicht die EXIF-Metadaten, die eine Kamera in ein Foto schreibt, samt GPS-Position, bevor das Bild gespeichert wird. Beides gilt für jedes Bild in der App: in eine Notiz eingefügt, als Datei hinzugefügt oder importiert. Zwei Ausnahmen: Ein GIF behält seine Größe, damit seine Animation weiter läuft, und eine Datei, die an einem Eintrag im Tresor hängt, bleibt genau so, wie sie war.",
+        "Ja. Beide Einstellungen sind standardmäßig an, weil wir unsere Nutzer lieben: Du sollst [Speicherplatz sparen](/de/help/storage-usage) und deine Privatsphäre behalten. Platzsparer verkleinert ein großes Bild auf 2048 Pixel und speichert es als JPEG mit 85 % Qualität, was alle Details behält, die ein Bildschirm zeigen kann. Standortdaten entfernen streicht die EXIF-Metadaten, die eine Kamera in ein Foto schreibt, samt GPS-Position, bevor das Bild gespeichert wird. Beides gilt für jedes Bild, das die App lesen kann: in eine Notiz eingefügt, als Datei hinzugefügt oder importiert. Ein Bild, das sie nicht lesen kann, etwa AVIF, SVG oder eines, das sich nicht öffnen lässt, wird beim Hinzufügen als Datei oder beim Import so gespeichert, wie es ankam, Standortdaten eingeschlossen. Zwei Ausnahmen: Ein GIF behält seine Größe, damit seine Animation weiter läuft, und eine Datei, die an einem Eintrag im Tresor hängt, bleibt genau so, wie sie war.",
         "Du kannst beide Optionen unter **Einstellungen > Speicher > Bilder** einzeln ausschalten; dort gibt es für Kontaktfotos einen dritten Schalter, der sie bei 512 Pixeln hält. Die Einstellungen gelten nur für neue Bilder; Dateien, die keine Bilder sind, werden genau so gespeichert, wie sie sind. HEIC- und TIFF-Bilder werden in JPEG umgewandelt, weil nur Safari sie anzeigen kann. [Ein Backup, das du wiederherstellst](/de/help/restore-backup), wird Byte für Byte zurückgeschrieben."
       ]
     },
@@ -768,7 +830,7 @@
       "q": "Was zählt zu meinem Speicher, und wie schaffe ich Platz?",
       "a": [
         "Alles, was du synchronisierst, in seiner verschlüsselten Größe: Notiztext, Bilder, Audioaufnahmen und Dateianhänge. Die Leiste unter Einstellungen > Speicher zeigt die Gesamtsumme; der eigene Fußabdruck jeder Notiz steht in ihren Notiz-Optionen als \"Belegter Speicher\". [Notizen im Papierkorb zählen weiter mit, bis der Papierkorb geleert ist](/de/help/trash-auto-delete).",
-        "Um schnell Platz zu schaffen, öffne Dateien, sortiere nach Größe und [lösche die größten Objekte](/de/help/storage-after-delete) - Anhänge stellen Text in fast jedem Konto in den Schatten. Leere dann den Papierkorb: Die Papierkorb-Ansicht zeigt, wie viel Platz \"Leeren\" freigibt. Text allein füllt fast nie ein Speicherlimit; selbst die kostenlosen 50 MB fassen Zehntausende einfache Notizen."
+        "Um schnell Platz zu schaffen, öffne Dateien, sortiere nach Größe und [lösche die größten Objekte](/de/help/storage-after-delete) - Anhänge stellen Text in fast jedem Konto in den Schatten. Leere dann den Papierkorb: Die Papierkorb-Ansicht zeigt, wie viel Platz \"Leeren\" freigibt. Jeder Tarif fasst bis zu 10.000 Objekte, den Papierkorb eingeschlossen: Notizen, Aufgaben, Logins und jede andere Art. Text allein füllt die Bytes fast nie."
       ]
     },
     "upload-failed": {
@@ -788,22 +850,22 @@
     "dead-mans-switch": {
       "q": "Was löscht der Totmannschalter, und was bleibt auf meinen Geräten?",
       "a": [
-        "Nur die Kopie auf dem Server. Wenn der Schalter eingeschaltet ist und keines deiner Geräte im gewählten Zeitraum online geht, irgendwo zwischen 1 Monat und 5 Jahren, löscht der Server deine verschlüsselten Notizen, ihren Verlauf, deine Dateien und deine Einstellungen. Nach Ablauf des Zeitraums wartet er als Sicherheitspuffer noch zwei Wochen, bevor er etwas löscht: Ein Gerät, das in diesen zwei Wochen online geht, stoppt die Löschung noch. Dein Konto bleibt bestehen, deine Wiederherstellungsphrase meldet dich also weiterhin an, und Pro bleibt bestehen. Ein Speicher-Abo bleibt ebenfalls bestehen und verlängert sich weiter. Es gibt keine Warnung per E-Mail, und die Löschung lässt sich nicht rückgängig machen.",
+        "Nur die Kopie auf dem Server. Wenn der Schalter eingeschaltet ist und keines deiner Geräte online geht und auch keine verbundene Browser-Erweiterung oder Kommandozeile genutzt wird, im gewählten Zeitraum, irgendwo zwischen 1 Monat und 5 Jahren, löscht der Server deine verschlüsselten Notizen, ihren Verlauf, deine Dateien und deine Einstellungen. Nach Ablauf des Zeitraums wartet er als Sicherheitspuffer noch zwei Wochen, bevor er etwas löscht (selten bis zu drei Wochen, wenn viele Konten gleichzeitig an der Reihe sind): Ein Gerät, das in dieser Zeit online geht, stoppt die Löschung noch. Dein Konto bleibt bestehen, deine Wiederherstellungsphrase meldet dich also weiterhin an, und Pro bleibt bestehen. Ein Speicher-Abo bleibt ebenfalls bestehen und verlängert sich weiter. Es gibt keine Warnung per E-Mail, und die Löschung lässt sich nicht rückgängig machen. Verschlüsselte Kopien der gelöschten Dateien können bis zu 40 Tage in unserem Datei-Papierkorb und in Backups bleiben.",
         "Deine Geräte behalten ihre Notizen. Kommt ein Gerät nach einer Löschung wieder online, hört es auf zu synchronisieren und fragt dich zuerst: Lade ein Backup von allem herunter, was es enthält und was du später [wiederherstellen](/de/help/restore-backup) kannst, und entferne dann die Notizen von diesem Gerät. Es meldet sich ab, und die nächste Anmeldung beginnt im leeren Konto. Eine Datei, die dieses Gerät nie geöffnet hat, kann auf dem Server schon fehlen, und das Backup führt sie dann als fehlend auf. Halte die App auf jedem Gerät aktuell, denn eine ältere Version kann nicht zuerst fragen.",
-        "Schalte ihn unter Einstellungen > ID & Sync > \"Totmannschalter\" ein und wähle den Zeitraum. Wenn du die App auf einem deiner Geräte online öffnest, startet die Zeit neu, und das Datum bei \"Löscht am\" in diesem Tab zeigt den frühesten Tag, an dem die Löschung stattfinden kann, die zwei Wochen eingerechnet. Schalte den Schalter jederzeit aus, um sie zu stoppen."
+        "Schalte ihn unter Einstellungen > ID & Sync > \"Totmannschalter\" ein und wähle den Zeitraum. Wenn du die App auf einem deiner Geräte online öffnest oder eine verbundene Browser-Erweiterung oder Kommandozeile nutzt, startet die Zeit neu. Entferne also eine Kommandozeile, die von selbst speichert, sonst wartet der Schalter auf sie. Das Datum bei \"Löscht am\" in diesem Tab zeigt den frühesten Tag, an dem die Löschung stattfinden kann, die zwei Wochen eingerechnet. Schalte den Schalter jederzeit aus, um sie zu stoppen."
       ]
     },
     "leaving": {
       "q": "Wie verlasse ich PrivacyNotes vollständig?",
       "a": [
         "[Erst exportieren](/de/help/export), dann löschen - beides in Eigenregie. Zwei Seiten decken jeden Ausstiegsweg ab. Unter Einstellungen > Backup > Manuell findest du \"Alles, unverschlüsselt (.zip)\" für eine vollständige Kopie. Unter Einstellungen > Transfer > Export findest du \"Nur Notizen (.zip)\" in Markdown und das HTML-Archiv für deine nächste Notiz-App und \"Tresor-Export (.json)\" im Bitwarden-kompatiblen Format für deinen nächsten Passwort-Manager. Exporte werden auf deinem Gerät erzeugt.",
-        "Dann Einstellungen > Konto > \"Konto und Daten löschen...\": Tippe DELETE, und deine synchronisierten Notizen, Dateien, Geräte, Einstellungen und das Konto selbst werden dauerhaft entfernt. Datensätze eines Speicher-Abos und eine minimale Sicherheitskennung bleiben bestehen, und vor der Löschung erstellte Backups laufen nach sieben Tagen ab ([Details](/de/help/delete-account)). [Ein aktives Speicher-Add-on muss zuerst gekündigt werden](/de/help/manage-storage-addon), und zwar unter Einstellungen > Speicher. Keine Dark Patterns und keine Rückgewinnungs-E-Mails - deine Daten gehören dir, auch auf dem Weg hinaus."
+        "Dann Einstellungen > Konto > \"Konto und Daten löschen...\": Tippe DELETE, und deine synchronisierten Notizen, Dateien, Geräte, Einstellungen und das Konto selbst werden dauerhaft entfernt. Datensätze eines Speicher-Abos und eine minimale Sicherheitskennung bleiben bestehen, vor der Löschung erstellte Backups laufen nach sieben Tagen ab, verschlüsselte Kopien von Dateien nach bis zu 30 Tagen ([Details](/de/help/delete-account)). [Ein aktives Speicher-Add-on muss zuerst gekündigt werden](/de/help/manage-storage-addon), und zwar unter Einstellungen > Speicher. Keine Dark Patterns und keine Rückgewinnungs-E-Mails - deine Daten gehören dir, auch auf dem Weg hinaus."
       ]
     },
     "data-rights": {
       "q": "Wie geht PrivacyNotes mit der DSGVO und meinen Datenrechten um?",
       "a": [
-        "Vor allem, indem wir so wenig wie möglich vorhalten. Registrierst du dich mit einer Phrase, gibt es keinen Namen, keine E-Mail und keine Identität in unseren Akten, die man anfordern könnte: Deine Daten sind Chiffretext unter einem zufälligen öffentlichen Schlüssel, [gehostet in Zürich, Schweiz](/de/help/data-location). Meldest du dich mit Google, Apple oder GitHub an, werden die E-Mail und die Konto-ID dieses Logins mit diesem Schlüssel verknüpft. Zahlungsdaten bleiben bei [Paddle](https://www.paddle.com), Apple oder Google; wir führen die Bestell- und Abodatensätze, die nötig sind, um Käufe freizuschalten und wiederherzustellen.",
+        "Vor allem, indem wir so wenig wie möglich vorhalten. Registrierst du dich mit einer Phrase, gibt es keinen Namen, keine E-Mail und keine Identität in unseren Akten, die man anfordern könnte: Deine Daten sind Chiffretext unter einem zufälligen öffentlichen Schlüssel, [gehostet in Zürich, Schweiz, und in der EU](/de/help/data-location). Meldest du dich mit Google, Apple oder GitHub an, werden die E-Mail und die Konto-ID dieses Logins mit diesem Schlüssel verknüpft. Zahlungsdaten bleiben bei [Paddle](https://www.paddle.com), Apple oder Google; wir führen die Bestell- und Abodatensätze, die nötig sind, um Käufe freizuschalten und wiederherzustellen.",
         "Die meisten Rechte übst du in Eigenregie aus, ohne Antragsformular: Auskunft und Übertragbarkeit sind Einstellungen > Transfer ([vollständiger Export in offenen Formaten](/de/help/export)), Löschung ist Einstellungen > Konto > \"Konto und Daten löschen...\" (einige Abrechnungs- und Sicherheitsdatensätze bleiben, [so siehst du, was die Löschung entfernt](/de/help/delete-account)), und Berichtigung ist das Bearbeiten deiner Notizen. Die formale Fassung, einschließlich wie du uns für alles erreichst, was die App nicht selbst kann, steht in der [Datenschutzerklärung](https://lifetimelabs.dev/privacy/)."
       ]
     },
@@ -818,7 +880,7 @@
     "pro-not-active": {
       "q": "Ich habe Pro bezahlt, aber es ist nicht aktiv. Was jetzt?",
       "a": [
-        "Warte eine Minute, dann lade die App neu. Nach dem Checkout fragt die App etwa 20 Sekunden lang nach und schaltet sich von selbst frei, und ein Neuladen prüft den Pro-Status beim Start erneut. Eine [Krypto-Zahlung](/de/help/pay-with-crypto) dauert länger, und ein Banner zeigt, wo sie steht. Ist die Zahlung angekommen, aber die Aktivierung hängt hinterher, sagt ein Banner \"Zahlung erhalten, aber die Pro-Aktivierung dauert länger als üblich\" - dieser Zustand löst sich in fast allen Fällen von selbst. [In Store-Builds](/de/help/store-purchases) wird ein Kauf, der die Validierung nicht besteht, beim Neustart der App erneut versucht, und ein Kauf, der nie aktiviert wird, wird vom Store automatisch innerhalb von 3 Tagen erstattet.",
+        "Warte eine Minute, dann lade die App neu. Nach dem Checkout fragt die App etwa 20 Sekunden lang nach und schaltet sich von selbst frei, und ein Neuladen prüft den Pro-Status beim Start erneut. Eine [Krypto-Zahlung](/de/help/pay-with-crypto) dauert länger, und ein Banner zeigt, wo sie steht. Ist die Zahlung angekommen, aber die Aktivierung hängt hinterher, sagt ein Banner \"Zahlung erhalten, aber die Pro-Aktivierung dauert länger als üblich\" - dieser Zustand löst sich in fast allen Fällen von selbst. [In Store-Builds](/de/help/store-purchases) wird ein Kauf, der die Validierung nicht besteht, beim Neustart der App erneut versucht, und auf Android wird ein Kauf, der nie aktiviert wird, von Google Play automatisch innerhalb von 3 Tagen erstattet.",
         "Immer noch gesperrt? Fast immer ist es eine Konto-Verwechslung: Pro hängt an dem Konto, das beim Kauf angemeldet war, eine andere Phrase - oder ein Google-, Apple- oder GitHub-Login statt deines Phrasen-Tresors - ist also ein anderes Konto. Vergleiche die Konto-ID unter Einstellungen > ID & Sync auf dem Gerät, auf dem du Pro gekauft hast. Falls es wirklich feststeckt, [melde es](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/issues) und gib diese Konto-ID an: Sie identifiziert den Kauf und verrät nichts über deine Notizen."
       ]
     },
@@ -841,7 +903,7 @@
       "q": "Obtainium, direkte APK oder Google Play: welcher Android-Download?",
       "a": [
         "Nimm Google Play, wenn du den üblichen Weg willst: Es installiert und aktualisiert die App wie jede andere, und Käufe in der App rechnet Google ab. Nimm [Obtainium](/de/help/obtainium), wenn die App sich ohne Google-Konto selbst aktuell halten soll, und [die direkte APK](/de/help/android-updates), wenn du dafür lieber keine zweite App laufen lässt. Obtainium und die APK geben dir dieselbe Datei, mit demselben Schlüssel signiert, du kannst also jederzeit zwischen diesen beiden wechseln: Obtainium übernimmt eine bereits per Sideload installierte APK, und die Website-APK installiert sich über eine von Obtainium. Der Play-Build ist mit einem anderen Schlüssel signiert, ein Wechsel zwischen Play und einem der beiden anderen Wege heißt also, die App zuerst zu deinstallieren.",
-        "Du kannst dich später jederzeit umentscheiden. Vor jedem Wechsel, der ein Deinstallieren voraussetzt, prüfe, dass die App \"Synced\" anzeigt, und halte deine Wiederherstellungsphrase oder [einen Anmelde-QR-Code von einem anderen Gerät](/de/help/add-second-device) bereit, denn das Deinstallieren löscht die lokale Kopie."
+        "Du kannst dich später jederzeit umentscheiden. Vor jedem Wechsel, der ein Deinstallieren voraussetzt, prüfe, dass die App \"Synchronisiert\" anzeigt, und halte deine Wiederherstellungsphrase oder [einen Anmelde-QR-Code von einem anderen Gerät](/de/help/add-second-device) bereit, denn das Deinstallieren löscht die lokale Kopie."
       ]
     },
     "markdown-folder": {
@@ -886,6 +948,13 @@
         "Ein Ordner der obersten Ebene gehört mit allem darin zu einem Bereich, und **Nach Arbeit verschieben** oder **Nach Privat verschieben** in seinem Menü oder im Menü eines beliebigen Eintrags verschiebt ihn hinüber. Ein Eintrag ohne Ordner ist Privat, ebenso alles, was du anlegst, während Alle geöffnet ist. Um Bereiche nicht mehr zu nutzen, schalte Einstellungen > Listen > Bereiche aus: Jeder Eintrag wird angezeigt, nichts wird verschoben, und jeder Ordner behält seinen Bereich für den Fall, dass du sie wieder einschaltest. Bereiche brauchen Pro."
       ]
     },
+    "hide-sections": {
+      "q": "Kann ich Bereiche ausblenden, die ich nicht nutze, etwa den Kalender oder das Tagebuch?",
+      "a": [
+        "Ja. Klick in der Seitenleiste mit der rechten Maustaste auf einen Bereich, auf dem Handy halte ihn gedrückt, und entferne das Häkchen bei **In der Seitenleiste anzeigen**. Der Bereich verschwindet aus der Seitenleiste, und nichts darin wird gelöscht: Seine Einträge bleiben in deiner Bibliothek, werden weiter synchronisiert und sind wieder da, sobald du den Bereich wieder anzeigst. Das Auge neben der Beschriftung **Inhalte** in der Seitenleiste listet alle Bereiche auf einmal auf, mit einem Kästchen für jeden.",
+        "Einstellungen > Listen > Seitenleiste und Alle enthält dieselbe Auswahl als Tabelle, plus eine zweite. Die Spalte **Seitenleiste** bestimmt die Bereiche, die die Seitenleiste zeigt, und die Spalte **Alle** bestimmt, welche Arten von Einträgen die Liste Alle enthält, sodass Tagebucheinträge aus Alle verschwinden können, während Tagebücher in der Seitenleiste bleibt. Beide Auswahlen folgen deinem Konto auf deine anderen Geräte, und beide sind kostenlos. Um Tagebücher zu behalten, aber die Karte \"Wie geht es dir heute?\" loszuwerden, blende sie in [den Check-in-Optionen](/de/help/daily-check-in) aus."
+      ]
+    },
     "note-links": {
       "q": "Wie verlinke ich eine Notiz mit einer anderen?",
       "a": [
@@ -910,7 +979,7 @@
     "add-second-device": {
       "q": "Wie melde ich mich auf einem zweiten Gerät an?",
       "a": [
-        "Öffne auf dem Gerät, das du schon nutzt, Einstellungen > Sicherheit > Phrase. Dort stehen die Wörter deiner Phrase und ein Anmelde-QR-Code. Wähl auf dem neuen Gerät \"Phrase-Login\" und scanne den QR-Code mit der Kamera, lade ein Foto davon hoch oder tippe die Wörter ein. Deine Notizen sind in Sekunden da.",
+        "Öffne auf dem Gerät, das du schon nutzt, Einstellungen > Sicherheit > Phrase. Dort stehen die Wörter deiner Phrase und ein Anmelde-QR-Code. Wähl auf dem neuen Gerät \"Phrase-Login\" und dann \"QR mit Kamera scannen\", lade ein Foto des QR-Codes hoch oder tippe die Wörter ein. Deine Notizen sind in Sekunden da. Nutze den Scanner der App: Die Kamera-App eines Handys meldet mit diesem QR-Code nicht an. Ein QR-Code, den du früher gespeichert hast, funktioniert hier weiterhin, aber ein älterer ist ein Link, den eine Kamera-App öffnen kann. Wähl also noch einmal **QR speichern** und lösche das alte Bild. Wenn der Scanner den QR-Code nicht liest, aktualisiere die App oder tippe die Wörter ein.",
         "[Ein kostenloses Konto deckt 2 Geräte](/de/help/device-limit), Pro beliebig viele, und zwei Browser auf einem Computer zählen als ein einziges Gerät. Behandle den QR-Code genau wie die Phrase, die er trägt: zeig ihn niemandem, und lass ihn nie in einer Fotomediathek landen, die in die Cloud von jemand anderem synchronisiert."
       ]
     },
@@ -918,7 +987,8 @@
       "q": "Kann ich ein Gerät vom Sync abhalten, ohne mich abzumelden?",
       "a": [
         "Ja. Öffne Einstellungen > ID & Sync und drück \"Synchronisierung pausieren\". Dieses Gerät schickt dann nichts mehr an den Server: weder Notizen noch Einstellungen noch Dateien. Du schreibst genau wie vorher weiter, alles sammelt sich lokal, und sobald du fortsetzt, geht alles hoch.",
-        "Die Pause gehört allein diesem Gerät. Sie wandert nicht zu deinen anderen Geräten und hebt sich nie von selbst auf, denn ein Schalter, der sagt \"dieses Gerät redet mit niemandem\", darf von nichts außer dir zurückgestellt werden. Eines läuft mit Absicht weiter: der kleine Heartbeat, über den ein entferntes Gerät erfährt, dass es entfernt wurde. So löscht sich ein [verlorenes Gerät](/de/help/lost-device) trotzdem selbst."
+        "Die Pause gehört allein diesem Gerät. Sie wandert nicht zu deinen anderen Geräten und hebt sich nie von selbst auf, denn ein Schalter, der deine Notizen auf diesem Gerät hält, darf von nichts außer dir rückgängig gemacht werden. Eines läuft mit Absicht weiter: der kleine Heartbeat, über den ein entferntes Gerät erfährt, dass es entfernt wurde. So löscht sich ein [verlorenes Gerät](/de/help/lost-device) trotzdem selbst.",
+        "So startet ein neues Konto, wenn \"Über Geräte hinweg synchronisieren\" bei der Anmeldung ausgeschaltet bleibt, was bei einem nur mit einer Phrase erstellten Konto der Standard ist. Solange du die Synchronisierung nicht einschaltest, existieren deine Notizen nur auf diesem Gerät: Wenn du es verlierst oder seine Browserdaten löschst, bringen weder deine Phrase noch dein Login sie zurück. Exportiere deshalb ab und zu ein Backup."
       ]
     },
     "wifi-only": {
@@ -932,15 +1002,36 @@
       "q": "Was passiert, wenn ich meine Browserdaten oder Cookies lösche?",
       "a": [
         "Die Web-App hält deine Notizen im Speicher deines Browsers. Site-Daten für PrivacyNotes zu löschen wischt also die lokale Kopie weg und meldet dich ab. Alles, was schon synchronisiert war, ist sicher: Melde dich mit deiner Wiederherstellungsphrase an, und es kommt zurück. Was noch nicht synchronisiert war, ist weg, weil wir nie eine Kopie davon hatten.",
-        "Also zwei Dinge. Prüf, ob die Fußzeile \"Synced\" sagt, bevor du etwas löschst, und bewahr deine Phrase in einem Passwortmanager auf, denn ein geleerter Browser kann dich nicht nett danach fragen. [Die Desktop- und Mobil-Apps](/de/help/platforms) sind überhaupt nicht betroffen: [Sie haben ihren eigenen Speicher](/de/help/data-on-disk), den eine Browser-Reinigung nie anfasst."
+        "Also zwei Dinge. Prüf, ob die Fußzeile \"Synchronisiert\" sagt, bevor du etwas löschst, und bewahr deine Phrase in einem Passwortmanager auf, denn ein geleerter Browser kann dich nicht nett danach fragen. [Die Desktop- und Mobil-Apps](/de/help/platforms) sind überhaupt nicht betroffen: [Sie haben ihren eigenen Speicher](/de/help/data-on-disk), den eine Browser-Reinigung nie anfasst."
+      ]
+    },
+    "phrase-not-saved": {
+      "q": "Warum steht in einem Banner, dass mich ein Neuladen oder Schließen dieses Tabs abmeldet?",
+      "a": [
+        "Weil dieser Browser deine Wiederherstellungsphrase nicht schützen konnte, deshalb hat PrivacyNotes sie nicht auf diesem Gerät gespeichert. Die App speichert die Phrase nie ungeschützt, sondern hält sie nur im offenen Tab, und ein Neuladen oder ein geschlossener Tab beendet die Anmeldung. Deine Notizen sind sicher: Alles, was synchronisiert wurde, kommt zurück, wenn du dich wieder anmeldest.",
+        "Um angemeldet zu bleiben, aktiviere die App-Sperre unter Einstellungen > Sicherheit > Sperre. Deine PIN oder dein Passcode schützt dann die Phrase, das Banner verschwindet, und beim nächsten Besuch siehst du den Sperrbildschirm statt der Anmeldung. Bis dahin halte [deine Wiederherstellungsphrase](/de/help/lost-phrase) bereit. [Die Desktop- und Mobil-Apps](/de/help/platforms) schützen die Phrase mit dem Gerät selbst."
+      ]
+    },
+    "shared-computer": {
+      "q": "Kann ich PrivacyNotes auf einem geteilten oder öffentlichen Computer nutzen?",
+      "a": [
+        "Ja. Öffne die Web-App unter https://use.privacynotes.app, melde dich mit deiner Wiederherstellungsphrase an und entferne das Häkchen bei **Diesem Gerät vertrauen**, bevor du weitermachst. Der Browser behält die Anmeldung dann nur in diesem Tab: Schließt du den Tab oder das Fenster, bist du abgemeldet, und beim nächsten Besuch wird wieder nach deiner vollständigen Phrase gefragt. Es muss nichts installiert werden, und du musst nichts auf einem USB-Stick mitbringen.",
+        "Deine Notizen sind auf dem Computer verschlüsselt, und die Phrase, die sie öffnet, verschwindet mit dem Tab. App-Sperre und biometrische Entsperrung bleiben dort aus, weil beide eine geschützte Kopie deiner Phrase auf dem Gerät aufbewahren. Das Kästchen erscheint nur, wenn du dich mit [deiner Wiederherstellungsphrase](/de/help/lost-phrase) anmeldest: Eine Anmeldung mit Google, Apple oder GitHub vertraut dem Gerät immer. Wenn du fertig bist, melde dich ab, wodurch auch die verschlüsselte Kopie deiner Notizen aus diesem Browser gelöscht wird. Auf deinen eigenen Geräten lass das Häkchen gesetzt, um angemeldet zu bleiben."
       ]
     },
     "android-backup": {
       "q": "Sind meine Notizen im Backup meines Android-Handys?",
       "a": [
         "Nein. Die Android-App hält ihre Daten aus dem Cloud-Backup des Handys heraus, es landet also nichts davon in Google Drive. Der Grund ist der Schlüssel, nicht die Notizen: Wo du **Diesem Gerät vertrauen** gewählt hast, liegt deine Wiederherstellungsphrase auf diesem Gerät, damit du angemeldet bleibst, und ein Cloud-Backup ist kein Ort für den Schlüssel, der deine Notizen entschlüsselt.",
-        "Ein neues Handy startet deshalb leer: App installieren, [mit deiner Phrase anmelden](/de/help/add-second-device), und alles Synchronisierte kommt an. Die Wiederherstellung wartet auf diese erste Synchronisierung, damit ein mitgebrachtes Backup mit dem abgeglichen wird, was das Konto schon enthält, statt doppelt hinzugefügt zu werden. Was nie synchronisiert wurde, liegt nur auf dem alten Handy, prüfe also zuerst, ob die Fußzeile \"Synced\" sagt, oder nimm \"Alles, unverschlüsselt (.zip)\" aus Einstellungen > Backup > Manuell mit ([welches Backup du erstellen solltest](/de/help/backup-strategy)).",
+        "Ein neues Handy startet deshalb leer: App installieren, [mit deiner Phrase anmelden](/de/help/add-second-device), und alles Synchronisierte kommt an. Die Wiederherstellung wartet auf diese erste Synchronisierung, damit ein mitgebrachtes Backup mit dem abgeglichen wird, was das Konto schon enthält, statt doppelt hinzugefügt zu werden. Was nie synchronisiert wurde, liegt nur auf dem alten Handy, prüfe also zuerst, ob die Fußzeile \"Synchronisiert\" sagt, oder nimm \"Alles, unverschlüsselt (.zip)\" aus Einstellungen > Backup > Manuell mit ([welches Backup du erstellen solltest](/de/help/backup-strategy)).",
         "Eine direkte Übertragung von Handy zu Handy bei der Einrichtung ist etwas anderes: Manche Handys übertragen dabei App-Daten, und Android gibt einer App keine verlässliche Möglichkeit, das abzulehnen. Diese Kopie verlässt deine beiden Geräte nie, lösche das alte Handy danach also vollständig."
+      ]
+    },
+    "ios-backup": {
+      "q": "Sind meine Notizen in meinem iPhone-Backup enthalten?",
+      "a": [
+        "Nein. Die iPhone-App hält ihre Daten aus den Backups des Telefons heraus, daher gelangt nichts davon in das iCloud-Backup oder in ein Backup, das du auf einem Computer erstellst. Das gilt auch für Einträge, die du in die App geteilt hast und die sie noch nicht übernommen hat. Der Grund ist der Schlüssel, nicht die Notizen: Wo du **Diesem Gerät vertrauen** gewählt hast, wird deine Wiederherstellungsphrase auf diesem Gerät gehalten, damit du angemeldet bleibst, und ein Backup ist kein Ort für den Schlüssel, der deine Notizen entschlüsselt.",
+        "Ein neues iPhone beginnt deshalb leer: Installiere die App, [melde dich mit deiner Phrase an](/de/help/add-second-device), und alles, was synchronisiert war, kommt an. Was nie synchronisiert wurde, liegt nur auf dem alten Telefon. Prüfe also zuerst, ob die Fußzeile \"Synchronisiert\" anzeigt, oder nimm eine Datei \"Alles, unverschlüsselt (.zip)\" aus Einstellungen > Backup > Manuell mit ([welches Backup du erstellen solltest](/de/help/backup-strategy))."
       ]
     },
     "print": {
@@ -1003,8 +1094,8 @@
     "storage-after-delete": {
       "q": "Ich habe Dateien gelöscht, aber mein Speicher ist nicht gesunken. Warum?",
       "a": [
-        "Dein Platz ist bereits frei. In dem Moment, in dem die Löschung synchronisiert, zählen diese Bytes nicht mehr [gegen dein Kontingent](/de/help/storage-usage), auf dem Server ebenso wie auf diesem Gerät. Zeigt der Balken noch den alten Wert, drück das Aktualisieren-Symbol daneben: Das zählt vom Server neu und lässt alles weg, was schon zum Löschen vorgemerkt ist. Ein Gerät, das offline war, behält seinen eigenen letzten Stand, bis es aufholt.",
-        "Die \"wenigen Tage\", von denen die App spricht, betreffen die verschlüsselte Datei selbst und nicht dein Kontingent, und dieses Warten ist Absicht. Eine Datei aus dem Speicher zu löschen ist endgültig, es gibt keinen Papierkorb, aus dem man sie zurückholt. Ein Gerät, das noch nicht fertig synchronisiert hat, kennt deine Notizen nur unvollständig und könnte ein Bild löschen, das eine andere Notiz noch zeigt. Eine Datei wartet deshalb mindestens 24 Stunden, und nur ein Gerät mit sauber abgeschlossenem Sync entfernt sie. Diese Geduld kostet dich nichts, denn der Platz wurde am Tag der Löschung gutgeschrieben."
+        "Der Platz kommt etwa einen Tag nach dem Löschen zurück. Eine gelöschte Datei zählt weiter [gegen dein Kontingent](/de/help/storage-usage), bis die verschlüsselte Datei selbst aus dem Speicher entfernt ist, auf dem Server ebenso wie auf diesem Gerät. Ist es so weit, drück das Aktualisieren-Symbol neben dem Balken, falls er noch den alten Wert zeigt: Das zählt vom Server neu. Ein Gerät, das offline war, behält seinen eigenen letzten Stand, bis es aufholt.",
+        "Dieses Warten auf die verschlüsselte Datei ist Absicht. Eine Datei aus dem Speicher zu löschen ist endgültig, es gibt keinen Papierkorb, aus dem man sie zurückholt. Ein Gerät, das noch nicht fertig synchronisiert hat, kennt deine Notizen nur unvollständig und könnte ein Bild löschen, das eine andere Notiz noch zeigt. Eine Datei wartet deshalb mindestens 24 Stunden, und nur ein Gerät mit sauber abgeschlossenem Sync entfernt sie. Bis dahin zählt sie weiter, lösche also früh, wenn du nah an deinem Limit bist."
       ]
     },
     "spoiler-text": {
@@ -1034,7 +1125,7 @@
         "Ja. Tippe `=` in eine Tabellenzelle, um eine Funktion auszuwählen, oder schreibe die Formel selbst. Die Zelle zeigt dann das Ergebnis statt des Textes, und jedes Ergebnis aktualisiert sich sofort, wenn du eine Zelle änderst, die es liest. Zellen heißen nach Spaltenbuchstabe und Zeilennummer, die Kopfzeile zählt als Zeile 1, deine erste Datenzeile ist also Zeile 2. Die Ergebnisse funktionieren in jedem Konto; die Auswahl über das Menü ist Pro.",
         "Um alles auf einmal auszuprobieren, lade die Beispielnotiz herunter, öffne dann Einstellungen > Transfer > Import, wähle **Markdown-Dateien** und nimm die Datei.",
         "[Beispielnotiz (.md)](/marketing/table-formulas-examples.md)",
-        "Das sind die Funktionen, und sie lassen sich mit `+`, `-`, `*`, `/` und Klammern kombinieren:",
+        "Das sind die Funktionen, und sie lassen sich mit `+`, `-`, `*`, `/`, `^` für eine Potenz und Klammern kombinieren:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` und `COUNT` arbeiten über einen Bereich, wie in `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` und `LOG` arbeiten mit einem einzelnen Wert, wie in `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` und `PHI` sind Konstanten, und `RAND` liefert eine Zufallszahl\n- `=B7-B2` zieht eine Zelle von einer anderen ab, und `=SUM(B2:B10)*0.2` berechnet einen Prozentsatz einer Summe",
         "Klicke auf eine Zelle, die ein Ergebnis zeigt, und die Formel kommt zurück, bereit zum Ändern. Deine Notiz speichert die Formel selbst, nie das Ergebnis, sodass ein Export und jede andere Markdown-App `=SUM(B2:B10)` genau so zeigen, wie du es geschrieben hast."
       ]
@@ -1066,7 +1157,7 @@
         "Ja. Öffne Einstellungen > Editor und wähle unter **Notizschrift** Sans, Serif oder Mono. Öffne dann direkt darunter **Schrift für Sans** (oder Serif oder Mono) und such dir eine Schrift aus. Deine Notizen ändern sich sofort. Jede der drei kann ihre eigene Schrift haben. Die Auswahl bleibt auf diesem Gerät, weil jeder Computer seine eigenen Schriften hat, und in deine Notizen wird nichts geschrieben.",
         "Die Liste zeigt nur gängige Schriften. Browser verraten einer Website nicht, welche Schriften du hast, weil man diese Liste benutzen könnte, um dich zu verfolgen. Deshalb probiert die App eine Liste bekannter Schriften aus und zeigt die, die sie findet. Wenn deine Schrift nicht in der Liste steht, kann sie trotzdem funktionieren:",
         "- Tipp den genauen Namen der Schrift ins Suchfeld, zum Beispiel `Fira Code`, und wähle die Zeile, die sie anbietet. Der Name muss mit dem Namen der Schrift auf deinem Computer übereinstimmen, einschließlich der Leerzeichen.\n- In Chrome und Edge wählst du **Alle Schriften auf diesem Gerät anzeigen** und erlaubst es. Die Liste enthält dann jede Schrift, die du hast.\n- Wenn die Zeile unter dem Feld sagt, dass die Schrift nicht gefunden wurde, prüfe zuerst die Schreibweise. Safari lässt Websites nur die Schriften verwenden, die mit deinem Mac geliefert wurden, nicht die, die du selbst installiert hast.",
-        "Eine Schrift, die du in der Symbolleiste wählst, hat weiterhin Vorrang vor dieser Einstellung, und Codeblöcke behalten ihre eigene Schrift."
+        "Eine Schrift, die du in der Symbolleiste für einzelne Wörter wählst, hat weiterhin Vorrang vor dieser Einstellung, und ihr Sans, Serif oder Mono verwendet die Schrift, die du hier dafür festlegst. Codeblöcke behalten ihre eigene Schrift."
       ]
     },
     "format-bar": {
@@ -1326,7 +1417,7 @@
     "tracker-privacy": {
       "q": "Wer kann meine Tracker- und Medikamentendaten lesen?",
       "a": [
-        "Deine Tracker-Werte liegen in deinen Tagebucheinträgen, die auf deinem Gerät verschlüsselt sind und beim Synchronisieren verschlüsselt bleiben. Deine Medikamentenliste und eigene Tracker liegen in deinen Einstellungen. Sie werden verschlüsselt synchronisiert wie deine Notizen, aber die Kopie, die dieses Gerät davon behält, ist noch nicht versiegelt, deshalb schützen dort deine Festplattenverschlüsselung und die Bildschirmsperre sie. Statistiken, [das Arzt-PDF](/de/help/doctor-pdf), [der KI-Prompt](/de/help/ai-prompt) und beide Downloads werden auf deinem Gerät berechnet.",
+        "Deine Tracker-Werte liegen in deinen Tagebucheinträgen, die auf deinem Gerät verschlüsselt sind und beim Synchronisieren verschlüsselt bleiben. Deine Medikamentenliste und eigene Tracker liegen in deinen Einstellungen. Sie werden verschlüsselt synchronisiert wie deine Notizen, und die Kopie, die dieses Gerät behält, ist unter einem Schlüssel aus deiner Phrase versiegelt, ebenso wie deine Notizen. Statistiken, [das Arzt-PDF](/de/help/doctor-pdf), [der KI-Prompt](/de/help/ai-prompt) und beide Downloads werden auf deinem Gerät berechnet.",
         "[Bei Selbstverwahrung](/de/help/threat-model-levels) hat der Server nichts, was sie öffnet. Wenn du dich mit Google, Apple oder GitHub angemeldet und \"Einfach und bequem\" gewählt hast, liegt deine Phrase auf unserem Server unter einem Schlüssel von uns; unter Einstellungen > Konto > Schlüsselverwaltung siehst du deinen Modus und kannst wechseln. Mehr unter [was PrivacyNotes sehen kann](/de/help/what-can-you-see)."
       ]
     },
@@ -1334,13 +1425,13 @@
       "q": "Was enthält ein vollständiges Backup?",
       "a": [
         "Alles, was du erstellt hast: Notizen, Tagebucheinträge mit jedem erfassten Wert, Aufgaben, Termine, Tresor-Einträge, Lesezeichen, Kontakte, Zeichnungen, Bilder, Audio und Dateien, auch die im Papierkorb. Es enthält auch, was du von Hand eingerichtet hast: Ordner und ihre Farben, angepinnte Tags, eigene Designs, deine Medikamente, eigene Tracker, Faktoren und Gewohnheitsfragen, die Tracker, die du eingeschaltet hast, und ihre Einheiten, abonnierte Kalender und dein Layout der Startseite.",
-        "Nicht enthalten sind die PIN deiner App-Sperre, der Notizverlauf, die Liste deiner Geräte und das Aussehen der App, etwa das Design und die Textgröße. Eine [Wiederherstellung](/de/help/restore-backup) fügt hinzu, was deinem Konto fehlt, und macht nie eine Änderung rückgängig, die du nach dem Backup vorgenommen hast. Um deine Tracker in einer Datei zu behalten, die du öffnen kannst, nutze **JSON herunterladen** unter Einstellungen > Transfer > Tracker ([Tracker-Dateien](/de/help/tracker-json-csv))."
+        "Nicht enthalten sind die PIN deiner App-Sperre, der Notizverlauf, die Liste deiner Geräte und das Aussehen der App, etwa das Design und die Textgröße. Eine [Wiederherstellung](/de/help/restore-backup) fügt hinzu, was deinem Konto fehlt, und behält deine späteren Änderungen. Eine Notiz, die du nach dem Backup in den Papierkorb verschoben oder gelöscht hast, kommt zurück. Um deine Tracker in einer Datei zu behalten, die du öffnen kannst, nutze **JSON herunterladen** unter Einstellungen > Transfer > Tracker ([Tracker-Dateien](/de/help/tracker-json-csv))."
       ]
     },
     "session-expired": {
       "q": "Warum zeigt die App \"Sitzung abgelaufen\" an?",
       "a": [
-        "Es bedeutet, dass unser Server die Anmeldung dieses Geräts nicht mehr akzeptiert, deshalb stoppt die Synchronisierung. Eine schwache Verbindung oder ein Serverausfall löst das nie aus: Die App fragt ein zweites Mal beim Server nach, bevor sie die Meldung zeigt. Deine Notizen sind auf diesem Gerät sicher.",
+        "Es bedeutet, dass unser Server die Anmeldung dieses Geräts nicht mehr akzeptiert, deshalb stoppt die Synchronisierung. Eine schwache Verbindung oder ein Serverausfall löst das nie aus: Die App fragt ein zweites Mal beim Server nach, bevor sie die Meldung zeigt. Eine Anmeldung endet auch, wenn dieses Gerät PrivacyNotes 60 Tage lang nicht geöffnet hat. Deine Notizen sind auf diesem Gerät sicher.",
         "Klick auf **Erneut anmelden**. Die App fragt zuerst, [ob du deine Wiederherstellungsphrase gesichert hast](/de/help/lost-phrase), denn um wieder hineinzukommen, brauchst du sie oder die Anmeldemöglichkeit, mit der du dich registriert hast. Notizen, die noch nicht synchronisiert sind, bleiben auf dem Gerät und werden synchronisiert, sobald du angemeldet bist. Dasselbe Fenster warnt dich, [falls Dateien noch nicht fertig hochgeladen sind](/de/help/upload-failed), denn diese werden beim Abmelden entfernt."
       ]
     },
@@ -1354,7 +1445,7 @@
     "share-into-app": {
       "q": "Kann ich Text oder einen Link aus einer anderen App an PrivacyNotes teilen?",
       "a": [
-        "Ja, auf iPhone, iPad und Android, als Beta. Tipp in einer beliebigen App auf die Teilen-Schaltfläche und wähl PrivacyNotes. [Ein Weblink wird zu einem Lesezeichen](/de/help/bookmarks) mit dem Seitentitel, Text wird zu einer neuen Notiz, und Bilder und Dateien landen unter Dateien. Ein Link, den du schon gespeichert hast, wird angezeigt statt doppelt gespeichert. Geteilte Einträge kommen ohne Ordner und ohne Tag an, du sortierst sie also, wann es dir passt.",
+        "Ja, auf iPhone, iPad und Android. Tipp in einer beliebigen App auf die Teilen-Schaltfläche und wähl PrivacyNotes. [Ein Weblink wird zu einem Lesezeichen](/de/help/bookmarks) mit dem Seitentitel, Text wird zu einer neuen Notiz, und Bilder und Dateien landen unter Dateien. Ein Link, den du schon gespeichert hast, wird angezeigt statt doppelt gespeichert. Geteilte Einträge kommen ohne Ordner und ohne Tag an, du sortierst sie also, wann es dir passt.",
         "Unter Android fragt die App zuerst: Sie listet, was angekommen ist, und speichert es erst, wenn du **Alle speichern** wählst, oder verwirft es mit **Verwerfen**. Auf iPhone und iPad bestätigt eine Karte **In PrivacyNotes gespeichert**. Für jede Datei gilt dein [Upload-Limit](/de/help/attachment-limits), und ein geteilter Inhalt wartet, bis du angemeldet bist und die App entsperrt ist."
       ]
     },

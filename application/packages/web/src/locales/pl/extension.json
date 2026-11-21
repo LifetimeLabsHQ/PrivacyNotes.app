@@ -47,9 +47,10 @@
     "title": "Chroń swoje loginy",
     "body": "Wybierz PIN albo kod dostępu dla tej przeglądarki. Potrzebujesz go, aby odblokować tutaj swoje loginy. Jest niezależny od tego w aplikacji.",
     "biometric": "Używaj też odblokowania biometrycznego",
-    "biometricHelp": "Touch ID albo Windows Hello, oprócz PIN-u lub kodu dostępu, który też zawsze działa.",
+    "biometricHelp": "Touch ID albo Windows Hello, przez passkey dla tej przeglądarki. PIN lub kod dostępu też zawsze działa.",
     "repeat": "Wpisz go ponownie",
-    "mismatch": "Wpisy się nie zgadzają. Spróbuj ponownie."
+    "mismatch": "Wpisy się nie zgadzają. Spróbuj ponownie.",
+    "commonPin": "Ten PIN jest zbyt łatwy do odgadnięcia. Wybierz inny."
   },
   "clip": {
     "selection": "Zaznaczenie",
@@ -85,7 +86,7 @@
     "unlockPin": "Wpisz swój PIN",
     "unlockPasscode": "Wpisz swój kod dostępu",
     "useBiometric": "Użyj odblokowania biometrycznego",
-    "wrong_one": "Błędnie. Została {{count}} próba, zanim ta przeglądarka zostanie odłączona.",
+    "wrong_one": "Błędnie. W tym miesiącu została {{count}} próba, zanim ta przeglądarka zostanie odłączona.",
     "forSite": "Dla {{site}}",
     "none": "Brak loginów dla tej strony.",
     "off": "Loginy są wyłączone w tej przeglądarce. Włącz Sejf przy jej łączeniu.",
@@ -101,13 +102,16 @@
     "noMatch": "Żaden login nie pasuje.",
     "openSite": "Otwórz stronę",
     "duplicate": "Masz już login dla tej strony z tą nazwą użytkownika.",
-    "wrong_few": "Błędnie. Zostały {{count}} próby, zanim ta przeglądarka zostanie odłączona.",
-    "wrong_many": "Błędnie. Zostało {{count}} prób, zanim ta przeglądarka zostanie odłączona."
+    "editTitle": "Edytuj login",
+    "saved": "Zmiany zapisane.",
+    "wrong_few": "Błędnie. W tym miesiącu zostały {{count}} próby, zanim ta przeglądarka zostanie odłączona.",
+    "wrong_many": "Błędnie. W tym miesiącu zostało {{count}} prób, zanim ta przeglądarka zostanie odłączona."
   },
   "account": {
     "confirmDisconnect": "Odłączyć?",
     "revoked": "Ta przeglądarka nie jest już połączona",
-    "revokedBody": "Połącz ją ponownie nowym kodem z aplikacji."
+    "revokedBody": "Połącz ją ponownie nowym kodem z aplikacji.",
+    "pendingPasskey": "Passkey zapisany w tej przeglądarce nie jest jeszcze w twoim Sejfie. Otwórz PrivacyNotes i najpierw pozwól mu się zsynchronizować, inaczej passkey przepadnie."
   },
   "badge": {
     "problem": "Coś wymaga twojej uwagi"
@@ -150,7 +154,8 @@
     "unlockToCopy": "Odblokuj, aby skopiować",
     "omniboxDefault": "Szukaj %s w sejfie PrivacyNotes",
     "omniboxUnlock": "Odblokuj PrivacyNotes, aby szukać",
-    "moreOptions": "Więcej opcji"
+    "moreOptions": "Więcej opcji",
+    "editNotSaved": "Twoja zmiana w {{name}} nie dotarła do Sejfu, więc login zachowuje stare wartości. Edytuj go ponownie, aby zapisać zmianę."
   },
   "shortcuts": {
     "notSet": "Nie ustawiono",
@@ -197,5 +202,19 @@
     "biometricPin": "Wpisz swój PIN, aby je skonfigurować.",
     "biometricPasscode": "Wpisz swój kod dostępu, aby je skonfigurować.",
     "biometricOff": "Odblokowanie biometryczne jest wyłączone"
+  },
+  "passkey": {
+    "saveTitle": "Zapisać passkey dla {{site}}?",
+    "useTitle": "Zaloguj się do {{site}}",
+    "saveTo": "Zapisz w",
+    "save": "Zapisz w PrivacyNotes",
+    "other": "Użyj innej aplikacji passkey",
+    "already": "Masz już passkey dla {{site}} w PrivacyNotes.",
+    "saved": "Passkey zapisany.",
+    "notSaved": "Nie udało się zapisać passkey. Przejmuje go własna aplikacja passkey twojej przeglądarki.",
+    "maybeSaved": "Passkey mógł zostać zapisany. Sprawdź swój Sejf.",
+    "unlockFirst": "Odblokuj, aby używać swoich passkey.",
+    "offer": "Proponuj passkey",
+    "offerHelp": "Zapisuj passkey i używaj ich na stronach."
   }
 }

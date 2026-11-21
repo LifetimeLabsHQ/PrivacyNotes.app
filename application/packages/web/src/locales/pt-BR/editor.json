@@ -115,10 +115,13 @@
       "red": "Vermelho",
       "orange": "Laranja",
       "yellow": "Amarelo",
+      "lime": "Verde-limão",
       "green": "Verde",
       "teal": "Verde-azulado",
       "blue": "Azul",
+      "indigo": "Índigo",
       "purple": "Roxo",
+      "grape": "Uva",
       "pink": "Rosa"
     }
   },
@@ -241,6 +244,8 @@
     "words_other": "{{formatted}} palavras",
     "characters_one": "{{formatted}} caractere",
     "characters_other": "{{formatted}} caracteres",
+    "lines_one": "{{formatted}} linha",
+    "lines_other": "{{formatted}} linhas",
     "tasksChecked_one": "{{done}} de {{formatted}} marcado",
     "tasksChecked_other": "{{done}} de {{formatted}} marcados",
     "syncLimit": " · {{share}} do limite de sincronização de 1 MB",
@@ -276,6 +281,10 @@
     "collapse": "Recolher bloco de código",
     "expand": "Expandir bloco de código",
     "placeholder": "Digite ou cole código. Para ter cores, escolha uma linguagem acima."
+  },
+  "fold": {
+    "collapse": "Recolher seção",
+    "expand": "Expandir seção"
   },
   "math": {
     "sourceLabel": "Código LaTeX"
@@ -313,7 +322,7 @@
     "hiddenNote": "Eles continuam funcionando por atalho e em Markdown.",
     "hiddenDrop": "Solte um botão aqui para ocultá-lo.",
     "arrangeTitle": "Botões",
-    "markdownViewNote": "A visualização Markdown mantém seu próprio conjunto fixo de botões.",
+    "markdownViewNote": "A visualização Markdown mostra os mesmos botões. Os que precisam da visualização formatada ficam esmaecidos ali e continuam funcionando na visualização formatada.",
     "hiddenEmpty": "Nada está oculto.",
     "alwaysVisible": "Sempre visíveis",
     "pinned": "Abre um painel, então fica na barra ou oculto",
@@ -340,7 +349,7 @@
       "notelink": "Link entre notas",
       "audio": "Gravação",
       "attachMenu": "Anexar",
-      "separator": "Separador",
+      "separator": "Divisória da barra",
       "markdownView": "Ver markdown"
     },
     "positionTitle": "Posição da barra",

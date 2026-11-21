@@ -240,6 +240,8 @@
       "prevYear": "Vorig jaar",
       "nextYear": "Volgend jaar"
     },
+    "seeEntries": "Notities bekijken",
+    "showInCalendar": "Tonen in Agenda",
     "trackers": {
       "tapHint": "Een tik opent Verkennen",
       "stopped": "Gestopt",

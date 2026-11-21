@@ -36,12 +36,15 @@ import { linesStartPaused } from './typewriter';
 import {
   hasBiometricCredential,
   unlockWithBiometricDetailed,
+  browserPresenceGateBesidePin,
+  dropPresenceGateBesidePin,
   hasPinWrappedPhrase,
   onWrappedBlobChange,
   pinWrapIsPasscode,
   pinWrapStamp,
   unwrapPhraseWithPin,
   type PinWrapBlob,
+  type ReplacedPinWrap,
 } from './biometric';
 import type { PinInputHandle } from './PinInput';
 import { SecretInput } from './PasscodeInput';
@@ -51,6 +54,7 @@ import {
   clearPinFailures,
   getPinLockoutState,
   hasPin,
+  pinHashIsLegacy,
   pinIsPasscode,
   verifyPin,
 } from './pin';
@@ -80,7 +84,7 @@ type Props = {
    * synced row; left local, every other device would replace it with the
    * account's old one on the next pass and the next unlock would redo it.
    */
-  onWrapUpgraded?: (blob: PinWrapBlob) => void;
+  onWrapUpgraded?: (blob: PinWrapBlob, replaced: ReplacedPinWrap) => void;
   /**
    * Given only while the session is live. A device with a PIN or passcode but
    * no wrap (Lock app with the app lock off) then gets a PIN door that checks
@@ -140,8 +144,12 @@ export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWr
   // Auto-trigger biometric on mount. If it fails silently (e.g.
   // browser requires a user gesture), swallow the error - the user
   // can tap the button manually.
+  // Not where a browser presence gate sits beside the PIN wrap: the PIN typed
+  // once proves its wrap opens, and the gate then goes (#842 B). The
+  // fingerprint button stays for anyone who does not know the PIN.
+  // Spec: docs/internal/plans/phrase-lock-hardening.md (section 2.2 B)
   useEffect(() => {
-    if (biometricAvailable && !autoTriggered.current) {
+    if (biometricAvailable && !browserPresenceGateBesidePin() && !autoTriggered.current) {
       autoTriggered.current = true;
       void handleBiometric(true);
     }
@@ -384,10 +392,12 @@ function PinUnlock({
   onVerified?: () => void;
   onExhausted: () => void;
   onForgotPin: () => void;
-  onWrapUpgraded?: (blob: PinWrapBlob) => void;
+  onWrapUpgraded?: (blob: PinWrapBlob, replaced: ReplacedPinWrap) => void;
   onPendingPhraseChange?: (pin: string) => Promise<string | null>;
 }) {
   const { t } = useTranslation('security');
+  // The key store did not open this device's sealed wrap (pinWrapSeal.ts).
+  const [keyUnavailable, setKeyUnavailable] = useState(false);
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -451,6 +461,19 @@ function PinUnlock({
       inputRef.current?.clear();
       return;
     }
+    // The wrap is sealed under the device key and the key store did not open
+    // it: no wrong PIN, so nothing counts and no lockout starts. The phrase
+    // button below is the way in, never the reset, which clears the PIN on
+    // every device. A dismissed keyring dialog can be tried again.
+    // Spec: docs/internal/plans/pin-wrap-hardening.md (section 5.4, C2-1)
+    if (phrase === 'keyring-cancelled' || phrase === 'device-key-unavailable') {
+      setKeyUnavailable(phrase === 'device-key-unavailable');
+      setError(t(phrase === 'keyring-cancelled' ? 'lockScreen.keyringCancelled' : 'lockScreen.deviceKeyUnavailable'));
+      setValue('');
+      inputRef.current?.clear();
+      setBusy(false);
+      return;
+    }
     // A phrase change this device sent and did not finish: once the server
     // confirms it landed, the new phrase is the one to sign in with.
     if (phrase && onPendingPhraseChange && hasPendingPhraseChange()) {
@@ -466,6 +489,14 @@ function PinUnlock({
         setError(t('pinRecovery.wrongPhrase'));
         setValue('');
         inputRef.current?.clear();
+      } else {
+        // The PIN just opened its wrap for this account: a browser presence
+        // gate beside it goes, with a banner (#842 B).
+        dropPresenceGateBesidePin();
+        // The wrap and the cached hash can come from different writes, so a
+        // legacy hash is checked against this PIN before a rehash is held.
+        // Spec: docs/internal/plans/pin-wrap-hardening.md (section 3)
+        if (pinHashIsLegacy()) void verifyPin(pin).catch(() => { /* the next check tries again */ });
       }
     } else {
       failed();
@@ -526,15 +557,17 @@ function PinUnlock({
       </div>
 
       {/* A link with a trailing arrow (owner's pick of four, 2026-10-22): it
-          names where it goes, the reset view, by that view's own title. */}
-      <button
+          names where it goes, the reset view, by that view's own title. Not
+          while the device cannot open its lock: the secret is right there,
+          and the reset would clear it on every device. */}
+      {!keyUnavailable && <button
         type="button"
         onClick={onForgotPin}
         className="w-full inline-flex items-center justify-center gap-1 text-body text-accent hover:underline py-1 transition"
       >
         {kind === 'passcode' ? t('pinRecovery.titlePasscode') : t('pinRecovery.title')}
         <ArrowRight aria-hidden="true" className="shrink-0" />
-      </button>
+      </button>}
     </div>
   );
 }

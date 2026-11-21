@@ -10,19 +10,59 @@ import { isDemoMode, isDemoOwnedKey } from './demo';
 import { settingsLocalKey } from './settingsLocalKey';
 import { HelpChip } from './HelpChip';
 import { ensureLevel2, MfaCancelledError, mfaSessionIdentity } from './mfaStep';
-import { jwtPayloadPubkey } from './authStorage';
-import { announceSignOut, endLiveSignIn } from './liveSignIn';
+import { jwtPayloadPubkey, PHRASE_STORAGE_KEY } from './authStorage';
+import { announceSignOut, beginSignOutMark, endLiveSignIn } from './liveSignIn';
+import { tabSecrets, trustAwareStorage } from './trustStorage';
+import { removeBiometricCredential, removePinWrappedPhrase } from './biometric';
+import { forgetFolder } from './markdownFolder/folderMemory';
+import { clearDestination } from './autoBackup/destination';
+import { clearPluginFolders } from './plugins/pluginStore';
 import { cancelDeviceReminders, remindersTeardownSettled, REMINDER_TO_CANCEL_KEY } from './notesView/useReminders';
 
 /** How long the reload after a wipe waits for the reminders' teardown. */
 const RELOAD_WAIT_MS = 10_000;
+/** How long the wipe waits for the auth server's sign-out. */
+const REMOTE_SIGN_OUT_MS = 4_000;
+
+/** The Cache Storage names of the on-device model and the plugins
+ *  (plugins/pluginStore.ts StoreId); desktop keeps them in folders too. */
+const DEVICE_CACHES = ['pn-on-device-ai', 'pn-plugins'] as const;
+
+/**
+ * The parts of this device's state that live outside the app's database and
+ * outside the `privacynotes.` keys, which a full wipe takes too. Not in the
+ * demo: the folder and backup records have demo buckets of their own, and
+ * the caches are the real install's.
+ */
+async function forgetDeviceLeftovers(): Promise<void> {
+  if (isDemoMode()) return;
+  await forgetFolder().catch(() => {});
+  await clearDestination().catch(() => {});
+  // The tracker range under its name from before the app's prefix
+  // (stats/wellnessRange.ts); the sweep takes the new one.
+  try { localStorage.removeItem('pn-wellness-range'); } catch { /* ignore */ }
+  for (const name of DEVICE_CACHES) {
+    try {
+      await caches.delete(name);
+    } catch {
+      /* no Cache Storage here */
+    }
+  }
+  // Desktop: the plugin folders. The caches go first, so nothing is moved into them.
+  try {
+    await clearPluginFolders();
+  } catch {
+    /* nothing to clear */
+  }
+}
 
 // ------------------------------------------------------------------
 // Danger zone - account & data deletion
 // ------------------------------------------------------------------
 
 /**
- * Wipe this session's keys from both localStorage and sessionStorage.
+ * Wipe this session's keys from localStorage, from the tab's own memory
+ * (a tab that is not trusted, trustStorage.ts) and from sessionStorage.
  * Catches per-key to avoid one bad key blocking the rest.
  *
  * The demo runs on the SAME origin as a real install whenever the URL
@@ -38,7 +78,7 @@ const RELOAD_WAIT_MS = 10_000;
 function clearAllStorageKeys(): void {
   const demo = isDemoMode();
   const demoSettings = settingsLocalKey();
-  for (const store of [localStorage, sessionStorage]) {
+  for (const store of [localStorage, tabSecrets, sessionStorage]) {
     const keys: string[] = [];
     for (let i = 0; i < store.length; i++) {
       const k = store.key(i);
@@ -76,6 +116,16 @@ export async function wipeThisDevice(
   // browser (liveSignIn.ts).
   endLiveSignIn();
   announceSignOut();
+  // The mark that this wipe began: a page that ends before the sweep below
+  // leaves it, and the next start finishes the job (signOutFinish.ts). The
+  // sweep takes the mark with every other app key.
+  beginSignOutMark('wipe');
+  // The phrase and the wrapped doors go before the first await, as a
+  // sign-out's do: a wipe that does not end must not leave the phrase at
+  // rest for the next start to sign in with (beta.privacynotes.app #211).
+  trustAwareStorage.removeItem(PHRASE_STORAGE_KEY);
+  removeBiometricCredential();
+  removePinWrappedPhrase();
   // A phone's scheduled reminders, while the map that names them
   // exists: the sweep below removes it, and the OS would ring them with
   // this account's titles after it is gone.
@@ -87,13 +137,25 @@ export async function wipeThisDevice(
   // after an account deletion the server user is gone, and a device
   // wipe keeps the account. Without this the sb-* session key survives
   // and hydrateFromOAuthSession treats a re-signup as a returning user.
+  // With a deadline: a request that never answers must not hold the wipe
+  // below, which removes the session whatever the library did.
   //
   // Not in demo: the demo holds no session of its own, so the only
   // row this could clear belongs to the real account signed in on
   // the same origin.
   if (!isDemoMode()) {
-    await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
+    let deadline: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([
+      supabase.auth.signOut({ scope: 'local' }).catch(() => {}),
+      new Promise<void>((resolve) => { deadline = setTimeout(resolve, REMOTE_SIGN_OUT_MS); }),
+    ]);
+    clearTimeout(deadline);
   }
+  // What outlives the database: the Markdown folder the restore would
+  // reopen for whoever signs in next, the backup destination, the model
+  // and plugin files in Cache Storage (beta.privacynotes.app #214 items 2
+  // and 3). Each one fails alone; none stops the wipe.
+  await forgetDeviceLeftovers();
   // Nuke IndexedDB (notes, images, attachments, dedup tables).
   await deleteEntireLocalDatabase();
   // Wipe all localStorage/sessionStorage privacynotes.* + sb-* keys.
@@ -204,14 +266,15 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
         // Block any further sync calls before we kick off deletion. An
         // in-flight `sync()` started before this click can still land
         // upserts after the server delete - we can't abort it from out
-        // here, but we can prevent NEW syncs and re-delete afterward.
-        // See gap #3.
+        // here, but we can prevent NEW syncs; the server settles the old
+        // one (see below). See gap #3.
         setDeletingAccount(true);
 
         const deleteArgs = {
           supabase,
           accessToken: session.access_token,
           authUid: session.user.id,
+          account: authed.pubkey,
           signingPrivateKey: authed.signingPrivateKey,
         };
         // Timeout guard: if the edge function hangs, don't leave sync
@@ -225,19 +288,12 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
           ),
         ]);
 
-        // Belt-and-suspenders: any sync that was already in flight when
-        // we set the flag may have landed an upsert seconds after the
-        // edge function finished. Sleep briefly, then re-delete to mop
-        // up. Best-effort - auth.users is gone so this 401s, which is
-        // fine; what matters is that the server's idempotent table
-        // deletes (run before auth deletion) catch any sneaked-in rows.
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        try {
-          await deleteAccountServer(deleteArgs);
-        } catch (e) {
-          // Expected: 401 because auth.users is gone, or quiet success.
-          console.log('[DangerZone] re-delete returned (expected):', (e as Error).message);
-        }
+        // No second call: once the Auth user is gone no request of ours gets
+        // past the session check. A sync that was already in flight is the
+        // server's to settle: every client write takes a lock the deletion's
+        // last step takes exclusively, which then deletes what such a write
+        // stored, and a later write finds no user and is refused.
+        // Spec: packages/supabase/migrations/history/0136_deletion_file_bytes_pin_window.sql
       }
 
       // Local wipe - always runs when server is deleted (the session

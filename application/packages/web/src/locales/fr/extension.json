@@ -47,9 +47,10 @@
     "title": "Protège tes identifiants",
     "body": "Choisis un PIN ou un code d'accès pour ce navigateur. Tu en as besoin pour déverrouiller tes identifiants ici. Il est distinct de celui de l'app.",
     "biometric": "Utiliser aussi le déverrouillage biométrique",
-    "biometricHelp": "Touch ID ou Windows Hello, en plus du PIN ou du code d'accès, qui fonctionne toujours aussi.",
+    "biometricHelp": "Touch ID ou Windows Hello, grâce à une passkey pour ce navigateur. Le PIN ou le code d'accès fonctionne toujours aussi.",
     "repeat": "Saisis-le à nouveau",
-    "mismatch": "Les deux ne correspondent pas. Réessaie."
+    "mismatch": "Les deux ne correspondent pas. Réessaie.",
+    "commonPin": "Ce PIN est trop facile à deviner. Choisis-en un autre."
   },
   "clip": {
     "selection": "Sélection",
@@ -85,9 +86,9 @@
     "unlockPin": "Saisis ton PIN",
     "unlockPasscode": "Saisis ton code d'accès",
     "useBiometric": "Utiliser le déverrouillage biométrique",
-    "wrong_one": "Erroné. Il reste {{count}} essai avant que ce navigateur soit déconnecté.",
+    "wrong_one": "Erroné. Il reste {{count}} essai ce mois-ci avant que ce navigateur soit déconnecté.",
     "wrong_many": "Erroné. Il reste {{count}} essais avant que ce navigateur soit déconnecté.",
-    "wrong_other": "Erroné. Il reste {{count}} essais avant que ce navigateur soit déconnecté.",
+    "wrong_other": "Erroné. Il reste {{count}} essais ce mois-ci avant que ce navigateur soit déconnecté.",
     "forSite": "Pour {{site}}",
     "none": "Aucun identifiant pour ce site.",
     "off": "Les identifiants sont désactivés pour ce navigateur. Active Coffre quand tu le connectes.",
@@ -102,12 +103,15 @@
     "search": "Rechercher dans tous les identifiants",
     "noMatch": "Aucun identifiant ne correspond.",
     "openSite": "Ouvrir le site",
-    "duplicate": "Tu as déjà un identifiant pour ce site avec ce nom d'utilisateur."
+    "duplicate": "Tu as déjà un identifiant pour ce site avec ce nom d'utilisateur.",
+    "editTitle": "Modifier l'identifiant",
+    "saved": "Modifications enregistrées."
   },
   "account": {
     "confirmDisconnect": "Déconnecter ?",
     "revoked": "Ce navigateur n'est plus connecté",
-    "revokedBody": "Connecte-le à nouveau avec un nouveau code de l'app."
+    "revokedBody": "Connecte-le à nouveau avec un nouveau code de l'app.",
+    "pendingPasskey": "Une passkey enregistrée dans ce navigateur n'est pas encore dans ton Coffre. Ouvre PrivacyNotes et laisse-le se synchroniser d'abord, sinon la passkey est perdue."
   },
   "badge": {
     "problem": "Quelque chose demande ton attention"
@@ -150,7 +154,8 @@
     "unlockToCopy": "Déverrouille pour copier",
     "omniboxDefault": "Rechercher %s dans ton coffre PrivacyNotes",
     "omniboxUnlock": "Déverrouille PrivacyNotes pour rechercher",
-    "moreOptions": "Plus d'options"
+    "moreOptions": "Plus d'options",
+    "editNotSaved": "Ta modification de {{name}} n'a jamais atteint ton Coffre, donc l'identifiant garde ses anciennes valeurs. Modifie-le à nouveau pour enregistrer le changement."
   },
   "shortcuts": {
     "notSet": "Non défini",
@@ -197,5 +202,19 @@
     "biometricPin": "Saisis ton PIN pour le configurer.",
     "biometricPasscode": "Saisis ton code d'accès pour le configurer.",
     "biometricOff": "Le déverrouillage biométrique est désactivé"
+  },
+  "passkey": {
+    "saveTitle": "Enregistrer une passkey pour {{site}} ?",
+    "useTitle": "Se connecter à {{site}}",
+    "saveTo": "Enregistrer dans",
+    "save": "Enregistrer dans PrivacyNotes",
+    "other": "Utiliser une autre app de passkeys",
+    "already": "Tu as déjà une passkey pour {{site}} dans PrivacyNotes.",
+    "saved": "Passkey enregistrée.",
+    "notSaved": "La passkey n'a pas pu être enregistrée. L'app de passkeys de ton navigateur prend le relais.",
+    "maybeSaved": "La passkey a peut-être été enregistrée. Vérifie ton Coffre.",
+    "unlockFirst": "Déverrouille pour utiliser tes passkeys.",
+    "offer": "Proposer les passkeys",
+    "offerHelp": "Enregistre et utilise des passkeys sur les sites web."
   }
 }

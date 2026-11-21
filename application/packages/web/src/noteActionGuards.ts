@@ -1,6 +1,7 @@
 import { hasPin } from './pin';
 import { proUnlocked } from './demo';
 import type { LocalNote } from './db';
+import { traitsOf } from './noteTypes';
 
 /**
  * Which upgrade pitch the modal opens on. Wider than the four triggers the
@@ -33,6 +34,27 @@ export type NoteActionGuardDeps = {
    */
   onClose: () => void;
 };
+
+/**
+ * The "Require PIN to view" box of an item form (login, card, SSH key,
+ * contact, bookmark), as the handler the form is given.
+ *
+ * Ticking the box is a plain write. Unticking it takes protection off, and
+ * that is the boundary the guards below keep: it goes to the same request the
+ * menu and the header icon make, which verifies first. The form is on screen
+ * only while the item's gate is open, so without this the box was a way to
+ * take the protection off for good, on every device, with no PIN.
+ * Test: tests/protectionBox.test.ts, and the mounts in tests/lockGateWiring.test.ts
+ */
+export function protectionFromForm(d: {
+  onProtect: (id: string) => void;
+  onRequestRemoveProtection: (id: string) => void;
+}): (id: string, pinProtected: boolean) => void {
+  return (id, pinProtected) => {
+    if (pinProtected) d.onProtect(id);
+    else d.onRequestRemoveProtection(id);
+  };
+}
 
 /**
  * The Pro and PIN checks in front of four per-note actions.
@@ -93,6 +115,16 @@ export function noteActionGuards(d: NoteActionGuardDeps) {
       d.onClose();
     },
   };
+}
+
+/**
+ * Whether Translate notes can read a note: its own Markdown, so not a vault
+ * item, a drawing or another item with no text body, and not a read-only or
+ * PIN-guarded note.
+ * Spec: docs/internal/plans/plugins.md (section 6.5)
+ */
+export function canTranslate(n: LocalNote): boolean {
+  return traitsOf(n.type).translate && n.locked !== 1 && n.pinProtected !== 1 && n.body.trim() !== '';
 }
 
 export type BulkActionGuardDeps = {

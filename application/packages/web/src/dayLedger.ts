@@ -13,8 +13,9 @@ import { toLocalIso } from './localDate';
  * conflict copy, a Markdown-folder copy, a share) passes `counted: false`.
  * Local to this device and never synced.
  *
- * Rows hold counts only, never note text, so the table stays outside the
- * at-rest seal (localSeal.ts SEALED_TABLES).
+ * Rows hold counts only, never note text. They are sealed at rest
+ * (localSeal.ts SEALED_TABLES) all but the day, which the queries walk:
+ * when someone writes is behavior, and the disk should not show it.
  * Spec: docs/internal/specs/wellness-statistics.md (section 20)
  */
 export interface LedgerRow {

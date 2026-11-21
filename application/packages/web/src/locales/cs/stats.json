@@ -250,6 +250,8 @@
       "prevYear": "Předchozí rok",
       "nextYear": "Další rok"
     },
+    "seeEntries": "Zobrazit záznamy",
+    "showInCalendar": "Zobrazit v Kalendáři",
     "trackers": {
       "tapHint": "Klepnutí otevře Prozkoumat",
       "stopped": "Zastavené",

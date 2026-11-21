@@ -8,13 +8,14 @@ import { defaultSettings, type UserSettings } from './userSettingsShape';
 /**
  * The sealed part of the settings cache (local at rest, release C).
  *
- * The settings that hold what a person typed - folder, tag and device names,
- * custom trackers and themes, the journal title text, the medication list -
- * leave the readable cache in localStorage and live here, sealed under the
- * local data key. Everything the lock screen and the boot read before any
- * key exists stays in the readable cache (userSettings.ts writes both).
- * Demo mode stays plaintext, as the Dexie seal does: the demo phrase is a
- * public constant.
+ * Every setting leaves the readable cache in localStorage and lives here,
+ * sealed under the local data key, except the few the lock screen, the boot
+ * and the raw note counter read before any key exists (READABLE_SETTINGS).
+ * A key this bundle does not know is sealed too: a blob that is not settings
+ * at all (a note's ciphertext copied over the settings row, RFS #226) or a
+ * setting a newer bundle added never lands on the disk in the clear
+ * (userSettings.ts writes both parts). Demo mode stays plaintext, as the
+ * Dexie seal does: the demo phrase is a public constant.
  *
  * The envelope carries the key epoch `e` of the local key that sealed it
  * (keyRing.ts), none for epoch 1. It opens with the key of that epoch, and an
@@ -25,27 +26,59 @@ import { defaultSettings, type UserSettings } from './userSettingsShape';
  * docs/internal/plans/phrase-change.md (6.2, sealed settings cache)
  */
 
-const SEALED_SETTINGS = [
-  'favoriteTags',
-  'folders',
-  'foldersDeleted',
-  'itemStyles',
-  'deviceLabels',
-  'extensionKeys',
-  'customThemes',
-  // A private calendar address is a secret. Spec: docs/internal/specs/calendar-pillar-spec.md (section 14)
-  'calendarFeeds',
-  // Home's layout names tags. Spec: docs/internal/specs/dashboard.md (section 7)
-  'dashboard',
-  'factors',
-  'customHabits',
-  'trackerSettings',
-  'medications',
-  'journalTitlePattern',
-  'journalTitleSuffix',
-] as const satisfies ReadonlyArray<keyof UserSettings>;
+// Spec: docs/internal/specs/local-at-rest.md (section 3.4, the readable list)
+const READABLE_SETTINGS = new Set<string>([
+  // The freshness counter and the note counter: notesCreated.ts bumps both
+  // in the raw envelope, and every save compares the counter.
+  'settingsRev',
+  'notesCreated',
+  // The app lock and its windows (DEVICE_SETTINGS), read by the boot, the
+  // lock screen and the re-lock watch before any key exists.
+  'appLockEnabled',
+  'appLockTimeoutMinutes',
+  'pinTimeoutMinutes',
+  'biometricEnabled',
+  // The PIN hash: the lock screen's PIN recovery, and the withholding of
+  // an untrusted device, which works on the readable envelope. The PIN
+  // wrap is sealed (PIN_WRAP_SETTINGS).
+  'pinSalt',
+  'pinHash',
+  'pinIterations',
+] satisfies ReadonlyArray<keyof UserSettings>);
 
-type SealedSettings = Pick<UserSettings, typeof SEALED_SETTINGS[number]>;
+/**
+ * The account's PIN wrap, sealed on every device. The lock's own copy stays
+ * only where this device's lock is on, or where it keeps no phrase at rest
+ * (syncPinWrap in pinRecovery.ts), so on a device whose lock is off this
+ * sealed copy is the only one, and a copy of its files holds no wrap. In the
+ * apps the lock's copy is sealed under the device key as well
+ * (pinWrapSeal.ts). No reader needs this copy before a key exists: the lock
+ * screen opens the lock's own copy, and a locked read is no settings pass.
+ * Spec: docs/internal/plans/pin-wrap-hardening.md (section 5.4, C2-2);
+ * docs/internal/plans/derived-keys-design.md (section 5.4, stage 2)
+ */
+const PIN_WRAP_SETTINGS = new Set<string>(['pinWrapSalt', 'pinWrapIV', 'pinWrapCiphertext', 'pinWrapIterations']);
+
+
+/** Whether a setting goes into the sealed part: every key but the readable
+ *  list. A `#` key is sync machinery, never a setting. */
+function isSealedSetting(key: string): boolean {
+  if (key.startsWith('#')) return false;
+  return !READABLE_SETTINGS.has(key);
+}
+
+/**
+ * The split version this device writes: 3, where the PIN wrap is sealed, so a
+ * bundle that knows only 1 and 2 reads the envelope as one from before the
+ * split and takes the server copy, never four missing fields as a PIN
+ * removed. A browser wrote 2 before stage 2; its readable wrap stands until
+ * the next write moves it (userSettings.ts).
+ */
+export function splitVersionHere(): 3 {
+  return 3;
+}
+
+type SealedSettings = Record<string, unknown>;
 
 const SEALED_KEY = 'privacynotes.settings.sealed';
 // Pinned: a sealed part written under another tag never opens.
@@ -96,8 +129,8 @@ export function readSealedSettings(): SealedRead {
     const fields = openWithRing('local', key, (k) => decryptJsonAad<unknown>(base64ToBytes(sealed), base64ToBytes(nonce), k, AAD), epochOf(e));
     if (!fields || typeof fields !== 'object' || Array.isArray(fields)) return { state: 'unreadable' };
     const own: Record<string, unknown> = {};
-    for (const k of SEALED_SETTINGS) {
-      if (k in fields) own[k] = (fields as Record<string, unknown>)[k];
+    for (const [k, v] of Object.entries(fields as Record<string, unknown>)) {
+      if (isSealedSetting(k)) own[k] = v;
     }
     const base = readBase((fields as Record<string, unknown>)[BASE_FIELD]);
     const dirty = (fields as Record<string, unknown>)[DIRTY_FIELD] !== false;
@@ -122,21 +155,36 @@ const DIRTY_FIELD = '#dirty';
 function readBase(raw: unknown): Record<string, string> {
   const out: Record<string, string> = {};
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
-  for (const k of SEALED_SETTINGS) {
-    const v = (raw as Record<string, unknown>)[k];
-    if (typeof v === 'string') out[k] = v;
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (isSealedSetting(k) && typeof v === 'string') out[k] = v;
   }
+  return out;
+}
+
+/** The per-key base the readable envelope keeps: none of a sealed setting,
+ *  whose fingerprint (a short value's, a guess away from the value) is
+ *  sealed with it. */
+export function readableBase(base: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(base)) if (!isSealedSetting(k)) out[k] = v;
   return out;
 }
 
 /** Seal these settings over the sealed part, with their synced base. False
  *  when no key is registered or the write failed: the sealed part is then as
  *  it was. */
-export function writeSealedSettings(settings: UserSettings, syncedKeys: Record<string, string> | undefined, dirty: boolean): boolean {
+export function writeSealedSettings(
+  settings: UserSettings,
+  syncedKeys: Record<string, string> | undefined,
+  dirty: boolean,
+  /** The PIN wrap is unknown here: its fields stay missing, never null. */
+  wrapUnknown = false,
+): boolean {
   const key = localDataKeyCopy();
   if (!key) return false;
   try {
-    const fields = pickSealed(settings) as Record<string, unknown>;
+    const fields = pickSealed(settings);
+    if (wrapUnknown) for (const k of PIN_WRAP_SETTINGS) delete fields[k];
     const base = readBase(syncedKeys);
     const { ciphertext, nonce } = encryptJsonAad({ ...fields, [BASE_FIELD]: base, [DIRTY_FIELD]: dirty }, key, AAD);
     const n = bytesToBase64(nonce);
@@ -207,15 +255,15 @@ export function removeSealedSettings(): void {
 }
 
 export function pickSealed(settings: UserSettings): SealedSettings {
-  const out = {} as Record<string, unknown>;
-  for (const k of SEALED_SETTINGS) out[k] = settings[k];
-  return out as SealedSettings;
+  const out: SealedSettings = {};
+  for (const [k, v] of Object.entries(settings)) if (isSealedSetting(k)) out[k] = v;
+  return out;
 }
 
-/** The readable part: the same object without the sealed settings. */
+/** The readable part: the readable list alone. */
 export function stripSealed(settings: UserSettings): Partial<UserSettings> {
-  const out: Record<string, unknown> = { ...settings };
-  for (const k of SEALED_SETTINGS) delete out[k];
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(settings)) if (READABLE_SETTINGS.has(k)) out[k] = v;
   return out as Partial<UserSettings>;
 }
 
@@ -223,26 +271,25 @@ export function stripSealed(settings: UserSettings): Partial<UserSettings> {
 // a save that carries one of them was built from such a read (the boot, the
 // lock screen, a PIN recovery), so its sealed settings are not the person's
 // and the device keeps the ones it holds (userSettings.ts, saveLocalSettings).
-// The journal strings cannot carry the mark; the lists beside them always do.
+// A string or a number cannot carry the mark; the lists beside it always do.
 const placeholders = new WeakSet<object>();
 
 /** These settings with every sealed one replaced by a marked default. */
 export function withPlaceholders(settings: UserSettings): UserSettings {
-  const defaults = defaultSettings();
+  const defaults = defaultSettings() as unknown as Record<string, unknown>;
   const out = { ...settings } as Record<string, unknown>;
-  for (const k of SEALED_SETTINGS) {
+  for (const k of Object.keys(out)) if (isSealedSetting(k) && !(k in defaults)) delete out[k];
+  for (const k of Object.keys(defaults)) {
+    if (!isSealedSetting(k)) continue;
     // A copy, so no default another object shares can ever carry the mark.
     const v: unknown = structuredClone(defaults[k]);
     if (v !== null && typeof v === 'object') placeholders.add(v);
     out[k] = v;
   }
-  return out as UserSettings;
+  return out as unknown as UserSettings;
 }
 
 /** Whether a settings object came from a read with the sealed part locked. */
 export function fromLockedRead(settings: UserSettings): boolean {
-  return SEALED_SETTINGS.some((k) => {
-    const v = settings[k];
-    return v !== null && typeof v === 'object' && placeholders.has(v);
-  });
+  return Object.entries(settings).some(([k, v]) => isSealedSetting(k) && v !== null && typeof v === 'object' && placeholders.has(v));
 }

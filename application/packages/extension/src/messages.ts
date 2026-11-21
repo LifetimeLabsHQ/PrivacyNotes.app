@@ -3,15 +3,20 @@
  * document. Only the extension's own pages send them; the background checks
  * the sender before it acts. The one message from a script inside a site,
  * the fill script's probe answer, has its own type and its own door
- * (`src/fill/types.ts`, `src/fillRun.ts`).
+ * (`src/fill/types.ts`, `src/fillRun.ts`); so do the passkey relay's
+ * request and abort (`src/passkeyWire.ts`, `src/passkeyDoor.ts`).
  */
 import type { CapturedPage } from './capture';
 import type { ClipMode } from './clipping';
-import type { LoginRequest, NoteRequest, SaveRequest } from './save';
+import type { LoginEditRequest, LoginRequest, NoteRequest, SaveRequest } from './save';
+import type { WireCredential } from './passkeyWire';
 
 export type BackgroundMessage =
   | { type: 'save'; request: SaveRequest }
   | { type: 'saveLogin'; request: LoginRequest }
+  | { type: 'saveLoginEdit'; request: LoginEditRequest }
+  /** A new site passkey: its row, and the credential the tab gets once the row is sent. */
+  | { type: 'savePasskey'; id: string; request: LoginEditRequest; credential: WireCredential }
   | { type: 'saveNote'; request: NoteRequest }
   | { type: 'flush' }
   | { type: 'fill'; item: string; tabId: number }

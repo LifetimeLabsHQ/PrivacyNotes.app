@@ -4,7 +4,8 @@
     "tabBiometricShort": "Lock",
     "tabPhraseShort": "Phrase",
     "tabPhrase": "Your Phrase",
-    "tabTwoFactor": "2FA"
+    "tabTwoFactor": "2FA",
+    "tabTwoFactorPasskeys": "2FA / Passkeys"
   },
   "pinTab": {
     "changeLost": "Your PIN change was not saved: the PIN was changed on another device first.",
@@ -70,7 +71,7 @@
     "browserRestart": "On browser restart"
   },
   "pinInfo": {
-    "body": "When enabled, your PIN is required every time you open this item, even if the app is already unlocked. Use it for sensitive items that should stay protected when you step away."
+    "body": "When enabled, this item asks for your PIN before it opens, unless you entered the PIN within the time set in Settings > Security > Lock (5 minutes unless you change it). Use it for your most sensitive items."
   },
   "removePinDialog": {
     "introWithBio": "Enter your current PIN to confirm removal. Biometric unlock stays active, but your only fallback will be your recovery phrase.",
@@ -121,6 +122,7 @@
     "hideQr": "Hide QR code",
     "showQr": "Show QR code",
     "saveQr": "Save QR",
+    "qrHint": "On the new device, choose “{{scanQr}}” on the sign-in screen.",
     "copyPhrase": "Copy phrase"
   },
   "custody": {
@@ -134,7 +136,7 @@
     "rowLostSelf": "Without another saved copy or an unlocked device, the notes cannot be recovered.",
     "rowKey": "Where your phrase lives",
     "rowKeyCustodial": "On our server and your devices",
-    "rowKeySelf": "Only on your devices",
+    "rowKeySelf": "Only on your devices, unless you add a sign-in passkey",
     "releaseWarning": "Save your phrase outside PrivacyNotes first. After we delete our copy, you will need it on new devices.",
     "challengePrompt": "Type these words from the list above to confirm you have them.",
     "wordLabel": "Word {{position}}",
@@ -167,14 +169,18 @@
   "biometricTab": {
     "checkingSupport": "Checking biometric support...",
     "description": "Unlock with your fingerprint or face instead of typing the PIN.",
+    "descriptionWeb": "Unlock with your fingerprint or face instead of typing the PIN. In a browser, this makes a passkey for PrivacyNotes on this device, saved by your device or your password manager.",
     "trustFirst": "Turn on \"Trust this device\" first. Biometric unlock and the app lock both keep a copy of your recovery phrase on this device, which is not what an untrusted device is for.",
     "notAvailable": "Biometric unlock is not available on this device. Your browser or hardware doesn't support a platform authenticator (Touch ID, Face ID, Windows Hello).",
     "enabledFlash": "Biometric unlock enabled.",
     "enrolledOnDevice": "Enrolled on this device",
     "boundStatus": "Biometric unlock is tied to your passkey.",
     "boundStatusNative": "Biometric unlock is tied to this device's secure hardware.",
+    "boundStatusWindows": "Biometric unlock is tied to Windows Hello on this PC.",
+    "boundStatusWindowsSoftware": "Biometric unlock is tied to Windows Hello on this PC. Windows reports no security chip (TPM) here that it can use. Without one, Windows Hello keeps the key in software, and someone with a copy of this PC's storage can try Windows Hello PINs without limit.",
     "setUpAgain": "Set up again for a stronger lock",
     "unboundWeaker": "On this device, biometric unlock is a gate for people nearby, not a lock: someone with a copy of this device's storage can open your notes without your fingerprint or face.",
+    "noPrfRefused": "This passkey app cannot hold the key of biometric unlock, so biometric unlock stays off. If a password manager saved the passkey, delete it there, turn off its passkey option, and try again.",
     "cannotBind": "The passkey app that saved this passkey, often a password manager, cannot make the full lock. On this device, biometric unlock only stops people nearby: someone with a copy of this device's storage can open your notes without your fingerprint or face. If a password manager saves your passkeys, turn off its passkey option, then turn biometric unlock off and on again.",
     "bindOffer": "Biometric unlock on this device is not tied to your passkey yet, and this browser can tie it. Set it up again once, so its key stays with your passkey instead of in this device's storage.",
     "bindOfferLater": "Not now",
@@ -185,18 +191,26 @@
     "lockOnOpenHint": "Asks for your PIN or fingerprint when the app opens on this device, and again after it sits idle.",
     "lockHidesOnSwitch": "Also hides your notes when you switch apps.",
     "confirmPinForLock": "Enter your PIN to turn this on. It locks a copy of your recovery phrase so only your PIN can open the app.",
+    "pinWeakCopy": "With a 4-digit PIN, someone with a copy of this device's storage can find the PIN in minutes to hours and open your notes. A passcode is much harder to guess: set one in the PIN tab.",
     "confirmPasscodeForLock": "Enter your passcode to turn this on. It locks a copy of your recovery phrase so only your passcode can open the app.",
     "setupTitle": "Choose how you unlock",
     "setupPin": "A PIN unlocks everything here.",
     "setupBiometric": "A fingerprint or face unlocks the app on this device only.",
+    "setupBiometricWeb": "A fingerprint or face unlocks the app on this device only, through a passkey.",
     "setupBiometrics": "Biometrics",
-    "setupAddPinTitle": "Add a PIN for protected notes",
+    "setupAddPinTitle": "Add a PIN for the lock and protected notes",
+    "fingerprintOnlyLock": "This lock opens only with your fingerprint. Enter your PIN to add it as a second way in.",
+    "fingerprintOnlyLockPasscode": "This lock opens only with your fingerprint. Enter your passcode to add it as a second way in.",
+    "fingerprintOnlyLockAction": "Enter PIN",
+    "fingerprintOnlyLockActionPasscode": "Enter passcode",
     "appLockHeading": "App lock",
     "relockAgainAfter": "Lock again after",
     "notesHeading": "Protected notes",
     "reaskAfter": "Ask for the PIN again after",
-    "reaskHint": "For protected notes and your recovery phrase.",
+    "reaskHint": "For protected notes, protected sections and your recovery phrase.",
+    "sectionsHint": "Protect a whole section, such as the Vault, from its menu in the sidebar.",
     "biometricHeading": "Fingerprint or face",
+    "biometricHeadingWeb": "Fingerprint or face (passkey)",
     "blockCapture": "Hide from screen capture",
     "blockCaptureHint": "Keeps your notes out of screenshots, recordings and screen sharing where your device allows it. Applies to this device only.",
     "perDeviceNote": "Biometric unlock opens the same notes as your PIN. It stays on this device and never syncs.",
@@ -205,8 +219,30 @@
     "disableConfirmBody": "Disable biometric unlock on this device?",
     "disableConfirmBodyAppLock": "Disable biometric unlock on this device? App lock will also be turned off."
   },
+  "passkeysTab": {
+    "intro": "Sign in on a new device with a passkey instead of typing your recovery phrase. Your phrase still works.",
+    "add": "Add a passkey",
+    "adding": "Adding...",
+    "lastUsed": "Last used {{date}}",
+    "neverUsed": "Never used",
+    "removeTitle": "Remove this passkey?",
+    "removeBody": "You can no longer sign in with it. The passkey itself stays in your passkey app until you delete it there.",
+    "retired": "Made before your phrase changed. Remove it and add it again.",
+    "noPrf": "This passkey app cannot protect your phrase, so the passkey was not added. Try your device's own passkeys, or another password manager.",
+    "tooMany": "You have {{count}} passkeys for signing in. Remove one to add another.",
+    "failed": "The passkey could not be added. Check your connection and try again.",
+    "appsOnly": "Add passkeys in your browser at use.privacynotes.app. Signing in with them in the apps comes later.",
+    "empty": "No passkeys yet.",
+    "loadFailed": "Your passkeys could not be loaded. Check your connection and try again.",
+    "removeFailed": "The passkey could not be removed. Check your connection and try again.",
+    "pinPrompt": "Enter your 4-digit PIN to add a passkey.",
+    "pinPromptPasscode": "Enter your passcode to add a passkey."
+  },
   "appLock": {
-    "phraseNotSaved": "This device could not save your recovery phrase, so nothing was changed. Try again."
+    "phraseNotSaved": "This device could not save your recovery phrase, so nothing was changed. Try again.",
+    "phraseInMemoryOnly": "This browser could not protect your recovery phrase, so it is not saved on this device. Reloading or closing this tab signs you out, so keep your recovery phrase at hand. To stay signed in here, turn on the app lock in Settings > Security > Lock.",
+    "untrustedSignIn": "You did not trust this device, so your sign-in is not saved on it. Closing or reloading the app signs you out, so keep your recovery phrase at hand.",
+    "presenceGateRemoved": "Fingerprint or face unlock is off: this browser kept its key next to your recovery phrase. Your PIN or passcode still unlocks the app."
   },
   "pinSetup": {
     "description": "A 4-digit PIN will be required to view your recovery phrase. Optional, but recommended for shared spaces.",
@@ -241,13 +277,21 @@
     "disableTitlePasscode": "Enter passcode to disable protection",
     "verifySubtitlePasscode": "Enter your passcode to unlock this item. The unlock lasts for the timeout you set in Security.",
     "passcodeRequired": "Passcode required",
-    "deleteSubtitlePasscode": "Enter your passcode to delete this protected item."
+    "deleteSubtitlePasscode": "Enter your passcode to delete this protected item.",
+    "sectionTitle": "This section is protected",
+    "sectionBiometricSubtitle": "Use your fingerprint or face to open this section.",
+    "sectionVerifySubtitle": "Enter your 4-digit PIN to open this section. The unlock lasts for the timeout you set in Security.",
+    "sectionVerifySubtitlePasscode": "Enter your passcode to open this section. The unlock lasts for the timeout you set in Security.",
+    "sectionDisableSubtitle": "Its items stay where they are. Only the protection comes off.",
+    "sectionBootstrapSubtitle": "This section is protected, but no PIN is set on this device. Set a 4-digit PIN to open it. Your PIN syncs across all your devices."
   },
   "lockScreen": {
     "unlockApp": "Unlock <brand/>",
     "subtitleWithBio": "Use your fingerprint, face, or PIN to continue.",
     "subtitleNoBio": "Enter your PIN to continue.",
-    "biometricFailed": "Biometric verification failed or was cancelled.",
+    "biometricFailed": "Biometric verification failed or was canceled.",
+    "deviceKeyUnavailable": "This device cannot open its lock right now, and what you typed is not the problem. Unlock another way below, such as your recovery phrase.",
+    "keyringCancelled": "Unlock your keyring, then try again.",
     "biometricUnopened": "Biometric unlock could not open your notes. Use your PIN or passcode, or set up biometric unlock again.",
     "biometricGone": "Biometric unlock stopped working on this device and must be set up again. Use another way in below, then turn biometric unlock back on in Settings.",
     "verifying": "Verifying...",
@@ -275,9 +319,6 @@
     "upgradeHeading": "Or upgrade to Pro",
     "upgradeBody": "One-time payment, no subscription. Unlimited devices plus images, note history, and more.",
     "upgradeCta": "Upgrade to Pro for ${{price}}",
-    "needMoreHeading": "Need more devices?",
-    "needMoreBody": "Pro upgrades aren't available on this build. If you genuinely need a third device, reach out and we'll sort it.",
-    "contactSupport": "Contact support",
     "saveRecoveryHeading": "Save your recovery phrase",
     "saveRecoveryBody": "You signed in with OAuth. Write down your recovery phrase too. It's your fallback if OAuth ever fails or you're locked out across devices.",
     "hide": "Hide",
@@ -315,7 +356,7 @@
     "custodial": "We store an encrypted copy of your phrase. Keep at least one connected account, or switch to self-custody before disconnecting the last one.",
     "selfCustody": "On a new device, a connected account still needs your recovery phrase to open your notes. Connecting an account does not store the phrase with us.",
     "mfaRequired": "Two-factor sign-in stays on for all sign-in methods. Keep your authenticator or its saved backup key.",
-    "unavailable": "Connected account changes are not available yet. Your existing sign-in still works.",
+    "unavailable": "Connected account changes are turned off for now. Your existing sign-in still works.",
     "loading": "Checking connected accounts...",
     "emailHidden": "Email not shared",
     "disconnectAccount": "Disconnect {{provider}} account {{email}}",
@@ -340,7 +381,7 @@
     "invalidReturn": "That return link does not belong to this connection. Copy the full link from the page you just opened.",
     "finishConnection": "Finish connecting",
     "cancelConnection": "Cancel connection",
-    "connectCancelled": "Connection cancelled. Your existing accounts are unchanged.",
+    "connectCancelled": "Connection canceled. Your existing accounts are unchanged.",
     "connectExpired": "This connection attempt expired. Start again from Connected accounts.",
     "popupBlocked": "The sign-in window was blocked. Allow popups for PrivacyNotes and try again.",
     "connectFailed": "The sign-in could not be completed. Your existing accounts are unchanged. Try again.",
@@ -384,7 +425,7 @@
     "signInAgain": "Sign in again",
     "lostAuthenticator": "Lost your phone?",
     "restore": "Add your backup key to any authenticator app, then enter its code in PrivacyNotes.",
-    "noBackup": "No phone and no backup key? We do not reset 2FA, and our support cannot help with it. Export the notes on this device and start a new vault.",
+    "noBackup": "No phone and no backup key? We do not reset 2FA, and our support cannot help with it. Export the notes on this device as \"Everything, not encrypted (.zip)\" and start a new vault.",
     "localNotes": "Not now? Keep using the notes on this device. Sync starts again after you enter a code.",
     "useLocalNotes": "Skip for now"
   },
@@ -394,7 +435,7 @@
     "loading": "Checking 2FA...",
     "retry": "Try again",
     "unavailable": "Could not check 2FA. Your notes on this device are safe. Check your connection and try again.",
-    "notAvailable": "2FA is not available yet.",
+    "notAvailable": "2FA is turned off for now. Try again later.",
     "actionFailed": "That did not work. Check your connection and try again. Your notes on this device are safe.",
     "warning": "Keep your phone or your backup key. If you lose both, you cannot sign in on a new device. This is for your own safety. We do not reset 2FA, and our support cannot help with it.",
     "cannotEnroll": "Sign in again with your phrase or a connected account to set up 2FA.",
@@ -423,6 +464,7 @@
     "backupWarning": "Lost your phone? This key brings your codes back. Keep it somewhere safe, outside PrivacyNotes.",
     "savedAcknowledgment": "I saved the backup key.",
     "confirmBackup": "Type your backup key again from the previous step, then enter the code from your app.",
+    "disconnectsConnections": "Turning on 2FA disconnects the browser extension and the command line. Connect the extension again in Settings > Extension, and the command line in Settings > CLI.",
     "codeLabel": "Code from your app",
     "cancelSetup": "Cancel",
     "enabled": "2FA is on",
@@ -452,6 +494,7 @@
   },
   "phraseChange": {
     "lengthGroup": "Phrase length",
+    "lengthLater": "You can change the length or the phrase later in Settings > Security > Phrase.",
     "badgeMargin": "Extra margin",
     "rowWrite": "To write down",
     "write12": "Quick to copy by hand.",
@@ -506,10 +549,23 @@
     "failed": "The phrase did not change.",
     "failedTooMany": "Your phrase changed three times in the last 24 hours. Try again later.",
     "failedMoved": "Your settings changed on another device meanwhile. Try again.",
+    "failedSettingsMoved": "Your settings changed on another device meanwhile. Try again: this time the phrase change replaces them, even if they change again.",
     "failedTwoFactor": "The 2FA code was not accepted. Try again.",
     "failedKeyRing": "This device does not hold the keys of an earlier phrase. Make the change on a device that does.",
     "failedBiometric": "Your fingerprint or face is the only lock of this device. Confirm it to make the change.",
+    "failedCannotBind": "Your fingerprint or face is the only lock of this device, and on this device it cannot protect the new phrase. Set a PIN or passcode in Settings > Security > PIN first, then make the change.",
     "failedUnsynced": "Some settings on this device are not synced yet. Wait a moment, then try again.",
-    "failedOffline": "The server could not take the change now. Check your connection and try again."
+    "failedOffline": "The server could not take the change now. Check your connection and try again.",
+    "signInPasskeysReset_one": "Your sign-in passkey stops working. Add it again after the change.",
+    "signInPasskeysReset_other": "Your {{count}} sign-in passkeys stop working. Add them again after the change."
+  },
+  "releaseNotice": {
+    "sent": "A new device signed in to your account on {{when}}. Not you? Remove it in Devices."
+  },
+  "releaseApproval": {
+    "ask": "A new sign-in on {{when}} asks for your recovery phrase (code {{code}}). Allow it only if it is you and the new device shows the same code.",
+    "waiting": "A new sign-in asks for your recovery phrase (code {{code}}) and gets it after {{when}}, unless you deny it. Allow it only if it is you and the new device shows the same code.",
+    "allow": "Allow",
+    "deny": "Deny"
   }
 }

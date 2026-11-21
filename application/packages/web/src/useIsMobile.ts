@@ -11,11 +11,13 @@ const MQ = '(max-width: 1023px)';
 const TOUCH_MQ = '(hover: none)';
 
 function useMediaQuery(query: string): boolean {
+  // A place with no matchMedia (a test's jsdom) reads as no match.
   const [matches, setMatches] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia(query).matches : false
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function' ? window.matchMedia(query).matches : false
   );
 
   useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
     const mql = window.matchMedia(query);
     const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
     mql.addEventListener('change', handler);
@@ -53,6 +55,12 @@ export function useIsMobile(): boolean {
  */
 /** The phone bar is on screen: below the md breakpoint, where an open item
  *  fills the screen, and taller than the 320px at which the bar hides. */
+/** The phone layout: below the md breakpoint, where an open item fills the
+ *  screen, at any height. */
+export function useIsPhoneLayout(): boolean {
+  return useMediaQuery('(max-width: 767px)');
+}
+
 export function useHasPhoneBar(): boolean {
   return useMediaQuery('(max-width: 767px) and (min-height: 321px)');
 }

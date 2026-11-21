@@ -27,6 +27,8 @@ import type { ExtensionKeys } from './extensionKeys';
 import type { DeviceRow } from './devices';
 import { DeviceRowLabel } from './SyncOptionsModal';
 import { formatRelative } from './intlFormat';
+import { loadLocalSettings } from './userSettings';
+import { hasLiveSignIn, signInStamp, signedOutSince } from './liveSignIn';
 
 /** What the pane needs from the signed-in app. */
 export interface ExtensionAccess {
@@ -40,7 +42,7 @@ export interface ExtensionAccess {
 
 /** Push the synced settings now; true once the server holds every local
  *  change, the extension's key entries included. */
-async function pushSettingsNow(access: ExtensionAccess): Promise<boolean> {
+export async function pushSettingsNow(access: ExtensionAccess): Promise<boolean> {
   if (isDemoMode()) return false;
   try {
     await syncUserSettings(access.supabase, access.pubkey, access.contentKey);
@@ -48,6 +50,15 @@ async function pushSettingsNow(access: ExtensionAccess): Promise<boolean> {
     return false;
   }
   return !hasUnpushedSettings();
+}
+
+/** After Remove: the connection's sender key goes from the synced settings,
+ *  so a row signed with it is refused from now on.
+ *  Spec: docs/internal/plans/inbox-signed-hybrid.md (section 5.2) */
+export async function forgetSenderOf(access: ExtensionAccess | null, tokenId: string): Promise<void> {
+  if (!access) return;
+  const { withoutSenderOf } = await import('./extensionKeyring');
+  access.saveKeys((k) => withoutSenderOf(k, access.contentKey, tokenId));
 }
 
 const ERROR_KEY: Record<string, string> = {
@@ -219,11 +230,17 @@ function ConnectSteps({ access, rows, reload, gated, onUpgrade }: {
 /**
  * The connected browsers: the device row, the scopes and the last clip under
  * the name, Remove in place. An extension takes no device slot. Remove
- * deletes its token, its PIN checker and its half of the logins key at once.
+ * deletes its token, its PIN checker and its half of the logins key at once,
+ * and the inbox rows it posted (0115) except its login edits, which outlive
+ * it (0132). So Remove first takes the inbox into this Vault; when that
+ * fails, or rows are left that this app could not take in, it says so and
+ * offers Remove anyway, which deletes the login edits left too, so nothing
+ * it warns about arrives later (beta #133).
+ * Spec: docs/contrib/passkeys.md (section 5.4, App side of Remove)
  */
 function ConnectedBrowsers({ rows, onRemoved, heading, help, icon = PuzzlePiece }: {
   rows: ExtensionRow[];
-  onRemoved: (id: string) => void;
+  onRemoved: (id: string) => void | Promise<void>;
   /** Settings > Command line names its own list (agent-cli.md section 3.6). */
   heading?: string;
   help?: string;
@@ -233,14 +250,53 @@ function ConnectedBrowsers({ rows, onRemoved, heading, help, icon = PuzzlePiece 
   const { supabase, auth } = useAuth();
   const pubkey = auth.status === 'authenticated' ? auth.pubkey : '';
   const [failed, setFailed] = useState(false);
-  const remove = async (id: string) => {
+  /** The browser whose inbox rows could not all be taken in first. */
+  const [held, setHeld] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const removeNow = async (id: string, dropEdits = false) => {
     setFailed(false);
+    setHeld(null);
     try {
-      await removeExtension(supabase, pubkey, id);
-      onRemoved(id);
+      await removeExtension(supabase, pubkey, id, { dropEdits });
+      // A failed revoke of the sender shows as a failed Remove (code review 5).
+      await onRemoved(id);
     } catch {
       setFailed(true);
     }
+  };
+  /** Take the inbox in first; true when nothing is left behind. With no
+   *  sign-in there is nothing to adopt with, so Remove goes ahead as before. */
+  const adoptFirst = async (): Promise<boolean> => {
+    if (auth.status !== 'authenticated') return true;
+    const signedInAt = signInStamp();
+    try {
+      const ext = await import('./extensionSync');
+      const { waiting } = await ext.adoptInboxNow({
+        store: ext.supabaseExtensionStore(supabase, auth.pubkey),
+        pubkey: auth.pubkey,
+        inboxSecret: ext.inboxSecretOf(auth.pubkey, auth.phrase),
+        contentKey: auth.encryptionKey,
+        readKeys: () => loadLocalSettings().extensionKeys,
+        deviceId: auth.deviceId,
+        isCurrent: () => hasLiveSignIn() && !signedOutSince(signedInAt),
+        agentFolder: () => {
+          const { agentFolder, folders } = loadLocalSettings();
+          return agentFolder && folders.some((f) => f.id === agentFolder) ? agentFolder : null;
+        },
+        hasFolder: (folder) => loadLocalSettings().folders.some((f) => f.id === folder),
+      });
+      return waiting === 0;
+    } catch {
+      return false;
+    }
+  };
+  const remove = async (id: string) => {
+    setFailed(false);
+    setBusy(id);
+    const adopted = await adoptFirst();
+    setBusy(null);
+    if (adopted) await removeNow(id);
+    else setHeld(id);
   };
   return (
     <section className="space-y-2">
@@ -269,11 +325,19 @@ function ConnectedBrowsers({ rows, onRemoved, heading, help, icon = PuzzlePiece 
                   </>
                 }
               />
-              <DeleteButton kind="remove" label={`${t('common:actions.remove')} ${r.label}`} onConfirm={() => void remove(r.id)} />
+              {busy === r.id ? <Spinner /> : <DeleteButton kind="remove" label={`${t('common:actions.remove')} ${r.label}`} onConfirm={() => void remove(r.id)} />}
             </li>
           );
         })}
       </ul>
+      {held && (
+        <Callout
+          tone="warning"
+          action={<Button action="remove" onClick={() => void removeNow(held, true)}>{t('notes:vaultPasskey.removeBrowserAnyway')}</Button>}
+        >
+          {t('notes:vaultPasskey.removeBrowserWaiting')}
+        </Callout>
+      )}
       {failed && <Callout tone="danger">{t('devices.removeFailed')}</Callout>}
     </section>
   );
@@ -299,6 +363,13 @@ export function BrowserPane({ extensionKeys, isPro, onUpgrade }: {
     loadExtensionState(supabase, pubkey).then((s) => setRows(s.extensions.filter((r) => r.client !== 'cli'))).catch(() => {});
   }, [supabase, pubkey]);
   useEffect(load, [load]);
+  // The app's last pass found the extension's copy at its row cap, so new
+  // logins wait outside it (beta #202 item 1).
+  const [copyFull, setCopyFull] = useState(false);
+  useEffect(() => {
+    if (!pubkey) return;
+    void import('./extensionSync').then((ext) => setCopyFull(ext.loginsCopyFull(pubkey))).catch(() => {});
+  }, [pubkey, rows]);
   // The code is redeemed in the extension, so the list catches up when the
   // reader comes back to this window.
   useEffect(() => {
@@ -343,7 +414,7 @@ export function BrowserPane({ extensionKeys, isPro, onUpgrade }: {
 
       {access ? (
         <div className="grid gap-6 @2xl:grid-cols-2">
-          {/* One browser free, more with Pro. Spec: docs/internal/plans/extension-pro-gate.md (section 5) */}
+          {/* One browser free, more with Pro. Spec: docs/internal/specs/extension-pro-gate.md (section 5) */}
           <ConnectSteps access={access} rows={rows} reload={load} gated={rows.length > 0 && !proUnlocked(isPro)} onUpgrade={onUpgrade} />
         </div>
       ) : (
@@ -353,7 +424,13 @@ export function BrowserPane({ extensionKeys, isPro, onUpgrade }: {
         </a>
       )}
 
-      {rows.length > 0 && <ConnectedBrowsers rows={rows} onRemoved={(id) => setRows((all) => all.filter((r) => r.id !== id))} />}
+      {rows.length > 0 && <ConnectedBrowsers rows={rows} onRemoved={async (id) => {
+        // The sender first: a failed clear keeps the row and its error, and a
+        // second Remove tries again (code review round 2).
+        await forgetSenderOf(access, id);
+        setRows((all) => all.filter((r) => r.id !== id));
+      }} />}
+      {rows.length > 0 && copyFull && <Callout tone="warning">{t('apps.loginsCopyFull')}</Callout>}
 
       <p className={SETTINGS_HELP}>
         {t('apps.otherApps')}{' '}

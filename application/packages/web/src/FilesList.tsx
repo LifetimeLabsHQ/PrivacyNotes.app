@@ -22,7 +22,8 @@ import { ItemFlags, ItemRow, ItemTile, applyCompactRows, type ItemFlag, type Ite
 import { itemLookDraw, useNoteLook } from './looks/LookGlyph';
 import { itemGridClass, routeItemClick, useContextTarget, useItemList } from './itemList';
 import { useCompactRows } from './viewMode';
-import { iconPin, iconTrash, iconEditPencil, Check, Folder, LinkSimple, Upload, FunnelSimple, Files, PILLAR_GLYPHS } from './icons';
+import { iconPin, iconTrash, iconEditPencil, Check, Folder, LinkSimple, Upload, FunnelSimple, Files, PILLAR_GLYPHS, Image, MusicNotes, File, FileDashed } from './icons';
+import { Button, KindChips, type KindChip } from './ui';
 import { NewButton } from './NewButton';
 import { HoverLabel } from './HoverLabel';
 import { SelectionToolbar } from './SelectionToolbar';
@@ -40,13 +41,15 @@ import { IMAGE_REF_RE, isMail, isPdf, isPictureMime, openMediaViewer, type Media
 import { useQuotaBlockedUuids } from './usePendingUploads';
 import { unescapeMarkdownText } from './fileNames';
 import { noteFileLinks } from './vaultBody';
+import type { FileUse } from './connectionsIndex';
 import { textMatcher } from './textMatch';
 import { setItemDragImage, writeItemDrag } from './itemDrag';
 import { isUuid } from './uuid';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
-export type FileType = 'all' | 'image' | 'audio' | 'document';
+/** A type tab, or `unused`: the files no note uses (#852). */
+export type FileType = 'all' | 'image' | 'audio' | 'document' | 'unused';
 
 export interface FileItem {
   uuid: string;
@@ -280,6 +283,8 @@ interface FilesListProps {
   /** Type filter - lifted to parent so it survives unmount/remount. */
   filter: FileType;
   onFilterChange: (f: FileType) => void;
+  /** Which notes use each file item (connectionsIndex.ts `buildFileUses`), keyed by the file item's id. */
+  fileUses: ReadonlyMap<string, FileUse>;
   onOpenNote: (noteId: string, fileUuid?: string) => void;
   /** Rename a stored file: opens its note and puts the chip into rename
    *  mode. The name is only ever written by the chip in the live editor,
@@ -365,9 +370,9 @@ function getFileTypeLabel(item: FileItem): string {
   return 'file';
 }
 
-// Free-vs-Pro comparison shown to free users in the Files view (storage-bar
-// area and empty state). Values are numbers with short labels so no locale can
-// overflow the narrow column. Spec: docs/internal/pro-features.md (free vs Pro limits).
+// Free-vs-Pro comparison shown to free users in the Files view, under the
+// storage gauge: each limit as "5 MB -> 50 MB", the Pro value in the accent,
+// so no heading row is needed. Spec: docs/internal/pro-features.md (free vs Pro limits).
 function ProUpsell({ onUpgrade, className = '' }: { onUpgrade: () => void; className?: string }) {
   const { t } = useTranslation('shell');
   const rows = [
@@ -377,26 +382,16 @@ function ProUpsell({ onUpgrade, className = '' }: { onUpgrade: () => void; class
   return (
     <div className={`w-full ${className}`}>
       {rows.map((r) => (
-        <div key={r.label} className="flex items-center justify-between gap-2 text-meta py-0.5">
-          <span className="text-pn-muted">{r.label}</span>
-          <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-            <span className="text-pn-muted">
-              {r.free} MB <span className="text-meta uppercase tracking-wide">{t('filesList.free')}</span>
-            </span>
-            <span className="text-pn-muted" aria-hidden="true">{'→'}</span>
-            <span className="text-accent font-medium">
-              {r.pro} MB <span className="text-meta uppercase tracking-wide">Pro</span>
-            </span>
+        <div key={r.label} className="flex items-baseline justify-between gap-2 text-meta py-0.5">
+          <span className="text-pn-muted truncate">{r.label}</span>
+          <span className="shrink-0 whitespace-nowrap tabular-nums text-pn-muted">
+            {r.free} MB <span aria-hidden="true">{'→'}</span> <span className="text-accent font-medium">{r.pro} MB</span>
           </span>
         </div>
       ))}
-      <button
-        type="button"
-        onClick={onUpgrade}
-        className="mt-2 w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-accent/10 hover:bg-accent/20 text-accent-strong font-medium text-small px-3 py-2 transition"
-      >
-        <IconUpgrade size={12} /> {t('settings:plan.upgradeToPro')}
-      </button>
+      <Button variant="upgrade" icon={<IconUpgrade size={15} onFill />} onClick={onUpgrade} className="mt-2 w-full">
+        {t('settings:plan.upgradeToPro')}
+      </Button>
     </div>
   );
 }
@@ -415,6 +410,7 @@ export function FilesList({
   currentNoteId,
   filter,
   onFilterChange: setFilter,
+  fileUses,
   onOpenNote,
   onRenameFile,
   onCopyShortcut,
@@ -649,6 +645,11 @@ export function FilesList({
         icon: filter === 'document' ? checkIcon : emptyIcon,
         onSelect: () => setFilter('document'),
       },
+      {
+        label: t('filesList.filterUnused'),
+        icon: filter === 'unused' ? checkIcon : emptyIcon,
+        onSelect: () => setFilter('unused'),
+      },
       { type: 'separator' },
       {
         label: showNote ? t('filesList.menuHideNoteAttachments') : t('shell:filesList.showNotesWithAttachments'),
@@ -703,9 +704,29 @@ export function FilesList({
     [fileItems, gatedKey, showNote, listPrefs.showLocked, listPrefs.showProtected],
   );
 
+  /** A file item no note uses. A file inside a note is in use by that note. */
+  const isUnused = useCallback((f: FileItem) => {
+    const use = f.standalone ? fileUses.get(f.noteId) : undefined;
+    return !!use && use.ids.length === 0 && use.hidden === 0;
+  }, [fileUses]);
+  /** The chips, each with the glyph its rows wear and its count before the type filter. */
+  const kindChips = useMemo((): KindChip<FileType>[] => {
+    const count = (key: FileType) => (key === 'all' ? visibleItems.length
+      : key === 'unused' ? visibleItems.filter(isUnused).length
+      : visibleItems.filter((f) => fileCategory(f) === key).length);
+    return ([
+      { key: 'all', label: t('filesList.filterAll'), Icon: null },
+      { key: 'image', label: t('notes:settings.imagesLabel'), Icon: Image },
+      { key: 'audio', label: t('filesList.filterAudio'), Icon: MusicNotes },
+      { key: 'document', label: t('filesList.filterFiles'), Icon: File },
+      { key: 'unused', label: t('filesList.filterUnused'), Icon: FileDashed },
+    ] as const).map((k) => ({ ...k, count: count(k.key) }));
+  }, [visibleItems, isUnused, t]);
   const filtered = useMemo(() => {
     let items = visibleItems;
-    if (filter !== 'all') {
+    if (filter === 'unused') {
+      items = items.filter(isUnused);
+    } else if (filter !== 'all') {
       items = items.filter((f) => fileCategory(f) === filter);
     }
     // Apply search - match on file name or parent note title.
@@ -725,7 +746,7 @@ export function FilesList({
       return dir * (a.editedAt > b.editedAt ? 1 : a.editedAt < b.editedAt ? -1 : 0);
     });
     return items;
-  }, [visibleItems, filter, search, sortField, sortDir]);
+  }, [visibleItems, filter, isUnused, search, sortField, sortDir]);
   // The files arrive in slices of 200; a different list - a new type filter,
   // search, folder or tag - starts at its top.
   const list = useItemList([filter, search, activeFolderName, activeTag, showNote], filtered.length, place);
@@ -877,30 +898,8 @@ export function FilesList({
         </div>
       )}
 
-      {/* ── Type filter tabs ─────────────────────────────────────── */}
-      <div className="shrink-0 px-3 pt-2 pb-1 flex gap-1.5">
-        {([
-          { key: 'all' as FileType, label: t('filesList.filterAll') },
-          { key: 'image' as FileType, label: t('notes:settings.imagesLabel') },
-          { key: 'audio' as FileType, label: t('filesList.filterAudio') },
-          { key: 'document' as FileType, label: t('filesList.filterFiles') },
-        ] as const).map(({ key, label }) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setFilter(key)}
-            aria-pressed={filter === key}
-            tabIndex={mobileTabIndex}
-            className={`text-small px-2.5 py-1 rounded-full transition font-medium ${
-              filter === key
-                ? 'bg-accent-fill text-white'
-                : 'bg-surface-1 text-pn-muted hover:bg-pn/10'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {/* ── Type filter chips: the Vault's kind chips (ui-patterns.md section 190) ── */}
+      <KindChips kinds={kindChips} value={filter} onChange={setFilter} tabIndex={mobileTabIndex} />
 
       {/* ── Search row + sort button - matches NotesList layout ───── */}
       <div className="shrink-0 px-3 py-2 md:p-3 border-b border-divider relative">
@@ -1093,7 +1092,7 @@ export function FilesList({
                   size: listPrefs.showSize && item.size > 0 ? formatBytes(item.size) : null,
                   flags,
                   chips: listPrefs.showTags ? <TagChips tags={item.tags} folderId={item.folderId} /> : null,
-                  ribbon: false,
+                  ribbon: null,
                 };
                 return (
                   <FileEntry

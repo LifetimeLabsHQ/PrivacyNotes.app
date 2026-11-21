@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from './db';
-import { parseLinkBody, buildLinkBody, normalizeUrl, linkDomain, duplicateBookmarkId } from './linkBody';
+import { parseLinkBody, updateLinkBody, normalizeUrl, linkDomain, duplicateBookmarkId } from './linkBody';
+import { NotesField } from './NotesField';
+import { BOOKMARK_NOTES_OFFERED } from './bookmarkNotesLaunch';
 import { SiteChip } from './NoteRow';
 import { useCopyToClipboard } from './clipboard';
 import { openExternal } from './openExternal';
@@ -49,6 +51,9 @@ const BOOKMARK_COLUMN = 'w-full max-w-[720px]';
  * URL you already have was the one way past it (fixed 2026-08-26).
  * Spec: docs/internal/specs/bookmarks-pillar.md (standard-header rework)
  */
+/** Save as note, its spinner and Open the note. */
+const CLIP_BUTTON = 'shrink-0 @max-[44rem]:flex-1 @max-[26rem]:basis-full';
+
 export function BookmarkItem({
   note,
   bookmarkKeys,
@@ -78,10 +83,39 @@ export function BookmarkItem({
   /** The website-icon explainer under the URL field, collapsed by default. */
   const [iconHintOpen, setIconHintOpen] = useState(false);
   const pinProtected = note.pinProtected === 1;
-  const { url: savedUrl, keyword: savedKeyword, keywordTag: savedKeywordTag } = parseLinkBody(note.body);
+  const { url: savedUrl, notes = '' } = parseLinkBody(note.body);
   const [draft, setDraft] = useState(savedUrl);
+  /** Three buttons beside the field instead of two. */
+  const wide = !!(clip && savedUrl);
   const [invalid, setInvalid] = useState(false);
   const [duplicate, setDuplicate] = useState(false);
+  const [notesDraft, setNotesDraft] = useState(notes);
+  // Once shown, the box stays while its text is deleted.
+  const [notesShown, setNotesShown] = useState(BOOKMARK_NOTES_OFFERED || notes !== '');
+  // The saved body trails what this pane sends: the editing hook buffers a
+  // body and writes it later. The pane builds every edit on the newest body
+  // it sent, and takes `note.body` only when it is none of its own, else a
+  // re-render while a write is in flight puts old notes back in the box.
+  const latestBody = useRef(note.body);
+  const sentBodies = useRef(new Set([note.body]));
+  useEffect(() => {
+    if (sentBodies.current.has(note.body)) {
+      if (note.body === latestBody.current) sentBodies.current = new Set([note.body]);
+      return;
+    }
+    latestBody.current = note.body;
+    sentBodies.current = new Set([note.body]);
+    const remote = parseLinkBody(note.body).notes ?? '';
+    setNotesDraft(remote);
+    if (remote) setNotesShown(true);
+  }, [note.body]);
+
+  function send(patch: { url?: string; notes?: string }) {
+    const next = updateLinkBody(latestBody.current, patch);
+    latestBody.current = next;
+    sentBodies.current.add(next);
+    onBodyChange(note.id, next);
+  }
 
   // A remote edit or note switch replaces the draft (the component is
   // keyed by note id in NoteEditorPane, so this covers same-id refreshes).
@@ -98,7 +132,7 @@ export function BookmarkItem({
       return;
     }
     setInvalid(false);
-    if (normalized === savedUrl) return;
+    if (normalized === parseLinkBody(latestBody.current).url) return;
     // The quick-add bar's guard, on the edit path: without it the same trap
     // (two rows, one URL - trash "the copy" and lose the tagged original)
     // was one rename away. The edit is refused, not merged: the two rows may
@@ -109,7 +143,7 @@ export function BookmarkItem({
       return;
     }
     setDuplicate(false);
-    onBodyChange(note.id, buildLinkBody(normalized, savedKeyword, savedKeywordTag));
+    send({ url: normalized });
   }
 
   return (
@@ -124,10 +158,13 @@ export function BookmarkItem({
       {/* One row while the pane holds it. Under 30rem the field would be
           squeezed to a sliver beside two buttons (a phone left it about
           115px), so the field takes its own line and the buttons share the
-          next one. A container query, because the pane is a column the user
-          drags and a viewport breakpoint cannot see it.
+          next one. With the third button (Save as note) the field shrinks
+          sooner, so that row breaks at 44rem, and the third button takes a
+          line of its own only under 26rem. A container query, because the
+          pane is a column the user drags and a viewport breakpoint cannot
+          see it.
           Spec: docs/internal/design/ui-patterns.md (section 77) */}
-      <div className="flex items-center gap-1.5 @max-[30rem]:flex-wrap">
+      <div className={`flex items-center gap-1.5 ${wide ? '@max-[44rem]:flex-wrap' : '@max-[30rem]:flex-wrap'}`}>
         {/* The website icon sits inside the field, behind a hairline, where a
             browser's address bar carries it: no extra line, and the address
             keeps the width a chip beside the field used to take. It is the
@@ -137,7 +174,7 @@ export function BookmarkItem({
             when an icon resolves. The domain comes from the SAVED url, so a
             half-typed value fetches nothing; the icon appears when the edit
             commits. */}
-        <div className={`flex items-stretch min-w-0 flex-1 rounded-md bg-surface-1 border focus-within:border-accent ${invalid ? 'border-red-500' : duplicate ? 'border-amber-500' : 'border-divider'} @max-[30rem]:basis-full`}>
+        <div className={`flex items-stretch min-w-0 flex-1 rounded-md bg-surface-1 border focus-within:border-accent ${invalid ? 'border-red-500' : duplicate ? 'border-amber-500' : 'border-divider'} ${wide ? '@max-[44rem]:basis-full' : '@max-[30rem]:basis-full'}`}>
           <span className="shrink-0 flex items-center px-1.5 border-e border-divider">
             <SiteChip
               domain={linkDomain(savedUrl)}
@@ -160,25 +197,25 @@ export function BookmarkItem({
           action={copied === 'url' ? 'done' : 'copy'}
           variant="secondary"
           onClick={() => copy(savedUrl, 'url')}
-          className={`shrink-0 @max-[30rem]:flex-1${copied === 'url' ? ' [&_svg]:text-success' : ''}`}
+          className={`shrink-0 ${wide ? '@max-[44rem]:flex-1' : '@max-[30rem]:flex-1'}${copied === 'url' ? ' [&_svg]:text-success' : ''}`}
         >
           {/* A fixed label keeps clipboard feedback from resizing the URL field. */}
           {t('common:actions.copy')}
         </Button>
-        <Button action="open" variant="accent" onClick={() => openExternal(savedUrl)} className="shrink-0 @max-[30rem]:flex-1">
+        <Button action="open" variant="accent" onClick={() => openExternal(savedUrl)} className={`shrink-0 ${wide ? '@max-[44rem]:flex-1' : '@max-[30rem]:flex-1'}`}>
           {t('shell:contacts.open')}
         </Button>
         {clip && savedUrl && (
           clip.job ? (
-            <Button variant="primary" icon={<Spinner size={15} className="text-white" />} disabled className="shrink-0 @max-[30rem]:basis-full">
+            <Button variant="primary" icon={<Spinner size={15} className="text-white" />} disabled className={CLIP_BUTTON}>
               {t('clipper.saving')}
             </Button>
           ) : clip.note ? (
-            <Button variant="primary" icon={<NotePencil aria-hidden />} onClick={clip.onOpenNote} className="shrink-0 @max-[30rem]:basis-full">
+            <Button variant="primary" icon={<NotePencil aria-hidden />} onClick={clip.onOpenNote} className={CLIP_BUTTON}>
               {t('editor:noteLink.open')}
             </Button>
           ) : (
-            <Button variant="primary" icon={<NEW_GLYPHS.note aria-hidden />} onClick={clip.onSave} className="shrink-0 @max-[30rem]:basis-full">
+            <Button variant="primary" icon={<NEW_GLYPHS.note aria-hidden />} onClick={clip.onSave} className={CLIP_BUTTON}>
               {t('shell:contextMenu.saveAsNote')}
             </Button>
           )
@@ -233,9 +270,24 @@ export function BookmarkItem({
       {/* No prose cap on the paragraph: it runs to the same edge as the field
           row above it, and the pane already caps its own column width. */}
       {iconHintOpen && (
-        <p className="mt-1.5 text-small leading-relaxed text-pn-soft">
+        <p className="mt-1.5 text-small leading-relaxed text-pn">
           {t('landing:trust.faviconsBody1')} {t('landing:trust.faviconsBody2')}
         </p>
+      )}
+
+      {/* The vault's Notes box, so bookmarks and vault items share one small
+          editor. Held back in release builds until old clients are gone
+          (bookmarkNotesLaunch.ts), except where notes already exist. */}
+      {notesShown && (
+        <div className="mt-6">
+          <NotesField
+            label={t('common:cardForm.notes')}
+            value={notesDraft}
+            onChange={(next) => { setNotesDraft(next); send({ notes: next }); }}
+            placeholder={t('common:cardForm.notesPlaceholder')}
+            disabled={isTrash || note.locked === 1}
+          />
+        </div>
       )}
 
       {/* PIN-protect toggle - the vault form's exact block (LoginForm),
@@ -266,7 +318,7 @@ export function BookmarkItem({
           </label>
           {showPinInfo && <PinInfoModal onClose={() => setShowPinInfo(false)} />}
           {!pinConfigured && !pinProtected && (
-            <p className="mt-1 text-meta text-pn-muted">
+            <p className="mt-2 ps-6 text-meta text-pn-muted">
               {t('common:cardForm.setUpPinFirst')}
             </p>
           )}

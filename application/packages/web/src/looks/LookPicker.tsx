@@ -75,8 +75,10 @@ export interface LookTarget {
   /** A tracker is icon-only, as a note is: its color has its own swatches.
    *  `insert` puts the pick into a note's text (Insert > Icons & logos): no
    *  look of its own, so no "Use default". */
-  kind: 'folder' | 'tag' | 'note' | 'tracker' | 'insert';
-  /** `folderLookKey(id)`, `tagLookKey(tag)` or `noteLookKey(id)`. */
+  kind: 'folder' | 'tag' | 'note' | 'tracker' | 'insert' | 'calendar';
+  /** `folderLookKey(id)`, `tagLookKey(tag)`, `noteLookKey(id)` or, for a
+   *  subscribed calendar (#811), `feedLookKey(id)`: an icon and a color its
+   *  events wear, with no switch for notes and no note color setting. */
   lookKey: string;
   /** The folder id, for a folder target. */
   folderId?: string;
@@ -235,7 +237,7 @@ export function LookPicker({
 
   const previewIcon = hoverIcon ?? look.icon;
   const previewPaths = useLookPaths(previewIcon);
-  const DefaultGlyph = target.kind === 'folder' ? Folder : target.kind === 'note' ? File : target.kind === 'tracker' ? Heartbeat : target.kind === 'insert' ? Shapes : target.favorite ? Star : Hash;
+  const DefaultGlyph = target.kind === 'folder' ? Folder : target.kind === 'note' ? File : target.kind === 'tracker' ? Heartbeat : target.kind === 'insert' ? Shapes : target.kind === 'calendar' ? Globe : target.favorite ? Star : Hash;
   const caption = hoverIcon
     ? iconName(hoverIcon)
     : target.kind === 'folder'
@@ -246,7 +248,9 @@ export function LookPicker({
           ? t('captionTracker')
           : target.kind === 'insert'
             ? ''
-            : t('captionTag');
+            : target.kind === 'calendar'
+              ? tShell('tagsRail.calendar')
+              : t('captionTag');
   // A note's color belongs to the note menu, so its reset leaves the color.
   const reset: Partial<Record<LookAttr, null>> = iconOnly ? { icon: null } : { icon: null, color: null, notes: null };
   const resettable = iconOnly ? !!look.icon : !!look.icon || !!look.color;
@@ -367,7 +371,7 @@ export function LookPicker({
   // only, pinned above the footer so the scrolling grid never hides it.
   // Off and greyed while there is no icon to show.
   // Spec: docs/internal/specs/folder-tag-icons.md (section 4.11)
-  const onNotesSwitch = !iconOnly && tab !== 'color' && (
+  const onNotesSwitch = !iconOnly && target.kind !== 'calendar' && tab !== 'color' && (
     <Switch
       className="shrink-0 border-t border-divider px-4 py-2.5"
       label={t(target.kind === 'folder' ? 'applyToFolderItems' : 'applyToTagItems')}
@@ -427,7 +431,8 @@ export function LookPicker({
           onPick={(c) => onPick({ color: c })}
         />
       </div>
-      <div className="mt-3 border-t border-divider divide-y divide-divider">
+      {/* A calendar's color marks its events only: no note setting. */}
+      {target.kind !== 'calendar' && <div className="mt-3 border-t border-divider divide-y divide-divider">
         {onSubfoldersFollow && subfolderIds.length > 0 && (
           <Switch
             className="py-2.5"
@@ -481,7 +486,7 @@ export function LookPicker({
             />
           </div>
         </div>
-      </div>
+      </div>}
     </>
   );
 
@@ -579,7 +584,7 @@ export function LookPicker({
           className={`fixed inset-x-0 z-[60] flex flex-col bg-surface-1 border-divider ${
             keyboard
               ? 'border-b rounded-b-xl pb-2'
-              : 'bottom-0 h-[calc(100dvh-env(safe-area-inset-top)-1rem)] border-t rounded-t-xl pb-[max(0.75rem,env(safe-area-inset-bottom))]'
+              : 'bottom-0 h-[calc(100dvh-var(--pn-safe-top)-1rem)] border-t rounded-t-xl pb-[max(0.75rem,var(--pn-safe-bottom))]'
           }`}
           style={keyboard ? { top: keyboard.top, height: keyboard.height } : undefined}
         >
@@ -609,7 +614,7 @@ export function LookPicker({
         role="dialog"
         aria-modal="true"
         aria-label={dialogLabel}
-        className="w-[380px] [@media(hover:none)]:w-[420px] max-w-full h-[min(640px,calc(100dvh-32px))] flex flex-col bg-surface-1 border border-divider rounded-xl shadow-xl pb-3"
+        className="w-[394px] [@media(hover:none)]:w-[420px] max-w-full h-[min(640px,calc(100dvh-32px))] flex flex-col bg-surface-1 border border-divider rounded-xl shadow-xl pb-3"
       >
         <div className="px-4 pt-4 shrink-0">{top}</div>
         <div className="px-4 pt-1 pb-3 overflow-y-auto min-h-0 flex-1 overscroll-contain" onScroll={onBodyScroll}>{body}</div>

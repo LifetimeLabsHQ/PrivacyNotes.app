@@ -5,16 +5,16 @@ import { invalidateDeviceRegistration } from './authStorage';
 import type { SupabaseClient } from '@notes/shared';
 import { createNote, listNotes } from './notesRepo';
 import { db, type LocalNote } from './db';
-import { sync, pushConflictAnswer, writeConflictAnswer, CaptchaRequiredError, DeviceRevokedError, QuotaExceededError, SessionExpiredError, type NoteConflict, type PushHalt } from './sync';
+import { sync, pushConflictAnswer, writeConflictAnswer, CaptchaRequiredError, DeviceRevokedError, SessionExpiredError, type NoteConflict, type PushHalt } from './sync';
 import { PhraseReplacedError } from './phraseReplaced';
 import { reportIfPhraseReplaced } from './identity';
 import { logAuthEvent } from './authDiag';
 import { verifyExpiredSession } from './sessionCheck';
 import { ensureLevel2, isMfaRefusal, MfaUnavailableError } from './mfaStep';
-import { fetchQuotaUsage } from './devices';
+import { deviceRegistered, fetchQuotaUsage } from './devices';
 import { hasSettingsPulled, hasUnpushedSettings, loadLocalSettings, settingsKeyEpoch, syncUserSettings, updateLocalSettings, type UserSettings } from './userSettings';
 import { syncPinCache } from './pin';
-import { syncPinWrap } from './pinRecovery';
+import { saveHeldPinRehash, syncPinWrap } from './pinRecovery';
 import { hasLiveSignIn, signInStamp, signedOutSince } from './liveSignIn';
 import { currentKeyEpoch } from './keyRing';
 import { seedOnboardingNotes } from './welcomeNote';
@@ -309,6 +309,11 @@ export function useSyncOrchestrator({
       const syncResult = await sync(supabase, auth.pubkey, auth.encryptionKey, auth.deviceId, onBatch, onPushError, enqueueConflict);
       passRan = syncResult.ran;
       passHalt = syncResult.halted ?? null;
+      // A note the server refused on the storage limit shows the banner and
+      // the pass goes on: the sweep below is what removes deleted files from
+      // Storage, and the quota read is what lifts the banner (beta #204 item 1).
+      const refusedOnQuota = syncResult.quotaRefused === true;
+      if (refusedOnQuota) setQuotaExceeded(true);
       // Feed the sync activity log (syncLog.ts). Skipped passes (demo,
       // floor, pause, mutex) report ran: false and are non-events.
       if (syncResult.ran) {
@@ -354,6 +359,9 @@ export function useSyncOrchestrator({
       // when the account no longer has one. The phrase goes with it so a
       // device the removal leaves with no door can put it back at rest.
       await syncPinWrap(merged, auth.phrase, settingsKeyEpoch());
+      // A legacy PIN hash a check upgraded in memory is saved only now, once
+      // this pass has read the account's row: the next pass pushes it.
+      if (settingsPass.readServer && !signedOutSince(signedInAt)) merged = saveHeldPinRehash(signedInAt) ?? merged;
 
       // One-shot welcome-note seed. Runs exactly once per user, ever
       // - gated on the synced `welcomeNoteSeeded` flag so a second
@@ -551,6 +559,9 @@ export function useSyncOrchestrator({
                 return agentFolder && folders.some((f) => f.id === agentFolder) ? agentFolder : null;
               },
               hasFolder: (id) => loadLocalSettings().folders.some((f) => f.id === id),
+              // This pass read the server's settings: a sender that a stale
+              // copy does not know yet is never refused (code review 2).
+              settingsPulled: () => settingsPass.readServer && hasSettingsPulled(),
               pushKeys: async () => {
                 await syncUserSettings(supabase, auth.pubkey, auth.encryptionKey, undefined, signedInAt);
                 return !hasUnpushedSettings();
@@ -623,8 +634,10 @@ export function useSyncOrchestrator({
             if (q.quotaExceededSince) {
               setQuotaExceeded(true);
               setQuotaExceededSince(q.quotaExceededSince);
-            } else {
-              // Storage back under quota - clear the banner. Fixes #69.
+            } else if (!refusedOnQuota) {
+              // Storage back under quota - clear the banner. Fixes #69. Not
+              // after a pass the server refused a note on: that refusal is
+              // newer news than an unset stamp.
               setQuotaExceeded(false);
               setQuotaExceededSince(null);
             }
@@ -663,7 +676,14 @@ export function useSyncOrchestrator({
       // asked about the phrase before either one is answered as itself.
       // Spec: docs/internal/plans/phrase-change.md (section 7)
       const replacedHere = () => reportIfPhraseReplaced(auth.phrase, 'sign-in');
-      if (isMfaRefusal(err)) {
+      // The server refuses the session of a removed device at the same gate
+      // as a missing factor, and a pass can meet that refusal (the dead man's
+      // switch question, a flush) before its heartbeat. So the removal is
+      // asked about first: only the server's explicit no counts, and an
+      // error reads as "still registered", as for the heartbeat.
+      // Spec: docs/internal/plans/r2-migration-spec.md (section 3.5)
+      const removed = isMfaRefusal(err) && !(await deviceRegistered(supabase, auth.deviceId));
+      if (isMfaRefusal(err) && !removed) {
         if (await replacedHere()) return;
         // A missing factor pauses server access, never the local vault.
         // Dismissal preserves notes and suppresses repeated background prompts.
@@ -680,12 +700,8 @@ export function useSyncOrchestrator({
       // phrase. Every unsynced edit stays for the pass after it.
       // Spec: docs/internal/plans/phrase-change.md (section 7)
       if (err instanceof PhraseReplacedError) return;
-      if (err instanceof DeviceRevokedError) {
+      if (removed || err instanceof DeviceRevokedError) {
         await forceSignOut('device revoked');
-        return;
-      }
-      if (err instanceof QuotaExceededError) {
-        setQuotaExceeded(true);
         return;
       }
       if (err instanceof SessionExpiredError) {
@@ -778,8 +794,8 @@ export function useSyncOrchestrator({
         // statically here folds the auth chunk into the entry and grows the
         // entry and NotesView chunks past their budgets.
         const { encryptNote, bytesToBase64 } = await import('@notes/shared');
-        await pushConflictAnswer(supabase, auth.pubkey, conflict, (fields) => {
-          const { ciphertext, nonce } = encryptNote(fields, keySnapshot);
+        await pushConflictAnswer(supabase, auth.pubkey, conflict, (fields, bind) => {
+          const { ciphertext, nonce } = encryptNote(fields, keySnapshot, bind);
           return { ciphertext: bytesToBase64(ciphertext), nonce: bytesToBase64(nonce) };
         });
       } else {

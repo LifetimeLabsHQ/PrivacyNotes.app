@@ -115,10 +115,13 @@
       "red": "Красный",
       "orange": "Оранжевый",
       "yellow": "Жёлтый",
+      "lime": "Лаймовый",
       "green": "Зелёный",
       "teal": "Бирюзовый",
       "blue": "Синий",
+      "indigo": "Индиго",
       "purple": "Фиолетовый",
+      "grape": "Виноградный",
       "pink": "Розовый"
     }
   },
@@ -247,6 +250,10 @@
     "characters_few": "{{formatted}} символа",
     "characters_many": "{{formatted}} символов",
     "characters_other": "{{formatted}} символа",
+    "lines_one": "{{formatted}} строка",
+    "lines_few": "{{formatted}} строки",
+    "lines_many": "{{formatted}} строк",
+    "lines_other": "{{formatted}} строки",
     "tasksChecked_one": "Отмечено {{done}} из {{formatted}}",
     "tasksChecked_few": "Отмечено {{done}} из {{formatted}}",
     "tasksChecked_many": "Отмечено {{done}} из {{formatted}}",
@@ -286,6 +293,10 @@
     "expand": "Развернуть блок кода",
     "placeholder": "Введите или вставьте код. Чтобы добавить цвета, выберите язык вверху."
   },
+  "fold": {
+    "collapse": "Свернуть раздел",
+    "expand": "Развернуть раздел"
+  },
   "math": {
     "sourceLabel": "Код LaTeX"
   },
@@ -322,7 +333,7 @@
     "hiddenNote": "Они по-прежнему работают через сочетание клавиш и Markdown.",
     "hiddenDrop": "Перетащите сюда кнопку, чтобы скрыть её.",
     "arrangeTitle": "Кнопки",
-    "markdownViewNote": "В представлении Markdown свой постоянный набор кнопок.",
+    "markdownViewNote": "В представлении Markdown те же кнопки. Те, которым нужно представление с форматированием, там затемнены и по-прежнему работают в представлении с форматированием.",
     "hiddenEmpty": "Ничего не скрыто.",
     "alwaysVisible": "Всегда видны",
     "pinned": "Открывает панель, поэтому остаётся на панели или скрыта",
@@ -349,7 +360,7 @@
       "notelink": "Ссылка на заметку",
       "audio": "Запись",
       "attachMenu": "Прикрепить",
-      "separator": "Вертикальная черта",
+      "separator": "Разделитель панели инструментов",
       "markdownView": "Показать Markdown"
     },
     "positionTitle": "Положение панели",

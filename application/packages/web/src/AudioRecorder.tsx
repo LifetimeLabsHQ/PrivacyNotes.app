@@ -92,7 +92,11 @@ export function AudioRecorder({ editorView, tabIndex, onStateChange, stopRef, st
 
   const startRecording = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Ask for the voice cleanup explicitly: the defaults differ by browser
+      // and webview, and a voice note wants all three.
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true },
+      });
 
       // MP4/AAC: plays on every browser/OS. Records on Chrome 128+, Safari.
       // OGG/Opus: fallback for desktop Firefox (can't record MP4, but

@@ -1,3 +1,4 @@
+import { STATIC_TIP_CSS } from './staticTip.ts';
 import { buildPool, linesStartPaused, mountTypewriter, type TypewriterLook } from './typewriter.ts';
 
 // The typewriter lines as the site footer's closing line (owner, 2026-10-23,
@@ -54,9 +55,8 @@ const FOOTER_LOOK: TypewriterLook = {
 };
 
 /**
- * The tooltip is CSS only: the button's own aria-label, shown above it on
- * hover and on keyboard focus, anchored to its right edge so it never leaves
- * the page on a phone.
+ * The button's tooltip is the shared static one (`STATIC_TIP_CSS`), above it
+ * and anchored to its end edge so it never leaves the page on a phone.
  */
 export const FOOTER_LINES_CSS = `.fl{position:relative;z-index:1;height:0;display:flex;align-items:flex-start;justify-content:center;padding:0 16px}
 .fl-pill{display:flex;align-items:center;gap:10px;width:min(100%,calc(var(--fl-ch,49) * 1ch + 70px));padding:5px 5px 5px 16px;border:1px solid #3D362A;border-radius:20px;background:var(--wl-footer,var(--footer,#161210));transform:translateY(-50%);font:var(--fs-body)/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#A69E8F}
@@ -71,11 +71,9 @@ export const FOOTER_LINES_CSS = `.fl{position:relative;z-index:1;height:0;displa
 .fl-btn{position:relative;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid #2E2820;border-radius:50%;background:transparent;color:#A69E8F;cursor:pointer;transition:color .15s,border-color .15s}
 .fl-btn:hover{color:#fff;border-color:#3D362A}
 .fl-btn:focus-visible{outline:2px solid #4F6BD5;outline-offset:2px}
-.fl-btn::after{content:attr(aria-label);position:absolute;right:-6px;bottom:calc(100% + 10px);padding:5px 9px;border:1px solid #3D362A;border-radius:6px;background:#161210;color:#F2EEE6;font:500 var(--fs-small)/1.3 Inter,system-ui,sans-serif;white-space:nowrap;opacity:0;transform:translateY(4px);pointer-events:none;transition:opacity .15s,transform .15s}
-.fl-btn:hover::after,.fl-btn:focus-visible::after{opacity:1;transform:none}
-@media (hover:none){.fl-btn:hover::after{opacity:0}}
 @media (max-width:639px){.fl{margin-bottom:10px}.fl-pill{gap:8px;padding-left:12px;font-size:var(--fs-small)}}
-@media (prefers-reduced-motion:reduce){.fl-blink{animation:none}.fl-btn::after{transition:none}}`;
+@media (prefers-reduced-motion:reduce){.fl-blink{animation:none}}
+${STATIC_TIP_CSS}`;
 
 function esc(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -88,7 +86,7 @@ function longest(lines: string[]): number {
 
 /** The closing line's markup, words included; mountFooterLines() brings it to life. */
 export function footerLinesHtml(text: FooterLinesText): string {
-  return `<div class="fl" style="--fl-ch:${longest([...text.lines, ...text.loadingOnly])}" data-footer-lines data-lines="${esc(JSON.stringify(text.lines))}" data-loading-lines="${esc(JSON.stringify(text.loadingOnly))}" data-pause="${esc(text.pause)}" data-play="${esc(text.play)}"><div class="fl-pill"><div class="fl-line" aria-hidden="true"></div><button type="button" class="fl-btn" aria-label="${esc(text.pause)}" aria-pressed="false">${PAUSE_ICON}</button></div></div>`;
+  return `<div class="fl" style="--fl-ch:${longest([...text.lines, ...text.loadingOnly])}" data-footer-lines data-lines="${esc(JSON.stringify(text.lines))}" data-loading-lines="${esc(JSON.stringify(text.loadingOnly))}" data-pause="${esc(text.pause)}" data-play="${esc(text.play)}"><div class="fl-pill"><div class="fl-line" aria-hidden="true"></div><button type="button" class="fl-btn tip tip-above-end" aria-label="${esc(text.pause)}" data-tip="${esc(text.pause)}" aria-pressed="false">${PAUSE_ICON}</button></div></div>`;
 }
 
 function strings(raw: string | undefined): string[] {
@@ -120,6 +118,7 @@ export function mountFooterLines(root: HTMLElement): () => void {
   function show() {
     const label = (paused ? root.dataset.play : root.dataset.pause) ?? '';
     button!.setAttribute('aria-label', label);
+    button!.setAttribute('data-tip', label);
     button!.setAttribute('aria-pressed', String(paused));
     button!.innerHTML = paused ? PLAY_ICON : PAUSE_ICON;
   }

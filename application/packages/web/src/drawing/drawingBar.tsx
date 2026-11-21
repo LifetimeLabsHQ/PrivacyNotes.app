@@ -17,7 +17,7 @@ import {
   Gear, Hash, Keyboard, LineSegment, LineVertical, LockSimpleOpen, MagnifyingGlass, MagnifyingGlassMinus, MagnifyingGlassPlus,
   NavigationArrow, PencilSimple, Square, TextT, Trash,
 } from '../icons';
-import { createBarModel, separator as hiddenSeparator, type FormatBarItem } from '../formatBar';
+import { createBarModel, type FormatBarItem } from '../formatBar';
 
 const bar = (key: string): FormatBarItem => ({ key, home: 'bar', group: 'format', menuAllowed: false, attachAllowed: false });
 const end = (key: string): FormatBarItem => ({ key, home: 'end', group: 'format', menuAllowed: false, attachAllowed: false });
@@ -30,13 +30,12 @@ export const DRAWING_BAR_ITEMS: readonly FormatBarItem[] = [
   bar('separator2'), bar('undo'), bar('redo'),
   bar('separator3'), bar('zoomOut'), bar('zoomReset'), bar('zoomIn'),
   end('open'), end('reset'), end('hotkeys'), end('customize'),
-  hiddenSeparator('separator4'),
 ];
 
-/** Not a button that keeps the bar usable: a line, the hotkeys button,
- *  which a touch-only screen leaves out, and the gear, which only a wide
- *  screen shows (as the format bar's). */
-const SOMETIMES_ABSENT = new Set(['separator1', 'separator2', 'separator3', 'separator4', 'hotkeys', 'customize']);
+/** Not a button that keeps the bar usable: the hotkeys button, which a
+ *  touch-only screen leaves out, and the gear, which only a wide screen shows
+ *  (as the format bar's). A divider never counts (createBarModel). */
+const SOMETIMES_ABSENT = new Set(['hotkeys', 'customize']);
 
 export const DRAWING_BAR = createBarModel(DRAWING_BAR_ITEMS, ['format'], SOMETIMES_ABSENT);
 
@@ -87,5 +86,6 @@ export const DRAWING_BAR_LOOK: Readonly<Record<string, DrawingBarLook>> = {
   reset: { Icon: Trash, label: 'notes:drawing.tools.reset' },
   hotkeys: { Icon: Keyboard, label: 'notes:drawing.hotkeysTitle' },
   customize: { Icon: Gear, label: 'editor:toolbar.customize' },
-  separator1: separator, separator2: separator, separator3: separator, separator4: separator,
+  // Every divider, of any number (isSeparatorKey), wears this look.
+  separator,
 };

@@ -109,6 +109,22 @@ async function ask(tabId: number, runId: string): Promise<number> {
   }
 }
 
+/**
+ * The frames of the tab where the page's own scripts run. A sub-frame
+ * sandboxed without `allow-scripts` runs none, and the fill script cannot see
+ * that from inside a frame of another origin of the same site, where its
+ * frame element is hidden from it (beta #217). A constant function sent to
+ * the frame's own world runs only where scripts run. No answer at all: none.
+ */
+async function scriptedFrames(tabId: number): Promise<Set<number>> {
+  const results = await within(
+    browser.scripting.executeScript({ target: { tabId, allFrames: true }, world: 'MAIN', func: () => true }).catch(() => null),
+    RUN_LIMIT_MS,
+    null,
+  );
+  return new Set((results ?? []).filter((r) => r.result === true).map((r) => r.frameId));
+}
+
 /** Wait until every asked frame answered, at most a moment. */
 function collected(run: Run, asked: number): Promise<void> {
   if (run.answered.size >= asked) return Promise.resolve();
@@ -151,10 +167,13 @@ export async function runFill(item: string, tabId: number): Promise<FillOutcome>
   try {
     const asked = await within(ask(tabId, runId), RUN_LIMIT_MS, 0);
     if (!asked) return 'nothing';
+    const scripted = scriptedFrames(tabId);
     await collected(run, asked);
 
-    // The top frame's address is the tab's, as the browser has it.
-    const frames = run.frames.filter((f) => f.frameId !== 0 || f.url === tab.url);
+    // The top frame's address is the tab's, as the browser has it. A
+    // sub-frame is filled only where the page's scripts run.
+    const inFrames = await scripted;
+    const frames = run.frames.filter((f) => (f.frameId === 0 ? f.url === tab.url : inFrames.has(f.frameId)));
     const totp = found.pro && login.totp ? parseTotpInput(login.totp) : null;
     const { frame, insecure } = chooseFrame(frames, login, !!totp);
     if (!frame) return insecure ? 'insecure' : (frames.find((f) => f.frameId === 0)?.report.reason ?? 'nothing');

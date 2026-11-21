@@ -3,7 +3,7 @@ id: 3d0c
 title: Alles wat markdown hier kan
 ---
 
-Alles hieronder is gemaakt met de balk boven aan deze notitie. Geen instellingen, geen plugins. Selecteer tekst en de balk werkt erop. Klik op een lege regel en hij begint iets nieuws.
+Alles hieronder is gemaakt met de balk boven aan deze notitie. Geen instellingen, geen plug-ins. Selecteer tekst en de balk werkt erop. Klik op een lege regel en hij begint iets nieuws.
 
 ## Woorden
 

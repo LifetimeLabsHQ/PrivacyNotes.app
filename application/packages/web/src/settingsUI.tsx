@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ClockClockwise, type Icon } from './icons';
+import { ClockClockwise, CloudSlash, Question, type Icon } from './icons';
+import { observeTip, positionClasses, TIP_SKIN } from './HoverLabel';
 import { Callout } from './ui/feedback';
 import { ARMED_MS } from './ui/DeleteButton';
 
@@ -43,13 +44,23 @@ export function EyebrowGlyph({ icon: Glyph }: { icon: Icon }) {
  *  glyph a `Switch` wraps in a span takes the same size, so call sites need
  *  not size it. Spec: docs/contrib/design/type-scale.md */
 export const ROW_TITLE = 'text-body font-medium flex items-center gap-1.5';
-export function RowTitle({ icon: Glyph, children }: { icon: Icon; children: ReactNode }) {
+export function RowTitle({ icon: Glyph, children, hint }: { icon: Icon; children: ReactNode; hint?: ReactNode }) {
   return (
     <p className={ROW_TITLE}>
       <Glyph className="text-accent shrink-0" aria-hidden="true" />
       {children}
+      {hint}
     </p>
   );
+}
+
+/** A setting kept on this device and never synced: a cloud-off beside the
+ *  row title, its words in the tip, so the rows need not end on the same
+ *  sentence. `phone` for a phone-only setting.
+ *  Spec: docs/internal/design/patterns/201-210.md (section 209) */
+export function DeviceOnlyTip({ phone = false }: { phone?: boolean }) {
+  const { t } = useTranslation('settings');
+  return <HelpTip end icon={CloudSlash} text={t(phone ? 'appearance.phoneOnly' : 'appearance.deviceOnly')} />;
 }
 
 /** A setting row in a pane: label and helper on the left, the control on the
@@ -342,4 +353,75 @@ export function settingsChipClass(on: boolean): string {
   return `inline-flex items-center h-7 px-2.5 rounded-md border text-small font-medium transition-colors ${
     on ? 'border-accent/30 bg-accent/10 text-accent-strong' : 'border-transparent bg-surface-0 text-pn-soft hover:bg-pn/10 hover:text-pn'
   }`;
+}
+
+/**
+ * A "?" beside a label that shows a short explanation in a tooltip: on hover
+ * with a pointer, and on a tap or click anywhere, which also works on a touch
+ * screen with no hover. The next tap outside closes it; a blur cannot, because
+ * a tapped button takes no focus on iOS. The button's name is the explanation
+ * itself, so a screen reader reads it without opening anything. `icon`
+ * swaps the "?" for a glyph that says what kind of note it is, as the
+ * cloud-off of a device-only setting does (`DeviceOnlyTip`).
+ */
+export function HelpTip({ text, icon: Glyph = Question, end = false }: {
+  text: string;
+  icon?: Icon;
+  /** Opens after the glyph instead of under it. Shown only while open, so a
+   *  hidden tip has no box to widen a narrow window; with no room beside the
+   *  glyph it drops below it (`fitTip`). */
+  end?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLSpanElement | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    window.addEventListener('pointerdown', close, true);
+    return () => window.removeEventListener('pointerdown', close, true);
+  }, [open]);
+  return (
+    <span ref={ref} className="group/help relative inline-flex">
+      <button
+        type="button"
+        aria-label={text}
+        aria-expanded={open}
+        // Inside the switch's label: the click must not toggle the switch.
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
+        // A 16px glyph with a 40px touch target, through an invisible ring.
+        // 1px down: the lowercase of the label centers below its line box,
+        // and a glyph centered on the box reads high beside it.
+        className="relative translate-y-px inline-flex items-center justify-center w-4 h-4 rounded-full text-pn-muted hover:text-accent transition before:absolute before:-inset-3 before:content-['']"
+      >
+        <Glyph aria-hidden="true" />
+      </button>
+      {end ? (
+        <span
+          aria-hidden="true"
+          ref={observeTip}
+          className={`pn-tip pointer-events-none absolute ${positionClasses.end} z-20 w-max max-w-[160px] ${TIP_SKIN} font-normal normal-case tracking-normal ${
+            open ? 'block' : 'hidden [@media(hover:hover)]:group-hover/help:block'
+          }`}
+        >
+          {text}
+        </span>
+      ) : (
+        <span
+          aria-hidden="true"
+          // rtl-ok: centered under the button, the same in both directions
+          className={`pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-1.5 z-20 w-max max-w-[160px] ${TIP_SKIN} font-normal normal-case tracking-normal transition-opacity duration-75 ${
+            open ? 'opacity-100' : 'opacity-0 [@media(hover:hover)]:group-hover/help:opacity-100'
+          }`}
+        >
+          {text}
+        </span>
+      )}
+    </span>
+  );
 }

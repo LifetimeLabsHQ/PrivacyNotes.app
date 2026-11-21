@@ -33,14 +33,18 @@ const WEB_SOURCES = [
 ];
 
 const imported = new Set<string>();
+/** A path with forward slashes: the bundler's module ids have them on
+ *  Windows too, `resolve` and `relative` give backslashes there (beta #236 item 4). */
+const slashes = (path: string): string => path.replaceAll('\\', '/');
 function recordWebSources(): NonNullable<WxtViteConfig['plugins']>[number] {
+  const webSrc = `${slashes(WEB_SRC)}/`;
   return {
     name: 'pn-web-sources',
     apply: 'build',
     buildEnd() {
       for (const id of this.getModuleIds()) {
-        const file = id.split('?')[0]!;
-        if (file.startsWith(`${WEB_SRC}/`) && !file.endsWith('.css') && !file.endsWith('.json')) imported.add(relative(REPO, file));
+        const file = slashes(id.split('?')[0]!);
+        if (file.startsWith(webSrc) && !file.endsWith('.css') && !file.endsWith('.json')) imported.add(slashes(relative(REPO, file)));
       }
     },
   };
@@ -162,7 +166,9 @@ export default defineConfig({
       // than one sealed clip with all its pictures. It shows no install warning.
       ...(browser === 'firefox' ? [] : ['offscreen', 'unlimitedStorage']),
     ],
-    host_permissions: ['<all_urls>'],
+    // http and https only: every save, fill, picture fetch and passkey script
+    // acts on those two schemes, so `<all_urls>` asked for more than is used.
+    host_permissions: ['*://*/*'],
     action: { default_title: '__MSG_extName__' },
     // Chrome and Edge take a default key for at most four commands, and
     // opening the popup counts as one; Firefox has no limit. So Chrome and

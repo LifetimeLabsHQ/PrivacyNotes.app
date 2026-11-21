@@ -240,6 +240,8 @@
       "prevYear": "Vorheriges Jahr",
       "nextYear": "Nächstes Jahr"
     },
+    "seeEntries": "Einträge anzeigen",
+    "showInCalendar": "Im Kalender anzeigen",
     "trackers": {
       "tapHint": "Ein Tipp öffnet Erkunden",
       "stopped": "Gestoppt",

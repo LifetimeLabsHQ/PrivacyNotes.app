@@ -1,43 +1,48 @@
 import type { Space } from '../spaces';
 import type { TrackerSetupTab } from '../TrackerConfig';
 import type { SpaceMove } from '../NoteOptionsMenu';
-import { useCallback, useContext, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import type { UpgradeTrigger } from '../UpgradeModal';
 import type { Dispatch, ReactNode, RefObject, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUUpLeft as Undo2Icon, ArrowUUpRight as Redo2Icon, X, ArrowLeft, ArrowCounterClockwise, Trash, DotsThreeOutlineVertical, CaretLeft, CaretRight, MarkdownLogo, TextAa, ArticleMedium, Paragraph, MagnifyingGlass, FrameCorners, ArrowCircleUp, ArrowCircleDown, CalendarDots, CalendarPlus } from '../icons';
+import { ArrowUUpLeft as Undo2Icon, ArrowUUpRight as Redo2Icon, X, ArrowLeft, ArrowCounterClockwise, Trash, DotsThreeOutlineVertical, CaretLeft, CaretRight, MarkdownLogo, TextAa, ArticleMedium, Paragraph, PushPin, MagnifyingGlass, FrameCorners, ArrowCircleUp, ArrowCircleDown, CalendarDots, CalendarPlus } from '../icons';
 import type { AuthState } from '../auth';
 import { captureAnchor, followAnchor, type ViewAnchor } from '../viewSwitchAnchor';
 import { noteAnchor, rememberNoteAnchor } from './listPlace';
 import type { LocalNote } from '../db';
-import { updateNote } from '../notesRepo';
+import { createdHere, updateNote } from '../notesRepo';
 import { listReplacedCopies } from '../replacedCopies';
 import { Editor, type EditorHandle } from '../Editor';
 import { FormatBarContext } from '../formatBarContext';
 import { MarkdownSourceEditor, type MarkdownSourceHandle } from '../MarkdownSourceEditor';
+import { useSplitView } from '../useSplitView';
+import { LineNumbersToggle } from '../sourcePreviewButtons';
+// Split view loads on demand, off the boot path.
+const SourcePreviewPane = lazy(() => import('../SourcePreviewPane').then((m) => ({ default: m.SourcePreviewPane })));
 import { TagInput, type TagInputHandle } from '../TagInput';
 import { withCredentialChanges, type UserSettings } from '../userSettings';
 import { NoteOptionsMenu, type NoteColorInfo, type NoteOptionsView } from '../NoteOptionsMenu';
 import { EventCard, type ScheduleRow } from '../EventCard';
-import { convertPatch, type ConvertTarget } from '../noteTypes';
+import { convertPatch, traitsOf, type ConvertTarget } from '../noteTypes';
 import type { NoteOwnColor } from '../itemStyles';
 import { ProtectedNoteGate } from '../ProtectedNoteGate';
 import { parseLinkBody, linkDomain } from '../linkBody';
 import { BookmarkItem, type BookmarkClip } from '../BookmarkItem';
 import { ContactItem } from '../ContactItem';
+import { NoteLinkOpenContext } from '../detailPane';
 import { DrawingItem } from '../drawing/DrawingItem';
-import { useHasPhoneBar } from '../useIsMobile';
+import { useHasPhoneBar, useIsPhoneLayout } from '../useIsMobile';
 import { HoverLabel } from '../HoverLabel';
 import type { NoteJump } from './AppFooter';
 import { EditorSlotPill } from '../EditorSlotPill';
-import { useTheme, type ContentWidth } from '../theme';
-import { TITLE_MAX_LENGTH, newEditorKey } from '../useNoteEditing';
+import { setNoteSpellcheck, useNoteSpellcheckOff, useTheme, type ContentWidth } from '../theme';
+import { TITLE_MAX_LENGTH, useEditorSession } from '../useNoteEditing';
 import { proUnlocked } from '../demo';
 import { usePushFailure } from '../pushFailures';
 import { VaultItem } from '../VaultItem';
 import { NotesDockContext } from '../NotesField';
 import { entryDayOf, hasStructuredBody, isKnownNoteType, isWeekJournal, noteLinkName, shareSurface, toLocalIso } from '../notesViewUtils';
-import { buildLinkIndex } from '../connectionsIndex';
+import type { FileUse, LinkIndex } from '../connectionsIndex';
 import { ConnectionsPill } from '../ConnectionsPill';
 import { linkInsertPoint, suggestionPairKey } from '../relatedLoader';
 import { setPairHidden } from '../dismissedSuggestions';
@@ -55,13 +60,13 @@ import { editorCommands, registerEditorCommand } from '../editorCommands';
 import type { JournalTrackerData } from '../trackerTypes';
 import { ShareMenu } from './ShareMenu';
 import { NoteQuickActions, HeaderDivider, type QuickActionsTier } from './NoteQuickActions';
-import { noteActionGuards, type NoteActionGuardDeps } from '../noteActionGuards';
+import { canTranslate, noteActionGuards, protectionFromForm, type NoteActionGuardDeps } from '../noteActionGuards';
 import { WeekInReview } from './WeekInReview';
 import { isImeComposing } from '../imeComposing';
 import { convertTypedSymbol, undoTypedSymbol, type TypedSymbolChange } from '../typedSymbols';
 import type { JournalDays } from '../notesViewUtils';
 import type { ScheduleEdit } from '../schedule';
-import { ArchivedHint, ReadOnlyHint, UnlockedHint } from '../readOnlyNotice';
+import { NoteStateRow, noteStates } from '../readOnlyNotice';
 import { NoteLocationChip } from './NoteLocationChip';
 import { readLocation } from '../noteLocation';
 
@@ -246,6 +251,8 @@ interface NoteEditorMenuActions {
   requestTrash: (ids: string[]) => void;
   handleRestore: (id: string) => Promise<void>;
   handleDuplicate: (id: string) => Promise<void>;
+  /** Opens Translate notes on a note; null while Plugins is not released. */
+  translateNote: ((n: LocalNote) => void) | null;
   /** "Split note" beside the sync-limit line; null where a note cannot split. */
   splitNote: ((n: LocalNote) => void) | null;
   /** The editor's measure found the open note over the 1 MB sync limit. */
@@ -279,6 +286,12 @@ export interface NoteEditorPaneProps {
   notes: LocalNote[];
   /** Bumps after each write to the related-notes index (relatedNotes.ts). */
   relatedIndexVersion: number;
+  /** The live (not trashed) notes the link index was built from, for the Connections pill. */
+  liveLinkNotes: readonly LocalNote[];
+  /** Which items link to which (connectionsIndex.ts), built once in NotesView. */
+  linkIndex: LinkIndex;
+  /** Which notes use each file item (#852), for a file's Connections panel. */
+  fileUses: ReadonlyMap<string, FileUse>;
   /** Every saved bookmark URL in the account (buildLinkKeyMap), for the
    *  bookmark body's duplicate guard. Owned by NotesView so the editor and
    *  the quick-add bar can never guard against different sets. */
@@ -314,8 +327,6 @@ export interface NoteEditorPaneProps {
   bodyOverflows: boolean;
 
   editorRevision: number;
-  wcBody: string;
-  setWcBody: Dispatch<SetStateAction<string>>;
 
   userSettings: UserSettings;
   mutateSettings: (updater: (prev: UserSettings) => UserSettings) => void;
@@ -323,6 +334,8 @@ export interface NoteEditorPaneProps {
   tagCounts: { tags: [string, number][]; untagged: number };
   isNoteLocked: (n: LocalNote) => boolean;
   folderChipFor: (note: LocalNote) => ReactNode;
+  /** The tag and folder suggestions of Smart connections for a note's tag row. */
+  suggestChipsFor: (note: LocalNote) => ReactNode;
   refresh: () => Promise<LocalNote[]>;
   /** Open a note in the pillar that lists it, clearing a filter that hides it. */
   onRevealNote: (note: LocalNote) => void;
@@ -332,6 +345,13 @@ export interface NoteEditorPaneProps {
   handleSelectTag: (tag: string | null) => Promise<void>;
 
   handleCloseEditor: () => Promise<void>;
+  /** Two items side by side: false on the side that is not focused, which
+   *  takes no keys and registers no commands, so they reach the focused side
+   *  only. Absent (true) when the pane is alone.
+   *  Spec: docs/internal/plans/side-by-side-notes.md (section 6) */
+  focused?: boolean;
+  /** Two items side by side: closes this side, the header's X. */
+  onCloseSide?: () => void;
   handleHistory: (action: 'undo' | 'redo') => void;
   handleBurnShare: (n: LocalNote) => Promise<void>;
 
@@ -380,9 +400,10 @@ export interface NoteEditorPaneProps {
 
 export function NoteEditorPane(props: NoteEditorPaneProps) {
   const { t } = useTranslation('notes');
-  const { position: barPosition } = useContext(FormatBarContext);
+  const { position: barPosition, layout: barLayout } = useContext(FormatBarContext);
   const [barSlot, setBarSlot] = useState<HTMLDivElement | null>(null);
   const [notesDock, setNotesDock] = useState<HTMLDivElement | null>(null);
+  const [footerPinned, setFooterPinned] = useState(readFooterPinned);
   /** The name the contact form's draft spells, while it is still being typed.
    *  The title field shows it in grey below, so a new contact wears its name at
    *  the top before it has a title to wear. Nothing writes it: the form buffers
@@ -391,7 +412,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   const [contactDraftName, setContactDraftName] = useState('');
   // The last sync pass could not push this note (pushFailures.ts).
   const pushFailure = usePushFailure(props.selected.id);
-  const { contentWidth, cycleContentWidth } = useTheme();
+  const { contentWidth, cycleContentWidth, openReadOnly } = useTheme();
   const {
     selected,
     view,
@@ -414,13 +435,12 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     titleLongPress,
     bodyOverflows,
     editorRevision,
-    wcBody,
-    setWcBody,
     userSettings,
     mutateSettings,
     tagCounts,
     isNoteLocked,
     folderChipFor,
+    suggestChipsFor,
     refresh,
     onRevealNote,
     onOpenNoteLink,
@@ -460,7 +480,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     },
     noteMenu: {
       noteColor, onSetNoteColor, onOpenColorSettings, onOpenOnDeviceAi, onPickNoteIcon, handleToggleStar, handleToggleArchive, setJournalDate, setNoteDate,
-      journalDays, requestTrash, handleRestore, handleDuplicate, splitNote, onOverSyncLimit, canUncheckAllTasks,
+      journalDays, requestTrash, handleRestore, handleDuplicate, translateNote, splitNote, onOverSyncLimit, canUncheckAllTasks,
       handleUncheckAllTasks, canDeleteCheckedTasks, handleDeleteCheckedTasks,
       canSortTasksByStatus, handleSortTasksByStatus, handleSetLocked, handleSetPinProtected,
       onCopyShortcut, onCopyNoteLink, spaceMove, schedule,
@@ -472,6 +492,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   /** A type a newer build added. This build cannot read its body, so the item
    *  is read-only here and the body area holds a notice instead of an editor. */
   const knownType = isKnownNoteType(selected.type);
+  const traits = traitsOf(selected.type);
   // The drawing's full-screen call, set by DrawingItem for the header button.
   const drawingFullScreen = useRef<(() => void) | null>(null);
   const hasPhoneBar = useHasPhoneBar();
@@ -487,26 +508,45 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
    */
   const markdownBody = !structuredBody && !isNoteLocked(selected);
   /**
-   * Each markdown editor mount saves under a key of its own, and records the
-   * body it mounted with, so a save from an editor whose row was rewritten
-   * under it is refused (#497). A new key comes with every new mount: another
-   * note, a remount, the other editor mode, or the editor coming back from
-   * behind the PIN gate, the one that takes the protection off included. The
-   * body is read at the mount only: later bodies reach the record through the
-   * editor's own saves. A drawing's canvas saves under the same key, so a
-   * restore or a pull that rewrote its row is refused the same way.
+   * "Open notes read-only" (#824): this device opens a text note read-only
+   * without writing a thing to it. Turn off edits it until the note is left;
+   * a note written here this session opens for editing. The note's own
+   * Read-only flag stays apart and still wins.
+   */
+  const [editingId, setEditingId] = useState<string | null>(null);
+  useEffect(() => { setEditingId(null); }, [selected.id]);
+  const deviceReadOnly = openReadOnly && markdownBody && view !== 'trash' && selected.locked !== 1
+    && editingId !== selected.id && !createdHere(selected.id);
+  /** No edits to the text: the note's own flag or this device's setting. */
+  const readOnlyText = selected.locked === 1 || deviceReadOnly;
+  /**
+   * The open note's editing session (useNoteEditing.ts): each markdown editor
+   * mount saves under a key of its own and records the body it mounted with,
+   * so a save from an editor whose row was rewritten under it is refused
+   * (#497). A new key comes with every new mount: another note, a remount,
+   * the other editor mode, or the editor coming back from behind the PIN
+   * gate, the one that takes the protection off included. A drawing's canvas
+   * saves under the same key, so a restore or a pull that rewrote its row is
+   * refused the same way. The session also holds the text the editor sent
+   * last (`liveBody`) for everything here that shows it.
    */
   const editorShown = markdownBody && knownType && !removingProtection;
-  const mountOf = `${selected.id}|${editorRevision}|${selectedEditorMode}|${editorShown}`;
-  const editorMountRef = useRef<{ of: string; key: string } | null>(null);
-  if (editorMountRef.current?.of !== mountOf) editorMountRef.current = { of: mountOf, key: newEditorKey(selected.id) };
-  const editorKey = editorMountRef.current.key;
+  // Undo and redo are format bar items (Settings > Toolbar). The tag row's
+  // pair, for a touch screen with no keys, stands in only where this note
+  // shows no format bar (the bar turned off, a read-only note), and not for
+  // a person who hid both: hidden in Settings means hidden everywhere.
+  // Spec: docs/internal/specs/format-bar.md
+  const barShown = editorShown && (zenMode ? zenToolbar : toolbarVisible) && view !== 'trash' && !readOnlyText;
+  const barHasHistory = barShown || (barLayout.hidden.includes('undo') && barLayout.hidden.includes('redo'));
+  const session = useEditorSession(
+    selected,
+    `${editorRevision}|${selectedEditorMode}|${editorShown}`,
+    editorShown || selected.type === 'drawing',
+    { handleBodyChange, registerEditorBody, flushEditingBody },
+  );
+  const editorKey = session.key;
   // The title's last typed symbol, which Backspace can take back (#660).
   const titleSymbolRef = useRef<TypedSymbolChange | null>(null);
-  useLayoutEffect(() => {
-    if (editorShown || selected.type === 'drawing') registerEditorBody(editorKey, selected.body);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editorKey]);
   /**
    * Flip THIS note between the rich editor and the markdown source.
    *
@@ -524,7 +564,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
    */
   const toggleEditorMode = () => {
     editorRef.current?.flushPendingSave();
-    flushEditingBody();
+    session.flush();
     viewAnchorRef.current = scrollerRef.current ? captureAnchor(scrollerRef.current) : null;
     setEditorModeOverrides((prev) => ({
       ...prev,
@@ -536,7 +576,11 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
    * word-count link shows it: a real markdown body, not read-only, not in
    * the trash. Two entry points, one condition.
    */
-  const canSwitchEditorMode = markdownBody && view !== 'trash' && selected.locked !== 1;
+  const canSwitchEditorMode = markdownBody && view !== 'trash' && !readOnlyText;
+  // Spell check per note only takes the device's away (S2, S3).
+  // Spec: docs/internal/specs/note-spell-check.md
+  const noteSpellOff = useNoteSpellcheckOff(selected.id);
+  const titleSpellcheck = spellcheck && !noteSpellOff;
   // The reading position across a switch: read before the swap, put back
   // once the other view has drawn its text, and again a frame later, when
   // its height has settled. Spec: docs/internal/issues/0493.md (Reading position)
@@ -555,6 +599,29 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     if (!anchor || !pane) return;
     return followAnchor(pane, anchor);
   }, [selectedEditorMode]);
+  // Split view and line numbers, shared with the Markdown folder's file pane.
+  const phoneLayout = useIsPhoneLayout();
+  const { split, first: previewFirst, lineNumbers, sourceControls, formattedControls } = useSplitView({
+    pane: paneEl,
+    // Two items side by side keep the screen at two columns: no preview
+    // beside the text on either side, and no Split view button (its "widen
+    // the window" tip would not be true). Spec: docs/internal/plans/side-by-side-notes.md (section 7)
+    markdownShown: selectedEditorMode === 'markdown' && editorShown && !props.onCloseSide,
+    showMarkdown: toggleEditorMode,
+  });
+  // The text column changes width when the split opens or closes, so its
+  // lines wrap anew: the line at the top of the pane stays there (the anchor
+  // keep-my-place read when the last scroll settled).
+  const splitSeenRef = useRef({ split, id: selected.id, mode: selectedEditorMode });
+  useEffect(() => {
+    const seen = splitSeenRef.current;
+    splitSeenRef.current = { split, id: selected.id, mode: selectedEditorMode };
+    if (seen.split === split || seen.id !== selected.id || seen.mode !== selectedEditorMode) return;
+    const pane = scrollerRef.current;
+    const anchor = noteAnchor(selected.id);
+    if (!pane || !anchor) return;
+    return followAnchor(pane, anchor);
+  }, [split, selected.id, selectedEditorMode]);
   // Each note opens at the line it was left at this session, on any way in:
   // a row, a tab, a view switch and back. The line is read when a scroll
   // settles, and only for the note it was read in: the swap to another note
@@ -607,7 +674,8 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   // Mod+Shift+M flips the open note between the two views, wherever the focus
   // is, on the notes that offer the switch (GitHub #260).
   const markdownKeyRef = useRef<(() => void) | null>(null);
-  markdownKeyRef.current = canSwitchEditorMode ? toggleEditorMode : null;
+  const idle = props.focused === false;
+  markdownKeyRef.current = canSwitchEditorMode && !idle ? toggleEditorMode : null;
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!markdownKeyRef.current || !matchesKey(e, APP_KEYS.markdownView)) return;
@@ -618,17 +686,17 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
   useEffect(
-    () => (canSwitchEditorMode ? registerEditorCommand('markdownView', () => markdownKeyRef.current?.()) : undefined),
-    [canSwitchEditorMode],
+    () => (canSwitchEditorMode && !idle ? registerEditorCommand('markdownView', () => markdownKeyRef.current?.()) : undefined),
+    [canSwitchEditorMode, idle],
   );
-  // Typed text waits in the keystroke buffer, and its "last edited" stamp
-  // with it, so the "..." menu would read both as they were. Opening the menu
-  // writes the pending save and empties the buffer: Details shows the stamp
-  // the row holds, and the write that lands after it brings the new one.
+  // The "..." menu reads the typed text from the session. Its "last edited"
+  // stamp waits in the keystroke buffer with the text, so opening the menu
+  // writes the editor's save delay and empties the buffer: Details shows the
+  // stamp the row holds, and the write that lands after it brings the new one.
   useEffect(() => {
     if (!showNoteOptions) return;
     editorRef.current?.flushPendingSave();
-    flushEditingBody();
+    session.flush();
   }, [showNoteOptions]); // eslint-disable-line react-hooks/exhaustive-deps
   /** Where Share sits for this note: nowhere while it is gated (shareSurface). */
   const share = shareSurface(isNoteLocked(selected), zenMode || headerCompact);
@@ -679,6 +747,12 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     const fresh = (await refresh()).find((n) => n.id === selected.id);
     if (fresh) onRevealNote(fresh);
   };
+  // The "Require PIN to view" box of the item forms: on is a write, off asks
+  // the PIN like the menu does (noteActionGuards.ts).
+  const setProtectionFromForm = protectionFromForm({
+    onProtect: (id) => void handleSetPinProtected(id, true),
+    onRequestRemoveProtection,
+  });
   /**
    * The wiring behind the four gated per-note actions, shared by the "..."
    * menu and the header's quick-action pill so the two cannot drift. The
@@ -711,7 +785,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   };
   // The notice row's actions (#723): Turn off runs the menu switch's own Pro
   // check; Unarchive is the menu's action.
-  const turnOffReadOnly = () => noteActionGuards(noteGuards).toggleLock();
+  const turnOffReadOnly = deviceReadOnly ? () => setEditingId(selected.id) : () => noteActionGuards(noteGuards).toggleLock();
   /** Unarchive keeps this note open: it follows the note to the pillar that
    *  lists it, as a convert does, instead of moving on to the next one. */
   const unarchive = async () => {
@@ -720,6 +794,9 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     const fresh = (await refresh()).find((n) => n.id === id);
     if (fresh) onRevealNote(fresh);
   };
+  /** Read-only, Archived and Unlocked: one answer for every body branch. */
+  const states = noteStates(selected, view, deviceReadOnly);
+  const stateActions = { deviceReadOnly, onTurnOff: turnOffReadOnly, onUnarchive: () => void unarchive(), onLock: () => onLockProtected(selected.id) };
   /**
    * The only control left in the editor's top-right slot, beside the
    * collapsed outline pill.
@@ -742,32 +819,19 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
    * has nothing to act on over the markdown textarea and stays away there.
    * Spec: docs/internal/design/ui-patterns.md (section 80)
    */
-  const findPill = selectedEditorMode !== 'markdown' && bodyOverflows ? (
+  // In the Markdown view with its preview, the pill sits in the preview's
+  // corner and opens the Markdown view's own find, over the text it searches.
+  const findPill = (selectedEditorMode !== 'markdown' || split) && bodyOverflows ? (
     <EditorSlotPill
       label={t('common:palette.commands.find')}
       keys={keyText('find')}
-      onClick={() => editorRef.current?.toggleFind()}
+      onClick={() => (selectedEditorMode === 'markdown' ? editorCommands.find?.() : editorRef.current?.toggleFind())}
       tabIndex={isMobile ? -1 : undefined}
     >
       <MagnifyingGlass />
     </EditorSlotPill>
   ) : null;
 
-  // Which items link to which, for the Connections pill. A locked note
-  // answers to its gated name, so the set of locked notes keys the memo too.
-  // Spec: docs/internal/issues/0351.md (Spec)
-  const lockedKey = notes.filter(isNoteLocked).map((n) => n.id).join(' ');
-  // Deferred: the scan reads every body, and a save must not wait for it.
-  const deferredNotes = useDeferredValue(notes);
-  const liveNotes = useMemo(() => deferredNotes.filter((n) => n.trashed === 0), [deferredNotes]);
-  const linkIndex = useMemo(
-    () => buildLinkIndex(liveNotes, {
-      nameOf: (n) => noteLinkName(n, isNoteLocked(n)),
-      isSource: (n) => !hasStructuredBody(n.type),
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [liveNotes, lockedKey],
-  );
   const bodyControls = findPill;
 
   // The two link actions of a link suggestion (plan, "Link suggestions"):
@@ -813,14 +877,15 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   const connections = (open: boolean, onOpenChange: (open: boolean) => void) => (
     <ConnectionsPill
       note={selected}
-      notes={liveNotes}
-      index={linkIndex}
+      notes={props.liveLinkNotes}
+      index={props.linkIndex}
+      fileUse={props.fileUses.get(selected.id)}
       relatedIndexVersion={props.relatedIndexVersion}
       linkSuggestions={userSettings.linkSuggestions}
       onHideSuggestions={() => mutateSettings((prev) => ({ ...prev, linkSuggestions: false }))}
       dismissedSuggestions={userSettings.dismissedSuggestions}
-      liveBody={wcBody || selected.body}
-      linkActions={view === 'trash' || selected.locked === 1 ? undefined : { cursorPlaced, onAtCursor: linkAtCursor, onAsFootnote: linkAsFootnote }}
+      liveBody={session.liveBody}
+      linkActions={view === 'trash' || readOnlyText ? undefined : { cursorPlaced, onAtCursor: linkAtCursor, onAsFootnote: linkAsFootnote }}
       onDismissSuggestion={(n) => mutateSettings((prev) => ({
         ...prev,
         dismissedSuggestions: setPairHidden(prev.dismissedSuggestions, suggestionPairKey(selected.id, n.id), true),
@@ -835,6 +900,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
       open={open}
       onOpenChange={onOpenChange}
       tabIndex={isMobile ? -1 : undefined}
+      idle={idle}
     />
   );
 
@@ -847,7 +913,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
 
   // A drawing always shows its toolbar: the canvas has no other one.
   const barBelow = barPosition === 'bottom' && (selected.type === 'drawing'
-    || ((zenMode ? zenToolbar : toolbarVisible) && view !== 'trash' && selected.locked !== 1));
+    || ((zenMode ? zenToolbar : toolbarVisible) && view !== 'trash' && !readOnlyText));
 
   // The format bar's row when it sits at the bottom: outside the scrolling
   // column, so the note scrolls and bounces under it and the bar never
@@ -855,8 +921,8 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   // thing on the screen: over the keyboard there is none, and iOS still
   // reports the inset there (GitHub #533). A drawing's toolbar uses it too.
   const barRow = barBelow && (
-    <div className={`shrink-0 border-t border-divider bg-surface-2 ${footerVisible || keyboardUp ? '' : 'pb-[env(safe-area-inset-bottom)]'}`}>
-      <div ref={setBarSlot} className="pn-content-col" />
+    <div className={`shrink-0 border-t border-divider bg-surface-2 ${footerVisible || keyboardUp ? '' : 'pb-[var(--pn-safe-bottom)]'}`}>
+      <div ref={setBarSlot} className="pn-content-col" data-split={split ? '' : undefined} />
     </div>
   );
 
@@ -882,6 +948,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           // the space available, so no group ever dropped. More icons made
           // the floor higher, which is the wrong way round.
           className="flex items-center gap-2 px-4 sm:px-6 pn-content-col min-w-0"
+          data-split={split ? '' : undefined}
         >
         <button
           onClick={() => void handleCloseEditor()}
@@ -890,11 +957,27 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
         >
           <ArrowLeft size={HEADER_ICON} />
         </button>
-        {gridMode && (
+        {gridMode && !props.onCloseSide && (
           <HoverLabel label={t('editor.backToGrid')} keys={keyText('closeTab')} position="below-start">
             <button
               onClick={() => void handleCloseEditor()}
               aria-label={t('editor.backToGrid')}
+              className={`${HEADER_BTN} -ms-1`}
+            >
+              <X size={HEADER_ICON} />
+            </button>
+          </HoverLabel>
+        )}
+        {/* Two items side by side: each side closes on its own X, in the
+            place the grid's X takes (it stands in for it while paired; the
+            last side's X goes back to the grid).
+            Spec: docs/internal/plans/side-by-side-notes.md (section 3) */}
+        {props.onCloseSide && (
+          <HoverLabel label={t('editor.closeSide')} position="below-start">
+            <button
+              type="button"
+              onClick={props.onCloseSide}
+              aria-label={t('editor.closeSide')}
               className={`${HEADER_BTN} -ms-1`}
             >
               <X size={HEADER_ICON} />
@@ -1002,17 +1085,14 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           maxLength={TITLE_MAX_LENGTH}
           rows={1}
           wrap="off"
-          spellCheck={spellcheck ? undefined : false}
+          spellCheck={titleSpellcheck ? undefined : false}
           placeholder={
-            selected.type === 'link' ? (linkDomain(parseLinkBody(selected.body).url) || t('editor.titlePlaceholderLink'))
-            : selected.type === 'contact' ? (contactDraftName || t('shell:contacts.menuName'))
-            : selected.type === 'login' ? t('editor.titlePlaceholderLogin')
-            : selected.type === 'card' ? t('editor.titlePlaceholderCard')
-            : selected.type === 'ssh-key' ? t('common:sshKeyForm.labelPlaceholder')
-            : t('editor.titlePlaceholder')
+            selected.type === 'link' ? (linkDomain(parseLinkBody(selected.body).url) || t(traits.titleKey))
+            : selected.type === 'contact' ? (contactDraftName || t(traits.titleKey))
+            : t(traits.titleKey)
           }
-          disabled={view === 'trash' || selected.locked === 1 || !knownType}
-          readOnly={selected.locked === 1 || !knownType}
+          disabled={view === 'trash' || readOnlyText || !knownType}
+          readOnly={readOnlyText || !knownType}
           // Single line (wrap="off"): the header stays a fixed height so
           // the column dividers line up. A too-long title scrolls and is
           // softly faded at the right edge (not hard-clipped) as a "more
@@ -1111,8 +1191,8 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
             the item has no day, its day and time once it has one. It opens
             the Schedule view of the "..." menu, the one place a schedule is
             edited. Spec: docs/internal/specs/calendar-pillar-spec.md (step 8) */}
-        {view !== 'trash' && !zenMode && (selected.type === 'note' || selected.type === 'task' || selected.type === 'event' || selected.type === 'journal') && (() => {
-          const s = scheduleOf(selected.trackers as Record<string, unknown> | undefined, selected.type, selected.type === 'journal' ? entryDayOf(selected) : undefined);
+        {view !== 'trash' && !zenMode && traits.dated && (() => {
+          const s = scheduleOf(selected.trackers as Record<string, unknown> | undefined, selected.type, traits.dated === 'entry' ? entryDayOf(selected) : undefined);
           const day = s ? (schedule.occurrence && s.repeat ? schedule.occurrence : s.day) : null;
           const label = day
             ? [formatDay(day, 'weekdayDate'), s?.time ? timeLabel(day, s.time) : ''].filter(Boolean).join(' · ')
@@ -1121,7 +1201,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           if (day && selected.type === 'event') return null;
           const openSchedule = () => openScheduleAt('main');
           // One name per type wherever the view opens: a journal entry's date is the entry's own.
-          const scheduleName = t(selected.type === 'journal' ? 'shell:noteOptionsMenu.entryDate' : 'shell:noteOptionsMenu.schedule');
+          const scheduleName = t(traits.dated === 'entry' ? 'shell:noteOptionsMenu.entryDate' : 'shell:noteOptionsMenu.schedule');
           return day && !headerCompact ? (
             <HoverLabel label={scheduleName} position="below">
               <button type="button" onClick={openSchedule} aria-label={`${scheduleName}: ${label}`} className={`${HEADER_BTN_BASE} gap-1.5 px-2 ${HEADER_BTN_REST} text-compact tabular-nums whitespace-nowrap`}>
@@ -1208,6 +1288,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           {showNoteOptions && (
             <NoteOptionsMenu
               {...noteGuards}
+              note={session.liveBody === selected.body ? selected : { ...selected, body: session.liveBody }}
               spaceMove={spaceMove}
               isTrash={view === 'trash'}
               onRestore={() => void handleRestore(selected.id)}
@@ -1215,6 +1296,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               {...(selected.type === 'drawing' ? {} : { onBurn: () => void handleBurnShare(selected) })}
               anchorRef={noteOptionsButtonRef}
               onDuplicate={() => void handleDuplicate(selected.id)}
+              {...(translateNote && canTranslate(selected) ? { onTranslate: () => translateNote(selected) } : {})}
               onToggleStar={() =>
                 void handleToggleStar(selected.id, selected.starred !== 1)
               }
@@ -1232,10 +1314,10 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               onTrash={() => requestTrash([selected.id])}
               initialView={optionsStartView}
               onConvertType={(target) => void convertNoteType(target)}
-              {...(selected.type === 'journal' && view !== 'trash'
+              {...(traits.dated === 'entry' && view !== 'trash'
                 ? { onSetJournalDate: (day: string) => void setJournalDate(selected.id, day), journalDays }
                 : {})}
-              {...((selected.type === 'note' || selected.type === 'task' || selected.type === 'event') && view !== 'trash'
+              {...(traits.dated === 'schedule' && view !== 'trash'
                 ? { onSetNoteDate: (day: string | null) => void setNoteDate(selected.id, day) }
                 : {})}
               schedule={{
@@ -1254,12 +1336,16 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               // Where the tag row draws the place chip (not in zen, not behind
               // the PIN gate), while the note can change and has no place yet;
               // the chip edits one it has.
-              {...(view !== 'trash' && !zenMode && selected.locked !== 1 && !isNoteLocked(selected) && !readLocation(selected.trackers as Record<string, unknown> | undefined)
-                && (selected.type === 'note' || selected.type === 'journal' || selected.type === 'file' || selected.type === 'task')
+              {...(view !== 'trash' && !zenMode && !readOnlyText && !isNoteLocked(selected) && !readLocation(selected.trackers as Record<string, unknown> | undefined)
+                && traits.tagRow
                 ? { onAddLocation: () => setLocationOpenFor(selected.id) }
                 : {})}
               {...(canSwitchEditorMode
                 ? { editorMode: selectedEditorMode, onToggleEditorMode: toggleEditorMode }
+                : {})}
+              // Only while the device switch is on: a note never turns it on (S2, S6).
+              {...(canSwitchEditorMode && spellcheck
+                ? { spellcheck: { on: !noteSpellOff, onToggle: () => setNoteSpellcheck(selected.id, noteSpellOff) } }
                 : {})}
               // Each view has its own replace bar, and the Pro gate sits
               // inside each toggle, shared with the shortcut.
@@ -1368,19 +1454,12 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 onChange={(tags) => handleTagsChange(selected.id, tags)}
                 onSelectTag={(tag) => void handleSelectTag(tag)}
                 leading={folderChipFor(selected)}
+                offers={suggestChipsFor(selected)}
                 readOnly={selected.locked === 1}
               />
             </div>
           )}
-          {selected.locked === 1 && view !== 'trash' && (
-            <ReadOnlyHint onTurnOff={turnOffReadOnly} className="px-6 pt-3" />
-          )}
-          {selected.archived === 1 && view !== 'trash' && (
-            <ArchivedHint onUnarchive={() => void unarchive()} className="px-6 pt-3" />
-          )}
-          {selected.pinProtected === 1 && view !== 'trash' && (
-            <UnlockedHint onLock={() => onLockProtected(selected.id)} className="px-6 pt-3" />
-          )}
+          <NoteStateRow states={states} place="block" {...stateActions} />
           {/* Keyed by the revision like the editors: a restore or a pull
               remounts the canvas from the new body (#9). */}
           <DrawingItem
@@ -1401,6 +1480,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
            under a centered title read as two different layouts on wide
            screens (2026-08-22 review). */
         <NotesDockContext.Provider value={keyboardUp ? notesDock : null}>
+        <NoteLinkOpenContext.Provider value={onOpenNoteLink ?? null}>
         <div className="flex-1 overflow-y-auto">
         <div ref={structuredColRef} className="pn-content-col flex min-h-full flex-col">
           {!zenMode && view !== 'trash' && (
@@ -1413,20 +1493,13 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               onSelectTag={(tag) => void handleSelectTag(tag)}
               onTabOut={focusFirstField}
               leading={folderChipFor(selected)}
+              offers={suggestChipsFor(selected)}
               readOnly={selected.locked === 1}
             />
           )}
-          {selected.locked === 1 && view !== 'trash' && (
-            /* The same read-only hint the markdown editor shows - vault
-               items and bookmarks were silently uneditable without it. */
-            <ReadOnlyHint onTurnOff={turnOffReadOnly} className="px-6 pt-3" />
-          )}
-          {selected.archived === 1 && view !== 'trash' && (
-            <ArchivedHint onUnarchive={() => void unarchive()} className="px-6 pt-3" />
-          )}
-          {selected.pinProtected === 1 && view !== 'trash' && (
-            <UnlockedHint onLock={() => onLockProtected(selected.id)} className="px-6 pt-3" />
-          )}
+          {/* The same hints the markdown editor shows - vault items and
+              bookmarks were silently uneditable without the read-only one. */}
+          <NoteStateRow states={states} place="block" {...stateActions} />
           {selected.type === 'contact' ? (
             <ContactItem
               key={selected.id}
@@ -1435,7 +1508,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               onDraftName={setContactDraftName}
               onTitleChange={handleTitleChange}
               onBodyChange={(id, body) => void handleBodyChange(id, body)}
-              onPinProtectedChange={handleSetPinProtected}
+              onPinProtectedChange={setProtectionFromForm}
             />
           ) : selected.type === 'link' ? (
             <BookmarkItem
@@ -1445,7 +1518,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               isTrash={view === 'trash'}
               clip={view === 'trash' ? undefined : bookmarkClip(selected)}
               onBodyChange={(id, body) => void handleBodyChange(id, body)}
-              onPinProtectedChange={handleSetPinProtected}
+              onPinProtectedChange={setProtectionFromForm}
             />
           ) : (
           // Keyed by id alone, like ContactItem: a pull that bumped the
@@ -1457,7 +1530,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
             isTrash={view === 'trash'}
             onTitleChange={handleTitleChange}
             onSave={handleVaultSave}
-            onPinProtectedChange={handleSetPinProtected}
+            onPinProtectedChange={setProtectionFromForm}
             isPro={auth.isPro}
             onOpenUpgrade={(trigger) => setShowUpgrade({ trigger })}
           />
@@ -1469,10 +1542,11 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
             note editor's bar at the bottom (NotesField.tsx, #765). Empty,
             and hidden, the rest of the time. */}
         <div ref={setNotesDock} className="shrink-0 border-t border-divider bg-surface-2 empty:hidden" />
+        </NoteLinkOpenContext.Provider>
         </NotesDockContext.Provider>
       ) : (
         <>
-        <div ref={setScroller} className={`flex-1 overflow-y-auto overflow-x-hidden pt-0 ${footerVisible ? 'pb-2' : 'pb-[max(0.5rem,env(safe-area-inset-bottom))]'}`}>
+        <div ref={setScroller} className={`flex-1 overflow-y-auto overflow-x-hidden pt-0 ${footerVisible ? (footerPinned && bodyOverflows ? PINNED_SCROLLER : 'pb-2') : 'pb-[max(0.5rem,var(--pn-safe-bottom))]'}`}>
           {/* Tags + tracker pills + week-in-review scroll with the
               editor so they don't permanently eat vertical space
               on mobile. The toolbar inside Editor is sticky.
@@ -1481,10 +1555,10 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               editor wrapper below handles horizontal scroll.
               pn-content-col caps the reading width so nothing
               stretches edge-to-edge on ultrawide displays. */}
-          <div className="pn-content-col flex min-h-full flex-col" data-content-col>
+          <div className="pn-content-col flex min-h-full flex-col" data-content-col data-split={split ? '' : undefined}>
           {/* A read-only note keeps its folder and tags in view, as text that
               does not change here (GitHub #706). */}
-          {!zenMode && view !== 'trash' && (selected.type === 'note' || selected.type === 'journal' || selected.type === 'file' || selected.type === 'task') && (
+          {!zenMode && view !== 'trash' && traits.tagRow && (
             <div ref={setStickyTagRow} className="pn-tagrow sticky top-0 z-20 bg-surface-1/95 backdrop-blur">
             <TagInput
               key={`tags-${selected.id}`}
@@ -1494,6 +1568,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               onChange={(tags) => handleTagsChange(selected.id, tags)}
               onSelectTag={(tag) => void handleSelectTag(tag)}
               onTabOut={focusBody}
+              offers={suggestChipsFor(selected)}
               leading={(
                 <>
                   {folderChipFor(selected)}
@@ -1503,7 +1578,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                     open={locationOpenFor === selected.id}
                     onOpenChange={(o) => setLocationOpenFor(o ? selected.id : null)}
                     onPatch={(patch) => handleTrackersPatch(selected.id, patch as JournalTrackerData)}
-                    {...(selected.type === 'note' || selected.type === 'journal' ? { autoType: selected.type } : {})}
+                    {...(traits.autoPlace ? { autoType: traits.autoPlace } : {})}
                   />
                 </>
               )}
@@ -1538,7 +1613,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                       because it answers what the device HAS, where a width
                       breakpoint only guesses.
                       Spec: docs/internal/design-decisions.md (share holds the header) */}
-                  <div className="flex items-center gap-0.5 [@media(hover:hover)_and_(pointer:fine)]:hidden">
+                  <div className={`flex items-center gap-0.5 [@media(hover:hover)_and_(pointer:fine)]:hidden ${barHasHistory ? 'hidden' : ''}`}>
                     <HoverLabel label={t('editor.undo')} keys={keyText('undo')} position="below">
                       <button
                         type="button"
@@ -1564,7 +1639,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                       </button>
                     </HoverLabel>
                   </div>
-                  <div className="[@media(hover:hover)_and_(pointer:fine)]:hidden">
+                  <div className={`[@media(hover:hover)_and_(pointer:fine)]:hidden ${barHasHistory ? 'hidden' : ''}`}>
                     <HeaderDivider />
                   </div>
                   <div className="flex items-center gap-0.5">
@@ -1610,7 +1685,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 key={selected.id}
                 schedule={s}
                 day={schedule.occurrence && s.repeat ? schedule.occurrence : s.day}
-                fold={mobileEditing || (wcBody || selected.body).trim() !== ''}
+                fold={mobileEditing || session.liveBody.trim() !== ''}
                 alertsUnlocked={proUnlocked(auth.isPro)}
                 showPro={!auth.isPro}
                 onOpen={openScheduleAt}
@@ -1626,7 +1701,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               onSettingsChange={(ts) => mutateSettings((prev) => ({ ...prev, trackerSettings: ts }))}
               medications={userSettings.medications}
               factors={userSettings.factors}
-              readOnly={view === 'trash' || selected.locked === 1}
+              readOnly={view === 'trash' || readOnlyText}
               isPro={auth.isPro}
               onOpenUpgrade={() => setShowUpgrade({ trigger: null })}
               collapsed={mobileEditing}
@@ -1638,15 +1713,9 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           )}
           {/* The rich editor shows the hint itself, on the row of its corner
               pills; the markdown source view has no pills, so it goes here. */}
-          {selected.locked === 1 && view !== 'trash' && selectedEditorMode === 'markdown' && (
-            <ReadOnlyHint onTurnOff={turnOffReadOnly} className="mx-4 sm:mx-6 mt-1 mb-3" />
-          )}
-          {selected.archived === 1 && view !== 'trash' && selectedEditorMode === 'markdown' && (
-            <ArchivedHint onUnarchive={() => void unarchive()} className="mx-4 sm:mx-6 mt-1 mb-3" />
-          )}
-          {selected.pinProtected === 1 && view !== 'trash' && selectedEditorMode === 'markdown' && (
-            <UnlockedHint onLock={() => onLockProtected(selected.id)} className="mx-4 sm:mx-6 mt-1 mb-3" />
-          )}
+          {/* Pinned under the tag row, as over the rich editor (#830). A
+              read-only note has no source bar to share the place with. */}
+          {selectedEditorMode === 'markdown' && <NoteStateRow states={states} place="source" {...stateActions} />}
           <div className="px-4 sm:px-6 flex flex-1 flex-col min-w-0">
             {selectedEditorMode === 'markdown' ? (
               /* No corner pills here. Find and replace come from the keys
@@ -1658,26 +1727,32 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               <MarkdownSourceEditor
                 key={`${selected.id}-${editorRevision}`}
                 ref={sourceRef}
+                idle={idle}
                 value={selected.body}
-                onChange={(body) => { handleBodyChange(selected.id, body, editorKey); setWcBody(body); }}
-                readOnly={view === 'trash' || selected.locked === 1}
+                noSpellcheck={noteSpellOff}
+                onChange={session.onChange}
+                readOnly={view === 'trash' || readOnlyText}
                 search={sourceSearch}
                 toolbar={(zenMode ? zenToolbar : toolbarVisible) ? {
                   onShowFormatted: toggleEditorMode,
                   atBottom: barPosition === 'bottom',
                   slot: barSlot,
                   mobileTabIndex: isMobile ? -1 : undefined,
+                  preview: props.onCloseSide ? undefined : sourceControls,
                 } : undefined}
+                preview={split ? (text, caretLine, edit) => <Suspense fallback={null}><SourcePreviewPane text={text} caretLine={caretLine} lineNumbers={lineNumbers} pane={paneEl} first={previewFirst} findPill={findPill} connections={connections} onEdit={edit} /></Suspense> : undefined}
               />
             ) : (
               <Editor
                 key={`${selected.id}-${editorRevision}`}
                 ref={editorRef}
+                idle={idle}
                 noteId={selected.id}
                 value={selected.body}
+                noSpellcheck={noteSpellOff}
                 place={readLocation(selected.trackers as Record<string, unknown> | undefined)}
-                onChange={(body) => { handleBodyChange(selected.id, body, editorKey); setWcBody(body); }}
-                readOnly={view === 'trash' || selected.locked === 1}
+                onChange={session.onChange}
+                readOnly={view === 'trash' || readOnlyText}
                 onFocusChange={(focused) => {
                   setEditorFocused(focused);
                   if (focused) setCursorNoteId(selected.id);
@@ -1699,18 +1774,14 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 connections={connections}
                 toolbarSlot={barSlot}
                 onShowMarkdown={canSwitchEditorMode ? toggleEditorMode : undefined}
+                sourcePreview={canSwitchEditorMode && !props.onCloseSide ? formattedControls : undefined}
+                lineNumbers={lineNumbers}
                 sinkCheckedTasks={userSettings.sinkCheckedTasks}
                 typedSymbols={userSettings.typedSymbols}
                 placeholder={selected.type === 'event' ? t('editor:eventPlaceholder') : undefined}
                 // Read-only, Archived and Unlocked share the notice row, each
                 // when it applies (#712, #723); none shows in the Trash.
-                notice={view !== 'trash' && (selected.locked === 1 || selected.archived === 1 || selected.pinProtected === 1) ? (
-                  <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-1">
-                    {selected.locked === 1 && <ReadOnlyHint onTurnOff={turnOffReadOnly} className="min-w-0" />}
-                    {selected.archived === 1 && <ArchivedHint onUnarchive={() => void unarchive()} className="min-w-0" />}
-                    {selected.pinProtected === 1 && <UnlockedHint onLock={() => onLockProtected(selected.id)} className="min-w-0" />}
-                  </div>
-                ) : undefined}
+                notice={states.length ? <NoteStateRow states={states} place="editor" {...stateActions} /> : undefined}
               />
             )}
             {/* 2-col footer: word/char counts left, editor-mode link right.
@@ -1738,7 +1809,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 inert={!noteJump.scrolling}
                 onMouseEnter={() => noteJump.keepShown(true)}
                 onMouseLeave={() => noteJump.keepShown(false)}
-                className={`sticky bottom-3 z-[5] mt-auto hidden [@media(min-width:768px)_and_(min-height:501px)]:flex h-0 items-end justify-end overflow-visible pointer-events-none transition-opacity duration-200 motion-reduce:transition-none ${noteJump.scrolling ? 'opacity-100' : 'opacity-0'}`}
+                className={`sticky ${footerPinned ? 'bottom-12' : 'bottom-3'} z-[5] mt-auto hidden [@media(min-width:768px)_and_(min-height:501px)]:flex h-0 items-end justify-end overflow-visible pointer-events-none transition-opacity duration-200 motion-reduce:transition-none ${noteJump.scrolling ? 'opacity-100' : 'opacity-0'}`}
               >
                 <EditorSlotPill
                   label={t(noteJump.toTop ? 'footer.goToTop' : 'footer.goToEnd')}
@@ -1749,7 +1820,12 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               </div>
             )}
             {!zenMode && (
-              <div className="mt-auto pt-4 shrink-0 flex items-start justify-between gap-3">
+              // Pinned, the row sticks to the pane's bottom edge on screens
+              // with the desktop footer, so the counts stay in view in a long
+              // note; the jump pill above moves up to clear it. Its fill is the pane's own, so it reads as no band; a note that does not scroll keeps it in place. Phones keep
+              // it at the end of the note: a fixed bar over the keyboard
+              // costs too much height there.
+              <div className={`mt-auto pt-4 shrink-0 flex items-start justify-between gap-3 ${footerPinned && bodyOverflows ? PINNED_FOOTER : ''}`}>
                 <div className="min-w-0 flex items-start gap-1.5">
                   {/* Invisible characters toggle. Only meaningful over the
                       rich-text editor - the markdown source view is a plain
@@ -1793,13 +1869,35 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                     </HoverLabel>
                   )}
                   <WordCount
-                    body={wcBody || selected.body}
+                    body={session.liveBody}
                     sizeOf={(body) => storedNoteBytes({ ...selected, body })}
                     onSplit={splitNote && view !== 'trash' ? () => splitNote(selected) : undefined}
                     onOverLimit={() => onOverSyncLimit(selected.id)}
                   />
+                  {/* Pin, after the counts it holds in view. Grey like the
+                      counts when off: a heavy pin outshouts the text it
+                      sits beside. Light in both states (fill and duotone read too heavy); on is accent.
+                      Only on a note that scrolls, like the find magnifier:
+                      on a short one the counts are always in view. */}
+                  {bodyOverflows && <HoverLabel label={footerPinned ? t('editor.footerUnpin') : t('editor.footerPin')}>
+                    <button
+                      type="button"
+                      onClick={() => { setFooterPinned(!footerPinned); writeFooterPinned(!footerPinned); }}
+                      aria-pressed={footerPinned}
+                      aria-label={footerPinned ? t('editor.footerUnpin') : t('editor.footerPin')}
+                      className={`shrink-0 h-4 hidden [@media(min-width:768px)_and_(min-height:501px)]:flex items-center hover:text-accent transition ${footerPinned ? 'text-accent' : 'text-pn-muted'}`}
+                    >
+                      {/* 14: the pin's glyph fills its box, so at the 17px of the
+                          glyphs beside it it read as the largest (owner,
+                          2026-11-20). Every footer glyph is sized to about
+                          11.5px of ink. */}
+                      <PushPin weight="light" size={14} />
+                    </button>
+                  </HoverLabel>}
                 </div>
-                {view !== 'trash' && selected.locked !== 1 && (
+                <div className="shrink-0 flex items-start gap-3">
+                <LineNumbersToggle />
+                {view !== 'trash' && !readOnlyText && (
                   <button
                     type="button"
                     onClick={toggleEditorMode}
@@ -1817,10 +1915,11 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                       {selectedEditorMode === 'markdown' ? t('editor.showFormatted') : t('editor:formatBar.items.markdownView')}
                     </span>
                     {selectedEditorMode === 'markdown'
-                      ? <TextAa className="text-accent shrink-0" aria-hidden="true" />
-                      : <ArticleMedium className="text-accent shrink-0" aria-hidden="true" />}
+                      ? <TextAa weight="light" size={16} className="text-accent shrink-0" aria-hidden="true" />
+                      : <ArticleMedium weight="light" size={16} className="text-accent shrink-0" aria-hidden="true" />}
                   </button>
                 )}
+                </div>
               </div>
             )}
           </div>
@@ -1831,4 +1930,19 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
       )}
     </>
   );
+}
+
+/** Whether the note footer (the counts row) sticks to the pane's bottom on
+ *  this device. Device-local, like the invisible characters: a layout choice
+ *  for this screen, not for every device of the account. */
+const FOOTER_PINNED_KEY = 'privacynotes.footerPinned';
+// Pinned, the row carries the scroller's bottom padding itself, so it rests
+// at the end of the note exactly where it sticks while the note scrolls.
+const PINNED_SCROLLER = 'pb-2 [@media(min-width:768px)_and_(min-height:501px)]:pb-0';
+const PINNED_FOOTER = '[@media(min-width:768px)_and_(min-height:501px)]:sticky [@media(min-width:768px)_and_(min-height:501px)]:bottom-0 [@media(min-width:768px)_and_(min-height:501px)]:z-[6] [@media(min-width:768px)_and_(min-height:501px)]:bg-surface-2 [@media(min-width:768px)_and_(min-height:501px)]:pb-2';
+function readFooterPinned(): boolean {
+  try { return localStorage.getItem(FOOTER_PINNED_KEY) === '1'; } catch { return false; }
+}
+function writeFooterPinned(on: boolean): void {
+  try { localStorage.setItem(FOOTER_PINNED_KEY, on ? '1' : '0'); } catch { /* private mode */ }
 }

@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "시간",
+    "minutesSuffix": "분",
+    "hoursMinutes": "{{h}}시간 {{m}}분",
     "bpm": "bpm",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -137,6 +139,7 @@
     "emptyAdd": "복용하는 약과 시간을 추가하고 여기에서 기록하세요.",
     "takenCount_other": "{{count}}개 복용",
     "namePlaceholder": "약 이름",
+    "nameMissing": "약 이름을 입력하세요.",
     "dosagePlaceholder": "용량 (예: 50mg)",
     "editMedication": "약 편집",
     "removeMedication": "약 제거",
@@ -231,12 +234,18 @@
     "yes": "네",
     "no": "아니요",
     "unknownType": "이 트래커를 쓰려면 더 새로운 버전의 앱이 필요해요.",
+    "counterOf": "/ {{limit}}",
+    "counterToday": "오늘 사용",
+    "counterReached": "한도 {{limit}}에 도달했어요.",
+    "counterStartAgain": "{{name}} 0부터 다시 시작",
+    "counterStartAgainConfirm": "다시 시작할까요?",
     "typeLabels": {
       "scale10": "척도 (0-10)",
       "scale5": "척도 (0-5)",
       "slider100": "점수 (0-100)",
       "number": "숫자",
       "pair": "숫자 두 개",
+      "counter": "카운터",
       "yesno": "네 / 아니요"
     }
   },
@@ -252,7 +261,7 @@
     "medicationCard": "복약 카드",
     "medicationCardHelp": "복용할 약이 있는 날에만 이 기기에서 \"약을 드셨나요?\"라고 물어요.",
     "customHelp": "직접 이름을 붙이는 트래커예요. 척도, 숫자, 네 또는 아니요 중에서 골라요. 최대 {{max}}개까지예요.",
-    "customHelpPair": "직접 이름을 붙이는 트래커예요. 척도, 숫자, 숫자 두 개, 네 또는 아니요 중에서 골라요. 최대 {{max}}개까지예요.",
+    "customHelpPair": "직접 이름을 붙이는 트래커예요. 척도, 숫자, 숫자 두 개, 카운터, 네 또는 아니요 중에서 골라요. 최대 {{max}}개까지예요.",
     "yourCustomTrackers": "내 커스텀 트래커",
     "categoryMoodMind": "기분 & 마음",
     "categoryBodyHealth": "몸 & 건강",
@@ -293,7 +302,10 @@
     "pairFirstPlaceholder": "수축기 혈압",
     "pairSecondPlaceholder": "이완기 혈압",
     "pairUnit": "단위(선택)",
-    "pairWaiting": "첫 번째 숫자를 입력하면 저장돼요."
+    "pairWaiting": "첫 번째 숫자를 입력하면 저장돼요.",
+    "nameMissing": "트래커 이름을 입력하세요.",
+    "counterLimit": "한도(선택)",
+    "counterHelp": "여러 날에 걸친 사용 횟수를 더해요. 면도날이라면 30처럼 한도를 정하고, 한도에 도달하면 다시 시작하세요."
   },
   "factors": {
     "prompt": "오늘 하루에는 무엇이 있었어요?",
@@ -382,5 +394,6 @@
   "flow": {
     "finish": "마치기",
     "step": "트래커 {{n}}/{{total}}"
-  }
+  },
+  "showEveryDay": "이 트래커가 있는 모든 날 보기"
 }

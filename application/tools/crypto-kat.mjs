@@ -34,6 +34,7 @@
  */
 
 import test from 'node:test';
+import { verifyAsync as ed25519Verify } from '../packages/shared/node_modules/@noble/ed25519/index.js';
 import assert from 'node:assert/strict';
 import {
   generatePhrase,
@@ -48,6 +49,9 @@ import {
   deriveDeviceId,
   signDeviceRegisterChallenge,
   signDeviceRevokeChallenge,
+  signPasskeySlotChallenge,
+  accountActionDigest,
+  signAccountActionChallenge,
   deriveFpPepper,
   computeFpHashes,
   bytesToHex,
@@ -62,6 +66,9 @@ import {
   decryptJson,
   encryptJsonAad,
   decryptJsonAad,
+  encryptBlob,
+  decryptBlob,
+  checkNoteBind,
 } from '../packages/shared/dist/index.js';
 import {
   deriveInboxKeyPair,
@@ -81,6 +88,12 @@ import {
   splitLoginsKey,
   serverHalf,
   joinLoginsKey,
+  loginEditProof,
+  loginEditProofOk,
+  loginsCopyAad,
+  parseCopyEntry,
+  browserHalfId,
+  parseInboxKeyHalf,
 } from '../packages/shared/dist/extension.js';
 
 /**
@@ -295,6 +308,45 @@ test('device register and revoke challenges are distinct messages', async () => 
   assert.notEqual(bytesToHex(reg), bytesToHex(rev));
 });
 
+// The passkey-slot edge function rebuilds this exact text before it checks the
+// signature. Spec: docs/contrib/passkeys.md (section 4.2, P19)
+test('signPasskeySlotChallenge signs the exact passkey-slot text, add and remove apart', async () => {
+  const { privateKey, publicKey } = await deriveSigningKey(phraseToSeed(PHRASE));
+  const ids = {
+    nonceId: '11111111-1111-4111-8111-111111111111',
+    authUid: '22222222-2222-4222-8222-222222222222',
+    sessionId: '33333333-3333-4333-8333-333333333333',
+    account: 'a'.repeat(64),
+    bodyDigest: 'b'.repeat(64),
+  };
+  const add = await signPasskeySlotChallenge(privateKey, { ...ids, operation: 'passkey-add' });
+  const text = `passkey-slot:${ids.nonceId}:${ids.authUid}:${ids.sessionId}:${ids.account}:passkey-add:${ids.bodyDigest}`;
+  assert.equal(await ed25519Verify(add, new TextEncoder().encode(text), publicKey), true);
+  const remove = await signPasskeySlotChallenge(privateKey, { ...ids, operation: 'passkey-remove' });
+  assert.notEqual(bytesToHex(add), bytesToHex(remove));
+  await assert.rejects(signPasskeySlotChallenge(privateKey, { ...ids, account: 'A'.repeat(64), operation: 'passkey-add' }));
+});
+
+// delete-account and revoke-device rebuild this exact text and digest before
+// they check the signature (_shared/custodyProof.ts, beta #227 item 10).
+test('signAccountActionChallenge signs the exact account action text over the fixed digest', async () => {
+  const { privateKey, publicKey } = await deriveSigningKey(phraseToSeed(PHRASE));
+  assert.equal(accountActionDigest('account-delete', null), 'd5095f1953786c4de0b2d2c963c4466bc799dbd95434eb8fce90c3e16947f502');
+  assert.equal(accountActionDigest('device-revoke', 'd'.repeat(32)), 'ed3f50e22722c39cc27079c11d2d9445d8e6961a0f52487ce6de99ba518cd21e');
+  const ids = {
+    nonceId: '11111111-1111-4111-8111-111111111111',
+    authUid: '22222222-2222-4222-8222-222222222222',
+    sessionId: '33333333-3333-4333-8333-333333333333',
+    account: 'a'.repeat(64),
+    bodyDigest: accountActionDigest('device-revoke', 'd'.repeat(32)),
+  };
+  const sig = await signAccountActionChallenge(privateKey, { ...ids, action: 'device-revoke' });
+  const text = `device-revoke:${ids.nonceId}:${ids.authUid}:${ids.sessionId}:${ids.account}:${ids.bodyDigest}`;
+  assert.equal(await ed25519Verify(sig, new TextEncoder().encode(text), publicKey), true);
+  await assert.rejects(signAccountActionChallenge(privateKey, { ...ids, action: 'custody-store' }));
+  await assert.rejects(signAccountActionChallenge(privateKey, { ...ids, account: 'A'.repeat(64), action: 'account-delete' }));
+});
+
 // ------------------------------------------------------------------------------------
 // Device identity
 // ------------------------------------------------------------------------------------
@@ -308,6 +360,13 @@ test('deriveDeviceId is stable, 32 hex chars, and scoped per pubkey', () => {
   assert.equal(deriveDeviceId('pubkey-aaa', secret), idA, 'must be idempotent');
   // Two accounts sharing one machine must not share a device id.
   assert.notEqual(idA, idB);
+});
+
+// The server keys a device's slot on this id: a moved derivation reads as a new device
+// on every machine, and every account fills its device limit at once (beta #205 item 7).
+// = hex(HKDF-SHA256(ikm=deviceSecret, salt=undefined, info="privacynotes-device-v1:<pubkey>", len=16))
+test('deriveDeviceId: the frozen id', () => {
+  assert.equal(deriveDeviceId('ab'.repeat(32), hexToBytes('11'.repeat(32))), '593188a69627c2109697809f9650b3d1');
 });
 
 // ------------------------------------------------------------------------------------
@@ -331,6 +390,19 @@ test('computeFpHashes: same hardware, different accounts, uncorrelatable', () =>
   // produce unrelated hashes, or the server could link them.
   assert.notEqual(a.platform_hash, b.platform_hash);
   assert.notEqual(a.gpu_hash, b.gpu_hash);
+});
+
+// The server compares these with the hashes it holds: a moved pepper or hash reads as
+// new hardware on every device of every account (beta #205 item 7).
+test('deriveFpPepper and computeFpHashes: the frozen pepper and hashes', () => {
+  const pepper = deriveFpPepper(phraseToSeed(PHRASE));
+  assert.equal(bytesToHex(pepper), '1bf88a434745c64bb0bb0748c601e59295c98c8fcca422d7b299832fef1b6f8c');
+  assert.deepEqual(computeFpHashes(pepper, { platform: 'macOS', gpu: 'Apple M4', cores: 10, language: 'en-US' }), {
+    platform_hash: 'MMxoncDYoBXOr/oVowRhVOb7NjAzDkf+jDaHNAmxTMs=',
+    gpu_hash: '24QlSXA9n3DLlZzkbvzDfH2ymqK+1MCsEez9MhZvYAo=',
+    cores_hash: 'Kvc4WgKLpnEQ4p9GBKjeGoCKfMxGAALVtOTvl8wiwuo=',
+    language_hash: 'Nt5pgVNFsxWptI9t6KVxrPMgPVROquuMIS1S7TeKgPg=',
+  });
 });
 
 test('computeFpHashes: field prefixes prevent cross-field collisions', () => {
@@ -399,6 +471,52 @@ test('encryptNote round-trips, unicode intact', () => {
   assert.equal(out.body, NOTE.body);
   assert.deepEqual(out.tags, NOTE.tags);
   assert.equal(out.starred, true);
+});
+
+// A frozen note row: a moved JSON shape or cipher leaves every note on the server
+// unreadable, which a round trip cannot see (beta #205 item 7).
+const KAT_NOTE = { title: 'KAT note', body: 'Body with a [[note-link]]', tags: ['kat'], trashed: false, starred: true, locked: false, pinProtected: false, type: 'note', folderId: null };
+const KAT_NOTE_PLAIN = '{"title":"KAT note","body":"Body with a [[note-link]]","tags":["kat"],"trashed":false,"starred":true,"locked":false,"pinProtected":false,"type":"note"}';
+const KAT_NOTE_CT =
+  'mipfm/2xvmkcejItdcvpLrQKieGaJYH4Txdm7jObqgtUvAMtvlHxA+jK7t2OXVSMQScEMpXeFXllmjy+IZjyo4spQP3CO5M9K5A254fJ+YXKIJQBAohgemt8ofaTyvg5Ys//l3dEHOFNfLToTJ2S1KfwCHS4rIk7xKbp+f7DAZpL9HZiPB0RYg8B8QqA5f7d98MVLmhYdjaDNiUuQilD5jA4+RNxsnA=';
+
+test('decryptNote opens the frozen note row, and encryptNote writes the frozen plaintext', async () => {
+  const { xchacha20poly1305 } = await import('../packages/shared/node_modules/@noble/ciphers/chacha.js');
+  const key = deriveEncryptionKey(phraseToSeed(PHRASE));
+  const out = decryptNote(base64ToBytes(KAT_NOTE_CT), new Uint8Array(24).fill(9), key);
+  for (const [field, value] of Object.entries(KAT_NOTE)) assert.deepEqual(out[field], value, field);
+  const { ciphertext, nonce } = encryptNote(KAT_NOTE, key);
+  assert.equal(new TextDecoder().decode(xchacha20poly1305(key, nonce).decrypt(ciphertext)), KAT_NOTE_PLAIN);
+});
+
+// The same note with its row binding (payload-row-binding.md, section 2): the
+// key follows the fields, and an old reader that drops it still opens the row.
+const KAT_BIND = { id: '0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c3d', kind: 'note', at: '2026-11-19T10:00:00.000Z' };
+const KAT_BOUND_PLAIN = '{"title":"KAT note","body":"Body with a [[note-link]]","tags":["kat"],"trashed":false,"starred":true,"locked":false,"pinProtected":false,"type":"note","bind":{"id":"0a1b2c3d-4e5f-4a6b-8c7d-8e9f0a1b2c3d","kind":"note","at":"2026-11-19T10:00:00.000Z"}}';
+const KAT_BOUND_CT =
+  'mipfm/2xvmkcejItdcvpLrQKieGaJYH4Txdm7jObqgtUvAMtvlHxA+jK7t2OXVSMQScEMpXeFXllmjy+IZjyo4spQP3CO5M9K5A254fJ+YXKIJQBAohgemt8ofaTyvg5Ys//l3dEHOFNfLToTJ2S1KfwCHS4rIk7xKbp+f7DAZpL9HZiPB0RYg8B8QqA5f7d98MVLmhYJz644/E79D8+jWTm//B5Umly4HYjmewE6xvLfliMIC0PtrroU/MWBDtawhY5mee8qmXeGFRaK+9/PQ/MzMqHUo3otCfNgm45y+r7RwugaugNoJQjpeo9ozGivUWWcDiXwjUCBFJRPFL0FFMyfFW5He7h3yQ=';
+
+test('decryptNote opens the frozen bound row and hands back its binding; encryptNote writes the frozen bound plaintext', async () => {
+  const { xchacha20poly1305 } = await import('../packages/shared/node_modules/@noble/ciphers/chacha.js');
+  const key = deriveEncryptionKey(phraseToSeed(PHRASE));
+  const out = decryptNote(base64ToBytes(KAT_BOUND_CT), new Uint8Array(24).fill(9), key);
+  for (const [field, value] of Object.entries(KAT_NOTE)) assert.deepEqual(out[field], value, field);
+  assert.deepEqual(out.bind, KAT_BIND);
+  assert.equal(checkNoteBind(out.bind, { id: KAT_BIND.id, kind: 'note', updatedAt: '2026-11-19 10:00:00+00' }), 'ok');
+  assert.equal(decryptNote(base64ToBytes(KAT_NOTE_CT), new Uint8Array(24).fill(9), key).bind, undefined);
+  const { ciphertext, nonce } = encryptNote(KAT_NOTE, key, KAT_BIND);
+  assert.equal(new TextDecoder().decode(xchacha20poly1305(key, nonce).decrypt(ciphertext)), KAT_BOUND_PLAIN);
+});
+
+// A frozen file: nonce || ciphertext, under the vault key with no bound data.
+const KAT_BLOB = 'CgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKsWsYM0zYh6+zT9wRRioNW7nrkN7jKs5eatpPQwNw';
+
+test('decryptBlob opens the frozen file, and encryptBlob writes nonce then ciphertext', async () => {
+  const { xchacha20poly1305 } = await import('../packages/shared/node_modules/@noble/ciphers/chacha.js');
+  const key = deriveEncryptionKey(phraseToSeed(PHRASE));
+  assert.equal(new TextDecoder().decode(decryptBlob(base64ToBytes(KAT_BLOB), key)), 'KAT blob bytes');
+  const sealed = encryptBlob(new TextEncoder().encode('KAT blob bytes'), key);
+  assert.equal(new TextDecoder().decode(xchacha20poly1305(key, sealed.subarray(0, 24)).decrypt(sealed.subarray(24))), 'KAT blob bytes');
 });
 
 test('encryptNote uses a fresh 24-byte nonce every time', () => {
@@ -611,6 +729,60 @@ test('deriveUnlockProof and unlockChecker: the frozen proof of a PIN, NFC first'
   assert.notDeepEqual(deriveUnlockProof('1234', new Uint8Array(16).fill(0x34)), proof, 'the salt is per extension');
 });
 
+// The proof a login edit carries that the extension was unlocked: a moved mac sends every
+// edit of an existing login to a new login (beta #205 item 7).
+test('loginEditProof: the frozen proof, checked in constant time', () => {
+  const p = new Uint8Array(32).fill(0x5a);
+  const rowId = '00000000-0000-4000-8000-000000000003';
+  const item = '00000000-0000-4000-8000-000000000004';
+  assert.equal(loginEditProof(p, 'ab'.repeat(32), rowId, item), 'NAiZGE_7HslWZD6Tbtjm_oArSp9BU_RFr--P4_dw1jA');
+  assert.ok(loginEditProofOk('NAiZGE_7HslWZD6Tbtjm_oArSp9BU_RFr--P4_dw1jA', p, 'ab'.repeat(32), rowId, item));
+  assert.ok(!loginEditProofOk('NAiZGE_7HslWZD6Tbtjm_oArSp9BU_RFr--P4_dw1jB', p, 'ab'.repeat(32), rowId, item));
+});
+
+// A copy row as the apps write it and the extension reads it: its bound data and a
+// frozen row (beta #205 item 7).
+const KAT_COPY_ROW = '3b1fb63d-4059-8cb9-98b7-cc6138f67f3f';
+const KAT_COPY_CT =
+  'g2/yHLdWCowfjNJDuhjQOb0IqTJx7FpL+loZcCFZ8dKCmRLx4hFhe7VVtyPxoMXajpvK0QVIcPwdQd156rK5x3EFspJaZsBUOB7JOUAeo+sZjPLSJ30gRXz33VepxE/EUp826W+0At+Gqg2UxOTN5szoLFDlFbim07M7QYNH5z/Bt8FXVA6dRp9utMGVCN6n48ODbYKEuoLKuiW+uKNG9NjS+vmSSEJQbPYpVSgTmRcnwI1kL01wzD6T';
+
+test('loginsCopyAad and the frozen copy row', () => {
+  const account = 'ab'.repeat(32);
+  assert.equal(loginsCopyAad(account, KAT_COPY_ROW), `privacynotes-ext-login-v1:${account}:${KAT_COPY_ROW}`);
+  const p = new Uint8Array(32).fill(0x5a);
+  const entry = parseCopyEntry(decryptJsonAad(base64ToBytes(KAT_COPY_CT), new Uint8Array(24).fill(11), p, loginsCopyAad(account, KAT_COPY_ROW)));
+  assert.deepEqual(entry, { v: 2, kind: 'login', item: '00000000-0000-4000-8000-000000000002', name: 'KAT', pinned: false, username: 'ada', password: 'pw', totp: '', urls: ['https://example.com'] });
+});
+
+// A `loginedit` row is sealed as version 2, which binds `v2` into its data (beta #205 item 7).
+const KAT_LOGINEDIT_ROW =
+  'An00pIFfprmCU15grzvZtJVWgWCA8WQf+B0rfIroJopEDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMctOcCobCqkBAR1PXyVX4LANNzwOv/SZkHc3/DqaXzBiT/0ml9s+OG9M=';
+
+test('openInbox opens the frozen version 2 row of a login edit, and only as one', () => {
+  const { secretKey } = deriveInboxKeyPair(phraseToSeed(PHRASE));
+  const ctx = { account: 'ab'.repeat(32), id: '00000000-0000-4000-8000-000000000005', kind: 'loginedit' };
+  assert.equal(inboxRowVersion(KAT_LOGINEDIT_ROW), 2);
+  assert.equal(new TextDecoder().decode(openInbox(KAT_LOGINEDIT_ROW, secretKey, ctx)), '{"v":1,"kat":"loginedit"}');
+  assert.throws(() => openInbox(KAT_LOGINEDIT_ROW, secretKey, { ...ctx, kind: 'login' }), /version/);
+  const v1 = base64ToBytes(KAT_LOGINEDIT_ROW);
+  v1[0] = 1;
+  assert.throws(() => openInbox(bytesToBase64(v1), secretKey, ctx), 'the version is bound in');
+});
+
+// A remaining browser's fresh half after a key change (beta #205 item 1): its row and
+// the name the server keeps of it.
+const KAT_KEYHALF_ROW =
+  'AZpFA6mKsQ/o01TJxCy9DJ15RPUufRTY6ll3Xn3J479LDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NDQ0NuN8tMgmQLHRFzajLFQwIDxs02pj36nzevVDKWblc974+zkyC1TIMypii0B1Q3rkOMUdh/HtA50FmZQS5U1Cp4/237OK6Sh5rBECuhlrJhTbseRKgPLrCvw94Z0t8/tq+Zs+OoNrFO0ehsdVXL2h1MLzAg39dRRjbvg=='; // gitleaks:allow (a frozen test vector, sealed under a fixed test key)
+
+test('the frozen keyhalf row and browserHalfId', () => {
+  const { secretKey } = deriveInboxKeyPair(phraseToSeed(PHRASE));
+  const ctx = { account: 'ab'.repeat(32), id: '00000000-0000-4000-8000-000000000006', kind: 'keyhalf' };
+  const kext = parseInboxKeyHalf(JSON.parse(new TextDecoder().decode(openInbox(KAT_KEYHALF_ROW, secretKey, ctx))), ctx.id);
+  assert.deepEqual(kext, new Uint8Array(32).fill(0x22));
+  assert.equal(browserHalfId(kext), '5e3c419f827148ade27d43380295c965');
+  assert.equal(parseInboxKeyHalf({ v: 1, id: 'other', kext: bytesToBase64(kext) }, ctx.id), null, 'bound to its row id');
+});
+
 test('the logins key: its wrap key, its row ids and its split', () => {
   const contentKey = deriveEncryptionKey(phraseToSeed(PHRASE));
   assert.equal(bytesToHex(deriveLoginsWrapKey(contentKey)), '7cfc62f76fed57beb12d1338f46b2e7ff72ac1db0d20e649bfed580fc13ce6d9');
@@ -626,4 +798,142 @@ test('the logins key: its wrap key, its row ids and its split', () => {
   assert.deepEqual(joinLoginsKey(kext, serverHalf(p2, kext)), p2, 'a new P keeps the browser half');
   const box = encryptJsonAad({ p: 'x' }, deriveLoginsWrapKey(contentKey), 'privacynotes-ext-logins-key-v1:t');
   assert.deepEqual(decryptJsonAad(box.ciphertext, box.nonce, deriveLoginsWrapKey(contentKey), 'privacynotes-ext-logins-key-v1:t'), { p: 'x' });
+});
+
+// ------------------------------------------------------------------------------------
+// The signed inbox row (wire byte 3) and pairing code 2: the hybrid X25519 and
+// ML-KEM-768 seal with the sender's Ed25519 signature inside. A moved vector here means
+// connections paired with a version 2 code seal to keys no app derives, or the apps
+// refuse every row they send.
+// Spec: docs/internal/plans/inbox-signed-hybrid.md (section 4)
+// ------------------------------------------------------------------------------------
+
+const SIGNED = await import('../packages/shared/dist/inboxSigned.js');
+const SIGNED_CTX = { account: 'ab'.repeat(32), id: '00000000-0000-4000-8000-000000000007', kind: 'note' };
+const SIGNED_BODY = new TextEncoder().encode('{"v":1,"kat":"signed"}');
+const SIGNED_FIXED = { esk: new Uint8Array(32).fill(0x66), kemRandomness: new Uint8Array(32).fill(0x77), nonce: new Uint8Array(24).fill(0x88) };
+const signedSetup = () => {
+  const inbox = deriveInboxKeyPair(phraseToSeed(PHRASE));
+  const kem = SIGNED.deriveInboxKemKeyPair(deriveEncryptionKey(phraseToSeed(PHRASE)));
+  const sender = SIGNED.deriveInboxSender(new Uint8Array(32).fill(0x55));
+  return { inbox, kem, sender, to: { inboxPublic: inbox.publicKey, kemPublic: kem.publicKey }, keys: { inboxSecret: inbox.secretKey, kem } };
+};
+
+test('ML-KEM-768 of @noble/post-quantum agrees with node:crypto both ways, and from a seed', async () => {
+  const crypto = await import('node:crypto');
+  const { ml_kem768 } = await import('../packages/shared/node_modules/@noble/post-quantum/ml-kem.js');
+  const seed = new Uint8Array(64).fill(9);
+  const pair = ml_kem768.keygen(seed);
+  const priv = crypto.createPrivateKey({ key: Buffer.from(seed), format: 'raw-seed', asymmetricKeyType: 'ml-kem-768' });
+  assert.deepEqual(new Uint8Array(crypto.createPublicKey(priv).export({ format: 'raw-public' })), pair.publicKey, 'the same public key from one seed');
+  const pub = crypto.createPublicKey({ key: Buffer.from(pair.publicKey), format: 'raw-public', asymmetricKeyType: 'ml-kem-768' });
+  const fromNode = crypto.encapsulate(pub);
+  assert.deepEqual(ml_kem768.decapsulate(new Uint8Array(fromNode.ciphertext), pair.secretKey), new Uint8Array(fromNode.sharedKey));
+  const fromNoble = ml_kem768.encapsulate(pair.publicKey);
+  assert.deepEqual(new Uint8Array(crypto.decapsulate(priv, Buffer.from(fromNoble.cipherText))), fromNoble.sharedSecret);
+});
+
+test('the sender key and the ML-KEM pair of the canonical inputs are frozen', () => {
+  const { kem, sender } = signedSetup();
+  assert.equal(bytesToHex(sender.publicKey), '6718dfcf77b8364d5ca368371be0a8439998587600cae3fa5a9989e15a14f6b1');
+  assert.equal(sender.keyId, '497420890519b55fef7278d23f8f4d82');
+  assert.equal(SIGNED.inboxSenderId(sender.publicKey), sender.keyId);
+  assert.equal(kem.publicKey.length, 1184);
+  assert.equal(bytesToHex(SIGNED.inboxKemHash(kem.publicKey)), 'ac134682510b1e886b06f0dc865dcfa744272b275288f5b3e46980ad7b346a1b');
+  assert.notDeepEqual(SIGNED.deriveInboxKemKeyPair(deriveEncryptionKey(phraseToSeed(PHRASE_2))).publicKey, kem.publicKey, 'another phrase, another pair');
+});
+
+test('sealInboxSigned is frozen for fixed one-time values, and the hybrid key is HKDF over both secrets', async () => {
+  const { hkdf } = await import('../packages/shared/node_modules/@noble/hashes/hkdf.js');
+  const { sha256 } = await import('../packages/shared/node_modules/@noble/hashes/sha2.js');
+  const { x25519 } = await import('../packages/shared/node_modules/@noble/curves/ed25519.js');
+  const { xchacha20poly1305 } = await import('../packages/shared/node_modules/@noble/ciphers/chacha.js');
+  const { ml_kem768 } = await import('../packages/shared/node_modules/@noble/post-quantum/ml-kem.js');
+  const { inbox, kem, sender, to } = signedSetup();
+  const row = SIGNED.sealInboxSigned(SIGNED_BODY, to, sender, SIGNED_CTX, SIGNED_FIXED);
+  assert.equal(inboxRowVersion(row), 3);
+  assert.equal(bytesToHex(sha256(base64ToBytes(row))), '28489dbc9d71d715d1cc79d0975a390f4bd402594059315b78d793966bf24e13');
+  // The construction of section 4.3, rebuilt from the primitives.
+  const raw = base64ToBytes(row);
+  const epk = raw.subarray(1, 33);
+  const kemCt = raw.subarray(33, 1121);
+  const nonce = raw.subarray(1121, 1145);
+  const enc = new TextEncoder();
+  const cat = (...p) => { const o = new Uint8Array(p.reduce((n, x) => n + x.length, 0)); let a = 0; for (const x of p) { o.set(x, a); a += x.length; } return o; };
+  const kemHash = sha256(cat(enc.encode('privacynotes-inbox-kem-v1:'), kem.publicKey));
+  const t = sha256(cat(enc.encode(`privacynotes-inbox-v3:${SIGNED_CTX.account}:${SIGNED_CTX.kind}:${SIGNED_CTX.id}:`), epk, inbox.publicKey, kemHash, kemCt));
+  const ikm = cat(x25519.getSharedSecret(inbox.secretKey, epk), ml_kem768.decapsulate(kemCt, kem.secretKey));
+  assert.equal(ikm.length, 64, 'two 32-byte secrets, one reading');
+  const key = hkdf(sha256, ikm, t, enc.encode('privacynotes-inbox-seal-v3'), 32);
+  const plain = xchacha20poly1305(key, nonce, cat(enc.encode('privacynotes-inbox:v3:'), t)).decrypt(raw.subarray(1145));
+  assert.equal(bytesToHex(plain.subarray(0, 16)), sender.keyId);
+  assert.deepEqual(plain.subarray(80), SIGNED_BODY);
+  const { ed25519 } = await import('../packages/shared/node_modules/@noble/curves/ed25519.js');
+  assert.ok(ed25519.verify(plain.subarray(16, 80), cat(enc.encode('privacynotes-inbox-sender-v1:'), t, sha256(SIGNED_BODY)), sender.publicKey));
+  // Each secret alone is not the key: neither the X25519 half nor the ML-KEM half alone gives it.
+  assert.notDeepEqual(hkdf(sha256, ikm.subarray(0, 32), t, enc.encode('privacynotes-inbox-seal-v3'), 32), key);
+  assert.notDeepEqual(hkdf(sha256, ikm.subarray(32), t, enc.encode('privacynotes-inbox-seal-v3'), 32), key);
+});
+
+test('openInboxSigned: a fresh row round-trips, and only its signer reads the body', () => {
+  const { keys, sender, to } = signedSetup();
+  const row = SIGNED.sealInboxSigned(SIGNED_BODY, to, sender, SIGNED_CTX);
+  const opened = SIGNED.openInboxSigned(row, keys, SIGNED_CTX);
+  assert.equal(opened.keyId, sender.keyId);
+  assert.deepEqual(opened.bodyFrom(sender.publicKey), SIGNED_BODY);
+  const other = SIGNED.deriveInboxSender(new Uint8Array(32).fill(0x56));
+  assert.equal(opened.bodyFrom(other.publicKey), null, 'another connection did not sign it');
+  // A forger with both public keys seals a row that opens, but names a key it does not hold.
+  const forged = SIGNED.openInboxSigned(SIGNED.sealInboxSigned(SIGNED_BODY, to, { secretKey: other.secretKey, keyId: sender.keyId }, SIGNED_CTX), keys, SIGNED_CTX);
+  assert.equal(forged.keyId, sender.keyId);
+  assert.equal(forged.bodyFrom(sender.publicKey), null, 'a claimed key id is not a signature');
+});
+
+test('openInboxSigned refuses a row moved to another account, id or kind, a tamper, another epoch and a legacy reader', () => {
+  const { keys, sender, to } = signedSetup();
+  const row = SIGNED.sealInboxSigned(SIGNED_BODY, to, sender, SIGNED_CTX);
+  assert.throws(() => SIGNED.openInboxSigned(row, keys, { ...SIGNED_CTX, account: 'cd'.repeat(32) }));
+  assert.throws(() => SIGNED.openInboxSigned(row, keys, { ...SIGNED_CTX, id: '00000000-0000-4000-8000-000000000008' }));
+  assert.throws(() => SIGNED.openInboxSigned(row, keys, { ...SIGNED_CTX, kind: 'clip' }));
+  for (const at of [40, 600, 1130, 1200]) {
+    const raw = base64ToBytes(row);
+    raw[at] ^= 1;
+    assert.throws(() => SIGNED.openInboxSigned(bytesToBase64(raw), keys, SIGNED_CTX), `a changed byte at ${at}`);
+  }
+  const otherKem = SIGNED.deriveInboxKemKeyPair(deriveEncryptionKey(phraseToSeed(PHRASE_2)));
+  assert.throws(() => SIGNED.openInboxSigned(row, { ...keys, kem: otherKem }, SIGNED_CTX), 'the ML-KEM half is needed');
+  assert.throws(() => SIGNED.openInboxSigned(row, { ...keys, inboxSecret: deriveInboxKeyPair(phraseToSeed(PHRASE_2)).secretKey }, SIGNED_CTX), 'the X25519 half is needed');
+  assert.throws(() => openInbox(row, keys.inboxSecret, SIGNED_CTX), /version/, 'the legacy opener never reads a signed row');
+  const asLegacy = base64ToBytes(row);
+  asLegacy[0] = 1;
+  assert.throws(() => openInbox(bytesToBase64(asLegacy), keys.inboxSecret, SIGNED_CTX), 'nor one relabeled as legacy');
+  assert.throws(() => SIGNED.openInboxSigned(GOLDEN_INBOX_ROW, keys, INBOX_CTX), 'a legacy row is not a signed one');
+});
+
+test('checkedInboxKemPublic takes only the key the code names', () => {
+  const { kem } = signedSetup();
+  const hash = SIGNED.inboxKemHash(kem.publicKey);
+  assert.deepEqual(SIGNED.checkedInboxKemPublic(bytesToBase64(kem.publicKey), hash), kem.publicKey);
+  const other = SIGNED.deriveInboxKemKeyPair(new Uint8Array(32).fill(1)).publicKey;
+  assert.equal(SIGNED.checkedInboxKemPublic(bytesToBase64(other), hash), null);
+  assert.equal(SIGNED.checkedInboxKemPublic(undefined, hash), null);
+  assert.equal(SIGNED.checkedInboxKemPublic(bytesToBase64(kem.publicKey).slice(4), hash), null);
+});
+
+test('pairing code 2: frozen, both versions decode, and neither reads as the other', () => {
+  const { publicKey } = deriveInboxKeyPair(phraseToSeed(PHRASE));
+  const secret = new Uint8Array(16).fill(0x11);
+  const signed = { kemHash: new Uint8Array(32).fill(0x33), seed: new Uint8Array(32).fill(0x44) };
+  const withKext = encodePairingCode({ secret, inboxPublic: publicKey, kext: new Uint8Array(32).fill(0x22), signed });
+  const without = encodePairingCode({ secret, inboxPublic: publicKey, kext: null, signed });
+  assert.equal(withKext, 'pnx2-088H 248H 248H 248H 248H 248H 248R SPG1 Q2TW QDG8 DCC3 BSTB ZDZS Z913 5Q4P TD66 V3YK 6E13 84C7 4G9K 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6D24 8H24 8H24 8H24 8H24 8H24 8H24 8H24 8H24 8H24 8H24 8H24 8H24 88H2 48H2 48H2 48H2 48H2 48H2 48H2 48H2 48H2 48H2 48H2 48H2 48H2 E7SD P2G');
+  assert.equal(without, 'pnx2-088H 248H 248H 248H 248H 248H 248R SPG1 Q2TW QDG8 DCC3 BSTB ZDZS Z913 5Q4P TD66 V3YK 6E13 84C7 4G9K 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6CSK 6D24 8H24 8H24 8H24 8H24 8H24 8H24 8H24 8H24 8H24 8H24 8H24 8H24 983P M010');
+  assert.ok(withKext.startsWith('pnx2-') && without.startsWith('pnx2-'));
+  const d = decodePairingCode(withKext.toLowerCase());
+  assert.deepEqual(d.signed, signed);
+  assert.deepEqual(d.kext, new Uint8Array(32).fill(0x22));
+  assert.deepEqual(decodePairingCode(without).signed, signed);
+  assert.equal(decodePairingCode(without).kext, null);
+  assert.equal(decodePairingCode(PAIR_CODE).signed, undefined, 'a version 1 code stays version 1');
+  assert.equal(decodePairingCode(withKext.slice(0, -1) + (withKext.endsWith('0') ? '1' : '0')), null, 'the check holds');
 });

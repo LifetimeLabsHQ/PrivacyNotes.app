@@ -4,7 +4,7 @@ import { Fire, Lock, Moon, Sun } from './icons';
 import { RevealGate } from './RevealGate';
 import { isLineSpacing, lineHeightCss, paragraphGapCss, useTheme, type LineSpacing } from './theme';
 import { decryptJson, hexToBytes, createSupabaseClient } from '@notes/shared';
-import { renderMarkdownSafe, renderNoteBody, prepareRender } from './markdownRender';
+import { keepBlankLines, renderMarkdownSafe, renderNoteBody, prepareRender } from './markdownRender';
 import { marketingHomeHref } from './siteLinks';
 import { Brand } from './Brand';
 import { readBurnSeconds } from './burnOptions';
@@ -189,10 +189,16 @@ export default function BurnNote() {
   const [renderReady, setRenderReady] = useState(false);
 
   // Memoize rendered markdown so the 1Hz countdown tick doesn't
-  // re-render the body HTML every second.
+  // re-render the body HTML every second. A vault item (it has fields) sends
+  // its Notes box as the body, so its blank lines show as typed, the way the
+  // item view shows them (keepBlankLines, #775).
   const bodyHtml = useMemo(
-    () => (note?.body ? renderNoteBody(renderMarkdownSafe(note.body), note.spacing) : ''),
-    [note?.body, note?.spacing, renderReady],
+    () => {
+      if (!note?.body) return '';
+      const md = note.fields.length ? keepBlankLines(note.body) : note.body;
+      return renderNoteBody(renderMarkdownSafe(md), note.spacing);
+    },
+    [note?.body, note?.fields, note?.spacing, renderReady],
   );
 
   // A shared note can contain math or fenced code, and rendering those needs

@@ -11,7 +11,21 @@
  */
 import type { LocalNote } from './db';
 
-/** A filesystem-safe stem from a note title. Empty titles get a fixed name. */
+/** The names Windows keeps for devices: a file called `con.md` cannot be
+ *  made there, whatever its extension. */
+const WINDOWS_DEVICE = /^(?:con|prn|aux|nul|com[0-9]|lpt[0-9])$/;
+
+/** A file name Windows can make: a device name before the first dot gets a
+ *  `_` after it, and trailing dots and spaces go, as Windows drops them. */
+export function windowsSafeFileName(name: string): string {
+  const trimmed = name.replace(/[. ]+$/, '');
+  const dot = trimmed.indexOf('.');
+  const stem = dot < 0 ? trimmed : trimmed.slice(0, dot);
+  return WINDOWS_DEVICE.test(stem.toLowerCase()) ? `${stem}_${trimmed.slice(stem.length)}` : trimmed;
+}
+
+/** A filesystem-safe stem from a note title. Empty titles get a fixed name,
+ *  and a Windows device name gets a `_` after it. */
 export function slugify(title: string): string {
   const slug = title
     .trim()
@@ -19,6 +33,7 @@ export function slugify(title: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 60);
+  if (WINDOWS_DEVICE.test(slug)) return `${slug}_`;
   return slug || 'untitled';
 }
 

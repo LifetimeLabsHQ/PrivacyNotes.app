@@ -345,6 +345,8 @@ export function TwoFactorTab() {
                 <ShieldCheck size={28} weight="fill" className="shrink-0 text-success" aria-hidden="true" />
                 <p className="text-body text-pn leading-relaxed">{t('twoFactor.warning')}</p>
               </div>
+              {/* The first factor disconnects every extension and command line (migration 0152, beta #213 item 1). */}
+              <p className={SETTINGS_HELP}>{t('twoFactor.disconnectsConnections')}</p>
               <div className="flex gap-2">
                 <button type="button" onClick={() => { setBackupAnswer(''); setCode(''); setStep('key'); }} disabled={busy} className={`${secondary} flex-1`}>{t('common:actions.back')}</button>
                 <button type="submit" className={`${primary} flex-1`} disabled={busy || !backupSaved || normalizeKey(backupAnswer) !== setup.secret || code.length !== 6}>{t(busy ? 'mfaPrompt.verifying' : 'security:twoFactor.start')}</button>

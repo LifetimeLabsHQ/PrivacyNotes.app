@@ -1,6 +1,5 @@
 {
   "header": {
-    "betaBadge": "beta",
     "downloads": "Do pobrania",
     "price": "Cena",
     "priceLine": "Ile kosztują Twoje aplikacje, razem",
@@ -290,7 +289,7 @@
   },
   "demoShot": {
     "kicker": "Zobacz na żywo",
-    "caption": "Prawdziwa aplikacja z przykładowymi notatkami, prosto w Twojej przeglądarce. Nic nie jest zapisywane."
+    "caption": "Prawdziwa aplikacja z przykładowymi notatkami, prosto w Twojej przeglądarce. To, co wpiszesz, zostaje w niej."
   },
   "badges": {
     "privacyToolsAlt": "PrivacyNotes na PrivacyTools.io",
@@ -358,7 +357,7 @@
     "freeImport": "Import i eksport, w tym Keep i Obsidian",
     "freeAnon": "Anonimowe logowanie, bez e-maila",
     "earlyAdopterBadge": "Wczesny użytkownik",
-    "payMethods": "Zapłać kartą albo w Bitcoin, Ethereum, Lightning, USDC lub USDT."
+    "payMethods": "Zapłać kartą albo w Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin lub TON."
   },
   "underHood": {
     "heading": "Pod maską",
@@ -501,7 +500,7 @@
     "noLockIn": "Uzależnienie od dostawcy",
     "noEmail": "Wymagany e-mail",
     "noDarkPatterns": "Dark patterns",
-    "noBackdoor": "Ukryte furtki"
+    "noBackdoor": "Ukryte tylne furtki"
   },
   "noRecovery": {
     "heading": "Twoja fraza to Twój klucz",
@@ -509,7 +508,7 @@
     "noRecoveryTerm": "Brak odzyskiwania",
     "noRecoveryDesc": "Przy samodzielnym przechowywaniu zgubisz frazę, zgubisz notatki",
     "deviceTerm": "Generowana na urządzeniu",
-    "deviceDesc": "Przy samodzielnym przechowywaniu Twoja fraza nigdy nie trafia na nasze serwery",
+    "deviceDesc": "Przy samodzielnym przechowywaniu Twoja fraza nigdy nie trafia na nasze serwery, chyba że dodasz passkey do logowania",
     "zkTerm": "Zero-knowledge",
     "zkDesc": "Przy samodzielnym przechowywaniu serwer nie ma niczego, co otwiera Twoje notatki",
     "writeTerm": "Zapisz ją",
@@ -524,7 +523,7 @@
     "heading": "Twój sejf będzie gotowy w niecałą minutę.",
     "importNote": "Przenosisz się z innej aplikacji? Wyeksportuj z każdej z nich i zaimportuj w kilka minut:",
     "importDemoTitle": "Najpierw wypróbuj własny import w demo",
-    "importDemoBody": "Twój plik jest odczytywany w przeglądarce, nic nie trafia na nasze serwery, a zamknięcie karty go usuwa."
+    "importDemoBody": "Twój plik jest odczytywany w przeglądarce i nic z niego nie jest wysyłane. Zostaje w tej przeglądarce, dopóki demo nie otworzy się tu ponownie; wyczyść dane witryny, aby usunąć go wcześniej."
   },
   "about": {
     "tabs": {
@@ -532,7 +531,7 @@
       "hotkeys": "Skróty",
       "rating": "Ocena"
     },
-    "intro": "<brand/> trzyma Twoje notatki, zadania, hasła, dziennik, pliki, kalendarz, kontakty i zakładki w jednym miejscu, ze śledzeniem nastroju i leków. Wszystko jest szyfrowane na Twoim urządzeniu kluczem utworzonym z Twojej frazy odzyskiwania i pozostaje zaszyfrowane na naszych serwerach w <nowrap>Szwajcarii</nowrap>. Działa offline, a aplikacja jest open source.",
+    "intro": "<brand/> trzyma Twoje notatki, zadania, hasła, dziennik, pliki, kalendarz, kontakty i zakładki w jednym miejscu, ze śledzeniem nastroju i leków. Wszystko jest szyfrowane na Twoim urządzeniu kluczem utworzonym z Twojej frazy odzyskiwania i pozostaje zaszyfrowane na naszych serwerach w <nowrap>Szwajcarii</nowrap> i w UE. Działa offline, a aplikacja jest open source.",
     "versionHeading": "Wersja",
     "windowVersion": "Wersja {{version}}",
     "windowHelp": "Centrum pomocy",
@@ -552,7 +551,7 @@
     "openSourceLink": "Przeczytaj kod na GitHub.com",
     "openSourceBody": "Aplikacja i szyfrowanie w środku są opublikowane, więc każdy może sprawdzić, jak szyfrowane są Twoje notatki.",
     "dataStorageHeading": "Przechowywanie danych",
-    "dataStorageBody": "Zaszyfrowane bloby przechowywane w Zurychu, <flag/> Szwajcaria.",
+    "dataStorageBody": "Zaszyfrowane notatki, dzienniki i cała reszta są przechowywane w Zurychu, <flag/> Szwajcaria. Nowe obrazy i pliki z obecnej wersji aplikacji są przechowywane w UE.",
     "faviconsHeading": "Ikony stron",
     "faviconsBody1": "Ikony stron (favikony) pochodzą z DuckDuckGo i Google, a pobiera je nasz serwer w Twoim imieniu. Twoja przeglądarka nigdy nie łączy się z żadnym z nich, więc widzą one nasz serwer pytający o domenę, a nigdy Ciebie.",
     "faviconsBody2": "Ikony są przechowywane w pamięci podręcznej urządzenia przez 90 dni. Żadne zapytanie nie zawiera Twojej tożsamości, a ikony możesz wyłączyć w Ustawienia > Listy."

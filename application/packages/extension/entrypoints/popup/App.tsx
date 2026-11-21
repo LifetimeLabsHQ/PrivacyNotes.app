@@ -42,8 +42,16 @@ import { SettingsView, ViewPrefsProvider, type ViewPrefs } from './SettingsView'
 import { SheetHeader } from './Sheet';
 import { ShortcutsView, useShortcuts } from './ShortcutsView';
 import { KIND_ORDER, TYPE_ICONS, Unlock, VaultSections, typeLabel as kindLabel, useVault, type OpenMenu } from './VaultView';
+import { PasskeyPrompt } from './PasskeyView';
+import { passkeysReleased } from '../../src/passkeyRelease';
+import { pendingHoldsPasskey } from '../../src/pending';
+import type { LoginCopyEntry } from '@notes/shared/extension';
 
-type View = { kind: 'main' } | { kind: 'settings' } | { kind: 'biometric' } | { kind: 'generator' } | { kind: 'addLogin' } | { kind: 'note'; start?: string } | { kind: 'shortcuts' } | { kind: 'changeSecret' };
+/** The passkey request this popup was opened for (passkeys.md section 5.4):
+ *  by its id in the address, never through the one-slot route. */
+const PASSKEY_REQUEST = passkeysReleased() ? new URLSearchParams(location.search).get('passkey') : null;
+
+type View = { kind: 'main' } | { kind: 'settings' } | { kind: 'biometric' } | { kind: 'generator' } | { kind: 'addLogin' } | { kind: 'editLogin'; login: LoginCopyEntry } | { kind: 'note'; start?: string } | { kind: 'shortcuts' } | { kind: 'changeSecret' };
 
 
 /** The logo and the app's two-tone wordmark, at the start of every header
@@ -74,6 +82,8 @@ export function App() {
     void writePrefs(patch);
   };
   const [lockAfter, setLockAfter] = useState<LockAfter>(900);
+  const [offerPasskeys, setOfferPasskeys] = useState(true);
+  const [pendingPasskey, setPendingPasskey] = useState(false);
   const [focusNonce, setFocusNonce] = useState(0);
   const notices = useNotices();
   const searchRef = useRef<HTMLInputElement>(null);
@@ -86,7 +96,14 @@ export function App() {
   useEffect(() => {
     if (view.kind !== 'settings') return;
     void Promise.all([biometricPossible(), biometricReady()]).then(([possible, on]) => setBio({ possible, on }));
+    if (passkeysReleased()) void pendingHoldsPasskey().then(setPendingPasskey);
   }, [view.kind]);
+  // A lock while the Edit login sheet is open takes the sheet and the login
+  // it holds away; the main view then shows the unlock screen (beta #217 item 2).
+  const editLocked = view.kind === 'editLogin' && vault.unlocked !== true;
+  useEffect(() => {
+    if (editLocked) setView({ kind: 'main' });
+  }, [editLocked]);
   // The popup's own keys, the app's (Settings, search): the handler reads
   // this render's state, so it is set after the early returns below.
   const onKey = useRef<((e: KeyboardEvent) => void) | null>(null);
@@ -97,8 +114,10 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    void Promise.all([readConnection(), takeRoute(), readPrefs(), activeTab()]).then(([c, r, prefs, active]) => {
+    // A passkey prompt leaves a route for the next popup.
+    void Promise.all([readConnection(), PASSKEY_REQUEST ? null : takeRoute(), readPrefs(), activeTab()]).then(([c, r, prefs, active]) => {
       setTypeFilter(prefs.typeFilter);
+      setOfferPasskeys(prefs.offerPasskeys);
       setViewPrefs({ showTotp: prefs.showTotp, totpBar: prefs.totpBar, favicons: prefs.favicons });
       setLockAfter(prefs.lockAfter);
       // A route opens the tab its job needs, once; the remembered tab stays.
@@ -206,6 +225,16 @@ export function App() {
           </>
         )}
       </div>
+    );
+  }
+
+  if (PASSKEY_REQUEST) {
+    return (
+      <NotifyProvider notify={notices.notify}>
+        <ViewPrefsProvider value={viewPrefs}>
+          <PasskeyPrompt id={PASSKEY_REQUEST} connection={connection} />
+        </ViewPrefsProvider>
+      </NotifyProvider>
     );
   }
 
@@ -355,7 +384,7 @@ export function App() {
             <Unlock connection={connection} onUnlocked={vault.onUnlocked} focusNonce={focusNonce} />
           </div>
         ) : (
-          <VaultSections vault={vault} url={url} tabId={tabId} loginKeys={keys['copy-login']} query={query} typeFilter={typeFilter} menu={openMenu} />
+          <VaultSections vault={vault} url={url} tabId={tabId} loginKeys={keys['copy-login']} query={query} typeFilter={typeFilter} menu={openMenu} onEdit={(login) => setView({ kind: 'editLogin', login })} />
         )}
       </main>
     </>
@@ -394,12 +423,21 @@ export function App() {
                     });
                   },
                 } : undefined,
+                // "Offer passkeys" (P29), under biometric unlock, while the switch is on.
+                passkeys: passkeysReleased() ? {
+                  on: offerPasskeys,
+                  set: (on) => {
+                    setOfferPasskeys(on);
+                    void writePrefs({ offerPasskeys: on });
+                  },
+                } : undefined,
                 changeSecret: unlocked ? {
                   label: connection.secretKind === 'passcode' ? t('changeSecret.titlePasscode') : t('changeSecret.titlePin'),
                   open: () => setView({ kind: 'changeSecret' }),
                 } : undefined,
               } : undefined}
               onShortcuts={() => setView({ kind: 'shortcuts' })}
+              disconnectLoses={pendingPasskey}
               onDisconnect={() => disconnect(connection).then(() => {
                 setConnection(null);
                 setView({ kind: 'main' });
@@ -432,6 +470,8 @@ export function App() {
           <NoteView start={view.start} onDone={backFrom} />
         ) : view.kind === 'addLogin' ? (
           <AddLoginView url={url} logins={loginsOf(vault.entries)} pro={vault.pro} onDone={backFrom} />
+        ) : view.kind === 'editLogin' && !editLocked ? (
+          <AddLoginView url={url} logins={loginsOf(vault.entries)} pro={vault.pro} onDone={backFrom} edit={view.login} />
         ) : (
           main
         )}

@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "h",
+    "minutesSuffix": "min",
+    "hoursMinutes": "{{h}} h {{m}} min",
     "bpm": "ud./min",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -149,6 +151,7 @@
     "takenCount_many": "{{count}} przyjętych",
     "takenCount_other": "{{count}} przyjętego",
     "namePlaceholder": "Nazwa leku",
+    "nameMissing": "Nadaj lekowi nazwę.",
     "dosagePlaceholder": "Dawka (np. 50 mg)",
     "editMedication": "Edytuj lek",
     "removeMedication": "Usuń lek",
@@ -278,12 +281,18 @@
     "yes": "Tak",
     "no": "Nie",
     "unknownType": "Ten tracker wymaga nowszej wersji aplikacji.",
+    "counterOf": "z {{limit}}",
+    "counterToday": "użyto dziś",
+    "counterReached": "Osiągnięto limit {{limit}}.",
+    "counterStartAgain": "{{name}}: zacznij od nowa od 0",
+    "counterStartAgainConfirm": "Zacząć od nowa?",
     "typeLabels": {
       "scale10": "Skala (0-10)",
       "scale5": "Skala (0-5)",
       "slider100": "Wynik (0-100)",
       "number": "Liczba",
       "pair": "Dwie liczby",
+      "counter": "Licznik",
       "yesno": "Tak / Nie"
     }
   },
@@ -299,7 +308,7 @@
     "medicationCard": "Karta leków",
     "medicationCardHelp": "„Czy udało Ci się przyjąć leki?” na tym urządzeniu, tylko w dniu, w którym przypada dawka leku.",
     "customHelp": "Trackery, które nazywasz samodzielnie: skala, liczba albo tak lub nie. Maksymalnie {{max}}.",
-    "customHelpPair": "Trackery, które nazywasz samodzielnie: skala, liczba, dwie liczby albo tak lub nie. Maksymalnie {{max}}.",
+    "customHelpPair": "Trackery, które nazywasz samodzielnie: skala, liczba, dwie liczby, licznik albo tak lub nie. Maksymalnie {{max}}.",
     "yourCustomTrackers": "Twoje własne trackery",
     "categoryMoodMind": "Nastrój i umysł",
     "categoryBodyHealth": "Ciało i zdrowie",
@@ -340,7 +349,10 @@
     "pairFirstPlaceholder": "Skurczowe",
     "pairSecondPlaceholder": "Rozkurczowe",
     "pairUnit": "Jednostka (opcjonalnie)",
-    "pairWaiting": "Zapisze się, gdy wpiszesz pierwszą liczbę."
+    "pairWaiting": "Zapisze się, gdy wpiszesz pierwszą liczbę.",
+    "nameMissing": "Nadaj trackerowi nazwę.",
+    "counterLimit": "Limit (opcjonalnie)",
+    "counterHelp": "Sumuje użycia z kolejnych dni. Ustaw limit, na przykład 30 dla żyletki, i zacznij od nowa, gdy go osiągniesz."
   },
   "factors": {
     "prompt": "Co było częścią Twojego dnia?",
@@ -431,5 +443,6 @@
   "flow": {
     "finish": "Zakończ",
     "step": "Tracker {{n}} z {{total}}"
-  }
+  },
+  "showEveryDay": "Pokaż każdy dzień z tym trackerem"
 }

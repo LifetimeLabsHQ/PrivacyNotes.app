@@ -1087,10 +1087,10 @@
   },
   "0.774": {
     "blood-pressure": {
-      "w": 1703,
-      "h": 1164,
-      "bytes": 48482,
-      "sha256": "49fc70785b6f0d853a6c7752cac2a0caef6018410660b70901eb20363e8099be"
+      "w": 1444,
+      "h": 902,
+      "bytes": 50022,
+      "sha256": "e55cb9adaa511795b7049f8efbe3983dbb9e063761d12402385d7057148f33dd"
     }
   },
   "0.776": {
@@ -1137,6 +1137,182 @@
       "h": 720,
       "bytes": 35078,
       "sha256": "b35af167a9aabbe59199fae2291d3c66d38d8283469a758083ae8b4f17a49c52"
+    }
+  },
+  "0.806": {
+    "app-size": {
+      "w": 1080,
+      "h": 1172,
+      "bytes": 73238,
+      "sha256": "0b346d050f490fd42e91c1deca421a79b9f8b05dbc1700330a79a862c36c7f77"
+    }
+  },
+  "0.808": {
+    "type-marks": {
+      "w": 576,
+      "h": 1800,
+      "bytes": 48704,
+      "sha256": "3cd405ffacbc9729e66dcb0099ce6ed508694438549c3409b175abf58bbd7bb9"
+    }
+  },
+  "0.809": {
+    "random-item": {
+      "w": 1288,
+      "h": 396,
+      "bytes": 17344,
+      "sha256": "ddf04b78d65264ed99a60b8c47166b768832e1b22d94be607c1c0f03a0957043"
+    },
+    "selection-more": {
+      "w": 1104,
+      "h": 1600,
+      "bytes": 86514,
+      "sha256": "6d81dab43a03604391bbdfc5a8466d5d4e3ee23658638439714d54d1e613ee30"
+    }
+  },
+  "0.810": {
+    "keep-for-folder": {
+      "w": 2000,
+      "h": 1250,
+      "bytes": 171538,
+      "sha256": "7343f976aac10aa68dbedb07571283bc469cc68d3d36db765f8328a627ae078c"
+    }
+  },
+  "0.811": {
+    "separate-home": {
+      "w": 2000,
+      "h": 1250,
+      "bytes": 151314,
+      "sha256": "187ed97c14480f9ac4f16279985c6431733113310857364b2977b486c9c4faaf"
+    }
+  },
+  "0.812": {
+    "importers": {
+      "w": 2000,
+      "h": 1618,
+      "bytes": 197014,
+      "sha256": "4cb1c1847df24aefcf33e09f8154b1e3953ff4c7ae4ee1eb2f28216152dac458"
+    }
+  },
+  "0.813": {
+    "protect-section": {
+      "w": 1104,
+      "h": 1600,
+      "bytes": 81046,
+      "sha256": "bfd1ed0e3ee8d86ac93f57bb56d34c84171382f677b709d08eb5d5aa4b0d0f11"
+    }
+  },
+  "0.814": {
+    "passkeys-tab": {
+      "w": 2000,
+      "h": 1618,
+      "bytes": 129698,
+      "sha256": "db25ebe61aaa1add6ddc40f5d6f34aaf6f26e7a161ae47277061412f8bed48ec"
+    }
+  },
+  "0.815": {
+    "folds": {
+      "w": 1444,
+      "h": 1514,
+      "bytes": 35550,
+      "sha256": "a87ad351490a6cd7e0d9a1edbacc55fb60ce2e60ce2fa5c6a9d99fd5e0e3a372"
+    }
+  },
+  "0.816": {
+    "calendar-colors": {
+      "w": 2000,
+      "h": 909,
+      "bytes": 113876,
+      "sha256": "4eef44a60254f439f540ef9e1640a69ba0b79b226a9d08237f7ff68952f28e59"
+    },
+    "calendar-trackers": {
+      "w": 1776,
+      "h": 982,
+      "bytes": 45358,
+      "sha256": "ac550950744985337c301f112101e5407fef8acb825857dbbd392d031df0fa4c"
+    },
+    "day-counter": {
+      "w": 1776,
+      "h": 1498,
+      "bytes": 68652,
+      "sha256": "d8fd4f007227393dc4433684f6b4666b705dc2b4b52ed513b2e1cddbb61e96e3"
+    },
+    "repeats": {
+      "w": 1776,
+      "h": 1720,
+      "bytes": 51114,
+      "sha256": "b2dd5c8361f0febe1e2f1d9c1622048c2c5009e57e3fe269b2db61eb558fb65d"
+    },
+    "tracker-focus": {
+      "w": 576,
+      "h": 1800,
+      "bytes": 49380,
+      "sha256": "26e57a3dbb9474662476f320031b250e73e880da2963da0b4d226747375ab925"
+    }
+  },
+  "0.817": {
+    "sync-choice": {
+      "w": 1488,
+      "h": 1524,
+      "bytes": 93572,
+      "sha256": "b24b5cbd7cfaa55bc18418113c703c0e5045f942d95f469d57ddbe9b245bcc0f"
+    }
+  },
+  "0.818": {
+    "file-chip": {
+      "w": 1444,
+      "h": 1350,
+      "bytes": 39480,
+      "sha256": "c8300bb8d73e775f1468578ef954e505cf747126bc1a6a3bc7f59b5d18d93892"
+    },
+    "plugins": {
+      "w": 2000,
+      "h": 1618,
+      "bytes": 210048,
+      "sha256": "80811ac1e57891a413df06723b1f1948e440be78b0682adcb0091fae1cfd8151"
+    },
+    "text-in-pictures": {
+      "w": 1032,
+      "h": 744,
+      "bytes": 26098,
+      "sha256": "c67f3b90ee1d5963ded7f859ddb6272f28f8976f3372caa72b7150fabe9f37db"
+    },
+    "text-in-pictures-note": {
+      "w": 1456,
+      "h": 1304,
+      "bytes": 66234,
+      "sha256": "cb96a54c3aaf87250a60baf050274069321a230a125640fa015ae209cdb680aa"
+    },
+    "translate": {
+      "w": 1350,
+      "h": 894,
+      "bytes": 28224,
+      "sha256": "3c99fd470abb14afdb075c9853dd86506c96caf25fe795d8001824cf09294512"
+    },
+    "voice-to-text": {
+      "w": 1030,
+      "h": 742,
+      "bytes": 19468,
+      "sha256": "d5cb2b07fae6e9a6379608599edbf61a7d8218391ae706ef3cfcbbdfe00a8a50"
+    }
+  },
+  "0.819": {
+    "line-numbers": {
+      "w": 2000,
+      "h": 1546,
+      "bytes": 114294,
+      "sha256": "464b6a74696282888881657f5e9848ab9517b8e60fc2144ead14e3433a2e4cc7"
+    },
+    "side-by-side": {
+      "w": 2000,
+      "h": 1651,
+      "bytes": 123948,
+      "sha256": "3105ff4cc84e7c15fdb480d9b94836dba1757a44065f551e0f7f862d970cef03"
+    },
+    "split-view": {
+      "w": 2000,
+      "h": 1546,
+      "bytes": 106976,
+      "sha256": "5d75281df8be2ff599976de5b659f2375976cfd1810c919e93278b2dd189c6d9"
     }
   }
 }

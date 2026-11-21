@@ -442,7 +442,7 @@
   if (page === 'help-leaf') initLeafSearch();
   if (page === 'changelog') { initChangelog(); initShots(); }
   if (page === 'brand') { initBrand(); initBrandRail(); }
-  if (page === 'themes') { initBrand(); initThemeMore(); initThemeShots(); }
+  if (page === 'themes') { initThemeMore(); initThemeShots(); }
   if (page === 'landing') initLanding();
   if (page === 'cheatsheet') initCheatSheet();
   if (page === 'auth-desktop') initAuthDesktop();
@@ -458,8 +458,7 @@
   // static-page-chrome.ts). Built once per page; returns open(shots, i, back),
   // where back is the element focus returns to on close. A shot is
   // { src, dark, alt } and, on /themes, also:
-  //   code   the theme code: the caption turns into a headline over a Copy
-  //          code button, and the C key copies it
+  //   code   the theme code: the caption turns into a headline
   //   mode   "Light" or "Dark", beside the count
   //   by     { name, href } for the credit, votes { count, href } for its thread
   //   desc   the author's description
@@ -517,16 +516,12 @@
     lb.setAttribute('role', 'dialog');
     lb.setAttribute('aria-modal', 'true');
     lb.setAttribute('aria-label', 'Screenshot');
-    // The card's COPY_ICON and DONE_ICON in themes-page.ts.
-    var copyIcons =
-      '<svg data-ic class="ic-copy" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></svg>' +
-      '<svg data-ic class="ic-done" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></svg>';
     lb.innerHTML =
       // The dock under the picture: the name, one meta line and the whole
-      // description, then Copy code and Upvote. It wraps by its own width
+      // description, then Upvote. It wraps by its own width
       // (a container query), and the picture gives up the height it needs.
       '<div class="lb-fig"><img alt=""><div class="lb-dock"><div class="lb-in"><div class="lb-info"><div class="lb-head"><p class="lb-t"></p><p class="lb-m"></p><p class="lb-m lb-tap">Tap the picture to zoom</p></div><p class="lb-d"></p></div>' +
-      '<div class="lb-acts"><button type="button" class="lb-btn lb-copy" data-label-done="Copied" aria-keyshortcuts="C" hidden>' + copyIcons + '<span class="cl">Copy code</span><kbd>C</kbd></button>' +
+      '<div class="lb-acts">' +
       '<a class="lb-btn lb-vote" target="_blank" rel="noopener noreferrer nofollow" hidden>' +
       // The card's P_ARROW_UP in themes-page.ts.
       '<svg data-ic viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M205.66,117.66a8,8,0,0,1-11.32,0L136,59.31V216a8,8,0,0,1-16,0V59.31L61.66,117.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,205.66,117.66Z"/></svg>' +
@@ -539,7 +534,6 @@
     var lbCap = lb.querySelector('.lb-t');
     var lbBy = lb.querySelector('.lb-m');
     var lbDesc = lb.querySelector('.lb-d');
-    var lbCopy = lb.querySelector('.lb-copy');
     var lbVote = lb.querySelector('.lb-vote');
     var lbDock = lb.querySelector('.lb-dock');
     var lbPrev = lb.querySelector('.lb-p');
@@ -589,10 +583,6 @@
       // The headline caption of /themes (the theme's name). The homepage's
       // Ninja shots ask for it with `big`: their caption is the whole story.
       lb.classList.toggle('lb-code', !!shot.code || !!shot.big);
-      clearTimeout(lbCopy._pnCopied);
-      lbCopy.classList.remove('on');
-      if (lbCopy._pnLabel) lbCopy.querySelector('.cl').textContent = lbCopy._pnLabel;
-      lbCopy.hidden = !shot.code || !navigator.clipboard;
       lbPrev.hidden = lbNext.hidden = cur.shots.length < 2;
       if (shot.hash) setHash(shot.hash);
       fit();
@@ -624,13 +614,6 @@
       if (shot.hash) setHash('');
       var back = shot.el || cur.back;
       if (back) back.focus();
-    }
-    function copy() {
-      if (lbCopy.hidden) return;
-      navigator.clipboard.writeText(cur.shots[cur.i].code).then(function () {
-        showCopied(lbCopy);
-      // A refused clipboard shows nothing, which is the honest answer.
-      }).catch(function () {});
     }
     // A picture drawn smaller than its own size (a desktop shot on a phone)
     // opens at its full size on a tap, with the spot under the finger kept in
@@ -669,7 +652,6 @@
       else if (cur.shots.length > 1) show(cur.i + by);
     });
     lbClose.addEventListener('click', close);
-    lbCopy.addEventListener('click', copy);
     lbPrev.addEventListener('click', function () { show(cur.i - 1); });
     lbNext.addEventListener('click', function () { show(cur.i + 1); });
     lb.addEventListener('click', function (e) {
@@ -681,10 +663,9 @@
       if (e.key === 'Escape') { if (lb.classList.contains('lb-zoom')) { unzoom(); fit(); } else close(); }
       else if (e.key === 'ArrowLeft') show(cur.i - 1);
       else if (e.key === 'ArrowRight') show(cur.i + 1);
-      else if ((e.key === 'c' || e.key === 'C') && !e.metaKey && !e.ctrlKey && !e.altKey) copy();
       else if (e.key === 'Tab') {
         // Keep focus inside the open dialog: the buttons and the credit links.
-        var f = [lbClose].concat(Array.prototype.slice.call(lbBy.querySelectorAll('a')), [lbCopy, lbVote, lbPrev, lbNext]).filter(function (b) { return !b.hidden; });
+        var f = [lbClose].concat(Array.prototype.slice.call(lbBy.querySelectorAll('a')), [lbVote, lbPrev, lbNext]).filter(function (b) { return !b.hidden; });
         var at = f.indexOf(document.activeElement);
         e.preventDefault();
         f[(at + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus();
@@ -1056,34 +1037,6 @@
     });
   }
 
-  // An icon copy button (/themes, its viewer) turns its icon into a check and
-  // its words into "Copied" for two seconds, the app's copy pattern.
-  function showCopied(btn) {
-    var text = btn.querySelector('.cl');
-    var label = btn._pnLabel || (btn._pnLabel = text ? text.textContent : '');
-    if (text) text.textContent = btn.getAttribute('data-label-done') || 'Copied';
-    btn.classList.add('on');
-    clearTimeout(btn._pnCopied);
-    btn._pnCopied = setTimeout(function () {
-      btn.classList.remove('on');
-      if (text) text.textContent = label;
-    }, 2000);
-  }
-
-  // /themes: a copy is the moment a person likes a theme, so the card shows
-  // its upvote nudge and the Upvote button pulses twice. Team cards have neither.
-  function nudgeUpvote(btn) {
-    var card = btn.closest('.tc');
-    var vote = card && card.querySelector('.vote');
-    var nudge = card && card.querySelector('.nudge');
-    if (!vote) return;
-    if (nudge) nudge.hidden = false;
-    vote.classList.remove('pulse');
-    // Reflow, so a second copy restarts the keyframe.
-    void vote.offsetWidth;
-    vote.classList.add('pulse');
-  }
-
   // /brand: reveal the copy buttons and wire them to their text blocks.
   // The buttons ship hidden; without JS the text stays selectable as-is.
   function initBrand() {
@@ -1094,13 +1047,7 @@
       btn.addEventListener('click', function () {
         var src = document.getElementById(btn.getAttribute('data-copy'));
         if (!src) return;
-        // textContent, because a code inside a closed <details> is not rendered.
-        navigator.clipboard.writeText(btn.hasAttribute('data-copy-icon') ? src.textContent : src.innerText).then(function () {
-          if (btn.hasAttribute('data-copy-icon')) {
-            showCopied(btn);
-            nudgeUpvote(btn);
-            return;
-          }
+        navigator.clipboard.writeText(src.innerText).then(function () {
           var old = btn.textContent;
           btn.textContent = 'Copied';
           btn.classList.add('on');
@@ -1424,9 +1371,11 @@
           url,
           function () {
             btn.classList.add('done');
+            btn.setAttribute('data-tip', 'Link copied');
           },
           function () {
             btn.classList.remove('done');
+            btn.setAttribute('data-tip', 'Copy link');
           }
         );
       });
@@ -1739,6 +1688,18 @@
     }
     var nojs = role('nojs');
     if (nojs) nojs.hidden = true;
+
+    // A phone browser never gets the code on the page or a Copy button: a
+    // hostile phone app can start a sign-in that returns here, and the app in
+    // front can read the clipboard. The address drops the code, as below.
+    if (window.pnIsPhoneBrowser && window.pnIsPhoneBrowser()) {
+      try {
+        history.replaceState(null, '', location.pathname);
+      } catch (e) { /* the code stays only in the address */ }
+      var phone = role('phone');
+      if (phone) phone.hidden = false;
+      return;
+    }
 
     var code = null;
     try {

@@ -1,4 +1,5 @@
 import MiniSearch from 'minisearch';
+import { parseLinkBody } from './linkBody';
 import { isKnownNoteType } from './noteTypes';
 import type { LocalNote } from './db';
 import { withoutArabicArticle } from './arabicFold';
@@ -79,13 +80,20 @@ export function indexedBodyText(n: LocalNote): string {
   // nor kept for the find bar, so a field a newer pillar keeps private is
   // not searchable on a build that cannot read it.
   if (!isKnownNoteType(n.type)) return '';
+  // A bookmark indexes its URL and its notes, never the JSON around them.
+  if (n.type === 'link') {
+    const { url, notes } = parseLinkBody(n.body);
+    return notes ? `${url} ${notes}` : url;
+  }
   // A doodle block's text is stroke data, never words.
   if (n.type !== 'login' && n.type !== 'card' && n.type !== 'ssh-key') return withoutDoodleData(n.body);
   try {
     const d = JSON.parse(n.body);
     if (n.type === 'login') {
       // Extra websites and custom field names are searchable; a field's
-      // value only when the field is a text field.
+      // value only when the field is a text field. A site passkey never is:
+      // the fields are named one by one, so `passkeys` stays out.
+      // Spec: docs/contrib/passkeys.md (P26)
       const e = loginExtrasOf(n.trackers);
       const extras = [...e.extraUrls, ...e.fields.flatMap((f) => (isPublicField(f) ? [f.label, f.value] : [f.label]))];
       return [d.url ?? '', d.username ?? '', d.notes ?? '', ...extras].join(' ');

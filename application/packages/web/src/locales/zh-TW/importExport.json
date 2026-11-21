@@ -58,7 +58,6 @@
     "import": "匯入",
     "downloading": "下載中…",
     "subscribe": "訂閱",
-    "subscribeTitle": "訂閱日曆",
     "subscribeDesc": "貼上日曆網址，例如來自 Google、iCloud、Proton、Outlook 或 Nextcloud 的 webcal:// 連結。其中的活動會以唯讀方式顯示在你的日曆中，並在 App 開啟期間更新。",
     "subscribed": "已訂閱的日曆",
     "updating": "更新中…",
@@ -74,6 +73,7 @@
       "offline": "你目前離線。請連線後再試一次。",
       "limit": "短時間內下載次數過多。請等一分鐘後再試。",
       "failed": "無法下載日曆。請檢查網址後再試一次。",
+      "insecure": "無法透過安全連線存取這個日曆。請檢查網址，或稍後再試。",
       "full": "你最多只能訂閱 {{max}} 個日曆。請先移除一個。"
     }
   },
@@ -84,6 +84,8 @@
     "lastpass": "在 LastPass 中選擇 Advanced options > Export > Export data for use anywhere。登入資訊會保留 2FA 金鑰，安全筆記與卡片也會一起帶過來，資料夾則會變成標籤。",
     "onePassword": "在 1Password 應用程式中選擇 File > Export，選取你的帳號與 1PUX 格式。登入資訊會保留 2FA 金鑰、其他網站與自訂欄位，卡片、筆記與身分也會一起帶過來，標籤仍會是標籤，最愛與封存的項目也會保留原本的位置。CSV 匯出檔也可以，但只會帶入登入資訊。",
     "dashlane": "在 Dashlane 中選擇 Settings > Export data，並選取 CSV 格式。登入資訊會保留 2FA 金鑰，安全筆記與卡片也會一起帶過來，類別則會變成標籤。.dash 匯出檔以密碼鎖定，無法讀取。",
+    "msecure": "在 mSecure 中選擇 Settings > Backups > Export records to CSV file。登入資訊會保留 2FA 金鑰、其他網站與自訂欄位，卡片與筆記也會一起帶過來，標籤仍會是標籤。",
+    "raindrop": "在 Raindrop.io 中開啟 All bookmarks，選擇 Export > Get backup，再到 Settings > Backups 下載 CSV。收藏集會變成資料夾，標籤仍會是標籤，每個書籤也會保留它的附註、摘錄與螢光標記。",
     "enpass": "在 Enpass 中選擇 File > Export，並選取 .json 格式。登入資訊會保留 2FA 金鑰、其他網站與自訂欄位，卡片、筆記與身分也會一起帶過來，資料夾會變成標籤，最愛與封存的項目也會保留原本的位置。垃圾桶中的項目不會匯入。",
     "nordpass": "在 NordPass 中選擇 Settings > Export items。登入資訊會保留其他網站與自訂欄位，筆記、卡片與身分也會一起帶過來，資料夾則會變成標籤。",
     "protonPass": "在 Proton Pass 中選擇 Settings > Export，並選取 ZIP。登入資訊會保留 2FA 金鑰、其他網站、自訂欄位與日期，筆記、卡片與身分也會一起帶過來。CSV 匯出檔也可以，只是內容較少。",
@@ -105,13 +107,15 @@
     "bear": "在 Bear 中選擇 File > Backup Notes...，然後把 .bear2bk 檔拖到這裡。標籤與巢狀標籤、釘選、封存、垃圾桶、帶顏色的螢光標記、筆記連結與附件都會一起帶過來。",
     "joplin": "從 File > Export all >「JEX - Joplin Export File」匯出的 .jex 檔。筆記本會變成資料夾，標籤、待辦事項、筆記連結與附件也會一起帶過來。",
     "anytype": "從 space settings > Export 匯出的 Any-Block v1 JSON .zip，並包含檔案與已封存的物件。Collections 會變成資料夾，標籤、任務、標註、摺疊區塊、表格、筆記連結與檔案都會一起帶過來。",
+    "capacities": "Capacities 匯出的 .zip：Settings > Full Export > Manual Full Export，並包含媒體。物件類型會變成資料夾，標籤、屬性、日期、物件之間的連結、表格、圖片與檔案都會一起帶過來。",
     "siyuan": "從 SiYuan 選單 > Data migration > Data.zip > Export 匯出的 Data.zip，或以 SiYuan .sy.zip 匯出的筆記本。筆記本與巢狀文件會變成資料夾，標籤、區塊參照、標註、數學公式、表格與資源檔都會一起帶過來。",
+    "onenote": "從 Windows 版 OneNote 匯出的 .onepkg：File > Export > Notebook > OneNote Package。節檔案（.one）或壓成 zip 的筆記本資料夾也可以。節與節群組會變成資料夾，子頁面、待辦事項、筆記標籤、表格、頁面連結、圖片與附加的檔案都會一起帶過來。",
     "upnote": "在 UpNote 中：Settings > Backup >「Backup now」，然後把備份資料夾裡的所有內容壓成 zip。保留筆記本、標籤、釘選、筆記連結、格式與附件。手機應用程式的逐篇匯出也可以：請選「Export to HTML」。",
     "markdownFolder": "單獨的 .md 或 .txt 檔，或是一個 .zip。壓成 zip 的資料夾會保留子資料夾，並把圖片和附件一起帶過來。",
     "markdownApp": "這些筆記本來就是資料夾裡的 Markdown 檔。把那個資料夾壓成 .zip 拖進來，子資料夾、圖片和 #標籤都會跟著過來。",
     "browserBookmarks": "瀏覽器「Export bookmarks」產生的書籤檔（.html），或 Safari 寫出的 .zip。Chrome、Firefox、Safari、Edge、Opera、Brave 和 Vivaldi 裝的都是同一種檔案，資料夾和日期都會一起帶過來。",
     "vcard": "通訊錄匯出的 .vcf 檔：iPhone 和 Mac 透過 iCloud 或聯絡人，Android，Google 聯絡人。每張名片都會匯入，照片也一起，同一個檔案匯入第二次會略過你已經有的人。",
-    "bitwarden": "Bitwarden 未加密的 .json 匯出檔（Tools > Export vault > .json）。登入資料、卡片、SSH 金鑰、安全筆記與 TOTP 驗證碼都會一起帶進來。",
+    "bitwarden": "Bitwarden 未加密的密碼庫匯出檔（Tools > Export vault > .json，或 .zip (with attachments)）。登入資訊、卡片、SSH 金鑰、安全筆記、TOTP 驗證碼、密碼金鑰與附件都會一起帶進來。",
     "browserPasswords": "來自 Chrome、Edge、Brave、Opera、Vivaldi、Firefox 或 Safari 的密碼檔（.csv），或 Safari 寫出的 .zip。每一列都會變成一組登入資料。用完請把檔案刪除 - 裡面是你的明文密碼。"
   },
   "sourceLabel": {
@@ -170,7 +174,18 @@
     "sourceTagDesc": "關閉：不為來源加上標籤。筆記中原有的標籤無論如何都會一併帶入。",
     "storageLine": "這次匯入大約需要 {{needed}}。你還有 {{available}} 可用空間。",
     "nothingWritten": "在你按下「匯入」之前，不會寫入任何資料。",
-    "whatComesIn": "會匯入的內容"
+    "whatComesIn": "會匯入的內容",
+    "backupSettings": "這份備份也會帶入以下設定：{{list}}。",
+    "backupSetting": {
+      "calendarFeeds": "已訂閱的日曆",
+      "dashboard": "首頁版面配置",
+      "itemStyles": "資料夾、標籤與筆記的顏色和圖示",
+      "customThemes": "自訂主題",
+      "favoriteTags": "最愛標籤",
+      "medications": "用藥",
+      "trackers": "追蹤項目設定",
+      "agentFolder": "「Agent」資料夾"
+    }
   },
   "counts": {
     "note_other": "筆記",
@@ -229,7 +244,8 @@
     "showInFolder": "在資料夾中顯示",
     "zipStep": "壓縮",
     "missingFailed_other": "這台裝置無法下載 {{items}}，所以匯出時略過了。請檢查連線後再匯出一次。",
-    "missingNotFound_other": "{{items}}不在這台裝置上，也不在伺服器上，所以匯出時略過了。"
+    "missingNotFound_other": "{{items}}不在這台裝置上，也不在伺服器上，所以匯出時略過了。",
+    "bookmarksSkipped_other": "有 {{count}} 個書籤的網址開頭不是 http 或 https，所以匯出時略過了。"
   },
   "missing": {
     "pictures_other": "{{count}} 張圖片",
@@ -315,8 +331,8 @@
     "typeFullHint": "筆記、保險庫、圖片、音訊與檔案，以你的助憶詞金鑰封存。存放在哪裡都安全。",
     "rhythmHeading": "頻率",
     "historyHeading": "最近的備份",
-    "runsHintDesktop": "在 PrivacyNotes 開啟中或位於系統匣時執行。應用程式關閉期間到期的備份，會在它開啟一分鐘後執行。",
-    "runsHintWeb": "在這個瀏覽器中開啟 PrivacyNotes 時執行。關閉期間到期的備份，會在它開啟一分鐘後執行。",
+    "runsHintDesktop": "在 PrivacyNotes 開啟中或位於系統匣時執行。應用程式關閉期間到期的備份，會在它開啟一分鐘後執行；只要這台裝置已同步過，離線時也會執行。",
+    "runsHintWeb": "在這個瀏覽器中開啟 PrivacyNotes 時執行。關閉期間到期的備份，會在它開啟一分鐘後執行；只要這台裝置已同步過，離線時也會執行。",
     "runsHintDownload": "PrivacyNotes 只有在這個瀏覽器中開啟時，才能提醒你備份已到期。關閉期間到期的備份，會在它開啟一分鐘後提供。",
     "runsHintPhone": "PrivacyNotes 關閉時，手機無法建立備份。當你開啟應用程式且有備份到期時才會執行。",
     "sizeHint": "{{count}} 份約 {{size}}。",

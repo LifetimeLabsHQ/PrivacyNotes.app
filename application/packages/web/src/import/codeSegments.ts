@@ -19,7 +19,7 @@ interface Segment {
   text: string;
 }
 
-function codeSegments(md: string): Segment[] {
+function codeSegments(md: string, spans = true): Segment[] {
   const out: Segment[] = [];
   const push = (code: boolean, text: string) => {
     if (!text) return;
@@ -44,7 +44,7 @@ function codeSegments(md: string): Segment[] {
       return;
     }
     let last = 0;
-    for (const m of line.matchAll(/`[^`]+`/g)) {
+    if (spans) for (const m of line.matchAll(/`[^`]+`/g)) {
       push(false, line.slice(last, m.index));
       push(true, m[0]);
       last = m.index! + m[0].length;
@@ -57,6 +57,15 @@ function codeSegments(md: string): Segment[] {
 /** Run `fn` over the prose of a Markdown text and leave code as it is. */
 export function mapOutsideCode(md: string, fn: (prose: string) => string): string {
   return codeSegments(md)
+    .map((s) => (s.code ? s.text : fn(s.text)))
+    .join('');
+}
+
+/** Run `fn` over everything but the fenced code. A replace of line breaks
+ *  needs no more: an inline code span holds none, and a cut at one would end
+ *  a prose part in the middle of a line (beta #199 item 1). */
+export function mapOutsideFences(md: string, fn: (prose: string) => string): string {
+  return codeSegments(md, false)
     .map((s) => (s.code ? s.text : fn(s.text)))
     .join('');
 }

@@ -85,6 +85,20 @@ function useFlushOnExitEffects(
   }, [editor]);
 }
 
+/**
+ * How long an edit waits for a pause in typing, by the note's size: its
+ * ProseMirror size for the save here, its Markdown length for the preview
+ * beside the Markdown view (the two are about the same number). Small notes
+ * stay quick and large ones get room to breathe. Perf fix for #58, #66, #91.
+ * Spec: docs/internal/design-decisions.md (editor adaptive debounce thresholds)
+ */
+export function editDelay(size: number): number {
+  return size > 500_000 ? 5000
+    : size > 150_000 ? 2000
+    : size > 50_000 ? 600
+    : 300;
+}
+
 export function useDebouncedMarkdownSave({
   value,
   onChange,
@@ -116,19 +130,16 @@ export function useDebouncedMarkdownSave({
     return () => cancelAnimationFrame(id);
   }, [value]);
 
-  const onUpdate = ({ editor }: EditorEvents['update']) => {
+  const onUpdate = ({ editor, transaction, appendedTransactions }: EditorEvents['update']) => {
     if (readOnly) return;
     if (!mountedRef.current) return; // suppress initial parse normalization
+    // TipTap's setEditable also emits an update, with an empty transaction.
+    // Turning read-only off is not an edit: a save here wrote the editor's
+    // own form of a body stored in another, and the note took today as its
+    // "Modified" date (issue #817). A real update always changed the document.
+    if (!transaction.docChanged && !appendedTransactions.some((tr) => tr.docChanged)) return;
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
-    // Scale debounce with document size. ProseMirror's content.size is
-    // roughly proportional to character count. Keeps small notes snappy
-    // while giving large notes breathing room. Perf fix for #58, #66, #91.
     const docSize = editor.state.doc.content.size;
-    // Spec: docs/internal/design-decisions.md (editor adaptive debounce thresholds)
-    const delay = docSize > 500_000 ? 5000
-      : docSize > 150_000 ? 2000
-      : docSize > 50_000 ? 600
-      : 300;
     debounceRef.current = window.setTimeout(() => {
       debounceRef.current = null;
       // For very large docs, yield to the main thread before the
@@ -149,7 +160,7 @@ export function useDebouncedMarkdownSave({
         onChange(md);
         writeDocCacheFromEditor(noteId, md, editor);
       }
-    }, delay);
+    }, editDelay(docSize));
   };
 
   const useFlushOnExit = (editor: TipTapEditor | null) =>

@@ -9,9 +9,10 @@
  * after the link expires. The status read also grants Pro when BlockBee says
  * paid, so a webhook that never arrives still unlocks it.
  *
- * A new order is registered here first, with the session: the server then
- * lets the order pay for this account only (crypto-checkout `register`). The
- * page waits for that on its confirm step.
+ * A new order is registered here first, with the session and the order's
+ * secret: the server then lets the order pay for this account only
+ * (crypto-checkout `register`). The page waits for that on its confirm step.
+ * The poll and the confirmation link carry the secret too (beta #172).
  *
  * Never in the demo: `pendingCryptoOrder` answers null there and nothing is
  * called (docs/internal/agent-rules.md, section 4).
@@ -22,7 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth';
 import {
   CRYPTO_ORDER_EVENT,
-  cryptoCheckoutPage,
+  cryptoCheckoutLink,
   cryptoCheckoutStatus,
   cryptoWaitGoesOn,
   forgetCryptoOrder,
@@ -53,7 +54,7 @@ const FINAL_REFUSALS = new Set([
   'bad_request',
 ]);
 
-type Shown = { order: string; state: CryptoState | 'ended'; paymentUrl: string | null };
+type Shown = { order: string; secret: string | null; state: CryptoState | 'ended'; paymentUrl: string | null };
 
 export function CryptoPaymentBanner({
   pubkey,
@@ -102,7 +103,7 @@ export function CryptoPaymentBanner({
       timer = null;
       if (!pending.registered) {
         const token = (await supabase.auth.getSession()).data.session?.access_token;
-        const reg = token ? await registerCryptoOrder(pending.order, token) : ({ ok: false, code: 'missing_token' } as const);
+        const reg = token ? await registerCryptoOrder(pending.order, pending.secret, token) : ({ ok: false, code: 'missing_token' } as const);
         if (stopped) return;
         if (!reg.ok) {
           if (!FINAL_REFUSALS.has(reg.code)) return schedule();
@@ -114,23 +115,24 @@ export function CryptoPaymentBanner({
         noteCryptoOrder(pending.order, reg.data.expires_at);
         pending.registered = true;
       }
-      const res = await cryptoCheckoutStatus(pending.order);
+      // An order an older app remembered has no secret: then the state alone.
+      const res = await cryptoCheckoutStatus(pending.order, pending.secret ? pending.pubkey : null, pending.secret);
       if (stopped) return;
       if (!res.ok) return schedule();
       const status: CryptoStatus = res.data;
       noteCryptoOrder(pending.order, status.expires_at);
       if (status.state === 'paid') {
         forgetCryptoOrder();
-        setShown({ order: pending.order, state: 'paid', paymentUrl: null });
+        setShown({ order: pending.order, secret: pending.secret, state: 'paid', paymentUrl: null });
         onPaidRef.current();
         return;
       }
       if (!cryptoWaitGoesOn(status)) {
         forgetCryptoOrder();
-        setShown({ order: pending.order, state: 'ended', paymentUrl: null });
+        setShown({ order: pending.order, secret: pending.secret, state: 'ended', paymentUrl: null });
         return;
       }
-      setShown({ order: pending.order, state: status.state, paymentUrl: status.payment_url ?? null });
+      setShown({ order: pending.order, secret: pending.secret, state: status.state, paymentUrl: status.payment_url ?? null });
       schedule();
     };
 
@@ -166,9 +168,7 @@ export function CryptoPaymentBanner({
     shown.state === 'paid' ? (
       <FeedbackButton
         action="open"
-        onClick={() =>
-          openExternal(cryptoCheckoutPage(`order=${encodeURIComponent(shown.order)}&pubkey=${encodeURIComponent(pubkey ?? '')}`))
-        }
+        onClick={() => openExternal(cryptoCheckoutLink(shown.order, pubkey ?? '', shown.secret))}
       >
         {t('billing:cryptoCheckout.receipt.heading')}
       </FeedbackButton>

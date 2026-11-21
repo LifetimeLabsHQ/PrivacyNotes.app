@@ -1,6 +1,5 @@
 {
   "header": {
-    "betaBadge": "beta",
     "downloads": "Downloads",
     "price": "Price",
     "priceLine": "What your apps cost, added up",
@@ -290,7 +289,7 @@
   },
   "demoShot": {
     "kicker": "See it live",
-    "caption": "The real app with sample notes, right in your browser. Nothing is saved."
+    "caption": "The real app with sample notes, right in your browser. What you type stays in it."
   },
   "badges": {
     "privacyToolsAlt": "PrivacyNotes on PrivacyTools.io",
@@ -358,7 +357,7 @@
     "freeImport": "Import and export, including Keep and Obsidian",
     "freeAnon": "Anonymous sign-in, no email",
     "earlyAdopterBadge": "Early Adopter",
-    "payMethods": "Pay by card, or with Bitcoin, Ethereum, Lightning, USDC or USDT."
+    "payMethods": "Pay by card, or with Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin or TON."
   },
   "underHood": {
     "heading": "Under the hood",
@@ -432,7 +431,7 @@
     "receiptCount_one": "{{count}} subscription",
     "receiptCount_other": "{{count}} subscriptions",
     "receiptRenews": "Renews every year",
-    "receiptStamp": "Cancelled",
+    "receiptStamp": "Canceled",
     "perYear": "Total per year",
     "keepLabel": "You save",
     "keepLine_one": "in {{count}} year, even if you buy Pro.",
@@ -498,7 +497,7 @@
     "noLockIn": "Lock-in",
     "noEmail": "Required email",
     "noDarkPatterns": "Dark patterns",
-    "noBackdoor": "Backdoors"
+    "noBackdoor": "Hidden backdoors"
   },
   "noRecovery": {
     "heading": "Your phrase is your key",
@@ -506,7 +505,7 @@
     "noRecoveryTerm": "No recovery",
     "noRecoveryDesc": "With self-custody, lose your phrase and you lose your notes",
     "deviceTerm": "Device-generated",
-    "deviceDesc": "With self-custody, your phrase never touches our servers",
+    "deviceDesc": "With self-custody, your phrase never touches our servers unless you add a sign-in passkey",
     "zkTerm": "Zero-knowledge",
     "zkDesc": "With self-custody, the server holds nothing that opens your notes",
     "writeTerm": "Write it down",
@@ -521,7 +520,7 @@
     "heading": "Your vault is ready in under a minute.",
     "importNote": "Switching apps? Export from any of these and import in minutes:",
     "importDemoTitle": "Try your own import in the demo first",
-    "importDemoBody": "Your file is read in your browser, nothing goes to our servers, and closing the tab clears it."
+    "importDemoBody": "Your file is read in your browser and nothing in it is uploaded. It stays in this browser until the demo opens here again; clear the site data to remove it sooner."
   },
   "about": {
     "tabs": {
@@ -529,7 +528,7 @@
       "hotkeys": "Hotkeys",
       "rating": "Rating"
     },
-    "intro": "<brand/> keeps your notes, tasks, passwords, journal, files, calendar, contacts and bookmarks in one place, with mood and medication tracking. Everything is encrypted on your device with a key made from your recovery phrase, and it stays encrypted on our servers in <nowrap>Switzerland</nowrap>. It works offline, and the app is open source.",
+    "intro": "<brand/> keeps your notes, tasks, passwords, journal, files, calendar, contacts and bookmarks in one place, with mood and medication tracking. Everything is encrypted on your device with a key made from your recovery phrase, and it stays encrypted on our servers in <nowrap>Switzerland</nowrap> and the EU. It works offline, and the app is open source.",
     "versionHeading": "Version",
     "windowVersion": "Version {{version}}",
     "windowHelp": "Help Center",
@@ -549,7 +548,7 @@
     "openSourceLink": "Read the source at GitHub.com",
     "openSourceBody": "The app and the encryption inside it are published, so anyone can check how your notes are encrypted.",
     "dataStorageHeading": "Data Storage",
-    "dataStorageBody": "Encrypted blobs stored in Zurich, <flag/> Switzerland.",
+    "dataStorageBody": "Encrypted notes, journals and the rest stored in Zurich, <flag/> Switzerland. New pictures and files from the current app stored in the EU.",
     "faviconsHeading": "Website icons",
     "faviconsBody1": "Website icons (favicons) come from DuckDuckGo and Google, fetched by our server on your behalf. Your browser never contacts either one, so they see our server asking for a domain and never see you.",
     "faviconsBody2": "Icons are cached on your device for 90 days. No request includes your identity, and you can turn icons off in Settings > Lists."

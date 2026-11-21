@@ -53,7 +53,7 @@ function visibleTop(): number {
   if (!insetProbe) {
     insetProbe = document.createElement('div');
     insetProbe.setAttribute('aria-hidden', 'true');
-    insetProbe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:env(safe-area-inset-top);visibility:hidden;pointer-events:none';
+    insetProbe.style.cssText = 'position:fixed;top:0;left:0;width:0;height:var(--pn-safe-top);visibility:hidden;pointer-events:none';
     document.body.appendChild(insetProbe);
   }
   const vv = window.visualViewport;

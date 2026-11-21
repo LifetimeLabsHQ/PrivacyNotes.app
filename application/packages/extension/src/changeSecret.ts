@@ -5,6 +5,9 @@
  * salt. Ksrv and P stay as they are. A fingerprint or face set-up wraps the
  * old proof, so it is forgotten here; the caller offers to set it up again
  * with the new proof.
+ * The new salt is stored as pending before the call: an answer lost on the
+ * way back leaves the server with the new checker, and unlock (logins.ts)
+ * then tries the pending salt once (beta #184, item 4).
  * Spec: docs/internal/plans/browser-extension-build.md (section 3.4, step 2)
  */
 import { browser } from 'wxt/browser';
@@ -12,7 +15,7 @@ import { base64ToBytes, bytesToBase64, bytesToHex } from '@notes/shared';
 import { unlockChecker, UNLOCK_SALT_BYTES } from '@notes/shared/extension';
 import { call } from './api';
 import { forgetBiometric } from './biometric';
-import { forgetLocal, readConnection, saveConnection, type Connection, type SecretKind } from './connection';
+import { forgetLocal, readConnection, saveConnection, settlePending, type Connection, type SecretKind } from './connection';
 import { lockLogins, SESSION_KEY } from './logins';
 import { deriveProof } from './proof';
 
@@ -33,12 +36,18 @@ export async function changeSecret(current: string, next: { value: string; kind:
   const salt = crypto.getRandomValues(new Uint8Array(UNLOCK_SALT_BYTES));
   const proof = await deriveProof(current, base64ToBytes(connection.salt));
   const newProof = await deriveProof(next.value, salt);
+  const pending: Connection = { ...connection, pendingSalt: bytesToBase64(salt), pendingKind: next.kind };
+  await saveConnection(pending);
   const answer = await call('extension-logins', {
     action: 'change_secret', token: connection.token, ticket: open.ticket,
     proof: bytesToHex(proof), checker: unlockChecker(newProof),
   });
   if (!answer.ok) {
     if (answer.status === 0) return { kind: 'offline' };
+    // The server checked nothing new in: back to what this browser held
+    // before the call, so an earlier change whose answer was lost keeps
+    // its pending salt.
+    if (answer.error === 'wrong' || answer.error === 'locked') await saveConnection(connection);
     if (answer.error === 'wrong') return { kind: 'wrong', left: Number(answer.body.left) || 0 };
     if (answer.error === 'locked') {
       await lockLogins();
@@ -50,8 +59,7 @@ export async function changeSecret(current: string, next: { value: string; kind:
     }
     return { kind: 'failed' };
   }
-  const changed: Connection = { ...connection, salt: bytesToBase64(salt), secretKind: next.kind };
-  await saveConnection(changed);
+  const changed = await settlePending(pending, true);
   await forgetBiometric();
   return { kind: 'ok', connection: changed, proof: newProof };
 }

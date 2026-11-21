@@ -6,8 +6,10 @@
 //!
 //! The key comes from the web view (`set_ninja_shortcut`), which keeps it as a
 //! device setting. The plugin's own JavaScript API is not granted, so a script
-//! cannot take keys from other apps. Esc, a click outside and the key again
-//! give the focus back to the app that was in front; a row that runs brings
+//! can take at most one key combination from other apps, through
+//! `set_ninja_shortcut`, and the person sees it in Settings. Esc, a click
+//! outside and the key again give the focus back to the app that was in
+//! front; a row that runs brings
 //! the main window forward instead (`ninja_dismiss`).
 //! Spec: docs/internal/plans/ninja-anywhere-694.md
 
@@ -102,6 +104,10 @@ pub fn summon<R: Runtime>(app: &AppHandle<R>) {
 
 fn open<R: Runtime>(app: &AppHandle<R>, window: &WebviewWindow<R>) {
     place(app, window);
+    // Before the show, so a shared screen never catches a first frame of
+    // the box. `build` shows a new box once off screen, so on Windows this
+    // never reaches a window that has not been shown (privacy_screen.rs).
+    crate::privacy_screen::protect(window);
     show(window);
     let _ = app.emit_to("main", "pn-ninja-open", ());
     let _ = app.emit_to(LABEL, "pn-ninja-shown", ());
@@ -143,7 +149,8 @@ fn show<R: Runtime>(window: &WebviewWindow<R>) {
 
 fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<WebviewWindow<R>> {
     let builder = WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("index.html?ninja-window=1".into()))
-        .on_navigation(crate::navigation::guard(app));
+        .on_navigation(crate::navigation::guard(app))
+        .on_web_resource_request(crate::script_csp::hook(app));
     // Windows: every web view of the app shares one WebView2 environment, so
     // the box starts with the main window's browser options, or WebView2
     // refuses it (0x8007139F). A debug build adds the DevTools port there.
@@ -167,7 +174,21 @@ fn build<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<WebviewWindow<R>> {
         .build()?;
     #[cfg(target_os = "macos")]
     panel::convert(&window);
+    #[cfg(target_os = "windows")]
+    prime(&window);
     Ok(window)
+}
+
+/// Show a new box once and hide it again, off every screen, before anything
+/// is drawn where a share can see it. On Windows the capture block on a
+/// window that has never been shown leaves a white copy of it on the desktop
+/// (#774), so `open` could only protect the box after its first show, and
+/// that first frame went out uncovered.
+#[cfg(target_os = "windows")]
+fn prime<R: Runtime>(window: &WebviewWindow<R>) {
+    let _ = window.set_position(PhysicalPosition::new(-32000, -32000));
+    let _ = window.show();
+    let _ = window.hide();
 }
 
 /// Centered on the screen of the pointer, a fifth of the way down.

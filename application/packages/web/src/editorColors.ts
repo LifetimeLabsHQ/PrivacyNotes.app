@@ -10,10 +10,13 @@ export const TEXT_COLORS: { name: string; value: string }[] = [
   { name: 'Red', value: '#e03131' },
   { name: 'Orange', value: '#e8590c' },
   { name: 'Yellow', value: '#f08c00' },
+  { name: 'Lime', value: '#66a80f' },
   { name: 'Green', value: '#2f9e44' },
   { name: 'Teal', value: '#0c8599' },
   { name: 'Blue', value: '#1971c2' },
+  { name: 'Indigo', value: '#4263eb' },
   { name: 'Purple', value: '#7048e8' },
+  { name: 'Grape', value: '#ae3ec9' },
   { name: 'Pink', value: '#c2255c' },
 ];
 
@@ -26,7 +29,7 @@ export const isHexColor = (v: unknown): v is string => typeof v === 'string' && 
 /** The palette by name, for a surface that needs one fixed color of it (a
  *  chart's bars) and must not carry a hex of its own. */
 export const PALETTE = Object.fromEntries(TEXT_COLORS.map((c) => [c.name.toLowerCase(), c.value])) as Record<
-  'gray' | 'red' | 'orange' | 'yellow' | 'green' | 'teal' | 'blue' | 'purple' | 'pink',
+  'gray' | 'red' | 'orange' | 'yellow' | 'lime' | 'green' | 'teal' | 'blue' | 'indigo' | 'purple' | 'grape' | 'pink',
   string
 >;
 
@@ -109,10 +112,13 @@ export const HIGHLIGHT_COLORS: { name: string; value: string | null }[] = [
   { name: 'Red', value: 'rgba(255, 107, 107, 0.35)' },
   { name: 'Orange', value: 'rgba(255, 146, 43, 0.35)' },
   DEFAULT_HIGHLIGHT,
+  { name: 'Lime', value: 'rgba(148, 216, 45, 0.35)' },
   { name: 'Green', value: 'rgba(64, 192, 87, 0.35)' },
   { name: 'Teal', value: 'rgba(18, 184, 134, 0.35)' },
   { name: 'Blue', value: 'rgba(51, 154, 240, 0.35)' },
+  { name: 'Indigo', value: 'rgba(92, 124, 250, 0.35)' },
   { name: 'Purple', value: 'rgba(151, 117, 250, 0.35)' },
+  { name: 'Grape', value: 'rgba(204, 93, 232, 0.35)' },
   { name: 'Pink', value: 'rgba(240, 101, 149, 0.35)' },
 ];
 

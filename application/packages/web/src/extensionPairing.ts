@@ -7,7 +7,13 @@
  * the code. With logins on, the code shows only once P and Kext are in the
  * synced settings on the server, so a code that works always has a key the
  * apps hold.
- * Spec: docs/internal/plans/browser-extension-build.md (section 3.2)
+ *
+ * A version 2 code (`PAIRING_CODE_SIGNED`) also carries a sender seed of its
+ * own for the connection, and the hash of the account's ML-KEM public key:
+ * the connection then seals signed, quantum-safe rows. Its sender key is in
+ * the synced settings before the code shows, for every kind of code.
+ * Spec: docs/internal/plans/browser-extension-build.md (section 3.2);
+ * docs/internal/plans/inbox-signed-hybrid.md (sections 4.4 and 5.1)
  */
 import { bytesToBase64, phraseToSeed, type SupabaseClient } from '@notes/shared';
 import {
@@ -19,8 +25,8 @@ import {
   splitLoginsKey,
 } from '@notes/shared/extension';
 import { createPairingRow, loadExtensionState, rekeyLogins, ExtensionCallError } from './extensionApi';
-import type { ExtensionKeys } from './extensionKeys';
-import { loginsKeyFor, withBrowserHalf, withLoginsKey } from './extensionKeyring';
+import { withoutEntries, type ExtensionKeys } from './extensionKeys';
+import { loginsKeyFor, withBrowserHalf, withLoginsKey, withSender } from './extensionKeyring';
 import { resetExtensionSync } from './extensionSync';
 
 export interface PairingInput {
@@ -37,23 +43,76 @@ export interface PairingInput {
   saveKeys: (update: (keys: ExtensionKeys) => ExtensionKeys) => void;
   /** Push the settings now; true once the server holds them. */
   pushKeys: () => Promise<boolean>;
+  /** The tests' stand-in for `PAIRING_CODE_SIGNED`. */
+  signed?: boolean;
+}
+
+/**
+ * Make version 2 codes. Off until the app release floor is at the release
+ * that reads signed rows (an older app drops the sender entries and leaves
+ * signed rows waiting), and the extension and command line releases that
+ * read a `pnx2` code are live. Spec: docs/internal/plans/inbox-signed-hybrid.md (section 9, step 4)
+ */
+export const PAIRING_CODE_SIGNED = false;
+
+interface SignedPart {
+  code: { kemHash: Uint8Array; seed: Uint8Array };
+  kem: string;
+  keyId: string;
+}
+
+/** The seed of a version 2 code, its sender entry in the settings, and the
+ *  account's ML-KEM public key for the server. ML-KEM loads only here. */
+async function signedPart(input: PairingInput, tokenId: string): Promise<SignedPart> {
+  const { deriveInboxKemKeyPair, deriveInboxSender, inboxKemHash } = await import('@notes/shared/inbox-signed');
+  const seed = crypto.getRandomValues(new Uint8Array(32));
+  const sender = deriveInboxSender(seed);
+  const kem = deriveInboxKemKeyPair(input.contentKey);
+  kem.secretKey.fill(0);
+  input.saveKeys((k) => withSender(k, input.contentKey, sender.keyId, { client: input.client === 'cli' ? 'cli' : 'browser', tokenId, publicKey: sender.publicKey }));
+  sender.secretKey.fill(0);
+  return { code: { kemHash: inboxKemHash(kem.publicKey), seed }, kem: bytesToBase64(kem.publicKey), keyId: sender.keyId };
+}
+
+/** A version 2 code that is never shown leaves no signer behind: its entry
+ *  is cleared when the server row or the push failed (code review 3). */
+async function orForget<T>(input: PairingInput, signed: SignedPart | null, work: () => Promise<T>): Promise<T> {
+  try {
+    return await work();
+  } catch (err) {
+    if (signed) input.saveKeys((k) => withoutEntries(k, [`s:${signed.keyId}`]));
+    throw err;
+  }
 }
 
 /** The code to show, valid once and for 10 minutes. Throws an
  *  ExtensionCallError with the server's code when the server refused. */
 export async function makePairingCode(input: PairingInput): Promise<string> {
+  const tokenId = crypto.randomUUID();
+  const signed = (input.signed ?? PAIRING_CODE_SIGNED) ? await signedPart(input, tokenId) : null;
+  return orForget(input, signed, () => makeCode(input, tokenId, signed));
+}
+
+async function makeCode(input: PairingInput, tokenId: string, signed: SignedPart | null): Promise<string> {
   const { supabase, pubkey, contentKey } = input;
   const inboxPublic = deriveInboxKeyPair(phraseToSeed(input.phrase)).publicKey;
   const secret = crypto.getRandomValues(new Uint8Array(PAIRING_SECRET_BYTES));
-  const tokenId = crypto.randomUUID();
 
   if (input.client === 'cli' || !input.logins) {
-    await createPairingRow(supabase, {
-      secretHash: hashHex(secret), tokenId, clips: input.client === 'cli' ? true : input.clips, logins: false,
-      ...(input.client === 'cli' ? { client: 'cli' as const } : {}),
-    });
+    // A version 2 code shows only once its sender key is up, as a code with
+    // logins waits for its key: an app that closed before the next sync would
+    // leave every row of the connection waiting for a sender nobody knows.
+    const [saved] = await Promise.all([
+      signed ? input.pushKeys() : Promise.resolve(true),
+      createPairingRow(supabase, {
+        secretHash: hashHex(secret), tokenId, clips: input.client === 'cli' ? true : input.clips, logins: false,
+        ...(input.client === 'cli' ? { client: 'cli' as const } : {}),
+        ...(signed ? { kem: signed.kem } : {}),
+      }),
+    ]);
+    if (!saved) throw new ExtensionCallError('not_saved');
     resetExtensionSync();
-    return encodePairingCode({ secret, inboxPublic, kext: null });
+    return encodePairingCode({ secret, inboxPublic, kext: null, ...(signed ? { signed: signed.code } : {}) });
   }
 
   const state = await loadExtensionState(supabase, pubkey);
@@ -87,9 +146,10 @@ export async function makePairingCode(input: PairingInput): Promise<string> {
     input.pushKeys(),
     createPairingRow(supabase, {
       secretHash: hashHex(secret), tokenId, clips: input.clips, logins: true, ksrv: bytesToBase64(ksrv), keyTag,
+      ...(signed ? { kem: signed.kem } : {}),
     }),
   ]);
   if (!saved) throw new ExtensionCallError('not_saved');
   resetExtensionSync();
-  return encodePairingCode({ secret, inboxPublic, kext });
+  return encodePairingCode({ secret, inboxPublic, kext, ...(signed ? { signed: signed.code } : {}) });
 }

@@ -218,3 +218,15 @@ export function dayOfQuery(parsed: QuickAdd, today: string): string | null {
   const away = (day: string) => Math.abs(dayNumber(day) - dayNumber(today));
   return shiftDay(before, 0) === before && away(before) < away(parsed.day) ? before : parsed.day;
 }
+
+/**
+ * The two days a jump query names when it is a span of dates and nothing else
+ * ("mar 3 to dec 25", "12/1 - 12/25"): Ninja's day count row, which opens the
+ * calendar's day counter on them (#815). Null for anything else.
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (section 15)
+ */
+export function spanOfQuery(parsed: QuickAdd): { from: string; to: string } | null {
+  if (!parsed.day || !parsed.end || parsed.title.trim() || parsed.repeat) return null;
+  if (!parsed.parts.some((p) => p.kind === 'span')) return null;
+  return { from: parsed.day, to: parsed.end };
+}

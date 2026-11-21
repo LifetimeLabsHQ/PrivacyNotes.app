@@ -34,7 +34,7 @@ import type {
   ExcalidrawImperativeAPI,
   ExcalidrawProps,
 } from '@excalidraw/excalidraw/types';
-import type { DrawingScene, parseScene, serializeScene } from './scene';
+import type { DrawingScene, parseScene, serializeScene, withoutFrames } from './scene';
 import { nextStep, relabel, renumberSteps, stepCount, stepIds, STEPS_TOOL, stepSkeleton } from './steps';
 
 type SceneElements = Parameters<NonNullable<ExcalidrawProps['onChange']>>[0];
@@ -67,7 +67,7 @@ export type DrawingCanvasProps = {
   /** `scene.ts`, handed down: a module of the NotesView chunk imported by
    *  this lazy chunk would be split out onto the boot path
    *  (docs/contrib/bundle-size.md section 8). */
-  scene: { parse: typeof parseScene; serialize: typeof serializeScene };
+  scene: { parse: typeof parseScene; serialize: typeof serializeScene; withoutFrames: typeof withoutFrames };
   readOnly: boolean;
   theme: 'light' | 'dark';
   onBodyChange: (body: string) => void;
@@ -292,6 +292,14 @@ export default function DrawingCanvas({
       props.current.onToolState?.(tool);
     }
     dropMissingFonts();
+    // A dropped `.excalidraw` file, library or picture with a scene in it
+    // reaches the canvas with no hook before it (a paste has `onPaste`): an
+    // `iframe` in it is taken out as soon as it lands (`withoutFrames`).
+    if (elements.some((e) => e.type === 'iframe')) {
+      const all = api.current?.getSceneElementsIncludingDeleted() ?? elements;
+      api.current?.updateScene({ elements: codec.withoutFrames(all) as never, captureUpdate: CaptureUpdateAction.NEVER });
+      return;
+    }
     if (readOnly) return;
     // A step marker deleted, pasted or brought back by Undo: the markers
     // left read 1 to n again. Not undoable on its own: Undo of the delete
@@ -335,7 +343,7 @@ export default function DrawingCanvas({
     if (signature === lastSignature.current) return;
     lastSignature.current = signature;
     scheduleSave();
-  }, [readOnly, storeLoose, scheduleSave]);
+  }, [readOnly, storeLoose, scheduleSave, codec]);
 
   // Every new picture: stored by our pipeline, then handed to the canvas
   // under its id, which tells Excalidraw it needs no resize of its own.
@@ -368,6 +376,11 @@ export default function DrawingCanvas({
       viewModeEnabled={readOnly}
       aiEnabled={false}
       validateEmbeddable={() => false}
+      // Pasted shapes lose any `iframe` before they land (`withoutFrames`).
+      onPaste={(data) => {
+        if (data.elements) data.elements = codec.withoutFrames(data.elements) as never;
+        return true;
+      }}
       generateIdForFile={generateIdForFile}
       onLinkOpen={(element, event) => {
         event.preventDefault();

@@ -15,6 +15,7 @@
 import { useSyncExternalStore } from 'react';
 import { canReadPosition } from './currentPosition';
 import type { NoteLocation } from './noteLocation';
+import { traitsOf } from './noteTypes';
 
 /** The item types that can get a place on their own. */
 export type AutoLocationType = 'note' | 'journal';
@@ -52,9 +53,11 @@ export function useAutoLocation(): Prefs {
   );
 }
 
-/** Whether a new item of this type gets a place on this device. */
-export function autoLocationOn(type: string): type is AutoLocationType {
-  return (type === 'note' || type === 'journal') && readAutoLocation()[type] && canReadPosition();
+/** Whether a new item of this type gets a place on this device. The type's
+ *  own switch, if it has one, comes from the note-type table. */
+export function autoLocationOn(type: string): boolean {
+  const own = traitsOf(type).autoPlace;
+  return own !== null && readAutoLocation()[own] && canReadPosition();
 }
 
 type Writer = (id: string, place: NoteLocation) => Promise<boolean>;

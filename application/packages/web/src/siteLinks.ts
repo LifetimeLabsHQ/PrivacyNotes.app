@@ -2,7 +2,8 @@ import { activeLocale } from './languages';
 import { LOCALE_TO_SLUG } from './localeRoutes';
 import { detectPlatform } from './devices';
 import { isDemoMode } from './demo';
-import { isAppHost } from './hosts';
+import { BETA_DEMO_URL, isAppHost, isBetaHost } from './hosts';
+import { DEMO_HREF } from './footerData';
 
 // In-app links to the public marketing site. The native (Tauri) webview can't
 // render the marketing page and silently swallows target="_blank", so on desktop
@@ -31,4 +32,10 @@ export function siteHref(path: string): string {
 /** Homepage in the user's active language (/en, /de, ...), regardless of login. */
 export function marketingHomeHref(): string {
   return siteHref(LOCALE_TO_SLUG[activeLocale()] ?? '/en');
+}
+
+/** The "Try the demo" target: the beta's own demo on the beta site, so a beta
+ *  visitor tries the beta (GitHub #848); try.privacynotes.app everywhere else. */
+export function demoHref(): string {
+  return isBetaHost() ? BETA_DEMO_URL : DEMO_HREF;
 }

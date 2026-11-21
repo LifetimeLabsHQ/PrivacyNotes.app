@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
-import { isDemoMode } from './demo';
+import { credentialKey, isDemoMode } from './demo';
+import { readFlag } from './localStore';
 import { isServerWriteBlocked, useSyncPaused } from './syncPause';
 import { isBelowVersionFloor, useBelowVersionFloor } from './versionFloor';
 
@@ -26,6 +27,28 @@ import { isBelowVersionFloor, useBelowVersionFloor } from './versionFloor';
  */
 
 let pulledClean = false;
+
+/**
+ * The same mark, kept across starts for the automatic backup only (beta
+ * #171, the owner chose "run offline"). The page-load rule above stays for the
+ * restore gate. A backup reads this device's copy and writes it out; it adds
+ * nothing to the vault, so a copy that one pull filled and no wipe emptied
+ * since is a whole copy to back up, even before this start's own pull, and
+ * with no network at all. The local wipes clear it as they begin, before a
+ * row goes, and so does an account change (forgetPulledBefore, from
+ * autoBackup/runner.ts). Through the demo bucket, like every device key.
+ * Spec: docs/internal/plans/auto-backup.md (section 6, condition 3)
+ */
+const PULLED_BEFORE_KEY = () => credentialKey('privacynotes.pulledBefore');
+
+function writePulledBefore(on: boolean): void {
+  try {
+    if (on) localStorage.setItem(PULLED_BEFORE_KEY(), '1');
+    else localStorage.removeItem(PULLED_BEFORE_KEY());
+  } catch {
+    /* Storage refused: the backup waits for this start's own pull. */
+  }
+}
 /** Counts the local wipes, so a pass that began before one cannot mark after it. */
 let wipeGeneration = 0;
 const listeners = new Set<() => void>();
@@ -45,12 +68,14 @@ export function markPulledClean(startedAt: number = wipeGeneration): void {
   if (startedAt !== wipeGeneration) return;
   if (pulledClean) return;
   pulledClean = true;
+  writePulledBefore(true);
   for (const cb of listeners) cb();
 }
 
 /** Called by the local wipes: the copy no longer holds what the pull brought. */
 export function resetPulledClean(): void {
   wipeGeneration += 1;
+  writePulledBefore(false);
   if (!pulledClean) return;
   pulledClean = false;
   for (const cb of listeners) cb();
@@ -58,6 +83,23 @@ export function resetPulledClean(): void {
 
 export function hasPulledClean(): boolean {
   return pulledClean;
+}
+
+/** A pull finished on this device, in this start or an earlier one, and no
+ *  wipe or account change came after it. */
+export function hasPulledBefore(): boolean {
+  return pulledClean || readFlag(PULLED_BEFORE_KEY());
+}
+
+/** A different account arrived: its copy is not the one that pull filled. */
+export function forgetPulledBefore(): void {
+  writePulledBefore(false);
+}
+
+/** Whether an automatic backup may read the copy: the restore gate, or a
+ *  pull from an earlier start (hasPulledBefore). */
+export function backupGateOpen(): boolean {
+  return restoreGateNow() === 'open' || hasPulledBefore();
 }
 
 function subscribe(cb: () => void) {

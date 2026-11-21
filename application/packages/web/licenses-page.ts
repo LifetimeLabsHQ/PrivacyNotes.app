@@ -11,7 +11,7 @@ import { brandMark, CHROME_CSS, GITHUB_ICON, OG_IMAGE_TAGS, ogLocaleTag, SITE_FO
 // the footer's Legal column and the public README.
 //
 // The list is the build's own: every package with a module in a chunk of
-// this bundle, so a dependency bump updates the page with no one doing
+// this bundle or of a worker bundle (licensesWorkerModules), so a dependency bump updates the page with no one doing
 // anything, and a package that tree-shaking or a stub removed is not listed.
 // The fonts are every font asset in the bundle, read from their own name tables. The Rust crates of
 // the desktop and mobile apps come from Cargo.lock, because the site build
@@ -42,7 +42,13 @@ const MISSING_TEXT_HOLDER: Array<[RegExp, string]> = [
   [/^@radix-ui\//, 'Copyright (c) 2022 WorkOS'],
   [/^pmtiles$/, 'Copyright 2021 Protomaps LLC'],
   [/^@protomaps\/basemaps$/, 'Copyright 2019-2023 Protomaps LLC, Kelso Cartography'],
+  // Neither npm package ships a LICENSE file. Spec: docs/internal/specs/plugins-files.md (section 5)
+  [/^onnxruntime-(web|common)$/, 'Copyright (c) Microsoft Corporation'],
 ];
+
+const ISC_TEXT = `Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.`;
 
 const BSD3_TEXT = `Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
@@ -121,9 +127,15 @@ export function collectPackages(moduleIds: Iterable<string>): Pkg[] {
       .map((f) => fs.readFileSync(path.join(dir, f), 'utf8').trim());
     let text = texts.join('\n\n');
     const license = licenseId(pkg, text);
-    if (!text && /^(MIT|BSD-3-Clause)$/.test(license)) {
+    if (!text && /^(MIT|BSD-3-Clause|ISC)$/.test(license)) {
       const holder = MISSING_TEXT_HOLDER.find(([re]) => re.test(name))?.[1] ?? (authorName(pkg) ? `Copyright (c) ${authorName(pkg)}` : null);
-      if (holder) text = license === 'MIT' ? `MIT License\n\n${holder}\n\n${MIT_TEXT}` : `BSD 3-Clause License\n\n${holder}\n\n${BSD3_TEXT}`;
+      if (holder) {
+        text = license === 'MIT'
+          ? `MIT License\n\n${holder}\n\n${MIT_TEXT}`
+          : license === 'ISC'
+            ? `ISC License\n\n${holder}\n\n${ISC_TEXT}`
+            : `BSD 3-Clause License\n\n${holder}\n\n${BSD3_TEXT}`;
+      }
     }
     pkgs.set(key, { name, version, license, url: repoUrl(pkg, name), text });
   }
@@ -252,6 +264,7 @@ ${rows}
 <a class="ritem" href="#fonts"><span class="rlbl">Fonts</span><span class="rct">${fonts.length}</span></a>
 ${crates.length ? `<a class="ritem" href="#crates"><span class="rlbl">Rust crates</span><span class="rct">${crates.length}</span></a>` : ''}
 <a class="ritem" href="#map-data"><span class="rlbl">Map data</span><span class="rct">${MAP_DATA.length}</span></a>
+<a class="ritem" href="#plugins"><span class="rlbl">Plugins</span><span class="rct">${PLUGIN_CREDITS.length}</span></a>
 <a class="ritem" href="#extension"><span class="rlbl">Browser extension</span><span class="rct">1</span></a>
 </nav>
 <div class="rail rail-extra">
@@ -315,6 +328,47 @@ const MAP_DATA: Array<{ name: string; url: string; text: string }> = [
     text: 'The place search uses the GeoNames list of towns of 5,000 people or more, licensed under Creative Commons Attribution 4.0 (CC BY 4.0).',
   },
 ];
+
+/**
+ * Settings > Plugins: the files on the plugin host and the vendored Bergamot
+ * glue, which the bundle scan cannot see. Spec: docs/internal/specs/plugins-files.md (section 5)
+ */
+const PLUGIN_CREDITS: Array<{ name: string; url: string; text: string }> = [
+  {
+    name: 'ONNX Runtime',
+    url: 'https://github.com/microsoft/onnxruntime',
+    text: 'The plugins run on ONNX Runtime Web by Microsoft, MIT License. Its WebAssembly file includes third-party code listed in its ThirdPartyNotices.txt: https://github.com/microsoft/onnxruntime/blob/v1.31.1/ThirdPartyNotices.txt',
+  },
+  {
+    name: 'PaddleOCR',
+    url: 'https://github.com/PaddlePaddle/PaddleOCR',
+    text: 'OCR uses the PP-OCRv6 and PP-OCRv5 models by PaddlePaddle, Apache License 2.0.',
+  },
+  {
+    name: 'Firefox Translations',
+    url: 'https://github.com/mozilla/translations',
+    text: "Translation uses the Bergamot engine and the Firefox Translations models by Mozilla, Mozilla Public License 2.0. The engine's source code: https://github.com/mozilla/translations/tree/1de4a085d3a7afb625c51a60aabb5ad298e4059f/inference",
+  },
+  {
+    name: 'Whisper',
+    url: 'https://github.com/openai/whisper',
+    text: 'Voice to text uses Whisper small by OpenAI, MIT License, in the ONNX conversion by Xenova (https://huggingface.co/Xenova/whisper-small).',
+  },
+  {
+    name: 'DPDFNet',
+    url: 'https://github.com/ceva-ip/DPDFNet',
+    text: 'Remove noise uses the DPDFNet2 48 kHz model by Ceva, Apache License 2.0, in the ONNX export by sherpa-onnx (https://github.com/k2-fsa/sherpa-onnx).',
+  },
+];
+
+function renderPluginCredits(): string {
+  return `<section class="lic" id="plugins">
+<h2 class="eyebrow">// Plugins</h2>
+${PLUGIN_CREDITS.map(
+  (d) => `<details class="lp"><summary><span class="lp-name">${esc(d.name)}</span></summary><a class="lp-link" href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.url.replace(/^https?:\/\//, ''))}</a><pre>${esc(d.text)}</pre></details>`
+).join('\n')}
+</section>`;
+}
 
 function renderMapData(): string {
   return `<section class="lic" id="map-data">
@@ -412,6 +466,7 @@ ${renderRail(groups, fonts, crates)}
 ${renderPackages(groups)}
 ${renderFonts(fonts)}
 ${renderMapData()}
+${renderPluginCredits()}
 ${renderExtension()}
 ${renderCrates(crates)}
 </div>
@@ -422,11 +477,30 @@ ${SITE_FOOTER}
 </html>`;
 }
 
+/** Module ids of the worker bundles, which reach the main bundle as assets with no module list. */
+const workerModuleIds = new Set<string>();
+
+/**
+ * For `worker.plugins`: records the modules of every worker chunk, so the
+ * page lists what ships only in a worker (the plugin worker's engines). Vite
+ * builds a worker while the main build transforms the file that starts it,
+ * so this runs before the page plugin's `generateBundle`.
+ * Spec: docs/internal/plans/third-party-notices.md (section 2)
+ */
+export function licensesWorkerModules(): Plugin {
+  return {
+    name: 'licenses-worker-modules',
+    generateBundle(_options, bundle) {
+      for (const out of Object.values(bundle)) if (out.type === 'chunk') for (const id of Object.keys(out.modules)) workerModuleIds.add(id);
+    },
+  };
+}
+
 export function licensesPagePlugin(): Plugin {
   return {
     name: 'emit-licenses-page',
     generateBundle(_options, bundle) {
-      const moduleIds: string[] = [];
+      const moduleIds: string[] = [...workerModuleIds];
       const woff2: Array<{ file: string; source: Buffer }> = [];
       for (const out of Object.values(bundle)) {
         if (out.type === 'chunk') moduleIds.push(...Object.keys(out.modules));

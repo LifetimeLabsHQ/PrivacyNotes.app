@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "h",
+    "minutesSuffix": "m",
+    "hoursMinutes": "{{h}}h {{m}}m",
     "bpm": "bpm",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -137,6 +139,7 @@
     "emptyAdd": "新增你服用的藥物與服用時間，並在這裡記錄。",
     "takenCount_other": "已服 {{count}} 項",
     "namePlaceholder": "藥物名稱",
+    "nameMissing": "請為藥物命名。",
     "dosagePlaceholder": "劑量（例如 50mg）",
     "editMedication": "編輯藥物",
     "removeMedication": "移除藥物",
@@ -231,12 +234,18 @@
     "yes": "是",
     "no": "否",
     "unknownType": "這個追蹤項目需要較新版本的應用程式。",
+    "counterOf": "/ {{limit}}",
+    "counterToday": "次（今天使用）",
+    "counterReached": "你已達到 {{limit}} 的上限。",
+    "counterStartAgain": "將「{{name}}」從 0 重新開始",
+    "counterStartAgainConfirm": "要重新開始嗎？",
     "typeLabels": {
       "scale10": "量表（0-10）",
       "scale5": "量表（0-5）",
       "slider100": "分數（0-100）",
       "number": "數值",
       "pair": "兩個數值",
+      "counter": "計數器",
       "yesno": "是／否"
     }
   },
@@ -252,7 +261,7 @@
     "medicationCard": "用藥卡片",
     "medicationCardHelp": "在這台裝置上詢問「你服藥了嗎？」，只在有藥物需要服用的日子顯示。",
     "customHelp": "你自己命名的追蹤項目：量表、數值，或是／否。最多 {{max}} 個。",
-    "customHelpPair": "你自己命名的追蹤項目：量表、數值、兩個數值，或是／否。最多 {{max}} 個。",
+    "customHelpPair": "你自己命名的追蹤項目：量表、數值、兩個數值、計數器，或是／否。最多 {{max}} 個。",
     "yourCustomTrackers": "你的自訂追蹤項目",
     "categoryMoodMind": "心情與心理",
     "categoryBodyHealth": "身體與健康",
@@ -293,7 +302,10 @@
     "pairFirstPlaceholder": "收縮壓",
     "pairSecondPlaceholder": "舒張壓",
     "pairUnit": "單位（選填）",
-    "pairWaiting": "填入第一個數值後就會儲存。"
+    "pairWaiting": "填入第一個數值後就會儲存。",
+    "nameMissing": "請為這個追蹤項目命名。",
+    "counterLimit": "上限（選填）",
+    "counterHelp": "累計你跨日的使用次數。設定上限，例如刮鬍刀片設為 30，達到上限時再重新開始。"
   },
   "factors": {
     "prompt": "今天有哪些事？",
@@ -382,5 +394,6 @@
   "flow": {
     "finish": "完成",
     "step": "追蹤項目 {{n}}/{{total}}"
-  }
+  },
+  "showEveryDay": "顯示有此項目的每一天"
 }

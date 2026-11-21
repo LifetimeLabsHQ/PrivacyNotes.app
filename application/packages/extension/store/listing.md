@@ -45,17 +45,17 @@ One field per permission in the Chrome Web Store (Privacy tab) and in Edge Partn
 
 `scripting`
 ```
-Reads the page you are on when you choose to save it as a note, a bookmark or a selection, and writes your login into the page's login fields when you ask it to fill. No script runs on a page until you ask for a save or a fill.
+Reads the page you are on when you open the popup on the Clip tab, to show what a note of it would keep, and when you save it from the menu or the keyboard, and writes your login into the page's login fields when you ask it to fill. While "Offer passkeys" is on, it registers two small scripts that run on every https page and act only when the site asks the browser for a passkey, so the extension can create or use the passkey saved in your Vault. No other script runs on a page until you open the Clip tab or ask for a save or a fill.
 ```
 
-Host permission (`<all_urls>`)
+Host permission (`*://*/*`)
 ```
-A save works on any page you choose to save, and the pictures of a saved page are fetched from their own site. A fill works on any site you have a login for. The extension declares no content script for any site and touches a page only when you ask for a save or a fill.
+A save works on any page you choose to save, and the pictures of a saved page are fetched from their own site. A fill works on any site you have a login for. A passkey works on any site that asks for one. The extension declares no content script in its manifest: the two passkey scripts are registered while "Offer passkeys" is on and act only when a site asks for a passkey, and otherwise the extension touches a page only when you open the Clip tab or ask for a save or a fill.
 ```
 
 `storage`
 ```
-Keeps the connection to your PrivacyNotes account, the saved pages that wait to send (sealed before they are stored), and your settings such as the lock time.
+Keeps the connection to your PrivacyNotes account, a sealed copy of your Vault and bookmarks, the saved pages and Vault changes that wait to send (sealed before they are stored), when you last saved each page (its address only as a hash) and last filled each login, how many passkeys you have, and your settings such as the lock time.
 ```
 
 `contextMenus`
@@ -65,7 +65,7 @@ Adds the PrivacyNotes entries to the right-click menu: save the page, the select
 
 `alarms`
 ```
-Retries a saved page that could not send because the device was offline, and clears a copied password from the clipboard after 30 seconds.
+Retries a saved page that could not send because the device was offline, clears a copied password from the clipboard after 30 seconds, and while your Vault is unlocked asks the server for its changes every 20 minutes.
 ```
 
 `idle`

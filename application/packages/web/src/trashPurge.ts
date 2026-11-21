@@ -4,12 +4,14 @@
  * Each device purges its own copy, because the trashed flag and the day count
  * both live inside encrypted data. A purge tombstone is final on every device:
  * the tombstone push carries no stamp guard and a pulled tombstone overrides
- * any local edit. So the purge decides only on state that has pulled:
+ * any local edit. So the purge starts only on state that has pulled:
  *  - It waits for a sync pass in this app session that ran, finished its pull,
  *    and read the settings from the server in that same pass, so the settings
  *    cache has read the server's row in this pass. Before that, the local copy
  *    can still hold a note another device restored, and the cached day count
  *    can be a fresh device's default or an old value another device has changed.
+ *    Once open, the gate stays open for the session: a session left open and
+ *    offline later purges on the copy it last pulled.
  *  - It reads the rows inside the transaction that writes the tombstones.
  *  - It skips a row with an unpushed change: the pull never replaces a dirty
  *    row, so that copy is not what the server holds.

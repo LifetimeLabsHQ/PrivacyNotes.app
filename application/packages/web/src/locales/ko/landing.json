@@ -1,6 +1,5 @@
 {
   "header": {
-    "betaBadge": "beta",
     "downloads": "다운로드",
     "price": "비용",
     "priceLine": "지금 쓰는 앱 비용, 모두 더해 보기",
@@ -290,7 +289,7 @@
   },
   "demoShot": {
     "kicker": "라이브로 체험",
-    "caption": "샘플 노트가 담긴 실제 앱을 브라우저에서 바로 사용해 볼 수 있어요. 아무것도 저장되지 않아요."
+    "caption": "샘플 노트가 담긴 실제 앱을 브라우저에서 바로 사용해 볼 수 있어요. 입력한 내용은 이 브라우저 안에만 남아요."
   },
   "badges": {
     "privacyToolsAlt": "PrivacyTools.io에 등재된 PrivacyNotes",
@@ -358,7 +357,7 @@
     "freeImport": "가져오기와 내보내기, Keep과 Obsidian 포함",
     "freeAnon": "익명 로그인, 이메일 없이",
     "earlyAdopterBadge": "얼리어답터",
-    "payMethods": "카드로 결제하거나 Bitcoin, Ethereum, Lightning, USDC 또는 USDT로 결제하세요."
+    "payMethods": "카드로 결제하거나 Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin 또는 TON으로 결제하세요."
   },
   "underHood": {
     "heading": "내부 들여다보기",
@@ -495,7 +494,7 @@
     "noLockIn": "종속",
     "noEmail": "필수 이메일",
     "noDarkPatterns": "다크 패턴",
-    "noBackdoor": "백도어"
+    "noBackdoor": "숨겨진 백도어"
   },
   "noRecovery": {
     "heading": "당신의 문구가 곧 열쇠예요",
@@ -503,7 +502,7 @@
     "noRecoveryTerm": "복구 불가",
     "noRecoveryDesc": "자가 보관에서는 문구를 잃으면 노트도 잃어요",
     "deviceTerm": "기기에서 생성",
-    "deviceDesc": "자가 보관에서는 문구가 저희 서버에 닿지 않아요",
+    "deviceDesc": "자가 보관에서는 로그인 패스키를 추가하지 않는 한 문구가 저희 서버에 닿지 않아요",
     "zkTerm": "영지식",
     "zkDesc": "자가 보관에서는 서버에 노트를 여는 것이 아무것도 없어요",
     "writeTerm": "적어 두세요",
@@ -518,7 +517,7 @@
     "heading": "1분이면 보관함이 준비돼요.",
     "importNote": "다른 앱에서 갈아타시나요? 어떤 앱이든 내보내서 몇 분 만에 가져올 수 있어요:",
     "importDemoTitle": "먼저 데모에서 직접 가져오기를 해 보세요",
-    "importDemoBody": "파일은 브라우저 안에서 읽히고, 저희 서버로는 아무것도 가지 않으며, 탭을 닫으면 지워져요."
+    "importDemoBody": "파일은 브라우저 안에서 읽히고, 그 안의 어떤 것도 업로드되지 않아요. 여기서 데모를 다시 열 때까지 이 브라우저에 남아 있어요. 더 빨리 지우려면 사이트 데이터를 삭제하세요."
   },
   "about": {
     "tabs": {
@@ -526,7 +525,7 @@
       "hotkeys": "단축키",
       "rating": "평가"
     },
-    "intro": "<brand/>는 노트, 할 일, 비밀번호, 저널, 파일, 캘린더, 연락처, 북마크를 한곳에 모아 두고, 기분과 복약 기록도 함께해요. 모든 데이터는 복구 문구로 만든 키로 기기에서 암호화되고, <nowrap>스위스</nowrap>에 있는 저희 서버에서도 암호화된 상태로 유지돼요. 오프라인에서도 작동하고, 앱은 오픈소스예요.",
+    "intro": "<brand/>는 노트, 할 일, 비밀번호, 저널, 파일, 캘린더, 연락처, 북마크를 한곳에 모아 두고, 기분과 복약 기록도 함께해요. 모든 데이터는 복구 문구로 만든 키로 기기에서 암호화되고, <nowrap>스위스</nowrap>와 EU에 있는 저희 서버에서도 암호화된 상태로 유지돼요. 오프라인에서도 작동하고, 앱은 오픈소스예요.",
     "versionHeading": "버전",
     "windowVersion": "버전 {{version}}",
     "windowHelp": "도움말 센터",
@@ -546,7 +545,7 @@
     "openSourceLink": "GitHub.com에서 소스 읽기",
     "openSourceBody": "앱과 그 안의 암호화가 공개되어 있어서, 누구나 노트가 어떻게 암호화되는지 직접 확인할 수 있어요.",
     "dataStorageHeading": "데이터 저장",
-    "dataStorageBody": "암호화된 블롭은 <flag/> 스위스 취리히에 저장돼요.",
+    "dataStorageBody": "암호화된 노트, 저널 등은 <flag/> 스위스 취리히에 저장돼요. 최신 앱에서 추가한 새 이미지와 파일은 EU에 저장돼요.",
     "faviconsHeading": "사이트 아이콘",
     "faviconsBody1": "사이트 아이콘(파비콘)은 DuckDuckGo와 Google에서 오지만, 저희 서버가 대신 가져와요. 브라우저가 두 곳 어디에도 직접 접속하지 않으니, 두 곳에서는 도메인을 묻는 저희 서버만 보일 뿐이에요.",
     "faviconsBody2": "아이콘은 기기에 90일간 캐시돼요. 어떤 요청에도 신원 정보는 담기지 않고, 설정 > 목록에서 아이콘을 끌 수 있어요."

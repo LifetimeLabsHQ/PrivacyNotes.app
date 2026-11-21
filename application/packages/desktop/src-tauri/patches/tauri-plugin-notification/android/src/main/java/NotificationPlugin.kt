@@ -156,6 +156,7 @@ class NotificationPlugin(private val activity: Activity): Plugin(activity) {
     manager.cancel(
       args.notifications ?: notificationStorage.getSavedNotificationIds().mapNotNull { it.toIntOrNull() }
     )
+    if (args.notifications == null) notificationStorage.forgetAllShown()
     invoke.resolve()
   }
 
@@ -165,8 +166,10 @@ class NotificationPlugin(private val activity: Activity): Plugin(activity) {
 
     if (args.notifications.isEmpty()) {
       notificationManager.cancelAll()
+      notificationStorage.forgetAllShown()
       invoke.resolve()
     } else {
+      notificationStorage.forgetShown(args.notifications.map { it.id })
       for (notification in args.notifications) {
         if (notification.tag == null) {
           notificationManager.cancel(notification.id)

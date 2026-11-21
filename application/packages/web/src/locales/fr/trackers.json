@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "h",
+    "minutesSuffix": "min",
+    "hoursMinutes": "{{h}}h {{m}}min",
     "bpm": "bpm",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -142,6 +144,7 @@
     "takenCount_one": "{{count}} pris",
     "takenCount_other": "{{count}} pris",
     "namePlaceholder": "Nom du médicament",
+    "nameMissing": "Donne un nom au médicament.",
     "dosagePlaceholder": "Dosage (p. ex. 50 mg)",
     "editMedication": "Modifier le médicament",
     "removeMedication": "Supprimer le médicament",
@@ -250,12 +253,18 @@
     "yes": "Oui",
     "no": "Non",
     "unknownType": "Ce suivi nécessite une version plus récente de l'application.",
+    "counterOf": "sur {{limit}}",
+    "counterToday": "fois aujourd'hui",
+    "counterReached": "Tu as atteint la limite de {{limit}}.",
+    "counterStartAgain": "Recommencer {{name}} à 0",
+    "counterStartAgainConfirm": "Recommencer ?",
     "typeLabels": {
       "scale10": "Échelle (0-10)",
       "scale5": "Échelle (0-5)",
       "slider100": "Score (0-100)",
       "number": "Nombre",
       "pair": "Deux nombres",
+      "counter": "Compteur",
       "yesno": "Oui / Non"
     }
   },
@@ -271,7 +280,7 @@
     "medicationCard": "Carte des médicaments",
     "medicationCardHelp": "« As-tu pris tes médicaments ? » sur cet appareil, seulement un jour où un médicament est prévu.",
     "customHelp": "Des suivis que tu nommes toi-même : une échelle, un nombre ou un oui ou non. Jusqu'à {{max}}.",
-    "customHelpPair": "Des suivis que tu nommes toi-même : une échelle, un nombre, deux nombres ou un oui ou non. Jusqu'à {{max}}.",
+    "customHelpPair": "Des suivis que tu nommes toi-même : une échelle, un nombre, deux nombres, un compteur ou un oui ou non. Jusqu'à {{max}}.",
     "yourCustomTrackers": "Tes suivis personnalisés",
     "categoryMoodMind": "Humeur et esprit",
     "categoryBodyHealth": "Corps et santé",
@@ -312,7 +321,10 @@
     "pairFirstPlaceholder": "Systolique",
     "pairSecondPlaceholder": "Diastolique",
     "pairUnit": "Unité (facultatif)",
-    "pairWaiting": "Enregistré dès que le premier nombre est saisi."
+    "pairWaiting": "Enregistré dès que le premier nombre est saisi.",
+    "nameMissing": "Donne un nom au suivi.",
+    "counterLimit": "Limite (facultatif)",
+    "counterHelp": "Additionne tes utilisations au fil des jours. Fixe une limite, par exemple 30 pour une lame de rasoir, et recommence quand tu l'atteins."
   },
   "factors": {
     "prompt": "Qu'est-ce qui a fait partie de ta journée ?",
@@ -402,5 +414,6 @@
   "flow": {
     "finish": "Terminer",
     "step": "Suivi {{n}} sur {{total}}"
-  }
+  },
+  "showEveryDay": "Afficher chaque jour avec ce suivi"
 }

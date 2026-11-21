@@ -50,6 +50,14 @@ export type View =
   | 'archive';
 
 /**
+ * The Vault's kind filter, the chips above its list. `passkey` is not a note
+ * type: it keeps the logins that hold a site passkey (`matchesVaultFilter` in
+ * loginBody.ts). One union here, as `View` above, for the list and the view.
+ * Spec: docs/contrib/passkeys.md (section 5.1, Kinds; section 7)
+ */
+export type VaultFilter = 'all' | 'login' | 'passkey' | 'card' | 'ssh-key';
+
+/**
  * Whether a view's row is drawn, given the user's hidden list and the view
  * that is open right now.
  *
@@ -82,6 +90,7 @@ export function isViewShown(view: View, hidden: View[] | undefined, current: Vie
  * itself, 'starred' and 'trash' are states rather than types, and 'markdown'
  * reads the user's disk and never enters the encrypted store at all.
  * Spec: docs/internal/specs/sidebar-views.md (feeds the Show in All filter, the funnel icon setting)
+ * Spec: docs/internal/specs/section-lock.md (the sections a person can protect, and which items each holds)
  */
 export const VIEW_NOTE_TYPES: Partial<Record<View, NoteType[]>> = {
   // 'all' is the Notes pillar, NOT the All list - see the union above, where

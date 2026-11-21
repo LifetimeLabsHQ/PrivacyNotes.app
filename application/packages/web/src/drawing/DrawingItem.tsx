@@ -28,7 +28,7 @@ import { wholeNoteLink } from '../noteLinks';
 import { deriveDisplayTitle } from '../notesViewUtils';
 import { stashPendingEdit } from '../flushStash';
 import { dataUrlToFile, pictureDataUrl, storeDrawingPicture } from './pictures';
-import { parseScene, serializeScene } from './scene';
+import { parseScene, serializeScene, withoutFrames } from './scene';
 import { keepLinkPopupInView } from './linkPopup';
 import { useDrawingTips } from './DrawingTips';
 import { DrawingToolbar, type DrawingToolState } from './DrawingToolbar';
@@ -56,7 +56,7 @@ function useDrawingKeys() {
     },
   };
 }
-const SCENE = { parse: parseScene, serialize: serializeScene };
+const SCENE = { parse: parseScene, serialize: serializeScene, withoutFrames };
 const noop = () => {};
 const noPicture = async () => null;
 const noFile = async (_url: string, name: string) => new File([], name);

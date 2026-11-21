@@ -47,9 +47,10 @@
     "title": "Beveilig je logins",
     "body": "Kies een PIN of een toegangscode voor deze browser. Je hebt die nodig om je logins hier te ontgrendelen. Die staat los van die van de app.",
     "biometric": "Ook biometrisch ontgrendelen gebruiken",
-    "biometricHelp": "Touch ID of Windows Hello, naast de PIN of toegangscode, die ook altijd werkt.",
+    "biometricHelp": "Touch ID of Windows Hello, via een passkey voor deze browser. De PIN of toegangscode werkt ook altijd.",
     "repeat": "Voer hem nog een keer in",
-    "mismatch": "De twee komen niet overeen. Probeer het opnieuw."
+    "mismatch": "De twee komen niet overeen. Probeer het opnieuw.",
+    "commonPin": "Deze PIN is te makkelijk te raden. Kies een andere."
   },
   "clip": {
     "selection": "Selectie",
@@ -83,8 +84,8 @@
     "unlockPin": "Voer je PIN in",
     "unlockPasscode": "Voer je toegangscode in",
     "useBiometric": "Biometrisch ontgrendelen gebruiken",
-    "wrong_one": "Fout. Nog {{count}} poging voordat deze browser wordt losgekoppeld.",
-    "wrong_other": "Fout. Nog {{count}} pogingen voordat deze browser wordt losgekoppeld.",
+    "wrong_one": "Fout. Nog {{count}} poging deze maand voordat deze browser wordt losgekoppeld.",
+    "wrong_other": "Fout. Nog {{count}} pogingen deze maand voordat deze browser wordt losgekoppeld.",
     "forSite": "Voor {{site}}",
     "none": "Geen logins voor deze site.",
     "off": "Logins staan uit voor deze browser. Zet Kluis aan wanneer je hem verbindt.",
@@ -99,12 +100,15 @@
     "search": "Alle logins doorzoeken",
     "noMatch": "Geen logins gevonden.",
     "openSite": "De site openen",
-    "duplicate": "Je hebt al een login voor deze site met deze gebruikersnaam."
+    "duplicate": "Je hebt al een login voor deze site met deze gebruikersnaam.",
+    "editTitle": "Login bewerken",
+    "saved": "Wijzigingen opgeslagen."
   },
   "account": {
     "confirmDisconnect": "Loskoppelen?",
     "revoked": "Deze browser is niet meer verbonden",
-    "revokedBody": "Verbind hem opnieuw met een nieuwe code uit de app."
+    "revokedBody": "Verbind hem opnieuw met een nieuwe code uit de app.",
+    "pendingPasskey": "Een passkey die in deze browser is opgeslagen, staat nog niet in je Kluis. Open PrivacyNotes en laat het eerst synchroniseren, anders gaat de passkey verloren."
   },
   "badge": {
     "problem": "Er vraagt iets je aandacht"
@@ -147,7 +151,8 @@
     "unlockToCopy": "Ontgrendel om te kopiëren",
     "omniboxDefault": "Je PrivacyNotes-kluis doorzoeken op %s",
     "omniboxUnlock": "Ontgrendel PrivacyNotes om te zoeken",
-    "moreOptions": "Meer opties"
+    "moreOptions": "Meer opties",
+    "editNotSaved": "Je wijziging aan {{name}} heeft je Kluis nooit bereikt, dus de login houdt zijn oude waarden. Bewerk hem opnieuw om de wijziging op te slaan."
   },
   "shortcuts": {
     "notSet": "Niet ingesteld",
@@ -194,5 +199,19 @@
     "biometricPin": "Voer je PIN in om het in te stellen.",
     "biometricPasscode": "Voer je toegangscode in om het in te stellen.",
     "biometricOff": "Biometrisch ontgrendelen staat uit"
+  },
+  "passkey": {
+    "saveTitle": "Een passkey opslaan voor {{site}}?",
+    "useTitle": "Aanmelden bij {{site}}",
+    "saveTo": "Opslaan in",
+    "save": "Opslaan in PrivacyNotes",
+    "other": "Een andere passkey-app gebruiken",
+    "already": "Je hebt al een passkey voor {{site}} in PrivacyNotes.",
+    "saved": "Passkey opgeslagen.",
+    "notSaved": "De passkey kon niet worden opgeslagen. De eigen passkey-app van je browser neemt het over.",
+    "maybeSaved": "De passkey is mogelijk opgeslagen. Controleer je Kluis.",
+    "unlockFirst": "Ontgrendel om je passkeys te gebruiken.",
+    "offer": "Passkeys aanbieden",
+    "offerHelp": "Passkeys opslaan en gebruiken op websites."
   }
 }

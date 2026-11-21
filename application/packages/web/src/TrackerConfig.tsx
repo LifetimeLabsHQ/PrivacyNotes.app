@@ -9,11 +9,12 @@
  * Spec: docs/internal/design/ui-patterns.md section 141
  */
 
-import { lazy, Suspense, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { TRACKER_ICONS } from './trackers/icons';
+import { lazy, Suspense, useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BellSimple, Check, Coffee, TextT, Eye, Heartbeat, ListChecks, Palette, Pause, Play, Shapes, Smiley, type Icon, Clock, ClockCounterClockwise, Gauge, Hash, Percent, Star, ToggleLeft, PencilSimple, Pill, Plus, PuzzlePiece, SlidersHorizontal, SquareSplitHorizontal } from './icons';
-import { CustomTrackerInput, PairInput } from './trackers/CustomPill';
-import { PAIR_TRACKER_OFFERED } from './trackerLaunch';
+import { BellSimple, Check, Coffee, TextT, Eye, Heartbeat, ListChecks, Palette, Pause, Play, Shapes, Smiley, type Icon, Clock, ClockCounterClockwise, Gauge, Hash, Percent, Star, ToggleLeft, PencilSimple, Pill, Plus, PuzzlePiece, SlidersHorizontal, SquareSplitHorizontal, HandTap } from './icons';
+import { CounterInput, CustomTrackerInput, PairInput } from './trackers/CustomPill';
+import { GUARDED_TYPES_OFFERED, typeOffered } from './trackerLaunch';
 import { TEXT_COLORS } from './editorColors';
 import { starterSuggestions } from './trackers/FactorsPill';
 import { CustomTrackerGlyph, MarkTile } from './trackers/CustomTrackerGlyph';
@@ -50,6 +51,8 @@ import {
   type TrackerColor,
   BUILTIN_TRACKER_COLORS,
   CUSTOM_TRACKER_TYPES,
+  COUNTER_LIMIT_MAX,
+  counterLimit,
   PAIR_LABEL_MAX,
   PAIR_UNIT_MAX,
   FACTOR_NAME_MAX,
@@ -75,13 +78,15 @@ const CUSTOM_MAX = 20;
 
 /** The glyph of each custom tracker type in the setup's type chips: a gauge
  *  and stars for the two scales, a percent for the score, a hash for the
- *  number, a split square for two numbers, a switch for yes or no. */
+ *  number, a split square for two numbers, a tapping hand for the counter,
+ *  a switch for yes or no. */
 const TYPE_GLYPHS: Record<CustomTrackerType, Icon> = {
   scale10: Gauge,
   scale5: Star,
   slider100: Percent,
   number: Hash,
   pair: SquareSplitHorizontal,
+  counter: HandTap,
   yesno: ToggleLeft,
 };
 
@@ -231,6 +236,7 @@ function TrackersSection({ settings, onChange, door, customHabits, onCustomHabit
                   key={meta.id}
                   on={settings.activeBuiltins.includes(meta.id)}
                   color={BUILTIN_TRACKER_COLORS[meta.id]}
+                  icon={TRACKER_ICONS[meta.id]}
                   label={t(`labels.${meta.id}`)}
                   onToggle={() => toggleBuiltin(meta.id)}
                 />
@@ -431,7 +437,7 @@ function CustomTab({ settings, onChange, isPro, onOpenUpgrade }: TrackerSettings
     <TrackerListTab
       setting="trackers.custom"
       newTitle={t('common:ninja.new.customTracker')}
-      newHelp={t(PAIR_TRACKER_OFFERED ? 'config.customHelpPair' : 'config.customHelp', { max: CUSTOM_MAX })}
+      newHelp={t(GUARDED_TYPES_OFFERED ? 'config.customHelpPair' : 'config.customHelp', { max: CUSTOM_MAX })}
       form={canAddMore ? (
         <AddCustomView
           key={formKey}
@@ -868,14 +874,14 @@ function CheckInSection() {
 /**
  * One switch of the pane, a toggle chip in the look of the emotion and factor
  * chips: a check and a soft tint when on, one text weight either way, and
- * chips wrap without orphan rows. A tracker's chip carries a dot in its chart
- * color, so the pane doubles as the legend of the charts.
+ * chips wrap without orphan rows. A tracker's chip carries its icon in its
+ * chart color, so the pane doubles as the legend of the charts.
  */
-function ToggleChip({ on, label, color, onToggle }: { on: boolean; label: string; color?: string; onToggle: () => void }) {
+function ToggleChip({ on, label, color, icon, onToggle }: { on: boolean; label: string; color?: string; icon?: ReactNode; onToggle: () => void }) {
   return (
     <button type="button" aria-pressed={on} onClick={onToggle} className={`${settingsChipClass(on)} gap-1.5`}>
       {on && <Check size={12} aria-hidden="true" />}
-      {color && <span aria-hidden="true" className="w-2 h-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />}
+      {icon && <span aria-hidden="true" className="inline-flex shrink-0" style={color ? { color } : undefined}>{icon}</span>}
       {label}
     </button>
   );
@@ -916,9 +922,13 @@ function TrackerIconPicker({ name, icon, onPick, onClose }: { name: string; icon
 }
 
 /** The preview's input, holding its own value so a try never saves. */
-function PreviewInput({ name, type, pairLabels, unit }: { name: string; type: CustomTrackerType; pairLabels: [string, string]; unit: string }) {
+function PreviewInput({ name, type, pairLabels, unit, limit }: { name: string; type: CustomTrackerType; pairLabels: [string, string]; unit: string; limit?: number }) {
   const [value, setValue] = useState<number | boolean | undefined>(undefined);
   const [pair, setPair] = useState<[number | undefined, number | undefined]>([undefined, undefined]);
+  if (type === 'counter') {
+    const uses = typeof value === 'number' ? value : undefined;
+    return <CounterInput name={name} total={uses ?? 0} limit={limit} uses={uses} onUses={(n) => setValue(n || undefined)} onStartAgain={() => setValue(undefined)} expanded />;
+  }
   if (type === 'pair') {
     return <PairInput labels={pairLabels} unit={unit.trim() || undefined} value={pair[0]} value2={pair[1]} onChange={(a, b) => setPair([a, b])} expanded />;
   }
@@ -952,6 +962,10 @@ function AddCustomView({
   const [pairLabels, setPairLabels] = useState<[string, string]>(initial?.pairLabels ?? ['', '']);
   const [unit, setUnit] = useState(initial?.unit ?? '');
   const isPair = (initial?.type ?? type) === 'pair';
+  // A counter's limit, as typed; empty is no limit.
+  const [limitText, setLimitText] = useState(initial?.limit !== undefined ? String(initial.limit) : '');
+  const isCounter = (initial?.type ?? type) === 'counter';
+  const limit = isCounter ? counterLimit(Number(limitText.trim() || NaN)) : undefined;
   const pairFields = (): Partial<CustomTrackerTemplate> => {
     const labels = pairLabels.map((l) => l.trim()) as [string, string];
     return {
@@ -969,14 +983,24 @@ function AddCustomView({
     () => initial?.color ?? TRACKER_COLORS.slice(1).find((c) => !usedColors.includes(c)) ?? TRACKER_COLORS[1]!
   );
 
+  // Create and Save stay on: a press without a name says so under the
+  // field and puts the cursor there, where a dimmed button said nothing.
+  // Spec: docs/internal/design/ui-patterns.md section 197
+  const [nameMissing, setNameMissing] = useState(false);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const nameErrorId = useId();
   const handleSubmit = () => {
     // A free person's tap goes to the upgrade, with or without a name.
-    if (!name.trim() && !locked) return;
+    if (!name.trim() && !locked) {
+      setNameMissing(true);
+      nameRef.current?.focus();
+      return;
+    }
     if (initial) {
       // Every field the form owns is set, undefined included: the row merges
       // this into the stored tracker, so a cleared icon or a switch turned
       // back on must overwrite the old value, not leave it.
-      onAdd({ ...initial, name: name.trim(), color, icon, startFromLast: hasStart && !startFromLast ? false : undefined, ...pairFields() });
+      onAdd({ ...initial, name: name.trim(), color, icon, startFromLast: hasStart && !startFromLast ? false : undefined, ...pairFields(), limit });
       return;
     }
     onAdd({
@@ -988,6 +1012,7 @@ function AddCustomView({
       ...(icon ? { icon } : {}),
       ...(hasStart && !startFromLast ? { startFromLast: false } : {}),
       ...Object.fromEntries(Object.entries(pairFields()).filter(([, v]) => v !== undefined)),
+      ...(limit !== undefined ? { limit } : {}),
     });
   };
 
@@ -1002,12 +1027,15 @@ function AddCustomView({
         <RowTitle icon={TextT}>{t('shell:filesList.sortName')}</RowTitle>
         <div className="relative">
           <input
+            ref={nameRef}
             type="text"
             placeholder={t('config.trackerNamePlaceholder')}
             aria-label={t('config.trackerNamePlaceholder')}
+            aria-invalid={nameMissing || undefined}
+            aria-describedby={nameMissing ? nameErrorId : undefined}
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full h-9 ps-3 pe-14 rounded-md text-compact border border-divider bg-surface-0 text-pn outline-none focus:border-accent"
+            onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameMissing(false); }}
+            className={`w-full h-9 ps-3 pe-14 rounded-md text-compact border bg-surface-0 text-pn outline-none ${nameMissing ? 'border-danger' : 'border-divider focus:border-accent'}`}
             maxLength={24}
             onKeyDown={(e) => { if (e.key === 'Enter' && !isImeComposing(e)) handleSubmit(); }}
           />
@@ -1015,6 +1043,8 @@ function AddCustomView({
             {t('config.nameCount', { count: name.length, max: 24 })}
           </span>
         </div>
+        {/* The error line of TextField. */}
+        {nameMissing && <p id={nameErrorId} role="alert" className="text-small text-danger">{t('config.nameMissing')}</p>}
         </div>
 
         {/* The panel the new tracker opens, live: the type's real input under
@@ -1027,45 +1057,31 @@ function AddCustomView({
               <TrackerMark icon={icon} color={color} size={16} />
               <span className={`truncate ${name.trim() ? '' : 'text-pn-muted font-normal'}`}>{name.trim() || t('config.trackerNamePlaceholder')}</span>
             </p>
-            <PreviewInput key={type} name={name.trim() || t('config.trackerNamePlaceholder')} type={type} pairLabels={pairLabels} unit={unit} />
+            <PreviewInput key={type} name={name.trim() || t('config.trackerNamePlaceholder')} type={type} pairLabels={pairLabels} unit={unit} limit={limit} />
           </div>
         </div>
 
-        {/* Icon and type share a row, each a labeled control of one line; a
-            type picked from a list of five is a select, as the UI rules ask
-            for a list too long for a segmented control. Editing keeps the
-            type, so the row then holds the icon alone. */}
-        <div className="flex flex-wrap items-end gap-x-4 gap-y-4">
+        {/* The type first, on a row of its own: it picks the input the
+            preview shows and the fields under it. The chips of the Factors
+            and Habits lists, one per type, each with a glyph of its input;
+            they wrap where the row is short. Editing keeps the type, so the
+            row is not there. */}
+        {!initial && (
           <div className="flex flex-col gap-1.5">
-            <RowTitle icon={Shapes}>{t('shell:noteOptionsMenu.icon')}</RowTitle>
-            <Button icon={<TrackerMark icon={icon} color={color} size={15} />} onClick={() => setPicking(true)}>
-              {t('config.chooseIcon')}
-            </Button>
-            {picking && (
-              <Suspense fallback={null}>
-                <TrackerIconPicker name={name.trim() || t('config.trackerNamePlaceholder')} icon={icon} onPick={setIcon} onClose={() => setPicking(false)} />
-              </Suspense>
-            )}
-          </div>
-          {!initial && (
-            <div className="flex min-w-[16rem] flex-1 flex-col gap-1.5">
-              <RowTitle icon={SlidersHorizontal}>{t('config.typeLabel')}</RowTitle>
-              {/* The chips of the Factors and Habits lists, one per type, each
-                  with a glyph of its input; they wrap where the row is short. */}
-              <div role="group" aria-label={t('config.typeLabel')} className="flex flex-wrap gap-1.5">
-                {CUSTOM_TRACKER_TYPES.filter((k) => k !== 'pair' || PAIR_TRACKER_OFFERED).map((k) => {
-                  const Glyph = TYPE_GLYPHS[k];
-                  return (
-                    <button key={k} type="button" aria-pressed={type === k} onClick={() => setType(k)} className={`${settingsChipClass(type === k)} gap-1.5 whitespace-nowrap`}>
-                      <Glyph aria-hidden="true" className="shrink-0" />
-                      {t(`custom.typeLabels.${k}`)}
-                    </button>
-                  );
-                })}
-              </div>
+            <RowTitle icon={SlidersHorizontal}>{t('config.typeLabel')}</RowTitle>
+            <div role="group" aria-label={t('config.typeLabel')} className="flex flex-wrap gap-1.5">
+              {CUSTOM_TRACKER_TYPES.filter(typeOffered).map((k) => {
+                const Glyph = TYPE_GLYPHS[k];
+                return (
+                  <button key={k} type="button" aria-pressed={type === k} onClick={() => setType(k)} className={`${settingsChipClass(type === k)} gap-1.5 whitespace-nowrap`}>
+                    <Glyph aria-hidden="true" className="shrink-0" />
+                    {t(`custom.typeLabels.${k}`)}
+                  </button>
+                );
+              })}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {isPair && (
           <div className="flex flex-wrap gap-3">
@@ -1096,6 +1112,22 @@ function AddCustomView({
           </div>
         )}
 
+        {isCounter && (
+          <div className="flex flex-col gap-1.5">
+            <RowTitle icon={HandTap}>{t('config.counterLimit')}</RowTitle>
+            <TextField
+              size="sm"
+              inputMode="numeric"
+              value={limitText}
+              onChange={(e) => setLimitText(e.target.value.replace(/[^0-9]/g, '').slice(0, String(COUNTER_LIMIT_MAX).length))}
+              placeholder="30"
+              aria-label={t('config.counterLimit')}
+              className="max-w-[9rem]"
+              hint={t('config.counterHelp')}
+            />
+          </div>
+        )}
+
         {hasStart && (
           <Switch
             icon={<ClockCounterClockwise className="text-accent" />}
@@ -1107,7 +1139,20 @@ function AddCustomView({
           />
         )}
 
-        <div className="flex flex-wrap items-end gap-x-4 gap-y-4">
+        {/* The look: icon and color, each a labeled control of one line,
+            then Create at the end of the row. */}
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
+          <div className="flex flex-col gap-1.5">
+            <RowTitle icon={Shapes}>{t('shell:noteOptionsMenu.icon')}</RowTitle>
+            <Button icon={<TrackerMark icon={icon} color={color} size={15} />} onClick={() => setPicking(true)}>
+              {t('config.chooseIcon')}
+            </Button>
+            {picking && (
+              <Suspense fallback={null}>
+                <TrackerIconPicker name={name.trim() || t('config.trackerNamePlaceholder')} icon={icon} onPick={setIcon} onClose={() => setPicking(false)} />
+              </Suspense>
+            )}
+          </div>
           <div className="flex flex-col gap-1.5">
             <RowTitle icon={Palette}>{t('shell:noteOptionsMenu.color')}</RowTitle>
             {/* The round swatch of the note menu's color row, with its tooltip. */}
@@ -1128,7 +1173,6 @@ function AddCustomView({
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!name.trim() && !locked}
               className={`${SETTINGS_BTN_PRIMARY} ms-auto`}
             >
               {t('common:actions.create')}
@@ -1136,7 +1180,7 @@ function AddCustomView({
             </button>
           )}
         </div>
-        {initial && onCancel && <EditRow onSave={handleSubmit} onCancel={onCancel} canSave={!!name.trim()} />}
+        {initial && onCancel && <EditRow onSave={handleSubmit} onCancel={onCancel} />}
 
       </div>
 

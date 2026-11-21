@@ -1,6 +1,5 @@
 {
   "header": {
-    "betaBadge": "beta",
     "downloads": "Ke stažení",
     "price": "Cena",
     "priceLine": "Kolik tvoje aplikace stojí dohromady",
@@ -290,7 +289,7 @@
   },
   "demoShot": {
     "kicker": "Podívej se naživo",
-    "caption": "Skutečná aplikace s ukázkovými poznámkami, přímo v tvém prohlížeči. Nic se neukládá."
+    "caption": "Skutečná aplikace s ukázkovými poznámkami, přímo v tvém prohlížeči. Co napíšeš, zůstane v něm."
   },
   "badges": {
     "privacyToolsAlt": "PrivacyNotes na PrivacyTools.io",
@@ -358,7 +357,7 @@
     "freeImport": "Import a export, včetně Keep a Obsidianu",
     "freeAnon": "Anonymní přihlášení, bez e-mailu",
     "earlyAdopterBadge": "Zaváděcí cena",
-    "payMethods": "Plať kartou, nebo v Bitcoinu, Ethereu, přes Lightning, v USDC či USDT."
+    "payMethods": "Plať kartou, nebo v Bitcoinu, Ethereu, přes Lightning, v USDC, USDT, Litecoinu, Bitcoin Cash, Dogecoinu či TON."
   },
   "underHood": {
     "heading": "Pod kapotou",
@@ -501,7 +500,7 @@
     "noLockIn": "Závislost na dodavateli",
     "noEmail": "Povinný e-mail",
     "noDarkPatterns": "Temné vzorce",
-    "noBackdoor": "Zadní vrátka"
+    "noBackdoor": "Skrytá zadní vrátka"
   },
   "noRecovery": {
     "heading": "Tvoje fráze je tvůj klíč",
@@ -509,7 +508,7 @@
     "noRecoveryTerm": "Žádná obnova",
     "noRecoveryDesc": "Při vlastní správě ztratíš s frází i poznámky",
     "deviceTerm": "Vytvořená v zařízení",
-    "deviceDesc": "Při vlastní správě se tvoje fráze nikdy nedostane na naše servery",
+    "deviceDesc": "Při vlastní správě se tvoje fráze nikdy nedostane na naše servery, pokud si nepřidáš přístupový klíč pro přihlášení",
     "zkTerm": "Nulová znalost",
     "zkDesc": "Při vlastní správě nemá server nic, co by tvoje poznámky otevřelo",
     "writeTerm": "Zapiš si ji",
@@ -524,7 +523,7 @@
     "heading": "Trezor máš hotový za necelou minutu.",
     "importNote": "Přecházíš z jiné aplikace? Vyexportuj z kterékoli z nich a naimportuj to za pár minut:",
     "importDemoTitle": "Vyzkoušej si nejdřív vlastní import v demu",
-    "importDemoBody": "Tvůj soubor se čte v prohlížeči, nic nejde na naše servery a zavřením karty se smaže."
+    "importDemoBody": "Tvůj soubor se čte v prohlížeči a nic z něj se nenahrává. Zůstane v tomto prohlížeči, dokud se tu demo znovu neotevře; pokud ho chceš odstranit dřív, vymaž data webu."
   },
   "about": {
     "tabs": {
@@ -532,7 +531,7 @@
       "hotkeys": "Zkratky",
       "rating": "Hodnocení"
     },
-    "intro": "<brand/> drží tvoje poznámky, úkoly, hesla, deník, soubory, kalendář, kontakty a záložky na jednom místě, se sledováním nálady a léků. Všechno se šifruje na tvém zařízení klíčem vytvořeným z tvé obnovovací fráze a zůstává zašifrované i na našich serverech ve <nowrap>Švýcarsku</nowrap>. Funguje offline a aplikace je open source.",
+    "intro": "<brand/> drží tvoje poznámky, úkoly, hesla, deník, soubory, kalendář, kontakty a záložky na jednom místě, se sledováním nálady a léků. Všechno se šifruje na tvém zařízení klíčem vytvořeným z tvé obnovovací fráze a zůstává zašifrované i na našich serverech ve <nowrap>Švýcarsku</nowrap> a v EU. Funguje offline a aplikace je open source.",
     "versionHeading": "Verze",
     "windowVersion": "Verze {{version}}",
     "windowHelp": "Centrum nápovědy",
@@ -552,7 +551,7 @@
     "openSourceLink": "Přečti si kód na GitHub.com",
     "openSourceBody": "Aplikace i šifrování uvnitř jsou zveřejněné, takže si kdokoli může ověřit, jak se tvoje poznámky šifrují.",
     "dataStorageHeading": "Ukládání dat",
-    "dataStorageBody": "Zašifrované bloby uložené v Curychu, <flag/> Švýcarsko.",
+    "dataStorageBody": "Zašifrované poznámky, deníky a vše ostatní uložené v Curychu, <flag/> Švýcarsko. Nové obrázky a soubory z aktuální aplikace uložené v EU.",
     "faviconsHeading": "Ikony webů",
     "faviconsBody1": "Ikony webů (favikony) pocházejí z DuckDuckGo a Google a stahuje je náš server za tebe. Tvůj prohlížeč se ani s jedním nespojí přímo, takže vidí náš server, jak se ptá na doménu, a tebe nikdy.",
     "faviconsBody2": "Ikony se ukládají do mezipaměti tvého zařízení na 90 dní. Žádný požadavek neobsahuje tvou identitu a ikony můžeš vypnout v Nastavení > Seznamy."

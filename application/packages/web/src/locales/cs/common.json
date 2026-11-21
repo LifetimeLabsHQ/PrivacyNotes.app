@@ -39,7 +39,7 @@
   "storageBar": {
     "usage": "Využito {{percent}} % ({{used}} / {{max}})",
     "refresh": "Obnovit úložiště",
-    "cleanupInfo": "Smazané položky se hned přestanou započítávat. Samotné zašifrované soubory zmizí ze serveru během několika dní.",
+    "cleanupInfo": "Poznámky smazané navždy se hned přestanou započítávat. Smazaný soubor se započítává, dokud jeho zašifrovaná kopie nezmizí ze serveru, zhruba o den později.",
     "open": "Otevřít nastavení úložiště"
   },
   "updateToast": {
@@ -334,6 +334,8 @@
     "commands": {
       "syncResume": "Obnovit synchronizaci",
       "lockProtected": "Zamknout tuto poznámku",
+      "randomItem": "Otevřít náhodnou položku",
+      "randomBookmark": "Otevřít náhodnou záložku",
       "changelog": "Co je nového",
       "themesPage": "Témata komunity",
       "website": "Web PrivacyNotes"

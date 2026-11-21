@@ -22,6 +22,7 @@ import {
 import { dropFolderLooks } from '../itemStyles';
 import { carrySpaces, folderSpaces, setRootSpace, type Space } from '../spaces';
 import { liveItemIds } from '../itemDrag';
+import { keepsOpenItem } from './closedPane';
 import { bulkMoveToFolder } from '../notesRepo';
 import type { UserSettings } from '../userSettings';
 import type { View } from '../views';
@@ -199,9 +200,12 @@ export function useFolderActions({
     // clears both filters in the other direction.
     // Home takes no filter: a folder clicked there opens it in All.
     // Spec: docs/internal/specs/dashboard.md (section 2)
-    if (view === 'trash' || view === 'dashboard') setView('home');
-    setSelectedId(null);
+    const nextView: View = view === 'trash' || view === 'dashboard' ? 'home' : view;
+    if (nextView !== view) setView(nextView);
     setDrawerOpen(false);
+    // The open item stays open on a wide screen (#823).
+    if (keepsOpenItem(nextView)) return;
+    setSelectedId(null);
     const discarded = await discardIfEmpty(previousId);
     if (discarded) {
       await refresh();

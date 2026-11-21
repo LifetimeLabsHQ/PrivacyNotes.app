@@ -84,6 +84,17 @@ export function restoreAssets(markdown: string, urls: Map<string, string>): stri
   });
 }
 
+/** The part of the rich editor's key that follows the resolved pictures. The
+ *  editor takes no new `value` once it is mounted, so the key has to change
+ *  whenever the map does: a count missed the next file's one picture after
+ *  this file's one picture, and the editor kept showing the raw path. */
+export function assetsKey(urls: Map<string, string>): string {
+  return [...urls].map(([ref, url]) => `${ref}\u0001${url}`).join('\0');
+}
+
+/** What a file gets until its own pictures resolve. Never written to. */
+const NONE = new Map<string, string>();
+
 function originalFor(url: string, urls: Map<string, string>): string | null {
   for (const [original, resolved] of urls) if (resolved === url) return original;
   return null;
@@ -96,13 +107,20 @@ function originalFor(url: string, urls: Map<string, string>): string | null {
  */
 export function useAssets(
   markdown: string,
-  dir: OpenedDirectoryRef | null,
+  dir: Pick<OpenedDirectoryRef, 'resolveAsset'> | null,
   noteDir: string,
 ): Map<string, string> {
   // Reference text -> loadable URL. The key is the reference EXACTLY as the
   // file spells it, because `restoreAssets` writes that key straight back into
   // the note on save; only the filesystem lookup below sees a decoded path.
-  const [urls, setUrls] = useState<Map<string, string>>(new Map());
+  // Stamped with the folder it was resolved in: the same reference names
+  // another file in another folder, so a map made for the file before is
+  // handed on only while the folder is the same, where every reference the
+  // two files share resolves to the same picture.
+  const [state, setState] = useState<{ dir: Pick<OpenedDirectoryRef, 'resolveAsset'> | null; noteDir: string; urls: Map<string, string> }>(
+    () => ({ dir, noteDir, urls: new Map() }),
+  );
+  const setUrls = (urls: Map<string, string>) => setState({ dir, noteDir, urls });
 
   useEffect(() => {
     if (!dir) { setUrls(new Map()); return; }
@@ -149,7 +167,7 @@ export function useAssets(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dir, noteDir, markdownIdentity(markdown)]);
 
-  return urls;
+  return state.dir === dir && state.noteDir === noteDir ? state.urls : NONE;
 }
 
 /** The set of image references, as a stable string. Changes only when the note
@@ -169,7 +187,7 @@ function markdownIdentity(markdown: string): string {
  * it. The adapters return null for the ordinary missing-file case on their own,
  * so anything caught here is a genuine fault and is worth a console line.
  */
-async function resolveQuietly(dir: OpenedDirectoryRef, relPath: string): Promise<string | null> {
+async function resolveQuietly(dir: Pick<OpenedDirectoryRef, 'resolveAsset'>, relPath: string): Promise<string | null> {
   try {
     return await dir.resolveAsset(relPath);
   } catch (e) {

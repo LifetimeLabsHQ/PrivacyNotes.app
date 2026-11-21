@@ -4,7 +4,8 @@
     "tabBiometricShort": "Sperre",
     "tabPhraseShort": "Phrase",
     "tabPhrase": "Deine Phrase",
-    "tabTwoFactor": "2FA"
+    "tabTwoFactor": "2FA",
+    "tabTwoFactorPasskeys": "2FA / Passkeys"
   },
   "pinTab": {
     "changeLost": "Deine PIN-Änderung wurde nicht gespeichert: Die PIN wurde zuerst auf einem anderen Gerät geändert.",
@@ -70,7 +71,7 @@
     "browserRestart": "Beim Neustart des Browsers"
   },
   "pinInfo": {
-    "body": "Wenn aktiv, wird dein PIN bei jedem Öffnen dieses Eintrags verlangt, auch wenn die App bereits entsperrt ist. Nutze das für sensible Einträge, die geschützt bleiben sollen, wenn du kurz weggehst."
+    "body": "Wenn aktiv, fragt dieser Eintrag vor dem Öffnen nach deiner PIN, außer du hast die PIN innerhalb der Zeit eingegeben, die unter Einstellungen > Sicherheit > Sperre festgelegt ist (5 Minuten, solange du das nicht änderst). Nutze das für deine sensibelsten Einträge."
   },
   "removePinDialog": {
     "introWithBio": "Gib deine aktuelle PIN ein, um das Entfernen zu bestätigen. Die biometrische Entsperrung bleibt aktiv, aber deine einzige Rückfalloption ist dann deine Wiederherstellungsphrase.",
@@ -121,6 +122,7 @@
     "hideQr": "QR-Code ausblenden",
     "showQr": "QR-Code anzeigen",
     "saveQr": "QR speichern",
+    "qrHint": "Wähle auf dem neuen Gerät „{{scanQr}}“ auf der Anmeldeseite.",
     "copyPhrase": "Phrase kopieren"
   },
   "custody": {
@@ -134,7 +136,7 @@
     "rowLostSelf": "Ohne weitere gesicherte Kopie oder ein entsperrtes Gerät lassen sich die Notizen nicht wiederherstellen.",
     "rowKey": "Wo deine Phrase liegt",
     "rowKeyCustodial": "Auf unserem Server und deinen Geräten",
-    "rowKeySelf": "Nur auf deinen Geräten",
+    "rowKeySelf": "Nur auf deinen Geräten, außer du fügst einen Passkey zum Anmelden hinzu",
     "releaseWarning": "Sichere deine Phrase zuerst außerhalb von PrivacyNotes. Wenn wir unsere Kopie gelöscht haben, brauchst du sie auf neuen Geräten.",
     "challengePrompt": "Gib diese Wörter aus der Liste oben ein, um zu bestätigen, dass du sie hast.",
     "wordLabel": "Wort {{position}}",
@@ -167,14 +169,18 @@
   "biometricTab": {
     "checkingSupport": "Biometrie-Unterstützung wird geprüft...",
     "description": "Entsperre per Fingerabdruck oder Gesicht, statt die PIN einzugeben.",
+    "descriptionWeb": "Entsperre per Fingerabdruck oder Gesicht, statt die PIN einzugeben. In einem Browser erstellt das auf diesem Gerät einen Passkey für PrivacyNotes, gespeichert von deinem Gerät oder deinem Passwortmanager.",
     "trustFirst": "Aktiviere zuerst \"Diesem Gerät vertrauen\". Die biometrische Entsperrung und die App-Sperre legen beide eine Kopie deiner Wiederherstellungsphrase auf diesem Gerät ab, und dafür ist ein nicht vertrauenswürdiges Gerät nicht gedacht.",
     "notAvailable": "Die biometrische Entsperrung ist auf diesem Gerät nicht verfügbar. Dein Browser oder deine Hardware unterstützt keinen Plattform-Authentifikator (Touch ID, Face ID, Windows Hello).",
     "enabledFlash": "Biometrische Entsperrung aktiviert.",
     "enrolledOnDevice": "Auf diesem Gerät eingerichtet",
     "boundStatus": "Die biometrische Entsperrung ist an deinen Passkey gebunden.",
     "boundStatusNative": "Die biometrische Entsperrung ist an die sichere Hardware dieses Geräts gebunden.",
+    "boundStatusWindows": "Die biometrische Entsperrung ist auf diesem PC an Windows Hello gebunden.",
+    "boundStatusWindowsSoftware": "Die biometrische Entsperrung ist auf diesem PC an Windows Hello gebunden. Windows meldet hier keinen Sicherheitschip (TPM), den es nutzen kann. Ohne einen solchen Chip bewahrt Windows Hello den Schlüssel in Software auf, und wer eine Kopie des Speichers dieses PCs hat, kann Windows-Hello-PINs ohne Begrenzung ausprobieren.",
     "setUpAgain": "Für eine stärkere Sperre neu einrichten",
     "unboundWeaker": "Auf diesem Gerät ist die biometrische Entsperrung eine Hürde für Menschen in deiner Nähe, keine Sperre: Wer eine Kopie des Speichers dieses Geräts hat, kann deine Notizen ohne deinen Fingerabdruck oder dein Gesicht öffnen.",
+    "noPrfRefused": "Diese Passkey-App kann den Schlüssel der biometrischen Entsperrung nicht aufbewahren, deshalb bleibt die biometrische Entsperrung aus. Wenn ein Passwortmanager den Passkey gespeichert hat, lösche ihn dort, schalte dessen Passkey-Option aus und versuche es erneut.",
     "cannotBind": "Die Passkey-App, die diesen Passkey gespeichert hat, oft ein Passwortmanager, kann die vollständige Sperre nicht einrichten. Auf diesem Gerät hält die biometrische Entsperrung nur Menschen in deiner Nähe fern: Wer eine Kopie des Speichers dieses Geräts hat, kann deine Notizen ohne deinen Fingerabdruck oder dein Gesicht öffnen. Wenn ein Passwortmanager deine Passkeys speichert, schalte dort die Passkey-Option aus und schalte dann die biometrische Entsperrung aus und wieder ein.",
     "bindOffer": "Die biometrische Entsperrung auf diesem Gerät ist noch nicht an deinen Passkey gebunden, und dieser Browser kann sie binden. Richte sie einmal neu ein, damit ihr Schlüssel bei deinem Passkey liegt statt im Speicher dieses Geräts.",
     "bindOfferLater": "Nicht jetzt",
@@ -185,18 +191,26 @@
     "lockOnOpenHint": "Fragt nach deiner PIN oder deinem Fingerabdruck, wenn die App auf diesem Gerät geöffnet wird, und erneut, wenn sie eine Weile nicht benutzt wurde.",
     "lockHidesOnSwitch": "Verbirgt deine Notizen außerdem beim Wechseln der App.",
     "confirmPinForLock": "Gib deine PIN ein, um das einzuschalten. Sie verschließt eine Kopie deiner Wiederherstellungsphrase, sodass nur deine PIN die App öffnen kann.",
+    "pinWeakCopy": "Mit einer 4-stelligen PIN kann jemand mit einer Kopie des Speichers dieses Geräts die PIN in Minuten bis Stunden herausfinden und deine Notizen öffnen. Ein Passcode ist viel schwerer zu erraten: Richte einen im Tab \"PIN\" ein.",
     "confirmPasscodeForLock": "Gib deinen Passcode ein, um das einzuschalten. Er verschließt eine Kopie deiner Wiederherstellungsphrase, sodass nur dein Passcode die App öffnen kann.",
     "setupTitle": "Wähle, wie du entsperrst",
     "setupPin": "Eine PIN entsperrt hier alles.",
     "setupBiometric": "Ein Fingerabdruck oder dein Gesicht entsperrt die App nur auf diesem Gerät.",
+    "setupBiometricWeb": "Ein Fingerabdruck oder dein Gesicht entsperrt die App nur auf diesem Gerät, über einen Passkey.",
     "setupBiometrics": "Biometrie",
-    "setupAddPinTitle": "PIN für geschützte Notizen hinzufügen",
+    "setupAddPinTitle": "PIN für die Sperre und geschützte Notizen hinzufügen",
+    "fingerprintOnlyLock": "Diese Sperre lässt sich nur mit deinem Fingerabdruck öffnen. Gib deine PIN ein, um sie als zweiten Weg hinzuzufügen.",
+    "fingerprintOnlyLockPasscode": "Diese Sperre lässt sich nur mit deinem Fingerabdruck öffnen. Gib deinen Passcode ein, um ihn als zweiten Weg hinzuzufügen.",
+    "fingerprintOnlyLockAction": "PIN eingeben",
+    "fingerprintOnlyLockActionPasscode": "Passcode eingeben",
     "appLockHeading": "App-Sperre",
     "relockAgainAfter": "Erneut sperren nach",
     "notesHeading": "Geschützte Notizen",
     "reaskAfter": "PIN erneut abfragen nach",
-    "reaskHint": "Für geschützte Notizen und deine Wiederherstellungsphrase.",
+    "reaskHint": "Für geschützte Notizen, geschützte Abschnitte und deine Wiederherstellungsphrase.",
+    "sectionsHint": "Schütze einen ganzen Abschnitt, etwa den Tresor, über sein Menü in der Seitenleiste.",
     "biometricHeading": "Fingerabdruck oder Gesicht",
+    "biometricHeadingWeb": "Fingerabdruck oder Gesicht (Passkey)",
     "blockCapture": "Vor Bildschirmaufnahmen verbergen",
     "blockCaptureHint": "Hält deine Notizen aus Screenshots, Aufnahmen und Bildschirmfreigaben heraus, soweit dein Gerät das zulässt. Gilt nur für dieses Gerät.",
     "perDeviceNote": "Die biometrische Entsperrung öffnet dieselben Notizen wie deine PIN. Sie bleibt auf diesem Gerät und wird nie synchronisiert.",
@@ -205,8 +219,30 @@
     "disableConfirmBody": "Biometrische Entsperrung auf diesem Gerät deaktivieren?",
     "disableConfirmBodyAppLock": "Biometrische Entsperrung auf diesem Gerät deaktivieren? Die App-Sperre wird dann ebenfalls ausgeschaltet."
   },
+  "passkeysTab": {
+    "intro": "Melde dich auf einem neuen Gerät mit einem Passkey an, statt deine Wiederherstellungsphrase einzugeben. Deine Phrase funktioniert weiterhin.",
+    "add": "Passkey hinzufügen",
+    "adding": "Wird hinzugefügt...",
+    "lastUsed": "Zuletzt verwendet {{date}}",
+    "neverUsed": "Nie verwendet",
+    "removeTitle": "Diesen Passkey entfernen?",
+    "removeBody": "Du kannst dich damit nicht mehr anmelden. Der Passkey selbst bleibt in deiner Passkey-App, bis du ihn dort löschst.",
+    "retired": "Vor der Änderung deiner Phrase erstellt. Entferne ihn und füge ihn erneut hinzu.",
+    "noPrf": "Diese Passkey-App kann deine Phrase nicht schützen, daher wurde der Passkey nicht hinzugefügt. Versuch es mit den eigenen Passkeys deines Geräts oder einem anderen Passwortmanager.",
+    "tooMany": "Du hast {{count}} Passkeys zum Anmelden. Entferne einen, um einen weiteren hinzuzufügen.",
+    "failed": "Der Passkey konnte nicht hinzugefügt werden. Prüfe deine Verbindung und versuche es erneut.",
+    "appsOnly": "Füge Passkeys in deinem Browser unter use.privacynotes.app hinzu. Die Anmeldung damit in den Apps kommt später.",
+    "empty": "Noch keine Passkeys.",
+    "loadFailed": "Deine Passkeys konnten nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.",
+    "removeFailed": "Der Passkey konnte nicht entfernt werden. Prüfe deine Verbindung und versuche es erneut.",
+    "pinPrompt": "Gib deine 4-stellige PIN ein, um einen Passkey hinzuzufügen.",
+    "pinPromptPasscode": "Gib deinen Passcode ein, um einen Passkey hinzuzufügen."
+  },
   "appLock": {
-    "phraseNotSaved": "Dieses Gerät konnte deine Wiederherstellungsphrase nicht speichern, deshalb wurde nichts geändert. Versuche es noch einmal."
+    "phraseNotSaved": "Dieses Gerät konnte deine Wiederherstellungsphrase nicht speichern, deshalb wurde nichts geändert. Versuche es noch einmal.",
+    "phraseInMemoryOnly": "Dieser Browser konnte deine Wiederherstellungsphrase nicht schützen, deshalb ist sie auf diesem Gerät nicht gespeichert. Wenn du diesen Tab neu lädst oder schließt, wirst du abgemeldet, also halte deine Wiederherstellungsphrase bereit. Um hier angemeldet zu bleiben, schalte die App-Sperre unter Einstellungen > Sicherheit > Sperre ein.",
+    "untrustedSignIn": "Du hast diesem Gerät nicht vertraut, deshalb ist deine Anmeldung hier nicht gespeichert. Wenn du die App schließt oder neu lädst, wirst du abgemeldet, also halte deine Wiederherstellungsphrase bereit.",
+    "presenceGateRemoved": "Die Entsperrung per Fingerabdruck oder Gesicht ist aus: Dieser Browser hat ihren Schlüssel neben deiner Wiederherstellungsphrase aufbewahrt. Deine PIN oder dein Passcode entsperrt die App weiterhin."
   },
   "pinSetup": {
     "description": "Eine 4-stellige PIN ist nötig, um deine Wiederherstellungsphrase anzuzeigen. Optional, aber für gemeinsam genutzte Geräte empfohlen.",
@@ -241,13 +277,21 @@
     "disableTitlePasscode": "Passcode eingeben, um den Schutz zu deaktivieren",
     "verifySubtitlePasscode": "Gib deinen Passcode ein, um dieses Element zu entsperren. Die Entsperrung gilt für die in den Sicherheitseinstellungen festgelegte Zeit.",
     "passcodeRequired": "Passcode erforderlich",
-    "deleteSubtitlePasscode": "Gib deinen Passcode ein, um dieses geschützte Element zu löschen."
+    "deleteSubtitlePasscode": "Gib deinen Passcode ein, um dieses geschützte Element zu löschen.",
+    "sectionTitle": "Dieser Abschnitt ist geschützt",
+    "sectionBiometricSubtitle": "Nutze deinen Fingerabdruck oder dein Gesicht, um diesen Abschnitt zu öffnen.",
+    "sectionVerifySubtitle": "Gib deine 4-stellige PIN ein, um diesen Abschnitt zu öffnen. Die Entsperrung gilt für die in den Sicherheitseinstellungen festgelegte Zeit.",
+    "sectionVerifySubtitlePasscode": "Gib deinen Passcode ein, um diesen Abschnitt zu öffnen. Die Entsperrung gilt für die in den Sicherheitseinstellungen festgelegte Zeit.",
+    "sectionDisableSubtitle": "Seine Einträge bleiben, wo sie sind. Nur der Schutz fällt weg.",
+    "sectionBootstrapSubtitle": "Dieser Abschnitt ist geschützt, aber auf diesem Gerät ist keine PIN festgelegt. Lege eine 4-stellige PIN fest, um ihn zu öffnen. Deine PIN wird über alle deine Geräte synchronisiert."
   },
   "lockScreen": {
     "unlockApp": "<brand/> entsperren",
     "subtitleWithBio": "Nutze deinen Fingerabdruck, dein Gesicht oder deine PIN, um fortzufahren.",
     "subtitleNoBio": "Gib deine PIN ein, um fortzufahren.",
     "biometricFailed": "Biometrische Bestätigung fehlgeschlagen oder abgebrochen.",
+    "deviceKeyUnavailable": "Dieses Gerät kann seine Sperre gerade nicht öffnen, und deine Eingabe ist nicht das Problem. Entsperre unten auf anderem Weg, etwa mit deiner Wiederherstellungsphrase.",
+    "keyringCancelled": "Entsperre deinen Schlüsselbund und versuche es dann erneut.",
     "biometricUnopened": "Die biometrische Entsperrung konnte deine Notizen nicht öffnen. Nutze deine PIN oder deinen Passcode, oder richte die biometrische Entsperrung neu ein.",
     "biometricGone": "Die biometrische Entsperrung funktioniert auf diesem Gerät nicht mehr und muss neu eingerichtet werden. Melde dich unten auf anderem Weg an und schalte die biometrische Entsperrung dann in den Einstellungen wieder ein.",
     "verifying": "Wird bestätigt...",
@@ -275,9 +319,6 @@
     "upgradeHeading": "Oder auf Pro upgraden",
     "upgradeBody": "Einmalzahlung, kein Abo. Unbegrenzt viele Geräte plus Bilder, Notizverlauf und mehr.",
     "upgradeCta": "Auf Pro upgraden für {{price}} $",
-    "needMoreHeading": "Mehr Geräte nötig?",
-    "needMoreBody": "Pro-Upgrades sind in diesem Build nicht verfügbar. Wenn du wirklich ein drittes Gerät brauchst, melde dich, und wir kümmern uns darum.",
-    "contactSupport": "Support kontaktieren",
     "saveRecoveryHeading": "Speichere deine Wiederherstellungsphrase",
     "saveRecoveryBody": "Du hast dich per OAuth angemeldet. Schreib dir trotzdem deine Wiederherstellungsphrase auf. Sie ist deine Rückfalloption, falls OAuth einmal versagt oder du auf allen Geräten ausgesperrt bist.",
     "hide": "Ausblenden",
@@ -315,7 +356,7 @@
     "custodial": "Wir speichern eine verschlüsselte Kopie deiner Phrase. Behalte mindestens ein verbundenes Konto oder wechsle zur Selbstverwahrung, bevor du das letzte trennst.",
     "selfCustody": "Auf einem neuen Gerät brauchst du auch mit einem verbundenen Konto deine Wiederherstellungsphrase, um deine Notizen zu öffnen. Das Verbinden eines Kontos speichert die Phrase nicht bei uns.",
     "mfaRequired": "Die Zwei-Faktor-Anmeldung bleibt für alle Anmeldearten aktiv. Bewahre deinen Authenticator oder seinen gesicherten Sicherungsschlüssel auf.",
-    "unavailable": "Verbundene Konten lassen sich noch nicht ändern. Deine bisherige Anmeldung funktioniert weiterhin.",
+    "unavailable": "Änderungen an verbundenen Konten sind vorerst ausgeschaltet. Deine bisherige Anmeldung funktioniert weiterhin.",
     "loading": "Verbundene Konten werden geprüft...",
     "emailHidden": "E-Mail-Adresse nicht geteilt",
     "disconnectAccount": "{{provider}}-Konto {{email}} trennen",
@@ -384,7 +425,7 @@
     "signInAgain": "Erneut anmelden",
     "lostAuthenticator": "Handy verloren?",
     "restore": "Füge deinen Sicherungsschlüssel in einer beliebigen Authenticator-App hinzu und gib dann dessen Code in PrivacyNotes ein.",
-    "noBackup": "Kein Handy und kein Sicherungsschlüssel? Wir setzen 2FA nicht zurück, und unser Support kann dabei nicht helfen. Exportiere die Notizen auf diesem Gerät und starte einen neuen Tresor.",
+    "noBackup": "Kein Handy und kein Sicherungsschlüssel? Wir setzen 2FA nicht zurück, und unser Support kann dabei nicht helfen. Exportiere die Notizen auf diesem Gerät als \"Alles, unverschlüsselt (.zip)\" und starte einen neuen Tresor.",
     "localNotes": "Nicht jetzt? Nutze weiter die Notizen auf diesem Gerät. Die Synchronisierung startet wieder, sobald du einen Code eingibst.",
     "useLocalNotes": "Später"
   },
@@ -394,7 +435,7 @@
     "loading": "2FA wird geprüft...",
     "retry": "Erneut versuchen",
     "unavailable": "2FA konnte nicht geprüft werden. Deine Notizen auf diesem Gerät sind sicher. Prüfe deine Verbindung und versuch es erneut.",
-    "notAvailable": "2FA ist noch nicht verfügbar.",
+    "notAvailable": "2FA ist vorerst ausgeschaltet. Versuch es später noch einmal.",
     "actionFailed": "Das hat nicht geklappt. Prüfe deine Verbindung und versuch es erneut. Deine Notizen auf diesem Gerät sind sicher.",
     "warning": "Bewahre dein Handy oder deinen Sicherungsschlüssel auf. Wenn du beides verlierst, kannst du dich auf keinem neuen Gerät anmelden. Das dient deiner eigenen Sicherheit. Wir setzen 2FA nicht zurück, und unser Support kann dabei nicht helfen.",
     "cannotEnroll": "Melde dich erneut mit deiner Phrase oder einem verbundenen Konto an, um 2FA einzurichten.",
@@ -423,6 +464,7 @@
     "backupWarning": "Handy verloren? Mit diesem Schlüssel bekommst du deine Codes zurück. Bewahre ihn sicher auf, außerhalb von PrivacyNotes.",
     "savedAcknowledgment": "Ich habe den Sicherungsschlüssel gespeichert.",
     "confirmBackup": "Gib deinen Sicherungsschlüssel aus dem vorigen Schritt noch einmal ein und dann den Code aus deiner App.",
+    "disconnectsConnections": "Wenn du 2FA einschaltest, werden die Browser-Erweiterung und die Kommandozeile getrennt. Verbinde die Erweiterung erneut unter Einstellungen > Erweiterung, und die Kommandozeile unter Einstellungen > CLI.",
     "codeLabel": "Code aus deiner App",
     "cancelSetup": "Abbrechen",
     "enabled": "2FA ist an",
@@ -452,6 +494,7 @@
   },
   "phraseChange": {
     "lengthGroup": "Länge der Phrase",
+    "lengthLater": "Du kannst die Länge oder die Phrase später unter Einstellungen > Sicherheit > Phrase ändern.",
     "badgeMargin": "Extra Reserve",
     "rowWrite": "Zum Aufschreiben",
     "write12": "Schnell von Hand abgeschrieben.",
@@ -503,13 +546,26 @@
     "failed": "Die Phrase wurde nicht geändert.",
     "failedTooMany": "Deine Phrase wurde in den letzten 24 Stunden dreimal geändert. Versuche es später erneut.",
     "failedMoved": "Deine Einstellungen wurden in der Zwischenzeit auf einem anderen Gerät geändert. Versuche es erneut.",
+    "failedSettingsMoved": "Deine Einstellungen wurden in der Zwischenzeit auf einem anderen Gerät geändert. Versuche es erneut: Diesmal ersetzt die Phrasenänderung sie, auch wenn sie sich wieder ändern.",
     "failedTwoFactor": "Der 2FA-Code wurde nicht akzeptiert. Versuche es erneut.",
     "failedKeyRing": "Dieses Gerät hat die Schlüssel einer früheren Phrase nicht. Nimm die Änderung auf einem Gerät vor, das sie hat.",
     "failedBiometric": "Dein Fingerabdruck oder dein Gesicht ist die einzige Sperre dieses Geräts. Bestätige die biometrische Entsperrung, um die Änderung vorzunehmen.",
+    "failedCannotBind": "Dein Fingerabdruck oder dein Gesicht ist die einzige Sperre dieses Geräts, und auf diesem Gerät kann sie die neue Phrase nicht schützen. Lege zuerst unter Einstellungen > Sicherheit > PIN eine PIN oder einen Passcode fest und nimm dann die Änderung vor.",
     "failedUnsynced": "Einige Einstellungen auf diesem Gerät sind noch nicht synchronisiert. Warte einen Moment und versuche es dann erneut.",
     "failedOffline": "Der Server konnte die Änderung gerade nicht annehmen. Prüfe deine Verbindung und versuche es erneut.",
+    "signInPasskeysReset_other": "Deine {{count}} Passkeys zum Anmelden funktionieren nicht mehr. Füge sie nach der Änderung erneut hinzu.",
+    "signInPasskeysReset_one": "Dein Passkey zum Anmelden funktioniert nicht mehr. Füge ihn nach der Änderung erneut hinzu.",
     "intro_one": "Eine neue Phrase aus {{count}} Wort ersetzt deine Phrase. Die alte Phrase funktioniert nicht mehr. Deine anderen Geräte fragen einmal nach der neuen Phrase. Pro, deine Notizen, Dateien, der Verlauf und deine Konto-ID bleiben.",
     "changeTitle_one": "Neue Phrase aus {{count}} Wort erzeugen",
     "switchTo_one": "Zu {{count}} Wort wechseln"
+  },
+  "releaseNotice": {
+    "sent": "Ein neues Gerät hat sich am {{when}} bei deinem Konto angemeldet. Nicht du? Entferne es unter „Geräte“."
+  },
+  "releaseApproval": {
+    "ask": "Eine neue Anmeldung am {{when}} fragt nach deiner Wiederherstellungsphrase (Code {{code}}). Erlaube sie nur, wenn du das bist und das neue Gerät denselben Code zeigt.",
+    "waiting": "Eine neue Anmeldung fragt nach deiner Wiederherstellungsphrase (Code {{code}}) und erhält sie nach {{when}}, sofern du sie nicht ablehnst. Erlaube sie nur, wenn du das bist und das neue Gerät denselben Code zeigt.",
+    "allow": "Erlauben",
+    "deny": "Ablehnen"
   }
 }

@@ -321,7 +321,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
         <div
           ref={sheetRef}
           className={`fixed bottom-0 inset-x-0 z-50 bg-surface-2 border-t border-divider rounded-t-xl px-4 pt-3 ${
-            keyboard ? 'pb-4 overflow-y-auto' : 'pb-[max(1rem,env(safe-area-inset-bottom))]'
+            keyboard ? 'pb-4 overflow-y-auto' : 'pb-[max(1rem,var(--pn-safe-bottom))]'
           }`}
           style={keyboard ? {
             top: keyboard.top + keyboard.height,

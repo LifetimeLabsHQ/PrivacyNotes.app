@@ -210,14 +210,27 @@ export async function placeBackup(name: string, bytes: Uint8Array, signal?: Abor
   return { ref: name, name, bytes: bytes.length, checked: false };
 }
 
-/** Whether a file this device placed is still there. True when the place cannot say. */
-export async function backupExists(ref: string): Promise<boolean> {
+/** Whether a file this device placed is still there. True when the place cannot say,
+ *  so a copy is never dropped from the list on an error. */
+export function backupExists(ref: string): Promise<boolean> {
+  return placedAnswer(ref, true);
+}
+
+/** Whether the place says a file this device placed is there, for the check that
+ *  skips an unchanged copy. False when the place cannot say (a provider error
+ *  rejects, BackupFolderPlugin.kt), so the run writes a new copy rather than
+ *  trusting one nobody could see. */
+export function backupConfirmed(ref: string): Promise<boolean> {
+  return placedAnswer(ref, false);
+}
+
+async function placedAnswer(ref: string, unsure: boolean): Promise<boolean> {
   const kind = destinationKind();
-  if (kind === 'native') return native<boolean>('backup_dest_exists', { ref }).catch(() => true);
+  if (kind === 'native') return native<boolean>('backup_dest_exists', { ref }).catch(() => unsure);
   if (kind === 'folder') {
     const handle = await storedHandle();
     if (!handle) return false;
-    return handle.getFileHandle(ref).then(() => true, (err) => (err as { name?: string })?.name !== 'NotFoundError');
+    return handle.getFileHandle(ref).then(() => true, (err) => unsure && (err as { name?: string })?.name !== 'NotFoundError');
   }
   return true;
 }

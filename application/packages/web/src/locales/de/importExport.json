@@ -61,7 +61,6 @@
     "import": "Importieren",
     "downloading": "Wird heruntergeladen…",
     "subscribe": "Abonnieren",
-    "subscribeTitle": "Kalender abonnieren",
     "subscribeDesc": "Füge eine Kalenderadresse ein, etwa einen webcal://-Link von Google, iCloud, Proton, Outlook oder Nextcloud. Ihre Termine erscheinen schreibgeschützt in deinem Kalender und werden aktualisiert, solange die App geöffnet ist.",
     "subscribed": "Abonnierte Kalender",
     "updating": "Wird aktualisiert…",
@@ -78,6 +77,7 @@
       "offline": "Du bist offline. Stell eine Verbindung her und versuch es noch einmal.",
       "limit": "Zu viele Downloads in kurzer Zeit. Warte eine Minute und versuch es noch einmal.",
       "failed": "Der Kalender konnte nicht heruntergeladen werden. Prüfe die Adresse und versuch es noch einmal.",
+      "insecure": "Dieser Kalender war über eine sichere Verbindung nicht erreichbar. Prüfe die Adresse oder versuche es später noch einmal.",
       "full": "Du kannst höchstens {{max}} Kalender abonnieren. Entferne zuerst einen."
     }
   },
@@ -88,6 +88,8 @@
     "lastpass": "Wähle in LastPass Advanced options > Export > Export data for use anywhere. Logins behalten ihren 2FA-Schlüssel, sichere Notizen und Karten kommen mit, und Ordner werden zu Tags.",
     "onePassword": "Wähle in der 1Password-App File > Export, dann dein Konto und das 1PUX-Format. Logins behalten ihren 2FA-Schlüssel, zusätzliche Websites und eigene Felder, Karten, Notizen und Identitäten kommen mit, Tags bleiben Tags, und Favoriten und archivierte Einträge behalten ihren Platz. Ein CSV-Export funktioniert auch, nur mit Logins.",
     "dashlane": "Wähle in Dashlane Settings > Export data und das CSV-Format. Logins behalten ihren 2FA-Schlüssel, sichere Notizen und Karten kommen mit, und Kategorien werden zu Tags. Ein .dash-Export ist mit einem Passwort gesperrt und kann nicht gelesen werden.",
+    "msecure": "Wähle in mSecure Settings > Backups > Export records to CSV file. Logins behalten ihren 2FA-Schlüssel, zusätzliche Websites und eigene Felder, Karten und Notizen kommen mit, und Tags bleiben Tags.",
+    "raindrop": "Öffne in Raindrop.io All bookmarks und wähle Export > Get backup, und lade dann die CSV unter Settings > Backups herunter. Collections werden zu Ordnern, Tags bleiben Tags, und jedes Lesezeichen behält seine Notiz, seinen Auszug und seine Hervorhebungen.",
     "enpass": "Wähle in Enpass File > Export und das .json-Format. Logins behalten ihren 2FA-Schlüssel, zusätzliche Websites und eigene Felder, Karten, Notizen und Identitäten kommen mit, Ordner werden zu Tags, und Favoriten und archivierte Einträge behalten ihren Platz. Einträge im Papierkorb bleiben zurück.",
     "nordpass": "Wähle in NordPass Settings > Export items. Logins behalten ihre zusätzlichen Websites und eigenen Felder, Notizen, Karten und Identitäten kommen mit, und Ordner werden zu Tags.",
     "protonPass": "Wähle in Proton Pass Settings > Export und dann ZIP. Logins behalten ihren 2FA-Schlüssel, zusätzliche Websites, eigene Felder und Daten, und Notizen, Karten und Identitäten kommen mit. Ein CSV-Export funktioniert auch, mit weniger Inhalt.",
@@ -109,13 +111,15 @@
     "bear": "Wähle in Bear File > Backup Notes... und lege die .bear2bk-Datei hier ab. Tags und verschachtelte Tags, Pins, das Archiv, der Papierkorb, Hervorhebungen mit ihren Farben, Notiz-Links und Anhänge kommen mit.",
     "joplin": "Die .jex-Datei aus File > Export all > \"JEX - Joplin Export File\". Notizbücher werden zu Ordnern, und Tags, To-dos, Notiz-Links und Anhänge kommen mit.",
     "anytype": "Die Any-Block-v1-JSON-.zip aus den Space-Einstellungen > Export, mit Dateien und archivierten Objekten. Collections werden zu Ordnern, und Tags, Aufgaben, Hinweisboxen, Toggles, Tabellen, Notiz-Links und Dateien kommen mit.",
+    "capacities": "Die .zip aus Capacities: Settings > Full Export > Manual Full Export, mit Medien. Objekttypen werden zu Ordnern, und Tags, Eigenschaften, Daten, Links zwischen Objekten, Tabellen, Bilder und Dateien kommen mit.",
     "siyuan": "Die Data.zip aus dem SiYuan-Menü > Data migration > Data.zip > Export, oder ein als SiYuan .sy.zip exportiertes Notizbuch. Notizbücher und verschachtelte Dokumente werden zu Ordnern, und Tags, Blockreferenzen, Hinweisboxen, Mathematik, Tabellen und Assets kommen mit.",
+    "onenote": "Die .onepkg aus OneNote für Windows: File > Export > Notebook > OneNote Package. Eine Abschnittsdatei (.one) oder ein gezippter Notizbuchordner funktioniert auch. Abschnitte und Abschnittsgruppen werden zu Ordnern, und Unterseiten, To-dos, OneNote-Tags, Tabellen, Seitenlinks, Bilder und angehängte Dateien kommen mit.",
     "upnote": "In UpNote: Settings > Backup > Backup now, dann alles im Backup-Ordner zippen. Behält Notizbücher, Tags, Pins, Notiz-Links, Formatierung und Anhänge. Einzel-Exporte aus den Handy-Apps funktionieren auch - wähle \"Export to HTML\".",
     "markdownFolder": ".md- oder .txt-Dateien einzeln oder als .zip. Ein gezippter Ordner behält seine Unterordner und bringt seine Bilder und Anhänge mit.",
     "markdownApp": "Diese Notizen sind schon Markdown-Dateien in einem Ordner. Zieh den Ordner als .zip hinein, dann kommen seine Unterordner, Bilder und #Tags mit.",
     "browserBookmarks": "Die Lesezeichen-Datei (.html) aus \"Export bookmarks\" in deinem Browser, oder die .zip, die Safari schreibt. Chrome, Firefox, Safari, Edge, Opera, Brave und Vivaldi enthalten alle dieselbe Datei. Ordner und Daten kommen mit.",
     "vcard": "Die .vcf-Datei, die dein Adressbuch exportiert: iPhone und Mac über iCloud oder Kontakte, Android, Google Kontakte. Jede Karte kommt mit, Fotos inklusive, und ein zweiter Import derselben Datei überspringt die Personen, die du schon hast.",
-    "bitwarden": "Unverschlüsselter .json-Export aus Bitwarden (Tools > Export vault > .json). Logins, Karten, SSH-Schlüssel, sichere Notizen und TOTP-Codes kommen alle mit.",
+    "bitwarden": "Unverschlüsselter Tresor-Export aus Bitwarden (Tools > Export vault > .json, oder .zip (with attachments)). Logins, Karten, SSH-Schlüssel, sichere Notizen, TOTP-Codes, Passkeys und Anhänge kommen alle mit.",
     "browserPasswords": "Die Passwort-Datei (.csv) aus Chrome, Edge, Brave, Opera, Vivaldi, Firefox oder Safari, oder die .zip, die Safari schreibt. Jede Zeile wird ein Login. Lösch die Datei, wenn du fertig bist - sie enthält deine Passwörter im Klartext."
   },
   "sourceLabel": {
@@ -178,7 +182,18 @@
     "sourceTagDesc": "Aus: kein Tag für die Quelle. Tags, die schon in den Notizen stehen, kommen so oder so mit.",
     "storageLine": "Dieser Import braucht etwa {{needed}}. Du hast {{available}} frei.",
     "nothingWritten": "Nichts wird gespeichert, bis du auf Importieren drückst.",
-    "whatComesIn": "Was importiert wird"
+    "whatComesIn": "Was importiert wird",
+    "backupSettings": "Dieses Backup bringt auch Einstellungen mit: {{list}}.",
+    "backupSetting": {
+      "calendarFeeds": "abonnierte Kalender",
+      "dashboard": "das Layout der Startseite",
+      "itemStyles": "Farben und Symbole von Ordnern, Tags und Notizen",
+      "customThemes": "eigene Designs",
+      "favoriteTags": "favorisierte Tags",
+      "medications": "Medikamente",
+      "trackers": "Tracker-Einrichtung",
+      "agentFolder": "den Agent-Ordner"
+    }
   },
   "counts": {
     "note_one": "Notiz",
@@ -246,7 +261,9 @@
     "missingFailed_one": "Dieses Gerät konnte {{items}} nicht herunterladen, deshalb fehlt es in deinem Export. Prüfe deine Verbindung und exportiere noch einmal.",
     "missingFailed_other": "Dieses Gerät konnte {{items}} nicht herunterladen, deshalb fehlen sie in deinem Export. Prüfe deine Verbindung und exportiere noch einmal.",
     "missingNotFound_one": "{{items}} ist weder auf diesem Gerät noch auf dem Server, deshalb fehlt es in deinem Export.",
-    "missingNotFound_other": "{{items}} sind weder auf diesem Gerät noch auf dem Server, deshalb fehlen sie in deinem Export."
+    "missingNotFound_other": "{{items}} sind weder auf diesem Gerät noch auf dem Server, deshalb fehlen sie in deinem Export.",
+    "bookmarksSkipped_one": "{{count}} Lesezeichen hat eine Adresse, die nicht mit http oder https beginnt, deshalb fehlt es in deinem Export.",
+    "bookmarksSkipped_other": "{{count}} Lesezeichen haben eine Adresse, die nicht mit http oder https beginnt, deshalb fehlen sie in deinem Export."
   },
   "missing": {
     "pictures_one": "{{count}} Bild",
@@ -337,8 +354,8 @@
     "typeFullHint": "Notizen, Tresor, Bilder, Audio und Dateien, versiegelt mit deinem Phrasenschlüssel. Überall sicher aufzubewahren.",
     "rhythmHeading": "Rhythmus",
     "historyHeading": "Letzte Backups",
-    "runsHintDesktop": "Läuft, solange PrivacyNotes geöffnet oder im Infobereich ist. Ein Backup, das fällig wurde, während die App geschlossen war, läuft eine Minute nach dem Öffnen.",
-    "runsHintWeb": "Läuft, solange PrivacyNotes in diesem Browser geöffnet ist. Ein Backup, das fällig wurde, während es geschlossen war, läuft eine Minute nach dem Öffnen.",
+    "runsHintDesktop": "Läuft, solange PrivacyNotes geöffnet oder im Infobereich ist. Ein Backup, das fällig wurde, während die App geschlossen war, läuft eine Minute nach dem Öffnen, auch offline, sobald dieses Gerät synchronisiert hat.",
+    "runsHintWeb": "Läuft, solange PrivacyNotes in diesem Browser geöffnet ist. Ein Backup, das fällig wurde, während es geschlossen war, läuft eine Minute nach dem Öffnen, auch offline, sobald dieses Gerät synchronisiert hat.",
     "runsHintDownload": "PrivacyNotes kann nur Bescheid geben, dass ein Backup fällig ist, solange es in diesem Browser geöffnet ist. Ein Backup, das fällig wurde, während es geschlossen war, wird eine Minute nach dem Öffnen angeboten.",
     "runsHintPhone": "Ein Telefon kann kein Backup erstellen, während PrivacyNotes geschlossen ist. Es läuft, wenn du die App öffnest und eines fällig ist.",
     "sizeHint": "Etwa {{size}} für {{count}}.",

@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { NotePencil, TextAa } from './icons';
 import { FieldLabel } from './formFields';
-import { NOTES_FIELD_BAR, SourceButtons } from './MarkdownSourceBar';
+import { notesFieldItems, SourceButtons } from './MarkdownSourceBar';
+import { FormatBarContext } from './formatBarContext';
 import { TB_ICON, TipSideContext, ToolbarBtn } from './editorToolbarParts';
 import { FORMAT_BAR_LOOK } from './formatBarItems';
 import { NotesText } from './detailPane';
@@ -19,8 +20,6 @@ import { useIsTouchDevice } from './useIsMobile';
  * bar at the top of the box, the one moment the bar is needed (#765).
  */
 export const NotesDockContext = createContext<HTMLElement | null>(null);
-
-const NOTES_BAR_SIG = NOTES_FIELD_BAR.join();
 
 /**
  * The Notes box of a login, card and SSH key: a plain text field with the
@@ -70,7 +69,9 @@ export function NotesField({ label, value, onChange, placeholder, disabled }: {
   const dock = useContext(NotesDockContext);
   const [focused, setFocused] = useState(false);
   const docked = strip && !!dock && focused && !formatted && !disabled;
-  const { rowRef } = useToolbarFit(true, strip && !disabled && !formatted ? `${NOTES_BAR_SIG}${docked ? ':dock' : ''}` : '');
+  // The person's arrangement (Settings > Toolbar), as every bar reads it.
+  const items = notesFieldItems(useContext(FormatBarContext).layout);
+  const { rowRef } = useToolbarFit(true, strip && !disabled && !formatted ? `${items.join()}${docked ? ':dock' : ''}` : '');
   const MarkdownIcon = FORMAT_BAR_LOOK.markdownView!.Icon;
 
   function toggleFormatted() {
@@ -93,7 +94,7 @@ export function NotesField({ label, value, onChange, placeholder, disabled }: {
     <TipSideContext.Provider value="above">
       <div className={`flex items-center gap-1.5 px-1 py-0.5 ${docked ? '' : 'border-b border-divider'}`}>
         <div ref={strip ? rowRef : undefined} className={`flex-1 min-w-0 flex items-center gap-0.5 ${strip ? 'pn-format-strip' : 'flex-wrap'}`}>
-          {!formatted && <SourceButtons items={NOTES_FIELD_BAR} onAction={format} />}
+          {!formatted && <SourceButtons items={items} onAction={format} />}
         </div>
         {!formatted && <span aria-hidden="true" className="shrink-0 mx-0.5 h-4 w-px bg-pn-muted/35" />}
         <ToolbarBtn

@@ -1,5 +1,6 @@
 /**
- * The copies a sync pull replaced.
+ * The copies a sync pull replaced, and the login as it was before each
+ * applied extension edit (`extensionSync.ts`, through `keepCurrentText`).
  *
  * A pull cannot tell another device's edit from an older ciphertext of the
  * same account replayed onto the row by a session that holds no key: both open under the account key and carry a newer stamp. So
@@ -20,6 +21,7 @@
  */
 import { db, type LocalNote, type ReplacedCopy } from './db';
 import { isDemoMode } from './demo';
+import { createNote } from './notesRepo';
 
 /** How long a copy stays. Spec: docs/contrib/sync-protocol.md (section 3) */
 export const REPLACED_COPY_DAYS = 30;
@@ -61,6 +63,7 @@ function copyOf(old: LocalNote, nowMs: number): ReplacedCopy {
     body: old.body,
     tags: [...old.tags],
     ...(old.trackers ? { trackers: old.trackers } : {}),
+    type: old.type,
   };
 }
 
@@ -91,9 +94,10 @@ export async function keepReplacedCopies(pairs: PullReplacement[], nowMs = Date.
 }
 
 /**
- * Keep the note's text as it is now, before a restore of a copy replaces
- * it, on an account with no server History: the restore is then never the
- * only copy of what it replaces. No second copy of the same text.
+ * Keep the note's text as it is now, before something replaces it: a
+ * restore of a copy on an account with no server History, or an applied
+ * extension edit of a login. The change is then never the only copy of
+ * what it replaces. No second copy of the same text.
  */
 export async function keepCurrentText(note: LocalNote, nowMs = Date.now()): Promise<void> {
   if (isDemoMode()) return;
@@ -113,4 +117,34 @@ export async function listReplacedCopies(noteId: string, nowMs = Date.now()): Pr
   const since = cutoff(nowMs);
   const list = await db.replacedCopies.where('noteId').equals(noteId).toArray();
   return list.filter((c) => c.at >= since).sort((a, b) => b.at.localeCompare(a.at));
+}
+
+/**
+ * The copies within 30 days whose note no longer exists on this device,
+ * newest first: the Trash lists them, because the History window that shows
+ * a copy opens only from its note. A tombstone deletes a note's server
+ * History with it, so after a delete these can be the last text left
+ * (beta #203 item 2).
+ */
+export async function listCopiesOfGoneNotes(nowMs = Date.now()): Promise<ReplacedCopy[]> {
+  if (isDemoMode()) return [];
+  const since = cutoff(nowMs);
+  const recent = await db.replacedCopies.where('at').aboveOrEqual(since).toArray();
+  if (recent.length === 0) return [];
+  const noteIds = [...new Set(recent.map((c) => c.noteId))];
+  const notes = await db.notes.bulkGet(noteIds);
+  const gone = new Set(noteIds.filter((_, i) => !notes[i] || notes[i]!.deleted === 1));
+  return recent.filter((c) => gone.has(c.noteId)).sort((a, b) => b.at.localeCompare(a.at));
+}
+
+/**
+ * Bring a copy of a gone note back as a new note, under a new id (the old
+ * one is a tombstone on the server). The copy stays, so a second restore
+ * still works; it goes after 30 days like every copy. Answers the new note.
+ */
+export async function restoreCopyAsNote(copy: ReplacedCopy): Promise<LocalNote> {
+  const note = await createNote(copy.title, copy.body, copy.tags, false, copy.type ?? 'note', null, { counted: false });
+  if (!copy.trackers) return note;
+  await db.notes.update(note.id, { trackers: copy.trackers });
+  return { ...note, trackers: copy.trackers };
 }

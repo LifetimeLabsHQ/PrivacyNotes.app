@@ -27,7 +27,7 @@ import {
   Kanban,
   FileMd,
   FileText,
-  Files as PhFiles,
+  Paperclip,
   NotePencil,
   PenNib,
   PencilSimple,
@@ -36,6 +36,7 @@ import {
   Scribble,
   ShieldPlus,
   Browsers,
+  Columns,
   SquaresFour,
   Layout as PhLayout,
   ArrowElbowDownRight as PhArrowElbowDownRight,
@@ -138,7 +139,8 @@ export const PILLAR_GLYPHS = {
   notes: NotePencil,
   tasks: CheckFat,
   vault: Key,
-  files: PhFiles,
+  // The paper clip: the same mark a file wears in a mixed list (section 78).
+  files: Paperclip,
   // A nib, not a notebook. Files and Journals both used a rounded rectangle
   // with interior detail, so at rail size the two rows read as the same
   // silhouette and the pair was reported as indistinguishable. A nib shares
@@ -215,6 +217,10 @@ export function iconExternal() {
 }
 export function iconOpenInTab() {
   return <Browsers size={14} />;
+}
+/** "Open side by side": two columns, never the Split view's split square. */
+export function iconSideBySide() {
+  return <Columns size={14} />;
 }
 export function iconHome() {
   return <PILLAR_GLYPHS.dashboard size={14} />;

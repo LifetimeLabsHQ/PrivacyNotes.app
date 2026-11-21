@@ -241,6 +241,8 @@
       "prevYear": "Année précédente",
       "nextYear": "Année suivante"
     },
+    "seeEntries": "Voir les entrées",
+    "showInCalendar": "Afficher dans le Calendrier",
     "trackers": {
       "tapHint": "Un appui ouvre Explorer",
       "stopped": "Arrêté",

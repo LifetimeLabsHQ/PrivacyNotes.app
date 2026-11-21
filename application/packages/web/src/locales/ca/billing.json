@@ -35,6 +35,7 @@
     "title": "Benvingut al club",
     "proLine": "<brand/> Pro, {{price}} $ un sol cop. Teu per sempre.",
     "storageLine": "<brand/> +{{gb}} GB d’emmagatzematge, {{price}} $ l’any.",
+    "storagePayerNote": "El titular del compte pot canviar el paquet més endavant. Aquesta targeta paga la diferència.",
     "benefitDevices": "Dispositius il·limitats",
     "benefitDevicesSub": "Mòbil, tauleta, portàtil, tot sincronitzat",
     "benefitStorage": "500 MB d’emmagatzematge",
@@ -63,7 +64,7 @@
     "openingBody": "Hauria d'aparèixer una finestra de pagament de Paddle. Si no apareix, potser el navegador ha blocat la finestra emergent; torna a carregar aquesta pàgina per provar-ho de nou."
   },
   "cryptoCheckout": {
-    "coins": "Tries Bitcoin, Ethereum, Lightning, USDC o USDT a la pàgina següent, gestionada per BlockBee. No et demana ni nom ni correu. Un pagament amb criptomonedes és públic a la seva cadena de blocs.",
+    "coins": "Tries Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin o TON a la pàgina següent, gestionada per BlockBee. No et demana ni nom ni correu. Un pagament amb criptomonedes és públic a la seva cadena de blocs.",
     "consent": "Activa Pro ara. Entenc que els pagaments amb criptomonedes són definitius i renuncio al dret de desistiment de 14 dies.",
     "consentNeeded": "Marca la casella de dalt per continuar.",
     "loadingTitle": "S'està comprovant la comanda...",

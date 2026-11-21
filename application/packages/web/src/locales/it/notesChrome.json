@@ -6,10 +6,6 @@
     "error": "Non è stato possibile sincronizzare tutto. Controlla la connessione e riprova.",
     "conflict": "Una delle tue note ha un conflitto di sincronizzazione che richiede una tua decisione. Risolvilo nella finestra, poi riprova."
   },
-  "movedHint": {
-    "body": "Questa è la nuova casa dell'app. Aggiorna il segnalibro su use.privacynotes.app e aggiungi di nuovo eventuali scorciatoie alla schermata Home.",
-    "gotIt": "Capito"
-  },
   "moveScreen": {
     "title": "L'app si è trasferita su use.privacynotes.app",
     "bodySignIn": "Accedi lì con la tua frase di recupero o con “{{scanQr}}”. Questo dispositivo sincronizza prima, così tutte le tue note ti aspettano lì, e qui non viene eliminato nulla.",
@@ -32,6 +28,7 @@
       "configured": "Spazio pieno. Alcune note non sono state sincronizzate. Libera spazio o aggiungine altro.",
       "unconfigured": "Spazio pieno. Alcune note non sono state sincronizzate. Libera spazio riducendo le note."
     },
+    "deletedSpace": "Lo spazio dei file eliminati torna disponibile circa un giorno dopo averli eliminati.",
     "manageStorage": "Gestisci lo spazio",
     "viewUsage": "Visualizza l'utilizzo"
   },
@@ -69,7 +66,11 @@
     "neverBackedUp_one": "Solo su questo dispositivo:",
     "neverBackedUp_other": "Solo su questo dispositivo:",
     "moreNotes": "e altre {{count}}",
-    "appLockHint": "Dispositivo condiviso? Attiva il blocco app in Impostazioni > Sicurezza."
+    "appLockHint": "Dispositivo condiviso? Attiva il blocco app in Impostazioni > Sicurezza.",
+    "unopenedWarn_other": "{{count}} note hanno una copia sul server che questo dispositivo non riesce ad aprire. Uscendo elimini le copie presenti qui, che potrebbero essere le uniche valide. Prima inviale di nuovo in Impostazioni > ID & Sync.",
+    "unopenedKept_other": "{{count}} note hanno una copia sul server che questo dispositivo non riesce ad aprire. Le copie presenti qui restano dopo che esci.",
+    "unopenedKept_one": "1 nota ha una copia sul server che questo dispositivo non riesce ad aprire. La copia presente qui resta dopo che esci.",
+    "unopenedWarn_one": "1 nota ha una copia sul server che questo dispositivo non riesce ad aprire. Uscendo elimini la copia presente qui, che potrebbe essere l'unica valida. Prima inviala di nuovo in Impostazioni > ID & Sync."
   },
   "signOutUpload": {
     "uploading": "Caricamento delle tue ultime modifiche…",

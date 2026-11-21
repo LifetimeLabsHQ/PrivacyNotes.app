@@ -1,6 +1,5 @@
 {
   "header": {
-    "betaBadge": "bêta",
     "downloads": "Téléchargements",
     "price": "Prix",
     "priceLine": "Ce que coûtent tes apps, au total",
@@ -290,7 +289,7 @@
   },
   "demoShot": {
     "kicker": "À tester en direct",
-    "caption": "La vraie app avec des notes d'exemple, directement dans ton navigateur. Rien n'est enregistré."
+    "caption": "La vraie app avec des notes d'exemple, directement dans ton navigateur. Ce que tu tapes y reste."
   },
   "badges": {
     "privacyToolsAlt": "PrivacyNotes sur PrivacyTools.io",
@@ -358,7 +357,7 @@
     "freeImport": "Import et export, dont Keep et Obsidian",
     "freeAnon": "Connexion anonyme, sans e-mail",
     "earlyAdopterBadge": "Adoptant précoce",
-    "payMethods": "Paie par carte, ou en Bitcoin, Ethereum, Lightning, USDC ou USDT."
+    "payMethods": "Paie par carte, ou en Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin ou TON."
   },
   "underHood": {
     "heading": "Sous le capot",
@@ -498,7 +497,7 @@
     "noLockIn": "Enfermement propriétaire",
     "noEmail": "E-mail obligatoire",
     "noDarkPatterns": "Dark patterns",
-    "noBackdoor": "Portes dérobées"
+    "noBackdoor": "Portes dérobées cachées"
   },
   "noRecovery": {
     "heading": "Ta phrase est ta clé",
@@ -506,7 +505,7 @@
     "noRecoveryTerm": "Aucune récupération",
     "noRecoveryDesc": "En autoconservation, perds ta phrase et tu perds tes notes",
     "deviceTerm": "Généré sur l'appareil",
-    "deviceDesc": "En autoconservation, ta phrase ne touche jamais nos serveurs",
+    "deviceDesc": "En autoconservation, ta phrase ne touche jamais nos serveurs, sauf si tu ajoutes une passkey de connexion",
     "zkTerm": "Zero-knowledge",
     "zkDesc": "En autoconservation, le serveur ne détient rien qui ouvre tes notes",
     "writeTerm": "Note-la",
@@ -521,7 +520,7 @@
     "heading": "Ton coffre est prêt en moins d'une minute.",
     "importNote": "Tu changes d'app ? Exporte depuis n'importe laquelle de ces apps et importe en quelques minutes :",
     "importDemoTitle": "Essaie d'abord ton propre import dans la démo",
-    "importDemoBody": "Ton fichier est lu dans ton navigateur, rien ne part vers nos serveurs, et fermer l'onglet l'efface."
+    "importDemoBody": "Ton fichier est lu dans ton navigateur et rien de son contenu n'est envoyé. Il reste dans ce navigateur jusqu'à la prochaine ouverture de la démo ici ; efface les données du site pour le retirer plus tôt."
   },
   "about": {
     "tabs": {
@@ -529,7 +528,7 @@
       "hotkeys": "Raccourcis",
       "rating": "Avis"
     },
-    "intro": "<brand/> réunit tes notes, tâches, mots de passe, journal, fichiers, calendrier, contacts et signets au même endroit, avec le suivi de l'humeur et des médicaments. Tout est chiffré sur ton appareil avec une clé issue de ta phrase de récupération, et reste chiffré sur nos serveurs en <nowrap>Suisse</nowrap>. Ça marche hors ligne, et l'app est open source.",
+    "intro": "<brand/> réunit tes notes, tâches, mots de passe, journal, fichiers, calendrier, contacts et signets au même endroit, avec le suivi de l'humeur et des médicaments. Tout est chiffré sur ton appareil avec une clé issue de ta phrase de récupération, et reste chiffré sur nos serveurs en <nowrap>Suisse</nowrap> et dans l'UE. Ça marche hors ligne, et l'app est open source.",
     "versionHeading": "Version",
     "windowVersion": "Version {{version}}",
     "windowHelp": "Centre d'aide",
@@ -549,7 +548,7 @@
     "openSourceLink": "Lire le code source sur GitHub.com",
     "openSourceBody": "L'application et le chiffrement qu'elle contient sont publiés, chacun peut donc vérifier comment tes notes sont chiffrées.",
     "dataStorageHeading": "Stockage des données",
-    "dataStorageBody": "Blobs chiffrés stockés à Zurich, <flag/> Suisse.",
+    "dataStorageBody": "Notes, journaux et tout le reste chiffrés, stockés à Zurich, <flag/> Suisse. Les nouvelles images et les nouveaux fichiers de l'app actuelle sont stockés dans l'UE.",
     "faviconsHeading": "Icônes de sites",
     "faviconsBody1": "Les icônes de sites (favicons) proviennent de DuckDuckGo et de Google, récupérées par notre serveur pour toi. Ton navigateur ne contacte jamais ni l'un ni l'autre, donc ils voient notre serveur demander un domaine et ne te voient jamais.",
     "faviconsBody2": "Les icônes sont mises en cache sur ton appareil pendant 90 jours. Aucune requête n'inclut ton identité, et tu peux désactiver les icônes dans Paramètres > Listes."

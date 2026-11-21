@@ -34,6 +34,9 @@ import { CheckInStreakTile, RhythmHeatmap, WeekTiles, WritingStreakTile, shiftDa
 import type { ListPrefs } from '../listPrefs';
 import { useDashboardEnv } from './env';
 import { useElementHeight } from '../useElementSize';
+import { useTrackerHistory } from '../trackerLastLogged';
+import { counterTotal } from '../customCounter';
+import type { CustomTrackerTemplate } from '../trackerTypes';
 import { ItemList, useItemList } from '../itemList';
 
 const NotePreview = lazy(() => import('./NotePreview'));
@@ -528,6 +531,8 @@ export function TrackerWidget({ trackerId }: { trackerId: string }) {
   const chartHeight = useElementHeight(chartBox);
   const d = month.byId(trackerId);
   if (!d) return null;
+  const counter = env.trackerSettings.customTrackers.find((c) => c.id === trackerId && c.type === 'counter');
+  if (counter) return <CounterWidget template={counter} onOpen={env.openStats} />;
   const series = month.seriesOf(d);
   if (!hasData(series)) return <Empty>{tShell('dashboard.empty.tracker')}</Empty>;
   const { headline, sub } = cardNumbers(d, series, t);
@@ -550,6 +555,24 @@ export function TrackerWidget({ trackerId }: { trackerId: string }) {
           )}
         </span>
       )}
+    </button>
+  );
+}
+
+/** A Counter tracker on Home: its total today against its limit, as the
+ *  pill shows it, not the sum of its days that the other trackers chart.
+ *  Spec: docs/internal/mood-wellness-tracker.md section 16.1 (Counter) */
+function CounterWidget({ template, onOpen }: { template: CustomTrackerTemplate; onOpen: () => void }) {
+  const { t } = useTranslation('trackers');
+  const total = counterTotal(template.id, useTrackerHistory(), toLocalIso(new Date()));
+  const limit = template.limit;
+  return (
+    <button type="button" onClick={onOpen} className="flex h-full w-full min-w-0 flex-col justify-center gap-2 text-start">
+      <span className="flex items-baseline gap-2 min-w-0">
+        <span className="text-display font-semibold tabular-nums truncate">{total}</span>
+        {limit !== undefined && <span className="text-meta text-pn-muted truncate">{t('custom.counterOf', { limit })}</span>}
+      </span>
+      {limit !== undefined && <ProgressBar value={total / limit} label={template.name} tone={total >= limit ? 'warning' : 'info'} />}
     </button>
   );
 }

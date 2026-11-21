@@ -44,19 +44,19 @@ export const TextField = forwardRef<HTMLInputElement, Omit<InputHTMLAttributes<H
         </label>
       )}
       {field}
-      {error ? <p className="mt-1 text-small text-danger">{error}</p> : hint && <p className={`mt-1 ${SETTINGS_HELP}`}>{hint}</p>}
+      {error ? <p role="alert" className="mt-1 text-small text-danger">{error}</p> : hint && <p className={`mt-1 ${SETTINGS_HELP}`}>{hint}</p>}
     </div>
   );
 });
 
 /**
  * @catalog Select
- * use: a choice from a list too long for a segmented control (a range, a time, a unit). Native <select>; `size` as TextField.
+ * use: a choice from a list too long for a segmented control (a range, a time, a unit). Native <select> with our own chevron (`.pn-select` in index.css), so the caret looks the same in every browser; `size` as TextField.
  * never: a <select> with its own classes; a select for two or three options (use Segmented).
  */
 export function Select({ size = 'md', className = '', children, ...rest }: Omit<SelectHTMLAttributes<HTMLSelectElement>, 'size'> & { size?: 'md' | 'sm'; children: ReactNode }) {
   return (
-    <select {...rest} className={`${BOX[size]}${className ? ` ${className}` : ''}`}>
+    <select {...rest} className={`pn-select ${BOX[size]}${className ? ` ${className}` : ''}`}>
       {children}
     </select>
   );

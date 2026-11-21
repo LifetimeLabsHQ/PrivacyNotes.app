@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "h",
+    "minutesSuffix": "min",
+    "hoursMinutes": "{{h}}h {{m}}min",
     "bpm": "bpm",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -142,6 +144,7 @@
     "takenCount_one": "{{count}} tomado",
     "takenCount_other": "{{count}} tomados",
     "namePlaceholder": "Nome da medicação",
+    "nameMissing": "Dê um nome à medicação.",
     "dosagePlaceholder": "Dosagem (ex.: 50mg)",
     "editMedication": "Editar medicação",
     "removeMedication": "Remover medicação",
@@ -250,12 +253,18 @@
     "yes": "Sim",
     "no": "Não",
     "unknownType": "Este rastreador precisa de uma versão mais recente do app.",
+    "counterOf": "de {{limit}}",
+    "counterToday": "usados hoje",
+    "counterReached": "Você atingiu o limite de {{limit}}.",
+    "counterStartAgain": "Recomeçar {{name}} do 0",
+    "counterStartAgainConfirm": "Recomeçar?",
     "typeLabels": {
       "scale10": "Escala (0-10)",
       "scale5": "Escala (0-5)",
       "slider100": "Pontuação (0-100)",
       "number": "Número",
       "pair": "Dois números",
+      "counter": "Contador",
       "yesno": "Sim / Não"
     }
   },
@@ -271,7 +280,7 @@
     "medicationCard": "Cartão de medicação",
     "medicationCardHelp": "\"Você tomou sua medicação?\" neste dispositivo, só em um dia em que uma medicação está prevista.",
     "customHelp": "Rastreadores que você mesmo nomeia: uma escala, um número ou um sim ou não. Até {{max}}.",
-    "customHelpPair": "Rastreadores que você mesmo nomeia: uma escala, um número, dois números ou um sim ou não. Até {{max}}.",
+    "customHelpPair": "Rastreadores que você mesmo nomeia: uma escala, um número, dois números, um contador ou um sim ou não. Até {{max}}.",
     "yourCustomTrackers": "Seus rastreadores personalizados",
     "categoryMoodMind": "Humor e mente",
     "categoryBodyHealth": "Corpo e saúde",
@@ -312,7 +321,10 @@
     "pairFirstPlaceholder": "Sistólica",
     "pairSecondPlaceholder": "Diastólica",
     "pairUnit": "Unidade (opcional)",
-    "pairWaiting": "Salvo quando o primeiro número for preenchido."
+    "pairWaiting": "Salvo quando o primeiro número for preenchido.",
+    "nameMissing": "Dê um nome ao rastreador.",
+    "counterLimit": "Limite (opcional)",
+    "counterHelp": "Soma seus usos ao longo dos dias. Defina um limite, como 30 para uma lâmina de barbear, e recomece quando chegar a ele."
   },
   "factors": {
     "prompt": "O que fez parte do seu dia?",
@@ -402,5 +414,6 @@
   "flow": {
     "finish": "Finalizar",
     "step": "Rastreador {{n}} de {{total}}"
-  }
+  },
+  "showEveryDay": "Mostrar todos os dias com este rastreador"
 }

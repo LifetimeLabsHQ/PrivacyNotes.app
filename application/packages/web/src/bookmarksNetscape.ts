@@ -25,6 +25,10 @@
  *     `keywordTag` says Firefox had that tag too, and then it is written.
  *   - A nameless bookmark is written with its domain as the name, because
  *     an empty <A> is a blank row in every browser's list.
+ *   - Only http and https addresses are written (beta #157 part 3). The
+ *     editor saves nothing else, but a backup restore carries an address as
+ *     the backup wrote it, and the browser that imports this file has no
+ *     scheme check of its own. The rest are counted in `report.skipped`.
  *   - The import's own "Bookmarks" root is NOT re-emitted (decided
  *     2026-08-22): re-importing elsewhere would nest everything one level
  *     deeper on every round trip.
@@ -46,6 +50,9 @@ export interface ExportableBookmark {
   folderId?: string | null;
 }
 
+/** The addresses a browser may be handed. */
+const WEB_ADDRESS = /^https?:\/\//i;
+
 /** Root folder name the importer creates. Mirrors ROOT_FOLDER there. */
 const IMPORT_ROOT = 'Bookmarks';
 
@@ -66,12 +73,20 @@ function attrs(pairs: Array<[string, string]>): string {
  * Build the file. `folders` is the user's whole tree; only the folders
  * that actually hold an exported bookmark are written, so an account with
  * two hundred note folders does not ship two hundred empty bookmark
- * folders to the browser.
+ * folders to the browser. A bookmark whose address is not http or https
+ * is left out and counted in `report.skipped`.
  */
 export function buildBookmarksHtml(
-  bookmarks: ExportableBookmark[],
-  folders: FolderDef[]
+  all: ExportableBookmark[],
+  folders: FolderDef[],
+  report?: { skipped: number },
 ): string {
+  const bookmarks = all.filter((b) => {
+    const { url } = parseLinkBody(b.body);
+    if (!url || WEB_ADDRESS.test(url)) return true;
+    if (report) report.skipped += 1;
+    return false;
+  });
   const byId = new Map(folders.map((f) => [f.id, f]));
   const childrenOf = new Map<string | null, FolderDef[]>();
   for (const f of folders) {
@@ -115,7 +130,7 @@ export function buildBookmarksHtml(
   ];
 
   const writeBookmark = (b: ExportableBookmark, indent: string) => {
-    const { url, keyword = '', keywordTag: alsoTag } = parseLinkBody(b.body);
+    const { url, keyword = '', keywordTag: alsoTag, notes } = parseLinkBody(b.body);
     if (!url) return;
     const name = b.title.trim() || linkDomain(url) || url;
     const keywordTag = alsoTag ? '' : normalizeTag(keyword);
@@ -126,6 +141,8 @@ export function buildBookmarksHtml(
       ['TAGS', b.tags.filter((t) => !keywordTag || t !== keywordTag).join(',')],
     ]);
     out.push(`${indent}<DT><A${a}>${escapeHtml(name)}</A>`);
+    // The notes as the description line browsers and Raindrop write.
+    if (notes) out.push(`${indent}<DD>${escapeHtml(notes)}`);
   };
 
   const writeFolder = (f: FolderDef, depth: number) => {

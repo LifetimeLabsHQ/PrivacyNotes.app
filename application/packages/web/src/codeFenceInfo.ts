@@ -6,7 +6,8 @@
  *
  * `title="..."` is the form Docusaurus, MkDocs Material and Starlight read,
  * and an app that does not know it shows a plain code block with the right
- * language. `fold` saves a titled block closed. Read by the editor
+ * language. `fold` saves a block closed (GitHub #780: with or without a
+ * title). Read by the editor
  * (editorCodeBlock.ts) and the export (markdownRender.ts), so it stays free
  * of TipTap. Spec: docs/internal/design-decisions.md (code blocks can carry a title)
  */
@@ -23,9 +24,9 @@ export function parseFenceInfo(info: string): FenceInfo {
     rest = (rest.slice(0, m.index) + ' ' + rest.slice((m.index ?? 0) + m[0].length)).trim();
   }
   const words = rest ? rest.split(/\s+/) : [];
-  const folded = title !== null && words.includes('fold');
+  const folded = words.includes('fold');
   const first = words[0];
-  const language = first && !(title !== null && first === 'fold') ? first : null;
+  const language = first && first !== 'fold' ? first : null;
   return { language, title, folded };
 }
 
@@ -36,13 +37,13 @@ export function cleanFenceTitle(title: string): string {
 }
 
 /** The info string for a block. An empty title is written (`title=""`), so
- *  a band waiting for its name survives a save; `fold` only with a title,
- *  since the title band is what folds. */
+ *  a band waiting for its name survives a save. `fold` comes last. */
 export function formatFenceInfo(language: string | null, title: string | null, folded: boolean): string {
   const lang = String(language || '').replace(/[`\s]/g, '');
-  if (title === null) return lang;
-  const name = cleanFenceTitle(title);
-  return `${lang}${lang ? ' ' : ''}title="${name}"${folded ? ' fold' : ''}`;
+  const parts = lang ? [lang] : [];
+  if (title !== null) parts.push(`title="${cleanFenceTitle(title)}"`);
+  if (folded) parts.push('fold');
+  return parts.join(' ');
 }
 
 /**

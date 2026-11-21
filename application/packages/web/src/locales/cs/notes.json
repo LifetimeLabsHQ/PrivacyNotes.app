@@ -29,9 +29,24 @@
   "tagChip": {
     "clear": "Zrušit filtr značky: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "Zrušit filtr sledované hodnoty: {{tracker}}",
+    "anyTag": "Libovolná značka",
+    "tagLabel": "Značka pro {{tracker}}",
+    "answerLabel": "Odpověď pro {{tracker}}",
+    "anyAnswer": "Libovolná odpověď"
+  },
+  "trackerFocus": {
+    "every_other": "zhruba každých {{count}} dní",
+    "last": "zapsáno {{when}}",
+    "locked_other": "{{count}} záznamů chráněných PINem se nezapočítává",
+    "locked_one": "{{count}} záznam chráněný PINem se nezapočítává",
+    "locked_few": "{{count}} záznamy chráněné PINem se nezapočítávají",
+    "every_one": "zhruba každý den",
+    "every_few": "zhruba každé {{count}} dny"
+  },
   "vaultNew": {
     "ariaLabel": "Nová položka trezoru",
-    "card": "Kreditní karta",
     "sshKey": "SSH klíč",
     "generator": "Heslo"
   },
@@ -50,6 +65,7 @@
   "vaultFilter": {
     "all": "Vše",
     "logins": "Přihlašovací údaje",
+    "passkeys": "Přístupové klíče",
     "cards": "Karty",
     "keys": "Klíče"
   },
@@ -62,7 +78,8 @@
   "trash": {
     "empty": "Vysypat",
     "emptyHover": "Smazat všechny poznámky v koši",
-    "autoDelete": "Automaticky mazat po 30 dnech"
+    "autoDelete": "Automaticky mazat po 30 dnech",
+    "replacedTitle": "Kopie smazaných poznámek"
   },
   "search": {
     "sortOptions": "Možnosti řazení a zobrazení",
@@ -138,6 +155,7 @@
     "imageUploadFailed": "Nahrání obrázku se nezdařilo: {{error}}",
     "imageError": "Chyba obrázku: {{error}}",
     "uploadFailedFor": "Nahrání souboru „{{filename}}“ se nezdařilo: {{error}}",
+    "uploadsHeld": "Dnešní limit pro nahrávání je vyčerpán. Tvoje obrázky a soubory jsou v tomto zařízení v bezpečí a nahrají se po {{time}}.",
     "importedSyncing_one": "Importována {{count}} poznámka. Probíhá synchronizace…",
     "importedSyncing_other": "Importováno {{count}} poznámek. Probíhá synchronizace…",
     "addedTag_one": "Přidáno #{{tag}} k {{count}} položce",
@@ -154,6 +172,7 @@
   },
   "loadError": {
     "message": "Nepodařilo se načíst tvoje poznámky. Připojení k lokální databázi bylo přerušeno. Může se to stát, když aplikace nějakou dobu běžela na pozadí.",
+    "storageOff": "Nepodařilo se načíst tvoje poznámky. Toto zařízení vypnulo úložiště, ve kterém je PrivacyNotes uchovává, a to dělá Režim blokování. Chceš-li to opravit, otevři Nastavení, pak Soukromí a zabezpečení, pak Režim blokování, pak Přizpůsobení webových stránek a vypni PrivacyNotes. V Safari vypni Režim blokování pro tento web v Nastavení webové stránky.",
     "reload": "Načíst znovu"
   },
   "banner": {
@@ -206,6 +225,7 @@
   "editor": {
     "backToList": "Zpět na seznam poznámek",
     "backToGrid": "Zpět na mřížku",
+    "closeSide": "Zavřít stranu",
     "titlePlaceholder": "Bez názvu (klikni a uprav, nebo nech vygenerovat)",
     "titlePlaceholderLogin": "např. GitHub",
     "titlePlaceholderCard": "např. Visa končící 4242",
@@ -214,10 +234,22 @@
     "lockNow": "Zamknout hned",
     "lockNowHint": "Skrýt obsah hned",
     "turnOffHint": "Znovu povolit úpravy",
+    "turnOffForNowHint": "Upravovat tuto poznámku, dokud ji neopustíš",
     "unarchiveHint": "Znovu zobrazit ve tvých seznamech",
     "showFormatted": "Zobrazit formátovaně",
+    "splitView": "Rozdělené zobrazení",
+    "showSplitView": "Zobrazit rozdělené zobrazení",
+    "hideSplitView": "Skrýt rozdělené zobrazení",
+    "splitViewNeedsWidth": "Pro rozdělené zobrazení rozšiř okno",
+    "swapSides": "Prohodit strany",
+    "formattedOnly": "{{name}} funguje ve formátovaném zobrazení",
+    "formattedOnlyHint": "Formátované zobrazení",
     "invisiblesShow": "Zobrazit netisknutelné znaky",
     "invisiblesHide": "Skrýt netisknutelné znaky",
+    "lineNumbersShow": "Zobrazit čísla řádků",
+    "lineNumbersHide": "Skrýt čísla řádků",
+    "footerPin": "Připnout statistiky",
+    "footerUnpin": "Odepnout statistiky",
     "undo": "Vrátit zpět",
     "redo": "Znovu",
     "hide": "Skrýt",
@@ -292,6 +324,7 @@
     "accountLabel": "ID a synchronizace",
     "appearanceLabel": "Vzhled",
     "editorLabel": "Editor",
+    "pluginsLabel": "Pluginy",
     "formatBarLabel": "Panel nástrojů",
     "listsLabel": "Seznamy",
     "trackersLabel": "Sledované hodnoty",
@@ -314,6 +347,11 @@
     "body_one": "Archivovat <highlight>{{count}} položku</highlight>? Zmizí z tvých seznamů a počká v zobrazení Archiv. „Zrušit archivaci“ ji vrátí zpět.",
     "body_few": "Archivovat <highlight>{{count}} položky</highlight>? Zmizí z tvých seznamů a počkají v zobrazení Archiv. „Zrušit archivaci“ je vrátí zpět.",
     "body_other": "Archivovat <highlight>{{count}} položek</highlight>? Zmizí z tvých seznamů a počkají v zobrazení Archiv. „Zrušit archivaci“ je vrátí zpět."
+  },
+  "duplicateConfirm": {
+    "body_one": "Duplikovat <highlight>{{count}} položku</highlight>? Dostane vlastní kopii.",
+    "body_few": "Duplikovat <highlight>{{count}} položky</highlight>? Každá dostane vlastní kopii.",
+    "body_other": "Duplikovat <highlight>{{count}} položek</highlight>? Každá dostane vlastní kopii."
   },
   "bulkTrash": {
     "body_one": "Smazat <highlight>{{count}} položku</highlight>? Přesuň ji do koše, odkud ji můžeš později obnovit, nebo ji smaž navždy.",
@@ -374,6 +412,7 @@
     "title": "Propojení",
     "hide": "Skrýt propojení",
     "linkedFrom": "Odkazují sem",
+    "usedIn": "Použito v",
     "linksTo": "Odkazuje na",
     "missing": "Zatím nevytvořeno",
     "protectedHidden_one": "{{count}} položka chráněná PINem se nezobrazuje",
@@ -385,9 +424,10 @@
     "relatedLinkedFrom": "Na obě odkazuje {{title}}",
     "relatedTag": "Obě mají značku {{tag}}",
     "relatedMeaning": "Stejný význam",
+    "relatedMention": "Zmiňuje {{name}}",
     "meaningDoor": "Chytrá propojení: najdi poznámky se stejným významem pomocí offline AI",
     "meaningDoorNo": "Už nezobrazovat",
-    "meaningDoorHidden": "Skryto ve všech poznámkách. Chytrá propojení zůstávají v Nastavení > Editor > Chování.",
+    "meaningDoorHidden": "Skryto ve všech poznámkách. Chytrá propojení zůstávají v Nastavení > Pluginy.",
     "hideSuggestions": "Skrýt navrhovaná propojení",
     "notRelated": "Nesouvisí",
     "notRelatedDone": "Už se nenavrhuje",
@@ -460,5 +500,32 @@
     "autoJournal": "Přidat moji polohu ke každému novému záznamu v deníku",
     "autoDenied": "Poloha je pro PrivacyNotes vypnutá. Nejdřív ji zapni v nastavení telefonu.",
     "autoOff": "Polohové služby jsou na tomto telefonu vypnuté. Nejdřív je zapni."
+  },
+  "vaultPasskey": {
+    "forSite": "Přístupový klíč pro {{rpId}}",
+    "hasPasskey": "Má přístupový klíč",
+    "removeTitle": "Odebrat přístupový klíč pro {{rpId}}?",
+    "removeBody": "Už se s ním z PrivacyNotes na {{rpId}} nepřihlásíš.",
+    "savedByExtension": "Přístupové klíče ukládá rozšíření prohlížeče PrivacyNotes, když je web nabídne.",
+    "removeBrowserWaiting": "Některé položky, které tento prohlížeč poslal, ještě nejsou v tvém Trezoru. Když ho teď odebereš, ztratí se.",
+    "removeBrowserAnyway": "Přesto odebrat"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "Přeložit",
+    "from": "Z jazyka",
+    "to": "Do jazyka",
+    "saveAsNote": "Uložit jako novou poznámku",
+    "needPair": "Stáhnout: {{language}} · {{size}}",
+    "noModel": "Tento jazyk zatím nejde přeložit.",
+    "nothing": "Tato poznámka neobsahuje žádná slova k překladu.",
+    "turnOn": "Zapnout: {{language}}",
+    "failed": "Tuto poznámku se nepodařilo přeložit. Zkus to znovu.",
+    "untranslated_one": "{{count}} řádek se nepodařilo přeložit a zůstává beze změny.",
+    "untranslated_few": "{{count}} řádky se nepodařilo přeložit a zůstávají beze změny.",
+    "untranslated_other": "{{count}} řádků se nepodařilo přeložit a zůstávají beze změny."
+  },
+  "tags": {
+    "suggestMove": "Přesunout do složky {{folder}}"
   }
 }

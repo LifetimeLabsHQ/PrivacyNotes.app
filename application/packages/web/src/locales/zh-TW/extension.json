@@ -47,9 +47,10 @@
     "title": "保護你的登入資訊",
     "body": "為這個瀏覽器設定 PIN 碼或通行碼。在這裡解鎖你的登入資訊時需要它。它和應用程式的 PIN 碼或通行碼是分開的。",
     "biometric": "同時使用生物辨識解鎖",
-    "biometricHelp": "Touch ID 或 Windows Hello，再加上 PIN 碼或通行碼，後者也一律可以使用。",
+    "biometricHelp": "透過這個瀏覽器的密碼金鑰使用 Touch ID 或 Windows Hello。PIN 碼或通行碼也一律可以使用。",
     "repeat": "再輸入一次",
-    "mismatch": "兩次輸入不一致。請再試一次。"
+    "mismatch": "兩次輸入不一致。請再試一次。",
+    "commonPin": "這個 PIN 碼太容易被猜到。請換一個。"
   },
   "clip": {
     "selection": "選取內容",
@@ -81,7 +82,7 @@
     "unlockPin": "輸入你的 PIN 碼",
     "unlockPasscode": "輸入你的通行碼",
     "useBiometric": "使用生物辨識解鎖",
-    "wrong_other": "錯誤。再錯 {{count}} 次，這個瀏覽器就會中斷連結。",
+    "wrong_other": "錯誤。本月再錯 {{count}} 次，這個瀏覽器就會中斷連結。",
     "forSite": "{{site}} 的項目",
     "none": "這個網站沒有登入資訊。",
     "off": "這個瀏覽器已關閉登入資訊功能。連結時請開啟「保險庫」。",
@@ -96,12 +97,15 @@
     "search": "搜尋所有登入資訊",
     "noMatch": "沒有符合的登入資訊。",
     "openSite": "開啟網站",
-    "duplicate": "你已經有這個網站、這個使用者名稱的登入資訊。"
+    "duplicate": "你已經有這個網站、這個使用者名稱的登入資訊。",
+    "editTitle": "編輯登入資訊",
+    "saved": "變更已儲存。"
   },
   "account": {
     "confirmDisconnect": "要中斷連結嗎？",
     "revoked": "這個瀏覽器已不再連結",
-    "revokedBody": "請用應用程式提供的新代碼重新連結。"
+    "revokedBody": "請用應用程式提供的新代碼重新連結。",
+    "pendingPasskey": "這個瀏覽器儲存的一個密碼金鑰還不在你的保險庫中。請先開啟 PrivacyNotes 讓它同步，否則這個密碼金鑰會遺失。"
   },
   "badge": {
     "problem": "有事情需要你處理"
@@ -144,7 +148,8 @@
     "unlockToCopy": "解鎖後即可複製",
     "omniboxDefault": "在你的 PrivacyNotes 保險庫中搜尋 %s",
     "omniboxUnlock": "解鎖 PrivacyNotes 即可搜尋",
-    "moreOptions": "更多選項"
+    "moreOptions": "更多選項",
+    "editNotSaved": "你對 {{name}} 的變更沒有存入保險庫，因此這筆登入資訊仍保留舊的值。請再編輯一次以儲存變更。"
   },
   "shortcuts": {
     "notSet": "未設定",
@@ -191,5 +196,19 @@
     "biometricPin": "輸入你的 PIN 碼以進行設定。",
     "biometricPasscode": "輸入你的通行碼以進行設定。",
     "biometricOff": "生物辨識解鎖已關閉"
+  },
+  "passkey": {
+    "saveTitle": "要為 {{site}} 儲存密碼金鑰嗎？",
+    "useTitle": "登入 {{site}}",
+    "saveTo": "儲存至",
+    "save": "儲存在 PrivacyNotes",
+    "other": "使用其他密碼金鑰應用程式",
+    "already": "你在 PrivacyNotes 中已經有 {{site}} 的密碼金鑰。",
+    "saved": "密碼金鑰已儲存。",
+    "notSaved": "無法儲存這個密碼金鑰。改由你瀏覽器本身的密碼金鑰應用程式接手。",
+    "maybeSaved": "密碼金鑰可能已經儲存。請檢查你的保險庫。",
+    "unlockFirst": "解鎖後即可使用你的密碼金鑰。",
+    "offer": "提供密碼金鑰",
+    "offerHelp": "在網站上儲存並使用密碼金鑰。"
   }
 }

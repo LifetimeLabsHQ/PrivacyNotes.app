@@ -47,9 +47,10 @@
     "title": "Proteggi i tuoi accessi",
     "body": "Scegli un PIN o un codice di sblocco per questo browser. Ti serve per sbloccare qui i tuoi accessi. È diverso da quello dell'app.",
     "biometric": "Usa anche lo sblocco biometrico",
-    "biometricHelp": "Touch ID o Windows Hello, in aggiunta al PIN o al codice di sblocco, che funziona sempre anch'esso.",
+    "biometricHelp": "Touch ID o Windows Hello, tramite una passkey per questo browser. Anche il PIN o il codice di sblocco funziona sempre.",
     "repeat": "Inseriscilo di nuovo",
-    "mismatch": "I due non coincidono. Riprova."
+    "mismatch": "I due non coincidono. Riprova.",
+    "commonPin": "Questo PIN è troppo facile da indovinare. Scegline un altro."
   },
   "clip": {
     "selection": "Selezione",
@@ -83,7 +84,7 @@
     "unlockPin": "Inserisci il tuo PIN",
     "unlockPasscode": "Inserisci il tuo codice di sblocco",
     "useBiometric": "Usa lo sblocco biometrico",
-    "wrong_other": "Sbagliato. Restano {{count}} tentativi prima che questo browser venga scollegato.",
+    "wrong_other": "Sbagliato. Restano {{count}} tentativi questo mese prima che questo browser venga scollegato.",
     "forSite": "Per {{site}}",
     "none": "Nessun accesso per questo sito.",
     "off": "Gli accessi sono disattivati per questo browser. Attiva Cassaforte quando lo colleghi.",
@@ -99,12 +100,15 @@
     "noMatch": "Nessun accesso corrisponde.",
     "openSite": "Apri il sito",
     "duplicate": "Hai già un accesso per questo sito con questo nome utente.",
-    "wrong_one": "Sbagliato. Resta {{count}} tentativo prima che questo browser venga scollegato."
+    "editTitle": "Modifica accesso",
+    "saved": "Modifiche salvate.",
+    "wrong_one": "Sbagliato. Resta {{count}} tentativo questo mese prima che questo browser venga scollegato."
   },
   "account": {
     "confirmDisconnect": "Scollegare?",
     "revoked": "Questo browser non è più collegato",
-    "revokedBody": "Collegalo di nuovo con un nuovo codice dall'app."
+    "revokedBody": "Collegalo di nuovo con un nuovo codice dall'app.",
+    "pendingPasskey": "Una passkey salvata in questo browser non è ancora nella tua Cassaforte. Apri PrivacyNotes e lascia che si sincronizzi prima, altrimenti la passkey va persa."
   },
   "badge": {
     "problem": "Qualcosa richiede la tua attenzione"
@@ -147,7 +151,8 @@
     "unlockToCopy": "Sblocca per copiare",
     "omniboxDefault": "Cerca %s nella tua cassaforte PrivacyNotes",
     "omniboxUnlock": "Sblocca PrivacyNotes per cercare",
-    "moreOptions": "Altre opzioni"
+    "moreOptions": "Altre opzioni",
+    "editNotSaved": "La tua modifica a {{name}} non è mai arrivata nella tua Cassaforte, quindi l'accesso mantiene i valori precedenti. Modificalo di nuovo per salvare la modifica."
   },
   "shortcuts": {
     "notSet": "Non impostata",
@@ -194,5 +199,19 @@
     "biometricPin": "Inserisci il tuo PIN per configurarlo.",
     "biometricPasscode": "Inserisci il tuo codice di sblocco per configurarlo.",
     "biometricOff": "Lo sblocco biometrico è disattivato"
+  },
+  "passkey": {
+    "saveTitle": "Salvare una passkey per {{site}}?",
+    "useTitle": "Accedi a {{site}}",
+    "saveTo": "Salva in",
+    "save": "Salva in PrivacyNotes",
+    "other": "Usa un'altra app delle passkey",
+    "already": "Hai già una passkey per {{site}} in PrivacyNotes.",
+    "saved": "Passkey salvata.",
+    "notSaved": "Non è stato possibile salvare la passkey. Subentra l'app delle passkey del tuo browser.",
+    "maybeSaved": "La passkey potrebbe essere stata salvata. Controlla la tua Cassaforte.",
+    "unlockFirst": "Sblocca per usare le tue passkey.",
+    "offer": "Offri le passkey",
+    "offerHelp": "Salva e usa le passkey sui siti web."
   }
 }

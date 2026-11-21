@@ -183,7 +183,7 @@ function pairDescriptors(t: CustomTrackerTemplate): TrackerDescriptor[] {
     ...(t.pairLabels?.[i]?.trim()
       ? { part: t.pairLabels[i]!.trim() }
       : { partKey: i === 0 ? 'trackers:config.pairFirst' : 'trackers:config.pairSecond' }),
-    color: customTrackerColor(t), stoppedAt: t.stoppedAt, deletedAt: t.deletedAt,
+    color: customTrackerColor(t), icon: t.icon, stoppedAt: t.stoppedAt, deletedAt: t.deletedAt,
     kind: 'measure', aggregate: 'avg',
     read: (d: JournalTrackerData) => {
       const e = d.customTrackers?.find((c) => c.trackerId === t.id);
@@ -194,7 +194,7 @@ function pairDescriptors(t: CustomTrackerTemplate): TrackerDescriptor[] {
 
 function customDescriptor(t: CustomTrackerTemplate): TrackerDescriptor {
   const base = {
-    id: t.id, source: 'custom' as const, name: t.name, color: customTrackerColor(t),
+    id: t.id, source: 'custom' as const, name: t.name, color: customTrackerColor(t), icon: t.icon,
     stoppedAt: t.stoppedAt, deletedAt: t.deletedAt,
   };
   if (t.type === 'yesno') {

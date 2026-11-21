@@ -27,9 +27,20 @@
   "tagChip": {
     "clear": "ล้างตัวกรองแท็ก: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "ล้างตัวกรองตัวติดตาม: {{tracker}}",
+    "anyTag": "แท็กใดก็ได้",
+    "tagLabel": "แท็กของ {{tracker}}",
+    "answerLabel": "คำตอบของ {{tracker}}",
+    "anyAnswer": "คำตอบใดก็ได้"
+  },
+  "trackerFocus": {
+    "every_other": "ประมาณทุก {{count}} วัน",
+    "last": "บันทึกล่าสุด {{when}}",
+    "locked_other": "ไม่รวม {{count}} รายการที่ล็อกด้วย PIN"
+  },
   "vaultNew": {
     "ariaLabel": "รายการใหม่ในตู้นิรภัย",
-    "card": "บัตรเครดิต",
     "sshKey": "คีย์ SSH",
     "generator": "รหัสผ่าน"
   },
@@ -48,7 +59,8 @@
   "vaultFilter": {
     "all": "ทั้งหมด",
     "logins": "ล็อกอิน",
-    "cards": "บัตรเครดิต",
+    "passkeys": "พาสคีย์",
+    "cards": "บัตร",
     "keys": "คีย์"
   },
   "journal": {
@@ -60,7 +72,8 @@
   "trash": {
     "empty": "ล้าง",
     "emptyHover": "ลบโน้ตทั้งหมดในถังขยะ",
-    "autoDelete": "ลบอัตโนมัติหลัง 30 วัน"
+    "autoDelete": "ลบอัตโนมัติหลัง 30 วัน",
+    "replacedTitle": "สำเนาของโน้ตที่ลบ"
   },
   "search": {
     "sortOptions": "ตัวเลือกการเรียงและมุมมอง",
@@ -112,6 +125,7 @@
     "imageUploadFailed": "อัปโหลดรูปภาพไม่สำเร็จ: {{error}}",
     "imageError": "ข้อผิดพลาดของรูปภาพ: {{error}}",
     "uploadFailedFor": "อัปโหลด “{{filename}}” ไม่สำเร็จ: {{error}}",
+    "uploadsHeld": "คุณใช้ขีดจำกัดการอัปโหลดของวันนี้ครบแล้ว รูปภาพและไฟล์ของคุณปลอดภัยอยู่บนอุปกรณ์นี้ และจะอัปโหลดหลัง {{time}}",
     "importedSyncing_other": "นำเข้าโน้ต {{count}} รายการแล้ว กำลังซิงค์…",
     "addedTag_other": "เพิ่ม #{{tag}} ให้ {{count}} รายการแล้ว",
     "restoreSummary": "กู้คืนแล้ว เพิ่ม {{added}} อัปเดต {{updated}} เป็นปัจจุบันอยู่แล้ว {{unchanged}}"
@@ -122,6 +136,7 @@
   },
   "loadError": {
     "message": "โหลดโน้ตไม่สำเร็จ การเชื่อมต่อฐานข้อมูลในเครื่องถูกขัดจังหวะ อาจเกิดขึ้นหลังจากแอปทำงานเบื้องหลังเป็นเวลานาน",
+    "storageOff": "โหลดโน้ตไม่สำเร็จ อุปกรณ์นี้ปิดที่เก็บข้อมูลที่ PrivacyNotes ใช้เก็บโน้ตของคุณ ซึ่งเป็นสิ่งที่โหมดล็อคดาวน์ทำ วิธีแก้คือเปิด การตั้งค่า แล้วไปที่ ความเป็นส่วนตัวและความปลอดภัย จากนั้น โหมดล็อคดาวน์ จากนั้น กำหนดเว็บไซต์เอง แล้วปิดใช้ PrivacyNotes ส่วนใน Safari ให้ปิดใช้โหมดล็อคดาวน์สำหรับเว็บไซต์นี้ใน การตั้งค่าเว็บไซต์",
     "reload": "โหลดใหม่"
   },
   "banner": {
@@ -174,6 +189,7 @@
   "editor": {
     "backToList": "กลับไปที่รายการโน้ต",
     "backToGrid": "กลับไปที่ตาราง",
+    "closeSide": "ปิดข้างนี้",
     "titlePlaceholder": "ไม่มีชื่อ (คลิกเพื่อแก้ไข หรือปล่อยให้สร้างอัตโนมัติ)",
     "titlePlaceholderLogin": "เช่น GitHub",
     "titlePlaceholderCard": "เช่น Visa ลงท้าย 4242",
@@ -182,10 +198,22 @@
     "lockNow": "ล็อกตอนนี้",
     "lockNowHint": "ซ่อนเนื้อหาตอนนี้",
     "turnOffHint": "อนุญาตให้แก้ไขได้อีกครั้ง",
+    "turnOffForNowHint": "แก้ไขโน้ตนี้ได้จนกว่าคุณจะออกจากโน้ต",
     "unarchiveHint": "แสดงในรายการของคุณอีกครั้ง",
     "showFormatted": "แสดงแบบจัดรูปแบบ",
+    "splitView": "มุมมองแบบแยก",
+    "showSplitView": "แสดงมุมมองแบบแยก",
+    "hideSplitView": "ซ่อนมุมมองแบบแยก",
+    "splitViewNeedsWidth": "ขยายหน้าต่างให้กว้างขึ้นเพื่อใช้มุมมองแบบแยก",
+    "swapSides": "สลับข้าง",
+    "formattedOnly": "{{name}} ใช้ได้ในมุมมองแบบจัดรูปแบบ",
+    "formattedOnlyHint": "มุมมองแบบจัดรูปแบบ",
     "invisiblesShow": "แสดงอักขระที่มองไม่เห็น",
     "invisiblesHide": "ซ่อนอักขระที่มองไม่เห็น",
+    "lineNumbersShow": "แสดงเลขบรรทัด",
+    "lineNumbersHide": "ซ่อนเลขบรรทัด",
+    "footerPin": "ปักหมุดสถิติ",
+    "footerUnpin": "เลิกปักหมุดสถิติ",
     "undo": "เลิกทำ",
     "redo": "ทำซ้ำ",
     "hide": "ซ่อน",
@@ -258,6 +286,7 @@
     "accountLabel": "ID และการซิงค์",
     "appearanceLabel": "รูปลักษณ์",
     "editorLabel": "ตัวแก้ไข",
+    "pluginsLabel": "ปลั๊กอิน",
     "formatBarLabel": "แถบเครื่องมือ",
     "listsLabel": "รายการ",
     "trackersLabel": "ตัวติดตาม",
@@ -278,6 +307,9 @@
   },
   "archiveConfirm": {
     "body_other": "เก็บถาวร <highlight>{{count}} รายการ</highlight> หรือไม่? รายการจะออกจากรายการต่าง ๆ ของคุณและไปรออยู่ในมุมมองเก็บถาวร เลิกเก็บถาวรจะนำกลับมา"
+  },
+  "duplicateConfirm": {
+    "body_other": "ทำสำเนา <highlight>{{count}} รายการ</highlight> หรือไม่? แต่ละรายการจะได้สำเนาของตัวเอง"
   },
   "bulkTrash": {
     "body_other": "ลบ <highlight>{{count}} รายการ</highlight> หรือไม่? ย้ายไปที่ถังขยะเพื่อกู้คืนภายหลัง หรือลบถาวร",
@@ -317,6 +349,7 @@
     "title": "การเชื่อมโยง",
     "hide": "ซ่อนการเชื่อมโยง",
     "linkedFrom": "ลิงก์มาจาก",
+    "usedIn": "ใช้ใน",
     "linksTo": "ลิงก์ไปยัง",
     "missing": "ยังไม่ได้สร้าง",
     "protectedHidden_other": "ไม่แสดงรายการที่ป้องกันด้วย PIN {{count}} รายการ",
@@ -326,9 +359,10 @@
     "relatedLinkedFrom": "ทั้งสองลิงก์มาจาก {{title}}",
     "relatedTag": "ทั้งสองมีแท็ก {{tag}}",
     "relatedMeaning": "ความหมายเดียวกัน",
+    "relatedMention": "กล่าวถึง {{name}}",
     "meaningDoor": "การเชื่อมโยงอัจฉริยะ: ค้นหาโน้ตที่มีความหมายเดียวกันด้วย AI ออฟไลน์",
     "meaningDoorNo": "ไม่ต้องแสดงอีก",
-    "meaningDoorHidden": "ซ่อนในโน้ตทั้งหมดแล้ว การเชื่อมโยงอัจฉริยะยังอยู่ใน การตั้งค่า > ตัวแก้ไข > การทำงาน",
+    "meaningDoorHidden": "ซ่อนในโน้ตทั้งหมดแล้ว การเชื่อมโยงอัจฉริยะยังอยู่ใน การตั้งค่า > ปลั๊กอิน",
     "hideSuggestions": "ซ่อนการเชื่อมโยงที่แนะนำ",
     "notRelated": "ไม่เกี่ยวข้อง",
     "notRelatedDone": "จะไม่แนะนำอีกแล้ว",
@@ -401,5 +435,30 @@
     "autoJournal": "เพิ่มตำแหน่งของฉันในบันทึกประจำวันใหม่ทุกรายการ",
     "autoDenied": "ตำแหน่งถูกปิดสำหรับ PrivacyNotes เปิดในการตั้งค่าของโทรศัพท์ก่อน",
     "autoOff": "บริการหาตำแหน่งปิดอยู่บนโทรศัพท์เครื่องนี้ เปิดก่อน"
+  },
+  "vaultPasskey": {
+    "forSite": "พาสคีย์สำหรับ {{rpId}}",
+    "hasPasskey": "มีพาสคีย์",
+    "removeTitle": "นำพาสคีย์สำหรับ {{rpId}} ออกหรือไม่?",
+    "removeBody": "คุณจะลงชื่อเข้าใช้ {{rpId}} ด้วยพาสคีย์นี้จาก PrivacyNotes ไม่ได้อีก",
+    "savedByExtension": "ส่วนขยายเบราว์เซอร์ PrivacyNotes จะบันทึกพาสคีย์เมื่อเว็บไซต์เสนอให้",
+    "removeBrowserWaiting": "บางรายการที่เบราว์เซอร์นี้ส่งมายังไม่อยู่ในตู้นิรภัยของคุณ หากนำเบราว์เซอร์ออกตอนนี้ รายการเหล่านั้นจะหายไป",
+    "removeBrowserAnyway": "นำออกต่อไป"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "แปล",
+    "from": "จาก",
+    "to": "เป็น",
+    "saveAsNote": "บันทึกเป็นโน้ตใหม่",
+    "needPair": "ดาวน์โหลด {{language}} · {{size}}",
+    "noModel": "ยังแปลภาษานี้ไม่ได้",
+    "nothing": "โน้ตนี้ไม่มีคำให้แปล",
+    "turnOn": "เปิดใช้ {{language}}",
+    "failed": "แปลโน้ตนี้ไม่ได้ ลองอีกครั้ง",
+    "untranslated_other": "แปลไม่ได้ {{count}} บรรทัด และคงไว้ตามเดิม"
+  },
+  "tags": {
+    "suggestMove": "ย้ายไปที่ {{folder}}"
   }
 }

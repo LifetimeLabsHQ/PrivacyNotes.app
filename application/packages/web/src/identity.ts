@@ -311,17 +311,19 @@ export async function bindSessionEpoch(
   expectedEpoch: number,
 ): Promise<number> {
   const headers = { Authorization: `Bearer ${session.accessToken}` };
-  const first = await supabase.functions.invoke('link-pubkey', { body: { op: 'bind-nonce' }, headers });
+  // skipBound: a session this account already bound at its current epoch (a
+  // reload signs in again on the same session) answers `bound` and no nonce.
+  const first = await supabase.functions.invoke('link-pubkey', { body: { op: 'bind-nonce', skipBound: true }, headers });
   if (first.error) {
     const code = await refusalCode(first.error);
     throw code ? new BindRefusedError(code) : new Error('bind-session failed: no nonce');
   }
-  const issued = first.data as { epoch?: unknown; nonceId?: unknown } | null;
+  const issued = first.data as { epoch?: unknown; nonceId?: unknown; bound?: unknown } | null;
   if (typeof issued?.epoch !== 'number') throw new Error('bind-session failed: no nonce');
   // The account is at another epoch than this device knows: a change it has
   // not seen, or a record that no longer holds. Never go on unbound.
   if (issued.epoch !== expectedEpoch) throw new BindRefusedError('epoch_mismatch');
-  if (expectedEpoch === 1) return 1;
+  if (expectedEpoch === 1 || issued.bound === true) return expectedEpoch;
   if (typeof issued.nonceId !== 'string') throw new Error('bind-session failed: no nonce');
   const signature = bytesToHex(await signBindSessionChallenge(signingPrivateKey, {
     nonceId: issued.nonceId, authUid: session.authUid, sessionId: session.sessionId, account: session.accountId,

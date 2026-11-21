@@ -193,7 +193,7 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     id: 'demo',
     title: 'Public demo',
     status: 'shipped',
-    description: 'try.privacynotes.app: the full app, no signup, nothing saved.',
+    description: 'try.privacynotes.app: the full app, no signup, no account.',
     icon: 'play',
   },
   {
@@ -334,7 +334,7 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     title: 'Sync on your terms',
     status: 'shipped',
     description:
-      'Pause sync on one device whenever you want, and it stays paused until you say otherwise, because a switch that says "this device talks to nobody" must not undo itself. The sync panel says what each pass carried and how long it took, and on Android your files can wait for wifi while your words go now.',
+      'Pause sync on one device whenever you want, and it stays paused until you say otherwise, because a switch that keeps your notes on this device must not undo itself. The sync panel says what each pass carried and how long it took, and on Android your files can wait for wifi while your words go now.',
     icon: 'sync',
   },
   {
@@ -447,7 +447,7 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     title: 'Paying in crypto',
     status: 'shipped',
     description:
-      'Pro can be paid with Bitcoin, Ethereum, Lightning, USDC or USDT, at the card price, on the web and in the desktop app. The payment page asks for no name and no email. Crypto payments are final, so try the free plan first. A way to pay, not a blockchain in the app.',
+      'Pro can be paid with Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin or TON, at the card price, on the web and in the desktop app. The payment page asks for no name and no email. Crypto payments are final, so try the free plan first. A way to pay, not a blockchain in the app.',
     icon: 'coin',
   },
   {

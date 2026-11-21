@@ -109,7 +109,7 @@ const CHECK_ICON =
   '<path d="M232.49,80.49l-128,128a12,12,0,0,1-17,0l-56-56a12,12,0,1,1,17-17L96,183,215.51,63.51a12,12,0,0,1,17,17Z"/></svg>';
 
 /** Phosphor's CaretDown, bold, for the language label. */
-const CARET_ICON =
+export const CARET_ICON =
   '<svg viewBox="0 0 256 256" width="10" height="10" fill="currentColor" aria-hidden="true">' +
   '<path d="M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z"/></svg>';
 
@@ -317,10 +317,10 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
               token.info = parsed.language ?? '';
               let html: string = fence(tokens, idx, options, env, self);
               token.info = info;
-              if (parsed.title !== null) {
-                const attrs = ` data-title="${md.utils.escapeHtml(parsed.title)}"` + (parsed.folded ? ' data-folded=""' : '');
-                html = html.replace(/^<pre/, '<pre' + attrs);
-              }
+              const attrs =
+                (parsed.title !== null ? ` data-title="${md.utils.escapeHtml(parsed.title)}"` : '') +
+                (parsed.folded ? ' data-folded=""' : '');
+              if (attrs) html = html.replace(/^<pre/, '<pre' + attrs);
               // A map block's size (PlaceMapNode.tsx), numbers only.
               const size = parseFenceSize(info);
               if (size.width !== null) html = html.replace(/^<pre/, `<pre data-width="${size.width}"`);
@@ -475,13 +475,20 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
       const langBtn = document.createElement('button');
       langBtn.type = 'button';
       langBtn.className =
-        `${CODE_TOOL_BTN} gap-1 px-2 [@media(hover:none)]:px-2.5 ` +
+        `pn-codeblock-langbtn ${CODE_TOOL_BTN} gap-1 px-2 [@media(hover:none)]:px-2.5 ` +
         // theme-ok: the code block toolbar is dark in every theme
         'text-neutral-400 hover:bg-neutral-700/80 hover:text-neutral-100';
       const langName = document.createElement('span');
       langBtn.append(langName);
       langBtn.insertAdjacentHTML('beforeend', CARET_ICON);
-      lang.appendChild(langBtn);
+      // The label and the chevron beside it are both carets, so each names
+      // itself in a tip (#780). They open to the right, into the block; on a
+      // titled block the label sits at the right end and its tip opens left.
+      const langTip = document.createElement('span');
+      langTip.className = 'relative group/tip inline-flex';
+      const langTipText = document.createElement('span');
+      langTip.append(langBtn, langTipText);
+      lang.appendChild(langTip);
       head.append(tools);
       pre.append(head, lang);
       let langShown: string | null | undefined;
@@ -493,6 +500,7 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
         const name = codeLanguageLabel(language) ?? i18n.t('settings:appearance.copyFormatPlain');
         langName.textContent = name;
         langBtn.setAttribute('aria-label', i18n.t('editor:codeBlock.language', { name }));
+        langTipText.textContent = langBtn.getAttribute('aria-label');
       };
       paintLang();
       langBtn.addEventListener('mousedown', (e) => e.preventDefault());
@@ -530,7 +538,9 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
 
       // The title band: a chevron that closes the block to the band, and the
       // title as a field (GitHub #679). Shown only on a block with a title;
-      // "Add title" in the language menu gives a block an empty one. A
+      // "Add title" in the language menu gives a block an empty one. A block
+      // with no title carries the same chevron left of its language label
+      // and closes to that line (GitHub #780), as a fold callout does. A
       // closed block is saved closed (`fold` in the fence). A cursor or a
       // find match that lands in it opens it on screen without an edit.
       const titleBar = document.createElement('span');
@@ -539,7 +549,7 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
       const chevron = document.createElement('button');
       chevron.type = 'button';
       chevron.className =
-        `${CODE_TOOL_BTN} w-6 shrink-0 [@media(hover:none)]:w-8 ` +
+        `pn-codeblock-chevron ${CODE_TOOL_BTN} w-6 shrink-0 [@media(hover:none)]:w-8 ` +
         // theme-ok: the code block toolbar is dark in every theme
         'text-neutral-300 hover:bg-neutral-700/80 hover:text-neutral-100';
       chevron.innerHTML = CARET_ICON;
@@ -549,7 +559,17 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
       titleInput.autocomplete = 'off';
       titleInput.placeholder = i18n.t('editor:codeBlock.titlePlaceholder');
       titleInput.setAttribute('aria-label', titleInput.placeholder);
-      titleBar.append(chevron, titleInput);
+      const chevronTip = document.createElement('span');
+      chevronTip.className = 'relative group/tip inline-flex shrink-0';
+      const chevronTipText = document.createElement('span');
+      chevronTipText.className = `${TIP_PILL} ${positionClasses.end} whitespace-nowrap`;
+      chevronTip.append(chevron, chevronTipText);
+      const labelChevron = (closed: boolean) => {
+        chevron.setAttribute('aria-expanded', String(!closed));
+        chevron.setAttribute('aria-label', i18n.t(closed ? 'editor:codeBlock.expand' : 'editor:codeBlock.collapse'));
+        chevronTipText.textContent = chevron.getAttribute('aria-label');
+      };
+      titleBar.append(chevronTip, titleInput);
       pre.appendChild(titleBar);
 
       // Open on screen although the node says closed, until the node changes
@@ -562,14 +582,21 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
         const folded = !!current.attrs['folded'];
         if (folded !== foldedShown) openedHere = false;
         foldedShown = folded;
-        const closed = title !== null && folded && !openedHere;
+        // A copy box draws no label, so no chevron either: it never closes.
+        const closed = folded && !openedHere && current.attrs['language'] !== COPY_BOX_LANGUAGE;
         pre.classList.toggle('pn-codeblock-titled', title !== null);
-        if (title !== null) head.appendChild(lang);
-        else pre.appendChild(lang);
+        if (title !== null) {
+          head.appendChild(lang);
+          if (chevronTip.parentNode !== titleBar) titleBar.prepend(chevronTip);
+        } else {
+          pre.appendChild(lang);
+          if (chevronTip.parentNode !== lang) lang.prepend(chevronTip);
+        }
+        langTipText.className =
+          `${TIP_PILL} ${title !== null ? positionClasses.start : positionClasses.end} whitespace-nowrap`;
         pre.classList.toggle('pn-codeblock-closed', closed);
         titleBar.hidden = title === null;
-        chevron.setAttribute('aria-expanded', String(!closed));
-        chevron.setAttribute('aria-label', i18n.t(closed ? 'editor:codeBlock.expand' : 'editor:codeBlock.collapse'));
+        labelChevron(closed);
         titleInput.readOnly = !editor.isEditable;
         if (title !== titleShown && document.activeElement !== titleInput) titleInput.value = title ?? '';
         titleShown = title;
@@ -582,7 +609,7 @@ export const CodeBlockWithCopy = CodeBlockLowlight.extend({
         if (!editor.isEditable) {
           openedHere = closed;
           pre.classList.toggle('pn-codeblock-closed', !closed);
-          chevron.setAttribute('aria-expanded', String(closed));
+          labelChevron(!closed);
           return;
         }
         openedHere = false;

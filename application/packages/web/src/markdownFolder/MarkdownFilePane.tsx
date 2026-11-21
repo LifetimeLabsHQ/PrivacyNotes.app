@@ -7,7 +7,7 @@
  *
  * Spec: docs/internal/specs/markdown-folder.md (section 7)
  */
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MarkdownSourceEditor } from '../MarkdownSourceEditor';
 import { WordCount } from '../WordCount';
@@ -21,9 +21,12 @@ import { EditorSlotPill } from '../EditorSlotPill';
 import { editorCommands } from '../editorCommands';
 import { HoverLabel } from '../HoverLabel';
 import { keyText } from '../shortcutMatch';
+import { useSplitView } from '../useSplitView';
+import { LineNumbersToggle } from '../sourcePreviewButtons';
 import { adaptFile, isTextFile, tidyRichSave } from './adapter';
-import { openFailedText, stampsMatch, type FileStamp } from './fileAccess';
-import { applyAssets, restoreAssets, useAssets } from './useAssets';
+import { openFailedText, stampsMatch, type FileStamp, type OpenedFileRef } from './fileAccess';
+import { applyAssets, assetsKey, restoreAssets, useAssets } from './useAssets';
+import { trackExitWrite } from '../flushStash';
 import { isLocalHref, noteLinkPathFor, resolveNoteLinkPath, resolveRelativeLinkPath } from './links';
 import type { OpenedMarkdownDir, OpenedMarkdownFile, SaveState } from './types';
 
@@ -40,6 +43,15 @@ const EMPTY_ASSETS: Map<string, string> = new Map();
 // pitch can open from this pane.
 // Spec: docs/internal/pro-features.md (Markdown folder)
 const SOURCE_SEARCH = { isPro: true };
+const SourcePreviewPane = lazy(() => import('../SourcePreviewPane').then((m) => ({ default: m.SourcePreviewPane })));
+
+/** The split view's preview text: the front matter hidden, as in the
+ *  formatted view, its lines kept blank so the preview's lines still pair
+ *  with the text's. */
+function previewText(raw: string): string {
+  const fence = /^---\r?\n[\s\S]*?\r?\n---(?=\r?\n|$)/.exec(raw);
+  return fence ? '\n'.repeat(fence[0].split('\n').length - 1) + raw.slice(fence[0].length) : raw;
+}
 // The find pill shows only on a file longer than the pane, with a line of
 // slack so it does not blink while a line wraps. The notes pane's value.
 // Spec: docs/internal/design-decisions.md (the editor corner holds only controls that can hide themselves)
@@ -76,7 +88,8 @@ export function MarkdownFilePane({
   opened: OpenedMarkdownFile;
   onUpdated: (next: OpenedMarkdownFile) => void;
   /** The open folder, when there is one. Images resolve against it; a file
-   *  opened on its own has no folder to look in and shows its links as text. */
+   *  opened on its own resolves its own (`OpenedFileRef.resolveAsset`), on
+   *  desktop only, and on the web shows its links as text. */
   dir: OpenedMarkdownDir | null;
   onDelete: (() => void) | null;
   /**
@@ -115,12 +128,15 @@ export function MarkdownFilePane({
    * the mode to reach for the moment a file looks reformatted.
    */
   const [mode, setMode] = useState<'rich' | 'source'>(opened.adapted.editorMode);
+  // A `.txt` file is not Markdown: no Markdown bar and no formatted preview.
+  const markdownFile = !isTextFile(opened.ref.name);
   // The format bar at the bottom gets a row under the scrolling column,
   // as in the note editor (see Editor's toolbarSlot).
-  const barBelow = useContext(FormatBarContext).position === 'bottom' && mode === 'rich';
+  const barPosition = useContext(FormatBarContext).position;
+  const barBelow = barPosition === 'bottom' && (mode === 'rich' || markdownFile);
   const [barSlot, setBarSlot] = useState<HTMLDivElement | null>(null);
   /** Mirrors the editor's current text so the counter moves while typing,
-   *  rather than only after a save lands. Same job as NotesView's `wcBody`. */
+   *  rather than only after a save lands. Same job as the note editor's `liveBody` (`useEditorSession`). */
   // Seeded from the BODY: the rich editor shows exactly that, and counting a
   // file's front matter as prose was never meaningful. Source mode replaces it
   // with the whole file on the first keystroke, which is what that mode shows.
@@ -136,10 +152,15 @@ export function MarkdownFilePane({
   const ownWrites = useRef(new Map<string, FileStamp | null>());
   // Relative image paths become loadable URLs on the way in, and are put back
   // verbatim on the way out - the file must keep saying what it said.
-  const noteDir = opened.ref.location.includes('/')
+  // A file opened on its own resolves its pictures itself, beside it, even
+  // while a folder is open: its location is then a full path, not one under
+  // that folder.
+  // The ref itself, not a copy: `useAssets` keeps a map only for the same one.
+  const lone = opened.ref.resolveAsset ? (opened.ref as Required<Pick<OpenedFileRef, 'resolveAsset'>>) : null;
+  const noteDir = !lone && opened.ref.location.includes('/')
     ? opened.ref.location.slice(0, opened.ref.location.lastIndexOf('/') + 1)
     : '';
-  const assets = useAssets(opened.raw, dir?.ref ?? null, noteDir);
+  const assets = useAssets(opened.raw, lone ?? dir?.ref ?? null, noteDir);
   // `opened` as of the last render, for the handlers that act on whatever file
   // is on screen right now - a paste, a drop, a reload. It is deliberately NOT
   // what a save writes through: React repoints this during the render that
@@ -174,6 +195,14 @@ export function MarkdownFilePane({
     measure();
     return () => ro.disconnect();
   }, []);
+  // Split view and line numbers, the note editor's own (`useSplitView`).
+  const [paneEl, setPaneEl] = useState<HTMLDivElement | null>(null);
+  useEffect(() => setPaneEl(scrollerRef.current), []);
+  const { split, first: previewFirst, lineNumbers, sourceControls, formattedControls } = useSplitView({
+    pane: paneEl,
+    markdownShown: mode === 'source' && markdownFile,
+    showMarkdown: () => setMode('source'),
+  });
   /** Blob URLs of files just pasted, dropped or picked in rich mode, by the
    *  relative path the file is written under. The editor shows the blob until
    *  the save lands and `useAssets` resolves the path itself; until then this
@@ -298,6 +327,8 @@ export function MarkdownFilePane({
   function save(write: PendingWrite): Promise<void> {
     const run = saveChain.current.then(() => writeNow(write));
     saveChain.current = run;
+    // A lock's reload waits for it (lockReload.ts): the file has no flush stash.
+    trackExitWrite(run);
     return run;
   }
 
@@ -610,7 +641,7 @@ export function MarkdownFilePane({
           Spec: docs/internal/design/ui-patterns.md (editor header) */}
       {/* data-pn-dock-header: the docked Settings panel starts below it (#741). */}
       <div data-pn-dock-header className="flex justify-center min-h-11 sm:min-h-14 py-1.5 sm:py-0 sm:h-14 border-b border-divider shrink-0">
-        <div className="flex items-center gap-2 px-4 sm:px-6 pn-content-col">
+        <div className="flex items-center gap-2 px-4 sm:px-6 pn-content-col" data-split={split ? '' : undefined}>
           {/* The way back, in the one slot every editor in this app puts it.
               Both variants are `NoteEditorPane`'s, class for class: below md the
               list column is `hidden`, and in grid mode the grid is hidden below
@@ -714,6 +745,7 @@ export function MarkdownFilePane({
       <div
         ref={contentRef}
         className="pn-content-col px-4 sm:px-6 py-4 flex flex-col min-h-full"
+        data-split={split ? '' : undefined}
         onPasteCapture={handlePasteFile}
         onDragOverCapture={(e) => { if (e.dataTransfer.types.includes('Files')) e.preventDefault(); }}
         onDropCapture={handleDropFile}
@@ -721,7 +753,7 @@ export function MarkdownFilePane({
         {mode === 'rich' ? (
           <Editor
             ref={editorRef}
-            key={`rich:${opened.ref.location}:${opened.reloadToken}:${assets.size}`}
+            key={`rich:${opened.ref.location}:${opened.reloadToken}:${assetsKey(assets)}`}
             // The BODY, not the raw file. A front-matter block rendered as
             // body text comes out as a horizontal rule followed by a setext
             // heading - four lines of YAML in 24px bold at the top of every
@@ -748,6 +780,9 @@ export function MarkdownFilePane({
             onInsertFiles={(files) => void attachFiles(files)}
             isPro
             toolbarSlot={barSlot}
+            onShowMarkdown={() => setMode('source')}
+            sourcePreview={markdownFile ? formattedControls : undefined}
+            lineNumbers={lineNumbers}
           />
         ) : (
           // Source mode shows the file's real text, images included. Swapping
@@ -760,6 +795,29 @@ export function MarkdownFilePane({
             // nothing - the text is already exactly what the file says.
             onChange={(text) => scheduleSave(text, opened, EMPTY_ASSETS, false)}
             search={SOURCE_SEARCH}
+            toolbar={markdownFile ? {
+              onShowFormatted: () => setMode('rich'),
+              atBottom: barPosition === 'bottom',
+              slot: barSlot,
+              preview: sourceControls,
+            } : undefined}
+            preview={split ? (text, caretLine, edit) => (
+              <Suspense fallback={null}>
+                <SourcePreviewPane
+                  text={applyAssets(previewText(text), assets)}
+                  caretLine={caretLine}
+                  lineNumbers={lineNumbers}
+                  pane={paneEl}
+                  first={previewFirst}
+                  // An edit in the preview is the body, as the formatted
+                  // view's is: paths back, the front matter back on top.
+                  onEdit={edit && ((md) => {
+                    const { frontMatterRaw, body } = adaptFile(opened.ref.name, text);
+                    edit(frontMatterRaw + tidyRichSave(restoreAssets(md, assets), body));
+                  })}
+                />
+              </Suspense>
+            ) : undefined}
           />
         )}
         {/* Same footer row as the encrypted editor: counts on the left, the
@@ -770,6 +828,8 @@ export function MarkdownFilePane({
             Spec: docs/internal/specs/editor-mode-toggle.md */}
         <div className="mt-auto pt-4 shrink-0 flex items-start justify-between gap-3">
           <WordCount body={liveBody} />
+          <div className="shrink-0 flex items-start gap-3">
+          <LineNumbersToggle />
           <button
             type="button"
             onClick={() => setMode(mode === 'source' ? 'rich' : 'source')}
@@ -779,12 +839,13 @@ export function MarkdownFilePane({
                 link and its wording must not fork from it. */}
             {mode === 'source' ? t('notes:editor.showFormatted') : t('editor:formatBar.items.markdownView')}
           </button>
+          </div>
         </div>
       </div>
     </div>
     {barBelow && (
       <div className="shrink-0 border-t border-divider bg-surface-2">
-        <div ref={setBarSlot} className="pn-content-col" />
+        <div ref={setBarSlot} className="pn-content-col" data-split={split ? '' : undefined} />
       </div>
     )}
     </div>

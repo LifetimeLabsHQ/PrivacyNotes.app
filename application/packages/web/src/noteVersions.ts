@@ -18,8 +18,10 @@ import {
   decryptBlob,
   encryptNote,
   decryptNote,
+  checkNoteBind,
   bytesToBase64,
   base64ToBytes,
+  bytesToHex,
   type SupabaseClient,
 } from '@notes/shared';
 import { db, type LocalNote } from './db';
@@ -28,6 +30,7 @@ import { isPhraseReplacedRefusal, reportPhraseReplaced } from './phraseReplaced'
 import { computeSnapshotTotalSize } from './notesViewUtils';
 import { isServerWriteBlocked } from './syncPause';
 import { isDemoMode } from './demo';
+import { localDataKeyCopy } from './localKey';
 import { trackerContent } from './editStamp';
 
 const TABLE = 'note_versions';
@@ -44,7 +47,14 @@ const MAX_VERSIONS = 50;
 export type NoteVersion = {
   id: string;
   noteId: string;
-  createdAt: string; // ISO
+  /** When the version was made (ISO): the time sealed inside it, which a
+   *  version that waited in the queue carries from the moment it was queued,
+   *  never later than `serverAt`. The server's date for a version from before
+   *  the sealed time. History lists and shows versions by it (beta #197
+   *  item 4); the server prunes by `serverAt`. */
+  createdAt: string;
+  /** When the server stored it (ISO). */
+  serverAt?: string;
   title: string;
   body: string;
   tags: string[];
@@ -106,10 +116,17 @@ function liveKey(encryptionKey: Uint8Array): Uint8Array | null {
   return copy.every((b) => b === 0) ? null : copy;
 }
 
-/** A version's payload, encrypted with the account key as the server row holds it. */
-function sealVersion(note: LocalNote, encryptionKey: Uint8Array): { ciphertext: string; nonce: string } {
+/**
+ * A version's payload, encrypted with the account key as the server row holds
+ * it. `madeAt` is the moment the version was made, sealed in the payload's
+ * `editedAt` (a version payload carries no other use for it): a version that
+ * waits in the queue keeps the time it was made, which the server's insert
+ * time is not.
+ */
+function sealVersion(note: LocalNote, encryptionKey: Uint8Array, madeAt: string): { ciphertext: string; nonce: string } {
   const { ciphertext, nonce } = encryptNote(
     {
+      editedAt: madeAt,
       title: note.title,
       body: note.body,
       tags: note.tags,
@@ -121,12 +138,37 @@ function sealVersion(note: LocalNote, encryptionKey: Uint8Array): { ciphertext: 
       ...(note.type === 'login' ? { trackers: loginOf(note) } : journalOf(note)),
     },
     encryptionKey,
+    // A version is bound to its note and to the history table, never to a
+    // stamp. Spec: docs/internal/plans/payload-row-binding.md (section 2)
+    { id: note.id, kind: 'version' },
   );
   return { ciphertext: bytesToBase64(ciphertext), nonce: bytesToBase64(nonce) };
 }
 
 /** The most versions the queue keeps; past it the oldest go. */
 const QUEUE_MAX = 200;
+
+/**
+ * The queue's lookup key for a content hash: an HMAC under the local data
+ * key, never the bare hash. The table is outside the at-rest seal (its
+ * ciphertext is under the account key), and a bare SHA-256 of a title, body
+ * and tags lets a copy of the device's files test guessed texts, a four-digit
+ * code in seconds (RFS #226). Null with no key registered. A key that
+ * changes (a phrase change) only stops the lookup from finding older rows,
+ * which the drain still sends and removes by id.
+ * Spec: docs/public/THREAT_MODEL.md (Local storage at rest)
+ */
+async function queueHash(hash: string): Promise<string | null> {
+  const key = localDataKeyCopy();
+  if (!key) return null;
+  try {
+    const k = await crypto.subtle.importKey('raw', key as BufferSource, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const mac = await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(`pn-version-queue-v1:${hash}`));
+    return bytesToHex(new Uint8Array(mac));
+  } finally {
+    key.fill(0);
+  }
+}
 
 /**
  * Keep a version the server could not take yet: the device was offline, or
@@ -140,8 +182,11 @@ export async function queueNoteVersion(note: LocalNote, encryptionKey: Uint8Arra
   const key = liveKey(encryptionKey);
   if (!key) return;
   try {
-    if (await db.versionQueue.where('hash').equals(hash).count()) return;
-    await db.versionQueue.add({ noteId: note.id, hash, ...sealVersion(note, key), queuedAt: new Date().toISOString(), ...keyEpochColumn() });
+    const keyed = await queueHash(hash);
+    if (!keyed) return;
+    if (await db.versionQueue.where('hash').equals(keyed).count()) return;
+    const queuedAt = new Date().toISOString();
+    await db.versionQueue.add({ noteId: note.id, hash: keyed, ...sealVersion(note, key, queuedAt), queuedAt, ...keyEpochColumn() });
     const ids = await db.versionQueue.toCollection().primaryKeys();
     if (ids.length > QUEUE_MAX) await db.versionQueue.bulkDelete(ids.slice(0, ids.length - QUEUE_MAX));
   } catch (err) {
@@ -151,7 +196,9 @@ export async function queueNoteVersion(note: LocalNote, encryptionKey: Uint8Arra
 
 /** A state that reached the server leaves the queue. */
 export async function unqueueNoteVersion(hash: string): Promise<void> {
-  await db.versionQueue.where('hash').equals(hash).delete().catch(() => 0);
+  const keyed = await queueHash(hash).catch(() => null);
+  if (!keyed) return;
+  await db.versionQueue.where('hash').equals(keyed).delete().catch(() => 0);
 }
 
 /** Whether a version is waiting: the orphan reconcile deletes nothing then,
@@ -273,7 +320,7 @@ export async function createNoteVersion(
   const key = liveKey(encryptionKey);
   if (!key) return { ok: false, code: 'signed_out', message: 'encryption key cleared' };
   try {
-    const { ciphertext, nonce } = sealVersion(note, key);
+    const { ciphertext, nonce } = sealVersion(note, key, new Date().toISOString());
     const { error } = await supabase.from(TABLE).insert({
       note_id: note.id,
       user_pubkey: pubkey,
@@ -339,10 +386,19 @@ export async function listNoteVersions(
       const ct = base64ToBytes(row.ciphertext);
       const nonce = base64ToBytes(row.nonce);
       const decrypted = openWithRing('sync', encryptionKey, (key) => decryptNote(ct, nonce, key), epochOf(row.key_epoch));
+      // A payload written for another note, or for a live row, is not a
+      // version of this note: left out, as one that does not open. No switch
+      // here: a version row has no server change clock (section 8, item 5).
+      // Spec: docs/internal/plans/payload-row-binding.md (section 4.2)
+      if (checkNoteBind(decrypted.bind, { id: row.note_id, kind: 'version' }, undefined, null) === 'moved') {
+        console.error('[note_versions] payload bound to another row for', row.id);
+        continue;
+      }
       out.push({
         id: row.id,
         noteId: row.note_id,
-        createdAt: row.created_at,
+        createdAt: madeAtOf(decrypted.editedAt, row.created_at),
+        serverAt: row.created_at,
         title: decrypted.title,
         body: decrypted.body,
         tags: decrypted.tags,
@@ -361,5 +417,16 @@ export async function listNoteVersions(
       console.error('[note_versions] decrypt failed for', row.id, err);
     }
   }
-  return out;
+  // Newest first by when each was made: a version queued offline on Monday
+  // and sent on Thursday sits with Monday's.
+  return out.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+}
+
+/** The sealed time a version was made, never later than the server stored
+ *  it (a clock that ran ahead cannot lift a version above later ones). */
+function madeAtOf(sealed: string | undefined, serverAt: string): string {
+  const made = sealed ? Date.parse(sealed) : NaN;
+  const stored = Date.parse(serverAt);
+  if (!Number.isFinite(made) || !Number.isFinite(stored) || made >= stored) return serverAt;
+  return new Date(made).toISOString();
 }

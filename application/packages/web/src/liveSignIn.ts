@@ -26,12 +26,13 @@
  * end: the notice alone refuses every other tab's older work, and those
  * tabs leave the vault.
  *
- * Imports only demo.ts, which imports nothing, so every writer can read it
- * without a cycle. The demo keeps its own announcement key, so a demo tab
+ * Imports only demo.ts and oauthPending.ts, which import nothing, so every
+ * writer can read it without a cycle. The demo keeps its own announcement key, so a demo tab
  * never signs out a real account on the same origin.
  * Pinned by tests/phraseAtRest.test.ts and tests/authInvariants.test.ts.
  */
-import { credentialKey } from './demo';
+import { credentialKey, isDemoMode } from './demo';
+import { dropOAuthPending } from './oauthPending';
 
 /** What a piece of work holds from its start: the sign-outs this tab had
  *  seen, and the last sign-out announced by any tab. */
@@ -159,7 +160,76 @@ export function watchSignOutsElsewhere(onNotice: () => void): () => void {
 export function adoptLiveSignIn(phrase: string, since: SignInStamp): boolean {
   if (signedOutSince(since)) return false;
   live = { phrase, stamp: signInStamp() };
+  // A sign-in that went live owns the storage now: an earlier sign-out that
+  // did not end is not finished over it (signOutFinish.ts). A provider
+  // sign-in this install started and left is over too (oauthPending.ts).
+  dropSignOutMark();
+  dropOAuthPending();
   return true;
+}
+
+// The record that a sign-out or a wipe began on this browser, written with
+// its first removal and removed as its last step. A start that finds it
+// finishes the job before anything reads a session (signOutFinish.ts), so a
+// page that ends in between (a closed tab, a quit, a reload) leaves no
+// session, phrase or wrap behind (beta.privacynotes.app #211). Its value is
+// the one sign-out's own token, so a sign-out can ask whether a sign-in went
+// live since it began (beta #213 item 4): that sign-in removed the mark.
+function markKey(): string {
+  return credentialKey('privacynotes.signOutBegun');
+}
+
+/** Writes the mark of a sign-out that begins now and answers its token, or
+ *  null when the store refused it. Never in the demo, which owns no session. */
+export function beginSignOutMark(kind: 'signout' | 'wipe'): string | null {
+  if (isDemoMode()) return null;
+  const token = `${kind}.${Date.now()}.${Math.random().toString(36).slice(2)}`;
+  try {
+    localStorage.setItem(markKey(), token);
+    return token;
+  } catch {
+    return null;
+  }
+}
+
+/** Whether the mark `token` wrote is still there: no sign-in went live and
+ *  no other sign-out began since. A sign-out whose mark the store refused
+ *  answers true, as it did before the mark existed. */
+export function holdsSignOutMark(token: string | null): boolean {
+  if (token === null) return true;
+  try {
+    return localStorage.getItem(markKey()) === token;
+  } catch {
+    return true;
+  }
+}
+
+/** Removes the mark, only while it is still `token`'s. */
+export function endSignOutMark(token: string | null): void {
+  if (token === null) return;
+  try {
+    if (localStorage.getItem(markKey()) === token) localStorage.removeItem(markKey());
+  } catch {
+    /* storage unavailable: nothing to remove */
+  }
+}
+
+/** The token of a sign-out or a wipe that began here and did not end, or null. */
+export function signOutMarkLeft(): string | null {
+  try {
+    return localStorage.getItem(markKey());
+  } catch {
+    return null;
+  }
+}
+
+/** Removes the mark, whoever wrote it. */
+export function dropSignOutMark(): void {
+  try {
+    localStorage.removeItem(markKey());
+  } catch {
+    /* storage unavailable: nothing to remove */
+  }
 }
 
 /** Whether a sign-in is live in this tab and no sign-out began since. */

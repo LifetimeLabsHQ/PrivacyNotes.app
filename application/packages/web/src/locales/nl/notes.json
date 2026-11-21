@@ -28,9 +28,22 @@
   "tagChip": {
     "clear": "Tagfilter wissen: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "Trackerfilter wissen: {{tracker}}",
+    "anyTag": "Elke tag",
+    "tagLabel": "Tag van {{tracker}}",
+    "answerLabel": "Antwoord van {{tracker}}",
+    "anyAnswer": "Elk antwoord"
+  },
+  "trackerFocus": {
+    "every_one": "ongeveer elke dag",
+    "every_other": "ongeveer elke {{count}} dagen",
+    "last": "{{when}} bijgehouden",
+    "locked_one": "{{count}} dagboeknotitie achter een PIN blijft buiten beschouwing",
+    "locked_other": "{{count}} dagboeknotities achter een PIN blijven buiten beschouwing"
+  },
   "vaultNew": {
     "ariaLabel": "Nieuw kluisitem",
-    "card": "Creditcard",
     "sshKey": "SSH-sleutel",
     "generator": "Wachtwoord"
   },
@@ -49,7 +62,8 @@
   "vaultFilter": {
     "all": "Alles",
     "logins": "Logins",
-    "cards": "Creditcards",
+    "passkeys": "Passkeys",
+    "cards": "Kaarten",
     "keys": "Sleutels"
   },
   "journal": {
@@ -61,7 +75,8 @@
   "trash": {
     "empty": "Legen",
     "emptyHover": "Alle notities in de prullenbak verwijderen",
-    "autoDelete": "Na 30 dagen automatisch verwijderen"
+    "autoDelete": "Na 30 dagen automatisch verwijderen",
+    "replacedTitle": "Kopieën van verwijderde notities"
   },
   "search": {
     "sortOptions": "Sorteer- en weergaveopties",
@@ -125,6 +140,7 @@
     "imageUploadFailed": "Uploaden van afbeelding mislukt: {{error}}",
     "imageError": "Fout bij afbeelding: {{error}}",
     "uploadFailedFor": "Uploaden mislukt voor \"{{filename}}\": {{error}}",
+    "uploadsHeld": "Je hebt de uploadlimiet van vandaag bereikt. Je afbeeldingen en bestanden staan veilig op dit apparaat en worden na {{time}} geüpload.",
     "importedSyncing_one": "{{count}} notitie geïmporteerd. Synchroniseren…",
     "importedSyncing_other": "{{count}} notities geïmporteerd. Synchroniseren…",
     "addedTag_one": "#{{tag}} toegevoegd aan {{count}} item",
@@ -137,6 +153,7 @@
   },
   "loadError": {
     "message": "Kon je notities niet laden. De verbinding met de lokale database is onderbroken. Dit kan gebeuren als de app een tijd op de achtergrond heeft gestaan.",
+    "storageOff": "Kon je notities niet laden. Dit apparaat heeft de opslag uitgezet waarin PrivacyNotes ze bewaart, wat de isolatiemodus doet. Om dit op te lossen open je Instellingen, dan Privacy en beveiliging, dan Isolatiemodus, dan Pas websites aan, en schakel je PrivacyNotes uit. Schakel in Safari de isolatiemodus voor deze site uit in Website-instellingen.",
     "reload": "Herladen"
   },
   "banner": {
@@ -189,6 +206,7 @@
   "editor": {
     "backToList": "Terug naar notitielijst",
     "backToGrid": "Terug naar raster",
+    "closeSide": "Deze kant sluiten",
     "titlePlaceholder": "Naamloos (klik om te bewerken of laat hem automatisch ontstaan)",
     "titlePlaceholderLogin": "bijv. GitHub",
     "titlePlaceholderCard": "bijv. Visa eindigend op 4242",
@@ -197,10 +215,22 @@
     "lockNow": "Nu vergrendelen",
     "lockNowHint": "Inhoud nu verbergen",
     "turnOffHint": "Weer bewerken toestaan",
+    "turnOffForNowHint": "Deze notitie bewerken tot je hem verlaat",
     "unarchiveHint": "Weer in je lijsten tonen",
     "showFormatted": "Opgemaakt tonen",
+    "splitView": "Gesplitste weergave",
+    "showSplitView": "Gesplitste weergave tonen",
+    "hideSplitView": "Gesplitste weergave verbergen",
+    "splitViewNeedsWidth": "Maak het venster breder voor de gesplitste weergave",
+    "swapSides": "Kanten wisselen",
+    "formattedOnly": "{{name}} werkt in de opgemaakte weergave",
+    "formattedOnlyHint": "Opgemaakte weergave",
     "invisiblesShow": "Onzichtbare tekens tonen",
     "invisiblesHide": "Onzichtbare tekens verbergen",
+    "lineNumbersShow": "Regelnummers tonen",
+    "lineNumbersHide": "Regelnummers verbergen",
+    "footerPin": "Statistieken vastzetten",
+    "footerUnpin": "Statistieken losmaken",
     "undo": "Ongedaan maken",
     "redo": "Opnieuw",
     "hide": "Verbergen",
@@ -274,6 +304,7 @@
     "accountLabel": "ID & synchronisatie",
     "appearanceLabel": "Weergave",
     "editorLabel": "Editor",
+    "pluginsLabel": "Plug-ins",
     "formatBarLabel": "Opmaakbalk",
     "listsLabel": "Lijsten",
     "trackersLabel": "Trackers",
@@ -295,6 +326,10 @@
   "archiveConfirm": {
     "body_one": "<highlight>{{count}} item</highlight> archiveren? Het verdwijnt uit je lijsten en wacht in de weergave Archief. Uit archief halen zet het terug.",
     "body_other": "<highlight>{{count}} items</highlight> archiveren? Ze verdwijnen uit je lijsten en wachten in de weergave Archief. Uit archief halen zet ze terug."
+  },
+  "duplicateConfirm": {
+    "body_one": "<highlight>{{count}} item</highlight> dupliceren? Het krijgt een eigen kopie.",
+    "body_other": "<highlight>{{count}} items</highlight> dupliceren? Elk item krijgt een eigen kopie."
   },
   "bulkTrash": {
     "body_one": "<highlight>{{count}} item</highlight> verwijderen? Verplaats het naar de prullenbak om het later te herstellen, of verwijder het definitief.",
@@ -341,6 +376,7 @@
     "title": "Verbanden",
     "hide": "Verbanden verbergen",
     "linkedFrom": "Gelinkt vanuit",
+    "usedIn": "Gebruikt in",
     "linksTo": "Linkt naar",
     "missing": "Nog niet aangemaakt",
     "protectedHidden_one": "{{count}} met PIN beveiligd item niet getoond",
@@ -351,9 +387,10 @@
     "relatedLinkedFrom": "Beide gelinkt vanuit {{title}}",
     "relatedTag": "Beide getagd met {{tag}}",
     "relatedMeaning": "Dezelfde betekenis",
+    "relatedMention": "Noemt {{name}}",
     "meaningDoor": "Slimme verbanden: vind notities met dezelfde betekenis, met offline AI",
     "meaningDoorNo": "Niet meer tonen",
-    "meaningDoorHidden": "Verborgen in alle notities. Slimme verbanden blijft in Instellingen > Editor > Gedrag.",
+    "meaningDoorHidden": "Verborgen in alle notities. Slimme verbanden blijft in Instellingen > Plug-ins.",
     "hideSuggestions": "Voorgestelde verbanden verbergen",
     "notRelated": "Niet gerelateerd",
     "notRelatedDone": "Wordt niet meer voorgesteld",
@@ -426,5 +463,31 @@
     "autoJournal": "Mijn locatie toevoegen aan elke nieuwe dagboeknotitie",
     "autoDenied": "Locatie staat uit voor PrivacyNotes. Zet het eerst aan in de instellingen van je telefoon.",
     "autoOff": "Locatievoorzieningen staan uit op deze telefoon. Zet ze eerst aan."
+  },
+  "vaultPasskey": {
+    "forSite": "Passkey voor {{rpId}}",
+    "hasPasskey": "Heeft een passkey",
+    "removeTitle": "De passkey voor {{rpId}} verwijderen?",
+    "removeBody": "Je kunt je er vanuit PrivacyNotes niet meer mee aanmelden bij {{rpId}}.",
+    "savedByExtension": "Passkeys worden opgeslagen door de PrivacyNotes-browserextensie wanneer een site er een aanbiedt.",
+    "removeBrowserWaiting": "Sommige items die deze browser heeft verstuurd, staan nog niet in je Kluis. Als je hem nu verwijdert, gaan ze verloren.",
+    "removeBrowserAnyway": "Toch verwijderen"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "Vertalen",
+    "from": "Van",
+    "to": "Naar",
+    "saveAsNote": "Opslaan als nieuwe notitie",
+    "needPair": "{{language}} downloaden · {{size}}",
+    "noModel": "Deze taal kan nog niet worden vertaald.",
+    "nothing": "Deze notitie heeft geen woorden om te vertalen.",
+    "turnOn": "{{language}} aanzetten",
+    "failed": "Kan deze notitie niet vertalen. Probeer het opnieuw.",
+    "untranslated_other": "{{count}} regels konden niet worden vertaald en blijven zoals ze waren.",
+    "untranslated_one": "{{count}} regel kon niet worden vertaald en blijft zoals hij was."
+  },
+  "tags": {
+    "suggestMove": "Verplaatsen naar {{folder}}"
   }
 }

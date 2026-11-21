@@ -1,5 +1,6 @@
 import type { Icon } from './icons';
 import {
+  Scan,
   TextB,
   TextItalic,
   TextUnderline,
@@ -45,6 +46,10 @@ import {
   Shapes,
   MapPin,
   ScribbleLoop,
+  ArrowsInLineVertical,
+  ArrowUUpLeft,
+  ArrowUUpRight,
+  SquareSplitHorizontal,
 } from './icons';
 
 /**
@@ -55,6 +60,9 @@ import {
  * Spec: docs/internal/specs/format-bar.md
  */
 export const FORMAT_BAR_LOOK: Record<string, { Icon: Icon; label: string }> = {
+  // The tag row's own words, so the two read the same.
+  undo: { Icon: ArrowUUpLeft, label: 'notes:editor.undo' },
+  redo: { Icon: ArrowUUpRight, label: 'notes:editor.redo' },
   bold: { Icon: TextB, label: 'toolbar.bold' },
   italic: { Icon: TextItalic, label: 'toolbar.italic' },
   underline: { Icon: TextUnderline, label: 'toolbar.underline' },
@@ -67,6 +75,9 @@ export const FORMAT_BAR_LOOK: Record<string, { Icon: Icon; label: string }> = {
   font: { Icon: TextT, label: 'toolbar.font' },
   highlight: { Icon: Highlighter, label: 'toolbar.highlight' },
   callout: { Icon: Megaphone, label: 'toolbar.callout' },
+  // Collapse all or Expand all (foldAll.ts); the toolbar flips the label and
+  // the icon, as the folder list's own control does (TagsRail.tsx).
+  foldAll: { Icon: ArrowsInLineVertical, label: 'shell:folders.collapseAll' },
   strike: { Icon: TextStrikethrough, label: 'toolbar.strikethrough' },
   table: { Icon: GridFour, label: 'toolbar.table' },
   hr: { Icon: Minus, label: 'toolbar.divider' },
@@ -96,14 +107,35 @@ export const FORMAT_BAR_LOOK: Record<string, { Icon: Icon; label: string }> = {
   footnote: { Icon: Asterisk, label: 'toolbar.footnote' },
   image: { Icon: Image, label: 'toolbar.image' },
   attach: { Icon: FileArrowUp, label: 'toolbar.attachFile' },
+  // Scan a page (scan/ScanEditor.tsx): a photo becomes a flat picture or PDF.
+  // The menu names the text too, so the OCR door is found (owner, 2026-11-18); the window keeps "Scan a page".
+  scan: { Icon: Scan, label: 'media:scanOcr' },
   attachMenu: { Icon: Paperclip, label: 'formatBar.items.attachMenu' },
-  separator1: { Icon: LineVertical, label: 'formatBar.items.separator' },
-  separator2: { Icon: LineVertical, label: 'formatBar.items.separator' },
-  separator3: { Icon: LineVertical, label: 'formatBar.items.separator' },
-  separator4: { Icon: LineVertical, label: 'formatBar.items.separator' },
+  // Every divider, of any number (isSeparatorKey in formatBar.ts), wears this look.
+  separator: { Icon: LineVertical, label: 'formatBar.items.separator' },
   audio: { Icon: Microphone, label: 'formatBar.items.audio' },
   customize: { Icon: Gear, label: 'toolbar.customize' },
+  // The Markdown view with its preview beside it (sourcePreviewButtons.tsx).
+  splitView: { Icon: SquareSplitHorizontal, label: 'notes:editor.splitView' },
   markdownView: { Icon: ArticleMedium, label: 'formatBar.items.markdownView' },
   copyAsPlain: { Icon: ClipboardText, label: 'bodyMenu.copyAsPlain' },
   copyAsMarkdown: { Icon: FileMd, label: 'bodyMenu.copyAsMarkdown' },
 };
+
+/**
+ * The Markdown an item writes, shown beside its entry in the '+' menu of
+ * both toolbars, the formatted one (EditorToolbar.tsx) and the Markdown
+ * view's (MarkdownSourceBar.tsx), so the two teach the same syntax.
+ * Spec: docs/internal/specs/format-bar.md
+ */
+export const FORMAT_BAR_HINT = {
+  bold: '**x**', italic: '*x*', strike: '~~x~~', tasks: '[]', notelink: '[[',
+  hr: '---', bullets: '-', numbered: '1.', quote: '>', codeblock: '```', copybox: '```copy',
+  inlinecode: '`x`', math: '$x$', blockmath: '$$x$$', spoiler: '||x||', footnote: '[^1]',
+  highlight: '==x==', callout: '> [!note]',
+} as const satisfies Record<string, string>;
+
+/** The hint for any key, or null where the item has none. */
+export function formatBarHint(key: string): string | null {
+  return (FORMAT_BAR_HINT as Record<string, string | undefined>)[key] ?? null;
+}

@@ -1,6 +1,5 @@
 {
   "header": {
-    "betaBadge": "beta",
     "downloads": "Nedladdningar",
     "price": "Pris",
     "priceLine": "Vad dina appar kostar, sammanlagt",
@@ -290,7 +289,7 @@
   },
   "demoShot": {
     "kicker": "Se det live",
-    "caption": "Den riktiga appen med exempelanteckningar, direkt i din webbläsare. Ingenting sparas."
+    "caption": "Den riktiga appen med exempelanteckningar, direkt i din webbläsare. Det du skriver stannar i den."
   },
   "badges": {
     "privacyToolsAlt": "PrivacyNotes på PrivacyTools.io",
@@ -358,7 +357,7 @@
     "freeImport": "Import och export, inklusive Keep och Obsidian",
     "freeAnon": "Anonym inloggning, utan e-post",
     "earlyAdopterBadge": "Tidig användare",
-    "payMethods": "Betala med kort, eller med Bitcoin, Ethereum, Lightning, USDC eller USDT."
+    "payMethods": "Betala med kort, eller med Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin eller TON."
   },
   "underHood": {
     "heading": "Under huven",
@@ -498,7 +497,7 @@
     "noLockIn": "Inlåsning",
     "noEmail": "Krav på e-post",
     "noDarkPatterns": "Dark patterns",
-    "noBackdoor": "Bakdörrar"
+    "noBackdoor": "Dolda bakdörrar"
   },
   "noRecovery": {
     "heading": "Din fras är din nyckel",
@@ -506,7 +505,7 @@
     "noRecoveryTerm": "Ingen återställning",
     "noRecoveryDesc": "Med egen förvaring tappar du anteckningarna om du tappar frasen",
     "deviceTerm": "Skapad på enheten",
-    "deviceDesc": "Med egen förvaring rör din fras aldrig våra servrar",
+    "deviceDesc": "Med egen förvaring rör din fras aldrig våra servrar, om du inte lägger till en passkey för inloggning",
     "zkTerm": "Zero-knowledge",
     "zkDesc": "Med egen förvaring har servern inget som öppnar dina anteckningar",
     "writeTerm": "Skriv ner den",
@@ -521,7 +520,7 @@
     "heading": "Ditt valv står klart på under en minut.",
     "importNote": "Byter du app? Exportera från vilken som helst av de här och importera på några minuter:",
     "importDemoTitle": "Prova din egen import i demot först",
-    "importDemoBody": "Din fil läses i din webbläsare, inget skickas till våra servrar, och när du stänger fliken rensas den."
+    "importDemoBody": "Din fil läses i din webbläsare och inget i den laddas upp. Den stannar i den här webbläsaren tills demot öppnas här igen; rensa webbplatsdata för att ta bort den tidigare."
   },
   "about": {
     "tabs": {
@@ -529,7 +528,7 @@
       "hotkeys": "Kortkommandon",
       "rating": "Betyg"
     },
-    "intro": "<brand/> samlar dina anteckningar, uppgifter, lösenord, dagbok, filer, kalender, kontakter och bokmärken på ett ställe, med uppföljning av humör och medicin. Allt krypteras på din enhet med en nyckel som skapas från din återställningsfras, och förblir krypterat på våra servrar i <nowrap>Schweiz</nowrap>. Det fungerar offline, och appen har öppen källkod.",
+    "intro": "<brand/> samlar dina anteckningar, uppgifter, lösenord, dagbok, filer, kalender, kontakter och bokmärken på ett ställe, med uppföljning av humör och medicin. Allt krypteras på din enhet med en nyckel som skapas från din återställningsfras, och förblir krypterat på våra servrar i <nowrap>Schweiz</nowrap> och EU. Det fungerar offline, och appen har öppen källkod.",
     "versionHeading": "Version",
     "windowVersion": "Version {{version}}",
     "windowHelp": "Hjälpcenter",
@@ -549,7 +548,7 @@
     "openSourceLink": "Läs källkoden på GitHub.com",
     "openSourceBody": "Appen och krypteringen i den är publicerade, så vem som helst kan kontrollera hur dina anteckningar krypteras.",
     "dataStorageHeading": "Datalagring",
-    "dataStorageBody": "Krypterade datablock lagrade i Zürich, <flag/> Schweiz.",
+    "dataStorageBody": "Krypterade anteckningar, dagböcker och resten lagras i Zürich, <flag/> Schweiz. Nya bilder och filer från den aktuella appen lagras i EU.",
     "faviconsHeading": "Webbplatsikoner",
     "faviconsBody1": "Webbplatsikoner (favikoner) kommer från DuckDuckGo och Google och hämtas av vår server åt dig. Din webbläsare kontaktar aldrig någon av dem, så de ser vår server fråga efter en domän och ser aldrig dig.",
     "faviconsBody2": "Ikoner cachas på din enhet i 90 dagar. Ingen förfrågan innehåller din identitet, och du kan stänga av ikoner under Inställningar > Listor."

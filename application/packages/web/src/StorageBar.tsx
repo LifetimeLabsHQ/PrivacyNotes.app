@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowsClockwise, CaretRight, Info } from './icons';
+import { ArrowsClockwise } from './icons';
 import { HoverLabel } from './HoverLabel';
 import { formatBytes } from './formatBytes';
+import { QuotaRing } from './QuotaRing';
 
 /** formatBytes with the pointless trailing ".0" trimmed ("500.0 MB" →
  *  "500 MB") - this line has to fit a narrow list pane in one piece. */
@@ -22,13 +23,14 @@ type Props = {
 };
 
 /**
- * Storage usage bar shared by the Trash and Files panes: one
- * "N% used (X / Y)" line, the fill track, and a refresh control so the
- * figure can be brought to server ground truth on demand instead of
- * only on view switches. The button reuses the Markdown rescan
- * button's two-animation contract (half-turn on hover, continuous spin
- * while running, held one full rotation so a fast refresh still
- * visibly runs - see MarkdownListPane's handleRescan for the rationale).
+ * The storage gauge of the Trash and Files panes: the Settings ring
+ * (`QuotaRing`, small) with the used and the total beside it; a click on it
+ * opens Settings > Storage, which also explains when deleted files stop
+ * counting. A small recount tool sits on its label line. The
+ * refresh reuses the Markdown rescan button's two-animation contract
+ * (half-turn on hover, continuous spin while running, held one full rotation
+ * so a fast refresh still visibly runs - see MarkdownListPane's handleRescan).
+ * Spec: docs/internal/design/ui-patterns.md section 204
  */
 export function StorageBar({ label, usedBytes, maxBytes, onRefresh, onOpen }: Props) {
   const { t } = useTranslation('common');
@@ -54,55 +56,36 @@ export function StorageBar({ label, usedBytes, maxBytes, onRefresh, onOpen }: Pr
     }
   }
 
+  // A small tool on the label line, so the amount keeps the pane's width.
+  const tool = 'group/tool pointer-events-auto relative z-10 inline-flex items-center justify-center w-6 h-6 shrink-0 rounded-md text-pn-muted hover:text-accent hover:bg-pn/10 disabled:opacity-50 transition cursor-pointer';
+  const label_ = (
+    <span className="inline-flex items-center gap-0.5">
+      {label}
+      <HoverLabel label={t('storageBar.refresh')} position="below-start" className="flex">
+        <button type="button" onClick={() => void handleRefresh()} disabled={busy} aria-label={t('storageBar.refresh')} className={tool}>
+          <ArrowsClockwise className={busy ? 'animate-spin' : 'transition-transform duration-300 group-hover/tool:rotate-180'} />
+        </button>
+      </HoverLabel>
+    </span>
+  );
   return (
+    // The whole gauge opens Settings > Storage: one button under the
+    // gauge (the stretched-link pattern), so the two tools on the label line
+    // stay their own buttons above it, never inside it.
     <div className="shrink-0 px-4 pt-2 pb-1">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mb-1.5">
-        <span className="flex items-center gap-1 text-small text-pn-muted">
-          {label}
-          <HoverLabel label={t('storageBar.cleanupInfo')} position="below-start" multiline className="flex items-center">
-            <span tabIndex={0} aria-label={t('storageBar.cleanupInfo')} className="inline-flex items-center cursor-help">
-              <Info />
-            </span>
-          </HoverLabel>
-        </span>
-        <span className="flex items-center gap-2 ml-auto">
-          {onOpen ? (
-            <button
-              type="button"
-              onClick={onOpen}
-              aria-label={`${usage} - ${t('storageBar.open')}`}
-              className="inline-flex items-center gap-0.5 text-small text-pn-muted whitespace-nowrap hover:text-accent transition cursor-pointer"
-            >
-              {usage}
-              <CaretRight aria-hidden="true" className="rtl:-scale-x-100" />
-            </button>
-          ) : (
-            <span className="text-small text-pn-muted whitespace-nowrap">{usage}</span>
-          )}
-          <HoverLabel label={t('storageBar.refresh')} position="below-end">
-            <button
-              type="button"
-              onClick={() => void handleRefresh()}
-              disabled={busy}
-              aria-label={t('storageBar.refresh')}
-              className="group inline-flex items-center justify-center w-7 h-7 shrink-0 rounded-md border border-divider bg-surface-2 text-pn-muted hover:border-accent hover:text-accent disabled:opacity-50 transition cursor-pointer"
-            >
-              <ArrowsClockwise
-                className={busy ? 'animate-spin' : 'transition-transform duration-300 group-hover:rotate-180'}
-              />
-            </button>
-          </HoverLabel>
-        </span>
-      </div>
-      {/* The track opens the same place for a pointer; the button above is
-          the keyboard's way in, so the track stays out of the tab order. */}
-      <div className={`h-2 rounded-full bg-pn/10 overflow-hidden${onOpen ? ' cursor-pointer' : ''}`} onClick={onOpen} aria-hidden="true">
-        <div
-          className={`h-full rounded-full transition-all ${
-            pct > 80 ? 'bg-amber-500 dark:bg-amber-400' : 'bg-accent-fill'
-          }`}
-          style={{ width: `${Math.max(pct, 0.5)}%` }}
-        />
+      <div className={`relative rounded-lg -m-1 p-1 transition${onOpen ? ' hover:bg-pn/5' : ''}`}>
+        {onOpen && (
+          <button
+            type="button"
+            onClick={onOpen}
+            aria-label={`${usage} - ${t('storageBar.open')}`}
+            className="absolute inset-0 rounded-lg cursor-pointer"
+          />
+        )}
+        {/* Clicks pass through the gauge to the button; only the tools take their own. */}
+        <div className="pointer-events-none">
+          <QuotaRing compact="small" usedBytes={usedBytes} maxBytes={maxBytes} label={label_} />
+        </div>
       </div>
     </div>
   );

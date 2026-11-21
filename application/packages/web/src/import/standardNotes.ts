@@ -9,9 +9,9 @@ import { escapeMarkdownText, guardMarkdownLineStart, superToMarkdown, type SnLin
 import { htmlNoteToMarkdown } from './notesnook';
 import { serializeLoginBody } from '../LoginForm';
 import i18n from '../i18n';
-import { isoOrNow, normalizeTagList } from './importHelpers';
+import { isoOrNow, normalizeTagList, str } from './importHelpers';
 
-const msg = (key: string, options?: Record<string, unknown>): string =>
+const msg = (key: string, options: Record<string, unknown> = {}): string =>
   i18n.t(`importLog:standardNotes.${key}`, options);
 
 /**
@@ -198,8 +198,6 @@ export const standardNotesImporter: Importer = {
 
     onProgress?.(i18n.t('importLog:shared.buildingNotes'));
     const notes: ImportedNote[] = [];
-    let emptyCount = 0;
-    let untaggedCount = 0;
     let missingTitleCount = 0;
     let linkifiedCount = 0;
     let starredCount = 0;
@@ -227,8 +225,10 @@ export const standardNotesImporter: Importer = {
       if (item.deleted) continue;
 
       const c = contentOf(item);
-      const rawTitle = (c.title ?? '').trim();
-      const rawBody = c.text ?? '';
+      // Loose JSON: a title or text that is not text is none, not a throw
+      // that ends the whole import.
+      const rawTitle = str(c.title).trim();
+      const rawBody = str(c.text);
       const noteTagIds = item.uuid ? (noteIdToTags.get(item.uuid) ?? []) : [];
       const rawTags = noteTagIds.map((id) => tagIndex.tagName.get(id)!);
       const folder = pickFolder(noteTagIds, tagIndex);
@@ -281,7 +281,6 @@ export const standardNotesImporter: Importer = {
             });
           }
           authEntryCount += entries.length;
-          if (rawTags.length === 0) untaggedCount += entries.length;
           if (trashed) trashedImportCount += entries.length;
           continue;
         }
@@ -354,8 +353,6 @@ export const standardNotesImporter: Importer = {
 
       const tags = tagsFor(extraTags);
       if (!rawTitle) missingTitleCount++;
-      if (!source.trim()) emptyCount++;
-      if (rawTags.length === 0 && extraTags.length === 0) untaggedCount++;
       if (pinned) starredCount++;
       if (trashed) trashedImportCount++;
       if (archived) archivedCount++;
@@ -503,12 +500,6 @@ export const standardNotesImporter: Importer = {
       notes,
       warnings,
       transforms,
-      stats: {
-        totalNotes: notes.length,
-        emptyNotes: emptyCount,
-        untaggedNotes: untaggedCount,
-        uniqueTags: uniqueTags.size,
-      },
       source: 'standard-notes',
     };
     if (tagIndex.folders.length > 0) parsed.folders = tagIndex.folders;
@@ -663,7 +654,7 @@ function codeLanguage(c: SnContent): string {
       'plain text': '',
       shell: 'bash',
     };
-    return name in known ? known[name]! : name.replace(/[^a-z0-9+#-]/g, '');
+    return Object.hasOwn(known, name) ? known[name]! : name.replace(/[^a-z0-9+#-]/g, '');
   }
   return '';
 }
@@ -693,27 +684,43 @@ function sheetsToMarkdown(rawBody: string): string | null {
 
   const blocks: string[] = [];
   for (const sheet of sheets as Array<{ name?: unknown; rows?: unknown }>) {
-    const grid: string[][] = [];
+    // Row -> column -> text. Maps, not arrays: the file sets the indexes,
+    // and an index of a billion must not make a billion-long array.
+    const grid = new Map<number, Map<number, string>>();
+    const at = (v: unknown, fallback: number) => (Number.isSafeInteger(v) && (v as number) >= 0 ? (v as number) : fallback);
     const rows = Array.isArray(sheet?.rows) ? sheet.rows : [];
     rows.forEach((row: { index?: unknown; cells?: unknown }, ri: number) => {
-      const r = typeof row?.index === 'number' ? row.index : ri;
+      const r = at(row?.index, ri);
       const cells = Array.isArray(row?.cells) ? row.cells : [];
       cells.forEach((cell: { index?: unknown; value?: unknown; formula?: unknown }, ci: number) => {
         const text = cellText(cell ?? {});
         if (!text) return;
-        const col = typeof cell?.index === 'number' ? cell.index : ci;
-        (grid[r] ??= [])[col] = text;
+        let line = grid.get(r);
+        if (!line) grid.set(r, (line = new Map()));
+        line.set(at(cell?.index, ci), text);
       });
     });
-    const used = grid.flatMap((row, r) => (row ? [r] : []));
-    if (used.length === 0) continue;
-    // `grid` is sparse, and map() keeps its holes, so the width is read off the used rows.
-    const width = Math.max(...used.map((r) => grid[r]!.length));
+    if (grid.size === 0) continue;
+    // The rows and columns the cells name, in order, with one empty one for
+    // any run of empty ones between (and before the first column), so a run
+    // of a billion empty rows does not become a billion lines.
+    const withGaps = (indexes: number[], from: number): (number | null)[] => {
+      const out: (number | null)[] = [];
+      let prev = from;
+      for (const i of indexes) {
+        if (i > prev + 1) out.push(null);
+        out.push(i);
+        prev = i;
+      }
+      return out;
+    };
+    const used = [...grid.keys()].sort((a, b) => a - b);
+    const cols = withGaps([...new Set([...grid.values()].flatMap((line) => [...line.keys()]))].sort((a, b) => a - b), -1);
     const lines: string[] = [];
-    for (let r = used[0]!; r <= used[used.length - 1]!; r++) {
-      const row = grid[r] ?? [];
-      lines.push(`| ${Array.from({ length: width }, (_, i) => row[i] ?? '').join(' | ')} |`);
-      if (lines.length === 1) lines.push(`|${' --- |'.repeat(width)}`);
+    for (const r of withGaps(used, used[0]! - 1)) {
+      const row = r === null ? undefined : grid.get(r);
+      lines.push(`| ${cols.map((c) => (c === null ? '' : row?.get(c) ?? '')).join(' | ')} |`);
+      if (lines.length === 1) lines.push(`|${' --- |'.repeat(cols.length)}`);
     }
     const name = typeof sheet.name === 'string' ? sheet.name.trim() : '';
     blocks.push(sheets.length > 1 && name ? `## ${name}\n\n${lines.join('\n')}` : lines.join('\n'));
@@ -868,9 +875,9 @@ function buildItemIndex(items: SnItem[]): Map<string, SnLinkedItem> {
   for (const item of items) {
     if (item.deleted || !item.uuid) continue;
     const c = contentOf(item);
-    if (item.content_type === 'Note') map.set(item.uuid, { kind: 'note', title: (c.title ?? '').trim() });
-    else if (item.content_type === 'Tag') map.set(item.uuid, { kind: 'tag', title: (c.title ?? '').trim() });
-    else if (item.content_type === 'SN|File') map.set(item.uuid, { kind: 'file', name: (c.name ?? '').trim() || 'file' });
+    if (item.content_type === 'Note') map.set(item.uuid, { kind: 'note', title: str(c.title).trim() });
+    else if (item.content_type === 'Tag') map.set(item.uuid, { kind: 'tag', title: str(c.title).trim() });
+    else if (item.content_type === 'SN|File') map.set(item.uuid, { kind: 'file', name: str(c.name).trim() || 'file' });
   }
   return map;
 }
@@ -901,7 +908,7 @@ function buildTagIndex(items: SnItem[]): TagIndex {
   const noteTags = new Map<string, string[]>();
   for (const item of items) {
     if (item.content_type !== 'Tag' || item.deleted || !item.uuid) continue;
-    const title = (contentOf(item).title ?? '').trim();
+    const title = str(contentOf(item).title).trim();
     if (!title) continue;
     titles.set(item.uuid, title);
   }

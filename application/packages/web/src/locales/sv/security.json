@@ -4,7 +4,8 @@
     "tabBiometricShort": "Lås",
     "tabPhraseShort": "Fras",
     "tabPhrase": "Din fras",
-    "tabTwoFactor": "2FA"
+    "tabTwoFactor": "2FA",
+    "tabTwoFactorPasskeys": "2FA / Passkeys"
   },
   "pinTab": {
     "changeLost": "Din PIN-ändring sparades inte: PIN-koden hade redan ändrats på en annan enhet.",
@@ -70,7 +71,7 @@
     "browserRestart": "Vid omstart av webbläsaren"
   },
   "pinInfo": {
-    "body": "När det är på krävs din PIN varje gång du öppnar det här objektet, även om appen redan är upplåst. Använd det för känsliga objekt som ska förbli skyddade när du går ifrån."
+    "body": "När det är på frågar det här objektet efter din PIN innan det öppnas, om du inte har angett PIN-koden inom den tid som är inställd i Inställningar > Säkerhet > Lås (5 minuter om du inte ändrar det). Använd det för dina mest känsliga objekt."
   },
   "removePinDialog": {
     "introWithBio": "Ange din nuvarande PIN för att bekräfta borttagningen. Biometrisk upplåsning förblir aktiv, men din enda reserv blir din återställningsfras.",
@@ -121,6 +122,7 @@
     "hideQr": "Dölj QR-kod",
     "showQr": "Visa QR-kod",
     "saveQr": "Spara QR",
+    "qrHint": "Välj ”{{scanQr}}” på inloggningsskärmen på den nya enheten.",
     "copyPhrase": "Kopiera frasen"
   },
   "custody": {
@@ -134,7 +136,7 @@
     "rowLostSelf": "Utan en annan sparad kopia eller en upplåst enhet kan anteckningarna inte återställas.",
     "rowKey": "Var din fras finns",
     "rowKeyCustodial": "På vår server och dina enheter",
-    "rowKeySelf": "Bara på dina enheter",
+    "rowKeySelf": "Bara på dina enheter, om du inte lägger till en passkey för inloggning",
     "releaseWarning": "Spara först din fras utanför PrivacyNotes. När vi har raderat vår kopia behöver du frasen på nya enheter.",
     "challengePrompt": "Skriv de här orden från listan ovan för att bekräfta att du har dem.",
     "wordLabel": "Ord {{position}}",
@@ -167,14 +169,18 @@
   "biometricTab": {
     "checkingSupport": "Kontrollerar stöd för biometri...",
     "description": "Lås upp med fingeravtryck eller ansikte i stället för att skriva in PIN-koden.",
+    "descriptionWeb": "Lås upp med fingeravtryck eller ansikte i stället för att skriva in PIN-koden. I en webbläsare skapar det här en passkey för PrivacyNotes på den här enheten, som sparas av din enhet eller din lösenordshanterare.",
     "trustFirst": "Aktivera ”Lita på den här enheten” först. Biometrisk upplåsning och applåset sparar båda en kopia av din återställningsfras på den här enheten, och det är inte vad en enhet som inte är betrodd är till för.",
     "notAvailable": "Biometrisk upplåsning är inte tillgänglig på den här enheten. Din webbläsare eller hårdvara saknar stöd för en plattformsautentiserare (Touch ID, Face ID, Windows Hello).",
     "enabledFlash": "Biometrisk upplåsning aktiverad.",
     "enrolledOnDevice": "Registrerad på den här enheten",
     "boundStatus": "Biometrisk upplåsning är knuten till din passkey.",
     "boundStatusNative": "Biometrisk upplåsning är knuten till den här enhetens säkra hårdvara.",
+    "boundStatusWindows": "Biometrisk upplåsning är knuten till Windows Hello på den här datorn.",
+    "boundStatusWindowsSoftware": "Biometrisk upplåsning är knuten till Windows Hello på den här datorn. Windows rapporterar inget säkerhetschip (TPM) här som det kan använda. Utan ett sådant förvarar Windows Hello nyckeln i programvara, och den som har en kopia av den här datorns lagring kan pröva Windows Hello-PIN-koder utan begränsning.",
     "setUpAgain": "Ställ in igen för ett starkare lås",
     "unboundWeaker": "På den här enheten är biometrisk upplåsning en spärr mot personer i närheten, inte ett lås: den som har en kopia av den här enhetens lagring kan öppna dina anteckningar utan ditt fingeravtryck eller ansikte.",
+    "noPrfRefused": "Den här passkey-appen kan inte hålla nyckeln för biometrisk upplåsning, så biometrisk upplåsning förblir avstängd. Om en lösenordshanterare sparade passkeyn, radera den där, stäng av dess passkey-alternativ och försök igen.",
     "cannotBind": "Passkey-appen som sparade den här passkeyn, ofta en lösenordshanterare, kan inte skapa det fullständiga låset. På den här enheten stoppar biometrisk upplåsning bara personer i närheten: den som har en kopia av den här enhetens lagring kan öppna dina anteckningar utan ditt fingeravtryck eller ansikte. Om en lösenordshanterare sparar dina passkeys, stäng av dess passkey-alternativ och stäng sedan av och slå på biometrisk upplåsning igen.",
     "bindOffer": "Biometrisk upplåsning på den här enheten är inte knuten till din passkey än, och den här webbläsaren kan knyta den. Ställ in den igen en gång, så att dess nyckel stannar hos din passkey i stället för i den här enhetens lagring.",
     "bindOfferLater": "Inte nu",
@@ -185,18 +191,26 @@
     "lockOnOpenHint": "Frågar efter din PIN eller ditt fingeravtryck när appen öppnas på den här enheten, och igen när den har varit inaktiv.",
     "lockHidesOnSwitch": "Döljer också dina anteckningar när du byter app.",
     "confirmPinForLock": "Ange din PIN för att slå på det här. Den låser en kopia av din återställningsfras, så att bara din PIN kan öppna appen.",
+    "pinWeakCopy": "Med en 4-siffrig PIN-kod kan den som har en kopia av enhetens lagring hitta PIN-koden på några minuter till några timmar och öppna dina anteckningar. En lösenkod är mycket svårare att gissa: ställ in en under fliken PIN.",
     "confirmPasscodeForLock": "Ange din lösenkod för att slå på det här. Den låser en kopia av din återställningsfras, så att bara din lösenkod kan öppna appen.",
     "setupTitle": "Välj hur du låser upp",
     "setupPin": "En PIN låser upp allt här.",
     "setupBiometric": "Ett fingeravtryck eller ansikte låser upp appen bara på den här enheten.",
+    "setupBiometricWeb": "Ett fingeravtryck eller ansikte låser upp appen bara på den här enheten, via en passkey.",
     "setupBiometrics": "Biometri",
-    "setupAddPinTitle": "Lägg till en PIN för skyddade anteckningar",
+    "setupAddPinTitle": "Lägg till en PIN för låset och skyddade anteckningar",
+    "fingerprintOnlyLock": "Det här låset öppnas bara med ditt fingeravtryck. Ange din PIN för att lägga till den som ett andra sätt att låsa upp.",
+    "fingerprintOnlyLockPasscode": "Det här låset öppnas bara med ditt fingeravtryck. Ange din lösenkod för att lägga till den som ett andra sätt att låsa upp.",
+    "fingerprintOnlyLockAction": "Ange PIN",
+    "fingerprintOnlyLockActionPasscode": "Ange lösenkod",
     "appLockHeading": "Applås",
     "relockAgainAfter": "Lås igen efter",
     "notesHeading": "Skyddade anteckningar",
     "reaskAfter": "Fråga efter PIN-koden igen efter",
-    "reaskHint": "För skyddade anteckningar och din återställningsfras.",
+    "reaskHint": "För skyddade anteckningar, skyddade avsnitt och din återställningsfras.",
+    "sectionsHint": "Skydda ett helt avsnitt, till exempel Valv, från dess meny i sidofältet.",
     "biometricHeading": "Fingeravtryck eller ansikte",
+    "biometricHeadingWeb": "Fingeravtryck eller ansikte (passkey)",
     "blockCapture": "Dölj vid skärmfångst",
     "blockCaptureHint": "Håller dina anteckningar borta från skärmdumpar, inspelningar och skärmdelning, så långt din enhet tillåter det. Gäller bara den här enheten.",
     "perDeviceNote": "Biometrisk upplåsning öppnar samma anteckningar som din PIN. Den stannar på den här enheten och synkas aldrig.",
@@ -205,8 +219,30 @@
     "disableConfirmBody": "Vill du inaktivera biometrisk upplåsning på den här enheten?",
     "disableConfirmBodyAppLock": "Vill du inaktivera biometrisk upplåsning på den här enheten? Applåset stängs också av."
   },
+  "passkeysTab": {
+    "intro": "Logga in på en ny enhet med en passkey i stället för att skriva in din återställningsfras. Din fras fungerar fortfarande.",
+    "add": "Lägg till en passkey",
+    "adding": "Lägger till...",
+    "lastUsed": "Senast använd {{date}}",
+    "neverUsed": "Aldrig använd",
+    "removeTitle": "Ta bort den här passkeyn?",
+    "removeBody": "Du kan inte längre logga in med den. Själva passkeyn finns kvar i din passkey-app tills du raderar den där.",
+    "retired": "Skapad innan din fras ändrades. Ta bort den och lägg till den igen.",
+    "noPrf": "Den här passkey-appen kan inte skydda din fras, så passkeyn lades inte till. Prova enhetens egna passkeys, eller en annan lösenordshanterare.",
+    "tooMany": "Du har {{count}} passkeys för inloggning. Ta bort en för att lägga till en till.",
+    "failed": "Passkeyn kunde inte läggas till. Kontrollera anslutningen och försök igen.",
+    "appsOnly": "Lägg till passkeys i din webbläsare på use.privacynotes.app. Inloggning med dem i apparna kommer senare.",
+    "empty": "Inga passkeys än.",
+    "loadFailed": "Dina passkeys kunde inte läsas in. Kontrollera anslutningen och försök igen.",
+    "removeFailed": "Passkeyn kunde inte tas bort. Kontrollera anslutningen och försök igen.",
+    "pinPrompt": "Ange din fyrsiffriga PIN för att lägga till en passkey.",
+    "pinPromptPasscode": "Ange din lösenkod för att lägga till en passkey."
+  },
   "appLock": {
-    "phraseNotSaved": "Den här enheten kunde inte spara din återställningsfras, så inget ändrades. Försök igen."
+    "phraseNotSaved": "Den här enheten kunde inte spara din återställningsfras, så inget ändrades. Försök igen.",
+    "phraseInMemoryOnly": "Den här webbläsaren kunde inte skydda din återställningsfras, så den sparas inte på den här enheten. Om du laddar om eller stänger den här fliken loggas du ut, så ha din återställningsfras till hands. Slå på applåset i Inställningar > Säkerhet > Lås för att förbli inloggad här.",
+    "untrustedSignIn": "Du litade inte på den här enheten, så din inloggning sparas inte på den. Om du stänger eller laddar om appen loggas du ut, så ha din återställningsfras till hands.",
+    "presenceGateRemoved": "Upplåsning med fingeravtryck eller ansikte är avstängd: den här webbläsaren förvarade dess nyckel bredvid din återställningsfras. Din PIN-kod eller lösenkod låser fortfarande upp appen."
   },
   "pinSetup": {
     "description": "En fyrsiffrig PIN krävs för att visa din återställningsfras. Valfritt, men rekommenderas i delade utrymmen.",
@@ -241,13 +277,21 @@
     "disableTitlePasscode": "Ange lösenkod för att stänga av skyddet",
     "verifySubtitlePasscode": "Ange din lösenkod för att låsa upp det här objektet. Upplåsningen varar lika länge som tidsgränsen du valt under Säkerhet.",
     "passcodeRequired": "Lösenkod krävs",
-    "deleteSubtitlePasscode": "Ange din lösenkod för att radera det här skyddade objektet."
+    "deleteSubtitlePasscode": "Ange din lösenkod för att radera det här skyddade objektet.",
+    "sectionTitle": "Det här avsnittet är skyddat",
+    "sectionBiometricSubtitle": "Använd fingeravtryck eller ansikte för att öppna det här avsnittet.",
+    "sectionVerifySubtitle": "Ange din fyrsiffriga PIN för att öppna det här avsnittet. Upplåsningen varar lika länge som tidsgränsen du valt under Säkerhet.",
+    "sectionVerifySubtitlePasscode": "Ange din lösenkod för att öppna det här avsnittet. Upplåsningen varar lika länge som tidsgränsen du valt under Säkerhet.",
+    "sectionDisableSubtitle": "Objekten ligger kvar där de är. Bara skyddet försvinner.",
+    "sectionBootstrapSubtitle": "Det här avsnittet är skyddat, men ingen PIN är inställd på den här enheten. Skapa en fyrsiffrig PIN för att öppna det. Din PIN synkas till alla dina enheter."
   },
   "lockScreen": {
     "unlockApp": "Lås upp <brand/>",
     "subtitleWithBio": "Använd fingeravtryck, ansikte eller PIN för att fortsätta.",
     "subtitleNoBio": "Ange din PIN för att fortsätta.",
     "biometricFailed": "Den biometriska verifieringen misslyckades eller avbröts.",
+    "deviceKeyUnavailable": "Den här enheten kan inte öppna sitt lås just nu, och det du skrev är inte problemet. Lås upp på ett annat sätt nedan, till exempel med din återställningsfras.",
+    "keyringCancelled": "Lås upp din nyckelring och försök sedan igen.",
     "biometricUnopened": "Biometrisk upplåsning kunde inte öppna dina anteckningar. Använd din PIN eller lösenkod, eller ställ in biometrisk upplåsning igen.",
     "biometricGone": "Biometrisk upplåsning slutade fungera på den här enheten och måste ställas in igen. Använd ett annat sätt att komma in nedan och slå sedan på biometrisk upplåsning igen i Inställningar.",
     "verifying": "Verifierar...",
@@ -275,9 +319,6 @@
     "upgradeHeading": "Eller uppgradera till Pro",
     "upgradeBody": "Engångsbetalning, ingen prenumeration. Obegränsat antal enheter plus bilder, anteckningshistorik och mer.",
     "upgradeCta": "Uppgradera till Pro för {{price}} $",
-    "needMoreHeading": "Behöver du fler enheter?",
-    "needMoreBody": "Pro-uppgraderingar är inte tillgängliga i den här versionen. Om du verkligen behöver en tredje enhet, hör av dig så löser vi det.",
-    "contactSupport": "Kontakta supporten",
     "saveRecoveryHeading": "Spara din återställningsfras",
     "saveRecoveryBody": "Du loggade in med OAuth. Skriv ner din återställningsfras också. Den är din reserv om OAuth någon gång slutar fungera eller om du blir utelåst på alla enheter.",
     "hide": "Dölj",
@@ -315,7 +356,7 @@
     "custodial": "Vi lagrar en krypterad kopia av din fras. Behåll minst ett anslutet konto eller byt till egen nyckelförvaring innan du kopplar bort det sista.",
     "selfCustody": "På en ny enhet behöver ett anslutet konto fortfarande din återställningsfras för att öppna dina anteckningar. Att ansluta ett konto lagrar inte frasen hos oss.",
     "mfaRequired": "Tvåfaktorsinloggning förblir på för alla inloggningssätt. Behåll din autentiseringsapp eller dess sparade reservnyckel.",
-    "unavailable": "Det går inte att ändra anslutna konton ännu. Din befintliga inloggning fungerar fortfarande.",
+    "unavailable": "Ändringar av anslutna konton är avstängda för tillfället. Din befintliga inloggning fungerar fortfarande.",
     "loading": "Kontrollerar anslutna konton...",
     "emailHidden": "E-postadress delas inte",
     "disconnectAccount": "Koppla bort {{provider}}-kontot {{email}}",
@@ -384,7 +425,7 @@
     "signInAgain": "Logga in igen",
     "lostAuthenticator": "Har du tappat bort telefonen?",
     "restore": "Lägg till din reservnyckel i valfri autentiseringsapp och ange sedan dess kod i PrivacyNotes.",
-    "noBackup": "Ingen telefon och ingen reservnyckel? Vi återställer inte 2FA, och vår support kan inte hjälpa till med det. Exportera anteckningarna på den här enheten och starta ett nytt valv.",
+    "noBackup": "Ingen telefon och ingen reservnyckel? Vi återställer inte 2FA, och vår support kan inte hjälpa till med det. Exportera anteckningarna på den här enheten som ”Allt, inte krypterat (.zip)” och starta ett nytt valv.",
     "localNotes": "Inte nu? Fortsätt använda anteckningarna på den här enheten. Synkroniseringen startar igen när du har angett en kod.",
     "useLocalNotes": "Hoppa över tills vidare"
   },
@@ -394,7 +435,7 @@
     "loading": "Kontrollerar 2FA...",
     "retry": "Försök igen",
     "unavailable": "Det gick inte att kontrollera 2FA. Dina anteckningar på den här enheten är säkra. Kontrollera anslutningen och försök igen.",
-    "notAvailable": "2FA är inte tillgängligt ännu.",
+    "notAvailable": "2FA är avstängt för tillfället. Försök igen senare.",
     "actionFailed": "Det fungerade inte. Kontrollera anslutningen och försök igen. Dina anteckningar på den här enheten är säkra.",
     "warning": "Behåll din telefon eller din reservnyckel. Om du förlorar båda kan du inte logga in på en ny enhet. Det här är för din egen säkerhet. Vi återställer inte 2FA, och vår support kan inte hjälpa till med det.",
     "cannotEnroll": "Logga in igen med din fras eller ett anslutet konto för att ställa in 2FA.",
@@ -423,6 +464,7 @@
     "backupWarning": "Har du tappat bort telefonen? Med den här nyckeln får du tillbaka dina koder. Förvara den säkert utanför PrivacyNotes.",
     "savedAcknowledgment": "Jag har sparat reservnyckeln.",
     "confirmBackup": "Skriv in reservnyckeln från förra steget igen och ange sedan koden från din app.",
+    "disconnectsConnections": "När du slår på 2FA kopplas webbläsartillägget och kommandoraden bort. Anslut tillägget igen under Inställningar > Tillägg, och kommandoraden under Inställningar > CLI.",
     "codeLabel": "Kod från din app",
     "cancelSetup": "Avbryt",
     "enabled": "2FA är på",
@@ -452,6 +494,7 @@
   },
   "phraseChange": {
     "lengthGroup": "Frasens längd",
+    "lengthLater": "Du kan ändra längden eller frasen senare under Inställningar > Säkerhet > Fras.",
     "badgeMargin": "Extra marginal",
     "rowWrite": "Att skriva ner",
     "write12": "Snabb att skriva av för hand.",
@@ -503,13 +546,26 @@
     "failed": "Frasen byttes inte.",
     "failedTooMany": "Din fras har bytts tre gånger under de senaste 24 timmarna. Försök igen senare.",
     "failedMoved": "Dina inställningar ändrades på en annan enhet under tiden. Försök igen.",
+    "failedSettingsMoved": "Dina inställningar ändrades på en annan enhet under tiden. Försök igen: den här gången ersätter frasbytet dem, även om de ändras igen.",
     "failedTwoFactor": "2FA-koden godtogs inte. Försök igen.",
     "failedKeyRing": "Den här enheten har inte nycklarna till en tidigare fras. Gör bytet på en enhet som har dem.",
     "failedBiometric": "Ditt fingeravtryck eller ansikte är det enda låset på den här enheten. Bekräfta det för att göra bytet.",
+    "failedCannotBind": "Ditt fingeravtryck eller ansikte är det enda låset på den här enheten, och på den här enheten kan det inte skydda den nya frasen. Ställ först in en PIN-kod eller lösenkod i Inställningar > Säkerhet > PIN och gör sedan bytet.",
     "failedUnsynced": "Vissa inställningar på den här enheten är inte synkade än. Vänta en stund och försök sedan igen.",
     "failedOffline": "Servern kunde inte ta emot bytet just nu. Kontrollera anslutningen och försök igen.",
+    "signInPasskeysReset_other": "Dina {{count}} passkeys för inloggning slutar fungera. Lägg till dem igen efter bytet.",
+    "signInPasskeysReset_one": "Din passkey för inloggning slutar fungera. Lägg till den igen efter bytet.",
     "intro_one": "En ny fras på {{count}} ord ersätter din fras. Den gamla frasen slutar fungera. Dina andra enheter ber om den nya frasen en gång. Pro, dina anteckningar, filer, historik och ditt konto-ID finns kvar.",
     "changeTitle_one": "Skapa en ny fras på {{count}} ord",
     "switchTo_one": "Byt till {{count}} ord"
+  },
+  "releaseNotice": {
+    "sent": "En ny enhet loggade in på ditt konto den {{when}}. Inte du? Ta bort den under Enheter."
+  },
+  "releaseApproval": {
+    "ask": "En ny inloggning den {{when}} ber om din återställningsfras (kod {{code}}). Tillåt den bara om det är du och den nya enheten visar samma kod.",
+    "waiting": "En ny inloggning ber om din återställningsfras (kod {{code}}) och får den efter {{when}}, om du inte nekar den. Tillåt den bara om det är du och den nya enheten visar samma kod.",
+    "allow": "Tillåt",
+    "deny": "Neka"
   }
 }

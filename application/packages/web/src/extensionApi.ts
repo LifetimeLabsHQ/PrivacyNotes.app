@@ -60,9 +60,20 @@ export async function loadExtensionState(supabase: SupabaseClient, pubkey: strin
   };
 }
 
-/** Remove deletes the row: the token, its checker and Ksrv go together. */
-export async function removeExtension(supabase: SupabaseClient, pubkey: string, id: string): Promise<void> {
+/** Remove deletes the row: the token, its checker and Ksrv go together, and
+ *  the inbox rows it posted, except its `loginedit` rows (0132). With
+ *  `dropEdits` (Remove anyway) those go too, so the warning that what this
+ *  app could not take in is lost stays true (beta #133), in one transaction
+ *  that locks the token first, so a login edit posted with it meanwhile
+ *  cannot outlive the remove (migration 0146, beta #198).
+ *  Spec: docs/contrib/passkeys.md (section 5.4, App side of Remove) */
+export async function removeExtension(supabase: SupabaseClient, pubkey: string, id: string, opts: { dropEdits?: boolean } = {}): Promise<void> {
   if (isDemoMode()) demoRefusal();
+  if (opts.dropEdits) {
+    const { error } = await supabase.rpc('extension_remove_anyway', { p_id: id });
+    if (error) throw new ExtensionCallError('remove_failed');
+    return;
+  }
   const { error } = await supabase.from('extension_tokens').delete().eq('user_pubkey', pubkey).eq('id', id);
   if (error) throw new ExtensionCallError('remove_failed');
 }
@@ -77,7 +88,7 @@ async function invokePair(supabase: SupabaseClient, body: Record<string, unknown
 
 export function createPairingRow(
   supabase: SupabaseClient,
-  row: { secretHash: string; tokenId: string; clips: boolean; logins: boolean; ksrv?: string; keyTag?: string; client?: 'cli' },
+  row: { secretHash: string; tokenId: string; clips: boolean; logins: boolean; ksrv?: string; keyTag?: string; client?: 'cli'; kem?: string },
 ): Promise<void> {
   return invokePair(supabase, { action: 'create', ...row });
 }
@@ -90,4 +101,11 @@ export function rekeyLogins(
   ksrv: Record<string, string>,
 ): Promise<void> {
   return invokePair(supabase, { action: 'rekey', oldTag, newTag, ksrv });
+}
+
+/** One remaining browser's server half for the fresh browser half it sent
+ *  (inbox kind `keyhalf`), under the account's current tag, named by
+ *  `halfId` (migration 0156). Spec: docs/internal/plans/browser-extension-build.md (section 3.4 step 7) */
+export function rehalfLogins(supabase: SupabaseClient, tokenId: string, tag: string, ksrv: string, halfId: string): Promise<void> {
+  return invokePair(supabase, { action: 'rehalf', tokenId, tag, ksrv, halfId });
 }

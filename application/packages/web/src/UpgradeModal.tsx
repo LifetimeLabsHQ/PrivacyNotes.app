@@ -121,7 +121,7 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative w-full sm:max-w-3xl max-h-[92vh] overflow-y-auto bg-surface-2 border border-divider text-pn rounded-t-2xl sm:rounded-xl grid sm:grid-cols-[1fr_12.5rem] pb-[env(safe-area-inset-bottom)]"
+        className="relative w-full sm:max-w-3xl max-h-[92vh] overflow-y-auto bg-surface-2 border border-divider text-pn rounded-t-2xl sm:rounded-xl grid sm:grid-cols-[1fr_12.5rem] pb-[var(--pn-safe-bottom)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute top-3 end-3 z-10">
@@ -227,7 +227,7 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete }: Props) {
  *  zen preview behind the window and the theme builder's return after it. */
 export type UpgradeTrigger =
   | 'lock' | 'protect' | 'history' | 'devices' | 'zen' | 'theme' | 'storage'
-  | 'fileSize' | 'folders' | 'looks' | 'noteIcon' | 'spaces' | 'formatBar' | 'totp' | 'replace' | 'passphrase' | 'alerts' | 'vaultFiles' | 'cli' | 'browsers' | 'smartConnections' | null;
+  | 'fileSize' | 'folders' | 'looks' | 'noteIcon' | 'spaces' | 'formatBar' | 'totp' | 'replace' | 'passphrase' | 'alerts' | 'vaultFiles' | 'cli' | 'browsers' | 'smartConnections' | 'ocr' | 'translate' | 'cleanup' | null;
 
 // The Pro mark lives in proMark.tsx, a leaf the UI parts import without this
 // window and its billing code.

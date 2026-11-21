@@ -67,6 +67,18 @@ export function emptyDrawingBody(): string {
 }
 
 /**
+ * The elements without an `iframe`. An `iframe` element carries a page of
+ * HTML (`customData.generationData`) that Excalidraw draws as a sandboxed
+ * frame with scripts on, whatever `validateEmbeddable` and `aiEnabled` say.
+ * The canvas never makes one (its AI tools are off), so one came from a file,
+ * a paste or a drop, and it goes. An `embeddable` stays: `validateEmbeddable`
+ * refuses every link, so it draws as an empty box.
+ */
+export function withoutFrames(elements: readonly unknown[]): SceneElement[] {
+  return elements.filter((e): e is SceneElement => isRecord(e) && e.type !== 'iframe');
+}
+
+/**
  * The scene a body holds, or null when the body is not a scene. A null is
  * never saved over: the caller shows the body as unreadable instead.
  */
@@ -79,7 +91,7 @@ export function parseScene(body: string): DrawingScene | null {
     return null;
   }
   if (!isRecord(data) || data.type !== 'excalidraw') return null;
-  const elements = Array.isArray(data.elements) ? data.elements.filter(isRecord) : [];
+  const elements = Array.isArray(data.elements) ? withoutFrames(data.elements) : [];
   const appState = isRecord(data.appState) ? data.appState : {};
   const files: Record<string, DrawingFile> = {};
   if (isRecord(data.files)) {

@@ -12,9 +12,11 @@ import { phraseSignsFor } from './identity';
 import {
   trustAwareStorage,
   setTrustedDevice,
+  setTabTrust,
 } from './trustStorage';
-import { detectPlatform, invokeFnWithRetry, type Platform } from './devices';
-import { appLockArmed, isWrappedEnvelope, persistStoredPhrase } from './phraseAtRest';
+import { detectPlatform, invokeFnWithRetry, readFnErrorBody, type FnError, type Platform } from './devices';
+import { appLockArmed, hasLockWrap, isWrappedEnvelope, persistStoredPhrase } from './phraseAtRest';
+import { requestCode } from './releaseNotice';
 import { APP_ORIGIN, isApexHost } from './hosts';
 import {
   PHRASE_STORAGE_KEY,
@@ -29,8 +31,9 @@ import { logAuthEvent } from './authDiag';
 import { signInStamp, type SignInStamp } from './liveSignIn';
 import { ensureLevel2, MfaCancelledError, mfaSessionIdentity } from './mfaStep';
 import { consumeOAuthPending, markOAuthPending } from './oauthPending';
+import { holdLocalDataLock } from './localDataLock';
 import { exchangeAccountOAuth, type AccountOAuthProvider } from './accountOAuth';
-import { parseShortcut } from './noteShortcut';
+import { takeDeepLinks } from './deepLinks';
 import type { AuthState, AuthMethod, OAuthProvider } from './auth';
 
 /**
@@ -143,39 +146,16 @@ export function useOAuthFlows({
   const brokerProvider = useRef<{ identity: string; provider: AccountOAuthProvider } | null>(null);
 
   function registerOAuthListener(): () => void {
-    // No stored phrase: restore an existing provider session or a legacy
-    // implicit return. PKCE codes go through broker preflight before boot
-    // reaches this listener and never auto-exchange inside SDK initialization.
+    // No stored phrase: restore an existing provider session. Every flow is
+    // PKCE (auth.tsx), so no token arrives in the address: codes go through
+    // broker preflight before boot reaches this listener and never
+    // auto-exchange inside SDK initialization.
     let handled = false;
-    // Armed when INITIAL_SESSION(null) arrives while an access_token hash
-    // is still unconsumed (see that branch below). If the token turns out
-    // to be dead (expired redirect, replayed link), supabase-js finishes
-    // its init with an error and never fires another event - without a
-    // fallback the user hangs on the loading screen forever. Any later
-    // auth event clears the timer.
-    let callbackFallbackTimer: ReturnType<typeof setTimeout> | null = null;
-    // Must exceed the worst realistic token-validation round-trip: cold
-    // connections to the sync API were measured at ~3.5 s, so give the
-    // pending validation a generous margin before declaring it dead.
-    // 20s rather than 12s: on high-latency lossy
-    // links (satellite, throttled mobile) a merely slow validation was
-    // demoted to the sign-in options mid-flow, which reads as a failed
-    // sign-in. A dead token costs 8 more seconds of loading screen; a
-    // false demote costs the user's confidence. `handled` stays false
-    // either way, so a late SIGNED_IN still wins after the demote.
-    const OAUTH_CALLBACK_FALLBACK_MS = 20_000;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         // Callback exchanges own hydration, including managed canonical
         // sessions whose original provider metadata can be "email".
         if (oauthExchangeInFlight.current) return;
-        // Any auth event means supabase-js is alive and progressing, so
-        // the pending-callback fallback is no longer needed. The branch
-        // that arms it re-arms on every run.
-        if (callbackFallbackTimer) {
-          clearTimeout(callbackFallbackTimer);
-          callbackFallbackTimer = null;
-        }
         // Re-arm on sign-out. Without this, the `handled` latch below stays
         // true for the whole session, so switching accounts (sign out, then
         // sign in with a different provider/account) drops the second
@@ -188,20 +168,38 @@ export function useOAuthFlows({
         if (handled) return;
         const provider = session?.user?.app_metadata?.provider;
         const eligible = provider === 'google' || provider === 'apple' || provider === 'github';
+        // A stored provider session with the app lock's own copy of the
+        // phrase on this device: the lock screen is the door, and its unlock
+        // signs in from that copy. Asking the server for the phrase here
+        // would open the vault behind the lock. So wait for the unlock, in
+        // the state every locked phrase account starts in, and only from the
+        // start: the event can arrive after a network refresh, when the
+        // unlock may already have opened the vault. A native SIGNED_IN
+        // belongs to the deep-link handler, as below.
+        // Spec: docs/internal/plans/custodial-release-hardening.md (section 3.2)
+        if (session && eligible && hasLockWrap()
+          && (event === 'INITIAL_SESSION' || (event === 'SIGNED_IN' && detectPlatform() === 'web'))) {
+          handled = true;
+          logAuthEvent('auth:oauth-start-waits-for-lock');
+          setAuth((prev) => (prev.status === 'loading' ? { status: 'onboarding' } : prev));
+          return;
+        }
         if (event === 'SIGNED_IN' && session && eligible) {
           // Native owns OAuth hydration in the deep-link handler
           // (handleNativeOAuthCallback), which is always registered even
           // when this boot-path listener is not. Web hydrates here.
           if (detectPlatform() !== 'web') return;
           handled = true;
-          // Strip OAuth hash fragment - supabase-js usually consumes it
-          // to a bare "#", but on slow connections or browser quirks the
-          // full #access_token=... can persist. See gap #59.
+          // Drop a bare "#" left in the address.
           const h = window.location.hash;
-          if (h === '' || h === '#' || h.includes('access_token=')) {
+          if (h === '' || h === '#') {
             history.replaceState(null, '', window.location.pathname + window.location.search || '/');
           }
-          hydrateFromOAuthSession(session.access_token, /*trust*/ true).catch(
+          // Not a sign-in made by hand: under PKCE that one arrives through
+          // the exchange, so what reaches this listener is the library
+          // announcing a session it found, which must not bring back a
+          // device the owner removed (beta.privacynotes.app #213 item 9).
+          hydrateFromOAuthSession(session.access_token, /*trust*/ true, undefined, undefined, /*byHand*/ false, 'found').catch(
             (err) => {
               console.error('OAuth session hydrate failed:', err);
               // Re-arm so a retry can hydrate without restarting.
@@ -227,30 +225,6 @@ export function useOAuthFlows({
             setAuth({ status: 'oauth_hydrate_failed', trust: true });
             return;
           }
-          // supabase-js finished init with no session - but if the URL
-          // hash still has `access_token=...`, the OAuth fragment hasn't
-          // been consumed yet. SIGNED_IN will fire shortly. Don't lock
-          // the handler with `handled = true` here, otherwise the user
-          // gets stranded on onboarding until they refresh manually.
-          // See gap #20.
-          if (typeof window !== 'undefined' && window.location.hash.includes('access_token=')) {
-            // ...unless SIGNED_IN never comes: an expired or replayed
-            // token makes supabase-js finish init with an error and go
-            // silent, which used to strand the user on the loading
-            // screen indefinitely. Fall back to onboarding after a
-            // deadline. `handled` stays false so a miraculously late
-            // SIGNED_IN can still hydrate and win.
-            callbackFallbackTimer = setTimeout(() => {
-              callbackFallbackTimer = null;
-              if (handled) return;
-              console.warn('[auth] OAuth callback never produced a session - showing sign-in options.');
-              if (window.location.hash.includes('access_token=')) {
-                history.replaceState(null, '', window.location.pathname + window.location.search || '/');
-              }
-              setAuth({ status: 'onboarding' });
-            }, OAUTH_CALLBACK_FALLBACK_MS);
-            return;
-          }
           // Native (Tauri): the OAuth token never rides in
           // window.location.hash - it arrives later, after the native
           // callback is exchanged, as a SIGNED_IN event. Show the login
@@ -269,10 +243,10 @@ export function useOAuthFlows({
           // OAuth). Process it the same way.
           handled = true;
           const h2 = window.location.hash;
-          if (h2 === '' || h2 === '#' || h2.includes('access_token=')) {
+          if (h2 === '' || h2 === '#') {
             history.replaceState(null, '', window.location.pathname + window.location.search || '/');
           }
-          hydrateFromOAuthSession(session.access_token, /*trust*/ true, undefined, undefined, false).catch(
+          hydrateFromOAuthSession(session.access_token, /*trust*/ true, undefined, undefined, false, 'start').catch(
             (err) => {
               console.error('OAuth session hydrate failed:', err);
               // Re-arm so a retry can hydrate without restarting.
@@ -294,7 +268,6 @@ export function useOAuthFlows({
 
     return () => {
       subscription.unsubscribe();
-      if (callbackFallbackTimer) clearTimeout(callbackFallbackTimer);
     };
   }
 
@@ -322,7 +295,11 @@ export function useOAuthFlows({
   // with a stored session and the retry after a failed one pass false, so a
   // device the owner removed is signed out instead of coming back
   // (register-device `reactivate`).
-  async function hydrateFromOAuthSession(accessToken: string, trust: boolean, verifiedProvider?: AccountOAuthProvider, expectedGeneration?: number, byHand = true) {
+  // `cause`: why a start that was not made by hand asks, sent to the release
+  // for its measurement only (custodial_release_take).
+  // `wait`: the person said they do not have their other device, so the
+  // release may start its wait (custodial_release_approval).
+  async function hydrateFromOAuthSession(accessToken: string, trust: boolean, verifiedProvider?: AccountOAuthProvider, expectedGeneration?: number, byHand = true, cause: 'start' | 'found' | 'retry' = 'start', wait = false) {
     // Abort marker: true once the user has started their own phrase
     // sign-in (or one is mid-flight). Checked before every side effect
     // below - a superseded hydration must neither sign out the session
@@ -335,6 +312,9 @@ export function useOAuthFlows({
     // no sign-out began during the lookups ahead of it (liveSignIn.ts).
     const startedAt = signInStamp();
 
+    // Asked before the flag is written, so a start wipe that ends now sees a
+    // sign-in waiting and keeps it (localDataLock.ts).
+    void holdLocalDataLock();
     setTrustedDevice(trust);
 
     // Existing user? Check app_metadata.pubkey, written by link-pubkey
@@ -389,12 +369,67 @@ export function useOAuthFlows({
       let custodialResult: { custodial?: boolean; phrase?: string } | null =
         null;
       try {
-        const { data: custodialData, error: custodialErr } =
-          await invokeFnWithRetry(supabase, 'get-custodial-phrase', {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
+        const fetchCustodial = () => invokeFnWithRetry(supabase, 'get-custodial-phrase', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          body: wait ? { cause: byHand ? 'hand' : cause, wait: true } : { cause: byHand ? 'hand' : cause },
+        });
+        // The body of a refusal can be read once.
+        let refusedUntil: string | undefined;
+        let refusedRequest: string | undefined;
+        const refusalCode = async (error: unknown) => {
+          if (!error) return undefined;
+          const body = (await readFnErrorBody(error as FnError)) as { error?: string; until?: unknown; request?: unknown } | null;
+          refusedUntil = typeof body?.until === 'string' ? body.until : undefined;
+          refusedRequest = typeof body?.request === 'string' ? body.request : undefined;
+          return body?.error;
+        };
+        let { data: custodialData, error: custodialErr } = await fetchCustodial();
         if (superseded()) {
           console.info('[oauth] hydrate superseded by manual sign-in, aborting');
+          return;
+        }
+        let refusal = await refusalCode(custodialErr);
+        // With two-factor sign-in on, the phrase goes only to a session that
+        // passed its code in the last minutes (beta.privacynotes.app #225
+        // item 1). A start from a stored session asks for the code again,
+        // with the same prompt as the gate above, and asks once more.
+        if (refusal === 'mfa_required') {
+          await ensureLevel2(supabase, { force: true });
+          if (superseded()) return;
+          const fresh = (await supabase.auth.getSession()).data.session;
+          if (!fresh || fresh.user.id !== authUid || fresh.user.app_metadata?.pubkey !== existingPubkey) {
+            setAuth({ status: 'oauth_hydrate_failed', trust });
+            return;
+          }
+          accessToken = fresh.access_token;
+          ({ data: custodialData, error: custodialErr } = await fetchCustodial());
+          if (superseded()) {
+            console.info('[oauth] hydrate superseded by manual sign-in, aborting');
+            return;
+          }
+          refusal = await refusalCode(custodialErr);
+        }
+        // The release went to no session older than its window, or to too
+        // many new sessions today. Trying again with this session cannot
+        // pass; a new sign-in can. The retry screen says so and offers only
+        // the way back to the sign-in options.
+        // Spec: docs/internal/plans/custodial-release-hardening.md (section 3.3)
+        if (refusal === 'release_needs_sign_in' || refusal === 'release_rate_limited') {
+          setAuth({ status: 'oauth_hydrate_failed', trust, reason: refusal === 'release_rate_limited' ? 'release_limit' : 'sign_in_again' });
+          return;
+        }
+        // The account has another device: it allows this sign-in, or the
+        // wait the person started runs out, unless a device denies it.
+        // Spec: docs/internal/plans/custodial-release-hardening.md (section 13.2)
+        if (refusal === 'release_approval_needed') {
+          const code = refusedRequest ? requestCode(refusedRequest) : undefined;
+          setAuth(refusedUntil
+            ? { status: 'oauth_hydrate_failed', trust, reason: 'approval_waiting', until: refusedUntil, code }
+            : { status: 'oauth_hydrate_failed', trust, reason: 'approval_needed', code });
+          return;
+        }
+        if (refusal === 'release_denied') {
+          setAuth({ status: 'oauth_hydrate_failed', trust, reason: 'approval_denied' });
           return;
         }
         if (custodialErr) throw custodialErr;
@@ -405,7 +440,7 @@ export function useOAuthFlows({
           console.info('[oauth] hydrate superseded by manual sign-in, aborting');
           return;
         }
-        setAuth({ status: 'oauth_hydrate_failed', trust });
+        setAuth({ status: err instanceof MfaCancelledError ? 'onboarding' : 'oauth_hydrate_failed', trust });
         return;
       }
       if (custodialResult?.custodial && custodialResult.phrase) {
@@ -598,7 +633,10 @@ export function useOAuthFlows({
       // re-authentication convenience, so persisting across reloads is
       // the expected UX. Users who want session-only behaviour should
       // use the phrase path with the "trust this device" box unticked.
-      setTrustedDevice(true);
+      // This tab only: the browser's flag follows once the return is
+      // accepted, so a click that goes nowhere moves no other tab's secrets
+      // to disk (beta #210).
+      setTabTrust(true);
 
       // Native (Tauri) apps cannot run OAuth inside the embedded webview -
       // Google rejects it as a "disallowed_useragent". Open the provider
@@ -729,6 +767,7 @@ export function useOAuthFlows({
     // Consumed synchronously, before the first await: two deliveries of one
     // URL (onOpenUrl and the resume check can both fire) cannot both pass.
     const gate = consumeOAuthPending();
+    void holdLocalDataLock();
     // Signed in means the vault is open, not merely that a phrase sits on
     // disk. A session the library ends on its own leaves the phrase behind
     // and lands the person on the sign-in screen, and reading the blob alone
@@ -748,7 +787,10 @@ export function useOAuthFlows({
       // the opposite case, a URL this install never asked for, and it stays
       // silent, because an answer hands an unsolicited link an oracle.
       // Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.8)
-      if (gate !== 'missing') {
+      // Never over an open vault: the refusal is right, and the retry
+      // screen in place of the notes ends the session from its Back button
+      // (beta.privacynotes.app #213 item 5).
+      if (gate !== 'missing' && !vaultOpenRef.current) {
         setAuth({ status: 'oauth_hydrate_failed', trust: true });
       }
       return;
@@ -801,6 +843,9 @@ export function useOAuthFlows({
     const isCurrent = () => userAuthGen.current === generation && !authInFlight.current && !vaultOpenRef.current &&
       trustAwareStorage.getItem(PHRASE_STORAGE_KEY) === storedPhrase && trustAwareStorage.getItem(PUBKEY_OWNER_KEY) === owner;
     try {
+      // The code verifier must outlive the exchange: no start wipe of another
+      // tab (untrustedLeftover.ts) runs while this page holds the lock.
+      await holdLocalDataLock();
       const result = await exchangeAccountOAuth(supabase, code, { storageKey, flowId, isCurrent });
       if (!isCurrent()) throw new MfaCancelledError();
       const identity = mfaSessionIdentity(result.session);
@@ -832,6 +877,9 @@ export function useOAuthFlows({
     if (!code) return false;
     if (oauthExchangeInFlight.current) return true;
     const webGate = consumeOAuthPending();
+    // A provider return holds the local data lock from here, so no start wipe
+    // in another tab removes its code verifier during the exchange.
+    void holdLocalDataLock();
     const clearCode = () => {
       const current = new URL(window.location.href);
       if (current.searchParams.get('code') !== code) return;
@@ -880,6 +928,7 @@ export function useOAuthFlows({
     const code = rawCode.trim();
     if (!code) return { ok: false as const, error: 'Paste the code from the browser first.' };
     const gate = consumeOAuthPending();
+    void holdLocalDataLock();
     if (gate !== 'ok') {
       logAuthEvent('auth:oauth-paste-refused', { reason: gate });
       return {
@@ -902,25 +951,20 @@ export function useOAuthFlows({
     }
   }
 
-  // Register the deep-link listener once, on native only. Covers both a warm
-  // callback (app already open) and a cold start launched by the link.
+  // Take the sign-in returns from the one deep-link listener (deepLinks.ts),
+  // on native only. Covers both a warm callback (app already open) and a cold
+  // start launched by the link. A shortcut or a connection return never comes
+  // here: deepLinks.ts hands it to its own handler.
   useEffect(() => {
     if (detectPlatform() === 'web') return;
-    let unlisten: (() => void) | undefined;
-    let stopResumeCheck: (() => void) | undefined;
-    let cancelled = false;
-    // Every deep link this effect has accounted for, whether it was processed
+    // Every deep link this handler has accounted for, whether it was processed
     // or deliberately skipped. getCurrent() keeps handing back the same URL,
-    // so the resume check below needs this to tell a genuinely new callback
-    // from one that has already had its turn.
+    // so the resume check needs this to tell a genuinely new callback from one
+    // that has already had its turn.
     let seen: string | undefined;
-    void (async () => {
-      try {
-        const { onOpenUrl, getCurrent } = await import(
-          '@tauri-apps/plugin-deep-link'
-        );
-        const initial = await getCurrent();
-        const initialUrl = initial?.[0];
+    const link = takeDeepLinks('signIn', (url, way) => {
+      if (way === 'launch') {
+        const initialUrl = url;
         // getCurrent() returns the deep link that launched the activity, and
         // it keeps returning that same launch URL on every cold start AND on
         // every Android dev-mode reload/rebuild - the webview reloads but the
@@ -931,65 +975,31 @@ export function useOAuthFlows({
         // the launch URL over at all, and the stored-phrase fast boot
         // restores the session instead.
         // Mark the launch URL seen even when the guard skips it, or the
-        // resume check below would process the very link this guard exists
-        // to avoid.
-        if (initialUrl) seen = initialUrl;
+        // resume check would process the very link this guard exists to
+        // avoid.
+        if (initialUrl === seen) return;
+        seen = initialUrl;
         if (initialUrl && !hasWellFormedStoredPhrase()) {
-          await handleNativeOAuthCallback(initialUrl);
+          void handleNativeOAuthCallback(initialUrl);
         }
-        // A shortcut is never a sign-in return: useShortcutDeepLinks takes it,
-        // and passing it on would only log a refusal.
-        const un = await onOpenUrl((urls) => {
-          const url = urls?.[0];
-          if (!url) return;
-          seen = url;
-          if (!parseShortcut(url)) void handleNativeOAuthCallback(url);
-        });
-        if (cancelled) un();
-        else unlisten = un;
-
-        // Android never fires onOpenUrl for a callback that returns to an
-        // already-running app. The intent IS delivered - getCurrent() returns
-        // it with its token fragment intact - but the event never reaches the
-        // webview, so sign-in hangs on "Redirecting..." forever with no error
-        // and no failed request. Retrying appears to fix it only because a
-        // relaunch takes the getCurrent() path above instead. Diagnosed on a
-        // Pixel 10 against v0.404.0 on 2026-08-16 (CDP showed zero webview
-        // activity while logcat showed the intent arriving 1.4s after the tap).
-        // So: on resume, ask for the current link rather than waiting to be
-        // told. Idempotent via `seen`, and a no-op on platforms where
-        // onOpenUrl already delivered it.
-        const checkOnResume = () => {
-          if (document.hidden) return;
-          void (async () => {
-            try {
-              const cur = await getCurrent();
-              const url = cur?.[0];
-              if (!url || url === seen) return;
-              seen = url;
-              if (!parseShortcut(url)) await handleNativeOAuthCallback(url);
-            } catch {
-              // Transient plugin/IPC failure: the next resume tries again.
-            }
-          })();
-        };
-        if (!cancelled) {
-          window.addEventListener('focus', checkOnResume);
-          document.addEventListener('visibilitychange', checkOnResume);
-          stopResumeCheck = () => {
-            window.removeEventListener('focus', checkOnResume);
-            document.removeEventListener('visibilitychange', checkOnResume);
-          };
-        }
-      } catch (e) {
-        console.error('Deep-link listener setup failed:', e);
+        return;
       }
-    })();
-    return () => {
-      cancelled = true;
-      unlisten?.();
-      stopResumeCheck?.();
-    };
+      // Android never fires onOpenUrl for a callback that returns to an
+      // already-running app. The intent IS delivered - getCurrent() returns
+      // it with its token fragment intact - but the event never reaches the
+      // webview, so sign-in hangs on "Redirecting..." forever with no error
+      // and no failed request. Retrying appears to fix it only because a
+      // relaunch takes the launch path above instead. Diagnosed on a Pixel 10
+      // against v0.404.0 on 2026-08-16 (CDP showed zero webview activity
+      // while logcat showed the intent arriving 1.4s after the tap). So on
+      // resume deepLinks.ts asks for the current link rather than waiting to
+      // be told. Idempotent via `seen`, and a no-op on platforms where
+      // onOpenUrl already delivered it.
+      if (way === 'resume' && url === seen) return;
+      seen = url;
+      void handleNativeOAuthCallback(url);
+    }, { launch: true });
+    return link.stop;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1001,14 +1011,14 @@ export function useOAuthFlows({
    * lands back on oauth_hydrate_failed, honestly.
    * Spec: docs/internal/domain-split.md (pre-cutover gate)
    */
-  async function retryOAuthHydration(trust: boolean) {
+  async function retryOAuthHydration(trust: boolean, opts: { wait?: boolean } = {}) {
     setAuth({ status: 'loading' });
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.access_token) {
         const verified = brokerProvider.current;
         await hydrateFromOAuthSession(session.access_token, trust,
-          verified?.identity === mfaSessionIdentity(session) ? verified.provider : undefined, undefined, false);
+          verified?.identity === mfaSessionIdentity(session) ? verified.provider : undefined, undefined, false, 'retry', opts.wait === true);
         return;
       }
     } catch (err) {

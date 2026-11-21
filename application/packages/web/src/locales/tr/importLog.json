@@ -18,6 +18,8 @@
     "filedNotes_other": "{{count}} not yerleştirildi",
     "tags_other": "{{count}} nottaki etiketler korundu.",
     "droppedAlign": "Düzenleyicinin hizalayamadığı bloklardaki hizalama kaldırıldı, metin korundu.",
+    "lostPasskeys_one": "Bir giriş bilgisiyle kaydedilmiş {{count}} geçiş anahtarı dışarıda bırakıldı. Onu eski uygulamanızda tutun veya o sitede yeni bir geçiş anahtarı ekleyin.",
+    "lostPasskeys_other": "Giriş bilgileriyle kaydedilmiş {{count}} geçiş anahtarı dışarıda bırakıldı. Onları eski uygulamanızda tutun veya bu sitelerde yeni geçiş anahtarları ekleyin.",
     "foldersFromNotebooks_other": "Not defterlerinizden {{count}} klasör yeniden oluşturuldu ({{filed}}).",
     "parsingJson": "JSON ayrıştırılıyor…",
     "buildingNotes": "Notlar oluşturuluyor…",
@@ -324,6 +326,14 @@
     "invalidJson": "Bu dosya geçerli bir JSON değil. \".json\" (şifresiz) olarak dışa aktardığınızdan emin olun.",
     "encryptedExport": "Bu şifreli bir Bitwarden dışa aktarımı. Lütfen düz \".json\" biçimiyle yeniden dışa aktarın (\".json (Encrypted)\" değil).",
     "missingItems": "Bu dosyada beklenen \"items\" dizisi yok. Bir Bitwarden kasa dışa aktarımı değil.",
+    "notZipExport": "Bu zip dosyasının en üst düzeyinde data.json yok. Bir Bitwarden \".zip (with attachments)\" dışa aktarımı değil.",
+    "keptPasskeys_other": "{{count}} geçiş anahtarı kendi giriş bilgilerinde tutuldu.",
+    "passkeyOtherSite": "\"{{name}}\" giriş bilgisi, web sitelerinden biri olmayan {{site}} için bir geçiş anahtarı içeriyor. Giriş bilgisiyle birlikte geldi; tanımıyorsanız orada silin.",
+    "skippedPasskeys_other": "Kasanın saklayamadığı {{count}} geçiş anahtarı alınmadı: anahtar P-256 değil ya da bir değer WebAuthn'ın izin verdiğinden uzun. Bu sitelerde yeni bir geçiş anahtarı ekleyin.",
+    "unmatchedAttachments_other": "{{count}} ek tek bir öğeyle eşleştirilemedi, çünkü klasör adlarını taşıyan hiçbir öğe yok ya da birden çok öğe var. Bu ekler, klasörlerinin adını taşıyan notlarda.",
+    "unmatchedAttachments_one": "{{count}} ek tek bir öğeyle eşleştirilemedi, çünkü klasör adını taşıyan hiçbir öğe yok ya da birden çok öğe var. Bu ek, klasörün adını taşıyan bir notta.",
+    "skippedPasskeys_one": "Kasanın saklayamadığı {{count}} geçiş anahtarı alınmadı: anahtarı P-256 değil ya da bir değer WebAuthn'ın izin verdiğinden uzun. O sitede yeni bir geçiş anahtarı ekleyin.",
+    "keptPasskeys_one": "{{count}} geçiş anahtarı kendi giriş bilgisinde tutuldu.",
     "unknownType": "Bilinmeyen {{type}} türündeki \"{{name}}\" öğesi atlandı.",
     "importedCards_other": "{{count}} kart kasa öğesi olarak içe aktarıldı.",
     "importedSecureNotes_other": "{{count}} güvenli not içe aktarıldı.",
@@ -627,6 +637,10 @@
     "leftFiles_other": "Ekli {{count}} dosya geride kaldı. Onları Enpass'ten kaydedin ve buradaki öğelere ekleyin.",
     "leftFiles_one": "Ekli {{count}} dosya geride kaldı. Onu Enpass'ten kaydedin ve buradaki öğeye ekleyin."
   },
+  "msecure": {
+    "notMSecure": "Bu dosya bir mSecure dışa aktarımı değil. mSecure'da Settings > Backups > Export records to CSV file seçeneğini seçin.",
+    "fieldDataOnly": "Bu mSecure dışa aktarımında alan adları yok, bu yüzden alanları birbirinden ayırt edilemiyor. \"Only export field data\" seçeneği kapalıyken yeniden dışa aktarın."
+  },
   "nordpass": {
     "notNordPass": "Bu dosya bir NordPass dışa aktarımı değil. NordPass'te Settings > Export items seçeneğini seçin."
   },
@@ -643,6 +657,7 @@
     "kdbxFile": "Bu, kilitli olan KeePass veritabanının kendisi. KeePass veya KeePassXC'de onu XML olarak dışa aktarın, ardından o dosyayı içe aktarın.",
     "notKeePass": "Bu dosya bir KeePass XML dışa aktarımı değil. KeePass'te File > Export > KeePass XML (2.x), KeePassXC'de ise Database > Export > XML File seçeneğini seçin.",
     "noEntries": "Bu KeePass dosyasında Recycle Bin dışında hiç kayıt yok.",
+    "doctype": "Bu dosya bir DOCTYPE bildiriyor; hiçbir KeePass dışa aktarımı bunu yazmaz, bu yüzden okunmadı. XML'i KeePass'ten yeniden dışa aktarın ve o dosyayı içe aktarın.",
     "readingEntries": "Kayıtlar okunuyor…",
     "leftHistory_other": "Kayıtların {{count}} eski sürümü dışarıda bırakıldı: yalnızca en yenisi gelir.",
     "missingFiles_other": "Ekli {{count}} dosya dışa aktarımda yoktu ve geride kaldı. Onları KeePass'ten kaydedin ve buradaki giriş bilgilerine ekleyin.",
@@ -659,6 +674,15 @@
     "readHashtags_one": "{{count}} notta #hashtag olarak yazılmış etiketler okundu.",
     "foundFiles_one": "{{count}} Markdown dosyası bulundu..."
   },
+  "raindrop": {
+    "notRaindrop": "Raindrop.io dışa aktarımı değil - Export > CSV ile alınan .csv dosyası veya onu içeren .zip bekleniyordu.",
+    "noCsv": "Bu zip içinde .csv dosyası yok. CSV'yi Raindrop.io'dan dışa aktarın ve o dosyayı seçin.",
+    "highlightsHeading": "Vurgular",
+    "skipped_other": "Adresleri web bağlantısı olmadığı için {{count}} yer imi dışarıda bırakıldı.",
+    "covers_other": "{{count}} kapak görseli içe aktarılmadı. Yer imleri bunun yerine web sitelerinin simgelerini gösterir.",
+    "covers_one": "{{count}} kapak görseli içe aktarılmadı. Yer imi bunun yerine web sitesinin simgesini gösterir.",
+    "skipped_one": "Adresi web bağlantısı olmadığı için {{count}} yer imi dışarıda bırakıldı."
+  },
   "browserBookmarks": {
     "notBookmarks": "Yer imi dışa aktarımı değil - bir tarayıcının dışa aktardığı yer imi .html dosyası bekleniyordu.",
     "noBookmarks": "Bu dosyada yer imi bulunamadı.",
@@ -670,6 +694,8 @@
     "entryTooLarge": "{{name}} açıldığında, bir içe aktarmanın tek seferde okuyabileceği {{limit}} sınırını aşıyor. Dışa aktarımdan çıkarın ve yeniden deneyin.",
     "entryTooLargeKnown": "{{name}} açıldığında {{size}} oluyor; bu, bir içe aktarmanın tek seferde okuyabileceği {{limit}} sınırından fazla. Dışa aktarımdan çıkarın ve yeniden deneyin.",
     "unreadable": "Bu dosya açılamadı. Eksik veya hasarlı olabilir. Dosyayı yeniden dışa aktarın ve yeni dosyayı seçin.",
+    "importTooLarge": "Bu dosya açıldığında {{limit}} boyutunu aşıyor; bu, gerçek bir dışa aktarımın içerebileceğinden fazla. Dosyayı yeniden dışa aktarın ve yeni dosyayı seçin.",
+    "tooManyEntries": "Bu zip {{max}} dosyadan fazlasını listeliyor; bu, gerçek bir dışa aktarımın içerebileceğinden fazla. Dosyayı yeniden dışa aktarın ve yeni dosyayı seçin.",
     "mediaTooLarge_one": "Herhangi bir planın eşitleyebileceği en büyük dosya boyutu olan {{size}} değerinden büyük {{count}} dosya atlandı."
   },
   "safariArchive": {
@@ -682,5 +708,47 @@
   },
   "apply": {
     "unknownWriteError": "Yerel veritabanına yazılırken bilinmeyen bir hata oluştu."
+  },
+  "onenote": {
+    "reading": "OneNote not defteri okunuyor…",
+    "notOneNote": "Bu bir OneNote not defteri değil. Windows için OneNote'ta File > Export > Notebook > OneNote Package'ı seçin ve .onepkg dosyasını buraya bırakın.",
+    "cloudFormat": "Bu bölüm, OneNote'un çevrimiçi sakladığı ve yalnızca OneNote'un okuyabildiği biçimde. Not defterini Windows için OneNote'ta açın, File > Export > Notebook > OneNote Package'ı seçin ve o .onepkg dosyasını buraya bırakın.",
+    "splitPackage": "Bu OneNote paketi birden fazla dosyaya bölünmüş. Not defterini tek bir OneNote Package olarak yeniden dışa aktarın ve o dosyayı buraya bırakın.",
+    "tooLarge": "Bu OneNote paketi tek seferde okunamayacak kadar büyük. Her seferinde bir bölüm grubunu veya bölümü dışa aktarın.",
+    "damaged": "Bu OneNote dosyası hasarlı ve okunamıyor. Not defterini OneNote'tan yeniden dışa aktarın ve o dosyayı deneyin.",
+    "noPages": "Bu OneNote not defterinde sayfa bulunamadı.",
+    "allLocked": "Bu not defterindeki tüm bölümler parola korumalı. Bölümlerin kilidini OneNote'ta açın, parolalarını kaldırın, yeniden dışa aktarın ve yeni dosyayı buraya bırakın.",
+    "subpages_other": "{{count}} alt sayfa, sayfalarının yanında not olarak korundu.",
+    "noteTags_other": "{{count}} sayfanın not etiketleri etiket olarak korundu.",
+    "lockedSections_other": "Parola korumalı {{count}} bölüm dışarıda bırakıldı. Onları da getirmek için parolalarını OneNote'ta kaldırın ve yeniden dışa aktarın.",
+    "unreadableSections_other": "Okunamayan {{count}} bölüm dışarıda bırakıldı.",
+    "unsupported_other": "Burada karşılığı olmayan {{count}} el çizimi, ses kaydı ve denklem dışarıda bırakıldı.",
+    "missingFiles_other": "{{count}} görsel veya dosya pakette yoktu ve dışarıda bırakıldı.",
+    "deadLinks_other": "{{count}} OneNote bağlantısı bu not defterinin dışını gösteriyor; yalnızca metinleri korundu.",
+    "recycleBin_other": "Not defterinin geri dönüşüm kutusundaki {{count}} sayfa dışarıda bırakıldı.",
+    "recycleBin_one": "Not defterinin geri dönüşüm kutusundaki {{count}} sayfa dışarıda bırakıldı.",
+    "deadLinks_one": "{{count}} OneNote bağlantısı bu not defterinin dışını gösteriyor; yalnızca metni korundu.",
+    "missingFiles_one": "{{count}} görsel veya dosya pakette yoktu ve dışarıda bırakıldı.",
+    "unsupported_one": "Burada karşılığı olmayan {{count}} el çizimi, ses kaydı veya denklem dışarıda bırakıldı.",
+    "unreadableSections_one": "Okunamayan {{count}} bölüm dışarıda bırakıldı.",
+    "lockedSections_one": "Parola korumalı {{count}} bölüm dışarıda bırakıldı. Onu da getirmek için parolasını OneNote'ta kaldırın ve yeniden dışa aktarın.",
+    "noteTags_one": "{{count}} sayfanın not etiketleri etiket olarak korundu.",
+    "subpages_one": "{{count}} alt sayfa, sayfasının yanında not olarak korundu."
+  },
+  "capacities": {
+    "notCapacities": "Bu bir Capacities dışa aktarımı değil. Capacities'te Settings > Full Export'u açın, Manual Full Export'u medya dahil çalıştırın ve zip dosyasını buraya bırakın.",
+    "noObjects": "Bu Capacities dışa aktarımında metin içeren sayfa veya başka nesne bulunamadı.",
+    "typeFolders_other": "{{count}} nesne türü klasör olarak yeniden oluşturuldu.",
+    "properties_other": "{{count}} nesnenin özellikleri notlarının başında liste olarak korundu.",
+    "mediaObjects_other": "{{count}} görsel ve dosya, kendi notları olmadan, onları gösteren notların içinde korundu.",
+    "queries_other": "{{count}} sorgu dışarıda bırakıldı. Sorgu, Capacities'te kendi metni olmayan kayıtlı bir aramadır.",
+    "collections_other": "{{count}} koleksiyon listesi dışarıda bırakıldı. İçlerindeki nesneler koleksiyonlar olmadan gelir.",
+    "deadLinks_other": "{{count}} bağlantı, dışa aktarımda olmayan nesneleri (örneğin çöp kutusundakileri) gösteriyor; yalnızca metinleri korundu.",
+    "deadLinks_one": "{{count}} bağlantı, dışa aktarımda olmayan bir nesneyi (örneğin çöp kutusundaki birini) gösteriyor; yalnızca metni korundu.",
+    "collections_one": "{{count}} koleksiyon listesi dışarıda bırakıldı. İçindeki nesneler koleksiyon olmadan gelir.",
+    "queries_one": "{{count}} sorgu dışarıda bırakıldı. Sorgu, Capacities'te kendi metni olmayan kayıtlı bir aramadır.",
+    "mediaObjects_one": "{{count}} görsel veya dosya, kendi notu olmadan, onu gösteren notların içinde korundu.",
+    "properties_one": "{{count}} nesnenin özellikleri notunun başında liste olarak korundu.",
+    "typeFolders_one": "{{count}} nesne türü klasör olarak yeniden oluşturuldu."
   }
 }

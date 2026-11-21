@@ -61,7 +61,6 @@
     "import": "Importar",
     "downloading": "Baixando…",
     "subscribe": "Assinar",
-    "subscribeTitle": "Assinar um calendário",
     "subscribeDesc": "Cole um endereço de calendário, como um link webcal:// do Google, iCloud, Proton, Outlook ou Nextcloud. Os eventos dele aparecem no seu calendário, somente leitura, e são atualizados enquanto o app está aberto.",
     "subscribed": "Calendários assinados",
     "updating": "Atualizando…",
@@ -78,6 +77,7 @@
       "offline": "Você está offline. Conecte-se e tente de novo.",
       "limit": "Downloads demais em pouco tempo. Aguarde um minuto e tente de novo.",
       "failed": "Não foi possível baixar o calendário. Verifique o endereço e tente de novo.",
+      "insecure": "Não foi possível acessar este calendário por uma conexão segura. Verifique o endereço ou tente de novo mais tarde.",
       "full": "Você pode assinar no máximo {{max}} calendários. Remova um primeiro."
     }
   },
@@ -88,6 +88,8 @@
     "lastpass": "No LastPass, escolha Advanced options > Export > Export data for use anywhere. Os logins mantêm sua chave 2FA, as notas seguras e os cartões vêm junto, e as pastas viram etiquetas.",
     "onePassword": "No app 1Password, escolha File > Export, selecione sua conta e o formato 1PUX. Os logins mantêm sua chave 2FA, sites adicionais e campos personalizados, os cartões, as notas e as identidades vêm junto, as etiquetas continuam etiquetas, e os favoritos e os itens arquivados mantêm seu lugar. Uma exportação CSV também funciona, só com os logins.",
     "dashlane": "No Dashlane, escolha Settings > Export data e o formato CSV. Os logins mantêm sua chave 2FA, as notas seguras e os cartões vêm junto, e as categorias viram etiquetas. Uma exportação .dash é protegida por senha e não pode ser lida.",
+    "msecure": "No mSecure, escolha Settings > Backups > Export records to CSV file. Os logins mantêm sua chave 2FA, sites adicionais e campos personalizados, os cartões e as notas vêm junto, e as etiquetas continuam etiquetas.",
+    "raindrop": "No Raindrop.io, abra All bookmarks e escolha Export > Get backup, depois baixe o CSV em Settings > Backups. As coleções viram pastas, as etiquetas continuam etiquetas, e cada marcador mantém sua nota, seu trecho e seus destaques.",
     "enpass": "No Enpass, escolha File > Export e o formato .json. Os logins mantêm sua chave 2FA, sites adicionais e campos personalizados, os cartões, as notas e as identidades vêm junto, as pastas viram etiquetas, e os favoritos e os itens arquivados mantêm seu lugar. Os itens na lixeira ficam de fora.",
     "nordpass": "No NordPass, escolha Settings > Export items. Os logins mantêm seus sites adicionais e campos personalizados, as notas, os cartões e as identidades vêm junto, e as pastas viram etiquetas.",
     "protonPass": "No Proton Pass, escolha Settings > Export e selecione ZIP. Os logins mantêm sua chave 2FA, sites adicionais, campos personalizados e datas, e as notas, os cartões e as identidades vêm junto. Uma exportação CSV também funciona, com menos conteúdo.",
@@ -109,13 +111,15 @@
     "bear": "No Bear, escolha File > Backup Notes... e solte o arquivo .bear2bk aqui. Etiquetas e etiquetas aninhadas, notas fixadas, o arquivo, a lixeira, os destaques com suas cores, os links entre notas e os anexos vêm junto.",
     "joplin": "O arquivo .jex de File > Export all > \"JEX - Joplin Export File\". Cadernos viram pastas, e etiquetas, tarefas, links entre notas e anexos vêm junto.",
     "anytype": "O .zip Any-Block v1 em JSON de space settings > Export, com os arquivos e os objetos arquivados incluídos. Coleções viram pastas, e etiquetas, tarefas, avisos, blocos recolhíveis, tabelas, links entre notas e arquivos vêm junto.",
+    "capacities": "O .zip do Capacities: Settings > Full Export > Manual Full Export, com as mídias incluídas. Tipos de objeto viram pastas, e etiquetas, propriedades, datas, links entre objetos, tabelas, imagens e arquivos vêm junto.",
     "siyuan": "O Data.zip do menu do SiYuan > Data migration > Data.zip > Export, ou um caderno exportado como SiYuan .sy.zip. Cadernos e documentos aninhados viram pastas, e etiquetas, referências de bloco, avisos, matemática, tabelas e assets vêm junto.",
+    "onenote": "O .onepkg do OneNote para Windows: File > Export > Notebook > OneNote Package. Um arquivo de seção (.one) ou uma pasta de caderno compactada também funciona. Seções e grupos de seções viram pastas, e subpáginas, tarefas, marcas de nota, tabelas, links entre páginas, imagens e arquivos anexados vêm junto.",
     "upnote": "No UpNote: Settings > Backup > Backup now, depois compacte tudo na pasta de backup. Mantém cadernos, etiquetas, notas fixadas, links entre notas, formatação e anexos. Exports por nota dos apps de celular também funcionam - escolha \"Export to HTML\".",
     "markdownFolder": "Arquivos .md ou .txt avulsos ou dentro de um .zip. Uma pasta compactada mantém as subpastas e traz as imagens e os anexos.",
     "markdownApp": "Essas notas já são arquivos Markdown numa pasta. Solte essa pasta como .zip e as subpastas, as imagens e as #hashtags vêm junto.",
     "browserBookmarks": "O arquivo de favoritos (.html) que sai de \"Export bookmarks\" no seu navegador, ou o .zip que o Safari escreve. Chrome, Firefox, Safari, Edge, Opera, Brave e Vivaldi contêm o mesmo arquivo. As pastas e as datas vêm junto.",
     "vcard": "O arquivo .vcf que sua agenda exporta: iPhone e Mac via iCloud ou Contatos, Android, Contatos do Google. Todo cartão é importado, fotos incluídas, e importar o mesmo arquivo duas vezes pula as pessoas que você já tem.",
-    "bitwarden": "Exportação .json não criptografada do Bitwarden (Tools > Export vault > .json). Logins, cartões, chaves SSH, notas seguras e códigos TOTP vêm todos junto.",
+    "bitwarden": "Exportação não criptografada do cofre do Bitwarden (Tools > Export vault > .json, ou .zip (with attachments)). Logins, cartões, chaves SSH, notas seguras, códigos TOTP, passkeys e anexos vêm todos junto.",
     "browserPasswords": "O arquivo de senhas (.csv) do Chrome, Edge, Brave, Opera, Vivaldi, Firefox ou Safari, ou o .zip que o Safari escreve. Cada linha vira um login. Apague o arquivo quando terminar - ele tem as suas senhas em texto puro."
   },
   "sourceLabel": {
@@ -178,7 +182,18 @@
     "sourceTagDesc": "Desativado: nenhuma etiqueta para a origem. As etiquetas que já estão nas notas vêm junto de qualquer forma.",
     "storageLine": "Esta importação precisa de cerca de {{needed}}. Você tem {{available}} livres.",
     "nothingWritten": "Nada é gravado até você clicar em Importar.",
-    "whatComesIn": "O que vai entrar"
+    "whatComesIn": "O que vai entrar",
+    "backupSettings": "Este backup também traz configurações: {{list}}.",
+    "backupSetting": {
+      "calendarFeeds": "calendários assinados",
+      "dashboard": "o layout do Início",
+      "itemStyles": "cores e ícones de pastas, etiquetas e notas",
+      "customThemes": "temas personalizados",
+      "favoriteTags": "etiquetas favoritas",
+      "medications": "medicações",
+      "trackers": "configuração dos rastreadores",
+      "agentFolder": "a pasta Agent"
+    }
   },
   "counts": {
     "note_one": "nota",
@@ -246,7 +261,10 @@
     "missingFailed_one": "Este dispositivo não conseguiu baixar {{items}}, que ficou de fora da exportação. Verifique a conexão e exporte de novo.",
     "missingFailed_other": "Este dispositivo não conseguiu baixar {{items}}, que ficaram de fora da exportação. Verifique a conexão e exporte de novo.",
     "missingNotFound_one": "{{items}} não está neste dispositivo nem no servidor, por isso ficou de fora da exportação.",
-    "missingNotFound_other": "{{items}} não estão neste dispositivo nem no servidor, por isso ficaram de fora da exportação."
+    "missingNotFound_other": "{{items}} não estão neste dispositivo nem no servidor, por isso ficaram de fora da exportação.",
+    "bookmarksSkipped_one": "{{count}} marcador tem um endereço que não começa com http ou https, por isso ficou de fora da exportação.",
+    "bookmarksSkipped_many": "{{count}} marcadores têm um endereço que não começa com http ou https, por isso ficaram de fora da exportação.",
+    "bookmarksSkipped_other": "{{count}} marcadores têm um endereço que não começa com http ou https, por isso ficaram de fora da exportação."
   },
   "missing": {
     "pictures_one": "{{count}} imagem",
@@ -338,8 +356,8 @@
     "typeFullHint": "Notas, cofre, imagens, áudio e arquivos, selados com a chave da sua frase. Seguro para guardar em qualquer lugar.",
     "rhythmHeading": "Ritmo",
     "historyHeading": "Backups recentes",
-    "runsHintDesktop": "Roda enquanto o PrivacyNotes está aberto ou na bandeja. Um backup que ficou pendente com o app fechado roda um minuto depois que ele abre.",
-    "runsHintWeb": "Roda enquanto o PrivacyNotes está aberto neste navegador. Um backup que ficou pendente com ele fechado roda um minuto depois que ele abre.",
+    "runsHintDesktop": "Roda enquanto o PrivacyNotes está aberto ou na bandeja. Um backup que ficou pendente com o app fechado roda um minuto depois que ele abre, inclusive offline, depois que este dispositivo tiver sincronizado.",
+    "runsHintWeb": "Roda enquanto o PrivacyNotes está aberto neste navegador. Um backup que ficou pendente com ele fechado roda um minuto depois que ele abre, inclusive offline, depois que este dispositivo tiver sincronizado.",
     "runsHintDownload": "O PrivacyNotes só consegue avisar que um backup está pendente enquanto está aberto neste navegador. Um backup que ficou pendente com ele fechado é oferecido um minuto depois que ele abre.",
     "runsHintPhone": "Um celular não consegue fazer backup com o PrivacyNotes fechado. Ele roda quando você abre o app e há um pendente.",
     "sizeHint": "Cerca de {{size}} para {{count}}.",

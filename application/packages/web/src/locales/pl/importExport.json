@@ -67,7 +67,6 @@
     "import": "Importuj",
     "downloading": "Pobieranie…",
     "subscribe": "Subskrybuj",
-    "subscribeTitle": "Subskrybuj kalendarz",
     "subscribeDesc": "Wklej adres kalendarza, na przykład link webcal:// z Google, iCloud, Proton, Outlook lub Nextcloud. Jego wydarzenia pojawią się w Twoim kalendarzu, tylko do odczytu, i będą aktualizowane, gdy aplikacja jest otwarta.",
     "subscribed": "Subskrybowane kalendarze",
     "updating": "Aktualizowanie…",
@@ -86,6 +85,7 @@
       "offline": "Jesteś offline. Połącz się i spróbuj ponownie.",
       "limit": "Za dużo pobrań w krótkim czasie. Odczekaj minutę i spróbuj ponownie.",
       "failed": "Nie udało się pobrać kalendarza. Sprawdź adres i spróbuj ponownie.",
+      "insecure": "Nie udało się nawiązać bezpiecznego połączenia z tym kalendarzem. Sprawdź adres lub spróbuj ponownie później.",
       "full": "Możesz subskrybować najwyżej {{max}} kalendarzy. Najpierw usuń jeden."
     }
   },
@@ -96,6 +96,8 @@
     "lastpass": "W LastPass wybierz Advanced options > Export > Export data for use anywhere. Loginy zachowują klucz 2FA, bezpieczne notatki i karty przechodzą razem z nimi, a foldery stają się tagami.",
     "onePassword": "W aplikacji 1Password wybierz File > Export, wybierz swoje konto i format 1PUX. Loginy zachowują klucz 2FA, dodatkowe strony internetowe i pola własne, karty, notatki i tożsamości przechodzą razem z nimi, tagi zostają tagami, a ulubione i zarchiwizowane elementy zachowują swoje miejsce. Eksport CSV też działa, ale tylko z loginami.",
     "dashlane": "W Dashlane wybierz Settings > Export data i format CSV. Loginy zachowują klucz 2FA, bezpieczne notatki i karty przechodzą razem z nimi, a kategorie stają się tagami. Eksport .dash jest zablokowany hasłem i nie da się go odczytać.",
+    "msecure": "W mSecure wybierz Settings > Backups > Export records to CSV file. Loginy zachowują klucz 2FA, dodatkowe strony internetowe i pola własne, karty i notatki przechodzą razem z nimi, a tagi zostają tagami.",
+    "raindrop": "W Raindrop.io otwórz All bookmarks i wybierz Export > Get backup, a potem pobierz plik CSV w Settings > Backups. Kolekcje stają się folderami, tagi zostają tagami, a każda zakładka zachowuje swoją notatkę, fragment i wyróżnienia.",
     "enpass": "W Enpass wybierz File > Export i format .json. Loginy zachowują klucz 2FA, dodatkowe strony internetowe i pola własne, karty, notatki i tożsamości przechodzą razem z nimi, foldery stają się tagami, a ulubione i zarchiwizowane elementy zachowują swoje miejsce. Elementy z kosza zostają na miejscu.",
     "nordpass": "W NordPass wybierz Settings > Export items. Loginy zachowują dodatkowe strony internetowe i pola własne, notatki, karty i tożsamości przechodzą razem z nimi, a foldery stają się tagami.",
     "protonPass": "W Proton Pass wybierz Settings > Export i wybierz ZIP. Loginy zachowują klucz 2FA, dodatkowe strony internetowe, pola własne i daty, a notatki, karty i tożsamości przechodzą razem z nimi. Eksport CSV też działa, ale zawiera mniej.",
@@ -117,13 +119,15 @@
     "bear": "W Bear wybierz File > Backup Notes... i upuść tutaj plik .bear2bk. Tagi i zagnieżdżone tagi, przypięcia, archiwum, kosz, wyróżnienia z ich kolorami, linki do notatek i załączniki przechodzą razem z nimi.",
     "joplin": "Plik .jex z File > Export all > „JEX - Joplin Export File”. Notesy stają się folderami, a tagi, zadania do zrobienia, linki do notatek i załączniki przechodzą razem z nimi.",
     "anytype": "Plik .zip w formacie Any-Block v1 JSON z ustawień przestrzeni > Export, z dołączonymi plikami i zarchiwizowanymi obiektami. Kolekcje stają się folderami, a tagi, zadania, ramki, sekcje rozwijane, tabele, linki do notatek i pliki przechodzą razem z nimi.",
+    "capacities": "Plik .zip z Capacities: Settings > Full Export > Manual Full Export, z dołączonymi multimediami. Typy obiektów stają się folderami, a tagi, właściwości, daty, linki między obiektami, tabele, obrazy i pliki przechodzą razem z nimi.",
     "siyuan": "Plik Data.zip z menu SiYuan > Data migration > Data.zip > Export albo notes wyeksportowany jako SiYuan .sy.zip. Notesy i zagnieżdżone dokumenty stają się folderami, a tagi, odwołania do bloków, ramki, wzory matematyczne, tabele i zasoby przechodzą razem z nimi.",
+    "onenote": "Plik .onepkg z OneNote dla Windows: File > Export > Notebook > OneNote Package. Działa też plik sekcji (.one) albo spakowany folder notesu. Sekcje i grupy sekcji stają się folderami, a podstrony, zadania do zrobienia, tagi notatek, tabele, linki do stron, obrazy i załączone pliki przechodzą razem z nimi.",
     "upnote": "W UpNote: Settings > Backup > Backup now, potem spakuj wszystko z folderu kopii zapasowej do .zip. Zachowuje notesy, tagi, przypięcia, linki do notatek, formatowanie i załączniki. Eksporty pojedynczych notatek z aplikacji na telefon też działają - wybierz „Export to HTML”.",
     "markdownFolder": "Pliki .md albo .txt pojedynczo lub w .zip. Spakowany folder zachowuje podfoldery i zabiera ze sobą obrazki oraz załączniki.",
     "markdownApp": "Te notatki już są plikami Markdown w folderze. Przeciągnij ten folder jako .zip, a razem z nim przyjdą podfoldery, obrazki i #tagi.",
     "browserBookmarks": "Plik zakładek (.html) z \"Export bookmarks\" w twojej przeglądarce albo .zip, który zapisuje Safari. Chrome, Firefox, Safari, Edge, Opera, Brave i Vivaldi zawierają ten sam plik. Foldery i daty przychodzą razem z nim.",
     "vcard": "Plik .vcf, który eksportuje twoja książka adresowa: iPhone i Mac przez iCloud lub Kontakty, Android, Kontakty Google. Każda wizytówka się importuje, ze zdjęciami, a ponowny import tego samego pliku pomija osoby, które już masz.",
-    "bitwarden": "Niezaszyfrowany eksport .json z Bitwarden (Tools > Export vault > .json). Loginy, karty, klucze SSH, bezpieczne notatki i kody TOTP przychodzą razem.",
+    "bitwarden": "Niezaszyfrowany eksport sejfu z Bitwarden (Tools > Export vault > .json albo .zip (with attachments)). Loginy, karty, klucze SSH, bezpieczne notatki, kody TOTP, passkey i załączniki przychodzą razem.",
     "browserPasswords": "Plik haseł (.csv) z Chrome, Edge, Brave, Opery, Vivaldi, Firefoksa lub Safari albo .zip, który zapisuje Safari. Każdy wiersz staje się loginem. Usuń plik, gdy skończysz - są w nim twoje hasła jawnym tekstem."
   },
   "sourceLabel": {
@@ -191,6 +195,17 @@
     "storageLine": "Ten import potrzebuje około {{needed}}. Masz wolne {{available}}.",
     "nothingWritten": "Nic nie zostanie zapisane, dopóki nie naciśniesz Importuj.",
     "whatComesIn": "Co zostanie zaimportowane",
+    "backupSettings": "Ta kopia zapasowa przywraca też ustawienia: {{list}}.",
+    "backupSetting": {
+      "calendarFeeds": "subskrybowane kalendarze",
+      "dashboard": "układ Pulpitu",
+      "itemStyles": "kolory i ikony folderów, tagów i notatek",
+      "customThemes": "własne motywy",
+      "favoriteTags": "ulubione tagi",
+      "medications": "leki",
+      "trackers": "konfiguracja trackerów",
+      "agentFolder": "folder Agent"
+    },
     "oversizeAttachments_few": "{{count}} pliki są większe niż limit {{limit}} na plik w Twoim planie. Zaimportują się na to urządzenie, ale nie zsynchronizują się z innymi urządzeniami, dopóki nie przejdziesz na wyższy plan.",
     "oversizeAttachments_many": "{{count}} plików jest większych niż limit {{limit}} na plik w Twoim planie. Zaimportują się na to urządzenie, ale nie zsynchronizują się z innymi urządzeniami, dopóki nie przejdziesz na wyższy plan."
   },
@@ -277,7 +292,10 @@
     "missingNotFound_one": "Nie ma na tym urządzeniu ani na serwerze: {{items}}. Twój eksport tego nie zawiera.",
     "missingNotFound_few": "Nie ma na tym urządzeniu ani na serwerze: {{items}}. Twój eksport ich nie zawiera.",
     "missingNotFound_many": "Nie ma na tym urządzeniu ani na serwerze: {{items}}. Twój eksport ich nie zawiera.",
-    "missingNotFound_other": "Nie ma na tym urządzeniu ani na serwerze: {{items}}. Twój eksport ich nie zawiera."
+    "missingNotFound_other": "Nie ma na tym urządzeniu ani na serwerze: {{items}}. Twój eksport ich nie zawiera.",
+    "bookmarksSkipped_one": "{{count}} zakładka ma adres, który nie zaczyna się od http ani https, więc Twój eksport jej nie zawiera.",
+    "bookmarksSkipped_few": "{{count}} zakładki mają adres, który nie zaczyna się od http ani https, więc Twój eksport ich nie zawiera.",
+    "bookmarksSkipped_many": "{{count}} zakładek ma adres, który nie zaczyna się od http ani https, więc Twój eksport ich nie zawiera."
   },
   "missing": {
     "pictures_one": "{{count}} obraz",
@@ -378,8 +396,8 @@
     "typeFullHint": "Notatki, sejf, obrazy, dźwięk i pliki, zapieczętowane kluczem z Twojej frazy. Możesz je trzymać gdziekolwiek.",
     "rhythmHeading": "Rytm",
     "historyHeading": "Ostatnie kopie zapasowe",
-    "runsHintDesktop": "Działa, gdy PrivacyNotes jest otwarte lub w zasobniku systemowym. Kopia, której termin minął, gdy aplikacja była zamknięta, zostanie wykonana minutę po jej otwarciu.",
-    "runsHintWeb": "Działa, gdy PrivacyNotes jest otwarte w tej przeglądarce. Kopia, której termin minął, gdy aplikacja była zamknięta, zostanie wykonana minutę po jej otwarciu.",
+    "runsHintDesktop": "Działa, gdy PrivacyNotes jest otwarte lub w zasobniku systemowym. Kopia, której termin minął, gdy aplikacja była zamknięta, zostanie wykonana minutę po jej otwarciu, także offline, jeśli to urządzenie zostało już zsynchronizowane.",
+    "runsHintWeb": "Działa, gdy PrivacyNotes jest otwarte w tej przeglądarce. Kopia, której termin minął, gdy aplikacja była zamknięta, zostanie wykonana minutę po jej otwarciu, także offline, jeśli to urządzenie zostało już zsynchronizowane.",
     "runsHintDownload": "PrivacyNotes może poinformować, że nadszedł termin kopii zapasowej, tylko gdy jest otwarte w tej przeglądarce. Kopia, której termin minął, gdy aplikacja była zamknięta, zostanie zaproponowana minutę po jej otwarciu.",
     "runsHintPhone": "Telefon nie może utworzyć kopii zapasowej, gdy PrivacyNotes jest zamknięte. Kopia powstaje, gdy otworzysz aplikację, a jej termin już minął.",
     "sizeHint": "Około {{size}} dla {{count}} kopii.",

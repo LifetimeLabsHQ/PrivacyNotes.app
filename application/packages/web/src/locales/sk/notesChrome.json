@@ -6,10 +6,6 @@
     "error": "Teraz sa nepodarilo synchronizovať všetko. Skontroluj pripojenie a skús to znova.",
     "conflict": "Jedna z tvojich poznámok má konflikt synchronizácie, ktorý čaká na tvoje rozhodnutie. Vyrieš ho v dialógovom okne a potom to skús znova."
   },
-  "movedHint": {
-    "body": "Toto je nový domov aplikácie. Zmeň si záložku na use.privacynotes.app a znova pridaj odkaz na plochu.",
-    "gotIt": "Rozumiem"
-  },
   "moveScreen": {
     "title": "Aplikácia sa presťahovala na use.privacynotes.app",
     "bodySignIn": "Prihlás sa tam obnovovacou frázou alebo cez „{{scanQr}}“. Toto zariadenie sa najprv synchronizuje, takže ťa tam čakajú všetky poznámky a nič sa tu neodstráni.",
@@ -36,6 +32,7 @@
       "configured": "Úložisko je plné. Niektoré poznámky sa nepodarilo synchronizovať. Uvoľni miesto alebo pridaj ďalšie úložisko.",
       "unconfigured": "Úložisko je plné. Niektoré poznámky sa nepodarilo synchronizovať. Uvoľni miesto skrátením poznámok."
     },
+    "deletedSpace": "Miesto po odstránených súboroch sa uvoľní približne deň po ich odstránení.",
     "manageStorage": "Spravovať úložisko",
     "viewUsage": "Zobraziť využitie"
   },
@@ -91,7 +88,13 @@
     "neverBackedUp_many": "Iba v tomto zariadení:",
     "neverBackedUp_other": "Iba v tomto zariadení:",
     "moreNotes": "a ešte {{count}}",
-    "appLockHint": "Zdieľané zariadenie? Zapni zámok aplikácie v časti Nastavenia > Zabezpečenie."
+    "appLockHint": "Zdieľané zariadenie? Zapni zámok aplikácie v časti Nastavenia > Zabezpečenie.",
+    "unopenedWarn_other": "{{count}} poznámok má na serveri kópiu, ktorú toto zariadenie nedokáže otvoriť. Odhlásenie odstráni kópie tu, ktoré môžu byť jediné dobré. Najprv ich znova odošli v Nastavenia > ID & Sync.",
+    "unopenedKept_other": "{{count}} poznámok má na serveri kópiu, ktorú toto zariadenie nedokáže otvoriť. Kópie tu po odhlásení zostanú.",
+    "unopenedKept_one": "1 poznámka má na serveri kópiu, ktorú toto zariadenie nedokáže otvoriť. Kópia tu po odhlásení zostane.",
+    "unopenedKept_few": "{{count}} poznámky majú na serveri kópiu, ktorú toto zariadenie nedokáže otvoriť. Kópie tu po odhlásení zostanú.",
+    "unopenedWarn_one": "1 poznámka má na serveri kópiu, ktorú toto zariadenie nedokáže otvoriť. Odhlásenie odstráni kópiu tu, ktorá môže byť jediná dobrá. Najprv ju znova odošli v Nastavenia > ID & Sync.",
+    "unopenedWarn_few": "{{count}} poznámky majú na serveri kópiu, ktorú toto zariadenie nedokáže otvoriť. Odhlásenie odstráni kópie tu, ktoré môžu byť jediné dobré. Najprv ich znova odošli v Nastavenia > ID & Sync."
   },
   "signOutUpload": {
     "uploading": "Nahrávajú sa tvoje posledné zmeny…",

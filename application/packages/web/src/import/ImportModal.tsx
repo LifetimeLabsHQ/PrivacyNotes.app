@@ -2,26 +2,26 @@ import { Fragment, useMemo, useRef, useState } from 'react';
 import type { ComponentProps, ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { isOversizeImport, splitImportedNote } from '../noteSplit';
+import { isOversizeImport } from '../noteSplit';
 import i18n, { ensureImportLogLoaded } from '../i18n';
 import { IMPORTERS } from './registry';
-import { applyImport } from './apply';
+import { runImport } from './importRun';
 import { withFolderPathTags } from './folderImport';
 import { withBrowserTags } from './browserBookmarks';
-import { normalizeTag } from '../notesRepo';
-import type { Importer, ParsedImport, ImportedNote, RestoreCounts, StagedBlob } from './types';
+import type { ImporterEntry, ParsedImport, ImportedNote, RestoreCounts } from './types';
 import { useAuth } from '../auth';
 import { recordAdminEvent, type ImportSource } from '../adminEvents';
 import type { LocalNote } from '../db';
 import { missingItemsLabel } from '../export';
 import type { FolderDef } from '../folders';
-import { destinationGroups, existingImportFolder, fileUnfiled, type ImportDestination, type ImportTarget } from './destination';
+import { destinationGroups, existingImportFolder, type ImportDestination, type ImportTarget } from './destination';
 import { Archive, ArrowCounterClockwise, ClockCounterClockwise, Heartbeat, BookmarkSimple, BookOpenText, BracketsCurly, CalendarDots, CalendarPlus, Check, CircleNotch, Download, FileHtml, FileText, FileZip, Globe, Key, Lock, LockOpen, Note, Upload, AddressBook, NEW_GLYPHS, EXPORT_GLYPHS } from '../icons';
 import { goesToCalendarFile } from '../schedule';
 import { fetchQuotaUsage, recalculateQuota } from '../devices';
 import { estimateNoteStoredBytes, estimateBlobBytes } from '../notesViewUtils';
 import { proUnlocked } from '../demo';
-import { savedToFinalIds } from '../backupRestore';
+import { backupSettingsNames } from '../backupRestore';
+import { listOf } from '../scheduleText';
 import { RESTORE_WAIT_LINE, restoreGateNow, useRestoreGate, type RestoreGate } from '../pullState';
 import { formatBytes } from '../formatBytes';
 import { textMatcher } from '../textMatch';
@@ -39,6 +39,7 @@ import { helpPath } from '../localeRoutes';
 import { siteHref } from '../siteLinks';
 import { HelpChip } from '../HelpChip';
 import { ImportFileError } from './zipEntry';
+import { holdLockReload } from '../lockReload';
 import { WellnessExportTab } from '../stats/WellnessExport';
 import { IconUpgrade } from '../UpgradeModal';
 import { usePaneTab } from '../settingsPaneTab';
@@ -122,44 +123,31 @@ async function sampleContactPhotos(parsed: ParsedImport): Promise<{ count: numbe
   return { count: photos.length, bytes: estimateBlobBytes(median) * photos.length };
 }
 
-/** The parsed import minus its contact photos: the blobs, and the
- *  `photo` key each card carries, so no body keeps a dangling reference. */
-function withoutContactPhotos(parsed: ParsedImport): ParsedImport {
-  if (!parsed.blobs) return parsed;
-  const blobs = new Map([...parsed.blobs].filter(([, b]) => b.ceiling !== 'contact'));
-  const notes = parsed.notes.map((n) => {
-    if (n.type !== 'contact') return n;
-    try {
-      const body = JSON.parse(n.body) as Record<string, unknown>;
-      if (!('photo' in body)) return n;
-      delete body.photo;
-      return { ...n, body: JSON.stringify(body) };
-    } catch {
-      return n;
-    }
-  });
-  return { ...parsed, blobs, notes };
-}
+/**
+ * The importer ids whose import records an anonymous event in admin_events.
+ * The registry ids match the source keys one to one. Keyed by the
+ * `ImportSource` union, so a source added there must be listed here too;
+ * `encrypted` is the encrypted backup, which records its own (useExports.ts).
+ */
+const COUNTED_SOURCES: Record<Exclude<ImportSource, 'encrypted'>, true> = {
+  'google-keep': true,
+  'standard-notes': true,
+  obsidian: true,
+  notesnook: true,
+  'apple-notes': true,
+  'apple-journal': true,
+  'samsung-notes': true,
+  simplenote: true,
+  'markdown-folder': true,
+  privacynotes: true,
+  'browser-bookmarks': true,
+  'browser-passwords': true,
+  vcard: true,
+};
 
-// Map importer ids to the short source keys we record in admin_events.
-// The registry uses kebab-case slugs that happen to match 1:1 - this
-// cast is just the type narrowing and keeps the set of sources honest.
-function importerIdToSource(id: string): ImportSource | null {
-  const known: ImportSource[] = [
-    'google-keep',
-    'standard-notes',
-    'obsidian',
-    'notesnook',
-    'apple-notes',
-    'apple-journal',
-    'samsung-notes',
-    'simplenote',
-    'markdown-folder',
-    'privacynotes',
-    'browser-bookmarks',
-    'browser-passwords',
-  ];
-  return (known as string[]).includes(id) ? (id as ImportSource) : null;
+/** The source key an import from this importer records, or null for one not counted. */
+export function importerIdToSource(id: string): ImportSource | null {
+  return Object.hasOwn(COUNTED_SOURCES, id) ? (id as ImportSource) : null;
 }
 
 /** Every tab of the window; each Settings page shows its own subset. */
@@ -283,10 +271,10 @@ export function ImportModal({
   const isPro = auth.status === 'authenticated' ? auth.isPro : false;
   type Phase =
     | { kind: 'pick' }
-    | { kind: 'parsing'; importer: Importer; status: string }
-    | { kind: 'preview'; importer: Importer; parsed: ParsedImport; file: { name: string; size: number } }
-    | { kind: 'applying'; importer: Importer }
-    | { kind: 'error'; importer: Importer; message: string; detail?: string };
+    | { kind: 'parsing'; importer: ImporterEntry; status: string }
+    | { kind: 'preview'; importer: ImporterEntry; parsed: ParsedImport; file: { name: string; size: number } }
+    | { kind: 'applying'; importer: ImporterEntry }
+    | { kind: 'error'; importer: ImporterEntry; message: string; detail?: string };
 
   const backup = section === 'backup';
   const tabs = backup ? BACKUP_TABS : TRANSFER_TABS;
@@ -299,7 +287,7 @@ export function ImportModal({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   /** Keep the raw file around so restoreBlobs can re-read it after applyImport. */
   const selectedFileRef = useRef<File | null>(null);
-  const [activeImporter, setActiveImporter] = useState<Importer | null>(null);
+  const [activeImporter, setActiveImporter] = useState<ImporterEntry | null>(null);
   const [autoTag, setAutoTag] = useState(true);
   // With Work open, an import goes into a new Work folder: an unfiled item is
   // always in Personal, so otherwise it would seem to vanish.
@@ -330,7 +318,7 @@ export function ImportModal({
    *  when the estimated ciphertext exceeds available capacity. */
   const [quotaCheck, setQuotaCheck] = useState<QuotaCheck | null>(null);
 
-  function handlePickImporter(importer: Importer) {
+  function handlePickImporter(importer: ImporterEntry) {
     if (!importer.enabled) return;
     setActiveImporter(importer);
     // Defer clicking until the input exists - React hasn't rendered the
@@ -352,7 +340,7 @@ export function ImportModal({
    *  oversize warnings, preview. The picker enters here with the chosen
    *  file; the .pnbackupz restore enters with the DECRYPTED zip, so the
    *  sealed backup reuses the whole flow, blob restore included. */
-  async function runParseFlow(importer: Importer, file: File) {
+  async function runParseFlow(importer: ImporterEntry, file: File) {
     selectedFileRef.current = file;
 
     setPhase({
@@ -413,7 +401,15 @@ export function ImportModal({
         } else {
           blobBytes = parsed.blobBytes ?? 0;
         }
-        const estimatedBytes = estimateImportBytes(parsed.notes) + blobBytes;
+        let countedNotes = parsed.notes;
+        // Our own backup adds only what the vault lacks.
+        if (parsed.source === 'privacynotes' && parsed.blobSizes) {
+          const { restoreAdds } = await import('./privacynotes');
+          const adds = await restoreAdds(parsed);
+          countedNotes = adds.notes;
+          blobBytes = adds.blobBytes;
+        }
+        const estimatedBytes = estimateImportBytes(countedNotes) + blobBytes;
         setQuotaCheck({
           estimatedBytes,
           availableBytes: available,
@@ -452,7 +448,7 @@ export function ImportModal({
   }
 
   /** The "Add to" folder; a new one it makes goes into `made`. */
-  function resolveDestination(importer: Importer, made: string[]): string | null {
+  function resolveDestination(importer: ImporterEntry, made: string[]): string | null {
     if (!importTarget || destination === 'none') return null;
     if (destination === 'new') {
       const folder = onCreateImportFolder?.(sourceLabel(importer, t)) ?? null;
@@ -462,13 +458,24 @@ export function ImportModal({
     return importTarget.folders.some((f) => f.id === destination.folderId) ? destination.folderId : null;
   }
 
+  /** The .pnbackup restore runs in the parent (`onImportEncrypted`); this
+   *  stands in for an importer on its progress and error screens, which
+   *  name it as our backup. */
+  function encryptedBackupImporter(): ImporterEntry {
+    return {
+      id: 'privacynotes', label: t('encryptedBackupLabel'), description: '', accept: '.pnbackup', enabled: true, sourceTag: '',
+      parse: async () => { throw new Error(); },
+      icon: null, labelKey: 'sourceLabel.privacynotes', descKey: null, fileTypes: '', guide: null, restore: true,
+    };
+  }
+
   async function handleConfirm() {
     if (phase.kind !== 'preview') return;
     const { importer, parsed } = phase;
     // Our own backups match their notes by id against this device's copy, so
     // they wait for its first clean pull, before the folder merge below or
     // any other write (pullState.ts).
-    if (importer.id === 'privacynotes') {
+    if (importer.restore) {
       const gate = restoreGateNow();
       if (gate !== 'open') {
         setPhase({ kind: 'error', importer, message: t(RESTORE_WAIT_LINE[gate]) });
@@ -476,146 +483,81 @@ export function ImportModal({
       }
     }
     setPhase({ kind: 'applying', importer });
-    // What this run made before its notes landed, taken back if they do not
-    // (backlog 217). The files need nothing here: they land in the notes'
-    // own write. A throw anywhere ends on the error screen, never on
-    // "applying".
+    // The "Add to" folder this import made: the run takes it back with its
+    // own folders if the notes do not land (backlog 217). A throw anywhere
+    // ends on the error screen, never on "applying".
     const madeFolders: string[] = [];
     let notesWritten = false;
+    const showFailure = (err: unknown) => {
+      console.warn('Import failed:', err);
+      const { message, detail } = importFailure(err, importer, selectedFileRef.current?.size, t);
+      setPhase({
+        kind: 'error',
+        importer,
+        message: notesWritten ? message : t('errors.importNothingChanged', { detail: message }),
+        detail,
+      });
+    };
+    // The import runs on behind the lock: the lock reloads the page only when it ends (lockReload.ts).
+    const releaseLockReload = holdLockReload();
     try {
-      // Obsidian vaults, Notesnook notebooks and our own backups rebuild a
-      // folder tree: merge it into settings so notes' folderId pointers
-      // resolve, then derive folder tags per the toggle (see folderImport).
-      let notesForApply = parsed.notes;
       // A restore keeps the backup's own folders, so the row is for other apps.
-      const target = importer.id === 'privacynotes' ? null : resolveDestination(importer, madeFolders);
-      // The settings wait for the notes (below); a folder look follows its
-      // folder there.
-      let savedToFinal: ReadonlyMap<string, string> = new Map();
-      if (parsed.folders && parsed.folders.length > 0) {
-        // Merge the tree into settings (reusing existing folders) and remap
-        // note folderIds to the ids that survived reconciliation.
-        const merged = onImportFolders?.(parsed.folders, parsed.originalFolderIds, target);
-        if (merged) madeFolders.push(...merged.created);
-        const idMap = merged?.idMap;
-        const remapped =
-          idMap && idMap.size > 0
-            ? parsed.notes.map((n) =>
-                n.folderId && idMap.has(n.folderId)
-                  ? { ...n, folderId: idMap.get(n.folderId)! }
-                  : n
-              )
-            : parsed.notes;
-        // The toggle lives on the Import tab. A restore puts notes back as the
-        // backup holds them, and its preview counts no folder tags, so a
-        // backup takes none.
-        notesForApply = importer.id === 'privacynotes'
-          ? remapped
-          : withFolderPathTags(remapped, folderTags);
-        // A folder look moves with its folder: saved id, to rebuilt id, to
-        // the id the merge kept.
-        savedToFinal = savedToFinalIds(parsed.originalFolderIds, idMap);
-      }
-      notesForApply = fileUnfiled(notesForApply, target);
-      notesForApply = withBrowserTags(notesForApply, browserTags);
-      // A note color from the source (Google Keep) becomes a tag named after
-      // the color, in the reader's language, and that tag takes the color:
-      // colors live on tags here, never on a note.
-      // Spec: docs/internal/specs/folder-tag-icons.md (section 4.7)
-      const colorTags = new Map<string, string>();
-      if (notesForApply.some((n) => n.colorKey)) {
-        notesForApply = notesForApply.map((n) => {
-          if (!n.colorKey) return n;
-          const tag = normalizeTag(t(`editor:color.names.${n.colorKey}`));
-          if (!tag) return n;
-          colorTags.set(tag, n.colorKey);
-          return n.tags.includes(tag) ? n : { ...n, tags: [...n.tags, tag] };
+      const restore = importer.restore === true;
+      const target = restore ? null : resolveDestination(importer, madeFolders);
+      // Every step of the import, in its one order (importRun.ts). A restore
+      // puts notes back as the backup holds them, and its preview counts no
+      // folder tags, so a backup takes none.
+      const run = await runImport(parsed, {
+        target,
+        targetMade: madeFolders.length > 0,
+        folderTags: !restore && folderTags,
+        browserTags,
+        splitOversize,
+        dropContactPhotos: !!photoEstimate && (!importPhotos || !photoEstimate.fits),
+        sourceTag: autoTag && importer.sourceTag ? importer.sourceTag : undefined,
+      }, {
+        mergeFolders: onImportFolders,
+        undoFolders: onUndoImportFolders,
+        applySettings: onImportSettings,
+        applyTagColors: onImportTagColors,
+        blobsStored: onBlobsRestored,
+        media: {
+          start: () => setPhase({ kind: 'parsing', importer, status: t('status.importingBlobs') }),
+          progress: (msg) => setPhase((prev) => (prev.kind === 'parsing' ? { ...prev, status: msg } : prev)),
+          end: () => setPhase({ kind: 'applying', importer }),
+        },
+      });
+      if (run.kind === 'refused') {
+        setPhase({
+          kind: 'error',
+          importer,
+          message: t('errors.importNothingChanged', { detail: run.errors.join('\n') }),
         });
+        return;
       }
-      if (splitOversize && notesForApply.some(isOversizeImport)) {
-        notesForApply = notesForApply.flatMap((n) =>
-          isOversizeImport(n)
-            ? splitImportedNote(
-                n,
-                (index, total) => t('preview.partTitle', { title: n.title || t('common:state.untitled'), index, total }),
-                (title) => t('notes:split.continuedIn', { link: `[[${title}]]` }),
-              )
-            : [n],
-        );
+      if (run.kind === 'failed') {
+        // The run took back what it made; only the words are left.
+        notesWritten = run.written;
+        showFailure(run.error);
+        return;
       }
-      let parsedForApply =
-        notesForApply === parsed.notes
-          ? parsed
-          : { ...parsed, notes: notesForApply };
-      // Declined photos leave with their references: a body that still names
-      // a blob nobody stored would carry a dead photo key forever.
-      if (photoEstimate && (!importPhotos || !photoEstimate.fits)) {
-        parsedForApply = withoutContactPhotos(parsedForApply);
-      }
+      const { result } = run;
+      notesWritten = true;
       // A media failure must never sink into a console.warn: that makes the
       // worst outcome the quietest one, where the notes land, every image
       // reference stays an un-rewritten placeholder token, and the modal
       // closes on a success toast with nothing on screen saying the pictures
-      // are gone. Both blob paths below record the reason, and the modal
-      // stays open on it - the notes land either way, so this is reported ON
-      // TOP of a real import, never instead of one.
-      let mediaError: string | null = null;
+      // are gone. The run records the reason, and the modal stays open on it -
+      // the notes land either way, so this is reported ON TOP of a real
+      // import, never instead of one.
+      let mediaError = run.mediaError;
       // A backup that lists a picture or a file and does not carry it is
       // reported the same way.
       let missingMessage: string | null = null;
 
-      // Generic blob import: any importer that populates parsed.blobs gets
-      // its images/attachments staged and its note bodies rewritten to
-      // pn:img/ and pn:file/ URIs. It runs BEFORE the notes are written,
-      // because a row written with a placeholder can be picked up and sent by
-      // a sync pass before the rewrite lands, and the rewrite moves no
-      // timestamp for that pass to notice (see blobImport.ts). The staged
-      // files land in the notes' own write, so a failed write keeps neither.
-      // parsedForApply, not parsed: a contact photo the user declined is
-      // filtered out of both by then, so it is never stored either.
-      let staged: StagedBlob[] = [];
-      if (parsedForApply.blobs && parsedForApply.blobs.size > 0) {
-        setPhase({
-          kind: 'parsing',
-          importer,
-          status: t('status.importingBlobs'),
-        });
-        try {
-          const { importBlobs } = await import('./blobImport');
-          const media = await importBlobs(parsedForApply.blobs, parsedForApply.notes, (msg) =>
-            setPhase((prev) =>
-              prev.kind === 'parsing' ? { ...prev, status: msg } : prev
-            )
-          );
-          parsedForApply = { ...parsedForApply, notes: media.notes };
-          staged = media.staged;
-        } catch (err) {
-          console.warn('Blob import failed:', err);
-          mediaError = err instanceof Error ? err.message : String(err);
-        }
-        setPhase({ kind: 'applying', importer });
-      }
-
-      const tag = autoTag && importer.sourceTag ? importer.sourceTag : undefined;
-      const result = await applyImport(parsedForApply, tag, staged);
-      if (result.errors.length > 0) {
-        onUndoImportFolders?.(madeFolders);
-        setPhase({
-          kind: 'error',
-          importer,
-          message: t('errors.importNothingChanged', { detail: result.errors.join('\n') }),
-        });
-        return;
-      }
-      notesWritten = true;
-      // Settings and tag colors have no undo, so they wait for the notes.
-      if (parsed.settings) onImportSettings?.(parsed.settings, savedToFinal);
-      if (colorTags.size > 0) onImportTagColors?.(colorTags);
-      if (staged.length > 0) onBlobsRestored?.();
-
       // For PrivacyNotes full backups, restore images + attachments from
       // the zip (uses manifest-based restoration, not parsed.blobs).
-      if (importer.id === 'privacynotes' && selectedFileRef.current) {
+      if (importer.restore && selectedFileRef.current) {
         setPhase({
           kind: 'parsing',
           importer,
@@ -623,10 +565,10 @@ export function ImportModal({
         });
         try {
           const { restoreBlobs } = await import('./privacynotes');
-          const restored = await restoreBlobs(selectedFileRef.current, (msg) =>
-            setPhase((prev) =>
-              prev.kind === 'parsing' ? { ...prev, status: msg } : prev
-            )
+          const restored = await restoreBlobs(
+            selectedFileRef.current,
+            (msg) => setPhase((prev) => (prev.kind === 'parsing' ? { ...prev, status: msg } : prev)),
+            auth.status === 'authenticated' ? { supabase, pubkey: auth.pubkey } : undefined,
           );
           // Re-trigger pending uploads so restored blobs reach Supabase.
           // Without this, blobs sit in local cache but never get uploaded,
@@ -669,15 +611,10 @@ export function ImportModal({
       }
       onClose();
     } catch (err) {
-      console.warn('Import failed:', err);
-      const { message, detail } = importFailure(err, importer, selectedFileRef.current?.size, t);
       if (!notesWritten) onUndoImportFolders?.(madeFolders);
-      setPhase({
-        kind: 'error',
-        importer,
-        message: notesWritten ? message : t('errors.importNothingChanged', { detail: message }),
-        detail,
-      });
+      showFailure(err);
+    } finally {
+      releaseLockReload();
     }
   }
 
@@ -769,7 +706,7 @@ export function ImportModal({
                   oversizeCount={oversizeCount}
                   splitOversize={splitOversize}
                   onSplitOversizeChange={setSplitOversize}
-                  destinationRow={importTarget && phase.importer.id !== 'privacynotes' && (
+                  destinationRow={importTarget && !phase.importer.restore && (
                     <DestinationRow
                       target={importTarget}
                       newFolderName={sourceLabel(phase.importer, t)}
@@ -806,7 +743,7 @@ export function ImportModal({
                     // the phrase key: decrypt, then run the NORMAL zip
                     // restore flow, preview and blob restore included.
                     if (file.name.toLowerCase().endsWith('.pnbackupz')) {
-                      const imp = IMPORTERS.find((i) => i.id === 'privacynotes');
+                      const imp = IMPORTERS.find((i) => i.restore);
                       if (!imp) return;
                       setPhase({ kind: 'parsing', importer: imp, status: t('status.decryptingBackup') });
                       try {
@@ -821,7 +758,7 @@ export function ImportModal({
                       }
                       return;
                     }
-                    setPhase({ kind: 'parsing', importer: { id: 'privacynotes', label: t('encryptedBackupLabel'), description: '', accept: '.pnbackup', enabled: true, sourceTag: '', parse: async () => { throw new Error(); } }, status: t('status.decryptingBackup') });
+                    setPhase({ kind: 'parsing', importer: encryptedBackupImporter(), status: t('status.decryptingBackup') });
                     try {
                       const counts = await onImportEncrypted(file);
                       onImported(counts.imported, undefined, { updated: counts.updated, unchanged: counts.unchanged });
@@ -829,7 +766,7 @@ export function ImportModal({
                     } catch (err) {
                       setPhase({
                         kind: 'error',
-                        importer: { id: 'privacynotes', label: t('encryptedBackupLabel'), description: '', accept: '.pnbackup', enabled: true, sourceTag: '', parse: async () => { throw new Error(); } },
+                        importer: encryptedBackupImporter(),
                         message: err instanceof Error ? err.message : t('errors.decryptionFailed'),
                       });
                     }
@@ -915,122 +852,19 @@ export function ImportModal({
   );
 }
 
-/** Importers drawn with a phosphor glyph instead of a brand asset, for a
- *  source no single vendor owns. */
-const IMPORT_GLYPH: Record<string, ReactNode> = {
+/** The glyphs a card can carry instead of a brand's mark (`ImporterIcon`). */
+const CARD_GLYPH: Record<'address-book' | 'drawing', ReactNode> = {
   // The address book, matching the Contacts pillar: every phone writes the
   // same .vcf, so no vendor's logo fits.
-  'vcard': <AddressBook size={20} aria-hidden="true" />,
+  'address-book': <AddressBook size={20} aria-hidden="true" />,
   // The drawing glyph the app draws everywhere, for a format two apps write.
-  'excalidraw': <NEW_GLYPHS.drawing size={20} aria-hidden="true" />,
+  'drawing': <NEW_GLYPHS.drawing size={20} aria-hidden="true" />,
 };
 
-/** App icons for the note importers, reused from the /help import guides
- *  (public/help/icons). markdown-folder maps to the generic markdown mark. */
-const IMPORT_ICON: Record<string, string> = {
-  'anytype': '/help/icons/anytype.webp',
-  'google-keep': '/help/icons/google-keep.svg',
-  'google-calendar': '/help/icons/google-calendar.svg',
-  'apple-notes': '/help/icons/apple-notes.svg',
-  'apple-journal': '/help/icons/apple-journal.webp',
-  'daylio': '/help/icons/daylio.webp',
-  'diarium': '/help/icons/diarium.webp',
-  'google-journal': '/help/icons/google-journal.webp',
-  'bear': '/help/icons/bear.webp',
-  'evernote': '/help/icons/evernote.svg',
-  'samsung-notes': '/help/icons/samsung-notes.webp',
-  'simplenote': '/help/icons/simplenote.svg',
-  'standard-notes': '/help/icons/standard-notes.webp',
-  'obsidian': '/help/icons/obsidian.svg',
-  'obsidian-canvas': '/help/icons/obsidian.svg',
-  'notesnook': '/help/icons/notesnook.svg',
-  'joplin': '/help/icons/joplin.svg',
-  'siyuan': '/help/icons/siyuan.svg',
-  'upnote': '/help/icons/upnote.svg',
-  'markdown-folder': '/help/icons/markdown.svg',
-  'bitwarden': '/help/icons/bitwarden.svg',
-  'keepass': '/help/icons/keepass.webp',
-  'keepassxc': '/help/icons/keepassxc.svg',
-  'lastpass': '/help/icons/lastpass.svg',
-  '1password': '/help/icons/1password.webp',
-  'enpass': '/help/icons/enpass.svg',
-  'dashlane': '/help/icons/dashlane.svg',
-  'nordpass': '/help/icons/nordpass.webp',
-  'proton-pass': '/help/icons/proton-pass.svg',
-  'typora': '/help/icons/typora.webp',
-  'ia-writer': '/help/icons/ia-writer.webp',
-  'zettlr': '/help/icons/zettlr.svg',
-  'nextcloud-notes': '/help/icons/nextcloud-notes.svg',
-};
-
-/** Maps importer ids to their /help/import/<slug> guide slug. Slugs match
- *  ids 1:1 except markdown-folder, whose guide lives under "markdown". */
-const GUIDE_SLUG: Record<string, string> = {
-  'anytype': 'anytype',
-  'apple-journal': 'apple-journal',
-  'browser-bookmarks': 'browser-bookmarks',
-  'apple-notes': 'apple-notes',
-  'bear': 'bear',
-  'bitwarden': 'bitwarden',
-  'browser-passwords': 'browser-passwords',
-  'vcard': 'contacts',
-  'daylio': 'daylio',
-  'diarium': 'diarium',
-  'evernote': 'evernote',
-  'google-keep': 'google-keep',
-  'google-calendar': 'google-calendar',
-  'google-journal': 'google-journal',
-  'joplin': 'joplin',
-  'keepass': 'keepass',
-  'keepassxc': 'keepassxc',
-  'lastpass': 'lastpass',
-  '1password': '1password',
-  'enpass': 'enpass',
-  'dashlane': 'dashlane',
-  'markdown-folder': 'markdown',
-  'typora': 'typora',
-  'ia-writer': 'ia-writer',
-  'zettlr': 'zettlr',
-  'nextcloud-notes': 'nextcloud-notes',
-  'nordpass': 'nordpass',
-  'notesnook': 'notesnook',
-  'obsidian': 'obsidian',
-  'proton-pass': 'proton-pass',
-  'samsung-notes': 'samsung-notes',
-  'simplenote': 'simplenote',
-  'siyuan': 'siyuan',
-  'standard-notes': 'standard-notes',
-  'upnote': 'upnote',
-};
-
-/** Maps importer ids to their description translation key under sourceDesc. */
-/**
- * The few importer labels that are OUR wording rather than the source
- * application's own name.
- *
- * An importer's `label` renders raw, because "Obsidian" is Obsidian in every
- * language. Five of them are not brands, and each already had a translation
- * sitting in `guides.json` for its help page, so the picker said "Browser
- * bookmarks" while the guide one click away said "Signets du navigateur".
- * `guides.json` is build-only (the static help site reads it off disk; it is
- * excluded from the runtime catalog glob in i18n.ts), so the wording is
- * repeated here in a catalog the app actually loads.
- *
- * An id ABSENT from this map is a brand name and renders as written. That is
- * what makes the map readable: it is the list of labels that are ours.
- */
-const SOURCE_LABEL_KEY: Record<string, string> = {
-  'privacynotes': 'sourceLabel.privacynotes',
-  'browser-bookmarks': 'sourceLabel.browserBookmarks',
-  'browser-passwords': 'sourceLabel.browserPasswords',
-  'vcard': 'sourceLabel.vcard',
-  'markdown-folder': 'sourceLabel.markdownFolder',
-};
 
 /** An importer's name in the reader's language, or its brand name unchanged. */
-function sourceLabel(imp: Importer, t: TFunction): string {
-  const key = SOURCE_LABEL_KEY[imp.id];
-  return key ? t(key) : imp.label;
+function sourceLabel(imp: ImporterEntry, t: TFunction): string {
+  return imp.labelKey ? t(imp.labelKey) : imp.label;
 }
 
 /**
@@ -1041,7 +875,7 @@ function sourceLabel(imp: Importer, t: TFunction): string {
  * the device failing: its text means nothing to the person, so it gets a plain
  * sentence, and its own text stays as the technical detail for a bug report.
  */
-function importFailure(err: unknown, imp: Importer, size: number | undefined, t: TFunction): { message: string; detail?: string } {
+function importFailure(err: unknown, imp: ImporterEntry, size: number | undefined, t: TFunction): { message: string; detail?: string } {
   if (err instanceof ImportFileError) return { message: err.message, detail: err.detail };
   const builtIn =
     err instanceof SyntaxError ||
@@ -1057,49 +891,6 @@ function importFailure(err: unknown, imp: Importer, size: number | undefined, t:
   return { message: t('errors.unreadable', { importer: sourceLabel(imp, t) }), detail };
 }
 
-const SOURCE_DESC_KEY: Record<string, string> = {
-  'browser-bookmarks': 'sourceDesc.browserBookmarks',
-  'vcard': 'sourceDesc.vcard',
-  'google-keep': 'sourceDesc.googleKeep',
-  'google-calendar': 'sourceDesc.googleCalendar',
-  'excalidraw': 'sourceDesc.excalidraw',
-  'apple-notes': 'sourceDesc.appleNotes',
-  'apple-journal': 'sourceDesc.appleJournal',
-  'daylio': 'sourceDesc.daylio',
-  'diarium': 'sourceDesc.diarium',
-  'google-journal': 'sourceDesc.googleJournal',
-  'bear': 'sourceDesc.bear',
-  'evernote': 'sourceDesc.evernote',
-  'samsung-notes': 'sourceDesc.samsungNotes',
-  'simplenote': 'sourceDesc.simplenote',
-  'standard-notes': 'sourceDesc.standardNotes',
-  'obsidian': 'sourceDesc.obsidian',
-  'obsidian-canvas': 'sourceDesc.obsidianCanvas',
-  'notesnook': 'sourceDesc.notesnook',
-  'joplin': 'sourceDesc.joplin',
-  'anytype': 'sourceDesc.anytype',
-  'siyuan': 'sourceDesc.siyuan',
-  'upnote': 'sourceDesc.upnote',
-  'markdown-folder': 'sourceDesc.markdownFolder',
-  // One shared line for the four markdown-app aliases: the parser is the
-  // same, so four near-identical descriptions would be four copies to keep
-  // in step across every locale. What differs per app is in its guide, one
-  // click away in the row's guide rail.
-  'typora': 'sourceDesc.markdownApp',
-  'ia-writer': 'sourceDesc.markdownApp',
-  'zettlr': 'sourceDesc.markdownApp',
-  'nextcloud-notes': 'sourceDesc.markdownApp',
-  'bitwarden': 'sourceDesc.bitwarden',
-  'browser-passwords': 'sourceDesc.browserPasswords',
-  'keepass': 'sourceDesc.keepass',
-  'keepassxc': 'sourceDesc.keepassxc',
-  'lastpass': 'sourceDesc.lastpass',
-  '1password': 'sourceDesc.onePassword',
-  'enpass': 'sourceDesc.enpass',
-  'dashlane': 'sourceDesc.dashlane',
-  'nordpass': 'sourceDesc.nordpass',
-  'proton-pass': 'sourceDesc.protonPass',
-};
 
 /** The app's own mark, for the rows that read or write our own format. */
 const PN_ICON = '/favicon.svg';
@@ -1163,11 +954,11 @@ function SourcePanel({ id, label, desc, children }: { id: string; label: string;
 
 /** The panel actions of one importer: Import opens the file picker, Guide
  *  opens its /help/import/<slug> page when one exists. */
-function ImporterActions({ imp, onPick, guide }: { imp: Importer; onPick: (imp: Importer) => void; guide?: string | null }) {
+function ImporterActions({ imp, onPick, guide }: { imp: ImporterEntry; onPick: (imp: ImporterEntry) => void; guide?: string | null }) {
   const { t } = useTranslation('importExport');
   // `guide` overrides the importer's own guide: an alias card names its app's
   // guide, or null when its family's guide is about another app.
-  const guideSlug = guide === undefined ? GUIDE_SLUG[imp.id] : guide ?? undefined;
+  const guideSlug = guide === undefined ? imp.guide ?? undefined : guide ?? undefined;
   return (
     <>
       <Button variant="primary" icon={<Download aria-hidden="true" />} onClick={() => onPick(imp)}>
@@ -1261,51 +1052,9 @@ function CalendarFeedForm({ onFile, feeds }: { onFile: (file: File) => void; fee
   );
 }
 
-/** The file types a source card names under its title: the extensions the
- *  person's export writes, so the card says which file to make before the
- *  click. Extensions only, so the line needs no translation. An importer
- *  that also takes another type to refuse it with a message (Notesnook's
- *  .nnbackupz) leaves that one out. */
-const FILE_TYPES: Record<string, string> = {
-  'apple-journal': '.zip',
-  'apple-notes': '.zip',
-  'daylio': '.daylio, .csv',
-  'diarium': '.zip, .json',
-  'google-journal': '.zip',
-  'bear': '.bear2bk, .zip',
-  'bitwarden': '.json',
-  'browser-bookmarks': '.html, .zip',
-  'browser-passwords': '.csv, .zip',
-  'evernote': '.enex, .zip',
-  'excalidraw': '.excalidraw, .zip',
-  'google-calendar': '.ics, .zip',
-  'google-keep': '.zip, .json',
-  'ia-writer': '.zip',
-  'joplin': '.jex, .zip',
-  'anytype': '.zip',
-  'siyuan': '.zip',
-  'keepass': '.xml, .csv',
-  'keepassxc': '.xml, .csv',
-  'lastpass': '.csv',
-  '1password': '.1pux, .csv',
-  'enpass': '.json',
-  'dashlane': '.zip, .csv',
-  'nordpass': '.csv',
-  'proton-pass': '.zip, .csv',
-  'markdown-folder': '.md, .txt, .zip',
-  'nextcloud-notes': '.zip',
-  'notesnook': '.zip',
-  'obsidian': '.zip, .canvas',
-  'obsidian-canvas': '.canvas, .zip',
-  'samsung-notes': '.docx, .txt, .zip',
-  'simplenote': '.zip, .json',
-  'standard-notes': '.zip, .txt',
-  'typora': '.zip',
-  'upnote': '.zip, .html, .md',
-  'vcard': '.vcf',
-  'zettlr': '.zip',
-  webcal: 'webcal://',
-};
+/** The Webcal card's line under its name (`ImporterCard.fileTypes` for the
+ *  importers). */
+const WEBCAL_TYPES = 'webcal://';
 
 /** Alias cards: an app whose export another importer already reads gets a
  *  card of its own, so a person finds the name of their app. One card per
@@ -1350,10 +1099,10 @@ const ALIAS_GUIDE: Record<string, string> = {
   'apple-calendar': 'apple-calendar',
 };
 /** Safari writes a .zip around both files; every other browser the bare file. */
-const aliasFileTypes = (family: string, alias: string): string => {
+const aliasFileTypes = (family: ImporterEntry, alias: string): string => {
   if (alias === 'apple-calendar') return '.ics';
-  if (alias === 'safari') return FILE_TYPES[family] ?? '';
-  return family === 'browser-bookmarks' ? '.html' : '.csv';
+  if (alias === 'safari') return family.fileTypes;
+  return family.id === 'browser-bookmarks' ? '.html' : '.csv';
 };
 
 /** Import tab: a search field over a card per source in five groups, the
@@ -1361,7 +1110,7 @@ const aliasFileTypes = (family: string, alias: string): string => {
  *  The search reads the name and the file types, so ".enex" finds Evernote.
  *  The descriptions live in the panel a card opens.
  *  Spec: docs/internal/design/patterns/151-160.md (section 157) */
-function ImportPickPhase({ onPick, onCalendarFeed, calendarFeeds }: { onPick: (imp: Importer) => void; onCalendarFeed: (file: File) => void; calendarFeeds?: FeedsControl }) {
+function ImportPickPhase({ onPick, onCalendarFeed, calendarFeeds }: { onPick: (imp: ImporterEntry) => void; onCalendarFeed: (file: File) => void; calendarFeeds?: FeedsControl }) {
   const { t } = useTranslation('importExport');
   const importerMap = Object.fromEntries(IMPORTERS.map((i) => [i.id, i]));
   const [openId, setOpenId] = useState<string | null>(null);
@@ -1375,11 +1124,11 @@ function ImportPickPhase({ onPick, onCalendarFeed, calendarFeeds }: { onPick: (i
   // its vault with the notes, its canvases alone as Obsidian Canvas. Each
   // group is alphabetical.
   const groups = [
-    { key: 'notes', icon: Note, title: t('shell:tagsRail.notes'), ids: ['anytype', 'apple-journal', 'apple-notes', 'bear', 'daylio', 'diarium', 'evernote', 'google-journal', 'google-keep', 'ia-writer', 'joplin', 'markdown-folder', 'nextcloud-notes', 'notesnook', 'obsidian', 'samsung-notes', 'simplenote', 'siyuan', 'standard-notes', 'typora', 'upnote', 'zettlr'] },
+    { key: 'notes', icon: Note, title: t('shell:tagsRail.notes'), ids: ['anytype', 'apple-journal', 'apple-notes', 'bear', 'capacities', 'daylio', 'diarium', 'evernote', 'google-journal', 'google-keep', 'ia-writer', 'joplin', 'markdown-folder', 'nextcloud-notes', 'notesnook', 'obsidian', 'onenote', 'samsung-notes', 'simplenote', 'siyuan', 'standard-notes', 'typora', 'upnote', 'zettlr'] },
     { key: 'drawings', icon: NEW_GLYPHS.drawing, title: t('shell:tagsRail.drawings'), ids: ['excalidraw', 'obsidian-canvas'] },
     { key: 'calendar', icon: CalendarDots, title: t('importPick.groupCalendar'), ids: ['google-calendar:apple-calendar', 'vcard', 'google-calendar', WEBCAL_ID] },
-    { key: 'bookmarks', icon: BookmarkSimple, title: t('shell:tagsRail.bookmarks'), ids: browserTiles('browser-bookmarks', ['brave', 'chrome', 'edge', 'firefox', 'safari', 'vivaldi']) },
-    { key: 'passwords', icon: Key, title: t('shell.tabVault'), ids: [...browserTiles('browser-passwords', ['apple-passwords']), '1password', 'bitwarden', ...browserTiles('browser-passwords', ['brave', 'chrome']), 'dashlane', ...browserTiles('browser-passwords', ['edge']), 'enpass', ...browserTiles('browser-passwords', ['firefox']), 'keepass', 'keepassxc', 'lastpass', 'nordpass', 'proton-pass', ...browserTiles('browser-passwords', ['safari', 'vivaldi'])] },
+    { key: 'bookmarks', icon: BookmarkSimple, title: t('shell:tagsRail.bookmarks'), ids: [...browserTiles('browser-bookmarks', ['brave', 'chrome', 'edge', 'firefox']), 'raindrop', ...browserTiles('browser-bookmarks', ['safari', 'vivaldi'])] },
+    { key: 'passwords', icon: Key, title: t('shell.tabVault'), ids: [...browserTiles('browser-passwords', ['apple-passwords']), '1password', 'bitwarden', ...browserTiles('browser-passwords', ['brave', 'chrome']), 'dashlane', ...browserTiles('browser-passwords', ['edge']), 'enpass', ...browserTiles('browser-passwords', ['firefox']), 'keepass', 'keepassxc', 'lastpass', 'msecure', 'nordpass', 'proton-pass', ...browserTiles('browser-passwords', ['safari', 'vivaldi'])] },
   ];
   const panelId = (id: string) => `import-panel-${id.replace(':', '-')}`;
   const labelOf = (id: string) => {
@@ -1390,8 +1139,11 @@ function ImportPickPhase({ onPick, onCalendarFeed, calendarFeeds }: { onPick: (i
     return imp ? sourceLabel(imp, t) : '';
   };
   const typesOf = (id: string) => {
+    if (id === WEBCAL_ID) return WEBCAL_TYPES;
     const [impId, browser] = splitTile(id);
-    return browser ? aliasFileTypes(impId, browser) : FILE_TYPES[id] ?? '';
+    const imp = importerMap[impId];
+    if (!imp) return '';
+    return browser ? aliasFileTypes(imp, browser) : imp.fileTypes;
   };
   const match = query.trim() ? textMatcher(query) : null;
   // A search for the group's name ("bookmarks") keeps the whole group: its
@@ -1411,7 +1163,7 @@ function ImportPickPhase({ onPick, onCalendarFeed, calendarFeeds }: { onPick: (i
             data-setting="import.webcal"
             icon={<RowIcon glyph={<Globe size={20} aria-hidden="true" />} />}
             label={t('webcal.title')}
-            detail={FILE_TYPES[id] ?? ''}
+            detail={WEBCAL_TYPES}
             open={open}
             panelId={panelId(id)}
             onToggle={() => toggle(id)}
@@ -1427,7 +1179,7 @@ function ImportPickPhase({ onPick, onCalendarFeed, calendarFeeds }: { onPick: (i
     const [impId, browser] = splitTile(id);
     const imp = importerMap[impId];
     if (!imp) return null;
-    const descKey = SOURCE_DESC_KEY[imp.id];
+    const descKey = imp.descKey;
     const ownDescKey = browser ? ALIAS_DESC_KEY[browser] : undefined;
     return (
       <Fragment key={id}>
@@ -1438,7 +1190,7 @@ function ImportPickPhase({ onPick, onCalendarFeed, calendarFeeds }: { onPick: (i
           // Calendar would land on it.
           data-setting={`import.source.${imp.id}`}
           {...(ownDescKey ? { 'data-setting': `import.alias.${browser}` } : {})}
-          icon={<RowIcon src={browser ? ALIAS_ICON[browser] : IMPORT_ICON[imp.id]} glyph={browser ? undefined : IMPORT_GLYPH[imp.id]} />}
+          icon={<RowIcon src={browser ? ALIAS_ICON[browser] : imp.icon && 'src' in imp.icon ? imp.icon.src : undefined} glyph={!browser && imp.icon && 'glyph' in imp.icon ? CARD_GLYPH[imp.icon.glyph] : undefined} />}
           label={labelOf(id)}
           detail={typesOf(id)}
           open={open}
@@ -1481,12 +1233,11 @@ const WEBCAL_ID = 'webcal';
 /** Restore tab pick phase - PrivacyNotes backup restore, 1-col with full descriptions. */
 function RestorePickPhase({ gate, onPickRestore, onImportEncrypted }: {
   gate: RestoreGate;
-  onPickRestore: (imp: Importer) => void;
+  onPickRestore: (imp: ImporterEntry) => void;
   onImportEncrypted: (file: File) => void;
 }) {
   const { t } = useTranslation('importExport');
   const encFileRef = useRef<HTMLInputElement | null>(null);
-  const importerMap = Object.fromEntries(IMPORTERS.map((i) => [i.id, i]));
 
   return (
     <div className="space-y-3">
@@ -1504,7 +1255,7 @@ function RestorePickPhase({ gate, onPickRestore, onImportEncrypted }: {
           glyph={<FileZip size={20} aria-hidden="true" />}
           disabled={gate !== 'open'}
           onClick={() => {
-            const imp = importerMap['privacynotes'];
+            const imp = IMPORTERS.find((i) => i.restore);
             if (imp) onPickRestore(imp);
           }}
         />
@@ -1731,6 +1482,10 @@ function PreviewPhase({
   // PrivacyNotes backup formats set an id (ImportedNote.id), so this reads
   // the file itself rather than the importer that opened it.
   const allOwn = notes.length > 0 && notes.every((n) => !!n.id);
+  // Our own full backup carries settings beside the notes (subscribed
+  // calendars, the Home layout, looks); the preview names the ones it holds,
+  // so a file somebody else made cannot bring them in unseen.
+  const settingNames = parsed.settings ? backupSettingsNames(parsed.settings) : [];
   // Reflect the folder tags the import is about to add (reactive to the
   // toggle) so the tag counts match what actually lands, not the raw
   // parse-time count. Non-folder imports fall through to notes unchanged.
@@ -1894,6 +1649,12 @@ function PreviewPhase({
             needed: formatBytes(quotaCheck.estimatedBytes),
             available: formatBytes(quotaCheck.availableBytes),
           })}
+        </p>
+      )}
+
+      {settingNames.length > 0 && (
+        <p className={SETTINGS_HELP}>
+          {t('preview.backupSettings', { list: listOf(settingNames.map((k) => t(`preview.backupSetting.${k}`))) })}
         </p>
       )}
 

@@ -18,6 +18,8 @@
     "filedNotes_other": "{{count}} notities ingedeeld",
     "tags_other": "De tags van {{count}} notities behouden.",
     "droppedAlign": "Uitlijning weggelaten bij blokken die de editor niet kan uitlijnen; de tekst blijft staan.",
+    "lostPasskeys_other": "{{count}} passkeys weggelaten die bij logins waren opgeslagen. Bewaar ze in je oude app, of voeg op die sites nieuwe passkeys toe.",
+    "lostPasskeys_one": "{{count}} passkey weggelaten die bij een login was opgeslagen. Bewaar hem in je oude app, of voeg op die site een nieuwe passkey toe.",
     "foldersFromNotebooks_other": "{{count}} mappen opnieuw opgebouwd uit je notitieboeken ({{filed}}).",
     "parsingJson": "JSON verwerken…",
     "buildingNotes": "Notities opbouwen…",
@@ -324,6 +326,14 @@
     "invalidJson": "Dit bestand is geen geldige JSON. Controleer of je hebt geëxporteerd als \".json\" (niet versleuteld).",
     "encryptedExport": "Dit is een versleutelde Bitwarden-export. Exporteer opnieuw met het gewone formaat \".json\" (niet \".json (Encrypted)\").",
     "missingItems": "In dit bestand ontbreekt de verwachte array \"items\". Het is geen export van een Bitwarden-vault.",
+    "notZipExport": "Deze zip heeft geen data.json op het hoogste niveau. Het is geen Bitwarden-export als \".zip (with attachments)\".",
+    "keptPasskeys_one": "{{count}} passkey bewaard bij zijn login.",
+    "keptPasskeys_other": "{{count}} passkeys bewaard bij hun logins.",
+    "passkeyOtherSite": "De login \"{{name}}\" bevat een passkey voor {{site}}, en dat is geen van zijn websites. Hij is met de login meegekomen; verwijder hem daar als je hem niet kent.",
+    "skippedPasskeys_one": "{{count}} passkey weggelaten die de Kluis niet kan bewaren: de sleutel is geen P-256, of een waarde is langer dan WebAuthn toestaat. Voeg op die site een nieuwe passkey toe.",
+    "skippedPasskeys_other": "{{count}} passkeys weggelaten die de Kluis niet kan bewaren: de sleutel is geen P-256, of een waarde is langer dan WebAuthn toestaat. Voeg op die sites een nieuwe passkey toe.",
+    "unmatchedAttachments_one": "{{count}} bijlage kon niet aan één item worden gekoppeld, omdat geen enkel item of meerdere items de naam van de map hebben. Hij staat in een notitie die naar de map is genoemd.",
+    "unmatchedAttachments_other": "{{count}} bijlagen konden niet aan één item worden gekoppeld, omdat geen enkel item of meerdere items de naam van hun map hebben. Ze staan in notities die naar hun mappen zijn genoemd.",
     "unknownType": "Item \"{{name}}\" met onbekend type {{type}} overgeslagen.",
     "importedCards_other": "{{count}} kaarten geïmporteerd als items in de Kluis.",
     "importedSecureNotes_other": "{{count}} beveiligde notities geïmporteerd.",
@@ -627,6 +637,10 @@
     "leftFiles_other": "{{count}} bijgevoegde bestanden zijn achtergebleven. Sla ze op vanuit Enpass en voeg ze hier bij de items toe.",
     "leftFiles_one": "{{count}} bijgevoegd bestand is achtergebleven. Sla het op vanuit Enpass en voeg het hier bij het item toe."
   },
+  "msecure": {
+    "notMSecure": "Dit is geen mSecure-export. Kies in mSecure Settings > Backups > Export records to CSV file.",
+    "fieldDataOnly": "Deze mSecure-export heeft geen veldnamen, dus de velden zijn niet van elkaar te onderscheiden. Exporteer opnieuw met \"Only export field data\" uitgeschakeld."
+  },
   "nordpass": {
     "notNordPass": "Dit bestand is geen NordPass-export. Kies in NordPass Settings > Export items."
   },
@@ -643,6 +657,7 @@
     "kdbxFile": "Dit is de KeePass-database zelf, en die is vergrendeld. Exporteer hem in KeePass of KeePassXC als XML en importeer dan dat bestand.",
     "notKeePass": "Dit bestand is geen KeePass XML-export. Kies in KeePass File > Export > KeePass XML (2.x); in KeePassXC Database > Export > XML File.",
     "noEntries": "Dat KeePass-bestand heeft geen items buiten de Recycle Bin.",
+    "doctype": "Dit bestand declareert een DOCTYPE, wat geen enkele KeePass-export schrijft, dus het is niet gelezen. Exporteer de XML opnieuw vanuit KeePass en importeer dat bestand.",
     "readingEntries": "De items lezen…",
     "leftHistory_other": "{{count}} oudere versies van items weggelaten: alleen de nieuwste gaat mee.",
     "missingFiles_other": "{{count}} bijgevoegde bestanden zaten niet in de export en zijn achtergebleven. Sla ze op vanuit KeePass en voeg ze hier bij de logins toe.",
@@ -659,6 +674,15 @@
     "readHashtags_one": "Tags gelezen die als #hashtags zijn geschreven in {{count}} notitie.",
     "foundFiles_one": "{{count}} Markdown-bestand gevonden..."
   },
+  "raindrop": {
+    "notRaindrop": "Geen Raindrop.io-export - er werd het .csv-bestand uit Export > CSV verwacht, of de .zip waar het in zit.",
+    "noCsv": "Geen .csv-bestand in deze zip. Exporteer de CSV uit Raindrop.io en kies dat bestand.",
+    "highlightsHeading": "Markeringen",
+    "skipped_other": "{{count}} bladwijzers zijn weggelaten omdat hun adres geen weblink is.",
+    "covers_other": "{{count}} omslagafbeeldingen zijn niet geïmporteerd. De bladwijzers tonen in plaats daarvan het icoontje van de website.",
+    "covers_one": "{{count}} omslagafbeelding is niet geïmporteerd. De bladwijzer toont in plaats daarvan het icoontje van de website.",
+    "skipped_one": "{{count}} bladwijzer is weggelaten omdat het adres geen weblink is."
+  },
   "browserBookmarks": {
     "notBookmarks": "Geen bladwijzerexport - er werd het .html-bestand met bladwijzers verwacht dat een browser exporteert.",
     "noBookmarks": "Geen bladwijzers gevonden in dit bestand.",
@@ -670,6 +694,8 @@
     "entryTooLarge": "{{name}} wordt uitgepakt groter dan de {{limit}} die een import in één keer kan lezen. Haal het uit de export en probeer het opnieuw.",
     "entryTooLargeKnown": "{{name}} wordt uitgepakt {{size}}, meer dan de {{limit}} die een import in één keer kan lezen. Haal het uit de export en probeer het opnieuw.",
     "unreadable": "Dit bestand kan niet worden geopend. Het is mogelijk onvolledig of beschadigd. Exporteer het opnieuw en kies het nieuwe bestand.",
+    "importTooLarge": "Dit bestand wordt uitgepakt groter dan {{limit}}, meer dan een echte export bevat. Exporteer het opnieuw en kies het nieuwe bestand.",
+    "tooManyEntries": "Deze zip bevat meer dan {{max}} bestanden, meer dan een echte export bevat. Exporteer hem opnieuw en kies het nieuwe bestand.",
     "mediaTooLarge_one": "{{count}} bestand groter dan {{size}} overgeslagen, het grootste bestand dat een plan kan synchroniseren."
   },
   "safariArchive": {
@@ -682,5 +708,47 @@
   },
   "apply": {
     "unknownWriteError": "Onbekende fout bij het schrijven naar de lokale database."
+  },
+  "onenote": {
+    "reading": "Het OneNote-notitieblok lezen…",
+    "notOneNote": "Dit is geen OneNote-notitieblok. Kies in OneNote voor Windows File > Export > Notebook > OneNote Package en sleep het .onepkg-bestand hierheen.",
+    "cloudFormat": "Deze sectie staat in het formaat dat OneNote online bewaart, en dat kan alleen OneNote lezen. Open het notitieblok in OneNote voor Windows, kies File > Export > Notebook > OneNote Package en sleep dat .onepkg-bestand hierheen.",
+    "splitPackage": "Dit OneNote-pakket is over meerdere bestanden verdeeld. Exporteer het notitieblok opnieuw als één OneNote Package en sleep dat bestand hierheen.",
+    "tooLarge": "Dit OneNote-pakket is te groot om in één keer te lezen. Exporteer één sectiegroep of sectie tegelijk.",
+    "damaged": "Dit OneNote-bestand is beschadigd en kan niet worden gelezen. Exporteer het notitieblok opnieuw uit OneNote en probeer dat bestand.",
+    "noPages": "Geen pagina's gevonden in dit OneNote-notitieblok.",
+    "allLocked": "Elke sectie in dit notitieblok is met een wachtwoord beveiligd. Ontgrendel de secties in OneNote, verwijder hun wachtwoorden, exporteer opnieuw en sleep het nieuwe bestand hierheen.",
+    "subpages_other": "{{count}} subpagina's behouden als notities naast hun pagina's.",
+    "noteTags_other": "De notitietags van {{count}} pagina's behouden als tags.",
+    "lockedSections_other": "{{count}} met een wachtwoord beveiligde secties weggelaten. Verwijder hun wachtwoorden in OneNote en exporteer opnieuw om ze mee te nemen.",
+    "unreadableSections_other": "{{count}} secties weggelaten die niet konden worden gelezen.",
+    "unsupported_other": "{{count}} tekeningen, audiofragmenten en vergelijkingen weggelaten die hier geen tegenhanger hebben.",
+    "missingFiles_other": "{{count}} afbeeldingen of bestanden zaten niet in het pakket en zijn weggelaten.",
+    "deadLinks_other": "{{count}} OneNote-links verwijzen naar iets buiten dit notitieblok en behouden alleen hun tekst.",
+    "recycleBin_other": "{{count}} pagina's uit de prullenbak van het notitieblok weggelaten.",
+    "recycleBin_one": "{{count}} pagina uit de prullenbak van het notitieblok weggelaten.",
+    "deadLinks_one": "{{count}} OneNote-link verwijst naar iets buiten dit notitieblok en behoudt alleen de tekst.",
+    "missingFiles_one": "{{count}} afbeelding of bestand zat niet in het pakket en is weggelaten.",
+    "unsupported_one": "{{count}} tekening, audiofragment of vergelijking weggelaten die hier geen tegenhanger heeft.",
+    "unreadableSections_one": "{{count}} sectie weggelaten die niet kon worden gelezen.",
+    "lockedSections_one": "{{count}} met een wachtwoord beveiligde sectie weggelaten. Verwijder het wachtwoord ervan in OneNote en exporteer opnieuw om die mee te nemen.",
+    "noteTags_one": "De notitietags van {{count}} pagina behouden als tags.",
+    "subpages_one": "{{count}} subpagina behouden als notitie naast de pagina ervan."
+  },
+  "capacities": {
+    "notCapacities": "Dit is geen Capacities-export. Open in Capacities Settings > Full Export, voer Manual Full Export uit met media erbij en sleep de zip hierheen.",
+    "noObjects": "Geen pagina's of andere objecten met tekst gevonden in deze Capacities-export.",
+    "typeFolders_other": "{{count}} objecttypen opnieuw opgebouwd als mappen.",
+    "properties_other": "De eigenschappen van {{count}} objecten als lijst bovenaan hun notities gezet.",
+    "mediaObjects_other": "{{count}} afbeeldingen en bestanden behouden in de notities die ze tonen, zonder eigen notitie.",
+    "queries_other": "{{count}} query's weggelaten. Een query is een opgeslagen zoekopdracht in Capacities, zonder eigen tekst.",
+    "collections_other": "{{count}} collectielijsten weggelaten. De objecten erin komen mee, zonder de collecties.",
+    "deadLinks_other": "{{count}} links verwijzen naar objecten die niet in de export zitten, zoals objecten in de prullenbak, en behouden alleen hun tekst.",
+    "deadLinks_one": "{{count}} link verwijst naar een object dat niet in de export zit, zoals een object in de prullenbak, en behoudt alleen de tekst.",
+    "collections_one": "{{count}} collectielijst weggelaten. De objecten erin komen mee, zonder de collectie.",
+    "queries_one": "{{count}} query weggelaten. Een query is een opgeslagen zoekopdracht in Capacities, zonder eigen tekst.",
+    "mediaObjects_one": "{{count}} afbeelding of bestand behouden in de notities die het tonen, zonder eigen notitie.",
+    "properties_one": "De eigenschappen van {{count}} object als lijst bovenaan de notitie gezet.",
+    "typeFolders_one": "{{count}} objecttype opnieuw opgebouwd als map."
   }
 }

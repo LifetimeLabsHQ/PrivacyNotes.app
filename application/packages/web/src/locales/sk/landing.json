@@ -1,6 +1,5 @@
 {
   "header": {
-    "betaBadge": "beta",
     "downloads": "Na stiahnutie",
     "price": "Cena",
     "priceLine": "Koľko stoja tvoje aplikácie dokopy",
@@ -290,7 +289,7 @@
   },
   "demoShot": {
     "kicker": "Pozri si to naživo",
-    "caption": "Skutočná aplikácia s ukážkovými poznámkami, priamo v tvojom prehliadači. Nič sa neukladá."
+    "caption": "Skutočná aplikácia s ukážkovými poznámkami, priamo v tvojom prehliadači. Čo napíšeš, zostane v ňom."
   },
   "badges": {
     "privacyToolsAlt": "PrivacyNotes na PrivacyTools.io",
@@ -358,7 +357,7 @@
     "freeImport": "Import a export, vrátane Keep a Obsidianu",
     "freeAnon": "Anonymné prihlásenie, bez e-mailu",
     "earlyAdopterBadge": "Pre prvých používateľov",
-    "payMethods": "Plať kartou alebo v Bitcoine, Ethereu, cez Lightning, v USDC či USDT."
+    "payMethods": "Plať kartou alebo v Bitcoine, Ethereu, cez Lightning, v USDC, USDT, Litecoine, Bitcoin Cash, Dogecoine či TON."
   },
   "underHood": {
     "heading": "Pod kapotou",
@@ -501,7 +500,7 @@
     "noLockIn": "Závislosť od poskytovateľa",
     "noEmail": "Povinný e-mail",
     "noDarkPatterns": "Manipulatívne praktiky",
-    "noBackdoor": "Zadné dvierka"
+    "noBackdoor": "Skryté zadné dvierka"
   },
   "noRecovery": {
     "heading": "Tvoja fráza je tvoj kľúč",
@@ -509,7 +508,7 @@
     "noRecoveryTerm": "Bez obnovy",
     "noRecoveryDesc": "Pri vlastnej správe: stratíš frázu, stratíš poznámky",
     "deviceTerm": "Vytvorená v zariadení",
-    "deviceDesc": "Pri vlastnej správe sa tvoja fráza nikdy nedostane na naše servery",
+    "deviceDesc": "Pri vlastnej správe sa tvoja fráza nikdy nedostane na naše servery, pokiaľ nepridáš prístupový kľúč na prihlásenie",
     "zkTerm": "Nulová znalosť",
     "zkDesc": "Pri vlastnej správe server nedrží nič, čo by otvorilo tvoje poznámky",
     "writeTerm": "Zapíš si ju",
@@ -524,7 +523,7 @@
     "heading": "Tvoj trezor je pripravený za menej ako minútu.",
     "importNote": "Meníš aplikáciu? Exportuj z ktorejkoľvek z týchto a za pár minút importuj:",
     "importDemoTitle": "Vyskúšaj si najprv vlastný import v deme",
-    "importDemoBody": "Tvoj súbor sa načíta v prehliadači, nič neodchádza na naše servery a zatvorením karty sa vymaže."
+    "importDemoBody": "Tvoj súbor sa načíta v prehliadači a nič z neho sa nenahrá. Zostane v tomto prehliadači, kým sa tu demo znova neotvorí; ak ho chceš odstrániť skôr, vymaž údaje stránky."
   },
   "about": {
     "tabs": {
@@ -532,7 +531,7 @@
       "hotkeys": "Skratky",
       "rating": "Hodnotenie"
     },
-    "intro": "<brand/> uchováva tvoje poznámky, úlohy, heslá, denník, súbory, kalendár, kontakty a záložky na jednom mieste, so sledovaním nálady a liekov. Všetko je šifrované na tvojom zariadení kľúčom vytvoreným z tvojej obnovovacej frázy a šifrované zostáva aj na našich serveroch vo <nowrap>Švajčiarsku</nowrap>. Funguje offline a aplikácia je open source.",
+    "intro": "<brand/> uchováva tvoje poznámky, úlohy, heslá, denník, súbory, kalendár, kontakty a záložky na jednom mieste, so sledovaním nálady a liekov. Všetko je šifrované na tvojom zariadení kľúčom vytvoreným z tvojej obnovovacej frázy a šifrované zostáva aj na našich serveroch vo <nowrap>Švajčiarsku</nowrap> a v EÚ. Funguje offline a aplikácia je open source.",
     "versionHeading": "Verzia",
     "windowVersion": "Verzia {{version}}",
     "windowHelp": "Centrum pomoci",
@@ -552,7 +551,7 @@
     "openSourceLink": "Prečítaj si zdrojový kód na GitHub.com",
     "openSourceBody": "Aplikácia aj šifrovanie v nej sú zverejnené, takže ktokoľvek si môže overiť, ako sú tvoje poznámky šifrované.",
     "dataStorageHeading": "Ukladanie údajov",
-    "dataStorageBody": "Šifrované bloby uložené v Zürichu vo <flag/> Švajčiarsku.",
+    "dataStorageBody": "Šifrované poznámky, denníky a všetko ostatné uložené v Zürichu vo <flag/> Švajčiarsku. Nové obrázky a súbory z aktuálnej aplikácie uložené v EÚ.",
     "faviconsHeading": "Ikony webov",
     "faviconsBody1": "Ikony webov (favikony) pochádzajú z DuckDuckGo a Google a sťahuje ich za teba náš server. Tvoj prehliadač nekontaktuje ani jeden z nich, takže vidia iba náš server, ako žiada o doménu, a teba nikdy.",
     "faviconsBody2": "Ikony sa na tvojom zariadení uchovávajú vo vyrovnávacej pamäti 90 dní. Žiadna požiadavka neobsahuje tvoju identitu a ikony môžeš vypnúť v časti Nastavenia > Zoznamy."

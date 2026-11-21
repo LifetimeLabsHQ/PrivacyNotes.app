@@ -1,11 +1,12 @@
 import { zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
-import { linkifyMarkdown } from './linkify';
+import { withBareLinks } from './bareLinks';
+import { mapOutsideFences } from './codeSegments';
 import i18n from '../i18n';
 import type { Importer, ImportedNote, ParsedImport } from './types';
 import { isoOrNow, normalizeTagList } from './importHelpers';
 
-const msg = (key: string, options?: Record<string, unknown>): string =>
+const msg = (key: string, options: Record<string, unknown> = {}): string =>
   i18n.t(`importLog:simplenote.${key}`, options);
 
 /**
@@ -59,7 +60,7 @@ interface SnExport {
   trashedNotes?: SnNote[];
 }
 
-export const simplenoteImporter: Importer = {
+const simplenoteImporterBase: Importer = {
   id: 'simplenote',
   label: 'Simplenote',
   description:
@@ -91,9 +92,6 @@ export const simplenoteImporter: Importer = {
     const notes: ImportedNote[] = [];
     const warnings: string[] = [];
 
-    let emptyCount = 0;
-    let untaggedCount = 0;
-    let linkifiedCount = 0;
     let starredCount = 0;
     let trashedImportCount = 0;
     let blankGhostCount = 0;
@@ -133,8 +131,6 @@ export const simplenoteImporter: Importer = {
         ? raw.collaboratorEmails.filter((e) => typeof e === 'string' && e.trim())
         : [];
 
-      if (!rawBody.trim()) emptyCount++;
-      if (rawTags.length === 0) untaggedCount++;
       if (pinned) starredCount++;
       if (isTrashed) trashedImportCount++;
       if (isMarkdown) markdownCount++;
@@ -149,23 +145,29 @@ export const simplenoteImporter: Importer = {
       // Double+ newlines (paragraph breaks) are left untouched.
       // Skip lines that start markdown block syntax (lists, headings,
       // blockquotes, code fences) - <br> before those breaks parsing.
-      const hardBroken = rawBody.replace(
+      // A fence is left as it is (a <br> there is shown as text), and so is
+      // a table: a <br> at the end of a row joins it to the next one. The end
+      // of a prose part is followed by a fence or by nothing, and a break at
+      // its very start is the blank line after a fence, so no <br> at either
+      // (beta #199 item 1). Inline code holds no line break, so it is not cut
+      // out: a line that starts with one keeps the <br> before it.
+      const hardBroken = mapOutsideFences(rawBody, (prose) => prose.replace(
         /(?<!\n)\n(?!\n)/g,
-        (_, offset) => {
-          const after = rawBody.slice(offset + 1);
+        (_, offset: number) => {
+          const after = prose.slice(offset + 1);
+          if (!after || offset === 0) return '\n';
+          const line = prose.slice(prose.lastIndexOf('\n', offset - 1) + 1, offset);
           // Don't insert <br> before markdown block-level syntax.
-          if (/^(?:[-*+] |\d+\. |#{1,6} |> |```)/.test(after)) return '\n';
+          if (/^(?:[-*+] |\d+\. |#{1,6} |> |```|~~~)/.test(after)) return '\n';
+          if (/^\s*\|/.test(line) || /^\s*\|/.test(after)) return '\n';
           return '<br>\n';
         },
-      );
+      ));
 
-      // Linkify bare URLs so they render as clickable on first load.
-      const body = linkifyMarkdown(hardBroken);
-      if (body !== hardBroken) linkifiedCount++;
-
+      // Bare URLs become links after the parse (withBareLinks).
       notes.push({
         title: rawTitle,
-        body,
+        body: hardBroken,
         tags: normalizeTagList(rawTags),
         createdAt: isoOrNow(raw.creationDate),
         updatedAt: isoOrNow(raw.lastModified ?? raw.creationDate),
@@ -179,9 +181,6 @@ export const simplenoteImporter: Importer = {
 
     // Transforms (accent-colored, positive).
     const transforms: string[] = [];
-    if (linkifiedCount > 0) {
-      transforms.push(i18n.t('importLog:shared.linkifiedNotes', { count: linkifiedCount }));
-    }
     if (starredCount > 0) {
       transforms.push(i18n.t('importLog:shared.keptStarred', { count: starredCount }));
     }
@@ -207,16 +206,13 @@ export const simplenoteImporter: Importer = {
       notes,
       warnings,
       transforms,
-      stats: {
-        totalNotes: notes.length,
-        emptyNotes: emptyCount,
-        untaggedNotes: untaggedCount,
-        uniqueTags: uniqueTags.size,
-      },
       source: 'simplenote',
     } satisfies ParsedImport;
   },
 };
+
+/** The importer with the bare-link pass after its parse (bareLinks.ts). */
+export const simplenoteImporter: Importer = { ...simplenoteImporterBase, parse: withBareLinks(simplenoteImporterBase.parse) };
 
 /**
  * Extract the notes.json payload from whatever the user gave us:
@@ -254,4 +250,3 @@ async function extractNotesJson(
   // .json or anything else - read as text.
   return file.text();
 }
-

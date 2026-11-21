@@ -58,6 +58,7 @@ export const GUIDE_META: Record<string, { name: string; icon?: string }> = {
   // honest. It wears the key the app gives the Vault instead - the
   // phosphor glyph in GUIDE_GLYPH (help-page.ts) and on the homepage pill.
   'browser-passwords': { name: 'Browser passwords' },
+  capacities: { name: 'Capacities', icon: 'capacities.svg' },
   // No icon either: a .vcf comes from every address book, so it wears the
   // AddressBook glyph the importer row uses.
   contacts: { name: 'Contacts (vCard)' },
@@ -74,12 +75,15 @@ export const GUIDE_META: Record<string, { name: string; icon?: string }> = {
   keepassxc: { name: 'KeePassXC', icon: 'keepassxc.svg' },
   lastpass: { name: 'LastPass', icon: 'lastpass.svg' },
   markdown: { name: 'Markdown', icon: 'markdown.svg' },
+  msecure: { name: 'mSecure', icon: 'msecure.svg' },
   'nextcloud-notes': { name: 'Nextcloud Notes', icon: 'nextcloud-notes.svg' },
   nordpass: { name: 'NordPass', icon: 'nordpass.webp' },
   notesnook: { name: 'Notesnook', icon: 'notesnook.svg' },
   obsidian: { name: 'Obsidian', icon: 'obsidian.svg' },
+  onenote: { name: 'OneNote', icon: 'onenote.webp' },
   'google-journal': { name: 'Google Journal', icon: 'google-journal.webp' },
   'proton-pass': { name: 'Proton Pass', icon: 'proton-pass.svg' },
+  raindrop: { name: 'Raindrop.io', icon: 'raindrop.svg' },
   'samsung-notes': { name: 'Samsung Notes', icon: 'samsung-notes.webp' },
   simplenote: { name: 'Simplenote', icon: 'simplenote.svg' },
   siyuan: { name: 'SiYuan', icon: 'siyuan.svg' },

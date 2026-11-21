@@ -27,9 +27,20 @@
   "tagChip": {
     "clear": "태그 필터 해제: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "트래커 필터 해제: {{tracker}}",
+    "anyTag": "모든 태그",
+    "tagLabel": "{{tracker}} 태그",
+    "answerLabel": "{{tracker}} 답변",
+    "anyAnswer": "모든 답변"
+  },
+  "trackerFocus": {
+    "every_other": "약 {{count}}일마다",
+    "last": "{{when}} 기록",
+    "locked_other": "PIN으로 잠긴 항목 {{count}}개는 제외돼요"
+  },
   "vaultNew": {
     "ariaLabel": "새 보관함 항목",
-    "card": "신용카드",
     "sshKey": "SSH 키",
     "generator": "비밀번호"
   },
@@ -48,7 +59,8 @@
   "vaultFilter": {
     "all": "전체",
     "logins": "로그인",
-    "cards": "신용카드",
+    "passkeys": "패스키",
+    "cards": "카드",
     "keys": "키"
   },
   "journal": {
@@ -60,7 +72,8 @@
   "trash": {
     "empty": "비우기",
     "emptyHover": "휴지통의 모든 노트 삭제",
-    "autoDelete": "30일 후 자동 삭제"
+    "autoDelete": "30일 후 자동 삭제",
+    "replacedTitle": "삭제된 노트의 사본"
   },
   "search": {
     "sortOptions": "정렬 및 보기 옵션",
@@ -112,6 +125,7 @@
     "imageUploadFailed": "이미지 업로드 실패: {{error}}",
     "imageError": "이미지 오류: {{error}}",
     "uploadFailedFor": "\"{{filename}}\" 업로드 실패: {{error}}",
+    "uploadsHeld": "오늘의 업로드 한도에 도달했어요. 이미지와 파일은 이 기기에 안전하게 보관되어 있으며 {{time}} 이후에 업로드돼요.",
     "importedSyncing_other": "노트 {{count}}개를 가져왔어요. 동기화 중…",
     "addedTag_other": "항목 {{count}}개에 #{{tag}} 추가됨",
     "restoreSummary": "복원했어요. {{added}}개 추가, {{updated}}개 업데이트, {{unchanged}}개는 이미 최신이에요."
@@ -122,6 +136,7 @@
   },
   "loadError": {
     "message": "노트를 불러오지 못했어요. 로컬 데이터베이스 연결이 끊겼어요. 앱이 한동안 백그라운드에 있었다면 이럴 수 있어요.",
+    "storageOff": "노트를 불러오지 못했어요. 이 기기에서 PrivacyNotes가 노트를 보관하는 저장 공간이 꺼져 있어요. 차단 모드를 켜면 이렇게 돼요. 해결하려면 설정을 열고 개인정보 보호 및 보안, 차단 모드, 웹사이트 사용자화로 차례로 들어가 PrivacyNotes를 끄세요. Safari에서는 웹사이트 설정에서 이 사이트의 차단 모드를 끄세요.",
     "reload": "새로고침"
   },
   "banner": {
@@ -174,6 +189,7 @@
   "editor": {
     "backToList": "노트 목록으로 돌아가기",
     "backToGrid": "그리드로 돌아가기",
+    "closeSide": "이쪽 닫기",
     "titlePlaceholder": "제목 없음 (클릭해서 편집하거나 자동 생성)",
     "titlePlaceholderLogin": "예: GitHub",
     "titlePlaceholderCard": "예: 4242로 끝나는 Visa",
@@ -182,10 +198,22 @@
     "lockNow": "지금 잠금",
     "lockNowHint": "지금 내용 숨기기",
     "turnOffHint": "다시 편집할 수 있게 하기",
+    "turnOffForNowHint": "이 노트를 떠날 때까지 편집할 수 있게 하기",
     "unarchiveHint": "목록에 다시 표시하기",
     "showFormatted": "서식 보기",
+    "splitView": "분할 보기",
+    "showSplitView": "분할 보기 표시",
+    "hideSplitView": "분할 보기 숨기기",
+    "splitViewNeedsWidth": "분할 보기를 쓰려면 창을 넓혀 주세요",
+    "swapSides": "좌우 바꾸기",
+    "formattedOnly": "{{name}} 버튼은 서식 보기에서 작동해요",
+    "formattedOnlyHint": "서식 보기",
     "invisiblesShow": "서식 기호 보기",
     "invisiblesHide": "서식 기호 숨기기",
+    "lineNumbersShow": "줄 번호 보기",
+    "lineNumbersHide": "줄 번호 숨기기",
+    "footerPin": "통계 고정",
+    "footerUnpin": "통계 고정 해제",
     "undo": "실행 취소",
     "redo": "다시 실행",
     "hide": "숨기기",
@@ -258,6 +286,7 @@
     "accountLabel": "ID·동기화",
     "appearanceLabel": "디자인",
     "editorLabel": "편집기",
+    "pluginsLabel": "플러그인",
     "formatBarLabel": "도구 모음",
     "listsLabel": "목록",
     "trackersLabel": "트래커",
@@ -278,6 +307,9 @@
   },
   "archiveConfirm": {
     "body_other": "<highlight>항목 {{count}}개</highlight>를 아카이브할까요? 목록에서 빠지고 아카이브 보기에 모여요. 아카이브 해제하면 다시 돌아와요."
+  },
+  "duplicateConfirm": {
+    "body_other": "<highlight>항목 {{count}}개</highlight>를 복제할까요? 항목마다 자체 사본이 하나씩 생겨요."
   },
   "bulkTrash": {
     "body_other": "<highlight>항목 {{count}}개</highlight>를 삭제할까요? 휴지통으로 옮겨 나중에 복원하거나 영구 삭제할 수 있어요.",
@@ -317,6 +349,7 @@
     "title": "연결",
     "hide": "연결 숨기기",
     "linkedFrom": "이 노트를 링크한 곳",
+    "usedIn": "사용된 곳",
     "linksTo": "이 노트의 링크",
     "missing": "아직 만들지 않음",
     "protectedHidden_other": "PIN 보호 항목 {{count}}개는 표시되지 않아요",
@@ -326,9 +359,10 @@
     "relatedLinkedFrom": "둘 다 {{title}}에서 링크돼요",
     "relatedTag": "둘 다 {{tag}} 태그가 있어요",
     "relatedMeaning": "같은 의미",
+    "relatedMention": "{{name}} 언급",
     "meaningDoor": "스마트 연결: 오프라인 AI로 같은 의미의 노트 찾기",
     "meaningDoorNo": "다시 표시하지 않기",
-    "meaningDoorHidden": "모든 노트에서 숨겼어요. 스마트 연결은 설정 > 편집기 > 동작에 그대로 있어요.",
+    "meaningDoorHidden": "모든 노트에서 숨겼어요. 스마트 연결은 설정 > 플러그인에 그대로 있어요.",
     "hideSuggestions": "연결 제안 숨기기",
     "notRelated": "관련 없음",
     "notRelatedDone": "더 이상 제안하지 않아요",
@@ -401,5 +435,30 @@
     "autoJournal": "새 저널 항목마다 내 위치 추가",
     "autoDenied": "PrivacyNotes의 위치 접근이 꺼져 있어요. 먼저 휴대폰 설정에서 켜 주세요.",
     "autoOff": "이 휴대폰의 위치 서비스가 꺼져 있어요. 먼저 켜 주세요."
+  },
+  "vaultPasskey": {
+    "forSite": "{{rpId}}의 패스키",
+    "hasPasskey": "패스키 있음",
+    "removeTitle": "{{rpId}}의 패스키를 제거할까요?",
+    "removeBody": "더 이상 PrivacyNotes에서 이 패스키로 {{rpId}}에 로그인할 수 없어요.",
+    "savedByExtension": "사이트가 패스키를 제안하면 PrivacyNotes 브라우저 확장 프로그램이 패스키를 저장해요.",
+    "removeBrowserWaiting": "이 브라우저가 보낸 일부 항목이 아직 보관함에 없어요. 지금 제거하면 그 항목을 잃어요.",
+    "removeBrowserAnyway": "그래도 제거"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "번역",
+    "from": "원본 언어",
+    "to": "번역할 언어",
+    "saveAsNote": "새 노트로 저장",
+    "needPair": "{{language}} 다운로드 · {{size}}",
+    "noModel": "이 언어는 아직 번역할 수 없어요.",
+    "nothing": "이 노트에는 번역할 단어가 없어요.",
+    "turnOn": "{{language}} 켜기",
+    "failed": "이 노트를 번역할 수 없어요. 다시 시도하세요.",
+    "untranslated_other": "{{count}}줄은 번역할 수 없어서 그대로 두었어요."
+  },
+  "tags": {
+    "suggestMove": "{{folder}} 폴더로 이동"
   }
 }

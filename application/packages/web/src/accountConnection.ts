@@ -1,5 +1,6 @@
 import { detectPlatform, type Platform } from './devices';
 import { isDemoMode } from './demo';
+import { takeDeepLinks } from './deepLinks';
 import { OAUTH_APP_LINK_REDIRECT } from './authStorage';
 import { APP_ORIGIN } from './hosts';
 import type { ConnectedAccountProvider } from './ConnectedAccounts';
@@ -123,18 +124,13 @@ export function beginAccountConnection(provider: ConnectedAccountProvider, optio
         }
       } else {
         if (platform === 'android') {
-          const { onOpenUrl, getCurrent } = await import('@tauri-apps/plugin-deep-link');
+          // The one deep-link listener (deepLinks.ts) hands this flow only
+          // addresses that carry `pn_connect`, as an event or on a resume.
+          // It listens before the browser opens, so no return is missed.
+          const link = takeDeepLinks('connection', (url) => { acceptReturn(url); });
+          cleanups.push(link.stop);
+          await link.ready;
           if (settled) return;
-          const unlisten = await onOpenUrl((urls) => { for (const url of urls) if (acceptReturn(url)) break; });
-          if (settled) { unlisten(); return; }
-          cleanups.push(unlisten);
-          const onResume = () => {
-            if (document.hidden || settled) return;
-            void getCurrent().then((urls) => { for (const url of urls ?? []) if (acceptReturn(url)) break; }).catch(() => {});
-          };
-          window.addEventListener('focus', onResume);
-          document.addEventListener('visibilitychange', onResume);
-          cleanups.push(() => { window.removeEventListener('focus', onResume); document.removeEventListener('visibilitychange', onResume); });
         }
         const { openUrl } = await import('@tauri-apps/plugin-opener');
         if (!settled) await openUrl(authorize.toString());

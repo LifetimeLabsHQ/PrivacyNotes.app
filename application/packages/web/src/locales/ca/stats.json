@@ -243,6 +243,8 @@
       "prevYear": "Any anterior",
       "nextYear": "Any següent"
     },
+    "seeEntries": "Mostra les entrades",
+    "showInCalendar": "Mostra al Calendari",
     "trackers": {
       "tapHint": "Un toc obre Explora",
       "stopped": "Aturat",

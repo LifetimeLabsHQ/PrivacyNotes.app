@@ -4,9 +4,10 @@ import { openZip } from './zipOpen';
 import type { FolderDef } from '../folders';
 import { extractInlineTags, parseYamlTags } from '../notesRepo';
 import { FRONT_MATTER } from '../markdownFolder/adapter';
-import { ATTACHMENT_EXT, isBlobReferenced, mimeFromExt } from './blobImport';
+import { ATTACHMENT_EXT, mimeFromExt } from './blobImport';
+import { FileKeys, fileResolver, keyFileRefs, readKeyedFiles } from './fileRefs';
 import { buildFolderTree, commonRootPrefix } from './folderImport';
-import { linkifyMarkdown } from './linkify';
+import { withBareLinks } from './bareLinks';
 import { detailsToFold } from './detailsFold';
 import { parseFrontMatterDate } from './markdown';
 import { noteLinkTarget } from '../noteLinks';
@@ -17,7 +18,7 @@ import { CANVAS_PICTURE_EXT, canvasFilePaths, canvasToDrawing } from './jsonCanv
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 import { FRONT_MATTER_LOCATION, FRONT_MATTER_LOCATION_NAME, LOCATION_KEY, parseFrontMatterLocation, type NoteLocation } from '../noteLocation';
 
-const msg = (key: string, options?: Record<string, unknown>): string =>
+const msg = (key: string, options: Record<string, unknown> = {}): string =>
   i18n.t(`importLog:obsidian.${key}`, options);
 
 /**
@@ -167,7 +168,7 @@ function preprocessObsidianMarkdown(body: string): string {
   // exactly as it is - our editor renders [[note links]] natively.
   //
   // The embedding and non-embedding forms have to convert TOGETHER. The
-  // importer only ships a blob it can also rewrite (isBlobReferenced), so
+  // importer only ships a file a markdown link names (`keyFileRefs`), so
   // converting `![[x.pdf]]` alone would leave `[[x.pdf]]` pointing at a file
   // that never came across, and converting neither would lose both.
   text = text.replace(
@@ -175,7 +176,10 @@ function preprocessObsidianMarkdown(body: string): string {
     (whole: string, bang: string, target: string) => {
       const path = target.trim();
       if (!ATTACHMENT_EXT.test(path)) return whole;
-      return `${bang}[${path.split('/').pop() ?? path}](${path})`;
+      // A name with a parenthesis goes in angle brackets, so the link's end
+      // is never read out of the file name (`Scan 1).png`).
+      const dest = /[()]/.test(path) && !/[<>]/.test(path) ? `<${path}>` : path;
+      return `${bang}[${path.split('/').pop() ?? path}](${dest})`;
     },
   );
 
@@ -266,8 +270,9 @@ function parseOneObsidian(
   const createdAt = meta.createdAt ?? fallback;
   const updatedAt = meta.updatedAt ?? meta.createdAt ?? fallback;
 
-  // Convert Obsidian-specific syntax, then linkify bare URLs.
-  const processedBody = linkifyMarkdown(detailsToFold(preprocessObsidianMarkdown(body.trim())));
+  // Convert Obsidian-specific syntax; bare URLs become links after the parse
+  // (withBareLinks).
+  const processedBody = detailsToFold(preprocessObsidianMarkdown(body.trim()));
 
   return {
     title,
@@ -441,32 +446,28 @@ async function parseZip(
   // Attachments, read AFTER the notes because only a referenced file is
   // worth carrying: a working vault accumulates images nothing links to any
   // more, and every one of those would be charged against the user's storage
-  // quota to render nowhere. The predicate is the shared one the rewrite
-  // itself uses, so "shipped" and "rewritten" cannot drift apart.
-  const bodies = notes.filter((n) => n.type !== 'drawing').map((n) => n.body).join('\n');
+  // quota to render nowhere. Each link is resolved from the note's own folder
+  // first and gets a fixed-width key, so `icon.png` never cuts into
+  // `favicon.png` and two folders' `logo.png` stay two pictures (beta #152).
+  // The canvas card reads no other file.
   let skippedAttachments = 0;
   let tooLarge = 0;
-  for (const [rel, entry] of attachments) {
-    // A picture a canvas shows is in `blobs` already; the canvas card
-    // reads no other file.
-    if (canvasOnly || canvasPictures.get(rel)) continue;
-    if (!isBlobReferenced(rel, bodies)) {
-      skippedAttachments++;
-      continue;
+  if (!canvasOnly) {
+    const files = new Map(attachments);
+    const resolve = fileResolver(files.keys());
+    const keys = new FileKeys('obsfile');
+    // The first notes are the Markdown files, in order; drawings follow.
+    const prose = notes.slice(0, mdFiles.length);
+    for (const [i, [rel]] of mdFiles.entries()) {
+      prose[i]!.body = keyFileRefs(prose[i]!.body, dirOf(rel), resolve, keys);
     }
-    if (blobs.size % 10 === 0) {
-      onProgress?.(i18n.t('importLog:shared.readingAttachments', { done: blobs.size + 1, total: attachments.length }));
-    }
-    const data = await zipEntryMedia(entry);
-    if (!data) {
-      tooLarge++;
-      continue;
-    }
-    blobs.set(rel, {
-      data,
-      mime: mimeFromExt(rel),
-      name: rel.split('/').pop() ?? rel,
-    });
+    const read = await readKeyedFiles(keys, files, prose, (done, total) =>
+      onProgress?.(i18n.t('importLog:shared.readingAttachments', { done, total })),
+    );
+    for (const [key, blob] of read.blobs) blobs.set(key, blob);
+    tooLarge = read.tooLarge;
+    const keyed = new Set([...keys.entries()].map(([path]) => path));
+    skippedAttachments = attachments.filter(([rel]) => !keyed.has(rel) && !canvasPictures.get(rel)).length;
   }
 
   return { notes, skippedAttachments, tooLarge, folders, blobs, counts };
@@ -476,7 +477,9 @@ async function parseZip(
 /* Public importer                                                    */
 /* ------------------------------------------------------------------ */
 
-export async function parseObsidian(
+export const parseObsidian = withBareLinks(readObsidian);
+
+async function readObsidian(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
@@ -484,7 +487,9 @@ export async function parseObsidian(
 }
 
 /** The Drawings group's Obsidian Canvas card: only a vault's canvases. */
-export async function parseObsidianCanvas(
+export const parseObsidianCanvas = withBareLinks(readObsidianCanvas);
+
+async function readObsidianCanvas(
   file: File,
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
@@ -501,12 +506,6 @@ async function parseVault(file: File, onProgress: ((msg: string) => void) | unde
     canvasOnly,
   );
   if (canvasOnly && notes.length === 0) throw new Error(msg(counts.refusedCanvases.length > 0 ? 'noCanvasRead' : 'noCanvas'));
-
-  const uniqueTags = new Set(notes.flatMap((n) => n.tags));
-  const emptyNotes = notes.filter(
-    (n) => !n.title.trim() && !n.body.trim()
-  ).length;
-  const untaggedNotes = notes.filter((n) => n.tags.length === 0).length;
 
   const warnings: string[] = [];
   if (skippedAttachments > 0) {
@@ -537,18 +536,11 @@ async function parseVault(file: File, onProgress: ((msg: string) => void) | unde
   if (withLinks > 0) {
     transforms.push(msg('linksPreserved', { count: withLinks }));
   }
-  if (!canvasOnly) transforms.push(i18n.t('importLog:shared.linkifiedBare'));
 
   return {
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes,
-      untaggedNotes,
-      uniqueTags: uniqueTags.size,
-    },
     source,
     folders,
     blobs: blobs.size > 0 ? blobs : undefined,
@@ -576,7 +568,6 @@ async function parseOneCanvas(file: File): Promise<ParsedImport> {
     notes: [note],
     warnings: drawingCountWarnings(counts),
     transforms: [msg('drawingsMade', { count: 1 })],
-    stats: { totalNotes: 1, emptyNotes: 0, untaggedNotes: 1, uniqueTags: 0 },
     source: 'obsidian',
   };
 }

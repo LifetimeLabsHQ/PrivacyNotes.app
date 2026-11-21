@@ -17,7 +17,7 @@ import { NodeViewContent, NodeViewWrapper, type NodeViewProps, type Editor as Ti
 import type { Node as PMNode } from '@tiptap/pm/model';
 import { TextSelection, type Transaction } from '@tiptap/pm/state';
 import { ContextMenu, useContextMenu, type ContextMenuItem } from './ContextMenu';
-import { ColorSwatchRow, IconButton } from './ui';
+import { COLOR_MENU_WIDTH, ColorSwatchRow, IconButton } from './ui';
 import { BackRow } from './ui/BackRow';
 import { ActionItem, Group, OptionsMenu } from './OptionsMenu';
 import type { LookColor } from './itemStyles';
@@ -183,8 +183,8 @@ export function KanbanBoardView({ node, editor, getPos, extension }: NodeViewPro
       view={menu}
       onClose={closeMenu}
       onEscape={() => (menu === 'main' ? closeMenu() : setMenu('main'))}
-      // The Color view holds a row of ten swatches; the main view only short rows.
-      className={menu === 'color' ? 'w-80' : 'w-60'}
+      // The Color view holds two rows of seven swatches; the main view only short rows.
+      className={menu === 'color' ? COLOR_MENU_WIDTH : 'w-60'}
     >
       {menu === 'color' ? (
         <>
@@ -387,7 +387,7 @@ export function KanbanColumnView({ node, editor, getPos }: NodeViewProps) {
       onClose={closeMenu}
       onEscape={() => (menu === 'main' ? closeMenu() : setMenu('main'))}
       // The Color view holds a row of ten swatches, as in the board menu.
-      className={menu === 'color' ? 'w-80' : 'w-max min-w-48'}
+      className={menu === 'color' ? COLOR_MENU_WIDTH : 'w-max min-w-48'}
     >
       {menu === 'color' ? (
         <>

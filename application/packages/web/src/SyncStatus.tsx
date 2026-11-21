@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Check, CircleNotch, CloudArrowUp, CloudSlash, Pause, Warning } from './icons';
-import { exemptOpts } from './i18nExempt';
+import { ArrowCircleDown, ArrowsClockwise, CloudCheck, CloudSlash, CloudWarning, CloudX, Database, PauseCircle, WifiHigh } from './icons';
 import { useOnlineStatus } from './useOnlineStatus';
 import { usePendingUploads } from './usePendingUploads';
 import { useSyncing } from './syncingStore';
@@ -13,7 +12,7 @@ import { usePushFailures, usePushHalt } from './pushFailures';
 import { pullStanding, useSyncLog } from './syncLog';
 
 interface SyncStatusProps {
-  /** Icon size in px - 14 for mobile header, 13 for footers. */
+  /** Icon size in px: the footer's 20, the phone bar's 22. The icon is the whole status, so it is larger than a glyph beside a word. */
   size?: number;
   /**
    * Opens ID & Sync, which is where the detail lives: what is still
@@ -58,13 +57,18 @@ interface SyncStatusProps {
  * to ID & Sync's "58 files waiting to upload" is a contradiction, and a
  * user who trusts the check closes the app before the files ever leave.
  *
- * Deliberately just an icon and one word. The footer slots this into a
- * sidebar-width zone next to "Settings", so anything longer than a label
- * overruns the zone and paints over the footer's next control - which is
- * what an added "N files waiting to upload" line did. That count now
- * lives in ID & Sync, one click away.
+ * Icon only (owner, 2026-11-21): one glyph per state, and the words live in
+ * the tip (the state's short word) and the `aria-label` (the full
+ * sentence), so they translate in every language. The footer once showed a word beside the icon and kept it in
+ * English for width. Cloud with a check, in the accent: synced. Turning
+ * arrows, faint and gray so a running pass does not pull the eye: syncing
+ * or uploading. Cloud struck: offline. Cloud with a
+ * warning: not synced. Pause: paused by the person. Wi-Fi: files wait for
+ * Wi-Fi. Database: storage full. Arrow down: an update is required. Cloud
+ * with an X: the demo saves nothing. The counts live in ID & Sync, one click
+ * away. Spec: docs/internal/design/ui-patterns.md section 205
  */
-export function SyncStatus({ size = 13, onOpen, tipPosition = 'above-start', tipHostClassName, ready = true }: SyncStatusProps) {
+export function SyncStatus({ size = 20, onOpen, tipPosition = 'above-start', tipHostClassName, ready = true }: SyncStatusProps) {
   const { t } = useTranslation('settings');
   const online = useOnlineStatus();
   const pendingUploads = usePendingUploads();
@@ -84,14 +88,13 @@ export function SyncStatus({ size = 13, onOpen, tipPosition = 'above-start', tip
   // that implies durability. Say so plainly instead.
   if (isDemoMode()) {
     return (
-      <HoverLabel label={t('syncStatus.demoTooltip')} position={tipPosition} multiline className={tipHostClassName}>
+      <HoverLabel label={t('syncStatus.notSaved')} position={tipPosition} className={tipHostClassName}>
         <span
           className="inline-flex items-center gap-1.5"
           aria-live="polite"
           aria-label={t('syncStatus.demoAria')}
         >
-          <CloudSlash size={size} className="text-warning" />
-          <span className="text-warning">{t('syncStatus.notSaved', exemptOpts('settings:syncStatus.notSaved'))}</span>
+          <CloudX size={size} className="text-warning" />
         </span>
       </HoverLabel>
     );
@@ -108,15 +111,9 @@ export function SyncStatus({ size = 13, onOpen, tipPosition = 'above-start', tip
   // saved" - the required update toast can cover content, this cannot.
   const state = belowFloor
     ? {
-        body: (
-          <>
-            <Warning size={size} className="text-warning" />
-            <span className="text-warning">{t('common:updateToast.required')}</span>
-          </>
-        ),
-        tip: t('syncStatus.updateRequiredTooltip'),
+        body: <ArrowCircleDown size={size} className="text-warning" />,
+        tip: t('common:updateToast.required'),
         aria: t('syncStatus.updateRequiredAria'),
-        needsOpenHint: true,
       }
     : paused
     ? {
@@ -124,40 +121,21 @@ export function SyncStatus({ size = 13, onOpen, tipPosition = 'above-start', tip
         // offline, spinners and the green check all describe work that is
         // deliberately not happening. Never auto-clears, so the pill is
         // the permanent carrier of the paused state.
-        body: (
-          <>
-            <Pause size={size} weight="bold" className="text-warning" />
-            <span className="text-warning">{t('syncStatus.paused')}</span>
-          </>
-        ),
-        tip: t('syncStatus.pausedTooltip'),
-        aria: t('syncStatus.pausedAria'),
-        needsOpenHint: true,
+        body: <PauseCircle size={size} className="text-warning" />,
+        tip: t('syncStatus.paused'),
+        aria: t('syncStatus.paused'),
       }
     : !online
     ? {
-        body: (
-          <>
-            <CloudSlash size={size} className="text-warning" />
-            <span className="text-warning">{t('syncStatus.offline', exemptOpts('settings:syncStatus.offline'))}</span>
-          </>
-        ),
-        tip: t('syncStatus.offlineTooltip'),
+        body: <CloudSlash size={size} className="text-warning" />,
+        tip: t('syncStatus.offline'),
         aria: t('syncStatus.offline'),
-        /** The synced tooltip spells out its own click target; these two don't. */
-        needsOpenHint: true,
       }
     : syncing
       ? {
-          body: (
-            <>
-              <CircleNotch size={size} className="text-accent animate-spin [animation-duration:1.2s]" />
-              <span>{t('syncStatus.syncing', exemptOpts('settings:syncStatus.syncing'))}</span>
-            </>
-          ),
+          body: <ArrowsClockwise size={size} className="text-pn-muted opacity-60 motion-safe:animate-spin [animation-duration:2s]" />,
           tip: t('syncStatus.syncing'),
           aria: t('syncStatus.syncingAria'),
-          needsOpenHint: true,
         }
       : failures.size > 0 || halt
         ? {
@@ -168,19 +146,11 @@ export function SyncStatus({ size = 13, onOpen, tipPosition = 'above-start', tip
             // refused them or was never reached. The stop speaks for the
             // pass; the count and the reason per note live in ID & Sync,
             // one click away.
-            body: (
-              <>
-                <Warning size={size} className="text-warning" />
-                <span className="text-warning">{t('syncStatus.notSynced', exemptOpts('settings:syncStatus.notSynced'))}</span>
-              </>
-            ),
-            tip: halt
-              ? t('syncStatus.haltedTooltip', { count: halt.unreached })
-              : t('syncStatus.notBackedUpTooltip', { count: failures.size }),
+            body: <CloudWarning size={size} className="text-warning" />,
+            tip: t('syncStatus.notSynced'),
             aria: halt
               ? t('syncStatus.haltedAria', { count: halt.unreached })
               : t('syncStatus.notBackedUpAria', { count: failures.size }),
-            needsOpenHint: true,
           }
       : standing !== 'ok'
         ? {
@@ -189,80 +159,50 @@ export function SyncStatus({ size = 13, onOpen, tipPosition = 'above-start', tip
             // this device holds what the server holds while a fresh
             // browser can still be thousands of notes short of it, which
             // reads as lost notes.
-            body: (
-              <>
-                <Warning size={size} className="text-warning" />
-                <span className="text-warning">{t('syncStatus.notSynced', exemptOpts('settings:syncStatus.notSynced'))}</span>
-              </>
-            ),
-            tip: standing === 'never' ? t('syncStatus.firstSyncPending') : t('syncStatus.pullFailed'),
+            body: <CloudWarning size={size} className="text-warning" />,
+            tip: t('syncStatus.notSynced'),
             aria: standing === 'never' ? t('syncStatus.firstSyncPending') : t('syncStatus.pullFailed'),
-            needsOpenHint: true,
           }
       : pendingUploads.count > 0 && wifi.held
         ? {
             // "Files on wifi only" is holding the queue on cellular. Not an
             // error: say what is waited for, not that something is wrong.
-            body: (
-              <>
-                <CloudArrowUp size={size} className="text-warning" />
-                <span className="text-warning">{t('syncStatus.wifiHold')}</span>
-              </>
-            ),
-            tip: t('syncStatus.wifiHoldTooltip'),
+            body: <WifiHigh size={size} className="text-warning" />,
+            tip: t('syncStatus.wifiHold'),
             aria: t('syncStatus.wifiHold'),
-            needsOpenHint: true,
           }
       : pendingUploads.count > 0 && pendingUploads.blocked >= pendingUploads.count
         ? {
             // Every pending blob is quota-blocked: nothing is actually
             // uploading, so a spinner + "Uploading..." would be a lie
             // (backlog #143). Amber warning instead.
-            body: (
-              <>
-                <Warning size={size} className="text-warning" />
-                <span>{t('syncStatus.storageFull', exemptOpts('settings:syncStatus.storageFull'))}</span>
-              </>
-            ),
-            tip: t('syncStatus.pendingBlobsBlocked', { count: pendingUploads.blocked }),
+            body: <Database size={size} className="text-warning" />,
+            tip: t('syncStatus.storageFull'),
             aria: t('syncStatus.pendingBlobsBlocked', { count: pendingUploads.blocked }),
-            needsOpenHint: true,
           }
       : pendingUploads.count > 0
         ? {
-            body: (
-              <>
-                <CircleNotch size={size} className="text-accent animate-spin [animation-duration:1.2s]" />
-                <span>{t('syncStatus.uploading', exemptOpts('settings:syncStatus.uploading'))}</span>
-              </>
-            ),
-            tip: t('syncStatus.pendingBlobs', { count: pendingUploads.count }),
+            body: <ArrowsClockwise size={size} className="text-pn-muted opacity-60 motion-safe:animate-spin [animation-duration:2s]" />,
+            tip: t('syncStatus.uploading'),
             aria: t('syncStatus.pendingBlobs', { count: pendingUploads.count }),
-            needsOpenHint: true,
           }
         : {
-            body: (
-              <>
-                <Check size={size} className="text-success" />
-                <span>{t('syncStatus.synced', exemptOpts('settings:syncStatus.synced'))}</span>
-              </>
-            ),
-            tip: onOpen ? t('syncStatus.syncedVerifyTooltip') : t('syncStatus.syncedTooltip'),
+            body: <CloudCheck size={size} className="text-accent" />,
+            tip: t('syncStatus.synced'),
             aria: onOpen ? t('syncStatus.syncedVerifyAria') : t('syncStatus.synced'),
-            needsOpenHint: false,
           };
 
-  const tip = onOpen && state.needsOpenHint
-    ? `${state.tip} ${t('syncStatus.openHint')}`
-    : state.tip;
+  // The tip is the state's short word; the full sentence stays in the
+  // aria-label and in ID & Sync, one click away (owner, 2026-11-21).
+  const tip = state.tip;
 
   return (
-    <HoverLabel label={tip} position={tipPosition} multiline={!!onOpen} className={tipHostClassName}>
+    <HoverLabel label={tip} position={tipPosition} className={tipHostClassName}>
       {onOpen ? (
         <button
           type="button"
           onClick={onOpen}
-          className="inline-flex items-center gap-1.5 rounded hover:opacity-80 transition"
+          className="inline-flex items-center justify-center rounded-md p-1 hover:bg-pn/5 transition"
           aria-live="polite"
           aria-label={state.aria}
         >
@@ -270,7 +210,7 @@ export function SyncStatus({ size = 13, onOpen, tipPosition = 'above-start', tip
         </button>
       ) : (
         <span
-          className="inline-flex items-center gap-1.5"
+          className="inline-flex items-center justify-center p-1"
           aria-live="polite"
           aria-label={state.aria}
         >

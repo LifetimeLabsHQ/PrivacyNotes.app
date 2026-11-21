@@ -35,6 +35,10 @@ import { brandMark, CHROME_CSS, ogLocaleTag } from './static-page-chrome.ts';
 // code is still in the address bar, so the page says so rather than showing an
 // empty box that looks broken.
 //
+// In a phone browser neither page shows a code or a Copy button
+// (/auth-phone.js decides): a hostile phone app can start a sign-in that
+// returns here, and on a phone the app in front can read the clipboard.
+//
 // English only, like the other static pages outside the marketing tier: it is
 // reached mid-sign-in from a desktop application, and the locale the person
 // picked lives in that application rather than in this browser.
@@ -61,7 +65,8 @@ button.copy:hover{background:var(--tint)}
 [hidden]{display:none!important}
 `;
 
-function renderHtml(connect = false): string {
+/** Exported for tests/authCodePages.test.ts. */
+export function renderHtml(connect = false): string {
   const title = connect ? 'Finish connecting your account' : TITLE;
   const description = connect ? 'Return to PrivacyNotes to finish connecting this sign-in account to your vault.' : DESC;
   const canonical = connect ? 'https://use.privacynotes.app/auth/connect' : CANONICAL;
@@ -108,11 +113,15 @@ ${THEME_SCRIPT_TAG}
 
     <p class="nojs" data-role="nojs">${connect ? 'Copy this page\'s full address and paste it into the Connected accounts screen in PrivacyNotes.' : `The code is in this page's address, after <code>code=</code>. Copy it from the address bar and paste it into ${brandMark()} on your computer.`}</p>
 
+    <p class="lede" data-role="phone" hidden>${connect ? 'Return to PrivacyNotes to see the connected account. If it is not there, start again from Connected accounts.' : 'This page finishes a sign-in in the PrivacyNotes desktop app, so it shows no code on a phone. If an app on this phone sent you here, do not sign in through it.'}</p>
+    ${connect ? '<p class="lede" data-role="phone-alone" hidden>This page cannot finish the connection in a phone browser. Connect this account from PrivacyNotes on a computer.</p>' : ''}
+
     <p class="lede" data-role="missing" hidden>${connect ? 'This connection could not be completed. Return to Connected accounts and try again. Your existing accounts are unchanged.' : 'This page has no sign-in code in its address, so there is nothing to copy. Start the sign-in again from the app.'}</p>
 
     <p class="note">The code works once, expires shortly, and is useless to anyone but the app that started this sign-in. Never paste it into any other program.</p>
   </div>
 </div>
+<script src="/auth-phone.js" defer></script>
 ${connect ? '<script src="/auth-connect.js" defer></script>' : '<script src="/static-pages.js" defer></script>'}
 </body>
 </html>`;

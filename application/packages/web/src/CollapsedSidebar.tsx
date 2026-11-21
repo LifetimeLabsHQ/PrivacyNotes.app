@@ -3,9 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { LogoIcon } from './LogoIcon';
 import { HoverLabel } from './HoverLabel';
 import { ProGlyph } from './UpgradeModal';
-import { Plus, PushPin, File, CheckSquare, Shield, Folder, Book, Hash, Trash, Question, CaretRight, Devices, FileMd, BookmarkSimple, NotePencil, CheckFat, Notebook, Bookmarks, Key } from './icons';
+import { Plus, PushPin, File, CheckSquare, Shield, Folder, Book, Hash, Trash, Question, CaretRight, Devices, FileMd, BookmarkSimple, NotePencil, CheckFat, Notebook, Bookmarks, Key, LockSimple, LockSimpleOpen } from './icons';
 import { KATANA_LINE, NinjaIcon } from './NinjaIcon';
 import { isViewShown, type View } from './views';
+import type { SectionLockControls } from './sectionLock';
 import { hiddenAtZero, viewRows } from './viewRows';
 import { exemptOpts } from './i18nExempt';
 import { SIDEBAR_ACTIVE } from './sidebarUI';
@@ -41,6 +42,8 @@ interface CollapsedSidebarProps {
    *  Spec: docs/internal/specs/start-view.md (one counts object) */
   viewCounts: Partial<Record<View, number>>;
   trashedCount: number;
+  /** Section lock state and the row menu. Spec: docs/internal/specs/section-lock.md (section 4) */
+  sectionLock: SectionLockControls;
   /** Views switched off in the sidebar options menu; the wide rail hides the
    *  same rows. Spec: docs/internal/specs/sidebar-views.md */
   hiddenViews: View[];
@@ -125,6 +128,7 @@ export function CollapsedSidebar({
   isPro,
   viewCounts,
   trashedCount,
+  sectionLock,
   hiddenViews,
 }: CollapsedSidebarProps) {
   const { t } = useTranslation('shell');
@@ -191,13 +195,25 @@ export function CollapsedSidebar({
         .filter((r) => (r.key === 'home' || showRow(r.key)) && !hiddenAtZero(r.key, viewCounts[r.key], view))
         // Mod+1 to 9 count these rows in this order (goToSection in
         // NotesView), so the tip numbers them the same way.
-        .map((r, i) => (
-          <HoverLabel key={r.key} label={r.label} keys={sectionKeyText(i + 1)} count={viewCounts[r.key]}>
-            <button type="button" onClick={() => handleSelectView(r.key)} className={iconBtn(view === r.key)} aria-label={r.label}>
-              <r.icon size={18} />
-            </button>
-          </HoverLabel>
-        ))}
+        .map((r, i) => {
+          // A protected row shows no count, and a lock badge on its icon.
+          // Spec: docs/internal/specs/section-lock.md (section 4)
+          const lock = sectionLock.stateOf(r.key);
+          return (
+            <HoverLabel key={r.key} label={r.label} keys={sectionKeyText(i + 1)} count={lock === 'none' ? viewCounts[r.key] : undefined}>
+              <button
+                type="button"
+                onClick={() => handleSelectView(r.key)}
+                onContextMenu={(e) => sectionLock.openMenu(e, r.key)}
+                className={`relative ${iconBtn(view === r.key)}`}
+                aria-label={r.label}
+              >
+                <r.icon size={18} />
+                {lock !== 'none' && <LockBadge open={lock === 'open'} />}
+              </button>
+            </HoverLabel>
+          );
+        })}
 
       <div className="w-7 border-t border-divider my-1" />
 
@@ -224,9 +240,16 @@ export function CollapsedSidebar({
       <div className="w-7 border-t border-divider my-1" />
 
       {/* Trash */}
-      <HoverLabel label={t('pillars.trash')} count={trashedCount}>
-        <button type="button" onClick={() => handleSelectView('trash')} className={dimIconBtn(view === 'trash')} aria-label={t('pillars.trash')}>
+      <HoverLabel label={t('pillars.trash')} count={sectionLock.stateOf('trash') === 'none' ? trashedCount : undefined}>
+        <button
+          type="button"
+          onClick={() => handleSelectView('trash')}
+          onContextMenu={(e) => sectionLock.openMenu(e, 'trash')}
+          className={`relative ${dimIconBtn(view === 'trash')}`}
+          aria-label={t('pillars.trash')}
+        >
           <Trash />
+          {sectionLock.stateOf('trash') !== 'none' && <LockBadge open={sectionLock.stateOf('trash') === 'open'} />}
         </button>
       </HoverLabel>
 
@@ -285,5 +308,15 @@ export function CollapsedSidebar({
         </button>
       </HoverLabel>
     </div>
+  );
+}
+
+/** The small lock on a protected section's icon in the strip. */
+function LockBadge({ open }: { open: boolean }) {
+  const Glyph = open ? LockSimpleOpen : LockSimple;
+  return (
+    <span className="absolute -bottom-0.5 -end-0.5 inline-flex rounded-full bg-surface-1 p-px text-pn-muted" aria-hidden="true">
+      <Glyph size={11} weight="bold" />
+    </span>
   );
 }

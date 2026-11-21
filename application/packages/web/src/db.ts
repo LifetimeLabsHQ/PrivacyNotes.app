@@ -41,7 +41,9 @@ export interface LocalNote {
   starred: number;
   locked: number;
   pinProtected: number;
-  /** Note type discriminator. 'note' = standard markdown, 'login' = password entry. */
+  /** Note type discriminator. 'note' = standard markdown, 'login' = password entry.
+   *  Not indexed since schema version 19; sealed at rest while
+   *  `rowTypeSealActive()` (localSeal.ts). */
   type: NoteType;
   /** Mood & wellness tracker data for journal entries. */
   trackers?: Record<string, unknown>;
@@ -214,7 +216,9 @@ interface DemoNoteVersion {
  * destroy the user's own credentials.
  * Second tenant: the phrase wrap key (`phraseWrapKey`) - a
  * NON-EXTRACTABLE CryptoKey persisted as an object via structured
- * clone, never as exported bytes (phraseAtRest.ts). No schema change:
+ * clone, never as exported bytes (phraseAtRest.ts). Third tenant:
+ * `deviceKeyMissing`, set while the app shell has no device key, so the
+ * boot does not ask it at every start (phraseAtRest.ts). No schema change:
  * Dexie only declares the primary key, and IndexedDB clones CryptoKey
  * natively.
  */
@@ -264,6 +268,26 @@ export const KEY_RING_CACHE_KEY = 'keyRingCache';
  * rest like a note's; the rest stays plain for the indexes and the purge.
  * Spec: docs/contrib/sync-protocol.md (section 3, replaced copies)
  */
+/**
+ * An inbox row of kind `loginedit` this device applied to the Vault: the row
+ * id, the account, the login it changed or made, and when. A row is applied
+ * once: a later pass only settles it, once that login is on the server, so an
+ * edit the user made after it is never written over by the same row again.
+ * No note text, so the at-rest seal does not cover the table.
+ * Spec: docs/contrib/passkeys.md (section 6, Adoption)
+ */
+interface AppliedInboxRow {
+  id: string;
+  account: string;
+  item: string;
+  /** This device's clock, ISO. */
+  at: string;
+  /** The row's `created_at` (the server's clock), so an older row that runs
+   *  later can tell a newer edit of its login ran first (beta #198). Absent on
+   *  a record from before it. */
+  rowAt?: string;
+}
+
 export interface ReplacedCopy {
   id: string;
   noteId: string;
@@ -275,6 +299,9 @@ export interface ReplacedCopy {
   body: string;
   tags: string[];
   trackers?: Record<string, unknown>;
+  /** The note's type, so a copy of a note that is gone comes back as what it
+   *  was (the Trash list). Absent on copies kept before the field. */
+  type?: NoteType;
 }
 
 interface KvEntry {
@@ -296,6 +323,7 @@ class NotesDb extends Dexie {
   versionQueue!: EntityTable<QueuedVersion, 'id'>;
   quickNotes!: EntityTable<QueuedQuickNote, 'id'>;
   replacedCopies!: EntityTable<ReplacedCopy, 'id'>;
+  appliedInbox!: EntityTable<AppliedInboxRow, 'id'>;
 
   constructor(raw = false) {
     // Demo mode uses a separate, throwaway database so demo data never
@@ -587,6 +615,55 @@ class NotesDb extends Dexie {
       versionQueue: '++id, noteId, hash',
       quickNotes: 'id, account',
       replacedCopies: 'id, noteId, at',
+    });
+
+    // v18 - the `loginedit` inbox rows this device applied (extensionSync.ts).
+    // Ids and a time, no note text, so not sealed. New table, nothing to
+    // back-fill, so no upgrade reads a sealed row.
+    // Spec: docs/contrib/passkeys.md (section 6, Adoption)
+    this.version(18).stores({
+      notes: 'id, updatedAt, dirty, deleted, trashed, starred, type, folderId',
+      imageCache: 'id, cachedAt',
+      imageDedup: 'hash, uuid',
+      attachmentCache: 'id, cachedAt',
+      attachmentDedup: 'hash, uuid',
+      blobGC: 'uuid, enqueuedAt',
+      editorDocCache: 'noteId, cachedAt',
+      demoVersions: 'id, noteId, createdAt',
+      kv: 'key',
+      dayLedger: 'date',
+      versionQueue: '++id, noteId, hash',
+      quickNotes: 'id, account',
+      replacedCopies: 'id, noteId, at',
+      appliedInbox: 'id, account, at',
+    });
+
+    // v19 - the `type` index goes (GitHub #795 point 8): it kept a sorted copy
+    // of which rows are Vault logins, readable in a copy of the database. The
+    // row type moves into the at-rest seal (localSeal.ts `lateFields`), and
+    // the two lists that read the index filter in memory (`liveNotesOfType` in
+    // notesRepo.ts). No upgrade function: deleting an index reads no row, so
+    // it needs no key (the rule above). The rows are rewritten after the
+    // unlock, by the sweep. A bundle that predates this version adds the
+    // index back when it opens the database (Dexie moves it to native version
+    // 191); it then holds no entry for a row whose type is sealed, and the seal
+    // stops moving types in while it is there (`rowTypeSealActive`).
+    // Spec: docs/internal/plans/row-type-seal.md (3.3)
+    this.version(19).stores({
+      notes: 'id, updatedAt, dirty, deleted, trashed, starred, folderId',
+      imageCache: 'id, cachedAt',
+      imageDedup: 'hash, uuid',
+      attachmentCache: 'id, cachedAt',
+      attachmentDedup: 'hash, uuid',
+      blobGC: 'uuid, enqueuedAt',
+      editorDocCache: 'noteId, cachedAt',
+      demoVersions: 'id, noteId, createdAt',
+      kv: 'key',
+      dayLedger: 'date',
+      versionQueue: '++id, noteId, hash',
+      quickNotes: 'id, account',
+      replacedCopies: 'id, noteId, at',
+      appliedInbox: 'id, account, at',
     });
 
     // The at-rest seal layer. Read surfaces open sealed rows wherever

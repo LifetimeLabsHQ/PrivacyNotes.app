@@ -19,7 +19,7 @@ order: 0
 
 Click at the end of this line and type a word. The note saves itself. There is no save button.
 
-The toolbar above changes how text looks: **bold**, *italic*, headings, checklists, <span style="color: #f08c00">colours</span>, <span style="font-size: 1.25em; font-family: ui-serif, Georgia, Cambria, serif">fonts</span>, links.
+The toolbar above changes how text looks: **bold**, *italic*, headings, checklists, <span style="color: #f08c00">colors</span>, <span style="font-size: 1.25em; font-family: ui-serif, Georgia, Cambria, serif">fonts</span>, links.
 
 ## Three notes worth opening
 

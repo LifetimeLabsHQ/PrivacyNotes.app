@@ -18,6 +18,8 @@
     "filedNotes_other": "{{count}} note sistemate",
     "tags_other": "Mantenuti i tag su {{count}} note.",
     "droppedAlign": "Rimosso l'allineamento dai blocchi che l'editor non può allineare, mantenendo il testo.",
+    "lostPasskeys_other": "Escluse {{count}} passkey salvate con gli accessi. Tienile nella tua vecchia app, oppure aggiungi nuove passkey su quei siti.",
+    "lostPasskeys_one": "Esclusa {{count}} passkey salvata con un accesso. Tienila nella tua vecchia app, oppure aggiungi una nuova passkey su quel sito.",
     "foldersFromNotebooks_other": "Ricostruite {{count}} cartelle dai tuoi taccuini ({{filed}}).",
     "parsingJson": "Analisi del JSON…",
     "buildingNotes": "Creazione delle note…",
@@ -324,6 +326,14 @@
     "invalidJson": "Questo file non è un JSON valido. Assicurati di aver esportato come \".json\" (non cifrato).",
     "encryptedExport": "Questo è un export cifrato di Bitwarden. Esporta di nuovo usando il formato \".json\" semplice (non \".json (Encrypted)\").",
     "missingItems": "In questo file manca l'array \"items\" previsto. Non è un export della cassaforte di Bitwarden.",
+    "notZipExport": "Questo zip non ha un data.json al primo livello. Non è un export Bitwarden \".zip (with attachments)\".",
+    "keptPasskeys_one": "Mantenuta {{count}} passkey sul suo accesso.",
+    "keptPasskeys_other": "Mantenute {{count}} passkey sui loro accessi.",
+    "passkeyOtherSite": "L'accesso \"{{name}}\" contiene una passkey per {{site}}, che non è uno dei suoi siti web. È arrivata insieme all'accesso; eliminala lì se non la riconosci.",
+    "skippedPasskeys_one": "Esclusa {{count}} passkey che la Cassaforte non può contenere: la sua chiave non è P-256, oppure un valore è più lungo di quanto WebAuthn consente. Aggiungi una nuova passkey su quel sito.",
+    "skippedPasskeys_other": "Escluse {{count}} passkey che la Cassaforte non può contenere: la chiave non è P-256, oppure un valore è più lungo di quanto WebAuthn consente. Aggiungi nuove passkey su quei siti.",
+    "unmatchedAttachments_one": "Non è stato possibile abbinare {{count}} allegato a un solo elemento, perché nessun elemento o più elementi hanno il nome della sua cartella. Si trova in una nota che porta il nome della cartella.",
+    "unmatchedAttachments_other": "Non è stato possibile abbinare {{count}} allegati a un solo elemento, perché nessun elemento o più elementi hanno il nome della loro cartella. Si trovano in note che portano il nome delle loro cartelle.",
     "unknownType": "Saltato l'elemento \"{{name}}\" con tipo sconosciuto {{type}}.",
     "importedCards_other": "Importate {{count}} carte come elementi della cassaforte.",
     "importedSecureNotes_other": "Importate {{count}} note sicure.",
@@ -627,6 +637,10 @@
     "leftFiles_other": "{{count}} file allegati sono rimasti esclusi. Salvali da Enpass e allegali agli elementi qui.",
     "leftFiles_one": "{{count}} file allegato è rimasto escluso. Salvalo da Enpass e allegalo all'elemento qui."
   },
+  "msecure": {
+    "notMSecure": "Questo file non è un export di mSecure. In mSecure, scegli Settings > Backups > Export records to CSV file.",
+    "fieldDataOnly": "Questo export di mSecure non ha i nomi dei campi, quindi i campi non si possono distinguere. Esporta di nuovo con \"Only export field data\" disattivato."
+  },
   "nordpass": {
     "notNordPass": "Questo file non è un export di NordPass. In NordPass, scegli Settings > Export items."
   },
@@ -643,6 +657,7 @@
     "kdbxFile": "Questo è il database di KeePass vero e proprio, che è bloccato. In KeePass o KeePassXC, esportalo come XML, poi importa quel file.",
     "notKeePass": "Questo file non è un export KeePass XML. In KeePass, scegli File > Export > KeePass XML (2.x); in KeePassXC, Database > Export > XML File.",
     "noEntries": "Questo file KeePass non ha voci fuori dal Recycle Bin.",
+    "doctype": "Questo file dichiara un DOCTYPE, che nessun export di KeePass scrive, quindi non è stato letto. Esporta di nuovo l'XML da KeePass e importa quel file.",
     "readingEntries": "Lettura delle voci…",
     "leftHistory_other": "Escluse {{count}} versioni precedenti di voci: arriva solo la più recente.",
     "missingFiles_other": "{{count}} file allegati non erano nell'export e sono rimasti esclusi. Salvali da KeePass e allegali agli accessi qui.",
@@ -659,6 +674,15 @@
     "readHashtags_one": "Letti i tag scritti come #hashtag in {{count}} nota.",
     "foundFiles_one": "Trovato {{count}} file markdown..."
   },
+  "raindrop": {
+    "notRaindrop": "Non è un export di Raindrop.io - serve il file .csv di Export > CSV, o lo zip che lo contiene.",
+    "noCsv": "Nessun file .csv in questo zip. Esporta il CSV da Raindrop.io e scegli quel file.",
+    "highlightsHeading": "Evidenziazioni",
+    "skipped_other": "{{count}} segnalibri sono stati esclusi perché i loro indirizzi non sono link web.",
+    "covers_other": "{{count}} immagini di copertina non sono state importate. I segnalibri mostrano invece le icone dei siti web.",
+    "covers_one": "{{count}} immagine di copertina non è stata importata. Il segnalibro mostra invece l'icona del sito web.",
+    "skipped_one": "{{count}} segnalibro è stato escluso perché il suo indirizzo non è un link web."
+  },
   "browserBookmarks": {
     "notBookmarks": "Non è un export di segnalibri - serve il file .html di segnalibri che esporta un browser.",
     "noBookmarks": "Nessun segnalibro trovato in questo file.",
@@ -670,6 +694,8 @@
     "entryTooLarge": "{{name}} una volta estratto supera i {{limit}} che un'importazione può leggere in una volta. Rimuovilo dall'export e riprova.",
     "entryTooLargeKnown": "{{name}} una volta estratto occupa {{size}}, più dei {{limit}} che un'importazione può leggere in una volta. Rimuovilo dall'export e riprova.",
     "unreadable": "Impossibile aprire questo file. Potrebbe essere incompleto o danneggiato. Esportalo di nuovo e scegli il nuovo file.",
+    "importTooLarge": "Questo file una volta estratto supera {{limit}}, più di quanto contenga qualsiasi export reale. Esportalo di nuovo e scegli il nuovo file.",
+    "tooManyEntries": "Questo zip elenca più di {{max}} file, più di quanti ne contenga qualsiasi export reale. Esportalo di nuovo e scegli il nuovo file.",
     "mediaTooLarge_one": "Saltato {{count}} file più grande di {{size}}, il file più grande che un piano può sincronizzare."
   },
   "safariArchive": {
@@ -682,5 +708,47 @@
   },
   "apply": {
     "unknownWriteError": "Errore sconosciuto durante la scrittura nel database locale."
+  },
+  "onenote": {
+    "reading": "Lettura del taccuino di OneNote…",
+    "notOneNote": "Questo non è un taccuino di OneNote. In OneNote per Windows, scegli File > Export > Notebook > OneNote Package e trascina qui il file .onepkg.",
+    "cloudFormat": "Questa sezione è nel formato che OneNote usa online, che solo OneNote può leggere. Apri il taccuino in OneNote per Windows, scegli File > Export > Notebook > OneNote Package e trascina qui quel file .onepkg.",
+    "splitPackage": "Questo pacchetto di OneNote è diviso in più file. Esporta di nuovo il taccuino come un unico OneNote Package e trascina qui quel file.",
+    "tooLarge": "Questo pacchetto di OneNote è troppo grande per essere letto in una volta sola. Esporta un gruppo di sezioni o una sezione alla volta.",
+    "damaged": "Questo file di OneNote è danneggiato e non può essere letto. Esporta di nuovo il taccuino da OneNote e prova con quel file.",
+    "noPages": "Nessuna pagina trovata in questo taccuino di OneNote.",
+    "allLocked": "Tutte le sezioni di questo taccuino sono protette da password. Sblocca le sezioni in OneNote, rimuovi le loro password, esporta di nuovo e trascina qui il nuovo file.",
+    "subpages_other": "Mantenute {{count}} sottopagine come note accanto alle loro pagine.",
+    "noteTags_other": "Mantenuti come tag i tag di OneNote di {{count}} pagine.",
+    "lockedSections_other": "Saltate {{count}} sezioni protette da password. Rimuovi le loro password in OneNote ed esporta di nuovo per portarle con te.",
+    "unreadableSections_other": "Saltate {{count}} sezioni che non è stato possibile leggere.",
+    "unsupported_other": "Saltati {{count}} disegni, clip audio ed equazioni che qui non hanno un equivalente.",
+    "missingFiles_other": "{{count}} immagini o file non erano nel pacchetto e sono stati esclusi.",
+    "deadLinks_other": "{{count}} link di OneNote puntano fuori da questo taccuino e mantengono solo il loro testo.",
+    "recycleBin_other": "Saltate {{count}} pagine del cestino del taccuino.",
+    "recycleBin_one": "Saltata {{count}} pagina del cestino del taccuino.",
+    "deadLinks_one": "{{count}} link di OneNote punta fuori da questo taccuino e mantiene solo il suo testo.",
+    "missingFiles_one": "{{count}} immagine o file non era nel pacchetto ed è stato escluso.",
+    "unsupported_one": "Saltato {{count}} disegno, clip audio o equazione che qui non ha un equivalente.",
+    "unreadableSections_one": "Saltata {{count}} sezione che non è stato possibile leggere.",
+    "lockedSections_one": "Saltata {{count}} sezione protetta da password. Rimuovi la sua password in OneNote ed esporta di nuovo per portarla con te.",
+    "noteTags_one": "Mantenuti come tag i tag di OneNote di {{count}} pagina.",
+    "subpages_one": "Mantenuta {{count}} sottopagina come nota accanto alla sua pagina."
+  },
+  "capacities": {
+    "notCapacities": "Questo non è un export di Capacities. In Capacities, apri Settings > Full Export, esegui Manual Full Export con i media inclusi e trascina qui lo zip.",
+    "noObjects": "Nessuna pagina o altro oggetto con testo trovato in questo export di Capacities.",
+    "typeFolders_other": "Ricostruiti {{count}} tipi di oggetto come cartelle.",
+    "properties_other": "Mantenute le proprietà di {{count}} oggetti come elenco in cima alle loro note.",
+    "mediaObjects_other": "Mantenuti {{count}} immagini e file dentro le note che li mostrano, senza una nota propria.",
+    "queries_other": "Saltate {{count}} query. Una query è una ricerca salvata in Capacities, senza testo proprio.",
+    "collections_other": "Saltati {{count}} elenchi di raccolte. Gli oggetti che contengono arrivano comunque, senza le raccolte.",
+    "deadLinks_other": "{{count}} link puntano a oggetti che non sono nell'export, come quelli nel cestino, e mantengono solo il loro testo.",
+    "deadLinks_one": "{{count}} link punta a un oggetto che non è nell'export, come uno nel cestino, e mantiene solo il suo testo.",
+    "collections_one": "Saltato {{count}} elenco di raccolta. Gli oggetti che contiene arrivano comunque, senza la raccolta.",
+    "queries_one": "Saltata {{count}} query. Una query è una ricerca salvata in Capacities, senza testo proprio.",
+    "mediaObjects_one": "{{count}} immagine o file resta dentro le note che lo mostrano, senza una nota propria.",
+    "properties_one": "Mantenute le proprietà di {{count}} oggetto come elenco in cima alla sua nota.",
+    "typeFolders_one": "Ricostruito {{count}} tipo di oggetto come cartella."
   }
 }

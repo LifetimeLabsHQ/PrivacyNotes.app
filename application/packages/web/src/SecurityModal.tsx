@@ -5,14 +5,18 @@ import { isDemoMode } from './demo';
 import { DemoAccountTeaser } from './DemoAccountTeaser';
 import { SettingsTabStrip, settingsTabClass } from './settingsUI';
 import { Modal } from './ui';
+import { passkeysReleased } from './passkeysRelease';
 import { BiometricTab } from './security/BiometricTab';
 import { PhraseTab } from './security/PhraseTab';
+import { PasskeysTab } from './security/PasskeysTab';
 import { PinTab } from './security/PinTab';
 import { TwoFactorTab } from './security/TwoFactorTab';
 import type { UserSettings } from './userSettings';
 import { usePaneTab } from './settingsPaneTab';
 
-type Tab = 'pin' | 'phrase' | 'biometric' | 'twoFactor';
+/** `passkeys` is the old tab of its own: a link or a remembered tab that
+ *  names it opens the 2FA tab, which holds the passkeys since they merged. */
+type Tab = 'pin' | 'phrase' | 'biometric' | 'twoFactor' | 'passkeys';
 
 type Props = {
   phrase: string;
@@ -46,7 +50,7 @@ type Props = {
 
 /**
  * Security modal - dialog for biometric enrollment, PIN, two-factor sign-in
- * management, and viewing the recovery phrase. The tab bodies live in
+ * management, viewing the recovery phrase, and the sign-in passkeys. The tab bodies live in
  * `./security/`; this file owns the chrome (overlay, tab strip, close
  * handling) and dispatches to the active tab.
  */
@@ -66,7 +70,12 @@ export function SecurityModal({
   embedded = false,
 }: Props) {
   const { t } = useTranslation('security');
-  const [tab, setTab] = usePaneTab<Tab>('security', defaultTab);
+  const [paneTab, setTab] = usePaneTab<Tab>('security', defaultTab);
+  // Passkeys share the 2FA tab, under it, while their release switch is on:
+  // both are what a new device needs to get in.
+  // Spec: docs/contrib/passkeys.md (4.4)
+  const passkeysShown = passkeysReleased();
+  const tab: Tab = paneTab === 'passkeys' ? 'twoFactor' : paneTab;
   // The Biometric tab sends a user with no credential off to create a PIN,
   // and this brings them back once it exists, so the round trip ends where it
   // started. A tab the user picks themselves clears it: the intent belongs to
@@ -105,13 +114,26 @@ export function SecurityModal({
       </TabButton>
       <TabButton setting="security.twoFactor" active={tab === 'twoFactor'} onClick={() => pickTab('twoFactor')}>
         <Shield className="text-accent" aria-hidden="true" />
-        <span>{t('modal.tabTwoFactor')}</span>
+        <span>{t(passkeysShown ? 'modal.tabTwoFactorPasskeys' : 'modal.tabTwoFactor')}</span>
       </TabButton>
     </SettingsTabStrip>
   );
   const body = (
     <>
     {tab === 'twoFactor' && (isDemoMode() ? <DemoAccountTeaser kind="twoFactor" /> : <TwoFactorTab />)}
+
+    {tab === 'twoFactor' && passkeysShown && (
+      <div data-setting="security.passkeys" className="pt-4">
+        <PasskeysTab
+          pubkey={pubkey}
+          pinTimeoutMinutes={pinTimeoutMinutes}
+          // The synced flag, as for the phrase: the local PIN cache can lag.
+          hasPin={Boolean(userSettings.pinHash && userSettings.pinSalt)}
+          pinCredential={`${userSettings.pinHash ?? ''}:${userSettings.pinSalt ?? ''}`}
+          recovery={{ phrase, userSettings, onSettingsChange }}
+        />
+      </div>
+    )}
 
     {tab === 'pin' && (
       <PinTab

@@ -32,9 +32,30 @@
   "tagChip": {
     "clear": "مسح عامل تصفية الوسم: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "مسح عامل تصفية المتتبع: {{tracker}}",
+    "anyTag": "أي وسم",
+    "tagLabel": "وسم {{tracker}}",
+    "answerLabel": "إجابة {{tracker}}",
+    "anyAnswer": "أي إجابة"
+  },
+  "trackerFocus": {
+    "every_zero": "كل {{count}} يوم تقريبًا",
+    "every_one": "كل يوم تقريبًا",
+    "every_two": "كل يومين تقريبًا",
+    "every_few": "كل {{count}} أيام تقريبًا",
+    "every_many": "كل {{count}} يومًا تقريبًا",
+    "every_other": "كل {{count}} يوم تقريبًا",
+    "last": "آخر تسجيل {{when}}",
+    "locked_zero": "{{count}} يومية محمية برمز PIN غير مشمولة",
+    "locked_one": "يومية واحدة محمية برمز PIN غير مشمولة",
+    "locked_two": "يوميتان محميتان برمز PIN غير مشمولتين",
+    "locked_few": "{{count}} يوميات محمية برمز PIN غير مشمولة",
+    "locked_many": "{{count}} يومية محمية برمز PIN غير مشمولة",
+    "locked_other": "{{count}} يومية محمية برمز PIN غير مشمولة"
+  },
   "vaultNew": {
     "ariaLabel": "عنصر خزنة جديد",
-    "card": "بطاقة ائتمان",
     "sshKey": "مفتاح SSH",
     "generator": "كلمة مرور"
   },
@@ -53,7 +74,8 @@
   "vaultFilter": {
     "all": "الكل",
     "logins": "بيانات تسجيل الدخول",
-    "cards": "بطاقات ائتمان",
+    "passkeys": "مفاتيح المرور",
+    "cards": "بطاقات",
     "keys": "مفاتيح"
   },
   "journal": {
@@ -65,7 +87,8 @@
   "trash": {
     "empty": "إفراغ",
     "emptyHover": "حذف جميع الملاحظات في المهملات",
-    "autoDelete": "حذف تلقائي بعد 30 يومًا"
+    "autoDelete": "حذف تلقائي بعد 30 يومًا",
+    "replacedTitle": "نسخ من الملاحظات المحذوفة"
   },
   "search": {
     "sortOptions": "خيارات الفرز والعرض",
@@ -174,9 +197,10 @@
     "tasks_other": "مهمة"
   },
   "toast": {
-    "imageUploadFailed": "فشل تحميل الصورة: {{error}}",
+    "imageUploadFailed": "فشل رفع الصورة: {{error}}",
     "imageError": "خطأ في الصورة: {{error}}",
-    "uploadFailedFor": "فشل تحميل «{{filename}}»: {{error}}",
+    "uploadFailedFor": "فشل رفع «{{filename}}»: {{error}}",
+    "uploadsHeld": "لقد بلغت حد الرفع لهذا اليوم. صورك وملفاتك آمنة على هذا الجهاز، وسيتم رفعها بعد {{time}}.",
     "importedSyncing_one": "تم استيراد ملاحظة واحدة. جارٍ المزامنة…",
     "importedSyncing_other": "تم استيراد {{count}} ملاحظة. جارٍ المزامنة…",
     "addedTag_one": "تمت إضافة الوسم #{{tag}} إلى عنصر واحد",
@@ -197,6 +221,7 @@
   },
   "loadError": {
     "message": "تعذّر تحميل ملاحظاتك. انقطع الاتصال بقاعدة البيانات المحلية. قد يحدث هذا بعد بقاء التطبيق في الخلفية لفترة.",
+    "storageOff": "تعذّر تحميل ملاحظاتك. أوقف هذا الجهاز مساحة التخزين التي يحفظ فيها PrivacyNotes ملاحظاتك، وهذا ما يفعله «وضع التأمين». لإصلاح ذلك، افتح «الإعدادات»، ثم «الخصوصية والأمان»، ثم «وضع التأمين»، ثم «تخصيص المواقع الإلكترونية»، وعطِّل PrivacyNotes. في Safari، عطِّل «وضع التأمين» لهذا الموقع في «إعدادات موقع الويب».",
     "reload": "إعادة التحميل"
   },
   "banner": {
@@ -249,6 +274,7 @@
   "editor": {
     "backToList": "العودة إلى قائمة الملاحظات",
     "backToGrid": "العودة إلى الشبكة",
+    "closeSide": "إغلاق الجانب",
     "titlePlaceholder": "بلا عنوان (انقر للتحرير أو اترك التوليد التلقائي)",
     "titlePlaceholderLogin": "مثال: GitHub",
     "titlePlaceholderCard": "مثال: Visa تنتهي بـ 4242",
@@ -257,10 +283,22 @@
     "lockNow": "قفل الآن",
     "lockNowHint": "إخفاء المحتوى الآن",
     "turnOffHint": "السماح بالتعديل مجددًا",
+    "turnOffForNowHint": "تعديل هذه الملاحظة حتى تغادرها",
     "unarchiveHint": "إظهارها في قوائمك مجددًا",
     "showFormatted": "عرض التنسيق",
+    "splitView": "العرض المقسّم",
+    "showSplitView": "إظهار العرض المقسّم",
+    "hideSplitView": "إخفاء العرض المقسّم",
+    "splitViewNeedsWidth": "وسّع النافذة لتفعيل العرض المقسّم",
+    "swapSides": "تبديل الجانبين",
+    "formattedOnly": "يعمل {{name}} في العرض المنسّق",
+    "formattedOnlyHint": "العرض المنسّق",
     "invisiblesShow": "إظهار الأحرف غير المرئية",
     "invisiblesHide": "إخفاء الأحرف غير المرئية",
+    "lineNumbersShow": "إظهار أرقام الأسطر",
+    "lineNumbersHide": "إخفاء أرقام الأسطر",
+    "footerPin": "تثبيت الإحصاءات",
+    "footerUnpin": "إلغاء تثبيت الإحصاءات",
     "undo": "تراجع",
     "redo": "إعادة",
     "hide": "إخفاء",
@@ -338,6 +376,7 @@
     "accountLabel": "الهوية والمزامنة",
     "appearanceLabel": "المظهر",
     "editorLabel": "المحرر",
+    "pluginsLabel": "المكوّنات الإضافية",
     "formatBarLabel": "شريط الأدوات",
     "listsLabel": "القوائم",
     "trackersLabel": "المتتبعات",
@@ -363,6 +402,14 @@
     "body_few": "هل تريد أرشفة <highlight>{{count}} عناصر</highlight>؟ ستغادر قوائمك وتنتظر في عرض «الأرشيف». ويعيدها «إلغاء الأرشفة».",
     "body_many": "هل تريد أرشفة <highlight>{{count}} عنصرًا</highlight>؟ ستغادر قوائمك وتنتظر في عرض «الأرشيف». ويعيدها «إلغاء الأرشفة».",
     "body_other": "هل تريد أرشفة <highlight>{{count}} عنصر</highlight>؟ ستغادر قوائمك وتنتظر في عرض «الأرشيف». ويعيدها «إلغاء الأرشفة»."
+  },
+  "duplicateConfirm": {
+    "body_zero": "هل تريد تكرار <highlight>{{count}} عناصر</highlight>؟ يحصل كل منها على نسخة خاصة به.",
+    "body_one": "هل تريد تكرار <highlight>عنصر واحد</highlight>؟ يحصل على نسخة خاصة به.",
+    "body_two": "هل تريد تكرار <highlight>عنصرين</highlight>؟ يحصل كل منهما على نسخة خاصة به.",
+    "body_few": "هل تريد تكرار <highlight>{{count}} عناصر</highlight>؟ يحصل كل منها على نسخة خاصة به.",
+    "body_many": "هل تريد تكرار <highlight>{{count}} عنصرًا</highlight>؟ يحصل كل منها على نسخة خاصة به.",
+    "body_other": "هل تريد تكرار <highlight>{{count}} عنصر</highlight>؟ يحصل كل منها على نسخة خاصة به."
   },
   "bulkTrash": {
     "body_one": "هل تريد حذف <highlight>عنصر واحد</highlight>؟ انقله إلى المهملات لتستعيده لاحقًا، أو احذفه نهائيًا.",
@@ -437,6 +484,7 @@
     "title": "الصلات",
     "hide": "إخفاء الصلات",
     "linkedFrom": "روابط واردة",
+    "usedIn": "مستخدم في",
     "linksTo": "روابط صادرة",
     "missing": "لم تُنشأ بعد",
     "protectedHidden_zero": "{{count}} عنصر محمي برمز PIN غير معروض",
@@ -451,9 +499,10 @@
     "relatedLinkedFrom": "كلتاهما مرتبطتان من {{title}}",
     "relatedTag": "كلتاهما موسومتان بـ {{tag}}",
     "relatedMeaning": "المعنى نفسه",
+    "relatedMention": "تذكر {{name}}",
     "meaningDoor": "الصلات الذكية: اعثر على الملاحظات ذات المعنى نفسه بالذكاء الاصطناعي دون اتصال",
     "meaningDoorNo": "عدم الإظهار مرة أخرى",
-    "meaningDoorHidden": "مخفية في كل الملاحظات. تبقى «الصلات الذكية» في الإعدادات > المحرر > السلوك.",
+    "meaningDoorHidden": "مخفية في كل الملاحظات. تبقى «الصلات الذكية» في الإعدادات > المكوّنات الإضافية.",
     "hideSuggestions": "إخفاء الصلات المقترحة",
     "notRelated": "لا صلة بينهما",
     "notRelatedDone": "لم تعد مقترحة",
@@ -526,5 +575,35 @@
     "autoJournal": "إضافة موقعي إلى كل تدوينة يومية جديدة",
     "autoDenied": "الوصول إلى الموقع متوقف لـ PrivacyNotes. شغّله أولًا من إعدادات هاتفك.",
     "autoOff": "خدمات الموقع متوقفة على هذا الهاتف. شغّلها أولًا."
+  },
+  "vaultPasskey": {
+    "forSite": "مفتاح مرور لـ {{rpId}}",
+    "hasPasskey": "له مفتاح مرور",
+    "removeTitle": "هل تريد إزالة مفتاح المرور لـ {{rpId}}؟",
+    "removeBody": "لن تتمكن بعد ذلك من تسجيل الدخول به إلى {{rpId}} من PrivacyNotes.",
+    "savedByExtension": "تحفظ إضافة المتصفح من PrivacyNotes مفاتيح المرور عندما يعرض موقع مفتاحًا.",
+    "removeBrowserWaiting": "بعض العناصر التي أرسلها هذا المتصفح ليست في الخزنة بعد. إذا أزلته الآن، فستضيع.",
+    "removeBrowserAnyway": "الإزالة على أي حال"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "ترجمة",
+    "from": "من",
+    "to": "إلى",
+    "saveAsNote": "حفظ كملاحظة جديدة",
+    "needPair": "تنزيل {{language}} · {{size}}",
+    "noModel": "لا يمكن ترجمة هذه اللغة بعد.",
+    "nothing": "لا تحتوي هذه الملاحظة على كلمات لترجمتها.",
+    "turnOn": "تشغيل {{language}}",
+    "failed": "تعذّرت ترجمة هذه الملاحظة. حاول مرة أخرى.",
+    "untranslated_zero": "تعذّرت ترجمة {{count}} سطر، وبقيت كما كانت.",
+    "untranslated_one": "تعذّرت ترجمة سطر واحد، وبقي كما كان.",
+    "untranslated_two": "تعذّرت ترجمة سطرين، وبقيا كما كانا.",
+    "untranslated_few": "تعذّرت ترجمة {{count}} أسطر، وبقيت كما كانت.",
+    "untranslated_many": "تعذّرت ترجمة {{count}} سطرًا، وبقيت كما كانت.",
+    "untranslated_other": "تعذّرت ترجمة {{count}} سطر، وبقيت كما كانت."
+  },
+  "tags": {
+    "suggestMove": "نقل إلى {{folder}}"
   }
 }

@@ -190,7 +190,7 @@
       "activityDistribution": "Activity level distribution",
       "columnLevel": "Level",
       "adherenceHeading": "Medication adherence",
-      "adherenceNote": "Scheduled doses taken, as a share of the doses due on the journalled days since each medication was first logged. A due dose that was not marked counts as not taken. Days with no journal entry, and medications taken as needed, are not counted.",
+      "adherenceNote": "Scheduled doses taken, as a share of the doses due on the journaled days since each medication was first logged. A due dose that was not marked counts as not taken. Days with no journal entry, and medications taken as needed, are not counted.",
       "columnMedication": "Medication",
       "columnTaken": "Taken/Doses",
       "columnRate": "Rate",
@@ -240,6 +240,8 @@
       "prevYear": "Previous year",
       "nextYear": "Next year"
     },
+    "seeEntries": "See entries",
+    "showInCalendar": "Show in Calendar",
     "trackers": {
       "tapHint": "A tap opens Explore",
       "stopped": "Stopped",

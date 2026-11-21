@@ -5,6 +5,7 @@ import { AuthProvider } from './auth';
 import { LoadingScreen } from './LoadingScreen';
 import { initTheme } from './theme';
 import { initAppZoom } from './appZoom';
+import { initSystemTextSize } from './systemTextSize';
 import { clearFreshDemoCredentials, isDemoMode } from './demo';
 import { cryptoCheckoutReleased } from './cryptoRelease';
 import { dropDoorsLeftBySignOut } from './biometric';
@@ -20,7 +21,7 @@ import { installCheckboxConfetti } from './checkboxConfetti';
 import { installStatusBarTap } from './statusBarTap';
 import { i18nReady } from './i18n';
 import { initWriterGenListener, announceSealedWriter } from './writerGen';
-import { SEALED_WRITES_IN_PRODUCTION, setSealedWrites } from './localSeal';
+import { ROW_TYPE_SEALED_IN_PRODUCTION, SEALED_WRITES_IN_PRODUCTION, setRowTypeSealed, setSealedWrites } from './localSeal';
 import { VERSION } from './version';
 import { onPreloadError } from './chunkLoad';
 import './index.css';
@@ -40,6 +41,7 @@ initTheme();
 // every other platform ignores. After initTheme() because it is the same
 // kind of device-local appearance choice, and it does not paint.
 initAppZoom();
+initSystemTextSize();
 
 // Android back button entry point (#174) - must exist before the first
 // back press, even during onboarding (where an unhandled press
@@ -95,6 +97,9 @@ initWriterGenListener();
 // write plaintext) - the rollout's release A ships that way.
 // Spec: docs/internal/specs/local-at-rest.md (5.1, the two releases)
 setSealedWrites(SEALED_WRITES_IN_PRODUCTION);
+// The row type inside the seal (#795 point 8), off until the release after
+// the one that carries its reader. Spec: docs/internal/plans/row-type-seal.md (6)
+setRowTypeSealed(ROW_TYPE_SEALED_IN_PRODUCTION);
 announceSealedWriter();
 
 if (isDemoMode() || isAppHost()) {

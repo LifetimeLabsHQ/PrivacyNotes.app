@@ -169,7 +169,7 @@ export function SiteFooter() {
           <div className="flex items-start justify-between gap-4 sm:items-center">
           <div className="min-w-0 text-body text-[#A69E8F] space-y-1">
             <p>
-              Data Stored in{' '}
+              Notes Stored in{' '}
               <svg data-ic="" viewBox="0 0 32 32" aria-hidden="true" className="inline-block align-[-1.5px] rounded-[2px]">
                 <rect width="32" height="32" fill="#da291c" />
                 <rect x="13" y="6" width="6" height="20" fill="#fff" />

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import i18n from './i18n';
-import { stripMarkdown, countWords, countChars } from './wordCountUtils';
+import { stripMarkdown, countWords, countChars, countLines } from './wordCountUtils';
 import { intlLocale } from './languages';
 import { countTasks } from './tasks';
 
@@ -154,6 +154,7 @@ function compute(body: string, sizeOf?: (body: string) => number) {
   }
   const words = countWords(body);
   const chars = countChars(body);
+  const lines = countLines(body);
 
   // Estimate the note's stored size to predict the 1 MB sync ceiling.
   // The whole raw body is encrypted (markdown syntax included), so size
@@ -168,7 +169,9 @@ function compute(body: string, sizeOf?: (body: string) => number) {
   const label =
     i18n.t('editor:wordCount.words', { count: words, formatted: words.toLocaleString(intlLocale()) }) +
     ' · ' +
-    i18n.t('editor:wordCount.characters', { count: chars, formatted: chars.toLocaleString(intlLocale()) });
+    i18n.t('editor:wordCount.characters', { count: chars, formatted: chars.toLocaleString(intlLocale()) }) +
+    ' · ' +
+    i18n.t('editor:wordCount.lines', { count: lines, formatted: lines.toLocaleString(intlLocale()) });
 
   // The size heads-up ends the line, after the task count the component adds.
   let warning = '';

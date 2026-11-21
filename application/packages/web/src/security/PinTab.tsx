@@ -10,10 +10,12 @@ import {
   isBiometricKeyBound,
   onWrappedBlobChange,
   removeStoredPhrase,
+  sealedLocalPinWrap,
   storeBuiltPinWrap,
 } from '../biometric';
 import { HelpChip } from '../HelpChip';
 import {
+  holdPinSurface,
   cachedPinCredential,
   clearPinFailures,
   credentialStamp,
@@ -29,8 +31,8 @@ import {
   verifyPin,
   type PinCredential,
 } from '../pin';
-import { clearPin, restoreUnsavedClear } from '../pinRecovery';
-import { storedPhraseUnwrapped } from '../phraseAtRest';
+import { clearPin, dropLocalPinWrapIfNotKept, keepsLocalPinWrap, restoreUnsavedClear } from '../pinRecovery';
+import { inNativeShell, noDeviceKeyHere, storedPhraseUnwrapped } from '../phraseAtRest';
 import { isTrustedDevice } from '../trustStorage';
 import { signInStamp, signedOutSince } from '../liveSignIn';
 import { ForgotPinLink, PinRecoveryForm } from '../PinRecoveryForm';
@@ -89,7 +91,18 @@ export function PinTab({
   // The kind the account holds, read from its hash salt, and the kind the
   // new-secret step sets.
   const [existingKind, setExistingKind] = useState<SecretKind>(() => (pinIsPasscode() ? 'passcode' : 'pin'));
-  const [newKind, setNewKind] = useState<SecretKind>(() => (pinIsPasscode() ? 'passcode' : 'pin'));
+  // A first secret defaults to a passcode where the OS keeps no device key
+  // (the web, a shell without one): C2 seals the PIN wrap under that key, and
+  // where it cannot, a copy of the storage gives a 4-digit PIN up to an
+  // offline search in minutes.
+  // Spec: docs/internal/plans/pin-wrap-hardening.md (section 5, C1 (b))
+  const [defaultKind, setDefaultKind] = useState<SecretKind>(() => (inNativeShell() ? 'pin' : 'passcode'));
+  const [newKind, setNewKind] = useState<SecretKind>(() =>
+    pinIsPasscode() || (!hasPin() && !inNativeShell()) ? 'passcode' : 'pin');
+  // The kind a first secret starts on, on every way back to that step.
+  const firstKind = (): SecretKind => (pinIsPasscode() ? 'passcode' : hasPin() ? 'pin' : defaultKindRef.current);
+  const defaultKindRef = useRef(defaultKind);
+  defaultKindRef.current = defaultKind;
   const [oldPinVerified, setOldPinVerified] = useState(false);
   // The phrase route out of a forgotten PIN, and the line that says it
   // worked. Spec: docs/internal/specs/pin-recovery.md
@@ -103,10 +116,23 @@ export function PinTab({
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  // The confirm box of the older-apps notice below; a passcode is set only
-  // once it is ticked.
-  const [devicesUpdated, setDevicesUpdated] = useState(false);
   const kindFromTiles = useRef(false);
+  // Anything typed in the new-secret fields: a late default never moves it.
+  const typedRef = useRef('');
+  typedRef.current = pin + confirm;
+  // A shell learns whether it has a device key from storage, so its default
+  // arrives after the first render, and only while nothing was picked or typed.
+  useEffect(() => {
+    if (!inNativeShell()) return;
+    let live = true;
+    void noDeviceKeyHere().then((none) => {
+      if (!live || !none) return;
+      setDefaultKind('passcode');
+      defaultKindRef.current = 'passcode';
+      if (!hasPin() && !kindFromTiles.current && !typedRef.current) setNewKind('passcode');
+    });
+    return () => { live = false; };
+  }, []);
   const [savedFlash, setSavedFlash] = useState(false);
   const [lockout, setLockout] = useState(() => getPinLockoutState());
   const oldPinRef = useRef<PinInputHandle>(null);
@@ -137,7 +163,8 @@ export function PinTab({
     const kind: SecretKind = pinIsPasscode() ? 'passcode' : 'pin';
     setPinExists(hasPin());
     setExistingKind(kind);
-    setNewKind(kind);
+    setNewKind(firstKind());
+    kindFromTiles.current = false;
     setOldPinVerified(false);
     proved.current = null;
     setOldPin('');
@@ -156,6 +183,9 @@ export function PinTab({
   // tab makes (an enrollment, a set-up-again, a removal) renders it again.
   const [, setBlobVersion] = useState(0);
   useEffect(() => onWrappedBlobChange(() => setBlobVersion((v) => v + 1)), []);
+  // A PIN screen holding a proof of the secret: a held PIN rehash waits
+  // until it closes (pin-wrap-hardening.md section 3).
+  useEffect(() => holdPinSurface(), []);
 
   const needsOldPin = pinExists && !oldPinVerified;
   // While biometric unlock on this device is a presence gate, its wrap key
@@ -204,11 +234,14 @@ export function PinTab({
         // account's, with no await in between, so a wrap under a secret
         // replaced meanwhile never overwrites the newer one.
         const blob = await buildPinWrap(phrase, candidate);
+        // This device's copy, sealed under the device key in the apps before
+        // the last check, so the wrap never lands plain (pinWrapSeal.ts).
+        const local = await sealedLocalPinWrap(blob);
         if (pinCredentialStamp() !== stamp || seenCredential.current !== credentialAtStart) {
           setOldPinBusy(false);
           return;
         }
-        storeBuiltPinWrap(blob, startedAt);
+        storeBuiltPinWrap(blob, startedAt, local);
         removeStoredPhrase();
         onSettingsChange({ ...userSettings, ...blob }, userSettings);
       }
@@ -232,7 +265,6 @@ export function PinTab({
     setPin('');
     setConfirm('');
     setError(null);
-    setDevicesUpdated(false);
   }
 
   async function submit(pinVal: string, confirmVal: string) {
@@ -240,7 +272,7 @@ export function PinTab({
     // A passcode that breaks a rule gets no line here: the live checks under
     // the field already say which one.
     const problem = newKind === 'passcode'
-      ? !isValidPasscode(pinVal) || !devicesUpdated ? ''
+      ? !isValidPasscode(pinVal) ? ''
         : normalizeSecret(pinVal) !== normalizeSecret(confirmVal) ? t('pinTab.passcodesDoNotMatch') : null
       : pinVal.length !== 4 ? t('pinTab.pinFourDigits')
         : pinVal !== confirmVal ? t('pinTab.pinsDoNotMatch') : null;
@@ -270,6 +302,9 @@ export function PinTab({
         ? await buildPinWrap(phrase, pinVal)
         : null;
       if (wrap) Object.assign(updated, wrap);
+      // This device's copy, sealed under the device key in the apps before
+      // the checks below, so the store after them stays synchronous.
+      const localWrap = wrap && isTrustedDevice() ? await sealedLocalPinWrap(wrap) : null;
       // A sign-out during the PIN hash or the wrap cleared the settings this
       // would write back, the new PIN and its wrap.
       if (signedOutSince(startedAt)) return;
@@ -285,16 +320,19 @@ export function PinTab({
       // This device's copies go in first, each read back and each with a
       // put-back: the hash every gate here checks, and on a trusted device the
       // new wrap (an untrusted one keeps no copy). A refused one says so and
-      // leaves everything as it was.
+      // leaves everything as it was. A device whose lock is off and whose
+      // phrase is at rest keeps no lock copy (`keepsLocalPinWrap`): the new
+      // wrap goes to the account only, and the next settings pass takes the
+      // old copy off once the phrase reads back.
       const putBackHash = stagePinHash(hashed);
       if (!putBackHash) {
         setError(t('pinTab.changeNotSaved'));
         return;
       }
       let putBackWrap: (() => void) | null = null;
-      if (wrap && isTrustedDevice()) {
+      if (wrap && isTrustedDevice() && keepsLocalPinWrap(now.appLockEnabled === true)) {
         try {
-          putBackWrap = storeBuiltPinWrap(wrap, startedAt);
+          putBackWrap = storeBuiltPinWrap(wrap, startedAt, localWrap);
         } catch {
           putBackHash();
           setError(t('pinTab.changeNotSaved'));
@@ -311,8 +349,11 @@ export function PinTab({
         return;
       }
       // Last, once the new wrap is this device's door: with the lock on, the
-      // phrase at rest goes so the lock is the only door.
+      // phrase at rest goes so the lock is the only door. Where no lock copy
+      // is kept, a copy under the old secret goes too, or Lock app would ask
+      // for a secret the account no longer holds.
       if (putBackWrap && now.appLockEnabled) removeStoredPhrase();
+      if (!putBackWrap) void dropLocalPinWrapIfNotKept(phrase);
       // This tab's own write: the settings that come back with it are not a
       // change made elsewhere, and must not reset the steps below.
       seenCredential.current = `${updated.pinHash ?? ''}:${updated.pinSalt ?? ''}`;
@@ -361,6 +402,8 @@ export function PinTab({
     seenCredential.current = ':';
     setPinExists(false);
     setExistingKind('pin');
+    setNewKind(defaultKindRef.current);
+    kindFromTiles.current = false;
     setOldPinVerified(false);
     reset();
   }
@@ -379,6 +422,8 @@ export function PinTab({
             setRecovered(existingKind);
             setPinExists(false);
             setExistingKind('pin');
+            setNewKind(defaultKindRef.current);
+            kindFromTiles.current = false;
             setOldPinVerified(false);
             reset();
           }}
@@ -457,6 +502,7 @@ export function PinTab({
 
           <SecretKindTiles
             value={newKind}
+            defaultKind={defaultKind}
             appLock={userSettings.appLockEnabled}
             disabled={busy}
             onChange={(kind) => {
@@ -473,7 +519,6 @@ export function PinTab({
 
           {newKind === 'passcode' ? (
             <>
-              <OlderAppsNotice />
               <NewPasscodeFields
                 value={pin}
                 confirm={confirm}
@@ -481,9 +526,8 @@ export function PinTab({
                 onChange={(v) => { setPin(v); setError(null); }}
                 onConfirmChange={(v) => { setConfirm(v); setError(null); }}
                 onSubmit={() => void submit(pin, confirm)}
-                autoFocus={!kindFromTiles.current}
+                autoFocus={pinExists && !kindFromTiles.current}
               />
-              <OlderAppsConfirm checked={devicesUpdated} onChange={setDevicesUpdated} disabled={busy} />
             </>
           ) : (
             <div className={NEW_SECRET_FIELDS}>
@@ -538,7 +582,7 @@ export function PinTab({
             <button
               onClick={() => void submit(pin, confirm)}
               disabled={busy || (newKind === 'passcode'
-                ? !isValidPasscode(pin) || normalizeSecret(pin) !== normalizeSecret(confirm) || !devicesUpdated
+                ? !isValidPasscode(pin) || normalizeSecret(pin) !== normalizeSecret(confirm)
                 : pin.length !== 4 || confirm.length !== 4)}
               className={`flex-1 ${SETTINGS_BTN_PRIMARY}`}
             >
@@ -819,11 +863,13 @@ function NewPasscodeFields({
  */
 function SecretKindTiles({
   value,
+  defaultKind,
   appLock,
   onChange,
   disabled,
 }: {
   value: SecretKind;
+  defaultKind: SecretKind;
   appLock: boolean;
   onChange: (kind: SecretKind) => void;
   disabled: boolean;
@@ -834,7 +880,7 @@ function SecretKindTiles({
     {
       value: 'pin',
       title: t('pinTab.kindPin'),
-      badge: { label: t('pinTab.badgeDefault'), tone: 'info' },
+      ...(defaultKind === 'pin' ? { badge: { label: t('pinTab.badgeDefault'), tone: 'info' as const } } : {}),
       rows: [
         { label: t('pinTab.rowTyping'), mark: 'yes', text: t('pinTab.typingPin') },
         { label: t('pinTab.rowNearby'), mark: 'yes', text: t('pinTab.nearby') },
@@ -856,49 +902,3 @@ function SecretKindTiles({
   ];
   return <CompareTiles label={t('pinTab.kindGroup')} value={value} tiles={tiles} onChange={onChange} disabled={disabled} />;
 }
-
-// ---- Temporary, English only: the older-apps notice ---------------------------
-//
-// Setting a passcode shipped in the same release that taught every app to read
-// one, so a device still on an older version shows four PIN boxes and cannot
-// take the passcode; there, only the recovery phrase gets in. This notice and
-// its confirm box carry the people who set a passcode across that gap. They
-// are English in every locale by the owner's decision of 2026-10-15 and stay
-// out of the catalogs on purpose, so no translation batch picks them up. Remove
-// both, with the devicesUpdated state, once every channel ships v0.632.5 or
-// newer. Spec: docs/internal/plans/app-lock-passcode.md (section 11, step 6)
-const OLDER_APPS_NOTICE =
-  'Before you switch, update PrivacyNotes on every device you use. An older version asks for a 4-digit PIN and will not take your passcode. If that happens, use your recovery phrase there.';
-const OLDER_APPS_CONFIRM = 'I updated PrivacyNotes on all my devices';
-
-function OlderAppsNotice() {
-  return (
-    <div className="rounded-md border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 p-3 text-small leading-relaxed text-amber-800 dark:text-amber-200">
-      {OLDER_APPS_NOTICE}
-    </div>
-  );
-}
-
-function OlderAppsConfirm({
-  checked,
-  onChange,
-  disabled,
-}: {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  disabled: boolean;
-}) {
-  return (
-    <label className="flex items-start gap-2 text-small leading-relaxed text-pn cursor-pointer">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        disabled={disabled}
-        className="mt-0.5 accent-accent"
-      />
-      <span>{OLDER_APPS_CONFIRM}</span>
-    </label>
-  );
-}
-// ---- end of the temporary older-apps notice ------------------------------------

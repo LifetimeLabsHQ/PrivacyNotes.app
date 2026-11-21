@@ -23,6 +23,43 @@ import { openShortcutInApp } from './noteShortcut';
 
 const OPENABLE = /^(https?|tel|sms|mailto):/i;
 
+/**
+ * True for a link the opener plugin's own script would hand to the browser as
+ * an address of the app itself: one with no scheme (`?x`, `/a`, `notes.md`)
+ * that opens a new window. The script resolves it against the page, which on
+ * Windows and Android is `http://tauri.localhost/`, an address it opens; on
+ * macOS and Linux the page is `tauri://localhost` and it opens nothing. The
+ * anchor interceptor in App.tsx cancels such a click, so every platform does
+ * the same: nothing (beta issue 169).
+ */
+export function isAppRelativeNewWindowLink(anchor: Element, href: string): boolean {
+  return anchor.getAttribute('target') === '_blank' && !/^[a-z][a-z0-9+.-]*:/i.test(href.trim());
+}
+
+/**
+ * True when the opener plugin's own click script would take this click and
+ * hand the browser an address of the app itself. The script takes a click on
+ * a `target="_blank"` link, or one with Ctrl or Shift held (never Cmd or Alt),
+ * and resolves the address against the page as the browser does: leading
+ * spaces dropped, so `" http:?x"` is `http://tauri.localhost/index.html?x` on
+ * Windows. So the test is the resolved address on the page's own scheme and
+ * host, not the text. A plain click on a `#` link (a footnote mark) is not one
+ * the script takes, and keeps scrolling (beta issue 200, item 2).
+ */
+export function pluginOpensThisApp(anchor: Element, keys: Pick<MouseEvent, 'ctrlKey' | 'shiftKey' | 'metaKey' | 'altKey'>, base = document.baseURI): boolean {
+  if (keys.metaKey || keys.altKey) return false;
+  if (anchor.getAttribute('target') !== '_blank' && !keys.ctrlKey && !keys.shiftKey) return false;
+  const href = anchor.getAttribute('href');
+  if (href === null) return false;
+  try {
+    const to = new URL(href, base);
+    const page = new URL(base);
+    return to.protocol === page.protocol && to.host === page.host;
+  } catch {
+    return false;
+  }
+}
+
 export function openExternal(url: string): void {
   // A site path ("/en/changelog", as `siteHref` gives one on a web host that
   // also serves the site: localhost, staging) opens on this origin.

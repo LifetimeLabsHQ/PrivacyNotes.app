@@ -6,10 +6,6 @@
     "error": "Impossible de tout synchroniser pour le moment. Vérifie ta connexion et réessaie.",
     "conflict": "Une de tes notes a un conflit de synchronisation qui nécessite ta décision. Résous-le dans la boîte de dialogue, puis réessaie."
   },
-  "movedHint": {
-    "body": "C'est la nouvelle adresse de l'application. Mets à jour ton marque-page vers use.privacynotes.app et rajoute tes raccourcis d'écran d'accueil.",
-    "gotIt": "Compris"
-  },
   "moveScreen": {
     "title": "L'application a déménagé sur use.privacynotes.app",
     "bodySignIn": "Connecte-toi là-bas avec ta phrase de récupération ou via « {{scanQr}} ». Cet appareil synchronise d'abord, donc toutes tes notes t'y attendent, et rien n'est supprimé ici.",
@@ -32,6 +28,7 @@
       "configured": "Stockage plein. Certaines notes n'ont pas pu se synchroniser. Libère de l'espace ou ajoute du stockage.",
       "unconfigured": "Stockage plein. Certaines notes n'ont pas pu se synchroniser. Libère de l'espace en allégeant tes notes."
     },
+    "deletedSpace": "L'espace des fichiers supprimés revient environ un jour après leur suppression.",
     "manageStorage": "Gérer le stockage",
     "viewUsage": "Voir l'utilisation"
   },
@@ -69,7 +66,11 @@
     "neverBackedUp_one": "Uniquement sur cet appareil :",
     "neverBackedUp_other": "Uniquement sur cet appareil :",
     "moreNotes": "et {{count}} de plus",
-    "appLockHint": "Appareil partagé ? Active le verrouillage de l'app dans Paramètres > Sécurité."
+    "appLockHint": "Appareil partagé ? Active le verrouillage de l'app dans Paramètres > Sécurité.",
+    "unopenedWarn_one": "1 note a une copie sur le serveur que cet appareil ne peut pas ouvrir. Te déconnecter supprime la copie d'ici, qui est peut-être la seule bonne. Renvoie-la d'abord dans Paramètres > ID & Sync.",
+    "unopenedWarn_other": "{{count}} notes ont une copie sur le serveur que cet appareil ne peut pas ouvrir. Te déconnecter supprime les copies d'ici, qui sont peut-être les seules bonnes. Renvoie-les d'abord dans Paramètres > ID & Sync.",
+    "unopenedKept_one": "1 note a une copie sur le serveur que cet appareil ne peut pas ouvrir. La copie d'ici reste après ta déconnexion.",
+    "unopenedKept_other": "{{count}} notes ont une copie sur le serveur que cet appareil ne peut pas ouvrir. Les copies d'ici restent après ta déconnexion."
   },
   "signOutUpload": {
     "uploading": "Envoi de tes dernières modifications…",

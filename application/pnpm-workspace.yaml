@@ -2,9 +2,13 @@ packages:
   - 'packages/*'
 allowBuilds:
   esbuild: true
+  # Pulled in by onnxruntime-web (Settings > Plugins); its install script only
+  # prints a notice, and nothing in the app needs what it would build.
+  protobufjs: false
 # Supply-chain gate (pnpm 10.16+/11 feature): refuse to install packages published
 # less than 24h ago. Written out explicitly so the policy is versioned rather than
-# an invisible pnpm default; CI's pnpm 9 ignores these keys. A version the gate
+# an invisible pnpm default; CI runs the pnpm that `packageManager` in the root
+# package.json names, so it reads these keys too. A version the gate
 # refuses can be unblocked with a per-version `minimumReleaseAgeExclude` entry;
 # each entry pins one exact version and is deleted once that version leaves the
 # lockfile, so the list is empty in steady state.
@@ -12,9 +16,9 @@ allowBuilds:
 minimumReleaseAge: 1440
 # Security floors for transitive copies a parent pins below the advisory fix
 # (Dependabot alerts 18, 35-44, 46). Each entry is deleted once every parent
-# accepts the fixed version on its own. CI's pnpm 9 reads only the copy in the
-# root package.json and local pnpm reads only this one, so keep the two equal:
-# a difference fails CI's frozen install.
+# accepts the fixed version on its own. CI and local pnpm read this copy; the
+# copy in the root package.json is for a contributor still on pnpm 9, so keep
+# the two equal.
 # Spec: docs/internal/dependency-migration.md (security overrides)
 overrides:
   'nanoid@<3.3.18': ^3.3.18

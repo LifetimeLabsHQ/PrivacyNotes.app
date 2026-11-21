@@ -6,10 +6,6 @@
     "error": "Não foi possível sincronizar tudo agora. Verifique sua conexão e tente de novo.",
     "conflict": "Uma de suas notas tem um conflito de sincronização que precisa da sua decisão. Resolva-o no diálogo e tente de novo."
   },
-  "movedHint": {
-    "body": "Esta é a nova casa do app. Atualize seu favorito para use.privacynotes.app e adicione de novo qualquer atalho da tela inicial.",
-    "gotIt": "Entendi"
-  },
   "moveScreen": {
     "title": "O app se mudou para use.privacynotes.app",
     "bodySignIn": "Entre lá com a sua frase de recuperação ou com “{{scanQr}}”. Este dispositivo sincroniza primeiro, então todas as suas notas estarão esperando por você lá, e nada é apagado aqui.",
@@ -32,6 +28,7 @@
       "configured": "Armazenamento cheio. Algumas notas não puderam sincronizar. Libere espaço ou adicione mais armazenamento.",
       "unconfigured": "Armazenamento cheio. Algumas notas não puderam sincronizar. Libere espaço enxugando notas."
     },
+    "deletedSpace": "O espaço dos arquivos excluídos volta cerca de um dia depois que você os exclui.",
     "manageStorage": "Gerenciar armazenamento",
     "viewUsage": "Ver uso"
   },
@@ -69,7 +66,11 @@
     "neverBackedUp_one": "Só neste dispositivo:",
     "neverBackedUp_other": "Só neste dispositivo:",
     "moreNotes": "e mais {{count}}",
-    "appLockHint": "Dispositivo compartilhado? Ative o bloqueio do app em Configurações > Segurança."
+    "appLockHint": "Dispositivo compartilhado? Ative o bloqueio do app em Configurações > Segurança.",
+    "unopenedWarn_one": "1 nota tem uma cópia no servidor que este dispositivo não consegue abrir. Sair apaga a cópia daqui, que pode ser a única boa. Envie-a de novo em Configurações > ID & Sync antes.",
+    "unopenedWarn_other": "{{count}} notas têm uma cópia no servidor que este dispositivo não consegue abrir. Sair apaga as cópias daqui, que podem ser as únicas boas. Envie-as de novo em Configurações > ID & Sync antes.",
+    "unopenedKept_one": "1 nota tem uma cópia no servidor que este dispositivo não consegue abrir. A cópia daqui continua depois que você sair.",
+    "unopenedKept_other": "{{count}} notas têm uma cópia no servidor que este dispositivo não consegue abrir. As cópias daqui continuam depois que você sair."
   },
   "signOutUpload": {
     "uploading": "Enviando suas últimas alterações…",

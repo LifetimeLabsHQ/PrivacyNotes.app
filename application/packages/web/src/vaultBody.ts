@@ -19,6 +19,21 @@ export function storedVaultKeys(previous: string): Record<string, unknown> {
   }
 }
 
+/** The form items whose JSON body has a freeform `notes` field. */
+const NOTES_FIELD_TYPES = new Set(['contact', 'login', 'card', 'ssh-key']);
+
+/**
+ * The freeform notes of a contact, login, card or SSH key, or '' for any
+ * other item. A note-link typed there joins the Connections of the note it
+ * names, so a contact can link to a meeting note.
+ * Spec: docs/internal/issues/0852.md (more connections)
+ */
+export function formNotesText(note: { type?: string; body: string }): string {
+  if (!NOTES_FIELD_TYPES.has(note.type ?? '')) return '';
+  const notes = storedVaultKeys(note.body).notes;
+  return typeof notes === 'string' ? notes : '';
+}
+
 /**
  * The body a vault or contact form saves when the stored item changed while
  * the form was open. `base` is the body the form opened on, `draft` what it
@@ -44,11 +59,57 @@ export function mergeVaultDraft(base: string, draft: string, current: string): s
   if (!b || !d || !c) return draft;
   const out: Record<string, unknown> = { ...c };
   for (const key of new Set([...Object.keys(b), ...Object.keys(d)])) {
+    if (key === PASSKEYS_KEY) continue;
     if (JSON.stringify(d[key]) === JSON.stringify(b[key])) continue;
     if (key in d) out[key] = d[key];
     else delete out[key];
   }
+  const passkeys = mergePasskeys(b[PASSKEYS_KEY], d[PASSKEYS_KEY], c[PASSKEYS_KEY]);
+  if (passkeys.length) out[PASSKEYS_KEY] = passkeys;
+  else delete out[PASSKEYS_KEY];
   return JSON.stringify(out);
+}
+
+/** A login's site passkeys (loginBody.ts). */
+const PASSKEYS_KEY = 'passkeys';
+
+const credentialIdOf = (entry: unknown): string | null => {
+  const id = (entry as { credentialId?: unknown } | null)?.credentialId;
+  return typeof id === 'string' && id ? id : null;
+};
+
+/**
+ * The passkeys a save writes: the stored ones, minus the ids the form
+ * removed, plus the ids the form added. A passkey the extension added while
+ * the form was open (adopted into `current`) stays, a Remove in the form
+ * still removes, and one another device removed meanwhile does not come back
+ * from the draft, which still holds what the form opened on. An entry with no
+ * credential id is a newer version's shape and stays as stored.
+ * Spec: docs/contrib/passkeys.md (section 5.1, Merge; P25), code review finding 14
+ */
+function mergePasskeys(base: unknown, draft: unknown, current: unknown): unknown[] {
+  const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+  const baseIds = new Set(list(base).map(credentialIdOf));
+  const draftIds = new Set(list(draft).map(credentialIdOf));
+  const out: unknown[] = [];
+  const seen = new Set<string>();
+  for (const entry of list(current)) {
+    const id = credentialIdOf(entry);
+    if (id === null) {
+      out.push(entry);
+      continue;
+    }
+    if ((baseIds.has(id) && !draftIds.has(id)) || seen.has(id)) continue;
+    seen.add(id);
+    out.push(entry);
+  }
+  for (const entry of list(draft)) {
+    const id = credentialIdOf(entry);
+    if (id === null || baseIds.has(id) || seen.has(id)) continue;
+    seen.add(id);
+    out.push(entry);
+  }
+  return out;
 }
 
 /** One file on a vault item: the fields of its `[name|size|mime](pn:file/<uuid>)` link. */

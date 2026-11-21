@@ -6,7 +6,7 @@ import type { FolderDef } from '../folders';
 import { normalizeTag } from '../notesRepo';
 import { FRONT_MATTER } from '../markdownFolder/adapter';
 import { buildFolderTree } from './folderImport';
-import { BARE_LINKABLE_RE, linkifyLiteralText, linkifyMarkdown } from './linkify';
+import { BARE_LINKABLE_RE, linkifyCounting, linkifyLiteralText } from './linkify';
 import { escapeMarkdownText, guardMarkdownLineStart, markdownCodeSpan } from './standardNotesSuper';
 import { isUntitledStem } from '../exportNames';
 import { DEFAULT_HIGHLIGHT, FONT_SIZES } from '../editorColors';
@@ -17,7 +17,7 @@ import type { ImportedNote, ParsedImport } from './types';
 import { escapeHtml } from '../escapeHtml';
 import { ALIGN_RE, isJunkEntry, noteLink } from './importHelpers';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:notesnook.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:notesnook.${key}`, options);
 
 /**
  * Notesnook importer.
@@ -207,6 +207,8 @@ interface ConvFlags {
   noteLinks: number;
   math: number;
   callouts: number;
+  /** Bare URLs and emails this converter made into links. */
+  bareLinks: number;
 }
 
 /**
@@ -270,6 +272,18 @@ function imageSuffix(el: Element): string {
 const ALIGN_BLOCKERS = new Set([
   'p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
   'ul', 'ol', 'table', 'pre', 'blockquote', 'hr', 'img', 'iframe', 'embed',
+]);
+
+/**
+ * Marks a single-spaced paragraph (Shift+Enter in Notesnook) while the note
+ * converts; `htmlToMarkdown` turns it into a line break at the end. A control
+ * character, so no typed text can hold it.
+ */
+const SINGLE_SPACED = '\u0001';
+
+/** Blocks inside a list item that go underneath the item line (#850). */
+const ITEM_BLOCKS = new Set([
+  'p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'pre', 'blockquote', 'hr',
 ]);
 
 /**
@@ -506,9 +520,15 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
   // Inside a link's label a bare URL is only text: a link cannot hold another.
   let linkDepth = 0;
 
+  /** The marker each list got (`-` or `*`, `.` or `)`), for the list after it. */
+  const listMarks = new WeakMap<Element, string>();
+
   /** Typed text as markdown; outside a link, a bare URL or email becomes an autolink. */
   function literal(s: string): string {
-    return linkDepth > 0 ? escapeMarkdownText(s) : linkifyLiteralText(s, escapeMarkdownText).markdown;
+    if (linkDepth > 0) return escapeMarkdownText(s);
+    const linked = linkifyLiteralText(s, escapeMarkdownText);
+    ctx.flags.bareLinks += linked.links;
+    return linked.markdown;
   }
 
   /** Does the block open with typed text, which could look like block syntax? */
@@ -553,6 +573,17 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     const items = Array.from(el.children).filter(
       (c) => c.tagName.toLowerCase() === 'li'
     );
+    // A blank line does not end a list: a list right after a list of the
+    // same kind (a checklist after a bullet list, too) would join it. The
+    // other marker, `*` or `1)`, starts a new list.
+    // An empty paragraph between them writes no text, so it does not count.
+    let prev = el.previousElementSibling;
+    while (prev?.tagName === 'P' && !prev.textContent?.trim() && !prev.querySelector('img')) {
+      prev = prev.previousElementSibling;
+    }
+    const swap = !!prev && prev.tagName === el.tagName && listMarks.get(prev) === (ordered ? '.' : '-');
+    const mark = ordered ? (swap ? ')' : '.') : swap ? '*' : '-';
+    listMarks.set(el, mark);
     const lines: string[] = [];
     let n = Number(el.getAttribute('start') ?? '1');
     if (!Number.isFinite(n) || n < 1) n = 1;
@@ -560,13 +591,20 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     for (const li of items) {
       const marker = isChecklist
         ? isChecked(li)
-          ? '- [x] '
-          : '- [ ] '
+          ? `${mark} [x] `
+          : `${mark} [ ] `
         : ordered
-          ? `${n++}. `
-          : '- ';
+          ? `${n++}${mark} `
+          : `${mark} `;
 
-      // Nested lists render underneath the item, everything else inline.
+      // The item's first paragraph (or its loose inline text) is the item
+      // line. Every block after it - a second paragraph, a code block, a
+      // quote, a table - goes underneath at the item's content column, after
+      // a blank line, so it stays inside the item with its own line breaks
+      // (#850). A nested list must start at that column too: two spaces
+      // under `- `, three under `1. `, four under `10. `. Two spaces under a
+      // number end the item, and the list goes flat.
+      const column = indent + ' '.repeat(ordered ? marker.length : 2);
       const nested: string[] = [];
       let inline = '';
       for (const child of Array.from(li.childNodes)) {
@@ -575,14 +613,34 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
             ? (child as Element).tagName.toLowerCase()
             : '';
         if (tag === 'ul' || tag === 'ol') {
-          nested.push(renderList(child as Element, `${indent}  `));
+          nested.push(renderList(child as Element, column));
+        } else if (
+          ITEM_BLOCKS.has(tag) &&
+          (tag !== 'p' || inline.trim() || nested.length > 0)
+        ) {
+          const block = walk(child, '').replace(/^\n+|\n+$/g, '');
+          if (block.trim()) {
+            nested.push(
+              '\n' + block.split('\n').map((l) => (l ? column + l : l)).join('\n'),
+            );
+          }
+        } else if (nested.length > 0) {
+          // Loose text after a block is a paragraph of its own.
+          const text = inlineOnly(walk(child, indent));
+          if (text) nested.push(`\n${column}${text}`);
         } else {
           inline += walk(child, indent);
         }
       }
 
       const text = inlineOnly(inline);
-      lines.push(indent + marker + (opensWithText(li) ? guardMarkdownLineStart(text) : text));
+      if (!text && nested[0]?.startsWith(`\n${column}`)) {
+        // An item that opens with a block: the block starts on the marker
+        // line, as an item cannot open with a blank line and go on.
+        lines.push(indent + marker + nested.shift()!.slice(column.length + 1));
+      } else {
+        lines.push(indent + marker + (opensWithText(li) ? guardMarkdownLineStart(text) : text));
+      }
       for (const block of nested) {
         const trimmed = block.replace(/\n+$/, '');
         if (trimmed) lines.push(trimmed);
@@ -738,7 +796,7 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
 
   function walk(node: Node, indent: string): string {
     if (node.nodeType === Node.TEXT_NODE) {
-      const text = literal(node.textContent ?? '');
+      const text = literal((node.textContent ?? '').replaceAll(SINGLE_SPACED, ''));
       // Text after a line break, or at the top of the body or a div, starts a
       // Markdown line: "# x" or "- x" typed there must stay text.
       const prev = node.previousSibling;
@@ -875,7 +933,17 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
         const inner = children().trim();
         if (!inner) return '\n';
         // A <p> holds no blocks, so only typed text can open it.
-        return `${tag === 'p' && opensWithText(el) ? guardMarkdownLineStart(inner) : inner}\n\n`;
+        const text = tag === 'p' && opensWithText(el) ? guardMarkdownLineStart(inner) : inner;
+        // Shift+Enter in Notesnook starts a single-spaced paragraph, which
+        // shows as the next line of the paragraph above it. It becomes a
+        // line break there: SINGLE_SPACED pulls it up when the text is done.
+        const prev = el.previousElementSibling;
+        const joins =
+          tag === 'p' &&
+          el.getAttribute('data-spacing') === 'single' &&
+          prev?.tagName === 'P' &&
+          !!prev.textContent?.trim();
+        return `${joins ? SINGLE_SPACED : ''}${text}\n\n`;
       }
 
       case 'ul':
@@ -911,7 +979,10 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
         // Notesnook writes a web clip as `<iframe src="<path> "width=... />`:
         // a space inside the src, and no end tag, so the parser reads the
         // rest of the note as the iframe's raw text. That text is parsed
-        // again, so the note does not end at its first web clip.
+        // again, so the note does not end at its first web clip. Every
+        // iframe in it is closed first: otherwise each later clip holds the
+        // rest again, and a note of many clips is parsed once per clip, one
+        // walk inside the other, until the stack runs out.
         const src = (el.getAttribute('src') ?? '').trim();
         const token = attachmentToken(ctx, src);
         let out = token
@@ -919,7 +990,8 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
           : src ? `\n[${src}](${src})\n\n` : '';
         const rest = tag === 'iframe' ? (el.textContent ?? '') : '';
         if (rest.trim()) {
-          const doc = new DOMParser().parseFromString(rest, 'text/html');
+          const closed = closeIframes(rest);
+          const doc = new DOMParser().parseFromString(closed, 'text/html');
           out += Array.from(doc.body.childNodes).map((c) => walk(c, indent)).join('');
         }
         return out;
@@ -950,6 +1022,10 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     .join('');
 
   return md
+    // A single-spaced paragraph joins the line above it, inside a list item
+    // or a quote too: the blank line (and its `>`) between them goes.
+    .replace(/\n(?:[ \t>]*\n)*([ \t>]*)\u0001/g, '\n$1')
+    .replaceAll(SINGLE_SPACED, '')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
@@ -1080,7 +1156,9 @@ function readMarkdownNote(text: string, rel: string, fileDate: Date | null): Raw
  *   [Sub3 Note Title](<./../Sub3-Note-Title.md> "Sub3 Note Title")
  */
 function rewriteMarkdownLinks(body: string, ctx: ConvCtx): string {
-  const LINK_RE = /(!?)\[([^\]]*)\]\(\s*<?([^)>]*?)>?(?:\s+"([^"]*)")?\s*\)/g;
+  // Bounded runs: with no `)` ahead, an unbounded href scanned to the end of
+  // the body from every `[`, which is quadratic on a crafted note.
+  const LINK_RE = /(!?)\[([^\]]{0,2000})\]\(\s*<?([^)>]{0,2000}?)>?(?:\s+"([^"]{0,2000})")?\s*\)/g;
 
   return body.replace(LINK_RE, (whole, bang: string, label: string, href: string) => {
     const target = href.trim();
@@ -1164,7 +1242,9 @@ async function parseZip(
   if (isBackupArchive(zip, file.name)) throw new Error(backupError());
 
   // Collect candidate paths so we can strip a wrapping folder if the user
-  // zipped the export directory rather than its contents.
+  // zipped the export directory rather than its contents. Only a folder
+  // named like the zip is a wrapper: Notesnook's own zip of one notebook's
+  // notes also holds a single top folder, and that one is the notebook.
   const allPaths: string[] = [];
   zip.forEach((path, entry) => {
     if (!entry.dir && !isJunkEntry(path)) allPaths.push(path);
@@ -1175,7 +1255,13 @@ async function parseZip(
   const firstSlash = allPaths[0]!.indexOf('/');
   if (firstSlash > 0) {
     const candidate = allPaths[0]!.slice(0, firstSlash + 1);
-    if (allPaths.every((p) => p.startsWith(candidate))) prefix = candidate;
+    const zipName = file.name.replace(/\.zip$/i, '').replace(/ \(?\d+\)?$/, '');
+    if (
+      candidate.slice(0, -1).toLowerCase() === zipName.toLowerCase() &&
+      allPaths.every((p) => p.startsWith(candidate))
+    ) {
+      prefix = candidate;
+    }
   }
 
   const htmlFiles: [string, JSZip.JSZipObject][] = [];
@@ -1272,6 +1358,7 @@ async function parseZip(
     noteLinks: 0,
     math: 0,
     callouts: 0,
+    bareLinks: 0,
   };
   const notes: ImportedNote[] = [];
 
@@ -1290,7 +1377,7 @@ async function parseZip(
     } else {
       body = rewriteMarkdownLinks(raw.mdBody, ctx).trim();
     }
-    body = linkifyMarkdown(body);
+    body = linkifyCounting(body, flags);
 
     const fallback =
       raw.fileDate && !Number.isNaN(raw.fileDate.getTime())
@@ -1370,10 +1457,6 @@ export async function parseNotesnook(
     attachmentCount,
     tooLarge,
   } = await parseZip(file, onProgress);
-
-  const uniqueTags = new Set(notes.flatMap((n) => n.tags));
-  const emptyNotes = notes.filter((n) => !n.title.trim() && !n.body.trim()).length;
-  const untaggedNotes = notes.filter((n) => n.tags.length === 0).length;
 
   const warnings: string[] = [];
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
@@ -1457,18 +1540,12 @@ export async function parseNotesnook(
       i18n.t('importLog:shared.foundAttachments', { count: attachmentCount })
     );
   }
-  transforms.push(i18n.t('importLog:shared.linkifiedBare'));
+  if (flags.bareLinks > 0) transforms.push(i18n.t('importLog:shared.linkifiedBare'));
 
   return {
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes,
-      untaggedNotes,
-      uniqueTags: uniqueTags.size,
-    },
     source: 'notesnook',
     blobBytes,
     blobs: blobs.size > 0 ? blobs : undefined,
@@ -1502,6 +1579,28 @@ export function htmlNoteToMarkdown(html: string): string {
       noteLinks: 0,
       math: 0,
       callouts: 0,
+      bareLinks: 0,
     },
   });
+}
+
+/**
+ * Every `<iframe ...>` of `text` followed by its end tag, found with one
+ * forward scan: the next `<iframe`, then the next `>`. A pattern that reads
+ * the attributes runs to the end of the text from every tag that never
+ * closes, and a bounded one leaves a tag with longer attributes open, so
+ * its rest was parsed again inside the walk (beta #199 item 7).
+ */
+function closeIframes(text: string): string {
+  const open = /<iframe\b/gi;
+  let out = '';
+  let pos = 0;
+  for (let m = open.exec(text); m; m = open.exec(text)) {
+    const end = text.indexOf('>', m.index);
+    if (end < 0) break;
+    out += text.slice(pos, end + 1) + '</iframe>';
+    pos = end + 1;
+    open.lastIndex = pos;
+  }
+  return out + text.slice(pos);
 }

@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "h",
+    "minutesSuffix": "min",
+    "hoursMinutes": "{{h}}h {{m}}min",
     "bpm": "bpm",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -142,6 +144,7 @@
     "takenCount_one": "{{count}} assunto",
     "takenCount_other": "{{count}} assunti",
     "namePlaceholder": "Nome del farmaco",
+    "nameMissing": "Dai un nome al farmaco.",
     "dosagePlaceholder": "Dosaggio (es. 50mg)",
     "editMedication": "Modifica farmaco",
     "removeMedication": "Rimuovi farmaco",
@@ -250,12 +253,18 @@
     "yes": "Sì",
     "no": "No",
     "unknownType": "Questo tracker richiede una versione più recente dell'app.",
+    "counterOf": "di {{limit}}",
+    "counterToday": "utilizzi oggi",
+    "counterReached": "Hai raggiunto il limite di {{limit}}.",
+    "counterStartAgain": "Ricomincia {{name}} da 0",
+    "counterStartAgainConfirm": "Ricominciare?",
     "typeLabels": {
       "scale10": "Scala (0-10)",
       "scale5": "Scala (0-5)",
       "slider100": "Punteggio (0-100)",
       "number": "Numero",
       "pair": "Due numeri",
+      "counter": "Contatore",
       "yesno": "Sì / No"
     }
   },
@@ -271,7 +280,7 @@
     "medicationCard": "Scheda dei farmaci",
     "medicationCardHelp": "\"Hai preso i tuoi farmaci?\" su questo dispositivo, solo nei giorni in cui è prevista una dose.",
     "customHelp": "Tracker a cui dai tu il nome: una scala, un numero o un sì o no. Fino a {{max}}.",
-    "customHelpPair": "Tracker a cui dai tu il nome: una scala, un numero, due numeri o un sì o no. Fino a {{max}}.",
+    "customHelpPair": "Tracker a cui dai tu il nome: una scala, un numero, due numeri, un contatore o un sì o no. Fino a {{max}}.",
     "yourCustomTrackers": "I tuoi tracker personalizzati",
     "categoryMoodMind": "Umore e mente",
     "categoryBodyHealth": "Corpo e salute",
@@ -312,7 +321,10 @@
     "pairFirstPlaceholder": "Sistolica",
     "pairSecondPlaceholder": "Diastolica",
     "pairUnit": "Unità (facoltativa)",
-    "pairWaiting": "Salvato non appena inserisci il primo numero."
+    "pairWaiting": "Salvato non appena inserisci il primo numero.",
+    "nameMissing": "Dai un nome al tracker.",
+    "counterLimit": "Limite (facoltativo)",
+    "counterHelp": "Somma i tuoi utilizzi nel corso dei giorni. Imposta un limite, ad esempio 30 per una lametta, e ricomincia quando lo raggiungi."
   },
   "factors": {
     "prompt": "Cosa ha fatto parte della tua giornata?",
@@ -402,5 +414,6 @@
   "flow": {
     "finish": "Termina",
     "step": "Tracker {{n}} di {{total}}"
-  }
+  },
+  "showEveryDay": "Mostra ogni giorno con questo tracker"
 }

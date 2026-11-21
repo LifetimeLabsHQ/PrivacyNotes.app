@@ -35,6 +35,7 @@
     "title": "クラブへようこそ",
     "proLine": "<brand/> Pro、{{price}} ドルの1回払い。ずっとあなたのものです。",
     "storageLine": "<brand/> +{{gb}} GB のストレージ、年額 {{price}} ドル。",
+    "storagePayerNote": "アカウントの所有者は、あとからパッケージを変更できます。差額はこのカードで支払われます。",
     "benefitDevices": "デバイス数は無制限",
     "benefitDevicesSub": "スマホ、タブレット、ノートPCをすべて同期",
     "benefitStorage": "500 MB のストレージ",
@@ -63,7 +64,7 @@
     "openingBody": "Paddleのチェックアウトウィンドウが表示されるはずです。表示されない場合は、ブラウザがポップアップをブロックした可能性があります。このページを再読み込みして再試行してください。"
   },
   "cryptoCheckout": {
-    "coins": "次のページで、Bitcoin、Ethereum、Lightning、USDC、USDTから選びます。このページはBlockBeeが運営しており、名前もメールアドレスも求められません。暗号資産の支払いは、そのブロックチェーン上で公開されます。",
+    "coins": "次のページで、Bitcoin、Ethereum、Lightning、USDC、USDT、Litecoin、Bitcoin Cash、Dogecoin、TONから選びます。このページはBlockBeeが運営しており、名前もメールアドレスも求められません。暗号資産の支払いは、そのブロックチェーン上で公開されます。",
     "consent": "今すぐProを開始します。暗号資産の支払いは取り消せないこと、そして14日間の撤回権を放棄することを理解しています。",
     "consentNeeded": "続けるには、上のチェックボックスにチェックを入れてください。",
     "loadingTitle": "注文を確認しています...",

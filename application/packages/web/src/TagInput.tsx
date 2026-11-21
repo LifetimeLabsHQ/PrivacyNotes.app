@@ -47,6 +47,8 @@ type Props = {
    * covering them.
    */
   leading?: ReactNode;
+  /** Faint chips after the tags that a tap applies (the tag and folder suggestions of Smart connections). */
+  offers?: ReactNode;
   /** A click on a tag's name filters the list by that tag, as the sidebar
    *  does. The remove button beside it keeps its own job. Spec: issue #333. */
   onSelectTag?: (tag: string) => void;
@@ -63,7 +65,7 @@ export type TagInputHandle = {
 const MAX_SUGGESTIONS = 5;
 
 export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
-  { tags, onChange, allTags, onTabOut, trailing, leading, onSelectTag, readOnly = false },
+  { tags, onChange, allTags, onTabOut, trailing, leading, offers, onSelectTag, readOnly = false },
   ref
 ) {
   const { t } = useTranslation('common');
@@ -440,6 +442,7 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
             </button>}
           </span>
         ))}
+        {!readOnly && offers}
         {!readOnly && <input
           ref={inputRef}
           tabIndex={isMobile ? -1 : undefined}

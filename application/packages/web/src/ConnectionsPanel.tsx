@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowCounterClockwise, ArrowsIn, ArrowsOut, Asterisk, CaretDown, CaretRight, CursorText, EyeSlash, FileDashed, Graph, Hash, Intersect, LinkSimple, LockSimple, Sparkle, TextAa, X } from './icons';
+import { ArrowCounterClockwise, At, ArrowsIn, ArrowsOut, Asterisk, CaretDown, CaretRight, CursorText, EyeSlash, FileDashed, Graph, Hash, Intersect, LinkSimple, LockSimple, Sparkle, TextAa, X } from './icons';
 import { IconButton, Snackbar } from './ui';
 import type { LocalNote } from './db';
 import { EditorSlotPanel, SLOT_BADGE, SLOT_PANEL_ROW } from './EditorSlotPill';
@@ -15,6 +15,8 @@ import { closeMeaningDoor, laterMeaningDoor, meaningDoorClosed, onDeviceAiShown,
 /** What the panel lists for the open item (ConnectionsPill works it out). */
 export type ConnectionLists = {
   from: LocalNote[];
+  /** The open item is a file: `from` lists the notes that use it, titled "Used in" (#852). */
+  usedIn: boolean;
   to: LocalNote[];
   missing: string[];
   hidden: number;
@@ -29,9 +31,9 @@ export type ConnectionLists = {
  * text beside it (a title, the shared words, a tag) and the whole sentence
  * ("Both link to X") for the tooltip and screen readers.
  */
-export type RelatedWhy = { kind: 'words' | 'link' | 'tag' | 'meaning'; text: string; sentence: string };
+export type RelatedWhy = { kind: 'words' | 'link' | 'tag' | 'meaning' | 'mention'; text: string; sentence: string };
 
-const WHY_ICON = { words: TextAa, link: LinkSimple, tag: Hash, meaning: Sparkle } as const;
+const WHY_ICON = { words: TextAa, link: LinkSimple, tag: Hash, meaning: Sparkle, mention: At } as const;
 
 /**
  * One item in the panel, drawn the way the list draws it: its own icon when
@@ -279,7 +281,7 @@ export function ConnectionsPanel({
       closeKeys={keyText('connections')}
       onClose={onClose}
     >
-      {group(t('connections.linkedFrom'), ArrowsIn, inTone, lists.from.length, hasIn && (
+      {group(lists.usedIn ? t('connections.usedIn') : t('connections.linkedFrom'), ArrowsIn, inTone, lists.from.length, hasIn && (
         <>
           <ul>{lists.from.map(row)}</ul>
           {lists.hidden > 0 && (

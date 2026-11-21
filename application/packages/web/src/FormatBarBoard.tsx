@@ -11,6 +11,7 @@ import { usePopoverPosition } from './usePopoverPosition';
 import {
   FORMAT_BAR,
   homeOf,
+  isSeparatorKey,
   type BarModel,
   type FormatBarHome,
   type FormatBarRefusal,
@@ -19,6 +20,11 @@ import {
 import { FORMAT_BAR_LOOK } from './formatBarItems';
 import type { Icon as IconType } from './icons';
 import type { BarPosition } from './editorPrefs';
+
+/** The board's one "Toolbar divider" tile in the hidden row. Not a divider
+ *  of the bar (those start at 1): each placement makes a new one
+ *  (`newSeparatorKey`), so a person can add as many as they like. */
+const DIVIDER_TILE = 'separator0';
 
 export type FormatBarBoardProps = {
   layout: ResolvedFormatBar;
@@ -104,7 +110,9 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
   const menuRef = useRef<HTMLDivElement>(null);
   const menuPos = usePopoverPosition(menuKey !== null, anchorRef, menuRef);
 
-  const label = (key: string) => t(look[key]!.label);
+  // Every divider, of any number, wears the one divider look.
+  const lookOf = (key: string) => look[key] ?? look[isSeparatorKey(key) ? 'separator' : key]!;
+  const label = (key: string) => t(lookOf(key).label);
   const itemButton = (key: string) =>
     rootRef.current?.querySelector<HTMLButtonElement>(`[data-key="${key}"][data-item]`) ?? null;
 
@@ -145,7 +153,8 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
     return () => document.removeEventListener('pointerdown', outside);
   }, [menuKey]);
 
-  /** Apply a move, or say why it is refused. */
+  /** Apply a move, or say why it is refused. The divider tile places a new
+   *  divider each time, numbered against the freshest arrangement. */
   function moveTo(key: string, to: FormatBarHome, beforeKey: string | null = null) {
     const reason = refusalFor(layout, key, to);
     if (reason) {
@@ -153,6 +162,10 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
       return;
     }
     setRefusal(null);
+    if (key === DIVIDER_TILE) {
+      if (to === 'bar' || to === 'end') onUpdate((current) => placeItem(current, model.newSeparatorKey(current), to, beforeKey));
+      return;
+    }
     onUpdate((current) => placeItem(current, key, to, beforeKey));
   }
 
@@ -300,7 +313,7 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
 
   function item(key: string, part: Part): ReactNode {
     const def = formatBarItem(key)!;
-    const { Icon } = look[key]!;
+    const { Icon } = lookOf(key);
     const home = homeOf(layout, key);
     const open = menuKey === key;
     const name = label(key);
@@ -551,7 +564,9 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
             <ul className={`flex flex-wrap items-center min-h-[2.625rem] [@media(hover:none)]:min-h-[3.125rem] rounded-lg border border-dashed px-1.5 py-1 transition-colors ${
               target?.part === 'hidden' ? 'border-accent bg-accent/10' : 'border-divider'
             }`}>
-              {layout.hidden.map((k) => item(k, 'hidden'))}
+              {/* The divider tile first: it never runs out, and a divider
+                  taken off the bar goes back into it. */}
+              {[DIVIDER_TILE, ...layout.hidden].map((k) => item(k, 'hidden'))}
             </ul>
           </section>
         </section>
@@ -599,7 +614,7 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
           style={{ top: menuPos?.top ?? 0, left: menuPos?.left ?? 0, visibility: menuPos ? 'visible' : 'hidden' }}
         >
           <div className="flex items-center gap-2 px-3 pt-1.5 pb-1 text-small font-semibold text-pn-muted" aria-hidden="true">
-            {(() => { const { Icon } = look[menuKey]!; return <Icon />; })()}
+            {(() => { const { Icon } = lookOf(menuKey); return <Icon />; })()}
             <span className="truncate">{label(menuKey)}</span>
           </div>
           {ordered && (
@@ -615,7 +630,9 @@ export function FormatBarBoard({ layout, onUpdate, position = 'top', onPositionC
               <div className="my-1 h-px bg-divider" aria-hidden="true" />
             </>
           )}
-          {(['bar', 'menu', 'attachMenu', 'hidden'] as const).filter((home) => (home !== 'attachMenu' || menuItem.attachAllowed) && (menus || home === 'bar' || home === 'hidden')).map((home) => {
+          {(['bar', 'menu', 'attachMenu', 'hidden'] as const).filter((home) => (home !== 'attachMenu' || menuItem.attachAllowed) && (menus || home === 'bar' || home === 'hidden')
+            // A divider lives on the bar or nowhere; the tile only places one.
+            && !(isSeparatorKey(menuKey) && home === 'menu') && !(menuKey === DIVIDER_TILE && home !== 'bar')).map((home) => {
             const blocked = home === 'menu' && !menuItem.menuAllowed;
             const current = menuHome === home || (home === 'bar' && menuHome === 'end');
             return (

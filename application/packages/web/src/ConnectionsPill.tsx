@@ -6,14 +6,18 @@ import { EditorSlotPill } from './EditorSlotPill';
 import { registerEditorCommand } from './editorCommands';
 import { keyText } from './shortcutMatch';
 import { deriveDisplayTitle } from './notesViewUtils';
-import { linkResolver, linksInBody, type LinkIndex } from './connectionsIndex';
+import { linkResolver, linksInBody, type FileUse, type LinkIndex } from './connectionsIndex';
 import type { ConnectionLists, LinkActions, MeaningDoor, RelatedWhy } from './ConnectionsPanel';
 import type { RelatedLinks, RelatedReason } from './relatedNotes';
 import { relatedModule, suggestionPairKey } from './relatedLoader';
 import { listOf } from './scheduleText';
 import { meaningHits } from './onDeviceAi';
 import { hiddenPairs } from './dismissedSuggestions';
+import { buildMentionIndex, mentionsIn } from './mentions';
 import { hasStructuredBody, noteLinkName } from './notesViewUtils';
+
+/** At most this many items named in the note lead the suggestions. */
+const MAX_MENTIONS = 5;
 
 const ConnectionsPanel = lazy(() => import('./ConnectionsPanel').then((m) => ({ default: m.ConnectionsPanel })));
 
@@ -30,6 +34,7 @@ export function ConnectionsPill({
   note,
   notes,
   index,
+  fileUse,
   relatedIndexVersion,
   linkSuggestions,
   dismissedSuggestions,
@@ -44,10 +49,16 @@ export function ConnectionsPill({
   open,
   onOpenChange,
   tabIndex,
+  idle = false,
 }: {
   note: LocalNote;
   notes: readonly LocalNote[];
   index: LinkIndex;
+  /**
+   * For a file item, the notes that use it (#852): those that hold its file
+   * and those that link to it. The panel lists them as "Used in".
+   */
+  fileUse?: FileUse;
   /** Bumps after each write to the related-notes index. */
   relatedIndexVersion: number;
   /** The Link suggestions setting: off, no related notes and the old pill. */
@@ -73,12 +84,24 @@ export function ConnectionsPill({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tabIndex?: number;
+  /** The other side of two items side by side: the key stays with the
+   *  focused side. Spec: docs/internal/plans/side-by-side-notes.md (section 6) */
+  idle?: boolean;
 }) {
   const { t } = useTranslation('notes');
 
   const byId = useMemo(() => new Map(notes.map((n) => [n.id, n])), [notes]);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- isNoteLocked changes identity every render; the names it gates follow `notes`.
   const resolver = useMemo(() => linkResolver(notes, (n) => noteLinkName(n, isNoteLocked(n))), [notes]);
+  // The items a note can suggest by name (mentions.ts): every item that is
+  // not markdown (a contact, a bookmark, a vault item, a drawing), never one
+  // behind a PIN. Only the name is read.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- isNoteLocked changes identity every render; the names it gates follow `notes`.
+  const mentionIndex = useMemo(() => buildMentionIndex(
+    notes
+      .filter((n) => hasStructuredBody(n.type) && n.pinProtected !== 1 && !isNoteLocked(n))
+      .map((n) => ({ id: n.id, name: noteLinkName(n) })),
+  ), [notes]);
   const lists = useMemo((): ConnectionLists => {
     const pick = (ids: readonly string[] | undefined) =>
       (ids ?? [])
@@ -96,8 +119,8 @@ export function ConnectionsPill({
     // reach any item.
     const dismissed = hiddenPairs(dismissedSuggestions);
     const mayList = (n: LocalNote | undefined): n is LocalNote =>
-      !!n && n.trashed === 0 && !hasStructuredBody(n.type) && n.pinProtected !== 1 && !isNoteLocked(n);
-    const isListable = (id: string) => mayList(byId.get(id)) && !dismissed.has(suggestionPairKey(note.id, id));
+      !!n && n.trashed === 0 && n.pinProtected !== 1 && !isNoteLocked(n);
+    const isListable = (id: string) => { const n = byId.get(id); return mayList(n) && !hasStructuredBody(n.type) && !dismissed.has(suggestionPairKey(note.id, id)); };
     const titleOf = (id: string) => {
       const n = byId.get(id);
       return n ? deriveDisplayTitle(n, isNoteLocked(n)) : '';
@@ -126,14 +149,26 @@ export function ConnectionsPill({
     // The ranking module loads with the first index build; until then, none.
     const ranking = relatedModule();
     const suggests = linkSuggestions && !hasStructuredBody(note.type) && !isNoteLocked(note);
+    // Items the note names come first: a name is the strongest reason. Then
+    // the ranking of notes (words, links, tags, meaning).
+    const mentioned = !ranking || !suggests
+      ? []
+      : mentionsIn(ranking.plainNoteText(liveNote), mentionIndex, new Set([note.id, ...out.ids]))
+        .filter((m) => !dismissed.has(suggestionPairKey(note.id, m.id)))
+        .slice(0, MAX_MENTIONS)
+        .map((m) => {
+          const sentence = t('connections.relatedMention', { name: m.name });
+          return { note: byId.get(m.id)!, why: { kind: 'mention' as const, text: sentence, sentence } };
+        });
     const related = !ranking || !suggests
       ? []
-      : ranking.relatedNotes(liveNote, links, isListable, (skip, limit) => meaningHits(liveNote, skip, limit)).map((hit) => ({ note: byId.get(hit.id)!, why: whyOf(hit.reason) }));
+      : [...mentioned, ...ranking.relatedNotes(liveNote, links, isListable, (skip, limit) => meaningHits(liveNote, skip, limit)).map((hit) => ({ note: byId.get(hit.id)!, why: whyOf(hit.reason) }))];
     return {
-      from: pick(index.incoming.get(note.id)),
+      from: pick(fileUse ? fileUse.ids : index.incoming.get(note.id)),
+      usedIn: !!fileUse,
       to: pick(out.ids),
       missing: out.missing,
-      hidden: index.protectedIncoming.get(note.id) ?? 0,
+      hidden: fileUse ? fileUse.hidden : index.protectedIncoming.get(note.id) ?? 0,
       related,
       // The pairs of this note marked "Not related", so Restore can bring one back.
       notRelated: suggests
@@ -148,16 +183,16 @@ export function ConnectionsPill({
     // isNoteLocked changes identity every render; the titles it gates follow `notes`.
     // The open note's own text is read through `note`, so a save re-scores it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, byId, resolver, note, liveBody, relatedIndexVersion, linkSuggestions, dismissedSuggestions, t]);
+  }, [index, fileUse, byId, resolver, mentionIndex, note, liveBody, relatedIndexVersion, linkSuggestions, dismissedSuggestions, t]);
 
   const shown = lists.from.length + lists.to.length + lists.missing.length + lists.related.length + lists.notRelated.length;
   const visible = shown + lists.hidden > 0;
 
   // The key (Mod+Shift+X) runs this toggle, and only while the pill is on screen.
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || idle) return;
     return registerEditorCommand('connections', () => onOpenChange(!open));
-  }, [visible, open, onOpenChange]);
+  }, [visible, idle, open, onOpenChange]);
 
   if (!visible) return null;
 

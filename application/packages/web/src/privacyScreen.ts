@@ -26,7 +26,7 @@
  * Spec: docs/internal/specs/app-switcher-privacy-screen.md (section 14)
  */
 
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { detectPlatform, type Platform } from './devices';
 import { createListeners } from './listeners';
 
@@ -71,9 +71,11 @@ export function privacyPush(
   blockCapture: boolean,
   platform: Platform,
   build: string,
+  /** The recovery phrase or its sign-in QR is on screen (useSecretOnScreen). */
+  secretShown = false,
 ): { cover: boolean; block: boolean } {
-  const block = blockCapture && captureBlockSupported(build);
-  return { cover: shouldArmPrivacyScreen(appLockEnabled || block, platform), block };
+  const block = (blockCapture || secretShown) && captureBlockSupported(build);
+  return { cover: shouldArmPrivacyScreen(appLockEnabled || block || secretShown, platform), block };
 }
 
 const CAPTURE_KEY = 'privacynotes.blockCapture';
@@ -95,6 +97,9 @@ function getCaptureBlock(): boolean {
 /** The app lock value of the last push, so the capture switch can re-push without reading settings. */
 let lastLock = false;
 
+/** How many views show the recovery phrase or its QR right now. */
+let secretsShown = 0;
+
 /**
  * What was last handed to the native side. The push runs on every settings
  * write, which is far more often than the answer changes, and an unchanged
@@ -109,7 +114,7 @@ let pushedBlock: boolean | null = null;
 export function applyPrivacyScreen(appLockEnabled: boolean): void {
   lastLock = appLockEnabled;
   const platform = detectPlatform();
-  const next = privacyPush(appLockEnabled, getCaptureBlock(), platform, __PN_BUILD_PLATFORM__);
+  const next = privacyPush(appLockEnabled, getCaptureBlock(), platform, __PN_BUILD_PLATFORM__, secretsShown > 0);
   if (next.cover !== pushedCover) {
     pushedCover = next.cover;
     pushCover(next.cover, platform);
@@ -161,6 +166,26 @@ export function setCaptureBlock(on: boolean): void {
   }
   applyPrivacyScreen(lastLock);
   notify();
+}
+
+/**
+ * While `shown`, the window stays out of screenshots, recordings and screen
+ * sharing, and a phone covers its app switcher card, whatever the two
+ * switches say: the recovery phrase and its sign-in QR open the vault, and a
+ * capture of them is a copy of the key (beta.privacynotes.app #213 item 8).
+ * Put back as the switches say when the view hides them or goes.
+ * Spec: docs/internal/specs/app-switcher-privacy-screen.md (section 14)
+ */
+export function useSecretOnScreen(shown: boolean): void {
+  useEffect(() => {
+    if (!shown) return;
+    secretsShown += 1;
+    applyPrivacyScreen(lastLock);
+    return () => {
+      secretsShown -= 1;
+      applyPrivacyScreen(lastLock);
+    };
+  }, [shown]);
 }
 
 export function useCaptureBlock(): boolean {

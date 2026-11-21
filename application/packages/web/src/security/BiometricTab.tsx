@@ -5,12 +5,16 @@ import { ConfirmModal } from '../ConfirmModal';
 import { Button, Callout, FeedbackButton, Select } from '../ui';
 import {
   answerBindingOffer,
+  biometricKeyInSoftware,
   buildPinWrap,
   canSetUpBiometricAgain,
   canUseBiometric,
   enrollBiometric,
   hasBiometricCredential,
   hasPinWrappedPhrase,
+  localPinWrapOpens,
+  localPinWrapSealed,
+  pinWrapIsPasscode,
   isBiometricKeyBound,
   onWrappedBlobChange,
   removeBiometricCredential,
@@ -18,10 +22,12 @@ import {
   setUpBiometricAgain,
   noPrfHere,
   shouldOfferBinding,
+  sealedLocalPinWrap,
   storeBuiltPinWrap,
   unlockWithBiometricDetailed,
 } from '../biometric';
 import {
+  holdPinSurface,
   clearPinFailures,
   getPinLockoutState,
   hasPin,
@@ -39,7 +45,8 @@ import { ROW_TITLE, RowTitle, SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HEL
 import { Switch } from '../Switch';
 import { isTrustedDevice } from '../trustStorage';
 import { isDemoMode } from '../demo';
-import { persistStoredPhrase } from '../phraseAtRest';
+import { inNativeShell, persistStoredPhrase } from '../phraseAtRest';
+import { dropLocalPinWrapIfNotKept } from '../pinRecovery';
 import type { UserSettings } from '../userSettings';
 import { detectPlatform } from '../devices';
 import { captureBlockSupported, setCaptureBlock, shouldArmPrivacyScreen, useCaptureBlock } from '../privacyScreen';
@@ -51,6 +58,19 @@ import { HelpChip } from '../HelpChip';
  * toggle, then enroll/disable the WebAuthn platform authenticator
  * (Touch ID, Face ID, Windows Hello).
  */
+/** Which sentence names a bound enrollment's key. A browser ties it to a
+ *  passkey; the Windows app to Windows Hello, which keeps the key in the TPM
+ *  only on a PC that has one, so it promises no chip, and says so where
+ *  Windows did not confirm a TPM for the key (`software`); the other apps to
+ *  the device's secure hardware.
+ *  Spec: docs/public/THREAT_MODEL.md (Local phrase-at-rest: biometric and PIN wrapping),
+ *  docs/internal/plans/hello-tpm-status.md (section 3.3) */
+export function boundStatusKey(platform: string, build: string, software = false): string {
+  if (platform === 'web') return 'biometricTab.boundStatus';
+  if (build !== 'windows') return 'biometricTab.boundStatusNative';
+  return software ? 'biometricTab.boundStatusWindowsSoftware' : 'biometricTab.boundStatusWindows';
+}
+
 /** True only where a backgrounded app leaves a picture behind. */
 const COVERS_ON_SWITCH = shouldArmPrivacyScreen(true, detectPlatform());
 /** True only where the operating system lets an app stay out of a capture. */
@@ -116,11 +136,21 @@ export function BiometricTab({
     answerBindingOffer();
     setOfferBind(false);
   }
+  // Windows Hello keeps the key in software on a PC with no TPM.
+  const [inSoftware, setInSoftware] = useState(false);
+  useEffect(() => {
+    let live = true;
+    void biometricKeyInSoftware(__PN_BUILD_PLATFORM__).then((answer) => { if (live) setInSoftware(answer); });
+    return () => { live = false; };
+  }, [bound]);
   function readBinding() {
     setBound(isBiometricKeyBound());
     setCanAgain(canSetUpBiometricAgain());
     setCannotBind(noPrfHere());
   }
+  // A PIN screen holding a proof of the secret: a held PIN rehash waits
+  // until it closes (pin-wrap-hardening.md section 3).
+  useEffect(() => holdPinSurface(), []);
   // Another tab can enroll, set up again or remove; this one follows.
   useEffect(() => onWrappedBlobChange(() => {
     setEnrolled(hasBiometricCredential());
@@ -146,6 +176,13 @@ export function BiometricTab({
   // the switch shows; the PIN window works only once this device has a PIN.
   const appLockOn = lockReady && userSettings.appLockEnabled;
   const pinSet = hasPin();
+  // Turning the lock on needs the PIN too, with or without a fingerprint: the
+  // PIN wrap it builds is what reaches the account's other devices, and a lock
+  // armed with a fingerprint alone leaves their phrase at rest. A lock already
+  // on keeps its switch, so it can always be turned off.
+  const armReady = pinSet || hasPinWrappedPhrase();
+  // A lock a fingerprint alone armed before this rule: the PIN adds the wrap.
+  const fingerprintOnlyLock = appLockOn && enrolled && pinSet && trusted && !hasPinWrappedPhrase();
   const appTimerId = useId();
   const pinTimerId = useId();
   const timeoutOptions = TIMEOUT_OPTIONS.map((opt) => (
@@ -173,18 +210,32 @@ export function BiometricTab({
       t('common:actions.cancel'),
     );
     if (result.ok) {
-      // Biometric wrap is the primary; PIN wrap (if a PIN is set) is
-      // created when the user enables app lock and enters their PIN.
-      removeStoredPhrase();
+      // The fingerprint is a door of this device. The lock goes on only with
+      // the PIN as well: with a PIN here the confirm below builds
+      // the PIN wrap, takes the phrase off and arms the lock; with none the
+      // setup card asks for one, and the phrase stays at rest until then.
       setEnrolled(true);
       readBinding();
-      onSettingsChange({ ...userSettings, appLockEnabled: true }, userSettings);
+      if (!hasPinWrappedPhrase()) {
+        // A PIN here: its confirm builds the wrap, also under a lock that is
+        // already on with no wrap. No PIN: a flag a first pull copied stays
+        // no lock until the PIN exists, so the switch says so.
+        if (hasPin()) setPinConfirm(true);
+        else if (userSettings.appLockEnabled) onSettingsChange({ ...userSettings, appLockEnabled: false }, userSettings);
+      }
       setSuccessFlash(true);
       setTimeout(() => setSuccessFlash(false), 2000);
     } else if (result.reason === 'changed') {
       // Another tab enrolled meanwhile; this one follows it and says nothing.
       setEnrolled(hasBiometricCredential());
       readBinding();
+    } else if (result.reason === 'no_prf') {
+      // The passkey cannot make the key, so nothing was stored (#842).
+      setError(t('biometricTab.noPrfRefused'));
+    } else if (result.reason === 'unsupported') {
+      // No secure hardware key here, or none just now (the shell also answers
+      // this during a biometry lockout), so the button stays (#842).
+      setError(t('biometricTab.notAvailable'));
     } else {
       setError(result.message);
     }
@@ -214,7 +265,9 @@ export function BiometricTab({
     // and the app lock goes with it. The phrase goes back at rest first, and
     // the fingerprint and the flag come off only once it reads back: a write
     // the store refused leaves both where they were.
-    const lastDoor = !hasPinWrappedPhrase();
+    // A PIN wrap sealed under a device key that no longer opens it is no door
+    // (pin-wrap-hardening.md section 5.4, C2-1).
+    const lastDoor = !hasPinWrappedPhrase() || !(await localPinWrapOpens());
     setError(null);
     // The fingerprint that turned the lock on turns it off. An open app alone
     // is not enough: removing the last door puts the phrase back at rest, and
@@ -292,13 +345,26 @@ export function BiometricTab({
     // account's, with no await in between: a wrap under a secret replaced
     // meanwhile would overwrite the newer wrap another tab already stored.
     const blob = await buildPinWrap(phrase, candidate);
+    // This device's copy, sealed under the device key in the apps before the
+    // last check, so the wrap never lands plain (pinWrapSeal.ts).
+    const local = await sealedLocalPinWrap(blob);
     if (pinCredentialStamp() !== stamp) {
       setPinConfirmValue('');
       setPinConfirmBusy(false);
       pinConfirmRef.current?.clear();
       return;
     }
-    storeBuiltPinWrap(blob, startedAt);
+    try {
+      storeBuiltPinWrap(blob, startedAt, local);
+    } catch {
+      // A store that refused the wrap, or a sign-out meanwhile: nothing was
+      // stripped or armed, and the confirm says so rather than spin.
+      setPinConfirmError(t('pinTab.changeNotSaved'));
+      setPinConfirmValue('');
+      setPinConfirmBusy(false);
+      pinConfirmRef.current?.clear();
+      return;
+    }
     removeStoredPhrase();
     // The user proved the PIN seconds ago - no immediate re-prompt.
     markPinUnlocked();
@@ -318,7 +384,7 @@ export function BiometricTab({
     // Arming a lock with no door behind it strips the phrase and leaves the
     // twelve words as the only way back in. The disabled control above says
     // so; this says it where the write happens.
-    if (next && !lockReady) return;
+    if (next && !armReady) return;
     if (!next) {
       // Arming the lock strips the phrase at rest, so a door is the only way
       // back into this device, and a door opens only through the lock
@@ -334,17 +400,28 @@ export function BiometricTab({
         return;
       }
       onSettingsChange({ ...userSettings, appLockEnabled: false }, userSettings);
+      // With the lock off and the phrase at rest this device keeps no lock
+      // copy of the PIN wrap; the account keeps it in the sealed settings,
+      // and arming again builds it from the PIN.
+      // Spec: docs/internal/plans/derived-keys-design.md (section 5.4, stage 2)
+      void dropLocalPinWrapIfNotKept(phrase);
       return;
     }
-    if (!enrolled && !hasPinWrappedPhrase()) {
-      // Existing PIN, no wrap yet: collect the PIN first (see the
-      // comment above). The setting commits inside the confirm.
+    // Asked again after the wait: a pass or the switch-off can take this
+    // device's lock copy off meanwhile, and the strip below must not run
+    // with no door behind it.
+    if (!hasPinWrappedPhrase() || !(await localPinWrapOpens()) || !hasPinWrappedPhrase()) {
+      // Existing PIN, no wrap yet, or one sealed under a device key that no
+      // longer opens it: collect the PIN first (see the comment above), which
+      // builds a wrap that opens. The setting commits inside the confirm. A
+      // fingerprint here does not stand in for it: the wrap is what the
+      // account's other devices lock with.
       setPinConfirm(true);
       return;
     }
-    // A wrap or a fingerprint is already here, so the lock has a door. The
-    // switch-off above put the phrase back at rest; arming takes it off again,
-    // or the lock screen would guard a device whose phrase is still on disk.
+    // A wrap is already here, so the lock has a door. The switch-off above
+    // put the phrase back at rest; arming takes it off again, or the lock
+    // screen would guard a device whose phrase is still on disk.
     removeStoredPhrase();
     onSettingsChange({ ...userSettings, appLockEnabled: true }, userSettings);
   }
@@ -388,7 +465,7 @@ export function BiometricTab({
           {enrolled ? t('pinTab.protectReason') : (
             <>
               {t('biometricTab.setupPin')}
-              {offerBiometric && <> {t('biometricTab.setupBiometric')}</>}
+              {offerBiometric && <> {t(detectPlatform() === 'web' ? 'biometricTab.setupBiometricWeb' : 'biometricTab.setupBiometric')}</>}
             </>
           )}
         </Callout>
@@ -435,8 +512,20 @@ export function BiometricTab({
               }
               checked={appLockOn}
               onChange={() => void handleAppLockToggle()}
-              disabled={!lockReady}
+              disabled={!lockReady || (!appLockOn && !armReady)}
             />
+            {/* A 4-digit PIN wrap on this device: a copy of its files gives the
+                PIN up to an offline search. Spec: docs/internal/plans/pin-wrap-hardening.md (section 5, C1) */}
+            {/* Shown with the lock off too in the apps, where the phrase sits
+                under the device key and the PIN wrap is the copy's only door;
+                not beside an unbound fingerprint, which opens with no secret;
+                and not where the wrap is sealed under the device key, which a
+                copy cannot search (pinWrapSeal.ts). */}
+            {(appLockOn || inNativeShell()) && hasPinWrappedPhrase() && !pinWrapIsPasscode() && !(enrolled && !bound) && !localPinWrapSealed() && (
+              <div className="mt-3">
+                <SettingsCallout>{t('biometricTab.pinWeakCopy')}</SettingsCallout>
+              </div>
+            )}
             {appLockOn && (
               <div data-setting="security.relockAfter" className="mt-3 space-y-1.5">
                 <label htmlFor={appTimerId}>
@@ -456,11 +545,30 @@ export function BiometricTab({
           </div>
         )}
 
+        {fingerprintOnlyLock && (
+          <div className="mt-3">
+            <SettingsCallout>
+              <p>{pinConfirmKind === 'passcode' ? t('biometricTab.fingerprintOnlyLockPasscode') : t('biometricTab.fingerprintOnlyLock')}</p>
+              {!pinConfirm && (
+                <div className="mt-2">
+                  <button type="button" onClick={() => setPinConfirm(true)} className={SETTINGS_BTN_PRIMARY}>
+                    <LockKey />
+                    {pinConfirmKind === 'passcode' ? t('biometricTab.fingerprintOnlyLockActionPasscode') : t('biometricTab.fingerprintOnlyLockAction')}
+                  </button>
+                </div>
+              )}
+            </SettingsCallout>
+          </div>
+        )}
+
         {pinConfirm && (
           <div className="rounded-md border border-divider bg-surface-1 p-3 space-y-3">
-            <p className={`${SETTINGS_HELP} leading-relaxed`}>
-              {pinConfirmKind === 'passcode' ? t('biometricTab.confirmPasscodeForLock') : t('biometricTab.confirmPinForLock')}
-            </p>
+            {/* A lock already on (a fingerprint alone armed it) has the line above. */}
+            {!appLockOn && (
+              <p className={`${SETTINGS_HELP} leading-relaxed`}>
+                {pinConfirmKind === 'passcode' ? t('biometricTab.confirmPasscodeForLock') : t('biometricTab.confirmPinForLock')}
+              </p>
+            )}
             {/* Same shape as the PIN tab's current-PIN step: eyebrow, compact
                 boxes, then the buttons. The keys live under pinTab because that
                 tab owns this wording; the control is the same control. */}
@@ -530,6 +638,10 @@ export function BiometricTab({
         <p className={`${SETTINGS_HELP} leading-relaxed`}>
           {t('biometricTab.reaskHint')}
         </p>
+        {/* Spec: docs/internal/specs/section-lock.md (section 10) */}
+        <p className={`${SETTINGS_HELP} leading-relaxed`}>
+          {t('biometricTab.sectionsHint')}
+        </p>
       </div>
 
       {/* Between the switch and the fingerprint buttons, the two controls
@@ -543,9 +655,10 @@ export function BiometricTab({
 
       {!(offerBiometric && !pinSet) && (
         <div className="pt-4 border-t border-divider space-y-2">
-          <SectionEyebrow icon={Fingerprint}>{t('biometricTab.biometricHeading')}</SectionEyebrow>
+          {/* In a browser the unlock is a WebAuthn passkey; the apps use secure hardware (biometric.ts). */}
+          <SectionEyebrow icon={Fingerprint}>{t(detectPlatform() === 'web' ? 'biometricTab.biometricHeadingWeb' : 'biometricTab.biometricHeading')}</SectionEyebrow>
           <p className={SETTINGS_HELP}>
-            {t('biometricTab.description')}
+            {t(detectPlatform() === 'web' ? 'biometricTab.descriptionWeb' : 'biometricTab.description')}
           </p>
         </div>
       )}
@@ -568,7 +681,7 @@ export function BiometricTab({
 
             {bound && (
               <p className={`${SETTINGS_HELP} leading-relaxed`}>
-                {t(detectPlatform() === 'web' ? 'biometricTab.boundStatus' : 'biometricTab.boundStatusNative')}
+                {t(boundStatusKey(detectPlatform(), __PN_BUILD_PLATFORM__, inSoftware))}
               </p>
             )}
             {/* Unbound, the wrap key sits in storage beside the phrase it opens:
@@ -577,7 +690,7 @@ export function BiometricTab({
                 browser's passkey gave no PRF, one paragraph says the cause,
                 the weakness and the fix; otherwise the weakness alone, with
                 the set-up-again offer below it. */}
-            {cannotBind ? (
+            {cannotBind && !bound ? (
               <SettingsCallout>{t('biometricTab.cannotBind')}</SettingsCallout>
             ) : !bound && (
               <SettingsCallout>{t('biometricTab.unboundWeaker')}</SettingsCallout>
@@ -669,7 +782,7 @@ export function BiometricTab({
           onConfirm={() => void doDisable()}
           onClose={() => setShowDisableConfirm(false)}
         >
-          {hasPinWrappedPhrase()
+          {hasPinWrappedPhrase() || !userSettings.appLockEnabled
             ? t('biometricTab.disableConfirmBody')
             : t('biometricTab.disableConfirmBodyAppLock')}
         </ConfirmModal>

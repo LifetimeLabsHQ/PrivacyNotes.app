@@ -7,7 +7,8 @@ import { detectPlatform } from './devices';
 import { RELEASES_ORIGIN } from './hosts';
 import { isUpdateSnoozed, snoozeUpdate } from './updateSnooze';
 import { setUpdateAvailable } from './updateAvailable';
-import { reportVersionFloor } from './versionFloor';
+import { knownVersionFloor, reportVersionFloor } from './versionFloor';
+import { fetchPolicy } from './policySignature';
 import { installedByStore } from './androidInstaller';
 
 /**
@@ -19,7 +20,10 @@ import { installedByStore } from './androidInstaller';
  *
  * Severity comes from the RELEASE, not from the channel. The manifest carries
  * `minVersion`, the oldest client we still tolerate, published from the tracked
- * packages/desktop/update-policy.json. Below it the toast is what it always
+ * packages/desktop/update-policy.json. This build takes the floor from its
+ * own signed file, android/update-policy.json (policySignature.ts), and not
+ * from the manifest, which is not signed and keeps its minVersion for older
+ * builds. The prompt follows the manifest. Below the floor the toast is what it always
  * was: no dismiss, no changelog, up until the user installs. At or above it the
  * update is ordinary, so it dismisses for 48h (updateSnooze.ts) and links the
  * changelog. Every release used to inherit the protocol-break treatment, which
@@ -41,17 +45,30 @@ const IS_DIRECT_APK =
   detectPlatform() === 'android' && import.meta.env.VITE_ANDROID_DIST === 'direct';
 
 const MANIFEST_URL = `${RELEASES_ORIGIN}/android/latest.json`;
+const POLICY_URL = `${RELEASES_ORIGIN}/android/update-policy.json`;
 const POLL_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6h; direct APK releases are infrequent
 const INITIAL_DELAY_MS = 20 * 1000;
 
 type AndroidManifest = {
   version: string;
   url: string;
-  /** Oldest tolerated client. Absent (older manifests) means nothing is forced. */
+  /** Oldest tolerated client, for older builds. This build sets it from the
+   *  signed floor it holds, never from the manifest. */
   minVersion?: string;
   /** APK download size, so the user can judge the cost before spending it. */
   sizeBytes?: number;
 };
+
+/** True when the manifest's download is on the releases host. The Download
+ *  button opens that address in the system browser, so a manifest that names
+ *  any other host is not ours to act on. */
+function onReleasesHost(url: string): boolean {
+  try {
+    return new URL(url).origin === RELEASES_ORIGIN;
+  } catch {
+    return false;
+  }
+}
 
 /** True when the running build is below the release floor. */
 function isRequired(m: AndroidManifest): boolean {
@@ -86,18 +103,31 @@ export function AndroidUpdateToast() {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
+    /** The floor, whether or not a newer APK exists, so the sync pause
+     *  (versionFloor.ts) always tracks the latest published floor. Only a
+     *  signed policy of this channel that names a floor changes it. */
+    async function checkFloor(): Promise<void> {
+      try {
+        const fetched = await fetchPolicy(POLICY_URL, 'android');
+        if (cancelled || !fetched?.signed) return;
+        const { minVersion } = fetched.policy;
+        if (typeof minVersion === 'string') reportVersionFloor(minVersion, fetched.issued);
+      } catch {
+        // Offline or blocked: keep whatever versionFloor.ts already holds.
+      }
+    }
+
     async function check(): Promise<void> {
       if (cancelled) return;
       lastCheckRef.current = Date.now();
+      await checkFloor();
       try {
         const res = await fetch(`${MANIFEST_URL}?t=${Date.now()}`, { cache: 'no-store' });
-        if (!res.ok) return;
-        const m = (await res.json()) as AndroidManifest;
-        if (cancelled || typeof m?.version !== 'string' || typeof m?.url !== 'string') return;
-        // The manifest is this channel's floor source whether or not a newer
-        // APK exists - report before the version early-return so the sync
-        // pause (versionFloor.ts) always tracks the latest published floor.
-        reportVersionFloor(typeof m.minVersion === 'string' ? m.minVersion : null);
+        if (cancelled || !res.ok) return;
+        const read = (await res.json()) as Partial<AndroidManifest>;
+        if (cancelled || typeof read?.version !== 'string' || typeof read.url !== 'string' || !onReleasesHost(read.url)) return;
+        // Required or not goes by the floor the app holds, not the manifest.
+        const m: AndroidManifest = { ...read, version: read.version, url: read.url, minVersion: knownVersionFloor() ?? undefined };
         // A store that carries this APK owns the update from here on: it
         // checks in the background and installs in place, because every
         // release carries the same signing certificate. Prompting anyway

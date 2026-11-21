@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { useTranslation } from 'react-i18next';
 import type { Editor as TipTapEditor } from '@tiptap/react';
 import type { Transaction } from '@tiptap/pm/state';
+import { openFoldsAt } from './editorFolds';
 import { BracketsSquare, CaretDown, Check, LinkSimple, ListBullets } from './icons';
 import { ContextMenu, useContextMenu } from './ContextMenu';
 import { shortcutUrl } from './noteShortcut';
@@ -91,6 +92,10 @@ type Props = {
   editor: TipTapEditor;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Brings a heading's element into view; by default it scrolls to the
+   *  top. The preview beside the Markdown view moves the text instead, and
+   *  the preview follows it (SourcePreviewPane.tsx). */
+  reveal?: (el: Element) => void;
 };
 
 /**
@@ -107,7 +112,7 @@ type Props = {
  *
  * Renders nothing when the note has no headings - there is nothing to outline.
  */
-export function OutlinePanel({ editor, open, onOpenChange }: Props) {
+export function OutlinePanel({ editor, open, onOpenChange, reveal }: Props) {
   const { t } = useTranslation('editor');
   const [headings, setHeadings] = useState<OutlineItem[]>(() => readHeadings(editor));
   const [activePos, setActivePos] = useState<number>(-1);
@@ -185,9 +190,13 @@ export function OutlinePanel({ editor, open, onOpenChange }: Props) {
 
   const jumpTo = useCallback((pos: number) => {
     if (editor.isDestroyed) return;
-    elementAt(editor, pos)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    // A heading inside a folded section is drawn first (editorFolds.ts).
+    openFoldsAt(editor.view, pos);
+    const el = elementAt(editor, pos);
+    if (el && reveal) reveal(el);
+    else el?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     setActivePos(pos);
-  }, [editor]);
+  }, [editor, reveal]);
 
   if (headings.length === 0) return null;
   const outline = foldOutline(headings, folded);

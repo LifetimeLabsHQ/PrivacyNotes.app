@@ -12,6 +12,7 @@
  * scoped hand-rolled renderer is less churn than pulling in marked / etc.
  */
 
+import DOMPurify, { type Config, type DOMPurify as DOMPurifyInstance } from 'dompurify';
 import { joinParagraphLinesHtml } from './paragraphLines';
 import { parseFenceInfo, parseFenceSize } from './codeFenceInfo';
 import { DOODLE_FENCE, looksLikeDoodle } from './doodle/doodleFence';
@@ -33,6 +34,7 @@ import { evaluateTable, formatFormulaValue, isFormulaText } from './tableFormula
 import { INLINE_ICON_RE, inlineIconId } from './editorIconSyntax';
 import { firstLetter, letterDirection, listNumerals, writesPersian } from './textDirection';
 import { escapeHtml } from './escapeHtml';
+import { nextFence } from './markdownFence';
 
 // ─── Callout types ──────────────────────────────────────────────────────
 //
@@ -101,15 +103,6 @@ function sanitizeAlign(input: string): string | null {
 }
 
 /**
- * Reject URL schemes that can execute script when clicked. Applies to
- * `<a href>` values specifically - burn notes render untrusted
- * sender-provided markdown, so we must neuter `javascript:`,
- * `vbscript:`, and any `data:` payload (which can be text/html).
- *
- * Accept same-origin paths, absolute http(s), mailto, tel, and
- * fragment links. Everything else collapses to `#`.
- */
-/**
  * Normalize a URL the way the browser's parser will, BEFORE deciding whether
  * it is safe. The parser strips leading C0 controls and spaces, and removes
  * ASCII tab, newline and carriage return from anywhere in the string.
@@ -127,16 +120,20 @@ function stripUrlControls(value: string): string {
   return value.replace(/[\u0000-\u001F\u007F]/g, '');
 }
 
-function sanitizeLinkHref(href: string): string {
+/**
+ * The link targets a rendered page may keep: http, https, mailto, tel and a
+ * `#fragment` (beta #157 part 1). Burn notes render untrusted sender-provided
+ * markdown, and an exported HTML file is opened from disk, where a target
+ * with no scheme (`//host/share`, `/etc/passwd`, a backslash path) resolves
+ * against `file:` and names a file or a network host. So anything else,
+ * `javascript:`, `data:`, `file:` and custom schemes included, is null and
+ * the caller writes the link text alone. Returns the cleaned target to emit.
+ */
+function sanitizeLinkHref(href: string): string | null {
   const cleaned = stripUrlControls(href).trim();
-  if (cleaned === '') return '#';
   const probe = cleaned.replace(/\s/g, '');
-  if (/^[a-z][a-z0-9+.-]*:/i.test(probe)) {
-    if (/^(https?|mailto|tel):/i.test(probe)) return cleaned;
-    return '#';
-  }
-  // No scheme - relative, root-relative, fragment, or query.
-  return cleaned;
+  if (/^(?:https?|mailto|tel):/i.test(probe) || probe.startsWith('#')) return cleaned;
+  return null;
 }
 
 /**
@@ -223,6 +220,60 @@ export function renderNoteBody(html: string, spacing: LineSpacing): string {
   return spacing === 'normal' ? html : joinParagraphLinesHtml(html);
 }
 
+/**
+ * A vault item's Notes box is a plain text field, so every blank line in it
+ * is one the person typed to see. Markdown folds a run of blank lines into
+ * one paragraph break; this keeps each blank line after the first as an
+ * empty line (`&nbsp;`, the editor's own empty paragraph), all in one
+ * paragraph between the two blocks. Fenced code keeps its lines as typed.
+ * A run inside a list (between two items, or before an indented line) stays
+ * as typed: an empty paragraph there would end the list, so a numbered list
+ * would count from 1 again and a nested item would show as text.
+ * Spec: docs/internal/issues/0634.md (View, #775)
+ */
+export function keepBlankLines(md: string): string {
+  const out: string[] = [];
+  let fence: string | null = null;
+  let blanks = 0;
+  let prev = '';
+  for (const line of md.replace(/\r\n?/g, '\n').split('\n')) {
+    if (fence === null && line.trim() === '') {
+      blanks++;
+      continue;
+    }
+    const inList = /^\s/.test(line) || (detectListItem(line) !== null && (detectListItem(prev) !== null || /^\s/.test(prev)));
+    if (blanks && out.length) {
+      if (inList || blanks === 1) out.push(...Array<string>(blanks).fill(''));
+      else out.push('', ...Array<string>(blanks - 1).fill('&nbsp;'), '');
+    }
+    blanks = 0;
+    prev = line;
+    const mark = /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1];
+    if (fence === null && mark) fence = mark;
+    else if (fence !== null && mark && mark[0] === fence[0] && mark.length >= fence.length && line.trim() === mark) fence = null;
+    out.push(line);
+  }
+  return out.join('\n');
+}
+
+/** Set by `renderMarkdownWithNoteLinks`: note-links render as links, not as plain text. */
+let noteLinkAnchors = false;
+
+/**
+ * `renderMarkdownSafe` for a view inside the app, where a note-link can open
+ * its note: each `[[Note]]` becomes `<a href="#" data-note-link="Note">`, and
+ * the caller's click handler follows it. Exports and shares keep plain text.
+ * Spec: docs/internal/issues/0852.md (more connections)
+ */
+export function renderMarkdownWithNoteLinks(md: string): string {
+  noteLinkAnchors = true;
+  try {
+    return renderMarkdownSafe(md);
+  } finally {
+    noteLinkAnchors = false;
+  }
+}
+
 export function renderMarkdownSafe(md: string): string {
   try {
     return renderMarkdown(md);
@@ -256,9 +307,9 @@ function renderTex(tex: string, display: boolean): string | null {
 let highlightCode: ((code: string, lang: string) => string | null) | null = null;
 
 async function prepareCodeHighlight(md: string): Promise<void> {
-  // A fence with a language is ``` followed by a tag character; a bare
-  // fence has nothing to highlight and must not cost the download.
-  if (highlightCode || !/```[^\s`]/.test(md)) return;
+  // A fence with a language is ``` or ~~~ followed by a tag character; a
+  // bare fence has nothing to highlight and must not cost the download.
+  if (highlightCode || !/(?:```|~~~)[^\s`~]/.test(md)) return;
   const mod = await import('./markdownHighlight');
   highlightCode = mod.highlightCode;
 }
@@ -399,7 +450,7 @@ function renderInline(raw: string): string {
   // is taken, the escapes when they come back.
   const codeSpans: string[] = [];
   const bsEscapes: string[] = [];
-  const preprocessed = raw.replace(/`([^`]+)`|\\([\\`*_{}[\]()#+\-.!|~>])/g, (_m: string, code: string | undefined, c: string | undefined) => {
+  const preprocessed = raw.replace(/`([^`]+)`|\\([\\`*_{}[\]()#+\-.!|~<>$=])/g, (_m: string, code: string | undefined, c: string | undefined) => {
     if (code !== undefined) {
       const idx = codeSpans.length;
       codeSpans.push(escapeHtml(code));
@@ -501,10 +552,15 @@ function renderInline(raw: string): string {
   // The second branch of each keeps a `[[` that opens none, up to where one
   // opening inside it would fail the same way, so a run of `[` is not read
   // again from every bracket (external report, 2026-10-24).
-  t = t.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]|\[\[[^\]|]*/g, (run: string, _target?: string, label?: string) =>
-    label === undefined ? run : `<em>${label}</em>`);
+  // In the app (`renderMarkdownWithNoteLinks`) each one is a link the caller
+  // follows by its `data-note-link` target, which arrives HTML-escaped.
+  const noteLink = (target: string, label: string) => (noteLinkAnchors
+    ? stash(`<a href="#" data-note-link="${target}">`) + label + stash('</a>')
+    : `<em>${label}</em>`);
+  t = t.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]|\[\[[^\]|]*/g, (run: string, target?: string, label?: string) =>
+    label === undefined ? run : noteLink(target!, label));
   t = t.replace(/\[\[([^\]]+)\]\]|\[\[[^\]]*/g, (run: string, target?: string) =>
-    target === undefined ? run : `<em>${noteLinkDisplayText(target)}</em>`);
+    target === undefined ? run : noteLink(target, noteLinkDisplayText(target)));
 
   // Links [text](url). URL itself is already HTML-escaped by the
   // initial pass, which is fine for href attribute safety.
@@ -536,14 +592,19 @@ function renderInline(raw: string): string {
       const titled = /\x01L(\d+)\x01$/.exec(rawTarget);
       const rawHref = titled ? rawTarget.slice(0, titled.index) : rawTarget;
       const titleAttr = titled ? ` title="${linkTitles[Number(titled[1])] ?? ''}"` : '';
-      const href = attrText(rawHref);
+      // The escapes go back into the address first: `sanitizeLinkHref` drops
+      // control characters, which would leave a marker's letters in it
+      // (`Mercury_\(planet\)` became `Mercury_E0planetE1`, beta #216 item 3).
+      const href = attrText(rawHref).replace(/\x01E(\d+)\x01/g, (_m: string, i: string) => escapeHtml(bsEscapes[Number(i)] ?? ''));
       const domain = domainFromHref(href);
       const fav = domain && getFavicons() ? faviconUrl(domain) : '';
       const favicon = fav
         ? `<img src="${fav}" width="14" height="14" style="display:inline-block;vertical-align:middle;margin:0 3px 0 0;border-radius:2px;max-width:none" onerror="this.style.display='none'" />`
         : '';
+      const safe = sanitizeLinkHref(href);
+      if (safe === null) return label;
       return (
-        stash(`<a href="${sanitizeLinkHref(href)}"${titleAttr} target="_blank" rel="noopener noreferrer">${favicon}`) +
+        stash(`<a href="${safe}"${titleAttr} target="_blank" rel="noopener noreferrer">${favicon}`) +
         label +
         stash('</a>')
       );
@@ -576,7 +637,7 @@ function renderInline(raw: string): string {
       const text = favicon
         ? `<span style="white-space:nowrap">${favicon}${href.slice(0, 1)}</span>${href.slice(1)}`
         : href;
-      return stash(`<a href="${sanitizeLinkHref(href)}" target="_blank" rel="noopener noreferrer">${text}</a>`);
+      return stash(`<a href="${sanitizeLinkHref(href) ?? '#'}" target="_blank" rel="noopener noreferrer">${text}</a>`);
     }
   );
 
@@ -725,11 +786,14 @@ function renderInline(raw: string): string {
  * ignores a meta policy. It is also the one defence against what no CSP
  * stops: a `position: fixed` overlay impersonating the app's own UI.
  *
- * Deliberately a denylist rather than an allowlist. Everything here is
- * something no editor feature emits; an allowlist would silently drop the
- * next attribute a TipTap upgrade starts writing (colwidth, colspan,
- * data-*) and break a feature quietly, which is the failure mode this
- * whole audit exists to fix.
+ * Two lists run in turn. DOMPurify's allow-list runs first
+ * (`PURIFY_CONFIG`): it keeps every `data-*` attribute, but a new attribute
+ * that a TipTap upgrade starts to write and that is not `data-*` must go into
+ * its `ADD_ATTR`, or the block loses it. It also drops what the editor never
+ * writes: an element outside its HTML list (its text stays), a comment,
+ * `contenteditable`, and a picture address with a scheme off its list
+ * (`blob:`, `cid:`). The walk of cleanEditorHtml then removes what no editor
+ * feature emits, a denylist, as before.
  */
 // Properties that let inline content reposition or overlay other content,
 // which is how a crafted note or a stranger's burn note would build a
@@ -745,6 +809,13 @@ function renderInline(raw: string): string {
 // the real risk.
 const UNSAFE_CSS_PROPS =
   /^(position|z-index|top|right|bottom|left|inset|transform|translate|rotate|scale|offset|offset-path|offset-distance|offset-position|offset-anchor|offset-rotate|pointer-events)$/i;
+
+// The CSS functions that take an address. `url()` is the usual one;
+// `image-set()` and `image()` take a bare quoted string as an address as
+// well, and `src()` is `url()` with a string. A declaration that holds any
+// of them is dropped from a kept style, so a style never names something to
+// load. The prefixed `-webkit-image-set(` ends in the same name.
+const CSS_ADDRESS_FN = /(?:url|src|image(?:-set)?)\s*\(/i;
 
 /**
  * A declaration as the CSS tokenizer reads it: a backslash escape (`\70`,
@@ -780,6 +851,100 @@ const KEPT_CLASSES = new Set(['pn-spoiler', 'pn-spoiler-text']);
 // none of them.
 const TOP_LAYER_ATTRS = new Set(['popover', 'popovertarget', 'popovertargetaction', 'command', 'commandfor', 'interestfor']);
 
+// The elements a raw HTML block loses with their content (the reasons are at
+// the walk in cleanEditorHtml); `input type="image"` goes there too.
+const REMOVED_ELEMENTS = [
+  'script', 'style', 'iframe', 'object', 'embed', 'link', 'meta', 'base', 'form', 'noscript', 'template', 'dialog',
+  'svg', 'math', 'xmp', 'noembed', 'noframes', 'plaintext', 'textarea', 'title', 'map', 'area',
+];
+
+// The attributes a raw HTML block always loses, besides every `on` handler
+// and the `id` and `name` of the walk. `action` and `formaction` name the
+// address a button or a field sends to, and the editor writes neither.
+const REMOVED_ATTRS = new Set(['usemap', 'action', 'formaction', ...TOP_LAYER_ATTRS]);
+
+/**
+ * DOMPurify's settings for a raw HTML block: HTML only, our lists of removed
+ * elements and attributes, and the schemes of our own pictures (`pn:img/`, an
+ * asset address the walk then checks). `target` and the editor's `colwidth`
+ * stay, as before. The walk in
+ * cleanEditorHtml applies the rest of our allow-list after it: KEPT_CLASSES,
+ * the style filter, sanitizeLinkHref and allowedImageSource.
+ */
+const PURIFY_CONFIG: Config = {
+  USE_PROFILES: { html: true },
+  FORBID_TAGS: REMOVED_ELEMENTS,
+  ADD_FORBID_CONTENTS: REMOVED_ELEMENTS,
+  FORBID_ATTR: ['id', 'name', ...REMOVED_ATTRS],
+  ADD_ATTR: ['target', 'colwidth'],
+  // DOMPurify's own rule with fewer schemes, plus ours.
+  ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|pn|asset):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
+};
+
+// An instance of our own: mermaid adds hooks to the default one, and they
+// must not change what a note block keeps. Its document is an inert one,
+// never the page's, so its work touches nothing that is drawn.
+let purifier: DOMPurifyInstance | null = null;
+
+/** A parsed raw HTML block through DOMPurify. Where it cannot run, it throws, and the block shows as text. */
+function purifyInPlace(root: HTMLElement): void {
+  purifier ??= DOMPurify({
+    document: new DOMParser().parseFromString('', 'text/html'),
+    DocumentFragment, HTMLTemplateElement, Node, Element, NodeFilter, NamedNodeMap, HTMLFormElement, DOMParser,
+    trustedTypes: undefined,
+  });
+  if (!purifier.isSupported) throw new Error('DOMPurify cannot run here');
+  purifier.sanitize(root, { ...PURIFY_CONFIG, IN_PLACE: true });
+}
+
+/**
+ * The attributes that load an address with no click: a picture, its
+ * candidates, a video poster, a table background. Each goes by the rule of a
+ * Markdown picture (`allowedImageSource`, beta issue 86): text never chooses
+ * a desktop asset address.
+ */
+const LOADING_ATTRS = new Set(['src', 'srcset', 'poster', 'background']);
+
+/** The addresses a loading attribute names: one, or the candidates of a `srcset`. */
+function loadingSources(name: string, value: string): string[] {
+  if (name !== 'srcset') return [value];
+  // Both readings: the standard's, where an address is a run with no white
+  // space and may hold a comma (`http://a,b@asset.localhost/x 1x` is one
+  // address, beta #216 item 4), and a cut at every comma, so an engine that
+  // reads it either way is asked about.
+  const cut = value.split(',').map((candidate) => candidate.trim().split(/\s+/)[0] ?? '');
+  return [...srcsetAddresses(value), ...cut].filter(Boolean);
+}
+
+/** The candidate addresses of a `srcset`, as the HTML standard parses one. */
+function srcsetAddresses(value: string): string[] {
+  const out: string[] = [];
+  const space = /[\t\n\f\r ]/;
+  let i = 0;
+  while (i < value.length) {
+    while (i < value.length && (space.test(value[i]!) || value[i] === ',')) i++;
+    const start = i;
+    while (i < value.length && !space.test(value[i]!)) i++;
+    const address = value.slice(start, i);
+    if (!address) break;
+    // An address that ends in commas ends its candidate there.
+    if (address.endsWith(',')) {
+      out.push(address.replace(/,+$/, ''));
+      continue;
+    }
+    out.push(address);
+    // The descriptors run to the next comma outside parentheses.
+    let depth = 0;
+    for (; i < value.length; i++) {
+      const c = value[i];
+      if (c === '(') depth++;
+      else if (c === ')') depth = Math.max(0, depth - 1);
+      else if (c === ',' && depth === 0) { i++; break; }
+    }
+  }
+  return out;
+}
+
 // How often a block is cleaned before it is given up on. An editor block is
 // stable after the first pass, so the second one only confirms it.
 const CLEAN_PASSES = 8;
@@ -787,20 +952,57 @@ const CLEAN_PASSES = 8;
 /**
  * The page parses the returned string again, so a block is cleaned until a
  * pass changes nothing: the tree that is drawn is then the tree that was
- * cleaned. A block that does not settle is shown as text.
+ * cleaned. A block that does not settle is shown as text, and so is one that
+ * DOMPurify refuses with a throw: in place it cannot remove the root, and it
+ * removes an element with no element child whose markup and text both look
+ * like a tag (an escaped `&lt;b` beside a comment), the root included.
  */
 function sanitizeEditorHtml(html: string): string {
   let current = html;
-  for (let pass = 0; pass < CLEAN_PASSES; pass++) {
-    const next = cleanEditorHtml(current);
-    if (next === current) return next;
-    current = next;
+  try {
+    for (let pass = 0; pass < CLEAN_PASSES; pass++) {
+      const next = cleanEditorHtml(current);
+      if (next === current) return next;
+      current = next;
+    }
+  } catch (err) {
+    // Text, as for a block that does not settle; the cause goes to the console.
+    console.warn('[render] raw HTML block shown as text:', err);
   }
   return escapeHtml(html);
 }
 
+/**
+ * The body of a parsed document, read so that no element of the parsed text
+ * can stand in for it. A named element is a member of its document and
+ * answers before the document's own: in a block that holds
+ * `<img name="body">`, `doc.body` is that picture (beta #208).
+ */
+function parsedBody(doc: Document): HTMLElement {
+  return Document.prototype.querySelector.call(doc, 'body') as HTMLElement;
+}
+
+let preBreakAdded: boolean | null = null;
+
+/** Whether this engine's serializer still writes the line break back after
+ *  `<pre>`, as the standard once said: then nothing needs adding. */
+function serializerAddsPreBreak(doc: Document): boolean {
+  if (preBreakAdded === null) {
+    const pre = doc.createElement('pre');
+    pre.textContent = '\nx';
+    preBreakAdded = pre.outerHTML === '<pre>\n\nx</pre>';
+  }
+  return preBreakAdded;
+}
+
 function cleanEditorHtml(html: string): string {
   const doc = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
+  const root = parsedBody(doc);
+  // DOMPurify cleans the parsed tree first, in place, with our own lists; the
+  // walk below then applies our rules to what it kept, so each rule is checked
+  // twice. In place, because a parse of its own would drop one more line
+  // break after each `<pre>` (see the end of the walk).
+  purifyInPlace(root);
   // `noscript` is here for a reason the others are not: this parser runs with
   // scripting disabled, so it reads the element's content as markup and an
   // attribute inside it as an attribute, while the browser that renders the
@@ -816,26 +1018,37 @@ function cleanEditorHtml(html: string): string {
   // content (`svg`, `math`), the elements whose content is read as text
   // (`xmp`, `noembed`, `noframes`, `plaintext`, `textarea`, `title`), and an
   // image map, whose `area` is a link that is not an `a`.
-  doc.body
-    .querySelectorAll(
-      'script,style,iframe,object,embed,link,meta,base,form,input[type="image"],noscript,template,dialog,' +
-        'svg,math,xmp,noembed,noframes,plaintext,textarea,title,map,area',
-    )
-    .forEach((el) => el.remove());
-  doc.body.querySelectorAll('*').forEach((el) => {
+  root.querySelectorAll(`${REMOVED_ELEMENTS.join(',')},input[type="image"]`).forEach((el) => el.remove());
+  root.querySelectorAll('*').forEach((el) => {
     for (const attr of [...el.attributes]) {
       const name = attr.name.toLowerCase();
-      if (name.startsWith('on') || name === 'usemap' || TOP_LAYER_ATTRS.has(name)) {
+      if (name.startsWith('on') || REMOVED_ATTRS.has(name)) {
+        el.removeAttribute(attr.name);
+      } else if (name === 'id' || name === 'name') {
+        // A named element is a member of the page it is drawn in, and a
+        // named member answers before the page's own: with
+        // `<img name="createElement">` on screen, `document.createElement`
+        // is that picture, the next render throws and the app is blank. An
+        // `id` does the same to a name the app looks for on `window`. The
+        // editor writes neither in a block; the footnote ids are made by the
+        // renderer itself, after this walk.
+        el.removeAttribute(attr.name);
+      } else if (LOADING_ATTRS.has(name) && !loadingSources(name, attr.value).every(allowedImageSource)) {
+        el.removeAttribute(attr.name);
+      } else if ((name === 'href' || name === 'xlink:href') && sanitizeLinkHref(attr.value) === null) {
+        // The same targets as a Markdown link (sanitizeLinkHref). A link
+        // without its target is its text.
         el.removeAttribute(attr.name);
       } else if (
-        (name === 'href' || name === 'src' || name === 'xlink:href') &&
+        name === 'src' &&
         // Test the parser-normalized form, never the raw attribute. See
         // stripUrlControls above for why the raw string cannot be trusted:
         // both an embedded tab and a leading control character defeat a
         // scheme test that the browser's own parser would see straight
-        // through.
+        // through. The C1 controls go too, because the sanitizer corpus judge
+        // removes them before its own scheme test.
         /^(?:javascript|vbscript|data:text)/i.test(
-          stripUrlControls(attr.value).replace(/\s/g, ''),
+          stripUrlControls(attr.value).replace(/[\s\u0080-\u009F]/g, ''),
         )
       ) {
         el.removeAttribute(attr.name);
@@ -851,8 +1064,14 @@ function cleanEditorHtml(html: string): string {
           .split(';')
           .filter((decl) => {
             const seen = cssUnescape(decl);
+            // Only a plain declaration is kept. The engine drops an at-rule
+            // or a block it does not know and reads what follows as a
+            // declaration of its own, so `@x{} position:fixed` is
+            // `position:fixed` to it, while the name test below would see
+            // `@x{} position`, which is on no list.
+            if (/[{}]/.test(seen) || (seen.split(':')[0] ?? '').includes('@')) return false;
             const prop = (seen.split(':')[0] ?? '').trim().toLowerCase().replace(/^-[a-z]+-/, '');
-            return prop !== '' && !UNSAFE_CSS_PROPS.test(prop) && !/url\s*\(/i.test(seen);
+            return prop !== '' && !UNSAFE_CSS_PROPS.test(prop) && !CSS_ADDRESS_FN.test(seen);
           })
           .join(';');
         if (kept.trim()) el.setAttribute('style', kept);
@@ -867,8 +1086,16 @@ function cleanEditorHtml(html: string): string {
     // it can send to a copy of the sign-in. Every link gets the rel the
     // renderer writes on its own.
     if (el.tagName === 'A') el.setAttribute('rel', 'noopener noreferrer');
+    // The parser drops one line break right after `<pre>` or `<listing>`,
+    // and today's serializer writes none back, so each pass lost a blank line
+    // and a block with enough of them never settled. One more line break
+    // gives the next parse back what this one took (beta #216 item 5).
+    const first = el.firstChild;
+    if ((el.tagName === 'PRE' || el.tagName === 'LISTING') && first?.nodeType === Node.TEXT_NODE && (first as Text).data.startsWith('\n') && !serializerAddsPreBreak(doc)) {
+      (first as Text).data = '\n' + (first as Text).data;
+    }
   });
-  return doc.body.innerHTML;
+  return root.innerHTML;
 }
 
 /**
@@ -915,7 +1142,7 @@ function taskTextHtml(checked: boolean, body: string, subHtml: string): string {
  */
 function renderTaskListHtml(block: string): string | null {
   const doc = new DOMParser().parseFromString(`<body>${block}</body>`, 'text/html');
-  const list = doc.body.querySelector('ul[data-type="taskList"]');
+  const list = parsedBody(doc).querySelector('ul[data-type="taskList"]');
   if (!list) return null;
   const items = [...list.children].map((li) => {
     const checked = li.getAttribute('data-checked') === 'true';
@@ -1045,11 +1272,12 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
   // neither). So a list that contains an aligned item states its own.
   let gutterPinned = false;
   const items: string[] = [];
-  // A blank line between two items of this list. The editor writes every
-  // list that way, so the HTML stays tight; `data-loose` only lets a view
-  // whose text a person typed (a vault item's Notes, .pn-detail-notes) keep
-  // the space they put between items. Spec: docs/internal/issues/0634.md
-  let loose = false;
+  // The blank lines before the next item. The editor writes one between
+  // every two items, so the HTML stays tight; `data-gap` (and `--pn-gap`, the
+  // lines past the first) only lets a view whose text a person typed (a vault
+  // item's Notes, .pn-detail-notes) keep the space they put before an item.
+  // Spec: docs/internal/issues/0634.md
+  let gap = 0;
   let i = startI;
 
   while (i < lines.length) {
@@ -1063,7 +1291,7 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
       while (ahead < lines.length && (lines[ahead] ?? '').trim() === '') ahead++;
       const next = ahead < lines.length ? detectListItem(lines[ahead]!) : null;
       if (!next || next.indent !== baseIndent || next.ordered !== isOrdered || next.isTask !== firstIsTask) break;
-      loose = true;
+      gap = ahead - i;
       i = ahead;
       continue;
     }
@@ -1141,11 +1369,14 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
         : align === 'justify' ? ';text-align:justify'
         : '';
     if (align === 'center' || align === 'right') gutterPinned = true;
+    const gapAttr = gap ? ` data-gap="${gap}"` : '';
+    const gapStyle = gap > 1 ? `;--pn-gap:${gap - 1}` : '';
+    gap = 0;
 
     if (item.isTask) {
       hasTask = true;
       items.push(
-        `<li${dirAttr(firstLetterOfHtml(body))} style="list-style:none;display:flex;align-items:flex-start;gap:0.5em;margin:0.2em 0${
+        `<li${dirAttr(firstLetterOfHtml(body))}${gapAttr} style="list-style:none;display:flex;align-items:flex-start;gap:0.5em;margin:0.2em 0${gapStyle}${
           align === 'center' ? ';justify-content:center' : align === 'right' ? ';justify-content:flex-end' : ''
         }">` +
           taskCheckboxHtml(item.checked) +
@@ -1153,7 +1384,7 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
         `</li>`
       );
     } else {
-      items.push(`<li style="margin:0.15em 0${itemAlign}">${body}${subHtml}</li>`);
+      items.push(`<li${gapAttr} style="margin:0.15em 0${itemAlign}${gapStyle}">${body}${subHtml}</li>`);
     }
   }
 
@@ -1166,7 +1397,7 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
   // item, so ordinary exported lists keep the indent they have always had.
   const body = items.join('');
   const letter = firstLetterOfHtml(body);
-  const dir = dirAttr(letter) + (loose ? ' data-loose' : '');
+  const dir = dirAttr(letter);
   const styles = gutterPinned ? [`padding-inline-start:${LIST_GUTTER}`, 'margin-inline-start:0'] : [];
   if (isOrdered) {
     if (letter && letterDirection(letter) === 'rtl' && listNumerals(letter, () => textOfHtml(body), () => notePersian === true)) {
@@ -1262,7 +1493,38 @@ function splitUnescapedPipes(row: string): string[] {
 
 /** The text a table cell shows once its inline markdown is rendered. */
 function shownText(cell: string): string {
-  return new DOMParser().parseFromString(`<body>${renderInline(cell)}</body>`, 'text/html').body.textContent ?? '';
+  return parsedBody(new DOMParser().parseFromString(`<body>${renderInline(cell)}</body>`, 'text/html')).textContent ?? '';
+}
+
+/**
+ * Every fenced code block of `text`, as CommonMark and the editor's
+ * markdown-it read one: a run of three or more backticks or tildes at the
+ * start of a line (after a container's `> ` or indent, or a list marker),
+ * closed by a run of the same character at least as long, alone on its
+ * line. A fence left open runs to the end. A backtick fence's info has no
+ * backtick. Each block is replaced by what `place` returns for it; the
+ * prefix in front of the opening run stays (beta #216 item 1).
+ */
+function replaceFences(text: string, place: (info: string, body: string, prefix: string) => string): string {
+  const lines = text.split('\n');
+  const out: string[] = [];
+  // One way to read each prefix character, so a long prefix costs its length.
+  const container = /^(?:[ \t>]|(?:[-*+]|\d{1,9}[.)])[ \t](?:\[[ xX]\][ \t])?)*/;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    const prefix = container.exec(line)![0];
+    const fence = nextFence(null, line.slice(prefix.length)).fence;
+    if (!fence) {
+      out.push(line);
+      continue;
+    }
+    let end = i + 1;
+    while (end < lines.length && nextFence(fence, lines[end]!.replace(/^[ \t>]*/, '')).fence) end++;
+    const info = line.slice(prefix.length + fence.len);
+    out.push(prefix + place(info, lines.slice(i + 1, end).join('\n'), prefix));
+    i = end;
+  }
+  return out.join('\n');
 }
 
 function renderBlocks(text: string): string {
@@ -1278,18 +1540,17 @@ function renderBlocks(text: string): string {
   // bytes, so it is handed the fence itself instead.
   const fenceSource: string[] = [];
   const unplace = (md: string) => md.replace(/\x02F(\d+)\x02/g, (_m: string, n: string) => fenceSource[Number(n)] ?? '');
-  const withoutFences = text.replace(
-    /```([^\n]*)\n([\s\S]*?)```/g,
-    (_m: string, lang: string, body: string, offset: number) => {
+  const withoutFences = replaceFences(text,
+    (lang: string, body: string, prefix: string) => {
       const idx = fences.length;
       // A fence inside a list item, a task, a callout or a card is written
       // with the container's prefix (`  `, `> `) on every line: take it off
       // the code, as the editor shows it.
-      const prefix = text.slice(text.lastIndexOf('\n', offset - 1) + 1, offset);
-      const lines = body.replace(/\n$/, '').split('\n');
+      const lines = body.split('\n');
       const dedent = /^[ \t>]+$/.test(prefix) && lines.every((l) => l.startsWith(prefix) || l.trim() === '');
       const code = dedent ? lines.map((l) => l.slice(prefix.length)).join('\n') : lines.join('\n');
-      fenceSource.push('```' + lang + '\n' + code + '\n```');
+      const tick = '`'.repeat(Math.max(3, ...(code.match(/`+/g) ?? []).map((r) => r.length + 1)));
+      fenceSource.push(tick + lang.replace(/`/g, '') + '\n' + code + '\n' + tick);
       // A title (```bash title="x", codeFenceInfo.ts) heads the panel, set
       // off by a rule as in the editor. A block saved closed prints open:
       // a page cannot be clicked.
@@ -1380,6 +1641,44 @@ function renderBlocks(text: string): string {
       out.push(fences[Number(fenceMatch[1])] ?? '');
       i++;
       continue;
+    }
+
+    // Indented code block (4 spaces or a tab), the other spelling of a code
+    // block an imported file or a burn note can carry. Guarded on the nearest
+    // preceding non-blank line NOT being a list item: a nested item's
+    // continuation text is indented this deep too, and per CommonMark it
+    // belongs to the list, not to a code block. An indented line directly
+    // after a paragraph never reaches here either - the paragraph collector
+    // below absorbs it, which is also CommonMark's rule. It is asked before
+    // the HTML block test, as markdown-it asks it: an indented `<div` after a
+    // blank line is code there, so it must not be drawn here (beta #216 item 1).
+    if (/^(?: {4}|\t)/.test(line) && line.trim() !== '') {
+      let prev: string | null = null;
+      for (let k = i - 1; k >= 0; k--) {
+        const s = lines[k] ?? '';
+        if (s.trim() !== '') { prev = s; break; }
+      }
+      if (prev === null || !detectListItem(prev)) {
+        const buf: string[] = [];
+        while (i < lines.length) {
+          const cur = lines[i] ?? '';
+          if (/^(?: {4}|\t)/.test(cur)) { buf.push(cur.replace(/^(?: {4}|\t)/, '')); i++; continue; }
+          if (cur.trim() === '') {
+            // A blank line stays inside the block only when more indented
+            // code follows; otherwise the block ends before it.
+            let ahead = i;
+            while (ahead < lines.length && (lines[ahead] ?? '').trim() === '') ahead++;
+            if (ahead < lines.length && /^(?: {4}|\t)/.test(lines[ahead] ?? '')) {
+              for (let k = i; k < ahead; k++) buf.push('');
+              i = ahead;
+              continue;
+            }
+          }
+          break;
+        }
+        out.push(`<pre><code>${escapeHtml(buf.join('\n'))}</code></pre>`);
+        continue;
+      }
     }
 
     // HTML block pass-through (e.g. tables serialized as HTML by tiptap-markdown).
@@ -1515,42 +1814,6 @@ function renderBlocks(text: string): string {
       out.push(listHtml);
       i = newI;
       continue;
-    }
-
-    // Indented code block (4 spaces or a tab), the other spelling of a code
-    // block an imported file or a burn note can carry. Guarded on the nearest
-    // preceding non-blank line NOT being a list item: a nested item's
-    // continuation text is indented this deep too, and per CommonMark it
-    // belongs to the list, not to a code block. An indented line directly
-    // after a paragraph never reaches here either - the paragraph collector
-    // below absorbs it, which is also CommonMark's rule.
-    if (/^(?: {4}|\t)/.test(line) && line.trim() !== '') {
-      let prev: string | null = null;
-      for (let k = i - 1; k >= 0; k--) {
-        const s = lines[k] ?? '';
-        if (s.trim() !== '') { prev = s; break; }
-      }
-      if (prev === null || !detectListItem(prev)) {
-        const buf: string[] = [];
-        while (i < lines.length) {
-          const cur = lines[i] ?? '';
-          if (/^(?: {4}|\t)/.test(cur)) { buf.push(cur.replace(/^(?: {4}|\t)/, '')); i++; continue; }
-          if (cur.trim() === '') {
-            // A blank line stays inside the block only when more indented
-            // code follows; otherwise the block ends before it.
-            let ahead = i;
-            while (ahead < lines.length && (lines[ahead] ?? '').trim() === '') ahead++;
-            if (ahead < lines.length && /^(?: {4}|\t)/.test(lines[ahead] ?? '')) {
-              for (let k = i; k < ahead; k++) buf.push('');
-              i = ahead;
-              continue;
-            }
-          }
-          break;
-        }
-        out.push(`<pre><code>${escapeHtml(buf.join('\n'))}</code></pre>`);
-        continue;
-      }
     }
 
     // GFM pipe table.
@@ -1795,6 +2058,17 @@ export async function inlineSameOriginImages(
 // Spec: packages/web/worker.ts (RASTER_TYPES, the types the icon route serves)
 const INLINE_ICON_URI = /^data:image\/(?:x-icon|vnd\.microsoft\.icon|png|jpeg|gif|webp);base64,[A-Za-z0-9+/]*={0,2}$/;
 
+/** The domain an icon address names, or null when its escape is malformed:
+ *  a picture address that a note spells can end the same way as an icon
+ *  address, and it is not this function's to read. */
+function faviconDomain(encoded: string): string | null {
+  try {
+    return decodeURIComponent(encoded);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Inline `/favicon?domain=...` images in rendered HTML as data URIs.
  * Used by the HTML export and print paths so files are self-contained.
@@ -1805,7 +2079,8 @@ export async function inlineRenderedFavicons(html: string): Promise<string> {
   const domains = new Set<string>();
   let m: RegExpExecArray | null;
   while ((m = re.exec(html)) !== null) {
-    domains.add(decodeURIComponent(m[1]!));
+    const domain = faviconDomain(m[1]!);
+    if (domain !== null) domains.add(domain);
   }
   if (domains.size === 0) return html;
 
@@ -1833,8 +2108,8 @@ export async function inlineRenderedFavicons(html: string): Promise<string> {
   return html.replace(
     /src="[^"]*\/favicon\?domain=([^"]+)"/g,
     (match: string, encoded: string) => {
-      const domain = decodeURIComponent(encoded);
-      const dataUri = resolved.get(domain);
+      const domain = faviconDomain(encoded);
+      const dataUri = domain === null ? undefined : resolved.get(domain);
       if (!dataUri) return match;
       return `src="${dataUri}"`;
     }

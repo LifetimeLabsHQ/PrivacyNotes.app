@@ -66,6 +66,9 @@ export const PROTECTED_FOLDERS = [
   'Library/Caches/app.privacynotes',
   'Library/Logs/app.privacynotes',
   'Library/WebKit',
+  '.config/app.privacynotes',
+  '.local/share/app.privacynotes',
+  '.cache/app.privacynotes',
 ];
 
 /** The protected folder `path` is inside, as a full path, or null. */

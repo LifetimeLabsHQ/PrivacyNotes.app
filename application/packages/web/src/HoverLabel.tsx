@@ -89,22 +89,34 @@ export function visibleBox(el: HTMLElement) {
 }
 
 const EDGE = 4;
-const PLACED = ['left', 'right', 'top', 'bottom', 'translate', 'transform', 'margin-top', 'margin-bottom'];
+const PLACED = ['left', 'right', 'top', 'bottom', 'translate', 'transform', 'margin-top', 'margin-bottom', 'inset-inline-start', 'inset-inline-end', 'margin-inline-start', 'margin-inline-end'];
 
 /**
  * Moves a showing tip that sits above or below `host` back inside the
  * visible box: sideways first, then to the other side of the host when it
- * does not fit vertically and the other side does.
+ * does not fit vertically and the other side does. A side tip (start, end)
+ * keeps its place while it fits; with no room beside the host (a narrow
+ * window) it drops below it and is fitted like any other.
  */
 function fitTip(tip: HTMLElement, host: HTMLElement) {
   const s = tip.style;
   for (const p of PLACED) s.removeProperty(p);
-  const t = tip.getBoundingClientRect();
+  let t = tip.getBoundingClientRect();
   if (t.width === 0) return;
   const h = host.getBoundingClientRect();
-  // A side tip (start, end) keeps its place.
-  if (t.right <= h.left + 1 || t.left >= h.right - 1) return;
   const box = visibleBox(host);
+  if (t.right <= h.left + 1 || t.left >= h.right - 1) {
+    if (t.right <= box.right - EDGE && t.left >= box.left + EDGE) return;
+    s.insetInlineStart = 'auto';
+    s.insetInlineEnd = 'auto';
+    s.marginInlineStart = '0';
+    s.marginInlineEnd = '0';
+    s.left = '0';
+    s.top = 'calc(100% + 6px)';
+    s.translate = 'none';
+    s.transform = 'none';
+    t = tip.getBoundingClientRect();
+  }
   // A tip that hangs past an edge lines up with its own button's edge on that
   // side first, the way an end-aligned tip ("Note options") reads; only a tip
   // too wide for that is pushed to the edge of the visible box.
@@ -176,7 +188,7 @@ const tipObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObs
   }
 });
 
-function observeTip(tip: HTMLElement | null) {
+export function observeTip(tip: HTMLElement | null) {
   if (!tip || !tipObserver) return;
   tipObserver.observe(tip);
   return () => tipObserver.unobserve(tip);

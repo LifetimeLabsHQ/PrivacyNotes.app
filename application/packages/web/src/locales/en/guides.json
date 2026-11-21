@@ -316,21 +316,21 @@
       "app": "Bitwarden",
       "title": "Export your Bitwarden vault",
       "metaTitle": "How to export your Bitwarden vault - PrivacyNotes",
-      "lead": "Bitwarden exports your whole vault as one unencrypted .json file, and PrivacyNotes files every item where it belongs: logins, cards, SSH keys, and secure notes.",
+      "lead": "Bitwarden exports your whole vault as one unencrypted .json file, or as a .zip with your attachments, and PrivacyNotes files every item where it belongs: logins, cards, SSH keys, and secure notes.",
       "sections": [
         {
           "h": "Export your vault from Bitwarden",
           "steps": [
             "Open the Bitwarden web vault (or the desktop app) and sign in.",
             "Go to Tools, then \"Export vault\".",
-            "Choose the file format .json (the plain one, not \".json (Encrypted)\").",
+            "Choose the file format .json, or \".zip (with attachments)\" to bring your attached files too. Do not choose \".json (Encrypted)\".",
             "Confirm with your master password and download the file."
           ]
         },
         {
           "h": "Where things land",
           "p": [
-            "Logins become [Vault login entries](/help/vault) (with their site icons), cards become card entries, SSH keys become SSH key entries, and secure notes plus identities arrive as readable notes. Bitwarden folders map to tags, and favorites arrive starred. Authenticator keys (TOTP) come along too, so [your 2FA codes keep working](/help/vault-totp).",
+            "Logins become [Vault login entries](/help/vault) (with their site icons), cards become card entries, SSH keys become SSH key entries, and secure notes plus identities arrive as readable notes. Bitwarden folders map to tags, and favorites arrive starred. Authenticator keys (TOTP) come along too, so [your 2FA codes keep working](/help/vault-totp), and so do the passkeys you saved in Bitwarden. From a .zip, each attachment lands on its item.",
             "The export file holds your passwords in plain text, so import it, verify everything arrived, and then delete the file properly. Inside PrivacyNotes it is all encrypted again, on your device and on the way to the server."
           ]
         }
@@ -954,7 +954,7 @@
         {
           "h": "What comes across",
           "p": [
-            "Every card in the file comes across: names, phones, email addresses, postal addresses, birthdays and other dates, websites, social profiles and notes. Your own labels stay as you typed them, so \"Mum's work line\" stays \"Mum's work line\".",
+            "Every card in the file comes across: names, phones, email addresses, postal addresses, birthdays and other dates, websites, social profiles and notes. Your own labels stay as you typed them, so \"Mom's work line\" stays \"Mom's work line\".",
             "A photo inside the file comes across. A photo that is only a web link stays a link, and nothing is downloaded. [When the photos do not fit in your storage](/help/storage-usage), the contacts still import and the photos stay out."
           ]
         },
@@ -1115,6 +1115,31 @@
         }
       ]
     },
+    "msecure": {
+      "app": "mSecure",
+      "title": "Export your mSecure vault",
+      "metaTitle": "How to export your mSecure vault - PrivacyNotes",
+      "lead": "mSecure exports your records as one .csv file from its desktop app, and PrivacyNotes turns them into Vault logins, cards and notes, custom fields included.",
+      "sections": [
+        {
+          "h": "Export from mSecure",
+          "steps": [
+            "Open mSecure on your computer and unlock it.",
+            "Open Settings and choose Backups.",
+            "Under Import and Export records, choose Export records to CSV file.",
+            "Pick Export all records. Leave \"Only export field data\" off, so the file keeps the name of each field.",
+            "Choose Export and save the .csv file."
+          ]
+        },
+        {
+          "h": "Where things land",
+          "p": [
+            "Every login becomes a [Vault login](/help/vault) with its 2FA key, so [your codes keep working](/help/vault-totp), and its extra websites and custom fields come along with their names. A secret field, such as a PIN or a recovery code, stays hidden. A card becomes a card. A secure note becomes a note, and other record types, such as an identity or a bank account, become notes that list their fields, tagged with the record type. Your tags stay tags. The file has no dates or favorites, so each item takes the day you import it.",
+            "The export holds your passwords in plain text. Import it, check that everything arrived, then delete the file."
+          ]
+        }
+      ]
+    },
     "nordpass": {
       "app": "NordPass",
       "title": "Export your NordPass vault",
@@ -1163,6 +1188,36 @@
           "p": [
             "Every login becomes a [Vault login](/help/vault) with its extra websites, custom fields and dates. Its 2FA key comes along, so [your codes keep working](/help/vault-totp). When an item has both an email and a user name, the user name fills the login and the email becomes a field. Notes arrive as notes, cards as cards, and identities as notes with every detail on its own line. Each hide-my-email alias becomes a note with its address, so you keep the list of which address you gave to which site; Proton goes on forwarding its mail while your Proton account is open. With more than one vault, each vault becomes a tag. Items in the trash stay behind.",
             "The export holds your passwords in plain text. Import it, check that everything arrived, then delete the file."
+          ]
+        }
+      ]
+    },
+    "raindrop": {
+      "app": "Raindrop.io",
+      "title": "Export your Raindrop.io bookmarks",
+      "metaTitle": "How to export your Raindrop.io bookmarks - PrivacyNotes",
+      "lead": "Export your Raindrop.io bookmarks as one .csv backup, and PrivacyNotes turns them into bookmarks in the same collections, with your notes, excerpts and highlights.",
+      "sections": [
+        {
+          "h": "Get a backup of everything",
+          "steps": [
+            "Open Raindrop.io in your browser or its app and sign in.",
+            "Open All bookmarks and choose Export > Get backup.",
+            "Wait for the email that says the backup is ready. It usually takes a few minutes.",
+            "Open Settings > Backups and choose CSV next to the new backup."
+          ]
+        },
+        {
+          "h": "Pick CSV, not HTML",
+          "p": [
+            "The HTML file keeps the links and your notes, but it leaves out excerpts and highlights. To move one collection only, open it and choose Export > CSV. The .zip from that menu works too."
+          ]
+        },
+        {
+          "h": "Where things land",
+          "p": [
+            "Every bookmark lands under Bookmarks, in a folder for each collection, nested the way you had them. Unsorted bookmarks go straight under Bookmarks. Your note, the excerpt and each highlight with its sticky note go into the bookmark's notes, and favorites stay pinned. Tags stay tags, and every bookmark keeps the day you saved it.",
+            "The file has no trash, reminders or highlight colors, so those stay behind. Cover pictures stay behind too: each bookmark shows its website's icon instead."
           ]
         }
       ]
@@ -1288,6 +1343,83 @@
           "p": [
             "[Every entry lands in Journals](/help/journal), on the day you picked for it in Journal. Each entry keeps its title and text, and photos and videos import as pictures and attachments. A map on an entry comes along as a picture.",
             "Takeout does not carry place names, writing prompts, bookmarks or Journal's reflections, so those stay in Journal. The import summary says so."
+          ]
+        }
+      ]
+    },
+    "capacities": {
+      "app": "Capacities",
+      "title": "Export your Capacities space",
+      "metaTitle": "How to export your Capacities space - PrivacyNotes",
+      "lead": "Capacities exports every space at once as one zip of Markdown files with their media. That zip brings your pages, daily notes and custom objects across with their tags, properties, links, tables and images.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/capacities-export.webp",
+            "alt": "Capacities settings, Full Export page, Manual Full Export with Include media turned on and the Export All Spaces button.",
+            "width": 1576,
+            "height": 802
+          },
+          "h": "Make a full export",
+          "steps": [
+            "Open Capacities on your computer and open Settings.",
+            "Choose Full Export.",
+            "Under Manual Full Export, open Options and leave \"Include media\" on. The other two options can stay as they are: we read both link styles and drop the title heading.",
+            "Click \"Export All Spaces\". Capacities builds the zip in the background and saves it to your Downloads folder, named \"Capacities\" with the date and time.",
+            "Drop that .zip in as it is."
+          ],
+          "p": [
+            "Capacities only puts images and files into the zip when they are on your device. If some are missing, set Settings > Offline & Sync > Media loading to \"Everything\", wait for the download, and export again."
+          ]
+        },
+        {
+          "h": "What comes along",
+          "p": [
+            "Every page, daily note and object of your own types becomes a note with its tags and the dates Capacities stored. Each object type becomes a folder, so your pages land in Pages, your daily notes in DailyNotes, and a type such as Books in a folder of its own.",
+            "Headings, lists, to-dos, quotes, code with its language, math and tables come across as they were. Capacities writes a table formula into the export as its result, so the numbers arrive and the formula does not. [Our tables take the same formulas](/help/table-formulas), with the same names and cell references, so type `=` in the cell to set one up again. [Links and mentions between objects become note-links](/help/note-links), and images and files are imported into your storage.",
+            "The properties of a custom type, such as a rating or a genre, are written as a short list at the top of the note. Queries are saved searches with no text, so they stay behind. Capacities does not export the trash, its collections or the look of toggles and colored blocks: toggles arrive as lists, and the text inside them comes along."
+          ]
+        }
+      ]
+    },
+    "onenote": {
+      "app": "OneNote",
+      "title": "Export your OneNote notebooks",
+      "metaTitle": "How to export your OneNote notebooks - PrivacyNotes",
+      "lead": "OneNote for Windows exports a whole notebook as one OneNote Package file (.onepkg). That file brings your sections, pages and subpages across with their to-dos, tables, pictures and attachments.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/onenote-export.webp",
+            "alt": "OneNote for Windows, File > Export, with Notebook picked under Export Current, OneNote Package picked under Select Format, and the Export button.",
+            "width": 1576,
+            "height": 548
+          },
+          "h": "Export the notebook as a OneNote Package",
+          "steps": [
+            "Open the notebook in OneNote for Windows, the desktop app. Notebooks kept in OneDrive open there too.",
+            "Choose File > Export.",
+            "Under \"Export Current\", pick \"Notebook\".",
+            "Under \"Select Format\", pick \"OneNote Package (*.onepkg)\" and click the Export button.",
+            "Choose a folder and save. OneNote writes one .onepkg file named after the notebook.",
+            "Drop that .onepkg in as it is."
+          ],
+          "p": [
+            "One package holds one notebook. If you keep several notebooks, export each one and drop the files in one after another. OneNote on the web, on a Mac and on phones has no export, so use a Windows computer for this step."
+          ]
+        },
+        {
+          "h": "Unlock protected sections first",
+          "p": [
+            "A section with a password stays encrypted inside the package, and only OneNote can open it. Unlock each one in OneNote, remove its password under Review > Password > Remove Password, and export again. The import preview names any section it had to leave out."
+          ]
+        },
+        {
+          "h": "What comes along",
+          "p": [
+            "The notebook becomes a folder, with a folder inside it for each section group and section. Every page becomes a note in its section's folder with the date OneNote created it, and a subpage follows its page in the same folder.",
+            "Headings, bold, italic, underline, colors, highlights, bullet and numbered lists, tables and code paragraphs come across as they were. A to-do tag becomes a checklist item, ticked when it was done, and other note tags such as Important or Question become tags on the note. [Links between pages become note-links](/help/note-links), and pictures and attached files are imported into your storage.",
+            "A section file (.one) on its own, or a zipped notebook folder, works too. Drawings made with a pen, audio recordings and equations have no form here, so the import preview counts them, and pages in OneNote's recycle bin are not part of the package."
           ]
         }
       ]

@@ -412,7 +412,7 @@ export function DefaultAppSettingsRow({ kind }: { kind: AssocKind }) {
   const markdown = useDefaultApp('markdown');
   if (kind === 'text' && markdown?.platform === 'linux') return null;
   const row = ROW[kind];
-  const tr = ([ns, key]: [ns: 'shell' | 'settings', key: string], opts?: Record<string, string>) =>
+  const tr = ([ns, key]: [ns: 'shell' | 'settings', key: string], opts: Record<string, string> = {}) =>
     ns === 'shell' ? tShell(key, opts) : t(key, opts);
   const isOurs = assoc?.owner === 'ours';
 

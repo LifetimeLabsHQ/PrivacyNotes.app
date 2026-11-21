@@ -30,9 +30,14 @@
   ],
   "pin": [
     "forgot-pin",
-    "locked-vs-protected"
+    "protect-section"
+  ],
+  "passkeys": [
+    "passkey-sign-in",
+    "passkey-unlock"
   ],
   "biometric": [
+    "passkey-unlock",
     "biometric-unlock",
     "enable-2fa"
   ],

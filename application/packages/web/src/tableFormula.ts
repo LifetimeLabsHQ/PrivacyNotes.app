@@ -36,8 +36,11 @@ const REF_RE = /^([A-Za-z]+)(\d+)$/;
  *
  * A leading or trailing currency symbol is allowed for the same reason: a
  * column of `$1,200` is the common case and nothing about it is ambiguous.
+ * A minus sign may sit on either side of a leading symbol: `-$400` and
+ * `$-400` are both -400 (#853). The group keeps the minus when the symbol
+ * after it is dropped.
  */
-const CURRENCY = /^[$€£¥]\s?|\s?[$€£¥]$/g;
+const CURRENCY = /^(-?)[$€£¥]\s?|\s?[$€£¥]$/g;
 const NUMBER_RE = /^-?(\d{1,3}(,\d{3})+|\d+)(\.\d+)?$/;
 
 /**
@@ -49,16 +52,20 @@ const NUMBER_RE = /^-?(\d{1,3}(,\d{3})+|\d+)(\.\d+)?$/;
  * `AVERAGE`, and `CEIL`, not Excel's `CEILING`. `AVERAGE` is accepted as well,
  * because it is what a person types.
  *
- * Capacities documents the names and nothing else: no arity, no bases, no
- * error behaviour. Where it is silent, the choice is Excel's, on the reasoning
- * that Capacities is far more likely to have copied Excel than to have
- * invented something. Three of those choices are worth naming, because a wrong
- * guess is a silently wrong number rather than a visible failure:
+ * Capacities documents the names and nothing else. Its behaviour was measured
+ * on a real Capacities Pro account (lab run 2026-11-19, 41 formulas). Where
+ * Capacities gives a number that the maths does not, these rules keep the
+ * mathematical one, because a wrong one is a silently wrong number rather
+ * than a failure. Capacities exports a formula as its result, so no imported
+ * formula depends on its quirks:
  *
- * - `LOG` is base 10, as Excel's is. An optional second argument gives another
- *   base, which Excel also allows, so we are a superset either way.
- * - `ROUND` goes to a whole number, which is what Capacities describes. An
- *   optional second argument gives decimal places, again a superset.
+ * - `LOG` is base 10 (`LOG(100)` is 2), as on a calculator and in Excel.
+ *   Capacities gives the natural log. A second argument gives another base,
+ *   so `LOG(x, E)` is the natural log.
+ * - `ROUND` rounds half away from zero, so -2.5 rounds to -3 (Capacities
+ *   uses `Math.round` and gives -2). A second argument gives decimal places.
+ * - `COUNT` counts the numbers in its arguments. Capacities counts every
+ *   cell a range covers, text and empty ones too.
  * - `CEIL` and `FLOOR` are plain `Math.ceil` and `Math.floor`, which is what
  *   Capacities describes. Excel's own CEILING and FLOOR take a significance
  *   argument and return an error without one, and that is NOT what is wanted.
@@ -80,7 +87,6 @@ const AGGREGATES: Record<string, (values: number[]) => number | null> = {
   },
   MIN: (v) => (v.length ? Math.min(...v) : null),
   MAX: (v) => (v.length ? Math.max(...v) : null),
-  // The only one with an answer over nothing, and the answer is zero.
   COUNT: (v) => v.length,
 };
 
@@ -144,8 +150,8 @@ function stableRandom(key: string): number {
 }
 
 /**
- * Usable bare (`=PI*2`) and as a call (`=PI()`), because Capacities lists them
- * beside the functions and gives no sign of which form it takes.
+ * Usable bare (`=PI*2`), as Capacities writes them, and as a call (`=PI()`),
+ * which Capacities refuses and we accept because it is what a person types.
  */
 const CONSTANTS: Record<string, number> = {
   PI: Math.PI,
@@ -179,7 +185,7 @@ export function isFormulaText(text: string): boolean {
  * same question the callers ask about a plain cell.
  */
 export function cellNumber(text: string): number | null {
-  const cleaned = text.trim().replace(CURRENCY, '');
+  const cleaned = text.trim().replace(CURRENCY, '$1');
   if (!NUMBER_RE.test(cleaned)) return null;
   const value = Number(cleaned.replace(/,/g, ''));
   return Number.isFinite(value) ? value : null;
@@ -210,7 +216,7 @@ function tokenize(source: string): Token[] | null {
       i++;
       continue;
     }
-    if ('+-*/(),:'.includes(ch)) {
+    if ('+-*/^(),:'.includes(ch)) {
       tokens.push({ kind: 'op', value: ch });
       i++;
       continue;
@@ -310,7 +316,13 @@ class Evaluator {
   private factor(): number {
     if (this.eatOp('-')) return -this.factor();
     if (this.eatOp('+')) return this.factor();
-    return this.primary();
+    return this.power();
+  }
+
+  /** `^` binds tighter than `*` and to the right: `2^3^2` is 2^9. */
+  private power(): number {
+    const base = this.primary();
+    return this.eatOp('^') ? base ** this.factor() : base;
   }
 
   private primary(): number {
@@ -387,15 +399,23 @@ class Evaluator {
 
   /** One argument: a range, which contributes many numbers, or an expression, which contributes one. */
   private argument(): number[] {
+    const span = this.span();
+    return span ? this.range(span.a, span.b) : [this.expression()];
+  }
+
+  /**
+   * `B2:B7`, or `B2:B` for the column down to the table's last row, which
+   * keeps covering rows added later. Null when the next tokens are no range.
+   */
+  private span(): { a: { row: number; col: number }; b: { row: number; col: number } } | null {
     const first = this.peek();
     const second = this.tokens[this.pos + 1];
-    if (first?.kind === 'ref' && second?.kind === 'op' && second.value === ':') {
-      const end = this.tokens[this.pos + 2];
-      if (end?.kind !== 'ref') throw new FormulaFailure();
-      this.pos += 3;
-      return this.range(first, end);
-    }
-    return [this.expression()];
+    if (first?.kind !== 'ref' || second?.kind !== 'op' || second.value !== ':') return null;
+    const end = this.tokens[this.pos + 2];
+    this.pos += 3;
+    if (end?.kind === 'ref') return { a: first, b: end };
+    if (end?.kind === 'name' && /^[A-Z]+$/.test(end.value)) return { a: first, b: { row: Number.MAX_SAFE_INTEGER, col: columnIndex(end.value) } };
+    throw new FormulaFailure();
   }
 }
 

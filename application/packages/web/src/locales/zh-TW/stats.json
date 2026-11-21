@@ -233,6 +233,8 @@
       "prevYear": "上一年",
       "nextYear": "下一年"
     },
+    "seeEntries": "查看日誌紀錄",
+    "showInCalendar": "在日曆中顯示",
     "trackers": {
       "tapHint": "點一下即可開啟「探索」",
       "stopped": "已停止",

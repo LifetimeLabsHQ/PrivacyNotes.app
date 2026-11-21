@@ -102,7 +102,7 @@ fn hex(bytes: &[u8]) -> String {
     })
 }
 
-fn is_full(error: &io::Error) -> bool {
+pub(crate) fn is_full(error: &io::Error) -> bool {
     // 28 is ENOSPC on every Unix this app runs on.
     matches!(error.kind(), io::ErrorKind::StorageFull | io::ErrorKind::QuotaExceeded)
         || (cfg!(unix) && error.raw_os_error() == Some(28))
@@ -238,11 +238,19 @@ mod folder {
         let device = device_of(name).ok_or("bad-name")?;
         require(dest)?;
         let mut from = File::open(staging).map_err(|_| "io".to_owned())?;
-        let partial = dest.join(format!("{NAME_PREFIX}{device}.partial"));
+        let mut partial = dest.join(format!("{NAME_PREFIX}{device}.partial"));
         let target = dest.join(name);
         // A leftover of a crashed run. Removing it first also means a link
         // someone put at that name is replaced, never written through.
         let _ = fs::remove_file(&partial);
+        remove_stale_partials(dest, device);
+        // Something still holds the name (a folder someone made there): write
+        // through a name of this run's own instead, or every backup of this
+        // device fails (beta issue 175).
+        if fs::symlink_metadata(&partial).is_ok() {
+            let run = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_nanos());
+            partial = dest.join(run_partial_name(device, std::process::id(), run));
+        }
         let written = (|| {
             let mut to = fs::OpenOptions::new().write(true).create_new(true).open(&partial)?;
             io::copy(&mut from, &mut to)?;
@@ -259,6 +267,40 @@ mod folder {
             Err(error) => {
                 let _ = fs::remove_file(&target);
                 Err(dest_code(&error))
+            }
+        }
+    }
+
+    /// The partial name of one run, for when the fixed one is taken. The dot
+    /// after the device cannot be in a device name, so the name is this
+    /// device's alone and `is_run_partial` reads it back without doubt.
+    pub(super) fn run_partial_name(device: &str, pid: u32, run: u128) -> String {
+        format!("{NAME_PREFIX}{device}.{pid}-{run}.partial")
+    }
+
+    /// Whether `name` is a run partial of `device` (`run_partial_name`).
+    pub(super) fn is_run_partial(name: &str, device: &str) -> bool {
+        let digits = |s: &str| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit());
+        name.strip_prefix(NAME_PREFIX)
+            .and_then(|rest| rest.strip_prefix(device))
+            .and_then(|rest| rest.strip_prefix('.'))
+            .and_then(|rest| rest.strip_suffix(".partial"))
+            .and_then(|run| run.split_once('-'))
+            .is_some_and(|(pid, nanos)| digits(pid) && digits(nanos))
+    }
+
+    /// Run partials a crashed run of this device left. This device writes
+    /// one backup at a time (one session), so, as with the fixed partial
+    /// name, none of them is being written now. Only
+    /// regular files of that one name shape go, never a link or a folder,
+    /// and never another device's: a synced folder holds several.
+    fn remove_stale_partials(dest: &Path, device: &str) {
+        let Ok(entries) = fs::read_dir(dest) else { return };
+        for entry in entries.flatten() {
+            let name = entry.file_name();
+            let Some(name) = name.to_str() else { continue };
+            if is_run_partial(name, device) && entry.file_type().is_ok_and(|t| t.is_file()) {
+                let _ = fs::remove_file(entry.path());
             }
         }
     }
@@ -429,13 +471,13 @@ mod platform {
     }
 }
 
-fn main_only(window: &tauri::WebviewWindow) -> Result<(), String> {
+pub(crate) fn main_only(window: &tauri::WebviewWindow) -> Result<(), String> {
     if window.label() == "main" { Ok(()) } else { Err("not-main".to_owned()) }
 }
 
 /// File work and the picker stay off the main thread and off the async
 /// workers: a copy to a slow drive takes as long as the drive does.
-async fn blocking<T: Send + 'static>(work: impl FnOnce() -> Result<T, String> + Send + 'static) -> Result<T, String> {
+pub(crate) async fn blocking<T: Send + 'static>(work: impl FnOnce() -> Result<T, String> + Send + 'static) -> Result<T, String> {
     tauri::async_runtime::spawn_blocking(work).await.map_err(|_| "io".to_owned())?
 }
 
@@ -702,6 +744,74 @@ mod tests {
         assert_eq!(folder::delete(&dest, NAME), Ok(true));
         assert_eq!(folder::exists(&dest, NAME), Ok(false));
         assert_eq!(folder::delete(&dest, NAME), Ok(false));
+    }
+
+    /// Beta issue 175: a folder at the partial name does not stop the backup,
+    /// and is left as it is.
+    #[test]
+    fn backup_dest_places_past_a_folder_at_the_partial_name() {
+        let temp = Temp::new("partial-folder");
+        let dest = temp.0.join("dest");
+        let blocker = dest.join("privacynotes-backup-work-laptop.partial");
+        fs::create_dir_all(blocker.join("inside")).expect("blocker");
+        let (staging, _, _) = stage(&temp, &[b"sealed bytes"]);
+        folder::place(&dest, &staging, NAME).expect("places");
+        assert_eq!(fs::read(dest.join(NAME)).expect("reads"), b"sealed bytes");
+        assert!(blocker.join("inside").is_dir());
+        let left: Vec<_> = fs::read_dir(&dest).expect("lists").filter_map(|e| e.ok()).map(|e| e.file_name()).collect();
+        assert_eq!(left.len(), 2, "{left:?}");
+    }
+
+    /// A run partial a crashed run left is removed by the next run; another
+    /// device's, a look-alike and a folder of that shape stay.
+    #[test]
+    fn backup_dest_removes_stale_run_partials_of_this_device() {
+        let temp = Temp::new("stale-partials");
+        let dest = temp.0.join("dest");
+        fs::create_dir(&dest).expect("dest");
+        let stale = dest.join("privacynotes-backup-work-laptop.4242-1763337600000000000.partial");
+        let other = dest.join("privacynotes-backup-home-pc.4242-1763337600000000000.partial");
+        let prefix = dest.join("privacynotes-backup-work.4242-1763337600000000000.partial");
+        let not_ours = dest.join("privacynotes-backup-work-laptop.notes.partial");
+        let folder = dest.join("privacynotes-backup-work-laptop.1-2.partial");
+        for file in [&stale, &other, &prefix, &not_ours] {
+            fs::write(file, b"old").expect("leftover");
+        }
+        fs::create_dir(&folder).expect("folder");
+        let (staging, _, _) = stage(&temp, &[b"sealed bytes"]);
+        folder::place(&dest, &staging, NAME).expect("places");
+        assert!(!stale.exists());
+        for kept in [&other, &prefix, &not_ours, &folder] {
+            assert!(kept.exists(), "{kept:?}");
+        }
+        assert!(folder::is_run_partial("privacynotes-backup-work-laptop.1-2.partial", "work-laptop"));
+        assert!(!folder::is_run_partial("privacynotes-backup-work-laptop.partial", "work-laptop"));
+        assert!(!folder::is_run_partial("privacynotes-backup-work-laptop-1-2.partial", "work"));
+        assert!(!folder::is_run_partial("privacynotes-backup-work-laptop.1-.partial", "work-laptop"));
+    }
+
+    /// The fallback name of a blocked run is one the next run removes, and
+    /// a blocked run still leaves none behind.
+    #[test]
+    fn backup_dest_names_a_blocked_run_partial_for_cleanup() {
+        let name = folder::run_partial_name("work-laptop", 7, 1_763_337_600_000_000_000);
+        assert!(folder::is_run_partial(&name, "work-laptop"));
+        assert!(!folder::is_run_partial(&name, "work"));
+        assert!(device_of(&name).is_none());
+
+        let temp = Temp::new("blocked-name");
+        let dest = temp.0.join("dest");
+        fs::create_dir_all(dest.join("privacynotes-backup-work-laptop.partial")).expect("blocker");
+        fs::write(dest.join("privacynotes-backup-work-laptop.7-8.partial"), b"old").expect("leftover");
+        let (staging, _, _) = stage(&temp, &[b"sealed bytes"]);
+        folder::place(&dest, &staging, NAME).expect("places");
+        let left: Vec<String> = fs::read_dir(&dest)
+            .expect("lists")
+            .filter_map(|e| e.ok())
+            .filter_map(|e| e.file_name().into_string().ok())
+            .filter(|n| folder::is_run_partial(n, "work-laptop"))
+            .collect();
+        assert_eq!(left, Vec::<String>::new());
     }
 
     #[test]

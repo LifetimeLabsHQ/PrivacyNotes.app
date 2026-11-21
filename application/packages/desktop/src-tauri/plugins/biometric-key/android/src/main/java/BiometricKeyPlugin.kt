@@ -30,6 +30,9 @@ import java.security.spec.X509EncodedKeySpec
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
 import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.OAEPParameterSpec
 import javax.crypto.spec.PSource
 
@@ -50,10 +53,13 @@ class DeleteArgs {
  *
  * An RSA-2048 key in the Android Keystore whose private half needs a strong
  * biometric for every use (`setUserAuthenticationRequired`, biometric-strong,
- * per use) and survives a finger added or removed while at least one stays
- * (`setInvalidatedByBiometricEnrollment(false)`). Removing the screen lock
- * destroys it. A random 32-byte secret is sealed to the public half, which
- * needs no prompt, and opened through a `BiometricPrompt.CryptoObject`, so the
+ * per use) and that Android invalidates for good when a biometric is
+ * enrolled after it, or when every biometric is removed
+ * (`setInvalidatedByBiometricEnrollment(true)`), so a finger added by someone
+ * who knows the screen lock opens nothing. Removing the screen lock destroys
+ * it too. A key made before that rule (`ks1.`) still opens; the web side
+ * replaces it at its next unlock. A random 32-byte secret is sealed to the
+ * public half, which needs no prompt, and opened through a `BiometricPrompt.CryptoObject`, so the
  * prompt the person passes is what lets the Keystore decrypt: enrollment and
  * unlock each show one prompt. Every enrollment gets a fresh alias, so making
  * a new key never touches a working one.
@@ -61,7 +67,8 @@ class DeleteArgs {
  * Rejections carry one code, which the web side reads: `unsupported` (said
  * before any prompt: no strong biometric, or the Keystore refused the key),
  * `cancelled`, `gone` (the key is destroyed and never comes back) and `failed`.
- * Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
+ * Spec: docs/internal/plans/biometric-key-binding.md (section 8.2),
+ * docs/internal/plans/biometric-new-finger.md (section 2.2)
  */
 @TauriPlugin
 class BiometricKeyPlugin(private val activity: Activity) : Plugin(activity) {
@@ -122,9 +129,9 @@ class BiometricKeyPlugin(private val activity: Activity) : Plugin(activity) {
         val host = activity as? FragmentActivity ?: return invoke.reject("No activity", FAILED)
         val (alias, sealed) = parseHandle(args.handle) ?: return invoke.reject("Bad handle", FAILED)
         // No screen lock: its removal invalidated every key that needs the
-        // user, for good. No strong biometric but a screen lock: the key
-        // survives (setInvalidatedByBiometricEnrollment(false)) and opens
-        // again once a finger is enrolled.
+        // user, for good. No strong biometric but a screen lock: a `ks1.` key
+        // survives and opens again once a finger is enrolled; a newer key is
+        // invalidated, which the next open after an enrollment reads as gone.
         val keyguard = activity.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
         if (keyguard?.isDeviceSecure == false) return invoke.reject("No screen lock", GONE)
         when (BiometricManager.from(activity).canAuthenticate(BIOMETRIC_STRONG)) {
@@ -154,13 +161,26 @@ class BiometricKeyPlugin(private val activity: Activity) : Plugin(activity) {
                 return@execute invoke.reject("Key unusable", FAILED)
             }
             prompt(host, args, cipher) { result, code ->
-                val opened = result?.let { runCatching { it.doFinal(sealed) }.getOrNull() }
+                val decrypt = result?.let { runCatching { it.doFinal(sealed) } }
+                val opened = decrypt?.getOrNull()
                 if (opened != null && opened.size == SECRET_BYTES) {
                     val ret = JSObject()
                     ret.put("secret", hex(opened))
                     invoke.resolve(ret)
+                } else if (code == null || code == FAILED) {
+                    // Some Keystore builds report an invalidated key only at
+                    // doFinal; a fresh init tells, so a dead key reads as gone
+                    // and never as a failure the lock screen retries.
+                    worker.execute {
+                        if (isInvalidation(decrypt?.exceptionOrNull()) || invalidated(alias)) {
+                            deleteAlias(alias)
+                            invoke.reject("Key invalidated", GONE)
+                        } else {
+                            invoke.reject("Not opened", FAILED)
+                        }
+                    }
                 } else {
-                    invoke.reject("Not opened", code ?: FAILED)
+                    invoke.reject("Not opened", code)
                 }
             }
         }
@@ -171,6 +191,90 @@ class BiometricKeyPlugin(private val activity: Activity) : Plugin(activity) {
         val args = invoke.parseArgs(DeleteArgs::class.java)
         parseHandle(args.handle)?.let { deleteAlias(it.first) }
         invoke.resolve()
+    }
+
+    /**
+     * The device key: one AES-256-GCM Keystore key under a fixed alias that
+     * needs no user, so it opens with no prompt, and whose bytes never leave
+     * the Keystore's TEE. Each create seals a
+     * fresh random secret with it; the handle carries the IV and the
+     * ciphertext, so a copy of the app's storage holds only ciphertext. It
+     * wraps the stored phrase while the app lock is off. Rejections:
+     * `unsupported` (the Keystore refused the key) and `failed`.
+     * Spec: docs/internal/plans/device-bound-phrase-key.md (section 3)
+     */
+    @Command
+    fun deviceCreate(invoke: Invoke) {
+        worker.execute {
+            var generated = false
+            try {
+                val existing = keyStore().getKey(DEVICE_ALIAS, null) as? SecretKey
+                val key = existing ?: deviceKey().also { generated = true }
+                val secret = random(SECRET_BYTES)
+                val cipher = Cipher.getInstance(AES_GCM)
+                cipher.init(Cipher.ENCRYPT_MODE, key)
+                val sealed = cipher.doFinal(secret)
+                val handle = "$DEVICE_HANDLE_PREFIX${hex(cipher.iv)}.${hex(sealed)}"
+                // The read-back: a key that cannot open what it sealed is no key.
+                if (!openDevice(handle).contentEquals(secret)) throw IllegalStateException("read-back")
+                val ret = JSObject()
+                ret.put("handle", handle)
+                ret.put("secret", hex(secret))
+                invoke.resolve(ret)
+            } catch (e: Exception) {
+                // A key this call made and that failed its read-back opens no
+                // envelope yet: remove it, so the next create makes a new one.
+                // An older key may hold envelopes and stays.
+                if (generated) runCatching { keyStore().deleteEntry(DEVICE_ALIAS) }
+                invoke.reject("The Keystore refused the device key", UNSUPPORTED)
+            }
+        }
+    }
+
+    @Command
+    fun deviceOpen(invoke: Invoke) {
+        val args = invoke.parseArgs(DeleteArgs::class.java)
+        worker.execute {
+            val opened = runCatching { openDevice(args.handle) }.getOrNull()
+            if (opened != null && opened.size == SECRET_BYTES) {
+                val ret = JSObject()
+                ret.put("secret", hex(opened))
+                invoke.resolve(ret)
+            } else {
+                invoke.reject("Not opened", FAILED)
+            }
+        }
+    }
+
+    private fun openDevice(handle: String): ByteArray {
+        val rest = handle.removePrefix(DEVICE_HANDLE_PREFIX).takeIf { it != handle } ?: throw IllegalArgumentException("bad handle")
+        val dot = rest.indexOf('.')
+        if (dot <= 0) throw IllegalArgumentException("bad handle")
+        val iv = unhex(rest.substring(0, dot)) ?: throw IllegalArgumentException("bad handle")
+        val sealed = unhex(rest.substring(dot + 1)) ?: throw IllegalArgumentException("bad handle")
+        val key = keyStore().getKey(DEVICE_ALIAS, null) as? SecretKey ?: throw IllegalStateException("no device key")
+        val cipher = Cipher.getInstance(AES_GCM)
+        cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(128, iv))
+        return cipher.doFinal(sealed)
+    }
+
+    /**
+     * Makes the device key. The TEE, not StrongBox: StrongBox is slow and has
+     * its own busy errors, and this key runs at every start.
+     */
+    @Synchronized
+    private fun deviceKey(): SecretKey {
+        (keyStore().getKey(DEVICE_ALIAS, null) as? SecretKey)?.let { return it }
+        val spec = KeyGenParameterSpec.Builder(DEVICE_ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
+            .setKeySize(256)
+            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+            .setUserAuthenticationRequired(false)
+            .build()
+        return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE).run {
+            init(spec)
+            generateKey()
+        }
     }
 
     /**
@@ -253,7 +357,7 @@ class BiometricKeyPlugin(private val activity: Activity) : Plugin(activity) {
             .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA1)
             .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
             .setUserAuthenticationRequired(true)
-            .setInvalidatedByBiometricEnrollment(false)
+            .setInvalidatedByBiometricEnrollment(true)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             // 0 seconds: every use needs its own prompt. Biometric only, never
             // the device PIN: the app's own PIN and phrase are the fallback.
@@ -282,6 +386,20 @@ class BiometricKeyPlugin(private val activity: Activity) : Plugin(activity) {
         return cipher
     }
 
+    /** True when the Keystore says the key is invalidated for good, or it is missing; any other error is not proof. */
+    private fun invalidated(alias: String): Boolean = try {
+        val key = privateKey(alias)
+        if (key != null) decryptCipher(key)
+        key == null
+    } catch (e: KeyPermanentlyInvalidatedException) {
+        true
+    } catch (e: Exception) {
+        false
+    }
+
+    private fun isInvalidation(error: Throwable?): Boolean =
+        generateSequence(error) { it.cause }.take(8).any { it is KeyPermanentlyInvalidatedException }
+
     private fun privateKey(alias: String): PrivateKey? = keyStore().getKey(alias, null) as? PrivateKey
 
     private fun deleteAlias(alias: String) {
@@ -291,9 +409,11 @@ class BiometricKeyPlugin(private val activity: Activity) : Plugin(activity) {
 
     private fun keyStore(): KeyStore = KeyStore.getInstance(KEYSTORE).apply { load(null) }
 
-    /** `ks1.<alias>.<hex ciphertext>`; anything else, or another app's alias, is no handle. */
+    /** `ks2.<alias>.<hex ciphertext>`, or an older `ks1.` one; anything else, or another app's alias, is no handle. */
     private fun parseHandle(handle: String?): Pair<String, ByteArray>? {
-        val rest = handle?.removePrefix(HANDLE_PREFIX)?.takeIf { it != handle } ?: return null
+        if (handle == null) return null
+        val prefix = listOf(HANDLE_PREFIX, ANY_SET_HANDLE_PREFIX).firstOrNull { handle.startsWith(it) } ?: return null
+        val rest = handle.substring(prefix.length)
         val dot = rest.indexOf('.')
         if (dot <= 0) return null
         val alias = rest.substring(0, dot)
@@ -318,7 +438,13 @@ class BiometricKeyPlugin(private val activity: Activity) : Plugin(activity) {
     private companion object {
         const val KEYSTORE = "AndroidKeyStore"
         const val ALIAS_PREFIX = "pn-bio-"
-        const val HANDLE_PREFIX = "ks1."
+        const val HANDLE_PREFIX = "ks2."
+        // A key made under setInvalidatedByBiometricEnrollment(false).
+        const val ANY_SET_HANDLE_PREFIX = "ks1."
+        // Outside ALIAS_PREFIX, so `delete` can never name it.
+        const val DEVICE_ALIAS = "pn-device-1"
+        const val DEVICE_HANDLE_PREFIX = "kd1."
+        const val AES_GCM = "AES/GCM/NoPadding"
         const val SECRET_BYTES = 32
         const val STALE_PROMPT_MS = 180_000L
         const val UNSUPPORTED = "unsupported"

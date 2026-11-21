@@ -38,6 +38,9 @@ class Notification {
   var sourceJson: String? = null
   var visibility: Int? = null
   var number: Int? = null
+  // Set only when an app update shows a notification again: the time it
+  // first showed, and no sound the second time (beta issue #808).
+  var shownAt: Long? = null
 
   fun getSound(context: Context, defaultSound: Int): String? {
     var soundPath: String? = null

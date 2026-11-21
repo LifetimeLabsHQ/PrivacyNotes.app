@@ -2,8 +2,11 @@
  * Download one web page or picture for the clipper, or one calendar file for
  * the calendar import, by the path this app has:
  * the native `clip_fetch` command on the desktop and the phones, the Worker's
- * `/clip-fetch` route on the web and in the demo. Both refuse the same things;
- * this module turns their refusals into the few reasons the screens explain.
+ * `/clip-fetch` route on the web and in the demo. Both refuse every local and
+ * private address; they differ only at edges that reach none (an IPv4 address
+ * in the IPv4-compatible IPv6 form, a local-looking name with a public address,
+ * a redirect with no Location). This module turns their refusals into the few
+ * reasons the screens explain.
  * Spec: docs/internal/specs/web-clipper-stage1.md (section 3.1)
  */
 import { isDemoMode } from './demo';
@@ -23,8 +26,10 @@ export interface Downloaded {
  *  network. `demo-limit`: the demo's clipping limit. `limit`: the account's
  *  rate limit. `refused`: the address is not one the clipper may open.
  *  `timeout`: the site did not answer within the deadline. `too-large`,
- *  `wrong-type`: the answer broke a limit. `failed`: anything else. */
-export type ClipErrorReason = 'blocked' | 'offline' | 'timeout' | 'demo-limit' | 'limit' | 'refused' | 'too-large' | 'wrong-type' | 'failed';
+ *  `wrong-type`: the answer broke a limit. `insecure`: a calendar's server
+ *  took no secure connection (calendars download over https only). `failed`:
+ *  anything else. */
+export type ClipErrorReason = 'blocked' | 'offline' | 'timeout' | 'demo-limit' | 'limit' | 'refused' | 'too-large' | 'wrong-type' | 'insecure' | 'failed';
 
 export class ClipError extends Error {
   constructor(readonly reason: ClipErrorReason) {
@@ -80,7 +85,7 @@ async function viaWorker(url: string, kind: ClipKind, token: TokenSource): Promi
   }
   let res: Response;
   try {
-    res = await fetch('/clip-fetch', { method: 'POST', headers, body: JSON.stringify({ url, kind }), credentials: 'omit', cache: 'no-store' });
+    res = await fetch(clipFetchUrl(), { method: 'POST', headers, body: JSON.stringify({ url, kind }), credentials: 'omit', cache: 'no-store' });
   } catch {
     throw new ClipError('offline');
   }
@@ -105,6 +110,12 @@ async function viaWorker(url: string, kind: ClipKind, token: TokenSource): Promi
   };
 }
 
+/** The beta site is static, with no Worker of its own: it asks the app
+ *  host's route, which answers that one origin with CORS (GitHub #849). */
+function clipFetchUrl(): string {
+  return typeof location !== 'undefined' && location.origin === 'https://beta.privacynotes.app' ? 'https://use.privacynotes.app/clip-fetch' : '/clip-fetch';
+}
+
 /** Whether a site's answer to a plain page request means it turns the
  *  clipper away. 405 belongs here: a page always takes a GET, so a site that
  *  refuses the method is refusing the client. */
@@ -127,6 +138,8 @@ function reasonOf(code: string): ClipErrorReason {
       return 'wrong-type';
     case 'timeout':
       return 'timeout';
+    case 'no-https':
+      return 'insecure';
     default:
       return 'failed';
   }

@@ -27,6 +27,19 @@ export function PanelQuestion({ children, className = 'mb-2' }: { children: Reac
   return <p className={`text-compact font-semibold text-pn ${className}`}>{children}</p>;
 }
 
+/** One tile of a choice: the fill of the chosen one, the hover of the rest.
+ *  The caller adds the height. `soft`: a bordered tile with an accent tint
+ *  when chosen, for a choice that sits beside bordered fields on a tinted
+ *  box (the day counter's From and To), where the solid fill shouted and a
+ *  borderless tile all but vanished in the light themes. */
+export function choiceTileClass(on: boolean, look: 'solid' | 'soft' = 'solid'): string {
+  const base = 'min-w-0 flex items-center justify-center rounded-lg px-1 text-center text-small font-medium leading-tight transition outline-none focus-visible:ring-2 focus-visible:ring-accent';
+  if (look === 'soft') {
+    return `${base} border ${on ? 'border-accent bg-accent/10 text-accent' : 'border-divider bg-surface-2 text-pn hover:border-accent hover:text-accent'}`;
+  }
+  return `${base} ${on ? 'bg-accent-fill text-white' : 'bg-surface-0 text-pn-soft hover:bg-accent/15 hover:text-accent'}`;
+}
+
 /**
  * One choice out of a few, as equal tiles across the row: sleep quality,
  * activity, yes or no. A long word wraps inside its tile rather than
@@ -53,9 +66,7 @@ export function ChoiceGrid<T extends string | boolean>({ options, value, onPick,
             role="radio"
             aria-checked={on}
             onClick={() => (on && onClear ? onClear() : onPick(o.key))}
-            className={`min-w-0 flex items-center justify-center rounded-lg px-1 text-center text-small font-medium leading-tight transition outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-              size === 'lg' ? 'h-12' : 'h-10 [@media(hover:none)]:h-11'
-            } ${on ? 'bg-accent-fill text-white' : 'bg-surface-0 text-pn-soft hover:bg-accent/15 hover:text-accent'}`}
+            className={`${choiceTileClass(on)} ${size === 'lg' ? 'h-12' : 'h-10 [@media(hover:none)]:h-11'}`}
           >
             <span className="min-w-0 break-words hyphens-auto">{o.label}</span>
           </button>
@@ -116,6 +127,20 @@ function snap(n: number, min: number | undefined, step: number): number {
 }
 
 /**
+ * The two inputs of one reading (a blood pressure, a Two numbers tracker):
+ * stacked and as wide as one panel, side by side once the panel has room
+ * for both, so the two questions read as one row.
+ * Spec: docs/internal/design/ui-patterns.md section 196
+ */
+export function ReadingPair({ children }: { children: ReactNode }) {
+  return (
+    <div className="@container w-full max-w-[856px]">
+      <div className="grid grid-cols-1 gap-4 max-w-[420px] @[38rem]:max-w-none @[38rem]:grid-cols-2">{children}</div>
+    </div>
+  );
+}
+
+/**
  * A number, big enough to read across the room: minus and plus step it, a
  * row of quick picks sets the usual values with one tap, and a tap on the
  * number itself opens the keyboard. Minus, plus and a quick pick save at
@@ -123,7 +148,7 @@ function snap(n: number, min: number | undefined, step: number): number {
  * so nothing typed is lost to a tap elsewhere. With `onClear`, an emptied
  * field and a tap on the chosen quick pick remove the value (GitHub #733).
  */
-export function NumberStepper({ value, onChange, onClear, min, max, step = 1, unit, unitKey, quick, placeholder, start, expanded, autoFocus, freeDecimals = false }: {
+export function NumberStepper({ value, onChange, onClear, min, max, step = 1, unit, unitKey, quick, placeholder, label, start, expanded, autoFocus, freeDecimals = false }: {
   value: number | null | undefined;
   onChange: (n: number) => void;
   /** Removes the value: an emptied field, a tap on the chosen quick pick. */
@@ -139,6 +164,9 @@ export function NumberStepper({ value, onChange, onClear, min, max, step = 1, un
   /** The values the quick picks offer, fixed per tracker. */
   quick?: readonly number[];
   placeholder?: string;
+  /** What a screen reader calls the field, where the placeholder is no name
+   *  (the day counter's "0"). Defaults to the placeholder. */
+  label?: string;
   /** The last value logged: shown in an empty field, and where minus and
    *  plus start. Never written by itself. */
   start?: number;
@@ -215,7 +243,7 @@ export function NumberStepper({ value, onChange, onClear, min, max, step = 1, un
             onChange={(e) => { typed.current = true; setDraft(e.target.value.slice(0, 10)); }}
             onBlur={commitDraft}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitDraft(); } }}
-            aria-label={placeholder}
+            aria-label={label ?? placeholder}
             style={{ width: `${Math.max(1, shown.length) + 0.4}ch` }}
             className="max-w-full bg-transparent text-center text-heading @[16rem]/stepper:text-display-2 font-semibold tabular-nums text-pn placeholder:text-pn-muted/60 outline-none"
           />

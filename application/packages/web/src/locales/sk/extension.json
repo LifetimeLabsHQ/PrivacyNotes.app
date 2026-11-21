@@ -47,9 +47,10 @@
     "title": "Chráň svoje prihlasovacie údaje",
     "body": "Zvoľ PIN alebo prístupový kód pre tento prehliadač. Potrebuješ ho na odomknutie prihlasovacích údajov tu. Je oddelený od toho v aplikácii.",
     "biometric": "Používať aj biometrické odomknutie",
-    "biometricHelp": "Touch ID alebo Windows Hello, popri PIN-e alebo prístupovom kóde, ktorý vždy funguje tiež.",
+    "biometricHelp": "Touch ID alebo Windows Hello cez prístupový kľúč pre tento prehliadač. PIN alebo prístupový kód vždy funguje tiež.",
     "repeat": "Zadaj ho znova",
-    "mismatch": "Tieto dva sa nezhodujú. Skús to znova."
+    "mismatch": "Tieto dva sa nezhodujú. Skús to znova.",
+    "commonPin": "Tento PIN sa dá príliš ľahko uhádnuť. Vyber iný."
   },
   "clip": {
     "selection": "Výber",
@@ -85,9 +86,9 @@
     "unlockPin": "Zadaj svoj PIN",
     "unlockPasscode": "Zadaj svoj prístupový kód",
     "useBiometric": "Použiť biometrické odomknutie",
-    "wrong_one": "Nesprávne. Zostáva {{count}} pokus, potom sa tento prehliadač odpojí.",
-    "wrong_few": "Nesprávne. Zostávajú {{count}} pokusy, potom sa tento prehliadač odpojí.",
-    "wrong_other": "Nesprávne. Zostáva {{count}} pokusov, potom sa tento prehliadač odpojí.",
+    "wrong_one": "Nesprávne. Tento mesiac zostáva {{count}} pokus, potom sa tento prehliadač odpojí.",
+    "wrong_few": "Nesprávne. Tento mesiac zostávajú {{count}} pokusy, potom sa tento prehliadač odpojí.",
+    "wrong_other": "Nesprávne. Tento mesiac zostáva {{count}} pokusov, potom sa tento prehliadač odpojí.",
     "forSite": "Pre {{site}}",
     "none": "Pre tento web nemáš žiadne prihlasovacie údaje.",
     "off": "Prihlasovacie údaje sú pre tento prehliadač vypnuté. Zapni Trezor, keď ho budeš pripájať.",
@@ -102,12 +103,15 @@
     "search": "Hľadať vo všetkých prihlasovacích údajoch",
     "noMatch": "Žiadne prihlasovacie údaje sa nezhodujú.",
     "openSite": "Otvoriť web",
-    "duplicate": "Pre tento web už máš prihlasovacie údaje s týmto používateľským menom."
+    "duplicate": "Pre tento web už máš prihlasovacie údaje s týmto používateľským menom.",
+    "editTitle": "Upraviť prihlasovacie údaje",
+    "saved": "Zmeny sú uložené."
   },
   "account": {
     "confirmDisconnect": "Odpojiť?",
     "revoked": "Tento prehliadač už nie je pripojený",
-    "revokedBody": "Pripoj ho znova novým kódom z aplikácie."
+    "revokedBody": "Pripoj ho znova novým kódom z aplikácie.",
+    "pendingPasskey": "Prístupový kľúč uložený v tomto prehliadači ešte nie je v tvojom Trezore. Otvor PrivacyNotes a nechaj ho najprv synchronizovať, inak sa prístupový kľúč stratí."
   },
   "badge": {
     "problem": "Niečo potrebuje tvoju pozornosť"
@@ -150,7 +154,8 @@
     "unlockToCopy": "Odomkni a kopíruj",
     "omniboxDefault": "Hľadať %s v trezore PrivacyNotes",
     "omniboxUnlock": "Odomkni PrivacyNotes a hľadaj",
-    "moreOptions": "Ďalšie možnosti"
+    "moreOptions": "Ďalšie možnosti",
+    "editNotSaved": "Tvoja zmena v položke {{name}} sa nedostala do Trezora, takže prihlasovacie údaje majú pôvodné hodnoty. Uprav ich znova a zmenu ulož."
   },
   "shortcuts": {
     "notSet": "Nenastavené",
@@ -197,5 +202,19 @@
     "biometricPin": "Na nastavenie zadaj svoj PIN.",
     "biometricPasscode": "Na nastavenie zadaj svoj prístupový kód.",
     "biometricOff": "Biometrické odomknutie je vypnuté"
+  },
+  "passkey": {
+    "saveTitle": "Uložiť prístupový kľúč pre {{site}}?",
+    "useTitle": "Prihlásiť sa do {{site}}",
+    "saveTo": "Uložiť do",
+    "save": "Uložiť do PrivacyNotes",
+    "other": "Použiť inú aplikáciu na prístupové kľúče",
+    "already": "Pre {{site}} už máš prístupový kľúč v PrivacyNotes.",
+    "saved": "Prístupový kľúč je uložený.",
+    "notSaved": "Prístupový kľúč sa nepodarilo uložiť. Prevezme to vlastná aplikácia na prístupové kľúče tvojho prehliadača.",
+    "maybeSaved": "Prístupový kľúč sa možno uložil. Skontroluj svoj Trezor.",
+    "unlockFirst": "Prístupové kľúče použiješ po odomknutí.",
+    "offer": "Ponúkať prístupové kľúče",
+    "offerHelp": "Ukladaj a používaj prístupové kľúče na weboch."
   }
 }

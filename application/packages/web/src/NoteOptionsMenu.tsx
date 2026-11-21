@@ -7,12 +7,12 @@ import { proUnlocked } from './demo';
 import { noteActionGuards, type NoteActionGuardDeps } from './noteActionGuards';
 import { formatInstant } from './intlFormat';
 import { prepareBurnPayload } from './burnShare';
-import { ColorSwatchRow } from './ColorSwatch';
+import { COLOR_MENU_WIDTH, ColorSwatchRow } from './ColorSwatch';
 import { NOTE_NO_COLOR, type LookColor, type NoteOwnColor } from './itemStyles';
-import { PencilSimpleSlash, Shield, LockSimple, ClockCounterClockwise, PushPin, Export, Trash, Repeat, Copy, Folder, Fire, ArrowCounterClockwise, ArticleMedium, TextAa, Swap, ListChecks, Broom, SortAscending, Palette, Shapes, MapPin, Info, CaretLeft, Calendar, Check, iconArchive } from './icons';
+import { PencilSimpleSlash, Shield, LockSimple, ClockCounterClockwise, PushPin, Export, Trash, Repeat, Copy, Folder, Fire, ArrowCounterClockwise, ArticleMedium, TextAa, TextAUnderline, Swap, ListChecks, Broom, SortAscending, Palette, Shapes, MapPin, Info, CaretLeft, Calendar, Check, Translate, iconArchive } from './icons';
 import { typeGlyph } from './NoteRow';
 import { PathGlyph, useNoteIconPaths } from './looks/LookGlyph';
-import { CONVERT_TARGETS, isConvertSource, type ConvertTarget } from './noteTypes';
+import { CONVERT_TARGETS, isConvertSource, traitsOf, type ConvertTarget } from './noteTypes';
 
 /**
  * Per-note options dropdown, anchored to the "..." button in the
@@ -63,6 +63,8 @@ type Props = NoteActionGuardDeps & {
 
   // Actions
   onDuplicate: () => void;
+  /** Translate notes (a plugin); absent where the note cannot be translated. Spec: docs/internal/plans/plugins.md (section 6.5) */
+  onTranslate?: () => void;
   /** Toggle pin/star. */
   onToggleStar?: () => void;
   /** Move to trash. */
@@ -105,6 +107,10 @@ type Props = NoteActionGuardDeps & {
   editorMode?: 'formatted' | 'markdown';
   /** Flip this note between the rich editor and the markdown source. */
   onToggleEditorMode?: () => void;
+  /** The "Spell check" switch of this one note. Present only while the
+   *  device switch is on, on an editable markdown body.
+   *  Spec: docs/internal/specs/note-spell-check.md */
+  spellcheck?: { on: boolean; onToggle: () => void };
   /**
    * Open the find-and-replace bar. Present only while the note shows the
    * rich editor: the bar drives that editor's search plugin, which the
@@ -171,6 +177,7 @@ export function NoteOptionsMenu({
   onClose,
   anchorRef,
   onDuplicate,
+  onTranslate,
   onSetLocked,
   onSetPinProtected,
   onOpenUpgrade,
@@ -194,6 +201,7 @@ export function NoteOptionsMenu({
   spaceMove,
   editorMode,
   onToggleEditorMode,
+  spellcheck,
   onFindReplace,
   onUncheckAllTasks,
   onDeleteCheckedTasks,
@@ -223,13 +231,15 @@ export function NoteOptionsMenu({
 
   const showModeRow = !isTrash && !!onToggleEditorMode && !!editorMode;
   const showReplaceRow = !isTrash && !!onFindReplace;
+  const showSpellRow = !isTrash && !!spellcheck;
   const showUncheckRow = !isTrash && !!onUncheckAllTasks;
   const showDeleteCheckedRow = !isTrash && !!onDeleteCheckedTasks;
   const showSortTasksRow = !isTrash && !!onSortTasksByStatus;
   const showTaskRows = showUncheckRow || showDeleteCheckedRow || showSortTasksRow;
   const showConvertRow = !!onConvertType && isConvertSource(note.type);
-  const noteDay = note.type === 'note' || note.type === 'task' || note.type === 'event' ? journalDateOf(note) : null;
-  const noteSchedule = scheduleOf(note.trackers as Record<string, unknown> | undefined, note.type, note.type === 'journal' ? entryDayOf(note) : noteDay);
+  const { dated } = traitsOf(note.type);
+  const noteDay = dated === 'schedule' ? journalDateOf(note) : null;
+  const noteSchedule = scheduleOf(note.trackers as Record<string, unknown> | undefined, note.type, dated === 'entry' ? entryDayOf(note) : noteDay);
   useEffect(() => { void loadScheduleView(); }, []);
 
   const bytes = computeNoteTotalSize(note);
@@ -249,7 +259,7 @@ export function NoteOptionsMenu({
       view={view}
       onClose={onClose}
       onEscape={() => (view === 'main' ? onClose() : setView('main'))}
-      className={view === 'convert' ? CONVERT_WIDTH : 'w-80'}
+      className={view === 'convert' ? CONVERT_WIDTH : view === 'color' ? COLOR_MENU_WIDTH : 'w-80'}
     >
       {/* Find-in-note deliberately does NOT live here: the magnifier sits in
           the editor's corner, on every note long enough to search. Find AND
@@ -419,7 +429,7 @@ export function NoteOptionsMenu({
             </Group>
           )}
 
-          {(showModeRow || showReplaceRow || showTaskRows) && (
+          {(showModeRow || showReplaceRow || showSpellRow || showTaskRows || onTranslate) && (
             <Group>
               {showModeRow && (
                 <ActionItem
@@ -435,6 +445,22 @@ export function NoteOptionsMenu({
                   icon={<Swap aria-hidden="true" />}
                   pro={!isPro}
                   onClick={() => { onFindReplace?.(); onClose(); }}
+                />
+              )}
+              {showSpellRow && (
+                <ToggleItem
+                  label={t('noteOptionsMenu.spellCheck')}
+                  icon={<TextAUnderline aria-hidden="true" />}
+                  checked={spellcheck.on}
+                  onClick={spellcheck.onToggle}
+                />
+              )}
+              {onTranslate && (
+                <ActionItem
+                  label={t('notes:translate.action')}
+                  icon={<Translate aria-hidden="true" />}
+                  pro={!isPro}
+                  onClick={() => { onClose(); onTranslate(); }}
                 />
               )}
               {showUncheckRow && (
@@ -462,7 +488,7 @@ export function NoteOptionsMenu({
           )}
 
           <Group>
-            {onSetJournalDate && !isTrash && note.type === 'journal' && (
+            {onSetJournalDate && !isTrash && dated === 'entry' && (
               <ActionItem
                 label={t('noteOptionsMenu.entryDate')}
                 icon={<Calendar aria-hidden="true" />}
@@ -471,7 +497,7 @@ export function NoteOptionsMenu({
                 onClick={() => setView('schedule')}
               />
             )}
-            {onSetNoteDate && !isTrash && (note.type === 'note' || note.type === 'task' || note.type === 'event') && (
+            {onSetNoteDate && !isTrash && dated === 'schedule' && (
               <ActionItem
                 label={t('noteOptionsMenu.schedule')}
                 icon={<Calendar aria-hidden="true" />}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { LocalNote } from '../db';
 import { splitOffCopy, updateNoteFrom } from '../notesRepo';
+import { traitsOf } from '../noteTypes';
 import { entryDayOf, journalDatePatch, schedulePatch, type JournalTitleFormat } from '../notesViewUtils';
 import {
   applyScheduleEdit,
@@ -39,6 +40,10 @@ export function useCalendarActions(deps: {
   displayTitle: (n: LocalNote) => string;
   /** A split made a copy that now holds the occurrence the item was open on. */
   onSplit?: (fromId: string, copyId: string) => void;
+  /** Gate a copy of an item the PIN guards right now, as every other copy is (RFS #215). */
+  gateCopy?: (id: string) => void;
+  /** Ask for the PIN, then run the action: the trash path's ask. */
+  requestPinGate?: (action: () => Promise<void>, purpose: 'delete') => void;
 }) {
   const [question, setQuestion] = useState<SeriesQuestion | null>(null);
 
@@ -84,8 +89,10 @@ export function useCalendarActions(deps: {
 
   /** The copy and the series' new rule in one write, both from the stored row. */
   async function split(item: LocalNote, build: (src: LocalNote) => { copy: Record<string, unknown>; series: Record<string, unknown> } | null): Promise<void> {
+    const gated = deps.isNoteLocked(item);
     const done = await splitOffCopy(item.id, build);
     if (!done) return;
+    if (gated) deps.gateCopy?.(done.copy.id);
     deps.patchLocal(item.id, done.series, new Date().toISOString(), { edit: false });
     deps.scheduleSync();
     await deps.refresh();
@@ -153,9 +160,10 @@ export function useCalendarActions(deps: {
     for (const id of ids) {
       const item = deps.notes.find((n) => n.id === id);
       if (!item) continue;
-      if (item.type === 'journal') {
+      const { dated } = traitsOf(item.type);
+      if (dated === 'entry') {
         await applyTo(id, entryDayOf(item), { shiftDays: diffDays(entryDayOf(item), day), ...(time ? { time } : {}) });
-      } else if (item.type === 'note' || item.type === 'task' || item.type === 'event') {
+      } else if (dated === 'schedule') {
         const s = scheduleOf(item.trackers as Record<string, unknown> | undefined, item.type);
         if (s?.repeat) continue;
         if (!s) await write(id, (current) => schedulePatch(current, day)?.trackers ?? null);
@@ -184,21 +192,26 @@ export function useCalendarActions(deps: {
           trashAll();
           return;
         }
-        after?.();
-        if (scope === 'this') {
-          void write(id, (current) => {
+        const run = async () => {
+          after?.();
+          if (scope === 'this') {
+            await write(id, (current) => {
+              const cur = scheduleOf(current.trackers as Record<string, unknown> | undefined, 'event');
+              if (!cur?.repeat || !isLive(current, occurrence)) return null;
+              return { ...(current.trackers ?? {}), repeat: { ...cur.repeat, skip: [...new Set([...(cur.repeat.skip ?? []), occurrence])].sort() } };
+            });
+            return;
+          }
+          await write(id, (current) => {
             const cur = scheduleOf(current.trackers as Record<string, unknown> | undefined, 'event');
             if (!cur?.repeat || !isLive(current, occurrence)) return null;
-            return { ...(current.trackers ?? {}), repeat: { ...cur.repeat, skip: [...new Set([...(cur.repeat.skip ?? []), occurrence])].sort() } };
+            const { count: _count, ...rest } = cur.repeat;
+            return { ...(current.trackers ?? {}), repeat: { ...rest, until: shiftDay(occurrence, -1) } };
           });
-          return;
-        }
-        void write(id, (current) => {
-          const cur = scheduleOf(current.trackers as Record<string, unknown> | undefined, 'event');
-          if (!cur?.repeat || !isLive(current, occurrence)) return null;
-          const { count: _count, ...rest } = cur.repeat;
-          return { ...(current.trackers ?? {}), repeat: { ...rest, until: shiftDay(occurrence, -1) } };
-        });
+        };
+        // Deleting part of an item behind the PIN asks for it, as deleting all of it does (RFS #215).
+        if (deps.isNoteLocked(item) && deps.requestPinGate) deps.requestPinGate(run, 'delete');
+        else void run();
       },
     });
     return true;

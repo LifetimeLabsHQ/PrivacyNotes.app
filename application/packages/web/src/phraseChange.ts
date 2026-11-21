@@ -105,7 +105,13 @@ export type ChangeState = {
   factors: ChangeFactor[];
   /** Browsers and the CLI: these disconnect, with no choice. */
   connections: ChangeConnection[];
-  settings: { nonce: string | null; keyEpoch: number; plain: Record<string, unknown> | null; localRev: number };
+  /** The sign-in passkeys that still sign in: the change retires every one
+   *  (P16), and the summary says so. 0 when the server gave no answer.
+   *  Spec: docs/contrib/passkeys.md (4.3) */
+  signInPasskeys: number;
+  /** `fromCache`: the row did not open, and `plain` is this device's cache
+   *  (readSettingsRowForChange); the change then replaces the row. */
+  settings: { nonce: string | null; keyEpoch: number; plain: Record<string, unknown> | null; localRev: number; fromCache?: true };
 };
 
 /** What the server needs, and this device's doors for the new phrase. */
@@ -121,6 +127,9 @@ export type PreparedChange = {
   settingsCiphertext: string;
   settingsNonce: string;
   observedSettingsNonce: string | null;
+  /** The person's retry after `phrase_change_settings_moved`: the server
+   *  replaces the settings row whatever its nonce (signed, #181 item 1). */
+  replaceSettings: boolean;
   custodial: boolean;
   /** The account's new PIN wrap, in the settings blob; null when it has none. */
   pinWrap: PinWrapBlob | null;
@@ -193,6 +202,14 @@ export async function readChangeState(actor: ChangeActor): Promise<ChangeState> 
   } catch (err) {
     throw new PhraseChangeError(err instanceof Error ? err.message : 'settings_unavailable');
   }
+  // A lazy module, as the header asks. Only a count for the summary: no
+  // answer is no line, never a stop.
+  let signInPasskeys = 0;
+  try {
+    signInPasskeys = (await (await import('./passkeySignIn')).countSignInPasskeys(actor)) ?? 0;
+  } catch {
+    signInPasskeys = 0;
+  }
   return {
     custodial: account.custodial === true,
     logins: account.connections.filter((c) => c.active).map((c) => ({ id: c.id, provider: c.provider, email: c.email })),
@@ -200,6 +217,7 @@ export async function readChangeState(actor: ChangeActor): Promise<ChangeState> 
       .map((f) => ({ id: f.id, name: typeof f.friendly_name === 'string' && f.friendly_name ? f.friendly_name : null })),
     connections: ((tokens.data ?? []) as Array<{ id: string; label: string; client: string }>)
       .map((t) => ({ id: t.id, label: t.label, client: t.client === 'cli' ? 'cli' as const : 'browser' as const })),
+    signInPasskeys,
     settings,
   };
 }
@@ -229,15 +247,22 @@ function wrapOf(plain: Record<string, unknown> | null): PinWrapBlob | null {
  * this flow (never one a gate remembered), needed when the account holds a
  * PIN wrap. `biometric` carries the two strings the native prompt shows,
  * needed when this device holds a biometric record. Throws PhraseChangeError:
- * `phrase_invalid`, `pin_required`, `pin_wrong`, `biometric_required` (the
+ * `phrase_invalid`, `pin_required`, `pin_wrong`, `pin_locked` (the shared
+ * PIN lockout runs), `biometric_required` (the
  * fingerprint is the only door, and its prompt was declined),
+ * `biometric_cannot_bind` (the fingerprint is the only door, and it is a
+ * presence gate that cannot become bound: a PIN or passcode first, #842),
  * `key_ring_incomplete` (this device lacks an earlier epoch's keys, so the
  * next ring would lose them).
  */
 export async function prepareChange(
   actor: ChangeActor,
   state: ChangeState,
-  input: { phrase: string; pin?: string; biometric?: { reason: string; cancelLabel: string } },
+  input: {
+    phrase: string; pin?: string; biometric?: { reason: string; cancelLabel: string };
+    /** Only on the person's own retry after `phrase_change_settings_moved`. */
+    replaceSettings?: boolean;
+  },
 ): Promise<PreparedChange> {
   const newPhrase = input.phrase.trim().toLowerCase();
   if (!isValidPhrase(newPhrase) || newPhrase === actor.phrase.trim().toLowerCase()) throw new PhraseChangeError('phrase_invalid');
@@ -248,7 +273,14 @@ export async function prepareChange(
   let pinWrap: PinWrapBlob | null = null;
   if (oldWrap) {
     if (!input.pin) throw new PhraseChangeError('pin_required');
-    if ((await E().openPinWrapBlob(oldWrap, input.pin)) !== actor.phrase) throw new PhraseChangeError('pin_wrong');
+    // The one counter every PIN surface shares (pin.ts): a try here waits
+    // out a lockout and counts like a try at any gate.
+    if (E().getPinLockoutState().locked) throw new PhraseChangeError('pin_locked');
+    if ((await E().openPinWrapBlob(oldWrap, input.pin)) !== actor.phrase) {
+      E().recordPinFailure();
+      throw new PhraseChangeError('pin_wrong');
+    }
+    E().clearPinFailures();
     pinWrap = await E().buildPinWrap(newPhrase, input.pin);
     if ((await E().openPinWrapBlob(pinWrap, input.pin)) !== newPhrase) throw new PhraseChangeError('pin_wrap_failed');
   }
@@ -291,12 +323,18 @@ export async function prepareChange(
   // door, the change waits for it.
   let biometric: PreparedChange['biometric'] = null;
   if (E().hasBiometricCredential()) {
-    const onlyDoor = E().appLockArmed() && !E().hasPinWrappedPhrase() && !pinWrap;
+    // A PIN wrap counts only once it is on this device: a prepared one that
+    // `commitLocalDoors` will not store here (`localPinWrap` false) opens
+    // nothing at the next start.
+    const onlyDoor = E().appLockArmed() && !E().hasPinWrappedPhrase();
     const made = input.biometric
       ? await E().prepareBiometricForPhrase(newPhrase, input.biometric.reason, input.biometric.cancelLabel)
       : ({ ok: false, reason: 'user_cancelled', message: '' } as const);
     if (made.ok) biometric = made.prepared;
-    else if (onlyDoor) throw new PhraseChangeError('biometric_required');
+    // A presence gate that cannot become bound gets no record for the new
+    // phrase (#842): with a PIN it goes after the change, and as the only
+    // door the change waits for a PIN or passcode.
+    else if (onlyDoor) throw new PhraseChangeError(made.reason === 'cannot_bind' ? 'biometric_cannot_bind' : 'biometric_required');
     else biometric = 'remove';
   }
 
@@ -312,6 +350,10 @@ export async function prepareChange(
     settingsCiphertext: bytesToBase64(sealed.ciphertext),
     settingsNonce: bytesToBase64(sealed.nonce),
     observedSettingsNonce: state.settings.nonce,
+    // A row that did not open is replaced by the blob built from this
+    // device's cache: guarding on its nonce would only meet a session that
+    // writes it again (beta #201 item 4).
+    replaceSettings: input.replaceSettings === true || state.settings.fromCache === true,
     custodial: state.custodial,
     pinWrap,
     localPinWrap: E().hasPinWrappedPhrase(),
@@ -341,6 +383,7 @@ function payloadOf(prepared: PreparedChange, keep: KeepList) {
     keepConnections: ids(keep.logins),
     keepFactors: ids(keep.factors),
     phrase: prepared.custodial ? prepared.newPhrase : null,
+    replaceSettings: prepared.replaceSettings,
   };
 }
 
@@ -349,12 +392,16 @@ function payloadOf(prepared: PreparedChange, keep: KeepList) {
  * the same order, as `bodyDigest` in the edge function. An array has no key
  * order to drift. Pinned by tests/rotatePhraseEdge.test.ts.
  */
-export async function rotateBodyDigest(p: ReturnType<typeof payloadOf>): Promise<string> {
-  const text = JSON.stringify([
-    'rotate-phrase-v1', p.epoch, p.newSigningPubkey, p.keyRing, p.authPassword,
+export async function rotateBodyDigest(p: Omit<ReturnType<typeof payloadOf>, 'replaceSettings'> & { replaceSettings?: boolean }): Promise<string> {
+  const fields = [
+    p.epoch, p.newSigningPubkey, p.keyRing, p.authPassword,
     p.settingsCiphertext, p.settingsNonce, p.observedSettingsNonce,
     p.keepConnections, p.keepFactors, p.phrase,
-  ]);
+  ];
+  // v2 signs the retry flag; v1 (no flag) is what apps before it sent.
+  const text = JSON.stringify(p.replaceSettings === undefined
+    ? ['rotate-phrase-v1', ...fields]
+    : ['rotate-phrase-v2', ...fields, p.replaceSettings]);
   return sha256Hex(new TextEncoder().encode(text));
 }
 
@@ -595,16 +642,32 @@ function putHandover(rec: Handover): void {
 async function writeHandover(prepared: PreparedChange): Promise<void> {
   const phrase = E().appLockArmed() ? null : await E().sealPhraseForDevice(prepared.newPhrase);
   if (!E().appLockArmed() && phrase === null) throw new PhraseChangeError('handover_unavailable');
+  // The record's PIN wrap holds the new phrase under the PIN: in the apps it
+  // is sealed under the device key like the lock's own copy, so this copy
+  // gives a search nothing without the device's key store.
+  // Spec: docs/internal/plans/pin-wrap-hardening.md (section 5.4, C2-1)
+  // A device that keeps no lock copy of the wrap (its lock off, the phrase at
+  // rest) writes none here either: the record's envelope finishes the change,
+  // and a copy under the PIN would give its files a PIN to search.
+  // Spec: docs/internal/plans/derived-keys-design.md (section 5.4, stage 2)
+  const pinWrap = prepared.localPinWrap ? await sealedHandoverWrap(prepared.pinWrap) : null;
   try {
     putHandover({
       v: 1, account: prepared.accountId, toEpoch: prepared.toEpoch, signingPubkey: prepared.newSigningPubkey,
-      phase: 'sent', pinWrap: prepared.pinWrap, localPinWrap: prepared.localPinWrap, biometric: prepared.biometric, phrase,
+      phase: 'sent', pinWrap, localPinWrap: prepared.localPinWrap, biometric: prepared.biometric, phrase,
       sentAt: Date.now(),
     });
   } catch {
     throw new PhraseChangeError('handover_unavailable');
   }
   if (readHandover()?.signingPubkey !== prepared.newSigningPubkey) throw new PhraseChangeError('handover_unavailable');
+}
+
+async function sealedHandoverWrap(blob: PinWrapBlob | null): Promise<PinWrapBlob | null> {
+  if (!blob || !E().sealsPinWrapHere()) return blob;
+  const sealed = await E().sealPinCiphertext(blob.pinWrapSalt, blob.pinWrapIV, blob.pinWrapCiphertext);
+  // A shell with no device key keeps the plain wrap, as the lock's copy does.
+  return sealed ? { ...blob, pinWrapCiphertext: sealed } : blob;
 }
 
 function markHandoverCommitted(): void {
@@ -659,13 +722,31 @@ export async function finishPendingPhraseChange(
   supabase: SupabaseClient | null,
   opts: { pin?: string; writeStoredPhrase?: boolean } = {},
 ): Promise<string | null> {
-  const rec = readHandover();
-  if (!rec) return null;
+  const read = readHandover();
+  if (!read) return null;
   let owner: string | null = null;
   try { owner = localStorage.getItem(E().PUBKEY_OWNER_KEY); } catch { /* unread: kept */ }
-  if (owner !== null && owner !== rec.account) {
+  if (owner !== null && owner !== read.account) {
     dropHandover();
     return null;
+  }
+  // A PIN wrap sealed under the device key (writeHandover) opens here, after
+  // the owner check. One the key store does not open: with the phrase in the
+  // record's envelope the change still finishes, and this device keeps no
+  // local PIN wrap from it (the next settings pass brings the account's);
+  // with only the wrap, the record waits for the next start.
+  let rec = read;
+  if (read.pinWrap && E().isSealedPinWrap(read.pinWrap.pinWrapCiphertext)) {
+    const opened = await E().openSealedPinWrap(read.pinWrap.pinWrapCiphertext, read.pinWrap.pinWrapSalt, read.pinWrap.pinWrapIV);
+    if (opened === null || opened === 'cancelled') {
+      // Only the record's phrase envelope can finish it now. The wrap is
+      // kept, never null: a null wrap would make commitLocalDoors remove this
+      // device's wrap; with localPinWrap off it stores and removes nothing.
+      if (!read.phrase) return null;
+      rec = { ...read, localPinWrap: false };
+    } else {
+      rec = { ...read, pinWrap: { ...read.pinWrap, pinWrapCiphertext: opened } };
+    }
   }
   let phrase: string | null = null;
   if (rec.phrase) phrase = await E().unwrapStoredEnvelope(rec.phrase);

@@ -13,25 +13,30 @@ import type { ImageStore } from '../imageStore';
 import type { AppearancePane } from '../AppearanceSheet';
 import { exemptOpts } from '../i18nExempt';
 import { appZoomSupported } from '../appZoom';
-import { Archive, Calendar, ChartBar, CreditCard, Database, Desktop, Info, Keyboard, Question, Repeat, ListBullets, Palette, Heartbeat, PencilLine, PuzzlePiece, Shield, TerminalWindow, Toolbox, Translate, User, type Icon } from '../icons';
+import { Archive, Calendar, ChartBar, CreditCard, Database, Desktop, Info, Keyboard, Question, Repeat, ListBullets, Palette, Heartbeat, PencilLine, Plug, PuzzlePiece, Shield, TerminalWindow, Toolbox, Translate, User, type Icon } from '../icons';
 import { proUnlocked } from '../demo';
 import { commandLineShown } from '../cliRelease';
+import { pluginsShown } from '../onDeviceAi';
+import { setPairHidden } from '../dismissedSuggestions';
+import { suggestionPairKey } from '../relatedLoader';
 import { isTouchOnly } from '../touchOnly';
 import { activeLocale } from '../languages';
 import { helpPath } from '../localeRoutes';
 import { updateNote } from '../notesRepo';
+import { endExpiredPinWindow } from '../pin';
 import { weekReflectionFor } from '../notesViewUtils';
 import type { View } from '../views';
 import type { SettingsCategory } from '../SettingsShell';
 import { StoragePane } from './StoragePane';
 import type { SectionId } from '../settingsSearch/registry';
 import { siteHref } from '../siteLinks';
-import { loadLocalSettings, withCredentialChanges, type UserSettings } from '../userSettings';
+import { loadLocalSettings, settingsBinder, withCredentialChanges, type UserSettings } from '../userSettings';
 import { applyNoteColorChoice, noteColorChoice } from '../itemStyles';
 import type { ViewMode } from '../viewMode';
 import { setDeviceLabel } from '../deviceLabels';
 import type { ThemeBuilderTarget } from './useThemeBuilder';
 import type { UpgradeTrigger } from '../UpgradeModal';
+import type { FeedsControl } from '../calendarFeedUI';
 
 export const StatsModal = lazyModal(() => import('../StatsModal').then((m) => m.StatsModal));
 export const AboutModal = lazyModal(() => import('../AboutModal').then((m) => m.AboutModal));
@@ -56,6 +61,7 @@ const DateSheet = lazyModal(() => import('../LanguageSheet').then((m) => m.DateS
 const CalendarSettings = lazyModal(() => import('../CalendarSettings').then((m) => m.CalendarSettings));
 const DateTimePane = lazyModal(() => import('../DateTimePane').then((m) => m.DateTimePane));
 const SystemPane = lazyModal(() => import('../SystemPane').then((m) => m.SystemPane));
+const PluginsPane = lazyModal(() => import('../plugins/PluginsPane').then((m) => m.PluginsPane));
 const TrackerSettingsPane = lazyModal(() => import('../TrackerConfig').then((m) => m.TrackerSettingsPane));
 
 type Authed = Extract<AuthState, { status: 'authenticated' }>;
@@ -71,6 +77,7 @@ export const SETTINGS_SECTION_ICONS: Record<SectionId, Icon> = {
   me: User,
   design: Palette,
   editor: PencilLine,
+  plugins: Plug,
   formatBar: Toolbox,
   lists: ListBullets,
   trackers: Heartbeat,
@@ -98,6 +105,8 @@ function railIcon(id: SectionId) {
 export function buildSettingsCategories({
   t,
   notes,
+  openNotesFromSettings,
+  allNotes,
   isNoteLocked,
   userSettings,
   mutateSettings,
@@ -137,11 +146,20 @@ export function buildSettingsCategories({
   refresh,
   runSync,
   saveWeekReflection,
+  statsTracker,
+  onShowTrackerEntries,
+  onShowTrackerInCalendar,
   openThemeBuilder,
   formatBarBoard,
+  calendarFeeds,
 }: {
   t: TFunction;
   notes: LocalNote[];
+  /** Find duplicates' Open both: side by side as tabs where tabs show, else the first. */
+  openNotesFromSettings: (ids: string[]) => void;
+  /** Every item, the ones of a shut section too: the import duplicate check
+   *  and the exports read the whole store (the exports ask for the PIN). */
+  allNotes: LocalNote[];
   /** The view's lock predicate, for the readers of a journal's trackers. */
   isNoteLocked: (n: LocalNote) => boolean;
   userSettings: UserSettings;
@@ -201,14 +219,24 @@ export function buildSettingsCategories({
   runSync: () => Promise<void>;
   /** Writes the weekly reflection, creating the Monday entry if needed. */
   saveWeekReflection: (text: string) => Promise<void>;
+  /** The tracker page Statistics opens on (a door from Journals or the Calendar). */
+  statsTracker: string | null;
+  /** A tracker page's "See entries" and "Show in Calendar". */
+  onShowTrackerEntries: (id: string) => void;
+  onShowTrackerInCalendar: (id: string) => void;
   /** Closes Settings and opens the theme builder. */
   openThemeBuilder: (target: ThemeBuilderTarget) => void;
   formatBarBoard: FormatBarBoardProps;
+  /** The subscribed calendars, with each one's space (#772): the one control
+   *  NotesView builds, so Settings writes what the calendar writes. */
+  calendarFeeds: FeedsControl;
 }): SettingsCategory[] {
+  const bind = settingsBinder(userSettings, mutateSettings);
   // Design, Editor and Lists are three panes of one sheet, one Settings
   // entry each. Spec: docs/internal/design/ui-patterns.md (section 135)
-  const appearancePane = (pane: AppearancePane, initialTab?: string) => (
+  const appearancePane = (pane: AppearancePane, initialTab?: string, onOpenPlugins?: () => void) => (
     <AppearanceSheet
+      onOpenPlugins={onOpenPlugins}
       embedded
       pane={pane}
       initialTab={initialTab}
@@ -218,33 +246,14 @@ export function buildSettingsCategories({
       editorMode={userSettings.editorMode}
       onEditorModeChange={onEditorModeChange}
       formatBar={formatBarBoard}
-      lineSpacing={userSettings.lineSpacing}
-      onLineSpacingChange={(next) => mutateSettings((prev) => ({ ...prev, lineSpacing: next }))}
-      nestedNumbers={userSettings.nestedNumbers}
-      onNestedNumbersChange={(next) => mutateSettings((prev) => ({ ...prev, nestedNumbers: next }))}
+      bind={bind}
       hiddenViews={userSettings.hiddenViews}
       hiddenInAll={userSettings.hiddenInAll}
       archivedInAll={userSettings.archivedInAll}
       onToggleHidden={onToggleHiddenView}
-      onViewOrderChange={(order) => mutateSettings((prev) => ({ ...prev, viewOrder: order }))}
-      startView={userSettings.startView}
-      onStartViewChange={(next) => mutateSettings((prev) => ({ ...prev, startView: next }))}
+      onViewOrderChange={bind('viewOrder').onChange}
       noteColors={noteColorChoice(userSettings.tintNotes, userSettings.noteColorStyle)}
       onNoteColorsChange={(next) => mutateSettings((prev) => applyNoteColorChoice(prev, next))}
-      sinkCheckedTasks={userSettings.sinkCheckedTasks}
-      onSinkCheckedTasksChange={(on) => mutateSettings((prev) => ({ ...prev, sinkCheckedTasks: on }))}
-      taskConfetti={userSettings.taskConfetti}
-      onTaskConfettiChange={(on) => mutateSettings((prev) => ({ ...prev, taskConfetti: on }))}
-      typedSymbols={userSettings.typedSymbols}
-      onTypedSymbolsChange={(on) => mutateSettings((prev) => ({ ...prev, typedSymbols: on }))}
-      linkSuggestions={userSettings.linkSuggestions}
-      onLinkSuggestionsChange={(on) => mutateSettings((prev) => ({ ...prev, linkSuggestions: on }))}
-      confirmTrash={userSettings.confirmTrash}
-      onConfirmTrashChange={(on) => mutateSettings((prev) => ({ ...prev, confirmTrash: on }))}
-      confirmArchive={userSettings.confirmArchive}
-      onConfirmArchiveChange={(on) => mutateSettings((prev) => ({ ...prev, confirmArchive: on }))}
-      spaces={userSettings.spaces}
-      onSpacesChange={(on) => mutateSettings((prev) => ({ ...prev, spaces: on }))}
       onOpenUpgrade={(trigger) => { setShowSettings(false); setShowUpgrade({ trigger: trigger ?? 'theme' }); }}
       onClose={() => setShowSettings(false)}
       customThemes={userSettings.customThemes}
@@ -270,8 +279,8 @@ export function buildSettingsCategories({
       onClose={() => setShowSettings(false)}
       section={section}
       initialTab={initialTab as ImportTab | undefined}
-      notes={notes}
-      calendarFeeds={{ list: userSettings.calendarFeeds, onChange: (update) => mutateSettings((prev) => ({ ...prev, calendarFeeds: update(prev.calendarFeeds) })) }}
+      notes={allNotes}
+      calendarFeeds={calendarFeeds}
       onImportFolders={mergeImportedFolders}
       importTarget={importTarget}
       onCreateImportFolder={createImportFolder}
@@ -339,6 +348,9 @@ export function buildSettingsCategories({
                   onOpenWellnessExport={() => navigate('import', 'wellness')}
                   embedded
                   initialTab={initialTab === 'wellness' || initialTab === 'writing' || initialTab === 'medication' || initialTab === 'mood' ? initialTab : 'overview'}
+                  {...(statsTracker ? { initialTracker: statsTracker } : {})}
+                  onShowEntries={onShowTrackerEntries}
+                  onShowInCalendar={onShowTrackerInCalendar}
                   notes={notes}
                   isNoteLocked={isNoteLocked}
                   // Deleted medications included on purpose: their log
@@ -419,8 +431,28 @@ export function buildSettingsCategories({
               label: t('settings.editorLabel'),
               group: t('settings.groupPreferences'),
               icon: railIcon('editor'),
-              render: ({ initialTab }) => appearancePane('editor', initialTab),
+              render: ({ initialTab, navigate }) => appearancePane('editor', initialTab, () => navigate('plugins')),
             },
+            // Spec: docs/internal/plans/plugins.md (section 5)
+            ...(pluginsShown() ? [{
+              id: 'plugins',
+              label: t('settings.pluginsLabel'),
+              group: t('settings.groupPreferences'),
+              icon: railIcon('plugins'),
+              render: () => (
+                <PluginsPane
+                  isPro={auth.isPro}
+                  onUpgrade={(trigger: UpgradeTrigger) => { setShowSettings(false); setShowUpgrade({ trigger }); }}
+                  linkSuggestions={userSettings.linkSuggestions}
+                  onLinkSuggestionsChange={bind('linkSuggestions').onChange}
+                  notes={notes}
+                  folders={userSettings.folders}
+                  dismissed={userSettings.dismissedSuggestions}
+                  onNotDuplicates={(a: string, b: string) => mutateSettings((prev) => ({ ...prev, dismissedSuggestions: setPairHidden(prev.dismissedSuggestions, suggestionPairKey(a, b), true) }))}
+                  onOpenNotes={(ids: string[]) => { setShowSettings(false); openNotesFromSettings(ids); }}
+                />
+              ),
+            }] : []),
             {
               id: 'formatBar',
               label: t('settings.formatBarLabel'),
@@ -444,13 +476,13 @@ export function buildSettingsCategories({
                 <TrackerSettingsPane
                   initialTab={initialTab}
                   settings={userSettings.trackerSettings}
-                  onChange={(ts) => mutateSettings((prev) => ({ ...prev, trackerSettings: ts }))}
+                  onChange={bind('trackerSettings').onChange}
                   factors={userSettings.factors}
-                  onFactorsChange={(next) => mutateSettings((prev) => ({ ...prev, factors: next }))}
+                  onFactorsChange={bind('factors').onChange}
                   customHabits={userSettings.customHabits}
-                  onCustomHabitsChange={(next) => mutateSettings((prev) => ({ ...prev, customHabits: next }))}
+                  onCustomHabitsChange={bind('customHabits').onChange}
                   medications={userSettings.medications}
-                  onMedicationsChange={(meds) => mutateSettings((prev) => ({ ...prev, medications: meds }))}
+                  onMedicationsChange={bind('medications').onChange}
                   isPro={auth.isPro}
                   onOpenUpgrade={() => { setShowSettings(false); setShowUpgrade({ trigger: null }); }}
                 />
@@ -477,27 +509,28 @@ export function buildSettingsCategories({
                     <DateSheet
                       journal={{
                         format: userSettings.journalTitleFormat,
-                        onFormatChange: (f) => mutateSettings((prev) => ({ ...prev, journalTitleFormat: f })),
+                        onFormatChange: bind('journalTitleFormat').onChange,
                         suffix: userSettings.journalTitleSuffix,
-                        onSuffixChange: (sfx) => mutateSettings((prev) => ({ ...prev, journalTitleSuffix: sfx })),
+                        onSuffixChange: bind('journalTitleSuffix').onChange,
                         pattern: userSettings.journalTitlePattern,
-                        onPatternChange: (p) => mutateSettings((prev) => ({ ...prev, journalTitlePattern: p })),
+                        onPatternChange: bind('journalTitlePattern').onChange,
                       }}
                       dateOrder={userSettings.dateOrder}
-                      onDateOrderChange={(order) => mutateSettings((prev) => ({ ...prev, dateOrder: order }))}
+                      onDateOrderChange={bind('dateOrder').onChange}
                       clock={userSettings.clock}
-                      onClockChange={(clock) => mutateSettings((prev) => ({ ...prev, clock }))}
+                      onClockChange={bind('clock').onChange}
                     />
                   }
                   calendar={
                     <CalendarSettings
                       value={userSettings.calendar}
-                      onChange={(next) => mutateSettings((prev) => ({ ...prev, calendar: next }))}
+                      onChange={bind('calendar').onChange}
                       weekStart={userSettings.weekStart}
-                      onWeekStartChange={(weekStart) => mutateSettings((prev) => ({ ...prev, weekStart }))}
+                      onWeekStartChange={bind('weekStart').onChange}
                       alertsUnlocked={proUnlocked(auth.isPro)}
                       showPro={!auth.isPro}
                       onUpgrade={() => setShowUpgrade({ trigger: 'alerts' })}
+                      feeds={calendarFeeds}
                     />
                   }
                 />
@@ -541,10 +574,11 @@ export function buildSettingsCategories({
                 <SecurityModal
                   embedded
                   phrase={auth.phrase}
-                  defaultTab={initialTab === 'biometric' || initialTab === 'phrase' || initialTab === 'twoFactor' ? initialTab : 'pin'}
+                  defaultTab={initialTab === 'biometric' || initialTab === 'phrase' || initialTab === 'twoFactor' || initialTab === 'passkeys' ? initialTab : 'pin'}
                   reason={settingsSecurityReason}
                   pinTimeoutMinutes={userSettings.pinTimeoutMinutes}
                   onPinTimeoutChange={(minutes) => {
+                    endExpiredPinWindow(userSettings.pinTimeoutMinutes);
                     mutateSettings((prev) => ({ ...prev, pinTimeoutMinutes: minutes }));
                   }}
                   appLockTimeoutMinutes={userSettings.appLockTimeoutMinutes}

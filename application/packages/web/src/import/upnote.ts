@@ -5,7 +5,7 @@ import type { FolderDef } from '../folders';
 import { normalizeTag } from '../notesRepo';
 import { TEXT_COLORS, HIGHLIGHT_COLORS } from '../editorColors';
 import { buildFolderTree } from './folderImport';
-import { BARE_LINKABLE_RE, linkifyLiteralText, linkifyMarkdown } from './linkify';
+import { BARE_LINKABLE_RE, linkifyCounting, linkifyLiteralText } from './linkify';
 import { escapeMarkdownText, guardMarkdownLineStart, markdownCodeSpan } from './standardNotesSuper';
 import { noteLinkTarget } from '../noteLinks';
 import { mimeFromExt } from './blobImport';
@@ -14,7 +14,7 @@ import i18n from '../i18n';
 import { escapeHtml } from '../escapeHtml';
 import { ALIGN_RE } from './importHelpers';
 
-const msg = (key: string, options?: Record<string, unknown>): string =>
+const msg = (key: string, options: Record<string, unknown> = {}): string =>
   i18n.t(`importLog:upnote.${key}`, options);
 
 /**
@@ -217,6 +217,8 @@ interface ConvFlags {
   aligned: number;
   droppedStyling: number;
   missingFiles: number;
+  /** Bare URLs and emails this converter made into links. */
+  bareLinks: number;
 }
 
 interface ConvCtx {
@@ -403,7 +405,8 @@ function renderInlineHtml(node: Node, ctx: ConvCtx): string {
 function shineColor(el: Element): string | null {
   const m = (el.getAttribute('class') ?? '').match(/(?:^|\s)shine-text-([a-z]+)/i);
   if (!m) return null;
-  return SHINE_TEXT_COLOR[m[1]!.toLowerCase()] ?? null;
+  const name = m[1]!.toLowerCase();
+  return Object.hasOwn(SHINE_TEXT_COLOR, name) ? SHINE_TEXT_COLOR[name]! : null;
 }
 
 /**
@@ -430,7 +433,7 @@ function shineHighlight(el: Element): { color: string | null } | null {
   const m = cls.match(/(?:^|\s)shine-highlight(?:-([a-z]+))?(?=\s|$)/i);
   if (!m) return null;
   const name = m[1]?.toLowerCase();
-  return { color: (name && SHINE_HIGHLIGHT_COLOR[name]) || null };
+  return { color: (name && Object.hasOwn(SHINE_HIGHLIGHT_COLOR, name) && SHINE_HIGHLIGHT_COLOR[name]) || null };
 }
 
 /** The opening tag for a colored highlight; `==` has no color to carry. */
@@ -447,7 +450,10 @@ function walkInline(node: Node, ctx: ConvCtx): string {
     // is quoted or emitted, so the markdown shows literal `**` markers.
     const text = normalizeText(node.textContent ?? '').replace(/\n[ \t]+/g, '\n');
     // Typed text as markdown; outside a link, a bare URL or email becomes an autolink.
-    return ctx.inLink ? escapeMarkdownText(text) : linkifyLiteralText(text, escapeMarkdownText).markdown;
+    if (ctx.inLink) return escapeMarkdownText(text);
+    const linked = linkifyLiteralText(text, escapeMarkdownText);
+    ctx.flags.bareLinks += linked.links;
+    return linked.markdown;
   }
   if (node.nodeType !== Node.ELEMENT_NODE) return '';
   const el = node as Element;
@@ -1290,7 +1296,7 @@ async function parseSingleExports(
   const flags: ConvFlags = {
     underline: 0, highlights: 0, colors: 0, checklists: 0, tables: 0,
     codeBlocks: 0, callouts: 0, math: 0, noteLinks: 0, aligned: 0,
-    droppedStyling: 0, missingFiles: 0,
+    droppedStyling: 0, missingFiles: 0, bareLinks: 0,
   };
 
   const ctx: ConvCtx = {
@@ -1317,14 +1323,12 @@ async function parseSingleExports(
     out.push({
       title: conv.title,
       // The single funnel for this branch's bodies (rule in linkify.ts).
-      body: linkifyMarkdown(conv.body),
+      body: linkifyCounting(conv.body, flags),
       tags: conv.tags,
       createdAt: fallback,
       updatedAt: fallback,
     });
   }
-
-  const uniqueTags = new Set(out.flatMap((n) => n.tags));
 
   const warnings: string[] = [
     mdCount > 0
@@ -1364,18 +1368,12 @@ async function parseSingleExports(
   if (mdCount > 0) {
     transforms.push(msg('repairedMarkdown'));
   }
-  transforms.push(i18n.t('importLog:shared.linkifiedBare'));
+  if (flags.bareLinks > 0) transforms.push(i18n.t('importLog:shared.linkifiedBare'));
 
   return {
     notes: out,
     warnings,
     transforms,
-    stats: {
-      totalNotes: out.length,
-      emptyNotes: out.filter((n) => !n.title.trim() && !n.body.trim()).length,
-      untaggedNotes: out.filter((n) => n.tags.length === 0).length,
-      uniqueTags: uniqueTags.size,
-    },
     source: 'upnote',
     blobBytes,
     blobs: blobs.size > 0 ? blobs : undefined,
@@ -1390,7 +1388,6 @@ async function parseSingleExports(
 function blobToken(index: number): string {
   return `upnatt:${String(index).padStart(6, '0')}`;
 }
-
 
 export async function parseUpNote(
   file: File,
@@ -1679,6 +1676,7 @@ export async function parseUpNote(
     aligned: 0,
     droppedStyling: 0,
     missingFiles: 0,
+    bareLinks: 0,
   };
   const ctx: ConvCtx = { blobTokens, fileIdTokens, noteTitles, plainMedia: false, flags };
 
@@ -1698,7 +1696,7 @@ export async function parseUpNote(
       const want = inlineOnly(normalizeText(n.title));
       if (want && body.startsWith(want)) body = body.slice(want.length).trim();
     }
-    body = linkifyMarkdown(body);
+    body = linkifyCounting(body, flags);
 
     const tags = [...n.tags];
     for (const t of extraTags.get(n.id) ?? []) if (!tags.includes(t)) tags.push(t);
@@ -1763,10 +1761,6 @@ export async function parseUpNote(
 
   /* ---------------- summary ---------------- */
 
-  const uniqueTags = new Set(out.flatMap((n) => n.tags));
-  const emptyNotes = out.filter((n) => !n.title.trim() && !n.body.trim()).length;
-  const untaggedNotes = out.filter((n) => n.tags.length === 0).length;
-
   const warnings: string[] = [];
   if (tooLarge > 0) warnings.push(mediaTooLargeWarning(tooLarge));
   if (flags.missingFiles > 0) {
@@ -1819,18 +1813,12 @@ export async function parseUpNote(
   if (attachmentCount > 0) {
     transforms.push(i18n.t('importLog:shared.foundAttachments', { count: attachmentCount }));
   }
-  transforms.push(i18n.t('importLog:shared.linkifiedBare'));
+  if (flags.bareLinks > 0) transforms.push(i18n.t('importLog:shared.linkifiedBare'));
 
   return {
     notes: out,
     warnings,
     transforms,
-    stats: {
-      totalNotes: out.length,
-      emptyNotes,
-      untaggedNotes,
-      uniqueTags: uniqueTags.size,
-    },
     source: 'upnote',
     blobBytes,
     blobs: blobs.size > 0 ? blobs : undefined,

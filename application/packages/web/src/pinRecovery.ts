@@ -26,14 +26,29 @@ import {
   hasSamePinWrap,
   hasStoredPhrase,
   hydrateLocalPinWrap,
+  localPinWrapOpens,
+  localPinWrapSealed,
+  sealLocalPinWrap,
   removePinWrappedPhrase,
   removeStoredPhrase,
 } from './biometric';
 import { isLivePhrase, signInStamp, signedOutSince, type SignInStamp } from './liveSignIn';
 import { LEGACY_PIN_WRAP_ITERATIONS } from './secretKind';
-import { persistStoredPhrase } from './phraseAtRest';
-import { clearPinFailures, clearPinFromSettings, syncPinCache } from './pin';
-import { isPinWrapWithheld, loadLocalSettings, settingsKeyEpoch, type UserSettings } from './userSettings';
+import { manualLockArmed } from './appReLock';
+import { persistStoredPhrase, readResumablePhrase } from './phraseAtRest';
+import {
+  cachedPinCredential,
+  clearPinFailures,
+  clearPinFromSettings,
+  credentialStamp,
+  pinSurfaceOpen,
+  recordOwnPinUpgrade,
+  stagePinHash,
+  syncPinCache,
+  takeHeldPinRehash,
+  takeHeldPinWrapUpgrade,
+} from './pin';
+import { isPinWrapWithheld, loadLocalSettings, settingsKeyEpoch, updateLocalSettings, type UserSettings } from './userSettings';
 import { accountKeyEpoch, epochOf } from './keyRing';
 
 /**
@@ -164,6 +179,12 @@ export async function syncPinWrap(settings: UserSettings, phrase: string | undef
       // A blob written before the count was recorded is a legacy one.
       pinWrapIterations: settings.pinWrapIterations ?? LEGACY_PIN_WRAP_ITERATIONS,
     };
+    // A device whose own lock is off and whose phrase is at rest keeps no
+    // lock copy: the sealed settings hold the account's wrap. Asked with no
+    // await first, so a device that keeps one takes the wrap at once.
+    if (!keepsLocalPinWrap(settings.appLockEnabled === true) && !keepsLocalPinWrap()) {
+      if (!hasPinWrappedPhrase() || (await dropLocalPinWrap(phrase))) return;
+    }
     // The account's wrap is the one this device must hold, not merely some
     // wrap: a PIN changed elsewhere re-wraps under the new PIN, and a device
     // that kept its old blob would keep opening with the retired PIN while
@@ -172,11 +193,29 @@ export async function syncPinWrap(settings: UserSettings, phrase: string | undef
     // would undo it on every pass. Pinned by tests/pinRecovery.test.ts.
     if (!hasPinWrappedPhrase() || !hasSamePinWrap(blob)) {
       hydrateLocalPinWrap(blob);
+    } else if (!localPinWrapSealed()) {
+      // The same wrap, still plain (a seal that failed or a put-back): sealed
+      // again in the background where this device seals.
+      void sealLocalPinWrap();
+    } else if (!(await localPinWrapOpens()) && hasSamePinWrap(blob)) {
+      // The account's wrap, sealed under a device key that no longer opens
+      // it (a restore on another device, a key the OS reset): the same wrap
+      // by identity, so the branch above would never replace it. It goes
+      // back from the account's copy and is sealed again under a fresh key.
+      // Safe for a busy store too: it is the same wrap.
+      // Spec: docs/internal/plans/pin-wrap-hardening.md (section 5.4, C2-1)
+      hydrateLocalPinWrap(blob);
     }
-    // The door is the account's wrap as it now reads back, not merely some
-    // wrap: an old one the write failed to replace opens only with a retired
-    // PIN. Pinned by tests/pinRecovery.test.ts.
-    if (hasSamePinWrap(blob)) stripPhraseUnderArmedLock(settings, phrase);
+    // The door is the account's wrap as it now reads back and opens, not
+    // merely some wrap: an old one the write failed to replace opens only
+    // with a retired PIN, and a seal no key opens is no door at all. Pinned
+    // by tests/pinRecovery.test.ts.
+    // A plain wrap answers at once; a sealed one is asked of the key store,
+    // and the lock switch is read again after that wait, so a lock switched
+    // off meanwhile keeps the phrase it just put back.
+    if (!hasSamePinWrap(blob)) return;
+    if (localPinWrapSealed() && !((await localPinWrapOpens()) && hasSamePinWrap(blob) && loadLocalSettings().appLockEnabled)) return;
+    stripPhraseUnderArmedLock(settings, phrase);
     return;
   }
   // Four nulls can also mean the cache does not KNOW the account's wrap:
@@ -189,10 +228,92 @@ export async function syncPinWrap(settings: UserSettings, phrase: string | undef
   // neither of the last two, the phrase lands before the wrap goes. With no
   // phrase to write, the wrap goes anyway: a PIN the account removed must
   // stop opening this device.
-  if (phrase && !hasBiometricCredential() && !hasStoredPhrase()) {
-    if (!(await persistStoredPhrase(phrase))) return;
-  }
+  const atRestFirst = !!phrase && !hasBiometricCredential() && !hasStoredPhrase();
+  if (atRestFirst && !(await persistStoredPhrase(phrase))) return;
   removePinWrappedPhrase();
+  // Another tab can remove the fingerprint between the check above and the
+  // removal (#842 B removes a browser presence gate beside the PIN wrap), and
+  // then no door is left: the phrase goes back at rest.
+  if (!atRestFirst && phrase && !hasBiometricCredential() && !hasStoredPhrase()) await persistStoredPhrase(phrase);
+}
+
+/**
+ * Whether this device keeps a copy of the account's PIN wrap outside the
+ * sealed settings. Only while its own lock is on, or while no phrase is at
+ * rest here: a device that holds its session in memory only, and an armed
+ * device whose phrase the lock took off, have the wrap as their door. A
+ * device whose lock is off and whose phrase is at rest opens with that
+ * phrase, so a lock copy there gives a copy of its files a PIN to search and
+ * opens nothing the person needs. Arming the lock here builds the copy again
+ * from the PIN (BiometricTab.tsx).
+ * Spec: docs/internal/plans/derived-keys-design.md (section 5.4, stage 2)
+ */
+export function keepsLocalPinWrap(lockOn = loadLocalSettings().appLockEnabled === true): boolean {
+  return lockOn || !hasStoredPhrase();
+}
+
+/**
+ * The lock copy goes from a device that does not keep one
+ * (`keepsLocalPinWrap`), and only once the phrase at rest reads back as the
+ * live sign-in's, the rule clearPin follows: a stored value that does not
+ * open is no door. The lock switch is read again after that wait, so a lock
+ * armed meanwhile keeps its copy. Answers whether it removed the copy; false
+ * leaves syncPinWrap to keep the account's wrap here as before.
+ */
+async function dropLocalPinWrap(phrase: string | undefined): Promise<boolean> {
+  // Never under the Lock app screen: it chose the wrap as its door when it
+  // opened, and a pass keeps running after the notes view unmounts.
+  if (!phrase || !isLivePhrase(phrase) || keepsLocalPinWrap() || manualLockArmed()) return false;
+  if ((await readResumablePhrase()) !== phrase) return false;
+  if (keepsLocalPinWrap() || !isLivePhrase(phrase) || manualLockArmed()) return false;
+  removePinWrappedPhrase();
+  return true;
+}
+
+/** The same, for a screen that just changed the PIN or switched the lock off
+ *  here: the lock copy goes now rather than at the next settings pass. */
+export function dropLocalPinWrapIfNotKept(phrase: string): Promise<boolean> {
+  return hasPinWrappedPhrase() ? dropLocalPinWrap(phrase) : Promise.resolve(false);
+}
+
+/**
+ * Save what an unlock upgraded in memory: the rehash a check held
+ * (`holdRehash` in pin.ts) and the wrap the lock screen re-wrapped
+ * (`holdPinWrapUpgrade`). Called after a settings pass that read the server
+ * row (`readServer`), so nothing is written before this device knows the
+ * account's PIN group, and each part lands only over the exact value it was
+ * proven against: a secret another device set meanwhile is in the cache by
+ * then, and that part goes. While a PIN screen holding a proof is open, both
+ * wait for a later pass (`pinSurfaceOpen`). The hash cache is written first,
+ * with its put-back, so the stamp moves here without ending this tab's PIN
+ * windows (`syncPinCache`); the settings change is the commit, one write for
+ * both, read back. Answers the settings it saved, or null.
+ * Spec: docs/internal/plans/pin-wrap-hardening.md (section 3)
+ */
+export function saveHeldPinRehash(since: SignInStamp): UserSettings | null {
+  if (pinSurfaceOpen()) return null;
+  const held = takeHeldPinRehash();
+  const wrap = takeHeldPinWrapUpgrade();
+  if ((!held && !wrap) || signedOutSince(since)) return null;
+  const proven = held ? credentialStamp(held.from) : null;
+  const hashOk = !!held && credentialStamp(cachedPinCredential()) === proven;
+  const putBack = hashOk ? stagePinHash(held.to) : null;
+  const withHash = hashOk && !!putBack;
+  const next = updateLocalSettings((prev) => {
+    let out = prev;
+    if (withHash && credentialStamp(prev) === proven) out = { ...out, ...held!.to };
+    if (wrap && prev.pinWrapSalt === wrap.replaced.pinWrapSalt && prev.pinWrapCiphertext === wrap.replaced.pinWrapCiphertext) {
+      out = { ...out, ...wrap.blob };
+    }
+    return out;
+  }, since);
+  const saved = loadLocalSettings();
+  const hashSaved = withHash && next.pinHash === held!.to.pinHash && saved.pinHash === held!.to.pinHash && saved.pinSalt === held!.to.pinSalt;
+  const wrapSaved = !!wrap && saved.pinWrapCiphertext === wrap.blob.pinWrapCiphertext && saved.pinWrapSalt === wrap.blob.pinWrapSalt;
+  if (withHash && !hashSaved) putBack!();
+  if (hashSaved) recordOwnPinUpgrade(held!.to.pinHash);
+  if (wrapSaved) recordOwnPinUpgrade(wrap!.blob.pinWrapCiphertext);
+  return hashSaved || wrapSaved ? saved : null;
 }
 
 /**

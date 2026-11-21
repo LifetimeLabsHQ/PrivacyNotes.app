@@ -115,10 +115,13 @@
       "red": "Rosso",
       "orange": "Arancione",
       "yellow": "Giallo",
+      "lime": "Verde lime",
       "green": "Verde",
       "teal": "Verde acqua",
       "blue": "Blu",
+      "indigo": "Indaco",
       "purple": "Viola",
+      "grape": "Vinaccia",
       "pink": "Rosa"
     }
   },
@@ -241,6 +244,8 @@
     "words_other": "{{formatted}} parole",
     "characters_one": "{{formatted}} carattere",
     "characters_other": "{{formatted}} caratteri",
+    "lines_one": "{{formatted}} riga",
+    "lines_other": "{{formatted}} righe",
     "tasksChecked_one": "{{done}} di {{formatted}} spuntato",
     "tasksChecked_other": "{{done}} di {{formatted}} spuntati",
     "syncLimit": " · {{share}} del limite di sincronizzazione di 1 MB",
@@ -276,6 +281,10 @@
     "collapse": "Comprimi blocco di codice",
     "expand": "Espandi blocco di codice",
     "placeholder": "Scrivi o incolla il codice. Per i colori, scegli un linguaggio qui sopra."
+  },
+  "fold": {
+    "collapse": "Comprimi sezione",
+    "expand": "Espandi sezione"
   },
   "math": {
     "sourceLabel": "Codice LaTeX"
@@ -313,7 +322,7 @@
     "hiddenNote": "Funzionano ancora con la scorciatoia e in Markdown.",
     "hiddenDrop": "Trascina qui un pulsante per nasconderlo.",
     "arrangeTitle": "Pulsanti",
-    "markdownViewNote": "La vista Markdown ha un proprio set fisso di pulsanti.",
+    "markdownViewNote": "La vista Markdown mostra gli stessi pulsanti. Quelli che richiedono la vista formattata sono attenuati, ma funzionano comunque nella vista formattata.",
     "hiddenEmpty": "Niente è nascosto.",
     "alwaysVisible": "Sempre visibili",
     "pinned": "Apre un pannello, quindi resta nella barra o nascosto",
@@ -340,7 +349,7 @@
       "notelink": "Collegamento fra note",
       "audio": "Registrazione",
       "attachMenu": "Allega",
-      "separator": "Separatore verticale",
+      "separator": "Separatore della barra degli strumenti",
       "markdownView": "Mostra markdown"
     },
     "positionTitle": "Posizione della barra",

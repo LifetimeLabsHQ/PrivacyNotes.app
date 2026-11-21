@@ -212,13 +212,16 @@ function buildCard(source: VcardSource): string[] {
       lines.push(`${name}:${value}`);
       return;
     }
-    const words = label.split(' ').map((w) => types[w]);
+    // The label comes out of an imported file, and an inherited member such as
+    // `constructor` answers with a function, so each table is asked for an own
+    // key (rule S6, as import/vcard.ts does).
+    const words = label.split(' ').map((w) => (Object.hasOwn(types, w) ? types[w] : undefined));
     if (words.every(Boolean)) {
       lines.push(`${name};${words.map((t) => `TYPE=${t}`).join(';')}:${value}`);
       return;
     }
     const item = `item${++group}`;
-    const apple = APPLE_NAMES[label];
+    const apple = Object.hasOwn(APPLE_NAMES, label) ? APPLE_NAMES[label] : undefined;
     lines.push(`${item}.${name}:${value}`);
     lines.push(`${item}.X-ABLabel:${apple ? `_$!<${apple}>!$_` : escapeText(label)}`);
   };
@@ -257,7 +260,7 @@ function buildCard(source: VcardSource): string[] {
   }
   for (const r of c.related) labelled('X-ABRELATEDNAMES', r.label, escapeText(r.value), NO_TYPES);
   for (const p of c.profiles) {
-    const chat = CHAT_SERVICES[p.label];
+    const chat = Object.hasOwn(CHAT_SERVICES, p.label) ? CHAT_SERVICES[p.label] : undefined;
     if (chat) lines.push(`IMPP;X-SERVICE-TYPE=${chat}:${escapeText(p.value)}`);
     else if (p.label) lines.push(`X-SOCIALPROFILE;type=${paramValue(p.label)}:${escapeText(p.value)}`);
     else lines.push(`X-SOCIALPROFILE:${escapeText(p.value)}`);

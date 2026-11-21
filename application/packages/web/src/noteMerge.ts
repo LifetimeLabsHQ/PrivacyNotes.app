@@ -75,6 +75,11 @@ export interface SyncBase {
    *  changed it. Absent on an older base: a key both sides hold goes to the
    *  local side, as mergeTrackers decides. */
   k?: Record<string, string>;
+  /** The `updated_at` of that generation. A conflict read that meets a server
+   *  row older than it is meeting a rollback (sync.ts). Absent on a base
+   *  written before the field, or when the stamp is not known.
+   *  Spec: docs/internal/plans/payload-row-binding.md (section 4) */
+  a?: string;
 }
 
 /**
@@ -121,7 +126,7 @@ function dayless(trackers: Record<string, unknown> | undefined): string {
   return fingerprint(rest);
 }
 
-export function buildSyncBase(fields: NoteFields, nonce: string): SyncBase {
+export function buildSyncBase(fields: NoteFields, nonce: string, at?: string): SyncBase {
   const f = {} as Record<FieldName, string>;
   for (const name of NOTE_FIELDS) f[name] = fingerprint(comparable(fields, name));
   return {
@@ -132,6 +137,7 @@ export function buildSyncBase(fields: NoteFields, nonce: string): SyncBase {
     d: dayPair(fields.trackers),
     r: dayless(fields.trackers),
     k: perKey(fields.trackers),
+    ...(at !== undefined ? { a: at } : {}),
   };
 }
 
@@ -167,6 +173,7 @@ export function trustedBase(raw: unknown, syncedNonce: string | undefined): Sync
   if (!Array.isArray(b.t) || !b.t.every((x) => typeof x === 'string')) return undefined;
   if (b.d !== undefined && typeof b.d !== 'string') return undefined;
   if (b.r !== undefined && typeof b.r !== 'string') return undefined;
+  if (b.a !== undefined && typeof b.a !== 'string') return undefined;
   if (b.k !== undefined && (b.k === null || typeof b.k !== 'object' || Array.isArray(b.k) || !Object.values(b.k).every((x) => typeof x === 'string'))) {
     return undefined;
   }
@@ -307,12 +314,30 @@ export function laterStamp(a: string, b: string): string {
  *  local one (`...581Z`) spell one moment differently, and an imported date
  *  (`3 Jan 2024`) sorts after every `2026-...` stamp as text, so a string
  *  compare skipped real edits (external report, 2026-10-24). A stamp that does
- *  not parse falls back to the text order it had before. */
+ *  not parse is earlier than one that does: `infinity`, written to every row
+ *  by a session with no key, sorted after every real stamp as text, so each
+ *  device kept its own copy and skipped the others' edits for good (beta #203
+ *  item 3). Two stamps that do not parse keep the text order. */
 export function compareStamps(a: string, b: string): number {
   const ta = Date.parse(a);
   const tb = Date.parse(b);
   if (Number.isFinite(ta) && Number.isFinite(tb)) return ta - tb;
+  if (Number.isFinite(ta)) return 1;
+  if (Number.isFinite(tb)) return -1;
   return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/** A local stamp in the form the server's timestamptz column accepts. A note
+ *  imported before import/apply.ts read stamps as instants keeps the text its
+ *  file had, and Postgres refuses a bare year (`2020`), so that note failed
+ *  its insert on every push and never backed up (22007 in the logs,
+ *  2026-11-17). An ISO date-time is sent as written; any other text that
+ *  parses goes as the same instant in ISO; text that does not parse is sent
+ *  as written, as before. */
+export function serverStamp(stamp: string): string {
+  if (/^\d{4}-\d{2}-\d{2}T/.test(stamp)) return stamp;
+  const at = Date.parse(stamp);
+  return Number.isFinite(at) ? new Date(at).toISOString() : stamp;
 }
 
 /** One side of a merge: its payload and the stamps its row carries. */

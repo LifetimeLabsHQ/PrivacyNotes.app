@@ -35,6 +35,7 @@
     "title": "Vitaj v klube",
     "proLine": "<brand/> Pro, ${{price}} jednorazovo. Tvoje navždy.",
     "storageLine": "<brand/> +{{gb}} GB úložiska, ${{price}} ročne.",
+    "storagePayerNote": "Vlastník účtu môže balík neskôr zmeniť. Rozdiel zaplatí táto karta.",
     "benefitDevices": "Neobmedzený počet zariadení",
     "benefitDevicesSub": "Telefón, tablet, laptop, všetko synchronizované",
     "benefitStorage": "500 MB úložiska",
@@ -63,7 +64,7 @@
     "openingBody": "Malo by sa zobraziť okno platby Paddle. Ak sa nezobrazí, prehliadač možno zablokoval vyskakovacie okno - obnov túto stránku a skús to znova."
   },
   "cryptoCheckout": {
-    "coins": "Bitcoin, Ethereum, Lightning, USDC alebo USDT si vyberieš na ďalšej stránke, ktorú prevádzkuje BlockBee. Nepýta si meno ani e-mail. Platba kryptomenou je verejná na svojom blockchaine.",
+    "coins": "Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin alebo TON si vyberieš na ďalšej stránke, ktorú prevádzkuje BlockBee. Nepýta si meno ani e-mail. Platba kryptomenou je verejná na svojom blockchaine.",
     "consent": "Zapnúť Pro hneď. Rozumiem, že platby kryptomenou sú konečné, a vzdávam sa 14-dňového práva na odstúpenie od zmluvy.",
     "consentNeeded": "Ak chceš pokračovať, zaškrtni políčko vyššie.",
     "loadingTitle": "Kontroluje sa objednávka…",

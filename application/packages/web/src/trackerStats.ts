@@ -619,6 +619,7 @@ export function exportTrackerJSON(
           name: t.name,
           type: t.type,
           ...(t.type === 'pair' ? { pairLabels: t.pairLabels ?? null, unit: t.unit ?? null } : {}),
+          ...(t.type === 'counter' ? { limit: t.limit ?? null } : {}),
           stoppedAt: t.stoppedAt ?? null,
           deletedAt: t.deletedAt ?? null,
         })),

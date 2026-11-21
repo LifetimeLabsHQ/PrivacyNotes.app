@@ -87,12 +87,12 @@ export default {
         body: 'Four independent security audits on the record and a ten-year longevity pledge. Our encryption layer is published and checkable by anyone, but an independent audit is a real credential we do not have yet.',
       },
       {
-        title: 'The whole stack is open source',
-        body: 'Clients and server, with self-hosting for people who want to run their own sync. Our clients, encryption layer and threat model are published, and this row is still theirs.',
+        title: 'Self-hosting',
+        body: 'You can run their sync server yourself. If self-hosting matters to you, this row is theirs.',
       },
       {
         title: 'More note types',
-        body: 'Spreadsheets, code editors, a built-in 2FA authenticator: notes that are little apps. Deliberately not our direction, markdown is. If your workflow leans on those, stay.',
+        body: 'Spreadsheets and code editors: notes that are little apps. Deliberately not our direction, markdown is. If your workflow leans on those, stay.',
       },
     ],
   },
@@ -102,7 +102,7 @@ export default {
     lead: 'Once two apps both encrypt end-to-end, the comparison moves to what you hand over, what the free tier really is, and what the price buys.',
     us: [
       { dt: 'Identity', dd: 'A recovery phrase. Optional Google, Apple, or GitHub sign-in, and you choose who holds the key.' },
-      { dt: 'Free tier', dd: 'The whole app, smaller. All seven pillars including markdown, 2 devices, files to 5 MB.' },
+      { dt: 'Free tier', dd: 'The whole app, smaller. Every pillar including markdown, 2 devices, files to 5 MB.' },
       { dt: 'Paying', dd: '{price} once: unlimited devices, note history, PIN-protect, 500 MB of encrypted files.' },
       { dt: 'Keys', dd: 'Derived from your phrase on your device. XChaCha20-Poly1305 per note.' },
     ],

@@ -125,14 +125,24 @@ const ListGroupHeader = memo(function ListGroupHeader({
 });
 
 /** One line of a grouped list: a header, or an item under it. */
-export type ListEntry = { kind: 'header'; group: ListGroup; collapsed: boolean } | { kind: 'note'; note: LocalNote };
+export type ListEntry =
+  | { kind: 'header'; group: ListGroup; collapsed: boolean }
+  | { kind: 'note'; note: LocalNote }
+  /** The days between two entries while a tracker is in focus in Journals;
+   *  `longest` marks the widest gap of the list. Spec: docs/internal/specs/tracker-focus-771.md (section 4) */
+  | { kind: 'gap'; days: number; longest: boolean; key: string };
 
 /** The collator `compareNotes` sorts titles with, so a letter group never cuts a run in two. */
 const titleCollator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
 
-/** Today's local date, renewed at local midnight and when the window comes
- *  back (a sleeping machine fires no timer on time), so a list left open
- *  overnight moves its "Today" items to "Yesterday". */
+/** Today's local date, renewed at local midnight, when the window comes
+ *  back (a sleeping machine fires no timer on time), and once a minute, so a
+ *  list left open overnight moves its "Today" items to "Yesterday". The
+ *  minute check is for Android: its WebView freezes timers in the background
+ *  and its timer clock stops in deep sleep, so the midnight timer can fire
+ *  hours late and the check-in and medication cards keep the day before
+ *  (the likely cause of GitHub #781, not reproduced on a phone). The same
+ *  string keeps the render where it is. */
 export function useToday(): string {
   const [today, setToday] = useState(() => toLocalIso(new Date()));
   useEffect(() => {
@@ -140,10 +150,12 @@ export function useToday(): string {
     const now = new Date();
     const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
     const timer = window.setTimeout(check, midnight.getTime() - now.getTime() + 1000);
+    const minute = window.setInterval(check, 60_000);
     window.addEventListener('focus', check);
     document.addEventListener('visibilitychange', check);
     return () => {
       window.clearTimeout(timer);
+      window.clearInterval(minute);
       window.removeEventListener('focus', check);
       document.removeEventListener('visibilitychange', check);
     };

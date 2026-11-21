@@ -1,6 +1,8 @@
 /**
- * What the extension reads from a page: injected into the tab only when the
- * person clips (scripting.executeScript), never declared for every page. It
+ * What the extension reads from a page: injected into the tab in front when
+ * the popup opens on the Clip tab, for its page card and counts, and when the
+ * person clips from the menu or the keyboard (scripting.executeScript); never
+ * declared for every page. It
  * returns strings and leaves nothing behind: no listener, no attribute, no
  * change to the page.
  *

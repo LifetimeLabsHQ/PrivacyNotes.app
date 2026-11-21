@@ -61,7 +61,6 @@
     "import": "Importer",
     "downloading": "Téléchargement…",
     "subscribe": "S'abonner",
-    "subscribeTitle": "S'abonner à un calendrier",
     "subscribeDesc": "Colle une adresse de calendrier, comme un lien webcal:// de Google, iCloud, Proton, Outlook ou Nextcloud. Ses événements s'affichent dans ton calendrier, en lecture seule, et se mettent à jour tant que l'app est ouverte.",
     "subscribed": "Calendriers abonnés",
     "updating": "Mise à jour…",
@@ -78,6 +77,7 @@
       "offline": "Tu es hors ligne. Connecte-toi et réessaie.",
       "limit": "Trop de téléchargements en peu de temps. Attends une minute et réessaie.",
       "failed": "Impossible de télécharger le calendrier. Vérifie l'adresse et réessaie.",
+      "insecure": "Impossible de joindre ce calendrier par une connexion sécurisée. Vérifie l'adresse ou réessaie plus tard.",
       "full": "Tu peux t'abonner à {{max}} calendriers au maximum. Retires-en un d'abord."
     }
   },
@@ -88,6 +88,8 @@
     "lastpass": "Dans LastPass, choisis Advanced options > Export > Export data for use anywhere. Les identifiants gardent leur clé 2FA, les notes sécurisées et les cartes suivent, et les dossiers deviennent des étiquettes.",
     "onePassword": "Dans l'app 1Password, choisis File > Export, sélectionne ton compte et le format 1PUX. Les identifiants gardent leur clé 2FA, leurs sites web supplémentaires et leurs champs personnalisés, les cartes, les notes et les identités suivent, les tags deviennent des étiquettes, et les favoris et les éléments archivés gardent leur place. Un export CSV fonctionne aussi, avec les identifiants seulement.",
     "dashlane": "Dans Dashlane, choisis Settings > Export data et le format CSV. Les identifiants gardent leur clé 2FA, les notes sécurisées et les cartes suivent, et les catégories deviennent des étiquettes. Un export .dash est verrouillé par un mot de passe et ne peut pas être lu.",
+    "msecure": "Dans mSecure, choisis Settings > Backups > Export records to CSV file. Les identifiants gardent leur clé 2FA, leurs sites web supplémentaires et leurs champs personnalisés, les cartes et les notes suivent, et les tags deviennent des étiquettes.",
+    "raindrop": "Dans Raindrop.io, ouvre All bookmarks et choisis Export > Get backup, puis télécharge le CSV sous Settings > Backups. Les collections deviennent des dossiers, les tags deviennent des étiquettes, et chaque signet garde sa note, son extrait et ses surlignages.",
     "enpass": "Dans Enpass, choisis File > Export et le format .json. Les identifiants gardent leur clé 2FA, leurs sites web supplémentaires et leurs champs personnalisés, les cartes, les notes et les identités suivent, les dossiers deviennent des étiquettes, et les favoris et les éléments archivés gardent leur place. Les éléments de la corbeille restent de côté.",
     "nordpass": "Dans NordPass, choisis Settings > Export items. Les identifiants gardent leurs sites web supplémentaires et leurs champs personnalisés, les notes, les cartes et les identités suivent, et les dossiers deviennent des étiquettes.",
     "protonPass": "Dans Proton Pass, choisis Settings > Export et prends ZIP. Les identifiants gardent leur clé 2FA, leurs sites web supplémentaires, leurs champs personnalisés et leurs dates, et les notes, les cartes et les identités suivent. Un export CSV fonctionne aussi, avec moins de contenu.",
@@ -109,13 +111,15 @@
     "bear": "Dans Bear, choisis File > Backup Notes... et dépose ici le fichier .bear2bk. Les étiquettes et étiquettes imbriquées, les épingles, les archives, la corbeille, les surlignages avec leurs couleurs, les liens de note et les pièces jointes suivent.",
     "joplin": "Le fichier .jex de File > Export all > \"JEX - Joplin Export File\". Les carnets deviennent des dossiers, et les étiquettes, les tâches à faire, les liens de note et les pièces jointes suivent.",
     "anytype": "Le .zip Any-Block v1 en JSON issu des paramètres de l'espace > Export, avec les fichiers et les objets archivés inclus. Les collections deviennent des dossiers, et les étiquettes, les tâches, les encadrés, les blocs repliables, les tableaux, les liens de note et les fichiers suivent.",
+    "capacities": "Le .zip issu de Capacities : Settings > Full Export > Manual Full Export, avec les médias inclus. Les types d'objets deviennent des dossiers, et les étiquettes, les propriétés, les dates, les liens entre objets, les tableaux, les images et les fichiers suivent.",
     "siyuan": "Le Data.zip issu du menu SiYuan > Data migration > Data.zip > Export, ou un carnet exporté en SiYuan .sy.zip. Les carnets et les documents imbriqués deviennent des dossiers, et les étiquettes, les références de bloc, les encadrés, les maths, les tableaux et les ressources suivent.",
+    "onenote": "Le .onepkg issu de OneNote pour Windows : File > Export > Notebook > OneNote Package. Un fichier de section (.one) ou un dossier de bloc-notes zippé fonctionne aussi. Les sections et les groupes de sections deviennent des dossiers, et les sous-pages, les tâches à faire, les indicateurs de note, les tableaux, les liens de page, les images et les fichiers joints suivent.",
     "upnote": "Dans UpNote : Settings > Backup > Backup now, puis zippe tout le contenu du dossier de sauvegarde. Conserve les carnets, les étiquettes, les épingles, les liens entre notes, la mise en forme et les pièces jointes. Les exports note par note depuis les apps mobiles fonctionnent aussi - choisis \"Export to HTML\".",
     "markdownFolder": "Fichiers .md ou .txt à l'unité ou en .zip. Un dossier zippé garde ses sous-dossiers et amène ses images et ses pièces jointes.",
     "markdownApp": "Ces notes sont déjà des fichiers Markdown dans un dossier. Dépose ce dossier en .zip et ses sous-dossiers, ses images et ses #tags viennent avec.",
     "browserBookmarks": "Le fichier de favoris (.html) issu de \"Export bookmarks\" dans ton navigateur, ou le .zip que Safari écrit. Chrome, Firefox, Safari, Edge, Opera, Brave et Vivaldi contiennent tous le même fichier. Les dossiers et les dates suivent.",
     "vcard": "Le fichier .vcf que ton carnet d'adresses exporte : iPhone et Mac via iCloud ou Contacts, Android, Google Contacts. Chaque fiche passe, photos comprises, et importer deux fois le même fichier ignore les personnes que tu as déjà.",
-    "bitwarden": "Export .json non chiffré de Bitwarden (Tools > Export vault > .json). Identifiants, cartes, clés SSH, notes sécurisées et codes TOTP suivent tous.",
+    "bitwarden": "Export de coffre non chiffré de Bitwarden (Tools > Export vault > .json, ou .zip (with attachments)). Identifiants, cartes, clés SSH, notes sécurisées, codes TOTP, passkeys et pièces jointes suivent tous.",
     "browserPasswords": "Le fichier de mots de passe (.csv) de Chrome, Edge, Brave, Opera, Vivaldi, Firefox ou Safari, ou le .zip que Safari écrit. Chaque ligne devient un identifiant. Supprime le fichier quand tu as fini - il contient tes mots de passe en clair."
   },
   "sourceLabel": {
@@ -178,7 +182,18 @@
     "sourceTagDesc": "Désactivé : aucune étiquette pour la source. Les étiquettes déjà présentes dans les notes suivent dans tous les cas.",
     "storageLine": "Cet import a besoin d'environ {{needed}}. Il te reste {{available}} de libre.",
     "nothingWritten": "Rien n'est écrit tant que tu n'appuies pas sur Importer.",
-    "whatComesIn": "Ce qui sera importé"
+    "whatComesIn": "Ce qui sera importé",
+    "backupSettings": "Cette sauvegarde apporte aussi des paramètres : {{list}}.",
+    "backupSetting": {
+      "calendarFeeds": "calendriers abonnés",
+      "dashboard": "la disposition de l'Accueil",
+      "itemStyles": "couleurs et icônes des dossiers, étiquettes et notes",
+      "customThemes": "thèmes personnalisés",
+      "favoriteTags": "étiquettes favorites",
+      "medications": "médicaments",
+      "trackers": "configuration des suivis",
+      "agentFolder": "le dossier Agent"
+    }
   },
   "counts": {
     "note_one": "note",
@@ -247,7 +262,9 @@
     "missingFailed_one": "Cet appareil n'a pas pu télécharger {{items}}, donc ton export ne l'inclut pas. Vérifie ta connexion et exporte à nouveau.",
     "missingFailed_other": "Cet appareil n'a pas pu télécharger {{items}}, donc ton export ne les inclut pas. Vérifie ta connexion et exporte à nouveau.",
     "missingNotFound_one": "{{items}} n'est ni sur cet appareil ni sur le serveur, donc ton export ne l'inclut pas.",
-    "missingNotFound_other": "{{items}} ne sont ni sur cet appareil ni sur le serveur, donc ton export ne les inclut pas."
+    "missingNotFound_other": "{{items}} ne sont ni sur cet appareil ni sur le serveur, donc ton export ne les inclut pas.",
+    "bookmarksSkipped_one": "{{count}} signet a une adresse qui ne commence pas par http ou https, donc ton export ne l'inclut pas.",
+    "bookmarksSkipped_other": "{{count}} signets ont une adresse qui ne commence pas par http ou https, donc ton export ne les inclut pas."
   },
   "missing": {
     "pictures_one": "{{count}} image",
@@ -339,8 +356,8 @@
     "typeFullHint": "Notes, coffre, images, audio et fichiers, scellés avec la clé de ta phrase. Stockable n'importe où.",
     "rhythmHeading": "Rythme",
     "historyHeading": "Sauvegardes récentes",
-    "runsHintDesktop": "S'exécute tant que PrivacyNotes est ouvert ou dans la zone de notification. Une sauvegarde arrivée à échéance pendant que l'app était fermée s'exécute une minute après son ouverture.",
-    "runsHintWeb": "S'exécute tant que PrivacyNotes est ouvert dans ce navigateur. Une sauvegarde arrivée à échéance pendant qu'il était fermé s'exécute une minute après son ouverture.",
+    "runsHintDesktop": "S'exécute tant que PrivacyNotes est ouvert ou dans la zone de notification. Une sauvegarde arrivée à échéance pendant que l'app était fermée s'exécute une minute après son ouverture, même hors ligne une fois cet appareil synchronisé.",
+    "runsHintWeb": "S'exécute tant que PrivacyNotes est ouvert dans ce navigateur. Une sauvegarde arrivée à échéance pendant qu'il était fermé s'exécute une minute après son ouverture, même hors ligne une fois cet appareil synchronisé.",
     "runsHintDownload": "PrivacyNotes ne peut signaler qu'une sauvegarde est due que tant qu'il est ouvert dans ce navigateur. Une sauvegarde arrivée à échéance pendant qu'il était fermé est proposée une minute après son ouverture.",
     "runsHintPhone": "Un téléphone ne peut pas faire de sauvegarde quand PrivacyNotes est fermé. Elle s'exécute quand tu ouvres l'app et qu'une sauvegarde est due.",
     "sizeHint": "Environ {{size}} pour {{count}}.",

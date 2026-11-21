@@ -24,14 +24,24 @@ const traySupported = appZoomSupported;
 
 let on: boolean | null = null;
 
-function getTrayMode(): boolean {
+/** The stored switch. Also sent with a start at sign-in (`openAtLogin.ts`). */
+export function getTrayMode(): boolean {
   if (on === null) on = readFlag(KEY);
   return on;
 }
 
+/** Counts pushes, so only the last one may set the switch back. */
+let pushes = 0;
+
 async function push(enabled: boolean): Promise<void> {
+  const mine = ++pushes;
+  let invoke: typeof import('@tauri-apps/api/core').invoke;
   try {
-    const { invoke } = await import('@tauri-apps/api/core');
+    ({ invoke } = await import('@tauri-apps/api/core'));
+  } catch {
+    return;
+  }
+  try {
     await invoke('set_tray_mode', {
       enabled,
       open: i18n.t('settings:appearance.trayOpen'),
@@ -39,7 +49,13 @@ async function push(enabled: boolean): Promise<void> {
       quit: i18n.t('settings:appearance.trayQuit'),
     });
   } catch {
-    /* An older build with no such command: the switch does nothing there. */
+    // No icon could be made, so tray mode is off (tray.rs brings the window
+    // back): the switch says so for this session. The stored choice stays,
+    // so the next start tries again (beta issue 200, item 6).
+    if (enabled && mine === pushes && on) {
+      on = false;
+      notify();
+    }
   }
 }
 

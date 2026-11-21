@@ -31,6 +31,17 @@ export const FILE_REF_PREFIX = 'pn:file/';
 /** Every `pn:img/<uuid>` in a body; global, so reset `lastIndex` before an exec loop. */
 export const IMAGE_REF_RE = /pn:img\/([0-9a-f-]{36})/g;
 
+/** The uuids of every `pn:file/` reference in a body: a file chip, a picture placed from Files, a vault file. */
+export function extractAttachmentIds(body: string): Set<string> {
+  const ids = new Set<string>();
+  const re = /pn:file\/([0-9a-f-]{36})/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(body)) !== null) {
+    ids.add(match[1]!);
+  }
+  return ids;
+}
+
 /**
  * Formats every browser we ship on draws in an `<img>`. HEIC and TIFF are not
  * here: Chromium cannot draw them, and the upload pipeline re-encodes both

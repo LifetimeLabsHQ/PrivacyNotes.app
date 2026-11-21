@@ -35,7 +35,7 @@ import { STORAGE_ADDON_PRICE, STORAGE_PACKAGES, PRO_PRICE, EARLY_PRICE } from '.
 import { useStorePrices, type StorePrice } from './storePrices';
 import { formatInstant, formatRelative } from './intlFormat';
 import { SectionEyebrow, SettingsCallout, SETTINGS_BTN, SETTINGS_BTN_UPGRADE, SETTINGS_HELP, SettingsTabStrip, settingsTabClass } from './settingsUI';
-import { CloseButton, Modal } from './ui';
+import { Callout, CloseButton, Modal } from './ui';
 import { SyncPanel } from './SyncPanel';
 import { DmsPanel } from './DmsPanel';
 import { HelpChip } from './HelpChip';
@@ -163,8 +163,12 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
   const [upgradePreviewFailed, setUpgradePreviewFailed] = useState(false);
   // Bumped by the dialog's retry, which re-runs the preview.
   const [upgradePreviewRun, setUpgradePreviewRun] = useState(0);
-  // One active storage sub per user under the package model.
-  const activeStorageSub = storageSubs && storageSubs.length > 0 ? storageSubs[0] : null;
+  // One active storage sub per user under the package model. A gated row
+  // (bought without Pro) is never the active one.
+  const activeStorageSub = storageSubs?.find((s) => !s.gated) ?? null;
+  // Without Pro an add-on adds no space, gated or not (a refunded Pro keeps
+  // its add-on billed), so the free view lists it with a Cancel (beta #187).
+  const waitingStorageSub = isPro === false ? (storageSubs?.[0] ?? null) : null;
   // Play and Apple upgrades complete in the store's own sheet, which shows the
   // charge. Every other upgrade goes through manage-storage-sub, which charges
   // the card on file the moment the confirm is pressed, so that confirm waits
@@ -316,9 +320,13 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
     setRestoreBusy(false);
   }
 
-  async function handleStorageAction(action: 'cancel' | 'switch', target?: { priceId: string; gb: number; quote?: string }) {
-    if (!authed || !activeStorageSub || storageActionBusy) return;
-    const source = activeStorageSub.source ?? 'paddle';
+  async function handleStorageAction(
+    action: 'cancel' | 'switch',
+    target?: { priceId: string; gb: number; quote?: string },
+    sub: StorageSubRow | null = activeStorageSub,
+  ) {
+    if (!authed || !sub || storageActionBusy) return;
+    const source = sub.source ?? 'paddle';
 
     // Native-store subs (Play/Apple): the store owns the billing relationship,
     // so neither action can go through manage-storage-sub (a store purchase
@@ -330,7 +338,7 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
         // the result back to paddle_storage_subs.
         setError(null);
         try {
-          await openNativeSubscriptionManagement(source, activeStorageSub.price_id);
+          await openNativeSubscriptionManagement(source, sub.price_id);
         } catch (err) {
           console.error('Storage action error:', err);
           // Append the raw failure so an on-device report names the failing
@@ -353,7 +361,7 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
         await startStorageUpgrade(
           authed.pubkey,
           target.gb,
-          { subscription_id: activeStorageSub.subscription_id, source },
+          { subscription_id: sub.subscription_id, source },
           () => { succeeded = true; },
           (reason) => setError(t(`billing:purchaseError.${reason}`)),
         );
@@ -384,7 +392,7 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
         accessToken: session.access_token,
         authUid: session.user.id,
         signingPrivateKey: authed.signingPrivateKey,
-        subscriptionId: activeStorageSub.subscription_id,
+        subscriptionId: sub.subscription_id,
         action,
         priceId: target?.priceId,
         quote: target?.quote,
@@ -401,6 +409,54 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
     } finally {
       setStorageActionBusy(false);
     }
+  }
+
+  // Cancel with a confirm step, for the live add-on and for one that waits
+  // for Pro, which differ only in the confirm line.
+  function storageCancelControls(sub: StorageSubRow, confirmLine: string) {
+    return (
+      cancelDone ? (
+        <div className="mt-3 text-small text-success">
+          {t('storage.cancelScheduled')}
+        </div>
+      ) : confirmingCancel ? (
+        <div className="mt-3 rounded-md border border-red-300 dark:border-red-900/60 px-2.5 py-2">
+          <div className="text-meta text-pn-soft mb-1.5 leading-relaxed">
+            {confirmLine}
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={storageActionBusy}
+              onClick={() => {
+                setConfirmingCancel(false);
+                void handleStorageAction('cancel', undefined, sub);
+              }}
+              className="text-small rounded-md bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 transition disabled:opacity-50"
+            >
+              {storageActionBusy ? t('storage.cancelling') : t('storage.yesCancel')}
+            </button>
+            <button
+              type="button"
+              disabled={storageActionBusy}
+              onClick={() => setConfirmingCancel(false)}
+              className="text-small rounded-md border border-divider hover:bg-surface-1 px-2.5 py-1 transition disabled:opacity-50"
+            >
+              {t('storage.keepStorage')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={storageActionBusy}
+          onClick={() => setConfirmingCancel(true)}
+          className="mt-3 text-small text-danger hover:underline disabled:opacity-50"
+        >
+          {t('storage.cancelStorage')}
+        </button>
+      )
+    );
   }
 
   async function handleRevoke(target: RevokeTarget) {
@@ -420,6 +476,7 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
           supabase,
           accessToken: session.access_token,
           authUid: session.user.id,
+          account: authed.pubkey,
           signingPrivateKey: authed.signingPrivateKey,
           targetDeviceId: row.device_id,
         });
@@ -1043,49 +1100,7 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                                 {error}
                               </div>
                             )}
-                            {activeStorageSub && !activeStorageSub.scheduled_cancel_at && (
-                              cancelDone ? (
-                                <div className="mt-3 text-small text-success">
-                                  {t('storage.cancelScheduled')}
-                                </div>
-                              ) : confirmingCancel ? (
-                                <div className="mt-3 rounded-md border border-red-300 dark:border-red-900/60 px-2.5 py-2">
-                                  <div className="text-meta text-pn-soft mb-1.5 leading-relaxed">
-                                    {t('storage.cancelConfirm')}
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <button
-                                      type="button"
-                                      disabled={storageActionBusy}
-                                      onClick={() => {
-                                        setConfirmingCancel(false);
-                                        void handleStorageAction('cancel');
-                                      }}
-                                      className="text-small rounded-md bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 transition disabled:opacity-50"
-                                    >
-                                      {storageActionBusy ? t('storage.cancelling') : t('storage.yesCancel')}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      disabled={storageActionBusy}
-                                      onClick={() => setConfirmingCancel(false)}
-                                      className="text-small rounded-md border border-divider hover:bg-surface-1 px-2.5 py-1 transition disabled:opacity-50"
-                                    >
-                                      {t('storage.keepStorage')}
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <button
-                                  type="button"
-                                  disabled={storageActionBusy}
-                                  onClick={() => setConfirmingCancel(true)}
-                                  className="mt-3 text-small text-danger hover:underline disabled:opacity-50"
-                                >
-                                  {t('storage.cancelStorage')}
-                                </button>
-                              )
-                            )}
+                            {activeStorageSub && !activeStorageSub.scheduled_cancel_at && storageCancelControls(activeStorageSub, t('storage.cancelConfirm'))}
                             {/* Subscription terms plus the two legal links, on the
                                 surface where the subscription is actually bought.
                                 App Store guideline 3.1.2 wants title, length, price
@@ -1137,6 +1152,27 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                           </>
                         )}
                       </p>
+                      {waitingStorageSub && (
+                        <div className="rounded-md border border-divider bg-surface-1 p-4">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-body font-medium text-pn">
+                              {t('storage.waitingAddon', { gb: waitingStorageSub.gb_count })}
+                            </span>
+                            <span className="text-meta px-2 py-px rounded bg-track text-pn-soft whitespace-nowrap">
+                              {t('storage.startsWithPro')}
+                            </span>
+                          </div>
+                          {(waitingStorageSub.scheduled_cancel_at || waitingStorageSub.current_period_ends_at) && (
+                            <div className="mt-1.5 text-meta text-pn-muted">
+                              {waitingStorageSub.scheduled_cancel_at
+                                ? t('storage.cancelsOn', { date: formatInstant(waitingStorageSub.scheduled_cancel_at, 'date') })
+                                : t('storage.renewsOn', { date: formatInstant(waitingStorageSub.current_period_ends_at as string, 'date') })}
+                            </div>
+                          )}
+                          {error && <Callout tone="danger" className="mt-2">{error}</Callout>}
+                          {!waitingStorageSub.scheduled_cancel_at && storageCancelControls(waitingStorageSub, t('storage.cancelWaitingConfirm'))}
+                        </div>
+                      )}
                       <div className="rounded-xl border border-divider bg-surface-2 p-5">
                         <div className="text-title font-medium text-pn mb-3 flex items-center gap-2">
                           <IconUpgrade size={18} />

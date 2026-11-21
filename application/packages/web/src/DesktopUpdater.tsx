@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { UpdateToast } from './UpdateToast';
 import { detectPlatform } from './devices';
+import { flushEditorsForExit } from './flushStash';
 import { APEX_ORIGIN, RELEASES_ORIGIN } from './hosts';
 import { marketingHomeHref } from './siteLinks';
 import { compareSemver } from './versionCheck';
@@ -9,6 +10,7 @@ import { VERSION } from './version';
 import { isUpdateSnoozed, snoozeUpdate } from './updateSnooze';
 import { setUpdateAvailable } from './updateAvailable';
 import { knownVersionFloor, reportVersionFloor } from './versionFloor';
+import { fetchPolicy } from './policySignature';
 
 const IS_DESKTOP = detectPlatform() === 'desktop';
 
@@ -72,12 +74,13 @@ const SAVE_BEFORE_QUIT_MS = 1500;
  * iOS/Android update through their app stores, so this is gated on
  * detectPlatform() === 'desktop'. Spec: docs/internal/macos-ios-setup.md (iOS updates through App Store review, not this updater).
  */
-async function fetchLinuxMinVersion(): Promise<string | undefined> {
+async function fetchLinuxMinVersion(): Promise<{ minVersion: string; issued: number } | undefined> {
   try {
-    const res = await fetch(`${LINUX_POLICY_URL}?t=${Date.now()}`, { cache: 'no-store' });
-    if (!res.ok) return undefined;
-    const p = (await res.json()) as { minVersion?: string };
-    return typeof p?.minVersion === 'string' ? p.minVersion : undefined;
+    const fetched = await fetchPolicy(LINUX_POLICY_URL, 'linux');
+    // A policy the release did not sign for this channel is no answer either.
+    if (!fetched?.signed) return undefined;
+    const { minVersion } = fetched.policy;
+    return typeof minVersion === 'string' ? { minVersion, issued: fetched.issued } : undefined;
   } catch {
     // Offline or policy missing: no answer. The caller keeps the floor it
     // already holds, so a network blip never lifts a pause.
@@ -116,11 +119,12 @@ async function runUpdateCheck(): Promise<UpdateReady | null> {
       // Feed the sync pause (versionFloor.ts). Only ever runs when an update
       // exists, which is sufficient: the floor is never above the newest
       // published .deb, so a below-floor build always has an update pending.
-      // Only a published floor changes it: an unreadable policy keeps the
-      // floor already held, so a blip cannot lift a pause.
+      // Only a published, signed floor changes it: an unreadable or unsigned
+      // policy keeps the floor already held, so a blip cannot lift a pause.
       const fetched = await fetchLinuxMinVersion();
-      if (fetched !== undefined) reportVersionFloor(fetched);
-      const minVersion = fetched ?? knownVersionFloor();
+      if (fetched !== undefined) reportVersionFloor(fetched.minVersion, fetched.issued);
+      // The floor held after the report: an older signed policy is refused there.
+      const minVersion = knownVersionFloor();
       const required = !!minVersion && compareSemver(VERSION, minVersion) < 0;
       // Dismissed within the last 48h: stay quiet. The 12h focus re-check keeps
       // running, so the toast returns on its own once the snooze lapses.
@@ -147,9 +151,8 @@ async function runUpdateCheck(): Promise<UpdateReady | null> {
 
 async function relaunchApp(): Promise<void> {
   try {
-    // The editors write what they hold on beforeunload (useDebouncedMarkdownSave
-    // and the flush stash); a quit by the updater fires none.
-    window.dispatchEvent(new Event('beforeunload'));
+    // A quit by the updater fires no beforeunload of its own.
+    flushEditorsForExit();
     await new Promise((resolve) => setTimeout(resolve, SAVE_BEFORE_QUIT_MS));
     if (downloadedForRestart) {
       // Windows: the installer runs and the app quits; it starts again after.

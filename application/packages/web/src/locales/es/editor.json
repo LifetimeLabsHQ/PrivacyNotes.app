@@ -115,10 +115,13 @@
       "red": "Rojo",
       "orange": "Naranja",
       "yellow": "Amarillo",
+      "lime": "Verde lima",
       "green": "Verde",
       "teal": "Verde azulado",
       "blue": "Azul",
+      "indigo": "Índigo",
       "purple": "Morado",
+      "grape": "Violeta",
       "pink": "Rosa"
     }
   },
@@ -241,6 +244,8 @@
     "words_other": "{{formatted}} palabras",
     "characters_one": "{{formatted}} carácter",
     "characters_other": "{{formatted}} caracteres",
+    "lines_one": "{{formatted}} línea",
+    "lines_other": "{{formatted}} líneas",
     "tasksChecked_one": "{{done}} de {{formatted}} marcado",
     "tasksChecked_other": "{{done}} de {{formatted}} marcados",
     "syncLimit": " · {{share}} del límite de sincronización de 1 MB",
@@ -276,6 +281,10 @@
     "collapse": "Contraer bloque de código",
     "expand": "Expandir bloque de código",
     "placeholder": "Escribe o pega código. Para los colores, elige un lenguaje arriba."
+  },
+  "fold": {
+    "collapse": "Contraer sección",
+    "expand": "Expandir sección"
   },
   "math": {
     "sourceLabel": "Código LaTeX"
@@ -313,7 +322,7 @@
     "hiddenNote": "Siguen funcionando con su atajo y en Markdown.",
     "hiddenDrop": "Suelta un botón aquí para ocultarlo.",
     "arrangeTitle": "Botones",
-    "markdownViewNote": "La vista Markdown tiene su propio conjunto fijo de botones.",
+    "markdownViewNote": "La vista Markdown muestra los mismos botones. Los que necesitan la vista con formato aparecen atenuados allí y siguen funcionando en la vista con formato.",
     "hiddenEmpty": "No hay nada oculto.",
     "alwaysVisible": "Siempre visibles",
     "pinned": "Abre un panel, así que queda en la barra u oculto",
@@ -340,7 +349,7 @@
       "notelink": "Enlace entre notas",
       "audio": "Grabación",
       "attachMenu": "Adjuntar",
-      "separator": "Separador",
+      "separator": "Separador de la barra",
       "markdownView": "Ver markdown"
     },
     "positionTitle": "Posición de la barra",

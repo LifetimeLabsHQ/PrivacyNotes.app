@@ -115,10 +115,13 @@
       "red": "Kırmızı",
       "orange": "Turuncu",
       "yellow": "Sarı",
+      "lime": "Limon yeşili",
       "green": "Yeşil",
       "teal": "Turkuaz",
       "blue": "Mavi",
+      "indigo": "Çivit mavisi",
       "purple": "Mor",
+      "grape": "Üzüm moru",
       "pink": "Pembe"
     }
   },
@@ -241,6 +244,8 @@
     "words_other": "{{formatted}} kelime",
     "characters_one": "{{formatted}} karakter",
     "characters_other": "{{formatted}} karakter",
+    "lines_one": "{{formatted}} satır",
+    "lines_other": "{{formatted}} satır",
     "tasksChecked_one": "{{formatted}} öğeden {{done}} tanesi işaretli",
     "tasksChecked_other": "{{formatted}} öğeden {{done}} tanesi işaretli",
     "syncLimit": " · 1 MB eşitleme sınırının {{share}} kadarı",
@@ -275,6 +280,10 @@
     "collapse": "Kod bloğunu daralt",
     "expand": "Kod bloğunu genişlet",
     "placeholder": "Kodu yazın veya yapıştırın. Renk için yukarıdan bir dil seçin."
+  },
+  "fold": {
+    "collapse": "Bölümü daralt",
+    "expand": "Bölümü genişlet"
   },
   "math": {
     "sourceLabel": "LaTeX kodu"
@@ -312,7 +321,7 @@
     "hiddenNote": "Kısayolları ve Markdown ile çalışmaya devam ederler.",
     "hiddenDrop": "Gizlemek için bir düğmeyi buraya bırakın.",
     "arrangeTitle": "Düğmeler",
-    "markdownViewNote": "Markdown görünümü kendi sabit düğme setini korur.",
+    "markdownViewNote": "Markdown görünümü aynı düğmeleri gösterir. Biçimlendirilmiş görünüm gerektirenler orada soluk görünür ve biçimlendirilmiş görünümde çalışmaya devam eder.",
     "hiddenEmpty": "Gizli bir şey yok.",
     "alwaysVisible": "Her zaman görünür",
     "pinned": "Bir panel açar, bu yüzden çubukta kalır veya gizlenir",
@@ -339,7 +348,7 @@
       "notelink": "Not bağlantısı",
       "audio": "Kayıt",
       "attachMenu": "Ekle",
-      "separator": "Dikey ayırıcı çizgi",
+      "separator": "Araç çubuğu ayırıcısı",
       "markdownView": "Markdown'ı göster"
     },
     "positionTitle": "Çubuk konumu",

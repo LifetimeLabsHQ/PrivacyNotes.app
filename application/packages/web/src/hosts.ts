@@ -26,12 +26,33 @@ export const APP_ORIGIN = 'https://use.privacynotes.app';
  */
 export const APEX_ORIGIN = 'https://privacynotes.app';
 
+/**
+ * The card checkout's own host: the /checkout page that loads Paddle's
+ * script, and nothing else. No version of the app ever ran on it, so it
+ * stores no phrase, unlike the apex, where the app ran until 2026-08-25
+ * (beta #224). worker.ts keeps a copy (PAY_ORIGIN) for its 301s;
+ * tests/payHost.test.ts holds the two equal.
+ * Spec: docs/internal/billing-integration.md (checkout host)
+ */
+export const PAY_ORIGIN = 'https://pay.privacynotes.app';
+
 /** The release files: update manifests and floors for every platform. */
 export const RELEASES_ORIGIN = 'https://releases.privacynotes.app';
 
 /** The world map and the town lists for a note's place: the privacynotes-maps R2 bucket.
  *  Read only after that click. Spec: docs/internal/plans/note-location.md (section 5) */
 export const MAP_ORIGIN = 'https://maps.privacynotes.app';
+
+/** The plugin files, such as the Smart connections model in `models/`: the
+ *  privacynotes-plugins R2 bucket, with its own upload token, so a leaked map
+ *  token cannot change them. Read only after a person turns a plugin on.
+ *  Spec: docs/internal/plans/related-notes.md (section 4d) */
+export const PLUGINS_ORIGIN = 'https://plugins.privacynotes.app';
+
+/** The files Worker: every encrypted picture and file of an official build
+ *  goes through it (blobStore.ts, workerBackend), with the person's own token.
+ *  Spec: docs/internal/plans/r2-migration-spec.md (section 6) */
+export const FILES_ORIGIN = 'https://files.privacynotes.app';
 
 /**
  * The sync host of the official builds. The CSP of every official build
@@ -83,6 +104,13 @@ let cachedApp: boolean | null = null;
 let cachedApex: boolean | null = null;
 let cachedBeta: boolean | null = null;
 
+/** The contributor beta site, open to the public since 2026-11-16. Its own
+ *  demo is `?demo=1` on the same origin (demo.ts), because try.privacynotes.app
+ *  runs the regular app, not the beta (GitHub #848).
+ *  Spec: docs/internal/repos-runbook.md (section 2) */
+export const BETA_ORIGIN = 'https://beta.privacynotes.app';
+export const BETA_DEMO_URL = `${BETA_ORIGIN}/?demo=1`;
+
 /** The beta site's changelog: the commit list of the beta repo, where every
  *  sync lands as one `Sync vX.Y.Z` commit. The BETA stamp links it. */
 export const BETA_COMMITS_URL = 'https://github.com/LifetimeLabsHQ/beta.privacynotes.app/commits/main/';
@@ -94,7 +122,7 @@ export const BETA_COMMITS_URL = 'https://github.com/LifetimeLabsHQ/beta.privacyn
  * beta site for the app; the stamp shows the version on hover and links
  * BETA_COMMITS_URL. `?betahost=1` forces it on localhost only, like
  * `?apphost=1` above.
- * Spec: docs/internal/plans/repo-split-contributors.md (Decision 2026-11-01)
+ * Spec: docs/internal/repos-runbook.md (section 2)
  */
 export function isBetaHost(): boolean {
   if (cachedBeta !== null) return cachedBeta;

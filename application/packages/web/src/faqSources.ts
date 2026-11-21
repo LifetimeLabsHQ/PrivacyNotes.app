@@ -92,6 +92,10 @@ export const FAQ_SOURCES: Readonly<Record<string, readonly FaqSource[]>> = {
     { doc: 'threatModel', heading: 'OAuth users' },
     { doc: 'security', heading: 'OAuth and custodial mode' },
   ],
+  'stored-phrase': [
+    { doc: 'security', heading: 'OAuth and custodial mode' },
+    { doc: 'threatModel', heading: 'Custodial (keep it simple)' },
+  ],
   'twelve-word-phrase': [{ doc: 'threatModel', heading: 'Key derivation' }],
   'guess-phrase': [
     { doc: 'threatModel', heading: 'Key derivation' },
@@ -100,15 +104,25 @@ export const FAQ_SOURCES: Readonly<Record<string, readonly FaqSource[]>> = {
   'enable-2fa': [{ doc: 'threatModel', heading: 'Two-factor sign-in' }],
   'bip39-wordlist': [{ doc: 'crypto' }],
   'no-ai': [
-    { doc: 'threatModel', heading: 'Smart connections' },
+    { doc: 'threatModel', heading: 'Plugins' },
     { doc: 'verify', heading: 'Tier 1: one minute, no tools' },
   ],
   'burn-notes': [{ doc: 'threatModel', heading: 'Burn notes (one-time shares)' }],
   'share-with-someone': [{ doc: 'threatModel', heading: 'Burn notes (one-time shares)' }],
   'locked-vs-protected': [{ doc: 'threatModel', heading: 'Lock / PIN-protect notes' }],
+  'lock-reload': [{ doc: 'threatModel', heading: 'Local storage at rest' }],
   'biometric-unlock': [
     { doc: 'threatModel', heading: 'Local phrase-at-rest: biometric and PIN wrapping' },
   ],
+  'passkey-unlock': [
+    { doc: 'threatModel', heading: 'Local phrase-at-rest: biometric and PIN wrapping' },
+  ],
+  // Held entry. Points at the heading the new "Passkey sign-in" section follows,
+  // because check:docs fails on a heading that does not exist yet; it moves to
+  // "Passkey sign-in" in the change that turns the switch on (passkeys.md, 9).
+  'passkey-sign-in': [{ doc: 'threatModel', heading: 'Passkey sign-in' }],
+  // The extension paragraph of the overview: what the copy holds.
+  'vault-passkeys': [{ doc: 'threatModel', heading: 'System overview' }],
   'open-source': [{ doc: 'verify' }, { doc: 'crypto' }],
   'report-vulnerability': [{ doc: 'security', heading: 'Reporting a vulnerability' }],
 
@@ -137,6 +151,7 @@ export const FAQ_SOURCES: Readonly<Record<string, readonly FaqSource[]>> = {
     { doc: 'verify', heading: 'What step 6 showed you, and what it does not buy' },
   ],
   'clear-browser-data': [{ doc: 'threatModel', heading: 'Local storage at rest' }],
+  'phrase-not-saved': [{ doc: 'threatModel', heading: 'Local storage at rest' }],
   'data-rights': [{ doc: 'security', heading: 'What we measure' }],
 
   // Apps & platforms

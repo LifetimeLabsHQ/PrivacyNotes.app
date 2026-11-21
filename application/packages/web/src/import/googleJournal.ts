@@ -9,7 +9,7 @@ import { mimeFromExtOrBytes } from './blobImport';
 import { blobKey, untitledEntryTitle } from './journalImport';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:googleJournal.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:googleJournal.${key}`, options);
 
 /**
  * Google Journal importer.
@@ -125,7 +125,8 @@ export async function parseGoogleJournal(file: File, onProgress?: (msg: string) 
         media.push(`![](${key})`);
         photos++;
       } else {
-        media.push(`[${name}](${key})`);
+        // No brackets in the label, or blobImport never finds the file.
+        media.push(`[${name.replace(/[[\]]/g, '')}](${key})`);
         videos++;
       }
     }
@@ -165,12 +166,6 @@ export async function parseGoogleJournal(file: File, onProgress?: (msg: string) 
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: notes.filter((n) => !n.body.trim()).length,
-      untaggedNotes: notes.length,
-      uniqueTags: 0,
-    },
     source: 'google-journal',
     ...(blobs.size > 0 ? { blobs, blobBytes } : {}),
   };

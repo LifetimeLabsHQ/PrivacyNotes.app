@@ -7,17 +7,18 @@ import { createFolder, type FolderDef } from '../folders';
 import { IMPORT_FOLDER_LIMIT, commonRootPrefix } from './folderImport';
 import { linkifyLiteralText } from './linkify';
 import { noteLinkTarget } from '../noteLinks';
-import { ATTACHMENT_EXT, mimeFromExt } from './blobImport';
+import { ATTACHMENT_EXT } from './blobImport';
+import { FileKeys, readKeyedFiles } from './fileRefs';
 import { escapeMarkdownText, guardMarkdownLineStart } from '../markdownEscape';
 import { markdownCodeSpan } from './standardNotesSuper';
 import { nearestHighlight, nearestTextColor } from './paletteColor';
 import { mapOutsideCode } from './codeSegments';
 import { parseMarkdown } from './markdown';
 import { toLocalIso } from '../notesViewUtils';
-import type { ImportBlob, ImportedNote, ParsedImport } from './types';
+import type { ImportedNote, ParsedImport } from './types';
 import { escapeHtml } from '../escapeHtml';
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:siyuan.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:siyuan.${key}`, options);
 
 /**
  * SiYuan importer.
@@ -238,7 +239,8 @@ interface RenderEnv {
   blocks: Map<string, BlockInfo>;
   assets: Map<string, JSZip.JSZipObject>;
   avs: Map<string, unknown>;
-  usedAssets: Set<string>;
+  /** The fixed-width key of each asset a note shows (fileRefs.ts, beta #152). */
+  assetKeys: FileKeys;
   flags: Flags;
 }
 
@@ -275,9 +277,8 @@ function renderDoc(doc: SyDoc, env: RenderEnv): DocResult {
       flags.missingAssets++;
       return `\`[${image ? 'image' : 'file'}: ${name.replace(/`/g, "'")} - not in the SiYuan export]\``;
     }
-    env.usedAssets.add(path);
     const text = (label || name).replace(/[[\]]/g, '');
-    return `${image ? '!' : ''}[${escapeMarkdownText(text)}](${linkTarget(path)})`;
+    return `${image ? '!' : ''}[${escapeMarkdownText(text)}](${env.assetKeys.keyOf(path)})`;
   }
 
   /** A block-ref as a note-link, or plain anchor text when the target is not in the export. */
@@ -937,7 +938,7 @@ export async function parseSiyuan(file: File, onProgress?: (msg: string) => void
     embeds: 0, queries: 0, tabs: 0, mindmaps: 0, databases: 0, avFailed: 0, flashcards: 0, memos: 0,
     droppedColors: 0, droppedAlign: 0, missingAssets: 0, unknownRefs: 0, noteLinks: 0, tooDeep: 0,
   };
-  const env: RenderEnv = { docs, blocks: blockIndex, assets, avs, usedAssets: new Set(), flags };
+  const env: RenderEnv = { docs, blocks: blockIndex, assets, avs, assetKeys: new FileKeys('syfile'), flags };
   const now = new Date().toISOString();
   const notes: ImportedNote[] = [];
   let folderDefs: FolderDef[] = [];
@@ -1024,19 +1025,7 @@ export async function parseSiyuan(file: File, onProgress?: (msg: string) => void
     throw new Error(encryptedBoxes > 0 || encryptedDocs > 0 ? msg('allEncrypted') : msg('noNotes'));
   }
 
-  const blobs = new Map<string, ImportBlob>();
-  let tooLarge = 0;
-  for (const path of env.usedAssets) {
-    const entry = assets.get(path);
-    if (!entry) continue;
-    const data = await zipEntryMedia(entry);
-    if (!data) {
-      tooLarge++;
-      continue;
-    }
-    const name = assetDisplayName(path);
-    blobs.set(path, { data, mime: mimeFromExt(name), name });
-  }
+  const { blobs, tooLarge } = await readKeyedFiles(env.assetKeys, assets, notes, undefined, assetDisplayName);
 
   const transforms: string[] = [];
   if (folderDefs.length > 0) transforms.push(msg('rebuiltNotebooks', { count: folderDefs.length }));
@@ -1064,17 +1053,10 @@ export async function parseSiyuan(file: File, onProgress?: (msg: string) => void
   if (droppedFolders > 0) warnings.push(msg('droppedFolders', { count: droppedFolders }));
   if (flags.tooDeep > 0) warnings.push(msg('tooDeep'));
 
-  const uniqueTags = new Set(notes.flatMap((n) => n.tags));
   const parsed: ParsedImport = {
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: notes.filter((n) => !n.body.trim()).length,
-      untaggedNotes: notes.filter((n) => n.tags.length === 0).length,
-      uniqueTags: uniqueTags.size,
-    },
     source: 'siyuan',
   };
   if (folderDefs.length > 0) parsed.folders = folderDefs;
@@ -1275,12 +1257,6 @@ async function parseSiyuanMarkdown(zip: JSZip, file: File, onProgress?: (msg: st
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: notes.filter((n) => !n.title.trim() && !n.body.trim()).length,
-      untaggedNotes: notes.filter((n) => n.tags.length === 0).length,
-      uniqueTags: new Set(notes.flatMap((n) => n.tags)).size,
-    },
     source: 'siyuan',
   };
 }

@@ -81,8 +81,6 @@ export function formatRelative(iso: string): string {
   return relativeFormatter('always').format(-Math.floor(h / 24), 'day');
 }
 
-/** "Today" (0), "Yesterday" (-1) or "Tomorrow" (1) in the app language, from
- *  Intl, as a list group header names a day. Lower case in most languages. */
 /** A word with its first letter in capitals, by the language's own rule
  *  ("today" to "Today"), for a word Intl gives in lower case. */
 export function capitalize(s: string, loc: string): string {
@@ -90,7 +88,10 @@ export function capitalize(s: string, loc: string): string {
   return first.toLocaleUpperCase(loc) + rest.join('');
 }
 
-export function relativeDayName(offset: -1 | 0 | 1): string {
+/** "Today" (0), "Yesterday" (-1) or "Tomorrow" (1) in the app language, from
+ *  Intl, as a list group header names a day; further off, "in 35 days" or
+ *  "35 days ago" (the day counter). Lower case in most languages. */
+export function relativeDayName(offset: number): string {
   return relativeFormatter('auto').format(offset, 'day');
 }
 
@@ -391,6 +392,10 @@ export function formatInstantWith(prefs: DatePrefs, value: string | Date, style:
   if (r.iso && style !== 'time' && style !== 'weekday' && style !== 'monthShort' && style !== 'weekdayShort') {
     const day = toLocalIso(d);
     switch (style) {
+      // A tile and a compact row drop the current year here too, the way
+      // YEAR_WHEN_OLD does for every other date order: "11-21", "2025-11-21".
+      case 'tile':
+        return d.getFullYear() === new Date().getFullYear() ? day.slice(5) : day;
       case 'row':
         return `${dateFormatter(r, { weekday: 'short' }, 'weekdayShort').format(d)} ${day} ${time()}`;
       case 'dateTime':

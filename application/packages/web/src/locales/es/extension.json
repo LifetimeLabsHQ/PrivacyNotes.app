@@ -47,9 +47,10 @@
     "title": "Protege tus inicios de sesión",
     "body": "Elige un PIN o un código de acceso para este navegador. Lo necesitas para desbloquear aquí tus inicios de sesión. Es distinto del de la app.",
     "biometric": "Usar también el desbloqueo biométrico",
-    "biometricHelp": "Touch ID o Windows Hello, además del PIN o el código de acceso, que siempre funcionan también.",
+    "biometricHelp": "Touch ID o Windows Hello, mediante una passkey para este navegador. El PIN o el código de acceso también funcionan siempre.",
     "repeat": "Introdúcelo otra vez",
-    "mismatch": "No coinciden. Vuelve a intentarlo."
+    "mismatch": "No coinciden. Vuelve a intentarlo.",
+    "commonPin": "Este PIN es demasiado fácil de adivinar. Elige otro."
   },
   "clip": {
     "selection": "Selección",
@@ -83,7 +84,7 @@
     "unlockPin": "Introduce tu PIN",
     "unlockPasscode": "Introduce tu código de acceso",
     "useBiometric": "Usar el desbloqueo biométrico",
-    "wrong_other": "Incorrecto. Quedan {{count}} intentos antes de que este navegador se desconecte.",
+    "wrong_other": "Incorrecto. Quedan {{count}} intentos este mes antes de que este navegador se desconecte.",
     "forSite": "Para {{site}}",
     "none": "No hay inicios de sesión para este sitio.",
     "off": "Los inicios de sesión están desactivados en este navegador. Activa Bóveda cuando lo conectes.",
@@ -99,12 +100,15 @@
     "noMatch": "Ningún inicio de sesión coincide.",
     "openSite": "Abrir el sitio",
     "duplicate": "Ya tienes un inicio de sesión para este sitio con este nombre de usuario.",
-    "wrong_one": "Incorrecto. Queda {{count}} intento antes de que este navegador se desconecte."
+    "editTitle": "Editar inicio de sesión",
+    "saved": "Cambios guardados.",
+    "wrong_one": "Incorrecto. Queda {{count}} intento este mes antes de que este navegador se desconecte."
   },
   "account": {
     "confirmDisconnect": "¿Desconectar?",
     "revoked": "Este navegador ya no está conectado",
-    "revokedBody": "Vuelve a conectarlo con un código nuevo de la app."
+    "revokedBody": "Vuelve a conectarlo con un código nuevo de la app.",
+    "pendingPasskey": "Una passkey guardada en este navegador aún no está en tu Bóveda. Abre PrivacyNotes y deja que se sincronice primero, o la passkey se perderá."
   },
   "badge": {
     "problem": "Algo necesita tu atención"
@@ -147,7 +151,8 @@
     "unlockToCopy": "Desbloquea para copiar",
     "omniboxDefault": "Buscar %s en tu bóveda de PrivacyNotes",
     "omniboxUnlock": "Desbloquea PrivacyNotes para buscar",
-    "moreOptions": "Más opciones"
+    "moreOptions": "Más opciones",
+    "editNotSaved": "Tu cambio en {{name}} nunca llegó a tu Bóveda, así que el inicio de sesión conserva sus valores anteriores. Edítalo de nuevo para guardar el cambio."
   },
   "shortcuts": {
     "notSet": "Sin asignar",
@@ -194,5 +199,19 @@
     "biometricPin": "Introduce tu PIN para configurarlo.",
     "biometricPasscode": "Introduce tu código de acceso para configurarlo.",
     "biometricOff": "El desbloqueo biométrico está desactivado"
+  },
+  "passkey": {
+    "saveTitle": "¿Guardar una passkey para {{site}}?",
+    "useTitle": "Iniciar sesión en {{site}}",
+    "saveTo": "Guardar en",
+    "save": "Guardar en PrivacyNotes",
+    "other": "Usar otra app de passkeys",
+    "already": "Ya tienes una passkey para {{site}} en PrivacyNotes.",
+    "saved": "Passkey guardada.",
+    "notSaved": "No se pudo guardar la passkey. Se encarga la app de passkeys de tu navegador.",
+    "maybeSaved": "Puede que la passkey se haya guardado. Revisa tu Bóveda.",
+    "unlockFirst": "Desbloquea para usar tus passkeys.",
+    "offer": "Ofrecer passkeys",
+    "offerHelp": "Guarda y usa passkeys en sitios web."
   }
 }

@@ -1,8 +1,10 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListEntryCard } from './ListEntryCard';
 import { OverflowTip } from './OverflowTip';
 import { Backspace, Folder, Folders, FunnelSimple, Hash, Prohibit, X } from './icons';
+import { Select, SettingsSegmented } from './ui';
+import type { FocusAnswer } from './trackerFocusStore';
 
 /**
  * Dismissable "this list is filtered" chips - one per active filter.
@@ -47,20 +49,36 @@ const UNTAGGED = '__untagged__';
 const CHIP_CLASS =
   'max-w-full inline-flex items-center gap-1.5 rounded-full bg-warning/10 hover:bg-warning/20 text-warning ps-2.5 pe-2 py-1 text-small font-medium transition';
 
+/**
+ * The tracker in focus in Journals, as a third chip: its name and the "x",
+ * and beside it the answer of a yes or no tracker (Yes, No, Any answer) or
+ * the tag of a tag set. Spec: docs/internal/specs/tracker-focus-771.md (section 4)
+ */
+export interface TrackerChip {
+  name: string;
+  /** The tracker's own icon (`TrackerIcon`). */
+  icon: ReactNode;
+  answer?: { value: FocusAnswer; onChange: (answer: FocusAnswer) => void };
+  tags?: { value: string; options: readonly { value: string; label: string }[]; onChange: (tag: string) => void };
+  onClear: () => void;
+}
+
 export function ListFilterChips({
   folderName,
   tag,
   onClearFolder,
   onClearTag,
+  tracker = null,
 }: {
   folderName: string | null;
   tag: string | null;
   onClearFolder: () => void;
   onClearTag: () => void;
+  tracker?: TrackerChip | null;
 }) {
   const { t } = useTranslation('notes');
   const subfolders = useContext(SubfoldersSwitchContext);
-  if (folderName === null && tag === null) return null;
+  if (folderName === null && tag === null && tracker === null) return null;
   const untagged = tag === UNTAGGED;
   const tagLabel = untagged ? t('shell:tagsRail.untagged') : tag;
   return (
@@ -116,6 +134,44 @@ export function ListFilterChips({
           </button>
         </OverflowTip>
       )}
+      {tracker && (
+        <OverflowTip text={tracker.name} className="min-w-0 flex">
+          <button
+            type="button"
+            onClick={tracker.onClear}
+            aria-label={t('trackerChip.clear', { tracker: tracker.name })}
+            className={CHIP_CLASS}
+          >
+            <span className="inline-flex shrink-0" aria-hidden="true">{tracker.icon}</span>
+            <span className="truncate" dir="auto">{tracker.name}</span>
+            <X size={11} className="shrink-0" aria-hidden="true" />
+          </button>
+        </OverflowTip>
+      )}
+      {tracker?.tags && (
+        <Select
+          size="sm"
+          aria-label={t('trackerChip.tagLabel', { tracker: tracker.name })}
+          value={tracker.tags.value}
+          onChange={(e) => tracker.tags!.onChange(e.target.value)}
+          className="max-w-[10rem]"
+        >
+          <option value="">{t('trackerChip.anyTag')}</option>
+          {tracker.tags.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </Select>
+      )}
+      {tracker?.answer && (
+        <SettingsSegmented<FocusAnswer>
+          label={t('trackerChip.answerLabel', { tracker: tracker.name })}
+          value={tracker.answer.value}
+          onChange={tracker.answer.onChange}
+          options={[
+            { value: 'yes', label: t('trackers:custom.yes') },
+            { value: 'no', label: t('trackers:custom.no') },
+            { value: 'any', label: t('trackerChip.anyAnswer') },
+          ]}
+        />
+      )}
     </div>
   );
 }
@@ -143,14 +199,17 @@ export function FilteredEmpty({
   tag,
   onClearFolder,
   onClearTag,
+  onClearTracker,
 }: {
   folderName: string | null;
   tag: string | null;
   onClearFolder: () => void;
   onClearTag: () => void;
+  /** The tracker in focus in Journals: present while one is. */
+  onClearTracker?: () => void;
 }) {
   const { t } = useTranslation('notes');
-  if (folderName === null && tag === null) return null;
+  if (folderName === null && tag === null && !onClearTracker) return null;
   return (
     <div className="flex flex-col items-center justify-center text-center px-6 py-12">
       <div className="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center mb-3">
@@ -166,7 +225,7 @@ export function FilteredEmpty({
       </p>
       <button
         type="button"
-        onClick={() => { onClearFolder(); onClearTag(); }}
+        onClick={() => { onClearFolder(); onClearTag(); onClearTracker?.(); }}
         className="text-small font-medium text-white bg-accent-fill hover:bg-accent-fill-hover px-4 py-1.5 rounded-md transition"
       >
         {t('common:palette.commands.clearFilters')}
@@ -210,6 +269,7 @@ export function ActiveFilterEntry({
   tag,
   onClearFolder,
   onClearTag,
+  onClearTracker,
   variant,
   as,
 }: {
@@ -217,13 +277,15 @@ export function ActiveFilterEntry({
   tag: string | null;
   onClearFolder: () => void;
   onClearTag: () => void;
+  /** The tracker in focus in Journals: present while one is. */
+  onClearTracker?: () => void;
   /** 'tile' in a grid pane, 'row' in a list pane. */
   variant: 'row' | 'tile';
   /** 'div' in the Files pane, whose rows are buttons in a plain container. */
   as?: 'li' | 'div';
 }) {
   const { t } = useTranslation('notes');
-  if (folderName === null && tag === null) return null;
+  if (folderName === null && tag === null && !onClearTracker) return null;
   return (
     <ListEntryCard
       variant={variant}
@@ -234,6 +296,7 @@ export function ActiveFilterEntry({
       onClick={() => {
         onClearFolder();
         onClearTag();
+        onClearTracker?.();
       }}
     />
   );

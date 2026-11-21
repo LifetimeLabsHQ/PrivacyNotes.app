@@ -12,6 +12,8 @@
  * through `isShown` in SettingsSearchResults.tsx, which keeps this file data.
  * Spec: docs/internal/design/ui-patterns.md (section 114, settings search)
  */
+import { passkeysReleased } from '../passkeysRelease';
+
 export type SectionId =
   | 'stats'
   | 'import'
@@ -22,6 +24,7 @@ export type SectionId =
   | 'me'
   | 'design'
   | 'editor'
+  | 'plugins'
   | 'formatBar'
   | 'lists'
   | 'trackers'
@@ -43,7 +46,7 @@ export type SettingEntry = {
   brand?: true;
   options?: readonly string[];
   keywords?: true;
-  shownOn?: 'storeBuild' | 'keyboard' | 'paneLayout' | 'realAccount' | 'desktopApp' | 'captureBlock' | 'commandLine' | 'phoneApp' | 'onDeviceAi';
+  shownOn?: 'storeBuild' | 'keyboard' | 'paneLayout' | 'realAccount' | 'desktopApp' | 'appSize' | 'captureBlock' | 'commandLine' | 'phoneApp' | 'plugins';
   /** An entry for a whole section: it opens the pane and flashes nothing. */
   isSection?: true;
 };
@@ -59,6 +62,7 @@ export const SECTION_LABEL: Record<SectionId, string> = {
   me: 'notes:settings.accountLabel',
   design: 'notes:settings.appearanceLabel',
   editor: 'notes:settings.editorLabel',
+  plugins: 'notes:settings.pluginsLabel',
   formatBar: 'notes:settings.formatBarLabel',
   lists: 'notes:settings.listsLabel',
   trackers: 'notes:settings.trackersLabel',
@@ -87,7 +91,7 @@ export const TAB_LABEL: Record<string, string> = {
   'security/pin': 'security:modal.tabPin',
   'security/biometric': 'security:modal.tabBiometricShort',
   'security/phrase': 'security:modal.tabPhrase',
-  'security/twoFactor': 'security:modal.tabTwoFactor',
+  'security/twoFactor': passkeysReleased() ? 'security:modal.tabTwoFactorPasskeys' : 'security:modal.tabTwoFactor',
   'plan/connectedAccounts': 'security:accountTabs.accounts',
   'plan/keyCustody': 'security:accountTabs.keyCustody',
   'plan/overview': 'security:accountTabs.overview',
@@ -121,6 +125,8 @@ const SECTION_ENTRIES: SettingEntry[] = (Object.keys(SECTION_LABEL) as SectionId
   ...(section === 'system' ? { shownOn: 'desktopApp' as const } : {}),
   // Settings > Command line shows where `privacynotes` can be installed (cliRelease.ts).
   ...(section === 'commandLine' ? { shownOn: 'commandLine' as const } : {}),
+  // Settings > Plugins waits for its release switch (onDeviceAi.ts, `pluginsShown`).
+  ...(section === 'plugins' ? { shownOn: 'plugins' as const } : {}),
 }));
 
 /** An importer row, named by its product. */
@@ -159,11 +165,13 @@ const ROW_ENTRIES: SettingEntry[] = [
   // Import & Export
   { id: 'import.import', section: 'import', tab: 'import', label: 'importExport:shell.tabImport' },
   keyedImporter('browser-bookmarks', 'importExport:sourceLabel.browserBookmarks'),
+  importer('raindrop', 'Raindrop.io'),
   keyedImporter('vcard', 'importExport:sourceLabel.vcard'),
   importer('anytype', 'Anytype'),
   importer('apple-journal', 'Apple Journal'),
   importer('apple-notes', 'Apple Notes'),
   importer('bear', 'Bear'),
+  importer('capacities', 'Capacities'),
   importer('daylio', 'Daylio'),
   importer('diarium', 'Diarium'),
   importer('evernote', 'Evernote'),
@@ -178,6 +186,7 @@ const ROW_ENTRIES: SettingEntry[] = [
   importer('notesnook', 'Notesnook'),
   importer('obsidian', 'Obsidian'),
   importer('obsidian-canvas', 'Obsidian Canvas'),
+  importer('onenote', 'OneNote'),
   importer('google-journal', 'Google Journal'),
   importer('samsung-notes', 'Samsung Notes'),
   importer('simplenote', 'Simplenote'),
@@ -215,6 +224,7 @@ const ROW_ENTRIES: SettingEntry[] = [
   importer('keepass', 'KeePass'),
   importer('keepassxc', 'KeePassXC'),
   importer('lastpass', 'LastPass'),
+  importer('msecure', 'mSecure'),
   importer('nordpass', 'NordPass'),
   importer('proton-pass', 'Proton Pass'),
   // The Passwords tab's search words, kept on the row that took its place (#608).
@@ -251,6 +261,9 @@ const ROW_ENTRIES: SettingEntry[] = [
   { id: 'security.reaskAfter', section: 'security', tab: 'biometric', label: 'security:biometricTab.reaskAfter', keywords: true },
   { id: 'security.blockCapture', section: 'security', tab: 'biometric', label: 'security:biometricTab.blockCapture', keywords: true, shownOn: 'captureBlock' },
   { id: 'security.phrase', section: 'security', tab: 'phrase', label: 'security:modal.tabPhrase', keywords: true },
+  // The Passkeys tab exists only while the release switch is on, so its row
+  // does too. Spec: docs/contrib/passkeys.md (4.4)
+  ...(passkeysReleased() ? [{ id: 'security.passkeys', section: 'security' as const, tab: 'twoFactor', label: 'notes:vaultFilter.passkeys', keywords: true as const }] : []),
   { id: 'security.twoFactor', section: 'security', tab: 'twoFactor', label: 'security:modal.tabTwoFactor', options: ['security:twoFactor.title', 'security:twoFactor.backupKey', 'security:twoFactor.start'], shownOn: 'realAccount' },
   { id: 'security.qrCode', section: 'security', tab: 'phrase', label: 'security:phraseView.showQr', options: ['security:phraseView.saveQr'] },
   { id: 'security.copyPhrase', section: 'security', tab: 'phrase', label: 'security:phraseView.copyPhrase' },
@@ -271,20 +284,30 @@ const ROW_ENTRIES: SettingEntry[] = [
   { id: 'appearance.mode', section: 'design', label: 'settings:appearance.modeTitle', options: ['settings:appearance.modeAuto', 'settings:appearance.light', 'settings:appearance.dark'], keywords: true },
   { id: 'appearance.theme', section: 'design', label: 'settings:appearance.lightThemes', options: ['settings:appearance.darkThemes'], keywords: true },
   { id: 'appearance.customThemes', section: 'design', label: 'settings:appearance.custom.builderNew', options: ['settings:appearance.custom.pasteCode', 'settings:appearance.themeSearch', 'settings:appearance.madeBy.more'], keywords: true },
-  { id: 'appearance.appZoom', section: 'system', label: 'settings:appearance.appZoomTitle', keywords: true, shownOn: 'desktopApp' },
+  { id: 'appearance.appZoom', section: 'design', label: 'settings:appearance.appZoomTitle', keywords: true, shownOn: 'appSize' },
   { id: 'appearance.tintNotes', section: 'design', label: 'settings:appearance.noteColorsTitle', options: ['settings:appearance.custom.seed.background', 'settings:appearance.noteColorsAccent', 'settings:appearance.noteColorsOff'], keywords: true },
   { id: 'appearance.textSize', section: 'editor', label: 'settings:appearance.textSizeTitle', options: ['settings:appearance.textSizeSmallest', 'settings:appearance.textSizeSmall', 'settings:appearance.textSizeDefault', 'settings:appearance.textSizeLarge', 'settings:appearance.textSizeLargest'], keywords: true },
   { id: 'appearance.lineSpacing', section: 'editor', label: 'settings:appearance.lineSpacingTitle', options: ['settings:appearance.lineSpacingTight', 'settings:appearance.lineSpacingCompact', 'settings:appearance.lineSpacingNormal'], keywords: true },
   { id: 'appearance.contentWidth', section: 'editor', label: 'settings:appearance.contentWidthTitle', options: ['settings:appearance.contentWidthWide', 'settings:appearance.contentWidthFull'], keywords: true },
   { id: 'appearance.editor', section: 'editor', label: 'notes:settings.editorLabel', options: ['settings:appearance.editorFormatted', 'settings:appearance.editorMarkdown'], keywords: true },
+  { id: 'appearance.openReadOnly', section: 'editor', tab: 'behavior', label: 'settings:appearance.openReadOnlyTitle', keywords: true },
   { id: 'appearance.copyFormat', section: 'editor', tab: 'behavior', label: 'settings:appearance.copyFormatTitle', options: ['settings:appearance.copyFormatMarkdown', 'settings:appearance.copyFormatPlain'], keywords: true },
   { id: 'appearance.pasteFormat', section: 'editor', tab: 'behavior', label: 'settings:appearance.pasteFormatTitle', options: ['settings:appearance.pasteFormatFormatted', 'settings:appearance.copyFormatPlain'], keywords: true },
   { id: 'appearance.invisibles', section: 'editor', label: 'settings:appearance.invisiblesTitle', keywords: true },
+  { id: 'appearance.lineNumbers', section: 'editor', label: 'settings:appearance.lineNumbersTitle', keywords: true },
   { id: 'appearance.linkModifier', section: 'editor', tab: 'behavior', label: 'settings:appearance.linkModifierTitle', keywords: true },
   { id: 'appearance.typedSymbols', section: 'editor', tab: 'behavior', label: 'settings:appearance.typedSymbolsTitle', keywords: true },
   { id: 'appearance.linkSuggestions', section: 'editor', tab: 'behavior', label: 'notes:connections.related', keywords: true },
   // Behind the release switch in onDeviceAi.ts.
-  { id: 'appearance.smartConnections', section: 'editor', tab: 'behavior', label: 'settings:onDeviceAi.title', keywords: true, shownOn: 'onDeviceAi' },
+  { id: 'appearance.smartConnectionsLink', section: 'editor', tab: 'behavior', label: 'settings:onDeviceAi.title', shownOn: 'plugins' },
+  // Spec: docs/internal/plans/plugins.md (section 5, Settings search)
+  { id: 'plugins.smartConnections', section: 'plugins', label: 'settings:onDeviceAi.title', keywords: true, shownOn: 'plugins' },
+  { id: 'plugins.ocr', section: 'plugins', label: 'settings:plugins.ocr.title', keywords: true, shownOn: 'plugins' },
+  { id: 'plugins.translate', section: 'plugins', label: 'settings:plugins.translate.title', keywords: true, shownOn: 'plugins' },
+  { id: 'plugins.voice', section: 'plugins', label: 'settings:plugins.voice.title', keywords: true, shownOn: 'plugins' },
+  { id: 'plugins.cleanup', section: 'plugins', label: 'settings:plugins.cleanup.title', keywords: true, shownOn: 'plugins' },
+  { id: 'plugins.duplicates', section: 'plugins', label: 'settings:plugins.smart.duplicates', keywords: true, shownOn: 'plugins' },
+  { id: 'plugins.suggestions', section: 'plugins', label: 'settings:plugins.smart.suggestions', keywords: true, shownOn: 'plugins' },
   { id: 'appearance.noteFont', section: 'editor', label: 'settings:appearance.noteFontTitle', keywords: true },
   { id: 'appearance.nestedNumbers', section: 'editor', label: 'settings:appearance.nestedNumbersTitle', options: ['settings:appearance.nestedNumbersFlat', 'settings:appearance.nestedNumbersOutline'], keywords: true },
   { id: 'appearance.favicons', section: 'lists', label: 'settings:appearance.faviconsTitle', keywords: true },
@@ -329,6 +352,8 @@ const ROW_ENTRIES: SettingEntry[] = [
   { id: 'calendar.weekStart', section: 'date', tab: 'calendar', label: 'settings:calendar.weekStart', keywords: true },
   { id: 'calendar.weekNumbers', section: 'date', tab: 'calendar', label: 'settings:calendar.weekNumbers', keywords: true },
   { id: 'calendar.hours', section: 'date', tab: 'calendar', label: 'settings:calendar.hours', keywords: true },
+  // The subscribed calendars, first in the tab; the calendar's gear lands here (#811).
+  { id: 'calendar.feeds', section: 'date', tab: 'calendar', label: 'importExport:webcal.subscribed' },
 
   // Hotkeys
   { id: 'hotkeys.typing', section: 'hotkeys', tab: 'typing', label: 'settings:appearance.toolbarTabTyping', shownOn: 'keyboard' },

@@ -9,6 +9,7 @@ import { changesContent } from './editStamp';
 import { recordLedgerWrite, type LedgerWrite } from './dayLedger';
 import { withoutSourceIdentity } from './schedule';
 import { storedHoldIds } from './massDelete';
+import { UNOPENED_ROWS_KEY, unopenedRowIds } from './unopenedRows';
 import { clipGraphemes } from './clipText';
 
 /**
@@ -174,6 +175,13 @@ export function extractInlineTags(
  * device's generations carrying an equal stamp (#156), and the merge's
  * later-stamp rule for a detail both devices changed reads a true order.
  */
+/** `stamp`, or the row's current one when `stamp` reads earlier. */
+function notBefore(stamp: string, current: string): string {
+  const at = Date.parse(stamp);
+  const cur = Date.parse(current);
+  return Number.isFinite(at) && Number.isFinite(cur) && at < cur ? current : stamp;
+}
+
 export function nextStamp(current: string | undefined): string {
   const now = Date.now();
   const cur = current ? Date.parse(current) : NaN;
@@ -226,8 +234,30 @@ export async function listNotes(): Promise<LocalNote[]> {
   }
 }
 
+/**
+ * The notes of the given types that still exist locally (not tombstones),
+ * in the order the dropped `type` index gave: by type, then by id. The type
+ * is sealed at rest, so this filters the live notes in memory; the unseal
+ * memo makes every read after the first a compare per row.
+ * Spec: docs/internal/plans/row-type-seal.md (5)
+ */
+export async function liveNotesOfType(types: readonly LocalNote['type'][]): Promise<LocalNote[]> {
+  if (types.length === 0) return [];
+  const want = new Set(types);
+  const rows = (await db.notes.where('deleted').equals(0).toArray()).filter((n) => want.has(n.type));
+  return rows.sort((a, b) => (a.type < b.type ? -1 : a.type > b.type ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}
+
 export async function getNote(id: string): Promise<LocalNote | undefined> {
   return db.notes.get(id);
+}
+
+/** Notes written here this session (GitHub #824): one made to type in opens
+ *  for editing even when this device opens notes read-only. */
+const createdHereIds = new Set<string>();
+
+export function createdHere(id: string): boolean {
+  return createdHereIds.has(id);
 }
 
 export async function createNote(
@@ -275,6 +305,7 @@ export async function createNote(
   // Count the create for milestones and the ledger. The importer writes rows
   // directly, and the callers that bring content in pass `counted: false`.
   if (counted) {
+    createdHereIds.add(note.id);
     bumpNotesCreated();
     recordLedgerWrite({ kind: 'create', body });
     // The person's own new note or journal entry, on a phone with the switch on.
@@ -395,7 +426,11 @@ async function writePatch(current: LocalNote, patch: NotePatch, updatedAt: strin
     (patch.trackers !== undefined && current.type === 'login' &&
       JSON.stringify(patch.trackers?.login) !== JSON.stringify(current.trackers?.login));
   if (current.locked === 1 && changesText) return false;
-  const stamp = updatedAt ?? nextStamp(current.updatedAt);
+  // A write that keeps a stamp it read earlier (a derived title, a title
+  // repair from React state) never sends one older than the row's own: the
+  // row's stamp never goes backward, which a reader's rollback check needs.
+  // Spec: docs/internal/plans/payload-row-binding.md (section 2)
+  const stamp = updatedAt === undefined ? nextStamp(current.updatedAt) : notBefore(updatedAt, current.updatedAt);
   const edited = updatedAt === undefined && opts?.edit !== false && changesContent(current, patch);
   const editedAt = edited ? (opts?.editedAt ?? stamp) : (current.editedAt ?? current.updatedAt);
   await db.notes.update(current.id, { ...patch, updatedAt: stamp, editedAt, dirty: 1 });
@@ -989,9 +1024,19 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
     // values are unsynced data (2 = sealed, invisible to old bundles).
     // Spec: docs/internal/specs/local-at-rest.md (3.3, the key-free wipe)
     // So are the notes the mass delete guard holds: the server deleted
-    // them and the question waits (massDelete.ts).
+    // them and the question waits (massDelete.ts), and the notes whose
+    // server row this device could not open: this copy may be the only
+    // good one left (unopenedRows.ts, beta #203). Their list stays too.
     const allNoteIds = await db.notes.toCollection().primaryKeys();
-    const keepNotes = new Set([...(await db.notes.where('dirty').anyOf(1, 2).primaryKeys()), ...storedHoldIds()]);
+    // And the notes whose last typing waits in the flush stash: their rows
+    // are clean, and the replay at the next sign-in needs them.
+    const { stashedNoteIds } = await import('./flushStash');
+    const keepNotes = new Set([
+      ...(await db.notes.where('dirty').anyOf(1, 2).primaryKeys()),
+      ...storedHoldIds(),
+      ...(await unopenedRowIds()),
+      ...stashedNoteIds(),
+    ]);
     await db.notes.bulkDelete(allNoteIds.filter((id) => !keepNotes.has(id)));
     // Blobs that never reached the server (pendingUpload=1, or 2 when the
     // server refused them for good) are the same class of data: the cache
@@ -1030,6 +1075,7 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
     return;
   }
   await db.notes.clear();
+  await db.kv.delete(UNOPENED_ROWS_KEY);
   await db.imageCache.clear();
   await db.imageDedup.clear();
   await db.attachmentCache.clear();
@@ -1051,6 +1097,10 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
   // Spec: docs/internal/plans/quick-note-694.md (section 5.2 step 8)
   await db.quickNotes.clear();
   await db.kv.delete(QUICK_NOTE_INBOX_KEY);
+  // Which extension inbox rows this device already applied (`loginedit`).
+  // The rows name their account, but nothing of a signed-out account stays.
+  // Spec: docs/contrib/passkeys.md (section 6, Adoption)
+  await db.appliedInbox.clear();
   // The favicon cache is a separate IndexedDB, so it is not covered by any
   // db.*.clear() above. It holds a per-domain record derived from the user's
   // links, so it must go on sign-out too. See clearFaviconCache.

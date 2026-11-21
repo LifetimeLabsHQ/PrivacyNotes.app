@@ -19,7 +19,7 @@ import { SectionEyebrow } from './settingsUI';
 import { useAuth } from './auth';
 import { isDemoMode, DEMO_APP_URL, proUnlocked } from './demo';
 import { ExtensionCallError, loadExtensionState, removeExtension, type ExtensionRow } from './extensionApi';
-import { PairingCodeBox, useCodeWatch, type ExtensionAccess } from './BrowserPane';
+import { forgetSenderOf, PairingCodeBox, pushSettingsNow, useCodeWatch, type ExtensionAccess } from './BrowserPane';
 import { formatRelative } from './intlFormat';
 import { CLI_EXAMPLES, cliExampleBody, cliExampleTitle } from './cliExamples';
 import { folderLookKey, setItemLook } from './itemStyles';
@@ -140,7 +140,9 @@ export function CommandLinePane({ extensionKeys, settings, mutateSettings, creat
     forget();
     try {
       const { makePairingCode } = await import('./extensionPairing');
-      show(await makePairingCode({ ...access, clips: true, logins: false, client: 'cli', pushKeys: async () => true }));
+      // A version 2 code waits for its sender key to reach the server
+      // (inbox-signed-hybrid.md 5.1); a version 1 code never asks.
+      show(await makePairingCode({ ...access, clips: true, logins: false, client: 'cli', pushKeys: () => pushSettingsNow(access) }));
     } catch (err) {
       const reason = err instanceof ExtensionCallError ? ERROR_KEY[err.code] : undefined;
       setError(t(reason ?? 'extensionConnect.failed'));
@@ -153,6 +155,7 @@ export function CommandLinePane({ extensionKeys, settings, mutateSettings, creat
     setError(null);
     try {
       await removeExtension(supabase, pubkey, id);
+      await forgetSenderOf(access, id);
       setRows((all) => all.filter((r) => r.id !== id));
     } catch {
       setError(t('settings:devices.removeFailed'));
@@ -165,7 +168,10 @@ export function CommandLinePane({ extensionKeys, settings, mutateSettings, creat
     if (!access) return;
     setError(null);
     try {
-      for (const r of rows) await removeExtension(supabase, pubkey, r.id);
+      for (const r of rows) {
+        await removeExtension(supabase, pubkey, r.id);
+        await forgetSenderOf(access, r.id);
+      }
     } catch {
       load();
       setError(t('settings:devices.removeFailed'));

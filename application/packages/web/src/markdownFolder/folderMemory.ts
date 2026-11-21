@@ -7,7 +7,7 @@
  *   - **Desktop** stores a path string. The fs grants carry no static
  *     allow, so the path opens only while the fs scope holds it, which
  *     `tauri-plugin-persisted-scope` restores at start: the folder reopens
- *     silently and completely. A folder the saved scope lacks (one picked
+ *     silently and completely, until `forgetFolder` takes the grant out. A folder the saved scope lacks (one picked
  *     before that change) is a one-click re-pick (`useFolderRestore`).
  *   - **Chromium browsers** store the `FileSystemDirectoryHandle` itself, which
  *     is structured-cloneable and therefore IndexedDB-storable. The handle
@@ -52,8 +52,23 @@ export async function recallFolder(): Promise<StoredFolder | null> {
   return withStore<StoredFolder>('readonly', (s) => s.get(KEY) as IDBRequest<StoredFolder>);
 }
 
+/**
+ * Forget the folder. On desktop its grant leaves the fs scope that
+ * `tauri-plugin-persisted-scope` restores at start too (`forget_folder_scope`,
+ * src-tauri/src/folder_scope.rs): otherwise the folder of an account that
+ * left stays reachable after every restart (beta.privacynotes.app #214
+ * item 2). Only a desktop stores a path.
+ */
 export async function forgetFolder(): Promise<void> {
+  const folder = await recallFolder();
   await withStore('readwrite', (s) => s.delete(KEY) as IDBRequest<unknown>);
+  if (folder?.kind !== 'path') return;
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('forget_folder_scope', { path: folder.path });
+  } catch {
+    /* The grant ends with the run; a failed call is no reason to keep the record. */
+  }
 }
 
 // The first-run explainer's seen-flag (`hasSeenExplainer` / `markExplainerSeen`,

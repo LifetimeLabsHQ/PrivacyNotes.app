@@ -10,7 +10,6 @@ import { MarkdownDemo } from './MarkdownDemo';
 import { usePriceMath } from './PriceMath';
 import { NinjaShotsButton } from './NinjaGallery';
 import { KATANA_LINE, NinjaIcon } from './NinjaIcon';
-import { DEMO_HREF } from './footerData';
 import { KEY_OS } from './shortcutMatch';
 import { Kbd } from './ui';
 import { installLinks } from './extensionStores';
@@ -37,7 +36,7 @@ import { useAuth } from './auth';
 import { isDemoMode } from './demo';
 import { APP_ORIGIN, APP_STORE_URL, PLAY_STORE_URL, isAppHost, isApexHost } from './hosts';
 import { captureSource, withSource } from './campaignSource';
-import { marketingHomeHref } from './siteLinks';
+import { demoHref, marketingHomeHref } from './siteLinks';
 import { GUIDE_META, GUIDE_ORDER } from './guides';
 import { cryptoCheckoutReleased } from './cryptoRelease';
 
@@ -624,7 +623,7 @@ function CtaPair({ label, onCreate, className, onSlab }: { label: string; onCrea
         {label}
       </button>
       <a
-        href="https://try.privacynotes.app/"
+        href={demoHref()}
         className="pn-fx-amber flex-auto sm:flex-none inline-flex items-center justify-center gap-2 rounded-full border-2 border-[var(--wl-amber-border)] text-[var(--wl-amber-text)] px-4 sm:px-6 py-3 text-body sm:text-title font-bold transition"
       >
         {t('hero.tryDemo')}
@@ -1288,7 +1287,7 @@ export function LandingPage({
             between the two is seamless in both modes. The onboarding steps
             inside the card keep the app's own surfaces. */}
         <style>{FX_CSS}</style>
-        <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-[calc(env(safe-area-inset-top)+1rem)] sm:pt-14 pb-16">
+        <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-[calc(var(--pn-safe-top)+1rem)] sm:pt-14 pb-16">
           {/* Brand on the left, exactly one control on the right: the Back
               exit on the web, the language icon on native. The website link,
               the language selector and the theme toggle all rode this row
@@ -1349,7 +1348,7 @@ export function LandingPage({
 
       {/* Top padding grows at lg, where the poster-sized brand wants the
           air; below lg it was dead space above the brand. */}
-      <div className="relative mx-auto max-w-5xl xl:max-w-7xl px-5 sm:px-8 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:pt-6 lg:pt-14">
+      <div className="relative mx-auto max-w-5xl xl:max-w-7xl px-5 sm:px-8 pt-[calc(var(--pn-safe-top)+0.75rem)] sm:pt-6 lg:pt-14">
         {/* The language picker lives in the header rail at every width;
             this row only carries the language suggestion, and has no margin
             of its own, so it takes no height when there is none. */}
@@ -1394,7 +1393,7 @@ export function LandingPage({
             aria-label={t('header.menuLabel')}
             className="fixed inset-0 z-[70] overflow-y-auto bg-[var(--wl-bg)]"
           >
-            <div className="mx-auto flex min-h-full max-w-5xl flex-col px-5 sm:px-8 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-10">
+            <div className="mx-auto flex min-h-full max-w-5xl flex-col px-5 sm:px-8 pt-[calc(var(--pn-safe-top)+0.75rem)] pb-10">
               <div className="mb-10 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <LogoIcon size={40} className="text-accent" />
@@ -1427,7 +1426,7 @@ export function LandingPage({
                   {t('header.openApp')}
                 </button>
                 <a
-                  href="https://try.privacynotes.app/"
+                  href={demoHref()}
                   className="pn-fx-amber flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-[var(--wl-amber-border)] py-3 text-title font-bold text-[var(--wl-amber-text)] transition"
                 >
                   {t('hero.tryDemo')}
@@ -1608,7 +1607,7 @@ export function LandingPage({
         <div className="max-w-5xl mx-auto mb-8 sm:mb-10">
           <Kicker className="text-[var(--wl-amber-text)]">{t('demoShot.kicker')}</Kicker>
           <a
-            href="https://try.privacynotes.app/"
+            href={demoHref()}
             className="group relative block overflow-hidden rounded-2xl border-2 border-[var(--wl-edge)] bg-[var(--wl-card)]"
           >
             {/* Two captures of the same screen, one per mode, so the shot
@@ -1823,7 +1822,7 @@ export function LandingPage({
                   the key works for real, and the screenshots of the real box
                   in the shared viewer (NinjaGallery.tsx). */}
               <div className="mt-5 lg:mt-auto lg:pt-5 flex flex-wrap items-center gap-2.5">
-                <a href={DEMO_HREF} className="pn-fx-conic-btn inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-body font-bold text-[var(--wl-bg)]">
+                <a href={demoHref()} className="pn-fx-conic-btn inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-body font-bold text-[var(--wl-bg)]">
                   <Play weight="fill" aria-hidden="true" />
                   {t('ninja.tryDemo')}
                 </a>
@@ -2950,7 +2949,7 @@ export function LandingPage({
                 <p className="mt-0.5 text-body leading-relaxed text-[var(--wl-sub)]">{t('closing.importDemoBody')}</p>
               </div>
               <a
-                href="https://try.privacynotes.app/"
+                href={demoHref()}
                 className="pn-fx-amber inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-full border-2 border-[var(--wl-amber-border)] px-5 py-2.5 text-body font-bold text-[var(--wl-amber-text)] transition sm:self-auto"
               >
                 {t('hero.tryDemo')}

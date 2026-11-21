@@ -18,34 +18,34 @@ import { Fragment, type Node as ProseMirrorNode } from '@tiptap/pm/model';
  *
  * An empty paragraph is written `&nbsp;`, the only way a file can record one,
  * and it arrives in a plain editor as those six literal characters. Here it
- * becomes a blank line, and a run of blank lines is capped at two so the gap
- * stays about the size it looked.
+ * becomes one empty line, and every empty paragraph keeps its own.
  *
- * A paragraph break is written as a blank line, and with the gap set to
- * nothing the screen has no blank line to show. So `tightParagraphs` joins two
- * adjacent paragraphs with a break instead, and the pasted text then has the
- * same line count as the note. Every other pair of blocks keeps the blank
- * line, which is why this walks the blocks rather than the string: a blank
- * line before a list, a heading or a code fence means something else.
+ * A paragraph break is written as a blank line, but the text of a copy is the
+ * lines the reader typed, on every Line spacing: the gap Relaxed draws
+ * between paragraphs is the look of the screen, like a line height, and no
+ * typed line (GitHub #345). So two adjacent paragraphs are joined with a
+ * break, and the pasted text has the same line count as the note on Tight
+ * and Default. The other blocks keep the blank line around them, which is
+ * why this walks the blocks rather than the string: a blank line before a
+ * list, a heading or a code fence means something else (`blockJoin`).
  *
  * The accepted cost: what this writes says "lines" where the note says
- * "paragraphs", so a markdown reader lays out a tight copy as one paragraph
- * and a spacer paragraph is gone. Nothing a person sees moves, the stored note
- * is untouched, and a target that understands a document reads the HTML
- * flavour instead.
+ * "paragraphs", so a markdown reader lays out the copy as one paragraph and a
+ * spacer paragraph is gone. Nothing a person sees moves, the stored note is
+ * untouched, and a target that understands a document reads the HTML flavour
+ * instead.
  */
 export function markdownForClipboard(
   content: Fragment,
   serializeFile: (fragment: Fragment) => string,
-  tightParagraphs: boolean,
   format: 'markdown' | 'plain' = 'markdown',
   render?: (markdown: string) => string,
 ): string {
   // A selection with no formatting has no markdown to carry, and every escape
   // the file needs would only change the text: a command, a key or a path
   // copies as it shows.
-  if (format === 'plain') return plainTextForClipboard(content, tightParagraphs);
-  if (unformatted(content)) return linesForClipboard(content, tightParagraphs);
+  if (format === 'plain') return plainTextForClipboard(content);
+  if (unformatted(content)) return linesForClipboard(content);
   const serialize = render
     ? (fragment: Fragment) => dropNeedlessEscapes(serializeFile(fragment), render)
     : serializeFile;
@@ -82,15 +82,37 @@ export function markdownForClipboard(
   let joined = '';
   for (let i = 0; i < blocks.length; i++) {
     const cur = blocks[i]!;
-    if (i > 0) {
-      const prev = blocks[i - 1]!.node;
-      const tight =
-        tightParagraphs && prev.type.name === 'paragraph' && cur.node.type.name === 'paragraph';
-      joined += tight ? '  \n' : '\n\n';
-    }
+    // Two lines of text meet at a hard break, written as two trailing spaces.
+    if (i > 0) joined += blockJoin(blocks[i - 1]!.node, cur.node, '  \n');
     joined += cur.md;
   }
   return tidyClipboardLines(joined);
+}
+
+/** A paragraph with nothing in it: an empty line on screen. */
+export function isEmptyParagraph(node: ProseMirrorNode): boolean {
+  return node.type.name === 'paragraph' && node.content.size === 0;
+}
+
+/**
+ * What stands between two top-level blocks of a copy. Two paragraphs are two
+ * lines (`lineBreak`). An empty paragraph is one empty line and nothing more,
+ * so a run of them copies as exactly as many empty lines, and next to a
+ * heading or a list it is the blank line that block needs, never a second
+ * one. Any other pair keeps one blank line.
+ * Spec: docs/internal/design-decisions.md (editor paragraph rhythm)
+ */
+function blockJoin(prev: ProseMirrorNode, cur: ProseMirrorNode, lineBreak: string): string {
+  if (isEmptyParagraph(prev) || isEmptyParagraph(cur)) return '\n';
+  if (prev.type.name === 'paragraph' && cur.type.name === 'paragraph') return lineBreak;
+  return '\n\n';
+}
+
+/** Select all ends on the empty paragraph the editor keeps below the last
+ *  block, and a paste target prints empty lines at the end of a copy as
+ *  blank lines under the text. */
+function dropTrailingBlankLines(text: string): string {
+  return text.replace(/(?:\n[ \t]*)+$/, '');
 }
 
 const UNESCAPED: Record<string, string> = { '&lt;': '<', '&gt;': '>', '&amp;': '&' };
@@ -163,10 +185,11 @@ function everyItemIsOneLine(list: ProseMirrorNode): boolean {
  * at all. No heading, quote, bullet or task marker and no emphasis, which a
  * form field or a work tool prints as it is. A numbered list keeps its
  * numbers, because they carry the order. Blank lines follow the Markdown
- * copy: a gap between blocks, none between Compact paragraphs.
+ * copy (`blockJoin`): one line per paragraph, one empty line per empty
+ * paragraph, and a blank line around the other blocks.
  * Spec: docs/internal/specs/paste-pictures.md (section 3.6)
  */
-function plainTextForClipboard(content: Fragment, tightParagraphs: boolean): string {
+function plainTextForClipboard(content: Fragment): string {
   const line = singleTextblock(content);
   if (line) return plainInline(line);
 
@@ -175,14 +198,11 @@ function plainTextForClipboard(content: Fragment, tightParagraphs: boolean): str
   content.forEach((node) => {
     const text = plainBlock(node, '');
     if (text === null) return;
-    if (prev) {
-      const tight = tightParagraphs && prev.type.name === 'paragraph' && node.type.name === 'paragraph';
-      out += tight ? '\n' : '\n\n';
-    }
+    if (prev) out += blockJoin(prev, node, '\n');
     out += text;
     prev = node;
   });
-  return out.replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '');
+  return dropTrailingBlankLines(out).replace(/\s+$/, '');
 }
 
 /** The words of an inline run: a note-link writes its label, a formula its
@@ -236,15 +256,15 @@ function plainBlock(node: ProseMirrorNode, indent: string): string | null {
 
 /** The one textblock a fragment reduces to when every level above it holds a
  *  single child, or null when the fragment spans more than one block. */
-/** The text of unformatted lines as the screen shows it: a hard break and a
- *  tight paragraph gap are one newline, a normal gap a blank line, and every
- *  empty paragraph keeps its line. */
-function linesForClipboard(content: Fragment, tightParagraphs: boolean): string {
+/** The text of unformatted lines as they were typed, on every Line spacing: a
+ *  hard break and a paragraph break are one newline, and every empty
+ *  paragraph keeps its line. */
+function linesForClipboard(content: Fragment): string {
   const line = singleTextblock(content);
   if (line) return plainInline(line);
   const lines: string[] = [];
   content.forEach((node) => lines.push(plainInline(node)));
-  return lines.join(tightParagraphs ? '\n' : '\n\n');
+  return dropTrailingBlankLines(lines.join('\n'));
 }
 
 /** Plain paragraphs, or one line of any block, holding only unmarked text and
@@ -280,7 +300,8 @@ const EMPTY_PARAGRAPH_MARKDOWN = '&nbsp;';
 
 /**
  * The per-line half of the rewrite above: backslash breaks, stray `&nbsp;`
- * from a paragraph nested inside a list item or a callout, and blank runs.
+ * from a paragraph nested inside a list item or a callout, and trailing blank
+ * lines.
  *
  * Fenced code is left alone throughout, because a shell line continuation
  * ends in exactly the same two characters as a hard break and is the author's
@@ -293,7 +314,6 @@ function tidyClipboardLines(markdown: string): string {
   const lines = markdown.split('\n');
   const out: string[] = [];
   let fence = '';
-  let blanks = 0;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]!;
     const mark = /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1];
@@ -301,7 +321,6 @@ function tidyClipboardLines(markdown: string): string {
       if (!fence) fence = mark;
       else if (mark[0] === fence[0] && mark.length >= fence.length) fence = '';
       out.push(line);
-      blanks = 0;
       continue;
     }
     if (fence) {
@@ -310,11 +329,9 @@ function tidyClipboardLines(markdown: string): string {
     }
     const raw = line === EMPTY_PARAGRAPH_MARKDOWN ? '' : line;
     if (raw === '') {
-      blanks += 1;
-      if (blanks <= 2) out.push('');
+      out.push('');
       continue;
     }
-    blanks = 0;
     // A paragraph indent is written as `&nbsp;` runs; a paste target wants spaces.
     const text = raw.replace(/^(?:&nbsp;)+/, (run) => ' '.repeat(run.length / 6));
     const trail = i === lines.length - 1 ? undefined : /\\+$/.exec(text)?.[0];

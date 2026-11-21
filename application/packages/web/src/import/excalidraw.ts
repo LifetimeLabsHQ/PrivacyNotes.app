@@ -34,7 +34,7 @@ import { isRecord } from '../isRecord';
 /** A drawing file as read: its path inside the zip (or its name), text, date. */
 type SourceFile = { path: string; text: string; date: Date | null };
 
-const msg = (key: string, options?: Record<string, unknown>): string => i18n.t(`importLog:excalidraw.${key}`, options);
+const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:excalidraw.${key}`, options);
 
 export const DRAWING_FILE = /\.excalidraw(?:\.md)?$/i;
 
@@ -71,7 +71,7 @@ function dataUrlBytes(url: string): Uint8Array | null {
 }
 
 /** What one drawing file came to. */
-export type DrawingRead = { note: ImportedNote; empty: boolean; outsidePictures: number; unreadablePictures: number } | 'compressed' | 'refused';
+export type DrawingRead = { note: ImportedNote; outsidePictures: number; unreadablePictures: number } | 'compressed' | 'refused';
 
 /**
  * One `.excalidraw` or Obsidian `.excalidraw.md` file as a drawing item,
@@ -121,7 +121,7 @@ export function readDrawing(path: string, text: string, date: Date | null, blobs
     if (!body.includes(key)) blobs.delete(key);
   }
   const stem = name.replace(DRAWING_FILE, '');
-  return { note: drawingNote(path, stem, body, date), empty: live.length === 0, outsidePictures, unreadablePictures };
+  return { note: drawingNote(path, stem, body, date), outsidePictures, unreadablePictures };
 }
 
 /** A drawing item for a file: its name as the title, its folder from the path. */
@@ -164,7 +164,6 @@ export async function parseExcalidraw(file: File, onProgress?: (msg: string) => 
   const blobs = new Map<string, ImportBlob>();
   const refused: string[] = [];
   const compressed: string[] = [];
-  let emptyNotes = 0;
   let outsidePictures = 0;
   let unreadablePictures = 0;
 
@@ -176,7 +175,6 @@ export async function parseExcalidraw(file: File, onProgress?: (msg: string) => 
     else if (read === 'refused') refused.push(name);
     else {
       notes.push(read.note);
-      if (read.empty) emptyNotes++;
       outsidePictures += read.outsidePictures;
       unreadablePictures += read.unreadablePictures;
     }
@@ -198,7 +196,6 @@ export async function parseExcalidraw(file: File, onProgress?: (msg: string) => 
     notes,
     warnings,
     transforms: [],
-    stats: { totalNotes: notes.length, emptyNotes, untaggedNotes: notes.length, uniqueTags: 0 },
     source: 'excalidraw',
     ...(blobs.size > 0 ? { blobs } : {}),
   };

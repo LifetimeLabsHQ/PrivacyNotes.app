@@ -1,3 +1,7 @@
+import { useSyncExternalStore } from 'react';
+import { createListeners } from './listeners';
+import { readFlag } from './localStore';
+
 const TOOLBAR_PREF_KEY = 'privacynotes.editor.toolbarVisible';
 
 export function readToolbarPref(): boolean {
@@ -55,6 +59,80 @@ export function readOutlinePref(): boolean {
 export function writeOutlinePref(open: boolean) {
   try {
     localStorage.setItem(OUTLINE_PREF_KEY, open ? '1' : '0');
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Line numbers (GitHub #727 follow-up): the Markdown view numbers each line
+ * of the text, and the formatted view and the split view's preview show the
+ * number of the line each block starts on. Device-local and off by default,
+ * like the outline; it names no note, so a sign-out keeps it. A store, so
+ * every view that draws numbers turns them on together.
+ * Spec: docs/internal/specs/editor-mode-toggle.md (Line numbers)
+ */
+const LINE_NUMBERS_KEY = 'privacynotes.editor.lineNumbers';
+let lineNumbersOn = readFlag(LINE_NUMBERS_KEY);
+const lineNumberListeners = createListeners();
+
+export function setLineNumbersPref(on: boolean) {
+  if (on === lineNumbersOn) return;
+  lineNumbersOn = on;
+  try {
+    localStorage.setItem(LINE_NUMBERS_KEY, on ? '1' : '0');
+  } catch {
+    /* the in-memory flag still holds for this session */
+  }
+  lineNumberListeners.notify();
+}
+
+export function useLineNumbersPref(): boolean {
+  return useSyncExternalStore(lineNumberListeners.subscribe, () => lineNumbersOn);
+}
+
+/**
+ * The formatted preview beside the Markdown view (SourcePreviewPane.tsx), on
+ * a pane wide enough for two columns. Device-local like the outline: how
+ * this screen lays the view out. Never a value of the synced `editorMode`,
+ * which an older client would read as its default and sync back. It names
+ * no note, so a sign-out keeps it.
+ * Spec: docs/internal/plans/heading-folds-and-source-preview.md (Part 2, decision 1)
+ */
+const SOURCE_PREVIEW_KEY = 'privacynotes.editor.sourcePreview';
+
+export function readSourcePreviewPref(): boolean {
+  try {
+    return localStorage.getItem(SOURCE_PREVIEW_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function writeSourcePreviewPref(on: boolean) {
+  try {
+    localStorage.setItem(SOURCE_PREVIEW_KEY, on ? '1' : '0');
+  } catch {
+    /* ignore */
+  }
+}
+
+// Which side the preview takes: the start (the default, the left in a
+// left-to-right language: the note as it reads, then its Markdown; owner,
+// 2026-11-20) or the end. Device-local like the pref above.
+const SOURCE_PREVIEW_FIRST_KEY = 'privacynotes.editor.sourcePreviewFirst';
+
+export function readSourcePreviewFirst(): boolean {
+  try {
+    return localStorage.getItem(SOURCE_PREVIEW_FIRST_KEY) !== '0';
+  } catch {
+    return true;
+  }
+}
+
+export function writeSourcePreviewFirst(first: boolean) {
+  try {
+    localStorage.setItem(SOURCE_PREVIEW_FIRST_KEY, first ? '1' : '0');
   } catch {
     /* ignore */
   }
@@ -149,6 +227,55 @@ export function readConnectionsPref(): boolean {
 export function writeConnectionsPref(open: boolean) {
   try {
     localStorage.setItem(CONNECTIONS_PREF_KEY, open ? '1' : '0');
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * The sections folded in each note (heading and list folds, editorFolds.ts),
+ * as fold keys. Device-local and never synced: a fold is how this screen
+ * shows the note, not a change to it. Bounded by itself to the notes folded
+ * most recently, so nothing grows without end. It names note ids, so a
+ * sign-out removes it (clearAccountScopedUiState in authStorage.ts).
+ * Spec: docs/internal/plans/heading-folds-and-source-preview.md (Where the fold state lives)
+ */
+const FOLDS_KEY = 'privacynotes.editor.folds';
+const FOLDS_MAX_NOTES = 500;
+
+type FoldRecord = { k: string[]; t: number };
+
+function readFoldMap(): Record<string, FoldRecord> {
+  try {
+    const raw = JSON.parse(localStorage.getItem(FOLDS_KEY) ?? 'null') as unknown;
+    return raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, FoldRecord>) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function readNoteFolds(noteId: string): string[] {
+  const rec = readFoldMap()[noteId];
+  return rec && Array.isArray(rec.k) ? rec.k.filter((k): k is string => typeof k === 'string') : [];
+}
+
+/** An empty list forgets the note. */
+export function writeNoteFolds(noteId: string, keys: readonly string[]) {
+  const map = readFoldMap();
+  if (keys.length === 0) {
+    if (!(noteId in map)) return;
+    delete map[noteId];
+  } else {
+    map[noteId] = { k: [...keys], t: Date.now() };
+    const ids = Object.keys(map);
+    if (ids.length > FOLDS_MAX_NOTES) {
+      ids.sort((a, b) => (map[b]!.t || 0) - (map[a]!.t || 0));
+      for (const id of ids.slice(FOLDS_MAX_NOTES)) delete map[id];
+    }
+  }
+  try {
+    if (Object.keys(map).length === 0) localStorage.removeItem(FOLDS_KEY);
+    else localStorage.setItem(FOLDS_KEY, JSON.stringify(map));
   } catch {
     /* ignore */
   }

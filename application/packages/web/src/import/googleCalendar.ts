@@ -26,6 +26,7 @@ import {
 } from '../schedule';
 import { buildFolderTree } from './folderImport';
 import { linkifyLiteralText, linkifyMarkdown } from './linkify';
+import { escapeTypedTags } from './importHelpers';
 import { htmlNoteToMarkdown } from './notesnook';
 import type { ImportedNote, ParsedImport } from './types';
 import { ImportTooLargeError, zipEntryBytes } from './zipEntry';
@@ -214,7 +215,10 @@ export function repairMojibake(s: string): string {
   }
 }
 
-const HTML_TAG = /<(a|b|i|u|p|br|ul|ol|li|span|div|strong|em|h[1-6])(\s[^>]*)?\/?>/i;
+/** A description written as HTML. The tables, figures, folds and pictures
+ *  a calendar can send are here too, so they are rebuilt by the converter
+ *  and never kept as written (beta #199). */
+const HTML_TAG = /<(a|b|i|u|p|br|ul|ol|li|span|div|strong|em|h[1-6]|table|tr|td|th|figure|figcaption|details|summary|img|blockquote|pre)(\s[^>]*)?\/?>/i;
 
 function textValue(p: IcsProp | undefined): { text: string; repaired: boolean } {
   if (!p) return { text: '', repaired: false };
@@ -231,7 +235,7 @@ const linkText = (v: string) => `<${safeUrl(v)}>`;
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+$/.test(v);
 const isWebLink = (v: string) => /^(https?:\/\/|mailto:)\S+$/i.test(v.trim());
 const label = (key: string) => i18n.t(`importExport:importCalendar.${key}`);
-const msg = (key: string, options?: Record<string, unknown>): string =>
+const msg = (key: string, options: Record<string, unknown> = {}): string =>
   i18n.t(`importLog:googleCalendar.${key}`, options);
 
 // ── Alerts ─────────────────────────────────────────────────────────
@@ -594,7 +598,11 @@ function buildBody(ev: IcsComponent, cal: Calendar, scheduleLines: string[], cou
   const desc = textValue(prop(ev, 'DESCRIPTION'));
   repaired ||= desc.repaired;
   let text = desc.text.replace(/\r\n?/g, '\n').trim();
-  if (text && HTML_TAG.test(text)) text = htmlNoteToMarkdown(text).trim();
+  // A calendar is text someone else wrote, so its description keeps no raw
+  // HTML (beta #199): HTML is rebuilt by the converter, which writes only
+  // its own markup, and in plain text every `<` that would open a tag is
+  // escaped, so it reads as the text it is.
+  if (text) text = HTML_TAG.test(text) ? htmlNoteToMarkdown(text).trim() : escapeTypedTags(text);
   const summary = textValue(prop(ev, 'SUMMARY'));
   if (repaired || summary.repaired) counts.repaired++;
 
@@ -780,17 +788,10 @@ export function parseCalendarFiles(
   if (counts.comingWithoutAlert) warnings.push(msg('comingWithoutAlert', { count: counts.comingWithoutAlert }));
   if (counts.noUid) warnings.push(msg('noUid', { count: counts.noUid }));
 
-  const uniqueTags = new Set(notes.flatMap((x) => x.tags));
   return {
     notes,
     warnings,
     transforms,
-    stats: {
-      totalNotes: notes.length,
-      emptyNotes: notes.filter((x) => !x.title.trim() && !x.body.trim()).length,
-      untaggedNotes: notes.filter((x) => x.tags.length === 0).length,
-      uniqueTags: uniqueTags.size,
-    },
     source: 'google-calendar',
     folders,
   };

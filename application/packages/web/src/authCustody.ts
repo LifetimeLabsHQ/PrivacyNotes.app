@@ -122,10 +122,10 @@ export function useCustody({
       try {
         if (next) {
           await adoptCustodyServer({ supabase, accessToken: session.access_token,
-            authUid: session.user.id, signingPrivateKey: auth.signingPrivateKey, phrase: auth.phrase });
+            authUid: session.user.id, account: pubkey, signingPrivateKey: auth.signingPrivateKey, phrase: auth.phrase });
         } else {
           await releaseCustodyServer({ supabase, accessToken: session.access_token,
-            authUid: session.user.id, signingPrivateKey: auth.signingPrivateKey });
+            authUid: session.user.id, account: pubkey, signingPrivateKey: auth.signingPrivateKey });
         }
       } catch (error) {
         // This exact refusal already proves the requested state. Other errors
@@ -147,7 +147,7 @@ export function useCustody({
       return { ok: true };
     } catch (error) {
       return { ok: false, error: error instanceof MfaCancelledError
-        ? 'Sign-in changed or verification was cancelled. No local account data was removed.'
+        ? 'Sign-in changed or verification was canceled. No local account data was removed.'
         : (error as Error).message };
     }
   }

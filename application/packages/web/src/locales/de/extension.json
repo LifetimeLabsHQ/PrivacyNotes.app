@@ -47,9 +47,10 @@
     "title": "Schütze deine Logins",
     "body": "Wähle für diesen Browser eine PIN oder einen Passcode. Damit entsperrst du hier deine Logins. Sie ist getrennt von PIN oder Passcode der App.",
     "biometric": "Auch biometrische Entsperrung verwenden",
-    "biometricHelp": "Touch ID oder Windows Hello, zusätzlich zur PIN oder zum Passcode, die immer auch funktionieren.",
+    "biometricHelp": "Touch ID oder Windows Hello, über einen Passkey für diesen Browser. Die PIN oder der Passcode funktioniert immer auch.",
     "repeat": "Noch einmal eingeben",
-    "mismatch": "Die beiden stimmen nicht überein. Versuch es noch einmal."
+    "mismatch": "Die beiden stimmen nicht überein. Versuch es noch einmal.",
+    "commonPin": "Diese PIN ist zu leicht zu erraten. Wähle eine andere."
   },
   "clip": {
     "selection": "Auswahl",
@@ -83,7 +84,7 @@
     "unlockPin": "Gib deine PIN ein",
     "unlockPasscode": "Gib deinen Passcode ein",
     "useBiometric": "Biometrische Entsperrung verwenden",
-    "wrong_other": "Falsch. Noch {{count}} Versuche, bevor dieser Browser getrennt wird.",
+    "wrong_other": "Falsch. Noch {{count}} Versuche in diesem Monat, bevor dieser Browser getrennt wird.",
     "forSite": "Für {{site}}",
     "none": "Keine Logins für diese Website.",
     "off": "Logins sind für diesen Browser aus. Schalte Tresor ein, wenn du ihn verbindest.",
@@ -99,12 +100,15 @@
     "noMatch": "Keine passenden Logins.",
     "openSite": "Website öffnen",
     "duplicate": "Du hast für diese Website schon einen Login mit diesem Benutzernamen.",
-    "wrong_one": "Falsch. Noch {{count}} Versuch, bevor dieser Browser getrennt wird."
+    "editTitle": "Login bearbeiten",
+    "saved": "Änderungen gespeichert.",
+    "wrong_one": "Falsch. Noch {{count}} Versuch in diesem Monat, bevor dieser Browser getrennt wird."
   },
   "account": {
     "confirmDisconnect": "Trennen?",
     "revoked": "Dieser Browser ist nicht mehr verbunden",
-    "revokedBody": "Verbinde ihn erneut mit einem neuen Code aus der App."
+    "revokedBody": "Verbinde ihn erneut mit einem neuen Code aus der App.",
+    "pendingPasskey": "Ein in diesem Browser gespeicherter Passkey ist noch nicht in deinem Tresor. Öffne PrivacyNotes und lass es zuerst synchronisieren, sonst geht der Passkey verloren."
   },
   "badge": {
     "problem": "Etwas braucht deine Aufmerksamkeit"
@@ -147,7 +151,8 @@
     "unlockToCopy": "Zum Kopieren entsperren",
     "omniboxDefault": "Deinen PrivacyNotes-Tresor nach %s durchsuchen",
     "omniboxUnlock": "PrivacyNotes zum Suchen entsperren",
-    "moreOptions": "Weitere Optionen"
+    "moreOptions": "Weitere Optionen",
+    "editNotSaved": "Deine Änderung an {{name}} ist nie in deinem Tresor angekommen, deshalb behält der Login seine alten Werte. Bearbeite ihn noch einmal, um die Änderung zu speichern."
   },
   "shortcuts": {
     "notSet": "Nicht festgelegt",
@@ -194,5 +199,19 @@
     "biometricPin": "Gib deine PIN ein, um sie einzurichten.",
     "biometricPasscode": "Gib deinen Passcode ein, um sie einzurichten.",
     "biometricOff": "Biometrische Entsperrung ist aus"
+  },
+  "passkey": {
+    "saveTitle": "Passkey für {{site}} speichern?",
+    "useTitle": "Bei {{site}} anmelden",
+    "saveTo": "Speichern in",
+    "save": "In PrivacyNotes speichern",
+    "other": "Andere Passkey-App verwenden",
+    "already": "Du hast in PrivacyNotes schon einen Passkey für {{site}}.",
+    "saved": "Passkey gespeichert.",
+    "notSaved": "Der Passkey konnte nicht gespeichert werden. Die eigene Passkey-App deines Browsers übernimmt.",
+    "maybeSaved": "Der Passkey wurde möglicherweise gespeichert. Sieh in deinem Tresor nach.",
+    "unlockFirst": "Entsperre, um deine Passkeys zu verwenden.",
+    "offer": "Passkeys anbieten",
+    "offerHelp": "Passkeys auf Websites speichern und verwenden."
   }
 }

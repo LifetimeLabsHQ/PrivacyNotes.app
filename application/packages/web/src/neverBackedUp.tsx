@@ -4,6 +4,7 @@ import { liveQuery } from 'dexie';
 import { WarningCircle } from './icons';
 import { db, type LocalNote } from './db';
 import { countUnsyncedNotes } from './notesRepo';
+import { countUnopenedCopiesHere } from './unopenedNotes';
 import { deriveDisplayTitle } from './notesViewUtils';
 import { isDemoMode } from './demo';
 import { getPushFailures } from './pushFailures';
@@ -64,21 +65,26 @@ interface OnlyOnThisDevice {
   notes: number;
   /** Pictures and files the server does not hold. */
   files: number;
+  /** Notes whose server row this device cannot open, held here and not
+   *  already in `notes` (unopenedNotes.ts): the copy here may be the only
+   *  good one. */
+  unopened?: number;
 }
 
-const NOTHING: OnlyOnThisDevice = { notes: 0, files: 0 };
+const NOTHING: OnlyOnThisDevice = { notes: 0, files: 0, unopened: 0 };
 
 /** The line a local wipe shows before it runs: what exists only on this
  *  device and dies with it, or null when nothing does. Shared by the Danger
  *  zone and the dead man's switch dialog, so both name the loss the same way. */
-export function describeOnlyHere(t: (key: string, opts?: Record<string, unknown>) => string, atStake: OnlyOnThisDevice): string | null {
-  const notes = t('settings:danger.unsyncedNotes', { count: atStake.notes });
+export function describeOnlyHere(t: (...args: [key: string] | [key: string, opts: Record<string, unknown>]) => string, atStake: OnlyOnThisDevice): string | null {
+  const noteCount = atStake.notes + (atStake.unopened ?? 0);
+  const notes = t('settings:danger.unsyncedNotes', { count: noteCount });
   const files = t('settings:danger.unsyncedFiles', { count: atStake.files });
   const items =
-    atStake.notes > 0 && atStake.files > 0
+    noteCount > 0 && atStake.files > 0
       ? t('settings:danger.unsyncedBoth', { notes, files })
-      : atStake.notes > 0 ? notes : files;
-  const total = atStake.notes + atStake.files;
+      : noteCount > 0 ? notes : files;
+  const total = noteCount + atStake.files;
   return total > 0 ? t('settings:danger.localUnsynced', { count: total, items }) : null;
 }
 
@@ -92,7 +98,9 @@ const blobOnlyHere = (r: { pendingUpload?: number }) => r.pendingUpload === 1 ||
  * person starts on purpose, a chosen sign-out and "Delete local data" in the
  * Danger zone, name these counts before they run: the sign-out's final
  * flush pushes notes and never a blob, the Danger zone pushes nothing, and
- * both wipes take the blob caches with them. A forced sign-out keeps all of
+ * both wipes take the blob caches with them. Neither sends a note whose
+ * server row this device cannot open (`unopened`, beta #203): its copy here
+ * goes too. A forced sign-out keeps all of
  * it (clearLocalDatabase with keepUnsyncedNotes). An unpushed settings
  * change is not counted here: a chosen sign-out waits for its upload and
  * asks when it cannot finish (signOutUpload.ts), and the Danger zone does
@@ -103,7 +111,7 @@ export async function countOnlyOnThisDevice(): Promise<OnlyOnThisDevice> {
   const notes = await countUnsyncedNotes();
   const images = await db.imageDedup.filter(blobOnlyHere).count();
   const attachments = await db.attachmentDedup.filter(blobOnlyHere).count();
-  return { notes, files: images + attachments };
+  return { notes, files: images + attachments, unopened: await countUnopenedCopiesHere() };
 }
 
 /**
@@ -118,7 +126,7 @@ export function maySkipSignOutConfirm(
   atStake: OnlyOnThisDevice,
   who: { custodial: boolean; dontRemind: boolean },
 ): boolean {
-  return atStake.notes === 0 && atStake.files === 0 && (who.custodial || who.dontRemind);
+  return atStake.notes === 0 && atStake.files === 0 && !atStake.unopened && (who.custodial || who.dontRemind);
 }
 
 /** The same counts, live while `active`: a pass that lands while the

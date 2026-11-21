@@ -1,19 +1,21 @@
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Trans, useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { useEscapeToClose } from './useEscapeToClose';
-import { HoverLabel, TIP_SKIN } from './HoverLabel';
+import { HoverLabel } from './HoverLabel';
+import { HelpTip } from './settingsUI';
 import { Switch } from './Switch';
 import { ViewModeContext, setDeviceCompactRows, useCompactRows } from './viewMode';
 import { ViewModeToggle } from './ViewModeToggle';
-import type { Space } from './spaces';
-import { SPACE_ICONS } from './SpaceSwitch';
-import { setCalendarShowsOther, setJournalCalendarMood, setJournalCalendarShown, useCalendarShowsOther, useJournalCalendarMood, useJournalCalendarShown } from './JournalCalendar';
-import { Question, ArrowsInLineVertical, Pulse, Pill, Article, Calendar, Rows, Clock, Smiley, HardDrive, PencilSimpleSlash, Shield, SortAscending, SortDescending, Tag, TextAlignJustify } from './icons';
+import { setJournalCalendarMood, setJournalCalendarShown, useJournalCalendarMood, useJournalCalendarShown } from './JournalCalendar';
+import { ArrowsInLineVertical, Folder, Pulse, Pill, Article, Calendar, Rows, Clock, Smiley, HardDrive, PencilSimpleSlash, Shield, SortAscending, SortDescending, Tag, TextAlignJustify } from './icons';
 import { CloseButton } from './ui';
 import {
+  scopedPrefs,
   resolvePrefs,
+  setScopedPrefs,
   setPillarPrefs,
+  type ScopedListPrefsStore,
   type ListPrefs,
   type ListPrefsStore,
   type Pillar,
@@ -65,13 +67,22 @@ type Props = {
    * own name, and MUST be the same pillar its list renders from.
    */
   pillar?: Pillar;
+  /**
+   * The one folder or tag open in a list that reads Global (`prefsScopeOf`):
+   * the menu offers "Keep for this folder" or "Keep for this tag", and while
+   * it has its own settings every edit here, the layout included, goes to its
+   * copy in `scopeStore`.
+   * Spec: docs/internal/design-decisions.md (per-folder and per-tag list settings)
+   */
+  prefsScope?: string | null;
+  /** The scopes' own settings (`UserSettings.scopedListPrefs`) and their
+   *  writer. Required with `prefsScope`. */
+  scopeStore?: ScopedListPrefsStore;
+  onScopeChange?: (next: ScopedListPrefsStore) => void;
   /** This list draws the calendar card: show its device switches. */
   calendarRows?: boolean;
   /** The Journals calendar's mood look switch, under Show calendar. */
   moodRow?: boolean;
-  /** With Spaces on, the space that is not open: the calendar's switch
-   *  shows or hides its items, and the row names it. */
-  otherSpace?: Space | null;
   /** This list draws the daily check-in card: its switch, above Show calendar.
    *  The one place the card is switched on and off, besides the gear's
    *  "Hide this card". Spec: docs/internal/issues/0439.md (Spec) */
@@ -135,20 +146,21 @@ export function ListPrefsPopover({
   titleLabel,
   createdLabel,
   pillar = 'global',
+  prefsScope = null,
+  scopeStore = {},
+  onScopeChange,
   calendarRows = false,
   moodRow = false,
-  otherSpace = null,
   checkInCard,
   medicationCard,
 }: Props) {
   const { t } = useTranslation('shell');
   // Read and write the SAME copy the pane's list renders from.
-  const prefs: ListPrefs = resolvePrefs(store, pillar);
+  const scoped = scopedPrefs(scopeStore, prefsScope);
+  const prefs: ListPrefs = scoped?.prefs ?? resolvePrefs(store, pillar);
+  const scopeIsTag = prefsScope?.startsWith('tag:') ?? false;
   const calendarShown = useJournalCalendarShown();
   const moodLook = useJournalCalendarMood();
-  // The switch belongs to the open space, the one that is not `otherSpace`.
-  const openSpace: Space = otherSpace === 'personal' ? 'work' : 'personal';
-  const showsOther = useCalendarShowsOther(openSpace);
   const resolvedTitleLabel = titleLabel ?? t('listPrefs.title');
 
   const layout = useContext(ViewModeContext);
@@ -219,7 +231,15 @@ export function ListPrefsPopover({
 
   function update<K extends keyof ListPrefs>(key: K, value: ListPrefs[K]) {
     const nextPrefs: ListPrefs = { ...prefs, [key]: value };
-    onChange(setPillarPrefs(store, pillar, nextPrefs));
+    if (scoped && prefsScope && onScopeChange) onScopeChange(setScopedPrefs(scopeStore, prefsScope, { ...scoped, prefs: nextPrefs }));
+    else onChange(setPillarPrefs(store, pillar, nextPrefs));
+  }
+
+  /** On: the folder or tag starts from what the list shows now. Off: it follows
+   *  Global and this device's layout again. */
+  function rememberForScope(on: boolean) {
+    if (!prefsScope || !onScopeChange) return;
+    onScopeChange(setScopedPrefs(scopeStore, prefsScope, on ? { prefs, layout: layout?.mode ?? 'auto' } : null));
   }
 
   function setSort(field: SortField) {
@@ -254,7 +274,22 @@ export function ListPrefsPopover({
           {t('listPrefs.layout')}
         </div>
         {/* The note scopes the whole section, so it sits under the heading. */}
-        <div className="mb-2 text-small text-pn-muted">{t('listPrefs.layoutDeviceOnly')}</div>
+        <div className="mb-2 text-small text-pn-muted">
+          {t(!scoped ? 'listPrefs.layoutDeviceOnly' : scopeIsTag ? 'listPrefs.layoutForTag' : 'listPrefs.layoutForFolder')}
+        </div>
+        {/* One row like Compact rows: it decides where the rest of the menu
+            saves, so it sits above the controls it scopes. */}
+        {prefsScope && onScopeChange && (
+          <div className="mb-2">
+            <ToggleRow
+              label={t(scopeIsTag ? 'listPrefs.rememberForTag' : 'listPrefs.rememberForFolder')}
+              icon={scopeIsTag ? <Tag aria-hidden="true" className="shrink-0" /> : <Folder aria-hidden="true" className="shrink-0" />}
+              hint={<HelpTip text={t('listPrefs.rememberHint')} />}
+              checked={scoped !== null}
+              onChange={rememberForScope}
+            />
+          </div>
+        )}
         <ViewModeToggle mode={layout.mode} onChange={layout.set} />
         <div className="mt-2">
           <ToggleRow
@@ -302,23 +337,6 @@ export function ListPrefsPopover({
                 icon={<Smiley aria-hidden="true" className="shrink-0" />}
                 checked={moodLook}
                 onChange={setJournalCalendarMood}
-              />
-            )}
-            {/* Not under calendarShown: the switch also governs the Calendar
-                pane and its rail count, which stay when this card is off. */}
-            {otherSpace && (
-              <ToggleRow
-                label={(
-                  // The space's name in bold: the one word that changes with the open space.
-                  <Trans
-                    t={t}
-                    i18nKey={otherSpace === 'work' ? 'listPrefs.showWorkItems' : 'listPrefs.showPersonalItems'}
-                    components={{ b: <b className="font-semibold" /> }}
-                  />
-                )}
-                icon={(() => { const Glyph = SPACE_ICONS[otherSpace]; return <Glyph aria-hidden="true" className="shrink-0" />; })()}
-                checked={showsOther}
-                onChange={(on) => setCalendarShowsOther(openSpace, on)}
               />
             )}
           </div>
@@ -526,56 +544,6 @@ export function SortRow({
       <div className="ps-5 pb-1 -mt-0.5 text-small text-pn-muted">{hint}</div>
     )}
     </>
-  );
-}
-
-/**
- * A "?" beside a label that shows a short explanation in a tooltip: on hover
- * with a pointer, and on a tap or click anywhere, which also works on a touch
- * screen with no hover. The next tap outside closes it; a blur cannot, because
- * a tapped button takes no focus on iOS. The button's name is the explanation
- * itself, so a screen reader reads it without opening anything.
- */
-function HelpTip({ text }: { text: string }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLSpanElement | null>(null);
-  useEffect(() => {
-    if (!open) return;
-    const close = (e: PointerEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    };
-    window.addEventListener('pointerdown', close, true);
-    return () => window.removeEventListener('pointerdown', close, true);
-  }, [open]);
-  return (
-    <span ref={ref} className="group/help relative inline-flex">
-      <button
-        type="button"
-        aria-label={text}
-        aria-expanded={open}
-        // Inside the switch's label: the click must not toggle the switch.
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setOpen((o) => !o);
-        }}
-        // A 16px glyph with a 40px touch target, through an invisible ring.
-        // 1px down: the lowercase of the label centers below its line box,
-        // and a glyph centered on the box reads high beside it.
-        className="relative translate-y-px inline-flex items-center justify-center w-4 h-4 rounded-full text-pn-muted hover:text-accent transition before:absolute before:-inset-3 before:content-['']"
-      >
-        <Question aria-hidden="true" />
-      </button>
-      <span
-        aria-hidden="true"
-        // rtl-ok: centered under the button, the same in both directions
-        className={`pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-1.5 z-20 w-max max-w-[160px] ${TIP_SKIN} font-normal transition-opacity duration-75 ${
-          open ? 'opacity-100' : 'opacity-0 [@media(hover:hover)]:group-hover/help:opacity-100'
-        }`}
-      >
-        {text}
-      </span>
-    </span>
   );
 }
 

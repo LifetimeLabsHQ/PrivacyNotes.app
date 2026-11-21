@@ -115,10 +115,13 @@
       "red": "Röd",
       "orange": "Orange",
       "yellow": "Gul",
+      "lime": "Limegrön",
       "green": "Grön",
       "teal": "Blågrön",
       "blue": "Blå",
+      "indigo": "Indigo",
       "purple": "Lila",
+      "grape": "Druvlila",
       "pink": "Rosa"
     }
   },
@@ -241,6 +244,8 @@
     "words_other": "{{formatted}} ord",
     "characters_one": "{{formatted}} tecken",
     "characters_other": "{{formatted}} tecken",
+    "lines_one": "{{formatted}} rad",
+    "lines_other": "{{formatted}} rader",
     "tasksChecked_one": "{{done}} av {{formatted}} markerad",
     "tasksChecked_other": "{{done}} av {{formatted}} markerade",
     "syncLimit": " · {{share}} av synkgränsen på 1 MB",
@@ -275,6 +280,10 @@
     "collapse": "Fäll ihop kodblocket",
     "expand": "Fäll ut kodblocket",
     "placeholder": "Skriv eller klistra in kod. Välj ett språk ovanför för färger."
+  },
+  "fold": {
+    "collapse": "Fäll ihop avsnittet",
+    "expand": "Fäll ut avsnittet"
   },
   "math": {
     "sourceLabel": "LaTeX-kod"
@@ -312,7 +321,7 @@
     "hiddenNote": "De fungerar fortfarande med kortkommando och Markdown.",
     "hiddenDrop": "Släpp en knapp här för att dölja den.",
     "arrangeTitle": "Knappar",
-    "markdownViewNote": "Markdown-vyn har sin egen fasta uppsättning knappar.",
+    "markdownViewNote": "Markdown-vyn visar samma knappar. De som kräver den formaterade vyn är nedtonade där och fungerar fortfarande i den formaterade vyn.",
     "hiddenEmpty": "Inget är dolt.",
     "alwaysVisible": "Alltid synliga",
     "pinned": "Öppnar en panel, så den stannar i fältet eller döljs",
@@ -339,7 +348,7 @@
       "notelink": "Anteckningslänk",
       "audio": "Inspelning",
       "attachMenu": "Bifoga",
-      "separator": "Avgränsare",
+      "separator": "Avdelare i verktygsfältet",
       "markdownView": "Visa markdown"
     },
     "positionTitle": "Fältets placering",

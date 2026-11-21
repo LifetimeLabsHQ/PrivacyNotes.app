@@ -10,9 +10,6 @@ import { currentImageOptions, isSupportedImage, processImage } from '../imagePro
 import type { LocalNote } from '../db';
 import { parseMarkdown } from '../import/markdown';
 import { ensureImportLogLoaded } from '../i18n';
-import { applyImport } from '../import/apply';
-import { fileUnfiled } from '../import/destination';
-import type { StagedBlob } from '../import/types';
 import type { FolderDef } from '../folders';
 import { SUPPORTED_EXT } from '../markdownFolder/adapter';
 import { createNote } from '../notesRepo';
@@ -130,69 +127,42 @@ export function useFilesUpload({
   /** Run the import pipeline on markdown/.zip files, bypassing the Import
    *  modal UI for a streamlined experience from the Files pillar.
    *
-   *  This has to do everything the modal's confirm step does, or the same zip
-   *  imports differently depending on where it was dropped: take the row's
-   *  default destination, merge the rebuilt folder tree under it and remap
-   *  folderIds onto the ids that survived, file the loose notes into it, then
-   *  store the blobs and rewrite the body references. Folder TAGS are the one
-   *  thing it leaves out - that is a toggle the modal asks about, and there
-   *  is no question to answer here. */
+   *  The steps are the Import window's own (`runImport` in import/importRun.ts),
+   *  with the choices a drop has no question for: the row's default
+   *  destination, decided once per batch; no folder tags, no cut of an
+   *  oversize note; the `markdown` source tag. */
   async function handleImportFromFiles(files: File[]) {
     setPendingImportableFiles(null);
     let totalImported = 0;
     const makeTarget = importDestination?.() ?? null;
     let target: string | null | undefined;
     for (const file of files) {
-      let created: string[] = [];
       try {
         await ensureImportLogLoaded();
         const parsed = await parseMarkdown(file);
         if (target === undefined) target = makeTarget?.() ?? null;
-        let toApply = parsed;
-        if (parsed.folders && parsed.folders.length > 0) {
-          const merged = onImportFolders?.(parsed.folders, target);
-          created = merged?.created ?? [];
-          const idMap = merged?.idMap;
-          if (idMap && idMap.size > 0) {
-            toApply = {
-              ...parsed,
-              notes: parsed.notes.map((n) =>
-                n.folderId && idMap.has(n.folderId)
-                  ? { ...n, folderId: idMap.get(n.folderId)! }
-                  : n,
-              ),
-            };
-          }
-        }
-        toApply = { ...toApply, notes: fileUnfiled(toApply.notes, target) };
-        // Pictures and attachments are stored and swapped into the bodies
-        // before the notes are written: a row written with a placeholder
-        // can be sent by a sync pass that the later rewrite cannot reach
-        // (see blobImport.ts). Its own try, so a media failure still
-        // leaves the notes, which is what the outer catch would cost.
-        let staged: StagedBlob[] = [];
-        if (parsed.blobs && parsed.blobs.size > 0) {
-          try {
-            const { importBlobs } = await import('../import/blobImport');
-            const media = await importBlobs(parsed.blobs, toApply.notes);
-            toApply = { ...toApply, notes: media.notes };
-            staged = media.staged;
-          } catch (err) {
-            console.warn('[Files->Import] media failed for', file.name, err);
-          }
-        }
-        // The pictures land in the notes' own write, so a failed write keeps
-        // neither, and the folders this file made go again with it.
-        const result = await applyImport(toApply, 'markdown', staged);
-        if (result.errors.length > 0) {
-          onUndoImportFolders?.(created);
-          console.warn('[Files->Import] write failed for', file.name, result.errors);
+        const { runImport } = await import('../import/importRun');
+        // The folder the batch shares is not this file's to take back.
+        const run = await runImport(
+          parsed,
+          { target, folderTags: false, browserTags: false, splitOversize: false, dropContactPhotos: false, sourceTag: 'markdown' },
+          {
+            mergeFolders: onImportFolders ? (folders, _originalIds, rootParent) => onImportFolders(folders, rootParent) : undefined,
+            undoFolders: onUndoImportFolders,
+            blobsStored: onBlobsRestored,
+          },
+        );
+        if (run.kind === 'refused') {
+          console.warn('[Files->Import] write failed for', file.name, run.errors);
           continue;
         }
-        totalImported += result.imported;
-        if (staged.length > 0) onBlobsRestored?.();
+        if (run.kind === 'failed') {
+          console.warn('[Files->Import] failed for', file.name, run.error);
+          continue;
+        }
+        if (run.mediaError) console.warn('[Files->Import] media failed for', file.name, run.mediaError);
+        totalImported += run.result.imported;
       } catch (err) {
-        onUndoImportFolders?.(created);
         console.warn('[Files→Import] failed for', file.name, err);
       }
     }

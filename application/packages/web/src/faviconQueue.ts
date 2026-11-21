@@ -4,8 +4,10 @@
  * Two layers:
  * 1. Concurrency queue - caps outbound requests at 5 so mass-import
  *    vaults (2000+ logins) don't hammer the Worker.
- * 2. IndexedDB cache - stores favicon blobs locally with a 90-day TTL.
+ * 2. IndexedDB cache - stores favicon blobs locally with a 90-day TTL,
+ *    sealed under the local seal key and keyed by an HMAC of the URL.
  *    Eliminates network requests for repeat loads and works offline.
+ *    With no local key (locked, signed out) nothing is read or written.
  *
  * Flow: check in-memory map → check IndexedDB → fetch through queue →
  * store in IndexedDB → return blob URL.
@@ -13,7 +15,10 @@
  * Spec: docs/internal/backlog.md (#69 - favicon concurrency cap + IDB cache)
  */
 
+import { bytesToHex, decryptBytesAad, encryptBytesAad } from '@notes/shared';
 import { isDemoMode } from './demo';
+import { localDataKeyCopy } from './localKey';
+import { localAad } from './localSeal';
 
 // ── Concurrency queue ────────────────────────────────────────────
 
@@ -32,16 +37,31 @@ function drain() {
 
 // ── IndexedDB cache ──────────────────────────────────────────────
 
+// Spec: docs/public/THREAT_MODEL.md (Local storage at rest - the favicon cache)
+// Version 2 drops the version 1 store, whose keys were the lookup URLs (so
+// the domain of every link and login, readable on disk) and whose values
+// were the plain icons. Version 2 keys each icon by an HMAC of its URL under
+// the local seal key and seals the icon under the same key, so a copy of the
+// files shows only how many icons there are, their sizes, types and times.
 const DB_NAME = 'pn-favicons';
-const STORE_NAME = 'icons';
-const DB_VERSION = 1;
+const STORE_NAME = 'sealed';
+const OLD_STORE_NAME = 'icons';
+const DB_VERSION = 2;
 const MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
 // How long clearing the cache waits for the delete. Without a blocking tab
 // it lands at once.
 const DELETE_WAIT_MS = 2000;
+const AAD_TAG = 'favicon';
+const ID_PREFIX = 'pn-favicon-v1:';
+// The record that names the key the cache was written under. It cannot
+// collide with an icon id, which is 64 hex digits.
+const KEY_CHECK_ID = '#key';
 
-interface CachedFavicon {
-  blob: Blob;
+interface SealedFavicon {
+  n: Uint8Array;
+  ct: Uint8Array;
+  /** The icon's media type, kept so an SVG still renders from a blob URL. */
+  type: string;
   storedAt: number;
 }
 
@@ -52,9 +72,9 @@ function openDB(): Promise<IDBDatabase> {
   const opening = new Promise<IDBDatabase>((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
-      if (!req.result.objectStoreNames.contains(STORE_NAME)) {
-        req.result.createObjectStore(STORE_NAME);
-      }
+      const names = req.result.objectStoreNames;
+      if (names.contains(OLD_STORE_NAME)) req.result.deleteObjectStore(OLD_STORE_NAME);
+      if (!names.contains(STORE_NAME)) req.result.createObjectStore(STORE_NAME);
     };
     req.onsuccess = () => {
       const db = req.result;
@@ -65,6 +85,7 @@ function openDB(): Promise<IDBDatabase> {
       db.onversionchange = () => {
         db.close();
         if (dbPromise === opening) dbPromise = null;
+        checkedFor = null;
       };
       resolve(db);
     };
@@ -77,47 +98,98 @@ function openDB(): Promise<IDBDatabase> {
   return opening;
 }
 
-async function getFromIDB(url: string): Promise<Blob | null> {
-  try {
-    const db = await openDB();
-    return new Promise(resolve => {
-      const tx = db.transaction(STORE_NAME, 'readonly');
-      const req = tx.objectStore(STORE_NAME).get(url);
-      req.onsuccess = () => {
-        const entry = req.result as CachedFavicon | undefined;
-        if (!entry) { resolve(null); return; }
-        if (Date.now() - entry.storedAt > MAX_AGE_MS) {
-          void deleteFromIDB(url);
-          resolve(null);
-          return;
-        }
-        resolve(entry.blob);
-      };
-      req.onerror = () => resolve(null);
+/** The HMAC of `value` under the local seal key, as hex. */
+async function keyedId(key: Uint8Array, value: string): Promise<string> {
+  const k = await crypto.subtle.importKey('raw', key as BufferSource, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const mac = await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(ID_PREFIX + value));
+  return bytesToHex(new Uint8Array(mac));
+}
+
+function request<T>(req: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/** The key check this tab already confirmed, so a lookup checks once. */
+let checkedFor: string | null = null;
+
+/**
+ * The cache opened for the current local key, or null with no key (locked,
+ * signed out, before the first unlock). Icons written under another key (a
+ * phrase change, another account) can never be found again, so the first
+ * lookup under a new key empties the store instead of leaving them to sit.
+ */
+async function openFor(key: Uint8Array): Promise<IDBDatabase> {
+  const db = await openDB();
+  const check = await keyedId(key, KEY_CHECK_ID);
+  if (checkedFor === check) return db;
+  const store = db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME);
+  const stored = await request(store.get(KEY_CHECK_ID)) as string | undefined;
+  if (stored !== check) {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).clear();
+    tx.objectStore(STORE_NAME).put(check, KEY_CHECK_ID);
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
     });
+  }
+  checkedFor = check;
+  return db;
+}
+
+async function getFromIDB(url: string): Promise<Blob | null> {
+  const key = localDataKeyCopy();
+  if (!key) return null;
+  try {
+    const db = await openFor(key);
+    const id = await keyedId(key, url);
+    const entry = await request(db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).get(id)) as SealedFavicon | undefined;
+    if (!entry) return null;
+    if (Date.now() - entry.storedAt > MAX_AGE_MS) {
+      void deleteFromIDB(db, id);
+      return null;
+    }
+    try {
+      const bytes = decryptBytesAad(entry.ct, entry.n, key, localAad(AAD_TAG, id));
+      return new Blob([bytes as BlobPart], { type: entry.type });
+    } catch {
+      // Damaged, or moved from another id: drop it and fetch again.
+      void deleteFromIDB(db, id);
+      return null;
+    }
   } catch {
     return null;
+  } finally {
+    key.fill(0);
   }
 }
 
 async function putInIDB(url: string, blob: Blob): Promise<void> {
+  const key = localDataKeyCopy();
+  if (!key) return;
   try {
-    const db = await openDB();
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).put(
-      { blob, storedAt: Date.now() } satisfies CachedFavicon,
-      url,
+    const db = await openFor(key);
+    const id = await keyedId(key, url);
+    const data = new Uint8Array(await blob.arrayBuffer());
+    const { ciphertext, nonce } = encryptBytesAad(data, key, localAad(AAD_TAG, id));
+    db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).put(
+      { n: nonce, ct: ciphertext, type: blob.type, storedAt: Date.now() } satisfies SealedFavicon,
+      id,
     );
   } catch {
     // QuotaExceededError or other IDB failure - continue without caching.
+  } finally {
+    key.fill(0);
   }
 }
 
-async function deleteFromIDB(url: string): Promise<void> {
+function deleteFromIDB(db: IDBDatabase, id: string): void {
   try {
-    const db = await openDB();
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).delete(url);
+    db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).delete(id);
   } catch {
     // Ignore.
   }
@@ -163,6 +235,7 @@ export async function clearFaviconCache(): Promise<void> {
   // behind the open connection and silently never completes.
   const open = dbPromise;
   dbPromise = null;
+  checkedFor = null;
   const deletion = (async () => {
     if (open) {
       try { (await open).close(); } catch { /* opening failed; nothing to close */ }

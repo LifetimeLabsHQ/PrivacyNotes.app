@@ -19,3 +19,19 @@ export function listScopeKey(
 export function keepsEmptyPane(closedScope: string | null, scope: string, selectedId: string | null): boolean {
   return selectedId === null && closedScope !== null && closedScope === scope;
 }
+
+/** Views that fill the editor pane with their own surface, so a switch to one
+ *  closes the open item: the month, the widgets, the task board, the files,
+ *  the Markdown folder. */
+const OWN_PANE = new Set(['tasks', 'files', 'calendar', 'dashboard', 'markdown']);
+
+/**
+ * A click on a folder, tag or view keeps the open item open on a wide screen
+ * (#823): it changes the list and nothing else. A phone shows the list
+ * instead, and a view with a pane of its own takes the pane.
+ * Spec: docs/internal/specs/keep-my-place.md (section 2.2)
+ */
+export function keepsOpenItem(nextView: string): boolean {
+  if (OWN_PANE.has(nextView)) return false;
+  return typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches;
+}

@@ -14,11 +14,15 @@
  * ciphertext (one record, `privacynotes.bio.enrollment`). In the native apps
  * the same record holds a key the device's secure hardware keeps (the Secure
  * Enclave, the Android Keystore, Windows Hello) and releases only after the
- * biometric check. Everywhere else (a device that cannot bind, a browser or
- * provider without PRF, an enrollment made before the binding) the gate is a
- * user-presence check only: the phrase is wrapped with a random AES-GCM-256
- * key that sits in localStorage beside the blob it wraps, so storage access
- * bypasses the gate entirely. `isBiometricKeyBound` answers which.
+ * biometric check. Where neither can bind (a device without secure hardware,
+ * a browser or provider without PRF) no enrollment is made (#842). One made
+ * before that, or before the binding, can still be a user-presence check
+ * only: the phrase is wrapped with a random AES-GCM-256 key that sits in
+ * localStorage beside the blob it wraps, so storage access bypasses the gate
+ * entirely. `isBiometricKeyBound` answers which. A browser one goes after an
+ * unlock where a PIN or passcode wrap is here too (`dropPresenceGateBesidePin`);
+ * a native one converts at its next unlock.
+ * Spec: docs/internal/plans/phrase-lock-hardening.md (section 2)
  * Spec: docs/internal/plans/app-lock-passcode.md (section 4.6),
  * docs/internal/plans/biometric-key-binding.md (sections 4 and 8)
  *
@@ -35,10 +39,14 @@ import {
 } from '@notes/shared';
 import { detectPlatform } from './devices';
 import { credentialKey } from './demo';
-import { isTrustedDevice } from './trustStorage';
+import { isTrustedDevice, tabSecrets } from './trustStorage';
+import { settleStoredSession } from './sessionSeal';
+import { logAuthEvent } from './authDiag';
 import { hasLiveSignIn, signInStamp, signedOutSince, type SignInStamp } from './liveSignIn';
 import { LEGACY_PIN_WRAP_ITERATIONS, normalizeSecret, saltBytesFor, saltIsPasscode } from './secretKind';
 import { settingsLocalKey } from './settingsLocalKey';
+import { buf, keyFromPrf, prfOutput, prfResultsOf, signalUnknownCredential } from './webauthn';
+import { isSealedPinWrap, openSealedPinWrap, plainWrapId, sealPinCiphertext, sealsPinWrapHere, storedWrapId } from './pinWrapSeal';
 
 // ── Constants ──────────────────────────────────────────────────
 // All demo-bucketed (see credentialKey in demo.ts): the demo's usable
@@ -67,13 +75,6 @@ const AES_KEY_BITS = 256;
 const PBKDF2_ITERATIONS = 600_000;
 
 // ── Helpers ─────────────────────────────────────────────────────
-
-/** Cast Uint8Array to ArrayBuffer for Web Crypto strict typing. */
-function buf(u: Uint8Array): ArrayBuffer {
-  return u.buffer instanceof ArrayBuffer && u.byteOffset === 0 && u.byteLength === u.buffer.byteLength
-    ? u.buffer
-    : u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength) as ArrayBuffer;
-}
 
 const textEnc = new TextEncoder();
 
@@ -115,7 +116,8 @@ export async function aesGcmDecrypt(
  */
 const NATIVE_CREDENTIAL_ID = 'native';
 
-async function invokeTauri<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
+/** Calls an app command of the native shell. Throws where there is none (the web). */
+export async function invokeTauri<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   const { invoke } = await import('@tauri-apps/api/core');
   return await invoke<T>(cmd, args);
 }
@@ -186,17 +188,20 @@ function nativeSecret(hex: unknown): Uint8Array {
 /**
  * Make a fresh hardware key, seal a secret to it, and open the secret once
  * behind the biometric prompt, which is both the person's consent and the
- * proof that the key opens. Throws a NativeKeyFailure. A shell without the
- * command reads as `unsupported`, so the presence gate still enrolls.
- * Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
+ * proof that the key opens. Throws a NativeKeyFailure. Only the shell's own
+ * `unsupported` says the device cannot bind; any other error (a shell without
+ * the command, a broken call) is `failed`, so nobody is told their device
+ * cannot bind when it can (#842).
+ * Spec: docs/internal/plans/biometric-key-binding.md (section 8.2),
+ * docs/internal/plans/phrase-lock-hardening.md (section 2.2 A)
  */
 async function nativeKeyCreate(reason: string, cancelLabel: string): Promise<NativeKey> {
   let made: { handle?: unknown; secret?: unknown };
   try {
     made = await invokeTauri<{ handle?: unknown; secret?: unknown }>('biometric_key_create', { reason, cancelLabel });
   } catch (err) {
-    if (err === 'cancelled' || err === 'failed') throw err;
-    throw 'unsupported';
+    if (err === 'cancelled' || err === 'unsupported') throw err;
+    throw 'failed';
   }
   if (typeof made?.handle !== 'string' || !made.handle) throw 'failed';
   return { handle: made.handle, secret: nativeSecret(made.secret) };
@@ -264,7 +269,7 @@ type NativeBoundEnrollment = { v: 2; handle: string; iv: string; wrapped: string
 type AnyBoundEnrollment = BoundEnrollment | NativeBoundEnrollment;
 
 const PRF_SALT_BYTES = 32;
-const PRF_HKDF_INFO = textEnc.encode('privacynotes-bio-prf-v1');
+const PRF_HKDF_INFO = 'privacynotes-bio-prf-v1';
 
 /** The bound enrollment this device holds, or null. Never throws. */
 function readEnrollment(): AnyBoundEnrollment | null {
@@ -283,47 +288,6 @@ function readEnrollment(): AnyBoundEnrollment | null {
   } catch {
     return null;
   }
-}
-
-/** The AES-GCM key a PRF output gives. Non-extractable, and never stored. */
-async function keyFromPrf(output: Uint8Array): Promise<CryptoKey> {
-  const material = await crypto.subtle.importKey('raw', buf(output), 'HKDF', false, ['deriveKey']);
-  return crypto.subtle.deriveKey(
-    { name: 'HKDF', hash: 'SHA-256', salt: new ArrayBuffer(0), info: buf(PRF_HKDF_INFO) },
-    material,
-    { name: 'AES-GCM', length: AES_KEY_BITS },
-    false,
-    ['encrypt', 'decrypt'],
-  );
-}
-
-type PrfExtensionResults = {
-  prf?: { enabled?: boolean; results?: { first?: BufferSource } };
-};
-
-function prfResultsOf(credential: PublicKeyCredential): PrfExtensionResults['prf'] {
-  try {
-    return (credential.getClientExtensionResults() as PrfExtensionResults).prf;
-  } catch {
-    return undefined;
-  }
-}
-
-/** The bytes of a PRF result. ArrayBuffer.isView, not instanceof: a buffer
- *  from another realm is not an instance of this one's ArrayBuffer. */
-function bytesOf(source: BufferSource): Uint8Array {
-  return ArrayBuffer.isView(source)
-    ? new Uint8Array(source.buffer, source.byteOffset, source.byteLength)
-    : new Uint8Array(source);
-}
-
-/** A PRF output is 32 bytes. Anything else is no output: an empty or short
- *  one would make a key every attacker can derive. */
-const PRF_OUTPUT_BYTES = 32;
-function prfOutput(source: BufferSource | undefined): Uint8Array | null {
-  if (!source) return null;
-  const bytes = bytesOf(source);
-  return bytes.length === PRF_OUTPUT_BYTES ? bytes : null;
 }
 
 /** A WebAuthn assertion of one credential, with the PRF evaluated over `salt`.
@@ -408,7 +372,7 @@ async function createWebCredential(): Promise<MadeCredential> {
 
 /** Wrap the phrase under the PRF key and prove the wrap opens before anything is stored. */
 async function buildBoundEnrollment(phrase: string, made: Extract<MadeCredential, { kind: 'prf' }>): Promise<BoundEnrollment> {
-  const key = await keyFromPrf(made.output);
+  const key = await keyFromPrf(made.output, PRF_HKDF_INFO);
   const { ciphertext, iv } = await aesGcmEncrypt(key, phrase);
   if ((await aesGcmDecrypt(key, ciphertext, iv)) !== phrase) throw new Error('The new biometric wrap did not open.');
   return {
@@ -494,8 +458,9 @@ function commitBoundEnrollment(record: AnyBoundEnrollment, since: SignInStamp, s
     } catch { /* */ }
     return false;
   }
-  // Asked again once written, as storeWrappedPhrase does: after a sign-out the
-  // new record goes and nothing is restored.
+  // Asked again once written: another tab's sign-out can fall between the
+  // check and the write. After a sign-out the new record goes and nothing is
+  // restored.
   if (signedOutSince(since)) {
     try {
       if (localStorage.getItem(BIO_ENROLLMENT) === value) localStorage.removeItem(BIO_ENROLLMENT);
@@ -503,53 +468,27 @@ function commitBoundEnrollment(record: AnyBoundEnrollment, since: SignInStamp, s
     throw new Error('Signed out during enrollment.');
   }
   removePresenceKeys();
+  // A bound record stands, so a no-PRF mark from an earlier refused try and
+  // the notice about a removed gate no longer say anything true.
+  try {
+    localStorage.removeItem(BIND_NO_PRF);
+    localStorage.removeItem(PRESENCE_GATE_REMOVED);
+  } catch { /* */ }
+  for (const fn of presenceNoticeListeners) fn();
   return true;
 }
 
 export type BiometricEnrollResult =
   | { ok: true }
-  | { ok: false; reason: 'user_cancelled' | 'changed' | 'error'; message: string };
-
-/** Wrap the phrase with a fresh random AES-GCM-256 key and persist the blob.
- *  `since` is the stamp taken when the enrollment began: a sign-out after it
- *  removed every wrap, and this one must not come back (liveSignIn.ts). */
-async function storeWrappedPhrase(
-  phrase: string,
-  credentialId: string,
-  since: SignInStamp,
-  /** Asked with no await before the writes; false stores nothing. */
-  stillCurrent: () => boolean = () => true,
-): Promise<boolean> {
-  const wrapKey = await crypto.subtle.generateKey(
-    { name: 'AES-GCM', length: AES_KEY_BITS },
-    true, // extractable so we can export to localStorage
-    ['encrypt', 'decrypt'],
-  );
-  const { ciphertext, iv } = await aesGcmEncrypt(wrapKey, phrase);
-
-  // Export raw key bytes for localStorage.
-  const rawKey = new Uint8Array(await crypto.subtle.exportKey('raw', wrapKey));
-
-  if (signedOutSince(since)) throw new Error('Signed out during enrollment.');
-  if (!stillCurrent()) return false;
-  const wrapped = bytesToBase64(ciphertext);
-  localStorage.setItem(BIO_CREDENTIAL_ID, credentialId);
-  localStorage.setItem(BIO_WRAP_KEY, bytesToBase64(rawKey));
-  localStorage.setItem(BIO_IV, bytesToBase64(iv));
-  localStorage.setItem(BIO_WRAPPED, wrapped);
-  // Asked again once written: another tab's sign-out can fall between the
-  // check and the writes, and then this wrap undoes itself.
-  if (signedOutSince(since)) {
-    if (localStorage.getItem(BIO_WRAPPED) === wrapped) removeBiometricCredential();
-    throw new Error('Signed out during enrollment.');
-  }
-  return true;
-}
+  /** `no_prf`: this browser's passkey gave no PRF output, so nothing was
+   *  stored. `unsupported`: the device has no secure hardware key for it. */
+  | { ok: false; reason: 'user_cancelled' | 'changed' | 'no_prf' | 'unsupported' | 'error'; message: string };
 
 /**
- * Enroll biometric unlock: pass the OS biometric prompt (native app) or create
- * a WebAuthn credential (web), then wrap the phrase with a random AES-GCM key
- * and store it in localStorage.
+ * Enroll biometric unlock: a WebAuthn passkey whose PRF output gives the wrap
+ * key (web), or a key the device's secure hardware holds (native app). Where
+ * neither can bind, nothing is stored: a wrap key beside the phrase it wraps
+ * would stop nobody with a copy of the storage (#842).
  *
  * The OS prompt renders both strings, so callers pass them translated: the
  * reason for the prompt, and the label for the cancel button Android draws
@@ -567,22 +506,19 @@ export async function enrollBiometric(
     const startedFrom = enrollmentStamp();
     const made = await createWebCredential();
     if (made.kind === 'cancelled') {
-      return { ok: false, reason: 'user_cancelled', message: 'Credential creation was cancelled.' };
+      return { ok: false, reason: 'user_cancelled', message: 'Credential creation was canceled.' };
     }
     const newId = bytesToBase64url(made.credentialId);
     const changed = { ok: false, reason: 'changed', message: 'Enrolled in another tab.' } as const;
     // From here a credential exists; any failure tells the provider it is unused.
     try {
-      // No PRF from this browser or passkey provider: the presence gate. The
-      // stamp is asked again with no await before its writes, so another
-      // tab's enrollment finished meanwhile is never joined by a raw key.
+      // No PRF from this browser or passkey provider: nothing is stored, and
+      // the passkey is told gone. The mark keeps the Lock tab from offering a
+      // set-up-again that could only fail the same way.
       if (made.kind === 'presence') {
-        if (await storeWrappedPhrase(phrase, newId, since, () => enrollmentStamp() === startedFrom)) {
-          markNoPrfHere();
-          return { ok: true };
-        }
         signalCredentialGone(newId);
-        return changed;
+        markNoPrfHere();
+        return { ok: false, reason: 'no_prf', message: 'This browser gave no PRF output.' };
       }
       const record = await buildBoundEnrollment(phrase, made);
       // Another tab enrolled while this prompt was up: its enrollment stands.
@@ -598,7 +534,7 @@ export async function enrollBiometric(
     }
   } catch (err) {
     if (err instanceof DOMException && err.name === 'NotAllowedError') {
-      return { ok: false, reason: 'user_cancelled', message: 'Biometric verification was cancelled.' };
+      return { ok: false, reason: 'user_cancelled', message: 'Biometric verification was canceled.' };
     }
     return {
       ok: false,
@@ -609,13 +545,12 @@ export async function enrollBiometric(
 }
 
 /**
- * The native enrollment: a key the device's secure hardware holds, where the
- * device can make one, and the presence gate where it cannot (the prompt IS
- * the enrollment there, and the sentinel id records which gate an unlock
- * uses). The hardware key is made under a fresh name, so a working enrollment
- * is never touched before the new record reads back; a key whose record did
- * not commit is deleted.
- * Spec: docs/internal/plans/biometric-key-binding.md (section 8.2)
+ * The native enrollment: a key the device's secure hardware holds. A device
+ * that cannot make one enrolls nothing (#842). The hardware key is made under
+ * a fresh name, so a working enrollment is never touched before the new
+ * record reads back; a key whose record did not commit is deleted.
+ * Spec: docs/internal/plans/biometric-key-binding.md (section 8.2),
+ * docs/internal/plans/phrase-lock-hardening.md (section 2.2 A)
  */
 async function enrollNative(
   phrase: string,
@@ -624,43 +559,37 @@ async function enrollNative(
   since: SignInStamp,
 ): Promise<BiometricEnrollResult> {
   const startedFrom = enrollmentStamp();
-  let made: NativeKey | null = null;
+  let made: NativeKey;
   try {
     made = await nativeKeyCreate(reason, cancelLabel);
   } catch (failure) {
     if (failure === 'cancelled') {
-      return { ok: false, reason: 'user_cancelled', message: 'Biometric verification was cancelled.' };
+      return { ok: false, reason: 'user_cancelled', message: 'Biometric verification was canceled.' };
     }
-    if (failure !== 'unsupported') {
-      return { ok: false, reason: 'error', message: 'Biometric unlock could not be set up on this device.' };
+    if (failure === 'unsupported') {
+      return { ok: false, reason: 'unsupported', message: 'This device has no secure hardware key for biometric unlock.' };
     }
+    return { ok: false, reason: 'error', message: 'Biometric unlock could not be set up on this device.' };
   }
-  if (made) {
-    try {
-      const record = await buildNativeEnrollment(phrase, made);
-      if (enrollmentStamp() !== startedFrom) {
-        nativeKeyDelete(made.handle);
-        return { ok: false, reason: 'changed', message: 'Enrolled in another tab.' };
-      }
-      const previous = readEnrollment();
-      if (!commitBoundEnrollment(record, since, startedFrom)) {
-        nativeKeyDelete(made.handle);
-        // Another tab's enrollment landed first and stands.
-        if (enrollmentStamp() !== startedFrom) return { ok: false, reason: 'changed', message: 'Enrolled in another tab.' };
-        return { ok: false, reason: 'error', message: 'This device could not store biometric unlock.' };
-      }
-      if (previous?.v === 2 && previous.handle !== record.handle) nativeKeyDelete(previous.handle);
-      return { ok: true };
-    } catch (err) {
+  try {
+    const record = await buildNativeEnrollment(phrase, made);
+    if (enrollmentStamp() !== startedFrom) {
       nativeKeyDelete(made.handle);
-      throw err;
+      return { ok: false, reason: 'changed', message: 'Enrolled in another tab.' };
     }
+    const previous = readEnrollment();
+    if (!commitBoundEnrollment(record, since, startedFrom)) {
+      nativeKeyDelete(made.handle);
+      // Another tab's enrollment landed first and stands.
+      if (enrollmentStamp() !== startedFrom) return { ok: false, reason: 'changed', message: 'Enrolled in another tab.' };
+      return { ok: false, reason: 'error', message: 'This device could not store biometric unlock.' };
+    }
+    if (previous?.v === 2 && previous.handle !== record.handle) nativeKeyDelete(previous.handle);
+    return { ok: true };
+  } catch (err) {
+    nativeKeyDelete(made.handle);
+    throw err;
   }
-  if (!(await nativeAuthenticate(reason, cancelLabel))) {
-    return { ok: false, reason: 'user_cancelled', message: 'Biometric verification was cancelled.' };
-  }
-  await storeWrappedPhrase(phrase, NATIVE_CREDENTIAL_ID, since);
-  return { ok: true };
 }
 
 /**
@@ -670,15 +599,31 @@ async function enrollNative(
  * the record reads back. Any failure deletes the new key and leaves the old
  * wrap exactly as it was; the unlock has already succeeded either way.
  */
-async function convertNative(phrase: string, made: NativeKey, since: SignInStamp, startedFrom: string): Promise<void> {
+async function convertNative(phrase: string, made: NativeKey, since: SignInStamp, startedFrom: string): Promise<boolean> {
   try {
     const record = await buildNativeEnrollment(phrase, made);
-    if (commitBoundEnrollment(record, since, startedFrom)) return;
+    if (commitBoundEnrollment(record, since, startedFrom)) return true;
   } catch {
     /* the old wrap still opens */
   }
   nativeKeyDelete(made.handle);
+  return false;
 }
+
+/**
+ * A hardware key made before the rule that a biometric added later makes it
+ * unusable: an Apple key under `.biometryAny` (`se1.`) or an Android key that
+ * survives a new enrollment (`ks1.`). The one place this file reads inside a
+ * handle. Windows Hello has no such rule, so its handles never match.
+ * Spec: docs/internal/plans/biometric-new-finger.md (section 3)
+ */
+function opensWithAnyBiometric(handle: string): boolean {
+  return handle.startsWith('se1.') || handle.startsWith('ks1.');
+}
+
+/** Old keys this app start already tried to replace: a cancel or a device
+ *  that refuses costs the second prompt once per start, not at every unlock. */
+const replaceTried = new Set<string>();
 
 export type BiometricSetUpAgainResult =
   | { ok: true }
@@ -702,7 +647,7 @@ export async function setUpBiometricAgain(phrase: string): Promise<BiometricSetU
   try {
     const made = await createWebCredential();
     if (made.kind === 'cancelled') {
-      return { ok: false, reason: 'user_cancelled', message: 'Credential creation was cancelled.' };
+      return { ok: false, reason: 'user_cancelled', message: 'Credential creation was canceled.' };
     }
     if (made.kind === 'presence') {
       signalCredentialGone(bytesToBase64url(made.credentialId));
@@ -731,7 +676,7 @@ export async function setUpBiometricAgain(phrase: string): Promise<BiometricSetU
     return { ok: true };
   } catch (err) {
     if (err instanceof DOMException && err.name === 'NotAllowedError') {
-      return { ok: false, reason: 'user_cancelled', message: 'Biometric verification was cancelled.' };
+      return { ok: false, reason: 'user_cancelled', message: 'Biometric verification was canceled.' };
     }
     return {
       ok: false,
@@ -752,27 +697,30 @@ export async function setUpBiometricAgain(phrase: string): Promise<BiometricSetU
 //   passkey gives the PRF output, and the new phrase is wrapped under it;
 // - a native record: a fresh hardware key under a new name, as an enrollment
 //   makes one; the commit deletes the old key, a discard the new one;
-// - the presence gate: the native prompt (a browser presence passkey asks
-//   nothing), then a fresh random key, as storeWrappedPhrase makes one.
-// Spec: docs/internal/plans/phrase-change.md (6.5)
+// - the presence gate of the native apps: a fresh hardware key, so the new
+//   phrase gets a bound record. A browser presence gate, or a device that
+//   cannot bind, gets none: no raw key is made for the new phrase, and the
+//   handover record never carries one (#842).
+// Spec: docs/internal/plans/phrase-change.md (6.5),
+// docs/internal/plans/phrase-lock-hardening.md (section 2.2 A)
 
 /** A biometric record for a new phrase, proven to open, stored nowhere yet.
  *  Plain JSON, so the handover record can keep it (phraseChange.ts). */
 export type PreparedBiometric =
   | { kind: 'prf'; record: BoundEnrollment; startedFrom: string }
-  | { kind: 'native'; record: NativeBoundEnrollment; previousHandle: string | null; startedFrom: string }
-  | { kind: 'presence'; credentialId: string; wrapKey: string; iv: string; wrapped: string; startedFrom: string };
+  | { kind: 'native'; record: NativeBoundEnrollment; previousHandle: string | null; startedFrom: string };
 
 export type BiometricPrepareResult =
   /** `prepared` is null when this device holds no biometric record. */
   | { ok: true; prepared: PreparedBiometric | null }
-  | { ok: false; reason: 'user_cancelled' | 'error'; message: string };
+  /** `cannot_bind`: the record is a presence gate that cannot become bound. */
+  | { ok: false; reason: 'user_cancelled' | 'cannot_bind' | 'error'; message: string };
 
 /** Build this device's biometric record again for `phrase`, store nothing. */
 export async function prepareBiometricForPhrase(phrase: string, reason: string, cancelLabel: string): Promise<BiometricPrepareResult> {
   const startedFrom = enrollmentStamp();
   const record = readEnrollment();
-  const cancelled = { ok: false, reason: 'user_cancelled', message: 'Biometric verification was cancelled.' } as const;
+  const cancelled = { ok: false, reason: 'user_cancelled', message: 'Biometric verification was canceled.' } as const;
   try {
     if (record?.v === 1) {
       const salt = base64ToBytes(record.prfSalt);
@@ -805,15 +753,23 @@ export async function prepareBiometricForPhrase(phrase: string, reason: string, 
       credentialId = null;
     }
     if (!credentialId) return { ok: true, prepared: null };
-    if (credentialId === NATIVE_CREDENTIAL_ID && !(await nativeAuthenticate(reason, cancelLabel))) return cancelled;
-    const wrapKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: AES_KEY_BITS }, true, ['encrypt', 'decrypt']);
-    const { ciphertext, iv } = await aesGcmEncrypt(wrapKey, phrase);
-    if ((await aesGcmDecrypt(wrapKey, ciphertext, iv)) !== phrase) throw new Error('The new biometric wrap did not open.');
-    const rawKey = new Uint8Array(await crypto.subtle.exportKey('raw', wrapKey));
-    return {
-      ok: true,
-      prepared: { kind: 'presence', credentialId, wrapKey: bytesToBase64(rawKey), iv: bytesToBase64(iv), wrapped: bytesToBase64(ciphertext), startedFrom },
-    };
+    const cannotBind = { ok: false, reason: 'cannot_bind', message: 'This biometric unlock cannot be bound.' } as const;
+    if (credentialId !== NATIVE_CREDENTIAL_ID) return cannotBind;
+    let made: NativeKey;
+    try {
+      made = await nativeKeyCreate(reason, cancelLabel);
+    } catch (failure) {
+      if (failure === 'cancelled') return cancelled;
+      if (failure === 'unsupported') return cannotBind;
+      return { ok: false, reason: 'error', message: 'Biometric unlock could not be set up on this device.' };
+    }
+    try {
+      const built = await buildNativeEnrollment(phrase, made);
+      return { ok: true, prepared: { kind: 'native', record: built, previousHandle: null, startedFrom } };
+    } catch (err) {
+      nativeKeyDelete(made.handle);
+      throw err;
+    }
   } catch (err) {
     if (err instanceof DOMException && err.name === 'NotAllowedError') return cancelled;
     return { ok: false, reason: 'error', message: err instanceof Error ? err.message : 'Biometric unlock could not be prepared.' };
@@ -828,34 +784,19 @@ export async function prepareBiometricForPhrase(phrase: string, reason: string, 
  * when a sign-out began at `since`, as every enrollment does.
  */
 export function commitPreparedBiometric(prepared: PreparedBiometric, since: SignInStamp): boolean {
-  if (prepared.kind === 'prf' || prepared.kind === 'native') {
-    let stands = false;
-    try {
-      stands = commitBoundEnrollment(prepared.record, since, prepared.startedFrom);
-    } finally {
-      if (prepared.kind === 'native') {
-        if (!stands) nativeKeyDelete(prepared.record.handle);
-        else if (prepared.previousHandle && prepared.previousHandle !== prepared.record.handle) nativeKeyDelete(prepared.previousHandle);
-      }
-    }
-    return stands;
-  }
-  if (signedOutSince(since)) throw new Error('Signed out during enrollment.');
-  if (enrollmentStamp() !== prepared.startedFrom) return false;
+  // A handover record an older version wrote can hold a presence gate with
+  // its raw key: it is never stored, and the caller removes the old record.
+  if (prepared.kind !== 'prf' && prepared.kind !== 'native') return false;
+  let stands = false;
   try {
-    localStorage.setItem(BIO_CREDENTIAL_ID, prepared.credentialId);
-    localStorage.setItem(BIO_WRAP_KEY, prepared.wrapKey);
-    localStorage.setItem(BIO_IV, prepared.iv);
-    localStorage.setItem(BIO_WRAPPED, prepared.wrapped);
-  } catch {
-    return false;
+    stands = commitBoundEnrollment(prepared.record, since, prepared.startedFrom);
+  } finally {
+    if (prepared.kind === 'native') {
+      if (!stands) nativeKeyDelete(prepared.record.handle);
+      else if (prepared.previousHandle && prepared.previousHandle !== prepared.record.handle) nativeKeyDelete(prepared.previousHandle);
+    }
   }
-  // Asked again once written, as storeWrappedPhrase does.
-  if (signedOutSince(since)) {
-    if (localStorage.getItem(BIO_WRAPPED) === prepared.wrapped) removeBiometricCredential();
-    throw new Error('Signed out during enrollment.');
-  }
-  return true;
+  return stands;
 }
 
 /** Throw away a prepared record that will not be stored: a native one's new
@@ -866,16 +807,7 @@ export function discardPreparedBiometric(prepared: PreparedBiometric): void {
 
 /** Tell the passkey provider a credential is no longer used, where the browser can. Never throws. */
 function signalCredentialGone(credentialId: string): void {
-  try {
-    const signal = (PublicKeyCredential as unknown as {
-      signalUnknownCredential?: (o: { rpId: string; credentialId: string }) => Promise<void>;
-    }).signalUnknownCredential;
-    if (typeof signal === 'function') {
-      void signal.call(PublicKeyCredential, { rpId: window.location.hostname, credentialId }).catch(() => { /* a hint only */ });
-    }
-  } catch {
-    /* a hint only */
-  }
+  signalUnknownCredential(window.location.hostname, credentialId);
 }
 
 /**
@@ -918,7 +850,7 @@ export async function unlockWithBiometricDetailed(
   const startedFrom = enrollmentStamp();
   const current = () => enrollmentStamp() === startedFrom && !signedOutSince(since);
   const record = readEnrollment();
-  if (record?.v === 2) return unlockNativeBound(record, reason, cancelLabel, current);
+  if (record?.v === 2) return unlockNativeBound(record, reason, cancelLabel, since, current);
   if (record) return unlockBound(record, current);
 
   let credIdB64: string | null, wrapKeyB64: string | null, ivB64: string | null, wrappedB64: string | null;
@@ -1011,13 +943,18 @@ async function unlockNativePresence(
  * the OS destroyed answers `gone`; the dead record is then removed, but only
  * while another door holds the phrase (a PIN wrap, or the phrase at rest) and
  * the record is still the one this unlock read. With no biometric enrolled
- * the lock screen says the same, and the record stays.
- * Spec: docs/internal/plans/biometric-key-binding.md (D6, section 8.2)
+ * the lock screen says the same, and the record stays. A key that any
+ * biometric opens is replaced after it opened, by a key bound to the
+ * biometrics enrolled now: a second prompt, once. Any failure of that keeps
+ * the old record, and the unlock stands.
+ * Spec: docs/internal/plans/biometric-key-binding.md (D6, section 8.2),
+ * docs/internal/plans/biometric-new-finger.md (section 3)
  */
 async function unlockNativeBound(
   record: NativeBoundEnrollment,
   reason: string,
   cancelLabel: string,
+  since: SignInStamp,
   current: () => boolean,
 ): Promise<BiometricUnlockResult> {
   let secret: Uint8Array;
@@ -1043,6 +980,31 @@ async function unlockNativeBound(
   }
   if (!current()) return { phrase: null, failure: 'cancelled' };
   removePresenceKeys();
+  if (opensWithAnyBiometric(record.handle) && !replaceTried.has(record.handle)) {
+    replaceTried.add(record.handle);
+    // Taken with no await after `current()`: the record this unlock opened,
+    // without the presence keys just removed.
+    const opened = enrollmentStamp();
+    let made: NativeKey | null = null;
+    try {
+      made = await nativeKeyCreate(reason, cancelLabel);
+    } catch {
+      /* a cancel or a refusal keeps the old key until the next app start */
+    }
+    // A shell without the current-set rule would trade one old key for another.
+    if (made && opensWithAnyBiometric(made.handle)) {
+      nativeKeyDelete(made.handle);
+      made = null;
+    }
+    const replaced = made !== null && (await convertNative(phrase, made, since, opened));
+    if (replaced) nativeKeyDelete(record.handle);
+    // A sign-out during the second prompt removed every door, and a record
+    // another tab wrote meanwhile is not the one this unlock opened; either
+    // way the phrase it read must not open the app.
+    if (signedOutSince(since) || (!replaced && enrollmentStamp() !== opened)) {
+      return { phrase: null, failure: 'cancelled' };
+    }
+  }
   return { phrase };
 }
 
@@ -1084,7 +1046,7 @@ async function unlockBound(record: BoundEnrollment, current: () => boolean): Pro
   if (!first) return { phrase: null, failure: 'unopened' };
   let phrase: string;
   try {
-    const key = await keyFromPrf(first);
+    const key = await keyFromPrf(first, PRF_HKDF_INFO);
     phrase = await aesGcmDecrypt(key, wrapped, iv);
   } catch {
     return { phrase: null, failure: 'unopened' };
@@ -1117,6 +1079,23 @@ export function hasBiometricCredential(): boolean {
   try {
     return localStorage.getItem(BIO_WRAPPED) !== null
       && localStorage.getItem(BIO_CREDENTIAL_ID) !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Whether this device's biometric unlock is a Windows Hello key on a PC that
+ * offers Windows no TPM, where Windows keeps the key in software. Asked live,
+ * with no prompt, so an enrollment of any age gets the answer. Only the
+ * Windows app (`build`) with a bound app enrollment asks; every failure
+ * reads as false, which leaves the sentence that promises no chip.
+ * Spec: docs/internal/plans/hello-tpm-status.md (section 3.3)
+ */
+export async function biometricKeyInSoftware(build: string): Promise<boolean> {
+  if (build !== 'windows' || readEnrollment()?.v !== 2 || !isBiometricKeyBound()) return false;
+  try {
+    return (await invokeTauri<unknown>('biometric_tpm_missing')) === true;
   } catch {
     return false;
   }
@@ -1184,6 +1163,11 @@ export function noPrfHere(): boolean {
 // Bucketed like the credentials, so a demo answer leaves a real account's ask.
 const BIND_OFFER_ANSWERED = credentialKey('privacynotes.ui.bindOfferAnswered');
 
+// Set when an unlock removed a browser presence gate; the notes view shows a
+// banner until it is dismissed. Bucketed like the credentials.
+const PRESENCE_GATE_REMOVED = credentialKey('privacynotes.ui.presenceGateRemoved');
+const presenceNoticeListeners = new Set<() => void>();
+
 /** Whether this browser says its passkeys can evaluate PRF. Unknown reads as no. */
 async function browserOffersPrf(): Promise<boolean> {
   try {
@@ -1238,9 +1222,81 @@ export function removeBiometricCredential(): void {
     localStorage.removeItem(BIO_LEGACY_PRF_SALT);
     localStorage.removeItem(BIO_LEGACY_HKDF_SALT);
     localStorage.removeItem(BIND_NO_PRF);
+    localStorage.removeItem(PRESENCE_GATE_REMOVED);
   } catch {
     /* storage unavailable */
   }
+  for (const fn of presenceNoticeListeners) fn();
+}
+
+/**
+ * Whether this device holds a browser presence gate beside the PIN or
+ * passcode wrap (#842 B): its raw key sits next to the phrase it wraps, so it
+ * stops nobody with a copy of the storage, and the PIN wrap is the lock. A
+ * native one converts at its next unlock, and a bound record with leftover
+ * keys is a set-up-again its own unlock finishes, so neither counts. The lock
+ * screen does not start the fingerprint prompt by itself while this holds, so
+ * the PIN, typed once, proves the wrap opens before the gate goes.
+ * Spec: docs/internal/plans/phrase-lock-hardening.md (section 2.2 B)
+ */
+export function browserPresenceGateBesidePin(): boolean {
+  let credentialId: string | null;
+  try {
+    if (localStorage.getItem(BIO_WRAP_KEY) === null) return false;
+    credentialId = localStorage.getItem(BIO_CREDENTIAL_ID);
+  } catch {
+    return false;
+  }
+  if (!credentialId || credentialId === NATIVE_CREDENTIAL_ID) return false;
+  if (readEnrollment()) return false;
+  return hasPinWrappedPhrase();
+}
+
+/**
+ * Remove that gate. Called only after the PIN or passcode opened the wrap on
+ * the lock screen, so the door that stays is one the person just used. The
+ * check and the removal are one synchronous block, so another tab cannot take
+ * the PIN wrap between them. A gate that is the only door stays, with its
+ * callout. Answers whether it removed one.
+ */
+export function dropPresenceGateBesidePin(): boolean {
+  if (!browserPresenceGateBesidePin()) return false;
+  let credentialId: string | null = null;
+  try {
+    credentialId = localStorage.getItem(BIO_CREDENTIAL_ID);
+  } catch { /* checked above */ }
+  removeBiometricCredential();
+  try {
+    localStorage.setItem(PRESENCE_GATE_REMOVED, '1');
+  } catch {
+    /* the Lock tab still shows biometric unlock as off */
+  }
+  for (const fn of presenceNoticeListeners) fn();
+  if (credentialId) signalCredentialGone(credentialId);
+  return true;
+}
+
+/** Whether the banner about a removed presence gate shows. */
+export function presenceGateRemovedNotice(): boolean {
+  try {
+    return localStorage.getItem(PRESENCE_GATE_REMOVED) !== null;
+  } catch {
+    return false;
+  }
+}
+
+export function dismissPresenceGateNotice(): void {
+  try {
+    localStorage.removeItem(PRESENCE_GATE_REMOVED);
+  } catch {
+    /* it shows again on the next start */
+  }
+  for (const fn of presenceNoticeListeners) fn();
+}
+
+export function onPresenceGateNoticeChange(fn: () => void): () => void {
+  presenceNoticeListeners.add(fn);
+  return () => { presenceNoticeListeners.delete(fn); };
 }
 
 // ── PIN-based phrase wrapping ───────────────────────────────────
@@ -1316,7 +1372,7 @@ export async function buildPinWrap(phrase: string, pin: string): Promise<PinWrap
  * whose next write failed (the PIN tab's settings save). It does nothing once
  * another wrap was stored here or a sign-out began.
  */
-export function storeBuiltPinWrap(blob: PinWrapBlob, since: SignInStamp): () => void {
+export function storeBuiltPinWrap(blob: PinWrapBlob, since: SignInStamp, local?: string | null): () => void {
   if (signedOutSince(since)) throw new Error('Signed out while the PIN wrap was built.');
   const keys = [PIN_PBKDF2_SALT, PIN_IV, PIN_WRAPPED, PIN_ITERATIONS_KEY];
   const previous = keys.map((k) => localStorage.getItem(k));
@@ -1331,7 +1387,9 @@ export function storeBuiltPinWrap(blob: PinWrapBlob, since: SignInStamp): () => 
   try {
     localStorage.setItem(PIN_PBKDF2_SALT, blob.pinWrapSalt);
     localStorage.setItem(PIN_IV, blob.pinWrapIV);
-    localStorage.setItem(PIN_WRAPPED, blob.pinWrapCiphertext);
+    // The value sealed under the device key when the caller made one
+    // (`sealedLocalPinWrap`), so a new wrap never lands plain.
+    localStorage.setItem(PIN_WRAPPED, local ?? blob.pinWrapCiphertext);
     localStorage.setItem(PIN_ITERATIONS_KEY, String(blob.pinWrapIterations));
   } catch (err) {
     // A store that refuses one of the four keeps the wrap it had, never a
@@ -1340,15 +1398,34 @@ export function storeBuiltPinWrap(blob: PinWrapBlob, since: SignInStamp): () => 
     putBack();
     throw err;
   }
-  // Asked again once written, as storeWrappedPhrase does.
+  // Asked again once written: another tab's sign-out can fall between the
+  // check and the writes, and then this wrap undoes itself.
   if (signedOutSince(since)) {
-    if (localStorage.getItem(PIN_WRAPPED) === blob.pinWrapCiphertext) removePinWrappedPhrase();
+    if (hasSamePinWrap(blob)) removePinWrappedPhrase();
     throw new Error('Signed out while the PIN wrap was built.');
   }
+  if (!local) void sealLocalPinWrap();
+  // By identity, so the put-back still finds this wrap once it is sealed; the
+  // wrap it puts back is sealed again where it was plain.
   return () => {
     if (signedOutSince(since)) return;
-    if (localStorage.getItem(PIN_WRAPPED) === blob.pinWrapCiphertext) putBack();
+    if (hasSamePinWrap(blob)) {
+      putBack();
+      void sealLocalPinWrap();
+    }
   };
+}
+
+/**
+ * This device's copy of a wrap a caller just built, sealed under the device
+ * key where it seals (pinWrapSeal.ts), for `storeBuiltPinWrap`'s `local`.
+ * Called before the caller's last check, so the store itself stays
+ * synchronous. Null where it does not seal, or the seal did not read back:
+ * the store then writes the plain value and seals it afterwards.
+ */
+export async function sealedLocalPinWrap(blob: PinWrapBlob): Promise<string | null> {
+  if (!sealsPinWrapHere()) return null;
+  return sealPinCiphertext(blob.pinWrapSalt, blob.pinWrapIV, blob.pinWrapCiphertext);
 }
 
 /**
@@ -1373,7 +1450,10 @@ export async function openPinWrapBlob(blob: PinWrapBlob, pin: string): Promise<s
  *  tests/lockScreenKind.test.ts. */
 export function pinWrapStamp(): string {
   try {
-    return `${localStorage.getItem(PIN_PBKDF2_SALT) ?? ''}:${localStorage.getItem(PIN_WRAPPED) ?? ''}`;
+    const stored = localStorage.getItem(PIN_WRAPPED);
+    // By the plain ciphertext, so a wrap sealed under the device key while a
+    // check runs (pinWrapSeal.ts) is still the same wrap.
+    return `${localStorage.getItem(PIN_PBKDF2_SALT) ?? ''}:${stored === null ? '' : storedWrapId(stored)}`;
   } catch {
     return '';
   }
@@ -1385,15 +1465,104 @@ export function pinWrapStamp(): string {
  * re-wraps under the new PIN, replaces the blob here rather than leaving a
  * wrap the retired PIN still opens. Pinned by tests/pinRecovery.test.ts.
  */
-export function hasSamePinWrap(blob: Pick<PinWrapBlob, 'pinWrapSalt' | 'pinWrapCiphertext'>): boolean {
+export function hasSamePinWrap(
+  blob: Pick<PinWrapBlob, 'pinWrapSalt' | 'pinWrapCiphertext'> & Partial<Pick<PinWrapBlob, 'pinWrapIV'>>,
+): boolean {
   try {
-    return (
-      localStorage.getItem(PIN_WRAPPED) === blob.pinWrapCiphertext &&
-      localStorage.getItem(PIN_PBKDF2_SALT) === blob.pinWrapSalt
-    );
+    const stored = localStorage.getItem(PIN_WRAPPED);
+    if (stored === null || localStorage.getItem(PIN_PBKDF2_SALT) !== blob.pinWrapSalt) return false;
+    if (!isSealedPinWrap(stored)) {
+      return stored === blob.pinWrapCiphertext
+        && (blob.pinWrapIV === undefined || localStorage.getItem(PIN_IV) === blob.pinWrapIV);
+    }
+    // A sealed wrap names its plain ciphertext by a check value, and the IV
+    // must match too, so a salt and IV of one wrap beside the ciphertext of
+    // another (a torn write) is never the same wrap.
+    // Spec: docs/internal/plans/pin-wrap-hardening.md (section 5.4, C2-1)
+    return storedWrapId(stored) === plainWrapId(blob.pinWrapCiphertext)
+      && (blob.pinWrapIV === undefined || localStorage.getItem(PIN_IV) === blob.pinWrapIV);
   } catch {
     return false;
   }
+}
+
+/**
+ * Seal this device's plain PIN wrap under the device key, in the apps
+ * (pinWrapSeal.ts). Runs after every write of the wrap and once at the boot,
+ * which moves a wrap written before. The sealed value replaces the plain one
+ * only while the plain one is still there, salt and IV included, with no
+ * await between that check and the write: a wrap another tab or a sign-out
+ * changed meanwhile stays as it is.
+ */
+export async function sealLocalPinWrap(): Promise<void> {
+  if (!sealsPinWrapHere()) return;
+  let salt: string | null;
+  let iv: string | null;
+  let plain: string | null;
+  try {
+    salt = localStorage.getItem(PIN_PBKDF2_SALT);
+    iv = localStorage.getItem(PIN_IV);
+    plain = localStorage.getItem(PIN_WRAPPED);
+  } catch {
+    return;
+  }
+  if (!salt || !iv || !plain || isSealedPinWrap(plain)) return;
+  const sealed = await sealPinCiphertext(salt, iv, plain);
+  if (!sealed) {
+    // Never silent, as the phrase envelope's fall back is not.
+    logAuthEvent('auth:pin-wrap-seal-fallback');
+    return;
+  }
+  try {
+    if (
+      localStorage.getItem(PIN_WRAPPED) === plain
+      && localStorage.getItem(PIN_PBKDF2_SALT) === salt
+      && localStorage.getItem(PIN_IV) === iv
+    ) {
+      localStorage.setItem(PIN_WRAPPED, sealed);
+    }
+  } catch {
+    /* stays plain; the next write or boot tries again */
+  }
+}
+
+/**
+ * Whether this device's PIN wrap opens: a plain one always, a sealed one when
+ * the device key store opens its seal (no dialog). A seal that does not open
+ * (a restore on another device, a key the OS reset) is no door, so the code
+ * that strips the phrase behind the wrap, or treats it as the last door, asks
+ * this first. A seal that opened is remembered per stored value for the
+ * life of the page; one that did not is asked again.
+ */
+const opensMemo = new Map<string, boolean>();
+
+/** Whether this device's PIN wrap is sealed under the device key (no await). */
+export function localPinWrapSealed(): boolean {
+  try {
+    return isSealedPinWrap(localStorage.getItem(PIN_WRAPPED));
+  } catch {
+    return false;
+  }
+}
+export async function localPinWrapOpens(): Promise<boolean> {
+  let stored: string | null;
+  let salt: string | null;
+  let iv: string | null;
+  try {
+    stored = localStorage.getItem(PIN_WRAPPED);
+    salt = localStorage.getItem(PIN_PBKDF2_SALT);
+    iv = localStorage.getItem(PIN_IV);
+  } catch {
+    return false;
+  }
+  if (stored === null || !salt || !iv) return false;
+  if (!isSealedPinWrap(stored)) return true;
+  const known = opensMemo.get(stored);
+  if (known !== undefined) return known;
+  const opened = await openSealedPinWrap(stored, salt, iv);
+  const opens = typeof opened === 'string' && opened !== 'cancelled';
+  if (opens) opensMemo.set(stored, true);
+  return opens;
 }
 
 /**
@@ -1419,38 +1588,91 @@ export function hydrateLocalPinWrap(blob: PinWrapBlob): void {
   // A sync pass that outlived a sign-out must not put the wrap back, or the
   // four-digit PIN opens the signed-out device (liveSignIn.ts).
   if (!hasLiveSignIn()) return;
+  const keys = [PIN_PBKDF2_SALT, PIN_IV, PIN_WRAPPED, PIN_ITERATIONS_KEY];
+  let previous: (string | null)[];
+  try {
+    previous = keys.map((k) => localStorage.getItem(k));
+  } catch {
+    return;
+  }
   try {
     localStorage.setItem(PIN_PBKDF2_SALT, blob.pinWrapSalt);
     localStorage.setItem(PIN_IV, blob.pinWrapIV);
     localStorage.setItem(PIN_WRAPPED, blob.pinWrapCiphertext);
     localStorage.setItem(PIN_ITERATIONS_KEY, String(blob.pinWrapIterations ?? LEGACY_PIN_WRAP_ITERATIONS));
   } catch {
-    /* storage unavailable */
+    // A store that refuses one of the four keeps the wrap it had, never a
+    // salt of one wrap beside the ciphertext of another, which no secret
+    // opens (as storeBuiltPinWrap).
+    keys.forEach((k, i) => {
+      try {
+        const v = previous[i];
+        if (v === null || v === undefined) localStorage.removeItem(k);
+        else localStorage.setItem(k, v);
+      } catch { /* */ }
+    });
+    return;
   }
-  // Asked again once written, as storeWrappedPhrase does.
-  if (!hasLiveSignIn() && localStorage.getItem(PIN_WRAPPED) === blob.pinWrapCiphertext) removePinWrappedPhrase();
+  // Asked again once written, as storeBuiltPinWrap does.
+  if (!hasLiveSignIn() && hasSamePinWrap(blob)) {
+    removePinWrappedPhrase();
+    return;
+  }
+  void sealLocalPinWrap();
 }
+
+/** Only a Linux keyring shows an unlock dialog, and only one asked for it
+ *  waits for the person (75 s); the other stores answer at once. */
+function keyringMayAsk(): boolean {
+  try {
+    const ua = navigator.userAgent.toLowerCase();
+    return ua.includes('linux') && !ua.includes('android');
+  } catch {
+    return false;
+  }
+}
+
+/** Why a PIN wrap sealed under the device key did not open: the person
+ *  dismissed the Linux keyring dialog, or the key store does not open it. */
+export type PinWrapUnavailable = 'keyring-cancelled' | 'device-key-unavailable';
+
+/** The wrap a legacy upgrade replaced, by salt and ciphertext. */
+export type ReplacedPinWrap = Pick<PinWrapBlob, 'pinWrapSalt' | 'pinWrapCiphertext'>;
 
 /**
  * `onUpgraded` receives the blob a legacy-iteration wrap was re-wrapped
- * into after a successful unlock. The re-wrap is local; the caller carries
+ * into after a successful unlock, and the wrap it replaced. The re-wrap is local; the caller carries
  * the blob to the synced settings, because every device replaces a wrap
  * that differs from the account's, and an upgrade the account never learns
  * of would be undone on the next pass and redone on the next unlock.
  */
 export async function unwrapPhraseWithPin(
   pin: string,
-  onUpgraded?: (blob: PinWrapBlob) => void,
-): Promise<string | null> {
+  onUpgraded?: (blob: PinWrapBlob, replaced: ReplacedPinWrap) => void,
+): Promise<string | null | PinWrapUnavailable> {
   // The legacy upgrade below starts after this function's own key
   // derivation, and it must not outlive a sign-out that began during it.
   const startedAt = signInStamp();
   const saltB64 = localStorage.getItem(PIN_PBKDF2_SALT);
   const ivB64 = localStorage.getItem(PIN_IV);
-  const wrappedB64 = localStorage.getItem(PIN_WRAPPED);
+  const stored = localStorage.getItem(PIN_WRAPPED);
 
-  if (!saltB64 || !ivB64 || !wrappedB64) return null;
+  if (!saltB64 || !ivB64 || !stored) return null;
   const wrapAtStart = pinWrapStamp();
+  // A wrap sealed under the device key opens through the key store first. A
+  // seal that does not open is no wrong PIN: the caller counts nothing and
+  // offers the phrase. On Linux this is the moment the keyring may ask to be
+  // unlocked, a dialog the person started by submitting the PIN.
+  // Spec: docs/internal/plans/pin-wrap-hardening.md (section 5.4, C2-1)
+  let wrappedB64 = stored;
+  if (isSealedPinWrap(stored)) {
+    const opened = await openSealedPinWrap(stored, saltB64, ivB64, keyringMayAsk());
+    if (opened === 'cancelled') return 'keyring-cancelled';
+    if (opened === null) return 'device-key-unavailable';
+    wrappedB64 = opened;
+  }
+  // The caller saves the upgrade only over the wrap it replaced.
+  const reportUpgrade = onUpgraded && ((blob: PinWrapBlob) => onUpgraded(blob, { pinWrapSalt: saltB64, pinWrapCiphertext: wrappedB64 }));
 
   const storedIterations = parseInt(localStorage.getItem(PIN_ITERATIONS_KEY) ?? '', 10) || LEGACY_PIN_WRAP_ITERATIONS;
   const salt = base64ToBytes(saltB64);
@@ -1463,7 +1685,9 @@ export async function unwrapPhraseWithPin(
     const phrase = await aesGcmDecrypt(key, ciphertext, iv);
 
     // Auto-upgrade: re-wrap with current iterations if using legacy count.
-    if (storedIterations < PIN_PBKDF2_ITERATIONS) upgradeLegacyWrap(phrase, pin, wrapAtStart, startedAt, onUpgraded);
+    if (storedIterations < PIN_PBKDF2_ITERATIONS) upgradeLegacyWrap(phrase, pin, wrapAtStart, startedAt, reportUpgrade);
+    // A plain wrap in the apps moves under the device key.
+    else if (!isSealedPinWrap(stored)) void sealLocalPinWrap();
 
     return phrase;
   } catch {
@@ -1473,7 +1697,7 @@ export async function unwrapPhraseWithPin(
       try {
         const legacyKey = await deriveKeyFromPin(pin, salt, LEGACY_PIN_WRAP_ITERATIONS);
         const phrase = await aesGcmDecrypt(legacyKey, ciphertext, iv);
-        upgradeLegacyWrap(phrase, pin, wrapAtStart, startedAt, onUpgraded);
+        upgradeLegacyWrap(phrase, pin, wrapAtStart, startedAt, reportUpgrade);
         return phrase;
       } catch {
         return null;
@@ -1512,9 +1736,10 @@ function upgradeLegacyWrap(
   onUpgraded?: (blob: PinWrapBlob) => void,
 ): void {
   void buildPinWrap(phrase, pin)
-    .then((blob) => {
+    .then(async (blob) => {
+      const local = await sealedLocalPinWrap(blob);
       if (pinWrapStamp() !== wrapAtStart) return;
-      storeBuiltPinWrap(blob, startedAt);
+      storeBuiltPinWrap(blob, startedAt, local);
       onUpgraded?.(blob);
     })
     .catch(() => { /* best-effort upgrade */ });
@@ -1547,8 +1772,8 @@ export function removePinWrappedPhrase(): void {
 const PHRASE_STORAGE_KEY = credentialKey('privacynotes.phrase');
 
 /**
- * True while a phrase is stored on this device (localStorage or
- * sessionStorage), i.e. this browser is still signed in. Presence only -
+ * True while a phrase is stored on this device (localStorage, or the tab's
+ * own copy in memory on a tab that is not trusted), i.e. this browser is still signed in. Presence only -
  * the value is a wrapped envelope (phraseAtRest.ts), or legacy plaintext
  * on a not-yet-migrated install. Distinguishes "the user changed an
  * app-lock setting" from "another tab signed out", which removes the
@@ -1560,7 +1785,7 @@ export function hasStoredPhrase(): boolean {
     if (localStorage.getItem(PHRASE_STORAGE_KEY) !== null) return true;
   } catch { /* storage unavailable */ }
   try {
-    return sessionStorage.getItem(PHRASE_STORAGE_KEY) !== null;
+    return tabSecrets.getItem(PHRASE_STORAGE_KEY) !== null;
   } catch {
     return false;
   }
@@ -1586,7 +1811,7 @@ export function dropDoorsLeftBySignOut(): boolean {
   try {
     if (signInStamp().announced === null) return false;
     if (localStorage.getItem(settingsLocalKey()) !== null) return false;
-    for (const store of [localStorage, sessionStorage]) {
+    for (const store of [localStorage, tabSecrets, sessionStorage]) {
       if (store.getItem(PHRASE_STORAGE_KEY) !== null) return false;
       for (let i = 0; i < store.length; i++) {
         if (store.key(i)?.startsWith('sb-')) return false;
@@ -1604,7 +1829,10 @@ export function dropDoorsLeftBySignOut(): boolean {
  *  door back into the session is a PIN or biometric unlock. */
 export function removeStoredPhrase(): void {
   try { localStorage.removeItem(PHRASE_STORAGE_KEY); } catch { /* */ }
-  try { sessionStorage.removeItem(PHRASE_STORAGE_KEY); } catch { /* */ }
+  try { tabSecrets.removeItem(PHRASE_STORAGE_KEY); } catch { /* */ }
+  // The settings write that arms the lock comes after this in some paths;
+  // it settles the session again (userSettings.ts writeLocal).
+  settleStoredSession();
 }
 
 // ── Cross-tab sync ──────────────────────────────────────────────

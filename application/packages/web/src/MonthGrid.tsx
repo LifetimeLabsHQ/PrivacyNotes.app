@@ -83,7 +83,10 @@ function sameMonth(a: string, b: string): boolean {
 /** The most dots a day draws; the list under the grid names the rest. */
 const MAX_DOTS = 3;
 
-type Dot = { space: Space | null; kind?: LocalNote['type'] };
+/** A day's dot. `color` paints it in a tone of its own and `bar` makes it a
+ *  short bar: the tracker in focus in Journals, and the trackers the
+ *  Calendar's phone strip shows. Spec: docs/internal/specs/tracker-focus-771.md */
+type Dot = { space: Space | null; kind?: LocalNote['type']; color?: string; bar?: boolean };
 
 /** The color of an item type in a calendar: the app's type color, except a
  *  birthday, which is pink so it never reads as a note in the accent.
@@ -101,7 +104,7 @@ export function pickDots(found: readonly Dot[]): Dot[] {
   const first: Dot[] = [];
   const rest: Dot[] = [];
   for (const dot of found) {
-    const key = `${dot.kind ?? ''}|${dot.space ?? ''}`;
+    const key = `${dot.kind ?? ''}|${dot.space ?? ''}|${dot.color ?? ''}`;
     (seen.has(key) ? rest : first).push(dot);
     seen.add(key);
   }
@@ -115,7 +118,7 @@ type Props = {
   /** The days that get a dot. With `entriesOf`, a dot per space: Personal
    *  round in the accent, Work square in the warning color, so the shape
    *  tells them apart without color. Spec: docs/internal/specs/spaces.md (section 9) */
-  marked: { has(day: string): boolean; entriesOf?(day: string): readonly { space: Space | null; kind?: LocalNote['type'] }[] };
+  marked: { has(day: string): boolean; entriesOf?(day: string): readonly Dot[] };
   /** The day drawn with a ring. */
   selected?: string;
   /** A day in the month to show first. Today when absent. */
@@ -132,8 +135,8 @@ type Props = {
    *  takes an overlay (`renderWeek`, the multi-day bars). `small` is the
    *  240 px grid of dots every popover and card draws. */
   size?: 'small' | 'large';
-  /** A `small` grid as wide as the check-in card above it, for the band at
-   *  the top of a list: the full width of the list since 2026-10-22. */
+  /** A `small` grid as wide as its host: the band at the top of a list (the
+   *  full width of the list since 2026-10-22) and the Home card (#798). */
   wide?: boolean;
   /** The focused day, when the host keeps it (the Calendar pillar keeps the
    *  month across an open item and Back). The grid keeps its own otherwise. */
@@ -143,6 +146,10 @@ type Props = {
   renderDay?: (day: string, state: { inMonth: boolean; isToday: boolean }) => ReactNode;
   /** Large: an overlay over one week row, for items that run across days. */
   renderWeek?: (days: readonly string[]) => ReactNode;
+  /** Large month: what sits beside a day's number (the trackers the Calendar
+   *  shows), within the number row's height.
+   *  Spec: docs/internal/specs/tracker-focus-771.md (section 6) */
+  renderDayBadge?: (day: string) => ReactNode;
   /** Large: a click on a cell's empty space or its plus, to create on that day. */
   onAdd?: (day: string) => void;
   /** Large: a right-click on a cell's empty space (an item's own menu comes first). */
@@ -161,6 +168,26 @@ type Props = {
    *  disc in its color, a day written without one a ring; the dots give way.
    *  Spec: docs/internal/issues/0439.md (Spec) */
   moodOf?: (day: string) => number | 'written' | undefined;
+  /** Large: the day counter (#815). */
+  counter?: DayCounter;
+};
+
+/** The day counter on the large month (#815). While `active`, a click on a
+ *  day, or at any time a shift-click, goes to `pick` and not to the cell's
+ *  own action; the days from `lo` to `hi` take the range look, and `badge`
+ *  marks the day that moves with its count. The days that count are filled:
+ *  `hi` is only outlined unless `hiCounted`, so the filled days always match
+ *  the number. `hover` follows the pointer, so the count can show where a
+ *  click would land.
+ *  Spec: docs/internal/specs/calendar-pillar-spec.md (section 15) */
+export type DayCounter = {
+  active: boolean;
+  lo: string | null;
+  hi: string | null;
+  hiCounted: boolean;
+  badge: { day: string; text: string } | null;
+  pick: (day: string) => void;
+  hover: (day: string | null) => void;
 };
 
 /** The number beside a row of the month: the ISO week of the row's Thursday.
@@ -180,6 +207,60 @@ function isoWeek(day: string): number {
   return 1 + Math.round(((thursday.getTime() - jan4.getTime()) / 86_400_000 - 3 + ((jan4.getDay() + 6) % 7)) / 7);
 }
 
+// One wheel turn is one step. A trackpad flick sends a long run of small
+// deltas; the run must add up to a step, and after a step the rest of the run
+// is ignored until a short pause. A mouse wheel turned on and on repeats after
+// WHEEL_REPEAT_MS; a flick's momentum, whose deltas fade under half of the
+// run's largest delta, does not.
+// Spec: docs/internal/specs/calendar-pillar-spec.md (step 3, #810)
+const WHEEL_STEP_PX = 40;
+const WHEEL_PAUSE_MS = 120;
+const WHEEL_REPEAT_MS = 450;
+
+/**
+ * The wheel over a calendar steps it (#810): down or away is the next month,
+ * week or day, up is the previous one. `canStep` lets a host keep the
+ * wheel for its own scroll (a large month taller than its pane). Pinch zoom
+ * (ctrlKey) and a horizontal swipe pass through.
+ */
+function useWheelStep(ref: React.RefObject<HTMLElement | null>, onStep: (n: 1 | -1) => void, canStep?: (el: HTMLElement) => boolean) {
+  const latest = useRef({ onStep, canStep });
+  latest.current = { onStep, canStep };
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let sum = 0;
+    let last = -Infinity;
+    let stepped = -Infinity;
+    let stepDelta = 0;
+    const wheel = (e: WheelEvent) => {
+      if (e.ctrlKey || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      // A part inside the header that is no place to change the month (the
+      // day counter's strip, #815) is marked and left alone.
+      if (e.target instanceof Element && e.target.closest('[data-no-wheel-step]')) return;
+      if (latest.current.canStep && !latest.current.canStep(el)) return;
+      e.preventDefault();
+      const now = e.timeStamp;
+      const delta = e.deltaMode === 0 ? e.deltaY : e.deltaY * 16;
+      if (now - last > WHEEL_PAUSE_MS) { sum = 0; stepped = -Infinity; stepDelta = 0; }
+      last = now;
+      stepDelta = Math.max(stepDelta, Math.abs(delta));
+      if (now - stepped < WHEEL_REPEAT_MS || (stepped > -Infinity && Math.abs(delta) < stepDelta / 2)) return;
+      sum += delta;
+      if (Math.abs(sum) < WHEEL_STEP_PX) return;
+      latest.current.onStep(sum > 0 ? 1 : -1);
+      sum = 0;
+      stepped = now;
+    };
+    // Not passive: the page under the calendar must not scroll as well.
+    el.addEventListener('wheel', wheel, { passive: false });
+    return () => el.removeEventListener('wheel', wheel);
+  }, [ref]);
+}
+
+/** The large month scrolls when its pane is short; then the wheel is the scroll's. */
+const fitsWithoutScroll = (el: HTMLElement) => el.scrollHeight <= el.clientHeight + 1;
+
 /**
  * The month and year picker the title caret opens (#750): a year with its
  * arrows, then the twelve months. A pick keeps the day of the month (clamped
@@ -187,13 +268,21 @@ function isoWeek(day: string): number {
  * month. The month shown is filled, the current month has a ring.
  * Spec: docs/internal/specs/calendar-pillar-spec.md (step 3), docs/internal/design/patterns/181-190.md (182)
  */
-function MonthYearPanel({ focus, onPick, onClose }: { focus: string; onPick: (day: string) => void; onClose: () => void }) {
+function MonthYearPanel({ focus, onPick, onMove, onClose }: { focus: string; onPick: (day: string) => void; onMove: (day: string) => void; onClose: () => void }) {
   const { t } = useTranslation('shell');
   const locale = intlLocale();
   const shown = dayAtNoon(focus);
   const now = new Date();
   const [year, setYear] = useState(shown.getFullYear());
   const months = useRef<HTMLDivElement | null>(null);
+  const panel = useRef<HTMLDivElement | null>(null);
+  // The wheel moves the month here too, as on the days (#810): the filled
+  // month walks, the year follows it, and the picker stays open.
+  useWheelStep(panel, (n) => {
+    const next = addMonths(focus, n);
+    setYear(dayAtNoon(next).getFullYear());
+    onMove(next);
+  });
   useEffect(() => {
     const box = months.current;
     (box?.querySelector<HTMLButtonElement>('[aria-current="true"]') ?? box?.querySelector<HTMLButtonElement>('[data-month]'))?.focus();
@@ -202,6 +291,7 @@ function MonthYearPanel({ focus, onPick, onClose }: { focus: string; onPick: (da
   const long = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }); // date-ok: the same, for the screen reader
   return (
     <div
+      ref={panel}
       onKeyDown={(e) => {
         if (e.key !== 'Escape') return;
         // Only the picker closes, not the menu or window the grid sits in.
@@ -247,7 +337,7 @@ function MonthYearPanel({ focus, onPick, onClose }: { focus: string; onPick: (da
 
 export function MonthGrid({
   marked, selected, initialMonth, onPick, weeks = 6, onToggleWeeks, onToday,
-  size = 'small', wide = false, focus: heldFocus, onFocusChange, renderDay, renderWeek, onAdd, onDayMenu, headerEnd, headerBelow, headerStart, weekNumbers = false, drop, moodOf,
+  size = 'small', wide = false, focus: heldFocus, onFocusChange, renderDay, renderWeek, renderDayBadge, onAdd, onDayMenu, headerEnd, headerBelow, headerStart, weekNumbers = false, drop, moodOf, counter,
 }: Props) {
   const { t } = useTranslation('shell');
   const today = toLocalIso(new Date());
@@ -270,6 +360,7 @@ export function MonthGrid({
   const weekStart = useWeekStart();
   const cells = weeks === 1 ? weekCells(focus, weekStart) : monthCells(focus, weekStart);
   const step = (n: number) => (weeks === 1 ? addDays(focus, 7 * n) : addMonths(focus, n));
+  useWheelStep(gridRef, (n) => setFocus(step(n)), size === 'large' ? fitsWithoutScroll : undefined);
   const title = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(dayAtNoon(focus)); // date-ok: a month heading carries no day, so no date-order setting applies
   const shortTitle = new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(dayAtNoon(focus)); // date-ok: the same heading, short
   // A narrow host (a tight list pane, a grid tile) shows the short month, so
@@ -339,6 +430,7 @@ export function MonthGrid({
         onPick={onPick}
         renderDay={renderDay}
         renderWeek={renderWeek}
+        renderDayBadge={renderDayBadge}
         onAdd={onAdd}
         onDayMenu={onDayMenu}
         headerEnd={headerEnd}
@@ -346,6 +438,7 @@ export function MonthGrid({
         headerStart={headerStart}
         weekNumbers={weekNumbers}
         drop={drop}
+        counter={counter}
       />
     );
   }
@@ -416,7 +509,7 @@ export function MonthGrid({
           {headerEnd && <span className="contents @max-[255.98px]/month:hidden">{headerEnd}</span>}
         </span>
       </div>
-      {picking && <MonthYearPanel focus={focus} onPick={(day) => { setFocus(day); closePicker(); }} onClose={closePicker} />}
+      {picking && <MonthYearPanel focus={focus} onPick={(day) => { setFocus(day); closePicker(); }} onMove={setFocus} onClose={closePicker} />}
       <div ref={gridRef} role="group" aria-label={title} onKeyDown={onKeyDown} className={`${picking ? 'hidden' : 'grid'} ${weekNumbers ? 'grid-cols-[1.5rem_repeat(7,minmax(0,1fr))]' : 'grid-cols-7'} gap-0.5 text-center`}>
         {weekNumbers && <div aria-hidden="true" />}
         {/* A grid with room (a phone-wide strip, a list band) names the
@@ -497,7 +590,8 @@ export function MonthGrid({
                     {dots.map((dot, i) => (
                       <span
                         key={i}
-                        className={`w-[5px] h-[5px] @max-[239.98px]/month:w-1 @max-[239.98px]/month:h-1 ${i >= 1 ? '@max-[239.98px]/month:hidden' : ''} ${dot.space === 'work' ? 'rounded-[1px]' : 'rounded-full'} ${isSelected ? 'bg-white' : `bg-current ${dot.kind ? dayKindColor(dot.kind) : 'text-accent'}`}`}
+                        className={`${dot.bar ? 'w-3 h-[3px] rounded-sm' : `w-[5px] h-[5px] @max-[239.98px]/month:w-1 @max-[239.98px]/month:h-1 ${dot.space === 'work' ? 'rounded-[1px]' : 'rounded-full'}`} ${i >= 1 ? '@max-[239.98px]/month:hidden' : ''} ${isSelected ? 'bg-white' : dot.color ? '' : `bg-current ${dot.kind ? dayKindColor(dot.kind) : 'text-accent'}`}`}
+                        style={dot.color && !isSelected ? { backgroundColor: dot.color } : undefined}
                       />
                     ))}
                   </span>
@@ -522,8 +616,9 @@ export function MonthGrid({
  */
 function LargeMonth({
   focus, today, title, cells, weekStart, weeks, gridRef, onKeyDown, onPrev, onNext, onJump, onToday, onPick,
-  renderDay, renderWeek, onAdd, onDayMenu, headerEnd, headerBelow, headerStart, shortTitle, weekNumbers, drop,
+  renderDay, renderWeek, renderDayBadge, onAdd, onDayMenu, headerEnd, headerBelow, headerStart, shortTitle, weekNumbers, drop, counter,
 }: {
+  counter?: DayCounter;
   onDayMenu?: Props['onDayMenu'];
   headerStart?: ReactNode;
   shortTitle?: string;
@@ -543,6 +638,7 @@ function LargeMonth({
   onPick: (day: string) => void;
   renderDay?: Props['renderDay'];
   renderWeek?: Props['renderWeek'];
+  renderDayBadge?: Props['renderDayBadge'];
   onAdd?: (day: string) => void;
   headerEnd?: ReactNode;
   weekNumbers: boolean;
@@ -570,7 +666,7 @@ function LargeMonth({
       />
       {/* A row never goes below room for the number, two lanes of bars and a
           chip; a short window scrolls the month instead of cutting chips. */}
-      <div role="grid" aria-label={title} ref={gridRef} onKeyDown={onKeyDown} className="flex-1 min-h-0 flex flex-col overflow-y-auto overscroll-contain">
+      <div role="grid" aria-label={title} ref={gridRef} onKeyDown={onKeyDown} onPointerLeave={counter?.active ? () => counter.hover(null) : undefined} className="flex-1 min-h-0 flex flex-col overflow-y-auto overscroll-contain">
         <div role="row" className={`sticky top-0 z-[2] bg-surface-2 shrink-0 grid ${cols} border-b border-divider`}>
           {weekNumbers && <div role="columnheader" aria-hidden="true" />}
           {Array.from({ length: 7 }, (_, i) => (
@@ -592,24 +688,42 @@ function LargeMonth({
               const weekday = dayAtNoon(day).getDay();
               const weekend = weekday === 0 || weekday === 6;
               const label = formatInstant(dayAtNoon(day), 'date');
+              const counting = counter?.active ?? false;
+              const countEnd = counting && (day === counter?.lo || day === counter?.hi);
+              // The later day, when it does not count: an outline, no fill. One
+              // day that is both ends counts 0 days, so it is an outline too.
+              const countOpen = countEnd && !counter?.hiCounted && (day !== counter?.lo || counter.lo === counter.hi);
+              const inCount = counting && counter?.lo != null && counter.hi != null && day > counter.lo && day < counter.hi;
+              const badge = counting && counter?.badge?.day === day ? counter.badge.text : null;
+              const restBg = isToday ? 'bg-accent/5' : weekend ? 'bg-pn/[0.03]' : '';
               return (
                 <div
                   key={day}
                   role="gridcell"
                   aria-current={isToday ? 'date' : undefined}
+                  aria-selected={(countEnd && !countOpen) || inCount ? true : undefined}
                   data-cell={day}
+                  // The counter takes the click before a chip, the number or
+                  // the add button can: in count mode a day is a day.
+                  onClickCapture={counter ? (e) => { if (counter.active || e.shiftKey) { e.preventDefault(); e.stopPropagation(); counter.pick(day); } } : undefined}
+                  // A mouse only: a tap sends a made-up hover first, which would
+                  // stay behind as the preview on a touch screen.
+                  onPointerEnter={counting ? (e) => { if (e.pointerType === 'mouse') counter?.hover(day); } : undefined}
                   onClick={onAdd ? (e) => { if (e.target === e.currentTarget) onAdd(day); } : undefined}
                   onContextMenu={onDayMenu ? (e) => { if (!e.defaultPrevented) onDayMenu(e, day); } : undefined}
                   onDragEnter={drop ? (e) => { if (drop.accepts(e)) { e.preventDefault(); setDropDay(day); } } : undefined}
                   onDragOver={drop ? (e) => { if (drop.accepts(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; if (dropDay !== day) setDropDay(day); } } : undefined}
                   onDragLeave={drop ? (e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropDay((d) => (d === day ? null : d)); } : undefined}
                   onDrop={drop ? (e) => { if (drop.accepts(e)) { e.preventDefault(); setDropDay(null); drop.onDrop(day, e); } } : undefined}
-                  className={`@container/cell group/cell relative min-w-0 min-h-0 overflow-hidden flex flex-col gap-px p-1 border-e border-divider last:border-e-0 ${
+                  className={`@container/cell group/cell relative min-w-0 min-h-0 overflow-hidden flex flex-col gap-px p-1 border-e border-divider last:border-e-0 transition-colors ${counting ? 'cursor-pointer' : ''} ${
                     dropDay === day ? 'ring-2 ring-inset ring-accent bg-accent/10'
-                      : isToday ? 'bg-accent/5' : weekend ? 'bg-pn/[0.03]' : ''
+                      : countOpen ? `ring-2 ring-inset ring-accent ${restBg}`
+                      : countEnd ? 'ring-2 ring-inset ring-accent bg-accent/25'
+                      : inCount ? 'bg-accent/[0.16]'
+                      : restBg
                   }`}
                 >
-                  <div className="shrink-0 flex items-center justify-between pointer-events-none">
+                  <div className="shrink-0 flex items-center justify-between gap-1 pointer-events-none">
                     <button
                       type="button"
                       data-day={day}
@@ -622,7 +736,10 @@ function LargeMonth({
                     >
                       {dayAtNoon(day).getDate()}
                     </button>
-                    {onAdd && (
+                    {renderDayBadge && <span className="min-w-0 flex-1 flex">{renderDayBadge(day)}</span>}
+                    {badge ? (
+                      <span className="px-1 rounded bg-accent-fill text-white text-meta font-semibold tabular-nums">{badge}</span>
+                    ) : onAdd && !counting && (
                       <button
                         type="button"
                         tabIndex={-1}
@@ -673,6 +790,10 @@ export function CalendarHeader({ title, shortTitle, onPrev, onNext, prevLabel, n
   const { t } = useTranslation('shell');
   const [picking, setPicking] = useState(false);
   const titleRef = useRef<HTMLButtonElement | null>(null);
+  // The header steps every large layout, also the week and day views, whose
+  // hour grid keeps the wheel for its own scroll.
+  const headRef = useRef<HTMLDivElement | null>(null);
+  useWheelStep(headRef, (n) => (n > 0 ? onNext() : onPrev()));
   const closePicker = () => {
     setPicking(false);
     titleRef.current?.focus();
@@ -685,7 +806,7 @@ export function CalendarHeader({ title, shortTitle, onPrev, onNext, prevLabel, n
     </>
   ) : title;
   return (
-    <div className="@container/calhead shrink-0 flex flex-col gap-1 px-3 py-2 border-b border-divider">
+    <div ref={headRef} className="@container/calhead shrink-0 flex flex-col gap-1 px-3 py-2 border-b border-divider">
       <div className="flex items-center gap-1.5 min-w-0">
         {start}
         {/* Today and the arrows come before the title, so a longer or
@@ -727,7 +848,7 @@ export function CalendarHeader({ title, shortTitle, onPrev, onNext, prevLabel, n
         </h2>
         {focus && onJump && (
           <Popover open={picking} anchorRef={titleRef} onClose={() => setPicking(false)} className="w-64">
-            <MonthYearPanel focus={focus} onPick={(day) => { onJump(day); closePicker(); }} onClose={closePicker} />
+            <MonthYearPanel focus={focus} onPick={(day) => { onJump(day); closePicker(); }} onMove={onJump} onClose={closePicker} />
           </Popover>
         )}
         <span className="flex-1" />

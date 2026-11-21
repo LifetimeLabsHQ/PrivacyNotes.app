@@ -40,6 +40,9 @@
     "tags_few": "Značky sa zachovali na {{count}} poznámkach.",
     "tags_other": "Značky sa zachovali na {{count}} poznámkach.",
     "droppedAlign": "Zarovnanie blokov, ktoré editor zarovnať nevie, sa vypustilo, text zostal.",
+    "lostPasskeys_one": "Vynechal sa {{count}} prístupový kľúč uložený pri prihlasovacích údajoch. Ponechaj si ho v pôvodnej aplikácii alebo si na tej stránke pridaj nový prístupový kľúč.",
+    "lostPasskeys_few": "Vynechali sa {{count}} prístupové kľúče uložené pri prihlasovacích údajoch. Ponechaj si ich v pôvodnej aplikácii alebo si na tých stránkach pridaj nové prístupové kľúče.",
+    "lostPasskeys_other": "Vynechalo sa {{count}} prístupových kľúčov uložených pri prihlasovacích údajoch. Ponechaj si ich v pôvodnej aplikácii alebo si na tých stránkach pridaj nové prístupové kľúče.",
     "foldersFromNotebooks_one": "Z tvojich zápisníkov sa obnovil {{count}} priečinok ({{filed}}).",
     "foldersFromNotebooks_few": "Z tvojich zápisníkov sa obnovili {{count}} priečinky ({{filed}}).",
     "foldersFromNotebooks_other": "Z tvojich zápisníkov sa obnovilo {{count}} priečinkov ({{filed}}).",
@@ -441,6 +444,17 @@
     "invalidJson": "Tento súbor nie je platný JSON. Skontroluj, či export prebehol ako „.json“ (nie šifrovaný).",
     "encryptedExport": "Toto je šifrovaný export z Bitwardenu. Exportuj znova v obyčajnom formáte „.json“ (nie „.json (Encrypted)“).",
     "missingItems": "V tomto súbore chýba očakávané pole „items“. Nie je to export trezora z Bitwardenu.",
+    "notZipExport": "Tento zip nemá na najvyššej úrovni súbor data.json. Nie je to export „.zip (with attachments)“ z Bitwardenu.",
+    "keptPasskeys_one": "{{count}} prístupový kľúč zostal pri svojich prihlasovacích údajoch.",
+    "keptPasskeys_few": "{{count}} prístupové kľúče zostali pri svojich prihlasovacích údajoch.",
+    "keptPasskeys_other": "{{count}} prístupových kľúčov zostalo pri svojich prihlasovacích údajoch.",
+    "passkeyOtherSite": "Prihlasovacie údaje „{{name}}“ obsahujú prístupový kľúč pre {{site}}, čo nie je žiadna z ich webových stránok. Prišiel spolu s prihlasovacími údajmi; ak ho nepoznáš, odstráň ho tam.",
+    "skippedPasskeys_one": "Vynechal sa {{count}} prístupový kľúč, ktorý Trezor nedokáže uložiť: jeho kľúč nie je P-256 alebo je niektorá hodnota dlhšia, ako povoľuje WebAuthn. Na tej stránke si pridaj nový prístupový kľúč.",
+    "skippedPasskeys_few": "Vynechali sa {{count}} prístupové kľúče, ktoré Trezor nedokáže uložiť: kľúč nie je P-256 alebo je niektorá hodnota dlhšia, ako povoľuje WebAuthn. Na tých stránkach si pridaj nové prístupové kľúče.",
+    "skippedPasskeys_other": "Vynechalo sa {{count}} prístupových kľúčov, ktoré Trezor nedokáže uložiť: kľúč nie je P-256 alebo je niektorá hodnota dlhšia, ako povoľuje WebAuthn. Na tých stránkach si pridaj nové prístupové kľúče.",
+    "unmatchedAttachments_one": "{{count}} prílohu sa nepodarilo priradiť k jednej položke, pretože názov jej priečinka nemá žiadna položka alebo ho má viac položiek. Je v poznámke pomenovanej podľa priečinka.",
+    "unmatchedAttachments_few": "{{count}} prílohy sa nepodarilo priradiť k jednej položke, pretože názov ich priečinka nemá žiadna položka alebo ho má viac položiek. Sú v poznámkach pomenovaných podľa ich priečinkov.",
+    "unmatchedAttachments_other": "{{count}} príloh sa nepodarilo priradiť k jednej položke, pretože názov ich priečinka nemá žiadna položka alebo ho má viac položiek. Sú v poznámkach pomenovaných podľa ich priečinkov.",
     "unknownType": "Preskočila sa položka „{{name}}“ s neznámym typom {{type}}.",
     "importedCards_one": "{{count}} karta sa naimportovala ako položka trezora.",
     "importedCards_few": "{{count}} karty sa naimportovali ako položky trezora.",
@@ -845,6 +859,10 @@
     "leftFiles_few": "{{count}} priložené súbory zostali bokom. Ulož ich z Enpass a prilož ich tu k položkám.",
     "leftFiles_other": "{{count}} priložených súborov zostalo bokom. Ulož ich z Enpass a prilož ich tu k položkám."
   },
+  "msecure": {
+    "notMSecure": "Tento súbor nie je export z mSecure. V mSecure zvoľ Settings > Backups > Export records to CSV file.",
+    "fieldDataOnly": "Tento export z mSecure nemá názvy polí, takže sa jeho polia nedajú od seba rozlíšiť. Exportuj ho znova s vypnutou voľbou „Only export field data“."
+  },
   "nordpass": {
     "notNordPass": "Tento súbor nie je export z NordPass. V NordPass zvoľ Settings > Export items."
   },
@@ -863,6 +881,7 @@
     "kdbxFile": "Toto je samotná databáza KeePass, ktorá je zamknutá. V KeePass alebo KeePassXC ju exportuj ako XML a potom importuj ten súbor.",
     "notKeePass": "Tento súbor nie je export KeePass XML. V KeePass zvoľ File > Export > KeePass XML (2.x), v KeePassXC Database > Export > XML File.",
     "noEntries": "Tento súbor KeePass nemá mimo Recycle Bin žiadne záznamy.",
+    "doctype": "Tento súbor deklaruje DOCTYPE, ktorý žiadny export z KeePass nezapisuje, preto sa nenačítal. Exportuj XML z KeePass znova a importuj ten súbor.",
     "readingEntries": "Načítavajú sa záznamy…",
     "leftHistory_one": "Vynechala sa {{count}} staršia verzia záznamu: prenesie sa iba najnovšia.",
     "leftHistory_few": "Vynechali sa {{count}} staršie verzie záznamov: prenesie sa iba najnovšia.",
@@ -884,6 +903,17 @@
     "rebuiltFolders_other": "Z tvojich súborov sa obnovilo {{count}} priečinkov ({{filed}}).",
     "broughtAcross": "Z tvojho priečinka sa prenieslo: {{parts}}."
   },
+  "raindrop": {
+    "notRaindrop": "Toto nie je export z Raindrop.io - očakával sa súbor .csv z Export > CSV alebo .zip, ktorý ho obsahuje.",
+    "noCsv": "V tomto zipe nie je žiadny súbor .csv. Exportuj CSV z Raindrop.io a vyber ten súbor.",
+    "highlightsHeading": "Zvýraznenia",
+    "skipped_one": "Vynechala sa {{count}} záložka, pretože jej adresa nie je webový odkaz.",
+    "skipped_few": "Vynechali sa {{count}} záložky, pretože ich adresy nie sú webové odkazy.",
+    "skipped_other": "Vynechalo sa {{count}} záložiek, pretože ich adresy nie sú webové odkazy.",
+    "covers_one": "{{count}} titulný obrázok sa nenaimportoval. Záložka namiesto neho zobrazuje ikonu webovej stránky.",
+    "covers_few": "{{count}} titulné obrázky sa nenaimportovali. Záložky namiesto nich zobrazujú ikony webových stránok.",
+    "covers_other": "{{count}} titulných obrázkov sa nenaimportovalo. Záložky namiesto nich zobrazujú ikony webových stránok."
+  },
   "browserBookmarks": {
     "notBookmarks": "Toto nie je export záložiek - očakával sa súbor .html so záložkami, ktorý exportuje prehliadač.",
     "noBookmarks": "V tomto súbore nie sú žiadne záložky.",
@@ -897,7 +927,9 @@
     "mediaTooLarge_other": "Preskočilo sa {{count}} súborov väčších ako {{size}}, čo je najväčší súbor, ktorý dokáže synchronizovať akýkoľvek tarif.",
     "entryTooLarge": "{{name}} sa po rozbalení zväčší nad {{limit}}, ktoré import dokáže načítať naraz. Odstráň ho z exportu a skús to znova.",
     "entryTooLargeKnown": "{{name}} sa po rozbalení zväčší na {{size}}, čo je viac ako {{limit}}, ktoré import dokáže načítať naraz. Odstráň ho z exportu a skús to znova.",
-    "unreadable": "Tento súbor sa nepodarilo otvoriť. Môže byť neúplný alebo poškodený. Exportuj ho znova a vyber nový súbor."
+    "unreadable": "Tento súbor sa nepodarilo otvoriť. Môže byť neúplný alebo poškodený. Exportuj ho znova a vyber nový súbor.",
+    "importTooLarge": "Tento súbor sa po rozbalení zväčší na viac ako {{limit}}, čo je viac, než obsahuje akýkoľvek skutočný export. Exportuj ho znova a vyber nový súbor.",
+    "tooManyEntries": "Tento zip obsahuje viac ako {{max}} súborov, čo je viac, než obsahuje akýkoľvek skutočný export. Exportuj ho znova a vyber nový súbor."
   },
   "safariArchive": {
     "noEntry": "V tomto zipe nie je {{want}}.",
@@ -909,5 +941,61 @@
   },
   "apply": {
     "unknownWriteError": "Neznáma chyba pri zápise do lokálnej databázy."
+  },
+  "onenote": {
+    "reading": "Načítava sa zápisník OneNote…",
+    "notOneNote": "Toto nie je zápisník OneNote. V OneNote pre Windows vyber File > Export > Notebook > OneNote Package a pretiahni sem súbor .onepkg.",
+    "cloudFormat": "Táto sekcia je vo formáte, v ktorom OneNote ukladá zápisníky online a ktorý vie prečítať iba OneNote. Otvor zápisník v OneNote pre Windows, vyber File > Export > Notebook > OneNote Package a pretiahni sem ten súbor .onepkg.",
+    "splitPackage": "Tento balík OneNote je rozdelený do viacerých súborov. Exportuj zápisník znova ako jeden OneNote Package a pretiahni sem ten súbor.",
+    "tooLarge": "Tento balík OneNote je príliš veľký na načítanie naraz. Exportuj vždy iba jednu skupinu sekcií alebo jednu sekciu.",
+    "damaged": "Tento súbor OneNote je poškodený a nedá sa načítať. Exportuj zápisník z OneNotu znova a skús ten súbor.",
+    "noPages": "V tomto zápisníku OneNote sa nenašli žiadne stránky.",
+    "allLocked": "Každá sekcia v tomto zápisníku je chránená heslom. Odomkni sekcie v OneNote, odstráň ich heslá, exportuj znova a pretiahni sem nový súbor.",
+    "subpages_one": "{{count}} podstránka sa zachovala ako poznámka vedľa svojej stránky.",
+    "subpages_few": "{{count}} podstránky sa zachovali ako poznámky vedľa svojich stránok.",
+    "subpages_other": "{{count}} podstránok sa zachovalo ako poznámky vedľa svojich stránok.",
+    "noteTags_one": "Značky OneNotu z {{count}} stránky sa zachovali ako značky.",
+    "noteTags_few": "Značky OneNotu z {{count}} stránok sa zachovali ako značky.",
+    "noteTags_other": "Značky OneNotu z {{count}} stránok sa zachovali ako značky.",
+    "lockedSections_one": "Vynechala sa {{count}} sekcia chránená heslom. Odstráň jej heslo v OneNote a exportuj znova, aby prešla s exportom.",
+    "lockedSections_few": "Vynechali sa {{count}} sekcie chránené heslom. Odstráň ich heslá v OneNote a exportuj znova, aby prešli s exportom.",
+    "lockedSections_other": "Vynechalo sa {{count}} sekcií chránených heslom. Odstráň ich heslá v OneNote a exportuj znova, aby prešli s exportom.",
+    "unreadableSections_one": "Vynechala sa {{count}} sekcia, ktorá sa nedala načítať.",
+    "unreadableSections_few": "Vynechali sa {{count}} sekcie, ktoré sa nedali načítať.",
+    "unreadableSections_other": "Vynechalo sa {{count}} sekcií, ktoré sa nedali načítať.",
+    "unsupported_one": "Vynechala sa {{count}} ručná kresba, zvukový záznam alebo rovnica, ktorá tu nemá žiadnu podobu.",
+    "unsupported_few": "Vynechali sa {{count}} ručné kresby, zvukové záznamy a rovnice, ktoré tu nemajú žiadnu podobu.",
+    "unsupported_other": "Vynechalo sa {{count}} ručných kresieb, zvukových záznamov a rovníc, ktoré tu nemajú žiadnu podobu.",
+    "missingFiles_one": "{{count}} obrázok alebo súbor nebol v balíku a vynechal sa.",
+    "missingFiles_few": "{{count}} obrázky alebo súbory neboli v balíku a vynechali sa.",
+    "missingFiles_other": "{{count}} obrázkov alebo súborov nebolo v balíku a vynechali sa.",
+    "deadLinks_one": "{{count}} odkaz OneNotu vedie mimo tohto zápisníka a zachoval si iba svoj text.",
+    "deadLinks_few": "{{count}} odkazy OneNotu vedú mimo tohto zápisníka a zachovali si iba svoj text.",
+    "deadLinks_other": "{{count}} odkazov OneNotu vedie mimo tohto zápisníka a zachovali si iba svoj text.",
+    "recycleBin_one": "Vynechala sa {{count}} stránka z koša zápisníka.",
+    "recycleBin_few": "Vynechali sa {{count}} stránky z koša zápisníka.",
+    "recycleBin_other": "Vynechalo sa {{count}} stránok z koša zápisníka."
+  },
+  "capacities": {
+    "notCapacities": "Toto nie je export z Capacities. V Capacities otvor Settings > Full Export, spusti Manual Full Export vrátane médií a pretiahni sem zip.",
+    "noObjects": "V tomto exporte z Capacities sa nenašli žiadne stránky ani iné objekty s textom.",
+    "typeFolders_one": "{{count}} typ objektu sa obnovil ako priečinok.",
+    "typeFolders_few": "{{count}} typy objektov sa obnovili ako priečinky.",
+    "typeFolders_other": "{{count}} typov objektov sa obnovilo ako priečinky.",
+    "properties_one": "Vlastnosti {{count}} objektu sa zapísali ako zoznam na začiatok jeho poznámky.",
+    "properties_few": "Vlastnosti {{count}} objektov sa zapísali ako zoznam na začiatok každej poznámky.",
+    "properties_other": "Vlastnosti {{count}} objektov sa zapísali ako zoznam na začiatok každej poznámky.",
+    "mediaObjects_one": "{{count}} obrázok alebo súbor zostal v poznámkach, ktoré ho zobrazujú, bez vlastnej poznámky.",
+    "mediaObjects_few": "{{count}} obrázky a súbory zostali v poznámkach, ktoré ich zobrazujú, bez vlastnej poznámky.",
+    "mediaObjects_other": "{{count}} obrázkov a súborov zostalo v poznámkach, ktoré ich zobrazujú, bez vlastnej poznámky.",
+    "queries_one": "Vynechal sa {{count}} dopyt. Dopyt je v Capacities uložené vyhľadávanie bez vlastného textu.",
+    "queries_few": "Vynechali sa {{count}} dopyty. Dopyt je v Capacities uložené vyhľadávanie bez vlastného textu.",
+    "queries_other": "Vynechalo sa {{count}} dopytov. Dopyt je v Capacities uložené vyhľadávanie bez vlastného textu.",
+    "collections_one": "Vynechal sa {{count}} zoznam kolekcie. Objekty v ňom prejdú s exportom, bez kolekcie.",
+    "collections_few": "Vynechali sa {{count}} zoznamy kolekcií. Objekty v nich prejdú s exportom, bez kolekcií.",
+    "collections_other": "Vynechalo sa {{count}} zoznamov kolekcií. Objekty v nich prejdú s exportom, bez kolekcií.",
+    "deadLinks_one": "{{count}} odkaz vedie na objekt, ktorý nie je v exporte, napríklad na objekt v koši, a zachoval si iba svoj text.",
+    "deadLinks_few": "{{count}} odkazy vedú na objekty, ktoré nie sú v exporte, napríklad na objekty v koši, a zachovali si iba svoj text.",
+    "deadLinks_other": "{{count}} odkazov vedie na objekty, ktoré nie sú v exporte, napríklad na objekty v koši, a zachovali si iba svoj text."
   }
 }

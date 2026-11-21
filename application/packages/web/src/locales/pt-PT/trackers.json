@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": "h",
+    "minutesSuffix": "min",
+    "hoursMinutes": "{{h}}h {{m}}min",
     "bpm": "bpm",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -142,6 +144,7 @@
     "takenCount_one": "{{count}} tomado",
     "takenCount_other": "{{count}} tomados",
     "namePlaceholder": "Nome do medicamento",
+    "nameMissing": "Dá um nome ao medicamento.",
     "dosagePlaceholder": "Dosagem (ex.: 50 mg)",
     "editMedication": "Editar medicamento",
     "removeMedication": "Remover medicamento",
@@ -250,12 +253,18 @@
     "yes": "Sim",
     "no": "Não",
     "unknownType": "Este registo precisa de uma versão mais recente da app.",
+    "counterOf": "de {{limit}}",
+    "counterToday": "utilizações hoje",
+    "counterReached": "Atingiste o limite de {{limit}}.",
+    "counterStartAgain": "Recomeçar {{name}} a partir do 0",
+    "counterStartAgainConfirm": "Recomeçar?",
     "typeLabels": {
       "scale10": "Escala (0-10)",
       "scale5": "Escala (0-5)",
       "slider100": "Pontuação (0-100)",
       "number": "Número",
       "pair": "Dois números",
+      "counter": "Contador",
       "yesno": "Sim / Não"
     }
   },
@@ -271,7 +280,7 @@
     "medicationCard": "Cartão da medicação",
     "medicationCardHelp": "\"Tomaste a medicação?\" neste dispositivo, só num dia em que há um medicamento a tomar.",
     "customHelp": "Registos a que tu dás o nome: uma escala, um número ou um sim ou não. Até {{max}}.",
-    "customHelpPair": "Registos a que tu dás o nome: uma escala, um número, dois números ou um sim ou não. Até {{max}}.",
+    "customHelpPair": "Registos a que tu dás o nome: uma escala, um número, dois números, um contador ou um sim ou não. Até {{max}}.",
     "yourCustomTrackers": "Os teus registos personalizados",
     "categoryMoodMind": "Humor e mente",
     "categoryBodyHealth": "Corpo e saúde",
@@ -312,7 +321,10 @@
     "pairFirstPlaceholder": "Sistólica",
     "pairSecondPlaceholder": "Diastólica",
     "pairUnit": "Unidade (opcional)",
-    "pairWaiting": "Guardado assim que o primeiro número for preenchido."
+    "pairWaiting": "Guardado assim que o primeiro número for preenchido.",
+    "nameMissing": "Dá um nome ao registo.",
+    "counterLimit": "Limite (opcional)",
+    "counterHelp": "Soma as tuas utilizações ao longo dos dias. Define um limite, como 30 para uma lâmina de barbear, e recomeça quando o atingires."
   },
   "factors": {
     "prompt": "O que fez parte do teu dia?",
@@ -402,5 +414,6 @@
   "flow": {
     "finish": "Terminar",
     "step": "Registo {{n}} de {{total}}"
-  }
+  },
+  "showEveryDay": "Mostrar todos os dias com este registo"
 }

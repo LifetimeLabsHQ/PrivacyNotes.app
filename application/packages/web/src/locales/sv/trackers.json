@@ -24,6 +24,8 @@
   },
   "units": {
     "hoursSuffix": " tim",
+    "minutesSuffix": " min",
+    "hoursMinutes": "{{h}} tim {{m}} min",
     "bpm": "slag/min",
     "mmHg": "mmHg",
     "kg": "kg",
@@ -142,6 +144,7 @@
     "takenCount_one": "{{count}} tagen",
     "takenCount_other": "{{count}} tagna",
     "namePlaceholder": "Medicinens namn",
+    "nameMissing": "Ge medicinen ett namn.",
     "dosagePlaceholder": "Dosering (t.ex. 50 mg)",
     "editMedication": "Redigera medicin",
     "removeMedication": "Ta bort medicin",
@@ -250,12 +253,18 @@
     "yes": "Ja",
     "no": "Nej",
     "unknownType": "Det här mätvärdet kräver en nyare version av appen.",
+    "counterOf": "av {{limit}}",
+    "counterToday": "använda i dag",
+    "counterReached": "Du har nått gränsen på {{limit}}.",
+    "counterStartAgain": "Börja om {{name}} från 0",
+    "counterStartAgainConfirm": "Börja om?",
     "typeLabels": {
       "scale10": "Skala (0-10)",
       "scale5": "Skala (0-5)",
       "slider100": "Poäng (0-100)",
       "number": "Tal",
       "pair": "Två tal",
+      "counter": "Räknare",
       "yesno": "Ja / Nej"
     }
   },
@@ -271,7 +280,7 @@
     "medicationCard": "Medicinkort",
     "medicationCardHelp": "\"Tog du din medicin?\" på den här enheten, bara en dag då en medicin ska tas.",
     "customHelp": "Mätvärden du namnger själv: en skala, ett tal eller ja eller nej. Upp till {{max}}.",
-    "customHelpPair": "Mätvärden du namnger själv: en skala, ett tal, två tal eller ja eller nej. Upp till {{max}}.",
+    "customHelpPair": "Mätvärden du namnger själv: en skala, ett tal, två tal, en räknare eller ja eller nej. Upp till {{max}}.",
     "yourCustomTrackers": "Dina egna mätvärden",
     "categoryMoodMind": "Humör och sinne",
     "categoryBodyHealth": "Kropp och hälsa",
@@ -312,7 +321,10 @@
     "pairFirstPlaceholder": "Systoliskt",
     "pairSecondPlaceholder": "Diastoliskt",
     "pairUnit": "Enhet (valfritt)",
-    "pairWaiting": "Sparas när det första talet är ifyllt."
+    "pairWaiting": "Sparas när det första talet är ifyllt.",
+    "nameMissing": "Ge mätvärdet ett namn.",
+    "counterLimit": "Gräns (valfritt)",
+    "counterHelp": "Summerar dina användningar över flera dagar. Ange en gräns, till exempel 30 för ett rakblad, och börja om när du når den."
   },
   "factors": {
     "prompt": "Vad var en del av din dag?",
@@ -402,5 +414,6 @@
   "flow": {
     "finish": "Slutför",
     "step": "Mätvärde {{n}} av {{total}}"
-  }
+  },
+  "showEveryDay": "Visa alla dagar med detta"
 }

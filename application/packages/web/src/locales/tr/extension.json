@@ -47,9 +47,10 @@
     "title": "Giriş bilgilerinizi koruyun",
     "body": "Bu tarayıcı için bir PIN veya geçiş kodu seçin. Buradaki giriş bilgilerinizin kilidini açmak için ona ihtiyacınız olur. Uygulamanınkinden ayrıdır.",
     "biometric": "Biyometrik kilit açmayı da kullan",
-    "biometricHelp": "Touch ID veya Windows Hello; her zaman çalışan PIN veya geçiş koduna ek olarak.",
+    "biometricHelp": "Bu tarayıcı için bir geçiş anahtarı aracılığıyla Touch ID veya Windows Hello. PIN veya geçiş kodu da her zaman çalışır.",
     "repeat": "Tekrar girin",
-    "mismatch": "İkisi eşleşmiyor. Tekrar deneyin."
+    "mismatch": "İkisi eşleşmiyor. Tekrar deneyin.",
+    "commonPin": "Bu PIN'in tahmin edilmesi çok kolay. Başka bir tane seçin."
   },
   "clip": {
     "selection": "Seçim",
@@ -83,7 +84,7 @@
     "unlockPin": "PIN'inizi girin",
     "unlockPasscode": "Geçiş kodunuzu girin",
     "useBiometric": "Biyometrik kilit açmayı kullan",
-    "wrong_other": "Yanlış. Bu tarayıcının bağlantısı kesilmeden önce {{count}} deneme hakkı kaldı.",
+    "wrong_other": "Yanlış. Bu tarayıcının bağlantısı kesilmeden önce bu ay {{count}} deneme hakkı kaldı.",
     "forSite": "{{site}} için",
     "none": "Bu site için giriş bilgisi yok.",
     "off": "Bu tarayıcıda giriş bilgileri kapalı. Bağlarken Kasa seçeneğini açın.",
@@ -99,12 +100,15 @@
     "noMatch": "Eşleşen giriş bilgisi yok.",
     "openSite": "Siteyi aç",
     "duplicate": "Bu site için bu kullanıcı adıyla zaten bir giriş bilginiz var.",
-    "wrong_one": "Yanlış. Bu tarayıcının bağlantısı kesilmeden önce {{count}} deneme hakkı kaldı."
+    "editTitle": "Giriş bilgisini düzenle",
+    "saved": "Değişiklikler kaydedildi.",
+    "wrong_one": "Yanlış. Bu tarayıcının bağlantısı kesilmeden önce bu ay {{count}} deneme hakkı kaldı."
   },
   "account": {
     "confirmDisconnect": "Bağlantı kesilsin mi?",
     "revoked": "Bu tarayıcı artık bağlı değil",
-    "revokedBody": "Uygulamadan alacağınız yeni bir kodla tekrar bağlayın."
+    "revokedBody": "Uygulamadan alacağınız yeni bir kodla tekrar bağlayın.",
+    "pendingPasskey": "Bu tarayıcıda kaydedilen bir geçiş anahtarı henüz Kasanızda değil. Önce PrivacyNotes'u açıp eşitlemesini bekleyin, yoksa geçiş anahtarı kaybolur."
   },
   "badge": {
     "problem": "İlgilenmeniz gereken bir şey var"
@@ -147,7 +151,8 @@
     "unlockToCopy": "Kopyalamak için kilidi açın",
     "omniboxDefault": "PrivacyNotes kasanızda %s için arayın",
     "omniboxUnlock": "Aramak için PrivacyNotes'un kilidini açın",
-    "moreOptions": "Diğer seçenekler"
+    "moreOptions": "Diğer seçenekler",
+    "editNotSaved": "{{name}} üzerinde yaptığınız değişiklik Kasanıza hiç ulaşmadı, bu yüzden giriş bilgisi eski değerlerini koruyor. Değişikliği kaydetmek için onu yeniden düzenleyin."
   },
   "shortcuts": {
     "notSet": "Ayarlanmadı",
@@ -194,5 +199,19 @@
     "biometricPin": "Ayarlamak için PIN'inizi girin.",
     "biometricPasscode": "Ayarlamak için geçiş kodunuzu girin.",
     "biometricOff": "Biyometrik kilit açma kapalı"
+  },
+  "passkey": {
+    "saveTitle": "{{site}} için bir geçiş anahtarı kaydedilsin mi?",
+    "useTitle": "{{site}} sitesine giriş yap",
+    "saveTo": "Kaydetme yeri",
+    "save": "PrivacyNotes'a kaydet",
+    "other": "Başka bir geçiş anahtarı uygulaması kullan",
+    "already": "PrivacyNotes'ta {{site}} için zaten bir geçiş anahtarınız var.",
+    "saved": "Geçiş anahtarı kaydedildi.",
+    "notSaved": "Geçiş anahtarı kaydedilemedi. Tarayıcınızın kendi geçiş anahtarı uygulaması devreye giriyor.",
+    "maybeSaved": "Geçiş anahtarı kaydedilmiş olabilir. Kasanızı kontrol edin.",
+    "unlockFirst": "Geçiş anahtarlarınızı kullanmak için kilidi açın.",
+    "offer": "Geçiş anahtarları sun",
+    "offerHelp": "Web sitelerinde geçiş anahtarlarını kaydet ve kullan."
   }
 }

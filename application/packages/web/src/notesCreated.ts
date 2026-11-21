@@ -50,8 +50,15 @@ export function bumpNotesCreated(): void {
     // reached the server with a higher number and then a lower one from here
     // would read as a rollback on the next device to pull it.
     const rev = s.settingsRev;
-    s.settingsRev =
-      (typeof rev === 'number' && Number.isFinite(rev) && rev >= 0 ? Math.floor(rev) : 0) + 1;
+    const before = typeof rev === 'number' && Number.isFinite(rev) && rev >= 0 ? Math.floor(rev) : 0;
+    // A clean envelope with no synced counter holds what it last synced, so
+    // its counter is the synced one: recorded before the bump, or the dirty
+    // envelope would read as one whose synced counter is unknown and refuse
+    // no rolled-back row (readLocal in userSettings.ts).
+    // Spec: docs/internal/plans/pin-wrap-hardening.md (section 2)
+    const c = cache as { dirty?: unknown; syncedRev?: unknown };
+    if (c.dirty !== true && typeof c.syncedRev !== 'number') c.syncedRev = before;
+    s.settingsRev = before + 1;
     // A split envelope keeps this bundle's stamp beside the fence for older
     // bundles, which must stay as it is (SplitMeta in userSettings.ts).
     const split = (cache as { split?: { updatedAt?: unknown } }).split;

@@ -47,9 +47,10 @@
     "title": "Chraň své přihlašovací údaje",
     "body": "Zvol PIN nebo přístupový kód pro tento prohlížeč. Budeš ho potřebovat k odemknutí svých přihlašovacích údajů tady. Je oddělený od toho v aplikaci.",
     "biometric": "Používat i biometrické odemknutí",
-    "biometricHelp": "Touch ID nebo Windows Hello, navíc k PINu nebo přístupovému kódu, který funguje vždy taky.",
+    "biometricHelp": "Touch ID nebo Windows Hello, přes přístupový klíč pro tento prohlížeč. PIN nebo přístupový kód funguje vždy taky.",
     "repeat": "Zadej ho znovu",
-    "mismatch": "Neshodují se. Zkus to znovu."
+    "mismatch": "Neshodují se. Zkus to znovu.",
+    "commonPin": "Tento PIN se dá příliš snadno uhodnout. Zvol jiný."
   },
   "clip": {
     "selection": "Výběr",
@@ -85,7 +86,7 @@
     "unlockPin": "Zadej svůj PIN",
     "unlockPasscode": "Zadej svůj přístupový kód",
     "useBiometric": "Použít biometrické odemknutí",
-    "wrong_other": "Špatně. Zbývá {{count}} pokusů, než se tento prohlížeč odpojí.",
+    "wrong_other": "Špatně. Tento měsíc ti zbývá {{count}} pokusů, pak se tento prohlížeč odpojí.",
     "forSite": "Pro {{site}}",
     "none": "Pro tento web nejsou žádné přihlašovací údaje.",
     "off": "Přihlašovací údaje jsou v tomto prohlížeči vypnuté. Zapni Trezor, až ho budeš připojovat.",
@@ -101,13 +102,16 @@
     "noMatch": "Žádné přihlašovací údaje neodpovídají.",
     "openSite": "Otevřít web",
     "duplicate": "Pro tento web už máš přihlašovací údaje s tímto uživatelským jménem.",
-    "wrong_one": "Špatně. Zbývá {{count}} pokus, než se tento prohlížeč odpojí.",
-    "wrong_few": "Špatně. Zbývají {{count}} pokusy, než se tento prohlížeč odpojí."
+    "editTitle": "Upravit přihlašovací údaje",
+    "saved": "Změny uložené.",
+    "wrong_one": "Špatně. Tento měsíc ti zbývá {{count}} pokus, pak se tento prohlížeč odpojí.",
+    "wrong_few": "Špatně. Tento měsíc ti zbývají {{count}} pokusy, pak se tento prohlížeč odpojí."
   },
   "account": {
     "confirmDisconnect": "Odpojit?",
     "revoked": "Tento prohlížeč už není připojený",
-    "revokedBody": "Připoj ho znovu novým kódem z aplikace."
+    "revokedBody": "Připoj ho znovu novým kódem z aplikace.",
+    "pendingPasskey": "Přístupový klíč uložený v tomto prohlížeči ještě není v tvém Trezoru. Nejdřív otevři PrivacyNotes a nech ho synchronizovat, jinak se přístupový klíč ztratí."
   },
   "badge": {
     "problem": "Něco vyžaduje tvou pozornost"
@@ -150,7 +154,8 @@
     "unlockToCopy": "Odemkni a kopíruj",
     "omniboxDefault": "Hledat %s v trezoru PrivacyNotes",
     "omniboxUnlock": "Odemkni PrivacyNotes a hledej",
-    "moreOptions": "Další možnosti"
+    "moreOptions": "Další možnosti",
+    "editNotSaved": "Tvoje změna u {{name}} se do Trezoru nikdy nedostala, takže přihlašovací údaje mají pořád staré hodnoty. Uprav je znovu a změnu ulož."
   },
   "shortcuts": {
     "notSet": "Nenastaveno",
@@ -197,5 +202,19 @@
     "biometricPin": "Zadej svůj PIN a nastav ho.",
     "biometricPasscode": "Zadej svůj přístupový kód a nastav ho.",
     "biometricOff": "Biometrické odemknutí je vypnuté"
+  },
+  "passkey": {
+    "saveTitle": "Uložit přístupový klíč pro {{site}}?",
+    "useTitle": "Přihlásit se na {{site}}",
+    "saveTo": "Uložit do",
+    "save": "Uložit v PrivacyNotes",
+    "other": "Použít jinou aplikaci pro přístupové klíče",
+    "already": "Pro {{site}} už máš v PrivacyNotes přístupový klíč.",
+    "saved": "Přístupový klíč uložený.",
+    "notSaved": "Přístupový klíč se nepodařilo uložit. Převezme to vlastní aplikace pro přístupové klíče tvého prohlížeče.",
+    "maybeSaved": "Přístupový klíč se možná uložil. Zkontroluj svůj Trezor.",
+    "unlockFirst": "Odemkni, ať můžeš použít své přístupové klíče.",
+    "offer": "Nabízet přístupové klíče",
+    "offerHelp": "Ukládej a používej přístupové klíče na webech."
   }
 }

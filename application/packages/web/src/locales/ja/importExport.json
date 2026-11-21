@@ -58,7 +58,6 @@
     "import": "読み込み",
     "downloading": "ダウンロード中…",
     "subscribe": "購読",
-    "subscribeTitle": "カレンダーを購読",
     "subscribeDesc": "カレンダーのアドレスを貼り付けてください。Google、iCloud、Proton、Outlook、Nextcloud の webcal:// リンクなどが使えます。予定は読み取り専用でカレンダーに表示され、アプリを開いている間に更新されます。",
     "subscribed": "購読中のカレンダー",
     "updating": "更新中…",
@@ -74,6 +73,7 @@
       "offline": "オフラインです。接続してからもう一度お試しください。",
       "limit": "短時間にダウンロードが多すぎます。1 分待ってからもう一度お試しください。",
       "failed": "カレンダーをダウンロードできませんでした。アドレスを確認して、もう一度お試しください。",
+      "insecure": "安全な接続でこのカレンダーにアクセスできませんでした。アドレスを確認するか、後でもう一度お試しください。",
       "full": "購読できるカレンダーは最大 {{max}} 件です。先にどれかを削除してください。"
     }
   },
@@ -84,6 +84,8 @@
     "lastpass": "LastPassで Advanced options > Export > Export data for use anywhere を選んでください。ログイン情報は2FA認証キーを保持し、セキュアメモとカードも一緒に読み込まれ、フォルダはタグになります。",
     "onePassword": "1Passwordアプリで File > Export を選び、アカウントと1PUX形式を選んでください。ログイン情報は2FA認証キー、追加のウェブサイト、カスタムフィールドを保持し、カード、メモ、IDも一緒に読み込まれます。タグはタグのまま残り、お気に入りとアーカイブ済みのアイテムも元の場所に収まります。CSVでの書き出しにも対応していますが、読み込まれるのはログイン情報だけです。",
     "dashlane": "Dashlaneで Settings > Export data を選び、CSV形式を選んでください。ログイン情報は2FA認証キーを保持し、セキュアメモとカードも一緒に読み込まれ、カテゴリはタグになります。.dashの書き出しファイルはパスワードでロックされているため、読み取れません。",
+    "msecure": "mSecureで Settings > Backups > Export records to CSV file を選んでください。ログイン情報は2FA認証キー、追加のウェブサイト、カスタムフィールドを保持し、カードとメモも一緒に読み込まれ、タグはタグのまま残ります。",
+    "raindrop": "Raindrop.ioで All bookmarks を開いて Export > Get backup を選び、Settings > Backups からCSVをダウンロードしてください。コレクションはフォルダになり、タグはタグのまま残り、各ブックマークはメモ、抜粋、ハイライトを保持します。",
     "enpass": "Enpassで File > Export を選び、.json形式を選んでください。ログイン情報は2FA認証キー、追加のウェブサイト、カスタムフィールドを保持し、カード、メモ、IDも一緒に読み込まれます。フォルダはタグになり、お気に入りとアーカイブ済みのアイテムも元の場所に収まります。ゴミ箱のアイテムは読み込まれません。",
     "nordpass": "NordPassで Settings > Export items を選んでください。ログイン情報は追加のウェブサイトとカスタムフィールドを保持し、メモ、カード、IDも一緒に読み込まれ、フォルダはタグになります。",
     "protonPass": "Proton Passで Settings > Export を選び、ZIPを選んでください。ログイン情報は2FA認証キー、追加のウェブサイト、カスタムフィールド、日付を保持し、メモ、カード、IDも一緒に読み込まれます。CSVでの書き出しにも対応していますが、含まれる内容は少なくなります。",
@@ -105,13 +107,15 @@
     "bear": "BearでFile > Backup Notes...を選び、.bear2bkファイルをここにドロップしてください。タグと入れ子のタグ、ピン留め、アーカイブ、ゴミ箱、色付きのハイライト、ノートリンク、添付ファイルも引き継がれます。",
     "joplin": "File > Export all > 「JEX - Joplin Export File」で書き出した.jexファイル。ノートブックはフォルダになり、タグ、ToDo、ノートリンク、添付ファイルも引き継がれます。",
     "anytype": "スペースの設定 > Export で、ファイルとアーカイブ済みのオブジェクトを含めて書き出したAny-Block v1 JSONの.zip。コレクションはフォルダになり、タグ、タスク、コールアウト、トグル、表、ノートリンク、ファイルも引き継がれます。",
+    "capacities": "Capacitiesで Settings > Full Export > Manual Full Export を、メディアを含めて実行した.zip。オブジェクトタイプはフォルダになり、タグ、プロパティ、日付、オブジェクト間のリンク、表、画像、ファイルも引き継がれます。",
     "siyuan": "SiYuanのメニュー > Data migration > Data.zip > Export で書き出したData.zip、またはSiYuan .sy.zipとして書き出したノートブック。ノートブックと入れ子のドキュメントはフォルダになり、タグ、ブロック参照、コールアウト、数式、表、アセットも引き継がれます。",
+    "onenote": "OneNote for Windowsで File > Export > Notebook > OneNote Package を選んで書き出した.onepkg。セクションファイル (.one) や、zipにしたノートブックのフォルダにも対応しています。セクションとセクショングループはフォルダになり、サブページ、ToDo、ノートタグ、表、ページリンク、画像、添付ファイルも引き継がれます。",
     "upnote": "UpNoteの設定 > 「Backup」で「Backup now」を実行し、バックアップフォルダの中身をすべてzipにしてください。ノートブック、タグ、ピン留め、ノートリンク、書式、添付ファイルを保持します。スマートフォンアプリからのノート単位の書き出しにも対応しています。その場合は「Export to HTML」を選んでください。",
     "markdownFolder": ".mdまたは.txtファイルを個別に、あるいは.zipでまとめて。zipにしたフォルダはサブフォルダを保ち、画像や添付ファイルも一緒に運びます。",
     "markdownApp": "これらのノートは、すでにフォルダの中のMarkdownファイルです。そのフォルダを.zipにしてドロップすれば、サブフォルダも画像も#タグも一緒に入ってきます。",
     "browserBookmarks": "ブラウザの \"Export bookmarks\" で書き出したブックマークファイル (.html)、または Safari が書き出す .zip です。Chrome、Firefox、Safari、Edge、Opera、Brave、Vivaldi はどれも同じファイルを含みます。フォルダーと日付も一緒に入ります。",
     "vcard": "連絡帳が書き出す .vcf ファイルです。iPhone と Mac は iCloud または連絡先から、Android、Google コンタクトも同様です。写真も含めてすべてのカードが取り込まれ、同じファイルを 2 回読み込んでもすでにいる人はスキップされます。",
-    "bitwarden": "Bitwarden の暗号化されていない .json エクスポート（Tools > Export vault > .json）。ログイン、カード、SSH 鍵、セキュアメモ、TOTP コードがすべて一緒に読み込まれます。",
+    "bitwarden": "Bitwarden の暗号化されていない保管庫の書き出し（Tools > Export vault > .json、または .zip (with attachments)）。ログイン、カード、SSH 鍵、セキュアノート、TOTP コード、パスキー、添付ファイルがすべて一緒に読み込まれます。",
     "browserPasswords": "Chrome、Edge、Brave、Opera、Vivaldi、Firefox、Safari のパスワードファイル (.csv)、または Safari が書き出す .zip です。1 行がログイン 1 件になります。終わったらファイルは削除してください。パスワードがそのまま書かれています。"
   },
   "sourceLabel": {
@@ -170,7 +174,18 @@
     "sourceTagDesc": "オフ: 読み込み元のタグは付けません。ノートにすでにあるタグはどちらの場合もそのまま読み込まれます。",
     "storageLine": "この読み込みには約{{needed}}が必要です。空きは{{available}}です。",
     "nothingWritten": "読み込みボタンを押すまで、何も書き込まれません。",
-    "whatComesIn": "読み込まれる内容"
+    "whatComesIn": "読み込まれる内容",
+    "backupSettings": "このバックアップには設定も含まれます: {{list}}。",
+    "backupSetting": {
+      "calendarFeeds": "購読中のカレンダー",
+      "dashboard": "ホームのレイアウト",
+      "itemStyles": "フォルダ、タグ、ノートの色とアイコン",
+      "customThemes": "カスタムテーマ",
+      "favoriteTags": "お気に入りのタグ",
+      "medications": "薬",
+      "trackers": "トラッカーの設定",
+      "agentFolder": "「Agent」フォルダ"
+    }
   },
   "counts": {
     "note_other": "件のノート",
@@ -229,7 +244,8 @@
     "showInFolder": "フォルダで表示",
     "zipStep": "圧縮",
     "missingFailed_other": "このデバイスでは{{items}}をダウンロードできなかったため、書き出しには含まれていません。接続を確認して、もう一度書き出してください。",
-    "missingNotFound_other": "{{items}}はこのデバイスにもサーバーにもないため、書き出しには含まれていません。"
+    "missingNotFound_other": "{{items}}はこのデバイスにもサーバーにもないため、書き出しには含まれていません。",
+    "bookmarksSkipped_other": "{{count}}件のブックマークはアドレスが http または https で始まらないため、書き出しには含まれていません。"
   },
   "missing": {
     "pictures_other": "画像 {{count}} 点",
@@ -315,8 +331,8 @@
     "typeFullHint": "ノート、保管庫、画像、音声、ファイルを、フレーズ鍵で封印します。どこに保管しても安全です。",
     "rhythmHeading": "間隔",
     "historyHeading": "最近のバックアップ",
-    "runsHintDesktop": "PrivacyNotesが開いているか、システムトレイにある間に実行されます。アプリが閉じている間に時期が来たバックアップは、アプリを開いてから1分後に実行されます。",
-    "runsHintWeb": "このブラウザでPrivacyNotesが開いている間に実行されます。閉じている間に時期が来たバックアップは、開いてから1分後に実行されます。",
+    "runsHintDesktop": "PrivacyNotesが開いているか、システムトレイにある間に実行されます。アプリが閉じている間に時期が来たバックアップは、アプリを開いてから1分後に実行されます。このデバイスが一度同期していれば、オフラインでも実行されます。",
+    "runsHintWeb": "このブラウザでPrivacyNotesが開いている間に実行されます。閉じている間に時期が来たバックアップは、開いてから1分後に実行されます。このデバイスが一度同期していれば、オフラインでも実行されます。",
     "runsHintDownload": "バックアップの時期が来たことをPrivacyNotesがお知らせできるのは、このブラウザで開いている間だけです。閉じている間に時期が来たバックアップは、開いてから1分後に提案されます。",
     "runsHintPhone": "スマートフォンでは、PrivacyNotesが閉じている間はバックアップを作れません。アプリを開いたときに時期が来ていれば実行されます。",
     "sizeHint": "{{count}}で約{{size}}です。",

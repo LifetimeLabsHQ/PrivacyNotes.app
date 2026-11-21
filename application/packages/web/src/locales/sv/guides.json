@@ -316,21 +316,21 @@
       "app": "Bitwarden",
       "title": "Exportera ditt Bitwarden-valv",
       "metaTitle": "Exportera ett Bitwarden-valv - PrivacyNotes",
-      "lead": "Bitwarden exporterar hela ditt valv som en enda okrypterad .json-fil, och PrivacyNotes lägger varje post där den hör hemma: inloggningar, kort, SSH-nycklar och säkra anteckningar.",
+      "lead": "Bitwarden exporterar hela ditt valv som en enda okrypterad .json-fil, eller som en .zip med dina bilagor, och PrivacyNotes lägger varje post där den hör hemma: inloggningar, kort, SSH-nycklar och säkra anteckningar.",
       "sections": [
         {
           "h": "Exportera ditt valv från Bitwarden",
           "steps": [
             "Öppna Bitwardens webbvalv (eller skrivbordsappen) och logga in.",
             "Gå till Tools och sedan ”Export vault”.",
-            "Välj filformatet .json (det vanliga, inte ”.json (Encrypted)”).",
+            "Välj filformatet .json, eller ”.zip (with attachments)” för att få med dina bifogade filer också. Välj inte ”.json (Encrypted)”.",
             "Bekräfta med ditt huvudlösenord och ladda ner filen."
           ]
         },
         {
           "h": "Var sakerna hamnar",
           "p": [
-            "Inloggningar blir [inloggningsposter i Valvet](/sv/help/vault) (med sina webbplatsikoner), kort blir kortposter, SSH-nycklar blir SSH-nyckelposter, och säkra anteckningar och identiteter kommer in som läsbara anteckningar. Mappar från Bitwarden blir taggar, och favoriter kommer in stjärnmärkta. Autentiseringsnycklar (TOTP) följer också med, så [dina 2FA-koder fortsätter att fungera](/sv/help/vault-totp).",
+            "Inloggningar blir [inloggningsposter i Valvet](/sv/help/vault) (med sina webbplatsikoner), kort blir kortposter, SSH-nycklar blir SSH-nyckelposter, och säkra anteckningar och identiteter kommer in som läsbara anteckningar. Mappar från Bitwarden blir taggar, och favoriter kommer in stjärnmärkta. Autentiseringsnycklar (TOTP) följer också med, så [dina 2FA-koder fortsätter att fungera](/sv/help/vault-totp), och det gör även de passkeys du sparat i Bitwarden. Från en .zip hamnar varje bilaga på sitt objekt.",
             "Exportfilen innehåller dina lösenord i klartext, så importera den, kontrollera att allt kom fram och radera sedan filen ordentligt. Inne i PrivacyNotes är alltihop krypterat igen, på din enhet och på vägen till servern."
           ]
         }
@@ -1115,6 +1115,31 @@
         }
       ]
     },
+    "msecure": {
+      "app": "mSecure",
+      "title": "Exportera ditt mSecure-valv",
+      "metaTitle": "Så exporterar du ditt mSecure-valv - PrivacyNotes",
+      "lead": "mSecure exporterar dina poster som en enda .csv-fil från sin skrivbordsapp, och PrivacyNotes gör om dem till inloggningar, kort och anteckningar i Valvet, egna fält inräknade.",
+      "sections": [
+        {
+          "h": "Exportera från mSecure",
+          "steps": [
+            "Öppna mSecure på din dator och lås upp det.",
+            "Öppna Settings och välj Backups.",
+            "Välj Export records to CSV file under Import and Export records.",
+            "Välj Export all records. Låt \"Only export field data\" vara avstängt, så att filen behåller namnet på varje fält.",
+            "Välj Export och spara .csv-filen."
+          ]
+        },
+        {
+          "h": "Var sakerna hamnar",
+          "p": [
+            "Varje inloggning blir en [inloggning i Valvet](/sv/help/vault) med sin 2FA-nyckel, så [dina koder fortsätter att fungera](/sv/help/vault-totp), och dess extra webbplatser och egna fält följer med sina namn. Ett hemligt fält, till exempel en PIN-kod eller en återställningskod, förblir dolt. Ett kort blir ett kort. En säker anteckning blir en anteckning, och andra posttyper, till exempel en identitet eller ett bankkonto, blir anteckningar som listar sina fält, taggade med posttypen. Dina taggar förblir taggar. Filen har inga datum eller favoriter, så varje objekt får dagen du importerar det.",
+            "Exporten innehåller dina lösenord i klartext. Importera den, kontrollera att allt kom fram och radera sedan filen."
+          ]
+        }
+      ]
+    },
     "nordpass": {
       "app": "NordPass",
       "title": "Exportera ditt NordPass-valv",
@@ -1163,6 +1188,36 @@
           "p": [
             "Varje inloggning blir en [inloggning i Valvet](/sv/help/vault) med sina extra webbplatser, egna fält och datum. 2FA-nyckeln följer med, så [dina koder fortsätter att fungera](/sv/help/vault-totp). När en post har både en e-postadress och ett användarnamn fyller användarnamnet inloggningen och e-postadressen blir ett fält. Anteckningar kommer in som anteckningar, kort som kort och identiteter som anteckningar med varje uppgift på en egen rad. Varje hide-my-email-alias blir en anteckning med sin adress, så du behåller listan över vilken adress du gav till vilken webbplats. Proton fortsätter att vidarebefordra e-posten så länge ditt Proton-konto är öppet. Med fler än ett valv blir varje valv en tagg. Poster i papperskorgen följer inte med.",
             "Exporten innehåller dina lösenord i klartext. Importera den, kontrollera att allt kom fram och radera sedan filen."
+          ]
+        }
+      ]
+    },
+    "raindrop": {
+      "app": "Raindrop.io",
+      "title": "Exportera dina Raindrop.io-bokmärken",
+      "metaTitle": "Så exporterar du dina Raindrop.io-bokmärken - PrivacyNotes",
+      "lead": "Exportera dina Raindrop.io-bokmärken som en enda .csv-säkerhetskopia, så gör PrivacyNotes om dem till bokmärken i samma samlingar, med dina anteckningar, utdrag och överstrykningar.",
+      "sections": [
+        {
+          "h": "Hämta en säkerhetskopia av allt",
+          "steps": [
+            "Öppna Raindrop.io i webbläsaren eller i appen och logga in.",
+            "Öppna All bookmarks och välj Export > Get backup.",
+            "Vänta på mejlet som säger att säkerhetskopian är klar. Det tar oftast några minuter.",
+            "Öppna Settings > Backups och välj CSV bredvid den nya säkerhetskopian."
+          ]
+        },
+        {
+          "h": "Välj CSV, inte HTML",
+          "p": [
+            "HTML-filen behåller länkarna och dina anteckningar, men utelämnar utdrag och överstrykningar. Vill du flytta bara en samling öppnar du den och väljer Export > CSV. Den .zip-fil som den menyn ger fungerar också."
+          ]
+        },
+        {
+          "h": "Var allt hamnar",
+          "p": [
+            "Varje bokmärke hamnar under Bookmarks, i en mapp för varje samling, nästlade som du hade dem. Bokmärken utan samling (Unsorted) hamnar direkt under Bookmarks. Din anteckning, utdraget och varje överstrykning med sin lapp läggs i bokmärkets anteckningar, och favoriter förblir fästa. Taggar förblir taggar, och varje bokmärke behåller dagen då du sparade det.",
+            "Filen innehåller ingen papperskorg, inga påminnelser och inga färger på överstrykningar, så de blir kvar. Omslagsbilderna blir också kvar: varje bokmärke visar i stället webbplatsens ikon."
           ]
         }
       ]
@@ -1288,6 +1343,83 @@
           "p": [
             "[Varje inlägg hamnar i Dagböcker](/sv/help/journal), på den dag du valde för det i Journal. Varje inlägg behåller sin titel och sin text, och foton och videor importeras som bilder och bilagor. En karta på ett inlägg följer med som en bild.",
             "Takeout innehåller inga platsnamn, skrivförslag, bokmärken eller Journals reflektioner, så de stannar kvar i Journal. Importsammanfattningen säger det."
+          ]
+        }
+      ]
+    },
+    "capacities": {
+      "app": "Capacities",
+      "title": "Exportera ditt Capacities-utrymme",
+      "metaTitle": "Så exporterar du ditt Capacities-utrymme - PrivacyNotes",
+      "lead": "Capacities exporterar alla utrymmen på en gång som en enda zip med Markdown-filer och deras media. Den zipfilen tar med dina sidor, dagliga anteckningar och egna objekt med deras taggar, egenskaper, länkar, tabeller och bilder.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/capacities-export.webp",
+            "alt": "Capacities inställningar, sidan Full Export, Manual Full Export med Include media påslaget och knappen Export All Spaces.",
+            "width": 1576,
+            "height": 802
+          },
+          "h": "Gör en fullständig export",
+          "steps": [
+            "Öppna Capacities på din dator och öppna Settings.",
+            "Välj Full Export.",
+            "Under Manual Full Export öppnar du Options och låter ”Include media” vara på. De två andra alternativen kan stå kvar som de är: vi läser båda länkstilarna och tar bort rubriken med titeln.",
+            "Klicka på ”Export All Spaces”. Capacities bygger zipfilen i bakgrunden och sparar den i din mapp Hämtade filer, med namnet ”Capacities” följt av datum och tid.",
+            "Släpp in den .zip-filen som den är."
+          ],
+          "p": [
+            "Capacities lägger bara bilder och filer i zipfilen när de finns på din enhet. Saknas några, ställ in Settings > Offline & Sync > Media loading på ”Everything”, vänta tills nedladdningen är klar och exportera igen."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "Varje sida, daglig anteckning och objekt av dina egna typer blir en anteckning med sina taggar och de datum som Capacities sparade. Varje objekttyp blir en mapp, så dina sidor hamnar i Pages, dina dagliga anteckningar i DailyNotes, och en typ som Books får en egen mapp.",
+            "Rubriker, listor, uppgifter, citat, kod med sitt språk, matematik och tabeller kommer med som de var. Capacities skriver in resultatet av en tabellformel i exporten, så siffrorna kommer fram men inte formeln. [Våra tabeller tar samma formler](/sv/help/table-formulas), med samma namn och cellreferenser, så skriv `=` i cellen för att lägga in den igen. [Länkar och omnämnanden mellan objekt blir anteckningslänkar](/sv/help/note-links), och bilder och filer importeras till din lagring.",
+            "Egenskaperna hos en egen typ, som ett betyg eller en genre, skrivs som en kort lista överst i anteckningen. Queries är sparade sökningar utan text, så de blir kvar. Capacities exporterar inte papperskorgen, sina samlingar eller utseendet på hopfällbara och färgade block: hopfällbara block kommer som listor, och texten inuti dem följer med."
+          ]
+        }
+      ]
+    },
+    "onenote": {
+      "app": "OneNote",
+      "title": "Exportera dina OneNote-anteckningsböcker",
+      "metaTitle": "Så exporterar du dina OneNote-anteckningsböcker - PrivacyNotes",
+      "lead": "OneNote för Windows exporterar en hel anteckningsbok som en enda OneNote Package-fil (.onepkg). Den filen tar med dina avsnitt, sidor och undersidor med deras uppgifter, tabeller, bilder och bilagor.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/onenote-export.webp",
+            "alt": "OneNote för Windows, File > Export, med Notebook vald under Export Current, OneNote Package valt under Select Format och knappen Export.",
+            "width": 1576,
+            "height": 548
+          },
+          "h": "Exportera anteckningsboken som ett OneNote Package",
+          "steps": [
+            "Öppna anteckningsboken i OneNote för Windows, skrivbordsappen. Anteckningsböcker som ligger i OneDrive öppnas också där.",
+            "Välj File > Export.",
+            "Under ”Export Current” väljer du ”Notebook”.",
+            "Under ”Select Format” väljer du ”OneNote Package (*.onepkg)” och klickar på ”Export”.",
+            "Välj en mapp och spara. OneNote skriver en .onepkg-fil som är uppkallad efter anteckningsboken.",
+            "Släpp in den .onepkg-filen som den är."
+          ],
+          "p": [
+            "Ett paket rymmer en anteckningsbok. Har du flera anteckningsböcker, exportera var och en för sig och släpp in filerna en efter en. OneNote på webben, på Mac och på telefoner har ingen export, så använd en Windows-dator för det här steget."
+          ]
+        },
+        {
+          "h": "Lås upp skyddade avsnitt först",
+          "p": [
+            "Ett avsnitt med lösenord förblir krypterat inuti paketet, och bara OneNote kan öppna det. Lås upp vart och ett i OneNote, ta bort lösenordet under Review > Password > Remove Password och exportera igen. Importförhandsgranskningen visar varje avsnitt som den måste utelämna."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "Anteckningsboken blir en mapp, med en mapp inuti för varje avsnittsgrupp och avsnitt. Varje sida blir en anteckning i sitt avsnitts mapp med det datum då OneNote skapade den, och en undersida följer sin sida i samma mapp.",
+            "Rubriker, fetstil, kursiv, understrykning, färger, överstrykningar, punkt- och numrerade listor, tabeller och kodstycken kommer med som de var. En att göra-etikett blir en punkt i en checklista, ikryssad när den var klar, och andra anteckningsetiketter som Important eller Question blir taggar på anteckningen. [Länkar mellan sidor blir anteckningslänkar](/sv/help/note-links), och bilder och bifogade filer importeras till din lagring.",
+            "En avsnittsfil (.one) för sig, eller en zippad anteckningsboksmapp, fungerar också. Teckningar gjorda med penna, ljudinspelningar och ekvationer har ingen motsvarighet här, så importförhandsgranskningen räknar dem, och sidor i OneNotes papperskorg ingår inte i paketet."
           ]
         }
       ]

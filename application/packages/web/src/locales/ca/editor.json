@@ -84,7 +84,7 @@
       "question": "Pregunta",
       "quote": "Citació",
       "example": "Exemple",
-      "bug": "Error",
+      "bug": "Bug",
       "note": "Nota",
       "abstract": "Resum",
       "failure": "Fallada",
@@ -115,10 +115,13 @@
       "red": "Vermell",
       "orange": "Taronja",
       "yellow": "Groc",
+      "lime": "Verd llima",
       "green": "Verd",
       "teal": "Verd blavós",
       "blue": "Blau",
+      "indigo": "Indi",
       "purple": "Porpra",
+      "grape": "Morat",
       "pink": "Rosa"
     }
   },
@@ -244,6 +247,8 @@
     "characters_one": "{{formatted}} caràcter",
     "characters_many": "{{formatted}} caràcters",
     "characters_other": "{{formatted}} caràcters",
+    "lines_one": "{{formatted}} línia",
+    "lines_other": "{{formatted}} línies",
     "tasksChecked_one": "{{done}} de {{formatted}} marcat",
     "tasksChecked_many": "{{done}} de {{formatted}} marcats",
     "tasksChecked_other": "{{done}} de {{formatted}} marcats",
@@ -281,6 +286,10 @@
     "expand": "Desplega el bloc de codi",
     "placeholder": "Escriu o enganxa codi. Per tenir colors, tria un llenguatge a dalt."
   },
+  "fold": {
+    "collapse": "Replega la secció",
+    "expand": "Desplega la secció"
+  },
   "math": {
     "sourceLabel": "Codi LaTeX"
   },
@@ -317,7 +326,7 @@
     "hiddenNote": "Continuen funcionant amb la drecera i en Markdown.",
     "hiddenDrop": "Deixa anar un botó aquí per amagar-lo.",
     "arrangeTitle": "Botons",
-    "markdownViewNote": "La vista Markdown té el seu propi conjunt fix de botons.",
+    "markdownViewNote": "La vista Markdown mostra els mateixos botons. Els que necessiten la vista amb format hi apareixen atenuats i continuen funcionant a la vista amb format.",
     "hiddenEmpty": "No hi ha res amagat.",
     "alwaysVisible": "Sempre visibles",
     "pinned": "Obre un tauler, així que es queda a la barra o amagat",
@@ -344,7 +353,7 @@
       "notelink": "Enllaç entre notes",
       "audio": "Enregistrament",
       "attachMenu": "Adjunta",
-      "separator": "Separador",
+      "separator": "Divisor de la barra d'eines",
       "markdownView": "Mostra el markdown"
     },
     "positionTitle": "Posició de la barra",

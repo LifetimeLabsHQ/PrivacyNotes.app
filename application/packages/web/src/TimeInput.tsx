@@ -25,9 +25,14 @@ export function nativeTimeCommit(raw: string, clearable: boolean): string | null
  * Done tick), or when the field loses focus.
  * Spec: docs/internal/issues/0550.md (Spec)
  */
-export function TimeInput({ value, onCommit, label, className, day, clearable = false }: {
+export function TimeInput({ value, onCommit, onDraft, label, className, day, clearable = false }: {
   value: string | undefined;
   onCommit: (time: string | null) => void;
+  /** The time as typed, before it commits: `HH:MM`, or `null` while the
+   *  field holds no time it can read and once the draft ends. A button that
+   *  depends on the time reads it, so it does not wait for the blur that the
+   *  click on it causes (#833). */
+  onDraft?: (time: string | null) => void;
   label: string;
   className: string;
   /** The day the time falls on, for the label of a day with a clock change. */
@@ -43,6 +48,7 @@ export function TimeInput({ value, onCommit, label, className, day, clearable = 
   const commitRaw = (raw: string | null) => {
     if (raw === null) return;
     setDraft(null);
+    onDraft?.(null);
     const next = native
       ? nativeTimeCommit(raw, clearable)
       : raw.trim() === '' ? (clearable ? null : undefined) : parseTimeLabel(raw) ?? undefined;
@@ -74,7 +80,11 @@ export function TimeInput({ value, onCommit, label, className, day, clearable = 
   const shared = {
     ref,
     'aria-label': label,
-    onChange: (e: ChangeEvent<HTMLInputElement>) => setDraft(e.target.value),
+    onChange: (e: ChangeEvent<HTMLInputElement>) => {
+      const raw = e.target.value;
+      setDraft(raw);
+      onDraft?.((native ? nativeTimeCommit(raw, false) : parseTimeLabel(raw)) ?? null);
+    },
     onBlur: commit,
     onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') { e.preventDefault(); commit(); }

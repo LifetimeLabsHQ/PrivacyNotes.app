@@ -240,6 +240,8 @@
       "prevYear": "Föregående år",
       "nextYear": "Nästa år"
     },
+    "seeEntries": "Visa inlägg",
+    "showInCalendar": "Visa i Kalender",
     "trackers": {
       "tapHint": "Ett tryck öppnar Utforska",
       "stopped": "Stoppade",

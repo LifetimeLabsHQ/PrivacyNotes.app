@@ -28,9 +28,22 @@
   "tagChip": {
     "clear": "Remover o filtro de etiqueta: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "Remover o filtro de rastreador: {{tracker}}",
+    "anyTag": "Qualquer etiqueta",
+    "tagLabel": "Etiqueta de {{tracker}}",
+    "answerLabel": "Resposta de {{tracker}}",
+    "anyAnswer": "Qualquer resposta"
+  },
+  "trackerFocus": {
+    "every_one": "quase todos os dias",
+    "every_other": "mais ou menos a cada {{count}} dias",
+    "last": "registrado {{when}}",
+    "locked_one": "{{count}} entrada protegida por PIN ficou de fora",
+    "locked_other": "{{count}} entradas protegidas por PIN ficaram de fora"
+  },
   "vaultNew": {
     "ariaLabel": "Novo item do cofre",
-    "card": "Cartão de Crédito",
     "sshKey": "Chave SSH",
     "generator": "Senha"
   },
@@ -49,6 +62,7 @@
   "vaultFilter": {
     "all": "Todos",
     "logins": "Logins",
+    "passkeys": "Passkeys",
     "cards": "Cartões",
     "keys": "Chaves"
   },
@@ -61,7 +75,8 @@
   "trash": {
     "empty": "Esvaziar",
     "emptyHover": "Excluir todas as notas da lixeira",
-    "autoDelete": "Excluir automaticamente após 30 dias"
+    "autoDelete": "Excluir automaticamente após 30 dias",
+    "replacedTitle": "Cópias de notas excluídas"
   },
   "search": {
     "sortOptions": "Opções de ordenação e visão",
@@ -125,6 +140,7 @@
     "imageUploadFailed": "Falha ao enviar imagem: {{error}}",
     "imageError": "Erro de imagem: {{error}}",
     "uploadFailedFor": "Falha ao enviar \"{{filename}}\": {{error}}",
+    "uploadsHeld": "Você atingiu o limite de envios de hoje. Suas imagens e arquivos estão seguros neste dispositivo e serão enviados depois de {{time}}.",
     "importedSyncing_one": "{{count}} nota importada. Sincronizando…",
     "importedSyncing_other": "{{count}} notas importadas. Sincronizando…",
     "addedTag_one": "#{{tag}} adicionada a {{count}} item",
@@ -137,6 +153,7 @@
   },
   "loadError": {
     "message": "Não foi possível carregar suas notas. A conexão com o banco de dados local foi interrompida. Isso pode acontecer depois que o app fica em segundo plano por um tempo.",
+    "storageOff": "Não foi possível carregar suas notas. Este dispositivo desativou o armazenamento em que o PrivacyNotes as guarda, algo que o Modo de Isolamento faz. Para corrigir, abra Ajustes, depois Privacidade e Segurança, depois Modo de Isolamento, depois Personalizar Sites, e desative o PrivacyNotes. No Safari, desative o Modo de Isolamento para este site em Ajustes do Site.",
     "reload": "Recarregar"
   },
   "banner": {
@@ -189,6 +206,7 @@
   "editor": {
     "backToList": "Voltar à lista de notas",
     "backToGrid": "Voltar à grade",
+    "closeSide": "Fechar este painel",
     "titlePlaceholder": "Sem título (clique para editar ou deixe gerar automaticamente)",
     "titlePlaceholderLogin": "ex.: GitHub",
     "titlePlaceholderCard": "ex.: Visa terminando em 4242",
@@ -197,10 +215,22 @@
     "lockNow": "Bloquear agora",
     "lockNowHint": "Ocultar o conteúdo agora",
     "turnOffHint": "Permitir edições de novo",
+    "turnOffForNowHint": "Editar esta nota até você sair dela",
     "unarchiveHint": "Mostrar nas suas listas de novo",
     "showFormatted": "Ver formatado",
+    "splitView": "Visualização dividida",
+    "showSplitView": "Ver visualização dividida",
+    "hideSplitView": "Ocultar visualização dividida",
+    "splitViewNeedsWidth": "Amplie a janela para ativar a visualização dividida",
+    "swapSides": "Trocar os lados",
+    "formattedOnly": "{{name}} funciona na visualização formatada",
+    "formattedOnlyHint": "Visualização formatada",
     "invisiblesShow": "Ver caracteres invisíveis",
     "invisiblesHide": "Ocultar caracteres invisíveis",
+    "lineNumbersShow": "Ver números de linha",
+    "lineNumbersHide": "Ocultar números de linha",
+    "footerPin": "Fixar estatísticas",
+    "footerUnpin": "Desafixar estatísticas",
     "undo": "Desfazer",
     "redo": "Refazer",
     "hide": "Ocultar",
@@ -274,6 +304,7 @@
     "accountLabel": "ID & Sync",
     "appearanceLabel": "Aparência",
     "editorLabel": "Editor",
+    "pluginsLabel": "Plugins",
     "formatBarLabel": "Barra de formatação",
     "listsLabel": "Listas",
     "trackersLabel": "Rastreadores",
@@ -295,6 +326,10 @@
   "archiveConfirm": {
     "body_one": "Arquivar <highlight>{{count}} item</highlight>? Ele sai das suas listas e fica esperando na visão Arquivo. Desarquivar o traz de volta.",
     "body_other": "Arquivar <highlight>{{count}} itens</highlight>? Eles saem das suas listas e ficam esperando na visão Arquivo. Desarquivar os traz de volta."
+  },
+  "duplicateConfirm": {
+    "body_one": "Duplicar <highlight>{{count}} item</highlight>? Ele ganha uma cópia própria.",
+    "body_other": "Duplicar <highlight>{{count}} itens</highlight>? Cada um ganha uma cópia própria."
   },
   "bulkTrash": {
     "body_one": "Excluir <highlight>{{count}} item</highlight>? Mova-o para a lixeira para restaurá-lo depois, ou exclua-o para sempre.",
@@ -341,6 +376,7 @@
     "title": "Conexões",
     "hide": "Ocultar conexões",
     "linkedFrom": "Links de entrada",
+    "usedIn": "Usado em",
     "linksTo": "Links de saída",
     "missing": "Ainda não criada",
     "protectedHidden_one": "{{count}} item protegido por PIN não exibido",
@@ -351,9 +387,10 @@
     "relatedLinkedFrom": "As duas recebem link de {{title}}",
     "relatedTag": "As duas têm a etiqueta {{tag}}",
     "relatedMeaning": "Mesmo significado",
+    "relatedMention": "Menciona {{name}}",
     "meaningDoor": "Conexões inteligentes: encontre notas com o mesmo significado, com IA offline",
     "meaningDoorNo": "Não mostrar novamente",
-    "meaningDoorHidden": "Oculto em todas as notas. As Conexões inteligentes continuam em Configurações > Editor > Comportamento.",
+    "meaningDoorHidden": "Oculto em todas as notas. As Conexões inteligentes continuam em Configurações > Plugins.",
     "hideSuggestions": "Ocultar conexões sugeridas",
     "notRelated": "Não relacionada",
     "notRelatedDone": "Não será mais sugerida",
@@ -426,5 +463,31 @@
     "autoJournal": "Adicionar minha localização a cada nova entrada de diário",
     "autoDenied": "A localização está desativada para o PrivacyNotes. Ative primeiro nas configurações do seu celular.",
     "autoOff": "Os serviços de localização estão desativados neste celular. Ative-os primeiro."
+  },
+  "vaultPasskey": {
+    "forSite": "Passkey para {{rpId}}",
+    "hasPasskey": "Tem uma passkey",
+    "removeTitle": "Remover a passkey para {{rpId}}?",
+    "removeBody": "Você não poderá mais entrar em {{rpId}} com ela pelo PrivacyNotes.",
+    "savedByExtension": "As passkeys são salvas pela extensão do navegador do PrivacyNotes quando um site oferece uma.",
+    "removeBrowserWaiting": "Alguns itens que este navegador enviou ainda não estão no seu Cofre. Se você removê-lo agora, eles serão perdidos.",
+    "removeBrowserAnyway": "Remover mesmo assim"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "Traduzir",
+    "from": "De",
+    "to": "Para",
+    "saveAsNote": "Salvar como nova nota",
+    "needPair": "Baixar {{language}} · {{size}}",
+    "noModel": "Este idioma ainda não pode ser traduzido.",
+    "nothing": "Esta nota não tem palavras para traduzir.",
+    "turnOn": "Ativar {{language}}",
+    "failed": "Não foi possível traduzir esta nota. Tente novamente.",
+    "untranslated_one": "{{count}} linha não pôde ser traduzida e ficou como estava.",
+    "untranslated_other": "{{count}} linhas não puderam ser traduzidas e ficaram como estavam."
+  },
+  "tags": {
+    "suggestMove": "Mover para {{folder}}"
   }
 }

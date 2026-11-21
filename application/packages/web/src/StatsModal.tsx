@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Heartbeat, PencilSimple, SquaresFour } from './icons';
 import type { LocalNote } from './db';
@@ -39,6 +39,12 @@ type Props = {
   notesCreated: number;
   /** When the account was first seen; null on an account older than the stamp. */
   firstSeenAt: string | null;
+  /** A tracker page to open on: a door from Journals or the Calendar. */
+  initialTracker?: string;
+  /** A tracker page's doors back: its days in Journals, and on the Calendar.
+   *  Spec: docs/internal/specs/tracker-focus-771.md (section 5) */
+  onShowEntries?: (id: string) => void;
+  onShowInCalendar?: (id: string) => void;
 };
 
 /** Where Statistics opens: the one page, or one of the pages a row opens. */
@@ -50,15 +56,22 @@ type Tab = 'overview' | 'wellness' | 'writing' | 'medication' | 'mood';
  * tracker and the writing numbers; a row opens its own page.
  * Spec: docs/internal/specs/wellness-statistics.md (section 22)
  */
-export function StatsModal({ notes, isNoteLocked, onClose, medications, isPro, onOpenUpgrade, weekReflection, onWeekReflectionChange, embedded = false, initialTab = 'overview', notesCreated, firstSeenAt, trackerSettings, factors = NO_FACTORS, onOpenDay, onOpenWellnessExport }: Props) {
+export function StatsModal({ notes, isNoteLocked, onClose, medications, isPro, onOpenUpgrade, weekReflection, onWeekReflectionChange, embedded = false, initialTab = 'overview', notesCreated, firstSeenAt, trackerSettings, factors = NO_FACTORS, onOpenDay, onOpenWellnessExport, initialTracker, onShowEntries, onShowInCalendar }: Props) {
   const { t } = useTranslation('stats');
-  const stats = useMemo(() => computeStats(notes), [notes]);
+  // The lock predicate is a fresh function each render: the memo keys on
+  // which notes it shuts. A shut note's words are not counted (RFS #215).
+  const gatedKey = notes.filter(isNoteLocked).map((n) => n.id).join(' ');
+  const stats = useMemo(() => {
+    const gated = new Set(gatedKey.split(' '));
+    return computeStats(notes, (n) => gated.has(n.id));
+  }, [notes, gatedKey]);
 
   const [tab, setTab] = usePaneTab<'overview' | 'wellness' | 'writing'>(
     'stats',
-    initialTab === 'writing' ? 'writing' : initialTab === 'wellness' || initialTab === 'medication' || initialTab === 'mood' ? 'wellness' : 'overview',
+    initialTracker ? 'wellness' : initialTab === 'writing' ? 'writing' : initialTab === 'wellness' || initialTab === 'medication' || initialTab === 'mood' ? 'wellness' : 'overview',
   );
-  const initialView: StatsView = initialTab === 'medication' ? { kind: 'medication' }
+  const initialView: StatsView = initialTracker ? { kind: 'tracker', id: initialTracker }
+    : initialTab === 'medication' ? { kind: 'medication' }
     : initialTab === 'mood' ? { kind: 'tracker', id: 'mood' }
     : { kind: 'home' };
   // Literal markers: the settings search test reads them from the source.
@@ -114,6 +127,8 @@ export function StatsModal({ notes, isNoteLocked, onClose, medications, isPro, o
             onOpenDay={onOpenDay}
             onOpenExport={onOpenWellnessExport}
             initialView={initialView}
+            onShowEntries={onShowEntries}
+            onShowInCalendar={onShowInCalendar}
           />
         )}
         {tab === 'writing' && <WritingTab notes={notes} stats={stats} isNoteLocked={isNoteLocked} notesCreated={notesCreated} firstSeenAt={firstSeenAt} />}

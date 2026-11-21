@@ -167,7 +167,7 @@ function llmsTxt(): string {
   const proPrice = process.env.VITE_PADDLE_BETA_DISCOUNT_ID ? EARLY_PRICE : PRO_PRICE;
   return `# PrivacyNotes
 
-> An end-to-end encrypted notes, tasks, journal and vault app: your notes are encrypted on your device, before they are stored or synced. The server holds ciphertext, which under self-custody it cannot read. Hosted in Switzerland, with no trackers and no analytics of what you write.
+> An end-to-end encrypted notes, tasks, journal and vault app: your notes are encrypted on your device, before they are stored or synced. The server holds ciphertext, which under self-custody it cannot read. Hosted in Switzerland and the EU, with no trackers and no analytics of what you write.
 
 Signing up needs no email address: a new account is a generated recovery phrase and nothing else. Google, Apple and GitHub sign-in are available for people who want them, and the encryption key is still generated on the reader's own device either way.
 
@@ -175,11 +175,11 @@ The free tier is a real tier, not a trial: 2 devices and 50 MB of storage, with 
 
 Available on the web, macOS, Windows, Linux, iOS and Android. The interface and help center are translated into ${Object.keys(LOCALE_TO_SLUG).length} languages.
 
-The app is open source: the web, desktop and mobile clients, the encryption layer and the threat model are all published. The sync backend stays closed and holds nothing but encrypted data.
+The app is open source: the web, desktop and mobile clients, the encryption layer and the threat model are all published. The server holds your notes only as ciphertext; [SECURITY.md](https://github.com/LifetimeLabsHQ/PrivacyNotes.app/blob/main/SECURITY.md#what-we-measure) lists what else it keeps.
 
 ## Product
 - [Homepage](${ORIGIN}/en): what it does, what it costs, and where to download it.
-- [Try it without signing up](https://try.privacynotes.app): the full app with sample content, running entirely in the browser. Nothing is saved and nothing reaches a server.
+- [Try it without signing up](https://try.privacynotes.app): the full app with sample content, running in the browser. Nothing you type is sent: a page you clip or a calendar you subscribe to is downloaded through our server, and a map is read from our map host.
 - [Roadmap](${ORIGIN}/roadmap): what has shipped and what is next.
 - [Changelog](${ORIGIN}/changelog): every release, newest first.
 

@@ -28,9 +28,22 @@
   "tagChip": {
     "clear": "Treu el filtre d'etiqueta: {{tag}}"
   },
+  "trackerChip": {
+    "clear": "Treu el filtre de seguiment: {{tracker}}",
+    "anyTag": "Qualsevol etiqueta",
+    "tagLabel": "Etiqueta de {{tracker}}",
+    "answerLabel": "Resposta de {{tracker}}",
+    "anyAnswer": "Qualsevol resposta"
+  },
+  "trackerFocus": {
+    "every_other": "aproximadament cada {{count}} dies",
+    "last": "registrat {{when}}",
+    "locked_other": "{{count}} entrades protegides amb PIN queden fora",
+    "locked_one": "{{count}} entrada protegida amb PIN queda fora",
+    "every_one": "aproximadament cada dia"
+  },
   "vaultNew": {
     "ariaLabel": "Element nou de la caixa forta",
-    "card": "Targeta de crèdit",
     "sshKey": "Clau SSH",
     "generator": "Contrasenya"
   },
@@ -49,6 +62,7 @@
   "vaultFilter": {
     "all": "Tot",
     "logins": "Accessos",
+    "passkeys": "Claus d'accés",
     "cards": "Targetes",
     "keys": "Claus"
   },
@@ -61,7 +75,8 @@
   "trash": {
     "empty": "Buida",
     "emptyHover": "Suprimeix totes les notes de la paperera",
-    "autoDelete": "Supressió automàtica després de 30 dies"
+    "autoDelete": "Supressió automàtica després de 30 dies",
+    "replacedTitle": "Còpies de notes suprimides"
   },
   "search": {
     "sortOptions": "Opcions d'ordenació i visualització",
@@ -125,6 +140,7 @@
     "imageUploadFailed": "La pujada de la imatge ha fallat: {{error}}",
     "imageError": "Error d'imatge: {{error}}",
     "uploadFailedFor": "La pujada de \"{{filename}}\" ha fallat: {{error}}",
+    "uploadsHeld": "Has arribat al límit de pujada d'avui. Les teves imatges i fitxers estan segurs en aquest dispositiu i es pujaran després de {{time}}.",
     "importedSyncing_one": "S'ha importat {{count}} nota. S'està sincronitzant…",
     "importedSyncing_other": "S'han importat {{count}} notes. S'estan sincronitzant…",
     "addedTag_one": "S'ha afegit #{{tag}} a {{count}} element",
@@ -139,6 +155,7 @@
   },
   "loadError": {
     "message": "No s'han pogut carregar les notes. La connexió amb la base de dades local s'ha interromput. Això pot passar quan l'aplicació ha estat una estona en segon pla.",
+    "storageOff": "No s'han pogut carregar les notes. Aquest dispositiu ha desactivat l'emmagatzematge on PrivacyNotes les desa, cosa que fa el Mode d'aïllament. Per solucionar-ho, obre Configuració, després Privacitat i seguretat, després Mode d'aïllament, després Personalitza els llocs web, i desactiva PrivacyNotes. A Safari, desactiva el Mode d'aïllament per a aquest lloc a Configuració del lloc web.",
     "reload": "Torna a carregar"
   },
   "banner": {
@@ -191,6 +208,7 @@
   "editor": {
     "backToList": "Torna a la llista de notes",
     "backToGrid": "Torna a la graella",
+    "closeSide": "Tanca aquest costat",
     "titlePlaceholder": "Sense títol (fes-hi clic per editar-lo o deixa que es generi sol)",
     "titlePlaceholderLogin": "p. ex. GitHub",
     "titlePlaceholderCard": "p. ex. Visa acabada en 4242",
@@ -199,10 +217,22 @@
     "lockNow": "Bloqueja ara",
     "lockNowHint": "Amaga el contingut ara",
     "turnOffHint": "Torna a permetre les edicions",
+    "turnOffForNowHint": "Edita aquesta nota fins que en surtis",
     "unarchiveHint": "Torna a mostrar-la a les teves llistes",
     "showFormatted": "Mostra amb format",
+    "splitView": "Vista dividida",
+    "showSplitView": "Mostra la vista dividida",
+    "hideSplitView": "Amaga la vista dividida",
+    "splitViewNeedsWidth": "Eixampla la finestra per activar la vista dividida",
+    "swapSides": "Intercanvia els costats",
+    "formattedOnly": "{{name}} funciona a la vista amb format",
+    "formattedOnlyHint": "Vista amb format",
     "invisiblesShow": "Mostra els caràcters invisibles",
     "invisiblesHide": "Amaga els caràcters invisibles",
+    "lineNumbersShow": "Mostra els números de línia",
+    "lineNumbersHide": "Amaga els números de línia",
+    "footerPin": "Fixa les estadístiques",
+    "footerUnpin": "Desfixa les estadístiques",
     "undo": "Desfés",
     "redo": "Refés",
     "hide": "Amaga",
@@ -276,6 +306,7 @@
     "accountLabel": "ID i sincronització",
     "appearanceLabel": "Aparença",
     "editorLabel": "Editor",
+    "pluginsLabel": "Connectors",
     "formatBarLabel": "Barra de format",
     "listsLabel": "Llistes",
     "trackersLabel": "Seguiments",
@@ -297,6 +328,10 @@
   "archiveConfirm": {
     "body_other": "Vols arxivar <highlight>{{count}} elements</highlight>? Surten de les teves llistes i esperen a la vista Arxiu. Desarxiva els recupera.",
     "body_one": "Vols arxivar <highlight>{{count}} element</highlight>? Surt de les teves llistes i espera a la vista Arxiu. Desarxiva el recupera."
+  },
+  "duplicateConfirm": {
+    "body_one": "Vols duplicar <highlight>{{count}} element</highlight>? Tindrà la seva pròpia còpia.",
+    "body_other": "Vols duplicar <highlight>{{count}} elements</highlight>? Cadascun tindrà la seva pròpia còpia."
   },
   "bulkTrash": {
     "body_one": "Vols suprimir <highlight>{{count}} element</highlight>? Mou-lo a la paperera per restaurar-lo més tard, o suprimeix-lo per sempre.",
@@ -350,6 +385,7 @@
     "title": "Connexions",
     "hide": "Amaga les connexions",
     "linkedFrom": "Enllaçada des de",
+    "usedIn": "Utilitzat a",
     "linksTo": "Enllaça a",
     "missing": "Encara no creada",
     "protectedHidden_one": "{{count}} element protegit amb PIN no es mostra",
@@ -360,9 +396,10 @@
     "relatedLinkedFrom": "Totes dues enllaçades des de {{title}}",
     "relatedTag": "Totes dues amb l'etiqueta {{tag}}",
     "relatedMeaning": "El mateix significat",
+    "relatedMention": "Menciona {{name}}",
     "meaningDoor": "Connexions intel·ligents: troba notes amb el mateix significat, amb IA fora de línia",
     "meaningDoorNo": "No ho tornis a mostrar",
-    "meaningDoorHidden": "Amagat a totes les notes. Connexions intel·ligents continua a Configuració > Editor > Comportament.",
+    "meaningDoorHidden": "Amagat a totes les notes. Connexions intel·ligents continua a Configuració > Connectors.",
     "hideSuggestions": "Amaga les connexions suggerides",
     "notRelated": "No hi té relació",
     "notRelatedDone": "Ja no se suggereix",
@@ -435,5 +472,31 @@
     "autoJournal": "Afegeix la meva ubicació a cada entrada de diari nova",
     "autoDenied": "La ubicació està desactivada per a PrivacyNotes. Activa-la primer a la configuració del telèfon.",
     "autoOff": "Els serveis de localització estan desactivats en aquest telèfon. Activa'ls primer."
+  },
+  "vaultPasskey": {
+    "forSite": "Clau d'accés per a {{rpId}}",
+    "hasPasskey": "Té una clau d'accés",
+    "removeTitle": "Vols eliminar la clau d'accés per a {{rpId}}?",
+    "removeBody": "Ja no podràs iniciar la sessió a {{rpId}} amb ella des de PrivacyNotes.",
+    "savedByExtension": "L'extensió del navegador de PrivacyNotes desa les claus d'accés quan un lloc n'ofereix una.",
+    "removeBrowserWaiting": "Alguns elements que ha enviat aquest navegador encara no són a la teva Caixa forta. Si l'elimines ara, es perdran.",
+    "removeBrowserAnyway": "Elimina igualment"
+  },
+  "translate": {
+    "newTitle": "{{title}} ({{language}})",
+    "action": "Tradueix",
+    "from": "De",
+    "to": "A",
+    "saveAsNote": "Desa com a nota nova",
+    "needPair": "Baixa {{language}} · {{size}}",
+    "noModel": "Encara no es pot traduir aquest idioma.",
+    "nothing": "Aquesta nota no té paraules per traduir.",
+    "turnOn": "Activa {{language}}",
+    "failed": "No s'ha pogut traduir aquesta nota. Torna-ho a provar.",
+    "untranslated_other": "{{count}} línies no s'han pogut traduir i es queden com estaven.",
+    "untranslated_one": "{{count}} línia no s'ha pogut traduir i es queda com estava."
+  },
+  "tags": {
+    "suggestMove": "Mou a {{folder}}"
   }
 }

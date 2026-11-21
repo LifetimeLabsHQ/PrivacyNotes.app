@@ -38,7 +38,7 @@
   "storageBar": {
     "usage": "{{percent}} % usat ({{used}} / {{max}})",
     "refresh": "Actualitza l’emmagatzematge",
-    "cleanupInfo": "Els elements suprimits deixen de comptar a l'instant. Els fitxers xifrats mateixos surten del servidor en pocs dies.",
+    "cleanupInfo": "Les notes suprimides per sempre deixen de comptar a l'instant. Un fitxer suprimit compta fins que la seva còpia xifrada surt del servidor, aproximadament un dia després.",
     "open": "Obre la configuració de l'emmagatzematge"
   },
   "updateToast": {
@@ -326,6 +326,8 @@
     "commands": {
       "syncResume": "Reprèn la sincronització",
       "lockProtected": "Bloqueja aquesta nota",
+      "randomItem": "Obre un element a l'atzar",
+      "randomBookmark": "Obre un marcador a l'atzar",
       "changelog": "Novetats",
       "themesPage": "Temes de la comunitat",
       "website": "Lloc web de PrivacyNotes"

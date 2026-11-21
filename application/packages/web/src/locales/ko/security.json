@@ -4,7 +4,8 @@
     "tabBiometricShort": "잠금",
     "tabPhraseShort": "문구",
     "tabPhrase": "내 문구",
-    "tabTwoFactor": "2FA"
+    "tabTwoFactor": "2FA",
+    "tabTwoFactorPasskeys": "2FA / 패스키"
   },
   "pinTab": {
     "changeLost": "PIN 변경이 저장되지 않았어요. 다른 기기에서 PIN이 먼저 변경됐어요.",
@@ -70,7 +71,7 @@
     "browserRestart": "브라우저 재시작 시"
   },
   "pinInfo": {
-    "body": "켜 두면 앱이 이미 잠금 해제되어 있어도 이 항목을 열 때마다 PIN을 입력해야 해요. 자리를 비울 때도 보호해야 하는 민감한 항목에 사용하세요."
+    "body": "켜 두면 이 항목을 열기 전에 PIN을 물어요. 단, 설정 > 보안 > 잠금에서 정한 시간(바꾸지 않으면 5분) 안에 PIN을 입력했다면 묻지 않아요. 가장 민감한 항목에 사용하세요."
   },
   "removePinDialog": {
     "introWithBio": "제거를 확정하려면 현재 PIN을 입력하세요. 생체 인증 잠금 해제는 유지되지만, 유일한 대안은 복구 문구뿐이에요.",
@@ -119,6 +120,7 @@
     "hideQr": "QR 코드 숨기기",
     "showQr": "QR 코드 표시",
     "saveQr": "QR 저장",
+    "qrHint": "새 기기의 로그인 화면에서 “{{scanQr}}”을 선택하세요.",
     "copyPhrase": "문구 복사"
   },
   "custody": {
@@ -132,7 +134,7 @@
     "rowLostSelf": "다른 저장된 사본이나 잠금 해제된 기기가 없으면 노트를 복구할 수 없어요.",
     "rowKey": "문구가 있는 곳",
     "rowKeyCustodial": "저희 서버와 내 기기",
-    "rowKeySelf": "내 기기에만",
+    "rowKeySelf": "로그인 패스키를 추가하지 않는 한 내 기기에만",
     "releaseWarning": "먼저 문구를 PrivacyNotes 밖에 저장해 주세요. 저희 사본을 삭제한 뒤에는 새 기기에서 문구가 필요해요.",
     "challengePrompt": "위 목록에서 아래 단어들을 입력해 가지고 있는지 확인해 주세요.",
     "wordLabel": "{{position}}번째 단어",
@@ -165,14 +167,18 @@
   "biometricTab": {
     "checkingSupport": "생체 인증 지원 확인 중...",
     "description": "PIN을 입력하는 대신 지문이나 얼굴로 잠금을 해제하세요.",
+    "descriptionWeb": "PIN을 입력하는 대신 지문이나 얼굴로 잠금을 해제하세요. 브라우저에서는 이 기기에 PrivacyNotes용 패스키를 만들고, 기기나 비밀번호 관리자가 그 패스키를 저장해요.",
     "trustFirst": "먼저 \"이 기기 신뢰하기\"를 켜세요. 생체 인증 잠금 해제와 앱 잠금은 둘 다 복구 문구 사본을 이 기기에 저장해요. 신뢰하지 않은 기기는 그런 용도가 아니에요.",
     "notAvailable": "이 기기에서는 생체 인증 잠금 해제를 사용할 수 없어요. 브라우저나 하드웨어가 플랫폼 인증 장치(Touch ID, Face ID, Windows Hello)를 지원하지 않아요.",
     "enabledFlash": "생체 인증 잠금 해제가 켜졌어요.",
     "enrolledOnDevice": "이 기기에 등록됨",
     "boundStatus": "생체 인증 잠금 해제가 패스키에 연결돼 있어요.",
     "boundStatusNative": "생체 인증 잠금 해제가 이 기기의 보안 하드웨어에 연결돼 있어요.",
+    "boundStatusWindows": "생체 인증 잠금 해제가 이 PC의 Windows Hello에 연결돼 있어요.",
+    "boundStatusWindowsSoftware": "생체 인증 잠금 해제가 이 PC의 Windows Hello에 연결돼 있어요. Windows가 이 PC에서 쓸 수 있는 보안 칩(TPM)이 없다고 알려요. 보안 칩이 없으면 Windows Hello는 키를 소프트웨어에 보관하고, 이 PC 저장소의 사본을 가진 사람은 Windows Hello PIN을 제한 없이 시도할 수 있어요.",
     "setUpAgain": "더 강한 잠금으로 다시 설정",
     "unboundWeaker": "이 기기에서 생체 인증 잠금 해제는 잠금이 아니라 주변 사람을 막는 관문일 뿐이에요. 이 기기 저장소의 복사본을 가진 사람은 지문이나 얼굴 없이도 노트를 열 수 있어요.",
+    "noPrfRefused": "이 패스키 앱은 생체 인증 잠금 해제의 키를 보관할 수 없어서 생체 인증 잠금 해제가 꺼진 상태로 유지돼요. 비밀번호 관리자가 패스키를 저장했다면 그곳에서 삭제하고 패스키 옵션을 끈 다음 다시 시도하세요.",
     "cannotBind": "이 패스키를 저장한 패스키 앱(주로 비밀번호 관리자)으로는 완전한 잠금을 만들 수 없어요. 이 기기에서 생체 인증 잠금 해제는 주변 사람만 막아요. 이 기기 저장소의 사본을 가진 사람은 지문이나 얼굴 없이도 노트를 열 수 있어요. 비밀번호 관리자가 패스키를 저장하고 있다면 그 패스키 옵션을 끈 다음, 생체 인증 잠금 해제를 껐다가 다시 켜세요.",
     "bindOffer": "이 기기의 생체 인증 잠금 해제는 아직 패스키에 연결되지 않았지만, 이 브라우저에서는 연결할 수 있어요. 한 번 다시 설정하면 그 키가 이 기기 저장소가 아니라 패스키와 함께 보관돼요.",
     "bindOfferLater": "나중에",
@@ -183,18 +189,26 @@
     "lockOnOpenHint": "이 기기에서 앱을 열 때, 그리고 한동안 사용하지 않은 뒤에 PIN이나 지문을 요구해요.",
     "lockHidesOnSwitch": "앱을 전환할 때도 노트를 가려요.",
     "confirmPinForLock": "이 기능을 켜려면 PIN을 입력하세요. 복구 문구 사본을 잠가서 PIN으로만 앱을 열 수 있게 해요.",
+    "pinWeakCopy": "4자리 PIN이면 이 기기 저장소의 사본을 가진 사람이 몇 분에서 몇 시간 안에 PIN을 알아내고 노트를 열 수 있어요. 패스코드는 훨씬 추측하기 어려워요. PIN 탭에서 설정하세요.",
     "confirmPasscodeForLock": "이 기능을 켜려면 패스코드를 입력하세요. 복구 문구 사본을 잠가서 패스코드로만 앱을 열 수 있게 해요.",
     "setupTitle": "잠금 해제 방법 선택",
     "setupPin": "PIN으로 여기 있는 모든 것을 잠금 해제해요.",
     "setupBiometric": "지문이나 얼굴은 이 기기에서만 앱의 잠금을 해제해요.",
+    "setupBiometricWeb": "지문이나 얼굴은 패스키를 통해 이 기기에서만 앱의 잠금을 해제해요.",
     "setupBiometrics": "생체 인증",
-    "setupAddPinTitle": "보호된 노트용 PIN 추가",
+    "setupAddPinTitle": "잠금과 보호된 노트용 PIN 추가",
+    "fingerprintOnlyLock": "이 잠금은 지문으로만 열려요. PIN을 입력하면 두 번째 잠금 해제 방법으로 추가돼요.",
+    "fingerprintOnlyLockPasscode": "이 잠금은 지문으로만 열려요. 패스코드를 입력하면 두 번째 잠금 해제 방법으로 추가돼요.",
+    "fingerprintOnlyLockAction": "PIN 입력",
+    "fingerprintOnlyLockActionPasscode": "패스코드 입력",
     "appLockHeading": "앱 잠금",
     "relockAgainAfter": "다시 잠그기까지 시간",
     "notesHeading": "보호된 노트",
     "reaskAfter": "PIN을 다시 묻기까지 시간",
-    "reaskHint": "보호된 노트와 복구 문구에 적용돼요.",
+    "reaskHint": "보호된 노트, 보호된 섹션, 복구 문구에 적용돼요.",
+    "sectionsHint": "보관함 같은 섹션 전체는 사이드바에 있는 그 섹션의 메뉴에서 보호할 수 있어요.",
     "biometricHeading": "지문 또는 얼굴",
+    "biometricHeadingWeb": "지문 또는 얼굴 (패스키)",
     "blockCapture": "화면 캡처에서 숨기기",
     "blockCaptureHint": "기기가 지원하는 경우 스크린샷, 화면 녹화, 화면 공유에 노트가 보이지 않게 해요. 이 기기에만 적용돼요.",
     "perDeviceNote": "생체 인증 잠금 해제는 PIN과 같은 노트를 열어요. 이 기기에만 남고 동기화되지 않아요.",
@@ -203,8 +217,30 @@
     "disableConfirmBody": "이 기기에서 생체 인증 잠금 해제를 끌까요?",
     "disableConfirmBodyAppLock": "이 기기에서 생체 인증 잠금 해제를 끌까요? 앱 잠금도 함께 꺼져요."
   },
+  "passkeysTab": {
+    "intro": "새 기기에서 복구 문구를 입력하는 대신 패스키로 로그인하세요. 문구도 계속 작동해요.",
+    "add": "패스키 추가",
+    "adding": "추가하는 중...",
+    "lastUsed": "마지막 사용 {{date}}",
+    "neverUsed": "사용한 적 없음",
+    "removeTitle": "이 패스키를 제거할까요?",
+    "removeBody": "더 이상 이 패스키로 로그인할 수 없어요. 패스키 자체는 패스키 앱에서 삭제할 때까지 그곳에 남아 있어요.",
+    "retired": "문구가 바뀌기 전에 만든 패스키예요. 제거하고 다시 추가하세요.",
+    "noPrf": "이 패스키 앱은 문구를 보호할 수 없어서 패스키를 추가하지 않았어요. 기기의 자체 패스키나 다른 비밀번호 관리자를 사용해 보세요.",
+    "tooMany": "로그인용 패스키가 {{count}}개 있어요. 하나를 제거해야 다른 패스키를 추가할 수 있어요.",
+    "failed": "패스키를 추가하지 못했어요. 연결을 확인하고 다시 시도하세요.",
+    "appsOnly": "브라우저의 use.privacynotes.app에서 패스키를 추가하세요. 앱에서 패스키로 로그인하는 기능은 나중에 나와요.",
+    "empty": "아직 패스키가 없어요.",
+    "loadFailed": "패스키를 불러오지 못했어요. 연결을 확인하고 다시 시도하세요.",
+    "removeFailed": "패스키를 제거하지 못했어요. 연결을 확인하고 다시 시도하세요.",
+    "pinPrompt": "패스키를 추가하려면 4자리 PIN을 입력하세요.",
+    "pinPromptPasscode": "패스키를 추가하려면 패스코드를 입력하세요."
+  },
   "appLock": {
-    "phraseNotSaved": "이 기기에서 복구 문구를 저장하지 못해서 아무것도 바뀌지 않았어요. 다시 시도해 주세요."
+    "phraseNotSaved": "이 기기에서 복구 문구를 저장하지 못해서 아무것도 바뀌지 않았어요. 다시 시도해 주세요.",
+    "phraseInMemoryOnly": "이 브라우저에서 복구 문구를 보호하지 못해서 이 기기에 저장되지 않았어요. 이 탭을 새로 고치거나 닫으면 로그아웃되니 복구 문구를 가까이 두세요. 여기서 로그인 상태를 유지하려면 설정 > 보안 > 잠금에서 앱 잠금을 켜세요.",
+    "untrustedSignIn": "이 기기를 신뢰하지 않아서 로그인 정보가 이 기기에 저장되지 않았어요. 앱을 닫거나 새로 고치면 로그아웃되니 복구 문구를 가까이 두세요.",
+    "presenceGateRemoved": "지문 또는 얼굴 잠금 해제가 꺼졌어요. 이 브라우저가 그 키를 복구 문구 옆에 보관하고 있었거든요. PIN이나 패스코드로는 계속 앱 잠금을 해제할 수 있어요."
   },
   "pinSetup": {
     "description": "복구 문구를 볼 때 4자리 PIN이 필요해져요. 선택 사항이지만 함께 쓰는 공간에서는 권장해요.",
@@ -239,13 +275,21 @@
     "disableTitlePasscode": "패스코드를 입력해 보호를 해제하세요",
     "verifySubtitlePasscode": "이 항목의 잠금을 해제하려면 패스코드를 입력하세요. 잠금 해제는 보안 설정에서 정한 시간 동안 유지돼요.",
     "passcodeRequired": "패스코드 필요",
-    "deleteSubtitlePasscode": "이 보호된 항목을 삭제하려면 패스코드를 입력하세요."
+    "deleteSubtitlePasscode": "이 보호된 항목을 삭제하려면 패스코드를 입력하세요.",
+    "sectionTitle": "이 섹션은 보호되어 있어요",
+    "sectionBiometricSubtitle": "지문이나 얼굴로 이 섹션을 여세요.",
+    "sectionVerifySubtitle": "이 섹션을 열려면 4자리 PIN을 입력하세요. 잠금 해제는 보안 설정에서 정한 시간 동안 유지돼요.",
+    "sectionVerifySubtitlePasscode": "이 섹션을 열려면 패스코드를 입력하세요. 잠금 해제는 보안 설정에서 정한 시간 동안 유지돼요.",
+    "sectionDisableSubtitle": "안에 있는 항목은 그대로 있어요. 보호만 풀려요.",
+    "sectionBootstrapSubtitle": "이 섹션은 보호되어 있지만 이 기기에는 PIN이 설정되어 있지 않아요. 열려면 4자리 PIN을 설정하세요. PIN은 모든 기기에 동기화돼요."
   },
   "lockScreen": {
     "unlockApp": "<brand/> 잠금 해제",
     "subtitleWithBio": "지문, 얼굴 또는 PIN으로 계속하세요.",
     "subtitleNoBio": "계속하려면 PIN을 입력하세요.",
     "biometricFailed": "생체 인증에 실패했거나 취소됐어요.",
+    "deviceKeyUnavailable": "지금은 이 기기가 잠금을 열 수 없어요. 입력한 내용에는 문제가 없어요. 아래의 다른 방법(예: 복구 문구)으로 잠금을 해제하세요.",
+    "keyringCancelled": "키링의 잠금을 해제한 다음 다시 시도하세요.",
     "biometricUnopened": "생체 인증 잠금 해제로 노트를 열 수 없었어요. PIN이나 패스코드를 사용하거나, 생체 인증 잠금 해제를 다시 설정하세요.",
     "biometricGone": "이 기기에서 생체 인증 잠금 해제가 더 이상 작동하지 않아 다시 설정해야 해요. 아래의 다른 방법으로 잠금을 해제한 다음, 설정에서 생체 인증 잠금 해제를 다시 켜세요.",
     "verifying": "확인 중...",
@@ -273,9 +317,6 @@
     "upgradeHeading": "또는 Pro로 업그레이드",
     "upgradeBody": "1회 결제, 구독 없음. 무제한 기기에 이미지, 노트 히스토리 등이 더해져요.",
     "upgradeCta": "${{price}}에 Pro로 업그레이드",
-    "needMoreHeading": "기기가 더 필요한가요?",
-    "needMoreBody": "이 빌드에서는 Pro 업그레이드를 제공하지 않아요. 세 번째 기기가 정말 필요하면 연락 주세요. 해결해 드릴게요.",
-    "contactSupport": "지원팀에 문의",
     "saveRecoveryHeading": "복구 문구를 저장하세요",
     "saveRecoveryBody": "OAuth로 로그인했어요. 복구 문구도 함께 적어 두세요. OAuth에 문제가 생기거나 모든 기기에서 잠겼을 때의 대비책이에요.",
     "hide": "숨기기",
@@ -310,7 +351,7 @@
     "custodial": "문구의 암호화된 사본을 저희가 보관해요. 계정을 하나 이상 연결해 두거나, 마지막 계정의 연결을 해제하기 전에 자가 보관으로 전환하세요.",
     "selfCustody": "새 기기에서는 연결된 계정으로도 노트를 열려면 복구 문구가 필요해요. 계정을 연결해도 문구가 저희에게 저장되지는 않아요.",
     "mfaRequired": "모든 로그인 방식에서 2단계 로그인이 켜진 상태로 유지돼요. 인증 앱이나 저장한 백업 키를 보관하세요.",
-    "unavailable": "아직 연결된 계정을 변경할 수 없어요. 기존 로그인은 계속 사용할 수 있어요.",
+    "unavailable": "연결된 계정 변경이 일시적으로 꺼져 있어요. 기존 로그인은 계속 사용할 수 있어요.",
     "loading": "연결된 계정 확인 중...",
     "emailHidden": "이메일이 공유되지 않았어요",
     "disconnectAccount": "{{provider}} 계정 {{email}} 연결 해제",
@@ -379,7 +420,7 @@
     "signInAgain": "다시 로그인",
     "lostAuthenticator": "휴대폰을 잃어버렸나요?",
     "restore": "백업 키를 아무 인증 앱에 추가한 뒤 그 코드를 PrivacyNotes에 입력하세요.",
-    "noBackup": "휴대폰도 백업 키도 없나요? 저희는 2FA를 재설정하지 않으며 고객 지원에서도 도와드릴 수 없어요. 이 기기의 노트를 내보내고 새 보관함을 시작하세요.",
+    "noBackup": "휴대폰도 백업 키도 없나요? 저희는 2FA를 재설정하지 않으며 고객 지원에서도 도와드릴 수 없어요. 이 기기의 노트를 \"전체, 암호화 안 됨 (.zip)\"으로 내보내고 새 보관함을 시작하세요.",
     "localNotes": "지금은 아닌가요? 이 기기의 노트는 계속 쓸 수 있어요. 코드를 입력하면 동기화가 다시 시작돼요.",
     "useLocalNotes": "나중에 하기"
   },
@@ -389,7 +430,7 @@
     "loading": "2FA 확인 중...",
     "retry": "다시 시도",
     "unavailable": "2FA를 확인하지 못했어요. 이 기기의 노트는 안전해요. 연결을 확인하고 다시 시도하세요.",
-    "notAvailable": "아직 2FA를 사용할 수 없어요.",
+    "notAvailable": "2FA가 일시적으로 꺼져 있어요. 나중에 다시 시도하세요.",
     "actionFailed": "잘 되지 않았어요. 연결을 확인하고 다시 시도하세요. 이 기기의 노트는 안전해요.",
     "warning": "휴대폰이나 백업 키를 잘 보관하세요. 둘 다 잃어버리면 새 기기에서 로그인할 수 없어요. 이는 사용자의 안전을 위한 거예요. 저희는 2FA를 재설정하지 않으며 고객 지원에서도 도와드릴 수 없어요.",
     "cannotEnroll": "2FA를 설정하려면 문구나 연결된 계정으로 다시 로그인하세요.",
@@ -418,6 +459,7 @@
     "backupWarning": "휴대폰을 잃어버렸나요? 이 키로 코드를 되찾을 수 있어요. PrivacyNotes 밖의 안전한 곳에 보관하세요.",
     "savedAcknowledgment": "백업 키를 저장했어요.",
     "confirmBackup": "이전 단계의 백업 키를 다시 입력한 뒤 앱의 코드를 입력하세요.",
+    "disconnectsConnections": "2FA를 켜면 브라우저 확장 프로그램과 명령줄의 연결이 끊겨요. 확장 프로그램은 설정 > 확장 프로그램에서, 명령줄은 설정 > CLI에서 다시 연결하세요.",
     "codeLabel": "앱의 코드",
     "cancelSetup": "취소",
     "enabled": "2FA가 켜져 있어요",
@@ -447,6 +489,7 @@
   },
   "phraseChange": {
     "lengthGroup": "문구 길이",
+    "lengthLater": "길이나 문구는 나중에 설정 > 보안 > 문구에서 바꿀 수 있어요.",
     "badgeMargin": "추가 여유",
     "rowWrite": "적어 두기",
     "write12": "손으로 옮겨 적기 쉬워요.",
@@ -498,10 +541,22 @@
     "failed": "문구가 바뀌지 않았어요.",
     "failedTooMany": "지난 24시간 동안 문구가 세 번 바뀌었어요. 나중에 다시 시도하세요.",
     "failedMoved": "그사이 다른 기기에서 설정이 바뀌었어요. 다시 시도하세요.",
+    "failedSettingsMoved": "그사이 다른 기기에서 설정이 바뀌었어요. 다시 시도하세요. 이번에는 설정이 또 바뀌더라도 문구 변경이 설정을 대체해요.",
     "failedTwoFactor": "2FA 코드가 받아들여지지 않았어요. 다시 시도하세요.",
     "failedKeyRing": "이 기기에는 이전 문구의 키가 없어요. 키가 있는 기기에서 변경하세요.",
     "failedBiometric": "지문이나 얼굴이 이 기기의 유일한 잠금이에요. 변경하려면 지문이나 얼굴로 확인하세요.",
+    "failedCannotBind": "지문이나 얼굴이 이 기기의 유일한 잠금인데, 이 기기에서는 그것으로 새 문구를 보호할 수 없어요. 먼저 설정 > 보안 > PIN에서 PIN이나 패스코드를 설정한 다음 변경하세요.",
     "failedUnsynced": "이 기기의 일부 설정이 아직 동기화되지 않았어요. 잠시 기다린 뒤 다시 시도하세요.",
-    "failedOffline": "서버가 지금 변경을 받지 못했어요. 연결을 확인하고 다시 시도하세요."
+    "failedOffline": "서버가 지금 변경을 받지 못했어요. 연결을 확인하고 다시 시도하세요.",
+    "signInPasskeysReset_other": "로그인용 패스키 {{count}}개가 더 이상 작동하지 않아요. 변경한 뒤에 다시 추가하세요."
+  },
+  "releaseNotice": {
+    "sent": "{{when}}에 새 기기가 계정에 로그인했어요. 본인이 아니라면 \"기기\"에서 제거하세요."
+  },
+  "releaseApproval": {
+    "ask": "{{when}}에 새 로그인이 복구 문구를 요청하고 있어요(코드 {{code}}). 본인이 맞고 새 기기에 같은 코드가 표시될 때만 허용하세요.",
+    "waiting": "새 로그인이 복구 문구를 요청하고 있어요(코드 {{code}}). 거부하지 않으면 {{when}} 이후에 문구가 전달돼요. 본인이 맞고 새 기기에 같은 코드가 표시될 때만 허용하세요.",
+    "allow": "허용",
+    "deny": "거부"
   }
 }

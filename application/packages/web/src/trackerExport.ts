@@ -33,6 +33,27 @@ export function waterText(glasses: number, unit: WaterUnit = 'glasses'): string 
     : `${shown} ${i18n.t(`trackers:units.water.${unit}`)}`;
 }
 
+/** Sleep, stored in decimal hours, the way a clock reads it: "7h 37m",
+ *  "8h". A night is hours and minutes, never a fraction (GitHub #792). */
+export function sleepHoursText(hours: number): string {
+  const { h, m } = splitSleepHours(hours);
+  return m === 0
+    ? `${h}${i18n.t('trackers:units.hoursSuffix')}`
+    : i18n.t('trackers:units.hoursMinutes', { h, m });
+}
+
+/** Decimal hours as whole hours and minutes: 7.6167 is 7 and 37. */
+export function splitSleepHours(hours: number): { h: number; m: number } {
+  const total = Math.round(Math.max(0, hours) * 60);
+  return { h: Math.floor(total / 60), m: total % 60 };
+}
+
+/** Hours and minutes as the stored decimal hours, to the minute: 7 and 37
+ *  is 7.6167, which reads back as 7 and 37. */
+export function joinSleepHours(h: number, m: number): number {
+  return Math.round(((h * 60 + m) / 60) * 10000) / 10000;
+}
+
 /** Caffeine, stored in cups, in the person's unit: "2 cups", "190 mg". */
 export function caffeineText(cups: number, unit: CaffeineUnit = 'cups'): string {
   const shown = caffeineToDisplay(cups, unit);
@@ -144,7 +165,7 @@ export function trackerRows(
   if (isSleep(d.sleep)) {
     const quality = t(`sleep.quality.${d.sleep.quality}`);
     add('sleep', d.sleep.hours != null
-      ? `${quality} (${d.sleep.hours}${t('units.hoursSuffix')})`
+      ? `${quality} (${sleepHoursText(d.sleep.hours)})`
       : quality);
   }
 
