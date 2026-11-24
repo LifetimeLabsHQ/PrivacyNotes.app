@@ -181,7 +181,7 @@ If you cannot use GitHub, email **sec@lifetimelabs.dev** as a backup. That addre
 <!-- credits:start -->
 ## Credits
 
-PrivacyNotes is shaped by the people who report bugs and ask for features in our issues. 116 people have opened an issue, and 541 reports are now fixed or built.
+PrivacyNotes is shaped by the people who report bugs and ask for features in our issues. 116 people have opened an issue, and 545 reports are now fixed or built.
 
 <p align="center">
 <a href="https://github.com/tech2-user" title="tech2-user, 87 shipped"><img src="https://github.com/tech2-user.png?size=112" width="56" height="56" alt="tech2-user"></a>
@@ -189,9 +189,9 @@ PrivacyNotes is shaped by the people who report bugs and ask for features in our
 <a href="https://github.com/scamidge" title="scamidge, 33 shipped"><img src="https://github.com/scamidge.png?size=112" width="56" height="56" alt="scamidge"></a>
 <a href="https://github.com/Real-Fruit-Snacks" title="Real-Fruit-Snacks, 29 shipped"><img src="https://github.com/Real-Fruit-Snacks.png?size=112" width="56" height="56" alt="Real-Fruit-Snacks"></a>
 <a href="https://github.com/AndreFeliciano" title="AndreFeliciano, 27 shipped"><img src="https://github.com/AndreFeliciano.png?size=112" width="56" height="56" alt="AndreFeliciano"></a>
-<a href="https://github.com/MrJarvisHere" title="MrJarvisHere, 19 shipped"><img src="https://github.com/MrJarvisHere.png?size=112" width="56" height="56" alt="MrJarvisHere"></a>
+<a href="https://github.com/MrJarvisHere" title="MrJarvisHere, 20 shipped"><img src="https://github.com/MrJarvisHere.png?size=112" width="56" height="56" alt="MrJarvisHere"></a>
+<a href="https://github.com/snogglefromp" title="snogglefromp, 16 shipped"><img src="https://github.com/snogglefromp.png?size=112" width="56" height="56" alt="snogglefromp"></a>
 <a href="https://github.com/shriganesh" title="shriganesh, 15 shipped"><img src="https://github.com/shriganesh.png?size=112" width="56" height="56" alt="shriganesh"></a>
-<a href="https://github.com/snogglefromp" title="snogglefromp, 14 shipped"><img src="https://github.com/snogglefromp.png?size=112" width="56" height="56" alt="snogglefromp"></a>
 <a href="https://github.com/mburr" title="mburr, 12 shipped"><img src="https://github.com/mburr.png?size=112" width="56" height="56" alt="mburr"></a>
 <a href="https://github.com/laulaugaby" title="laulaugaby, 12 shipped"><img src="https://github.com/laulaugaby.png?size=112" width="56" height="56" alt="laulaugaby"></a>
 <a href="https://github.com/les-incompetent" title="les-incompetent, 11 shipped"><img src="https://github.com/les-incompetent.png?size=112" width="56" height="56" alt="les-incompetent"></a>
@@ -220,6 +220,7 @@ PrivacyNotes is shaped by the people who report bugs and ask for features in our
 <a href="https://github.com/Xarcell" title="Xarcell, 3 shipped"><img src="https://github.com/Xarcell.png?size=112" width="56" height="56" alt="Xarcell"></a>
 <a href="https://github.com/tactfuljeer" title="tactfuljeer, 3 shipped"><img src="https://github.com/tactfuljeer.png?size=112" width="56" height="56" alt="tactfuljeer"></a>
 <a href="https://github.com/825i" title="825i, 3 shipped"><img src="https://github.com/825i.png?size=112" width="56" height="56" alt="825i"></a>
+<a href="https://github.com/adrcotfas" title="adrcotfas, 3 shipped"><img src="https://github.com/adrcotfas.png?size=112" width="56" height="56" alt="adrcotfas"></a>
 <a href="https://github.com/Alexander182182" title="Alexander182182, 3 shipped"><img src="https://github.com/Alexander182182.png?size=112" width="56" height="56" alt="Alexander182182"></a>
 <a href="https://github.com/ameetjeeva" title="ameetjeeva, 3 shipped"><img src="https://github.com/ameetjeeva.png?size=112" width="56" height="56" alt="ameetjeeva"></a>
 <a href="https://github.com/iplayball" title="iplayball, 3 shipped"><img src="https://github.com/iplayball.png?size=112" width="56" height="56" alt="iplayball"></a>
