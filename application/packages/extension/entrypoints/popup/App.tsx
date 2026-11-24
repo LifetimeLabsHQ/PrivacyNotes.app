@@ -23,6 +23,7 @@ import { useEscapeToClose } from '@web/useEscapeToClose';
 import { APP_KEYS, keyText, matchesKey } from '@web/shortcutMatch';
 import { SETTINGS_TRACK, settingsSegClass } from '@web/settingsUI';
 import { disconnect, readConnection, type Connection } from '../../src/connection';
+import { knownPro } from '../../src/logins';
 import { LOCK_CHOICES, readPrefs, writePrefs, type LockAfter, type PopupTab, type TypeFilter } from '../../src/prefs';
 import { takeRoute } from '../../src/route';
 import { activeTab } from '../../src/tabs';
@@ -83,6 +84,9 @@ export function App() {
   };
   const [lockAfter, setLockAfter] = useState<LockAfter>(900);
   const [offerPasskeys, setOfferPasskeys] = useState(true);
+  const [organizeOpen, setOrganizeOpen] = useState(false);
+  const [proKnown, setProKnown] = useState<boolean | null>(null);
+  const [unlockingFromOrganize, setUnlockingFromOrganize] = useState(false);
   const [pendingPasskey, setPendingPasskey] = useState(false);
   const [focusNonce, setFocusNonce] = useState(0);
   const notices = useNotices();
@@ -104,6 +108,9 @@ export function App() {
   useEffect(() => {
     if (editLocked) setView({ kind: 'main' });
   }, [editLocked]);
+  useEffect(() => {
+    if (vault.unlocked === true && unlockingFromOrganize) setUnlockingFromOrganize(false);
+  }, [vault.unlocked, unlockingFromOrganize]);
   // The popup's own keys, the app's (Settings, search): the handler reads
   // this render's state, so it is set after the early returns below.
   const onKey = useRef<((e: KeyboardEvent) => void) | null>(null);
@@ -115,9 +122,11 @@ export function App() {
 
   useEffect(() => {
     // A passkey prompt leaves a route for the next popup.
-    void Promise.all([readConnection(), PASSKEY_REQUEST ? null : takeRoute(), readPrefs(), activeTab()]).then(([c, r, prefs, active]) => {
+    void Promise.all([readConnection(), PASSKEY_REQUEST ? null : takeRoute(), readPrefs(), activeTab(), knownPro()]).then(([c, r, prefs, active, pro]) => {
       setTypeFilter(prefs.typeFilter);
       setOfferPasskeys(prefs.offerPasskeys);
+      setOrganizeOpen(prefs.organizeOpen);
+      setProKnown(pro);
       setViewPrefs({ showTotp: prefs.showTotp, totpBar: prefs.totpBar, favicons: prefs.favicons });
       setLockAfter(prefs.lockAfter);
       // A route opens the tab its job needs, once; the remembered tab stays.
@@ -137,15 +146,22 @@ export function App() {
     // A revoke seen by the background forgets the connection: follow it. A
     // new connection is the Connect view's own, which shows its confirmation.
     const onChange = (changes: Record<string, { newValue?: unknown }>, area: string) => {
-      if (area === 'local' && 'connection' in changes && !changes.connection?.newValue) setConnection(null);
+      if (area === 'local' && 'connection' in changes && !changes.connection?.newValue) {
+        setConnection(null);
+        setUnlockingFromOrganize(false);
+        setProKnown(null);
+        setOrganizeOpen(false);
+        setView({ kind: 'main' });
+      }
     };
     browser.storage.onChanged.addListener(onChange);
     return () => browser.storage.onChanged.removeListener(onChange);
   }, []);
 
-  // Escape: the search first, then a sheet, then the popup or window itself.
+  // Escape: inline unlock overlay first, then search, then a sheet, then the popup itself.
   // The hook takes the key from the browser, so the last step closes it here.
   useEscapeToClose(() => {
+    if (unlockingFromOrganize) return setUnlockingFromOrganize(false);
     if (query) return setQuery('');
     // A page opened from Settings goes back to Settings (owner, 2026-11-11).
     if (view.kind === 'changeSecret' || view.kind === 'shortcuts' || view.kind === 'biometric') return setView({ kind: 'settings' });
@@ -219,6 +235,8 @@ export function App() {
             <ConnectView
               onConnected={(c, note) => {
                 setConnection(c);
+                setUnlockingFromOrganize(false);
+                void knownPro().then(setProKnown);
                 notices.notify({ title: t('connect.connected'), detail: note ?? (c.logins && c.clips ? t('connect.connectedBoth') : c.logins ? t('notes:vaultFilter.logins') : t('connect.connectedClips')) });
               }}
             />
@@ -239,15 +257,40 @@ export function App() {
   }
 
   const unlocked = vault.unlocked === true;
+  const hydrated = vault.unlocked !== null && (!unlocked || vault.loaded);
+  const pro = unlocked && vault.loaded ? vault.pro : proKnown !== false;
   const bothTabs = !!connection.clips && !!connection.logins;
   const shownTab: PopupTab = bothTabs ? tab : connection.logins ? 'vault' : 'clip';
   const pickTab = (next: PopupTab) => {
+    setUnlockingFromOrganize(false);
     setTab(next);
     void writePrefs({ tab: next });
+  };
+  const handleUnlocked = () => {
+    vault.onUnlocked();
+    void knownPro().then(setProKnown);
+    setUnlockingFromOrganize(false);
+  };
+  const organize = {
+    canFolder: !!connection.logins,
+    hydrated,
+    unlocked,
+    // Known-free accounts see the Pro gate immediately, even while locked;
+    // before the first unlock (`proKnown === null`) offer Unlock first.
+    pro,
+    folders: unlocked && vault.loaded && vault.pro ? (vault.organizer?.folders ?? []) : [],
+    knownTags: unlocked && vault.loaded ? (vault.organizer?.tags ?? []) : [],
+    open: organizeOpen,
+    onOpenChange: (next: boolean) => {
+      setOrganizeOpen(next);
+      void writePrefs({ organizeOpen: next });
+    },
+    onUnlock: () => setUnlockingFromOrganize(true),
   };
   // The app's keys where the popup has the same command: Settings (Mod+,)
   // and search (/), shown in the tooltips as the app shows them (owner, 2026-11-11).
   onKey.current = (e) => {
+    if (unlockingFromOrganize) return;
     const el = e.target instanceof HTMLElement ? e.target : null;
     const typing = !!el && (el.isContentEditable || el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT');
     if (matchesKey(e, APP_KEYS.openSettings, typing)) {
@@ -377,11 +420,11 @@ export function App() {
       <main className="flex-1">
         {shownTab === 'clip' ? (
           <div className="p-3">
-            <ClipView connection={connection} bookmarkKeys={keys['save-bookmark']} noteKeys={keys['save-note']} bookmark={unlocked && url ? bookmarkOfPage(vault.entries, url) : null} />
+            <ClipView connection={connection} bookmarkKeys={keys['save-bookmark']} noteKeys={keys['save-note']} bookmark={unlocked && url ? bookmarkOfPage(vault.entries, url) : null} organize={organize} />
           </div>
         ) : vault.unlocked === null ? null : !unlocked ? (
           <div className="p-3">
-            <Unlock connection={connection} onUnlocked={vault.onUnlocked} focusNonce={focusNonce} />
+            <Unlock connection={connection} onUnlocked={handleUnlocked} focusNonce={focusNonce} />
           </div>
         ) : (
           <VaultSections vault={vault} url={url} tabId={tabId} loginKeys={keys['copy-login']} query={query} typeFilter={typeFilter} menu={openMenu} onEdit={(login) => setView({ kind: 'editLogin', login })} />
@@ -390,10 +433,21 @@ export function App() {
     </>
   );
 
+  const showOrganizeUnlock = unlockingFromOrganize && !!connection.logins;
   return (
     <NotifyProvider notify={notices.notify}>
       <ViewPrefsProvider value={viewPrefs}>
       <div className="flex flex-1 flex-col">
+        {showOrganizeUnlock && (
+          <>
+            <SheetHeader title={t('security:lockScreen.unlock')} onBack={() => setUnlockingFromOrganize(false)} />
+            <div className="p-3">
+              <Unlock connection={connection} onUnlocked={handleUnlocked} focusNonce={focusNonce} />
+            </div>
+          </>
+        )}
+        {/* Keep Clip/New note/Add login mounted underneath the unlock overlay so in-progress form state survives unlock. */}
+        <div className={showOrganizeUnlock ? 'hidden' : 'contents'}>
         {view.kind === 'changeSecret' ? (
           <ChangeSecretView
             connection={connection}
@@ -440,6 +494,9 @@ export function App() {
               disconnectLoses={pendingPasskey}
               onDisconnect={() => disconnect(connection).then(() => {
                 setConnection(null);
+                setUnlockingFromOrganize(false);
+                setProKnown(null);
+                setOrganizeOpen(false);
                 setView({ kind: 'main' });
               })}
             />
@@ -467,14 +524,15 @@ export function App() {
             <GeneratorView />
           </>
         ) : view.kind === 'note' ? (
-          <NoteView start={view.start} onDone={backFrom} />
+          <NoteView start={view.start} organize={organize} onDone={backFrom} />
         ) : view.kind === 'addLogin' ? (
-          <AddLoginView url={url} logins={loginsOf(vault.entries)} pro={vault.pro} onDone={backFrom} />
+          <AddLoginView url={url} logins={loginsOf(vault.entries)} pro={pro} organize={organize} onDone={backFrom} />
         ) : view.kind === 'editLogin' && !editLocked ? (
           <AddLoginView url={url} logins={loginsOf(vault.entries)} pro={vault.pro} onDone={backFrom} edit={view.login} />
         ) : (
           main
         )}
+        </div>
         {/* The footer shows only a message, under the screen: the popup grows
             by its height while it shows. */}
         {notices.shown && <Footer notice={notices.shown} onGone={notices.clear} />}

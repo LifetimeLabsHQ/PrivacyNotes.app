@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "Her şeyin kilidini {{price}} karşılığında aç",
     "ctaOpening": "Ödeme sayfası açılıyor...",
     "ctaSignUp": "Kilidi açmak için kaydol",
+    "localOnlyHint": "Yükseltme işlemi, hesabınızı kaydetmek ve Pro'yu etkinleştirmek için bir kez bağlanır. Eşitleme kapalı kalır.",
+    "localOnlyOffline": "Yükseltmek için internete bağlanın.",
     "features": {
       "folders": "İç içe klasörler",
       "lock": "Kilit ve PIN",

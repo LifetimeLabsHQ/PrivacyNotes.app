@@ -97,7 +97,10 @@
     "googleCalendar": "O .zip de Settings > Import & export do Google Calendar, ou um único arquivo .ics. Os eventos mantêm seus horários, repetições e lembretes.",
     "appleNotes": "Exporte pelo app gratuito Exporter como Markdown e solte o .zip aqui.",
     "appleJournal": "Exporte do Diário no Mac ou iPhone, comprima a pasta AppleJournalEntries e solte o .zip. As entradas são importadas como entradas de diário com suas fotos, vídeos, memorandos de voz e localizações.",
+    "dayOne": "No Day One, escolha Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media) na web, ou File > Export > JSON no Mac ou iOS. Solte o .zip ou .json aqui. As entradas mantêm o dia, as etiquetas, as estrelas, o lugar, o clima e as mídias.",
+    "todoist": "No Todoist, baixe um backup .zip em Settings > Backups (Pro), ou abra um projeto e escolha ... > Import & export > Export as CSV. Cada projeto vira uma lista de tarefas com suas seções, subtarefas, prioridades, datas de vencimento, etiquetas, descrições e comentários.",
     "daylio": "No Daylio, escolha More > Backup & Restore > Advanced Options > Export, feche o Daylio e solte o arquivo .daylio. Cada entrada vira uma entrada de diário com seu humor, atividades, escalas, fotos e gravações de voz. O CSV de More > Export Entries também funciona, sem fotos.",
+    "diaro": "No Diaro, escolha Settings > Data > Backup & restore, toque em +, deixe a criptografia desativada e os anexos ativados e solte o backup .zip aqui. Um arquivo DiaroBackup.xml sozinho também funciona, sem fotos. As entradas mantêm o dia, as pastas, as etiquetas, os humores, os lugares, o clima e as fotos.",
     "diarium": "No Diarium, escolha Export, selecione JSON com Attachments ativado e salve no armazenamento local. Solte o .zip, ou um .json sem anexos. As entradas mantêm a avaliação como humor, as etiquetas, as pessoas, os rastreadores, o lugar e os anexos.",
     "googleJournal": "No Journal do seu Pixel, ative Settings > Back up your journal. Depois escolha Journal no Google Takeout e solte o .zip que ele enviar. As entradas mantêm o dia, o título, o texto, as fotos e os vídeos.",
     "excalidraw": "Desenhos salvos no excalidraw.com: um arquivo .excalidraw, ou vários dentro de um zip. Desenhos do plugin Excalidraw do Obsidian também funcionam, como arquivos .excalidraw.md. As imagens dentro de um desenho vêm junto.",
@@ -108,6 +111,7 @@
     "obsidian": "Vault do Obsidian em .zip. Preserva etiquetas, links entre notas, estrutura de pastas, #hashtags no texto, e imagens e arquivos embutidos. Os canvas e os desenhos do Excalidraw viram desenhos, e um arquivo .canvas sozinho também pode ser importado.",
     "obsidianCanvas": "Um arquivo .canvas do seu vault do Obsidian, ou o vault inteiro em .zip para trazer todos os canvas. Cada canvas vira um desenho: cartões, grupos, setas e cores vêm junto, e as imagens também, quando estão no .zip.",
     "notesnook": "Export do Notesnook como .zip. Escolha HTML ao exportar para manter formatação, cadernos, etiquetas e anexos.",
+    "notion": "No Notion, escolha Settings > General > Export > Workspace content (ou o menu de uma página > More > Export), selecione \"Markdown & CSV\" com subpáginas e pastas ativadas e solte o .zip aqui. Remove os IDs do Notion dos títulos e das pastas, mantém subpáginas como pastas, converte avisos e links internos em links entre notas e traz imagens, arquivos e páginas de linhas de banco de dados junto.",
     "bear": "No Bear, escolha File > Backup Notes... e solte o arquivo .bear2bk aqui. Etiquetas e etiquetas aninhadas, notas fixadas, o arquivo, a lixeira, os destaques com suas cores, os links entre notas e os anexos vêm junto.",
     "joplin": "O arquivo .jex de File > Export all > \"JEX - Joplin Export File\". Cadernos viram pastas, e etiquetas, tarefas, links entre notas e anexos vêm junto.",
     "anytype": "O .zip Any-Block v1 em JSON de space settings > Export, com os arquivos e os objetos arquivados incluídos. Coleções viram pastas, e etiquetas, tarefas, avisos, blocos recolhíveis, tabelas, links entre notas e arquivos vêm junto.",
@@ -134,7 +138,13 @@
     "fullBackupTitle": "Backup completo (.zip)",
     "fullBackupDesc": "Restaure notas, diários, itens do cofre, tarefas, imagens, áudio e arquivos. Uma nota que você já tem é mantida, ou atualizada se o backup tiver uma versão mais recente dela.",
     "encryptedBackupTitle": "Backup criptografado (.pnbackup, .pnbackupz)",
-    "encryptedBackupDesc": "Restaure um backup criptografado com a chave da sua frase. Um .pnbackupz traz tudo de volta, arquivos incluídos; um .pnbackup contém apenas texto e metadados. Você precisa estar conectado com a mesma conta que o criou."
+    "encryptedBackupDesc": "Restaure um backup criptografado com a chave da sua frase. Um .pnbackupz traz tudo de volta, arquivos incluídos; um .pnbackup contém apenas texto e metadados. Backups de outro dispositivo ou conta vão pedir a frase de recuperação desse backup."
+  },
+  "restoreForeign": {
+    "title": "Desbloquear com outra frase de recuperação",
+    "body": "Este backup não foi criptografado com a sua frase atual. Digite ou escaneie a frase de recuperação do dispositivo que o criou. Suas notas serão importadas para este cofre.",
+    "unlock": "Desbloquear backup",
+    "wrongPhrase": "Essa frase de recuperação não desbloqueou este backup. Confira as palavras e tente de novo."
   },
   "restoreGate": {
     "wait": "A restauração espera até este dispositivo ficar online e concluir uma sincronização, para que seu backup seja associado às notas que já estão na sua conta em vez de adicioná-las duas vezes.",
@@ -316,7 +326,8 @@
     "title_one": "{{count}} item foi compartilhado com o PrivacyNotes",
     "title_other": "{{count}} itens foram compartilhados com o PrivacyNotes",
     "line": "Nada é salvo até você escolher.",
-    "saveAll": "Salvar tudo"
+    "saveAll": "Salvar tudo",
+    "saveAs": "Salvar como"
   },
   "destination": {
     "none": "Sem pasta",

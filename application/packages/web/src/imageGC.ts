@@ -67,6 +67,8 @@ import { decryptNote, base64ToBytes, type SupabaseClient } from '@notes/shared';
 import { db } from './db';
 import { openWithRing } from './keyRing';
 import { isDemoMode } from './demo';
+import { isLocalOnly, isLocalTruthOnly } from './localOnly';
+import { readFlushStashBodies } from './flushStash';
 import { isServerWriteBlocked } from './syncPause';
 import { fetchQuotaUsage, recalculateQuota } from './devices';
 import { blobBackend, type BlobEntry } from './blobStore';
@@ -446,9 +448,81 @@ async function listBucket(supabase: SupabaseClient, pubkey: string): Promise<Blo
  * leaves it to that reconcile.
  */
 export async function uploadAgainAfterRestore(supabase: SupabaseClient, pubkey: string): Promise<void> {
-  if (isDemoMode() || navigator.onLine === false) return;
+  if (isDemoMode() || isLocalOnly() || navigator.onLine === false) return;
   const objects = await listBucket(supabase, pubkey);
   if (objects) await uploadAgainWhatIsMissing(new Set(objects.map((o) => o.uuid)));
+}
+
+/**
+ * Local-only phase-2 blob GC (GitHub #862). Runs when the vault was born
+ * locally and has never synced (`isLocalTruthOnly()`, which covers both
+ * `localOnly` and Pro-with-Sync-off `neverSynced` vaults). Shares
+ * `sweepInFlight` with `sweepBlobGC`, checks references only against live
+ * non-deleted notes plus any un-replayed flush stash bodies, re-checks
+ * `isLocalTruthOnly()` after every await so graduation mid-sweep aborts
+ * safely, and drops unreferenced local cache + dedup + queue rows once they
+ * clear the 24h grace period.
+ */
+export async function sweepLocalOnlyBlobGC(
+  now: number = Date.now(),
+  graceMs: number = BLOB_GC_GRACE_MS,
+): Promise<number> {
+  if (isDemoMode() || !isLocalTruthOnly()) return 0;
+  if (sweepInFlight) return 0;
+  sweepInFlight = true;
+  try {
+    const queued = await db.blobGC.toArray();
+    if (!isLocalTruthOnly() || queued.length === 0) return 0;
+
+    const cutoff = new Date(now - graceMs).toISOString();
+    const entries = queued.filter((e) => e.enqueuedAt <= cutoff);
+    if (entries.length === 0) return 0;
+
+    const uuids = entries.map((e) => e.uuid);
+    const referenced = new Set<string>();
+    const remaining = new Set(uuids);
+
+    // Protect any blob referenced in an un-replayed flush stash.
+    for (const body of readFlushStashBodies()) {
+      for (const uuid of remaining) {
+        if (body.includes(uuid)) {
+          referenced.add(uuid);
+          remaining.delete(uuid);
+        }
+      }
+    }
+
+    if (remaining.size > 0) {
+      await db.notes
+        .where('deleted')
+        .equals(0)
+        .each((note) => {
+          if (remaining.size === 0) return;
+          for (const uuid of remaining) {
+            if (note.body.includes(uuid)) {
+              referenced.add(uuid);
+              remaining.delete(uuid);
+            }
+          }
+        });
+    }
+    if (!isLocalTruthOnly()) return 0;
+
+    const cancelled = entries.filter((e) => referenced.has(e.uuid)).map((e) => e.uuid);
+    const toRemove = entries.filter((e) => !referenced.has(e.uuid)).map((e) => e.uuid);
+
+    if (cancelled.length > 0) {
+      await db.blobGC.bulkDelete(cancelled);
+    }
+    if (!isLocalTruthOnly()) return 0;
+    if (toRemove.length > 0) {
+      await dropLocalCopies(toRemove);
+      await db.blobGC.bulkDelete(toRemove);
+    }
+    return toRemove.length;
+  } finally {
+    sweepInFlight = false;
+  }
 }
 
 /**
@@ -467,7 +541,7 @@ export async function sweepBlobGC(
   // Below the release floor server writes pause (see sync.ts) - and GC
   // deletes are the most dangerous write of all here, because an old client
   // is deleting blobs based on reference rules that may have changed.
-  if (isDemoMode() || isServerWriteBlocked() || navigator.onLine === false) return;
+  if (isDemoMode() || isLocalOnly() || isServerWriteBlocked() || navigator.onLine === false) return;
   if (sweepInFlight) return;
   sweepInFlight = true;
 
@@ -670,7 +744,7 @@ export async function reconcileOrphanBlobs(
   imageStore: ImageStore,
 ): Promise<void> {
   // Same release-floor pause as sweepBlobGC above.
-  if (isDemoMode() || isServerWriteBlocked() || navigator.onLine === false) return;
+  if (isDemoMode() || isLocalOnly() || isServerWriteBlocked() || navigator.onLine === false) return;
   if (reconcileInFlight) return;
 
   const last = Number(localStorage.getItem(RECONCILE_AT_KEY) ?? 0);

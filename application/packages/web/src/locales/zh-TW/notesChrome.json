@@ -57,7 +57,12 @@
     "moreNotes": "還有 {{count}} 則",
     "appLockHint": "共用裝置？請到「設定 > 安全性」開啟應用程式鎖定。",
     "unopenedWarn_other": "有 {{count}} 則筆記的伺服器副本無法在這台裝置上開啟。登出會刪除這裡的副本，而它們可能是僅存的完好副本。請先到「設定 > ID & Sync」重新傳送。",
-    "unopenedKept_other": "有 {{count}} 則筆記的伺服器副本無法在這台裝置上開啟。登出後，這裡的副本仍會保留。"
+    "unopenedKept_other": "有 {{count}} 則筆記的伺服器副本無法在這台裝置上開啟。登出後，這裡的副本仍會保留。",
+    "localOnlyTitle": "要刪除這台裝置上的所有內容嗎？",
+    "localOnlyBody": "你的筆記只儲存在這台裝置上，從未同步。登出會將它們從這台裝置上永久刪除。",
+    "localOnlyCounts": "在這台裝置上：{{items}}。",
+    "localOnlyExportBackup": "匯出備份",
+    "localOnlyDeleteConfirm": "刪除並登出"
   },
   "signOutUpload": {
     "uploading": "正在上傳你最近的變更…",
@@ -122,6 +127,7 @@
   "burnShare": {
     "offline": "你目前離線。burn 連結需要與伺服器往返，請恢復連線後再試。",
     "demo": "burn 連結會儲存在伺服器上，而示範版不會連線到伺服器。註冊後即可建立真正的 burn 連結。",
+    "localOnly": "burn 連結需要線上帳號。請到「設定 > ID & Sync」開啟同步，即可分享 burn 連結。",
     "tooLarge": "筆記太大，無法透過 burn 連結分享（{{size}}KB）。上限為 {{max}}KB。",
     "storeFailed": "無法將 burn 筆記儲存到伺服器。",
     "rateLimited": "這個網路連線建立的 burn 連結太多了。請稍後再試。"

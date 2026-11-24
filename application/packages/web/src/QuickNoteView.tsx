@@ -14,7 +14,7 @@ import type { QuickNoteAnswer } from './quickNoteQueue';
  * search; locked, there is no search, so Escape closes the box and Open
  * PrivacyNotes is a button (Enter in the text is a new line). The draft is
  * the caller's, in memory only.
- * Spec: docs/internal/plans/quick-note-694.md (section 5.1); picture mockups/quick-note-694-10nov2026.html (C2 to C4)
+ * Spec: docs/internal/specs/quick-note-694.md (section 5.1); picture mockups/quick-note-694-10nov2026.html (C2 to C4)
  */
 
 export interface QuickNoteDraft {
@@ -22,7 +22,7 @@ export interface QuickNoteDraft {
   markdown: string;
 }
 
-/** How long the saved line shows before the box closes. Spec: docs/internal/plans/quick-note-694.md (section 5.1) */
+/** How long the saved line shows before the box closes. Spec: docs/internal/specs/quick-note-694.md (section 5.1) */
 const SAVED_MS = 800;
 
 export function QuickNoteView({ draft, onDraft, locked, onSave, onBack, onSaved, onOpenApp }: {

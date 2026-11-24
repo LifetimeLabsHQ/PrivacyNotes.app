@@ -288,7 +288,9 @@ impl SwiftLinker {
             let mut command = Command::new("swift");
             command.current_dir(&package.path);
 
-            let arch = match std::env::consts::ARCH {
+            // The target's arch, not the host's: an Intel build on Apple
+            // silicon (x86_64-apple-darwin) otherwise gets an arm64 archive.
+            let arch = match rust_target.arch.as_str() {
                 "aarch64" => "arm64",
                 arch => arch,
             };
@@ -301,10 +303,11 @@ impl SwiftLinker {
 
             // Xcode 27's SwiftPM appends the host -sdk/-target after the -Xswiftc
             // overrides below, so cross builds compile against the host SDK. Pass
-            // --triple there instead. macOS (host == target) is unaffected and
-            // keeps the legacy path.
+            // --triple there instead. A macOS build for the host's own arch is
+            // unaffected and keeps the legacy path.
             let xcode27 = xcode_major_version().map(|v| v >= 27).unwrap_or(false);
-            let cross_compiling = !matches!(rust_target.os, RustTargetOS::MacOS);
+            let cross_compiling = !matches!(rust_target.os, RustTargetOS::MacOS)
+                || rust_target.arch != std::env::consts::ARCH;
             let use_triple = cross_compiling && xcode27;
 
             // Xcode 27 SDKs reject iOS deployment targets below 15

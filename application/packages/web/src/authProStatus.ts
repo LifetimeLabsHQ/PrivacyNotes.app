@@ -46,8 +46,10 @@ export function useProStatus({
   authRef.current = auth;
   const account = auth.status === 'authenticated' || auth.status === 'device_limit_reached'
     ? auth.pubkey : null;
+  const localOnly = auth.status === 'authenticated' && auth.localOnly;
 
   async function refreshProStatus(opts?: { silent?: boolean; attempts?: number }) {
+    if (auth.status === 'authenticated' && auth.localOnly) return;
     const limitBlocked = auth.status === 'device_limit_reached';
     if (auth.status !== 'authenticated' && !limitBlocked) return;
     const stillCurrent = () => {
@@ -105,7 +107,7 @@ export function useProStatus({
   const refreshRef = useRef(refreshProStatus);
   refreshRef.current = refreshProStatus;
   useEffect(() => {
-    if (!account || isDemoMode()) return;
+    if (!account || localOnly || isDemoMode()) return;
     let stale = false;
     let busy = false;
     let lastCheck = -Infinity;
@@ -139,7 +141,7 @@ export function useProStatus({
       window.removeEventListener('focus', recheck);
       document.removeEventListener('visibilitychange', recheck);
     };
-  }, [account]);
+  }, [account, localOnly]);
 
   return { refreshProStatus };
 }

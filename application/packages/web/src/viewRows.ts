@@ -15,6 +15,10 @@ export function setViewOrder(order: readonly View[]): void {
   viewOrder = order;
 }
 
+export function getViewOrder(): readonly View[] {
+  return viewOrder;
+}
+
 /** Rows that keep their place at the top, in this order, whatever the stored
  *  order says: Home, then All. Spec: docs/internal/specs/dashboard.md (section 2) */
 const PINNED_TOP: readonly View[] = ['dashboard', 'home'];

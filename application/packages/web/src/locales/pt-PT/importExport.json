@@ -97,7 +97,10 @@
     "googleCalendar": "O .zip de Settings > Import & export do Google Calendar, ou um único ficheiro .ics. Os eventos mantêm as horas, as repetições e os lembretes.",
     "appleNotes": "Exporta pela app gratuita Exporter como Markdown e larga o .zip aqui.",
     "appleJournal": "Exporta do Diário no Mac ou no iPhone, comprime a pasta AppleJournalEntries e larga o .zip. As entradas importam-se como entradas de diário com as suas fotos, vídeos, memorandos de voz e localizações.",
+    "dayOne": "No Day One, escolhe Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media) na web, ou File > Export > JSON no Mac ou no iOS. Larga o .zip ou o .json aqui. As entradas mantêm o dia, as etiquetas, as estrelas, o local, o estado do tempo e os ficheiros multimédia.",
+    "todoist": "No Todoist, transfere um .zip de backup em Settings > Backups (Pro), ou abre um projeto e escolhe ... > Import & export > Export as CSV. Cada projeto passa a ser uma lista de tarefas com as suas secções, subtarefas, prioridades, datas de vencimento, etiquetas, descrições e comentários.",
     "daylio": "No Daylio, escolhe More > Backup & Restore > Advanced Options > Export, fecha o Daylio e larga o ficheiro .daylio. Cada entrada passa a ser uma entrada de diário com o seu humor, atividades, escalas, fotos e memorandos de voz. O CSV de More > Export Entries também funciona, sem fotos.",
+    "diaro": "No Diaro, escolhe Settings > Data > Backup & restore, toca em +, deixa a encriptação desativada e os anexos ativados, e larga aqui o backup .zip. Um DiaroBackup.xml sozinho também funciona, sem fotos. As entradas mantêm o dia, as pastas, as etiquetas, os humores, os locais, o estado do tempo e as fotos.",
     "diarium": "No Diarium, escolhe Export, seleciona JSON com Attachments ativado e guarda no armazenamento local. Larga o .zip, ou um .json sem anexos. As entradas mantêm a classificação como humor, as etiquetas, as pessoas, os registos, o local e os anexos.",
     "googleJournal": "No Journal do teu Pixel, ativa Settings > Back up your journal. Depois escolhe Journal no Google Takeout e larga o .zip que ele envia. As entradas mantêm o dia, o título, o texto, as fotos e os vídeos.",
     "excalidraw": "Desenhos guardados a partir do excalidraw.com: um ficheiro .excalidraw, ou vários dentro de um zip. Os desenhos do plugin Excalidraw do Obsidian também funcionam, como ficheiros .excalidraw.md. As imagens dentro de um desenho vêm junto.",
@@ -108,6 +111,7 @@
     "obsidian": "Vault do Obsidian em .zip. Mantém etiquetas, ligações entre notas, estrutura de pastas, #hashtags em linha, e imagens e ficheiros embebidos. As canvas e os desenhos do Excalidraw passam a desenhos, e um ficheiro .canvas também se importa sozinho.",
     "obsidianCanvas": "Um ficheiro .canvas do teu vault do Obsidian, ou o vault inteiro em .zip para trazeres todas as canvas. Cada canvas passa a desenho: os cartões, os grupos, as setas e as cores vêm junto, e as imagens também, quando estão no .zip.",
     "notesnook": "Exportação do Notesnook como .zip. Escolhe HTML ao exportar para manteres a formatação, os cadernos, as etiquetas e os anexos.",
+    "notion": "No Notion, escolhe Settings > General > Export > Workspace content (ou o menu de uma página > More > Export), seleciona \"Markdown & CSV\" com subpáginas e pastas ativadas e larga o .zip aqui. Remove os ID do Notion dos títulos e das pastas, mantém as subpáginas como pastas, converte os avisos, transforma as ligações internas em ligações entre notas, e traz as imagens, os ficheiros e as páginas de linhas de bases de dados.",
     "bear": "No Bear, escolhe File > Backup Notes... e larga aqui o ficheiro .bear2bk. As etiquetas e as etiquetas aninhadas, as notas fixadas, o arquivo, o lixo, os realces com as suas cores, as ligações entre notas e os anexos vêm com elas.",
     "joplin": "O ficheiro .jex de File > Export all > \"JEX - Joplin Export File\". Os cadernos passam a pastas, e as etiquetas, as tarefas, as ligações entre notas e os anexos vêm com eles.",
     "anytype": "O .zip JSON Any-Block v1 de space settings > Export, com os ficheiros e os objetos arquivados incluídos. As coleções passam a pastas, e as etiquetas, as tarefas, os avisos, os blocos expansíveis, as tabelas, as ligações entre notas e os ficheiros vêm com elas.",
@@ -134,7 +138,13 @@
     "fullBackupTitle": "Backup completo (.zip)",
     "fullBackupDesc": "Restaura notas, diários, itens do cofre, tarefas, imagens, áudio e ficheiros. Uma nota que já tens é mantida, ou atualizada se o backup tiver uma versão mais recente dela.",
     "encryptedBackupTitle": "Backup encriptado (.pnbackup, .pnbackupz)",
-    "encryptedBackupDesc": "Restaura um backup encriptado com a chave da tua frase. Um .pnbackupz traz tudo de volta, ficheiros incluídos; um .pnbackup contém apenas texto e metadados. Tens de ter sessão iniciada com a mesma conta que o criou."
+    "encryptedBackupDesc": "Restaura um backup encriptado com a chave da tua frase. Um .pnbackupz traz tudo de volta, ficheiros incluídos; um .pnbackup contém apenas texto e metadados. Os backups de outro dispositivo ou conta pedem a frase de recuperação desse backup."
+  },
+  "restoreForeign": {
+    "title": "Desbloquear com outra frase de recuperação",
+    "body": "Este backup não foi encriptado com a tua frase atual. Introduz ou digitaliza a frase de recuperação do dispositivo que o criou. As tuas notas serão importadas para este cofre.",
+    "unlock": "Desbloquear backup",
+    "wrongPhrase": "Essa frase de recuperação não desbloqueou este backup. Verifica as palavras e tenta de novo."
   },
   "restoreGate": {
     "wait": "O restauro espera até este dispositivo estar online e ter concluído uma sincronização, para que o teu backup seja associado às notas que já estão na tua conta em vez de as adicionar duas vezes.",
@@ -315,7 +325,8 @@
     "title_one": "{{count}} item foi partilhado com o PrivacyNotes",
     "title_other": "{{count}} itens foram partilhados com o PrivacyNotes",
     "line": "Nada é guardado até escolheres.",
-    "saveAll": "Guardar tudo"
+    "saveAll": "Guardar tudo",
+    "saveAs": "Guardar como"
   },
   "destination": {
     "none": "Sem pasta",

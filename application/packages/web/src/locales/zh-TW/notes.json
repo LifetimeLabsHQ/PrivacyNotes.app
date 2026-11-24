@@ -303,7 +303,11 @@
     "confirm": "匯入為筆記",
     "cancel": "儲存為檔案",
     "bodySingle": "<strong>{{filename}}</strong> 看起來是 Markdown 檔。要匯入為筆記以便閱讀和編輯，還是儲存為加密檔案附件？",
-    "bodyMulti": "這 {{count}} 個檔案看起來是 Markdown。要匯入為筆記以便閱讀和編輯，還是儲存為加密檔案附件？"
+    "bodyMulti": "這 {{count}} 個檔案看起來是 Markdown。要匯入為筆記以便閱讀和編輯，還是儲存為加密檔案附件？",
+    "backupTitle": "還原還是儲存？",
+    "backupConfirm": "還原備份",
+    "backupCancel": "儲存為檔案",
+    "backupBody": "<strong>{{filename}}</strong> 是 PrivacyNotes 備份。要從中還原你的資料，還是儲存為加密檔案附件？"
   },
   "archiveConfirm": {
     "body_other": "要封存 <highlight>{{count}} 個項目</highlight>嗎？它們會離開你的清單，放在「封存」檢視中。選擇「取消封存」就能把它們移回來。"

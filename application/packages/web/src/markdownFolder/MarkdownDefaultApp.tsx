@@ -32,6 +32,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowSquareOut, CheckCircle, FileMd, FileText } from '../icons';
 import { useEscapeToClose } from '../useEscapeToClose';
 import { Button, RowTitle, SETTINGS_HELP, SETTINGS_ROW, StatusLine } from '../ui';
+import { PRIMARY_BTN_SKIN } from '../settingsUI';
 import {
   claimDefaultApp,
   markDefaultAppOurs,
@@ -145,10 +146,10 @@ function ActionButton({
       type="button"
       onClick={onClick}
       disabled={busy}
-      className={`inline-flex items-center gap-1.5 text-compact font-medium px-3 py-1.5 rounded-md transition disabled:opacity-50 cursor-pointer ${
+      className={`inline-flex items-center gap-1.5 text-compact font-semibold px-3 py-1.5 rounded-md transition disabled:opacity-50 cursor-pointer ${
         emphasis === 'solid'
-          ? 'bg-accent-fill text-white hover:bg-accent-fill-hover'
-          : 'border border-divider bg-surface-2 text-pn hover:border-accent'
+          ? PRIMARY_BTN_SKIN
+          : 'border border-divider bg-surface-2 font-medium text-pn hover:border-accent'
       }`}
     >
       {/* A distinct label while the OS is working, not just a disabled button.

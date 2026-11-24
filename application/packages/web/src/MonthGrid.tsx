@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CalendarDot, CalendarDots, CaretDown, CaretLeft, CaretRight, Plus } from './icons';
+import { CalendarDot, CalendarDots, CalendarMinus, CaretDown, CaretLeft, CaretRight, Plus } from './icons';
 import { HoverLabel, IconButton, Popover } from './ui';
 import { WEEK_START_DAY, formatInstant, toLocalIso, useDateFormatKey, weekStartSetting, weekdayDate, weekdayLabel, type WeekStart } from './intlFormat';
 import { intlLocale } from './languages';
@@ -359,20 +359,36 @@ export function MonthGrid({
   const locale = intlLocale();
   const weekStart = useWeekStart();
   const cells = weeks === 1 ? weekCells(focus, weekStart) : monthCells(focus, weekStart);
+  const showToday = weeks === 1 ? !cells.includes(today) : !sameMonth(focus, today);
   const step = (n: number) => (weeks === 1 ? addDays(focus, 7 * n) : addMonths(focus, n));
   useWheelStep(gridRef, (n) => setFocus(step(n)), size === 'large' ? fitsWithoutScroll : undefined);
   const title = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(dayAtNoon(focus)); // date-ok: a month heading carries no day, so no date-order setting applies
   const shortTitle = new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(dayAtNoon(focus)); // date-ok: the same heading, short
   // A narrow host (a tight list pane, a grid tile) shows the short month, so
   // the heading never wraps beside the arrows; a screen reader always hears
-  // the long one. The breakpoint fits the longest long month with its year;
-  // each extra header button (a host's, the week switch) moves it up 32px.
-  const extra = (headerEnd ? 1 : 0) + (onToggleWeeks ? 1 : 0);
-  const shortUpTo = ['@min-[208px]/month:hidden', '@min-[240px]/month:hidden', '@min-[272px]/month:hidden'][extra];
-  const longFrom = ['@min-[208px]/month:inline', '@min-[240px]/month:inline', '@min-[272px]/month:inline'][extra];
-  // Touch-size buttons (40px each) leave the long name room only from 280px, 40px more per extra button.
-  const touchShort = ['[@media(hover:none)]:@max-[279.98px]/month:inline', '[@media(hover:none)]:@max-[319.98px]/month:inline', '[@media(hover:none)]:@max-[359.98px]/month:inline'][extra];
-  const touchLong = ['[@media(hover:none)]:@max-[279.98px]/month:hidden', '[@media(hover:none)]:@max-[319.98px]/month:hidden', '[@media(hover:none)]:@max-[359.98px]/month:hidden'][extra];
+  // the long one. The breakpoint always budgets for the Show today slot too,
+  // so stepping off today never toggles the heading or hides another button
+  // and shifts the icons under the pointer (#891).
+  const extra = (headerEnd ? 1 : 0) + (onToggleWeeks ? 1 : 0) + 1;
+  const shortUpTo = ['@min-[240px]/month:hidden', '@min-[272px]/month:hidden', '@min-[304px]/month:hidden'][extra - 1];
+  const longFrom = ['@min-[240px]/month:inline', '@min-[272px]/month:inline', '@min-[304px]/month:inline'][extra - 1];
+  // Touch-size buttons (40px each) leave the long name room only from 320px, 40px more per extra button.
+  const touchShort = ['[@media(hover:none)]:@max-[319.98px]/month:inline', '[@media(hover:none)]:@max-[359.98px]/month:inline', '[@media(hover:none)]:@max-[399.98px]/month:inline'][extra - 1];
+  const touchLong = ['[@media(hover:none)]:@max-[319.98px]/month:hidden', '[@media(hover:none)]:@max-[359.98px]/month:hidden', '[@media(hover:none)]:@max-[399.98px]/month:hidden'][extra - 1];
+  // Tighten mouse buttons (32px -> 28px) and title padding below the full-size
+  // width for this host's button count, so all five controls (including Show
+  // today and Open the calendar) fit side by side at the default 288px list
+  // pane (256px inner width) without hiding or shifting any button.
+  const tightTitle = [
+    '@max-[207.98px]/month:px-1',
+    '@max-[207.98px]/month:px-1 [@media(hover:hover)]:@max-[247.98px]/month:px-1',
+    '@max-[207.98px]/month:px-1 [@media(hover:hover)]:@max-[287.98px]/month:px-1',
+  ][extra - 1];
+  const tightBtns = [
+    '[@media(hover:hover)]:@max-[207.98px]/month:[&_button.w-8]:w-7',
+    '[@media(hover:hover)]:@max-[247.98px]/month:[&_button.w-8]:w-7',
+    '[@media(hover:hover)]:@max-[287.98px]/month:[&_button.w-8]:w-7',
+  ][extra - 1];
   const heading = (
     <span aria-live="polite" className="min-w-0 truncate">
       <span aria-hidden="true" className={`${shortUpTo} ${touchShort}`}>{shortTitle}</span>
@@ -451,7 +467,7 @@ export function MonthGrid({
   // the room left; it truncates instead of pushing the arrows out.
   const shortDays = Array.from({ length: 7 }, (_, i) => weekdayLabel(weekdayDate((weekStart + i) % 7), 'short'));
   const shortFits = shortDays.every((name) => [...name].length <= 6);
-  const titleClass = 'inline-flex min-w-0 items-center gap-1 rounded-md px-2 @max-[207.98px]/month:px-1 py-1 text-compact font-medium text-pn';
+  const titleClass = `inline-flex min-w-0 items-center gap-1 rounded-md px-2 ${tightTitle} py-1 text-compact font-medium text-pn`;
   return (
     <div className={`@container/month w-full ${wide ? '' : 'max-w-[240px]'} mx-auto select-none`}>
       {onToday && (
@@ -482,16 +498,36 @@ export function MonthGrid({
             <CaretDown aria-hidden="true" className={`shrink-0 text-accent transition-transform ${picking ? 'rotate-180' : ''}`} />
           </button>
         </HoverLabel>
-        <span className={`flex shrink-0 items-center @max-[207.98px]/month:[&_button]:w-7 ${picking ? 'invisible' : ''}`}>
-          {/* The extra buttons step aside before the month name truncates:
-              a host's button under 256 px, the week switch under 224 px
-              (measured with the short name and its year, plus room for the
-              longer short names of other languages). */}
+        <span className={`flex shrink-0 items-center ${tightBtns} ${picking ? 'invisible' : ''}`}>
+          {/* The extra buttons step aside before the month name truncates, at
+              static container breakpoints that always budget for Show today:
+              stepping off today adds Show today on the start edge of this
+              end-aligned group without hiding headerEnd or shifting any button
+              under the pointer (#891). Host control hides first, then the week
+              switch, then Show today. */}
+          {showToday && (
+            <span className="contents @max-[191.98px]/month:hidden [@media(hover:none)]:@max-[219.98px]/month:hidden">
+            <HoverLabel label={t('monthGrid.showToday')} position="below" disabled={picking}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  // Keyboard activation keeps focus inside the grid after this button unmounts.
+                  if (e.detail === 0) moved.current = true;
+                  setFocus(today);
+                }}
+                aria-label={t('monthGrid.showToday')}
+                className={navBtn}
+              >
+                <CalendarDot aria-hidden="true" />
+              </button>
+            </HoverLabel>
+            </span>
+          )}
           {onToggleWeeks && (
-            <span className="contents @max-[223.98px]/month:hidden">
+            <span className="contents @max-[219.98px]/month:hidden [@media(hover:none)]:@max-[259.98px]/month:hidden">
             <HoverLabel label={t(weeks === 6 ? 'monthGrid.showOneWeek' : 'monthGrid.showWholeMonth')} position="below" disabled={picking}>
               <button type="button" onClick={onToggleWeeks} aria-expanded={weeks === 6} aria-label={t(weeks === 6 ? 'monthGrid.showOneWeek' : 'monthGrid.showWholeMonth')} className={navBtn}>
-                {weeks === 6 ? <CalendarDot aria-hidden="true" /> : <CalendarDots aria-hidden="true" />}
+                {weeks === 6 ? <CalendarMinus aria-hidden="true" /> : <CalendarDots aria-hidden="true" />}
               </button>
             </HoverLabel>
             </span>
@@ -506,7 +542,11 @@ export function MonthGrid({
               <CaretRight aria-hidden="true" />
             </button>
           </HoverLabel>
-          {headerEnd && <span className="contents @max-[255.98px]/month:hidden">{headerEnd}</span>}
+          {headerEnd && (
+            <span className={`contents ${onToggleWeeks ? '@max-[247.98px]/month:hidden [@media(hover:none)]:@max-[299.98px]/month:hidden' : '@max-[219.98px]/month:hidden [@media(hover:none)]:@max-[259.98px]/month:hidden'}`}>
+              {headerEnd}
+            </span>
+          )}
         </span>
       </div>
       {picking && <MonthYearPanel focus={focus} onPick={(day) => { setFocus(day); closePicker(); }} onMove={setFocus} onClose={closePicker} />}

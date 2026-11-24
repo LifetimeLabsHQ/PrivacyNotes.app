@@ -23,7 +23,6 @@
     "generatePassword": "Parola oluştur"
   },
   "note": {
-    "tagsPlaceholder": "#iş #fikirler",
     "tagsHelp": "Etiketler arasında boşluk veya virgül kullanın. # isteğe bağlıdır.",
     "failed": "Not kaydedilemedi. Tekrar deneyin."
   },
@@ -213,5 +212,11 @@
     "unlockFirst": "Geçiş anahtarlarınızı kullanmak için kilidi açın.",
     "offer": "Geçiş anahtarları sun",
     "offerHelp": "Web sitelerinde geçiş anahtarlarını kaydet ve kullan."
+  },
+  "organize": {
+    "title": "Klasör ve etiketler",
+    "unlockToPick": "Seçmek için Kasa kilidini açın",
+    "addTag": "Etiket ekle...",
+    "proFolders": "Klasörler Pro özelliğidir. Yükseltmek için PrivacyNotes'u açın."
   }
 }

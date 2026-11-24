@@ -34,6 +34,7 @@ import { consumeOAuthPending, markOAuthPending } from './oauthPending';
 import { holdLocalDataLock } from './localDataLock';
 import { exchangeAccountOAuth, type AccountOAuthProvider } from './accountOAuth';
 import { takeDeepLinks } from './deepLinks';
+import { withBackendNetworkAllowed } from './localOnly';
 import type { AuthState, AuthMethod, OAuthProvider } from './auth';
 
 /**
@@ -300,6 +301,7 @@ export function useOAuthFlows({
   // `wait`: the person said they do not have their other device, so the
   // release may start its wait (custodial_release_approval).
   async function hydrateFromOAuthSession(accessToken: string, trust: boolean, verifiedProvider?: AccountOAuthProvider, expectedGeneration?: number, byHand = true, cause: 'start' | 'found' | 'retry' = 'start', wait = false) {
+    return withBackendNetworkAllowed(async () => {
     // Abort marker: true once the user has started their own phrase
     // sign-in (or one is mid-flight). Checked before every side effect
     // below - a superseded hydration must neither sign out the session
@@ -613,6 +615,7 @@ export function useOAuthFlows({
 
     // Fallback: no auth.uid (shouldn't happen, but be safe)
     setAuth({ status: 'onboarding' });
+    });
   }
 
   /**
@@ -627,6 +630,7 @@ export function useOAuthFlows({
    * returns here only cover the "failed to start the redirect" case.
    */
   async function signInWithOAuth(provider: OAuthProvider) {
+    return withBackendNetworkAllowed(async () => {
     try {
       userAuthGen.current++;
       // Trust the device for OAuth flows - the whole point of OAuth is
@@ -728,6 +732,7 @@ export function useOAuthFlows({
     } catch (err) {
       return { ok: false as const, error: (err as Error).message };
     }
+    });
   }
 
   // Receives the OAuth redirect on native (Tauri) after the system browser
@@ -843,15 +848,17 @@ export function useOAuthFlows({
     const isCurrent = () => userAuthGen.current === generation && !authInFlight.current && !vaultOpenRef.current &&
       trustAwareStorage.getItem(PHRASE_STORAGE_KEY) === storedPhrase && trustAwareStorage.getItem(PUBKEY_OWNER_KEY) === owner;
     try {
-      // The code verifier must outlive the exchange: no start wipe of another
-      // tab (untrustedLeftover.ts) runs while this page holds the lock.
-      await holdLocalDataLock();
-      const result = await exchangeAccountOAuth(supabase, code, { storageKey, flowId, isCurrent });
-      if (!isCurrent()) throw new MfaCancelledError();
-      const identity = mfaSessionIdentity(result.session);
-      brokerProvider.current = result.provider && identity ? { identity, provider: result.provider } : null;
-      await hydrateFromOAuthSession(result.session.access_token, true, result.provider, generation);
-      return true;
+      return await withBackendNetworkAllowed(async () => {
+        // The code verifier must outlive the exchange: no start wipe of another
+        // tab (untrustedLeftover.ts) runs while this page holds the lock.
+        await holdLocalDataLock();
+        const result = await exchangeAccountOAuth(supabase, code, { storageKey, flowId, isCurrent });
+        if (!isCurrent()) throw new MfaCancelledError();
+        const identity = mfaSessionIdentity(result.session);
+        brokerProvider.current = result.provider && identity ? { identity, provider: result.provider } : null;
+        await hydrateFromOAuthSession(result.session.access_token, true, result.provider, generation);
+        return true;
+      });
     } catch (error) {
       if (isCurrent()) {
         // A cancelled step returns to the sign-in screen. The callback
@@ -1012,6 +1019,7 @@ export function useOAuthFlows({
    * Spec: docs/internal/domain-split.md (pre-cutover gate)
    */
   async function retryOAuthHydration(trust: boolean, opts: { wait?: boolean } = {}) {
+    return withBackendNetworkAllowed(async () => {
     setAuth({ status: 'loading' });
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -1029,6 +1037,7 @@ export function useOAuthFlows({
     // No session left to retry against.
     await supabase.auth.signOut({ scope: 'local' }).catch(() => { /* ignore */ });
     setAuth({ status: 'onboarding' });
+    });
   }
 
   /** Give up on a failed hydration: local sign-out, back to sign-in options. */

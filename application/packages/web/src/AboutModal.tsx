@@ -1,20 +1,33 @@
 import type { ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { VERSION } from './version';
-import { ArrowSquareOut, Bug, ChatCircle, Code, Database, GithubLogo, Globe, Info, Link, MapTrifold, Scales, Sparkle, Star, Tag } from './icons';
+import { ArrowClockwise, ArrowSquareOut, Bug, ChatCircle, Check, Code, Database, GithubLogo, Globe, Info, Link, MapTrifold, Scales, Sparkle, Star, Tag } from './icons';
 import { bugReportUrl } from './bugReportUrl';
+import { useCopyToClipboard } from './clipboard';
+import { detectPlatform } from './devices';
+import {
+  applyDesktopUpdate,
+  checkForDesktopUpdate,
+  openDesktopChangelog,
+  openDesktopDownloads,
+  SCOOP_SWITCH_CMD,
+  useDesktopUpdateState,
+} from './DesktopUpdater';
 import { FOLLOW_LINKS, GITHUB_NEW_ISSUE } from './followLinks';
 import { HelpChip } from './HelpChip';
+import { usesOfficialServer } from './hosts';
 import { LinksList } from './LinksList';
 import { RateOutro, useRateLinks } from './rateLinks';
 import { siteHref } from './siteLinks';
 import { EYEBROW_ICON_ROW, EyebrowGlyph, SETTINGS_EYEBROW, SETTINGS_HELP, SettingsTabStrip, settingsTabClass } from './settingsUI';
-import { Modal } from './ui';
+import { Button, Callout, FeedbackButton, Modal, ProgressBar, StatusLine } from './ui';
 import { Brand } from './Brand';
 import { SwissFlag } from './SwissFlag';
 import { formatDay } from './intlFormat';
 import { LATEST_RELEASE, latestChangelogHref } from './latestRelease';
 import { usePaneTab } from './settingsPaneTab';
+
+const SHOW_DESKTOP_UPDATER = detectPlatform() === 'desktop' && usesOfficialServer();
 
 type Tab = 'about' | 'rating';
 
@@ -45,6 +58,114 @@ function ExternalLinkIcon() {
 /* ------------------------------------------------------------------ */
 /*  Tab content                                                       */
 /* ------------------------------------------------------------------ */
+
+function DesktopUpdateControl() {
+  const { t } = useTranslation('landing');
+  const state = useDesktopUpdateState();
+  const { copy, copied } = useCopyToClipboard();
+
+  if (state.phase === 'ready') {
+    const { update } = state;
+    const isStaged = update.mode === 'restart';
+    const isScoop = update.mode === 'scoop';
+    const required = update.mode === 'download' && !!update.required;
+    const scoopCopied = copied === 'scoop';
+    return (
+      <Callout
+        tone={required ? 'warning' : 'info'}
+        title={t(required ? 'common:updateToast.required' : 'common:updateToast.available')}
+        action={
+          isStaged ? (
+            <FeedbackButton icon={<ArrowClockwise aria-hidden="true" />} onClick={() => void applyDesktopUpdate()}>
+              {t('common:updateToast.restart')}
+            </FeedbackButton>
+          ) : isScoop ? (
+            scoopCopied ? (
+              <FeedbackButton icon={<Check className="text-success" aria-hidden="true" />} onClick={() => copy(SCOOP_SWITCH_CMD, 'scoop')}>
+                {t('auth:copied')}
+              </FeedbackButton>
+            ) : (
+              <FeedbackButton action="copy" onClick={() => copy(SCOOP_SWITCH_CMD, 'scoop')}>
+                {t('common:updateToast.copyCommand')}
+              </FeedbackButton>
+            )
+          ) : (
+            <FeedbackButton action="download" onClick={() => void openDesktopDownloads()}>
+              {t('common:updateToast.download')}
+            </FeedbackButton>
+          )
+        }
+      >
+        <span className="font-mono">v{update.version}</span>
+        {!required && (
+          <>
+            {' · '}
+            <button
+              type="button"
+              onClick={() => void openDesktopChangelog()}
+              className="text-accent hover:underline"
+            >
+              {t('common:updateToast.changelog')}
+            </button>
+          </>
+        )}
+      </Callout>
+    );
+  }
+
+  if (state.phase === 'error') {
+    const msg =
+      state.stage === 'download' && state.version
+        ? t('about.updateDownloadFailed', { version: state.version })
+        : state.stage === 'install' && state.version
+          ? t('about.updateInstallFailed', { version: state.version })
+          : t('about.updateCheckFailed');
+    return (
+      <Callout
+        tone="danger"
+        action={
+          <>
+            <FeedbackButton action="retry" onClick={() => void checkForDesktopUpdate()}>
+              {t('auth:signIn.tryAgain')}
+            </FeedbackButton>
+            <FeedbackButton action="download" onClick={() => void openDesktopDownloads()}>
+              {t('common:updateToast.download')}
+            </FeedbackButton>
+          </>
+        }
+      >
+        {msg}
+      </Callout>
+    );
+  }
+
+  const busy = state.phase === 'checking' || state.phase === 'downloading' || state.phase === 'restarting';
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          icon={<ArrowClockwise aria-hidden="true" />}
+          disabled={busy}
+          onClick={() => void checkForDesktopUpdate()}
+        >
+          {t('about.checkForUpdates')}
+        </Button>
+        {state.phase === 'checking' && <StatusLine busy>{t('about.updateChecking')}</StatusLine>}
+        {state.phase === 'upToDate' && <StatusLine tone="success">{t('about.updateUpToDate')}</StatusLine>}
+        {state.phase === 'downloading' && (
+          <StatusLine busy>{t('about.updateDownloading', { version: state.version })}</StatusLine>
+        )}
+        {state.phase === 'restarting' && <StatusLine busy>{t('about.updateRestarting')}</StatusLine>}
+      </div>
+      {state.phase === 'downloading' && (
+        <ProgressBar
+          value={state.progress}
+          label={t('about.updateDownloading', { version: state.version })}
+        />
+      )}
+    </div>
+  );
+}
 
 function AboutTab() {
   const { t } = useTranslation('landing');
@@ -85,32 +206,35 @@ function AboutTab() {
         </span>
       </a>
 
-      <section className="grid grid-cols-2 gap-6">
-        <div>
-          <h3 data-setting="about.version" className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW} mb-2`}>
-            <EyebrowGlyph icon={Tag} />
-            {t('about.versionHeading')}
-          </h3>
-          <p className="font-mono text-pn-soft">v{VERSION}</p>
+      <section className="space-y-4">
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <h3 data-setting="about.version" className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW} mb-2`}>
+              <EyebrowGlyph icon={Tag} />
+              {t('about.versionHeading')}
+            </h3>
+            <p className="font-mono text-pn-soft">v{VERSION}</p>
+          </div>
+          <div>
+            {/* Reuses the retired tab's label rather than carrying a second key
+                for the same word, exactly as the desktop About window does.
+                /roadmap is an English-only page, so the href takes no slug. */}
+            <h3 data-setting="about.roadmap" className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW} mb-2`}>
+              <EyebrowGlyph icon={MapTrifold} />
+              {t('header.roadmap')}
+            </h3>
+            <a
+              href={siteHref('/roadmap')}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent hover:underline transition inline-flex items-center gap-1.5"
+            >
+              privacynotes.app
+              <ExternalLinkIcon />
+            </a>
+          </div>
         </div>
-        <div>
-          {/* Reuses the retired tab's label rather than carrying a second key
-              for the same word, exactly as the desktop About window does.
-              /roadmap is an English-only page, so the href takes no slug. */}
-          <h3 data-setting="about.roadmap" className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW} mb-2`}>
-            <EyebrowGlyph icon={MapTrifold} />
-            {t('header.roadmap')}
-          </h3>
-          <a
-            href={siteHref('/roadmap')}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-accent hover:underline transition inline-flex items-center gap-1.5"
-          >
-            privacynotes.app
-            <ExternalLinkIcon />
-          </a>
-        </div>
+        {SHOW_DESKTOP_UPDATER && <DesktopUpdateControl />}
       </section>
 
       <section className="border-t border-divider pt-5">

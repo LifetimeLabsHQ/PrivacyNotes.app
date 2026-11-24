@@ -1,9 +1,9 @@
 /**
- * The Swiss flag as an inline SVG, never as the U+1F1E8 U+1F1ED emoji pair.
- * WebKitGTK draws color emoji through Skia's COLRv1 path, and with the
- * gradient flags of a current Noto Color Emoji that path fails an assertion
- * and kills the web process, which freezes the whole Linux window.
- * Spec: docs/contrib/gotchas.md (color emoji freeze the Linux app)
+ * The Swiss flag as an inline SVG, never as the U+1F1E8 U+1F1ED emoji pair:
+ * Windows has no flag emoji and draws the pair as the letters CH. (The Linux
+ * AppImage crash that first made this an SVG is fixed for every emoji by its
+ * bundled emoji font, #863.)
+ * Spec: docs/contrib/gotchas.md (Color emoji crash the Linux AppImage)
  */
 export function SwissFlag() {
   return (

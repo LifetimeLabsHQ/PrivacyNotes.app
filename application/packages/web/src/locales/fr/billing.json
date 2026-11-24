@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "Tout débloquer pour {{price}}",
     "ctaOpening": "Ouverture du paiement...",
     "ctaSignUp": "Inscris-toi pour débloquer",
+    "localOnlyHint": "La mise à niveau se connecte une fois pour enregistrer ton compte et activer Pro. La synchronisation reste désactivée.",
+    "localOnlyOffline": "Connecte-toi à Internet pour passer à Pro.",
     "features": {
       "folders": "Dossiers imbriqués",
       "lock": "Verrouillage et PIN",

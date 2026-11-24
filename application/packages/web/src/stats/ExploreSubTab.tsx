@@ -10,7 +10,7 @@ import { TrackerChart } from '../TrackerChart';
 import { aggregate } from '../trackerSeries';
 import { compare, outcomesFor } from '../trackerCompare';
 import { cardNumbers, chartSpecFor } from './TrackerCard';
-import { compareSentence, formatNumber, hasData, levelLabel, sideLabels, trackerName, type WellnessModel } from './wellnessModel';
+import { compareSentence, formatNumber, formatPlain, hasData, levelLabel, sideLabels, trackerName, type WellnessModel } from './wellnessModel';
 
 /**
  * One tracker's page: its numbers, its chart against an outcome on one date
@@ -77,7 +77,7 @@ export function ExploreSubTab({ model, trackerId, unlocked, isPro, onOpenUpgrade
   const formatPoint = (v: unknown) => {
     if (typeof v === 'boolean') return v ? t('trackers:custom.yes') : t('trackers:custom.no');
     if (typeof v === 'string') return levelLabel(selected, v, t);
-    if (typeof v === 'number') return formatNumber(v, 1);
+    if (typeof v === 'number') return formatPlain(selected, v, t);
     if (Array.isArray(v)) return v.map((k) => levelLabel(selected, String(k), t)).join(', ');
     return '';
   };
@@ -147,7 +147,7 @@ export function ExploreSubTab({ model, trackerId, unlocked, isPro, onOpenUpgrade
         <div>
           <SectionEyebrow className="mb-2" icon={CalendarCheck}>{t('home.byWeekday')}</SectionEyebrow>
           <div className="rounded-lg border border-divider bg-surface-2 p-3">
-            <WeekdayChart values={weekdays} color={selected.color} format={(v) => formatNumber(v, 1)} />
+            <WeekdayChart values={weekdays} color={selected.color} format={(v) => formatPlain(selected, v, t)} />
           </div>
         </div>
       )}

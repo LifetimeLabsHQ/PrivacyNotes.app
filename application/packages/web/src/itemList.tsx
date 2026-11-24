@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useProgressiveReveal, type ProgressiveReveal } from './useProgressiveReveal';
 import { listTop, rememberListTop } from './notesView/listPlace';
+import { PullToSyncBar, usePullToSync } from './pullToSync';
 
 /** The grid of tiles. `pn-notes-grid` scopes the container-query column count
  *  and every mini-tile rule in index.css; `content-start` keeps a short grid
@@ -161,9 +162,11 @@ export function useItemList(resetKey: readonly unknown[], total: number, place: 
  * The list element: a `ul` of `li` items, or a `div` for the Files pane,
  * whose items are buttons. It scrolls, and in grid mode it is the grid.
  */
-export function ItemList({ list, grid, as: Root = 'ul', className = '', style, onMouseDown, children }: {
+export function ItemList({ list, grid, pullToSync = false, as: Root = 'ul', className = '', style, onMouseDown, children }: {
   list: ItemListState;
   grid: boolean;
+  /** Enable pull-down-to-sync on touch devices above this list. */
+  pullToSync?: boolean;
   as?: 'ul' | 'div';
   className?: string;
   /** A pane that lays out its own grid (Home) sets it here. */
@@ -171,16 +174,24 @@ export function ItemList({ list, grid, as: Root = 'ul', className = '', style, o
   onMouseDown?: (e: React.MouseEvent) => void;
   children: ReactNode;
 }) {
-  return (
+  const pull = usePullToSync(list.ref, pullToSync);
+  const root = (
     <Root
       ref={list.ref as React.RefObject<HTMLUListElement & HTMLDivElement>}
       onScroll={(e) => list.onScroll(e.currentTarget)}
       onMouseDown={onMouseDown}
       style={style}
-      className={`flex-1 overflow-y-auto list-none m-0 ${grid ? GRID_CLASS : 'p-0'} ${className}`.trim()}
+      className={`flex-1 overflow-y-auto ${pullToSync ? 'overscroll-y-contain ' : ''}list-none m-0 ${grid ? GRID_CLASS : 'p-0'} ${className}`.trim()}
     >
       {children}
     </Root>
+  );
+  if (!pullToSync) return root;
+  return (
+    <>
+      <PullToSyncBar {...pull} />
+      {root}
+    </>
   );
 }
 

@@ -137,18 +137,37 @@ for (const [plistRel, required] of [
   }
 }
 
-// The share extension's three messages, from the web catalogs, so the locale checks
+// The share extension's UI strings, from the web catalogs, so the locale checks
 // that guard every other string guard these too. A locale whose catalog lacks
-// them gets no folder, and iOS falls back to English. Apple knows Traditional
-// Chinese by its script tag, as above.
+// the base messages gets no folder, and iOS falls back to English for any newer
+// key a locale does not carry yet. Apple knows Traditional Chinese by its
+// script tag, as above.
 // Spec: docs/internal/specs/share-into-app.md
 for (const lang of readdirSync(resolve(root, 'packages/web/src/locales'))) {
-  const catalogPath = resolve(root, 'packages/web/src/locales', lang, 'shell.json');
-  if (!existsSync(catalogPath)) continue;
-  const texts = JSON.parse(readFileSync(catalogPath, 'utf8')).shareInbox;
+  const dirPath = resolve(root, 'packages/web/src/locales', lang);
+  const shellPath = resolve(dirPath, 'shell.json');
+  if (!existsSync(shellPath)) continue;
+  const shell = JSON.parse(readFileSync(shellPath, 'utf8'));
+  const texts = shell.shareInbox;
   if (!texts?.saved || !texts?.failed || !texts?.tooLarge) continue;
+  const commonPath = resolve(dirPath, 'common.json');
+  const notesPath = resolve(dirPath, 'notes.json');
+  const common = existsSync(commonPath) ? JSON.parse(readFileSync(commonPath, 'utf8')) : {};
+  const notes = existsSync(notesPath) ? JSON.parse(readFileSync(notesPath, 'utf8')) : {};
+  const entries = [
+    ['saved', texts.saved],
+    ['failed', texts.failed],
+    ['tooLarge', texts.tooLarge],
+    ['save', common.actions?.save],
+    ['cancel', common.actions?.cancel],
+    ['note', notes.newMenu?.note],
+    ['files', shell.tagsRail?.files],
+    ['titlePlaceholder', texts.titlePlaceholder],
+    ['notePlaceholder', texts.notePlaceholder],
+    ['photoCount', texts.photoCount],
+  ].filter(([, value]) => typeof value === 'string' && value.length > 0);
   const quote = (s) => JSON.stringify(s);
-  const strings = ['saved', 'failed', 'tooLarge'].map((k) => `"${k}" = ${quote(texts[k])};\n`).join('');
+  const strings = entries.map(([k, v]) => `"${k}" = ${quote(v)};\n`).join('');
   const dir = resolve(root, 'packages/desktop/src-tauri/ios-share', `${lang === 'zh-TW' ? 'zh-Hant' : lang}.lproj`);
   const stringsPath = resolve(dir, 'Localizable.strings');
   if (existsSync(stringsPath) && readFileSync(stringsPath, 'utf8') === strings) continue;

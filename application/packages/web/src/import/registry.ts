@@ -3,6 +3,7 @@ import { standardNotesImporter } from './standardNotes';
 import { googleKeepImporter } from './googleKeep';
 import { parseMarkdown } from './markdown';
 import { parseObsidian, parseObsidianCanvas } from './obsidian';
+import { parseNotion } from './notion';
 import { parseNotesnook } from './notesnook';
 import { parseJoplin } from './joplin';
 import { parseAnytype } from './anytype';
@@ -13,11 +14,14 @@ import { parseBear } from './bear';
 import { parseUpNote } from './upnote';
 import { parseAppleNotes } from './appleNotes';
 import { parseAppleJournal } from './appleJournal';
+import { parseDayOne } from './dayOne';
 import { parseDaylio } from './daylio';
+import { parseDiaro } from './diaro';
 import { parseDiarium } from './diarium';
 import { parseGoogleJournal } from './googleJournal';
 import { parseEvernote } from './evernote';
 import { parseSamsungNotes } from './samsungNotes';
+import { parseTodoist } from './todoist';
 import { parsePrivacyNotesBackup } from './privacynotes';
 import { bitwardenImporter } from './bitwarden';
 import { keepassImporter, keepassxcImporter, passwordCsvImporter } from './passwordCsv';
@@ -230,6 +234,36 @@ export const IMPORTERS: ImporterEntry[] = [
     guide: 'apple-journal',
   },
   {
+    id: 'day-one',
+    label: 'Day One',
+    description:
+      'In Day One, choose Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media) on the web, or File > Export > JSON on Mac or iOS. Drop the .zip or .json here. Entries keep their day, tags, stars, place, weather, and media.',
+    accept: '.zip,.json',
+    enabled: true,
+    sourceTag: 'day-one',
+    parse: parseDayOne,
+    icon: { src: '/help/icons/day-one.webp' },
+    labelKey: null,
+    descKey: 'sourceDesc.dayOne',
+    fileTypes: '.zip, .json',
+    guide: 'day-one',
+  },
+  {
+    id: 'todoist',
+    label: 'Todoist',
+    description:
+      'In Todoist, download a backup .zip from Settings > Backups (Pro), or open a project and choose ... > Import & export > Export as CSV. Each project becomes a task list with its sections, subtasks, priorities, due dates, labels, descriptions, and comments.',
+    accept: '.zip,.csv',
+    enabled: true,
+    sourceTag: 'todoist',
+    parse: parseTodoist,
+    icon: { src: '/help/icons/todoist.svg' },
+    labelKey: null,
+    descKey: 'sourceDesc.todoist',
+    fileTypes: '.zip, .csv',
+    guide: 'todoist',
+  },
+  {
     id: 'daylio',
     label: 'Daylio',
     description:
@@ -243,6 +277,21 @@ export const IMPORTERS: ImporterEntry[] = [
     descKey: 'sourceDesc.daylio',
     fileTypes: '.daylio, .csv',
     guide: 'daylio',
+  },
+  {
+    id: 'diaro',
+    label: 'Diaro',
+    description:
+      'In Diaro, choose Settings > Data > Backup & restore, tap +, leave encryption off and attachments on, and drop the .zip backup here. A bare DiaroBackup.xml works too, without photos. Entries keep their day, folders, tags, moods, places, weather and photos.',
+    accept: '.zip,.xml,.drxml,.denc',
+    enabled: true,
+    sourceTag: 'diaro',
+    parse: parseDiaro,
+    icon: { src: '/help/icons/diaro.webp' },
+    labelKey: null,
+    descKey: 'sourceDesc.diaro',
+    fileTypes: '.zip, .xml',
+    guide: 'diaro',
   },
   {
     id: 'diarium',
@@ -422,6 +471,21 @@ export const IMPORTERS: ImporterEntry[] = [
     descKey: 'sourceDesc.notesnook',
     fileTypes: '.zip',
     guide: 'notesnook',
+  },
+  {
+    id: 'notion',
+    label: 'Notion',
+    description:
+      'In Notion, choose Settings > General > Export > Workspace content (or a page menu > More > Export), pick "Markdown & CSV" with subpages and folders on, then drop the .zip here. Strips Notion IDs from titles and folders, keeps subpages as folders, converts callouts and internal links to note-links, and brings images, files, and database row pages along.',
+    accept: '.zip',
+    enabled: true,
+    sourceTag: 'notion',
+    parse: parseNotion,
+    icon: { src: '/help/icons/notion.webp' },
+    labelKey: null,
+    descKey: 'sourceDesc.notion',
+    fileTypes: '.zip',
+    guide: 'notion',
   },
   {
     id: 'joplin',

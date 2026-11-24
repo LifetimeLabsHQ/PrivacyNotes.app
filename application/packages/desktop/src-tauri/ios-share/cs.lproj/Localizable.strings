@@ -1,3 +1,10 @@
 "saved" = "Uloženo do PrivacyNotes";
 "failed" = "Do PrivacyNotes se nepodařilo uložit";
 "tooLarge" = "Příliš velké. Maximum je {{limit}} MB na soubor.";
+"save" = "Uložit";
+"cancel" = "Zrušit";
+"note" = "Poznámka";
+"files" = "Soubory";
+"titlePlaceholder" = "Název (nepovinné)";
+"notePlaceholder" = "Přidejte poznámku...";
+"photoCount" = "Fotky: {{count}}";

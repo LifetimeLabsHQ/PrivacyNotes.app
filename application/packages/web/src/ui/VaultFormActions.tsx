@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { PRIMARY_BTN_SKIN } from '../settingsUI';
 import { ACTIONS } from './actions';
 import { Callout } from './feedback';
 
@@ -26,7 +27,7 @@ export function VaultFormActions({ locked, isNew, saveError, onSave, onCancel }:
         {t('actions.cancel')}
       </button>}
       <button type="button" onClick={onSave}
-        className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md text-body font-medium bg-accent-fill text-white hover:bg-accent-fill-hover transition">
+        className={`flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md text-body font-semibold ${PRIMARY_BTN_SKIN} transition`}>
         <SaveIcon aria-hidden="true" />
         {t('actions.save')}
       </button>

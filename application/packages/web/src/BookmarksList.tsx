@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from './db';
 import { setPillarPrefs, type ListPrefs, type ListPrefsStore } from './listPrefs';
@@ -9,6 +10,8 @@ import { ListNav } from './notesView/ListNav';
 import { ListSearchInput } from './ListSearchInput';
 import { Switch } from './Switch';
 import { ListPrefsPopover } from './ListPrefsPopover';
+import { useListGroups } from './ListGroupHeader';
+import { groupOptionsForView } from './listGroups';
 import { ActiveFilterEntry, ActiveSearchEntry, FilteredEmpty, ListFilterChips } from './ListFilterChips';
 import { BookmarkRowActions } from './BookmarkRowActions';
 import { SelectionToolbar } from './SelectionToolbar';
@@ -104,6 +107,7 @@ export function BookmarksList({
   onSaveDerived,
   onTrash,
   onRowContextMenu,
+  onContextMenu,
   onRowMenu,
   onOpenImport,
   selectionMode,
@@ -190,6 +194,7 @@ export function BookmarksList({
   onSaveDerived: (draft: BookmarkDraft) => void;
   onTrash: (note: LocalNote) => void;
   onRowContextMenu: (note: LocalNote, e: React.MouseEvent) => void;
+  onContextMenu?: (e: React.MouseEvent, items: ContextMenuItem[]) => void;
   /** The same menu from the touch "..." button. A tap is not a right-click,
    *  so it cannot go through the context-menu path, which swallows touch. */
   onRowMenu: (note: LocalNote, e: React.MouseEvent) => void;
@@ -325,18 +330,30 @@ export function BookmarksList({
      itself, an empty pane does not. The filter entry rides along there, so
      both causes are named. */
   const showSearchEntry = !!q && bookmarks.length === 0 && !selectionMode;
+  const grouping = useListGroups({
+    notes: bookmarks,
+    listPrefs,
+    search,
+    scope: 'bookmarks',
+    view: 'bookmarks',
+    selectionMode,
+    selectedId: editingNoteId,
+    isNoteLocked,
+    onContextMenu,
+  });
+  const bookmarkRowCount = grouping.entries ? grouping.entries.length : bookmarks.length;
   // Saved bookmarks and links found in notes share one scroll budget.
-  const list = useItemList([search, activeFolderName, activeTag], bookmarks.length + filteredDerived.length, place);
+  const list = useItemList([search, activeFolderName, activeTag], bookmarkRowCount + filteredDerived.length, place);
   const compactRows = useCompactRows();
   // The links found in notes wait until every saved bookmark is revealed, or
   // they would sit in the middle of a long list and move down as it grew.
-  const shownDerived = filteredDerived.slice(0, Math.max(0, list.reveal.visible - bookmarks.length));
+  const shownDerived = filteredDerived.slice(0, Math.max(0, list.reveal.visible - bookmarkRowCount));
   const showFilterEntry =
     !selectionMode &&
     (activeFolderName !== null || activeTag !== null) &&
     // Held back until the revealed slice covers the whole list, so a long
     // filtered list never draws it mid-scroll and then pushes it down again.
-    (showSearchEntry || (bookmarks.length > 0 && list.reveal.visible >= bookmarks.length));
+    (showSearchEntry || (bookmarks.length > 0 && list.reveal.visible >= bookmarkRowCount));
 
   /** The per-item pencil/delete pair - ONE builder for list rows and grid
    *  cards. Tooltip side follows the layout: list actions sit at the pane's
@@ -439,6 +456,7 @@ export function BookmarksList({
             anchorRef={sortBtnRef}
             className="absolute start-3 top-full mt-1"
             pillar="bookmarks"
+            groupOptions={groupOptionsForView('bookmarks')}
           />
         )}
       </div>
@@ -487,7 +505,7 @@ export function BookmarksList({
               // keyboard only to raise it again.
               onMouseDown={(e) => e.preventDefault()}
               onClick={submitQuickAdd}
-              className="shrink-0 inline-flex items-center h-7 rounded bg-accent-fill px-2.5 text-compact font-medium text-white whitespace-nowrap transition hover:bg-accent-fill/90"
+              className={`shrink-0 inline-flex items-center h-7 rounded ${PRIMARY_BTN_SKIN} px-2.5 text-compact font-semibold whitespace-nowrap transition`}
             >
               {t('common:actions.add')}
             </button>
@@ -512,7 +530,7 @@ export function BookmarksList({
         />
       )}
 
-      <ItemList list={list} grid={viewMode === 'grid'}>
+      <ItemList list={list} grid={viewMode === 'grid'} pullToSync>
         {empty && !filteredAway ? (
           <li className={`flex flex-col items-center justify-center text-center px-8 py-14 ${viewMode === 'grid' ? 'col-span-full' : ''}`}>
             <BookmarkSimple size={34} className="text-pn-muted" weight="duotone" aria-hidden="true" />
@@ -526,7 +544,7 @@ export function BookmarksList({
                 lines instead of squeezing, and each label stays on one line
                 so the wrap actually triggers. */}
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <button type="button" onClick={() => quickInputRef.current?.focus()} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-accent-fill px-3.5 py-2 text-compact font-medium text-white transition hover:bg-accent-fill/90">
+              <button type="button" onClick={() => quickInputRef.current?.focus()} className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-md ${PRIMARY_BTN_SKIN} px-3.5 py-2 text-compact font-semibold transition`}>
                 <NEW_GLYPHS.bookmark />
                 {t('bookmarks.emptyAdd')}
               </button>
@@ -555,7 +573,8 @@ export function BookmarksList({
             {!filteredAway && bookmarks.length === 0 && shownDerived.length === 0 && (
               <li className={`p-6 text-compact text-pn-muted text-center ${viewMode === 'grid' ? 'col-span-full' : ''}`}>{t('bookmarks.noMatches')}</li>
             )}
-            {bookmarks.slice(0, list.reveal.visible).map((n) => (
+            {(() => {
+              const renderBookmark = (n: LocalNote) => (
               viewMode === 'grid' ? (
               <NoteCard
                 windowed={bookmarks.length > 100}
@@ -611,7 +630,17 @@ export function BookmarksList({
                 trailing={itemActions(n)}
               />
               )
-            ))}
+              );
+              return grouping.entries
+                ? grouping.entries.slice(0, list.reveal.visible).map((e) =>
+                    e.kind === 'header'
+                      ? grouping.header(e, viewMode === 'grid')
+                      : e.kind === 'note'
+                        ? renderBookmark(e.note)
+                        : null,
+                  )
+                : bookmarks.slice(0, list.reveal.visible).map(renderBookmark);
+            })()}
             {showSearchEntry && (
               <ActiveSearchEntry
                 search={search}

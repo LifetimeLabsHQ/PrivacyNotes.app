@@ -23,7 +23,6 @@
     "generatePassword": "Wygeneruj hasło"
   },
   "note": {
-    "tagsPlaceholder": "#praca #pomysły",
     "tagsHelp": "Oddzielaj tagi spacją lub przecinkiem. Znak # jest opcjonalny.",
     "failed": "Nie udało się zapisać notatki. Spróbuj ponownie."
   },
@@ -216,5 +215,11 @@
     "unlockFirst": "Odblokuj, aby używać swoich passkey.",
     "offer": "Proponuj passkey",
     "offerHelp": "Zapisuj passkey i używaj ich na stronach."
+  },
+  "organize": {
+    "title": "Folder i tagi",
+    "unlockToPick": "Odblokuj Sejf, aby wybrać",
+    "addTag": "Dodaj tag...",
+    "proFolders": "Foldery to funkcja Pro. Otwórz PrivacyNotes, aby przejść na Pro."
   }
 }

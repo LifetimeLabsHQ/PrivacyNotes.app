@@ -287,6 +287,8 @@
     "showNoteLinks": "Links in anderen Einträgen anzeigen",
     "showNoteTasks": "Aufgaben in anderen Einträgen anzeigen",
     "showGroups": "Gruppen anzeigen",
+    "groupBy": "Gruppieren nach",
+    "groupLetter": "Anfangsbuchstabe",
     "groupsByDate": "Nach Datum gruppiert",
     "groupsByLetter": "Nach Anfangsbuchstabe gruppiert",
     "groupsNoneForSize": "Nicht verfügbar bei Sortierung nach Größe",
@@ -310,6 +312,7 @@
     "nextWeek": "Nächste Woche",
     "pickMonth": "{{month}}, Monat und Jahr wählen",
     "pickMonthTip": "Monat und Jahr wählen",
+    "showToday": "Heute anzeigen",
     "showWholeMonth": "Ganzen Monat anzeigen",
     "showOneWeek": "Eine Woche anzeigen"
   },
@@ -625,7 +628,10 @@
   "shareInbox": {
     "saved": "In PrivacyNotes gespeichert",
     "failed": "Speichern in PrivacyNotes fehlgeschlagen",
-    "tooLarge": "Zu groß. Maximal {{limit}} MB pro Datei."
+    "tooLarge": "Zu groß. Maximal {{limit}} MB pro Datei.",
+    "titlePlaceholder": "Titel (optional)",
+    "notePlaceholder": "Notiz hinzufügen...",
+    "photoCount": "{{count}} Fotos"
   },
   "shortcut": {
     "copyNote": "Verknüpfung zur Notiz kopieren",
@@ -984,9 +990,8 @@
     "addressPlaceholder": "Link einfügen…",
     "savePictures": "Bilder speichern",
     "savePicturesHint": "Bis zu 20 Bilder, gespeichert mit der Notiz. Sie zählen zu deinem Speicher.",
-    "extensionTipTitle": "Clippe aus deinem Browser für ein besseres Ergebnis",
-    "extensionTip": "Die Browser-Erweiterung speichert die Seite so, wie du sie siehst, auch Seiten hinter einer Anmeldung.",
-    "extensionTipSetUp": "Erweiterung einrichten",
+    "extensionTipTitle": "Willst du deutlich bessere Clips?",
+    "extensionTip": "Die Browser-Erweiterung speichert jede Seite sauber mit einem Klick, auch hinter einer Anmeldung.",
     "downloading": "Seite wird heruntergeladen…",
     "downloadingPictures": "Bilder werden heruntergeladen, {{done}} von {{total}}",
     "picturesLine_other": "{{count}} Bilder · {{size}}, mit der Notiz gespeichert",
@@ -1023,7 +1028,7 @@
   "apps": {
     "railLabel": "Erweiterung",
     "title": "Browser-Erweiterung",
-    "subtitle": "Web-Clipper und Passwort-Manager in Chrome, Firefox, Edge, Brave und Vivaldi. Die Erweiterung hat nie den Schlüssel, der deine Notizen öffnet.",
+    "subtitle": "Web-Clipper und Passwort-Manager in Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf und Zen. Die Erweiterung hat nie den Schlüssel, der deine Notizen öffnet.",
     "loginsCopyFull": "Die Kopie deiner Logins in der Browser-Erweiterung ist voll. Neue Logins kommen dort an, sobald du einige löschst.",
     "stepInstall": "Erweiterung installieren",
     "stepFeatures": "Wähle, was sie können soll",

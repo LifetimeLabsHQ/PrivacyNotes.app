@@ -50,6 +50,7 @@ import { IMAGE_FORMAT_MIME, sniffImageFormat } from './imageMetadata';
 import { intlLocale } from './languages';
 import { isSameOriginPath } from './sameOriginPath';
 import { allowedImageSource } from './markdownFolder/assetSource';
+import { isGenericClipboardImageName, nextPastedImageName, splitFileName } from './fileNames';
 
 /** Prefix for our custom image URIs. */
 const IMAGE_URI_PREFIX = 'pn:img/';
@@ -1039,14 +1040,30 @@ export async function storePicture(
   opts: ImageOptions,
   onAccepted?: () => void,
 ): Promise<{ uuid: string; name: string; bytes: number } | null> {
-  const out = await runPicturePipeline(file, opts, onAccepted);
+  const out = await storePictureWithOutcome(file, opts, onAccepted);
+  return 'uuid' in out ? out : null;
+}
+
+/**
+ * Runs the picture pipeline and surfaces the same quota/error toasts as
+ * `storePicture`, while returning the outcome so callers (like the phone share
+ * inbox) can tell a permanent refusal (too large, unreadable) from a failure
+ * that can pass (storage full, auth tearing down).
+ */
+export async function storePictureWithOutcome(
+  file: File,
+  opts: ImageOptions,
+  onAccepted?: () => void,
+  reserved = 0,
+): Promise<PipelineOutcome> {
+  const out = await runPicturePipeline(file, opts, onAccepted, reserved);
   if ('uuid' in out) return out;
   if (out.failure === 'storage') _uploadContext?.onQuotaExceeded?.();
   else if (out.message) {
     console.error('[image]', out.message);
     _uploadContext?.onError?.(out.message);
   }
-  return null;
+  return out;
 }
 
 /**
@@ -1068,7 +1085,7 @@ export async function storePictureQuietly(
 
 type PipelineOutcome =
   | { uuid: string; name: string; bytes: number }
-  | { failure: 'storage' | 'failed'; message?: string };
+  | { failure: 'storage' | 'failed'; message?: string; refused?: boolean };
 
 async function runPicturePipeline(file: File, opts: ImageOptions, onAccepted?: () => void, reserved = 0): Promise<PipelineOutcome> {
   if (!_uploadContext) {
@@ -1086,13 +1103,13 @@ async function runPicturePipeline(file: File, opts: ImageOptions, onAccepted?: (
   if (opts.fitBox === null) {
     const maxBytes = _uploadContext.getQuota?.()?.maxBytes ?? 0;
     const v = validateAttachment(file, _uploadContext.isPro, maxBytes > 500 * 1000 * 1000);
-    if (!v.ok) return { failure: 'failed', message: v.error };
+    if (!v.ok) return { failure: 'failed', message: v.error, refused: true };
   }
 
   onAccepted?.();
 
   const result = await processImage(file, opts);
-  if (!result.ok) return { failure: 'failed', message: result.error };
+  if (!result.ok) return { failure: 'failed', message: result.error, refused: true };
 
   // Quota gate with the INCOMING file counted, using the exact bytes about
   // to be stored (shrunk, stripped or kept, whichever the switches chose)
@@ -1607,6 +1624,54 @@ async function bigEnough(file: File): Promise<boolean> {
 /** Editors that must never store a picture: Markdown folder notes. */
 const plaintextViews = new WeakSet<EditorView>();
 
+/** Note title lookup per editor view, used to name pasted clipboard images. */
+const viewNoteTitle = new WeakMap<EditorView, () => string>();
+
+/** Names reserved by in-flight pastes in a view before their nodes land in the doc. */
+const inFlightImageNames = new WeakMap<EditorView, Set<string>>();
+
+function extFromImageMime(mime: string): string {
+  const sub = mime.split('/')[1]?.toLowerCase() ?? '';
+  if (!sub) return 'png';
+  if (sub === 'jpeg') return 'jpg';
+  if (sub === 'svg+xml') return 'svg';
+  return sub.replace(/[^a-z0-9]/g, '') || 'png';
+}
+
+/**
+ * Replace a generic clipboard image name (`image.png`, `blob`, `pasted-image.png`,
+ * empty) with `<note_title>_<n>.<ext>`, reserving the number across concurrent
+ * pastes in the same view until the node is placed or the upload finishes.
+ * Files that already carry a real name keep it unchanged.
+ */
+function reservePastedImageFile(view: EditorView, file: File): { file: File; release: () => void } {
+  if (!isGenericClipboardImageName(file.name)) return { file, release: () => {} };
+  const used: string[] = [];
+  view.state.doc.descendants((node) => {
+    if (node.type.name === 'image' && typeof node.attrs['alt'] === 'string' && node.attrs['alt']) {
+      used.push(node.attrs['alt']);
+    }
+  });
+  let pending = inFlightImageNames.get(view);
+  if (pending) {
+    for (const name of pending) used.push(name);
+  }
+  const ext = splitFileName(file.name).ext || extFromImageMime(file.type);
+  const nextName = nextPastedImageName(viewNoteTitle.get(view)?.() ?? '', ext, used);
+  if (!pending) {
+    pending = new Set<string>();
+    inFlightImageNames.set(view, pending);
+  }
+  pending.add(nextName);
+  const renamed = new File([file], nextName, { type: file.type, lastModified: file.lastModified });
+  return {
+    file: renamed,
+    release: () => {
+      pending.delete(nextName);
+    },
+  };
+}
+
 type PendingItem = { id: string; source: PendingSource };
 
 /** Fill the placeholders of one batch, in document order. */
@@ -1636,17 +1701,24 @@ async function resolvePending(view: EditorView, items: PendingItem[]): Promise<v
     }
 
     let stored: { uuid: string; name: string } | null = null;
-    if (file && !view.isDestroyed && !plaintextViews.has(view)) {
-      stored = await storePicture(file, currentImageOptions());
-      // storePicture already told the reader why it refused.
-      counted = false;
-    }
-    if (!view.isDestroyed) {
-      const pos = findPlaceholderPos(view, id);
-      removePlaceholder(view, id);
-      if (stored && pos !== null) {
-        placeAtPlaceholder(view, `${IMAGE_URI_PREFIX}${stored.uuid}`, source.alt || stored.name, pos);
+    let release = () => {};
+    try {
+      if (file && !view.isDestroyed && !plaintextViews.has(view)) {
+        const named = !source.alt ? reservePastedImageFile(view, file) : { file, release };
+        release = named.release;
+        stored = await storePicture(named.file, currentImageOptions());
+        // storePicture already told the reader why it refused.
+        counted = false;
       }
+      if (!view.isDestroyed) {
+        const pos = findPlaceholderPos(view, id);
+        removePlaceholder(view, id);
+        if (stored && pos !== null) {
+          placeAtPlaceholder(view, `${IMAGE_URI_PREFIX}${stored.uuid}`, source.alt || stored.name, pos);
+        }
+      }
+    } finally {
+      release();
     }
     if (!stored && counted) source.report.leftOut += 1;
     source.report.open -= 1;
@@ -1730,7 +1802,7 @@ function createPlaceholderWidget(fileName: string): HTMLElement {
   return el;
 }
 
-function createImageUploadPlugin(plaintextOnly: boolean) {
+function createImageUploadPlugin(plaintextOnly: boolean, getNoteTitle?: () => string) {
   return new Plugin({
     key: imageUploadPluginKey,
 
@@ -1805,6 +1877,7 @@ function createImageUploadPlugin(plaintextOnly: boolean) {
 
     view(editorView) {
       if (plaintextOnly) plaintextViews.add(editorView);
+      if (getNoteTitle) viewNoteTitle.set(editorView, getNoteTitle);
       const started = new Set<string>();
       return {
         update(view) {
@@ -1867,7 +1940,8 @@ function createImageUploadPlugin(plaintextOnly: boolean) {
           event.preventDefault();
           const pos = view.state.selection.from;
           for (const file of files) {
-            void handleImageUpload(file, view, pos);
+            const named = reservePastedImageFile(view, file);
+            void handleImageUpload(named.file, view, pos).finally(named.release);
           }
           return true;
         }
@@ -1882,7 +1956,7 @@ function createImageUploadPlugin(plaintextOnly: boolean) {
 // TipTap Extension
 // ------------------------------------------------------------------
 
-export const EncryptedImage = Node.create<{ plaintextOnly: boolean }>({
+export const EncryptedImage = Node.create<{ plaintextOnly: boolean; getNoteTitle?: () => string }>({
   name: 'image',
   group: 'block',
   atom: true,
@@ -1956,11 +2030,11 @@ export const EncryptedImage = Node.create<{ plaintextOnly: boolean }>({
   addOptions() {
     // True in a Markdown folder note: no picture from a paste, a drop or the
     // toolbar may go to the encrypted store there.
-    return { plaintextOnly: false };
+    return { plaintextOnly: false, getNoteTitle: undefined };
   },
 
   addProseMirrorPlugins() {
-    return [createImageUploadPlugin(this.options.plaintextOnly)];
+    return [createImageUploadPlugin(this.options.plaintextOnly, this.options.getNoteTitle)];
   },
 
   addStorage() {

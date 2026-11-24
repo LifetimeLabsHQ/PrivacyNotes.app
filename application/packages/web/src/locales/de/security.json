@@ -228,7 +228,7 @@
     "removeTitle": "Diesen Passkey entfernen?",
     "removeBody": "Du kannst dich damit nicht mehr anmelden. Der Passkey selbst bleibt in deiner Passkey-App, bis du ihn dort löschst.",
     "retired": "Vor der Änderung deiner Phrase erstellt. Entferne ihn und füge ihn erneut hinzu.",
-    "noPrf": "Diese Passkey-App kann deine Phrase nicht schützen, daher wurde der Passkey nicht hinzugefügt. Versuch es mit den eigenen Passkeys deines Geräts oder einem anderen Passwortmanager.",
+    "noPrf": "Diese Passkey-App kann den Schlüssel nicht erzeugen, der deine Phrase schützt, daher wurde der Passkey nicht hinzugefügt. Mit deiner Phrase kannst du dich weiterhin anmelden. Wenn dein Passwortmanager anbietet, den Passkey zu speichern, wähle stattdessen, ihn auf diesem Gerät oder einem Sicherheitsschlüssel zu speichern.",
     "tooMany": "Du hast {{count}} Passkeys zum Anmelden. Entferne einen, um einen weiteren hinzuzufügen.",
     "failed": "Der Passkey konnte nicht hinzugefügt werden. Prüfe deine Verbindung und versuche es erneut.",
     "appsOnly": "Füge Passkeys in deinem Browser unter use.privacynotes.app hinzu. Die Anmeldung damit in den Apps kommt später.",

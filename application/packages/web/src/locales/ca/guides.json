@@ -439,6 +439,58 @@
         }
       ]
     },
+    "notion": {
+      "app": "Notion",
+      "title": "Exporta el teu espai de treball de Notion",
+      "metaTitle": "Com exportar el teu espai de treball de Notion - PrivacyNotes",
+      "lead": "Exporta el teu espai de treball de Notion com un zip de Markdown & CSV, i PrivacyNotes elimina els identificadors de 32 caràcters de Notion, reconstrueix les subpàgines com a carpetes i converteix els enllaços entre pàgines en enllaços entre notes.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/notion-settings.webp",
+            "alt": "Settings de Notion, pàgina General, que mostra la secció Export amb el botó Export al costat de Workspace content.",
+            "width": 1576,
+            "height": 754
+          },
+          "h": "Exporta tot el teu espai de treball",
+          "steps": [
+            "Obre Notion al web o a l'ordinador i obre Settings des del menú de l'espai de treball.",
+            "A Workspace, obre General i desplaça't fins a Export.",
+            "Fes clic a Export al costat de Workspace content.",
+            "Si només vols exportar una pàgina i les seves subpàgines, obre el menú de tres punts d'aquella pàgina i tria More > Export."
+          ],
+          "p": [
+            "Notion genera les exportacions grans d'espais de treball en segon pla i t'envia per correu un enllaç de baixada. Deixa anar aquest .zip a PrivacyNotes tal com és, sense descomprimir-lo - els zips dividits en parts niats dins de l'arxiu comprimit es processen automàticament."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/notion-export.webp",
+            "alt": "Diàleg Export de Notion amb Markdown & CSV seleccionat, Page content establert en Everything, i Include private pages i Create folders for subpages activats.",
+            "width": 1576,
+            "height": 600
+          },
+          "h": "Tria Markdown & CSV, amb les carpetes activades",
+          "steps": [
+            "Posa Export format en \"Markdown & CSV\".",
+            "Posa Page content en \"Everything\" perquè s'hi incloguin les imatges, els PDF i els fitxers adjunts.",
+            "Activa \"Include private pages\" (o \"Include subpages\" en una exportació d'una sola pàgina) i \"Create folders for subpages\".",
+            "Fes clic a Export i desa el fitxer .zip."
+          ],
+          "p": [
+            "Les exportacions en HTML i PDF no contenen fitxers Markdown i l'importador de Notion no les pot llegir. Tria \"Markdown & CSV\" perquè la teva estructura, els enllaços i el format arribin nets."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "Notion afegeix un identificador de 32 caràcters al final de cada nom de fitxer exportat i de cada enllaç intern. PrivacyNotes elimina aquests identificadors de cada títol i nom de carpeta, treu la carpeta superior \"Private & Shared\" i reconstrueix les subpàgines niades com a carpetes.",
+            "Els encapçalaments, les llistes, les llistes de verificació niades, les taules, els blocs de codi amb el seu llenguatge, les matemàtiques, el subratllat i les cites arriben tal com eren. Els requadres destacats de Notion es converteixen en requadres destacats de PrivacyNotes, [els enllaços i les mencions entre pàgines exportades es converteixen en enllaços entre notes](/ca/help/note-links), i les imatges, els PDF i els fitxers pujats s'importen al teu emmagatzematge.",
+            "Les pàgines de fila de les bases de dades s'importen com a notes dins d'una carpeta amb el nom de la base de dades, i qualsevol propietat Tags s'afegeix com a etiqueta. Els fitxers de taula CSV de les bases de dades s'ometen i es compten al resum. La mateixa exportació en Markdown de Notion deixa fora els colors del text, els ressaltats i les pàgines de la paperera."
+          ]
+        }
+      ]
+    },
     "notesnook": {
       "app": "Notesnook",
       "title": "Exporta les teves notes de Notesnook",
@@ -1281,6 +1333,53 @@
         }
       ]
     },
+    "diaro": {
+      "app": "Diaro",
+      "title": "Exporta el teu diari de Diaro",
+      "metaTitle": "Com exportar la còpia de seguretat de Diaro - PrivacyNotes",
+      "lead": "Diaro exporta tot el teu diari com una còpia de seguretat .zip des de la seva aplicació mòbil, i PrivacyNotes importa cada entrada a Diaris amb les seves carpetes, etiquetes, estats d'ànim, llocs, meteorologia i fotos.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-menu.webp",
+            "alt": "Pantalla de configuració Data de Diaro que mostra Backup & restore i la carpeta d'emmagatzematge dels fitxers de còpia de seguretat",
+            "width": 1576,
+            "height": 732
+          },
+          "h": "Crea una còpia de seguretat sense xifrar a l'app de Diaro",
+          "steps": [
+            "Obre Diaro a Android o iOS, obre el menú de l'esquerra i toca la roda dentada de Settings.",
+            "Tria Data, baixa fins a Backup & restore i toca Backup & restore.",
+            "Toca el botó + de dalt a la dreta.",
+            "Deixa \"Encrypt entries in backup file\" desmarcat i \"Do not backup attachments\" desmarcat, i després toca Backup.",
+            "Copia el fitxer Diaro_YYYYMMDD.zip de la carpeta de còpies de seguretat que es mostra a Storage directories (o de Dropbox si l'has sincronitzat allà) i deixa'l anar a PrivacyNotes."
+          ],
+          "p": [
+            "Crear una còpia de seguretat a l'app mòbil és gratuït i no necessita cap subscripció Pro. Diaro Online només exporta en PDF, DOCX i TXT en plans de pagament i no té cap botó de baixada de còpia de seguretat."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-dialog.webp",
+            "alt": "Diàleg Backup de Diaro amb Encrypt entries in backup file i Do not backup attachments desmarcats",
+            "width": 1576,
+            "height": 817
+          },
+          "h": "Tria la còpia de seguretat .zip sense xifrar, no pas PDF, TXT, CSV ni còpies xifrades",
+          "p": [
+            "Una còpia de seguretat sense xifrar escriu DiaroBackup.xml i la teva carpeta media/photo dins d'un sol fitxer .zip. Si marques \"Encrypt entries in backup file\", Diaro escriu DiaroBackup.denc en el seu lloc, que PrivacyNotes no pot desbloquejar i rebutja amb un recordatori perquè desactivis el xifratge.",
+            "Un fitxer DiaroBackup.xml sol importa tot el text i les metadades per si sol, sense fotos, i el resum compta cada imatge que falta. Desmarca \"Do not backup attachments\" i deixa anar el .zip sencer per portar també les teves fotos."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "[Cada entrada va a Diaris](/ca/help/journal) el dia del calendari corresponent al desplaçament de zona horària registrat a l'entrada. Les entrades sense títol agafen el títol amb la data que rep una entrada nova d'aquell dia, i els enllaços web nus es tornen clicables.",
+            "Les carpetes de Diaro es converteixen en carpetes, les etiquetes continuen sent etiquetes, i els estats d'ànim omplen [el seguiment de l'estat d'ànim](/ca/help/choose-trackers) a partir del seu pes a Diaro (els noms d'estat d'ànim personalitzats també apareixen a la línia superior). Les ubicacions amb coordenades omplen l'etiqueta d'ubicació de l'entrada, els llocs que només tenen nom i la meteorologia se situen en una sola línia a dalt, i les fotos s'importen en el seu ordre original."
+          ]
+        }
+      ]
+    },
     "diarium": {
       "app": "Diarium",
       "title": "Exporta el teu diari de Diarium",
@@ -1420,6 +1519,69 @@
             "El quadern es converteix en una carpeta, amb una carpeta a dins per a cada grup de seccions i cada secció. Cada pàgina es converteix en una nota a la carpeta de la seva secció amb la data en què OneNote la va crear, i una subpàgina segueix la seva pàgina a la mateixa carpeta.",
             "Els encapçalaments, la negreta, la cursiva, el subratllat, els colors, els ressaltats, les llistes amb punts i numerades, les taules i els paràgrafs de codi arriben tal com eren. Una etiqueta de tasca es converteix en un element de llista de tasques, marcat si estava fet, i les altres etiquetes de nota com Important o Question es converteixen en etiquetes de la nota. [Els enllaços entre pàgines es converteixen en enllaços entre notes](/ca/help/note-links), i les imatges i els fitxers adjunts s'importen al teu emmagatzematge.",
             "Un fitxer de secció (.one) sol, o una carpeta de quadern en zip, també funciona. Els dibuixos fets amb llapis, les gravacions d'àudio i les equacions no tenen equivalent aquí, així que la previsualització de la importació els compta, i les pàgines de la paperera de OneNote no formen part del paquet."
+          ]
+        }
+      ]
+    },
+    "day-one": {
+      "app": "Day One",
+      "title": "Exporta el teu diari de Day One",
+      "metaTitle": "Com exportar el teu diari de Day One - PrivacyNotes",
+      "lead": "Day One exporta el teu diari com un .zip JSON amb fitxers multimèdia, i PrivacyNotes porta cada entrada a Diaris amb el seu dia, les etiquetes, el lloc, la meteorologia i les fotos.",
+      "sections": [
+        {
+          "h": "Exporta en JSON amb fitxers multimèdia",
+          "steps": [
+            "Obre Day One al web i selecciona el diari que vols moure.",
+            "Tria Edit Journal, obre Journal Settings i tria Export Journal.",
+            "Tria Export journal JSON file i després marca Include media. Day One desa un .zip amb les teves entrades i els adjunts.",
+            "Deixa anar aquest .zip tal com és."
+          ],
+          "p": [
+            "Al Mac o a iOS, tria File > Export > JSON en lloc d'això. Pots exportar un diari cada vegada o tots els diaris en un sol .zip."
+          ]
+        },
+        {
+          "h": "Tria JSON, no pas PDF ni text pla",
+          "p": [
+            "JSON és el format que conserva les dates, les zones horàries, les etiquetes, les estrelles, les ubicacions, la meteorologia, els enllaços entre entrades i els fitxers multimèdia. Un fitxer .json sol importa només el text, sense fotos ni fitxers, i el resum compta tots els adjunts que no ha pogut trobar."
+          ]
+        },
+        {
+          "h": "Què hi arriba",
+          "p": [
+            "[Cada entrada va a Diaris](/ca/help/journal) el dia del calendari en la zona horària pròpia de l'entrada. Un encapçalament inicial es converteix en el títol, i una entrada que no en té pren la seva data com a títol. Les entrades destacades amb estrella i les fixades continuen fixades, i les etiquetes continuen sent etiquetes.",
+            "La teva ubicació omple l'etiqueta d'ubicació de l'entrada, i la meteorologia, l'activitat i la música se situen en una sola línia a dalt. Les fotos s'importen com a imatges, l'àudio, el vídeo i els PDF com a adjunts, i els enllaços entre entrades es converteixen en [enllaços entre notes](/ca/help/note-links). Quan un sol .zip conté diversos diaris, cada diari es converteix en una carpeta."
+          ]
+        }
+      ]
+    },
+    "todoist": {
+      "app": "Todoist",
+      "title": "Exporta les teves tasques de Todoist",
+      "metaTitle": "Com exportar les teves tasques de Todoist - PrivacyNotes",
+      "lead": "Exporta els projectes de Todoist com una còpia de seguretat .zip o fitxers .csv de projecte, i PrivacyNotes converteix cada projecte en una llista de tasques amb seccions, subtasques i comentaris.",
+      "sections": [
+        {
+          "h": "Baixa una còpia de seguretat o exporta un projecte en CSV",
+          "steps": [
+            "A Todoist, amb un pla Pro o Business, obre Settings > Backups i baixa l'última còpia de seguretat .zip. Conté un fitxer .csv per a cada projecte actiu.",
+            "Amb el pla gratuït, obre un projecte, tria el menú de tres punts > Import & export > Export as CSV i desa el fitxer .csv.",
+            "Deixa anar el fitxer .zip o .csv a PrivacyNotes."
+          ]
+        },
+        {
+          "h": "Desactiva les dates relatives quan exportis un sol projecte",
+          "p": [
+            "Al menú Export as CSV, desactiva \"Use relative dates\" perquè les dates de venciment es desin com a dates de calendari, com ara 2026-12-15, en lloc de \"d'aquí a 21 dies\". Totes dues s'importen com a text a la línia de la tasca, i les dates de calendari continuen sent exactes més endavant.",
+            "Todoist deixa les tasques completades i els projectes arxivats fora de les exportacions en CSV i de les còpies de seguretat, així que al fitxer només hi ha les tasques actives."
+          ]
+        },
+        {
+          "h": "On va a parar cada cosa",
+          "p": [
+            "Cada projecte es converteix en una llista de tasques a [Tasques](/ca/help/tasks) amb el nom del projecte, amb les seccions com a encapçalaments tant als projectes en llista com als de tauler, i les subtasques niades a la mateixa profunditat. Les prioritats P1 a P3, les dates de venciment, les durades, les dates límit i les @etiquetes en línia es mantenen a cada línia, i cada @etiqueta s'afegeix també com a etiqueta a la llista.",
+            "Les descripcions de les tasques, els comentaris de les tasques i els comentaris del projecte també hi arriben, i les tasques d'encapçalament no completables es mantenen com a pics en negreta en lloc de caselles de selecció. Els recordatoris de línies de tasques individuals no s'importen i es compten al resum."
           ]
         }
       ]

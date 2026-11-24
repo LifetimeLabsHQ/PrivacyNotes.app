@@ -8,10 +8,12 @@ import { useEdgeSwipe, EDGE_START_PX } from './useEdgeSwipe';
 import { useIsMobile } from './useIsMobile';
 import { detectPlatform } from './devices';
 import { ArrowLeft, ArrowSquareOut, ArrowsIn, ArrowsLeftRight, ArrowsOut, CaretRight, SidebarSimple, X } from './icons';
+import { HoverLabel } from './HoverLabel';
 import { AccentBar, HeadlineRule, SETTINGS_EYEBROW } from './settingsUI';
 import { PaneTabMemory } from './settingsPaneTab';
 import type { SettingsShellProps as Props } from './SettingsShell';
 import { Button, CloseButton, IconButton } from './ui';
+import { UpdateDot } from './UpdateDot';
 
 /** The desktop Settings window's size (device-local): the normal window,
  *  the full app, or a panel docked at one edge beside the app (#741). */
@@ -594,9 +596,13 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
                   <button
                     type="button"
                     onClick={() => openCategory(c.id)}
+                    aria-label={c.badgeTip ? `${c.label} - ${c.badgeTip}` : undefined}
                     className="w-full flex items-center gap-3 px-4 py-3 text-body text-start text-pn hover:bg-surface-1 transition"
                   >
-                    <span className="shrink-0 text-accent">{c.icon}</span>
+                    <span className="relative inline-flex shrink-0 text-accent">
+                      {c.icon}
+                      {c.badgeTip && <UpdateDot ring="ring-surface-2" />}
+                    </span>
                     <span className="flex-1">{c.label}</span>
                     <CaretRight className="text-pn-muted shrink-0" />
                   </button>
@@ -699,25 +705,36 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
                       </span>
                       {badge}
                     </a>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => openCategory(c.id)}
-                      aria-current={on}
-                      className={`w-full flex items-center gap-2.5 px-3 py-1.5 [@media(max-height:999px)]:py-1 rounded-md text-body text-start transition ${
-                        on
-                          ? 'bg-accent/10 text-accent-strong font-medium'
-                          : 'text-pn-soft hover:bg-surface-1'
-                      } ${dim ? 'opacity-45' : ''}`}
-                    >
-                      {/* Category icons are always accent, active or not, so the
-                          rail reads as one family and matches the sidebar.
-                          Spec: docs/internal/design/ui-patterns.md section 36 */}
-                      <span className="shrink-0 text-accent">{c.icon}</span>
-                      <span className="flex-1">{c.label}</span>
-                      {badge}
-                    </button>
-                  )}
+                  ) : (() => {
+                    const rowBtn = (
+                      <button
+                        type="button"
+                        onClick={() => openCategory(c.id)}
+                        aria-current={on}
+                        aria-label={c.badgeTip ? `${c.label} - ${c.badgeTip}` : undefined}
+                        className={`w-full flex items-center gap-2.5 px-3 py-1.5 [@media(max-height:999px)]:py-1 rounded-md text-body text-start transition ${
+                          on
+                            ? 'bg-accent/10 text-accent-strong font-medium'
+                            : 'text-pn-soft hover:bg-surface-1'
+                        } ${dim ? 'opacity-45' : ''}`}
+                      >
+                        {/* Category icons are always accent, active or not, so the
+                            rail reads as one family and matches the sidebar.
+                            Spec: docs/internal/design/ui-patterns.md section 36 */}
+                        <span className="relative inline-flex shrink-0 text-accent">
+                          {c.icon}
+                          {c.badgeTip && <UpdateDot ring="ring-surface-2" />}
+                        </span>
+                        <span className="flex-1">{c.label}</span>
+                        {badge}
+                      </button>
+                    );
+                    return c.badgeTip ? (
+                      <HoverLabel label={c.badgeTip} position="above-start" className="w-full">
+                        {rowBtn}
+                      </HoverLabel>
+                    ) : rowBtn;
+                  })()}
                 </Fragment>
               );
             })}

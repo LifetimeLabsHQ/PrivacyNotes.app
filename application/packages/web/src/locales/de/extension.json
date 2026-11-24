@@ -23,7 +23,6 @@
     "generatePassword": "Passwort erzeugen"
   },
   "note": {
-    "tagsPlaceholder": "#arbeit #ideen",
     "tagsHelp": "Leerzeichen oder Komma zwischen Tags. Das # ist optional.",
     "failed": "Die Notiz konnte nicht gespeichert werden. Versuch es noch einmal."
   },
@@ -213,5 +212,11 @@
     "unlockFirst": "Entsperre, um deine Passkeys zu verwenden.",
     "offer": "Passkeys anbieten",
     "offerHelp": "Passkeys auf Websites speichern und verwenden."
+  },
+  "organize": {
+    "title": "Ordner & Tags",
+    "unlockToPick": "Tresor zum Auswählen entsperren",
+    "addTag": "Tag hinzufügen...",
+    "proFolders": "Ordner sind eine Pro-Funktion. Öffne PrivacyNotes für das Upgrade."
   }
 }

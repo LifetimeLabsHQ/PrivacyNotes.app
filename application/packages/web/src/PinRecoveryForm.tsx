@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { useTranslation } from 'react-i18next';
 import { clearPin, phraseMatches, restoreUnsavedClear } from './pinRecovery';
 import type { SecretKind } from './secretKind';
@@ -106,7 +107,7 @@ export function PinRecoveryForm({
           type="button"
           onClick={() => void submit()}
           disabled={!input.trim()}
-          className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-3 py-2 text-body font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-3 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed`}
         >
           {kind === 'passcode' ? t('pinRecovery.clearPasscode') : t('pinRecovery.clearPin')}
         </button>

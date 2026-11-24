@@ -19,6 +19,7 @@
     "proUnlimited": "· 무제한 기기",
     "earlySupporterThanks": "얼리 서포터, 가장 먼저 와 주셔서 감사해요",
     "proThanks": "준비 끝이에요. 프로젝트를 지원해 주셔서 감사해요",
+    "freeLocalOnly": "무료 플랜",
     "freeLimit_other": "<strong>무료 플랜</strong>, 최대 기기 {{count}}대.",
     "freeUsage": "현재 {{limit}}대 중 {{used}}대 사용 중.",
     "ratePro": "평가는 다른 사람들이 PrivacyNotes를 찾는 데 도움이 돼요.",
@@ -88,7 +89,25 @@
   },
   "images": {
     "spaceSaverTitle": "공간 절약",
-    "spaceSaverDesc": "{{px}}픽셀에 맞게 줄이고 {{quality}}% 품질의 JPEG로 저장해요. 약간의 세부를 내주고 공간은 훨씬 적게 써요. GIF는 애니메이션을 그대로 유지하고, 보관함의 파일은 있는 그대로 남아요.",
+    "spaceSaverDesc": "새 이미지를 줄여서 JPEG로 저장해요. GIF는 애니메이션을 그대로 유지하고, 보관함의 파일은 있는 그대로 남아요.",
+    "compressionTitle": "압축",
+    "level": {
+      "standard": "표준",
+      "small": "작게",
+      "tiny": "아주 작게"
+    },
+    "levelSpec": "{{px}}픽셀에 {{quality}}% JPEG 품질로 맞춰요.",
+    "levelDesc": {
+      "standard": "훨씬 적은 공간으로 또렷한 세부를 유지해요.",
+      "small": "사진과 스크린샷을 선명하게 유지하면서 파일 크기를 줄여요.",
+      "tiny": "저장 공간이 빠듯할 때 쓰는 가장 작은 크기예요. 작은 글씨는 다소 흐려질 수 있어요."
+    },
+    "previewSample": "{{size}} 휴대폰 사진",
+    "previewSavedAs": "저장 후",
+    "previewCompressed": "약 {{size}} JPEG ({{px}} px, {{quality}}%)",
+    "previewOriginal": "{{size}} 원본",
+    "previewBarLabel": "원본 대비 예상 저장 이미지 크기",
+    "previewFits": "사진 약 {{count}}장 / {{storage}}",
     "removeLocationTitle": "위치 정보 제거",
     "removeLocationDesc": "이미지를 찍은 장소는 저장하기 전에 제거돼요.",
     "contactTitle": "작은 연락처 사진",
@@ -131,7 +150,8 @@
     "verifyPendingDelete_other": "다른 기기에서 삭제된 항목 {{count}}개가 아직 여기 있어요",
     "verifyNeverPushed_other": "여기 있는 항목 {{count}}개는 서버에 한 번도 올라가지 않았어요",
     "verifyRepairAction": "전부 다시 내려받기",
-    "verifyRepairQueued": "다음 동기화에서 보관함 전체를 다시 읽어요. 업로드를 기다리는 것은 사라지지 않아요."
+    "verifyRepairQueued": "다음 동기화에서 보관함 전체를 다시 읽어요. 업로드를 기다리는 것은 사라지지 않아요.",
+    "localOnlyOfflineError": "지금 오프라인이에요. 동기화를 켜려면 인터넷에 연결하세요."
   },
   "accountId": {
     "heading": "계정 ID",
@@ -457,6 +477,7 @@
     "blockedByStorage": "활성 저장 공간 구독이 있어요. 계정을 삭제하려면 먼저 설정의 저장 공간에서 해지하세요.",
     "localLabel": "로컬 데이터 삭제",
     "localDesc": "이 기기에서 노트, 이미지, 캐시 데이터를 지워요. 계정은 삭제되지 않고 이 브라우저만 정리돼요.",
+    "localDescLocalOnly": "이 기기에서 모든 노트, 이미지, 파일을 지워요. 클라우드에는 아무것도 저장되어 있지 않아요.",
     "localRequired": "(계정 삭제 시 필수)",
     "localUnsynced_other": "이 기기의 {{items}}가 동기화되지 않았어요. 로컬 데이터를 삭제하면 영구적으로 사라져요.",
     "unsyncedNotes_other": "노트 {{count}}개",
@@ -491,6 +512,8 @@
     "updateRequiredAria": "업데이트가 필요해요, 동기화가 일시 중지됐어요",
     "paused": "동기화 꺼짐",
     "pausedTooltip": "이 기기에서 동기화가 꺼져 있어요. 동기화를 켤 때까지 노트는 여기에 남아요.",
+    "localOnly": "로컬 전용",
+    "localOnlyAria": "로컬 전용. 노트는 이 기기에 남아요",
     "wifiHold": "와이파이 대기 중",
     "wifiHoldTooltip": "와이파이가 돌아오면 파일을 올려요. 노트는 계속 동기화돼요.",
     "notBackedUp": "백업 안 됨",
@@ -547,7 +570,26 @@
     "unopenedNoCopy": "이 기기에 없는 노트",
     "unopenedSeen": "{{ago}} 발견",
     "passPushFailed_other": "{{count}}개 실패",
-    "passHalted_other": "중단됨, {{count}}개 대기 중"
+    "passHalted_other": "중단됨, {{count}}개 대기 중",
+    "localOnlyBody": "노트는 이 기기에 암호화된 채로 남고 저희 서버와 동기화되지 않아요.",
+    "localOnlyNotes_other": "이 기기의 노트 {{count}}개",
+    "localOnlyBackupHint": "클라우드에 동기화되는 내용은 없어요. 다른 드라이브나 폴더에 안전한 사본을 보관하려면 자동 백업을 설정하세요.",
+    "localOnlySetUpBackups": "자동 백업 설정",
+    "localOnlyTurnOnSync": "동기화 켜기",
+    "localOnlyTurningOn": "동기화 켜는 중...",
+    "localOnlyAccountIdHint": "아직 저희 서버에 등록되지 않았어요."
+  },
+  "localOnlyNotice": {
+    "body": "{{feature}}: 이 온라인 기능을 사용하려면 설정 > ID & Sync에서 동기화를 켜세요.",
+    "cta": "ID & Sync로 이동",
+    "features": {
+      "multiDevice": "여러 기기 관리",
+      "keyCustody": "클라우드 키 관리",
+      "cloudStorage": "클라우드 저장 공간",
+      "twoFactorPasskeys": "2단계 로그인 및 패스키",
+      "phraseChange": "복구 문구 변경",
+      "burnShare": "Burn After Reading 링크"
+    }
   },
   "language": {
     "reportMistake": "번역 오류 신고하기",

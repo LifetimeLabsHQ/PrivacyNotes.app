@@ -183,9 +183,12 @@ export function useExports({
    *  modal then runs it through the NORMAL zip restore flow - preview,
    *  quota preflight and blob restore all reuse. Errors arrive already
    *  translated, the decryptBackup precedent (issue #193). */
-  const decryptFullBackup = async (file: File): Promise<File> => {
+  const decryptFullBackup = async (file: File, foreignPhrase?: string): Promise<File> => {
     const bytes = new Uint8Array(await file.arrayBuffer());
-    const zip = (await loadExport()).decryptFullBackupZip(bytes, auth.encryptionKey);
+    const ex = await loadExport();
+    const zip = foreignPhrase !== undefined
+      ? ex.decryptFullBackupZipWithForeignPhrase(bytes, foreignPhrase)
+      : ex.decryptFullBackupZip(bytes, auth.encryptionKey);
     return new File([zip as BlobPart], 'backup.zip', { type: 'application/zip' });
   };
   const exportAllHtmlZip = (ns: LocalNote[], fileStem?: string) =>
@@ -216,13 +219,16 @@ export function useExports({
   const printNote = (n: LocalNote, titleOnly = false) =>
     runExport('pdf', async () =>
       (await loadExport()).printNote(n, imageStoreRef.current, userSettings.folders, attachmentStoreRef.current, titleOnly));
-  const importEncryptedBackup = async (file: File): Promise<{ imported: number; updated: number; unchanged: number }> => {
+  const importEncryptedBackup = async (file: File, foreignPhrase?: string): Promise<{ imported: number; updated: number; unchanged: number }> => {
     // The restore matches the backup's notes by id against this device's
     // copy, so it waits for this device's first clean pull (pullState.ts).
     const gate = restoreGateNow();
     if (gate !== 'open') throw new Error(i18n.t(RESTORE_WAIT_LINE[gate]));
     const buf = new Uint8Array(await file.arrayBuffer());
-    const backup = (await loadExport()).decryptBackup(buf, auth.encryptionKey);
+    const ex = await loadExport();
+    const backup = foreignPhrase !== undefined
+      ? ex.decryptBackupWithForeignPhrase(buf, foreignPhrase)
+      : ex.decryptBackup(buf, auth.encryptionKey);
     recordAdminEvent(supabase, 'import', 'encrypted');
     // v3 backups carry the folder definitions, their looks and the custom
     // themes; merged before the notes so the restored notes' folderId

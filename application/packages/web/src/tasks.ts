@@ -1,5 +1,10 @@
 import type { LocalNote } from './db';
+import { getFolderGroupLabels } from './folderNames';
+import { toLocalIso } from './intlFormat';
+import { orderNotesForGroup } from './ListGroupHeader';
 import type { ListPrefs } from './listPrefs';
+import { parseDay } from './localDate';
+import { getViewOrder } from './viewRows';
 import { compareNotes, deriveDisplayTitle, editedAtOf } from './notesViewUtils';
 import { nextFence, type Fence } from './markdownFence';
 import { createNote, getNote, updateNoteFrom } from './notesRepo';
@@ -140,7 +145,18 @@ export function selectTaskNotes(
     const match = textMatcher(q);
     matching = matching.filter((n) => match(n.title ?? '') || (!isGated(n) && match(n.body)));
   }
-  return matching.slice().sort((a, b) => compareNotes(a, b, listPrefs));
+  const sorted = matching.slice().sort((a, b) => compareNotes(a, b, listPrefs));
+  if (!q) {
+    return orderNotesForGroup(sorted, {
+      view: 'tasks',
+      listPrefs,
+      now: parseDay(toLocalIso(new Date())),
+      isGated,
+      viewOrder: getViewOrder(),
+      folderNames: getFolderGroupLabels(),
+    });
+  }
+  return sorted;
 }
 
 /** A task line's text the way the Tasks view shows it. */

@@ -69,6 +69,14 @@ body {
   z-index: 56;
 }
 
+/* The web app's <=640px mobile rule pins every input to 16px for iOS Safari
+   zoom prevention; the 480px desktop extension popup keeps compact inputs at
+   the small type role. */
+#root input.pn-ext-compact-input {
+  font-size: var(--fs-small) !important;
+  line-height: var(--lh-small) !important;
+}
+
 /* The footer message and the done button (pattern 177). The rise and the
    pop are the app's own pn-toast-in curve and pn-pop, so the popup moves
    like the app. Less motion keeps the fades and the timer line only.

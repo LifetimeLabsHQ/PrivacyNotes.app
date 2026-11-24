@@ -3,8 +3,9 @@ import { Trans, useTranslation } from 'react-i18next';
 import { liveQuery } from 'dexie';
 import { useEscapeToClose } from '../useEscapeToClose';
 import { countUnopenedCopiesHere } from '../unopenedNotes';
-import { WarningCircle } from '../icons';
-import { CloseButton } from '../ui';
+import { Archive, WarningCircle } from '../icons';
+import { Button, Callout, CloseButton } from '../ui';
+import { PRIMARY_BTN_SKIN } from '../settingsUI';
 
 /**
  * Phrase-reminder confirmation shown when the user clicks Sign Out
@@ -48,6 +49,8 @@ export function SignOutConfirmModal({
   unsyncedFiles,
   unsyncedKept,
   neverBackedUp,
+  localOnly = false,
+  onExportBackup,
 }: {
   dontRemind: boolean;
   onDontRemindChange: (next: boolean) => void;
@@ -66,10 +69,15 @@ export function SignOutConfirmModal({
   unsyncedKept: boolean;
   /** The subset that exists on this device only (neverBackedUp.ts). */
   neverBackedUp: ReadonlyArray<{ id: string; title: string }>;
+  /** Local-only vault: nothing has ever synced, so signing out permanently
+   *  deletes all notes and files on this device. */
+  localOnly?: boolean;
+  /** Opens Settings > Backup > Manual from the local-only sign-out confirm. */
+  onExportBackup?: () => void;
 }) {
   const { t } = useTranslation('notesChrome');
-  // With unsynced rows or files at stake, every dismissal keeps the
-  // session; the phrase escape hatch stays as an explicit button.
+  // With unsynced rows or files at stake (or local-only mode), every dismissal
+  // keeps the session; the phrase escape hatch stays as an explicit button.
   const unopened = useUnopenedCopiesHere();
   const filesAtRisk = unsyncedFiles > 0 && !unsyncedKept;
   const lostNotes = unsyncedCount + (unsyncedKept ? 0 : unopened);
@@ -82,10 +90,68 @@ export function SignOutConfirmModal({
           files: t('signOutConfirm.fileCount', { count: unsyncedFiles }),
         })
       : t('signOutConfirm.signOutLoseFiles', { count: unsyncedFiles });
-  const dismiss = risky ? onStay : onShowPhrase;
+  const dismiss = localOnly || risky ? onStay : onShowPhrase;
   useEscapeToClose(dismiss);
   const shown = neverBackedUp.slice(0, 5);
   const more = neverBackedUp.length - shown.length;
+
+  if (localOnly) {
+    const noteText = t('settings:danger.unsyncedNotes', { count: unsyncedCount });
+    const fileText = t('settings:danger.unsyncedFiles', { count: unsyncedFiles });
+    const items =
+      unsyncedCount > 0 && unsyncedFiles > 0
+        ? t('settings:danger.unsyncedBoth', { notes: noteText, files: fileText })
+        : unsyncedCount > 0
+          ? noteText
+          : fileText;
+    const hasItems = unsyncedCount > 0 || unsyncedFiles > 0;
+    return (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70 p-4"
+        onClick={dismiss}
+      >
+        <div
+          className="w-full max-w-sm rounded-lg bg-surface-2 border border-divider text-pn p-6 space-y-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-start justify-between">
+            <h2 className="text-heading font-semibold">
+              {t('signOutConfirm.localOnlyTitle')}
+            </h2>
+            <CloseButton onClick={dismiss} />
+          </div>
+          <p className="text-body text-pn-muted leading-relaxed">
+            {t('signOutConfirm.localOnlyBody')}
+          </p>
+          {hasItems && (
+            <Callout tone="warning">
+              {t('signOutConfirm.localOnlyCounts', { items })}
+            </Callout>
+          )}
+          <div className="space-y-2 pt-2">
+            <div className="flex gap-2">
+              {onExportBackup && (
+                <Button icon={<Archive aria-hidden="true" />} onClick={onExportBackup} className="flex-1">
+                  {t('signOutConfirm.localOnlyExportBackup')}
+                </Button>
+              )}
+              <Button action="confirm" onClick={onStay} className="flex-1">
+                {t('signOutConfirm.stay')}
+              </Button>
+            </div>
+            <Button
+              action="delete"
+              variant="dangerSoft"
+              onClick={onConfirmSignOut}
+              className="w-full"
+            >
+              {t('signOutConfirm.localOnlyDeleteConfirm')}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70 p-4"
@@ -157,7 +223,7 @@ export function SignOutConfirmModal({
               </button>
               <button
                 onClick={onStay}
-                className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-4 py-2 text-body font-medium transition"
+                className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold transition`}
               >
                 {t('signOutConfirm.stay')}
               </button>
@@ -179,7 +245,7 @@ export function SignOutConfirmModal({
             </button>
             <button
               onClick={onConfirmSignOut}
-              className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-4 py-2 text-body font-medium transition"
+              className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold transition`}
             >
               {t('signOutConfirm.confirm')}
             </button>

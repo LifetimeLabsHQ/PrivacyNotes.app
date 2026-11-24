@@ -4,6 +4,7 @@ import { ArrowsClockwise, CaretRight } from './icons';
 import { formatInstant } from './intlFormat';
 import { deriveTitleFromContent } from './notesViewUtils';
 import { Modal } from './ui';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import type { NoteConflict } from './sync';
 
 type Props = {
@@ -72,7 +73,7 @@ export function ConflictModal({ conflict, onResolve }: Props) {
           <div className="flex gap-2">
             <button
               onClick={() => onResolve('server')}
-              className="flex-[2] rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-4 py-2 text-body font-medium transition"
+              className={`flex-[2] rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold transition`}
             >
               {t('conflict.useNewer')}
             </button>

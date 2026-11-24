@@ -279,7 +279,7 @@ type Props = {
 
 export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayMenu, onAdd, onMove, onResize, onDropItems, weekNumbers, firstHour, onMenu, agenda, onImport, onSettings, trackers = null }: Props) {
   const { t } = useTranslation(['shell', 'notes']);
-  const { mode, setMode, focus, setFocus } = pillar;
+  const { mode, setMode, focus, setFocus, goToday } = pillar;
   const hiddenKinds = useHiddenKinds();
   const hidden = (e: DayEntry) => hiddenKinds.has(e.kind);
   const shown = useMemo<DayIndex>(() => ({
@@ -545,7 +545,7 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
         focus={focus}
         onFocusChange={setFocus}
         onPick={(day) => { setFocus(day); setMode('day'); }}
-        onToday={() => setFocus(today)}
+        onToday={goToday}
         onAdd={(day) => onAdd(day)}
         headerEnd={headerEnd}
         headerBelow={<>{legend}{countStrip}</>}
@@ -585,7 +585,7 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
           onNext={() => setFocus(addDays(focus, stepDays))}
           prevLabel={t(mode === 'week' ? 'monthGrid.previousWeek' : 'calendar.previousDay')}
           nextLabel={t(mode === 'week' ? 'monthGrid.nextWeek' : 'calendar.nextDay')}
-          onToday={() => setFocus(today)}
+          onToday={goToday}
           end={headerEnd}
           below={<>{legend}{countStrip}</>}
           start={headerStart}

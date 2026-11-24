@@ -230,7 +230,7 @@
     "removeTitle": "Usunąć ten passkey?",
     "removeBody": "Nie zalogujesz się już nim. Sam passkey zostaje w twojej aplikacji passkey, dopóki go tam nie usuniesz.",
     "retired": "Utworzony przed zmianą frazy. Usuń go i dodaj ponownie.",
-    "noPrf": "Ta aplikacja passkey nie może chronić twojej frazy, więc passkey nie został dodany. Spróbuj własnych passkey urządzenia albo innego menedżera haseł.",
+    "noPrf": "Ta aplikacja passkey nie może utworzyć klucza, który chroni twoją frazę, więc passkey nie został dodany. Nadal możesz logować się frazą. Gdy menedżer haseł zaproponuje zapisanie passkey, wybierz zapisanie go na tym urządzeniu lub na kluczu bezpieczeństwa.",
     "tooMany": "Masz {{count}} passkey do logowania. Usuń jeden, aby dodać kolejny.",
     "failed": "Nie udało się dodać passkey. Sprawdź połączenie i spróbuj ponownie.",
     "appsOnly": "Dodawaj passkey w przeglądarce na use.privacynotes.app. Logowanie nimi w aplikacjach pojawi się później.",

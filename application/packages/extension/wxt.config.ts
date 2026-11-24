@@ -205,7 +205,7 @@ export default defineConfig({
         ...(browser === 'firefox' ? { suggested_key: { default: 'Alt+Shift+B' } } : {}),
         description: '__MSG_commandSaveBookmark__',
       },
-      // Spec: docs/internal/plans/quick-note-694.md (section 4.1)
+      // Spec: docs/internal/specs/quick-note-694.md (section 4.1)
       'new-note': {
         ...(browser === 'firefox' ? { suggested_key: { default: 'Alt+Shift+N' } } : {}),
         description: '__MSG_commandNewNote__',

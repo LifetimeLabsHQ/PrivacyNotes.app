@@ -6,7 +6,7 @@ import { EditorSlotPill } from './EditorSlotPill';
 import { registerEditorCommand } from './editorCommands';
 import { keyText } from './shortcutMatch';
 import { deriveDisplayTitle } from './notesViewUtils';
-import { linkResolver, linksInBody, type FileUse, type LinkIndex } from './connectionsIndex';
+import { linkResolver, linksInBody, suggestedLinksInBody, type FileUse, type LinkIndex } from './connectionsIndex';
 import type { ConnectionLists, LinkActions, MeaningDoor, RelatedWhy } from './ConnectionsPanel';
 import type { RelatedLinks, RelatedReason } from './relatedNotes';
 import { relatedModule, suggestionPairKey } from './relatedLoader';
@@ -85,7 +85,7 @@ export function ConnectionsPill({
   onOpenChange: (open: boolean) => void;
   tabIndex?: number;
   /** The other side of two items side by side: the key stays with the
-   *  focused side. Spec: docs/internal/plans/side-by-side-notes.md (section 6) */
+   *  focused side. Spec: docs/internal/specs/side-by-side-notes.md (section 6) */
   idle?: boolean;
 }) {
   const { t } = useTranslation('notes');
@@ -167,6 +167,7 @@ export function ConnectionsPill({
       from: pick(fileUse ? fileUse.ids : index.incoming.get(note.id)),
       usedIn: !!fileUse,
       to: pick(out.ids),
+      suggestedTo: suggestedLinksInBody(liveBody, note.id, resolver),
       missing: out.missing,
       hidden: fileUse ? fileUse.hidden : index.protectedIncoming.get(note.id) ?? 0,
       related,

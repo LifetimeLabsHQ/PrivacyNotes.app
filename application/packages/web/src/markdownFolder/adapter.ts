@@ -214,7 +214,8 @@ const LOST_IN_RICH = /<!--|!\[\[|%%|<(?:kbd|iframe|video|audio|details|summary|a
 function needsSourceMode(body: string): boolean {
   const prose = body
     .replace(/^ {0,3}(`{3,}|~{3,})[^\n]*\n[\s\S]*?^ {0,3}\1[ \t]*$/gm, '')
-    .replace(/`[^`\n]*`/g, '');
+    .replace(/`[^`\n]*`/g, '')
+    .replace(/<!--suggested-->/g, '');
   return LOST_IN_RICH.test(prose);
 }
 

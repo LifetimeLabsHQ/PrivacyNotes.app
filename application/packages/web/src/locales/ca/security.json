@@ -228,7 +228,7 @@
     "removeTitle": "Vols eliminar aquesta clau d'accés?",
     "removeBody": "Ja no podràs iniciar la sessió amb ella. La clau d'accés es queda a la teva app de claus d'accés fins que la suprimeixis allà.",
     "retired": "Creada abans que canviés la teva frase. Elimina-la i torna-la a afegir.",
-    "noPrf": "Aquesta app de claus d'accés no pot protegir la teva frase, així que no s'ha afegit la clau d'accés. Prova les claus d'accés del teu dispositiu o un altre gestor de contrasenyes.",
+    "noPrf": "Aquesta app de claus d'accés no pot crear la clau que protegeix la teva frase, així que no s'ha afegit la clau d'accés. La teva frase encara et permet iniciar la sessió. Quan el teu gestor de contrasenyes t'ofereixi desar la clau d'accés, tria desar-la en aquest dispositiu o en una clau de seguretat.",
     "tooMany": "Tens {{count}} claus d'accés per iniciar la sessió. Elimina'n una per afegir-ne una altra.",
     "failed": "No s'ha pogut afegir la clau d'accés. Comprova la connexió i torna-ho a provar.",
     "appsOnly": "Afegeix claus d'accés al navegador a use.privacynotes.app. Iniciar la sessió amb elles a les apps arribarà més endavant.",

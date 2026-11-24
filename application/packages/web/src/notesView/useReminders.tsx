@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { PRIMARY_BTN_SKIN } from '../settingsUI';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from '../db';
 import type { View } from '../views';
@@ -14,10 +15,12 @@ import { CHECK_IN_REMINDER_ID, checkInReminderItem } from '../checkIn';
 import { MEDICATION_REMINDER_PREFIX } from '../medicationReminders';
 import { BACKUP_REMINDER_ID } from '../autoBackup/reminder';
 import { mayWriteUnstamped } from '../liveSignIn';
-import { LOCKED_REMINDERS_KEY } from '../lockReloadKeys';
+import { LOCKED_REMINDERS_KEY, SHOWN_REMINDER_KEY } from '../lockReloadKeys';
 import {
   keepUnseen,
+  localMoment,
   markUnseen,
+  notificationId,
   planAlerts,
   plannedThrough,
   readSnoozes,
@@ -39,8 +42,15 @@ import {
  * docs/internal/issues/0439.md (Reminder plan)
  */
 
-const NATIVE_MOBILE = __PN_BUILD_PLATFORM__ === 'ios' || __PN_BUILD_PLATFORM__ === 'android';
+const ANDROID = __PN_BUILD_PLATFORM__ === 'android';
+const NATIVE_MOBILE = __PN_BUILD_PLATFORM__ === 'ios' || ANDROID;
 const NATIVE = __PN_BUILD_PLATFORM__ !== '';
+/** Portable token mapped to each OS's default notification sound in our
+ *  patched tauri-plugin-notification (GitHub #892). */
+const DEFAULT_SOUND = 'default';
+/** Android notification channel for reminders: default OS sound + vibration
+ *  enabled, private on the lock screen (GitHub #892). */
+const REMINDERS_CHANNEL_ID = 'reminders';
 const SCHEDULED_KEY = 'privacynotes.reminderScheduled';
 const firedKey = () => (isDemoMode() ? 'privacynotes.demo.reminderFired' : 'privacynotes.reminderFired');
 /** A timer longer than this overflows; the next check runs before it anyway. */
@@ -206,7 +216,7 @@ export function ReminderPermissionHint() {
       <button
         type="button"
         onClick={() => void (denied ? openReminderSettings() : askReminderPermission()).catch(() => {})}
-        className="shrink-0 rounded-md bg-accent-fill text-white px-2.5 py-1 text-compact font-medium hover:bg-accent-fill-hover transition"
+        className={`shrink-0 rounded-md ${PRIMARY_BTN_SKIN} px-2.5 py-1 text-compact font-semibold transition`}
       >
         {t(denied ? 'common:palette.commands.openSettings' : 'alerts.turnOn')}
       </button>
@@ -321,6 +331,7 @@ export function cancelLeftoverReminders(): Promise<void> {
  *  memory: a launch sends the whole plan once, which replaces by id. */
 const sentHere = new Map<number, string>();
 let typesHere = '';
+let channelNameHere = '';
 
 /** Hand the plan to the OS on a phone. Cancel the future alerts that left
  *  the plan and send the ones that are new or changed. An alert whose minute
@@ -356,6 +367,7 @@ let deviceGeneration = 0;
 function scheduleOnDevice(
   plan: readonly (PlannedAlert & { title: string; body: string; plain: boolean })[],
   snoozeLabel: string,
+  channelName: string,
   stillDue: (s: Scheduled) => boolean,
   redact: boolean,
 ): Promise<boolean> {
@@ -429,6 +441,18 @@ function scheduleOnDevice(
     }
     // The plugin's own send does not wait for an answer; its command does.
     const { invoke } = await import('@tauri-apps/api/core');
+    if (ANDROID && channelName !== channelNameHere) {
+      // Android 8+ locks a channel's vibration flag once created, so reminders
+      // use their own vibration-enabled channel with the OS default sound (#892).
+      await invoke('plugin:notification|create_channel', {
+        id: REMINDERS_CHANNEL_ID,
+        name: channelName,
+        importance: 3,
+        visibility: 0,
+        vibration: true,
+      }).then(() => { channelNameHere = channelName; }, () => {});
+      if (stale()) return;
+    }
     const answered = new Map<number, boolean>();
     for (const a of changed) {
       if (stale()) return;
@@ -442,6 +466,8 @@ function scheduleOnDevice(
         id: a.nid,
         title: a.title,
         body: a.body,
+        sound: DEFAULT_SOUND,
+        ...(ANDROID ? { channelId: REMINDERS_CHANNEL_ID } : {}),
         schedule: p.Schedule.at(new Date(a.at), false, true),
         actionTypeId: `reminder-${a.nid}`,
         autoCancel: true,
@@ -546,7 +572,7 @@ export function ReminderPermissionControl() {
       <button
         type="button"
         onClick={() => void askReminderPermission().catch(() => {})}
-        className="shrink-0 rounded-md bg-accent-fill text-white px-3 py-1.5 text-body font-medium hover:bg-accent-fill-hover transition"
+        className={`shrink-0 rounded-md ${PRIMARY_BTN_SKIN} px-3 py-1.5 text-body font-semibold transition`}
       >
         {t('calendar.permissionAsk')}
       </button>
@@ -578,7 +604,7 @@ export function ReminderPermissionControl() {
 async function showNow(title: string, body: string, onClick: () => void) {
   if (NATIVE) {
     const p = await plugin();
-    if (await p.isPermissionGranted()) p.sendNotification({ title, body });
+    if (await p.isPermissionGranted()) p.sendNotification({ title, body, sound: DEFAULT_SOUND });
     return;
   }
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
@@ -645,6 +671,64 @@ function keptLockedPlan(): LockedAlert[] {
   }
 }
 
+/** An undismissed in-app reminder toast kept across a lock/unlock in this
+ *  tab's sessionStorage: key, item id and fire time only, never a title or
+ *  folder. Rebuilt from the live decrypted items after unlock (GitHub #895). */
+type KeptShown = { key: string; itemId: string; at: number };
+const SHOWN_KEPT_MS = 86_400_000;
+
+function readKeptShown(): KeptShown | null {
+  try {
+    const raw = JSON.parse(sessionStorage.getItem(SHOWN_REMINDER_KEY) ?? 'null') as unknown;
+    if (!raw || typeof raw !== 'object') return null;
+    const r = raw as Record<string, unknown>;
+    if (typeof r.key !== 'string' || typeof r.itemId !== 'string' || typeof r.at !== 'number') return null;
+    return { key: r.key, itemId: r.itemId, at: r.at };
+  } catch {
+    return null;
+  }
+}
+
+function writeKeptShown(v: KeptShown | null): void {
+  try {
+    if (!v) sessionStorage.removeItem(SHOWN_REMINDER_KEY);
+    else sessionStorage.setItem(SHOWN_REMINDER_KEY, JSON.stringify({ key: v.key, itemId: v.itemId, at: v.at }));
+  } catch {
+    /* sessionStorage refused: the toast still lives for this mount */
+  }
+}
+
+/** Format one alert's display and locked texts from a live item. */
+function formatReminder(
+  item: ReminderItem,
+  startsAt: number,
+  opts: { titles: boolean; appLock: boolean; t: (key: string) => string },
+): { plain: boolean; title: string; body: string; locked: { title: string; body: string } } {
+  // The check-in reminder carries the question and nothing else: no
+  // title, no value, so the lock and the titles switch change nothing.
+  if (item.id === CHECK_IN_REMINDER_ID) {
+    const text = { title: opts.t('checkIn.prompt'), body: '' };
+    return { plain: true, ...text, locked: text };
+  }
+  if (item.id === BACKUP_REMINDER_ID) {
+    const text = { title: opts.t('importExport:auto.toastDue'), body: '' };
+    return { plain: true, ...text, locked: text };
+  }
+  // A medication reminder says what it is and when, never which one:
+  // a lock screen is read over a shoulder.
+  if (item.id.startsWith(MEDICATION_REMINDER_PREFIX)) {
+    const text = { title: opts.t('alerts.medication'), body: formatInstant(new Date(startsAt), 'time') };
+    return { plain: true, ...text, locked: text };
+  }
+  const start = new Date(startsAt);
+  const today = toLocalIso(start) === toLocalIso(new Date());
+  const when = item.schedule.time ? formatInstant(start, today ? 'time' : 'row') : formatInstant(start, today ? 'weekday' : 'date');
+  const plain = !opts.titles || opts.appLock || item.gated;
+  const words = { reminder: opts.t('alerts.reminder'), untitled: opts.t('common:state.untitled') };
+  const text = reminderText(item, when, { ...words, titles: !plain });
+  return { plain, ...text, locked: plain ? text : reminderText(item, when, { ...words, titles: false }) };
+}
+
 /** Ring the last plan while the app is locked. Returns the teardown. A phone
  *  needs none: its OS holds the alerts. */
 export function ringWhileLocked(): () => void {
@@ -657,7 +741,10 @@ export function ringWhileLocked(): () => void {
     if (!next) return;
     const wait = Math.max(0, next.at - Date.now());
     id = window.setTimeout(() => {
-      if (wait <= MAX_TIMER_MS) ringAlert(next, () => window.focus());
+      if (wait <= MAX_TIMER_MS) {
+        ringAlert(next, () => window.focus());
+        writeKeptShown({ key: next.key, itemId: next.itemId, at: next.at });
+      }
       arm();
     }, Math.min(wait, MAX_TIMER_MS));
   };
@@ -753,29 +840,7 @@ export function useReminders({
     const byId = new Map(items.map((i) => [i.id, i]));
     return raw.map((a) => {
       const item = byId.get(a.itemId)!;
-      // The check-in reminder carries the question and nothing else: no
-      // title, no value, so the lock and the titles switch change nothing.
-      if (a.itemId === CHECK_IN_REMINDER_ID) {
-        const text = { title: t('checkIn.prompt'), body: '' };
-        return { ...a, plain: true, ...text, locked: text };
-      }
-      if (a.itemId === BACKUP_REMINDER_ID) {
-        const text = { title: t('importExport:auto.toastDue'), body: '' };
-        return { ...a, plain: true, ...text, locked: text };
-      }
-      // A medication reminder says what it is and when, never which one:
-      // a lock screen is read over a shoulder.
-      if (a.itemId.startsWith(MEDICATION_REMINDER_PREFIX)) {
-        const text = { title: t('alerts.medication'), body: formatInstant(new Date(a.startsAt), 'time') };
-        return { ...a, plain: true, ...text, locked: text };
-      }
-      const start = new Date(a.startsAt);
-      const today = toLocalIso(start) === toLocalIso(new Date());
-      const when = item.schedule.time ? formatInstant(start, today ? 'time' : 'row') : formatInstant(start, today ? 'weekday' : 'date');
-      const plain = !titles || appLock || item.gated;
-      const words = { reminder: t('alerts.reminder'), untitled: t('common:state.untitled') };
-      const text = reminderText(item, when, { ...words, titles: !plain });
-      return { ...a, plain, ...text, locked: plain ? text : reminderText(item, when, { ...words, titles: false }) };
+      return { ...a, ...formatReminder(item, a.startsAt, { titles, appLock, t }) };
     });
   }, [items, titles, appLock, t, tick]);
 
@@ -783,12 +848,52 @@ export function useReminders({
   // removed, here or by sync) gives up the Calendar row's bell (GitHub #722).
   // Its toast goes too: it has nothing to open. Not before the first read:
   // the empty list then would clear every bell.
+  // Also restores an undismissed toast kept across a lock/unlock (or fired
+  // while locked) from its id/key in sessionStorage once items load (#895).
   useEffect(() => {
     if (!loaded) return;
     const ids = new Set(items.map((i) => i.id));
     keepUnseen(ids);
-    setShown((s) => (s && !ids.has(s.itemId) ? null : s));
-  }, [items, loaded]);
+    if (shown) {
+      if (!ids.has(shown.itemId)) {
+        writeKeptShown(null);
+        setShown(null);
+      }
+      return;
+    }
+    const kept = readKeptShown();
+    if (!kept) return;
+    if (Date.now() - kept.at > SHOWN_KEPT_MS) {
+      writeKeptShown(null);
+      return;
+    }
+    const item = items.find((i) => i.id === kept.itemId);
+    if (!item) {
+      writeKeptShown(null);
+      return;
+    }
+    const occurrence = kept.key.split('|')[1] ?? '';
+    if (occurrence && item.schedule.repeat?.skip?.includes(occurrence)) {
+      writeKeptShown(null);
+      return;
+    }
+    if (item.id === CHECK_IN_REMINDER_ID && occurrence && occurrence < item.schedule.day) {
+      writeKeptShown(null);
+      return;
+    }
+    const startsAt = occurrence ? localMoment(occurrence, item.schedule.time ?? '00:00').getTime() : kept.at;
+    const text = formatReminder(item, startsAt, { titles, appLock, t });
+    setShown({
+      key: kept.key,
+      nid: notificationId(kept.key),
+      itemId: kept.itemId,
+      occurrence,
+      at: kept.at,
+      startsAt,
+      title: text.title,
+      body: text.body,
+    });
+  }, [items, loaded, shown, titles, appLock, t]);
 
   // The plan the lock screen rings from (ringWhileLocked). The view plans
   // afresh, so a plan a lock's reload kept for this tab is spent.
@@ -815,7 +920,7 @@ export function useReminders({
       const item = byId.get(s.itemId);
       return item !== undefined && planAlerts([item], s.at, readSnoozes()).some((a) => a.key === s.key && a.at === s.at);
     };
-    void scheduleOnDevice(plan, t('alerts.snooze'), stillDue, appLock)
+    void scheduleOnDevice(plan, t('alerts.snooze'), t('alerts.label'), stillDue, appLock)
       .then((snoozed) => { if (snoozed) setTick((n) => n + 1); })
       .catch((err: unknown) => console.warn('[reminders] schedule failed', err));
   }, [plan, items, loaded, appLock, t]);
@@ -889,6 +994,7 @@ export function useReminders({
       if (wait > MAX_TIMER_MS || zoneNow() !== planZone) { setTick((n) => n + 1); return; }
       firedHere.current.set(next.key, Date.now());
       ringAlert(next, () => onOpenRef.current(next.itemId, next.occurrence));
+      writeKeptShown({ key: next.key, itemId: next.itemId, at: next.at });
       setShown(next);
       setTick((n) => n + 1);
     }, Math.min(wait, MAX_TIMER_MS));
@@ -901,9 +1007,9 @@ export function useReminders({
       meta={shown.body}
       icon={<BellSimple className="w-4 h-4 text-accent" aria-hidden="true" />}
       actionLabel={t('shell:contacts.open')}
-      onAction={() => { const s = shown; setShown(null); onOpenRef.current(s.itemId, s.occurrence); }}
-      secondary={{ label: t('alerts.snooze'), onAction: () => { snooze(shown.key); setShown(null); setTick((n) => n + 1); } }}
-      onDismiss={() => setShown(null)}
+      onAction={() => { const s = shown; writeKeptShown(null); setShown(null); onOpenRef.current(s.itemId, s.occurrence); }}
+      secondary={{ label: t('alerts.snooze'), onAction: () => { snooze(shown.key); writeKeptShown(null); setShown(null); setTick((n) => n + 1); } }}
+      onDismiss={() => { writeKeptShown(null); setShown(null); }}
     />
   ) : null;
 

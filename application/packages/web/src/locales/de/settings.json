@@ -19,6 +19,7 @@
     "proUnlimited": "· unbegrenzt viele Geräte",
     "earlySupporterThanks": "Early Supporter, danke, dass du von Anfang an dabei bist",
     "proThanks": "Alles erledigt. Danke, dass du das Projekt unterstützt",
+    "freeLocalOnly": "Kostenloser Tarif",
     "freeLimit_one": "<strong>Kostenloser Tarif</strong>, bis zu {{count}} Gerät.",
     "freeLimit_other": "<strong>Kostenloser Tarif</strong>, bis zu {{count}} Geräte.",
     "freeUsage": "Aktuell {{used}} von {{limit}} in Verwendung.",
@@ -89,7 +90,25 @@
   },
   "images": {
     "spaceSaverTitle": "Platzsparer",
-    "spaceSaverDesc": "Auf {{px}} Pixel verkleinert und als JPEG mit {{quality}} % Qualität gespeichert. Ein kleiner Detailverlust für einen Bruchteil des Platzes. Ein GIF behält seine Animation, und Dateien im Tresor bleiben, wie sie sind.",
+    "spaceSaverDesc": "Verkleinert neue Bilder und speichert sie als JPEG. Ein GIF behält seine Animation, und Dateien im Tresor bleiben, wie sie sind.",
+    "compressionTitle": "Komprimierung",
+    "level": {
+      "standard": "Standard",
+      "small": "Klein",
+      "tiny": "Winzig"
+    },
+    "levelSpec": "Passt in {{px}} Pixel bei {{quality}} % JPEG-Qualität.",
+    "levelDesc": {
+      "standard": "Scharfe Details für einen Bruchteil des Platzes.",
+      "small": "Kleinere Dateien, während Fotos und Screenshots klar bleiben.",
+      "tiny": "Kleinste Größe für knappen Speicher; feiner Text kann weicher wirken."
+    },
+    "previewSample": "{{size}} Handyfoto",
+    "previewSavedAs": "Gespeichert als",
+    "previewCompressed": "~{{size}} JPEG ({{px}} px, {{quality}} %)",
+    "previewOriginal": "{{size}} Original",
+    "previewBarLabel": "Geschätzte gespeicherte Bildgröße im Vergleich zum Original",
+    "previewFits": "~{{count}} Fotos / {{storage}}",
     "removeLocationTitle": "Standortdaten entfernen",
     "removeLocationDesc": "Der Aufnahmeort eines Bildes wird vor dem Speichern entfernt.",
     "contactTitle": "Kleine Kontaktfotos",
@@ -139,7 +158,8 @@
     "verifyNeverPushed_one": "{{count}} Eintrag hier hat den Server nie erreicht",
     "verifyNeverPushed_other": "{{count}} Einträge hier haben den Server nie erreicht",
     "verifyRepairAction": "Alles neu laden",
-    "verifyRepairQueued": "Beim nächsten Sync wird dein ganzer Tresor neu gelesen. Nichts, was noch hochgeladen werden muss, geht verloren."
+    "verifyRepairQueued": "Beim nächsten Sync wird dein ganzer Tresor neu gelesen. Nichts, was noch hochgeladen werden muss, geht verloren.",
+    "localOnlyOfflineError": "Du bist offline. Verbinde dich mit dem Internet, um die Synchronisierung einzuschalten."
   },
   "accountId": {
     "heading": "Konto-ID",
@@ -469,6 +489,7 @@
     "blockedByStorage": "Du hast ein aktives Speicher-Abo. Kündige es unter Speicher in den Einstellungen, bevor du dein Konto löschen kannst.",
     "localLabel": "Lokale Daten löschen",
     "localDesc": "Löscht Notizen, Bilder und zwischengespeicherte Daten von diesem Gerät. Dadurch wird dein Konto nicht gelöscht, es wird nur dieser Browser bereinigt.",
+    "localDescLocalOnly": "Löscht alle Notizen, Bilder und Dateien von diesem Gerät. Es ist nichts in der Cloud gespeichert.",
     "localRequired": "(erforderlich beim Löschen des Kontos)",
     "localUnsynced_one": "{{items}} auf diesem Gerät ist nicht synchronisiert. Das Löschen der lokalen Daten vernichtet sie endgültig.",
     "localUnsynced_other": "{{items}} auf diesem Gerät sind nicht synchronisiert. Das Löschen der lokalen Daten vernichtet sie endgültig.",
@@ -508,6 +529,8 @@
     "updateRequiredAria": "Update erforderlich, Synchronisierung pausiert",
     "paused": "Sync aus",
     "pausedTooltip": "Die Synchronisierung ist auf diesem Gerät ausgeschaltet. Deine Notizen bleiben hier, bis du sie einschaltest.",
+    "localOnly": "Nur lokal",
+    "localOnlyAria": "Nur lokal. Deine Notizen bleiben auf diesem Gerät",
     "wifiHold": "Wartet auf WLAN",
     "wifiHoldTooltip": "Dateien werden hochgeladen, sobald WLAN da ist. Notizen synchronisieren weiter.",
     "notBackedUp": "Nicht gesichert",
@@ -575,7 +598,27 @@
     "passPushFailed_one": "{{count}} fehlgeschlagen",
     "passPushFailed_other": "{{count}} fehlgeschlagen",
     "passHalted_one": "gestoppt, {{count}} wartet",
-    "passHalted_other": "gestoppt, {{count}} warten"
+    "passHalted_other": "gestoppt, {{count}} warten",
+    "localOnlyBody": "Deine Notizen bleiben verschlüsselt auf diesem Gerät und werden nicht mit unseren Servern synchronisiert.",
+    "localOnlyNotes_other": "{{count}} Notizen auf diesem Gerät",
+    "localOnlyBackupHint": "Nichts wird mit der Cloud synchronisiert. Richte automatische Backups ein, um eine sichere Kopie auf einem anderen Laufwerk oder in einem anderen Ordner aufzubewahren.",
+    "localOnlySetUpBackups": "Automatische Backups einrichten",
+    "localOnlyTurnOnSync": "Synchronisierung einschalten",
+    "localOnlyTurningOn": "Synchronisierung wird eingeschaltet...",
+    "localOnlyAccountIdHint": "Noch nicht auf unseren Servern registriert.",
+    "localOnlyNotes_one": "{{count}} Notiz auf diesem Gerät"
+  },
+  "localOnlyNotice": {
+    "body": "{{feature}}: Schalte die Synchronisierung unter Einstellungen > ID & Sync ein, um diese Online-Funktion zu nutzen.",
+    "cta": "Zu ID & Sync gehen",
+    "features": {
+      "multiDevice": "Verwaltung mehrerer Geräte",
+      "keyCustody": "Cloud-Schlüsselverwaltung",
+      "cloudStorage": "Cloud-Speicher",
+      "twoFactorPasskeys": "Zwei-Faktor-Anmeldung und Passkeys",
+      "phraseChange": "Wiederherstellungsphrase ändern",
+      "burnShare": "Burn-Links"
+    }
   },
   "language": {
     "reportMistake": "Übersetzungsfehler melden",

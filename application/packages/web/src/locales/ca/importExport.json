@@ -97,7 +97,10 @@
     "googleCalendar": "El .zip de Settings > Import & export de Google Calendar, o un sol fitxer .ics. Els esdeveniments conserven les hores, les repeticions i els recordatoris.",
     "appleNotes": "Exporta amb l'aplicació gratuïta Exporter en format Markdown i deixa anar el .zip aquí.",
     "appleJournal": "Exporta des de Diari al Mac o a l'iPhone, comprimeix la carpeta AppleJournalEntries i deixa anar el .zip. Les entrades s'importen com a entrades de diari amb les fotos, els vídeos, les notes de veu i les ubicacions.",
+    "dayOne": "A Day One, tria Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media) al web, o File > Export > JSON al Mac o a iOS. Deixa anar aquí el .zip o el .json. Les entrades conserven el dia, les etiquetes, les estrelles, el lloc, la meteorologia i els fitxers multimèdia.",
+    "todoist": "A Todoist, baixa una còpia de seguretat .zip des de Settings > Backups (Pro), o obre un projecte i tria ... > Import & export > Export as CSV. Cada projecte es converteix en una llista de tasques amb les seves seccions, subtasques, prioritats, dates de venciment, etiquetes, descripcions i comentaris.",
     "daylio": "A Daylio, tria More > Backup & Restore > Advanced Options > Export, tanca Daylio i deixa anar el fitxer .daylio. Cada entrada es converteix en una entrada de diari amb el seu estat d'ànim, les activitats, les escales, les fotos i les notes de veu. També funciona el CSV de More > Export Entries, sense fotos.",
+    "diaro": "A Diaro, tria Settings > Data > Backup & restore, toca +, deixa el xifratge desactivat i els adjunts activats, i deixa anar aquí la còpia de seguretat .zip. També funciona un DiaroBackup.xml sol, sense fotos. Les entrades conserven el dia, les carpetes, les etiquetes, els estats d'ànim, els llocs, la meteorologia i les fotos.",
     "diarium": "A Diarium, tria Export, escull JSON amb Attachments activat i desa-ho a l'emmagatzematge local. Deixa anar el .zip, o un .json sense adjunts. Les entrades conserven la valoració com a estat d'ànim, les etiquetes, les persones, els seguiments, el lloc i els adjunts.",
     "googleJournal": "A Journal, al teu Pixel, activa Settings > Back up your journal. Després tria Journal a Google Takeout i deixa anar el .zip que t'envia. Les entrades conserven el dia, el títol, el text, les fotos i els vídeos.",
     "excalidraw": "Dibuixos desats des d'excalidraw.com: un fitxer .excalidraw, o uns quants dins d'un zip. També funcionen els dibuixos del connector Excalidraw d'Obsidian, com a fitxers .excalidraw.md. Les imatges de dins d'un dibuix també s'importen.",
@@ -108,6 +111,7 @@
     "obsidian": "Vault d'Obsidian en .zip. Conserva les etiquetes, els enllaços entre notes, l'estructura de carpetes, les #etiquetes del text, i les imatges i els fitxers incrustats. Els llenços i els dibuixos d'Excalidraw es converteixen en dibuixos, i un fitxer .canvas també es pot importar tot sol.",
     "obsidianCanvas": "Un fitxer .canvas del teu vault d'Obsidian, o tot el vault en un .zip per portar tots els llenços. Cada llenç es converteix en un dibuix: hi vénen les targetes, els grups, les fletxes i els colors, i també les imatges quan són dins del .zip.",
     "notesnook": "Exportació de Notesnook com a .zip. Tria HTML en exportar per conservar el format, les llibretes, les etiquetes i els adjunts.",
+    "notion": "A Notion, tria Settings > General > Export > Workspace content (o el menú d'una pàgina > More > Export), escull «Markdown & CSV» amb les subpàgines i les carpetes activades, i deixa anar aquí el .zip. Treu els identificadors de Notion dels títols i les carpetes, conserva les subpàgines com a carpetes, converteix els requadres destacats i transforma els enllaços interns en enllaços entre notes, i també importa les imatges, els fitxers i les pàgines de fila de les bases de dades.",
     "bear": "A Bear, tria File > Backup Notes... i deixa anar aquí el fitxer .bear2bk. Hi vénen les etiquetes i les etiquetes niades, les notes fixades, l'arxiu, la paperera, els ressaltats amb els seus colors, els enllaços entre notes i els adjunts.",
     "joplin": "El fitxer .jex de File > Export all > \"JEX - Joplin Export File\". Les llibretes es converteixen en carpetes, i les etiquetes, les tasques pendents, els enllaços entre notes i els adjunts també hi vénen.",
     "anytype": "El .zip JSON d'Any-Block v1 de la configuració de l'espai > Export, amb els fitxers i els objectes arxivats inclosos. Les col·leccions es converteixen en carpetes, i les etiquetes, les tasques, els requadres destacats, les seccions plegables, les taules, els enllaços entre notes i els fitxers també hi vénen.",
@@ -134,7 +138,13 @@
     "fullBackupTitle": "Còpia de seguretat completa (.zip)",
     "fullBackupDesc": "Restaura notes, diaris, elements de la caixa forta, tasques, imatges, àudio i fitxers. Una nota que ja tens es conserva, o s'actualitza si la còpia de seguretat en conté una versió més recent.",
     "encryptedBackupTitle": "Còpia de seguretat xifrada (.pnbackup, .pnbackupz)",
-    "encryptedBackupDesc": "Restaura una còpia de seguretat xifrada amb la clau de la teva frase. Un .pnbackupz ho retorna tot, fitxers inclosos; un .pnbackup només conté text i metadades. Has d'haver iniciat la sessió amb el mateix compte que la va crear."
+    "encryptedBackupDesc": "Restaura una còpia de seguretat xifrada amb la clau de la teva frase. Un .pnbackupz ho retorna tot, fitxers inclosos; un .pnbackup només conté text i metadades. Les còpies de seguretat d'un altre dispositiu o compte et demanaran la frase de recuperació d'aquella còpia."
+  },
+  "restoreForeign": {
+    "title": "Desbloqueja amb una altra frase de recuperació",
+    "body": "Aquesta còpia de seguretat no es va xifrar amb la teva frase actual. Introdueix o escaneja la frase de recuperació del dispositiu que la va crear. Les teves notes s'importaran en aquesta caixa forta.",
+    "unlock": "Desbloqueja la còpia de seguretat",
+    "wrongPhrase": "Aquesta frase de recuperació no ha desbloquejat la còpia de seguretat. Revisa les paraules i torna-ho a provar."
   },
   "restoreGate": {
     "wait": "La restauració espera que aquest dispositiu estigui en línia i hagi completat una sincronització, perquè la teva còpia de seguretat es faci coincidir amb les notes que ja hi ha al teu compte en lloc d'afegir-les dues vegades.",
@@ -322,7 +332,8 @@
     "title_one": "S'ha compartit {{count}} element amb PrivacyNotes",
     "title_other": "S'han compartit {{count}} elements amb PrivacyNotes",
     "line": "No es desa res fins que triïs.",
-    "saveAll": "Desa-ho tot"
+    "saveAll": "Desa-ho tot",
+    "saveAs": "Desa com a"
   },
   "destination": {
     "none": "Sense carpeta",

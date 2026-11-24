@@ -124,8 +124,9 @@ export async function countOnlyOnThisDevice(): Promise<OnlyOnThisDevice> {
  */
 export function maySkipSignOutConfirm(
   atStake: OnlyOnThisDevice,
-  who: { custodial: boolean; dontRemind: boolean },
+  who: { custodial: boolean; dontRemind: boolean; localOnly?: boolean },
 ): boolean {
+  if (who.localOnly) return false;
   return atStake.notes === 0 && atStake.files === 0 && !atStake.unopened && (who.custodial || who.dontRemind);
 }
 

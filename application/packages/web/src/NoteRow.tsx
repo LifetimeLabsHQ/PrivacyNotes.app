@@ -31,6 +31,8 @@ import { isSameOriginPath } from './sameOriginPath';
 import { attachmentLinks } from './fileNames';
 import { useCompactRows } from './viewMode';
 import { scheduleOf } from './schedule';
+import { useIsTouchDevice } from './useIsMobile';
+import { SwipeRowActionsContext } from './swipeRow';
 
 
 export interface NoteRowProps {
@@ -279,6 +281,9 @@ export function noteItemState(p: NoteRowProps): ItemState {
  *  large-note perf (#58, #64). */
 export default React.memo(function NoteRow(props: NoteRowProps) {
   const item = useNoteItem(props);
+  const isTouch = useIsTouchDevice();
+  const swipeActionsFor = useContext(SwipeRowActionsContext);
+  const swipeActions = isTouch && !props.selectionMode && swipeActionsFor ? swipeActionsFor(props.note) : undefined;
   return (
     <ItemRow
       item={item}
@@ -287,6 +292,7 @@ export default React.memo(function NoteRow(props: NoteRowProps) {
       onToggleSelect={props.onToggleSelect}
       trailing={props.trailing}
       badge={props.valueBadge ? <ValueBadge text={props.valueBadge} tone={props.valueTone ?? 'neutral'} icon={props.valueIcon} name={props.valueName} /> : undefined}
+      swipeActions={swipeActions}
     />
   );
 });

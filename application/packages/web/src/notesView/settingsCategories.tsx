@@ -152,6 +152,8 @@ export function buildSettingsCategories({
   openThemeBuilder,
   formatBarBoard,
   calendarFeeds,
+  storageLimitBytes,
+  updateAvailable,
 }: {
   t: TFunction;
   notes: LocalNote[];
@@ -204,7 +206,7 @@ export function buildSettingsCategories({
   exportAllJson: (ns: LocalNote[]) => Promise<void>;
   exportEncryptedBackup: (ns: LocalNote[]) => Promise<void>;
   exportEncryptedFullBackup: (ns: LocalNote[]) => Promise<void>;
-  decryptFullBackup: (file: File) => Promise<File>;
+  decryptFullBackup: (file: File, foreignPhrase?: string) => Promise<File>;
   exportVault: (ns: LocalNote[]) => Promise<void>;
   exportBookmarks: (ns: LocalNote[]) => Promise<void>;
   exportContacts: (ns: LocalNote[]) => Promise<void>;
@@ -212,7 +214,7 @@ export function buildSettingsCategories({
   /** The gated drawings export; without it the Drawings card is not drawn. */
   exportDrawings?: (ns: LocalNote[]) => Promise<void>;
   exportNotesMarkdownZip: (ns: LocalNote[]) => Promise<void>;
-  importEncryptedBackup: (file: File) => Promise<{ imported: number; updated: number; unchanged: number }>;
+  importEncryptedBackup: (file: File, foreignPhrase?: string) => Promise<{ imported: number; updated: number; unchanged: number }>;
   imageStoreRef: MutableRefObject<ImageStore | null>;
   attachmentStoreRef: MutableRefObject<AttachmentStore | null>;
   refresh: () => Promise<LocalNote[]>;
@@ -230,6 +232,10 @@ export function buildSettingsCategories({
   /** The subscribed calendars, with each one's space (#772): the one control
    *  NotesView builds, so Settings writes what the calendar writes. */
   calendarFeeds: FeedsControl;
+  /** The account's total storage limit in bytes, for the Images live preview. */
+  storageLimitBytes?: number;
+  /** Outstanding desktop/direct-APK update version, for the About row's dot. */
+  updateAvailable?: string | null;
 }): SettingsCategory[] {
   const bind = settingsBinder(userSettings, mutateSettings);
   // Design, Editor and Lists are three panes of one sheet, one Settings
@@ -393,7 +399,7 @@ export function buildSettingsCategories({
               label: t('settings.storageLabel'),
               group: t('settings.groupYourNotes'),
               icon: railIcon('storage'),
-              render: ({ initialTab }) => (
+              render: ({ initialTab, navigate }) => (
                 <StoragePane
                   initialTab={initialTab}
                   storage={(openImages) => (
@@ -403,6 +409,7 @@ export function buildSettingsCategories({
                       onSyncNow={runSync}
                       onOpenNote={onOpenNote}
                       onOpenImageSettings={openImages}
+                      onOpenSync={() => navigate('me', 'overview')}
                       onClose={() => setShowSettings(false)}
                       onOpenUpgrade={() => { setShowSettings(false); setShowUpgrade({ trigger: 'storage' }); }}
                       onSignOut={handleSignOutClick}
@@ -411,9 +418,12 @@ export function buildSettingsCategories({
                   images={
                     <ImagesSheet
                       spaceSaver={userSettings.imageSpaceSaver}
+                      spaceSaverLevel={userSettings.imageSpaceSaverLevel}
                       stripMetadata={userSettings.imageStripMetadata}
                       contactCeiling={userSettings.imageContactCeiling}
+                      storageLimitBytes={storageLimitBytes ?? (proUnlocked(auth.isPro) ? 500_000_000 : 50_000_000)}
                       onChange={(field, value) => mutateSettings((prev) => ({ ...prev, [field]: value }))}
+                      onSpaceSaverLevelChange={(level) => mutateSettings((prev) => ({ ...prev, imageSpaceSaverLevel: level }))}
                     />
                   }
                 />
@@ -549,6 +559,7 @@ export function buildSettingsCategories({
                   custodySettings={{ hasPin: Boolean(userSettings.pinHash && userSettings.pinSalt), pinCredential: `${userSettings.pinHash ?? ''}:${userSettings.pinSalt ?? ''}`, pinTimeoutMinutes: userSettings.pinTimeoutMinutes,
                     userSettings, onSettingsChange: (next, base) => mutateSettings((prev) => withCredentialChanges(prev, base, next)) }}
                   onOpenPhrase={() => navigate('security', 'phrase')}
+                  onOpenSync={() => navigate('me', 'overview')}
                   deviceLabels={userSettings.deviceLabels}
                   onRenameDevice={(deviceId, name, serverName) =>
                     mutateSettings((prev) => ({
@@ -591,6 +602,7 @@ export function buildSettingsCategories({
                   }}
                   onClose={() => setShowSettings(false)}
                   onOpenCustody={() => navigate('plan', 'keyCustody')}
+                  onOpenSync={() => navigate('me', 'overview')}
                   pubkey={auth.pubkey}
                 />
               ),
@@ -600,13 +612,15 @@ export function buildSettingsCategories({
               label: t('settings.accountLabel', exemptOpts('notes:settings.accountLabel')),
               group: t('settings.planLabel'),
               icon: railIcon('me'),
-              render: ({ initialTab }) => (
+              render: ({ initialTab, navigate }) => (
                 <SyncOptionsModal
                   embedded
                   tab="me"
                   initialMeSection={initialTab === 'dms' ? 'dms' : undefined}
                   onSyncNow={runSync}
                   onOpenNote={onOpenNote}
+                  onOpenSync={() => navigate('me', 'overview')}
+                  onOpenAutoBackup={() => navigate('backup', 'automatic')}
                   autoVerify={settingsAutoVerify}
                   onClose={() => setShowSettings(false)}
                   onOpenUpgrade={() => { setShowSettings(false); setShowUpgrade({ trigger: null }); }}
@@ -638,7 +652,7 @@ export function buildSettingsCategories({
               title: t('shell:apps.title'),
               group: t('settings.groupBrand'),
               icon: railIcon('browser'),
-              render: () => <BrowserPane extensionKeys={extensionKeys} isPro={auth.isPro} onUpgrade={() => setShowUpgrade({ trigger: 'browsers' })} />,
+              render: ({ navigate }) => <BrowserPane extensionKeys={extensionKeys} isPro={auth.isPro} onUpgrade={() => setShowUpgrade({ trigger: 'browsers' })} onOpenSync={() => navigate('me', 'overview')} />,
             },
             // Spec: docs/internal/plans/agent-cli.md (sections 3.6, C2, C9)
             ...(commandLineShown() ? [{
@@ -647,7 +661,7 @@ export function buildSettingsCategories({
               title: t('shell:cli.title'),
               group: t('settings.groupBrand'),
               icon: railIcon('commandLine'),
-              render: () => (
+              render: ({ navigate }: { navigate: (id: string, tab?: string) => void }) => (
                 <CommandLinePane
                   extensionKeys={extensionKeys}
                   settings={userSettings}
@@ -655,6 +669,7 @@ export function buildSettingsCategories({
                   createFolder={createImportFolder}
                   isPro={auth.isPro}
                   onUpgrade={() => setShowUpgrade({ trigger: 'cli' })}
+                  onOpenSync={() => navigate('me', 'overview')}
                 />
               ),
             }] : []),
@@ -663,6 +678,7 @@ export function buildSettingsCategories({
               label: t('settings.aboutLabel'),
               group: t('settings.groupBrand'),
               icon: railIcon('about'),
+              badgeTip: updateAvailable ? t('common:updateToast.available') : undefined,
               render: ({ initialTab }) => (
                 <AboutModal
                   embedded

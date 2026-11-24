@@ -29,6 +29,8 @@ import { textMatcher } from './textMatch';
 import { isImeComposing } from './imeComposing';
 import { Switch } from './Switch';
 import { useListGroups } from './ListGroupHeader';
+import { groupOptionsForView } from './listGroups';
+import { PullToSyncBar, usePullToSync } from './pullToSync';
 
 export interface TasksListProps {
   /** The view and space this list draws, so a return lands where it was;
@@ -367,7 +369,7 @@ export default function TasksList({
     listPrefs,
     search,
     scope: 'tasks',
-    entryDays: false,
+    view: 'tasks',
     selectionMode,
     selectedId,
     isNoteLocked,
@@ -382,6 +384,7 @@ export default function TasksList({
   const taskLineCount = viewMode === 'grid' ? 0 : taskGroups.reduce((sum, g) => sum + g.tasks.length, 0);
   const revealTotal = noteItemCount + taskLineCount;
   const list = useItemList([search, activeFolderName, activeTag, viewMode], revealTotal, place);
+  const pull = usePullToSync(list.ref, true);
   const reveal = list.reveal;
   const revealedAll = reveal.visible >= revealTotal;
   useEffect(() => {
@@ -582,7 +585,7 @@ export default function TasksList({
             className="absolute start-3 top-full mt-1"
             pillar="tasks"
             calendarRows
-            showGroupsToggle
+            groupOptions={groupOptionsForView('tasks')}
           />
         )}
       </div>
@@ -623,10 +626,11 @@ export default function TasksList({
       </div>
 
       {/* Content -- the tile grid, or the pane's one list shape */}
+      <PullToSyncBar {...pull} />
       <div
         ref={list.ref as React.RefObject<HTMLDivElement>}
         onScroll={(e) => list.onScroll(e.currentTarget)}
-        className="flex-1 overflow-y-auto"
+        className="flex-1 overflow-y-auto overscroll-y-contain"
         onMouseDown={suppressShiftTextSelection}
       >
         {viewMode !== 'grid' && calendarCard && <ul>{calendarCard}</ul>}

@@ -10,6 +10,7 @@ import { entryDayOf } from './notesViewUtils';
 import { tonePaint, type PillTone } from './trackerTone';
 import type { TrackerFocus } from './trackerFocusStore';
 import { readWellnessRange } from './stats/wellnessRange';
+import { counterText, counterTotal } from './customCounter';
 
 /** The Statistics range on this device, which the tones are measured against (D6). */
 export function readRange(): RangeId {
@@ -131,16 +132,32 @@ export function buildFocusEngine({ notes, isGated, trackerSettings, medications,
     return trackerName(d, t);
   };
 
-  const text = (d: TrackerDescriptor, v: TrackerValue, data: JournalTrackerData, focus?: TrackerFocus): string => {
+  // A custom tracker's template: a pair's unit, a counter's limit. A pair
+  // number's id is the template id and "~1" or "~2".
+  const templateOf = (id: string) => trackerSettings.customTrackers.find((c) => c.id === id.replace(/~[12]$/, ''));
+  // The journal days newest first, as the counter math reads them.
+  const history: JournalTrackerData[] = model.entries.map((e) => ({ ...e.data, journalDate: e.date })).reverse();
+
+  // The value as the entry's own pill writes it (GitHub #856).
+  const text = (d: TrackerDescriptor, v: TrackerValue, data: JournalTrackerData, day: string, focus?: TrackerFocus): string => {
     const pair = partnerOf(d.id);
     const other = pair ? byId(pair.other) : undefined;
     if (pair && other && typeof v === 'number') {
       const w = other.read(data);
-      if (typeof w === 'number') {
-        const [a, b] = pair.first ? [v, w] : [w, v];
-        const second = pair.first ? other : d;
-        return `${formatNumber(a, 0)}/${second.unit ? formatValue(second, b, t) : formatNumber(b, 1)}`;
-      }
+      const [a, b] = pair.first ? [v, w] : [w, v];
+      const second = pair.first ? other : d;
+      // A missing number reads "-", as the pill writes "130/-". Blood
+      // pressure is whole numbers in mmHg; a custom pair keeps its decimals
+      // on both numbers and its own unit, "41.5/37.5 kg".
+      const num = (x: TrackerValue | undefined, digits: number) => (typeof x === 'number' ? formatNumber(x, digits) : '-');
+      if (second.unit) return `${num(a, 0)}/${typeof b === 'number' ? formatValue(second, b, t) : '-'}`;
+      const unit = d.source === 'custom' ? templateOf(d.id)?.unit : undefined;
+      return `${num(a, 1)}/${num(b, 1)}${unit ? ` ${unit}` : ''}`;
+    }
+    if (d.source === 'custom' && typeof v === 'number') {
+      // A counter shows its total so far, "5/30", never the day's uses.
+      const tpl = templateOf(d.id);
+      if (tpl?.type === 'counter') return counterText(counterTotal(tpl.id, history, day), tpl.limit);
     }
     if (Array.isArray(v) && focus?.tag && focus.answer !== 'any') return levelLabel(d, focus.tag, t);
     return formatPoint(d, v, t);
@@ -193,7 +210,7 @@ export function buildFocusEngine({ notes, isGated, trackerSettings, medications,
       if (!d || n.type !== 'journal' || isGated(n)) return null;
       const v = entryValue(n, d);
       if (!matchesValue(v, focus) || v === undefined) return null;
-      return { text: text(d, v, n.trackers as JournalTrackerData, focus), tone: toneOf(d, v) };
+      return { text: text(d, v, n.trackers as JournalTrackerData, entryDayOf(n), focus), tone: toneOf(d, v) };
     },
     days: (focus) => {
       const d = byId(focus.id);
@@ -219,7 +236,7 @@ export function buildFocusEngine({ notes, isGated, trackerSettings, medications,
         if (!matchesValue(v, { id, answer: 'yes' })) continue;
         const tone = toneOf(d, v);
         out.push({
-          id, d, name: name(d), text: text(d, v!, e.data), tone, paint: tonePaint(tone, d.color), entryId: entryIdOn.get(day)?.id ?? null,
+          id, d, name: name(d), text: text(d, v!, e.data, day), tone, paint: tonePaint(tone, d.color), entryId: entryIdOn.get(day)?.id ?? null,
           ...(Array.isArray(v) ? { tags: v.map((tag) => levelLabel(d, String(tag), t)) } : {}),
         });
       }

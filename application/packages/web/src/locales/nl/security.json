@@ -228,7 +228,7 @@
     "removeTitle": "Deze passkey verwijderen?",
     "removeBody": "Je kunt je er niet meer mee aanmelden. De passkey zelf blijft in je passkey-app tot je hem daar verwijdert.",
     "retired": "Gemaakt voordat je herstelzin wijzigde. Verwijder hem en voeg hem opnieuw toe.",
-    "noPrf": "Deze passkey-app kan je herstelzin niet beschermen, dus de passkey is niet toegevoegd. Probeer de eigen passkeys van je apparaat, of een andere wachtwoordmanager.",
+    "noPrf": "Deze passkey-app kan de sleutel die je herstelzin beschermt niet maken, dus de passkey is niet toegevoegd. Je kunt je nog steeds aanmelden met je herstelzin. Als je wachtwoordmanager aanbiedt de passkey op te slaan, kies er dan voor om hem op dit apparaat of op een beveiligingssleutel op te slaan.",
     "tooMany": "Je hebt {{count}} passkeys om je aan te melden. Verwijder er een om een andere toe te voegen.",
     "failed": "De passkey kon niet worden toegevoegd. Controleer je verbinding en probeer het opnieuw.",
     "appsOnly": "Voeg passkeys toe in je browser op use.privacynotes.app. Je ermee aanmelden in de apps komt later.",

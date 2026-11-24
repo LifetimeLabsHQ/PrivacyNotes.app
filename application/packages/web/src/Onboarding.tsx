@@ -1,8 +1,9 @@
 import { withMfaAwareTimeout } from './mfaStep';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { lazy, Suspense, useState, useEffect, useRef, type ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { generatePhrase, isValidPhrase } from '@notes/shared';
-import { ArrowLeft, ArrowRight, CaretDown, Check, Copy, FileText, Fingerprint, KeyReturn, Lock, Password, QrCode, Scales, Scan, Upload, Warning } from './icons';
+import { ArrowLeft, ArrowRight, CaretDown, Check, Copy, FileText, Fingerprint, Key, KeyReturn, Lock, Password, QrCode, Scales, Scan, Upload, Warning } from './icons';
 import { QRCodeCanvas } from 'qrcode.react';
 import { buildPhraseFile, PHRASE_FILE_NAME } from './phraseFile';
 import { buildSignInCode, extractPhraseFromScan } from './qrSignIn';
@@ -27,12 +28,17 @@ import { Brand } from './Brand';
 import { PrivacyLadder } from './PrivacyLadder';
 import { PHRASE_CHANGE_PREVIEW } from './phraseLaunch';
 import { isSyncPaused, setSyncPaused } from './syncPause';
-import { Badge, Button } from './ui';
+import { isLocalOnly } from './localOnly';
+import { Badge, Button, IconTile } from './ui';
+import { PhraseInput } from './PhraseInput';
 import { isImeComposing } from './imeComposing';
 import { AppleIcon, GithubIcon, GoogleIcon, PROVIDER_CONTINUE_KEY, PROVIDER_ORDER } from './providerIcons';
 
-/** Native (Tauri) build - desktop or mobile wrapper, not the web app. */
-const IS_DESKTOP = detectPlatform() !== 'web';
+/** Native (Tauri) build - desktop or mobile wrapper, not the web app.
+ *  Checked dynamically so tests and embedded shells see the live runtime. */
+function isInstalledApp(): boolean {
+  return detectPlatform() !== 'web';
+}
 
 type Mode = 'choose' | 'create' | 'import' | 'signin';
 
@@ -122,6 +128,16 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
   // NotesView's useTheme hook runs.
   const inOAuthFlow = oauthLoading || oauthHandoff || auth.status === 'oauth_custody_choice';
 
+  // Track which mode spawned the sign-in step so Back returns there.
+  const [preSignInMode, setPreSignInMode] = useState<'create' | 'import'>('import');
+
+  // Installed apps creating a phrase vault with Sync off start completely
+  // offline and must not pre-warm backend edge functions.
+  const isLocalOnlyCreate =
+    (mode === 'create' || (mode === 'signin' && preSignInMode === 'create')) &&
+    !syncOn &&
+    isInstalledApp();
+
   // Warm the NotesView chunk and the sign-in edge functions as soon as the
   // visitor commits to an auth flow (any phrase step, or any OAuth setup
   // screen). The chunk then downloads in parallel with the sign-in
@@ -133,9 +149,9 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
   useEffect(() => {
     if (inOAuthFlow || mode !== 'choose') {
       void import('./NotesView');
-      warmAuthEdgeFunctions();
+      if (!isLocalOnlyCreate) warmAuthEdgeFunctions();
     }
-  }, [inOAuthFlow, mode]);
+  }, [inOAuthFlow, mode, isLocalOnlyCreate]);
   useEffect(() => {
     // The marketing page and the auth screens all follow the stored/system
     // theme, like the rest of the app; the landing header's ThemeToggle
@@ -155,9 +171,6 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
       applyStoredTheme();
     };
   }, []);
-
-  // Track which mode spawned the sign-in step so Back returns there.
-  const [preSignInMode, setPreSignInMode] = useState<'create' | 'import'>('import');
 
   function onPhraseReady(phrase: string) {
     setPreSignInMode(mode as 'create' | 'import');
@@ -289,7 +302,7 @@ function OAuthHandoffStep({ onEnterPhrase, onBack }: { onEnterPhrase: () => void
       <button
         type="button"
         onClick={onEnterPhrase}
-        className="w-full rounded-lg bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-3 font-medium transition shadow-sm"
+        className={`w-full rounded-lg ${PRIMARY_BTN_SKIN} px-4 py-3 font-semibold transition shadow-sm`}
       >
         {t('oauthHandoff.enterPhrase')}
       </button>
@@ -312,7 +325,7 @@ function OAuthHandoffStep({ onEnterPhrase, onBack }: { onEnterPhrase: () => void
 
 function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
   const { t } = useTranslation('auth');
-  const { signInWithOAuth, completeDesktopOAuth, signInWithPhrase } = useAuth();
+  const { signInWithOAuth, completeDesktopOAuth, signInWithPhrase, unlockLocally } = useAuth();
   const [oauthPending, setOauthPending] = useState<null | 'google' | 'apple' | 'github'>(
     null
   );
@@ -340,8 +353,9 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
       if (cancelled) return;
       setResumable(p);
       // A held phrase makes the resume button the likely next click, and
-      // it starts the handshake at once.
-      if (p) warmAuthEdgeFunctions();
+      // it starts the handshake at once - unless this device holds a
+      // local-only vault, which resumes offline without contacting the server.
+      if (p && !isLocalOnly()) warmAuthEdgeFunctions();
     });
     return () => { cancelled = true; };
   }, []);
@@ -357,7 +371,7 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
       void readResumablePhrase().then((p) => {
         if (cancelled || !p) return;
         setResumable(p);
-        warmAuthEdgeFunctions();
+        if (!isLocalOnly()) warmAuthEdgeFunctions();
       });
     }
     window.addEventListener('focus', recheck);
@@ -415,6 +429,15 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
     if (!resumable || resumeBusy) return;
     setOauthError(null);
     setResumeBusy(true);
+    // A local-only vault whose OS keyring was locked at boot resumes straight
+    // into local-only mode without contacting any server.
+    if (isLocalOnly()) {
+      if (!(await unlockLocally(resumable))) {
+        setOauthError(t('signIn.failedUnexpectedly'));
+      }
+      setResumeBusy(false);
+      return;
+    }
     // Trust stays as this device already had it: the phrase is on disk
     // because a previous sign-in put it there, so carrying on is not a new
     // trust decision. A failure leaves the offer in place and says why.
@@ -460,7 +483,7 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
             type="button"
             disabled={resumeBusy}
             onClick={() => void handleResume()}
-            className="w-full rounded-lg bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-3 font-medium transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            className={`w-full rounded-lg ${PRIMARY_BTN_SKIN} px-4 py-3 font-semibold transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed`}
           >
             {resumeBusy ? t('chooseMode.resumeWorking') : t('chooseMode.resumeAction')}
           </button>
@@ -498,7 +521,7 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
                 type="button"
                 disabled={pasteBusy || !pastedCode.trim()}
                 onClick={() => void handlePastedCode()}
-                className="flex-1 sm:flex-none rounded-lg bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-2.5 text-body font-medium transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                className={`flex-1 sm:flex-none rounded-lg ${PRIMARY_BTN_SKIN} px-4 py-2.5 text-body font-semibold transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed`}
               >
                 {pasteBusy ? t('auth:chooseMode.resumeWorking') : t('auth:chooseMode.resumeAction')}
               </button>
@@ -521,11 +544,14 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
       <div className="grid sm:grid-cols-2 gap-4">
         {/* Easy & Convenient - OAuth providers */}
         <div className="rounded-2xl border border-[var(--wl-line)] bg-[var(--wl-bg)] shadow-sm p-5 flex flex-col gap-3">
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col items-center text-center">
+            <div className="mb-2 flex flex-wrap items-center justify-center gap-1.5">
+              <Badge tone="success">{t('chooseMode.oneClickLogin')}</Badge>
+            </div>
             <div className="text-body font-semibold text-[var(--wl-ink)]">
               {t('chooseMode.easyTitle')}
             </div>
-            <div className="text-small text-[var(--wl-sub)] mt-0.5">
+            <div className="text-small text-[var(--wl-sub)] mt-0.5 text-balance">
               {t('chooseMode.easySubtitle')}
             </div>
           </div>
@@ -553,18 +579,22 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
 
         {/* Anonymous & Uncompromising - phrase auth */}
         <div className="rounded-2xl border border-[var(--wl-line)] bg-[var(--wl-bg)] shadow-sm p-5 flex flex-col gap-3">
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col items-center text-center">
+            <div className="mb-2 flex flex-wrap items-center justify-center gap-1.5">
+              <Badge tone="success">{t('chooseMode.worksOffline')}</Badge>
+              <Badge tone="success">{t('ladder.zeroKnowledge')}</Badge>
+            </div>
             <div className="text-body font-semibold text-[var(--wl-ink)]">
               {t('chooseMode.anonymousTitle')}
             </div>
-            <div className="text-small text-[var(--wl-sub)] mt-0.5">
+            <div className="text-small text-[var(--wl-sub)] mt-0.5 text-balance">
               {t('chooseMode.anonymousSubtitle')}
             </div>
           </div>
           <div className="space-y-2">
             <button
               onClick={() => onPick('create')}
-              className="w-full rounded-lg bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-3 font-medium transition shadow-sm flex items-center justify-center gap-2.5"
+              className={`w-full rounded-lg ${PRIMARY_BTN_SKIN} px-4 py-3 font-semibold transition shadow-sm flex items-center justify-center gap-2.5`}
             >
               <Password aria-hidden="true" />
               {t('chooseMode.generatePhrase')}
@@ -827,7 +857,7 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
       <button
         type="button"
         onClick={handleContinue}
-        className="w-full rounded-lg bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-3 font-medium transition shadow-sm"
+        className={`w-full rounded-lg ${PRIMARY_BTN_SKIN} px-4 py-3 font-semibold transition shadow-sm`}
       >
         {t('continue')}
       </button>
@@ -855,21 +885,23 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
 const PhraseLengthChoice = lazy(() => import('./security/PhraseLengthChoice').then((m) => ({ default: m.PhraseLengthChoice })));
 
 /** A sign-up option: a checkbox with a bold label and one line under it. */
-function OptionCheckbox({ checked, onChange, label, description, tone }: {
+function OptionCheckbox({ checked, onChange, label, description, tone, disabled }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   label: string;
   description: string;
   /** A line that names a risk (warning) or a safe state (success). */
   tone?: 'warning' | 'success';
+  disabled?: boolean;
 }) {
   return (
-    <label className="flex items-start gap-2 text-body text-[var(--wl-ink)] cursor-pointer rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3">
+    <label className={`flex items-start gap-2 text-body text-[var(--wl-ink)] rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3 ${disabled ? 'cursor-default opacity-80' : 'cursor-pointer'}`}>
       <input
         type="checkbox"
         checked={checked}
+        disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+        className="mt-0.5 h-4 w-4 shrink-0 accent-accent disabled:cursor-not-allowed"
       />
       <span>
         <span className="font-medium">{label}</span>
@@ -884,12 +916,24 @@ function OptionCheckbox({ checked, onChange, label, description, tone }: {
 function TrustDeviceCheckbox({
   trustDevice,
   onTrustDeviceChange,
+  disabled,
+  description,
 }: {
   trustDevice: boolean;
   onTrustDeviceChange: (v: boolean) => void;
+  disabled?: boolean;
+  description?: string;
 }) {
   const { t } = useTranslation('auth');
-  return <OptionCheckbox checked={trustDevice} onChange={onTrustDeviceChange} label={t('trustDevice.label')} description={t('trustDevice.description')} />;
+  return (
+    <OptionCheckbox
+      checked={trustDevice}
+      onChange={onTrustDeviceChange}
+      label={t('trustDevice.label')}
+      description={description ?? t('trustDevice.description')}
+      disabled={disabled}
+    />
+  );
 }
 
 /**
@@ -898,15 +942,30 @@ function TrustDeviceCheckbox({
  * notes live only in this browser or app; on, `restoreBy` brings them back.
  * Spec: docs/internal/plans/sync-choice-821.md
  */
-function SyncCheckbox({ syncOn, onSyncOnChange, restoreBy }: {
+function SyncCheckbox({ syncOn, onSyncOnChange, restoreBy, localOnly = false }: {
   syncOn: boolean;
   onSyncOnChange: (v: boolean) => void;
   restoreBy: 'phrase' | 'login';
+  /** True on installed apps for phrase creation: Sync off starts completely
+   *  offline without contacting our servers (GitHub #862). */
+  localOnly?: boolean;
 }) {
   const { t } = useTranslation('auth');
-  const off = detectPlatform() === 'web' ? 'syncChoice.offWeb' : 'syncChoice.offApp';
+  const off = detectPlatform() === 'web'
+    ? 'syncChoice.offWeb'
+    : localOnly
+      ? 'syncChoice.offAppLocalOnly'
+      : 'syncChoice.offApp';
   const on = restoreBy === 'login' ? 'syncChoice.onLogin' : 'syncChoice.onPhrase';
-  return <OptionCheckbox checked={syncOn} onChange={onSyncOnChange} label={t('syncChoice.label')} description={t(syncOn ? on : off)} tone={syncOn ? 'success' : 'warning'} />;
+  return (
+    <OptionCheckbox
+      checked={syncOn}
+      onChange={onSyncOnChange}
+      label={t('syncChoice.label')}
+      description={t(syncOn ? on : off)}
+      tone={syncOn ? 'success' : localOnly ? undefined : 'warning'}
+    />
+  );
 }
 
 function CreatePhrase({
@@ -1085,12 +1144,21 @@ function CreatePhrase({
         </span>
       </label>
 
-      <SyncCheckbox syncOn={syncOn} onSyncOnChange={onSyncOnChange} restoreBy="phrase" />
-
-      <TrustDeviceCheckbox
-        trustDevice={trustDevice}
-        onTrustDeviceChange={onTrustDeviceChange}
-      />
+      {(() => {
+        const installed = isInstalledApp();
+        const localOnly = !syncOn && installed;
+        return (
+          <>
+            <SyncCheckbox syncOn={syncOn} onSyncOnChange={onSyncOnChange} restoreBy="phrase" localOnly={installed} />
+            <TrustDeviceCheckbox
+              trustDevice={localOnly ? true : trustDevice}
+              onTrustDeviceChange={onTrustDeviceChange}
+              disabled={localOnly}
+              description={localOnly ? t('trustDevice.lockedLocalOnly') : undefined}
+            />
+          </>
+        );
+      })()}
 
       <div className="grid grid-cols-2 gap-2">
         <button
@@ -1103,7 +1171,7 @@ function CreatePhrase({
         <button
           onClick={() => onReady(phrase)}
           disabled={!confirmed}
-          className="inline-flex items-center justify-center gap-1.5 rounded-md bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-2 text-body font-medium disabled:opacity-40 disabled:cursor-not-allowed transition"
+          className={`inline-flex items-center justify-center gap-1.5 rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition`}
         >
           {t('continue')}
           <ArrowRight aria-hidden="true" />
@@ -1213,29 +1281,39 @@ function ImportPhrase({
 
   return (
     <div className="space-y-4">
-      <p className="text-body text-[var(--wl-sub)]">
-        {t('importPhrase.instructions')}
-      </p>
-      <textarea
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 shrink-0">
+          <IconTile tone="info" size="sm">
+            <Key aria-hidden="true" />
+          </IconTile>
+        </span>
+        <div className="min-w-0">
+          <h3 className="text-title font-semibold text-[var(--wl-ink)]">
+            {t('chooseMode.signInExisting')}
+          </h3>
+          <p className="text-small text-[var(--wl-sub)] mt-0.5">
+            {t('importPhrase.instructions')}
+          </p>
+        </div>
+      </div>
+      <PhraseInput
         value={input}
-        onChange={(e) => {
-          setInput(e.target.value);
+        onChange={(next) => {
+          setInput(next);
           setError(null);
         }}
         placeholder={t('importPhrase.placeholder')}
-        rows={3}
-        dir="ltr" // rtl-ok: BIP-39 phrase words, always LTR
-        // A phone keyboard must neither rewrite a phrase word nor learn it.
-        spellCheck={false}
-        autoCapitalize="none"
-        autoCorrect="off"
-        autoComplete="off"
-        className="w-full rounded-md bg-[var(--wl-bg)] border border-[var(--wl-line)] text-[var(--wl-ink)] focus:border-accent p-3 text-body font-mono focus:outline-none placeholder:text-[var(--wl-muted)]"
         autoFocus
       />
+      <div className="flex items-center gap-3 pt-1">
+        <span className="h-px flex-1 bg-[var(--wl-line)]" />
+        <span className="text-small text-[var(--wl-muted)]">{t('importPhrase.orOtherWays')}</span>
+        <span className="h-px flex-1 bg-[var(--wl-line)]" />
+      </div>
       {passkeyOffered && (
         <div className="space-y-1.5">
           <Button
+            variant="accent"
             icon={<Fingerprint aria-hidden="true" />}
             onClick={() => void handlePasskey()}
             disabled={passkeyBusy}
@@ -1251,17 +1329,17 @@ function ImportPhrase({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={scanning}
-          className="w-full rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body font-medium text-[var(--wl-ink)] transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Upload />
+          <Upload aria-hidden="true" className="text-accent" />
           {scanning ? t('qrScanner.readingImage') : t('importPhrase.uploadQr')}
         </button>
         <button
           type="button"
           onClick={() => setShowScanner(true)}
-          className="w-full rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body transition flex items-center justify-center gap-2"
+          className="w-full rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body font-medium text-[var(--wl-ink)] transition flex items-center justify-center gap-2"
         >
-          <Scan />
+          <Scan aria-hidden="true" className="text-accent" />
           {t('importPhrase.scanQr')}
         </button>
       </div>
@@ -1280,20 +1358,16 @@ function ImportPhrase({
         trustDevice={trustDevice}
         onTrustDeviceChange={onTrustDeviceChange}
       />
-      <div className="flex gap-2">
-        <button
-          onClick={onBack}
-          className="rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-2 text-body transition"
-        >
-          {t('common:actions.back')}
-        </button>
-        <button
+      <div className="flex gap-2 pt-1">
+        <Button action="back" onClick={onBack} />
+        <Button
+          action="next"
           onClick={handleSubmit}
           disabled={!input.trim()}
-          className="flex-1 rounded-md bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-2 text-body font-medium disabled:opacity-40 disabled:cursor-not-allowed transition"
+          className="flex-1 !bg-accent-fill hover:!bg-accent-fill-hover !border-accent-fill !text-white shadow-sm"
         >
           {t('continue')}
-        </button>
+        </Button>
       </div>
 
       {showScanner && (
@@ -1336,7 +1410,8 @@ function SignInStep({
   onBack: () => void;
 }) {
   const { t } = useTranslation('auth');
-  const { signInWithPhrase } = useAuth();
+  const { signInWithPhrase, createLocalVault } = useAuth();
+  const isLocalOnlyFlow = freshVault && syncOn === false && isInstalledApp();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -1406,12 +1481,29 @@ function SignInStep({
 
   async function finish() {
     // Before the loading screen, which would cover the question.
-    if (!switchConfirmed.current && (await switchWouldWipe(phrase))) {
+    if (!switchConfirmed.current && (await switchWouldWipe(phrase, !isLocalOnlyFlow))) {
       setAskSwitch(true);
       return;
     }
     setBusy(true);
     setError(null);
+
+    // Installed-app local-only vault creation (GitHub #862): skip all backend
+    // auth, Turnstile, and timeouts; initialize the encrypted local vault.
+    if (isLocalOnlyFlow) {
+      try {
+        const result = await createLocalVault(phrase);
+        if (!result.ok) {
+          setError(result.error);
+          setBusy(false);
+        }
+      } catch (err) {
+        setError((err as Error).message || t('signIn.failedUnexpectedly'));
+        setBusy(false);
+      }
+      return;
+    }
+
     const pausedBefore = isSyncPaused();
     if (syncOn !== undefined) setSyncPaused(!syncOn);
 
@@ -1547,7 +1639,7 @@ function SignInStep({
                 void finish();
               }
             }}
-            className="flex-1 rounded-md bg-[var(--wl-pro)] text-white hover:bg-[var(--wl-pro)]/90 px-4 py-2 text-body font-medium transition"
+            className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold transition`}
           >
             {t('signIn.tryAgain')}
           </button>}

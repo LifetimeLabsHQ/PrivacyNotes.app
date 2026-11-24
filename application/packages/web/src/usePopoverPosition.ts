@@ -68,12 +68,14 @@ function visibleTop(): number {
  */
 export function placeAtCaret(popup: HTMLElement, rect: DOMRect): void {
   popup.style.top = `${rect.bottom + window.scrollY + 4}px`;
-  popup.style.left = `${rect.left + window.scrollX}px`;
+  popup.style.left = `${Math.max(8, rect.left) + window.scrollX}px`;
   requestAnimationFrame(() => {
     const popupRect = popup.getBoundingClientRect();
-    if (popupRect.right > window.innerWidth - 8) {
-      popup.style.left = `${window.innerWidth - popupRect.width - 8}px`;
+    let left = rect.left;
+    if (left + popupRect.width > window.innerWidth - 8) {
+      left = window.innerWidth - popupRect.width - 8;
     }
+    popup.style.left = `${Math.max(8, left) + window.scrollX}px`;
     const bottom = visibleBottom();
     if (popupRect.bottom <= bottom - 8) return;
     const top = rect.top - popupRect.height - 4 >= 8

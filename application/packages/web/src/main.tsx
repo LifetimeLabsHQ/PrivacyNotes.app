@@ -98,7 +98,7 @@ initWriterGenListener();
 // Spec: docs/internal/specs/local-at-rest.md (5.1, the two releases)
 setSealedWrites(SEALED_WRITES_IN_PRODUCTION);
 // The row type inside the seal (#795 point 8), off until the release after
-// the one that carries its reader. Spec: docs/internal/plans/row-type-seal.md (6)
+// the one that carries its reader. Spec: docs/internal/specs/row-type-seal.md (6)
 setRowTypeSealed(ROW_TYPE_SEALED_IN_PRODUCTION);
 announceSealedWriter();
 

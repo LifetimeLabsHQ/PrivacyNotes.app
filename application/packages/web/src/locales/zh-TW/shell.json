@@ -284,6 +284,8 @@
     "showNoteLinks": "顯示其他項目中的連結",
     "showNoteTasks": "顯示其他項目中的任務",
     "showGroups": "顯示群組",
+    "groupBy": "分組方式",
+    "groupLetter": "首字",
     "groupsByDate": "依日期分組",
     "groupsByLetter": "依首字分組",
     "groupsNoneForSize": "依大小排序時無法使用",
@@ -306,6 +308,7 @@
     "nextWeek": "下一週",
     "pickMonth": "{{month}}，選擇月份和年份",
     "pickMonthTip": "選擇月份和年份",
+    "showToday": "顯示今天",
     "showWholeMonth": "顯示整個月",
     "showOneWeek": "顯示一週"
   },
@@ -614,7 +617,10 @@
   "shareInbox": {
     "saved": "已儲存到 PrivacyNotes",
     "failed": "無法儲存到 PrivacyNotes",
-    "tooLarge": "檔案太大。單檔上限為 {{limit}} MB。"
+    "tooLarge": "檔案太大。單檔上限為 {{limit}} MB。",
+    "titlePlaceholder": "標題（選填）",
+    "notePlaceholder": "新增筆記...",
+    "photoCount": "{{count}} 張照片"
   },
   "shortcut": {
     "copyNote": "複製筆記捷徑",
@@ -949,9 +955,8 @@
     "addressPlaceholder": "貼上連結…",
     "savePictures": "儲存圖片",
     "savePicturesHint": "最多 20 張圖片，與筆記一起儲存，並計入你的儲存空間。",
-    "extensionTipTitle": "從瀏覽器擷取，效果更好",
-    "extensionTip": "瀏覽器擴充功能會照你看到的樣子儲存網頁，需要登入才能看的網頁也可以。",
-    "extensionTipSetUp": "設定擴充功能",
+    "extensionTipTitle": "想要好得多的擷取效果嗎？",
+    "extensionTip": "瀏覽器擴充功能只要一鍵就能乾淨地儲存任何網頁，需要登入才能看的網頁也可以。",
     "downloading": "正在下載網頁…",
     "downloadingPictures": "正在下載圖片，第 {{done}} 張，共 {{total}} 張",
     "picturesLine_other": "{{count}} 張圖片 · {{size}}，與筆記一起儲存",
@@ -985,7 +990,7 @@
   "apps": {
     "railLabel": "擴充功能",
     "title": "瀏覽器擴充功能",
-    "subtitle": "Chrome、Firefox、Edge、Brave 和 Vivaldi 上的網頁擷取工具與密碼管理器。擴充功能從不持有開啟你筆記的金鑰。",
+    "subtitle": "Chrome、Firefox、Edge、Brave、Vivaldi、Opera、Arc、LibreWolf 和 Zen 上的網頁擷取工具與密碼管理器。擴充功能從不持有開啟你筆記的金鑰。",
     "loginsCopyFull": "瀏覽器擴充功能中的登入資訊副本已滿。刪除一些之後，新的登入資訊才會傳到擴充功能。",
     "stepInstall": "安裝擴充功能",
     "stepFeatures": "選擇它能做什麼",

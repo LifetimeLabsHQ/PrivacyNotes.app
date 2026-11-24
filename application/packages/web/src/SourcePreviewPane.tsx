@@ -136,7 +136,7 @@ export function SourcePreviewPane({ text, caretLine = null, lineNumbers = false,
       {/* The corner, pinned to the column's top as the formatted view's is
           to the body's. */}
       <div className="sticky top-0 z-[5] flex h-0 items-start justify-end overflow-visible pointer-events-none">
-        <div className="flex items-start gap-1.5">
+        <div className="flex max-w-full items-start justify-end gap-1.5">
           {findPill}
           {connections?.(connectionsOpen, setConnectionsOpen)}
           {editor && <OutlinePanel editor={editor} open={outlineOpen} onOpenChange={setOutlineOpen} reveal={reveal} />}

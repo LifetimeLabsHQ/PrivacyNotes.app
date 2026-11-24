@@ -50,8 +50,9 @@ export function useCustody({
   // cached answer stands.
   const authedPubkey = auth.status === 'authenticated' ? auth.pubkey : null;
   const authedCustodial = auth.status === 'authenticated' ? auth.isCustodial : null;
+  const authedLocalOnly = auth.status === 'authenticated' ? auth.localOnly : false;
   useEffect(() => {
-    if (!authedPubkey || authedCustodial === null) return;
+    if (!authedPubkey || authedCustodial === null || authedLocalOnly) return;
     let cancelled = false;
     void (async () => {
       let token: string | undefined;
@@ -93,7 +94,7 @@ export function useCustody({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authedPubkey, authedCustodial]);
+  }, [authedPubkey, authedCustodial, authedLocalOnly]);
 
   /** The session is bound by uid, session_id and the server-owned pubkey.
    * Token refresh may change token bytes without changing that session.
@@ -112,6 +113,7 @@ export function useCustody({
   async function changeCustody(next: boolean): Promise<{ ok: true } | { ok: false; error: string }> {
     if (isDemoMode()) return { ok: false, error: 'Key custody cannot be changed in the demo.' };
     if (auth.status !== 'authenticated') return { ok: false, error: 'Not signed in.' };
+    if (auth.localOnly) return { ok: false, error: 'Turn on sync to change key custody.' };
     const pubkey = auth.pubkey;
     try {
       const initial = await custodySession(pubkey);

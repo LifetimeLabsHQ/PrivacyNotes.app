@@ -363,7 +363,7 @@ function LockLines() {
 
 function LockShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-[100] bg-surface-2 flex items-center justify-center p-6">
+    <div className="fixed inset-0 z-[90] bg-surface-2 flex items-center justify-center p-6">
       <div className="w-full max-w-sm">{children}</div>
     </div>
   );

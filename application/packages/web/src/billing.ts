@@ -19,6 +19,7 @@ import { detectPlatform, isNativeStoreBuild } from './devices';
 
 export { isNativeStoreBuild };
 import { isDemoMode } from './demo';
+import { isBackendNetworkAllowed, isLocalOnly, LocalOnlyNetworkBlockedError } from './localOnly';
 import { PAY_ORIGIN } from './hosts';
 import { cryptoCheckoutLink, newCryptoOrderId, rememberCryptoOrder, reusableCryptoOrder } from './cryptoCheckout';
 import { cryptoCheckoutReleased } from './cryptoRelease';
@@ -305,6 +306,9 @@ async function validateNativePurchase(
   // completed purchase surfaced as "payment went through but activating
   // it failed" - the single worst place in the app to give up on one dead
   // socket. Spec: docs/internal/billing-integration.md (retries are safe: validators are idempotent by design)
+  if (isLocalOnly() && !isBackendNetworkAllowed()) {
+    throw new LocalOnlyNetworkBlockedError();
+  }
   for (let attempt = 0; ; attempt++) {
     try {
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${fn}`, {
@@ -519,6 +523,13 @@ export async function restoreNativePurchases(pubkey: string): Promise<RestoreOut
       (p) => p.purchaseState === iap.PurchaseState.PURCHASED,
     );
     if (purchases.length === 0) return 'none';
+    // A freshly generated unregistered local-only vault can never own a prior
+    // store purchase (upgrading registers the vault before StoreKit/Play opens,
+    // and returning users sign in online via Phrase login). Returning
+    // 'notApplied' immediately tells the user to sign in with the purchasing
+    // phrase while keeping Restore purchases visible for Apple Guideline 3.1.1
+    // and sending nothing to our backend.
+    if (isLocalOnly()) return 'notApplied';
 
     let restored = 0;
     for (const p of purchases) {

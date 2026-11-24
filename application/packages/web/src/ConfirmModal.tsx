@@ -6,7 +6,7 @@ import { Info, Trash, Warning } from './icons';
 import { Modal } from './ui/Modal';
 import { ACTIONS } from './ui/actions';
 import { Button } from './ui/Button';
-import { SETTINGS_HELP } from './settingsUI';
+import { PRIMARY_BTN_SKIN, SETTINGS_HELP } from './settingsUI';
 import { Kbd } from './ui/misc';
 
 type ConfirmVariant = 'danger' | 'warning' | 'info';
@@ -90,12 +90,12 @@ const BTN_ROW = 'inline-flex items-center justify-center gap-2 whitespace-nowrap
 
 // amber-950 on amber-500, not white: amber is a light hue, and white on
 // it measures 2.15:1. Dark text takes the same swatch to 6.97:1. Danger
-// and info are dark hues and keep white. Spec: docs/internal/design/ui-patterns.md
-// (section 89, ask before you show it).
+// keeps white; info takes the soft accent primary skin.
+// Spec: docs/internal/design/ui-patterns.md (section 89, ask before you show it).
 const confirmBtnClass: Record<ConfirmVariant, string> = {
   danger: 'bg-red-600 text-white hover:bg-red-700',
   warning: 'bg-amber-500 text-amber-950 hover:bg-amber-600',
-  info: 'bg-accent-fill text-white hover:bg-accent-fill-hover',
+  info: PRIMARY_BTN_SKIN,
 };
 
 /* ── Component ─────────────────────────────────────────── */

@@ -14,7 +14,7 @@
 
 export const NOTES_GUARD_VERSION = '0.796.0';
 
-export const BOOKMARK_NOTES_LAUNCHED = false;
+export const BOOKMARK_NOTES_LAUNCHED = true;
 
 /** Whether a bookmark with no notes shows the Notes box. */
 export const BOOKMARK_NOTES_OFFERED: boolean = BOOKMARK_NOTES_LAUNCHED || import.meta.env.DEV;

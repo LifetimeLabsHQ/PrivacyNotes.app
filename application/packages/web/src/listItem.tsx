@@ -17,6 +17,7 @@ import type { CSSProperties, HTMLAttributes, ReactNode, RefCallback } from 'reac
 import { useTranslation } from 'react-i18next';
 import { Archive, Bell, Check, CloudSlash, Image, PILLAR_GLYPHS, Paperclip, PencilSimpleSlash, PushPin, Shield, Warning, type Icon } from './icons';
 import { PILL_TONE, type PillTone } from './trackerTone';
+import { SwipeRow, type SwipeRowAction } from './swipeRow';
 
 export type ItemFlag = 'notBackedUp' | 'pinned' | 'pinProtected' | 'readOnly' | 'archived' | 'localOnly';
 
@@ -209,6 +210,8 @@ interface LayoutProps {
   /** A short value that always shows: a row ends its title line with it, a
    *  tile its head (the tracker in focus in Journals). */
   badge?: ReactNode;
+  /** Touch swipe-left actions revealed behind a list row (list view only). */
+  swipeActions?: SwipeRowAction[];
 }
 
 export function SelectBox({ selected, onToggle, layout, compact = false }: { selected: boolean; onToggle?: (e: React.MouseEvent) => void; layout: 'row' | 'tile'; compact?: boolean }) {
@@ -249,18 +252,12 @@ function rootAttrs(item: ListItem, state: ItemState) {
  * size are anchored to the date, never to the row's end, where a wide pane
  * would strand them (ui-patterns.md section 66).
  */
-export function ItemRow({ item, state, as: Root = 'li', rootProps, onToggleSelect, trailing, badge }: LayoutProps) {
+export function ItemRow({ item, state, as: Root = 'li', rootProps, onToggleSelect, trailing, badge, swipeActions }: LayoutProps) {
   const onTitle = flagsOnTitle(item);
   const meta = !onTitle && (item.date || item.flags.length > 0 || item.size || hasCounts(item));
   const compact = !!item.compact;
-  return (
-    <Root
-      {...rootAttrs(item, state)}
-      {...rootProps}
-      // Touch only: long-press is the multi-select gesture, so the row must
-      // not also hand the WebView something to select. Spec: issue #208.
-      className={`pn-row pn-lazy-row relative ${Root === 'button' ? 'block w-full text-start ' : ''}px-4 ${compact ? 'py-2' : 'py-2 md:py-3'} cursor-pointer border-b border-divider/50 transition [@media(hover:none)]:select-none ${itemStateClass(state, 'row')} ${state.selectionMode ? 'ps-10' : ''}`}
-    >
+  const body = (
+    <>
       {item.ribbon && <TypeMark mark={item.ribbon} />}
       {state.selectionMode && <SelectBox selected={state.selected} onToggle={onToggleSelect} layout="row" compact={compact} />}
       <div className="flex items-center gap-2.5">
@@ -295,6 +292,46 @@ export function ItemRow({ item, state, as: Root = 'li', rootProps, onToggleSelec
         </div>
       )}
       {item.chips}
+    </>
+  );
+
+  if (Root === 'li' && swipeActions && swipeActions.length > 0 && item.id && !state.selectionMode) {
+    const {
+      onClick,
+      onTouchStart,
+      onTouchMove,
+      onTouchEnd,
+      onTouchCancel,
+      ...restOuter
+    } = rootProps ?? {};
+    return (
+      <SwipeRow
+        id={item.id}
+        actions={swipeActions}
+        outerProps={{ ...rootAttrs(item, state), ...restOuter }}
+        outerClassName="pn-lazy-row"
+        foregroundClassName={`pn-row px-4 ${compact ? 'py-2' : 'py-2 md:py-3'} cursor-pointer transition-colors ${itemStateClass(state, 'row')}`}
+        foregroundStyle={item.look?.css}
+        onRowClick={onClick}
+        onRowTouchStart={onTouchStart}
+        onRowTouchMove={onTouchMove}
+        onRowTouchEnd={onTouchEnd}
+        onRowTouchCancel={onTouchCancel}
+      >
+        {body}
+      </SwipeRow>
+    );
+  }
+
+  return (
+    <Root
+      {...rootAttrs(item, state)}
+      {...rootProps}
+      // Touch only: long-press is the multi-select gesture, so the row must
+      // not also hand the WebView something to select. Spec: issue #208.
+      className={`pn-row pn-lazy-row relative ${Root === 'button' ? 'block w-full text-start ' : ''}px-4 ${compact ? 'py-2' : 'py-2 md:py-3'} cursor-pointer border-b border-divider/50 transition [@media(hover:none)]:select-none ${itemStateClass(state, 'row')} ${state.selectionMode ? 'ps-10' : ''}`}
+    >
+      {body}
     </Root>
   );
 }

@@ -69,6 +69,11 @@
     "appLockHint": "Geteiltes Gerät? Schalte die App-Sperre unter Einstellungen > Sicherheit ein.",
     "unopenedWarn_other": "{{count}} Notizen haben eine Server-Kopie, die dieses Gerät nicht öffnen kann. Beim Abmelden werden die Kopien hier gelöscht, und vielleicht sind sie die einzigen intakten. Sende sie vorher unter Einstellungen > ID & Sync erneut.",
     "unopenedKept_other": "{{count}} Notizen haben eine Server-Kopie, die dieses Gerät nicht öffnen kann. Die Kopien hier bleiben nach dem Abmelden erhalten.",
+    "localOnlyTitle": "Alles auf diesem Gerät löschen?",
+    "localOnlyBody": "Deine Notizen sind nur auf diesem Gerät gespeichert und wurden nie synchronisiert. Beim Abmelden werden sie endgültig von diesem Gerät gelöscht.",
+    "localOnlyCounts": "Auf diesem Gerät: {{items}}.",
+    "localOnlyExportBackup": "Backup exportieren",
+    "localOnlyDeleteConfirm": "Löschen & abmelden",
     "unopenedKept_one": "1 Notiz hat eine Server-Kopie, die dieses Gerät nicht öffnen kann. Die Kopie hier bleibt nach dem Abmelden erhalten.",
     "unopenedWarn_one": "1 Notiz hat eine Server-Kopie, die dieses Gerät nicht öffnen kann. Beim Abmelden wird die Kopie hier gelöscht, und vielleicht ist sie die einzige intakte. Sende sie vorher unter Einstellungen > ID & Sync erneut."
   },
@@ -139,6 +144,7 @@
   "burnShare": {
     "offline": "Du bist offline. Burn-Links erfordern einen Server-Roundtrip. Versuch es erneut, sobald du wieder online bist.",
     "demo": "Burn-Links werden auf einem Server gespeichert, und die Demo kontaktiert keinen. Registriere dich, um echte Burn-Links zu erstellen.",
+    "localOnly": "Burn-Links erfordern ein Online-Konto. Schalte die Synchronisierung unter Einstellungen > ID & Sync ein, um Burn-Links zu teilen.",
     "tooLarge": "Die Notiz ist zu groß, um sie per Burn-Link zu teilen ({{size}} KB). Das Maximum sind {{max}} KB.",
     "storeFailed": "Die Burn-Notiz konnte nicht auf dem Server gespeichert werden.",
     "rateLimited": "Von dieser Verbindung wurden zu viele Burn-Links erstellt. Versuch es später noch einmal."

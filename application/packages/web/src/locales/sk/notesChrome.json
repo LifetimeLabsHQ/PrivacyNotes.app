@@ -91,6 +91,11 @@
     "appLockHint": "Zdieľané zariadenie? Zapni zámok aplikácie v časti Nastavenia > Zabezpečenie.",
     "unopenedWarn_other": "{{count}} poznámok má na serveri kópiu, ktorú toto zariadenie nedokáže otvoriť. Odhlásenie odstráni kópie tu, ktoré môžu byť jediné dobré. Najprv ich znova odošli v Nastavenia > ID & Sync.",
     "unopenedKept_other": "{{count}} poznámok má na serveri kópiu, ktorú toto zariadenie nedokáže otvoriť. Kópie tu po odhlásení zostanú.",
+    "localOnlyTitle": "Odstrániť všetko na tomto zariadení?",
+    "localOnlyBody": "Tvoje poznámky sú uložené iba na tomto zariadení a nikdy sa nesynchronizovali. Odhlásenie ich z tohto zariadenia natrvalo odstráni.",
+    "localOnlyCounts": "Na tomto zariadení: {{items}}.",
+    "localOnlyExportBackup": "Exportovať zálohu",
+    "localOnlyDeleteConfirm": "Odstrániť a odhlásiť sa",
     "unopenedKept_one": "1 poznámka má na serveri kópiu, ktorú toto zariadenie nedokáže otvoriť. Kópia tu po odhlásení zostane.",
     "unopenedKept_few": "{{count}} poznámky majú na serveri kópiu, ktorú toto zariadenie nedokáže otvoriť. Kópie tu po odhlásení zostanú.",
     "unopenedWarn_one": "1 poznámka má na serveri kópiu, ktorú toto zariadenie nedokáže otvoriť. Odhlásenie odstráni kópiu tu, ktorá môže byť jediná dobrá. Najprv ju znova odošli v Nastavenia > ID & Sync.",
@@ -171,6 +176,7 @@
   "burnShare": {
     "offline": "Si offline. Odkazy na spálenie potrebujú spojenie so serverom. Skús to znova, keď budeš online.",
     "demo": "Odkazy na spálenie sa ukladajú na server a demo sa so žiadnym serverom nespája. Zaregistruj sa a vytváraj skutočné odkazy na spálenie.",
+    "localOnly": "Odkazy na spálenie vyžadujú online účet. Ak chceš zdieľať odkazy na spálenie, zapni synchronizáciu v Nastavenia > ID & Sync.",
     "tooLarge": "Poznámka je príliš veľká na zdieľanie cez odkaz na spálenie ({{size}} KB). Maximum je {{max}} KB.",
     "storeFailed": "Samozničujúcu poznámku sa nepodarilo uložiť na server.",
     "rateLimited": "Z tohto pripojenia vzniklo príliš veľa odkazov na spálenie. Skús to znova neskôr."

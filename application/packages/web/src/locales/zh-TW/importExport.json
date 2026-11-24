@@ -93,7 +93,10 @@
     "googleCalendar": "Google 日曆的 Settings > Import & export 匯出的 .zip，或單一 .ics 檔案。活動會保留時間、重複設定與提醒。",
     "appleNotes": "用免費的 Exporter 應用程式匯出為 Markdown，然後把 .zip 拖進來。",
     "appleJournal": "從 Mac 或 iPhone 的日誌匯出，把 AppleJournalEntries 資料夾壓縮起來，再把 .zip 拖進來。項目會連同相片、影片、語音備忘錄與位置資訊一起匯入為日誌項目。",
+    "dayOne": "在 Day One 網頁版中選擇 Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media)，或在 Mac 與 iOS 上選擇 File > Export > JSON。將 .zip 或 .json 拖到這裡。項目會保留日期、標籤、星號、地點、天氣與媒體。",
+    "todoist": "在 Todoist 中從 Settings > Backups (Pro) 下載備份 .zip，或開啟專案並選擇 ... > Import & export > Export as CSV。每個專案都會變成一份任務清單，連同區段、子任務、優先順序、到期日、標籤、描述與留言。",
     "daylio": "在 Daylio 中選擇 More > Backup & Restore > Advanced Options > Export，關閉 Daylio，再把 .daylio 檔案拖進來。每則項目都會變成一則日誌紀錄，連同心情、活動、量表、照片與語音備忘錄。從 More > Export Entries 匯出的 CSV 也可以，只是沒有照片。",
+    "diaro": "在 Diaro 中選擇 Settings > Data > Backup & restore，點一下 +，保持關閉加密並開啟附件，再把 .zip 備份拖到這裡。單獨的 DiaroBackup.xml 也可以，只是沒有照片。項目會保留日期、資料夾、標籤、心情、地點、天氣與照片。",
     "diarium": "在 Diarium 中選擇 Export，選取 JSON 並開啟 Attachments，然後儲存到本機儲存空間。把 .zip 拖進來，或拖入不含附件的 .json。項目會保留評分（作為心情）、標籤、人物、追蹤項目、地點與附件。",
     "googleJournal": "在 Pixel 上的 Journal 中，開啟 Settings > Back up your journal。接著在 Google Takeout 中選擇 Journal，再把它寄來的 .zip 拖進來。項目會保留日期、標題、文字、照片與影片。",
     "excalidraw": "從 excalidraw.com 儲存的繪圖：單一 .excalidraw 檔案，或多個壓成一個 zip 都可以。Obsidian 的 Excalidraw 外掛所產生的 .excalidraw.md 繪圖也能匯入。繪圖中的圖片會一起帶過來。",
@@ -104,6 +107,7 @@
     "obsidian": "Obsidian vault 的 .zip。保留標籤、筆記連結、資料夾結構、內文中的 #tags，以及嵌入的圖片和檔案。Canvas 與 Excalidraw 繪圖會變成繪圖，單一 .canvas 檔案也能單獨匯入。",
     "obsidianCanvas": "Obsidian vault 中的單一 .canvas 檔案，或把整個 vault 壓成 .zip 以帶入所有 Canvas。每個 Canvas 都會變成一份繪圖：卡片、群組、箭頭與顏色都會一起帶過來，圖片若在 .zip 裡也會一起帶過來。",
     "notesnook": "Notesnook 匯出的 .zip。匯出時選 HTML 可保留格式、筆記本、標籤與附件。",
+    "notion": "在 Notion 中選擇 Settings > General > Export > Workspace content（或開啟頁面選單 > More > Export），選取「Markdown & CSV」並開啟子頁面與資料夾，再把 .zip 拖到這裡。會從標題與資料夾名稱移除 Notion ID、將子頁面保留為資料夾、轉換標註並把內部連結轉成筆記連結，同時帶入圖片、檔案與資料庫列頁面。",
     "bear": "在 Bear 中選擇 File > Backup Notes...，然後把 .bear2bk 檔拖到這裡。標籤與巢狀標籤、釘選、封存、垃圾桶、帶顏色的螢光標記、筆記連結與附件都會一起帶過來。",
     "joplin": "從 File > Export all >「JEX - Joplin Export File」匯出的 .jex 檔。筆記本會變成資料夾，標籤、待辦事項、筆記連結與附件也會一起帶過來。",
     "anytype": "從 space settings > Export 匯出的 Any-Block v1 JSON .zip，並包含檔案與已封存的物件。Collections 會變成資料夾，標籤、任務、標註、摺疊區塊、表格、筆記連結與檔案都會一起帶過來。",
@@ -130,7 +134,13 @@
     "fullBackupTitle": "完整備份（.zip）",
     "fullBackupDesc": "還原筆記、日誌、保險庫項目、任務、圖片、音訊與檔案。已有的筆記會保留，只有當備份中有較新版本時才會更新。",
     "encryptedBackupTitle": "加密備份（.pnbackup、.pnbackupz）",
-    "encryptedBackupDesc": "以你的助憶詞金鑰還原加密備份。.pnbackupz 會還原全部內容，包含檔案；.pnbackup 只含文字內容與中繼資料。必須以建立備份時的同一個帳號登入。"
+    "encryptedBackupDesc": "以你的助憶詞金鑰還原加密備份。.pnbackupz 會還原全部內容，包含檔案；.pnbackup 只含文字內容與中繼資料。來自其他裝置或帳號的備份，會要求輸入該備份的復原助憶詞。"
+  },
+  "restoreForeign": {
+    "title": "以其他復原助憶詞解鎖",
+    "body": "這份備份不是以你目前的助憶詞加密。請輸入或掃描建立它的裝置所使用的復原助憶詞。你的筆記將匯入這個保險庫。",
+    "unlock": "解鎖備份",
+    "wrongPhrase": "這組復原助憶詞無法解鎖這份備份。請檢查單字後再試一次。"
   },
   "restoreGate": {
     "wait": "還原會等到這台裝置連上網路並完成一次同步，這樣你的備份才能與帳號中已有的筆記比對，而不會重複新增。",
@@ -291,7 +301,8 @@
   "shareSheet": {
     "title_other": "有 {{count}} 個項目分享到 PrivacyNotes",
     "line": "在你選擇之前，不會儲存任何內容。",
-    "saveAll": "全部儲存"
+    "saveAll": "全部儲存",
+    "saveAs": "儲存為"
   },
   "destination": {
     "none": "不放入資料夾",

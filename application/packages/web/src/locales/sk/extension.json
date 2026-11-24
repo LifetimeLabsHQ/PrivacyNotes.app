@@ -23,7 +23,6 @@
     "generatePassword": "Vygenerovať heslo"
   },
   "note": {
-    "tagsPlaceholder": "#práca #nápady",
     "tagsHelp": "Značky oddeľ medzerou alebo čiarkou. Znak # je voliteľný.",
     "failed": "Poznámku sa nepodarilo uložiť. Skús to znova."
   },
@@ -216,5 +215,11 @@
     "unlockFirst": "Prístupové kľúče použiješ po odomknutí.",
     "offer": "Ponúkať prístupové kľúče",
     "offerHelp": "Ukladaj a používaj prístupové kľúče na weboch."
+  },
+  "organize": {
+    "title": "Priečinok a značky",
+    "unlockToPick": "Odomkni Trezor a vyber",
+    "addTag": "Pridaj značku…",
+    "proFolders": "Priečinky sú funkcia Pro. Otvor PrivacyNotes a prejdi na Pro."
   }
 }

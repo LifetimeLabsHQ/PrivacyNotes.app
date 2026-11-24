@@ -20,7 +20,7 @@ const PHRASE_MEGATHREAD = {
 
 /** Phrase reveal and backup stay separate from account custody changes. */
 export function PhraseTab({
-  phrase, pubkey, pinTimeoutMinutes, hasPin, pinCredential, onCancel, onOpenCustody, onOpenTwoFactor, recovery,
+  phrase, pubkey, pinTimeoutMinutes, hasPin, pinCredential, onCancel, onOpenCustody, onOpenTwoFactor, onOpenSync, recovery,
 }: {
   phrase: string;
   pubkey: string;
@@ -31,6 +31,8 @@ export function PhraseTab({
   onOpenCustody?: () => void;
   /** The 2FA tab, for the phrase change's last screen. */
   onOpenTwoFactor?: () => void;
+  /** Opens Settings > ID & Sync from a local-only notice. */
+  onOpenSync?: () => void;
   recovery?: PinGateRecovery;
 }) {
   const { t } = useTranslation('security');
@@ -42,7 +44,7 @@ export function PhraseTab({
         <span>{t('phraseView.demoPhrase')}</span>
       </div>}
       <PhraseView phrase={phrase} onCancel={onCancel} hideDismiss gated hasPin={hasPin} />
-      <Suspense fallback={null}><PhraseLength words={phrase.trim().split(/\s+/).length} onOpenTwoFactor={onOpenTwoFactor} /></Suspense>
+      <Suspense fallback={null}><PhraseLength words={phrase.trim().split(/\s+/).length} onOpenTwoFactor={onOpenTwoFactor} onOpenSync={onOpenSync} /></Suspense>
       {onOpenCustody && <button type="button" className="inline-flex items-center gap-2 text-body text-accent hover:underline" onClick={onOpenCustody}>
         <Vault className="shrink-0" aria-hidden="true" />
         {t('connectedAccounts.openCustody')}

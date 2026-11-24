@@ -9,7 +9,7 @@ import { checkInEntry } from './checkIn';
 import { useToday } from './ListGroupHeader';
 import { activeLocale } from './i18n';
 import { MedicationRows, medicationRowsOn, takenOfRows } from './trackers/MedicationPill';
-import { Snackbar } from './ui';
+import { Badge, ProgressBar, Snackbar } from './ui';
 import type { JournalTrackerData, MedicationLogEntry, MedicationTemplate } from './trackerTypes';
 import type { TrackerSetupTab } from './TrackerConfig';
 
@@ -156,21 +156,36 @@ export function MedicationCard(p: Props) {
   }
 
   return shell(
-    <div className={`@container/checkin group/checkin mx-auto w-full ${p.grid ? 'max-w-[420px]' : ''}`}>
+    <div className="@container/checkin group/checkin w-full">
       <div className="relative flex items-center gap-2 min-h-8">
         <span className="min-w-0 flex items-center gap-1.5 text-compact font-medium text-pn">
           <Pill aria-hidden="true" className="shrink-0 text-accent" />
-          <span className="truncate">{t('medicationCard.title')}</span>
+          <span className="truncate">{t('trackers:labels.medication')}</span>
         </span>
+        {expected > 0 && (
+          <Badge tone={taken === expected ? 'success' : 'neutral'}>
+            <span className="tabular-nums">{taken}/{expected}</span>
+          </Badge>
+        )}
         <span className="flex-1" />
         {gear}
       </div>
-      <div className="pt-1.5">
+      {expected > 0 && (
+        <div className="pt-1 pb-2">
+          <ProgressBar value={taken / expected} tone="success" label={t('medicationCard.title')} />
+        </div>
+      )}
+      <div className={expected > 0 ? '' : 'pt-1.5'}>
         <MedicationRows
           bare
           value={logs}
           day={today}
-          onChange={(next: MedicationLogEntry[]) => { setOpen(false); void p.onSave(today, { medications: next }); }}
+          onChange={(next: MedicationLogEntry[]) => {
+            // Auto-fold only when completing the final scheduled dose; keep the
+            // reopened card open when logging as-needed doses or adjusting rows.
+            if (expected > 0 && taken < expected && takenOfRows(rows, next).taken === expected) setOpen(false);
+            void p.onSave(today, { medications: next });
+          }}
           templates={p.medications}
           supplyUnlocked={p.supplyUnlocked}
         />

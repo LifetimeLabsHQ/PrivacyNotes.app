@@ -228,7 +228,7 @@
     "removeTitle": "Remover esta passkey?",
     "removeBody": "Você não poderá mais entrar com ela. A passkey em si continua no seu app de passkeys até você excluí-la lá.",
     "retired": "Criada antes de a sua frase mudar. Remova-a e adicione-a de novo.",
-    "noPrf": "Este app de passkeys não consegue proteger sua frase, então a passkey não foi adicionada. Tente as passkeys do próprio dispositivo ou outro gerenciador de senhas.",
+    "noPrf": "Este app de passkeys não consegue criar a chave que protege sua frase, então a passkey não foi adicionada. Você continua entrando com a sua frase. Quando seu gerenciador de senhas oferecer salvar a passkey, escolha salvá-la neste dispositivo ou em uma chave de segurança.",
     "tooMany": "Você tem {{count}} passkeys para entrar. Remova uma para adicionar outra.",
     "failed": "Não foi possível adicionar a passkey. Verifique sua conexão e tente novamente.",
     "appsOnly": "Adicione passkeys no seu navegador em use.privacynotes.app. Entrar com elas nos apps virá depois.",

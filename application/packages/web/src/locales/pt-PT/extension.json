@@ -23,7 +23,6 @@
     "generatePassword": "Gerar uma palavra-passe"
   },
   "note": {
-    "tagsPlaceholder": "#trabalho #ideias",
     "tagsHelp": "Espaço ou vírgula entre etiquetas. O # é opcional.",
     "failed": "Não foi possível guardar a nota. Tenta novamente."
   },
@@ -213,5 +212,11 @@
     "unlockFirst": "Desbloqueia para usares as tuas passkeys.",
     "offer": "Oferecer passkeys",
     "offerHelp": "Guarda e usa passkeys em sites."
+  },
+  "organize": {
+    "title": "Pasta e etiquetas",
+    "unlockToPick": "Desbloqueia o Cofre para escolher",
+    "addTag": "Adicionar etiqueta...",
+    "proFolders": "As pastas são uma funcionalidade Pro. Abre o PrivacyNotes para passares para Pro."
   }
 }

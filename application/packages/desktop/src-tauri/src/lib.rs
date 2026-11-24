@@ -11,6 +11,11 @@ mod biometric;
 #[cfg(target_os = "linux")]
 mod device_key_linux;
 
+/// The AppImage's own color emoji font, so no emoji reaches the COLRv1 code
+/// that crashes its WebKitGTK on a newer FreeType (GitHub #863).
+#[cfg(target_os = "linux")]
+mod emoji_font;
+
 /// Who the OS opens Markdown files with, and pointing it at us on the two
 /// platforms that permit it. Desktop only: neither mobile OS has user-settable
 /// file associations. Spec: docs/internal/specs/markdown-folder.md (section 11)
@@ -435,6 +440,14 @@ pub fn run() {
     // Built here rather than at the end of the chain: the rendezvous check
     // below reads the identifier out of it.
     let context = tauri::generate_context!();
+
+    // Every color emoji in the AppImage comes from its own bitmap font, or a
+    // COLRv1 emoji kills the web process on a host with FreeType 2.13 or
+    // newer (#863). Before any thread or GTK call: fontconfig reads the
+    // variable once.
+    // Spec: docs/contrib/gotchas.md (Color emoji crash the Linux AppImage)
+    #[cfg(target_os = "linux")]
+    emoji_font::use_bundled_emoji_font(&context.config().identifier);
 
     let builder = tauri::Builder::default();
 

@@ -158,7 +158,12 @@ export function DetailLink({ href, children }: { href: string; children: string 
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      onClick={(e) => { e.preventDefault(); openExternal(href); }}
+      data-open-browser=""
+      onClick={(e) => {
+        if (e.defaultPrevented) return;
+        e.preventDefault();
+        openExternal(href, { browser: true });
+      }}
       className="text-accent hover:underline break-all"
       dir="ltr"
     >
@@ -200,14 +205,16 @@ function notesLinkClick(onNoteLink?: (target: string) => void) {
   return (e: MouseEvent<HTMLDivElement>) => {
     const a = (e.target as HTMLElement).closest('a[href]');
     if (!a) return;
-    e.preventDefault();
     const target = a.getAttribute('data-note-link');
     if (target !== null) {
+      e.preventDefault();
       onNoteLink?.(target);
       return;
     }
+    if (e.defaultPrevented) return;
+    e.preventDefault();
     const href = a.getAttribute('href')!;
-    if (href !== '#') openExternal(href);
+    if (href !== '#') openExternal(href, { browser: true });
   };
 }
 

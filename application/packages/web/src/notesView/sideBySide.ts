@@ -5,7 +5,7 @@ import type { SidePair } from './useOpenTabs';
  * Two items side by side ("Open side by side"): which side is focused, and
  * an editor count per side that a focus swap leaves alone. The room it needs
  * is Split view's (`fitsSourcePreview` in sourcePreviewButtons.tsx).
- * Spec: docs/internal/plans/side-by-side-notes.md
+ * Spec: docs/internal/specs/side-by-side-notes.md
  */
 
 export type Side = 'left' | 'right';

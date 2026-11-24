@@ -15,7 +15,7 @@ import { footerLinesScriptPlugin } from './footer-lines-script.ts';
 import { brandPagePlugin } from './brand-page.ts';
 import { marketingShellPlugin } from './marketing-shell.ts';
 import { landingPagesPlugin } from './landing-pages.ts';
-import { authConnectPagePlugin, authDesktopPagePlugin } from './auth-desktop-page.ts';
+import { authCallbackPagePlugin, authConnectPagePlugin, authDesktopPagePlugin } from './auth-desktop-page.ts';
 // @ts-expect-error - plain .mjs tool script, no types; this file is not type-checked
 import { syncHelpChips } from '../../tools/sync-help-chips.mjs';
 
@@ -150,12 +150,14 @@ function katexWoff2Only(): Plugin {
 }
 
 // Phosphor ships all six icon weights inside every icon's defs module and
-// offers no import path that selects one, so 152 icons cost six weights
-// each. We render exactly three: `bold` (the sitewide IconDefaults
-// default), `fill` and `duotone`. `regular` stays as Phosphor's own
-// fallback for anything rendered outside the provider. `thin` and `light`
-// are unreachable - no prop, context value or expression in src/ can
-// produce them - and they are a third of the icon payload.
+// offers no import path that selects one, so 550+ icons cost six weights
+// each. We render `bold` (the sitewide IconDefaults default), `fill`,
+// `duotone`, and `regular` (Phosphor's own fallback for anything rendered
+// outside the provider). `thin` and `light` are stripped by default (saving
+// ~60 kB gz for `light` alone), except for the specific icons listed in
+// PHOSPHOR_KEEP_WEIGHTS (each costs ~0.2 kB gz). `tools/lint-house-rules.mjs`
+// reads both constants from this file and fails if `src/` renders a dropped
+// weight on an icon not kept here.
 //
 // This rewrites a third-party module, so it validates the shape on every
 // file and throws on a mismatch: a Phosphor bump that changes the defs
@@ -164,14 +166,23 @@ function katexWoff2Only(): Plugin {
 // Spec: docs/contrib/bundle-size.md (Phosphor icon weights)
 const PHOSPHOR_WEIGHTS = ['thin', 'light', 'regular', 'bold', 'fill', 'duotone'] as const;
 const PHOSPHOR_DROP_WEIGHTS: readonly string[] = ['thin', 'light'];
+const PHOSPHOR_KEEP_WEIGHTS: Record<string, readonly string[]> = {
+  ArticleMedium: ['light'],
+  Hash: ['light'],
+  PushPin: ['light'],
+  TextAa: ['light'],
+};
 
 function phosphorTrimWeights(): Plugin {
+  let sawAnyDef = false;
+  const seenKept = new Set<string>();
   return {
     name: 'pn-phosphor-trim-weights',
     enforce: 'pre',
     apply: 'build',
     transform(code, id) {
       if (!id.includes('@phosphor-icons/react') || !id.includes('/dist/defs/')) return null;
+      sawAnyDef = true;
       const fail = (why: string) => {
         throw new Error(
           `pn-phosphor-trim-weights: ${why} in ${id}. ` +
@@ -192,8 +203,23 @@ function phosphorTrimWeights(): Plugin {
       if (missing.length || weights.length !== PHOSPHOR_WEIGHTS.length) {
         fail(`expected the six Phosphor weights, found [${weights.join(', ')}]`);
       }
-      const kept = entries.filter((_, i) => !PHOSPHOR_DROP_WEIGHTS.includes(weights[i]!));
+      const iconName = path.basename(id.split('?')[0]!, '.es.js');
+      const keptForIcon = PHOSPHOR_KEEP_WEIGHTS[iconName];
+      if (keptForIcon) seenKept.add(iconName);
+      const kept = entries.filter(
+        (_, i) => !PHOSPHOR_DROP_WEIGHTS.includes(weights[i]!) || keptForIcon?.includes(weights[i]!)
+      );
       return head + kept.map((entry) => `  [\n${entry}\n  ]`).join(',\n') + tail;
+    },
+    buildEnd(error) {
+      if (error || !sawAnyDef) return;
+      const missing = Object.keys(PHOSPHOR_KEEP_WEIGHTS).filter((name) => !seenKept.has(name));
+      if (missing.length > 0) {
+        throw new Error(
+          `pn-phosphor-trim-weights: PHOSPHOR_KEEP_WEIGHTS names [${missing.join(', ')}] which never entered the build. ` +
+            'Check the spelling against @phosphor-icons/react/dist/defs/*.es.js or remove unused entries.'
+        );
+      }
     },
   };
 }
@@ -912,7 +938,7 @@ export default defineConfig({
     preloadOnboarding(),
     ...(isAppBuild
       ? []
-      : [changelogPagePlugin(), helpPagePlugin(), roadmapPagePlugin(), licensesPagePlugin(), themesPagePlugin(), brandPagePlugin(), marketingShellPlugin(), landingPagesPlugin(), authDesktopPagePlugin(), authConnectPagePlugin(), searchCoreScriptPlugin(), footerLinesScriptPlugin()]),
+      : [changelogPagePlugin(), helpPagePlugin(), roadmapPagePlugin(), licensesPagePlugin(), themesPagePlugin(), brandPagePlugin(), marketingShellPlugin(), landingPagesPlugin(), authDesktopPagePlugin(), authConnectPagePlugin(), authCallbackPagePlugin(), searchCoreScriptPlugin(), footerLinesScriptPlugin()]),
     chunkBudgets(),
     chunkCycles(),
     moduleRoots(),

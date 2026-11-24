@@ -52,7 +52,7 @@ type Props = {
   ref?: Ref<MarkdownSourceHandle>;
   /** The other side of two items side by side: it takes no keys and
    *  registers no commands, so they reach the focused side only.
-   *  Spec: docs/internal/plans/side-by-side-notes.md (section 6) */
+   *  Spec: docs/internal/specs/side-by-side-notes.md (section 6) */
   idle?: boolean;
 };
 

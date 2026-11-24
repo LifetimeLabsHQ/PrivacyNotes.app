@@ -323,7 +323,7 @@ function ContactView({ note, contact, locked, onEdit }: {
             label={labelText(u.label)}
             actions={
               <>
-                <DetailAction label={t('contacts.open')} onClick={() => openExternal(href)}><ArrowSquareOut /></DetailAction>
+                <DetailAction label={t('contacts.open')} onClick={() => openExternal(href, { browser: true })}><ArrowSquareOut /></DetailAction>
                 {copyAction(u.value, `url${i}`)}
               </>
             }
@@ -342,7 +342,7 @@ function ContactView({ note, contact, locked, onEdit }: {
             label={labelText(p.label)}
             actions={
               <>
-                {href && <DetailAction label={t('contacts.open')} onClick={() => openExternal(href)}><ArrowSquareOut /></DetailAction>}
+                {href && <DetailAction label={t('contacts.open')} onClick={() => openExternal(href, { browser: true })}><ArrowSquareOut /></DetailAction>}
                 {copyAction(p.value, `pr${i}`)}
               </>
             }

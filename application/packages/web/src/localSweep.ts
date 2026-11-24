@@ -22,7 +22,7 @@
  *     Steps 1 and 5 also move the row type into the blob of a sealed row
  *     while the move is on (localSeal.ts `sealPending`, `lateFields`); a row
  *     that does not open is passed by with a breadcrumb, never the pass.
- *     Spec: docs/internal/plans/row-type-seal.md (3.4)
+ *     Spec: docs/internal/specs/row-type-seal.md (3.4)
  *  6. After a phrase change only (key epoch above 1): every sealed row,
  *     the kept stash slots and the sealed settings cache whose envelope a
  *     key of an earlier epoch sealed are sealed again under the current

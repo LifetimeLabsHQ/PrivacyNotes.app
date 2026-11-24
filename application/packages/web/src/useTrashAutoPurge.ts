@@ -57,7 +57,11 @@ export function useTrashAutoPurge({
         await gcOnNotesDelete(imageStoreRef.current, purged, attachmentStoreRef.current);
       }
       // Sync deletes to server, then refresh quota so the storage bar updates.
-      runSync().then(refreshStorage);
+      // Local-truth vaults (demo, local-only, or never-synced) have nothing
+      // on the server to push or recount.
+      if (!demo) {
+        runSync().then(refreshStorage);
+      }
     })();
   }, [ready, demo, trashedCount, dayCount, imageStoreRef, attachmentStoreRef, refresh, runSync, refreshStorage]);
 }

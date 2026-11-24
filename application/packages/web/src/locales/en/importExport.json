@@ -97,7 +97,10 @@
     "googleCalendar": "The .zip from Google Calendar's Settings > Import & export, or one .ics file. Events keep their times, repeats and reminders.",
     "appleNotes": "Export via the free Exporter app as Markdown, then drop the .zip here.",
     "appleJournal": "Export from Journal on Mac or iPhone, compress the AppleJournalEntries folder, and drop the .zip. Entries import as journal entries with their photos, videos, voice memos, and locations.",
+    "dayOne": "In Day One, choose Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media) on the web, or File > Export > JSON on Mac or iOS. Drop the .zip or .json here. Entries keep their day, tags, stars, place, weather, and media.",
+    "todoist": "In Todoist, download a backup .zip from Settings > Backups (Pro), or open a project and choose ... > Import & export > Export as CSV. Each project becomes a task list with its sections, subtasks, priorities, due dates, labels, descriptions, and comments.",
     "daylio": "In Daylio choose More > Backup & Restore > Advanced Options > Export, close Daylio, and drop the .daylio file. Each entry becomes a journal entry with its mood, activities, scales, photos and voice memos. The CSV from More > Export Entries works too, without photos.",
+    "diaro": "In Diaro, choose Settings > Data > Backup & restore, tap +, leave encryption off and attachments on, and drop the .zip backup here. A bare DiaroBackup.xml works too, without photos. Entries keep their day, folders, tags, moods, places, weather and photos.",
     "diarium": "In Diarium choose Export, pick JSON with Attachments on, and save to local storage. Drop the .zip, or a .json without attachments. Entries keep their rating as mood, tags, people, trackers, place and attachments.",
     "googleJournal": "In Journal on your Pixel, turn on Settings > Back up your journal. Then choose Journal in Google Takeout and drop the .zip it sends. Entries keep their day, title, text, photos and videos.",
     "excalidraw": "Drawings saved from excalidraw.com: one .excalidraw file, or several zipped together. Drawings from Obsidian's Excalidraw plugin work too, as .excalidraw.md files. Pictures inside a drawing come along.",
@@ -108,6 +111,7 @@
     "obsidian": "Obsidian vault as .zip. Preserves tags, note-links, folder structure, inline #tags, and embedded images and files. Canvases and Excalidraw drawings become drawings, and one .canvas file imports on its own too.",
     "obsidianCanvas": "One .canvas file from your Obsidian vault, or the whole vault as a .zip to bring in every canvas. Each canvas becomes a drawing: cards, groups, arrows and colors come along, and pictures do too when they are in the .zip.",
     "notesnook": "Notesnook export as .zip. Pick HTML when exporting to keep formatting, notebooks, tags, and attachments.",
+    "notion": "In Notion, choose Settings > General > Export > Workspace content (or a page menu > More > Export), pick \"Markdown & CSV\" with subpages and folders on, then drop the .zip here. Strips Notion IDs from titles and folders, keeps subpages as folders, converts callouts and internal links to note-links, and brings images, files, and database row pages along.",
     "bear": "In Bear, choose File > Backup Notes... and drop the .bear2bk file here. Tags and nested tags, pins, the archive, the trash, highlights with their colors, note-links and attachments come along.",
     "joplin": "The .jex file from File > Export all > \"JEX - Joplin Export File\". Notebooks become folders, and tags, to-dos, note links and attachments come along.",
     "anytype": "The Any-Block v1 JSON .zip from space settings > Export, with files and archived objects included. Collections become folders, and tags, tasks, callouts, toggles, tables, note-links and files come along.",
@@ -134,7 +138,13 @@
     "fullBackupTitle": "Full backup (.zip)",
     "fullBackupDesc": "Restore notes, journals, vault items, tasks, images, audio, and files. A note you already have is kept, or updated if the backup holds a newer copy of it.",
     "encryptedBackupTitle": "Encrypted backup (.pnbackup, .pnbackupz)",
-    "encryptedBackupDesc": "Restore an encrypted backup with your phrase key. A .pnbackupz brings everything back, files included; a .pnbackup carries text content and metadata only. You must be signed in with the same account that created it."
+    "encryptedBackupDesc": "Restore an encrypted backup with your phrase key. A .pnbackupz brings everything back, files included; a .pnbackup carries text content and metadata only. Backups from another device or account will ask for that backup's recovery phrase."
+  },
+  "restoreForeign": {
+    "title": "Unlock with another recovery phrase",
+    "body": "This backup wasn't encrypted with your current phrase. Enter or scan the recovery phrase from the device that created it. Your notes will be imported into this vault.",
+    "unlock": "Unlock backup",
+    "wrongPhrase": "That recovery phrase didn't unlock this backup. Check the words and try again."
   },
   "restoreGate": {
     "wait": "Restore waits until this device is online and has completed a sync, so your backup is matched to the notes already in your account instead of adding them twice.",
@@ -314,7 +324,8 @@
     "title_one": "{{count}} item was shared into PrivacyNotes",
     "title_other": "{{count}} items were shared into PrivacyNotes",
     "line": "Nothing is saved until you choose.",
-    "saveAll": "Save all"
+    "saveAll": "Save all",
+    "saveAs": "Save as"
   },
   "destination": {
     "none": "No folder",

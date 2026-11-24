@@ -120,6 +120,8 @@ import {
   HeadingWithMarkdown,
   HardBreakWithMarkdown,
   TextWithMarkdown,
+  StrikeWithMarkdown,
+  OrderedListWithMarkdown,
   TableWithMarkdown,
   stepTableCell,
   indentListItem,
@@ -143,6 +145,8 @@ type Props = {
   /** Id of the note being edited - enables the synchronous close-flush
    *  stash (flushStash.ts) so a tab closed mid-debounce loses nothing. */
   noteId?: string;
+  /** Title of the note being edited, used to auto-name pasted clipboard images. */
+  noteTitle?: string;
   /** Spell check is off for this note. It only takes the device switch away.
    *  Spec: docs/internal/specs/note-spell-check.md */
   noSpellcheck?: boolean;
@@ -157,7 +161,7 @@ type Props = {
    */
   preview?: boolean;
   /** The other side of two items side by side: no keys, no commands
-   *  (useEditorPanels.ts). Spec: docs/internal/plans/side-by-side-notes.md (section 6) */
+   *  (useEditorPanels.ts). Spec: docs/internal/specs/side-by-side-notes.md (section 6) */
   idle?: boolean;
   /** Called when the editor gains or loses focus. */
   onFocusChange?: (focused: boolean) => void;
@@ -297,7 +301,7 @@ export type EditorHandle = {
 const TOUCH_HANDLE_HEIGHT = 32;
 
 const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }>(function EditorInner(
-  { value, onChange, readOnly = false, noSpellcheck = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, notice, connections, toolbarSlot, onShowMarkdown, sourcePreview, lineNumbers, place, onRenameFile, fileNote = false, preview = false, idle = false, sinkCheckedTasks = true, typedSymbols = false, placeholder, onReady },
+  { value, onChange, readOnly = false, noSpellcheck = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, noteTitle, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, notice, connections, toolbarSlot, onShowMarkdown, sourcePreview, lineNumbers, place, onRenameFile, fileNote = false, preview = false, idle = false, sinkCheckedTasks = true, typedSymbols = false, placeholder, onReady },
   ref
 ) {
   const { t } = useTranslation('editor');
@@ -323,6 +327,8 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
    */
   const onRenameFileRef = useRef(onRenameFile);
   onRenameFileRef.current = onRenameFile;
+  const noteTitleRef = useRef(noteTitle ?? '');
+  noteTitleRef.current = noteTitle ?? '';
   const sinkCheckedRef = useRef(sinkCheckedTasks);
   sinkCheckedRef.current = sinkCheckedTasks;
   const typedSymbolsRef = useRef(typedSymbols);
@@ -623,6 +629,10 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         hardBreak: false,
         // TextWithMarkdown escapes text so it reads back as itself.
         text: false,
+        // StrikeWithMarkdown marks strike mixable so nested marks keep it open.
+        strike: false,
+        // OrderedListWithMarkdown preserves a list starting at 0.
+        orderedList: false,
         // Footnotes brings a document with room for its section after the body.
         document: false,
         // Drop indicator for dragged text and files. The library default is a
@@ -637,6 +647,8 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       HeadingWithMarkdown,
       HardBreakWithMarkdown,
       TextWithMarkdown,
+      StrikeWithMarkdown,
+      OrderedListWithMarkdown,
       Underline,
       // TextStyleMarkdown must come before Color: Color sets the `color`
       // attribute on the textStyle mark, so that mark has to exist first.
@@ -737,7 +749,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       // Spec: docs/internal/specs/markdown-folder.md (section 5, isolation)
       // The paste guard on the upload itself rides on the same flag:
       // docs/internal/specs/paste-pictures.md (section 3.3)
-      EncryptedImage.configure({ plaintextOnly: !!hideEncryptedMedia }),
+      EncryptedImage.configure({ plaintextOnly: !!hideEncryptedMedia, getNoteTitle: () => noteTitleRef.current }),
       EncryptedAttachment.configure({
         onRename: (name: string) => {
           // A note whose name lives in its title as well holds exactly one
@@ -1400,7 +1412,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         >
           {/* Measured, so the first lines of the note wrap beside the
               pills instead of under them. */}
-          <div ref={setPillsEl} className="flex items-start gap-1.5">
+          <div ref={setPillsEl} className="flex max-w-full items-start justify-end gap-1.5">
             {bodyControls}
             {connections?.(connectionsOpen, setConnectionsOpen)}
             <OutlinePanel

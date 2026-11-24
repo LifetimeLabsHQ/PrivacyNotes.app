@@ -4,6 +4,7 @@ import { ListEntryCard } from './ListEntryCard';
 import { OverflowTip } from './OverflowTip';
 import { Backspace, Folder, Folders, FunnelSimple, Hash, Prohibit, X } from './icons';
 import { Select, SettingsSegmented } from './ui';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import type { FocusAnswer } from './trackerFocusStore';
 
 /**
@@ -226,7 +227,7 @@ export function FilteredEmpty({
       <button
         type="button"
         onClick={() => { onClearFolder(); onClearTag(); onClearTracker?.(); }}
-        className="text-small font-medium text-white bg-accent-fill hover:bg-accent-fill-hover px-4 py-1.5 rounded-md transition"
+        className={`text-small font-semibold ${PRIMARY_BTN_SKIN} px-4 py-1.5 rounded-md transition`}
       >
         {t('common:palette.commands.clearFilters')}
       </button>

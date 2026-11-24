@@ -27,10 +27,17 @@ import { readPrefs, writePrefs } from '../../src/prefs';
 import { savedOn, type SaveRequest, type SaveResult } from '../../src/save';
 import type { Connection } from '../../src/connection';
 import { displayHost } from '../../src/favicon';
-import { shortcutUrl } from '../../src/logins';
+import { CLIP_FOLDER_SESSION_KEY, shortcutUrl } from '../../src/logins';
+import { mergeTags } from '../../src/organize';
 import { activeTab } from '../../src/tabs';
+import { OrganizeFields, type OrganizeFieldsProps } from './OrganizeFields';
 import { SaveButton } from './SaveButton';
 import { Tile } from './VaultView';
+
+export type OrganizeContext = Pick<OrganizeFieldsProps, 'canFolder' | 'unlocked' | 'pro' | 'folders' | 'knownTags' | 'open' | 'onOpenChange' | 'onUnlock'> & {
+  /** False while Vault unlock/copy state is still hydrating; avoids clearing a saved folder prematurely. */
+  hydrated?: boolean;
+};
 
 type Phase =
   | { at: 'reading' }
@@ -56,17 +63,52 @@ function countsOf(built: Built | undefined): Counts | null {
   return clip ? { words: countWords(clip.markdown), pictures: clip.images.length } : null;
 }
 
-export function ClipView({ connection, bookmark, bookmarkKeys, noteKeys }: { connection: Connection; bookmark: BookmarkCopyEntry | null; bookmarkKeys?: string; noteKeys?: string }) {
+export function ClipView({ connection, bookmark, bookmarkKeys, noteKeys, organize }: {
+  connection: Connection;
+  bookmark: BookmarkCopyEntry | null;
+  bookmarkKeys?: string;
+  noteKeys?: string;
+  organize?: OrganizeContext;
+}) {
   const { t } = useTranslation('extension');
   const [phase, setPhase] = useState<Phase>({ at: 'reading' });
   const [pictures, setPictures] = useState(true);
   const [mode, setMode] = useState<ClipMode>('note');
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagDraft, setTagDraft] = useState('');
   // Very little main text: Save as note becomes Save anyway, and a callout says why.
   const [short, setShort] = useState(false);
   const [act, setAct] = useState<Act | null>(null);
   // The clip of each mode, built once: the counts read it, and Save sends it.
   const built = useRef(new Map<ClipMode, Built>());
   const [counts, setCounts] = useState<Partial<Record<ClipMode, Counts | null>>>({});
+
+  const hydrated = organize?.hydrated ?? true;
+  const canUseFolder = !!organize?.canFolder && organize.unlocked && organize.pro;
+
+  // Restore the session-remembered folder while unlocked + Pro; clear once hydrated and locked/non-Pro.
+  useEffect(() => {
+    if (!canUseFolder) {
+      if (hydrated) setFolderId(null);
+      return;
+    }
+    let cancelled = false;
+    void browser.storage.session.get(CLIP_FOLDER_SESSION_KEY).then((got) => {
+      if (cancelled) return;
+      const kept = got[CLIP_FOLDER_SESSION_KEY];
+      if (typeof kept === 'string' && kept) setFolderId(kept);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [canUseFolder, hydrated]);
+
+  const pickFolder = (next: string | null) => {
+    setFolderId(next);
+    if (next) void browser.storage.session.set({ [CLIP_FOLDER_SESSION_KEY]: next });
+    else void browser.storage.session.remove(CLIP_FOLDER_SESSION_KEY);
+  };
 
   useEffect(() => {
     void readPrefs().then((p) => setPictures(p.pictures));
@@ -111,13 +153,25 @@ export function ClipView({ connection, bookmark, bookmarkKeys, noteKeys }: { con
     } else setAct({ which, state: 'refused', result });
   };
 
-  const saveBookmark = (p: CapturedPage, tooLong = false) => send('bookmark', { mode: 'bookmark', url: p.url, title: p.title }, tooLong);
+  const chosenTags = () => mergeTags(tags, tagDraft);
+  const chosenFolder = () =>
+    canUseFolder && folderId && organize?.folders.some((f) => f.id === folderId)
+      ? folderId
+      : undefined;
+
+  const saveBookmark = (p: CapturedPage, tooLong = false) => {
+    const nextTags = chosenTags();
+    const folder = chosenFolder();
+    return send('bookmark', { mode: 'bookmark', url: p.url, title: p.title, ...(nextTags.length ? { tags: nextTags } : {}), ...(folder ? { folder } : {}) }, tooLong);
+  };
 
   const note = (p: CapturedPage, anyway: boolean) => {
     const b = !anyway && built.current.get(mode) ? built.current.get(mode)! : buildClip(p, mode, anyway);
     if (b.kind === 'short') return setShort(true);
     if (b.kind === 'tooLong') return void saveBookmark(p, true);
-    void send('note', { mode, url: p.url, title: p.title || b.clip.title, clip: b.clip, pictures });
+    const nextTags = chosenTags();
+    const folder = chosenFolder();
+    void send('note', { mode, url: p.url, title: p.title || b.clip.title, clip: b.clip, pictures, ...(nextTags.length ? { tags: nextTags } : {}), ...(folder ? { folder } : {}) });
   };
 
   if (!connection.clips) return <p className={SETTINGS_HELP}>{t('clip.off')}</p>;
@@ -208,15 +262,28 @@ export function ClipView({ connection, bookmark, bookmarkKeys, noteKeys }: { con
       {saved ? (
         <Saved result={saved.result} pictureCount={pictureCount} />
       ) : (
-        <Switch
-          label={t('clip.includePictures')}
-          description={t('clip.includePicturesHelp')}
-          checked={pictures}
-          onChange={(on) => {
-            setPictures(on);
-            void writePrefs({ pictures: on });
-          }}
-        />
+        <div className="space-y-3">
+          <Switch
+            label={t('clip.includePictures')}
+            description={t('clip.includePicturesHelp')}
+            checked={pictures}
+            onChange={(on) => {
+              setPictures(on);
+              void writePrefs({ pictures: on });
+            }}
+          />
+          {organize && (
+            <OrganizeFields
+              {...organize}
+              folderId={folderId}
+              onFolderChange={pickFolder}
+              tags={tags}
+              onTagsChange={setTags}
+              tagDraft={tagDraft}
+              onTagDraftChange={setTagDraft}
+            />
+          )}
+        </div>
       )}
       {act?.state === 'refused' && <Refused result={act.result} />}
     </div>

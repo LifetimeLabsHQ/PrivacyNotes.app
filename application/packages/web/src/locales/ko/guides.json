@@ -439,6 +439,58 @@
         }
       ]
     },
+    "notion": {
+      "app": "Notion",
+      "title": "Notion 워크스페이스 내보내기",
+      "metaTitle": "Notion 워크스페이스를 내보내는 방법 - PrivacyNotes",
+      "lead": "Notion 워크스페이스를 Markdown & CSV zip으로 내보내면, PrivacyNotes가 Notion의 32자 ID를 제거하고 하위 페이지를 폴더로 다시 만들며 페이지 링크를 노트 링크로 바꿔 줘요.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/notion-settings.webp",
+            "alt": "Notion Settings의 General 페이지. Export 섹션에서 Workspace content 옆의 Export 버튼이 보이는 모습.",
+            "width": 1576,
+            "height": 754
+          },
+          "h": "워크스페이스 전체 내보내기",
+          "steps": [
+            "웹이나 데스크톱에서 Notion을 열고 워크스페이스 메뉴에서 Settings를 여세요.",
+            "Workspace 아래에서 General을 열고 Export까지 스크롤하세요.",
+            "Workspace content 옆의 Export를 클릭하세요.",
+            "페이지 하나와 그 하위 페이지만 내보내려면, 해당 페이지의 점 세 개 메뉴를 열고 More > Export를 선택하세요."
+          ],
+          "p": [
+            "Notion은 큰 워크스페이스 내보내기를 백그라운드에서 만든 뒤 다운로드 링크를 이메일로 보내 줘요. 그 .zip을 압축을 풀지 말고 그대로 PrivacyNotes에 끌어다 놓으세요. 안에 중첩된 분할 zip 파일이 있어도 자동으로 처리돼요."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/notion-export.webp",
+            "alt": "Notion Export 대화상자. Markdown & CSV가 선택되어 있고 Page content는 Everything이며, Include private pages와 Create folders for subpages가 모두 켜져 있는 모습.",
+            "width": 1576,
+            "height": 600
+          },
+          "h": "폴더 옵션을 켜고 Markdown & CSV를 고르세요",
+          "steps": [
+            "Export format을 \"Markdown & CSV\"로 설정하세요.",
+            "이미지, PDF, 첨부 파일이 포함되도록 Page content를 \"Everything\"으로 설정하세요.",
+            "\"Include private pages\"(단일 페이지 내보내기에서는 \"Include subpages\")와 \"Create folders for subpages\"를 켜세요.",
+            "Export를 클릭하고 .zip 파일을 저장하세요."
+          ],
+          "p": [
+            "HTML과 PDF 내보내기에는 Markdown 파일이 들어 있지 않아 Notion 가져오기 도구가 읽을 수 없어요. 구조, 링크, 서식이 깔끔하게 넘어오도록 \"Markdown & CSV\"를 고르세요."
+          ]
+        },
+        {
+          "h": "함께 옮겨지는 것",
+          "p": [
+            "Notion은 내보내는 모든 파일 이름과 내부 링크 끝에 32자 ID를 붙여요. PrivacyNotes는 모든 제목과 폴더 이름에서 그 ID를 제거하고, 최상위 \"Private & Shared\" 폴더를 벗겨 내며, 중첩된 하위 페이지를 폴더로 다시 만들어요.",
+            "제목, 목록, 중첩된 체크리스트, 표, 언어가 표시된 코드 블록, 수식, 밑줄, 인용은 원래대로 넘어와요. Notion 콜아웃은 PrivacyNotes 콜아웃으로 변환되고, [내보낸 페이지 사이의 링크와 멘션은 노트 링크가 되며](/ko/help/note-links), 업로드한 이미지, PDF, 파일은 저장 공간으로 가져와요.",
+            "데이터베이스의 행 페이지는 데이터베이스 이름을 딴 폴더 안의 노트로 가져오고, Tags 속성이 있으면 태그로 추가돼요. 데이터베이스 CSV 표 파일은 건너뛰고 가져오기 요약에 개수가 표시돼요. Notion 자체 Markdown 내보내기에는 글자 색상, 형광펜, 휴지통에 있는 페이지가 포함되지 않아요."
+          ]
+        }
+      ]
+    },
     "notesnook": {
       "app": "Notesnook",
       "title": "Notesnook 노트 내보내기",
@@ -1281,6 +1333,53 @@
         }
       ]
     },
+    "diaro": {
+      "app": "Diaro",
+      "title": "Diaro 저널 내보내기",
+      "metaTitle": "Diaro 백업을 내보내는 방법 - PrivacyNotes",
+      "lead": "Diaro는 모바일 앱에서 저널 전체를 .zip 백업으로 내보내고, PrivacyNotes는 모든 항목을 폴더, 태그, 기분, 장소, 날씨, 사진과 함께 저널로 가져와요.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-menu.webp",
+            "alt": "Backup & restore와 백업 파일 저장 폴더가 보이는 Diaro의 Data 설정 화면",
+            "width": 1576,
+            "height": 732
+          },
+          "h": "Diaro 앱에서 암호화되지 않은 백업 만들기",
+          "steps": [
+            "Android나 iOS에서 Diaro를 열고 왼쪽 메뉴를 연 다음, Settings 톱니바퀴를 탭하세요.",
+            "Data를 선택하고 Backup & restore까지 아래로 스크롤한 다음 Backup & restore를 탭하세요.",
+            "오른쪽 위의 + 버튼을 탭하세요.",
+            "\"Encrypt entries in backup file\"과 \"Do not backup attachments\"를 모두 체크 해제한 상태로 두고 Backup을 탭하세요.",
+            "Storage directories 아래에 표시된 백업 폴더에서(또는 동기화했다면 Dropbox에서) Diaro_YYYYMMDD.zip 파일을 복사해 PrivacyNotes에 끌어다 놓으세요."
+          ],
+          "p": [
+            "모바일 앱에서 백업을 만드는 것은 무료이며 Pro 구독이 필요하지 않아요. Diaro Online은 유료 플랜에서만 PDF, DOCX, TXT 내보내기를 제공하고 백업 다운로드 버튼이 없어요."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-dialog.webp",
+            "alt": "Encrypt entries in backup file과 Do not backup attachments가 모두 체크 해제되어 있는 Diaro의 Backup 대화상자",
+            "width": 1576,
+            "height": 817
+          },
+          "h": "PDF, TXT, CSV나 암호화된 백업이 아니라 암호화되지 않은 .zip 백업을 고르세요",
+          "p": [
+            "암호화되지 않은 백업은 DiaroBackup.xml과 media/photo 폴더를 .zip 파일 하나에 담아 줘요. \"Encrypt entries in backup file\"에 체크하면 Diaro가 대신 DiaroBackup.denc를 쓰는데, PrivacyNotes는 이 파일의 잠금을 해제할 수 없어 암호화를 끄라는 안내와 함께 가져오기를 거부해요.",
+            "DiaroBackup.xml 파일만 넣어도 사진 없이 텍스트와 메타데이터를 모두 가져오며, 가져오기 요약에 빠진 이미지 수가 표시돼요. 사진도 함께 옮기려면 \"Do not backup attachments\"의 체크를 풀고 전체 .zip을 끌어다 놓으세요."
+          ]
+        },
+        {
+          "h": "함께 옮겨지는 것",
+          "p": [
+            "[모든 항목은 저널에 도착하고](/ko/help/journal), 항목에 기록된 시간대 오프셋의 날짜로 들어가요. 제목이 없는 항목은 그날 새 항목을 만들 때 붙는 날짜 제목이 들어가고, 일반 텍스트로 적힌 웹 링크는 클릭할 수 있는 링크가 돼요.",
+            "Diaro 폴더는 폴더가 되고 태그는 태그로 남으며, 기분은 Diaro 가중치에 따라 [기분 트래커](/ko/help/choose-trackers)를 채워요(직접 만든 기분 이름은 맨 윗줄에도 나타나요). 좌표가 있는 위치는 항목의 위치 칩을 채우고, 이름만 있는 장소와 날씨는 맨 위에 한 줄로 들어가며, 사진은 원래 순서대로 가져와요."
+          ]
+        }
+      ]
+    },
     "diarium": {
       "app": "Diarium",
       "title": "Diarium 일기 내보내기",
@@ -1420,6 +1519,69 @@
             "노트북은 폴더가 되고, 그 안에 섹션 그룹과 섹션마다 폴더가 하나씩 생겨요. 모든 페이지는 해당 섹션의 폴더 안에서 OneNote가 만든 날짜가 붙은 노트가 되고, 하위 페이지는 같은 폴더에서 상위 페이지 뒤에 이어져요.",
             "제목, 굵게, 기울임, 밑줄, 색상, 형광펜, 글머리 기호 목록과 번호 목록, 표, 코드 단락은 있던 그대로 넘어와요. 할 일 태그는 체크리스트 항목이 되고 완료했다면 체크된 채로 도착해요. Important나 Question 같은 다른 노트 태그는 노트의 태그가 돼요. [페이지 사이의 링크는 노트 링크가 되고](/ko/help/note-links), 사진과 첨부 파일은 여러분의 저장 공간으로 가져와요.",
             "섹션 파일(.one) 하나나 zip으로 묶은 노트북 폴더도 가져올 수 있어요. 펜으로 그린 그림, 음성 녹음, 수식은 이쪽에서 표현할 방법이 없어서 가져오기 미리보기에 개수만 표시되고, OneNote 휴지통에 있는 페이지는 패키지에 들어 있지 않아요."
+          ]
+        }
+      ]
+    },
+    "day-one": {
+      "app": "Day One",
+      "title": "Day One 저널 내보내기",
+      "metaTitle": "Day One 저널을 내보내는 방법 - PrivacyNotes",
+      "lead": "Day One은 저널을 미디어가 포함된 JSON .zip으로 내보내고, PrivacyNotes는 각 항목을 날짜, 태그, 장소, 날씨, 사진과 함께 저널로 가져와요.",
+      "sections": [
+        {
+          "h": "미디어를 포함해 JSON으로 내보내기",
+          "steps": [
+            "웹에서 Day One을 열고 옮기려는 저널을 선택하세요.",
+            "Edit Journal을 선택하고 Journal Settings를 연 다음 Export Journal을 선택하세요.",
+            "Export journal JSON file을 선택한 다음 Include media를 고르세요. Day One이 항목과 첨부 파일이 담긴 .zip을 저장해요.",
+            "그 .zip을 그대로 끌어다 놓으세요."
+          ],
+          "p": [
+            "Mac이나 iOS에서는 대신 File > Export > JSON을 선택하세요. 저널을 하나씩 내보낼 수도 있고, 모든 저널을 .zip 하나로 내보낼 수도 있어요."
+          ]
+        },
+        {
+          "h": "PDF나 일반 텍스트가 아니라 JSON을 고르세요",
+          "p": [
+            "JSON은 날짜, 시간대, 태그, 별표, 위치, 날씨, 항목 링크, 미디어를 모두 유지하는 형식이에요. .json 파일만 넣어도 사진과 파일 없이 텍스트만 가져오며, 가져오기 요약에 찾지 못한 첨부 파일 수가 표시돼요."
+          ]
+        },
+        {
+          "h": "함께 옮겨지는 것",
+          "p": [
+            "[모든 항목은 저널에 도착하고](/ko/help/journal), 항목 자체 시간대의 날짜로 들어가요. 맨 앞의 제목이 항목 제목이 되며, 제목이 없는 항목은 날짜가 제목이 돼요. 별표를 단 항목과 고정된 항목은 고정된 채로 남고, 태그는 태그로 남아요.",
+            "위치는 항목의 위치 칩을 채우고, 날씨, 활동, 음악은 맨 위에 한 줄로 들어가요. 사진은 이미지로, 오디오, 동영상, PDF는 첨부 파일로 가져오며, 항목 사이의 링크는 [노트 링크](/ko/help/note-links)가 돼요. .zip 하나에 여러 저널이 들어 있으면 저널마다 폴더가 돼요."
+          ]
+        }
+      ]
+    },
+    "todoist": {
+      "app": "Todoist",
+      "title": "Todoist 할 일 내보내기",
+      "metaTitle": "Todoist 할 일을 내보내는 방법 - PrivacyNotes",
+      "lead": "Todoist 프로젝트를 백업 .zip이나 프로젝트 .csv 파일로 내보내면, PrivacyNotes가 각 프로젝트를 섹션, 하위 할 일, 댓글이 담긴 할 일 목록으로 바꿔 줘요.",
+      "sections": [
+        {
+          "h": "백업 다운로드 또는 프로젝트를 CSV로 내보내기",
+          "steps": [
+            "Todoist의 Pro 또는 Business 플랜에서는 Settings > Backups를 열고 최신 백업 .zip을 다운로드하세요. 활성 프로젝트마다 .csv 파일이 하나씩 들어 있어요.",
+            "무료 플랜에서는 프로젝트를 열고 점 세 개 메뉴 > Import & export > Export as CSV를 선택한 다음 .csv 파일을 저장하세요.",
+            "그 .zip이나 .csv 파일을 PrivacyNotes에 끌어다 놓으세요."
+          ]
+        },
+        {
+          "h": "프로젝트 하나를 내보낼 때는 상대 날짜를 끄세요",
+          "p": [
+            "Export as CSV 메뉴에서 \"Use relative dates\"를 끄면 마감일이 \"in 21 days\" 대신 2026-12-15 같은 실제 날짜로 저장돼요. 둘 다 할 일 줄에 텍스트로 가져오지만, 실제 날짜로 두어야 나중에 봐도 정확해요.",
+            "Todoist는 완료된 할 일과 아카이브된 프로젝트를 CSV 내보내기와 백업에서 제외하므로, 파일에는 활성 할 일만 들어 있어요."
+          ]
+        },
+        {
+          "h": "각 항목이 들어가는 자리",
+          "p": [
+            "각 프로젝트는 [할 일](/ko/help/tasks)에서 프로젝트 이름의 할 일 목록이 되고, 목록과 보드 프로젝트 모두 섹션은 제목이 되며 하위 할 일은 같은 깊이로 중첩돼요. P1~P3 우선순위, 마감일, 소요 시간, 최종 기한, 인라인 @라벨은 각 줄에 그대로 남고, 모든 라벨은 목록의 태그로 추가돼요.",
+            "할 일 설명, 할 일 댓글, 프로젝트 댓글도 함께 옮겨지고, 완료할 수 없는 헤더 할 일은 체크박스 대신 굵은 글머리 기호로 남아요. 개별 할 일 줄의 미리 알림은 옮겨지지 않으며 가져오기 요약에 개수가 표시돼요."
           ]
         }
       ]

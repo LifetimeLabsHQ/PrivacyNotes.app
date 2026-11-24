@@ -228,7 +228,7 @@
     "removeTitle": "Ta bort den här passkeyn?",
     "removeBody": "Du kan inte längre logga in med den. Själva passkeyn finns kvar i din passkey-app tills du raderar den där.",
     "retired": "Skapad innan din fras ändrades. Ta bort den och lägg till den igen.",
-    "noPrf": "Den här passkey-appen kan inte skydda din fras, så passkeyn lades inte till. Prova enhetens egna passkeys, eller en annan lösenordshanterare.",
+    "noPrf": "Den här passkey-appen kan inte skapa nyckeln som skyddar din fras, så passkeyn lades inte till. Din fras loggar fortfarande in dig. När din lösenordshanterare erbjuder att spara passkeyn, välj i stället att spara den på den här enheten eller på en säkerhetsnyckel.",
     "tooMany": "Du har {{count}} passkeys för inloggning. Ta bort en för att lägga till en till.",
     "failed": "Passkeyn kunde inte läggas till. Kontrollera anslutningen och försök igen.",
     "appsOnly": "Lägg till passkeys i din webbläsare på use.privacynotes.app. Inloggning med dem i apparna kommer senare.",

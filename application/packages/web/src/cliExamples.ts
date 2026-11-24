@@ -21,7 +21,7 @@ export const CLI_EXAMPLES: readonly CliExample[] = [
   { key: 'Git', icon: GitBranch, command: 'git log --since=8am | privacynotes save' },
   { key: 'Clip', icon: ClipboardText, command: 'pbpaste | privacynotes save --tag inbox' },
   // The steps per system: the FAQ entry quick-note-shortcut.
-  // Spec: docs/internal/plans/quick-note-694.md (section 3.2)
+  // Spec: docs/internal/specs/quick-note-694.md (section 3.2)
   { key: 'Shortcut', icon: Keyboard, command: 'zenity --text-info --editable | privacynotes save' },
 ];
 

@@ -341,7 +341,11 @@
     "confirm": "Importuj jako notatki",
     "cancel": "Zapisz jako pliki",
     "bodySingle": "<strong>{{filename}}</strong> wygląda na plik markdown. Zaimportować go jako notatkę, żebyś mógł go czytać i edytować, czy zapisać jako zaszyfrowany załącznik?",
-    "bodyMulti": "Te pliki ({{count}}) wyglądają na markdown. Zaimportować je jako notatki, żebyś mógł je czytać i edytować, czy zapisać jako zaszyfrowane załączniki?"
+    "bodyMulti": "Te pliki ({{count}}) wyglądają na markdown. Zaimportować je jako notatki, żebyś mógł je czytać i edytować, czy zapisać jako zaszyfrowane załączniki?",
+    "backupTitle": "Przywrócić czy zapisać?",
+    "backupConfirm": "Przywróć kopię zapasową",
+    "backupCancel": "Zapisz jako plik",
+    "backupBody": "<strong>{{filename}}</strong> to kopia zapasowa PrivacyNotes. Przywrócić z niej swoje dane czy zapisać ją jako zaszyfrowany załącznik?"
   },
   "archiveConfirm": {
     "body_one": "Zarchiwizować <highlight>{{count}} element</highlight>? Zniknie z Twoich list i poczeka w widoku Archiwum. Opcja Przywróć z archiwum go przywraca.",

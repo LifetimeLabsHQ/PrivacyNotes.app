@@ -97,7 +97,10 @@
     "googleCalendar": "Google Calendar'ın Settings > Import & export bölümünden alınan .zip dosyası veya tek bir .ics dosyası. Etkinlikler saatlerini, tekrarlarını ve hatırlatıcılarını korur.",
     "appleNotes": "Ücretsiz Exporter uygulamasıyla Markdown olarak dışa aktarın, sonra .zip dosyasını buraya bırakın.",
     "appleJournal": "Mac veya iPhone'daki Journal uygulamasından dışa aktarın, AppleJournalEntries klasörünü sıkıştırın ve .zip dosyasını bırakın. Kayıtlar fotoğrafları, videoları, ses notları ve konumlarıyla birlikte günlük kaydı olarak içe aktarılır.",
+    "dayOne": "Day One'da web üzerinde Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media), Mac veya iOS'ta ise File > Export > JSON seçeneğini seçin. .zip veya .json dosyasını buraya bırakın. Kayıtlar günlerini, etiketlerini, yıldızlarını, yerlerini, hava durumunu ve medyalarını korur.",
+    "todoist": "Todoist'te Settings > Backups (Pro) bölümünden bir yedek .zip dosyası indirin ya da bir proje açıp ... > Import & export > Export as CSV seçeneğini seçin. Her proje; bölümleri, alt görevleri, öncelikleri, bitiş tarihleri, etiketleri, açıklamaları ve yorumlarıyla birlikte bir görev listesine dönüşür.",
     "daylio": "Daylio'da More > Backup & Restore > Advanced Options > Export seçeneğini seçin, Daylio'yu kapatın ve .daylio dosyasını bırakın. Her kayıt; ruh hali, aktiviteler, ölçekler, fotoğraflar ve ses notlarıyla birlikte bir günlük kaydına dönüşür. More > Export Entries ile alınan CSV de çalışır, ancak fotoğraflar olmadan.",
+    "diaro": "Diaro'da Settings > Data > Backup & restore seçeneğini seçin, + simgesine dokunun, şifrelemeyi kapalı, ekleri açık bırakın ve .zip yedeğini buraya bırakın. Tek başına bir DiaroBackup.xml dosyası da çalışır, ancak fotoğraflar olmadan. Kayıtlar günlerini, klasörlerini, etiketlerini, ruh hallerini, yerlerini, hava durumunu ve fotoğraflarını korur.",
     "diarium": "Diarium'da Export seçeneğini seçin, Attachments açıkken JSON'u seçin ve yerel depolamaya kaydedin. .zip dosyasını veya eksiz bir .json dosyasını bırakın. Kayıtlar puanlarını ruh hali olarak, etiketlerini, kişilerini, takiplerini, yerlerini ve eklerini korur.",
     "googleJournal": "Pixel'inizdeki Journal uygulamasında Settings > Back up your journal seçeneğini açın. Ardından Google Takeout'ta Journal'ı seçin ve gönderdiği .zip dosyasını bırakın. Kayıtlar günlerini, başlıklarını, metinlerini, fotoğraflarını ve videolarını korur.",
     "excalidraw": "excalidraw.com'dan kaydedilmiş çizimler: tek bir .excalidraw dosyası veya birkaçı birlikte sıkıştırılmış hâlde. Obsidian'ın Excalidraw eklentisinden gelen .excalidraw.md dosyaları da çalışır. Çizimin içindeki görseller de birlikte gelir.",
@@ -108,6 +111,7 @@
     "obsidian": "Obsidian kasası .zip olarak. Etiketleri, not bağlantılarını, klasör yapısını, metin içi #etiketleri ve gömülü görsel ile dosyaları korur. Tuvaller ve Excalidraw çizimleri çizime dönüşür; tek bir .canvas dosyası da kendi başına içe aktarılabilir.",
     "obsidianCanvas": "Obsidian kasanızdan tek bir .canvas dosyası veya her tuvali getirmek için kasanın tamamı .zip olarak. Her tuval bir çizime dönüşür: kartlar, gruplar, oklar ve renkler de gelir; görseller .zip içindeyse onlar da gelir.",
     "notesnook": "Notesnook dışa aktarımı .zip olarak. Biçimlendirmeyi, not defterlerini, etiketleri ve ekleri korumak için dışa aktarırken HTML seçin.",
+    "notion": "Notion'da Settings > General > Export > Workspace content seçeneğini (veya bir sayfa menüsü > More > Export) seçin, alt sayfalar ve klasörler açıkken \"Markdown & CSV\" biçimini seçip .zip dosyasını buraya bırakın. Başlıklardan ve klasörlerden Notion kimliklerini kaldırır, alt sayfaları klasör olarak korur, bilgi kutularını dönüştürür, iç bağlantıları not bağlantılarına çevirir ve görselleri, dosyaları ve veritabanı satır sayfalarını da birlikte getirir.",
     "bear": "Bear'da File > Backup Notes... seçeneğini seçin ve .bear2bk dosyasını buraya bırakın. Etiketler ve iç içe etiketler, sabitlemeler, arşiv, çöp kutusu, renkleriyle vurgular, not bağlantıları ve ekler de gelir.",
     "joplin": "File > Export all > \"JEX - Joplin Export File\" ile alınan .jex dosyası. Not defterleri klasöre dönüşür; etiketler, yapılacaklar, not bağlantıları ve ekler de gelir.",
     "anytype": "Space settings > Export ile alınan, dosyaları ve arşivlenmiş nesneleri içeren Any-Block v1 JSON .zip dosyası. Koleksiyonlar klasöre dönüşür; etiketler, görevler, bilgi kutuları, katlanır bölümler, tablolar, not bağlantıları ve dosyalar da gelir.",
@@ -134,7 +138,13 @@
     "fullBackupTitle": "Tam yedek (.zip)",
     "fullBackupDesc": "Notları, günlükleri, kasa öğelerini, görevleri, görselleri, sesleri ve dosyaları geri yükleyin. Zaten sahip olduğunuz bir not korunur ya da yedekte daha yeni bir kopyası varsa güncellenir.",
     "encryptedBackupTitle": "Şifreli yedek (.pnbackup, .pnbackupz)",
-    "encryptedBackupDesc": "Şifreli bir yedeği ifade anahtarınızla geri yükleyin. Bir .pnbackupz dosyası dosyalar dahil her şeyi geri getirir; .pnbackup yalnızca metin içeriği ve üst verileri içerir. Yedeği oluşturan hesapla giriş yapmış olmanız gerekir."
+    "encryptedBackupDesc": "Şifreli bir yedeği ifade anahtarınızla geri yükleyin. Bir .pnbackupz dosyası dosyalar dahil her şeyi geri getirir; .pnbackup yalnızca metin içeriği ve üst verileri içerir. Başka bir cihazdan veya hesaptan alınan yedekler, o yedeğin kurtarma ifadesini ister."
+  },
+  "restoreForeign": {
+    "title": "Başka bir kurtarma ifadesiyle kilidi aç",
+    "body": "Bu yedek mevcut ifadenizle şifrelenmemiş. Yedeği oluşturan cihazın kurtarma ifadesini girin veya tarayın. Notlarınız bu kasaya içe aktarılacak.",
+    "unlock": "Yedeğin kilidini aç",
+    "wrongPhrase": "Bu kurtarma ifadesi yedeğin kilidini açmadı. Kelimeleri kontrol edip tekrar deneyin."
   },
   "restoreGate": {
     "wait": "Geri yükleme, bu cihaz çevrimiçi olup bir eşitlemeyi tamamlayana kadar bekler; böylece yedeğinizdeki notlar iki kez eklenmek yerine hesabınızda zaten bulunan notlarla eşleştirilir.",
@@ -314,7 +324,8 @@
     "title_one": "PrivacyNotes ile {{count}} öğe paylaşıldı",
     "title_other": "PrivacyNotes ile {{count}} öğe paylaşıldı",
     "line": "Siz seçene kadar hiçbir şey kaydedilmez.",
-    "saveAll": "Tümünü kaydet"
+    "saveAll": "Tümünü kaydet",
+    "saveAs": "Kaydetme biçimi"
   },
   "destination": {
     "none": "Klasör yok",

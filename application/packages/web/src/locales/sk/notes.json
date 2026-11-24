@@ -341,7 +341,11 @@
     "confirm": "Importovať ako poznámky",
     "cancel": "Uložiť ako súbory",
     "bodySingle": "<strong>{{filename}}</strong> vyzerá ako súbor markdown. Importovať ho ako poznámku, ktorú môžeš čítať a upravovať, alebo ho uložiť ako šifrovanú prílohu?",
-    "bodyMulti": "Tieto súbory ({{count}}) vyzerajú ako markdown. Importovať ich ako poznámky, ktoré môžeš čítať a upravovať, alebo ich uložiť ako šifrované prílohy?"
+    "bodyMulti": "Tieto súbory ({{count}}) vyzerajú ako markdown. Importovať ich ako poznámky, ktoré môžeš čítať a upravovať, alebo ich uložiť ako šifrované prílohy?",
+    "backupTitle": "Obnoviť alebo uložiť?",
+    "backupConfirm": "Obnoviť zálohu",
+    "backupCancel": "Uložiť ako súbor",
+    "backupBody": "<strong>{{filename}}</strong> je záloha PrivacyNotes. Obnoviť z nej svoje dáta alebo ju uložiť ako šifrovanú prílohu?"
   },
   "archiveConfirm": {
     "body_one": "Archivovať <highlight>{{count}} položku</highlight>? Zmizne z tvojich zoznamov a počká v zobrazení Archív. Príkaz Zrušiť archiváciu ju vráti späť.",

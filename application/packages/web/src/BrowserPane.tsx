@@ -20,6 +20,7 @@ import { useAuth } from './auth';
 import { marketingHomeHref } from './siteLinks';
 import { isTouchOnly } from './touchOnly';
 import { isDemoMode, DEMO_APP_URL, proUnlocked } from './demo';
+import { LocalOnlyNotice } from './LocalOnlyNotice';
 import { ExtensionCallError, loadExtensionState, removeExtension, type ExtensionRow } from './extensionApi';
 import { installLinks, type InstallBrowser } from './extensionStores';
 import { hasUnpushedSettings, syncUserSettings } from './userSettings';
@@ -284,6 +285,7 @@ function ConnectedBrowsers({ rows, onRemoved, heading, help, icon = PuzzlePiece 
           return agentFolder && folders.some((f) => f.id === agentFolder) ? agentFolder : null;
         },
         hasFolder: (folder) => loadLocalSettings().folders.some((f) => f.id === folder),
+        foldersUnlocked: () => proUnlocked(auth.isPro),
       });
       return waiting === 0;
     } catch {
@@ -343,15 +345,18 @@ function ConnectedBrowsers({ rows, onRemoved, heading, help, icon = PuzzlePiece 
   );
 }
 
-export function BrowserPane({ extensionKeys, isPro, onUpgrade }: {
+export function BrowserPane({ extensionKeys, isPro, onUpgrade, onOpenSync }: {
   extensionKeys: Pick<ExtensionAccess, 'readKeys' | 'saveKeys'>;
   isPro: boolean | null | undefined;
   /** The upgrade window, with the browsers reason. */
   onUpgrade: () => void;
+  /** Opens Settings > ID & Sync from the local-only notice. */
+  onOpenSync?: () => void;
 }) {
   const { t } = useTranslation('shell');
   const { auth, supabase } = useAuth();
-  const access: ExtensionAccess | null = isDemoMode() || auth.status !== 'authenticated'
+  const localOnly = auth.status === 'authenticated' && auth.localOnly;
+  const access: ExtensionAccess | null = isDemoMode() || auth.status !== 'authenticated' || localOnly
     ? null
     : { supabase, pubkey: auth.pubkey, phrase: auth.phrase, contentKey: auth.encryptionKey, ...extensionKeys };
   const pubkey = access?.pubkey ?? '';
@@ -385,9 +390,9 @@ export function BrowserPane({ extensionKeys, isPro, onUpgrade }: {
 
       <section className="space-y-3">
         <SectionEyebrow icon={DownloadSimple} setting="browser.install">{t('apps.stepInstall')}</SectionEyebrow>
-        {/* Five cards, three to a row on a wide pane (the three stores,
-            then Brave and Vivaldi on the Chrome Web Store); one column on
-            a phone. */}
+        {/* Nine cards, three to a row on a wide pane (the three stores,
+            then Chromium browsers on the Chrome Web Store and Firefox-based
+            browsers on Firefox Add-ons); one column on a phone. */}
         <div className="grid gap-1.5 @md:grid-cols-3">
           {installLinks().map(({ browser, url, store }) => {
             const body = (
@@ -417,6 +422,8 @@ export function BrowserPane({ extensionKeys, isPro, onUpgrade }: {
           {/* One browser free, more with Pro. Spec: docs/internal/specs/extension-pro-gate.md (section 5) */}
           <ConnectSteps access={access} rows={rows} reload={load} gated={rows.length > 0 && !proUnlocked(isPro)} onUpgrade={onUpgrade} />
         </div>
+      ) : localOnly ? (
+        <LocalOnlyNotice feature="browserExtension" onOpenSync={onOpenSync} />
       ) : (
         <a href={DEMO_APP_URL} className={`${SETTINGS_BTN_PRIMARY} inline-flex`}>
           <UserPlus aria-hidden="true" />
@@ -448,6 +455,7 @@ function currentBrowser(): InstallBrowser | null {
   // Brave hides its name from the user agent but adds navigator.brave.
   if (typeof navigator !== 'undefined' && 'brave' in navigator) return 'Brave';
   if (/Vivaldi\//.test(ua)) return 'Vivaldi';
+  if (/OPR\//.test(ua)) return 'Opera';
   if (/Edg\//.test(ua)) return 'Edge';
   if (/Firefox\//.test(ua)) return 'Firefox';
   if (/Chrome\//.test(ua)) return 'Chrome';

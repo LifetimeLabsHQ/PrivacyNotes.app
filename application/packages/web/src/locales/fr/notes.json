@@ -321,7 +321,11 @@
     "confirm": "Importer comme notes",
     "cancel": "Stocker comme fichiers",
     "bodySingle": "<strong>{{filename}}</strong> ressemble à un fichier markdown. L'importer comme note pour pouvoir le lire et le modifier, ou le stocker comme pièce jointe chiffrée ?",
-    "bodyMulti": "Ces {{count}} fichiers ressemblent à du markdown. Les importer comme notes pour pouvoir les lire et les modifier, ou les stocker comme pièces jointes chiffrées ?"
+    "bodyMulti": "Ces {{count}} fichiers ressemblent à du markdown. Les importer comme notes pour pouvoir les lire et les modifier, ou les stocker comme pièces jointes chiffrées ?",
+    "backupTitle": "Restaurer ou stocker ?",
+    "backupConfirm": "Restaurer la sauvegarde",
+    "backupCancel": "Stocker comme fichier",
+    "backupBody": "<strong>{{filename}}</strong> est une sauvegarde PrivacyNotes. Restaurer tes données depuis cette sauvegarde, ou la stocker comme pièce jointe chiffrée ?"
   },
   "archiveConfirm": {
     "body_one": "Archiver <highlight>{{count}} élément</highlight> ? Il quitte tes listes et attend dans la vue Archives. Désarchiver le ramène.",

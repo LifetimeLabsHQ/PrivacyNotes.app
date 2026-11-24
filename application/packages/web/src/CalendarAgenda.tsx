@@ -43,6 +43,8 @@ type Props = {
   strip: boolean;
   /** The strip's week numbers (the synced `calendar.weekNumbers`). */
   weekNumbers?: boolean;
+  /** Bumped by the Calendar header's Today button or shortcut to scroll back to today (#867). */
+  todaySignal?: number;
   /** What a row drags: its id and its note-link, for a drop on a day of a
    *  calendar, a folder or an editor. */
   dragPayload?: (id: string) => ItemDragPayload;
@@ -84,7 +86,7 @@ function dayHeader(day: string, today: string): { word: string | null; date: str
   return { word: null, date };
 }
 
-export default function CalendarAgenda({ index, onOpen, search, strip, weekNumbers, dragPayload, onItemMenu, selection, trackers = null }: Props) {
+export default function CalendarAgenda({ index, onOpen, search, strip, weekNumbers, todaySignal = 0, dragPayload, onItemMenu, selection, trackers = null }: Props) {
   const { t } = useTranslation('shell');
   const today = toLocalIso(new Date());
   const [ahead, setAhead] = useState(AHEAD_DAYS);
@@ -216,6 +218,18 @@ export default function CalendarAgenda({ index, onOpen, search, strip, weekNumbe
       pending.current = null;
     }
   }
+
+  // Scroll today to the top when the Calendar pane's Today button or shortcut fires (#867).
+  const lastTodaySignal = useRef(todaySignal);
+  useEffect(() => {
+    if (todaySignal === lastTodaySignal.current) return;
+    lastTodaySignal.current = todaySignal;
+    if (!days.some((d) => d.day === today)) return;
+    setStripDay(today);
+    goTo(today);
+    // Only run on a fresh Today trigger; query and day rollovers are handled above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todaySignal]);
 
   function onScroll(e: React.UIEvent<HTMLDivElement>) {
     const el = e.currentTarget;

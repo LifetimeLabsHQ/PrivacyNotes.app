@@ -22,7 +22,7 @@ import type { CustomTrackerType } from './trackerTypes';
 
 export const TYPE_GUARD_VERSION = '0.766.0';
 
-export const GUARDED_TYPES_LAUNCHED = false;
+export const GUARDED_TYPES_LAUNCHED = true;
 
 /** The types that wait for the switch. */
 const GUARDED_TYPES: ReadonlySet<CustomTrackerType> = new Set(['pair', 'counter']);

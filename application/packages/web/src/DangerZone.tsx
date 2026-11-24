@@ -14,6 +14,7 @@ import { jwtPayloadPubkey, PHRASE_STORAGE_KEY } from './authStorage';
 import { announceSignOut, beginSignOutMark, endLiveSignIn } from './liveSignIn';
 import { tabSecrets, trustAwareStorage } from './trustStorage';
 import { removeBiometricCredential, removePinWrappedPhrase } from './biometric';
+import { clearLocalOnlyFlagsSync, isLocalOnly } from './localOnly';
 import { forgetFolder } from './markdownFolder/folderMemory';
 import { clearDestination } from './autoBackup/destination';
 import { clearPluginFolders } from './plugins/pluginStore';
@@ -126,6 +127,7 @@ export async function wipeThisDevice(
   trustAwareStorage.removeItem(PHRASE_STORAGE_KEY);
   removeBiometricCredential();
   removePinWrappedPhrase();
+  clearLocalOnlyFlagsSync();
   // A phone's scheduled reminders, while the map that names them
   // exists: the sweep below removes it, and the OS would ring them with
   // this account's titles after it is gone.
@@ -140,16 +142,16 @@ export async function wipeThisDevice(
   // With a deadline: a request that never answers must not hold the wipe
   // below, which removes the session whatever the library did.
   //
-  // Not in demo: the demo holds no session of its own, so the only
-  // row this could clear belongs to the real account signed in on
-  // the same origin.
+  // Not in demo or local-only mode: neither holds a Supabase session.
   if (!isDemoMode()) {
-    let deadline: ReturnType<typeof setTimeout> | undefined;
-    await Promise.race([
-      supabase.auth.signOut({ scope: 'local' }).catch(() => {}),
-      new Promise<void>((resolve) => { deadline = setTimeout(resolve, REMOTE_SIGN_OUT_MS); }),
-    ]);
-    clearTimeout(deadline);
+    if (!isLocalOnly()) {
+      let deadline: ReturnType<typeof setTimeout> | undefined;
+      await Promise.race([
+        supabase.auth.signOut({ scope: 'local' }).catch(() => {}),
+        new Promise<void>((resolve) => { deadline = setTimeout(resolve, REMOTE_SIGN_OUT_MS); }),
+      ]);
+      clearTimeout(deadline);
+    }
   }
   // What outlives the database: the Markdown folder the restore would
   // reopen for whoever signs in next, the backup destination, the model
@@ -171,11 +173,14 @@ export async function wipeThisDevice(
 export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void }) {
   const { t } = useTranslation('settings');
   const { auth, supabase } = useAuth();
+  const authed = auth.status === 'authenticated' ? auth : null;
+  const isLocalOnlyVault = authed?.localOnly === true;
+  const noServerAccount = isDemoMode() || isLocalOnlyVault;
   const [expanded, setExpanded] = useState(false);
   const [deleteLocal, setDeleteLocal] = useState(true);
-  // Demo mode has no server-side account to delete, so the option is
-  // neither offered nor pre-selected - local wipe is the only real action.
-  const [deleteServer, setDeleteServer] = useState(!isDemoMode());
+  // Demo and local-only vaults have no server-side account to delete, so the
+  // option is neither offered nor pre-selected - local wipe is the only action.
+  const [deleteServer, setDeleteServer] = useState(!noServerAccount);
   const [confirmText, setConfirmText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -184,16 +189,19 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
   // sub in Paddle (surface-and-defer per gap #8).
   const [hasActiveSub, setHasActiveSub] = useState<boolean | null>(null);
 
-  const authed = auth.status === 'authenticated' ? auth : null;
   const authRef = useRef(authed);
   authRef.current = authed;
+
+  useEffect(() => {
+    if (noServerAccount) setDeleteServer(false);
+  }, [noServerAccount]);
 
   // Preflight when the danger zone expands. Cheap RPC, returns boolean.
   useEffect(() => {
     if (!expanded || !authed) return;
-    // Demo mode makes zero server calls - there is no account and no
-    // storage sub, so answer the preflight locally.
-    if (isDemoMode()) { setHasActiveSub(false); return; }
+    // Demo and local-only mode make zero server calls - there is no account
+    // and no storage sub, so answer the preflight locally.
+    if (noServerAccount) { setHasActiveSub(false); return; }
     let cancelled = false;
     void (async () => {
       const { data, error: rpcErr } = await supabase.rpc(
@@ -210,7 +218,7 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
       setHasActiveSub(data === true);
     })();
     return () => { cancelled = true; };
-  }, [expanded, authed, supabase]);
+  }, [expanded, authed, supabase, noServerAccount]);
 
   // What the local wipe destroys outright. Live while the panel is open,
   // and released before the wipe starts.
@@ -368,13 +376,13 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
         <span className={`${deleteServer && !deleteLocal ? 'text-pn-muted' : 'text-pn-soft'}`}>
           {t('danger.localLabel')}
           <span className="block text-small text-pn-soft">
-            {t('danger.localDesc')}
+            {t(isLocalOnlyVault ? 'danger.localDescLocalOnly' : 'danger.localDesc')}
             {deleteServer && !deleteLocal && ` ${t('danger.localRequired')}`}
           </span>
         </span>
       </label>
 
-      {!isDemoMode() && (
+      {!noServerAccount && (
       <label className="flex items-start gap-2 text-body cursor-pointer">
         <input
           type="checkbox"

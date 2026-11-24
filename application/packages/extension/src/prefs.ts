@@ -41,6 +41,8 @@ export interface Prefs {
   /** "Offer passkeys": off, every passkey request goes to the browser.
    *  Spec: docs/contrib/passkeys.md (P29) */
   offerPasskeys: boolean;
+  /** Whether the "Folder & tags" section starts expanded (default collapsed). */
+  organizeOpen: boolean;
 }
 
 const KEY = 'prefs';
@@ -59,6 +61,7 @@ export async function readPrefs(): Promise<Prefs> {
     totpBar: got?.totpBar !== false,
     favicons: got?.favicons !== false,
     offerPasskeys: got?.offerPasskeys !== false,
+    organizeOpen: got?.organizeOpen === true,
   };
 }
 

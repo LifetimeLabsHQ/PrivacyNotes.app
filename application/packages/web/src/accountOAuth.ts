@@ -3,6 +3,7 @@ import { trustAwareStorage } from './trustStorage';
 import { guardAccountSessionWrite, MfaCancelledError, mfaSessionIdentity } from './sessionWriteGuard';
 import { isDemoMode } from './demo';
 import { jwtClaims } from './jwtClaims';
+import { isBackendNetworkAllowed, isLocalOnly, LocalOnlyNetworkBlockedError } from './localOnly';
 
 export type AccountOAuthProvider = 'google' | 'apple' | 'github';
 type ExchangeContext = {
@@ -48,6 +49,13 @@ function withRestDeadline(requestUrl: URL, init: RequestInit | undefined): Reque
 export function accountOAuthFetch(url: string, storageKey: string): typeof fetch {
   const authTokenUrl = `${url.replace(/\/$/, '')}/auth/v1/token`;
   return async (input, init) => {
+    // Single transport choke point for local-only vaults (#862): blocks every
+    // Supabase call (auth, PostgREST, RPC, edge functions, storage) with zero
+    // outbound packets unless an explicit online flow opened the gate.
+    // Spec: docs/internal/specs/local-only-862.md (section 4)
+    if (isLocalOnly() && !isBackendNetworkAllowed()) {
+      throw new LocalOnlyNetworkBlockedError();
+    }
     const requestUrl = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
     const active = exchanges.get(storageKey);
     const context = active && !active.requestClaimed && requestUrl.origin + requestUrl.pathname === authTokenUrl &&

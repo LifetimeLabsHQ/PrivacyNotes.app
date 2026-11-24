@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "Desbloqueia tudo por {{price}}",
     "ctaOpening": "A abrir o checkout...",
     "ctaSignUp": "Regista-te para desbloquear",
+    "localOnlyHint": "Ao passares para Pro, a app liga-se uma vez para registar a tua conta e ativar o Pro. A sincronização continua desativada.",
+    "localOnlyOffline": "Liga-te à internet para passares para Pro.",
     "features": {
       "folders": "Pastas aninhadas",
       "lock": "Bloqueio e PIN",

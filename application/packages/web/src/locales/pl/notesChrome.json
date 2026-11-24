@@ -91,6 +91,11 @@
     "appLockHint": "Współdzielone urządzenie? Włącz blokadę aplikacji w Ustawienia > Bezpieczeństwo.",
     "unopenedWarn_one": "1 notatka ma kopię na serwerze, której to urządzenie nie może otworzyć. Wylogowanie usuwa kopię z tego urządzenia, a może to być jedyna dobra kopia. Najpierw wyślij ją ponownie w Ustawienia > ID & Sync.",
     "unopenedKept_one": "1 notatka ma kopię na serwerze, której to urządzenie nie może otworzyć. Kopia na tym urządzeniu zostaje po wylogowaniu.",
+    "localOnlyTitle": "Usunąć wszystko z tego urządzenia?",
+    "localOnlyBody": "Twoje notatki są przechowywane wyłącznie na tym urządzeniu i nigdy nie były synchronizowane. Wylogowanie bezpowrotnie usunie je z tego urządzenia.",
+    "localOnlyCounts": "Na tym urządzeniu: {{items}}.",
+    "localOnlyExportBackup": "Eksportuj kopię zapasową",
+    "localOnlyDeleteConfirm": "Usuń i wyloguj się",
     "unopenedKept_few": "{{count}} notatki mają kopię na serwerze, której to urządzenie nie może otworzyć. Kopie na tym urządzeniu zostają po wylogowaniu.",
     "unopenedKept_many": "{{count}} notatek ma kopię na serwerze, której to urządzenie nie może otworzyć. Kopie na tym urządzeniu zostają po wylogowaniu.",
     "unopenedWarn_few": "{{count}} notatki mają kopię na serwerze, której to urządzenie nie może otworzyć. Wylogowanie usuwa kopie z tego urządzenia, a mogą to być jedyne dobre kopie. Najpierw wyślij je ponownie w Ustawienia > ID & Sync.",
@@ -171,6 +176,7 @@
   "burnShare": {
     "offline": "Jesteś offline. Linki do spalenia wymagają połączenia z serwerem. Spróbuj ponownie, gdy wrócisz online.",
     "demo": "Linki do spalenia są zapisywane na serwerze, a demo z żadnym się nie łączy. Zarejestruj się, aby tworzyć prawdziwe linki do spalenia.",
+    "localOnly": "Linki do spalenia wymagają konta online. Włącz synchronizację w Ustawienia > ID & Sync, aby udostępniać linki do spalenia.",
     "tooLarge": "Notatka jest za duża, aby udostępnić ją linkiem do spalenia ({{size}} KB). Maksimum to {{max}} KB.",
     "storeFailed": "Nie udało się zapisać notatki do spalenia na serwerze.",
     "rateLimited": "Z tego połączenia utworzono zbyt wiele linków do spalenia. Spróbuj ponownie później."

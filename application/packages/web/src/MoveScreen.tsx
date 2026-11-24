@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from 'react';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './auth';
 import { db } from './db';
@@ -124,7 +125,7 @@ export function MoveScreen({ onOpenNotes }: { onOpenNotes: () => void }) {
           type="button"
           disabled={state === 'syncing'}
           onClick={() => void handleMove()}
-          className="w-full rounded-lg bg-accent-fill hover:bg-accent-fill-hover text-white text-body font-semibold px-4 py-2.5 transition disabled:opacity-60"
+          className={`w-full rounded-lg ${PRIMARY_BTN_SKIN} text-body font-semibold px-4 py-2.5 transition disabled:opacity-60`}
         >
           {state === 'syncing' ? t('moveBanner.syncing') : t('moveBanner.cta')}
         </button>

@@ -97,7 +97,10 @@
     "googleCalendar": ".zip-filen från Settings > Import & export i Google Kalender, eller en enskild .ics-fil. Händelserna behåller sina tider, upprepningar och påminnelser.",
     "appleNotes": "Exportera med gratisappen Exporter som Markdown och släpp .zip-filen här.",
     "appleJournal": "Exportera från Journal på Mac eller iPhone, komprimera mappen AppleJournalEntries och släpp .zip-filen här. Posterna importeras som dagboksinlägg med sina foton, videor, röstmemon och platser.",
+    "dayOne": "Välj Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media) i Day One på webben, eller File > Export > JSON på Mac eller iOS. Släpp .zip- eller .json-filen här. Posterna behåller dag, taggar, stjärnor, plats, väder och media.",
+    "todoist": "Ladda ner en säkerhetskopia (.zip) från Settings > Backups (Pro) i Todoist, eller öppna ett projekt och välj ... > Import & export > Export as CSV. Varje projekt blir en uppgiftslista med sina avsnitt, deluppgifter, prioriteter, förfallodatum, etiketter, beskrivningar och kommentarer.",
     "daylio": "Välj More > Backup & Restore > Advanced Options > Export i Daylio, stäng Daylio och släpp .daylio-filen här. Varje post blir ett dagboksinlägg med sitt humör, sina Activities, skalor, foton och röstmemon. CSV-filen från More > Export Entries fungerar också, utan foton.",
+    "diaro": "Välj Settings > Data > Backup & restore i Diaro, tryck på +, lämna kryptering avstängd och bilagor påslagna, och släpp .zip-säkerhetskopian här. En enskild DiaroBackup.xml fungerar också, utan foton. Posterna behåller dag, mappar, taggar, humör, platser, väder och foton.",
     "diarium": "Välj Export i Diarium, välj JSON med Attachments påslaget och spara till lokal lagring. Släpp .zip-filen, eller en .json utan bilagor. Posterna behåller sitt betyg som humör, sina taggar, personer, mätvärden, platser och bilagor.",
     "googleJournal": "Slå på Settings > Back up your journal i Journal på din Pixel. Välj sedan Journal i Google Takeout och släpp .zip-filen du får. Posterna behåller sin dag, titel, text, sina foton och videor.",
     "excalidraw": "Teckningar sparade från excalidraw.com: en .excalidraw-fil, eller flera zippade tillsammans. Teckningar från Obsidians Excalidraw-plugin fungerar också, som .excalidraw.md-filer. Bilder i en teckning följer med.",
@@ -108,6 +111,7 @@
     "obsidian": "Obsidian-valv som .zip. Bevarar taggar, anteckningslänkar, mappstruktur, #taggar i texten samt inbäddade bilder och filer. Canvas-filer och Excalidraw-teckningar blir teckningar, och en enskild .canvas-fil kan också importeras för sig.",
     "obsidianCanvas": "En .canvas-fil från ditt Obsidian-valv, eller hela valvet som .zip för att ta med alla canvas-filer. Varje canvas blir en teckning: kort, grupper, pilar och färger följer med, och bilder också när de finns i .zip-filen.",
     "notesnook": "Notesnook-export som .zip. Välj HTML vid exporten för att behålla formatering, anteckningsböcker, taggar och bilagor.",
+    "notion": "Välj Settings > General > Export > Workspace content (eller en sidas meny > More > Export) i Notion, välj \"Markdown & CSV\" med undersidor och mappar påslagna och släpp sedan .zip-filen här. Tar bort Notion-ID:n från titlar och mappar, behåller undersidor som mappar, konverterar informationsrutor, gör om interna länkar till anteckningslänkar och tar med bilder, filer och sidor för databasrader.",
     "bear": "Välj File > Backup Notes... i Bear och släpp .bear2bk-filen här. Taggar och undertaggar, fästa anteckningar, arkivet, papperskorgen, överstrykningar med sina färger, anteckningslänkar och bilagor följer med.",
     "joplin": "Filen .jex från File > Export all > ”JEX - Joplin Export File”. Anteckningsböcker blir mappar, och taggar, att göra-punkter, anteckningslänkar och bilagor följer med.",
     "anytype": "Any-Block v1 JSON-.zip:en från utrymmets inställningar > Export, med filer och arkiverade objekt medtagna. Samlingar blir mappar, och taggar, uppgifter, informationsrutor, hopfällbara block, tabeller, anteckningslänkar och filer följer med.",
@@ -134,7 +138,13 @@
     "fullBackupTitle": "Fullständig säkerhetskopia (.zip)",
     "fullBackupDesc": "Återställ anteckningar, dagböcker, valvobjekt, uppgifter, bilder, ljud och filer. En anteckning du redan har behålls, eller uppdateras om säkerhetskopian har en nyare version av den.",
     "encryptedBackupTitle": "Krypterad säkerhetskopia (.pnbackup, .pnbackupz)",
-    "encryptedBackupDesc": "Återställ en krypterad säkerhetskopia med din frasnyckel. En .pnbackupz tar tillbaka allt, filer inräknade; en .pnbackup innehåller bara text och metadata. Du måste vara inloggad med samma konto som skapade den."
+    "encryptedBackupDesc": "Återställ en krypterad säkerhetskopia med din frasnyckel. En .pnbackupz tar tillbaka allt, filer inräknade; en .pnbackup innehåller bara text och metadata. Säkerhetskopior från en annan enhet eller ett annat konto ber om den säkerhetskopians återställningsfras."
+  },
+  "restoreForeign": {
+    "title": "Lås upp med en annan återställningsfras",
+    "body": "Den här säkerhetskopian är inte krypterad med din nuvarande fras. Ange eller skanna återställningsfrasen från enheten som skapade den. Dina anteckningar importeras till det här valvet.",
+    "unlock": "Lås upp säkerhetskopian",
+    "wrongPhrase": "Den återställningsfrasen låste inte upp den här säkerhetskopian. Kontrollera orden och försök igen."
   },
   "restoreGate": {
     "wait": "Återställningen väntar tills den här enheten är online och har slutfört en synkning, så att din säkerhetskopia matchas mot anteckningarna som redan finns i ditt konto i stället för att de läggs till två gånger.",
@@ -314,7 +324,8 @@
     "title_one": "{{count}} objekt delades till PrivacyNotes",
     "title_other": "{{count}} objekt delades till PrivacyNotes",
     "line": "Inget sparas förrän du väljer.",
-    "saveAll": "Spara alla"
+    "saveAll": "Spara alla",
+    "saveAs": "Spara som"
   },
   "destination": {
     "none": "Ingen mapp",

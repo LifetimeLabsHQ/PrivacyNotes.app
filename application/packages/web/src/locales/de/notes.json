@@ -321,7 +321,11 @@
     "confirm": "Als Notizen importieren",
     "cancel": "Als Dateien speichern",
     "bodySingle": "<strong>{{filename}}</strong> sieht nach einer Markdown-Datei aus. Als Notiz importieren, damit du sie lesen und bearbeiten kannst, oder als verschlüsselten Dateianhang speichern?",
-    "bodyMulti": "Diese {{count}} Dateien sehen nach Markdown aus. Als Notizen importieren, damit du sie lesen und bearbeiten kannst, oder als verschlüsselte Dateianhänge speichern?"
+    "bodyMulti": "Diese {{count}} Dateien sehen nach Markdown aus. Als Notizen importieren, damit du sie lesen und bearbeiten kannst, oder als verschlüsselte Dateianhänge speichern?",
+    "backupTitle": "Wiederherstellen oder speichern?",
+    "backupConfirm": "Backup wiederherstellen",
+    "backupCancel": "Als Datei speichern",
+    "backupBody": "<strong>{{filename}}</strong> ist ein PrivacyNotes-Backup. Deine Daten daraus wiederherstellen oder es als verschlüsselten Dateianhang speichern?"
   },
   "archiveConfirm": {
     "body_one": "<highlight>{{count}} Eintrag</highlight> archivieren? Er verschwindet aus deinen Listen und wartet in der Ansicht Archiv. Mit „Archivierung aufheben“ holst du ihn zurück.",

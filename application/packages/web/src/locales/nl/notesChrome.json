@@ -69,6 +69,11 @@
     "appLockHint": "Gedeeld apparaat? Zet de app-vergrendeling aan onder Instellingen > Beveiliging.",
     "unopenedWarn_other": "{{count}} notities hebben een kopie op de server die dit apparaat niet kan openen. Afmelden verwijdert de kopieën hier, en dat zijn misschien de enige goede. Stuur ze eerst opnieuw via Instellingen > ID & Sync.",
     "unopenedKept_other": "{{count}} notities hebben een kopie op de server die dit apparaat niet kan openen. De kopieën hier blijven staan nadat je je afmeldt.",
+    "localOnlyTitle": "Alles op dit apparaat verwijderen?",
+    "localOnlyBody": "Je notities staan alleen op dit apparaat en zijn nooit gesynchroniseerd. Afmelden verwijdert ze definitief van dit apparaat.",
+    "localOnlyCounts": "Op dit apparaat: {{items}}.",
+    "localOnlyExportBackup": "Back-up exporteren",
+    "localOnlyDeleteConfirm": "Verwijderen & afmelden",
     "unopenedKept_one": "1 notitie heeft een kopie op de server die dit apparaat niet kan openen. De kopie hier blijft staan nadat je je afmeldt.",
     "unopenedWarn_one": "1 notitie heeft een kopie op de server die dit apparaat niet kan openen. Afmelden verwijdert de kopie hier, en dat is misschien de enige goede. Stuur hem eerst opnieuw via Instellingen > ID & Sync."
   },
@@ -139,6 +144,7 @@
   "burnShare": {
     "offline": "Je bent offline. Burn-links hebben contact met de server nodig. Probeer het opnieuw zodra je weer online bent.",
     "demo": "Burn-links worden op een server opgeslagen, en de demo neemt met geen enkele server contact op. Meld je aan om echte burn-links te maken.",
+    "localOnly": "Burn-links hebben een online account nodig. Zet de synchronisatie aan in Instellingen > ID & Sync om burn-links te delen.",
     "tooLarge": "De notitie is te groot om via een burn-link te delen ({{size}}KB). Maximaal is {{max}}KB.",
     "storeFailed": "Kon de burn-notitie niet op de server opslaan.",
     "rateLimited": "Er zijn te veel burn-links gemaakt vanaf deze internetverbinding. Probeer het later opnieuw."

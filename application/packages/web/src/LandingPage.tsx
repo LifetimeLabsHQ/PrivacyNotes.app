@@ -492,6 +492,7 @@ function DownloadTile({
   version,
   note,
   ariaLabel: ariaOverride,
+  compact = false,
 }: {
   href?: string;
   icon: ReactNode;
@@ -513,18 +514,23 @@ function DownloadTile({
   /** The tile's name for a screen reader, in place of "Download for X",
    *  which is wrong for a store listing (the browser extension row). */
   ariaLabel?: string;
+  /** Tighter tile for a longer row (the nine browser extension links). */
+  compact?: boolean;
 }) {
   const { t } = useTranslation('landing');
+  const outer = compact ? 'w-16 gap-1.5' : 'w-20 gap-2.5';
+  const box = compact ? 'h-14 w-14 rounded-xl' : 'h-[72px] w-[72px] rounded-2xl';
+  const labelCls = compact ? 'text-compact' : 'text-body';
   if (!href && !onClick) {
     return (
-      <div className="flex w-20 flex-col items-center gap-2.5">
+      <div className={`flex ${outer} flex-col items-center`}>
         <span
           aria-hidden="true"
-          className="inline-flex h-[72px] w-[72px] items-center justify-center rounded-2xl border-2 border-dashed border-[var(--wl-ink)]/15 bg-[var(--wl-tint)] text-[var(--wl-sub)] [&_img]:opacity-50"
+          className={`inline-flex ${box} items-center justify-center border-2 border-dashed border-[var(--wl-ink)]/15 bg-[var(--wl-tint)] text-[var(--wl-sub)] [&_img]:opacity-50`}
         >
           {icon}
         </span>
-        <span className="text-body font-semibold text-[var(--wl-sub)]">{name}</span>
+        <span className={`${labelCls} font-semibold text-[var(--wl-sub)]`}>{name}</span>
         {note && <span className="h-3.5 font-mono text-meta text-[var(--wl-muted)]">{note}</span>}
       </div>
     );
@@ -538,13 +544,15 @@ function DownloadTile({
     <>
       <span
         aria-hidden="true"
-        className="pn-fx-conic-tile inline-flex h-[72px] w-[72px] items-center justify-center rounded-2xl"
+        className={`pn-fx-conic-tile inline-flex ${box} items-center justify-center`}
         style={{ '--tile-bg-l': tileBg, color: iconColor } as CSSProperties}
       >
         {icon}
       </span>
-      <span className="text-body font-semibold text-[var(--wl-ink)]">{name}</span>
-      <span className="h-3.5 font-mono text-meta text-[var(--wl-muted)]">{version ? `v${version}` : note}</span>
+      <span className={`${labelCls} font-semibold text-[var(--wl-ink)]`}>{name}</span>
+      {(!compact || version || note) && (
+        <span className="h-3.5 font-mono text-meta text-[var(--wl-muted)]">{version ? `v${version}` : note}</span>
+      )}
     </>
   );
   if (onClick) {
@@ -554,14 +562,14 @@ function DownloadTile({
         onClick={onClick}
         aria-expanded={expanded}
         aria-label={ariaLabel}
-        className="group flex w-20 cursor-pointer flex-col items-center gap-2.5"
+        className={`group flex ${outer} cursor-pointer flex-col items-center`}
       >
         {tile}
       </button>
     );
   }
   return (
-    <a href={href} aria-label={ariaLabel} className="group flex w-20 flex-col items-center gap-2.5">
+    <a href={href} aria-label={ariaLabel} className={`group flex ${outer} flex-col items-center`}>
       {tile}
     </a>
   );
@@ -2226,16 +2234,17 @@ export function LandingPage({
                 </div>
               ))}
             </dl>
-            <div className="mx-auto mt-8 flex flex-wrap justify-center gap-5 sm:gap-7">
+            <div className="mx-auto mt-8 flex flex-wrap justify-center gap-4 sm:gap-5">
               {installLinks().map(({ browser, url }) => (
                 <DownloadTile
                   key={browser}
+                  compact
                   href={url ?? undefined}
                   name={browser}
                   note={url ? undefined : t('shell:noteOptionsMenu.comingSoon')}
                   ariaLabel={t('downloads.extensionAria', { name: browser })}
                   tileBg="#EDE8D8"
-                  icon={<img src={`/help/icons/${browser.toLowerCase()}.svg`} alt="" width={40} height={40} loading="lazy" />}
+                  icon={<img src={`/help/icons/${browser.toLowerCase()}.svg`} alt="" width={30} height={30} loading="lazy" />}
                 />
               ))}
             </div>

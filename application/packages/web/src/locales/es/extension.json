@@ -23,7 +23,6 @@
     "generatePassword": "Generar una contraseña"
   },
   "note": {
-    "tagsPlaceholder": "#trabajo #ideas",
     "tagsHelp": "Espacio o coma entre etiquetas. El # es opcional.",
     "failed": "No se pudo guardar la nota. Vuelve a intentarlo."
   },
@@ -213,5 +212,11 @@
     "unlockFirst": "Desbloquea para usar tus passkeys.",
     "offer": "Ofrecer passkeys",
     "offerHelp": "Guarda y usa passkeys en sitios web."
+  },
+  "organize": {
+    "title": "Carpeta y etiquetas",
+    "unlockToPick": "Desbloquea la Bóveda para elegir",
+    "addTag": "Añadir etiqueta...",
+    "proFolders": "Las carpetas son una función Pro. Abre PrivacyNotes para mejorar el plan."
   }
 }

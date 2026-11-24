@@ -13,6 +13,7 @@ import type { CustomThemes } from './customThemes';
 import type { CalendarFeeds } from './calendarFeeds';
 import type { FormatBarSetting } from './formatBar';
 import type { DashboardSetting } from './dashboard/dashboardLayout';
+import type { PinnedTabsSetting } from './pinnedTabs';
 import { defaultPwGen, type PwGen } from './passwordGen';
 
 // ------------------------------------------------------------------
@@ -25,6 +26,14 @@ import { defaultPwGen, type PwGen } from './passwordGen';
  * Spec: docs/internal/specs/image-quality-handoff.md (section 3)
  */
 export type ImageSwitch = 'on' | 'off';
+
+/**
+ * How tightly Space saver shrinks new images when enabled. Kept separate
+ * from `imageSpaceSaver` so turning Space saver off and back on remembers
+ * the chosen level, and older clients keep compressing at standard.
+ * Spec: docs/internal/specs/image-quality-handoff.md (section 3)
+ */
+export type SpaceSaverLevel = 'standard' | 'small' | 'tiny';
 
 /**
  * Every field here is part of ONE encrypted row that every device shares,
@@ -484,6 +493,13 @@ export type UserSettings = {
    */
   dashboard: DashboardSetting;
   /**
+   * Item ids pinned to the start of the tab strip, in order, as one stamped
+   * register, merged at every sync point like the format bar and Home layout.
+   * Unpinned open tabs stay per device.
+   * Spec: docs/internal/specs/note-tabs.md (section 7)
+   */
+  pinnedTabs: PinnedTabsSetting;
+  /**
    * Whether a note takes its folder or tag color as its background: the open
    * note, its list row and its grid tile. One switch for all notes, synced
    * like the theme.
@@ -612,6 +628,7 @@ export type UserSettings = {
    * Spec: docs/internal/specs/image-quality-handoff.md (section 3)
    */
   imageSpaceSaver: ImageSwitch;
+  imageSpaceSaverLevel: SpaceSaverLevel;
   imageStripMetadata: ImageSwitch;
   /**
    * Keep contact photos small: a contact photo fits inside the ceiling in
@@ -690,6 +707,7 @@ export function defaultSettings(): UserSettings {
     calendarFeeds: {},
     formatBar: {},
     dashboard: {},
+    pinnedTabs: {},
     // Spec: docs/internal/specs/folder-tag-icons.md (decision D10, on)
     tintNotes: true,
     // Spec: docs/internal/specs/note-color-style.md (decision N5, accent)
@@ -698,6 +716,7 @@ export function defaultSettings(): UserSettings {
     sidebarBrowse: 'tags', // Spec: docs/internal/specs/folders.md (sidebarBrowse default)
     // Spec: docs/internal/specs/image-quality-handoff.md (section 3, both default on)
     imageSpaceSaver: 'on',
+    imageSpaceSaverLevel: 'standard',
     imageStripMetadata: 'on',
     imageContactCeiling: 'on',
     notesCreated: 0,

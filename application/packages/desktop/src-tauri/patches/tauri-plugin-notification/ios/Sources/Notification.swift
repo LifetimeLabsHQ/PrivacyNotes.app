@@ -63,7 +63,9 @@ func makeNotificationContent(_ notification: Notification) throws -> UNNotificat
   }
 
   if let sound = notification.sound {
-    content.sound = UNNotificationSound(named: UNNotificationSoundName(sound))
+    content.sound = sound == "default"
+      ? UNNotificationSound.default
+      : UNNotificationSound(named: UNNotificationSoundName(sound))
   }
 
   if let attachments = notification.attachments {

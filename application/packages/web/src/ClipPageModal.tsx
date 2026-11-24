@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Callout, Modal, ModalFooter, ROW_TITLE, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, Switch, TextField } from './ui';
-import { Image as ImageIcon, NEW_GLYPHS, PuzzlePiece, X } from './icons';
+import { Button, Callout, FeedbackButton, IconButton, Modal, ModalFooter, ROW_TITLE, SETTINGS_BTN_PRIMARY, StatusLine, Switch, TextField } from './ui';
+import { Image as ImageIcon, Link, NEW_GLYPHS, PuzzlePiece, X } from './icons';
 import { normalizeUrl } from './linkBody';
 import { isImeComposing } from './imeComposing';
 import { renderMarkdownSafe } from './markdownRender';
@@ -57,7 +57,7 @@ export default function ClipPageModal({
   extensionTip: { dismissed: boolean; onDismiss: () => void; onSetUp: () => void };
   onClose: () => void;
 }) {
-  const { t } = useTranslation(['shell', 'settings']);
+  const { t } = useTranslation(['shell', 'settings', 'importExport']);
   const [address, setAddress] = useState(initialUrl);
   const [invalid, setInvalid] = useState(false);
   const [pictures, setPictures] = useState(readClipPictures);
@@ -215,12 +215,18 @@ export default function ClipPageModal({
   }
 
   const stored = ready ? ready.held.filter((h) => 'bytes' in h).length : 0;
+  const host = ready ? clipHost(ready.source.url) : null;
 
   return (
-    <Modal onClose={saving ? undefined : onClose} title={t('extensionConnect.clips')} icon={<NEW_GLYPHS.clip />} className="max-w-md p-6 space-y-4">
+    <Modal onClose={saving ? undefined : onClose} title={t('extensionConnect.clips')} icon={<NEW_GLYPHS.clip />} className="max-w-md overflow-hidden p-6 space-y-4">
       <TextField
         // The window's one field reads as a row title, like Save pictures below.
-        label={<span className={`${ROW_TITLE} text-pn`}>{t('clipper.addressLabel')}</span>}
+        label={(
+          <span className={`${ROW_TITLE} text-pn`}>
+            <Link className="text-accent shrink-0" aria-hidden="true" />
+            {t('clipper.addressLabel')}
+          </span>
+        )}
         value={address}
         autoFocus
         dir="ltr"
@@ -249,7 +255,12 @@ export default function ClipPageModal({
         onBlur={() => setInvalid(address.trim() !== '' && !url)}
       />
       {ready && (
-        <div className="max-h-56 overflow-y-auto rounded-md border border-dashed border-divider bg-surface-1 px-3 py-2">
+        <div className="relative max-h-56 overflow-y-auto rounded-lg border border-divider bg-surface-1 px-3.5 pt-2.5 pb-3">
+          {host && (
+            <p className="text-meta font-medium text-pn-muted mb-1 truncate" dir="ltr">
+              {host}
+            </p>
+          )}
           <p className="text-body font-semibold text-pn">{ready.clip.title || url}</p>
           <div
             className="prose prose-pn prose-sm max-w-none text-compact [&_a]:pointer-events-none"
@@ -257,57 +268,62 @@ export default function ClipPageModal({
             // renderer, pictures removed; never the downloaded HTML.
             dangerouslySetInnerHTML={{ __html: preview }}
           />
+          <div aria-hidden="true" className="pointer-events-none sticky -bottom-3 -mx-3.5 h-6 bg-gradient-to-t from-surface-1 to-transparent" />
         </div>
       )}
       {ready && short && !saving && (
         <Callout
           tone="warning"
           action={(
-            <Button icon={<NEW_GLYPHS.bookmark aria-hidden="true" />} onClick={() => void keepBookmark()}>
+            <FeedbackButton icon={<NEW_GLYPHS.bookmark aria-hidden="true" />} onClick={() => void keepBookmark()}>
               {t('clipper.keepBookmark')}
-            </Button>
+            </FeedbackButton>
           )}
         >
           {t('clipper.shortText')}
         </Callout>
       )}
-      <Switch
-        label={t('clipper.savePictures')}
-        description={ready && pictures && stored > 0
-          ? t('clipper.picturesLine', { count: stored, size: formatBytes(ready.pictureBytes) })
-          : (
-            <>
-              {t('clipper.savePicturesHint')}{' '}
-              {/* A button inside the switch's label does not flip the switch. */}
-              <button type="button" onClick={onOpenImageSettings} className="text-accent hover:underline">
-                {t('settings:storage.imageSettingsLink')}
-              </button>
-            </>
-          )}
-        icon={<ImageIcon className="text-accent" />}
-        labelClassName={ROW_TITLE}
-        checked={pictures}
-        disabled={ended || saving}
-        onChange={(on) => {
-          setPictures(on);
-          writeClipPictures(on);
-        }}
-      />
-      {busy && <p className={SETTINGS_HELP} role="status">{busy}</p>}
+      <div className="rounded-lg border border-divider bg-surface-1/60 px-3.5 py-2.5">
+        <Switch
+          label={t('clipper.savePictures')}
+          description={ready && pictures && stored > 0
+            ? t('clipper.picturesLine', { count: stored, size: formatBytes(ready.pictureBytes) })
+            : (
+              <>
+                {t('clipper.savePicturesHint')}{' '}
+                {/* A button inside the switch's label does not flip the switch. */}
+                <button type="button" onClick={onOpenImageSettings} className="text-accent hover:underline">
+                  {t('settings:storage.imageSettingsLink')}
+                </button>
+              </>
+            )}
+          icon={<ImageIcon className="text-accent" />}
+          labelClassName={ROW_TITLE}
+          checked={pictures}
+          disabled={ended || saving}
+          onChange={(on) => {
+            setPictures(on);
+            writeClipPictures(on);
+          }}
+        />
+      </div>
+      {busy && <StatusLine busy>{busy}</StatusLine>}
       {existing && (
-        <p className="text-body text-pn-soft" role="status">
+        <Callout tone="info">
           {t('clipper.alreadySaved', { date: formatInstant(existing.createdAt, 'date') })}
-        </p>
+        </Callout>
       )}
       {notice && (
-        <div className="space-y-2" role="alert">
-          <p className="text-body text-warning">{notice.text}</p>
-          {notice.signUp && (
+        <Callout
+          tone="warning"
+          action={notice.signUp ? (
             <a href={withSource(DEMO_APP_URL)} className={`${SETTINGS_BTN_PRIMARY} inline-flex`}>
               {t('security:demoTeaser.createAccount')}
             </a>
-          )}
-        </div>
+          ) : undefined}
+        >
+          {notice.text}
+        </Callout>
       )}
       {/* A clip that ended in a bookmark leaves nothing to do: the X closes. */}
       {!ended && (
@@ -323,20 +339,38 @@ export default function ClipPageModal({
         </ModalFooter>
       )}
       {tip && (
-        <Callout
-          title={t('clipper.extensionTipTitle')}
-          action={(
-            <>
-              <Button icon={<PuzzlePiece aria-hidden="true" />} onClick={extensionTip.onSetUp}>{t('clipper.extensionTipSetUp')}</Button>
-              <Button icon={<X aria-hidden="true" />} onClick={extensionTip.onDismiss}>{t('common:updateToast.dismiss')}</Button>
-            </>
-          )}
-        >
-          {t('clipper.extensionTip')}
-        </Callout>
+        <div className="-mx-6 -mb-6 border-t border-divider bg-surface-1 px-6 py-3.5 space-y-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5 text-small font-semibold text-pn">
+              <PuzzlePiece className="shrink-0 text-accent" aria-hidden="true" />
+              <span>{t('clipper.extensionTipTitle')}</span>
+            </div>
+            <IconButton label={t('common:updateToast.dismiss')} onClick={extensionTip.onDismiss} className="-me-2 -my-1.5">
+              <X aria-hidden="true" />
+            </IconButton>
+          </div>
+          <p className="text-small leading-relaxed text-pn-soft">
+            {t('clipper.extensionTip')}{' '}
+            <button
+              type="button"
+              onClick={extensionTip.onSetUp}
+              className="font-semibold text-accent hover:text-accent-hover hover:underline cursor-pointer"
+            >
+              {t('importExport:auto.setUp')}
+            </button>
+          </p>
+        </div>
       )}
     </Modal>
   );
+}
+
+function clipHost(url: string): string | null {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '') || null;
+  } catch {
+    return null;
+  }
 }
 
 /**

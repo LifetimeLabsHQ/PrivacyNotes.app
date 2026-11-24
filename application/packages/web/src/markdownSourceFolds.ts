@@ -16,8 +16,10 @@ import { formatFenceInfo, parseFenceInfo } from './codeFenceInfo';
 export type SourceFoldSummary = { foldable: number; open: number };
 
 /** A callout's first line: its quote marks, the type, the meta after a bar,
- *  and the fold marker. */
-const CALLOUT_HEAD = /^((?:[ \t]*>[ \t]?)+)\[!([\w-]+)((?:\|[\w-]+)?)\]([+-]?)/;
+ *  and the fold marker. The quote marks read `(?:[ \t]*>)+[ \t]?`, the same
+ *  text as `(?:[ \t]*>[ \t]?)+` with one way to split each tab: the
+ *  two-way split backtracked exponentially on a line of `>` and tab pairs. */
+const CALLOUT_HEAD = /^((?:[ \t]*>)+[ \t]?)\[!([\w-]+)((?:\|[\w-]+)?)\]([+-]?)/;
 /** The quote marks at the start of a line. */
 const QUOTES = /^(?:[ \t]*>[ \t]?)*/;
 /** A fence line once its quote marks are off: indent, the run, the info. */

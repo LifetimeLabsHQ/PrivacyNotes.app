@@ -22,6 +22,7 @@ import { useEffect, useRef } from 'react';
 import { detectPlatform } from './devices';
 import { normalizeUrl } from './linkBody';
 import { perFileLimit } from './attachmentValidation';
+import { isSupportedImage } from './imageProcessing';
 import { proUnlocked } from './demo';
 import type { LaterFile } from './notesView/useFilesUpload';
 
@@ -35,14 +36,30 @@ export interface SharedItem {
   name?: string;
   mime?: string;
   size?: number;
+  /** 'note' when shared photos should become a note with inline images (#870). */
+  target?: 'note';
+  /** Shared batch id grouping multiple photos from one share into one note. */
+  group?: string;
 }
+
+export type ShareApproval =
+  | 'save'
+  | 'discard'
+  | 'later'
+  | { action: 'save'; asNote: { title: string; text: string } };
 
 type ShareFile = { id: string; name: string; mime: string; size: number };
 
 export type ShareStep =
   | { kind: 'bookmark'; id: string; url: string; title: string }
   | { kind: 'note'; id: string; text: string }
+  | { kind: 'photoNote'; title: string; text: string; files: ShareFile[] }
   | { kind: 'files'; files: ShareFile[] };
+
+/** Whether a waiting share item is an image the note image pipeline can embed. */
+export function isSharedImage(item: SharedItem): boolean {
+  return item.kind === 'file' && isSupportedImage({ type: item.mime ?? '', name: item.name ?? '' });
+}
 
 /** A text that is nothing but one valid web address, which people share as text. */
 function loneWebUrl(text: string): string | null {
@@ -51,10 +68,12 @@ function loneWebUrl(text: string): string | null {
 }
 
 /** What to create, in the order the items were shared, with every file in one
- *  upload at the place of the first. Pure, for the tests. */
+ *  upload at the place of the first, and photos marked for a note grouped by
+ *  their share batch. Pure, for the tests. */
 export function planShares(items: SharedItem[]): ShareStep[] {
   const steps: ShareStep[] = [];
   let files: ShareFile[] | null = null;
+  const photoNotes = new Map<string, Extract<ShareStep, { kind: 'photoNote' }>>();
   for (const item of items) {
     if (item.kind === 'url' && item.url) {
       steps.push({ kind: 'bookmark', id: item.id, url: item.url, title: item.title ?? '' });
@@ -63,6 +82,18 @@ export function planShares(items: SharedItem[]): ShareStep[] {
       steps.push(url
         ? { kind: 'bookmark', id: item.id, url, title: '' }
         : { kind: 'note', id: item.id, text: item.text });
+    } else if (item.kind === 'file' && item.target === 'note') {
+      const key = item.group ?? item.id;
+      let step = photoNotes.get(key);
+      if (!step) {
+        step = { kind: 'photoNote', title: item.title ?? '', text: item.text ?? '', files: [] };
+        photoNotes.set(key, step);
+        steps.push(step);
+      } else {
+        if (!step.title && item.title) step.title = item.title;
+        if (!step.text && item.text) step.text = item.text;
+      }
+      step.files.push({ id: item.id, name: item.name ?? 'file', mime: item.mime ?? '', size: item.size ?? 0 });
     } else if (item.kind === 'file') {
       if (!files) {
         files = [];
@@ -79,6 +110,10 @@ export interface ShareHandlers {
   addBookmark: (url: string, title: string) => Promise<string>;
   /** Saves a note and returns its id. */
   addNote: (text: string) => Promise<string>;
+  /** Saves shared photo(s) as an encrypted note with inline images (#870).
+   *  Returns the new note id (or null if none stored) and the files the inbox
+   *  may remove (stored or permanently refused; storage-full files stay). */
+  addPhotoNote: (title: string, text: string, files: LaterFile[]) => Promise<{ noteId: string | null; handled: LaterFile[] }>;
   /** Stores files through the Files upload path, which shows its own progress.
    *  Answers the files the inbox may let go: each one stored on this device,
    *  and each one refused for good, whose reason the upload window names. A
@@ -94,7 +129,7 @@ export interface ShareHandlers {
   /** Asks the person about the waiting items before anything is saved.
    *  Passed on Android only, where any installed app can send a share with
    *  no step by the person. 'later' leaves every item for the next drain. */
-  approve?: (items: SharedItem[]) => Promise<'save' | 'discard' | 'later'>;
+  approve?: (items: SharedItem[]) => Promise<ShareApproval>;
 }
 
 let publishedLimit: number | null = null;
@@ -133,6 +168,7 @@ export async function drainOnce(live: () => boolean, handlers: () => ShareHandle
   const { invoke } = await import('@tauri-apps/api/core');
   const items = await invoke<SharedItem[]>('share_inbox_list');
   if (items.length === 0) return;
+  let plannedItems = items;
   // The choice covers exactly the items listed: one that arrives while the
   // sheet is open waits for the next drain and its own question.
   const approve = handlers().approve;
@@ -152,9 +188,35 @@ export async function drainOnce(live: () => boolean, handlers: () => ShareHandle
       for (const it of items) await invoke('share_inbox_remove', { id: it.id }).catch(() => {});
       return;
     }
+    if (typeof choice === 'object' && choice.action === 'save') {
+      const group = items[0]?.id ?? 'note';
+      plannedItems = items.map((it) =>
+        isSharedImage(it)
+          ? {
+              ...it,
+              target: 'note' as const,
+              group,
+              title: choice.asNote.title || undefined,
+              text: choice.asNote.text || undefined,
+            }
+          : it,
+      );
+    }
   }
+  const makeLater = (list: ShareFile[]): LaterFile[] =>
+    list.map((f) => ({
+      name: f.name,
+      size: f.size,
+      read: async () =>
+        new File([await invoke<ArrayBuffer>('share_inbox_read', { id: f.id })], f.name, { type: f.mime }),
+      // A file the upload keeps for a reason that can pass stays in the
+      // inbox; this lets the person drop it from the upload window.
+      discard: async () => {
+        await invoke('share_inbox_remove', { id: f.id });
+      },
+    }));
   let last: string | null = null;
-  for (const step of planShares(items)) {
+  for (const step of planShares(plannedItems)) {
     // Checked before each save, never between a save and its removal: an item
     // saved and left in the inbox would be saved again by the next drain.
     if (!live()) return;
@@ -163,18 +225,14 @@ export async function drainOnce(live: () => boolean, handlers: () => ShareHandle
       if (step.kind === 'bookmark') last = await h.addBookmark(step.url, step.title);
       else if (step.kind === 'note') last = await h.addNote(step.text);
       let ids: string[];
-      if (step.kind === 'files') {
-        const later = step.files.map((f) => ({
-          name: f.name,
-          size: f.size,
-          read: async () =>
-            new File([await invoke<ArrayBuffer>('share_inbox_read', { id: f.id })], f.name, { type: f.mime }),
-          // A file the upload keeps for a reason that can pass stays in the
-          // inbox; this lets the person drop it from the upload window.
-          discard: async () => {
-            await invoke('share_inbox_remove', { id: f.id });
-          },
-        }));
+      if (step.kind === 'photoNote') {
+        const later = makeLater(step.files);
+        const res = await h.addPhotoNote(step.title, step.text, later);
+        if (res.noteId) last = res.noteId;
+        const done = new Set(res.handled);
+        ids = step.files.filter((_, i) => done.has(later[i]!)).map((f) => f.id);
+      } else if (step.kind === 'files') {
+        const later = makeLater(step.files);
         const done = new Set(await h.addFiles(later));
         ids = step.files.filter((_, i) => done.has(later[i]!)).map((f) => f.id);
       } else {

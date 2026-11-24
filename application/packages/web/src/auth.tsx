@@ -163,13 +163,25 @@ import {
   hasPendingPhraseChange,
   removePendingPhraseChange,
 } from './authStorage';
-import { dropProThemes, resetAppearance } from './theme';
+import { dropProThemes, resetAppearance, setFavicons } from './theme';
 import { logAuthEvent } from './authDiag';
 import { checkEarlySupporter, useProStatus } from './authProStatus';
 import { useCustody } from './authCustody';
 import { useOAuthFlows } from './authOAuth';
 import { isRefusedPhrase } from './refusedPhrases';
 import { accountOAuthFetch, supabaseAuthStorageKey } from './accountOAuth';
+import { setSyncPaused } from './syncPause';
+import {
+  clearLocalOnlyFlagsSync,
+  clearNeverSynced,
+  commitLocalOnlyGraduation,
+  isLocalOnly,
+  isLocalOnlyFor,
+  isNeverSyncedFor,
+  markLocalOnlyVault,
+  setLocalOnlyFlags,
+  withBackendNetworkAllowed,
+} from './localOnly';
 
 // Only an account that changed its phrase needs the key ring, so it loads
 // on demand and stays off the boot path.
@@ -260,7 +272,7 @@ purgeOlderTabCopies([PHRASE_STORAGE_KEY, PHRASE_CHANGE_KEY, OAUTH_FLAG_KEY, SHOW
 void wipeUntrustedLeftover(AUTH_STORAGE_KEY);
 watchRestoredPage();
 // The session is stored sealed while the app lock is armed.
-// Spec: docs/internal/plans/session-under-app-lock.md
+// Spec: docs/internal/specs/session-under-app-lock.md
 setSessionStorageName(AUTH_STORAGE_KEY);
 const supabase =
   (import.meta.env.DEV && hmrGlobal.__pnSupabase) ||
@@ -424,6 +436,9 @@ export type AuthState =
       isEarlySupporter: boolean;
       /** True if this user's phrase is stored server-side (custodial). */
       isCustodial: boolean;
+      /** True when this vault was created locally without registering on our
+       *  backend. Spec: docs/internal/specs/local-only-862.md */
+      localOnly: boolean;
     };
 
 export type OAuthProvider = 'google' | 'apple' | 'github';
@@ -538,6 +553,24 @@ type AuthContextValue = {
    * device trade as `tryFastBoot`, which does the work.
    */
   unlockLocally: (phrase: string) => Promise<boolean>;
+  /**
+   * Create an encrypted vault locally on an installed app with zero backend
+   * traffic (GitHub #862). Sets `localOnly` + `neverSynced`, pauses sync,
+   * defaults website icons off, persists the wrapped phrase and seeds the
+   * welcome note offline. Spec: docs/internal/specs/local-only-862.md (5.1)
+   */
+  createLocalVault: (
+    phrase: string,
+  ) => Promise<{ ok: true } | { ok: false; error: string }>;
+  /**
+   * Register an existing local-only vault on our backend when the user turns
+   * sync on or upgrades to Pro. When `enableSync` is false (Pro upgrade with
+   * Sync kept off), clears `localOnly` while keeping `neverSynced` and
+   * `syncPaused` true. Spec: docs/internal/specs/local-only-862.md (7)
+   */
+  graduateLocalVault: (opts: {
+    enableSync: boolean;
+  }) => Promise<{ ok: true } | { ok: false; error: string }>;
   signInWithOAuth: (
     provider: OAuthProvider
   ) => Promise<{ ok: true; awaitPastedCode?: boolean } | { ok: false; error: string }>;
@@ -851,6 +884,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
      *  scanned, a provider sign-in they started. Only then does a device the
      *  owner removed come back (register-device `reactivate`). */
     byHand?: boolean,
+    /** Internal graduation options for moving a local-only vault online. */
+    localOnlyOpts?: { skipPasswordRemint?: boolean; commitGraduation?: { enableSync: boolean } },
   ) {
     // Returns false when the StrictMode/concurrency mutex swallowed the
     // call, so a caller that goes on to persist something derived from
@@ -867,7 +902,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (authInFlight.current) return false;
     authInFlight.current = true;
     try {
-      await _authenticateWithPhrase(phrase, method, custodial, oauthSession, freshVault, captchaToken, startedAt, byHand);
+      await _authenticateWithPhrase(phrase, method, custodial, oauthSession, freshVault, captchaToken, startedAt, byHand, localOnlyOpts);
       // Any successful full authentication proves the session is live
       // again - clear the boot-revalidation flag so the modal never
       // outlives the problem. #118
@@ -904,6 +939,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     startedAt?: SignInStamp,
     /** See the wrapper above. */
     byHand?: boolean,
+    /** See the wrapper above. */
+    localOnlyOpts?: { skipPasswordRemint?: boolean; commitGraduation?: { enableSync: boolean } },
   ) {
     // A previous sign-out (or stale-tab bailout) may have suspended
     // sync; a new authentication always re-enables it, so a failed
@@ -1390,7 +1427,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // the result. Reused by the stale-token retry in the link step below.
     // Spec: docs/internal/design-decisions.md (phrase-derived auth credential)
     const remintSession = async (): Promise<{ authUid: string; accessToken: string; user: typeof linkedUser }> => {
-      if (!freshVault) {
+      if (!freshVault && !localOnlyOpts?.skipPasswordRemint) {
         // Skipped when the caller KNOWS the vault is brand new: the
         // credential cannot exist yet, so the grant would be a guaranteed
         // 400.
@@ -2037,6 +2074,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       custodial ?? readCachedAccountFlags(pubkey)?.isCustodial ?? false;
 
     await goLive();
+    // Atomically clear localOnly (and neverSynced + syncPaused when turning
+    // sync on) before publishing the registered AuthState, while still inside
+    // withBackendNetworkAllowed so React effects firing on the state change
+    // see the settled flags. Spec: docs/internal/specs/local-only-862.md (7)
+    if (localOnlyOpts?.commitGraduation) {
+      await commitLocalOnlyGraduation(localOnlyOpts.commitGraduation.enableSync);
+      if (localOnlyOpts.commitGraduation.enableSync) setSyncPaused(false);
+    } else if (isLocalOnly()) {
+      await commitLocalOnlyGraduation(true);
+    }
     // Refresh the fast-boot cache so the next reload can render
     // immediately with up-to-date flags.
     writeCachedAccountFlags({
@@ -2058,6 +2105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isPro,
       isEarlySupporter: earlySup,
       isCustodial: resolvedCustodial,
+      localOnly: false,
     });
   }
 
@@ -2150,8 +2198,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const flags = cached ?? { pubkey, isPro: false, isEarlySupporter: false };
 
+      const localOnly = await isLocalOnlyFor(pubkey);
+      const neverSynced = localOnly || (await isNeverSyncedFor(pubkey));
+
       const localCount = await db.notes.count();
-      if (localCount === 0) {
+      if (localCount === 0 && !localOnly) {
         // The one exit that genuinely has nothing to show. The boot
         // path's demote reads this as the only reason fast boot ever
         // declines, so say it in the log rather than leaving the next
@@ -2166,6 +2217,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       adoptSessionSeal(phrase);
       releaseChangeHold();
+      // Repair localStorage flags from Dexie mirrors before setAuth so a
+      // localStorage eviction cannot open the transport gate or unpause sync.
+      if (localOnly) {
+        try { localStorage.setItem(PUBKEY_OWNER_KEY, pubkey); } catch { /* ignore */ }
+        setLocalOnlyFlags({ localOnly: true, neverSynced: true });
+        setSyncPaused(true);
+        try {
+          if (localStorage.getItem('privacynotes.favicons') === null) setFavicons(false);
+        } catch { /* ignore */ }
+      } else if (neverSynced) {
+        setLocalOnlyFlags({ neverSynced: true });
+        setSyncPaused(true);
+      }
       setAuth({
         status: 'authenticated',
         method,
@@ -2182,6 +2246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // field existed) reads as self-custody, and reconcileCustody
         // corrects it from the JWT claim a moment later.
         isCustodial: flags.isCustodial === true,
+        localOnly,
       });
       return true;
     } catch (err) {
@@ -2370,6 +2435,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               isPro: retry.isPro,
               isEarlySupporter: earlySup2,
               isCustodial: custodial2,
+              localOnly: false,
             }
           : prev,
       );
@@ -2493,6 +2559,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // refreshes the session, registers the device and updates Pro
         // flags (or transitions to device_limit_reached) when it lands.
         if (fastBooted) {
+          // Local-only vaults stay 100% offline: never revalidate against the
+          // server on boot. Spec: docs/internal/specs/local-only-862.md (5.2)
+          if (isLocalOnly()) return;
           authenticateWithPhrase(phrase, method, undefined, undefined, false, undefined, bootStamp, false).catch((err) => {
             // The account replaced this phrase: the vault fast boot opened
             // gives way to the screen that asks for the new one.
@@ -2589,6 +2658,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     captchaToken?: string,
     byHand = true,
   ) {
+    return withBackendNetworkAllowed(async () => {
     // The demo authenticates itself from a fixed phrase and holds no server
     // session, so every server call it could make is guarded at its own site.
     // This one is guarded here instead, because the demo can reach it: `?demo=1`
@@ -2605,7 +2675,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // while the key derivation and the session lookup below are still
     // running, and the authentication they lead into must not go live.
     const startedAt = signInStamp();
-    const trimmed = phrase.trim().toLowerCase();
+    const trimmed = phrase.trim().toLowerCase().replace(/\s+/g, ' ');
     if (!isValidPhrase(trimmed)) {
       return {
         ok: false as const,
@@ -2702,7 +2772,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // phrase does not open: the phrase holds no credential of that login,
       // so a mint would make an anonymous user. It takes the provider path
       // ("OAuth session lost", sign in with the provider again) instead.
-      // Spec: docs/internal/plans/session-under-app-lock.md (section 2.4)
+      // Spec: docs/internal/specs/session-under-app-lock.md (section 2.4)
       const sealedProviderLost = !oauthSession && trustAwareStorage.getItem(OAUTH_FLAG_KEY) === '1'
         && trustAwareStorage.getItem(AUTH_STORAGE_KEY) === null
         && (() => { try { return localStorage.getItem(sealedName(AUTH_STORAGE_KEY)) !== null; } catch { return false; } })();
@@ -2772,6 +2842,210 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         captchaRequired: err instanceof CaptchaRequiredError,
       };
     }
+    });
+  }
+
+  async function createLocalVault(
+    phrase: string,
+  ): Promise<{ ok: true } | { ok: false; error: string }> {
+    if (isDemoMode()) {
+      return { ok: false, error: 'Sign-in is disabled in the demo.' };
+    }
+    const trimmed = phrase.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (!isValidPhrase(trimmed)) {
+      return {
+        ok: false,
+        error: 'Invalid phrase. Check spelling and word order.',
+      };
+    }
+    if (await isRefusedPhrase(trimmed)) {
+      return { ok: false, error: i18n.t('auth:signIn.publicPhrase') };
+    }
+    if (!(await waitForLocalDataLock(LOCAL_DATA_LOCK_WAIT_MS))) {
+      logAuthEvent('auth:local-data-lock-waiting');
+      return { ok: false, error: i18n.t('auth:signIn.failedUnexpectedly') };
+    }
+    if (authInFlight.current) {
+      return { ok: false, error: 'Sign-in is already in progress. Please try again.' };
+    }
+    authInFlight.current = true;
+    try {
+      resumeSync();
+      dismissMfaPrompt();
+      userAuthGen.current++;
+      void holdLocalDataLock();
+      const since = signInStamp();
+      const seed = phraseToSeed(trimmed);
+      const { privateKey: signingPrivateKey, publicKey } = await deriveSigningKey(seed);
+      const encryptionKey = deriveEncryptionKey(seed);
+      const fpPepper = deriveFpPepper(seed);
+      const signingPubkey = bytesToHex(publicKey);
+      const pubkey = signingPubkey;
+      const localKey = deriveLocalDataKey(seed);
+      authenticatingRef.current = { stamp: since, pubkey };
+      registerLocalDataKey(localKey);
+
+      let priorOwner: string | null = null;
+      let ownerReadFailed = false;
+      try { priorOwner = localStorage.getItem(PUBKEY_OWNER_KEY); } catch { ownerReadFailed = true; }
+      const ownerUnknown = ownerReadFailed || priorOwner === null;
+      let wipePrior = priorOwner !== null && priorOwner !== pubkey;
+      if (!wipePrior && ownerUnknown) {
+        const mirror = await readOwnerMirror();
+        if (mirror !== null && mirror !== pubkey) {
+          wipePrior = true;
+        } else if (mirror === null) {
+          wipePrior = await hasLocalAccountState();
+        }
+      }
+      if (wipePrior) {
+        suspendSync();
+        clearRegistrationMarker();
+        clearSupabaseAuthKeys();
+        await cancelPhoneReminders();
+        await clearLocalDatabase();
+        clearLocalSettings();
+        clearCachedAccountFlags();
+        clearReplacedAccount();
+        clearLocalOnlyFlagsSync();
+        clearPanelCache();
+        clearPinCache();
+        removeBiometricCredential();
+        removePinWrappedPhrase();
+        clearAccountScopedUiState();
+        clearMassDeleteState();
+        resetAppearance();
+        void import('./autoBackup/runner').then((m) => m.forgetAutoBackup()).catch(() => {});
+        void import('./markdownFolder/folderMemory').then((m) => m.forgetFolder()).catch(() => {});
+        clearPriorAccountChoices();
+        dropMeaningIndex();
+        try { localStorage.removeItem('privacynotes.lastSync'); } catch { /* ignore */ }
+        try { sessionStorage.removeItem('privacynotes.lastSync'); } catch { /* ignore */ }
+        resumeSync();
+      } else {
+        clearSupabaseAuthKeys();
+      }
+
+      // Establish live sign-in and session seal BEFORE persistStoredPhrase
+      // (persistStoredPhrase refuses writes whose phrase is not live).
+      holdSessionSeal(trimmed);
+      if (!adoptLiveSignIn(trimmed, since)) {
+        logAuthEvent('auth:signin-overtaken');
+        return { ok: false, error: i18n.t('auth:signIn.failedUnexpectedly') };
+      }
+      adoptSessionSeal(trimmed);
+      releaseChangeHold();
+      setTrustedDevice(true);
+
+      try { localStorage.setItem(PUBKEY_OWNER_KEY, pubkey); } catch { /* ignore */ }
+      await writeOwnerMirror(pubkey);
+      await markLocalOnlyVault(pubkey);
+      setSyncPaused(true);
+      // Default website icons off on new local-only vaults (AFTER any
+      // appearance reset in wipePrior above, which resets them to true).
+      // Spec: docs/internal/specs/local-only-862.md (D2, section 5.1)
+      setFavicons(false);
+      trustAwareStorage.removeItem(OAUTH_FLAG_KEY);
+
+      if (appLockArmed()) {
+        logAuthEvent('auth:phrase-persist-skipped-applock');
+      } else {
+        logAuthEvent('auth:phrase-persisted', { by: 'local-only-create' });
+        await persistStoredPhrase(trimmed);
+      }
+
+      writeCachedAccountFlags({
+        pubkey,
+        isPro: false,
+        isEarlySupporter: false,
+        isCustodial: false,
+      });
+
+      try {
+        await seedOnboardingNotes(pubkey, since);
+        saveLocalSettings({ ...loadLocalSettings(), welcomeNoteSeeded: true }, since);
+      } catch (err) {
+        console.warn('[auth] local-only seed failed:', err);
+      }
+
+      setRevalidationExpired(false);
+      setAuth({
+        status: 'authenticated',
+        method: 'phrase',
+        phrase: trimmed,
+        pubkey,
+        signingPubkey,
+        encryptionKey,
+        signingPrivateKey,
+        fpPepper,
+        deviceId: getDeviceId(pubkey),
+        isPro: false,
+        isEarlySupporter: false,
+        isCustodial: false,
+        localOnly: true,
+      });
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message || i18n.t('auth:signIn.failedUnexpectedly') };
+    } finally {
+      authInFlight.current = false;
+      authenticatingRef.current = null;
+    }
+  }
+
+  async function graduateLocalVault(opts: {
+    enableSync: boolean;
+  }): Promise<{ ok: true } | { ok: false; error: string }> {
+    const current = authStateRef.current;
+    if (current.status !== 'authenticated') {
+      return { ok: false, error: i18n.t('auth:signIn.failedUnexpectedly') };
+    }
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      return { ok: false, error: i18n.t('settings:sync.localOnlyOfflineError') };
+    }
+    if (opts.enableSync) {
+      // Flush any recently deleted blobs still inside the 24h local grace
+      // window BEFORE unpausing sync so deleted files never upload to R2.
+      try {
+        const { sweepLocalOnlyBlobGC } = await import('./imageGC');
+        await sweepLocalOnlyBlobGC(Date.now(), 0);
+      } catch {
+        /* best-effort pre-graduation sweep */
+      }
+    }
+    if (!current.localOnly) {
+      if (opts.enableSync) {
+        await clearNeverSynced();
+        setSyncPaused(false);
+      }
+      return { ok: true };
+    }
+    return withBackendNetworkAllowed(async () => {
+      try {
+        const ran = await authenticateWithPhrase(
+          current.phrase,
+          current.method,
+          false,
+          undefined,
+          false,
+          undefined,
+          undefined,
+          true,
+          { skipPasswordRemint: true, commitGraduation: { enableSync: opts.enableSync } },
+        );
+        if (!ran || isLocalOnly()) {
+          clearSupabaseAuthKeys();
+          return { ok: false as const, error: i18n.t('auth:signIn.failedUnexpectedly') };
+        }
+        return { ok: true as const };
+      } catch (err) {
+        clearSupabaseAuthKeys();
+        return {
+          ok: false as const,
+          error: (err as Error).message || i18n.t('auth:signIn.failedUnexpectedly'),
+        };
+      }
+    });
   }
 
   // ── A phrase the account replaced (phrase change, section 7) ──────
@@ -3048,7 +3322,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // With this account's notes here, only while the storage is still its.
     const holds = holdsReplacedAccount();
     if (auth.pubkey !== null && !holds) return { ok: false as const, reason: 'failed' as const };
-    const trimmed = phrase.trim().toLowerCase();
+    const trimmed = phrase.trim().toLowerCase().replace(/\s+/g, ' ');
     if (!isValidPhrase(trimmed)) return { ok: false as const, reason: 'invalid' as const };
     if (await isRefusedPhrase(trimmed)) return { ok: false as const, reason: 'invalid' as const, error: i18n.t('auth:signIn.publicPhrase') };
     // A fresh answer: the phrase must be the account's current one, and the
@@ -3278,6 +3552,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     choice: 'custodial' | 'self-custody',
     words: 12 | 24 = 12,
   ): Promise<{ ok: true; phrase: string } | { ok: false; error: string }> {
+    return withBackendNetworkAllowed(async () => {
     if (auth.status !== 'oauth_custody_choice') {
       return { ok: false, error: 'Not in custody choice state.' };
     }
@@ -3382,6 +3657,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       return { ok: false, error: (err as Error).message };
     }
+    });
   }
 
   async function signOut(opts?: { keepUnsyncedNotes?: boolean }) {
@@ -3545,8 +3821,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Also runs from the device-cap state - a blocked device can
     // carry dirty rows from an earlier authenticated life on this
     // browser, and link-pubkey has already stamped its session.
+    const localOnlySession = (auth.status === 'authenticated' && auth.localOnly) || isLocalOnly();
     let flushSettled = true;
-    if (auth.status === 'authenticated' || auth.status === 'device_limit_reached') {
+    if (!localOnlySession && (auth.status === 'authenticated' || auth.status === 'device_limit_reached')) {
       // Time-boxed so a cold or slow server can't stall the sign-out UI
       // forever. 2s keeps a clean sign-out snappy; with unsynced rows at
       // stake the budget widens to 10s - a batch of dirty notes pushes
@@ -3682,6 +3959,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearRegistrationMarker();
       clearEverRegistered();
       clearReplacedAccount();
+      clearLocalOnlyFlagsSync();
       // Drop the settings-panel figures (device list, quota, storage
       // subs) alongside the other account-scoped caches. Keyed by pubkey
       // so a stale entry could not be read by another account anyway,
@@ -3742,6 +4020,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // browser keeps it (beta.privacynotes.app #211). The mark stays until
       // the request settles, and its late end sweeps again: the library can
       // write a refreshed session back before it gives up.
+      if (localOnlySession) {
+        // Local-only vaults hold no server session: skip the remote /logout
+        // call and 4s deadline wait so sign-out stays instant and offline.
+        clearSupabaseAuthKeys();
+        announceSignOut();
+        trustAwareStorage.removeItem(PHRASE_STORAGE_KEY);
+        removeBiometricCredential();
+        removePinWrappedPhrase();
+        removePendingPhraseChange();
+        clearLocalSettings(keepSettings);
+        endSignOutMark(signOutMark);
+        dropSessionSeal();
+        setAuth({ status: 'onboarding' });
+        return;
+      }
       const remote = supabase.auth.signOut({ scope: 'local' });
       let remoteDeadline: ReturnType<typeof setTimeout> | undefined;
       const remoteAnswer = await Promise.race([
@@ -3828,6 +4121,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supabase,
         signInWithPhrase,
         unlockLocally,
+        createLocalVault,
+        graduateLocalVault,
         revalidationExpired,
         signInWithOAuth,
         completeDesktopOAuth,

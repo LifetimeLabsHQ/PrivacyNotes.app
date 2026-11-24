@@ -439,6 +439,58 @@
         }
       ]
     },
+    "notion": {
+      "app": "Notion",
+      "title": "Exportera din Notion-arbetsyta",
+      "metaTitle": "Så exporterar du din Notion-arbetsyta - PrivacyNotes",
+      "lead": "Exportera din Notion-arbetsyta som en zipfil i formatet Markdown & CSV, så tar PrivacyNotes bort Notions ID:n på 32 tecken, bygger upp undersidor som mappar och gör om sidlänkar till anteckningslänkar.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/notion-settings.webp",
+            "alt": "Notions inställningar, sidan General, med avsnittet Export och knappen Export bredvid Workspace content.",
+            "width": 1576,
+            "height": 754
+          },
+          "h": "Exportera hela din arbetsyta",
+          "steps": [
+            "Öppna Notion på webben eller i skrivbordsappen och öppna Settings från arbetsytans meny.",
+            "Under Workspace öppnar du General och bläddrar ner till Export.",
+            "Klicka på Export bredvid Workspace content.",
+            "Vill du i stället exportera en enda sida och dess undersidor öppnar du sidans trepunktsmeny och väljer More > Export."
+          ],
+          "p": [
+            "Notion bygger exporter av stora arbetsytor i bakgrunden och mejlar dig en nedladdningslänk. Släpp in den .zip-filen i PrivacyNotes som den är, utan att packa upp den - nästlade del-zipfiler inuti arkivet hanteras automatiskt."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/notion-export.webp",
+            "alt": "Notions dialogruta Export med Markdown & CSV valt, Page content inställt på Everything och både Include private pages och Create folders for subpages påslagna.",
+            "width": 1576,
+            "height": 600
+          },
+          "h": "Välj Markdown & CSV, med mappar på",
+          "steps": [
+            "Ställ in Export format på \"Markdown & CSV\".",
+            "Ställ in Page content på \"Everything\" så att dina bilder, PDF-filer och bifogade filer följer med.",
+            "Slå på \"Include private pages\" (eller \"Include subpages\" vid export av en enskild sida) och \"Create folders for subpages\".",
+            "Klicka på Export och spara .zip-filen."
+          ],
+          "p": [
+            "HTML- och PDF-exporter innehåller inga Markdown-filer och kan inte läsas av Notion-importverktyget. Välj \"Markdown & CSV\" så att din struktur, dina länkar och din formatering kommer med rent och helt."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "Notion lägger till ett ID på 32 tecken i varje exporterat filnamn och varje intern länk. PrivacyNotes tar bort de ID:na från varje titel och mappnamn, tar bort den översta mappen \"Private & Shared\" och bygger upp nästlade undersidor som mappar.",
+            "Rubriker, listor, nästlade checklistor, tabeller, kodblock med sitt språk, matematik, understrykning och citat kommer med som de var. Notions informationsrutor görs om till informationsrutor i PrivacyNotes, [länkar och omnämnanden mellan exporterade sidor blir anteckningslänkar](/sv/help/note-links), och uppladdade bilder, PDF-filer och filer importeras till din lagring.",
+            "Sidor för databasrader importeras som anteckningar i en mapp uppkallad efter databasen, och en eventuell Tags-egenskap läggs till som taggar. Databasernas CSV-tabellfiler hoppas över och räknas i sammanfattningen. Notions egen Markdown-export utelämnar textfärger, markeringar och sidor i papperskorgen."
+          ]
+        }
+      ]
+    },
     "notesnook": {
       "app": "Notesnook",
       "title": "Exportera dina Notesnook-anteckningar",
@@ -1281,6 +1333,53 @@
         }
       ]
     },
+    "diaro": {
+      "app": "Diaro",
+      "title": "Exportera din Diaro-dagbok",
+      "metaTitle": "Så exporterar du din Diaro-säkerhetskopia - PrivacyNotes",
+      "lead": "Diaro exporterar hela din dagbok som en .zip-säkerhetskopia från sin mobilapp, och PrivacyNotes importerar varje inlägg till Dagböcker med sina mappar, taggar, humör, platser, väder och foton.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-menu.webp",
+            "alt": "Diaros inställningsskärm Data med Backup & restore och lagringsmappen för säkerhetskopior",
+            "width": 1576,
+            "height": 732
+          },
+          "h": "Skapa en okrypterad säkerhetskopia i Diaro-appen",
+          "steps": [
+            "Öppna Diaro på Android eller iOS, öppna menyn till vänster och tryck på kugghjulet för Settings.",
+            "Välj Data, bläddra ner till Backup & restore och tryck på Backup & restore.",
+            "Tryck på +-knappen uppe till höger.",
+            "Lämna både \"Encrypt entries in backup file\" och \"Do not backup attachments\" avmarkerade och tryck sedan på Backup.",
+            "Kopiera filen Diaro_YYYYMMDD.zip från säkerhetskopiemappen som visas under Storage directories (eller från Dropbox om du synkade den dit) och släpp in den i PrivacyNotes."
+          ],
+          "p": [
+            "Att skapa en säkerhetskopia i mobilappen är gratis och kräver ingen Pro-prenumeration. Diaro Online exporterar bara PDF, DOCX och TXT i betalda planer och har ingen knapp för att ladda ner säkerhetskopior."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-dialog.webp",
+            "alt": "Diaros dialogruta Backup med både Encrypt entries in backup file och Do not backup attachments avmarkerade",
+            "width": 1576,
+            "height": 817
+          },
+          "h": "Välj den okrypterade .zip-säkerhetskopian, inte PDF, TXT, CSV eller krypterade säkerhetskopior",
+          "p": [
+            "En okrypterad säkerhetskopia skriver DiaroBackup.xml och din media/photo-mapp i en enda .zip-fil. Om du kryssar i \"Encrypt entries in backup file\" skriver Diaro i stället DiaroBackup.denc, som PrivacyNotes inte kan låsa upp och avvisar med en påminnelse om att stänga av kryptering.",
+            "En fristående DiaroBackup.xml-fil importerar all text och metadata på egen hand, utan foton, och sammanfattningen räknar varje saknad bild. Avmarkera \"Do not backup attachments\" och släpp in hela .zip-filen för att få med dina foton."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "[Varje inlägg hamnar i Dagböcker](/sv/help/journal) på den kalenderdag som följer av inläggets sparade tidszon. Inlägg utan titel får den datumtitel som ett nytt inlägg för den dagen får, och nakna webblänkar blir klickbara.",
+            "Diaro-mappar blir mappar, taggar förblir taggar och humör fyller i [humörmätvärdet](/sv/help/choose-trackers) utifrån sin Diaro-vikt (egna humörnamn visas också på översta raden). Platser med koordinater fyller inläggets platsbricka, platser med bara namn och väder hamnar på en rad överst, och foton importeras i sin ursprungliga ordning."
+          ]
+        }
+      ]
+    },
     "diarium": {
       "app": "Diarium",
       "title": "Exportera din Diarium-dagbok",
@@ -1420,6 +1519,69 @@
             "Anteckningsboken blir en mapp, med en mapp inuti för varje avsnittsgrupp och avsnitt. Varje sida blir en anteckning i sitt avsnitts mapp med det datum då OneNote skapade den, och en undersida följer sin sida i samma mapp.",
             "Rubriker, fetstil, kursiv, understrykning, färger, överstrykningar, punkt- och numrerade listor, tabeller och kodstycken kommer med som de var. En att göra-etikett blir en punkt i en checklista, ikryssad när den var klar, och andra anteckningsetiketter som Important eller Question blir taggar på anteckningen. [Länkar mellan sidor blir anteckningslänkar](/sv/help/note-links), och bilder och bifogade filer importeras till din lagring.",
             "En avsnittsfil (.one) för sig, eller en zippad anteckningsboksmapp, fungerar också. Teckningar gjorda med penna, ljudinspelningar och ekvationer har ingen motsvarighet här, så importförhandsgranskningen räknar dem, och sidor i OneNotes papperskorg ingår inte i paketet."
+          ]
+        }
+      ]
+    },
+    "day-one": {
+      "app": "Day One",
+      "title": "Exportera din Day One-dagbok",
+      "metaTitle": "Så exporterar du din Day One-dagbok - PrivacyNotes",
+      "lead": "Day One exporterar din dagbok som en JSON-.zip med media, och PrivacyNotes tar in varje inlägg i Dagböcker med sin dag, sina taggar, sin plats, sitt väder och sina foton.",
+      "sections": [
+        {
+          "h": "Exportera som JSON med media",
+          "steps": [
+            "Öppna Day One på webben och välj den dagbok du vill flytta.",
+            "Välj Edit Journal, öppna Journal Settings och välj Export Journal.",
+            "Välj Export journal JSON file och välj sedan Include media. Day One sparar en .zip med dina inlägg och bilagor.",
+            "Släpp in den .zip-filen som den är."
+          ],
+          "p": [
+            "På Mac eller iOS väljer du i stället File > Export > JSON. Du kan exportera en dagbok i taget eller alla dagböcker i en enda .zip."
+          ]
+        },
+        {
+          "h": "Välj JSON, inte PDF eller oformaterad text",
+          "p": [
+            "JSON är formatet som behåller datum, tidszoner, taggar, stjärnor, platser, väder, länkar mellan inlägg och media. En fristående .json-fil importerar texten på egen hand, utan foton eller filer, och sammanfattningen räknar de bilagor den inte kunde hitta."
+          ]
+        },
+        {
+          "h": "Vad som följer med",
+          "p": [
+            "[Varje inlägg hamnar i Dagböcker](/sv/help/journal) på kalenderdagen i inläggets egen tidszon. En inledande rubrik blir titeln, och ett inlägg utan rubrik får sitt datum som titel. Stjärnmärkta och fästa inlägg förblir fästa, och taggar förblir taggar.",
+            "Din plats fyller inläggets platsbricka, och väder, aktivitet och musik hamnar på en rad överst. Foton importeras som bilder, ljud, video och PDF-filer som bilagor, och länkar mellan inlägg blir [anteckningslänkar](/sv/help/note-links). När en enda .zip innehåller flera dagböcker blir varje dagbok en mapp."
+          ]
+        }
+      ]
+    },
+    "todoist": {
+      "app": "Todoist",
+      "title": "Exportera dina Todoist-uppgifter",
+      "metaTitle": "Så exporterar du dina Todoist-uppgifter - PrivacyNotes",
+      "lead": "Exportera Todoist-projekt som en säkerhetskopia (.zip) eller som projektfiler i .csv-format, så gör PrivacyNotes om varje projekt till en uppgiftslista med avsnitt, deluppgifter och kommentarer.",
+      "sections": [
+        {
+          "h": "Ladda ner en säkerhetskopia eller exportera ett projekt som CSV",
+          "steps": [
+            "I Todoist med en Pro- eller Business-plan öppnar du Settings > Backups och laddar ner din senaste säkerhetskopia som .zip. Den innehåller en .csv-fil för varje aktivt projekt.",
+            "I gratisplanen öppnar du ett projekt, väljer trepunktsmenyn > Import & export > Export as CSV och sparar .csv-filen.",
+            "Släpp in .zip- eller .csv-filen i PrivacyNotes."
+          ]
+        },
+        {
+          "h": "Stäng av relativa datum när du exporterar ett enskilt projekt",
+          "p": [
+            "I menyn Export as CSV stänger du av \"Use relative dates\" så att förfallodatum sparas som kalenderdatum som 2026-12-15 i stället för \"in 21 days\". Båda importeras som text på uppgiftsraden, och kalenderdatum förblir rätt även längre fram.",
+            "Todoist utelämnar slutförda uppgifter och arkiverade projekt ur CSV-exporter och säkerhetskopior, så bara aktiva uppgifter finns i filen."
+          ]
+        },
+        {
+          "h": "Var sakerna hamnar",
+          "p": [
+            "Varje projekt blir en uppgiftslista i [Uppgifter](/sv/help/tasks) uppkallad efter projektet, med avsnitt som rubriker i både list- och tavelprojekt och deluppgifter nästlade på samma djup. Prioriteterna P1 till P3, förfallodatum, varaktigheter, deadlines och @etiketter i texten stannar kvar på varje rad, och varje etikett läggs till som en tagg på listan.",
+            "Uppgiftsbeskrivningar, uppgiftskommentarer och projektkommentarer följer med, och rubrikuppgifter som inte går att bocka av förblir punkter i fetstil i stället för kryssrutor. Påminnelser på enskilda uppgiftsrader följer inte med och räknas i sammanfattningen."
           ]
         }
       ]

@@ -1,6 +1,6 @@
 [package]
 name = "privacynotes"
-version = "0.819.1"
+version = "0.831.2"
 description = "PrivacyNotes - private notes, encrypted on your device"
 authors = ["Lifetime Labs LLC <hi@lifetimelabs.dev>"]
 homepage = "https://privacynotes.app"
@@ -254,8 +254,10 @@ swift-rs = { path = "patches/swift-rs" }
 # the OS page for this app's notifications on Android and iOS. On Android it
 # keeps a record of each reminder on screen and shows it again, without sound,
 # after an app update, which removes an app's notifications (beta issue #808).
-# A release that carries both fixes still needs the command and the Android
-# change before the patch can go.
+# It also maps `sound: "default"` to the OS default notification sound on iOS
+# and desktop, and enables vibration on Android's default channel (issue #892).
+# A release that carries both fixes still needs the command, sound mapping,
+# and Android changes before the patch can go.
 tauri-plugin-notification = { path = "patches/tauri-plugin-notification" }
 # patches/tauri-plugin-single-instance is 2.5.2 with the macOS socket moved
 # from the shared `/tmp` into the app's own data folder, where another account

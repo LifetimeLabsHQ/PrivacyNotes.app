@@ -284,6 +284,8 @@
     "showNoteLinks": "他の項目内のリンクを表示",
     "showNoteTasks": "他の項目内のタスクを表示",
     "showGroups": "グループを表示",
+    "groupBy": "グループ化",
+    "groupLetter": "頭文字",
     "groupsByDate": "日付でグループ化",
     "groupsByLetter": "頭文字でグループ化",
     "groupsNoneForSize": "サイズ順では使用できません",
@@ -306,6 +308,7 @@
     "nextWeek": "次の週",
     "pickMonth": "{{month}}、年と月を選択",
     "pickMonthTip": "年と月を選択",
+    "showToday": "今日を表示",
     "showWholeMonth": "月全体を表示",
     "showOneWeek": "1週間を表示"
   },
@@ -614,7 +617,10 @@
   "shareInbox": {
     "saved": "PrivacyNotesに保存しました",
     "failed": "PrivacyNotesに保存できませんでした",
-    "tooLarge": "大きすぎます。上限は1ファイルあたり{{limit}} MBです。"
+    "tooLarge": "大きすぎます。上限は1ファイルあたり{{limit}} MBです。",
+    "titlePlaceholder": "タイトル（任意）",
+    "notePlaceholder": "ノートを追加...",
+    "photoCount": "写真 {{count}}枚"
   },
   "shortcut": {
     "copyNote": "ノートへのショートカットをコピー",
@@ -949,9 +955,8 @@
     "addressPlaceholder": "リンクを貼り付け…",
     "savePictures": "画像を保存",
     "savePicturesHint": "最大20枚の画像をノートと一緒に保存します。ストレージの使用量に含まれます。",
-    "extensionTipTitle": "ブラウザからクリップすると、よりきれいに保存できます",
-    "extensionTip": "ブラウザ拡張機能は、サインインが必要なページも含め、表示されているとおりにページを保存します。",
-    "extensionTipSetUp": "拡張機能を設定",
+    "extensionTipTitle": "ずっときれいにクリップしませんか？",
+    "extensionTip": "ブラウザ拡張機能は、サインインが必要なページも含め、どんなページもワンクリックできれいに保存します。",
     "downloading": "ページをダウンロード中…",
     "downloadingPictures": "画像をダウンロード中 ({{done}}/{{total}})",
     "picturesLine_other": "画像{{count}}枚 · {{size}}、ノートと一緒に保存",
@@ -985,7 +990,7 @@
   "apps": {
     "railLabel": "拡張機能",
     "title": "ブラウザ拡張機能",
-    "subtitle": "Chrome、Firefox、Edge、Brave、Vivaldi で使えるウェブクリッパーとパスワードマネージャーです。ノートを開く鍵を拡張機能が持つことはありません。",
+    "subtitle": "Chrome、Firefox、Edge、Brave、Vivaldi、Opera、Arc、LibreWolf、Zen で使えるウェブクリッパーとパスワードマネージャーです。ノートを開く鍵を拡張機能が持つことはありません。",
     "loginsCopyFull": "ブラウザ拡張機能が持つログイン情報のコピーがいっぱいです。いくつか削除すると、新しいログイン情報が届くようになります。",
     "stepInstall": "拡張機能をインストール",
     "stepFeatures": "使う機能を選ぶ",

@@ -7,6 +7,7 @@ import { buildRegistry } from '../trackerRegistry';
 import { buildSeries, resolveRange } from '../trackerSeries';
 import type { CompareResult, DaySeries, RangeBounds, RangeId, TrackerDescriptor } from '../wellnessTypes';
 import { intlLocale } from '../languages';
+import { splitSleepHours } from '../trackerExport';
 
 /**
  * The one model every Wellness screen reads: the entries behind the lock
@@ -94,6 +95,9 @@ export function formatNumber(n: number, digits = 1): string {
 
 /** A numeric value with its unit, the way the pills show it. */
 export function formatValue(d: TrackerDescriptor, v: number, t: TFunction, digits = 1): string {
+  // A night reads as a clock length, "7h 37m", as the sleep pill shows it,
+  // never 7.6 hours (GitHub #792, #856).
+  if (d.id === 'sleepHours') return clockHours(v, t);
   // Steps, beats and millimetres of mercury are whole numbers.
   const n = formatNumber(v, d.unit === 'steps' || d.unit === 'bpm' || d.unit === 'mmHg' ? 0 : digits);
   switch (d.unit) {
@@ -109,6 +113,20 @@ export function formatValue(d: TrackerDescriptor, v: number, t: TFunction, digit
     case 'cups': return `${n}${t('trackers:units.cups', { count: v })}`;
     default: return n;
   }
+}
+
+/** A number with no unit beside it (a low, a high), except a night, which
+ *  is never a bare decimal: "3h", not 3. */
+export function formatPlain(d: TrackerDescriptor, v: number, t: TFunction): string {
+  return d.id === 'sleepHours' ? clockHours(v, t) : formatNumber(v);
+}
+
+/** Decimal hours as the sleep pill writes them: "7h 37m", "8h", "25m". */
+function clockHours(hours: number, t: TFunction): string {
+  const { h, m } = splitSleepHours(hours);
+  if (m === 0) return `${h}${t('trackers:units.hoursSuffix')}`;
+  if (h === 0) return `${m}${t('trackers:units.minutesSuffix')}`;
+  return t('trackers:units.hoursMinutes', { h, m });
 }
 
 export { moodColor } from '../moodColors';

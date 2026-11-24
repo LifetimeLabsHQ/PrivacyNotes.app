@@ -31,6 +31,7 @@ import {
 } from '@notes/shared';
 import { collectFingerprint, detectDeviceOs, hashFingerprint } from './deviceFingerprint';
 import { isDemoMode } from './demo';
+import { isLocalOnly } from './localOnly';
 import { isMfaRefusal } from './mfaStep';
 import { mfaSessionIdentity } from './sessionWriteGuard';
 import { reportPhraseReplaced } from './phraseReplaced';
@@ -225,7 +226,7 @@ let edgeWarmupFired = false;
  * happened.
  */
 export function warmAuthEdgeFunctions(): void {
-  if (edgeWarmupFired || isDemoMode()) return;
+  if (edgeWarmupFired || isDemoMode() || isLocalOnly()) return;
   edgeWarmupFired = true;
   const base = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   if (!base) return;
@@ -1142,8 +1143,8 @@ export async function fetchQuotaUsage(
   supabase: SupabaseClient,
   isPro?: boolean,
 ): Promise<QuotaUsage> {
-  // Demo mode never queries the server - return inert defaults.
-  if (isDemoMode()) {
+  // Demo mode and local-only vaults never query the server - return inert defaults.
+  if (isDemoMode() || isLocalOnly()) {
     return {
       noteCount: 0,
       totalBytes: 0,

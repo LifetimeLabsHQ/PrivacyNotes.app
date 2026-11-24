@@ -97,7 +97,10 @@
     "googleCalendar": "Il file .zip da Settings > Import & export di Google Calendar, oppure un singolo file .ics. Gli eventi mantengono orari, ripetizioni e promemoria.",
     "appleNotes": "Esporta tramite l'app gratuita Exporter come Markdown, poi trascina qui il file .zip.",
     "appleJournal": "Esporta da Diario su Mac o iPhone, comprimi la cartella AppleJournalEntries e trascina qui il .zip. Le pagine si importano come pagine di diario con le loro foto, video, memo vocali e luoghi.",
+    "dayOne": "In Day One, scegli Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media) sul web, oppure File > Export > JSON su Mac o iOS. Trascina qui il file .zip o .json. Le pagine mantengono giorno, tag, stelle, luogo, meteo e media.",
+    "todoist": "In Todoist, scarica un backup .zip da Settings > Backups (Pro), oppure apri un progetto e scegli ... > Import & export > Export as CSV. Ogni progetto diventa un elenco di attività con le sue sezioni, sottoattività, priorità, scadenze, etichette, descrizioni e commenti.",
     "daylio": "In Daylio scegli More > Backup & Restore > Advanced Options > Export, chiudi Daylio e trascina qui il file .daylio. Ogni voce di Daylio diventa una pagina di diario con il suo umore, le attività, le scale, le foto e i memo vocali. Funziona anche il CSV di More > Export Entries, senza foto.",
+    "diaro": "In Diaro, scegli Settings > Data > Backup & restore, tocca +, lascia disattivata la cifratura e attivi gli allegati, e trascina qui il backup .zip. Funziona anche un semplice DiaroBackup.xml, senza foto. Le pagine mantengono giorno, cartelle, tag, umori, luoghi, meteo e foto.",
     "diarium": "In Diarium scegli Export, seleziona JSON con Attachments attivo e salva nella memoria locale. Trascina qui il .zip, oppure un .json senza allegati. Le pagine mantengono la valutazione come umore, i tag, le persone, i tracker, il luogo e gli allegati.",
     "googleJournal": "In Journal sul tuo Pixel attiva Settings > Back up your journal. Poi scegli Journal in Google Takeout e trascina qui il .zip che ti invia. Le pagine mantengono giorno, titolo, testo, foto e video.",
     "excalidraw": "Disegni salvati da excalidraw.com: un solo file .excalidraw, oppure più file in un unico zip. Funzionano anche i disegni del plugin Excalidraw di Obsidian, come file .excalidraw.md. Le immagini dentro un disegno vengono importate insieme.",
@@ -108,6 +111,7 @@
     "obsidian": "Vault di Obsidian in .zip. Mantiene tag, collegamenti fra note, struttura delle cartelle, #tag in linea e immagini e file incorporati. I canvas e i disegni di Excalidraw diventano disegni, e si può importare anche un solo file .canvas.",
     "obsidianCanvas": "Un file .canvas dal tuo vault di Obsidian, oppure l'intero vault in .zip per importare tutti i canvas. Ogni canvas diventa un disegno: schede, gruppi, frecce e colori arrivano con lui, e anche le immagini, se sono nel .zip.",
     "notesnook": "Export di Notesnook come .zip. Scegli HTML quando esporti per tenere formattazione, taccuini, tag e allegati.",
+    "notion": "In Notion, scegli Settings > General > Export > Workspace content (oppure il menu di una pagina > More > Export), seleziona \"Markdown & CSV\" con sottopagine e cartelle attive, poi trascina qui il file .zip. Rimuove gli ID di Notion da titoli e cartelle, mantiene le sottopagine come cartelle, converte i riquadri e i link interni in collegamenti fra note e importa anche immagini, file e pagine delle righe dei database.",
     "bear": "In Bear, scegli File > Backup Notes... e trascina qui il file .bear2bk. Tag e tag annidati, note fissate, l'archivio, il cestino, le evidenziazioni con i loro colori, i collegamenti fra note e gli allegati arrivano con loro.",
     "joplin": "Il file .jex da File > Export all > \"JEX - Joplin Export File\". I taccuini diventano cartelle, e tag, cose da fare, collegamenti fra note e allegati arrivano con loro.",
     "anytype": "Lo .zip JSON Any-Block v1 da impostazioni dello spazio > Export, con file e oggetti archiviati inclusi. Le raccolte diventano cartelle, e tag, attività, riquadri, sezioni comprimibili, tabelle, collegamenti fra note e file arrivano con loro.",
@@ -134,7 +138,13 @@
     "fullBackupTitle": "Backup completo (.zip)",
     "fullBackupDesc": "Ripristina note, diari, elementi della cassaforte, attività, immagini, audio e file. Una nota che hai già viene conservata, oppure aggiornata se il backup ne contiene una versione più recente.",
     "encryptedBackupTitle": "Backup cifrato (.pnbackup, .pnbackupz)",
-    "encryptedBackupDesc": "Ripristina un backup cifrato con la chiave della tua frase. Un .pnbackupz riporta tutto, file inclusi; un .pnbackup contiene solo testo e metadati. Devi aver effettuato l'accesso con lo stesso account che lo ha creato."
+    "encryptedBackupDesc": "Ripristina un backup cifrato con la chiave della tua frase. Un .pnbackupz riporta tutto, file inclusi; un .pnbackup contiene solo testo e metadati. Per i backup di un altro dispositivo o account ti verrà chiesta la frase di recupero di quel backup."
+  },
+  "restoreForeign": {
+    "title": "Sblocca con un'altra frase di recupero",
+    "body": "Questo backup non è stato cifrato con la tua frase attuale. Inserisci o scansiona la frase di recupero del dispositivo che lo ha creato. Le tue note verranno importate in questa cassaforte.",
+    "unlock": "Sblocca il backup",
+    "wrongPhrase": "Quella frase di recupero non ha sbloccato questo backup. Controlla le parole e riprova."
   },
   "restoreGate": {
     "wait": "Il ripristino attende che questo dispositivo sia online e abbia completato una sincronizzazione, così il tuo backup viene abbinato alle note già presenti nel tuo account invece di aggiungerle due volte.",
@@ -315,7 +325,8 @@
     "title_one": "{{count}} elemento è stato condiviso con PrivacyNotes",
     "title_other": "{{count}} elementi sono stati condivisi con PrivacyNotes",
     "line": "Non viene salvato nulla finché non scegli.",
-    "saveAll": "Salva tutto"
+    "saveAll": "Salva tutto",
+    "saveAs": "Salva come"
   },
   "destination": {
     "none": "Nessuna cartella",

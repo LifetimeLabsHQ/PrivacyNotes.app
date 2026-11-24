@@ -89,12 +89,12 @@ function store(): Storage {
 const REOPEN_KEY = 'privacynotes.reopenLastOpen';
 const reopenListeners = createListeners();
 
-function readReopen(): boolean {
+export function readReopenLastOpen(): boolean {
   try { return store().getItem(REOPEN_KEY) !== '0'; } catch { return true; }
 }
 
 export function useReopenLastOpen(): [boolean, (on: boolean) => void] {
-  const on = useSyncExternalStore(reopenListeners.subscribe, readReopen, () => true);
+  const on = useSyncExternalStore(reopenListeners.subscribe, readReopenLastOpen, () => true);
   const set = useCallback((next: boolean) => {
     try { store().setItem(REOPEN_KEY, next ? '1' : '0'); } catch { /* storage unavailable */ }
     reopenListeners.notify();
@@ -104,7 +104,7 @@ export function useReopenLastOpen(): [boolean, (on: boolean) => void] {
 
 /** The note open at the last quit, or null; null too when the setting is off. */
 export function readLastOpen(): string | null {
-  if (!readReopen()) return null;
+  if (!readReopenLastOpen()) return null;
   try {
     const id = store().getItem(LAST_OPEN_KEY);
     return id && id.length <= 64 ? id : null;
@@ -140,7 +140,7 @@ export function writeLastList(list: LastList): void {
 }
 
 export function readLastList(): LastList | null {
-  if (!readReopen()) return null;
+  if (!readReopenLastOpen()) return null;
   try {
     const raw: unknown = JSON.parse(store().getItem(LAST_LIST_KEY) ?? 'null');
     if (!Array.isArray(raw) || raw.length !== 2) return null;

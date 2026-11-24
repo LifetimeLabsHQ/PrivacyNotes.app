@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "Alles freischalten für {{price}}",
     "ctaOpening": "Checkout wird geöffnet...",
     "ctaSignUp": "Registrieren zum Freischalten",
+    "localOnlyHint": "Beim Upgrade wird einmalig eine Verbindung hergestellt, um dein Konto zu registrieren und Pro zu aktivieren. Die Synchronisierung bleibt aus.",
+    "localOnlyOffline": "Verbinde dich für ein Upgrade mit dem Internet.",
     "features": {
       "folders": "Verschachtelte Ordner",
       "lock": "Sperre und PIN",

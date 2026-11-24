@@ -69,6 +69,11 @@
     "appLockHint": "Dispositivo condiviso? Attiva il blocco app in Impostazioni > Sicurezza.",
     "unopenedWarn_other": "{{count}} note hanno una copia sul server che questo dispositivo non riesce ad aprire. Uscendo elimini le copie presenti qui, che potrebbero essere le uniche valide. Prima inviale di nuovo in Impostazioni > ID & Sync.",
     "unopenedKept_other": "{{count}} note hanno una copia sul server che questo dispositivo non riesce ad aprire. Le copie presenti qui restano dopo che esci.",
+    "localOnlyTitle": "Eliminare tutto su questo dispositivo?",
+    "localOnlyBody": "Le tue note sono salvate solo su questo dispositivo e non sono mai state sincronizzate. Uscendo le elimini definitivamente da questo dispositivo.",
+    "localOnlyCounts": "Su questo dispositivo: {{items}}.",
+    "localOnlyExportBackup": "Esporta backup",
+    "localOnlyDeleteConfirm": "Elimina ed esci",
     "unopenedKept_one": "1 nota ha una copia sul server che questo dispositivo non riesce ad aprire. La copia presente qui resta dopo che esci.",
     "unopenedWarn_one": "1 nota ha una copia sul server che questo dispositivo non riesce ad aprire. Uscendo elimini la copia presente qui, che potrebbe essere l'unica valida. Prima inviala di nuovo in Impostazioni > ID & Sync."
   },
@@ -139,6 +144,7 @@
   "burnShare": {
     "offline": "Sei offline. I burn link richiedono uno scambio con il server. Riprova quando sei di nuovo online.",
     "demo": "I burn link vengono salvati su un server, e la demo non ne contatta nessuno. Registrati per creare veri burn link.",
+    "localOnly": "I burn link richiedono un account online. Attiva la sincronizzazione in Impostazioni > ID & Sync per condividere i burn link.",
     "tooLarge": "La nota è troppo grande per essere condivisa tramite burn link ({{size}}KB). Il massimo è {{max}}KB.",
     "storeFailed": "Impossibile archiviare la burn note sul server.",
     "rateLimited": "Sono stati creati troppi burn link da questa connessione Internet. Riprova più tardi."

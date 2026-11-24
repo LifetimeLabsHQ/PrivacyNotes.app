@@ -59,17 +59,16 @@ code.code{flex:1;min-width:0;font-family:ui-monospace,SFMono-Regular,Menlo,monos
 button.copy{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--ink);
   border-radius:10px;padding:.85rem 1.1rem;font-weight:600;cursor:pointer}
 button.copy:hover{background:var(--tint)}
+a.open{display:inline-block;background:var(--accent);color:var(--on-accent);text-decoration:none;
+  border-radius:10px;padding:.85rem 1.25rem;font-weight:600}
 .steps{margin:1.5rem 0 0;padding-left:1.15rem;color:var(--sub);line-height:1.7}
 .note{margin:1.5rem 0 0;padding-top:1.25rem;border-top:1px solid var(--line);color:var(--sub);font-size:var(--fs-body);line-height:1.6}
 .nojs{color:var(--sub);line-height:1.6}
 [hidden]{display:none!important}
 `;
 
-/** Exported for tests/authCodePages.test.ts. */
-export function renderHtml(connect = false): string {
-  const title = connect ? 'Finish connecting your account' : TITLE;
-  const description = connect ? 'Return to PrivacyNotes to finish connecting this sign-in account to your vault.' : DESC;
-  const canonical = connect ? 'https://use.privacynotes.app/auth/connect' : CANONICAL;
+/** The head every sign-in return page shares. */
+function pageHead(title: string, description: string, canonical: string): string {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -95,7 +94,15 @@ ${PAGE_CSS}
 </style>
 ${THEME_SCRIPT_TAG}
 </head>
-<body ${connect ? 'data-static-page="auth-connect"' : 'data-static-page="auth-desktop"'}>
+`;
+}
+
+/** Exported for tests/authCodePages.test.ts. */
+export function renderHtml(connect = false): string {
+  const title = connect ? 'Finish connecting your account' : TITLE;
+  const description = connect ? 'Return to PrivacyNotes to finish connecting this sign-in account to your vault.' : DESC;
+  const canonical = connect ? 'https://use.privacynotes.app/auth/connect' : CANONICAL;
+  return `${pageHead(title, description, canonical)}<body ${connect ? 'data-static-page="auth-connect"' : 'data-static-page="auth-desktop"'}>
 <div class="wrap">
   <div class="card">
     <h1>${title}</h1>
@@ -160,6 +167,62 @@ export function authConnectPagePlugin(): Plugin {
         res.setHeader('Referrer-Policy', 'no-referrer');
         res.setHeader('Cache-Control', 'no-store');
         res.end(renderHtml(true));
+      });
+    },
+  };
+}
+
+// The page an Android sign-in returns to when the browser kept the return
+// instead of handing it to the app (a browser that does not open links in
+// apps, or an app the phone has not verified). Without it the person sees a
+// 404 and the app waits forever.
+//
+// It never shows the code, and it gives the person one way on: a button that
+// asks Android to open the same https address as an app link. That button
+// names no package, so Android delivers it only where it would have delivered
+// the return itself: from Android 12 on, to the verified app or nowhere. On
+// Android 11 and older the same intent can list any app that claims our host,
+// so the button shows only when the browser proves Android 12 or newer
+// (/auth-callback.js). Every other browser gets the way back to the app.
+// Spec: docs/internal/plans/oauth-redirect-binding-handoff.md (section 8.1)
+
+/** Exported for tests/authCodePages.test.ts. */
+export function renderCallbackHtml(): string {
+  const title = 'Finish signing in';
+  const description = 'Open the PrivacyNotes app to finish signing in.';
+  return `${pageHead(title, description, 'https://use.privacynotes.app/auth/callback')}<body>
+<div class="wrap">
+  <div class="card">
+    <h1>${title}</h1>
+
+    <div data-role="open" hidden>
+      <p class="lede">Your sign-in is ready. Open the PrivacyNotes app to finish it.</p>
+      <a class="open" data-role="open-link" href="#">Open PrivacyNotes</a>
+      <p class="note">If the app does not open, allow links to open in apps in your browser's settings and sign in again, or sign in with your recovery phrase.</p>
+    </div>
+
+    <p class="lede" data-role="back">This page finishes a sign-in in the PrivacyNotes Android app, and it cannot open the app from here. Go back to the app and try again, or sign in with your recovery phrase. If another app sent you here, do not sign in through it.</p>
+
+    <p class="lede" data-role="missing" hidden>This page has no sign-in code in its address. Start the sign-in again from the app.</p>
+  </div>
+</div>
+<script src="/auth-callback.js" defer></script>
+</body>
+</html>`;
+}
+
+export function authCallbackPagePlugin(): Plugin {
+  return {
+    name: 'emit-auth-callback-page',
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'auth/callback/index.html', source: renderCallbackHtml() });
+    },
+    configureServer(server) {
+      server.middlewares.use('/auth/callback', (_req, res) => {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Referrer-Policy', 'no-referrer');
+        res.setHeader('Cache-Control', 'no-store');
+        res.end(renderCallbackHtml());
       });
     },
   };

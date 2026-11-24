@@ -23,6 +23,7 @@ import { useEscapeToClose } from './useEscapeToClose';
 import { useKeyboardRect } from './useKeyboardOpen';
 import { usePopoverPosition } from './usePopoverPosition';
 import { CloseButton } from './ui/Button';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { TextField } from './ui';
 import { CaretDown, CaretRight } from './icons';
 import { getMarkRange } from '@tiptap/core';
@@ -291,7 +292,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
           onMouseDown={(e) => e.preventDefault()}
           onClick={apply}
           disabled={!url.trim()}
-          className="rounded-md bg-accent-fill px-4 py-2 text-body font-medium text-white hover:bg-accent-fill-hover transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className={`rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed`}
         >
           {isEditing ? t('link.update') : t('link.apply')}
         </button>

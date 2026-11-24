@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowsClockwise, ArrowsLeftRight, Key, Ruler } from '../icons';
 import { useAuth } from '../auth';
 import { isDemoMode } from '../demo';
+import { LocalOnlyNotice } from '../LocalOnlyNotice';
 import { PHRASE_CHANGE_PREVIEW } from '../phraseLaunch';
 import { SectionEyebrow, SETTINGS_HELP } from '../settingsUI';
 import { Button, CompareTiles, Divider, IconTile } from '../ui';
@@ -21,10 +22,19 @@ import { usePhraseLengthTiles, type PhraseWordCount } from './phraseLengthTiles'
  * in a dev build).
  * Spec: docs/internal/plans/phrase-change.md (section 2.1)
  */
-export function PhraseLength({ words, onOpenTwoFactor }: { words: number; onOpenTwoFactor?: () => void }) {
+export function PhraseLength({
+  words,
+  onOpenTwoFactor,
+  onOpenSync,
+}: {
+  words: number;
+  onOpenTwoFactor?: () => void;
+  onOpenSync?: () => void;
+}) {
   const { t } = useTranslation('security');
-  const { supabase, loadPhraseChange } = useAuth();
+  const { auth, supabase, loadPhraseChange } = useAuth();
   const demo = isDemoMode();
+  const localOnly = auth?.status === 'authenticated' && auth.localOnly;
   // The demo asks no server: it shows the tiles once launched, and before
   // that only in a dev build (phraseLaunch.ts).
   const [allowed, setAllowed] = useState(demo && PHRASE_CHANGE_PREVIEW);
@@ -37,7 +47,7 @@ export function PhraseLength({ words, onOpenTwoFactor }: { words: number; onOpen
   const tiles = usePhraseLengthTiles({ current });
 
   useEffect(() => {
-    if (demo) return;
+    if (demo || localOnly) return;
     let live = true;
     // Any failure reads as "not allowed": the tiles stay hidden.
     void Promise.resolve()
@@ -46,7 +56,11 @@ export function PhraseLength({ words, onOpenTwoFactor }: { words: number; onOpen
       .then((ok) => { if (live) setAllowed(ok); })
       .catch(() => {});
     return () => { live = false; };
-  }, [demo, loadPhraseChange, supabase]);
+  }, [demo, localOnly, loadPhraseChange, supabase]);
+
+  if (localOnly) {
+    return PHRASE_CHANGE_PREVIEW ? <LocalOnlyNotice feature="phraseChange" onOpenSync={onOpenSync} /> : null;
+  }
 
   if (!allowed) return null;
 

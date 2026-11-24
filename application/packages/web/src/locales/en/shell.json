@@ -287,6 +287,8 @@
     "showNoteLinks": "Show links in other items",
     "showNoteTasks": "Show tasks in other items",
     "showGroups": "Show groups",
+    "groupBy": "Group by",
+    "groupLetter": "First letter",
     "groupsByDate": "Grouped by date",
     "groupsByLetter": "Grouped by first letter",
     "groupsNoneForSize": "Not available when sorted by size",
@@ -305,6 +307,7 @@
     "nextWeek": "Next week",
     "pickMonth": "{{month}}, choose a month and year",
     "pickMonthTip": "Choose a month and year",
+    "showToday": "Show today",
     "showWholeMonth": "Show the whole month",
     "showOneWeek": "Show one week",
     "dayWithEntry": "{{date}}, has an entry",
@@ -625,7 +628,10 @@
   "shareInbox": {
     "saved": "Saved to PrivacyNotes",
     "failed": "Could not save to PrivacyNotes",
-    "tooLarge": "Too large. Maximum is {{limit}} MB per file."
+    "tooLarge": "Too large. Maximum is {{limit}} MB per file.",
+    "titlePlaceholder": "Title (optional)",
+    "notePlaceholder": "Add a note...",
+    "photoCount": "{{count}} photos"
   },
   "shortcut": {
     "copyNote": "Copy shortcut to note",
@@ -984,9 +990,8 @@
     "addressPlaceholder": "Paste a link…",
     "savePictures": "Save pictures",
     "savePicturesHint": "Up to 20 pictures, stored with the note. They count toward your storage.",
-    "extensionTipTitle": "Clip from your browser for a better result",
-    "extensionTip": "The browser extension saves the page as you see it, also pages behind a sign-in.",
-    "extensionTipSetUp": "Set up the extension",
+    "extensionTipTitle": "Want far better clips?",
+    "extensionTip": "The browser extension saves any page cleanly in one click, even behind a sign-in.",
     "downloading": "Downloading the page…",
     "downloadingPictures": "Downloading pictures, {{done}} of {{total}}",
     "picturesLine_one": "{{count}} picture · {{size}}, saved with the note",
@@ -1023,7 +1028,7 @@
   "apps": {
     "railLabel": "Extension",
     "title": "Browser extension",
-    "subtitle": "Web clipper and password manager in Chrome, Firefox, Edge, Brave and Vivaldi. The extension never holds the key that opens your notes.",
+    "subtitle": "Web clipper and password manager in Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf and Zen. The extension never holds the key that opens your notes.",
     "loginsCopyFull": "The browser extension's copy of your logins is full. New logins reach it once you delete some.",
     "stepInstall": "Install the extension",
     "stepFeatures": "Choose what it can do",

@@ -93,7 +93,10 @@
     "googleCalendar": "GoogleカレンダーのSettings > Import & exportから書き出した.zip、または単一の.icsファイル。予定は時刻、繰り返し、リマインダーを保持します。",
     "appleNotes": "無料のExporterアプリでMarkdownとして書き出し、その.zipをここにドロップしてください。",
     "appleJournal": "Journal(ジャーナル)をMacまたはiPhoneから書き出し、AppleJournalEntriesフォルダを圧縮して、その.zipをドロップしてください。エントリーは写真、動画、ボイスメモ、位置情報とともにジャーナルのエントリーとして読み込まれます。",
+    "dayOne": "Day Oneで、ウェブ版は Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media)、MacやiOSは File > Export > JSON を選んでください。書き出した.zipまたは.jsonをここにドロップします。エントリーは日付、タグ、スター、場所、天気、メディアを保持します。",
+    "todoist": "Todoistで Settings > Backups (Pro) からバックアップの.zipをダウンロードするか、プロジェクトを開いて ... > Import & export > Export as CSV を選んでください。各プロジェクトはセクション、サブタスク、優先度、期限、ラベル、説明、コメントを持つタスクリストになります。",
     "daylio": "Daylioで More > Backup & Restore > Advanced Options > Export を選び、Daylioを閉じてから、.daylioファイルをドロップしてください。各エントリーは気分、アクティビティ、スケール、写真、ボイスメモを持つジャーナルの記録になります。More > Export Entries のCSVにも対応していますが、写真は含まれません。",
+    "diaro": "Diaroで Settings > Data > Backup & restore を選び、+ をタップして暗号化をオフ、添付ファイルをオンにしたまま作成し、バックアップの.zipをここにドロップしてください。単体のDiaroBackup.xmlにも対応していますが、写真は含まれません。エントリーは日付、フォルダ、タグ、気分、場所、天気、写真を保持します。",
     "diarium": "Diariumで Export を選び、JSON を Attachments をオンにして選んで、ローカルストレージに保存してください。その.zip、または添付ファイルなしの.jsonをドロップします。エントリーは評価を気分として保持し、タグ、人物、トラッカー、場所、添付ファイルも保持します。",
     "googleJournal": "PixelのJournalで Settings > Back up your journal をオンにしてください。次にGoogle TakeoutでJournalを選び、届いた.zipをドロップします。エントリーは日付、タイトル、本文、写真、動画を保持します。",
     "excalidraw": "excalidraw.com から保存したドローイング。.excalidrawファイル1つでも、複数をzipにまとめてでも読み込めます。ObsidianのExcalidrawプラグインのドローイング(.excalidraw.mdファイル)にも対応しています。ドローイング内の画像も一緒に読み込まれます。",
@@ -104,6 +107,7 @@
     "obsidian": "Obsidianの保管庫を.zipで。タグ、ノートリンク、フォルダ構造、本文中の#タグ、埋め込んだ画像とファイルを保持します。キャンバスとExcalidrawのドローイングはドローイングになり、.canvasファイル1つだけでも読み込めます。",
     "obsidianCanvas": "Obsidianの保管庫にある.canvasファイル1つ、またはすべてのキャンバスを読み込む場合は保管庫全体を.zipで。各キャンバスはドローイングになります。カード、グループ、矢印、色が引き継がれ、画像も.zipに含まれていれば一緒に読み込まれます。",
     "notesnook": "Notesnookの書き出しデータを.zipで。書き出し時にHTMLを選ぶと、書式、ノートブック、タグ、添付ファイルが保持されます。",
+    "notion": "Notionで Settings > General > Export > Workspace content（またはページのメニュー > More > Export）を選び、サブページとフォルダを含める設定で「Markdown & CSV」を選んでから、その.zipをここにドロップしてください。タイトルとフォルダからNotionのIDを取り除き、サブページをフォルダとして保持し、コールアウトをコールアウトブロックに、内部リンクをノートリンクに変換し、画像、ファイル、データベースの行ページも一緒に読み込みます。",
     "bear": "BearでFile > Backup Notes...を選び、.bear2bkファイルをここにドロップしてください。タグと入れ子のタグ、ピン留め、アーカイブ、ゴミ箱、色付きのハイライト、ノートリンク、添付ファイルも引き継がれます。",
     "joplin": "File > Export all > 「JEX - Joplin Export File」で書き出した.jexファイル。ノートブックはフォルダになり、タグ、ToDo、ノートリンク、添付ファイルも引き継がれます。",
     "anytype": "スペースの設定 > Export で、ファイルとアーカイブ済みのオブジェクトを含めて書き出したAny-Block v1 JSONの.zip。コレクションはフォルダになり、タグ、タスク、コールアウト、トグル、表、ノートリンク、ファイルも引き継がれます。",
@@ -130,7 +134,13 @@
     "fullBackupTitle": "完全バックアップ(.zip)",
     "fullBackupDesc": "ノート、ジャーナル、保管庫のアイテム、タスク、画像、音声、ファイルを復元します。すでにあるノートはそのまま残り、バックアップにより新しい版がある場合だけ更新されます。",
     "encryptedBackupTitle": "暗号化バックアップ(.pnbackup、.pnbackupz)",
-    "encryptedBackupDesc": "暗号化バックアップをフレーズ鍵で復元します。.pnbackupz はファイルも含めてすべてを復元します。.pnbackup はテキスト内容とメタデータのみです。バックアップを作成したのと同じアカウントでサインインしている必要があります。"
+    "encryptedBackupDesc": "暗号化バックアップをフレーズ鍵で復元します。.pnbackupz はファイルも含めてすべてを復元します。.pnbackup はテキスト内容とメタデータのみです。別のデバイスやアカウントのバックアップでは、そのバックアップのリカバリーフレーズの入力が求められます。"
+  },
+  "restoreForeign": {
+    "title": "別のリカバリーフレーズでロック解除",
+    "body": "このバックアップは、現在のフレーズで暗号化されたものではありません。バックアップを作成したデバイスのリカバリーフレーズを入力するかスキャンしてください。ノートはこの保管庫に読み込まれます。",
+    "unlock": "バックアップのロックを解除",
+    "wrongPhrase": "そのリカバリーフレーズではこのバックアップのロックを解除できませんでした。単語を確認して、もう一度お試しください。"
   },
   "restoreGate": {
     "wait": "復元は、このデバイスがオンラインになり、同期が完了するまで待機します。バックアップをアカウントにすでにあるノートと照合し、ノートを二重に追加しないためです。",
@@ -291,7 +301,8 @@
   "shareSheet": {
     "title_other": "{{count}}件の項目がPrivacyNotesに共有されました",
     "line": "選択するまで何も保存されません。",
-    "saveAll": "すべて保存"
+    "saveAll": "すべて保存",
+    "saveAs": "保存形式"
   },
   "destination": {
     "none": "フォルダなし",

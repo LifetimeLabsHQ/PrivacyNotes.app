@@ -10,6 +10,7 @@
 import { useTranslation } from 'react-i18next';
 import { Download, SlidersHorizontal, Copy, Check, FileText, FolderOpen } from '../icons';
 import { Button } from '../ui';
+import { PRIMARY_BTN_SKIN } from '../settingsUI';
 import { useCopyToClipboard } from '../clipboard';
 import { marketingHomeHref } from '../siteLinks';
 import { detectPlatform } from '../devices';
@@ -124,7 +125,7 @@ export function MarkdownEmptyState({
           href={`${marketingHomeHref()}#downloads`}
           target="_blank"
           rel="noreferrer"
-          className="text-compact font-medium px-3 py-1.5 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover transition mt-1"
+          className={`text-compact font-semibold px-3 py-1.5 rounded-md ${PRIMARY_BTN_SKIN} transition mt-1`}
         >
           {t('markdown.getDesktopApp')}
         </a>
@@ -152,7 +153,7 @@ export function MarkdownEmptyState({
             <button
               type="button"
               onClick={onReopen}
-              className="text-compact font-medium px-3 py-1.5 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover transition"
+              className={`text-compact font-semibold px-3 py-1.5 rounded-md ${PRIMARY_BTN_SKIN} transition`}
             >
               {t('markdown.reopenFolder', { name: reopenName })}
             </button>

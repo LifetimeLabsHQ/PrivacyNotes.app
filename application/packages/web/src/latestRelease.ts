@@ -1,3 +1,4 @@
+import { BETA_CHANGELOG_URL, isBetaHost } from './hosts';
 import { siteHref } from './siteLinks';
 
 /** The newest curated release, baked in at build time so the app ships one
@@ -6,7 +7,8 @@ import { siteHref } from './siteLinks';
 export const LATEST_RELEASE = __PN_LATEST_RELEASE__;
 
 /** The /changelog page. Never a per-release anchor: links point at the page
- *  as a whole, which always opens on the newest release. */
+ *  as a whole, which always opens on the newest release. On the beta site
+ *  (including its ?demo=1), stay on beta.privacynotes.app/changelog (GitHub #890). */
 export function latestChangelogHref(): string {
-  return siteHref('/changelog');
+  return isBetaHost() ? BETA_CHANGELOG_URL : siteHref('/changelog');
 }

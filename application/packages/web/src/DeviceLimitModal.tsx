@@ -9,6 +9,7 @@ import { startProCheckout } from './billing';
 import { PRO_PRICE, EARLY_PRICE } from './pricing';
 import { PhraseView } from './security/PhraseView';
 import { Modal } from './ui';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 
 /**
  * Blocking modal shown immediately after sign-in when the free-tier
@@ -159,7 +160,7 @@ export function DeviceLimitModal() {
             </p>
             <button
               type="button"
-              className="w-full rounded-md bg-accent-fill hover:bg-accent-fill-hover text-white text-body font-medium px-3 py-2 transition disabled:opacity-50"
+              className={`w-full rounded-md ${PRIMARY_BTN_SKIN} text-body font-semibold px-3 py-2 transition disabled:opacity-50`}
               // Also locked while a paid checkout awaits its webhook: the
               // one-time Pro product has no server-side dedupe, so a live
               // button here invites a second charge.

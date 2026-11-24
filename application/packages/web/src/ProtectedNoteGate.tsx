@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { useTranslation } from 'react-i18next';
 import { Fingerprint, Lock, ShieldSlash } from './icons';
 import { PinInput, type PinInputHandle } from './PinInput';
@@ -263,8 +264,8 @@ function BiometricMode({
           <button
             onClick={() => void run(done)}
             disabled={busy}
-            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-md text-white px-4 py-2 text-body font-medium transition disabled:opacity-40 disabled:cursor-not-allowed ${
-              removing ? 'bg-red-500 hover:bg-red-600' : 'bg-accent-fill hover:bg-accent-fill-hover'
+            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed ${
+              removing ? 'bg-red-500 text-white hover:bg-red-600' : PRIMARY_BTN_SKIN
             }`}
           >
             {removing ? <ShieldSlash /> : <Fingerprint />}
@@ -461,8 +462,8 @@ function VerifyMode({
           <button
             onClick={() => void submit(value)}
             disabled={!secretReady(kind, value) || disabled}
-            className={`flex-1 rounded-md text-white px-3 py-2 text-body font-medium transition disabled:opacity-40 disabled:cursor-not-allowed ${
-              removing ? 'bg-red-500 hover:bg-red-600' : 'bg-accent-fill hover:bg-accent-fill-hover'
+            className={`flex-1 rounded-md px-3 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed ${
+              removing ? 'bg-red-500 text-white hover:bg-red-600' : PRIMARY_BTN_SKIN
             }`}
           >
             {busy
@@ -629,7 +630,7 @@ function BootstrapMode({
         <button
           onClick={() => void submit(pin, confirm)}
           disabled={busy || pin.length !== 4 || confirm.length !== 4}
-          className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-3 py-2 text-body font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-3 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed`}
         >
           {busy ? t('common:state.saving') : t('protectedGate.setPinUnlock')}
         </button>
@@ -810,8 +811,8 @@ function ModalVerifyMode({
         <button
           onClick={() => void submit(value)}
           disabled={!secretReady(kind, value) || disabled}
-          className={`w-full rounded-md text-white px-3 py-2 text-body font-medium transition disabled:opacity-40 disabled:cursor-not-allowed ${
-            purpose === 'delete' ? 'bg-red-500 hover:bg-red-600' : 'bg-accent-fill hover:bg-accent-fill-hover'
+          className={`w-full rounded-md px-3 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed ${
+            purpose === 'delete' ? 'bg-red-500 text-white hover:bg-red-600' : PRIMARY_BTN_SKIN
           }`}
         >
           {busy

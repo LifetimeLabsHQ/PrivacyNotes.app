@@ -33,7 +33,7 @@ export const COMMUNITY_VOTES: Record<number, number> = {
   506: 2,
   507: 3,
   520: 1,
-  573: 2,
+  573: 3,
   574: 2,
   575: 1,
   576: 1,

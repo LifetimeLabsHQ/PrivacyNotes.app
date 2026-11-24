@@ -104,7 +104,10 @@
     "googleCalendar": "Soubor .zip z Google Calendar přes Settings > Import & export, nebo jeden soubor .ics. Události si zachovají časy, opakování i připomínky.",
     "appleNotes": "Exportuj přes bezplatnou aplikaci Exporter do Markdownu a pak sem přetáhni .zip.",
     "appleJournal": "Exportuj z Deníku na Macu nebo iPhonu, zkomprimuj složku AppleJournalEntries a přetáhni sem .zip. Záznamy se importují jako záznamy v deníku i s fotkami, videi, hlasovými poznámkami a polohami.",
+    "dayOne": "V Day One zvol na webu Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media), nebo na Macu či iOS File > Export > JSON. Přetáhni sem .zip nebo .json. Záznamy si zachovají den, značky, hvězdičky, místo, počasí a média.",
+    "todoist": "V Todoistu si stáhni zálohu .zip ze Settings > Backups (Pro), nebo otevři projekt a zvol ... > Import & export > Export as CSV. Z každého projektu se stane seznam úkolů s jeho sekcemi, podúkoly, prioritami, termíny, štítky, popisy a komentáři.",
     "daylio": "V aplikaci Daylio zvol More > Backup & Restore > Advanced Options > Export, zavři Daylio a přetáhni sem soubor .daylio. Z každého záznamu bude záznam v deníku s náladou, aktivitami, stupnicemi, fotkami a hlasovými poznámkami. Funguje i CSV z More > Export Entries, jen bez fotek.",
+    "diaro": "V aplikaci Diaro zvol Settings > Data > Backup & restore, klepni na +, nech šifrování vypnuté a přílohy zapnuté a přetáhni sem zálohu .zip. Funguje i samotný DiaroBackup.xml, jen bez fotek. Záznamy si zachovají den, složky, značky, nálady, místa, počasí a fotky.",
     "diarium": "V aplikaci Diarium zvol Export, vyber JSON se zapnutými Attachments a ulož do místního úložiště. Přetáhni sem .zip, nebo .json bez příloh. Záznamy si zachovají hodnocení jako náladu, značky, lidi, sledované hodnoty, místo a přílohy.",
     "googleJournal": "V aplikaci Journal na Pixelu zapni Settings > Back up your journal. Pak v Google Takeout vyber Journal a přetáhni sem .zip, který ti pošle. Záznamy si zachovají den, název, text, fotky a videa.",
     "excalidraw": "Kresby uložené z excalidraw.com: jeden soubor .excalidraw, nebo víc zabalených do zipu. Fungují i kresby z pluginu Excalidraw v Obsidianu jako soubory .excalidraw.md. Obrázky uvnitř kresby se přenesou taky.",
@@ -115,6 +118,7 @@
     "obsidian": "Vault Obsidianu jako .zip. Zachová značky, odkazy na poznámky, strukturu složek, #značky v textu i vložené obrázky a soubory. Plátna (Canvas) a kresby Excalidraw se stanou kresbami a samostatně se dá naimportovat i jeden soubor .canvas.",
     "obsidianCanvas": "Jeden soubor .canvas z tvého vaultu Obsidianu, nebo celý vault jako .zip, když chceš přenést všechna plátna. Každé plátno se stane kresbou: karty, skupiny, šipky i barvy přejdou s ním, a obrázky taky, pokud jsou v .zip.",
     "notesnook": "Export z Notesnooku jako .zip. Při exportu zvol HTML, aby se zachovalo formátování, zápisníky, značky a přílohy.",
+    "notion": "V Notionu zvol Settings > General > Export > Workspace content (nebo nabídku stránky > More > Export), vyber „Markdown & CSV“ se zapnutými podstránkami a složkami a pak sem přetáhni .zip. Odstraní ID Notionu z názvů a složek, zachová podstránky jako složky, převede callouty a interní odkazy na odkazy na poznámky a přenese obrázky, soubory i stránky řádků databází.",
     "bear": "V Bearu zvol File > Backup Notes... a přetáhni sem soubor .bear2bk. Přejdou s ním značky i vnořené značky, připnutí, archiv, koš, zvýraznění s jejich barvami, odkazy na poznámky i přílohy.",
     "joplin": "Soubor .jex z File > Export all > „JEX - Joplin Export File“. Zápisníky se stanou složkami a značky, úkoly, odkazy na poznámky i přílohy přejdou s nimi.",
     "anytype": "Soubor .zip ve formátu Any-Block v1 JSON z nastavení prostoru > Export, včetně souborů a archivovaných objektů. Kolekce se stanou složkami a značky, úkoly, callouty, rozbalovací bloky, tabulky, odkazy na poznámky i soubory přejdou s nimi.",
@@ -141,7 +145,13 @@
     "fullBackupTitle": "Kompletní záloha (.zip)",
     "fullBackupDesc": "Obnoví poznámky, deníky, položky trezoru, úkoly, obrázky, zvuk a soubory. Poznámka, kterou už máš, zůstane zachována, nebo se aktualizuje, pokud záloha obsahuje její novější verzi.",
     "encryptedBackupTitle": "Šifrovaná záloha (.pnbackup, .pnbackupz)",
-    "encryptedBackupDesc": "Obnov šifrovanou zálohu klíčem z tvojí fráze. Soubor .pnbackupz vrátí všechno včetně souborů; .pnbackup obsahuje jen text a metadata. Vyžaduje přihlášení pod stejným účtem, který zálohu vytvořil."
+    "encryptedBackupDesc": "Obnov šifrovanou zálohu klíčem z tvojí fráze. Soubor .pnbackupz vrátí všechno včetně souborů; .pnbackup obsahuje jen text a metadata. U záloh z jiného zařízení nebo účtu si aplikace vyžádá jejich obnovovací frázi."
+  },
+  "restoreForeign": {
+    "title": "Odemknout jinou obnovovací frází",
+    "body": "Tato záloha nebyla zašifrovaná tvojí současnou frází. Zadej nebo naskenuj obnovovací frázi ze zařízení, které ji vytvořilo. Tvoje poznámky se naimportují do tohoto trezoru.",
+    "unlock": "Odemknout zálohu",
+    "wrongPhrase": "Tato obnovovací fráze zálohu neodemkla. Zkontroluj slova a zkus to znovu."
   },
   "restoreGate": {
     "wait": "Obnovení čeká, dokud toto zařízení nebude online a nedokončí synchronizaci, aby se záloha spárovala s poznámkami, které už máš v účtu, a nepřidala je podruhé.",
@@ -355,7 +365,8 @@
     "title_many": "Do PrivacyNotes bylo sdíleno {{count}} položky",
     "title_other": "Do PrivacyNotes bylo sdíleno {{count}} položek",
     "line": "Nic se neuloží, dokud nevybereš.",
-    "saveAll": "Uložit vše"
+    "saveAll": "Uložit vše",
+    "saveAs": "Uložit jako"
   },
   "destination": {
     "none": "Bez složky",

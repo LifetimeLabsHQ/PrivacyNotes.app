@@ -439,6 +439,58 @@
         }
       ]
     },
+    "notion": {
+      "app": "Notion",
+      "title": "Notion çalışma alanınızı dışa aktarın",
+      "metaTitle": "Notion çalışma alanı nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "Notion çalışma alanınızı Markdown & CSV zip dosyası olarak dışa aktarın; PrivacyNotes, Notion'ın 32 karakterlik kimliklerini kaldırır, alt sayfaları klasör olarak yeniden kurar ve sayfa bağlantılarını not bağlantılarına dönüştürür.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/notion-settings.webp",
+            "alt": "Notion Settings, General sayfası: Workspace content yanındaki Export düğmesiyle Export bölümü.",
+            "width": 1576,
+            "height": 754
+          },
+          "h": "Tüm çalışma alanınızı dışa aktarın",
+          "steps": [
+            "Notion'ı web'de veya masaüstünde açın ve çalışma alanı menüsünden Settings'i açın.",
+            "Workspace altında General'ı açın ve Export bölümüne kaydırın.",
+            "Workspace content yanındaki Export düğmesine tıklayın.",
+            "Bunun yerine tek bir sayfa ve alt sayfaları için o sayfanın üç nokta menüsünü açın ve More > Export seçeneğini seçin."
+          ],
+          "p": [
+            "Notion büyük çalışma alanı dışa aktarmalarını arka planda hazırlar ve size e-postayla bir indirme bağlantısı gönderir. O .zip dosyasını açmadan, olduğu gibi PrivacyNotes'a bırakın - arşivin içindeki iç içe parça zip dosyaları otomatik olarak işlenir."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/notion-export.webp",
+            "alt": "Notion Export penceresi: Markdown & CSV seçili, Page content ayarı Everything, hem Include private pages hem de Create folders for subpages açık.",
+            "width": 1576,
+            "height": 600
+          },
+          "h": "Klasörler açıkken Markdown & CSV seçin",
+          "steps": [
+            "Export format ayarını \"Markdown & CSV\" yapın.",
+            "Görsellerinizin, PDF'lerinizin ve ekli dosyalarınızın dahil olması için Page content ayarını \"Everything\" yapın.",
+            "\"Include private pages\" (veya tek sayfa dışa aktarmasında \"Include subpages\") ve \"Create folders for subpages\" seçeneklerini açın.",
+            "Export düğmesine tıklayın ve .zip dosyasını kaydedin."
+          ],
+          "p": [
+            "HTML ve PDF dışa aktarmaları Markdown dosyaları içermez ve Notion içe aktarıcısı tarafından okunamaz. Yapınızın, bağlantılarınızın ve biçimlendirmenizin temiz bir şekilde gelmesi için \"Markdown & CSV\" seçeneğini seçin."
+          ]
+        },
+        {
+          "h": "Neler geliyor",
+          "p": [
+            "Notion, dışa aktarılan her dosya adının ve iç bağlantının sonuna 32 karakterlik bir kimlik ekler. PrivacyNotes bu kimlikleri her başlık ve klasör adından kaldırır, en üst düzeydeki \"Private & Shared\" sarmalayıcısını çıkarır ve iç içe alt sayfaları klasör olarak yeniden kurar.",
+            "Başlıklar, listeler, iç içe onay listeleri, tablolar, dili belirtilmiş kod blokları, matematik, altı çizili metin ve alıntılar olduğu gibi gelir. Notion bilgi kutuları PrivacyNotes bilgi kutularına dönüşür, [dışa aktarılan sayfalar arasındaki bağlantılar ve bahsetmeler not bağlantılarına dönüşür](/tr/help/note-links) ve yüklenmiş görseller, PDF'ler ile dosyalar depolama alanınıza aktarılır.",
+            "Veritabanı satır sayfaları, veritabanının adını taşıyan bir klasör içinde not olarak içe aktarılır ve varsa Tags özelliği etiket olarak eklenir. Veritabanı CSV tablo dosyaları atlanır ve özette sayılır. Notion'ın kendi Markdown dışa aktarması metin renklerini, vurguları ve çöp kutusundaki sayfaları dışarıda bırakır."
+          ]
+        }
+      ]
+    },
     "notesnook": {
       "app": "Notesnook",
       "title": "Notesnook notlarınızı dışa aktarın",
@@ -1281,6 +1333,53 @@
         }
       ]
     },
+    "diaro": {
+      "app": "Diaro",
+      "title": "Diaro günlüğünüzü dışa aktarın",
+      "metaTitle": "Diaro yedeği nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "Diaro tüm günlüğünüzü mobil uygulamasından tek bir .zip yedeği olarak dışa aktarır, PrivacyNotes da her kaydı klasörleri, etiketleri, ruh halleri, yerleri, hava durumu ve fotoğraflarıyla Günlükler'e aktarır.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-menu.webp",
+            "alt": "Diaro'nun Data ayarları ekranı: Backup & restore seçeneği ve yedek dosyaları depolama klasörü",
+            "width": 1576,
+            "height": 732
+          },
+          "h": "Diaro uygulamasında şifresiz bir yedek oluşturun",
+          "steps": [
+            "Android veya iOS'ta Diaro'yu açın, sol menüyü açın ve Settings dişli simgesine dokunun.",
+            "Data seçeneğini seçin, Backup & restore bölümüne kaydırın ve Backup & restore öğesine dokunun.",
+            "Sağ üstteki + düğmesine dokunun.",
+            "\"Encrypt entries in backup file\" ve \"Do not backup attachments\" kutularını işaretlemeden bırakın, ardından Backup düğmesine dokunun.",
+            "Storage directories altında gösterilen yedek klasöründeki (ya da oraya eşitlediyseniz Dropbox'taki) Diaro_YYYYMMDD.zip dosyasını kopyalayıp PrivacyNotes'a bırakın."
+          ],
+          "p": [
+            "Mobil uygulamada yedek oluşturmak ücretsizdir ve Pro aboneliği gerektirmez. Diaro Online yalnızca ücretli planlarda PDF, DOCX ve TXT dışa aktarır ve yedek indirme düğmesi yoktur."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-dialog.webp",
+            "alt": "Diaro'nun Backup penceresi: Encrypt entries in backup file ve Do not backup attachments kutularının ikisi de işaretsiz",
+            "width": 1576,
+            "height": 817
+          },
+          "h": "PDF, TXT, CSV veya şifreli yedekleri değil, şifresiz .zip yedeğini seçin",
+          "p": [
+            "Şifresiz bir yedek, DiaroBackup.xml dosyasını ve media/photo klasörünüzü tek bir .zip dosyasına yazar. \"Encrypt entries in backup file\" kutusunu işaretlerseniz Diaro bunun yerine DiaroBackup.denc yazar; PrivacyNotes bunun kilidini açamaz ve şifrelemeyi kapatmanızı hatırlatarak dosyayı reddeder.",
+            "Tek başına bir DiaroBackup.xml dosyası tüm metni ve üst verileri fotoğraflar olmadan içe aktarır ve özet her eksik görseli sayar. Fotoğraflarınızı da getirmek için \"Do not backup attachments\" işaretini kaldırın ve tam .zip dosyasını bırakın."
+          ]
+        },
+        {
+          "h": "Neler geliyor",
+          "p": [
+            "[Her kayıt Günlükler'e iner](/tr/help/journal), kaydın saklanan saat dilimi farkındaki takvim gününde. Başlıksız kayıtlar o güne açılan yeni bir kaydın aldığı tarih başlığını alır ve çıplak web bağlantıları tıklanabilir olur.",
+            "Diaro klasörleri klasör olur, etiketler etiket olarak kalır ve ruh halleri Diaro ağırlıklarına göre [ruh hali takibini](/tr/help/choose-trackers) doldurur (özel ruh hali adları en üst satırda da görünür). Koordinatlı konumlar kaydın konum rozetini doldurur, yalnızca adı olan yerler ve hava durumu en üstte tek bir satırda yer alır ve fotoğraflar özgün sıralarıyla içe aktarılır."
+          ]
+        }
+      ]
+    },
     "diarium": {
       "app": "Diarium",
       "title": "Diarium günlüğünüzü dışa aktarın",
@@ -1420,6 +1519,69 @@
             "Defter bir klasör olur; içinde her bölüm grubu ve bölüm için bir klasör bulunur. Her sayfa, bölümünün klasöründe OneNote'un oluşturduğu tarihle bir not olur ve bir alt sayfa aynı klasörde sayfasının ardından gelir.",
             "Başlıklar, kalın, italik, altı çizili, renkler, vurgular, madde işaretli ve numaralı listeler, tablolar ve kod paragrafları olduğu gibi gelir. Bir to-do etiketi, yapıldıysa işaretli bir görev listesi öğesi olur; Important veya Question gibi diğer not etiketleri notun etiketleri olur. [Sayfalar arasındaki bağlantılar not bağlantılarına dönüşür](/tr/help/note-links), görseller ve ekli dosyalar da depolama alanınıza aktarılır.",
             "Tek başına bir bölüm dosyası (.one) ya da zipli bir defter klasörü de işe yarar. Kalemle yapılmış çizimlerin, ses kayıtlarının ve denklemlerin burada karşılığı yoktur; içe aktarma önizlemesi bunları sayar. OneNote'un geri dönüşüm kutusundaki sayfalar paketin parçası değildir."
+          ]
+        }
+      ]
+    },
+    "day-one": {
+      "app": "Day One",
+      "title": "Day One günlüğünüzü dışa aktarın",
+      "metaTitle": "Day One günlüğü nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "Day One günlüğünüzü medyayla birlikte bir JSON .zip dosyası olarak dışa aktarır, PrivacyNotes da her kaydı günü, etiketleri, yeri, hava durumu ve fotoğraflarıyla Günlükler'e getirir.",
+      "sections": [
+        {
+          "h": "Medyayla birlikte JSON olarak dışa aktarın",
+          "steps": [
+            "Day One'ı web'de açın ve taşımak istediğiniz günlüğü seçin.",
+            "Edit Journal seçeneğini seçin, Journal Settings'i açın ve Export Journal seçeneğini seçin.",
+            "Export journal JSON file seçeneğini, ardından Include media seçeneğini seçin. Day One kayıtlarınızı ve eklerinizi içeren bir .zip kaydeder.",
+            "O .zip dosyasını olduğu gibi bırakın."
+          ],
+          "p": [
+            "Mac veya iOS'ta bunun yerine File > Export > JSON yolunu izleyin. Tek seferde bir günlüğü ya da tüm günlükleri tek bir .zip dosyasına aktarabilirsiniz."
+          ]
+        },
+        {
+          "h": "PDF veya düz metni değil, JSON'u seçin",
+          "p": [
+            "Tarihleri, saat dilimlerini, etiketleri, yıldızları, konumları, hava durumunu, kayıt bağlantılarını ve medyayı koruyan biçim JSON'dur. Tek başına bir .json dosyası yalnızca metni, fotoğraflar ve dosyalar olmadan içe aktarır ve özet bulamadığı ekleri sayar."
+          ]
+        },
+        {
+          "h": "Neler geliyor",
+          "p": [
+            "[Her kayıt Günlükler'e iner](/tr/help/journal), kaydın kendi saat dilimindeki takvim gününde. En baştaki bir başlık kaydın başlığı olur; başlığı olmayan bir kayıt tarihini başlık olarak alır. Yıldızlı ve sabitlenmiş kayıtlar sabitlenmiş kalır, etiketler de etiket olarak kalır.",
+            "Konumunuz kaydın konum rozetini doldurur; hava durumu, aktivite ve müzik en üstte tek bir satırda yer alır. Fotoğraflar görsel olarak, ses, video ve PDF'ler ek olarak içe aktarılır ve kayıtlar arasındaki bağlantılar [not bağlantısına](/tr/help/note-links) dönüşür. Tek bir .zip birkaç günlük içerdiğinde her günlük bir klasör olur."
+          ]
+        }
+      ]
+    },
+    "todoist": {
+      "app": "Todoist",
+      "title": "Todoist görevlerinizi dışa aktarın",
+      "metaTitle": "Todoist görevleri nasıl dışa aktarılır - PrivacyNotes",
+      "lead": "Todoist projelerini yedek .zip dosyası veya proje .csv dosyaları olarak dışa aktarın; PrivacyNotes her projeyi bölümleri, alt görevleri ve yorumlarıyla bir görev listesine dönüştürür.",
+      "sections": [
+        {
+          "h": "Bir yedek indirin veya bir projeyi CSV olarak dışa aktarın",
+          "steps": [
+            "Todoist'te, Pro veya Business planında Settings > Backups bölümünü açın ve en son yedek .zip dosyanızı indirin. Her etkin proje için bir .csv dosyası içerir.",
+            "Ücretsiz planda bir proje açın, üç nokta menüsü > Import & export > Export as CSV yolunu izleyin ve .csv dosyasını kaydedin.",
+            ".zip veya .csv dosyasını PrivacyNotes'a bırakın."
+          ]
+        },
+        {
+          "h": "Tek bir projeyi dışa aktarırken göreli tarihleri kapatın",
+          "p": [
+            "Export as CSV menüsünde \"Use relative dates\" seçeneğini kapatın; böylece bitiş tarihleri \"21 gün içinde\" yerine 2026-12-15 gibi takvim tarihleri olarak kaydedilir. İkisi de görev satırına metin olarak aktarılır, takvim tarihleri ise daha sonra da doğru kalır.",
+            "Todoist, tamamlanan görevleri ve arşivlenen projeleri CSV dışa aktarmalarının ve yedeklerin dışında bırakır, bu yüzden dosyada yalnızca etkin görevler bulunur."
+          ]
+        },
+        {
+          "h": "Neler nereye iniyor",
+          "p": [
+            "Her proje, [Görevler](/tr/help/tasks) içinde projenin adını taşıyan bir görev listesi olur; hem liste hem pano projelerinde bölümler başlık olarak gelir ve alt görevler aynı derinlikte iç içe yerleşir. P1'den P3'e öncelikler, bitiş tarihleri, süreler, son teslim tarihleri ve satır içi @etiketler her satırda kalır ve her @etiket listeye etiket olarak eklenir.",
+            "Görev açıklamaları, görev yorumları ve proje yorumları birlikte gelir; tamamlanamayan başlık görevleri onay kutusu yerine kalın madde işareti olarak kalır. Tekil görev satırlarındaki hatırlatıcılar aktarılmaz ve özette sayılır."
           ]
         }
       ]

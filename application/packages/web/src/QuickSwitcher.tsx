@@ -177,7 +177,7 @@ type Snippet = { text: string; start: number; end: number } | null;
  */
 const MAKERS = [
   // The Ninja box only: its note mode, with the text as the title line.
-  // Spec: docs/internal/plans/quick-note-694.md (section 5.1)
+  // Spec: docs/internal/specs/quick-note-694.md (section 5.1)
   { id: 'writeNote', glyph: PencilSimple, tone: 'note', takes: 'name' },
   { id: 'kanban', glyph: NEW_GLYPHS.kanban, tone: 'task', takes: 'name' },
   { id: 'drawing', glyph: NEW_GLYPHS.drawing, tone: 'drawing', takes: 'name' },
@@ -1107,7 +1107,7 @@ export default function QuickSwitcher({
     else if (row.kind === 'text') onOpen(row.n, inTab && canOpenInTab);
     else if (link && row.kind === 'item' && !inTab) {
       if (edit && onEditLink) onEditLink(row.n);
-      else openExternal(link);
+      else openExternal(link, { browser: true });
     } else if (row.kind === 'item') onOpen(row.n, inTab && canOpenInTab);
     else if (row.kind === 'file') onOpenFile(row.f);
     else if (row.kind === 'markdown') onOpenMarkdown(row.e);

@@ -34,7 +34,7 @@
     "@noble/hashes": "^2.4.0",
     "@noble/post-quantum": "0.7.1",
     "@scure/bip39": "^2.4.0",
-    "@supabase/supabase-js": "^2.119.0"
+    "@supabase/supabase-js": "^2.119.2"
   },
   "devDependencies": {
     "typescript": "^7.0.2"

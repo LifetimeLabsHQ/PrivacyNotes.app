@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "以 {{price}} 解鎖全部功能",
     "ctaOpening": "正在開啟結帳…",
     "ctaSignUp": "註冊以解鎖",
+    "localOnlyHint": "升級時會連線一次，用來註冊你的帳號並啟用 Pro。同步會維持關閉。",
+    "localOnlyOffline": "請連上網路以升級。",
     "features": {
       "folders": "巢狀資料夾",
       "lock": "鎖定與 PIN 碼",

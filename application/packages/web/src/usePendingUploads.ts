@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { liveQuery } from 'dexie';
 import { db } from './db';
+import { useLocalTruthOnly } from './localOnly';
 
 export interface PendingUploads {
   /** Blobs (images + attachments) still queued for upload. */
@@ -73,8 +74,13 @@ export function useQuotaBlockedUuids(): Set<string> {
 }
 
 export function usePendingUploads(): PendingUploads {
+  const localTruth = useLocalTruthOnly();
   const [state, setState] = useState<PendingUploads>({ count: 0, blocked: 0 });
   useEffect(() => {
+    if (localTruth) {
+      setState({ count: 0, blocked: 0 });
+      return;
+    }
     const sub = liveQuery(async () => {
       const images = await db.imageDedup.filter((r) => r.pendingUpload === 1).toArray();
       const attachments = await db.attachmentDedup.filter((r) => r.pendingUpload === 1).toArray();
@@ -87,6 +93,6 @@ export function usePendingUploads(): PendingUploads {
       error: (err) => console.warn('[syncStatus] pending blob query failed:', err),
     });
     return () => sub.unsubscribe();
-  }, []);
-  return state;
+  }, [localTruth]);
+  return localTruth ? { count: 0, blocked: 0 } : state;
 }

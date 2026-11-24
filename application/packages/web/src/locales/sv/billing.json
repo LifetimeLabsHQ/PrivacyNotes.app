@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "Lås upp allt för {{price}}",
     "ctaOpening": "Öppnar kassan...",
     "ctaSignUp": "Registrera dig för att låsa upp",
+    "localOnlyHint": "När du uppgraderar ansluter appen en gång för att registrera ditt konto och aktivera Pro. Synk förblir avstängd.",
+    "localOnlyOffline": "Anslut till internet för att uppgradera.",
     "features": {
       "folders": "Mappar i flera nivåer",
       "lock": "Lås och PIN",

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { Monitor, X } from './icons';
 import { desktopShortcutUrl, dismissDesktopOffer, type ShortcutTarget } from './noteShortcut';
 import { useEscapeToClose } from './useEscapeToClose';
@@ -25,7 +26,7 @@ export function ShortcutDesktopBar({ target, onClose }: { target: ShortcutTarget
       <a
         href={desktopShortcutUrl(target)}
         onClick={onClose}
-        className="shrink-0 rounded-lg bg-accent-fill hover:bg-accent-fill-hover text-white text-compact font-semibold px-3 py-1.5 transition"
+        className={`shrink-0 rounded-lg ${PRIMARY_BTN_SKIN} text-compact font-semibold px-3 py-1.5 transition`}
       >
         {t('shortcut.offerOpen')}
       </a>
@@ -55,7 +56,7 @@ export function ShortcutSignInCard({ target, onSignIn }: { target: ShortcutTarge
         <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
           <a
             href={desktopShortcutUrl(target)}
-            className="rounded-lg bg-accent-fill hover:bg-accent-fill-hover text-white text-body font-semibold px-4 py-2 transition"
+            className={`rounded-lg ${PRIMARY_BTN_SKIN} text-body font-semibold px-4 py-2 transition`}
           >
             {t('shortcut.cardOpen')}
           </a>

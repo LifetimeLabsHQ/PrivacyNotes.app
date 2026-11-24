@@ -37,7 +37,8 @@ import { REMINDER_PLATFORM, askForRemindersOnce } from './notesView/useReminders
 import { adoptFactor, adoptFactors, removeFactor, renameFactor } from './factorList';
 import { CUSTOM_HABITS_MAX, CUSTOM_HABIT_NAME_MAX, CUSTOM_HABIT_SHORT_MAX, activeCustomHabits, addCustomHabit, allHabitQuestions, askedHabits, cleanHabitName, removeCustomHabit, renameCustomHabit, type CustomHabitDef, type HabitKind } from './habitList';
 import { addMedication, removeMedication, saveMedication } from './medicationTemplates';
-import { MedicationEditor, MedicationGlyph, describeMedication, type MedicationEdit } from './trackers/MedicationEditor';
+import { MedicationEditor, describeMedication, type MedicationEdit } from './trackers/MedicationEditor';
+import { MedicationGlyph } from './trackers/icons';
 import { setMedicationReminder, useMedicationReminders } from './medicationReminders';
 import { runsOutOn, supplyLeft } from './medicationDoses';
 import { useTrackerHistory } from './trackerLastLogged';

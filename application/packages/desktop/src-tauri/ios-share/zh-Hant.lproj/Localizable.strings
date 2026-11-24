@@ -1,3 +1,10 @@
 "saved" = "已儲存到 PrivacyNotes";
 "failed" = "無法儲存到 PrivacyNotes";
 "tooLarge" = "檔案太大。單檔上限為 {{limit}} MB。";
+"save" = "儲存";
+"cancel" = "取消";
+"note" = "筆記";
+"files" = "檔案";
+"titlePlaceholder" = "標題（選填）";
+"notePlaceholder" = "新增筆記...";
+"photoCount" = "{{count}} 張照片";

@@ -97,7 +97,10 @@
     "googleCalendar": "De .zip uit Google Calendar via Settings > Import & export, of één los .ics-bestand. Afspraken behouden hun tijden, herhalingen en herinneringen.",
     "appleNotes": "Exporteer via de gratis Exporter-app als Markdown en sleep de .zip hierheen.",
     "appleJournal": "Exporteer vanuit Dagboek op Mac of iPhone, comprimeer de map AppleJournalEntries en sleep de .zip hierheen. Items worden geïmporteerd als dagboeknotities met hun foto's, video's, spraakmemo's en locaties.",
+    "dayOne": "Kies in Day One Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media) op het web, of File > Export > JSON op Mac of iOS. Sleep de .zip of .json hierheen. Items behouden hun dag, tags, sterren, plaats, weer en media.",
+    "todoist": "Download in Todoist een back-up-.zip via Settings > Backups (Pro), of open een project en kies ... > Import & export > Export as CSV. Elk project wordt een takenlijst met zijn secties, subtaken, prioriteiten, vervaldatums, labels, beschrijvingen en opmerkingen.",
     "daylio": "Kies in Daylio More > Backup & Restore > Advanced Options > Export, sluit Daylio en sleep het .daylio-bestand hierheen. Elk item wordt een dagboeknotitie met zijn stemming, activiteiten, schalen, foto's en spraakmemo's. De CSV uit More > Export Entries werkt ook, zonder foto's.",
+    "diaro": "Kies in Diaro Settings > Data > Backup & restore, tik op +, laat versleuteling uit en bijlagen aan, en sleep de .zip-back-up hierheen. Een losse DiaroBackup.xml werkt ook, zonder foto's. Items behouden hun dag, mappen, tags, stemmingen, plaatsen, weer en foto's.",
     "diarium": "Kies in Diarium Export, kies JSON met Attachments aan en sla op in de lokale opslag. Sleep de .zip hierheen, of een .json zonder bijlagen. Items behouden hun beoordeling als stemming, en hun tags, personen, trackers, plaats en bijlagen.",
     "googleJournal": "Zet in Journal op je Pixel Settings > Back up your journal aan. Kies daarna Journal in Google Takeout en sleep de .zip die je ontvangt hierheen. Items behouden hun dag, titel, tekst, foto's en video's.",
     "excalidraw": "Tekeningen opgeslagen vanaf excalidraw.com: één .excalidraw-bestand, of meerdere samen in een zip. Tekeningen uit de Excalidraw-plug-in van Obsidian werken ook, als .excalidraw.md-bestanden. Afbeeldingen in een tekening gaan mee.",
@@ -108,6 +111,7 @@
     "obsidian": "Obsidian-vault als .zip. Behoudt tags, notitielinks, mappenstructuur, inline #tags en ingesloten afbeeldingen en bestanden. Canvassen en Excalidraw-tekeningen worden tekeningen, en één .canvas-bestand kun je ook los importeren.",
     "obsidianCanvas": "Eén .canvas-bestand uit je Obsidian-vault, of de hele vault als .zip om elk canvas binnen te halen. Elk canvas wordt een tekening: kaarten, groepen, pijlen en kleuren komen mee, en afbeeldingen ook als ze in de .zip zitten.",
     "notesnook": "Notesnook-export als .zip. Kies bij het exporteren HTML om opmaak, notitieboeken, tags en bijlagen te behouden.",
+    "notion": "Kies in Notion Settings > General > Export > Workspace content (of het menu van een pagina > More > Export), kies \"Markdown & CSV\" met subpagina's en mappen aan, en sleep de .zip hierheen. Verwijdert Notion-ID's uit titels en mappen, behoudt subpagina's als mappen, zet Notion-callouts om in aandachtsblokken en interne links in notitielinks, en neemt afbeeldingen, bestanden en rijpagina's uit databases mee.",
     "bear": "Kies in Bear File > Backup Notes... en sleep het .bear2bk-bestand hierheen. Tags en geneste tags, vastgezette notities, het archief, de prullenbak, markeringen met hun kleuren, notitielinks en bijlagen komen mee.",
     "joplin": "Het .jex-bestand uit File > Export all > \"JEX - Joplin Export File\". Notitieboeken worden mappen, en tags, taken, notitielinks en bijlagen komen mee.",
     "anytype": "De Any-Block v1 JSON-.zip uit de space-instellingen > Export, met bestanden en gearchiveerde objecten erbij. Collecties worden mappen, en tags, taken, aandachtsblokken, toggles, tabellen, notitielinks en bestanden komen mee.",
@@ -134,7 +138,13 @@
     "fullBackupTitle": "Volledige back-up (.zip)",
     "fullBackupDesc": "Herstel notities, dagboeken, kluisitems, taken, afbeeldingen, audio en bestanden. Een notitie die je al hebt blijft staan, of wordt bijgewerkt als de back-up er een nieuwere versie van bevat.",
     "encryptedBackupTitle": "Versleutelde back-up (.pnbackup, .pnbackupz)",
-    "encryptedBackupDesc": "Herstel een versleutelde back-up met de sleutel van je herstelzin. Een .pnbackupz brengt alles terug, bestanden inbegrepen; een .pnbackup bevat alleen tekst en metagegevens. Je moet aangemeld zijn met hetzelfde account dat hem heeft gemaakt."
+    "encryptedBackupDesc": "Herstel een versleutelde back-up met de sleutel van je herstelzin. Een .pnbackupz brengt alles terug, bestanden inbegrepen; een .pnbackup bevat alleen tekst en metagegevens. Back-ups van een ander apparaat of account vragen om de herstelzin van die back-up."
+  },
+  "restoreForeign": {
+    "title": "Ontgrendelen met een andere herstelzin",
+    "body": "Deze back-up is niet versleuteld met je huidige herstelzin. Voer de herstelzin in van het apparaat dat de back-up heeft gemaakt, of scan hem. Je notities worden in deze kluis geïmporteerd.",
+    "unlock": "Back-up ontgrendelen",
+    "wrongPhrase": "Met die herstelzin kon deze back-up niet worden ontgrendeld. Controleer de woorden en probeer het opnieuw."
   },
   "restoreGate": {
     "wait": "Herstellen wacht tot dit apparaat online is en een synchronisatie heeft voltooid, zodat je back-up wordt gekoppeld aan de notities die al in je account staan, in plaats van ze dubbel toe te voegen.",
@@ -314,7 +324,8 @@
     "title_one": "{{count}} item is gedeeld met PrivacyNotes",
     "title_other": "{{count}} items zijn gedeeld met PrivacyNotes",
     "line": "Er wordt niets bewaard tot je kiest.",
-    "saveAll": "Alles bewaren"
+    "saveAll": "Alles bewaren",
+    "saveAs": "Opslaan als"
   },
   "destination": {
     "none": "Geen map",

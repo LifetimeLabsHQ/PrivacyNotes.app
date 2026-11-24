@@ -17,7 +17,7 @@ const KEY = 'privacynotes.ninjaKey';
 /** The key, pressed while the main window has the focus: Ninja opens or closes there. */
 export const NINJA_TOGGLE_EVENT = 'pn:ninja-toggle';
 /** At an unlock, the quick notes the Ninja box kept while the app was locked
- *  are in: the event's detail is their ids. Spec: docs/internal/plans/quick-note-694.md (section 5.1) */
+ *  are in: the event's detail is their ids. Spec: docs/internal/specs/quick-note-694.md (section 5.1) */
 export const QUICK_NOTES_ADDED_EVENT = 'pn:quick-notes-added';
 
 /** Option+Shift+Space on a Mac, Alt+Shift+Space elsewhere. Spec: docs/internal/plans/ninja-anywhere-694.md (N2) */

@@ -51,6 +51,8 @@ export function buildSupportReport(input: {
   pubkey: string;
   device: string;
   version: string;
+  /** Set when the vault is local-only or registered without ever syncing. */
+  mode?: 'local-only' | 'never-synced';
   unsynced: number;
   pendingUploads: number;
   lastOkAt: number | null;
@@ -71,6 +73,7 @@ export function buildSupportReport(input: {
     `Account: ${account}`,
     `Device: ${input.device}`,
     `Version: ${input.version}`,
+    ...(input.mode ? [`Mode: ${input.mode}`] : []),
     `Unsynced notes: ${input.unsynced}`,
     `Pending file uploads: ${input.pendingUploads}`,
     `Last sync: ${input.lastOkAt !== null ? new Date(input.lastOkAt).toISOString() : 'never'}`,

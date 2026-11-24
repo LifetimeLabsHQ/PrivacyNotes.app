@@ -23,7 +23,6 @@
     "generatePassword": "Vygenerovat heslo"
   },
   "note": {
-    "tagsPlaceholder": "#práce #nápady",
     "tagsHelp": "Značky odděl mezerou nebo čárkou. Znak # je nepovinný.",
     "failed": "Poznámku se nepodařilo uložit. Zkus to znovu."
   },
@@ -216,5 +215,11 @@
     "unlockFirst": "Odemkni, ať můžeš použít své přístupové klíče.",
     "offer": "Nabízet přístupové klíče",
     "offerHelp": "Ukládej a používej přístupové klíče na webech."
+  },
+  "organize": {
+    "title": "Složka a značky",
+    "unlockToPick": "Odemkni Trezor pro výběr",
+    "addTag": "Přidat značku...",
+    "proFolders": "Složky jsou funkce Pro. Otevři PrivacyNotes a přejdi na Pro."
   }
 }

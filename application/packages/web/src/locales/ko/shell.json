@@ -284,6 +284,8 @@
     "showNoteLinks": "다른 항목의 링크 표시",
     "showNoteTasks": "다른 항목의 할 일 표시",
     "showGroups": "그룹 표시",
+    "groupBy": "그룹 기준",
+    "groupLetter": "첫 글자",
     "groupsByDate": "날짜별로 그룹화",
     "groupsByLetter": "첫 글자별로 그룹화",
     "groupsNoneForSize": "크기순 정렬에서는 사용할 수 없어요",
@@ -306,6 +308,7 @@
     "nextWeek": "다음 주",
     "pickMonth": "{{month}}, 연도와 월 선택",
     "pickMonthTip": "연도와 월 선택",
+    "showToday": "오늘 보기",
     "showWholeMonth": "한 달 전체 보기",
     "showOneWeek": "한 주 보기"
   },
@@ -614,7 +617,10 @@
   "shareInbox": {
     "saved": "PrivacyNotes에 저장했어요",
     "failed": "PrivacyNotes에 저장하지 못했어요",
-    "tooLarge": "너무 커요. 파일당 최대 {{limit}} MB까지 가능해요."
+    "tooLarge": "너무 커요. 파일당 최대 {{limit}} MB까지 가능해요.",
+    "titlePlaceholder": "제목(선택)",
+    "notePlaceholder": "노트 추가...",
+    "photoCount": "사진 {{count}}장"
   },
   "shortcut": {
     "copyNote": "노트 바로가기 복사",
@@ -949,9 +955,8 @@
     "addressPlaceholder": "링크를 붙여넣으세요…",
     "savePictures": "이미지 저장",
     "savePicturesHint": "이미지를 최대 20개까지 노트와 함께 보관해요. 저장 공간에 포함돼요.",
-    "extensionTipTitle": "브라우저에서 스크랩하면 결과가 더 좋아요",
-    "extensionTip": "브라우저 확장 프로그램은 보이는 그대로 페이지를 저장하고, 로그인해야 볼 수 있는 페이지도 저장해요.",
-    "extensionTipSetUp": "확장 프로그램 설정",
+    "extensionTipTitle": "훨씬 더 나은 스크랩을 원하세요?",
+    "extensionTip": "브라우저 확장 프로그램은 로그인해야 볼 수 있는 페이지까지 어떤 페이지든 클릭 한 번으로 깔끔하게 저장해요.",
     "downloading": "페이지 다운로드 중…",
     "downloadingPictures": "이미지 다운로드 중, {{total}}개 중 {{done}}개",
     "picturesLine_other": "이미지 {{count}}개 · {{size}}, 노트와 함께 저장됨",
@@ -985,7 +990,7 @@
   "apps": {
     "railLabel": "확장 프로그램",
     "title": "브라우저 확장 프로그램",
-    "subtitle": "Chrome, Firefox, Edge, Brave, Vivaldi에서 쓰는 웹 클리퍼이자 비밀번호 관리자예요. 확장 프로그램은 노트를 여는 키를 절대 갖지 않아요.",
+    "subtitle": "Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf, Zen에서 쓰는 웹 클리퍼이자 비밀번호 관리자예요. 확장 프로그램은 노트를 여는 키를 절대 갖지 않아요.",
     "loginsCopyFull": "브라우저 확장 프로그램에 있는 로그인 항목 사본이 가득 찼어요. 일부를 삭제하면 새 로그인 항목이 들어가요.",
     "stepInstall": "확장 프로그램 설치",
     "stepFeatures": "할 수 있는 일 선택",

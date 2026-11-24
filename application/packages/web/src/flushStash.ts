@@ -335,6 +335,29 @@ export function stashedNoteIds(): string[] {
   return [...ids];
 }
 
+/** Read-only snapshot of every stashed body (fresh, kept, and waiting) that
+ *  can be opened right now, without consuming or mutating any slot. Used by
+ *  local-only blob GC so an un-replayed edit never loses its media. */
+export function readFlushStashBodies(): string[] {
+  if (isDemoMode()) return [];
+  const bodies: string[] = [];
+  const inspect = (raw: string | null) => {
+    if (!raw) return;
+    try {
+      const opened = openStash(JSON.parse(raw) as Stash);
+      if (Array.isArray(opened) && typeof opened[0] === 'string') {
+        bodies.push(opened[0]);
+      }
+    } catch { /* unreadable stash */ }
+  };
+  try {
+    inspect(localStorage.getItem(STASH_KEY));
+    inspect(localStorage.getItem(KEPT_STASH_KEY));
+  } catch { /* storage unavailable */ }
+  for (const raw of readWaiting()) inspect(raw);
+  return bodies;
+}
+
 /** Store the waiting list when it changed; false when the storage refused
  *  the write, which leaves the list as it was. */
 function writeWaiting(before: string[], next: string[]): boolean {

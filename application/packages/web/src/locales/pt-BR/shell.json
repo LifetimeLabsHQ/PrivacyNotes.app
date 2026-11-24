@@ -287,6 +287,8 @@
     "showNoteLinks": "Mostrar links em outros itens",
     "showNoteTasks": "Mostrar tarefas em outros itens",
     "showGroups": "Mostrar grupos",
+    "groupBy": "Agrupar por",
+    "groupLetter": "Primeira letra",
     "groupsByDate": "Agrupado por data",
     "groupsByLetter": "Agrupado pela primeira letra",
     "groupsNoneForSize": "Indisponível ao ordenar por tamanho",
@@ -310,6 +312,7 @@
     "nextWeek": "Próxima semana",
     "pickMonth": "{{month}}, escolha o mês e o ano",
     "pickMonthTip": "Escolha o mês e o ano",
+    "showToday": "Mostrar hoje",
     "showWholeMonth": "Mostrar o mês inteiro",
     "showOneWeek": "Mostrar uma semana"
   },
@@ -625,7 +628,10 @@
   "shareInbox": {
     "saved": "Salvo no PrivacyNotes",
     "failed": "Não foi possível salvar no PrivacyNotes",
-    "tooLarge": "Grande demais. O máximo é {{limit}} MB por arquivo."
+    "tooLarge": "Grande demais. O máximo é {{limit}} MB por arquivo.",
+    "titlePlaceholder": "Título (opcional)",
+    "notePlaceholder": "Adicionar uma nota...",
+    "photoCount": "{{count}} fotos"
   },
   "shortcut": {
     "copyNote": "Copiar atalho para a nota",
@@ -984,9 +990,8 @@
     "addressPlaceholder": "Cole um link…",
     "savePictures": "Salvar imagens",
     "savePicturesHint": "Até 20 imagens, guardadas com a nota. Elas contam no seu armazenamento.",
-    "extensionTipTitle": "Recorte pelo navegador para um resultado melhor",
-    "extensionTip": "A extensão do navegador salva a página como você a vê, inclusive páginas que exigem login.",
-    "extensionTipSetUp": "Configurar a extensão",
+    "extensionTipTitle": "Quer recortes muito melhores?",
+    "extensionTip": "A extensão do navegador salva qualquer página de forma limpa em um clique, mesmo páginas que exigem login.",
     "downloading": "Baixando a página…",
     "downloadingPictures": "Baixando imagens, {{done}} de {{total}}",
     "picturesLine_one": "{{count}} imagem · {{size}}, salva com a nota",
@@ -1023,7 +1028,7 @@
   "apps": {
     "railLabel": "Extensão",
     "title": "Extensão do navegador",
-    "subtitle": "Recorte web e gerenciador de senhas no Chrome, Firefox, Edge, Brave e Vivaldi. A extensão nunca guarda a chave que abre suas notas.",
+    "subtitle": "Recorte web e gerenciador de senhas no Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf e Zen. A extensão nunca guarda a chave que abre suas notas.",
     "loginsCopyFull": "A cópia dos seus logins na extensão do navegador está cheia. Novos logins chegam a ela assim que você excluir alguns.",
     "stepInstall": "Instale a extensão",
     "stepFeatures": "Escolha o que ela pode fazer",

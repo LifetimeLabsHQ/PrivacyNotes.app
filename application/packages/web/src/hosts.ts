@@ -111,16 +111,16 @@ let cachedBeta: boolean | null = null;
 export const BETA_ORIGIN = 'https://beta.privacynotes.app';
 export const BETA_DEMO_URL = `${BETA_ORIGIN}/?demo=1`;
 
-/** The beta site's changelog: the commit list of the beta repo, where every
- *  sync lands as one `Sync vX.Y.Z` commit. The BETA stamp links it. */
-export const BETA_COMMITS_URL = 'https://github.com/LifetimeLabsHQ/beta.privacynotes.app/commits/main/';
+/** The beta site's changelog page. The beta GitHub repository is private, so
+ *  the BETA stamp and About link point here instead of GitHub commits (GitHub #890). */
+export const BETA_CHANGELOG_URL = `${BETA_ORIGIN}/changelog`;
 
 /**
  * True on the contributor beta site (beta.privacynotes.app, or its Pages
  * address privacynotes-beta.pages.dev and the per-deploy previews under it).
  * Swaps the header version stamp for the BETA stamp, so nobody mistakes the
  * beta site for the app; the stamp shows the version on hover and links
- * BETA_COMMITS_URL. `?betahost=1` forces it on localhost only, like
+ * BETA_CHANGELOG_URL. `?betahost=1` forces it on localhost only, like
  * `?apphost=1` above.
  * Spec: docs/internal/repos-runbook.md (section 2)
  */

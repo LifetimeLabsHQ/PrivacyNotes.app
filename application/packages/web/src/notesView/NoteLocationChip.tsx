@@ -268,7 +268,7 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
           action="open"
           className={layout === 'popup' ? 'flex-1 justify-center' : ''}
           aria-label={t('location.openOsm')}
-          onClick={() => openExternal(osmUrl(place.lat, place.lng))}
+          onClick={() => openExternal(osmUrl(place.lat, place.lng), { browser: true })}
         >
           OpenStreetMap
         </Button>
@@ -438,7 +438,7 @@ export function ShownMap({ place, scrollZoom = false, bleed = false, height = MA
   const { theme } = useTheme();
   const text = place.label ?? formatCoordinates(place, 2);
   const credit = (href: string, name: string) => (
-    <a href={href} draggable={false} className="underline" onClick={(e) => { e.preventDefault(); openExternal(href); }}>{name}</a>
+    <a href={href} draggable={false} className="underline" onClick={(e) => { if (e.defaultPrevented) return; e.preventDefault(); openExternal(href); }}>{name}</a>
   );
   if (failed) {
     return (

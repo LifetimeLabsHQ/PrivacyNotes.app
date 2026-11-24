@@ -70,7 +70,12 @@
     "unopenedWarn_one": "1 note has a server copy this device can't open. Signing out deletes the copy here, which may be the only good one. Send it again in Settings > ID & Sync first.",
     "unopenedWarn_other": "{{count}} notes have a server copy this device can't open. Signing out deletes the copies here, which may be the only good ones. Send them again in Settings > ID & Sync first.",
     "unopenedKept_one": "1 note has a server copy this device can't open. The copy here stays after you sign out.",
-    "unopenedKept_other": "{{count}} notes have a server copy this device can't open. The copies here stay after you sign out."
+    "unopenedKept_other": "{{count}} notes have a server copy this device can't open. The copies here stay after you sign out.",
+    "localOnlyTitle": "Delete everything on this device?",
+    "localOnlyBody": "Your notes are stored on this device only and have never synced. Signing out permanently deletes them from this device.",
+    "localOnlyCounts": "On this device: {{items}}.",
+    "localOnlyExportBackup": "Export backup",
+    "localOnlyDeleteConfirm": "Delete & sign out"
   },
   "signOutUpload": {
     "uploading": "Uploading your last changes…",
@@ -139,6 +144,7 @@
   "burnShare": {
     "offline": "You're offline. Burn links require a server round-trip. Try again when you're back online.",
     "demo": "Burn links are stored on a server, and the demo never contacts one. Sign up to create real burn links.",
+    "localOnly": "Burn links require an online account. Turn on sync in Settings > ID & Sync to share burn links.",
     "tooLarge": "Note is too large to share via burn link ({{size}}KB). Maximum is {{max}}KB.",
     "storeFailed": "Failed to store burn note on server.",
     "rateLimited": "Too many burn links were made from this connection. Try again later."

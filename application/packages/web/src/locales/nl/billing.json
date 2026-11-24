@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "Ontgrendel alles voor {{price}}",
     "ctaOpening": "Afrekenen openen...",
     "ctaSignUp": "Maak een account aan om te ontgrendelen",
+    "localOnlyHint": "Bij het upgraden wordt eenmalig verbinding gemaakt om je account te registreren en Pro te activeren. De synchronisatie blijft uit.",
+    "localOnlyOffline": "Maak verbinding met internet om te upgraden.",
     "features": {
       "folders": "Submappen",
       "lock": "Vergrendeling en PIN",

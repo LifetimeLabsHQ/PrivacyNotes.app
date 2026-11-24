@@ -50,5 +50,6 @@ export async function buildDemoAuthState(): Promise<AuthState> {
     isPro: false,
     isEarlySupporter: false,
     isCustodial: false,
+    localOnly: false,
   };
 }

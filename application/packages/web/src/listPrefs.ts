@@ -17,6 +17,13 @@
 
 export type SortField = 'modified' | 'created' | 'title' | 'size';
 type SortDir = 'asc' | 'desc';
+/**
+ * How a list groups its rows: decoupled from `sortField` so `groupBy` chooses
+ * the foldable buckets and `sortField` + `sortDir` sorts items inside each
+ * bucket (including when sorted by Size).
+ * Spec: docs/internal/specs/list-groups.md
+ */
+export type GroupBy = 'none' | 'date' | 'letter' | 'type' | 'folder' | 'site';
 
 export type ListPrefs = {
   sortField: SortField;
@@ -89,12 +96,18 @@ export type ListPrefs = {
    */
   showNoteTasks: boolean;
   /**
-   * Whether the list draws group headers. The sort decides the groups: date
-   * buckets for a date sort, first letters for the title sort, none for size.
-   * Default false. Only the panes that draw groups offer the switch.
+   * Whether the list draws group headers. Kept in sync with `groupBy`
+   * (`groupBy !== 'none'`) so older clients still see groups on/off while
+   * carrying `groupBy` through `unknownScalars`.
    * Spec: docs/internal/specs/list-groups.md
    */
   showGroups: boolean;
+  /**
+   * Which grouping mode is active. Default `'none'`. Views that do not offer a
+   * stored mode (e.g. `'type'` in a single-type view) fall back to `'none'`.
+   * Spec: docs/internal/specs/list-groups.md
+   */
+  groupBy: GroupBy;
 };
 
 /**
@@ -170,6 +183,7 @@ const DEFAULT_PREFS: ListPrefs = {
   showNoteLinks: false,
   showNoteTasks: true,
   showGroups: false,
+  groupBy: 'none',
 };
 
 export const DEFAULT_STORE: ListPrefsStore = {
@@ -261,7 +275,41 @@ function hydratePrefs(raw: unknown): ListPrefs {
   if (typeof obj.showNoteLinks === 'boolean') base.showNoteLinks = obj.showNoteLinks;
   if (typeof obj.showNoteTasks === 'boolean') base.showNoteTasks = obj.showNoteTasks;
   if (typeof obj.showGroups === 'boolean') base.showGroups = obj.showGroups;
+  // Backward/forward compat between legacy `showGroups` and `groupBy`:
+  // - An older client that turns `showGroups` off leaves `groupBy` carried via
+  //   `unknownScalars`; honor `showGroups === false` as turning groups off.
+  // - A legacy blob with `showGroups: true` and no `groupBy` (or legacy `'sort'`)
+  //   maps to `'letter'` under title sort and `'date'` otherwise.
+  const rawGroupBy = obj.groupBy as string | undefined;
+  if (obj.showGroups === false) {
+    base.groupBy = 'none';
+    base.showGroups = false;
+  } else if (
+    rawGroupBy === 'none' ||
+    rawGroupBy === 'date' ||
+    rawGroupBy === 'letter' ||
+    rawGroupBy === 'type' ||
+    rawGroupBy === 'folder' ||
+    rawGroupBy === 'site'
+  ) {
+    base.groupBy = rawGroupBy;
+    base.showGroups = rawGroupBy !== 'none';
+  } else if (rawGroupBy === 'sort' || base.showGroups) {
+    base.groupBy = base.sortField === 'title' ? 'letter' : 'date';
+    base.showGroups = true;
+  }
   return base;
+}
+
+/**
+ * Effective grouping mode from a `ListPrefs` value. Handles callers that
+ * construct `{ ...DEFAULT_STORE.global, showGroups: true }` without also
+ * setting `groupBy`.
+ */
+export function resolveGroupBy(prefs: Pick<ListPrefs, 'sortField' | 'showGroups' | 'groupBy'>): GroupBy {
+  if (prefs.groupBy !== 'none') return prefs.groupBy;
+  if (prefs.showGroups) return prefs.sortField === 'title' ? 'letter' : 'date';
+  return 'none';
 }
 
 /** A scope key: `folder:` or `tag:` and a name of bounded length. */

@@ -23,7 +23,6 @@
     "generatePassword": "Skapa ett lösenord"
   },
   "note": {
-    "tagsPlaceholder": "#arbete #idéer",
     "tagsHelp": "Mellanslag eller kommatecken mellan taggarna. # är valfritt.",
     "failed": "Det gick inte att spara anteckningen. Försök igen."
   },
@@ -213,5 +212,11 @@
     "unlockFirst": "Lås upp för att använda dina passkeys.",
     "offer": "Erbjud passkeys",
     "offerHelp": "Spara och använd passkeys på webbplatser."
+  },
+  "organize": {
+    "title": "Mapp och taggar",
+    "unlockToPick": "Lås upp valvet för att välja",
+    "addTag": "Lägg till tagg...",
+    "proFolders": "Mappar är en Pro-funktion. Öppna PrivacyNotes för att uppgradera."
   }
 }

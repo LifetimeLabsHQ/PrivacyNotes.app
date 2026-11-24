@@ -3,6 +3,7 @@ import { credentialKey, isDemoMode } from './demo';
 import { readFlag } from './localStore';
 import { isServerWriteBlocked, useSyncPaused } from './syncPause';
 import { isBelowVersionFloor, useBelowVersionFloor } from './versionFloor';
+import { isLocalTruthOnly, useLocalTruthOnly } from './localOnly';
 
 /**
  * Whether this device has pulled the account since its local copy was last
@@ -116,11 +117,13 @@ export type RestoreGate = 'open' | 'wait' | 'paused' | 'belowFloor';
 export function restoreGate(s: {
   pulled: boolean;
   demo: boolean;
+  /** True when the vault was born locally and has never synced (localOnly or neverSynced). */
+  localTruth?: boolean;
   /** isServerWriteBlocked(): below the release floor, or paused by the user. */
   blocked: boolean;
   belowFloor: boolean;
 }): RestoreGate {
-  if (s.pulled || s.demo) return 'open';
+  if (s.pulled || s.demo || s.localTruth) return 'open';
   if (!s.blocked) return 'wait';
   return s.belowFloor ? 'belowFloor' : 'paused';
 }
@@ -130,6 +133,7 @@ export function restoreGateNow(): RestoreGate {
   return restoreGate({
     pulled: pulledClean,
     demo: isDemoMode(),
+    localTruth: isLocalTruthOnly(),
     blocked: isServerWriteBlocked(),
     belowFloor: isBelowVersionFloor(),
   });
@@ -140,7 +144,8 @@ export function useRestoreGate(): RestoreGate {
   const pulled = useSyncExternalStore(subscribe, hasPulledClean, () => false);
   const paused = useSyncPaused();
   const belowFloor = useBelowVersionFloor();
-  return restoreGate({ pulled, demo: isDemoMode(), blocked: paused || belowFloor, belowFloor });
+  const localTruth = useLocalTruthOnly();
+  return restoreGate({ pulled, demo: isDemoMode(), localTruth, blocked: paused || belowFloor, belowFloor });
 }
 
 /** The line each closed gate shows, from the importExport catalog. */

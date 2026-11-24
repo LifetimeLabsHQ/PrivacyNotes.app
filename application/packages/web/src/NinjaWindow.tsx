@@ -20,7 +20,7 @@ import { Button } from './ui';
  * Its note mode (QuickNoteView) is its own view, not the mirror's: Mod+N or
  * the row "Write a note" opens it, and a locked app that can keep a note
  * opens it at once. Only the finished note goes to the main window.
- * Spec: docs/internal/plans/ninja-anywhere-694.md (section 3); docs/internal/plans/quick-note-694.md (section 5)
+ * Spec: docs/internal/plans/ninja-anywhere-694.md (section 3); docs/internal/specs/quick-note-694.md (section 5)
  */
 
 async function send(event: string, payload?: unknown): Promise<void> {

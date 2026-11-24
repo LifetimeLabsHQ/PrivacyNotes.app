@@ -31,6 +31,7 @@ import { textMatcher } from './textMatch';
 import { noteLinkKey, noteLinkTarget, resolveNoteLinkMatches } from './noteLinks';
 import { headingsFromDoc, uniqueHeadings, type NoteHeadingsAnswer } from './noteHeadings';
 import { placeAtCaret } from './usePopoverPosition';
+import { OverflowTip } from './OverflowTip';
 
 /* ------------------------------------------------------------------ */
 /* Note titles provider - set from NotesView                          */
@@ -204,7 +205,7 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
 
     if (items.length === 0 && !showCreate) {
       return (
-        <div className="z-50 w-64 rounded-lg border border-divider bg-surface-2 shadow-lg overflow-hidden">
+        <div className="z-50 w-64 max-w-[calc(100vw-16px)] rounded-lg border border-divider bg-surface-2 shadow-lg overflow-hidden">
           <div className="px-3 py-2 text-body text-pn-muted">
             {t('noteLinkSuggestion.noMatches')}
           </div>
@@ -216,31 +217,35 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
       const first = items[0]!;
       const filter = query.slice(query.indexOf('#') + 1);
       const top = Math.min(...items.map((i) => (i.kind === 'heading' ? i.level : 1)));
+      const headingsLabel = t('noteLinkSuggestion.headingsIn', { title: 'note' in first ? first.note : '' });
       return (
         <div
           ref={listRef}
-          className="z-50 w-72 max-h-64 overflow-y-auto rounded-lg border border-divider bg-surface-2 shadow-lg"
+          className="z-50 min-w-[min(18rem,calc(100vw-16px))] w-max max-w-[min(32rem,calc(100vw-16px))] max-h-64 overflow-y-auto rounded-lg border border-divider bg-surface-2 shadow-lg"
         >
-          <div className="px-3 pt-2 pb-1 text-small text-pn-muted truncate" dir="auto">
-            {t('noteLinkSuggestion.headingsIn', { title: 'note' in first ? first.note : '' })}
-          </div>
+          <OverflowTip text={headingsLabel} className="block">
+            <div className="px-3 pt-2 pb-1 text-small text-pn-muted truncate" dir="auto">
+              {headingsLabel}
+            </div>
+          </OverflowTip>
           {items.map((item, index) =>
             item.kind === 'heading' ? (
-              <button
-                key={item.id}
-                type="button"
-                data-selected={index === selectedIndex}
-                onClick={() => pick(item)}
-                onMouseEnter={() => setSelectedIndex(index)}
-                style={{ paddingInlineStart: `${12 + (item.level - top) * 12}px` }}
-                className={`w-full text-start pe-3 py-1.5 text-body truncate transition ${
-                  index === selectedIndex
-                    ? 'bg-accent/10 text-accent-strong dark:bg-accent/20'
-                    : 'text-pn hover:bg-pn/5'
-                }`}
-              >
-                {highlightMatch(item.title, filter)}
-              </button>
+              <OverflowTip key={item.id} text={item.title} className="block">
+                <button
+                  type="button"
+                  data-selected={index === selectedIndex}
+                  onClick={() => pick(item)}
+                  onMouseEnter={() => setSelectedIndex(index)}
+                  style={{ paddingInlineStart: `${12 + (item.level - top) * 12}px` }}
+                  className={`block w-full text-start pe-3 py-1.5 text-body truncate transition ${
+                    index === selectedIndex
+                      ? 'bg-accent/10 text-accent-strong dark:bg-accent/20'
+                      : 'text-pn hover:bg-pn/5'
+                  }`}
+                >
+                  {highlightMatch(item.title, filter)}
+                </button>
+              </OverflowTip>
             ) : (
               <div key={item.id} className="px-3 py-2 text-body text-pn-muted">
                 {item.title}
@@ -254,23 +259,24 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
     return (
       <div
         ref={listRef}
-        className="z-50 w-72 max-h-64 overflow-y-auto rounded-lg border border-divider bg-surface-2 shadow-lg"
+        className="z-50 min-w-[min(18rem,calc(100vw-16px))] w-max max-w-[min(32rem,calc(100vw-16px))] max-h-64 overflow-y-auto rounded-lg border border-divider bg-surface-2 shadow-lg"
       >
         {items.map((item, index) => (
-          <button
-            key={item.id}
-            type="button"
-            data-selected={index === selectedIndex}
-            onClick={() => pick(item)}
-            onMouseEnter={() => setSelectedIndex(index)}
-            className={`w-full text-start px-3 py-2 text-body truncate transition ${
-              index === selectedIndex
-                ? 'bg-accent/10 text-accent-strong dark:bg-accent/20'
-                : 'text-pn hover:bg-pn/5'
-            }`}
-          >
-            {highlightMatch(item.title, query)}
-          </button>
+          <OverflowTip key={item.id} text={item.title} className="block">
+            <button
+              type="button"
+              data-selected={index === selectedIndex}
+              onClick={() => pick(item)}
+              onMouseEnter={() => setSelectedIndex(index)}
+              className={`block w-full text-start px-3 py-2 text-body truncate transition ${
+                index === selectedIndex
+                  ? 'bg-accent/10 text-accent-strong dark:bg-accent/20'
+                  : 'text-pn hover:bg-pn/5'
+              }`}
+            >
+              {highlightMatch(item.title, query)}
+            </button>
+          </OverflowTip>
         ))}
         {showCreate && (
           <>

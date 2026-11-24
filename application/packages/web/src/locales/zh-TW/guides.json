@@ -439,6 +439,58 @@
         }
       ]
     },
+    "notion": {
+      "app": "Notion",
+      "title": "匯出你的 Notion 工作區",
+      "metaTitle": "如何匯出 Notion 工作區 - PrivacyNotes",
+      "lead": "將你的 Notion 工作區匯出成 Markdown & CSV 的 .zip 檔，PrivacyNotes 會移除 Notion 的 32 字元 ID、將子頁面重建為資料夾，並把頁面連結轉成筆記連結。",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/notion-settings.webp",
+            "alt": "Notion 的「Settings」中「General」頁面，顯示「Export」區段以及「Workspace content」旁的「Export」按鈕。",
+            "width": 1576,
+            "height": 754
+          },
+          "h": "匯出整個工作區",
+          "steps": [
+            "開啟網頁版或桌面版 Notion，從工作區選單開啟「Settings」。",
+            "在「Workspace」底下開啟「General」，然後捲動到「Export」。",
+            "點按「Workspace content」旁的「Export」。",
+            "如果只想匯出單一頁面及其子頁面，請開啟該頁面的三點選單，然後選擇「More > Export」。"
+          ],
+          "p": [
+            "大型工作區的匯出會在背景進行，Notion 完成後會寄給你下載連結。請直接把那個 .zip 原封不動拖進 PrivacyNotes，不需要解壓縮 - 封存檔裡巢狀的分段 zip 會自動處理。"
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/notion-export.webp",
+            "alt": "Notion 的「Export」對話框，已選取「Markdown & CSV」，「Page content」設為「Everything」，並同時開啟「Include private pages」和「Create folders for subpages」。",
+            "width": 1576,
+            "height": 600
+          },
+          "h": "選「Markdown & CSV」，並開啟資料夾選項",
+          "steps": [
+            "將「Export format」設為「Markdown & CSV」。",
+            "將「Page content」設為「Everything」，讓你的圖片、PDF 和附加的檔案一併包含在內。",
+            "開啟「Include private pages」（匯出單一頁面時為「Include subpages」）和「Create folders for subpages」。",
+            "點按「Export」並儲存 .zip 檔案。"
+          ],
+          "p": [
+            "HTML 與 PDF 匯出不含 Markdown 檔案，Notion 匯入器無法讀取。請選擇「Markdown & CSV」，讓你的結構、連結和格式都能乾淨完整地過來。"
+          ]
+        },
+        {
+          "h": "哪些內容會跟著過來",
+          "p": [
+            "Notion 會在每個匯出的檔名與內部連結後方加上 32 字元的 ID。PrivacyNotes 會從每個標題與資料夾名稱移除這些 ID、去掉最上層的「Private & Shared」外層資料夾，並將巢狀子頁面重建為資料夾。",
+            "標題、清單、巢狀核取清單、表格、附語言的程式碼區塊、數學公式、底線與引言都會原樣過來。Notion 標註會轉換成 PrivacyNotes 標註，[匯出頁面之間的連結與提及會變成筆記連結](/tw/help/note-links)，而上傳的圖片、PDF 與檔案會匯入你的儲存空間。",
+            "資料庫列頁面會以筆記的形式匯入以該資料庫命名的資料夾中，而任何「Tags」屬性都會加為標籤。資料庫的 CSV 表格檔案會略過，並在匯入摘要中計數。Notion 自己的 Markdown 匯出不包含文字顏色、螢光標示以及垃圾桶中的頁面。"
+          ]
+        }
+      ]
+    },
     "notesnook": {
       "app": "Notesnook",
       "title": "匯出你的 Notesnook 筆記",
@@ -1281,6 +1333,53 @@
         }
       ]
     },
+    "diaro": {
+      "app": "Diaro",
+      "title": "匯出你的 Diaro 日誌",
+      "metaTitle": "如何匯出 Diaro 備份 - PrivacyNotes",
+      "lead": "Diaro 可以從手機應用程式將你的整本日誌匯出成一個 .zip 備份，PrivacyNotes 會把每一則紀錄匯入「日誌」，連同資料夾、標籤、心情、地點、天氣與照片。",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-menu.webp",
+            "alt": "Diaro 的「Data」設定畫面，顯示「Backup & restore」與備份檔案的儲存資料夾",
+            "width": 1576,
+            "height": 732
+          },
+          "h": "在 Diaro 應用程式中建立未加密備份",
+          "steps": [
+            "在 Android 或 iOS 上開啟 Diaro，展開左側選單，然後點一下「Settings」齒輪圖示。",
+            "選擇「Data」，往下捲動到「Backup & restore」，再點一下「Backup & restore」。",
+            "點一下右上角的「+」按鈕。",
+            "保持「Encrypt entries in backup file」和「Do not backup attachments」不要勾選，然後點一下「Backup」。",
+            "從「Storage directories」下方顯示的備份資料夾（如果有同步到 Dropbox，也可以從那裡）複製 Diaro_YYYYMMDD.zip 檔案，再拖進 PrivacyNotes。"
+          ],
+          "p": [
+            "在手機應用程式中建立備份是免費的，不需要 Pro 訂閱。Diaro Online 只在付費方案上提供 PDF、DOCX 與 TXT 匯出，且沒有備份下載按鈕。"
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-dialog.webp",
+            "alt": "Diaro 的「Backup」對話框，「Encrypt entries in backup file」和「Do not backup attachments」皆保持未勾選",
+            "width": 1576,
+            "height": 817
+          },
+          "h": "選未加密的 .zip 備份，不要選 PDF、TXT、CSV 或加密備份",
+          "p": [
+            "未加密備份會將 DiaroBackup.xml 和你的 media/photo 資料夾寫進同一個 .zip 檔案。如果勾選「Encrypt entries in backup file」，Diaro 會改為寫出 DiaroBackup.denc，PrivacyNotes 無法解鎖，並會拒絕匯入且提醒你先關閉加密。",
+            "單獨的 DiaroBackup.xml 檔案會匯入所有文字與中繼資料，但不包含照片，匯入摘要也會統計每張缺少的圖片。請取消勾選「Do not backup attachments」並拖入完整的 .zip，讓你的照片一起過來。"
+          ]
+        },
+        {
+          "h": "哪些內容會跟著過來",
+          "p": [
+            "[每一則紀錄都會進到「日誌」](/tw/help/journal)，並依該則紀錄所記載的時區偏移量落在對應的日曆日期。沒有標題的紀錄會採用當天新紀錄的日期標題，裸網址也會變成可點的連結。",
+            "Diaro 資料夾會變成資料夾，標籤仍是標籤，心情則會依其 Diaro 權重填入[心情追蹤項目](/tw/help/choose-trackers)（自訂的心情名稱也會顯示在最上方那一行）。附有座標的位置會填入該則紀錄的地點膠囊，只有名稱的地點與天氣會放在最上方的一行，照片則依原本的順序匯入。"
+          ]
+        }
+      ]
+    },
     "diarium": {
       "app": "Diarium",
       "title": "匯出你的 Diarium 日記",
@@ -1420,6 +1519,69 @@
             "筆記本會變成一個資料夾，裡面為每個節群組和節各有一個資料夾。每個頁面會變成其節資料夾中的一篇筆記，日期為 OneNote 建立它的時間，子頁面則和它的頁面放在同一個資料夾。",
             "標題、粗體、斜體、底線、顏色、螢光標示、項目符號與編號清單、表格和程式碼段落都會照原樣過來。待辦標記會變成核取清單項目，完成的會勾選，而其他筆記標記，例如 Important 或 Question，會變成筆記上的標籤。[頁面之間的連結會變成筆記連結](/tw/help/note-links)，圖片和附加的檔案則會匯入你的儲存空間。",
             "單獨的節檔案（.one），或壓縮過的筆記本資料夾，也都可以。用筆繪製的圖畫、錄音和方程式在這裡沒有對應的形式，所以匯入預覽會列出它們的數量，而 OneNote 資源回收筒裡的頁面不屬於封裝檔的內容。"
+          ]
+        }
+      ]
+    },
+    "day-one": {
+      "app": "Day One",
+      "title": "匯出你的 Day One 日誌",
+      "metaTitle": "如何匯出 Day One 日誌 - PrivacyNotes",
+      "lead": "Day One 會把你的日誌連同媒體匯出成一個 JSON .zip，PrivacyNotes 會將每一則紀錄帶進「日誌」，連同日期、標籤、地點、天氣與照片。",
+      "sections": [
+        {
+          "h": "匯出含媒體的 JSON",
+          "steps": [
+            "開啟 Day One 網頁版，選取你想搬移的日誌。",
+            "選擇「Edit Journal」，開啟「Journal Settings」，再選擇「Export Journal」。",
+            "選擇「Export journal JSON file」，再選取「Include media」。Day One 會存出一個包含你的紀錄與附件的 .zip。",
+            "把那個 .zip 原封不動拖進來。"
+          ],
+          "p": [
+            "在 Mac 或 iOS 上，請改選「File > Export > JSON」。你可以一次匯出一本日誌，或把所有日誌匯出成同一個 .zip。"
+          ]
+        },
+        {
+          "h": "請選 JSON，不要選 PDF 或純文字",
+          "p": [
+            "JSON 是能保留日期、時區、標籤、星號、位置、天氣、紀錄連結與媒體的格式。單獨的 .json 檔案只會匯入文字，不包含照片或檔案，匯入摘要也會統計找不到的附件數量。"
+          ]
+        },
+        {
+          "h": "哪些內容會跟著過來",
+          "p": [
+            "[每一則紀錄都會進到「日誌」](/tw/help/journal)，並依該則紀錄本身的時區落在對應的日曆日期。開頭的標題會成為紀錄標題，沒有標題的紀錄則會以日期作為標題。加星號與已釘選的紀錄都會保持釘選，標籤仍是標籤。",
+            "你的位置會填入該則紀錄的地點膠囊，天氣、活動與音樂則放在最上方的一行。照片會匯入成圖片，音訊、影片與 PDF 會匯入成附件，紀錄之間的連結則會變成[筆記連結](/tw/help/note-links)。如果一個 .zip 裡有多本日誌，每本日誌會變成一個資料夾。"
+          ]
+        }
+      ]
+    },
+    "todoist": {
+      "app": "Todoist",
+      "title": "匯出你的 Todoist 任務",
+      "metaTitle": "如何匯出 Todoist 任務 - PrivacyNotes",
+      "lead": "將 Todoist 專案匯出成備份 .zip 或專案 .csv 檔案，PrivacyNotes 會把每個專案轉成一份任務清單，連同區段、子任務與留言。",
+      "sections": [
+        {
+          "h": "下載備份或將專案匯出為 CSV",
+          "steps": [
+            "在 Todoist 中，若使用 Pro 或 Business 方案，請開啟「Settings > Backups」並下載最新的備份 .zip。裡面為每個使用中的專案各有一個 .csv 檔案。",
+            "在免費方案中，請開啟一個專案，選擇三點選單 >「Import & export > Export as CSV」，並儲存 .csv 檔案。",
+            "把 .zip 或 .csv 檔案拖進 PrivacyNotes。"
+          ]
+        },
+        {
+          "h": "匯出單一專案時請關閉相對日期",
+          "p": [
+            "在「Export as CSV」選單中，請關閉「Use relative dates」，這樣到期日才會儲存成例如 2026-12-15 這樣的日曆日期，而不是「in 21 days」。兩種都會以文字形式匯入任務那一列，而日曆日期之後也能保持準確。",
+            "Todoist 的 CSV 匯出與備份不包含已完成的任務和已封存的專案，所以檔案裡只會有進行中的任務。"
+          ]
+        },
+        {
+          "h": "東西會落在哪裡",
+          "p": [
+            "每個專案都會在「[任務](/tw/help/tasks)」中成為以該專案命名的任務清單；不論清單或看板專案，區段都會成為標題，子任務也會維持原本的巢狀層級。P1 至 P3 優先順序、到期日、持續時間、截止日期與行內 @標籤都會保留在各列上，每個 @標籤也都會加為這份清單的標籤。",
+            "任務描述、任務留言與專案留言都會一併帶過來，無法勾選完成的標題型任務則會保留為粗體項目符號，而不是核取方塊。個別任務列上的提醒不會帶過來，並會在匯入摘要中計數。"
           ]
         }
       ]

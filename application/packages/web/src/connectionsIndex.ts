@@ -1,4 +1,4 @@
-import { noteLinkKey, noteLinkTargets, parseNoteLinkTarget } from './noteLinks';
+import { noteLinkEntries, noteLinkKey, noteLinkTargets, parseNoteLinkTarget } from './noteLinks';
 import { extractAttachmentIds } from './mediaRefs';
 
 /**
@@ -85,6 +85,28 @@ export function linksInBody<T extends Item>(
     if (match.id !== sourceId) ids.add(match.id);
   }
   return { ids: [...ids], missing: [...missing.values()] };
+}
+
+/**
+ * Outgoing target ids in `body` whose note-link carries the suggested marker
+ * (added via Suggested connections). Resolves by the same rules as `linksInBody`.
+ */
+export function suggestedLinksInBody<T extends Item>(
+  body: string,
+  sourceId: string,
+  { hasNote, resolve }: ReturnType<typeof linkResolver<T>>,
+): Set<string> {
+  const out = new Set<string>();
+  for (const entry of noteLinkEntries(body)) {
+    if (!entry.suggested) continue;
+    const { note } = parseNoteLinkTarget(entry.target, hasNote);
+    if (note === '') continue;
+    const matches = resolve(note);
+    if (matches.length !== 1) continue;
+    const match = matches[0]!;
+    if (match.id !== sourceId) out.add(match.id);
+  }
+  return out;
 }
 
 export function buildLinkIndex<T extends Item>(

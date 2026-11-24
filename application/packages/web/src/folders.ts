@@ -36,6 +36,15 @@ export interface FolderDef {
    * copy" - see `mergeFolderTrees`.
    */
   updatedAt?: string;
+  /**
+   * When `order` last changed, ISO, on the dragged folder AND on every
+   * sibling a drag renumbered. `updatedAt` cannot carry that: it is the
+   * stamp for the name too, so stamping a shifted sibling with it would let
+   * a drag overrule a rename. Without it, a sibling's new index lost every
+   * merge against the server's older copy and the drop snapped back
+   * (GitHub #855). Absent reads as older than any stamped order.
+   */
+  orderedAt?: string;
 }
 
 /**
@@ -249,6 +258,29 @@ export function folderScope(
  * because the chip truncates and its leaf is the part that matters.
  * Spec: docs/internal/specs/folder-subfolders.md (D4)
  */
+/**
+ * Full path label for every folder ("Prose / Arabic", or "… / Parent / Child"
+ * beyond two levels), or relative to `rootId` when a branch is open. Used by
+ * Group by Folder headers so sibling subtrees sharing leaf names read apart.
+ */
+export function folderPathLabels(folders: FolderDef[], rootId: string | null = null): Map<string, string> {
+  if (rootId) return branchPathLabels(folders, rootId);
+  const byId = new Map(folders.map((f) => [f.id, f]));
+  const labels = new Map<string, string>();
+  for (const f of folders) {
+    const names: string[] = [];
+    const seen = new Set<string>();
+    let current: FolderDef | undefined = f;
+    while (current && !seen.has(current.id)) {
+      seen.add(current.id);
+      names.unshift(current.name);
+      current = current.parentId ? byId.get(current.parentId) : undefined;
+    }
+    labels.set(f.id, names.length > 2 ? ['…', ...names.slice(-2)].join(' / ') : names.join(' / '));
+  }
+  return labels;
+}
+
 export function branchPathLabels(folders: FolderDef[], rootId: string): Map<string, string> {
   const byId = new Map(folders.map((f) => [f.id, f]));
   const labels = new Map<string, string>();
@@ -336,7 +368,7 @@ export function moveFolder(
   const order = nextOrder(folders, newParentId);
   const at = stamp();
   return folders.map((f) =>
-    f.id === id ? { ...f, parentId: newParentId, order, updatedAt: at } : f,
+    f.id === id ? { ...f, parentId: newParentId, order, updatedAt: at, orderedAt: at } : f,
   );
 }
 
@@ -407,18 +439,17 @@ export function applyFolderPlacement(
       const order = destination.get(id) ?? f.order;
       if (f.parentId === newParentId && f.order === order) return f;
       changed = true;
-      return { ...f, parentId: newParentId, order, updatedAt: at };
+      return { ...f, parentId: newParentId, order, updatedAt: at, orderedAt: at };
     }
-    // Only the dragged folder is stamped. A sibling whose index shifted was
-    // not edited by anyone, and one stamp covers the name, the parent and
-    // the order together, so stamping it here would let a drag win a name
-    // conflict against a real rename made on another device. The cost is
-    // that a shifted index can lose a merge, which the next drag corrects;
-    // the alternative costs a name the user typed.
+    // Only the dragged folder gets `updatedAt`. A sibling whose index shifted
+    // was not renamed or moved by anyone, and `updatedAt` also covers the
+    // name, so stamping it here would let a drag win a name conflict against
+    // a real rename made on another device. Its new index gets `orderedAt`
+    // instead, which the merge reads for `order` alone (GitHub #855).
     const wanted = f.parentId === newParentId ? destination.get(f.id) : source.get(f.id);
     if (wanted === undefined || f.order === wanted) return f;
     changed = true;
-    return { ...f, order: wanted };
+    return { ...f, order: wanted, orderedAt: at };
   });
   // A drop that lands a folder back where it started must not look like an
   // edit: same array, so nothing re-renders and no settings write syncs.
@@ -646,8 +677,9 @@ export function validateFolders(raw: unknown): FolderDef[] {
     const parentId = typeof f.parentId === 'string' && f.parentId ? f.parentId : null;
     const order = typeof f.order === 'number' && Number.isFinite(f.order) ? f.order : Number.MAX_SAFE_INTEGER;
     const updatedAt = typeof f.updatedAt === 'string' && f.updatedAt ? f.updatedAt : undefined;
+    const orderedAt = typeof f.orderedAt === 'string' && f.orderedAt ? f.orderedAt : undefined;
     seenIds.add(f.id);
-    cleaned.push({ id: f.id, name, parentId, order, ...(updatedAt ? { updatedAt } : {}) });
+    cleaned.push({ id: f.id, name, parentId, order, ...(updatedAt ? { updatedAt } : {}), ...(orderedAt ? { orderedAt } : {}) });
   }
   // Orphaned parents become roots (parent id not in the set).
   const idSet = new Set(cleaned.map((f) => f.id));
@@ -739,6 +771,9 @@ export function validateFolderTombstones(raw: unknown, now = Date.now()): Folder
  *   copy beats an unstamped one, because a client that records edits wrote
  *   it later than one that does not. With neither stamped, `unstampedWinner`
  *   decides, and the caller knows which side can be hiding an unpushed edit.
+ * - `order` then follows the later `orderedAt`, when both copies sit under
+ *   the same parent. A drag renumbers siblings nobody edited, and their new
+ *   places must survive a merge against a copy from before the drag.
  *
  * A folder that a tombstone removes takes its children with it only insofar
  * as `validateFolders` re-parents them to the root; nothing here deletes a
@@ -769,6 +804,11 @@ export function mergeFolderTrees(
     } else if (unstampedWinner === 'local') {
       live.set(f.id, f);
     }
+    const winner = live.get(f.id) as FolderDef;
+    const other = winner === f ? existing : f;
+    if (other.parentId === winner.parentId && (other.orderedAt ?? '') > (winner.orderedAt ?? '')) {
+      live.set(f.id, { ...winner, order: other.order, orderedAt: other.orderedAt });
+    }
   }
   // A tombstone is final. No edit stamp outranks it: a rename or a drag is
   // not a request to bring back something deleted elsewhere, and a drag
@@ -795,7 +835,8 @@ export function folderTreesEqual(a: FolderTree, b: FolderTree): boolean {
       other.name !== f.name ||
       other.parentId !== f.parentId ||
       other.order !== f.order ||
-      other.updatedAt !== f.updatedAt
+      other.updatedAt !== f.updatedAt ||
+      other.orderedAt !== f.orderedAt
     ) {
       return false;
     }

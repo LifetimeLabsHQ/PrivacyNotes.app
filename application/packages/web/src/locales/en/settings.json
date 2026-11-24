@@ -19,6 +19,7 @@
     "proUnlimited": "· unlimited devices",
     "earlySupporterThanks": "Early Supporter, thank you for being here first",
     "proThanks": "You're all set. Thanks for supporting the project",
+    "freeLocalOnly": "Free plan",
     "freeLimit_one": "<strong>Free plan</strong>, up to {{count}} device.",
     "freeLimit_other": "<strong>Free plan</strong>, up to {{count}} devices.",
     "freeUsage": "Currently using {{used}} of {{limit}}.",
@@ -89,7 +90,25 @@
   },
   "images": {
     "spaceSaverTitle": "Space saver",
-    "spaceSaverDesc": "Resized to fit {{px}} pixels and saved as JPEG at {{quality}}% quality. A small loss of detail for a fraction of the space. A GIF keeps its animation, and Vault files stay as they are.",
+    "spaceSaverDesc": "Shrinks new images and saves them as JPEG. A GIF keeps its animation, and Vault files stay as they are.",
+    "compressionTitle": "Compression",
+    "level": {
+      "standard": "Standard",
+      "small": "Small",
+      "tiny": "Tiny"
+    },
+    "levelSpec": "Fits {{px}} pixels at {{quality}}% JPEG quality.",
+    "levelDesc": {
+      "standard": "Sharp detail for a fraction of the space.",
+      "small": "Smaller files while keeping photos and screenshots clear.",
+      "tiny": "Smallest size for tight storage; fine text may soften."
+    },
+    "previewSample": "{{size}} phone photo",
+    "previewSavedAs": "Saved as",
+    "previewCompressed": "~{{size}} JPEG ({{px}} px, {{quality}}%)",
+    "previewOriginal": "{{size}} original",
+    "previewBarLabel": "Estimated saved image size compared to the original",
+    "previewFits": "~{{count}} photos / {{storage}}",
     "removeLocationTitle": "Remove location data",
     "removeLocationDesc": "The place an image was taken is removed before it is saved.",
     "contactTitle": "Small contact photos",
@@ -139,7 +158,8 @@
     "verifyNeverPushed_one": "{{count}} item here has never reached the server",
     "verifyNeverPushed_other": "{{count}} items here have never reached the server",
     "verifyRepairAction": "Re-download everything",
-    "verifyRepairQueued": "The next sync will re-read your whole vault. Nothing waiting to upload will be lost."
+    "verifyRepairQueued": "The next sync will re-read your whole vault. Nothing waiting to upload will be lost.",
+    "localOnlyOfflineError": "You're offline. Connect to the internet to turn on sync."
   },
   "accountId": {
     "heading": "Account ID",
@@ -469,6 +489,7 @@
     "blockedByStorage": "You have an active storage subscription. Cancel it from Storage in settings before you can delete your account.",
     "localLabel": "Delete local data",
     "localDesc": "Wipes notes, images, and cached data from this device. This does not delete your account, it only cleans up this browser.",
+    "localDescLocalOnly": "Wipes all notes, images, and files from this device. Nothing is stored in the cloud.",
     "localRequired": "(required when deleting account)",
     "localUnsynced_one": "{{items}} on this device hasn't synced. Deleting local data destroys it for good.",
     "localUnsynced_other": "{{items}} on this device haven't synced. Deleting local data destroys them for good.",
@@ -508,6 +529,8 @@
     "updateRequiredAria": "Update required, sync paused",
     "paused": "Sync off",
     "pausedTooltip": "Sync is off on this device. Your notes stay here until you turn it on.",
+    "localOnly": "Local only",
+    "localOnlyAria": "Local only. Your notes stay on this device",
     "wifiHold": "Waiting for wifi",
     "wifiHoldTooltip": "Files upload when wifi returns. Notes still sync.",
     "notBackedUp": "Not backed up",
@@ -575,7 +598,27 @@
     "passPushFailed_one": "{{count}} failed",
     "passPushFailed_other": "{{count}} failed",
     "passHalted_one": "stopped, {{count}} waiting",
-    "passHalted_other": "stopped, {{count}} waiting"
+    "passHalted_other": "stopped, {{count}} waiting",
+    "localOnlyBody": "Your notes stay encrypted on this device and are not synced to our servers.",
+    "localOnlyNotes_one": "{{count}} note on this device",
+    "localOnlyNotes_other": "{{count}} notes on this device",
+    "localOnlyBackupHint": "Nothing is synced to the cloud. Set up automatic backups to keep a safe copy on another drive or folder.",
+    "localOnlySetUpBackups": "Set up automatic backups",
+    "localOnlyTurnOnSync": "Turn on sync",
+    "localOnlyTurningOn": "Turning on sync...",
+    "localOnlyAccountIdHint": "Not registered on our servers yet."
+  },
+  "localOnlyNotice": {
+    "body": "{{feature}}: turn on sync in Settings > ID & Sync to use this online feature.",
+    "cta": "Go to ID & Sync",
+    "features": {
+      "multiDevice": "Multi-device management",
+      "keyCustody": "Cloud key custody",
+      "cloudStorage": "Cloud storage",
+      "twoFactorPasskeys": "Two-factor sign-in and passkeys",
+      "phraseChange": "Changing your recovery phrase",
+      "burnShare": "Burn-after-reading links"
+    }
   },
   "language": {
     "reportMistake": "Report a translation mistake",

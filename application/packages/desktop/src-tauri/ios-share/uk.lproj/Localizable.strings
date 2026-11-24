@@ -1,3 +1,10 @@
 "saved" = "Збережено в PrivacyNotes";
 "failed" = "Не вдалося зберегти в PrivacyNotes";
 "tooLarge" = "Завеликий. Максимум {{limit}} МБ на файл.";
+"save" = "Зберегти";
+"cancel" = "Скасувати";
+"note" = "Нотатка";
+"files" = "Файли";
+"titlePlaceholder" = "Заголовок (необов’язково)";
+"notePlaceholder" = "Додати нотатку...";
+"photoCount" = "Фото: {{count}}";

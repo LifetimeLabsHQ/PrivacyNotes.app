@@ -20,7 +20,7 @@ import { brandMark, CHROME_CSS, GITHUB_ICON, OG_IMAGE_TAGS, ogLocaleTag, SITE_FO
 // Web build only, like the other static pages: the app downloads do not
 // carry this page (docs/contrib/bundle-size.md section 1). The same shell as
 // /changelog and /help (.pcols grid, .rail-col sidebar); zero inline scripts.
-// Spec: docs/internal/plans/third-party-notices.md
+// Spec: docs/internal/specs/third-party-notices.md
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ORIGIN = 'https://privacynotes.app';
@@ -485,7 +485,7 @@ const workerModuleIds = new Set<string>();
  * page lists what ships only in a worker (the plugin worker's engines). Vite
  * builds a worker while the main build transforms the file that starts it,
  * so this runs before the page plugin's `generateBundle`.
- * Spec: docs/internal/plans/third-party-notices.md (section 2)
+ * Spec: docs/internal/specs/third-party-notices.md (section 2)
  */
 export function licensesWorkerModules(): Plugin {
   return {

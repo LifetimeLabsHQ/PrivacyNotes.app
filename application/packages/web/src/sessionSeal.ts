@@ -20,14 +20,14 @@
  * an older bundle reads the plain name only, and would meet "Session
  * expired" once a newer tab seals. This release reads sealed copies and
  * writes none; a later one turns the writes on.
- * Spec: docs/internal/plans/session-under-app-lock.md
+ * Spec: docs/internal/specs/session-under-app-lock.md
  */
 import { base64ToBytes, bytesToBase64, decryptBytesAad, deriveSessionSealKey, encryptBytesAad } from '@notes/shared';
 import { isDemoMode } from './demo';
 import { logAuthEvent } from './authDiag';
 
-// Spec: docs/internal/plans/session-under-app-lock.md (section 2.6, the release switch)
-const SESSION_SEAL_RELEASED = false;
+// Spec: docs/internal/specs/session-under-app-lock.md (section 2.6, the release switch)
+const SESSION_SEAL_RELEASED = true;
 const PREFIX = 'pnsess1:';
 // A settle or a reseal rewrites a session only when its access token has
 // longer than this to live: auth-js refreshes within the last 90 seconds,

@@ -287,6 +287,8 @@
     "showNoteLinks": "Afficher les liens des autres éléments",
     "showNoteTasks": "Afficher les tâches des autres éléments",
     "showGroups": "Afficher les groupes",
+    "groupBy": "Grouper par",
+    "groupLetter": "Première lettre",
     "groupsByDate": "Groupés par date",
     "groupsByLetter": "Groupés par première lettre",
     "groupsNoneForSize": "Indisponible avec le tri par taille",
@@ -310,6 +312,7 @@
     "nextWeek": "Semaine suivante",
     "pickMonth": "{{month}}, choisir un mois et une année",
     "pickMonthTip": "Choisir un mois et une année",
+    "showToday": "Afficher aujourd'hui",
     "showWholeMonth": "Afficher tout le mois",
     "showOneWeek": "Afficher une semaine"
   },
@@ -625,7 +628,10 @@
   "shareInbox": {
     "saved": "Enregistré dans PrivacyNotes",
     "failed": "Impossible d'enregistrer dans PrivacyNotes",
-    "tooLarge": "Trop volumineux. Maximum {{limit}} Mo par fichier."
+    "tooLarge": "Trop volumineux. Maximum {{limit}} Mo par fichier.",
+    "titlePlaceholder": "Titre (facultatif)",
+    "notePlaceholder": "Ajouter une note...",
+    "photoCount": "{{count}} photos"
   },
   "shortcut": {
     "copyNote": "Copier le raccourci vers la note",
@@ -984,9 +990,8 @@
     "addressPlaceholder": "Colle un lien…",
     "savePictures": "Enregistrer les images",
     "savePicturesHint": "Jusqu'à 20 images, stockées avec la note. Elles comptent dans ton stockage.",
-    "extensionTipTitle": "Capture depuis ton navigateur pour un meilleur résultat",
-    "extensionTip": "L'extension de navigateur enregistre la page telle que tu la vois, y compris les pages qui demandent une connexion.",
-    "extensionTipSetUp": "Configurer l'extension",
+    "extensionTipTitle": "Tu veux de bien meilleures captures ?",
+    "extensionTip": "L'extension de navigateur enregistre proprement n'importe quelle page en un clic, même si elle demande une connexion.",
     "downloading": "Téléchargement de la page…",
     "downloadingPictures": "Téléchargement des images, {{done}} sur {{total}}",
     "picturesLine_one": "{{count}} image · {{size}}, enregistrée avec la note",
@@ -1026,7 +1031,7 @@
   "apps": {
     "railLabel": "Extension",
     "title": "Extension de navigateur",
-    "subtitle": "Capture web et gestionnaire de mots de passe dans Chrome, Firefox, Edge, Brave et Vivaldi. L'extension ne détient jamais la clé qui ouvre tes notes.",
+    "subtitle": "Capture web et gestionnaire de mots de passe dans Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf et Zen. L'extension ne détient jamais la clé qui ouvre tes notes.",
     "loginsCopyFull": "La copie de tes identifiants dans l'extension de navigateur est pleine. Les nouveaux identifiants y arrivent dès que tu en supprimes quelques-uns.",
     "stepInstall": "Installer l'extension",
     "stepFeatures": "Choisir ce qu'elle peut faire",

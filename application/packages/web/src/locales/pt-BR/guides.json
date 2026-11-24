@@ -439,6 +439,58 @@
         }
       ]
     },
+    "notion": {
+      "app": "Notion",
+      "title": "Exporte o seu workspace do Notion",
+      "metaTitle": "Como exportar o seu workspace do Notion - PrivacyNotes",
+      "lead": "Exporte o seu workspace do Notion como um zip Markdown & CSV, e o PrivacyNotes remove os IDs de 32 caracteres do Notion, reconstrói as subpáginas como pastas e transforma os links entre páginas em links entre notas.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/notion-settings.webp",
+            "alt": "Configurações do Notion, página General, mostrando a seção Export com o botão Export ao lado de Workspace content.",
+            "width": 1576,
+            "height": 754
+          },
+          "h": "Exporte o workspace inteiro",
+          "steps": [
+            "Abra o Notion na web ou no computador e abra Settings no menu do workspace.",
+            "Em Workspace, abra General e role até Export.",
+            "Clique em Export ao lado de Workspace content.",
+            "Para exportar apenas uma página e as subpáginas dela, abra o menu de três pontos dessa página e escolha More > Export."
+          ],
+          "p": [
+            "O Notion monta exportações grandes de workspace em segundo plano e envia um link de download por e-mail. Solte esse .zip no PrivacyNotes do jeito que está, sem descompactar - zips parciais aninhados dentro do arquivo são tratados automaticamente."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/notion-export.webp",
+            "alt": "Janela Export do Notion com Markdown & CSV selecionado, Page content definido como Everything, e Include private pages e Create folders for subpages ativados.",
+            "width": 1576,
+            "height": 600
+          },
+          "h": "Escolha Markdown & CSV, com pastas ativadas",
+          "steps": [
+            "Defina Export format como \"Markdown & CSV\".",
+            "Defina Page content como \"Everything\" para incluir suas imagens, PDFs e arquivos anexados.",
+            "Ative \"Include private pages\" (ou \"Include subpages\" ao exportar uma única página) e \"Create folders for subpages\".",
+            "Clique em Export e salve o arquivo .zip."
+          ],
+          "p": [
+            "As exportações em HTML e PDF não contêm arquivos Markdown e não podem ser lidas pelo importador do Notion. Escolha \"Markdown & CSV\" para que a estrutura, os links e a formatação cheguem sem perda."
+          ]
+        },
+        {
+          "h": "O que vem junto",
+          "p": [
+            "O Notion acrescenta um ID de 32 caracteres a cada nome de arquivo e link interno exportado. O PrivacyNotes remove esses IDs de todos os títulos e nomes de pasta, tira a pasta principal \"Private & Shared\" e reconstrói as subpáginas aninhadas como pastas.",
+            "Títulos, listas, listas de tarefas aninhadas, tabelas, blocos de código com linguagem, matemática, sublinhado e citações chegam como estavam. Os avisos do Notion viram avisos do PrivacyNotes, [links e menções entre páginas exportadas viram links entre notas](/br/help/note-links), e as imagens, PDFs e arquivos enviados são importados para o seu armazenamento.",
+            "As páginas de linhas de banco de dados são importadas como notas dentro de uma pasta com o nome do banco de dados, e qualquer propriedade `Tags` é adicionada como etiqueta. Os arquivos de tabela CSV dos bancos de dados são pulados e contados no resumo. A própria exportação em Markdown do Notion deixa de fora cores de texto, destaques e páginas na Lixeira."
+          ]
+        }
+      ]
+    },
     "notesnook": {
       "app": "Notesnook",
       "title": "Exporte as suas notas do Notesnook",
@@ -1281,6 +1333,53 @@
         }
       ]
     },
+    "diaro": {
+      "app": "Diaro",
+      "title": "Exporte o seu diário do Diaro",
+      "metaTitle": "Como exportar o backup do Diaro - PrivacyNotes",
+      "lead": "O Diaro exporta o seu diário inteiro como um backup .zip pelo app de celular, e o PrivacyNotes importa cada entrada em Diários com as pastas, etiquetas, humores, lugares, clima e fotos.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-menu.webp",
+            "alt": "Tela de configurações Data do Diaro mostrando Backup & restore e a pasta de armazenamento dos arquivos de backup",
+            "width": 1576,
+            "height": 732
+          },
+          "h": "Crie um backup não criptografado no app Diaro",
+          "steps": [
+            "Abra o Diaro no Android ou iOS, abra o menu à esquerda e toque na engrenagem de Settings.",
+            "Escolha Data, role até Backup & restore e toque em Backup & restore.",
+            "Toque no botão + no canto superior direito.",
+            "Deixe \"Encrypt entries in backup file\" e \"Do not backup attachments\" desmarcadas e depois toque em Backup.",
+            "Copie o arquivo Diaro_YYYYMMDD.zip da pasta de backup mostrada em Storage directories (ou do Dropbox, se você sincronizou lá) e solte-o no PrivacyNotes."
+          ],
+          "p": [
+            "Criar um backup no app de celular é grátis e não precisa de assinatura Pro. O Diaro Online só exporta PDF, DOCX e TXT nos planos pagos e não tem botão para baixar o backup."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-dialog.webp",
+            "alt": "Caixa de diálogo Backup do Diaro com Encrypt entries in backup file e Do not backup attachments desmarcadas",
+            "width": 1576,
+            "height": 817
+          },
+          "h": "Escolha o backup .zip não criptografado, não PDF, TXT, CSV nem backups criptografados",
+          "p": [
+            "Um backup não criptografado grava DiaroBackup.xml e a sua pasta media/photo em um único arquivo .zip. Se você marcar \"Encrypt entries in backup file\", o Diaro grava DiaroBackup.denc no lugar, que o PrivacyNotes não consegue desbloquear e recusa com um lembrete para desativar a criptografia.",
+            "Um arquivo DiaroBackup.xml sozinho importa todo o texto e os metadados por conta própria, sem fotos, e o resumo conta cada imagem ausente. Desmarque \"Do not backup attachments\" e solte o .zip completo para trazer suas fotos junto."
+          ]
+        },
+        {
+          "h": "O que vem junto",
+          "p": [
+            "[Cada entrada vai parar em Diários](/br/help/journal) no dia do calendário conforme o fuso horário registrado na entrada. Entradas sem título recebem o título com a data que uma nova entrada daquele dia ganha, e links da web soltos viram links clicáveis.",
+            "As pastas do Diaro viram pastas, as etiquetas continuam etiquetas e os humores preenchem [o rastreador de humor](/br/help/choose-trackers) a partir do peso deles no Diaro (nomes de humor personalizados também aparecem na primeira linha). Localizações com coordenadas preenchem o chip de localização da entrada, lugares só com nome e o clima ficam em uma linha no topo, e as fotos são importadas na ordem original."
+          ]
+        }
+      ]
+    },
     "diarium": {
       "app": "Diarium",
       "title": "Exporte o seu diário do Diarium",
@@ -1420,6 +1519,69 @@
             "O caderno vira uma pasta, com uma pasta dentro dela para cada grupo de seções e cada seção. Cada página vira uma nota na pasta da sua seção, com a data em que o OneNote a criou, e uma subpágina vem logo depois da sua página na mesma pasta.",
             "Títulos, negrito, itálico, sublinhado, cores, destaques, listas com marcadores e numeradas, tabelas e parágrafos de código chegam como estavam. Uma etiqueta de tarefa vira um item de lista de tarefas, marcado quando estava concluído, e outras etiquetas de nota, como Important ou Question, viram etiquetas da nota. [Links entre páginas viram links entre notas](/br/help/note-links), e as imagens e os arquivos anexados são importados para o seu armazenamento.",
             "Um arquivo de seção (.one) sozinho, ou uma pasta de caderno compactada, também funciona. Desenhos feitos com caneta, gravações de áudio e equações não têm forma aqui, então a prévia da importação os conta, e as páginas da lixeira do OneNote não fazem parte do pacote."
+          ]
+        }
+      ]
+    },
+    "day-one": {
+      "app": "Day One",
+      "title": "Exporte o seu diário do Day One",
+      "metaTitle": "Como exportar o seu diário do Day One - PrivacyNotes",
+      "lead": "O Day One exporta o seu diário como um .zip JSON com mídias, e o PrivacyNotes traz cada entrada para Diários com o dia, as etiquetas, o lugar, o clima e as fotos.",
+      "sections": [
+        {
+          "h": "Exporte como JSON com mídias",
+          "steps": [
+            "Abra o Day One na web e selecione o diário que você quer trazer.",
+            "Escolha Edit Journal, abra Journal Settings e escolha Export Journal.",
+            "Escolha Export journal JSON file e depois selecione Include media. O Day One salva um .zip com suas entradas e anexos.",
+            "Solte esse .zip do jeito que está."
+          ],
+          "p": [
+            "No Mac ou no iOS, escolha File > Export > JSON. Você pode exportar um diário por vez ou todos os diários em um único .zip."
+          ]
+        },
+        {
+          "h": "Escolha JSON, não PDF nem texto simples",
+          "p": [
+            "JSON é o formato que mantém datas, fusos horários, etiquetas, estrelas, localizações, clima, links entre entradas e mídias. Um arquivo .json sozinho importa o texto por conta própria, sem fotos nem arquivos, e o resumo conta qualquer anexo que não foi encontrado."
+          ]
+        },
+        {
+          "h": "O que vem junto",
+          "p": [
+            "[Cada entrada vai parar em Diários](/br/help/journal) no dia do calendário no fuso horário da própria entrada. Um título no início vira o título da entrada, e uma entrada sem ele usa a própria data como título. Entradas com estrela e fixadas continuam fixadas, e as etiquetas continuam etiquetas.",
+            "A sua localização preenche o chip de localização da entrada, e o clima, a atividade e a música ficam em uma linha no topo. As fotos são importadas como imagens; áudios, vídeos e PDFs entram como anexos, e os links entre entradas viram [links entre notas](/br/help/note-links). Quando um .zip contém vários diários, cada diário vira uma pasta."
+          ]
+        }
+      ]
+    },
+    "todoist": {
+      "app": "Todoist",
+      "title": "Exporte as suas tarefas do Todoist",
+      "metaTitle": "Como exportar as suas tarefas do Todoist - PrivacyNotes",
+      "lead": "Exporte projetos do Todoist como um backup .zip ou arquivos .csv de projeto, e o PrivacyNotes transforma cada projeto em uma lista de tarefas com seções, subtarefas e comentários.",
+      "sections": [
+        {
+          "h": "Baixe um backup ou exporte um projeto como CSV",
+          "steps": [
+            "No Todoist, em um plano Pro ou Business, abra Settings > Backups e baixe o seu backup .zip mais recente. Ele contém um arquivo .csv para cada projeto ativo.",
+            "No plano gratuito, abra um projeto, escolha o menu de três pontos > Import & export > Export as CSV e salve o arquivo .csv.",
+            "Solte o arquivo .zip ou .csv no PrivacyNotes."
+          ]
+        },
+        {
+          "h": "Desative as datas relativas ao exportar um projeto",
+          "p": [
+            "No menu Export as CSV, desative \"Use relative dates\" para que as datas de vencimento sejam salvas como datas de calendário, como 2026-12-15, em vez de \"em 21 dias\". Os dois formatos são importados como texto na linha da tarefa, e as datas de calendário continuam precisas depois.",
+            "O Todoist deixa tarefas concluídas e projetos arquivados de fora das exportações em CSV e dos backups, então apenas as tarefas ativas estão no arquivo."
+          ]
+        },
+        {
+          "h": "Onde as coisas vão parar",
+          "p": [
+            "Cada projeto vira uma lista de tarefas em [Tarefas](/br/help/tasks) com o nome do projeto, com as seções como títulos tanto em projetos de lista quanto de quadro e as subtarefas aninhadas na mesma profundidade. As prioridades P1 a P3, datas de vencimento, durações, prazos e @etiquetas na linha continuam em cada linha, e cada @etiqueta também é adicionada como etiqueta na lista.",
+            "As descrições de tarefas, os comentários de tarefas e os comentários de projetos vêm junto, e as tarefas de cabeçalho não concluíveis continuam como marcadores em negrito em vez de caixas de seleção. Os lembretes em linhas individuais de tarefas não são importados e são contados no resumo."
           ]
         }
       ]

@@ -1,3 +1,10 @@
 "saved" = "Guardado en PrivacyNotes";
 "failed" = "No se pudo guardar en PrivacyNotes";
 "tooLarge" = "Demasiado grande. El máximo es {{limit}} MB por archivo.";
+"save" = "Guardar";
+"cancel" = "Cancelar";
+"note" = "Nota";
+"files" = "Archivos";
+"titlePlaceholder" = "Título (opcional)";
+"notePlaceholder" = "Añadir una nota...";
+"photoCount" = "{{count}} fotos";

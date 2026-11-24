@@ -97,7 +97,10 @@
     "googleCalendar": "El .zip de Settings > Import & export en Google Calendar, o un solo archivo .ics. Los eventos conservan sus horas, repeticiones y recordatorios.",
     "appleNotes": "Exporta con la app gratuita Exporter como Markdown y luego suelta el .zip aquí.",
     "appleJournal": "Exporta desde Diario en Mac o iPhone, comprime la carpeta AppleJournalEntries y suelta el .zip. Las entradas se importan como entradas de diario con sus fotos, vídeos, notas de voz y ubicaciones.",
+    "dayOne": "En Day One, elige Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media) en la web, o File > Export > JSON en Mac o iOS. Suelta aquí el .zip o el .json. Las entradas conservan su día, etiquetas, estrellas, lugar, clima y archivos multimedia.",
+    "todoist": "En Todoist, descarga una copia de seguridad .zip desde Settings > Backups (Pro), o abre un proyecto y elige ... > Import & export > Export as CSV. Cada proyecto se convierte en una lista de tareas con sus secciones, subtareas, prioridades, fechas de vencimiento, etiquetas, descripciones y comentarios.",
     "daylio": "En Daylio, elige More > Backup & Restore > Advanced Options > Export, cierra Daylio y suelta el archivo .daylio. Cada entrada se convierte en una entrada del diario con su ánimo, sus actividades, sus escalas, sus fotos y sus notas de voz. También funciona el CSV de More > Export Entries, sin fotos.",
+    "diaro": "En Diaro, elige Settings > Data > Backup & restore, pulsa +, deja el cifrado desactivado y los adjuntos activados, y suelta aquí la copia de seguridad .zip. También funciona un DiaroBackup.xml suelto, sin fotos. Las entradas conservan su día, carpetas, etiquetas, estados de ánimo, lugares, clima y fotos.",
     "diarium": "En Diarium, elige Export, selecciona JSON con Attachments activado y guárdalo en el almacenamiento local. Suelta el .zip, o un .json sin adjuntos. Las entradas conservan su valoración como ánimo, sus etiquetas, sus personas, sus trackers, su lugar y sus adjuntos.",
     "googleJournal": "En Journal en tu Pixel, activa Settings > Back up your journal. Luego elige Journal en Google Takeout y suelta el .zip que te envía. Las entradas conservan su día, su título, su texto, sus fotos y sus vídeos.",
     "excalidraw": "Dibujos guardados desde excalidraw.com: un archivo .excalidraw, o varios dentro de un zip. Los dibujos del plugin Excalidraw de Obsidian también funcionan, como archivos .excalidraw.md. Las imágenes dentro de un dibujo vienen con él.",
@@ -108,6 +111,7 @@
     "obsidian": "Bóveda de Obsidian en .zip. Conserva las etiquetas, los enlaces entre notas, la estructura de carpetas, las #etiquetas en el texto y las imágenes y archivos incrustados. Los canvas y los dibujos de Excalidraw se convierten en dibujos, y un archivo .canvas suelto también se importa por sí solo.",
     "obsidianCanvas": "Un archivo .canvas de tu bóveda de Obsidian, o la bóveda entera en .zip para traer todos los canvas. Cada canvas se convierte en un dibujo: las tarjetas, los grupos, las flechas y los colores vienen con él, y las imágenes también cuando están en el .zip.",
     "notesnook": "Exportación de Notesnook como .zip. Elige HTML al exportar para conservar el formato, los cuadernos, las etiquetas y los adjuntos.",
+    "notion": "En Notion, elige Settings > General > Export > Workspace content (o el menú de una página > More > Export), selecciona \"Markdown & CSV\" con las subpáginas y carpetas activadas y suelta aquí el .zip. Quita los ID de Notion de los títulos y las carpetas, conserva las subpáginas como carpetas, convierte los avisos y enlaces internos en enlaces entre notas y trae consigo las imágenes, los archivos y las páginas de filas de bases de datos.",
     "bear": "En Bear, elige File > Backup Notes... y suelta aquí el archivo .bear2bk. Vienen con él las etiquetas y las etiquetas anidadas, las notas fijadas, el archivo, la papelera, los resaltados con sus colores, los enlaces entre notas y los adjuntos.",
     "joplin": "El archivo .jex de File > Export all > \"JEX - Joplin Export File\". Los cuadernos se convierten en carpetas, y las etiquetas, las tareas pendientes, los enlaces entre notas y los adjuntos vienen con ellos.",
     "anytype": "El .zip Any-Block v1 en JSON que sale de Export en los ajustes del espacio, con los archivos y los objetos archivados incluidos. Las colecciones se convierten en carpetas, y las etiquetas, las tareas, los avisos, los desplegables, las tablas, los enlaces entre notas y los archivos vienen con ellas.",
@@ -134,7 +138,13 @@
     "fullBackupTitle": "Copia de seguridad completa (.zip)",
     "fullBackupDesc": "Restaura notas, diarios, elementos de la bóveda, tareas, imágenes, audio y archivos. Una nota que ya tienes se conserva, o se actualiza si la copia de seguridad contiene una versión más reciente.",
     "encryptedBackupTitle": "Copia de seguridad cifrada (.pnbackup, .pnbackupz)",
-    "encryptedBackupDesc": "Restaura una copia de seguridad cifrada con la clave de tu frase. Un .pnbackupz lo devuelve todo, archivos incluidos; un .pnbackup solo contiene texto y metadatos. Debes haber iniciado sesión con la misma cuenta que la creó."
+    "encryptedBackupDesc": "Restaura una copia de seguridad cifrada con la clave de tu frase. Un .pnbackupz lo devuelve todo, archivos incluidos; un .pnbackup solo contiene texto y metadatos. Las copias de seguridad de otro dispositivo o cuenta pedirán la frase de recuperación de esa copia."
+  },
+  "restoreForeign": {
+    "title": "Desbloquear con otra frase de recuperación",
+    "body": "Esta copia de seguridad no se cifró con tu frase actual. Introduce o escanea la frase de recuperación del dispositivo que la creó. Tus notas se importarán en esta bóveda.",
+    "unlock": "Desbloquear copia de seguridad",
+    "wrongPhrase": "Esa frase de recuperación no desbloqueó esta copia de seguridad. Revisa las palabras e inténtalo de nuevo."
   },
   "restoreGate": {
     "wait": "La restauración espera a que este dispositivo esté en línea y haya completado una sincronización, para que tu copia de seguridad se empareje con las notas que ya están en tu cuenta en lugar de añadirlas dos veces.",
@@ -316,7 +326,8 @@
     "title_one": "Se compartió {{count}} elemento con PrivacyNotes",
     "title_other": "Se compartieron {{count}} elementos con PrivacyNotes",
     "line": "No se guarda nada hasta que elijas.",
-    "saveAll": "Guardar todo"
+    "saveAll": "Guardar todo",
+    "saveAs": "Guardar como"
   },
   "destination": {
     "none": "Sin carpeta",

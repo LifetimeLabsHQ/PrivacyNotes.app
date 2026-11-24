@@ -180,3 +180,55 @@ export function subscribeToAttachmentNames(listener: NameListener): () => void {
   nameListeners.add(listener);
   return () => { nameListeners.delete(listener); };
 }
+
+/** Longest stem derived from a note title for a pasted clipboard image. */
+const PASTED_IMAGE_STEM_MAX = 60;
+
+/** Generic names browsers and our data-URL reader hand to copied images. */
+const GENERIC_CLIPBOARD_IMAGE_RE = /^(?:image|blob|pasted-image)(?:\.[a-z0-9]{1,6})?$/i;
+
+/** True when a pasted image carries no real filename (browser default or empty). */
+export function isGenericClipboardImageName(name: string): boolean {
+  const trimmed = name.trim();
+  return !trimmed || GENERIC_CLIPBOARD_IMAGE_RE.test(trimmed);
+}
+
+/**
+ * Filename stem derived from a note title: keeps Unicode letters, numbers and
+ * hyphens, collapses every other run into `_`, and falls back to `image` when
+ * nothing usable remains.
+ */
+function pastedImageStem(noteTitle: string): string {
+  const cleaned = noteTitle
+    .replace(/[^\p{L}\p{N}-]+/gu, '_')
+    .replace(/^[_-]+|[_-]+$/g, '')
+    .slice(0, PASTED_IMAGE_STEM_MAX)
+    .replace(/[_-]+$/g, '');
+  return cleaned || 'image';
+}
+
+/**
+ * Next unused `<stem>_<n>.<ext>` name for a copied image pasted into a note.
+ * Scans existing image names in the note (and any in-flight pastes) by stem,
+ * case-insensitively and regardless of extension, so opaque JPEGs and
+ * transparent PNGs share one counter (`Notes_for_Github_1`, `_2`, ...).
+ */
+export function nextPastedImageName(
+  noteTitle: string,
+  ext: string,
+  usedNames: Iterable<string>,
+): string {
+  const stem = pastedImageStem(noteTitle);
+  const prefix = `${stem.toLowerCase()}_`;
+  let max = 0;
+  for (const raw of usedNames) {
+    const base = splitFileName(raw.trim()).base.toLowerCase();
+    if (!base.startsWith(prefix)) continue;
+    const tail = base.slice(prefix.length);
+    if (!/^[1-9]\d*$/.test(tail)) continue;
+    const n = Number(tail);
+    if (Number.isSafeInteger(n) && n < Number.MAX_SAFE_INTEGER && n > max) max = n;
+  }
+  const cleanExt = ext.replace(/^\.+/, '').toLowerCase();
+  return joinFileName(`${stem}_${max + 1}`, cleanExt);
+}

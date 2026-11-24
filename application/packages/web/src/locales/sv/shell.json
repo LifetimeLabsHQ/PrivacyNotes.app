@@ -287,6 +287,8 @@
     "showNoteLinks": "Visa länkar i andra objekt",
     "showNoteTasks": "Visa uppgifter i andra objekt",
     "showGroups": "Visa grupper",
+    "groupBy": "Gruppera efter",
+    "groupLetter": "Begynnelsebokstav",
     "groupsByDate": "Grupperade efter datum",
     "groupsByLetter": "Grupperade efter begynnelsebokstav",
     "groupsNoneForSize": "Inte tillgängligt vid sortering efter storlek",
@@ -310,6 +312,7 @@
     "nextWeek": "Nästa vecka",
     "pickMonth": "{{month}}, välj månad och år",
     "pickMonthTip": "Välj månad och år",
+    "showToday": "Visa i dag",
     "showWholeMonth": "Visa hela månaden",
     "showOneWeek": "Visa en vecka"
   },
@@ -625,7 +628,10 @@
   "shareInbox": {
     "saved": "Sparat i PrivacyNotes",
     "failed": "Det gick inte att spara i PrivacyNotes",
-    "tooLarge": "För stor. Max {{limit}} MB per fil."
+    "tooLarge": "För stor. Max {{limit}} MB per fil.",
+    "titlePlaceholder": "Titel (valfritt)",
+    "notePlaceholder": "Lägg till en anteckning...",
+    "photoCount": "{{count}} foton"
   },
   "shortcut": {
     "copyNote": "Kopiera genväg till anteckningen",
@@ -984,9 +990,8 @@
     "addressPlaceholder": "Klistra in en länk…",
     "savePictures": "Spara bilder",
     "savePicturesHint": "Upp till 20 bilder, lagrade med anteckningen. De räknas mot din lagring.",
-    "extensionTipTitle": "Klipp från webbläsaren för ett bättre resultat",
-    "extensionTip": "Webbläsartillägget sparar sidan som du ser den, även sidor som kräver inloggning.",
-    "extensionTipSetUp": "Konfigurera tillägget",
+    "extensionTipTitle": "Vill du ha mycket bättre webbklipp?",
+    "extensionTip": "Webbläsartillägget sparar vilken sida som helst rent och snyggt med ett klick, även sidor som kräver inloggning.",
     "downloading": "Laddar ner sidan…",
     "downloadingPictures": "Laddar ner bilder, {{done}} av {{total}}",
     "picturesLine_other": "{{count}} bilder · {{size}}, sparade med anteckningen",
@@ -1023,7 +1028,7 @@
   "apps": {
     "railLabel": "Tillägg",
     "title": "Webbläsartillägg",
-    "subtitle": "Webbklippare och lösenordshanterare i Chrome, Firefox, Edge, Brave och Vivaldi. Tillägget har aldrig nyckeln som öppnar dina anteckningar.",
+    "subtitle": "Webbklippare och lösenordshanterare i Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf och Zen. Tillägget har aldrig nyckeln som öppnar dina anteckningar.",
     "loginsCopyFull": "Webbläsartilläggets kopia av dina inloggningar är full. Nya inloggningar når den när du har raderat några.",
     "stepInstall": "Installera tillägget",
     "stepFeatures": "Välj vad det får göra",

@@ -287,6 +287,8 @@
     "showNoteLinks": "Links in andere items tonen",
     "showNoteTasks": "Taken in andere items tonen",
     "showGroups": "Groepen tonen",
+    "groupBy": "Groeperen op",
+    "groupLetter": "Beginletter",
     "groupsByDate": "Gegroepeerd op datum",
     "groupsByLetter": "Gegroepeerd op beginletter",
     "groupsNoneForSize": "Niet beschikbaar bij sorteren op grootte",
@@ -310,6 +312,7 @@
     "nextWeek": "Volgende week",
     "pickMonth": "{{month}}, kies een maand en jaar",
     "pickMonthTip": "Kies een maand en jaar",
+    "showToday": "Vandaag tonen",
     "showWholeMonth": "Hele maand tonen",
     "showOneWeek": "Eén week tonen"
   },
@@ -625,7 +628,10 @@
   "shareInbox": {
     "saved": "Opgeslagen in PrivacyNotes",
     "failed": "Opslaan in PrivacyNotes is mislukt",
-    "tooLarge": "Te groot. Maximaal {{limit}} MB per bestand."
+    "tooLarge": "Te groot. Maximaal {{limit}} MB per bestand.",
+    "titlePlaceholder": "Titel (optioneel)",
+    "notePlaceholder": "Voeg een notitie toe...",
+    "photoCount": "{{count}} foto's"
   },
   "shortcut": {
     "copyNote": "Snelkoppeling naar notitie kopiëren",
@@ -984,9 +990,8 @@
     "addressPlaceholder": "Plak een link…",
     "savePictures": "Afbeeldingen opslaan",
     "savePicturesHint": "Tot 20 afbeeldingen, bewaard bij de notitie. Ze tellen mee voor je opslag.",
-    "extensionTipTitle": "Clip vanuit je browser voor een beter resultaat",
-    "extensionTip": "De browserextensie slaat de pagina op zoals jij hem ziet, ook pagina's achter een aanmelding.",
-    "extensionTipSetUp": "De extensie instellen",
+    "extensionTipTitle": "Wil je veel betere clips?",
+    "extensionTip": "De browserextensie slaat elke pagina netjes op met één klik, ook achter een aanmelding.",
     "downloading": "Pagina downloaden…",
     "downloadingPictures": "Afbeeldingen downloaden, {{done}} van {{total}}",
     "picturesLine_other": "{{count}} afbeeldingen · {{size}}, opgeslagen bij de notitie",
@@ -1023,7 +1028,7 @@
   "apps": {
     "railLabel": "Extensie",
     "title": "Browserextensie",
-    "subtitle": "Webclipper en wachtwoordmanager in Chrome, Firefox, Edge, Brave en Vivaldi. De extensie heeft nooit de sleutel die je notities opent.",
+    "subtitle": "Webclipper en wachtwoordmanager in Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf en Zen. De extensie heeft nooit de sleutel die je notities opent.",
     "loginsCopyFull": "De kopie van je logins in de browserextensie is vol. Nieuwe logins komen erin zodra je er een paar verwijdert.",
     "stepInstall": "De extensie installeren",
     "stepFeatures": "Kies wat hij mag doen",

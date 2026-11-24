@@ -41,6 +41,7 @@ import { clearPinCache } from './pin';
 import { clearLocalSettings } from './userSettings';
 import { clearLocalDatabase } from './notesRepo';
 import { endSignOutMark, signOutMarkLeft } from './liveSignIn';
+import { clearLocalOnlyFlagsSync } from './localOnly';
 
 /** The credentials and caches of the account that left, every one of them
  *  synchronous. */
@@ -58,6 +59,7 @@ function removeAccountKeys(): void {
   clearReplacedAccount();
   clearPanelCache();
   clearAccountScopedUiState();
+  clearLocalOnlyFlagsSync();
   clearPinCache();
   clearLocalSettings(true);
 }

@@ -88,7 +88,7 @@ export type ContextMenuDeps = {
   onOpenInTab?: (ids: string[]) => void;
   /** Two items side by side; absent where it cannot be offered. `offers`
    *  is false for an item already on screen.
-   *  Spec: docs/internal/plans/side-by-side-notes.md (section 2) */
+   *  Spec: docs/internal/specs/side-by-side-notes.md (section 2) */
   sideBySide?: { offers: (n: LocalNote) => boolean; open: (n: LocalNote) => void };
   /** Home: whether a note widget shows this item, and the row that adds or
    *  removes it. Absent while the layout cannot be written.

@@ -439,6 +439,58 @@
         }
       ]
     },
+    "notion": {
+      "app": "Notion",
+      "title": "Vyexportuj si pracovný priestor z Notion",
+      "metaTitle": "Ako exportovať pracovný priestor z Notion - PrivacyNotes",
+      "lead": "Vyexportuj si pracovný priestor z Notion ako zip vo formáte Markdown & CSV a PrivacyNotes odstráni 32-znakové ID z Notion, znova zostaví podstránky ako priečinky a premení odkazy na stránky na odkazy na poznámky.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/notion-settings.webp",
+            "alt": "Nastavenia Notion, stránka General, zobrazujúca sekciu Export s tlačidlom Export vedľa položky Workspace content.",
+            "width": 1576,
+            "height": 754
+          },
+          "h": "Export celého pracovného priestoru",
+          "steps": [
+            "Otvor Notion na webe alebo v počítači a v ponuke pracovného priestoru otvor Settings.",
+            "V časti Workspace otvor General a prejdi nižšie k časti Export.",
+            "Vedľa položky Workspace content klikni na Export.",
+            "Ak chceš namiesto toho exportovať iba jednu stránku s jej podstránkami, otvor jej ponuku s tromi bodkami a vyber More > Export."
+          ],
+          "p": [
+            "Notion pripravuje veľké exporty pracovného priestoru na pozadí a pošle ti e-mailom odkaz na stiahnutie. Tento súbor .zip pretiahni do PrivacyNotes tak, ako je, bez rozbaľovania - vnorené čiastkové súbory zip vo vnútri archívu sa spracujú automaticky."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/notion-export.webp",
+            "alt": "Dialóg Export v Notion s vybraným formátom Markdown & CSV, obsahom Page content nastaveným na Everything a zapnutými možnosťami Include private pages a Create folders for subpages.",
+            "width": 1576,
+            "height": 600
+          },
+          "h": "Vyber Markdown & CSV so zapnutými priečinkami",
+          "steps": [
+            "Nastav Export format na „Markdown & CSV“.",
+            "Nastav Page content na „Everything“, aby boli zahrnuté aj tvoje obrázky, súbory PDF a priložené súbory.",
+            "Zapni „Include private pages“ (alebo „Include subpages“ pri exporte jednej stránky) a „Create folders for subpages“.",
+            "Klikni na Export a ulož súbor .zip."
+          ],
+          "p": [
+            "Exporty do HTML a PDF neobsahujú súbory Markdown a importér pre Notion ich nevie prečítať. Vyber „Markdown & CSV“, aby sa tvoja štruktúra, odkazy a formátovanie preniesli čisto."
+          ]
+        },
+        {
+          "h": "Čo sa prenesie",
+          "p": [
+            "Notion pridáva 32-znakové ID na koniec každého exportovaného názvu súboru a interného odkazu. PrivacyNotes tieto ID odstráni z každého názvu poznámky aj priečinka, odoberie najvyššiu úroveň „Private & Shared“ a znova zostaví vnorené podstránky ako priečinky.",
+            "Nadpisy, zoznamy, vnorené kontrolné zoznamy, tabuľky, bloky kódu s jazykom, matematika, podčiarknutie a citácie sa prenesú v pôvodnej podobe. Callouty z Notion sa premenia na callouty v PrivacyNotes, [odkazy a zmienky medzi exportovanými stránkami sa stanú odkazmi na poznámky](/sk/help/note-links) a nahrané obrázky, súbory PDF a súbory sa importujú do tvojho úložiska.",
+            "Stránky riadkov databáz sa importujú ako poznámky v priečinku pomenovanom podľa databázy, pričom vlastnosť Tags sa pridá ako značky. Súbory CSV s tabuľkami databáz sa preskočia a spočítajú v súhrne importu. Samotný export do Markdownu v Notion vynecháva farby textu, zvýraznenia a stránky v koši."
+          ]
+        }
+      ]
+    },
     "notesnook": {
       "app": "Notesnook",
       "title": "Exportuj si poznámky z Notesnooku",
@@ -1281,6 +1333,53 @@
         }
       ]
     },
+    "diaro": {
+      "app": "Diaro",
+      "title": "Vyexportuj si denník z Diaro",
+      "metaTitle": "Ako exportovať zálohu z Diaro - PrivacyNotes",
+      "lead": "Diaro exportuje celý tvoj denník ako zálohu .zip zo svojej mobilnej aplikácie a PrivacyNotes naimportuje každý záznam do Denníkov aj s jeho priečinkami, značkami, náladami, miestami, počasím a fotkami.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-menu.webp",
+            "alt": "Obrazovka nastavení Data v Diaro zobrazujúca položku Backup & restore a priečinok úložiska záložných súborov",
+            "width": 1576,
+            "height": 732
+          },
+          "h": "Vytvorenie nešifrovanej zálohy v aplikácii Diaro",
+          "steps": [
+            "Otvor Diaro na Androide alebo iOS, otvor ľavú ponuku a ťukni na ozubené koliesko Settings.",
+            "Vyber Data, prejdi nižšie na Backup & restore a ťukni na Backup & restore.",
+            "Ťukni na tlačidlo + vpravo hore.",
+            "Nechaj možnosti „Encrypt entries in backup file“ aj „Do not backup attachments“ nezaškrtnuté a potom ťukni na Backup.",
+            "Skopíruj súbor Diaro_YYYYMMDD.zip z priečinka záloh zobrazeného v časti Storage directories (alebo z Dropboxu, ak sa tam synchronizuje) a pretiahni ho do PrivacyNotes."
+          ],
+          "p": [
+            "Vytvorenie zálohy v mobilnej aplikácii je bezplatné a nevyžaduje predplatné Pro. Diaro Online exportuje iba PDF, DOCX a TXT v platených tarifoch a nemá tlačidlo na stiahnutie zálohy."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-dialog.webp",
+            "alt": "Dialóg Backup v Diaro s nezaškrtnutými možnosťami Encrypt entries in backup file a Do not backup attachments",
+            "width": 1576,
+            "height": 817
+          },
+          "h": "Vyber nešifrovanú zálohu .zip, nie PDF, TXT, CSV ani šifrované zálohy",
+          "p": [
+            "Nešifrovaná záloha zapíše súbor DiaroBackup.xml a priečinok media/photo do jedného súboru .zip. Ak zaškrtneš „Encrypt entries in backup file“, Diaro namiesto toho zapíše DiaroBackup.denc, ktorý PrivacyNotes nevie odomknúť a odmietne ho s pripomienkou vypnúť šifrovanie.",
+            "Samotný súbor DiaroBackup.xml naimportuje všetok text a metadáta bez fotiek a súhrn importu spočíta každý chýbajúci obrázok. Zruš zaškrtnutie možnosti „Do not backup attachments“ a pretiahni sem celý súbor .zip, aby sa preniesli aj tvoje fotky."
+          ]
+        },
+        {
+          "h": "Čo sa prenesie",
+          "p": [
+            "[Každý záznam skončí v Denníkoch](/sk/help/journal) v kalendárny deň podľa zaznamenaného časového posunu záznamu. Záznamy bez názvu dostanú názov s dátumom, aký dostane nový záznam v ten deň, a holé webové odkazy sa stanú klikateľnými.",
+            "Priečinky z Diaro sa stanú priečinkami, značky zostanú značkami a nálady vyplnia [sledovanú hodnotu nálady](/sk/help/choose-trackers) podľa ich váhy v Diaro (vlastné názvy nálad sa zobrazia aj na prvom riadku). Polohy so súradnicami vyplnia pole Poloha v zázname, miesta iba s názvom a počasie budú na jednom riadku hore a fotky sa importujú v pôvodnom poradí."
+          ]
+        }
+      ]
+    },
     "diarium": {
       "app": "Diarium",
       "title": "Exportuj si denník z Diarium",
@@ -1420,6 +1519,69 @@
             "Zápisník sa zmení na priečinok a v ňom je ďalší priečinok pre každú skupinu sekcií a sekciu. Každá stránka sa zmení na poznámku v priečinku svojej sekcie s dátumom, kedy ju OneNote vytvoril, a podstránka nasleduje svoju stránku v tom istom priečinku.",
             "Nadpisy, tučné písmo, kurzíva, podčiarknutie, farby, zvýraznenia, odrážkové a číslované zoznamy, tabuľky a odseky s kódom sa prenesú v pôvodnej podobe. Značka úlohy sa zmení na položku zoznamu úloh, zaškrtnutú, ak bola hotová, a ostatné značky poznámok, napríklad Important alebo Question, sa zmenia na značky poznámky. [Odkazy medzi stránkami sa zmenia na odkazy na poznámky](/sk/help/note-links) a obrázky a priložené súbory sa importujú do tvojho úložiska.",
             "Funguje aj samotný súbor sekcie (.one) alebo zabalený priečinok zápisníka. Kresby perom, zvukové nahrávky a rovnice tu nemajú obdobu, preto ich náhľad importu iba spočíta, a stránky z koša OneNotu nie sú súčasťou balíka."
+          ]
+        }
+      ]
+    },
+    "day-one": {
+      "app": "Day One",
+      "title": "Vyexportuj si denník z Day One",
+      "metaTitle": "Ako exportovať denník z Day One - PrivacyNotes",
+      "lead": "Day One exportuje tvoj denník ako súbor JSON .zip s médiami a PrivacyNotes prenesie každý záznam do Denníkov aj s jeho dňom, značkami, miestom, počasím a fotkami.",
+      "sections": [
+        {
+          "h": "Export ako JSON s médiami",
+          "steps": [
+            "Otvor Day One na webe a vyber denník, ktorý chceš presunúť.",
+            "Vyber Edit Journal, otvor Journal Settings a vyber Export Journal.",
+            "Vyber Export journal JSON file a potom zvoľ Include media. Day One uloží súbor .zip s tvojimi záznamami a prílohami.",
+            "Pretiahni sem tento súbor .zip tak, ako je."
+          ],
+          "p": [
+            "Na Macu alebo iOS vyber namiesto toho File > Export > JSON. Môžeš exportovať vždy jeden denník alebo všetky denníky do jedného súboru .zip."
+          ]
+        },
+        {
+          "h": "Vyber JSON, nie PDF ani obyčajný text",
+          "p": [
+            "JSON je formát, ktorý zachová dátumy, časové pásma, značky, hviezdičky, polohy, počasie, odkazy medzi záznamami a médiá. Samotný súbor .json naimportuje iba text bez fotiek a súborov a súhrn importu spočíta prílohy, ktoré sa nepodarilo nájsť."
+          ]
+        },
+        {
+          "h": "Čo sa prenesie",
+          "p": [
+            "[Každý záznam skončí v Denníkoch](/sk/help/journal) v kalendárny deň podľa vlastného časového pásma záznamu. Úvodný nadpis sa stane názvom a záznam bez neho dostane ako názov svoj dátum. Záznamy s hviezdičkou a pripnuté záznamy zostanú pripnuté a značky zostanú značkami.",
+            "Tvoja poloha vyplní pole Poloha v zázname a počasie, aktivita a hudba budú na jednom riadku hore. Fotky sa importujú ako obrázky, zvuk, video a súbory PDF ako prílohy a odkazy medzi záznamami sa stanú [odkazmi na poznámky](/sk/help/note-links). Keď jeden súbor .zip obsahuje viac denníkov, z každého denníka sa stane priečinok."
+          ]
+        }
+      ]
+    },
+    "todoist": {
+      "app": "Todoist",
+      "title": "Vyexportuj si úlohy z Todoist",
+      "metaTitle": "Ako exportovať úlohy z Todoist - PrivacyNotes",
+      "lead": "Vyexportuj si projekty z Todoist ako zálohu .zip alebo súbory projektov .csv a PrivacyNotes premení každý projekt na zoznam úloh so sekciami, podúlohami a komentármi.",
+      "sections": [
+        {
+          "h": "Stiahnutie zálohy alebo export projektu ako CSV",
+          "steps": [
+            "V Todoist s tarifom Pro alebo Business otvor Settings > Backups a stiahni svoju najnovšiu zálohu .zip. Obsahuje jeden súbor .csv pre každý aktívny projekt.",
+            "V bezplatnom tarife otvor projekt, vyber ponuku s tromi bodkami > Import & export > Export as CSV a ulož súbor .csv.",
+            "Pretiahni súbor .zip alebo .csv do PrivacyNotes."
+          ]
+        },
+        {
+          "h": "Pri exporte jedného projektu vypni relatívne dátumy",
+          "p": [
+            "V ponuke Export as CSV vypni „Use relative dates“, aby sa termíny splnenia uložili ako kalendárne dátumy, napríklad 2026-12-15 namiesto „in 21 days“. Oba varianty sa importujú ako text na riadku úlohy a kalendárne dátumy zostanú presné aj neskôr.",
+            "Todoist z exportov do CSV aj zo záloh vynecháva dokončené úlohy a archivované projekty, takže v súbore sú iba aktívne úlohy."
+          ]
+        },
+        {
+          "h": "Kam sa všetko dostane",
+          "p": [
+            "Z každého projektu sa stane zoznam úloh v [Úlohách](/sk/help/tasks) pomenovaný podľa projektu, so sekciami ako nadpismi v projektoch typu zoznam aj tabuľa a s podúlohami vnorenými do rovnakej hĺbky. Priority P1 až P3, termíny splnenia, dĺžky trvania, uzávierky a vložené @štítky zostanú na každom riadku a každý štítok sa pridá ako značka zoznamu.",
+            "Popisy úloh, komentáre k úlohám a komentáre k projektom sa prenesú tiež a hlavičkové úlohy, ktoré sa nedajú odškrtnúť, zostanú ako tučné odrážky namiesto začiarkavacích políčok. Pripomienky pri jednotlivých riadkoch úloh sa neprenesú a spočítajú sa v súhrne importu."
           ]
         }
       ]

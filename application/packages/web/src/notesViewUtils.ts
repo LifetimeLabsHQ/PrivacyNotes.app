@@ -331,7 +331,7 @@ function stripInlineMarkdown(line: string): string {
     .replace(/\]\((?:https?:|mailto:|#|\/)[^)\s]*\)/g, '')
     // [[note link]] -> note link; [[note link|label]] -> label, as the
     // editor shows it (same groups and skip as NOTE_LINK_RE in noteLinks.ts).
-    .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]|\[\[[^\]|][^\]]*/g, (run, target?: string, label?: string) =>
+    .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\](?:<!--suggested-->)?|\[\[[^\]|][^\]]*/g, (run, target?: string, label?: string) =>
       target === undefined ? run : label ?? target)
     // <http://...> autolink -> http://...
     .replace(/<((?:https?|mailto):[^>\s]+)>/g, '$1')

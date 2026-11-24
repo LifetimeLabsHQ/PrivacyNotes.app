@@ -23,7 +23,6 @@
     "generatePassword": "Générer un mot de passe"
   },
   "note": {
-    "tagsPlaceholder": "#travail #idées",
     "tagsHelp": "Un espace ou une virgule entre les étiquettes. Le # est facultatif.",
     "failed": "Impossible d'enregistrer la note. Réessaie."
   },
@@ -216,5 +215,11 @@
     "unlockFirst": "Déverrouille pour utiliser tes passkeys.",
     "offer": "Proposer les passkeys",
     "offerHelp": "Enregistre et utilise des passkeys sur les sites web."
+  },
+  "organize": {
+    "title": "Dossier et étiquettes",
+    "unlockToPick": "Déverrouille le Coffre pour choisir",
+    "addTag": "Ajouter une étiquette...",
+    "proFolders": "Les dossiers sont une fonctionnalité Pro. Ouvre PrivacyNotes pour passer à Pro."
   }
 }

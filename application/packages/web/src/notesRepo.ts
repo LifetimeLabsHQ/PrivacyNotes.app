@@ -11,6 +11,8 @@ import { withoutSourceIdentity } from './schedule';
 import { storedHoldIds } from './massDelete';
 import { UNOPENED_ROWS_KEY, unopenedRowIds } from './unopenedRows';
 import { clipGraphemes } from './clipText';
+import { isDemoMode } from './demo';
+import { isLocalTruthOnly, LOCAL_ONLY_OWNER_KEY, NEVER_SYNCED_OWNER_KEY } from './localOnly';
 
 /**
  * Pure Dexie CRUD. No network, and no crypto of its own: wire
@@ -239,7 +241,7 @@ export async function listNotes(): Promise<LocalNote[]> {
  * in the order the dropped `type` index gave: by type, then by id. The type
  * is sealed at rest, so this filters the live notes in memory; the unseal
  * memo makes every read after the first a compare per row.
- * Spec: docs/internal/plans/row-type-seal.md (5)
+ * Spec: docs/internal/specs/row-type-seal.md (5)
  */
 export async function liveNotesOfType(types: readonly LocalNote['type'][]): Promise<LocalNote[]> {
   if (types.length === 0) return [];
@@ -498,7 +500,11 @@ export async function permanentlyDelete(id: string): Promise<{ id: string; body:
   const deleted = await db.transaction('rw', db.notes, async () => {
     const current = await db.notes.get(id);
     if (!current || current.trashed !== 1 || current.deleted === 1) return null;
-    await db.notes.update(id, { deleted: 1, updatedAt: nextStamp(current.updatedAt), dirty: 1 });
+    if ((isDemoMode() || isLocalTruthOnly()) && current.syncedNonce == null) {
+      await db.notes.delete(id);
+    } else {
+      await db.notes.update(id, { deleted: 1, updatedAt: nextStamp(current.updatedAt), dirty: 1 });
+    }
     return { id, body: current.body };
   });
   // Drop the parsed-doc cache row (#150) - stale rows are harmless (exact
@@ -520,8 +526,13 @@ export async function emptyTrash(): Promise<Array<{ id: string; body: string }>>
       .equals(1)
       .and((n) => n.deleted === 0)
       .toArray();
+    const localTruth = isDemoMode() || isLocalTruthOnly();
     for (const n of trashed) {
-      await db.notes.update(n.id, { deleted: 1, updatedAt: nextStamp(n.updatedAt), dirty: 1 });
+      if (localTruth && n.syncedNonce == null) {
+        await db.notes.delete(n.id);
+      } else {
+        await db.notes.update(n.id, { deleted: 1, updatedAt: nextStamp(n.updatedAt), dirty: 1 });
+      }
     }
     return trashed.map((n) => ({ id: n.id, body: n.body }));
   });
@@ -705,16 +716,23 @@ export async function bulkRestore(ids: string[]): Promise<number> {
  *  tombstoned, the only ones the blob GC may take. */
 export async function bulkPermanentlyDelete(ids: string[]): Promise<Array<{ id: string; body: string }>> {
   if (ids.length === 0) return [];
-  return db.transaction('rw', db.notes, async () => {
-    const deleted: Array<{ id: string; body: string }> = [];
+  const deleted = await db.transaction('rw', db.notes, async () => {
+    const out: Array<{ id: string; body: string }> = [];
+    const localTruth = isDemoMode() || isLocalTruthOnly();
     for (const id of ids) {
       const note = await db.notes.get(id);
       if (!note || note.trashed !== 1 || note.deleted === 1) continue;
-      await db.notes.update(id, { deleted: 1, updatedAt: nextStamp(note.updatedAt), dirty: 1 });
-      deleted.push({ id, body: note.body });
+      if (localTruth && note.syncedNonce == null) {
+        await db.notes.delete(id);
+      } else {
+        await db.notes.update(id, { deleted: 1, updatedAt: nextStamp(note.updatedAt), dirty: 1 });
+      }
+      out.push({ id, body: note.body });
     }
-    return deleted;
+    return out;
   });
+  await db.editorDocCache.bulkDelete(deleted.map((n) => n.id)).catch(() => { /* best-effort */ });
+  return deleted;
 }
 
 /**
@@ -975,6 +993,8 @@ const ACCOUNT_KV_KEYS = [
   'reencryptPassDone', // reencryptPass.ts
   'reencryptFilesDone', // reencryptPass.ts
   'atRestResealedEpoch', // localSweep.ts
+  LOCAL_ONLY_OWNER_KEY, // localOnly.ts
+  NEVER_SYNCED_OWNER_KEY, // localOnly.ts
 ];
 
 /**
@@ -1094,7 +1114,7 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
   // Quick notes the Ninja box kept while the app was locked, and the key it
   // sealed them to. A forced sign-out keeps both, like the unsynced notes;
   // the rows name their account, so another one never adds them.
-  // Spec: docs/internal/plans/quick-note-694.md (section 5.2 step 8)
+  // Spec: docs/internal/specs/quick-note-694.md (section 5.2 step 8)
   await db.quickNotes.clear();
   await db.kv.delete(QUICK_NOTE_INBOX_KEY);
   // Which extension inbox rows this device already applied (`loginedit`).

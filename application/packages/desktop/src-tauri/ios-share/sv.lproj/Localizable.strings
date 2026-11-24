@@ -1,3 +1,10 @@
 "saved" = "Sparat i PrivacyNotes";
 "failed" = "Det gick inte att spara i PrivacyNotes";
 "tooLarge" = "För stor. Max {{limit}} MB per fil.";
+"save" = "Spara";
+"cancel" = "Avbryt";
+"note" = "Anteckning";
+"files" = "Filer";
+"titlePlaceholder" = "Titel (valfritt)";
+"notePlaceholder" = "Lägg till en anteckning...";
+"photoCount" = "{{count}} foton";

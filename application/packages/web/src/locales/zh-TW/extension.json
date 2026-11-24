@@ -23,7 +23,6 @@
     "generatePassword": "產生密碼"
   },
   "note": {
-    "tagsPlaceholder": "#工作 #點子",
     "tagsHelp": "標籤之間用空格或逗號分開。# 可加可不加。",
     "failed": "無法儲存筆記。請再試一次。"
   },
@@ -210,5 +209,11 @@
     "unlockFirst": "解鎖後即可使用你的密碼金鑰。",
     "offer": "提供密碼金鑰",
     "offerHelp": "在網站上儲存並使用密碼金鑰。"
+  },
+  "organize": {
+    "title": "資料夾與標籤",
+    "unlockToPick": "解鎖保險庫即可選取",
+    "addTag": "新增標籤...",
+    "proFolders": "資料夾是 Pro 功能。開啟 PrivacyNotes 即可升級。"
   }
 }

@@ -19,6 +19,7 @@
     "proUnlimited": "· obegränsat antal enheter",
     "earlySupporterThanks": "Tidig supporter, tack för att du var här först",
     "proThanks": "Allt är klart. Tack för att du stöttar projektet",
+    "freeLocalOnly": "Gratisplan",
     "freeLimit_one": "<strong>Gratisplan</strong>, upp till {{count}} enhet.",
     "freeLimit_other": "<strong>Gratisplan</strong>, upp till {{count}} enheter.",
     "freeUsage": "Använder just nu {{used}} av {{limit}}.",
@@ -89,7 +90,25 @@
   },
   "images": {
     "spaceSaverTitle": "Utrymmessparare",
-    "spaceSaverDesc": "Krympt till {{px}} pixlar och sparad som JPEG med {{quality}} % kvalitet. Lite mindre detalj för en bråkdel av utrymmet. En GIF behåller sin animation, och filer i Valvet förblir som de är.",
+    "spaceSaverDesc": "Krymper nya bilder och sparar dem som JPEG. En GIF behåller sin animation, och filer i Valvet förblir som de är.",
+    "compressionTitle": "Komprimering",
+    "level": {
+      "standard": "Standard",
+      "small": "Liten",
+      "tiny": "Mycket liten"
+    },
+    "levelSpec": "Ryms inom {{px}} pixlar med {{quality}} % JPEG-kvalitet.",
+    "levelDesc": {
+      "standard": "Skarpa detaljer för en bråkdel av utrymmet.",
+      "small": "Mindre filer medan foton och skärmdumpar förblir tydliga.",
+      "tiny": "Minsta storlek när lagringen är knapp; fin text kan bli mjukare."
+    },
+    "previewSample": "Mobilfoto på {{size}}",
+    "previewSavedAs": "Sparas som",
+    "previewCompressed": "~{{size}} JPEG ({{px}} px, {{quality}} %)",
+    "previewOriginal": "{{size}} original",
+    "previewBarLabel": "Beräknad sparad bildstorlek jämfört med originalet",
+    "previewFits": "~{{count}} foton / {{storage}}",
     "removeLocationTitle": "Ta bort platsdata",
     "removeLocationDesc": "Platsen där en bild togs tas bort innan den sparas.",
     "contactTitle": "Små kontaktfoton",
@@ -139,7 +158,8 @@
     "verifyNeverPushed_one": "{{count}} objekt här har aldrig nått servern",
     "verifyNeverPushed_other": "{{count}} objekt här har aldrig nått servern",
     "verifyRepairAction": "Ladda ner allt på nytt",
-    "verifyRepairQueued": "Nästa synkning läser om hela ditt valv. Inget som väntar på uppladdning går förlorat."
+    "verifyRepairQueued": "Nästa synkning läser om hela ditt valv. Inget som väntar på uppladdning går förlorat.",
+    "localOnlyOfflineError": "Du är offline. Anslut till internet för att slå på synk."
   },
   "accountId": {
     "heading": "Konto-ID",
@@ -469,6 +489,7 @@
     "blockedByStorage": "Du har en aktiv lagringsprenumeration. Avsluta den under Lagring i inställningarna innan du kan radera ditt konto.",
     "localLabel": "Radera lokal data",
     "localDesc": "Rensar anteckningar, bilder och cachad data från den här enheten. Det raderar inte ditt konto, det städar bara den här webbläsaren.",
+    "localDescLocalOnly": "Rensar alla anteckningar, bilder och filer från den här enheten. Ingenting lagras i molnet.",
     "localRequired": "(krävs när kontot raderas)",
     "localUnsynced_one": "{{items}} på den här enheten har inte synkats. Om du raderar lokal data förstörs den för alltid.",
     "localUnsynced_other": "{{items}} på den här enheten har inte synkats. Om du raderar lokal data förstörs de för alltid.",
@@ -508,6 +529,8 @@
     "updateRequiredAria": "Uppdatering krävs, synkning pausad",
     "paused": "Synk av",
     "pausedTooltip": "Synk är avstängd på den här enheten. Dina anteckningar stannar här tills du slår på den.",
+    "localOnly": "Endast lokalt",
+    "localOnlyAria": "Endast lokalt. Dina anteckningar stannar på den här enheten",
     "wifiHold": "Väntar på wifi",
     "wifiHoldTooltip": "Filerna laddas upp när wifi är tillbaka. Anteckningarna synkar som vanligt.",
     "notBackedUp": "Inte säkerhetskopierad",
@@ -575,7 +598,27 @@
     "passPushFailed_one": "{{count}} misslyckades",
     "passPushFailed_other": "{{count}} misslyckades",
     "passHalted_one": "stoppad, {{count}} väntar",
-    "passHalted_other": "stoppad, {{count}} väntar"
+    "passHalted_other": "stoppad, {{count}} väntar",
+    "localOnlyBody": "Dina anteckningar stannar krypterade på den här enheten och synkas inte till våra servrar.",
+    "localOnlyNotes_other": "{{count}} anteckningar på den här enheten",
+    "localOnlyBackupHint": "Ingenting synkas till molnet. Ställ in automatiska säkerhetskopior för att ha en säker kopia på en annan disk eller i en annan mapp.",
+    "localOnlySetUpBackups": "Ställ in automatiska säkerhetskopior",
+    "localOnlyTurnOnSync": "Slå på synk",
+    "localOnlyTurningOn": "Slår på synk...",
+    "localOnlyAccountIdHint": "Inte registrerat på våra servrar än.",
+    "localOnlyNotes_one": "{{count}} anteckning på den här enheten"
+  },
+  "localOnlyNotice": {
+    "body": "{{feature}}: slå på synk under Inställningar > ID & Sync för att använda den här onlinefunktionen.",
+    "cta": "Gå till ID & Sync",
+    "features": {
+      "multiDevice": "Hantering av flera enheter",
+      "keyCustody": "Nyckelförvaring i molnet",
+      "cloudStorage": "Molnlagring",
+      "twoFactorPasskeys": "Tvåfaktorsinloggning och passkeys",
+      "phraseChange": "Byte av återställningsfras",
+      "burnShare": "Burn-länkar"
+    }
   },
   "language": {
     "reportMistake": "Rapportera ett översättningsfel",

@@ -1561,9 +1561,12 @@ select.pn-select {
   .pn-fold-toggle[data-folded] {
     opacity: 1;
   }
-  /* Hover only where there is hover: a tap leaves it stuck on a phone. */
+  /* Hover only where there is hover: a tap leaves it stuck on a phone.
+     z-index lifts the hovered button above sibling fold chevrons inside the
+     gutter so a downward tip never paints under the next heading's chevron. */
   @media (hover: hover) {
     .pn-fold-toggle:hover {
+      z-index: 1;
       color: rgb(var(--pn-text));
       background: rgb(var(--pn-text-muted) / 0.12);
     }
@@ -3037,8 +3040,8 @@ select.pn-select {
        Spec: docs/internal/specs/folder-tag-icons.md (section 4.2) */
     --pn-label-gray-ink: #5a6168;
     --pn-label-red-ink: #ba1c1c;
-    --pn-label-orange-ink: #a43f08;
-    --pn-label-yellow-ink: #8d5200;
+    --pn-label-orange-ink: #c24700;
+    --pn-label-yellow-ink: #986500;
     --pn-label-green-ink: #206d2f;
     --pn-label-teal-ink: #096878;
     --pn-label-blue-ink: #1661a7;
@@ -3047,18 +3050,18 @@ select.pn-select {
     --pn-label-lime-ink: #4d7c0f;
     --pn-label-indigo-ink: #3b4cc0;
     --pn-label-grape-ink: #8e2aa8;
-    --pn-label-gray-tint: rgb(134 142 150 / 0.12);
-    --pn-label-red-tint: rgb(255 107 107 / 0.12);
-    --pn-label-orange-tint: rgb(255 146 43 / 0.12);
-    --pn-label-yellow-tint: rgb(250 204 21 / 0.12);
-    --pn-label-green-tint: rgb(64 192 87 / 0.12);
-    --pn-label-teal-tint: rgb(18 184 134 / 0.12);
-    --pn-label-blue-tint: rgb(51 154 240 / 0.12);
-    --pn-label-purple-tint: rgb(151 117 250 / 0.12);
-    --pn-label-pink-tint: rgb(240 101 149 / 0.12);
-    --pn-label-lime-tint: rgb(148 216 45 / 0.12);
-    --pn-label-indigo-tint: rgb(92 124 250 / 0.12);
-    --pn-label-grape-tint: rgb(204 93 232 / 0.12);
+    --pn-label-gray-tint: rgb(134 142 150 / 0.18);
+    --pn-label-red-tint: rgb(255 107 107 / 0.18);
+    --pn-label-orange-tint: rgb(255 146 43 / 0.18);
+    --pn-label-yellow-tint: rgb(250 204 21 / 0.18);
+    --pn-label-green-tint: rgb(46 184 82 / 0.18);
+    --pn-label-teal-tint: rgb(12 184 192 / 0.18);
+    --pn-label-blue-tint: rgb(51 154 240 / 0.18);
+    --pn-label-purple-tint: rgb(151 117 250 / 0.18);
+    --pn-label-pink-tint: rgb(240 101 149 / 0.18);
+    --pn-label-lime-tint: rgb(164 222 34 / 0.18);
+    --pn-label-indigo-tint: rgb(92 124 250 / 0.18);
+    --pn-label-grape-tint: rgb(204 93 232 / 0.18);
   }
 
   /* === Default dark: warm-charcoal =================================== */
@@ -3070,12 +3073,12 @@ select.pn-select {
        dark for its mode. Spec: docs/internal/design-decisions.md (Pro mark colour) */
     --pn-pro: 245 197 24; /* #F5C518 - gold */
     /* Folder and tag colors for every dark theme. A tint lightens a dark
-       surface, so it is weaker here, and yellow the weakest: at 0.10 it would
-       take dates on Soft dark under 3:1. */
+       surface, so it is weaker here, and yellow/lime the weakest so dates
+       and body text keep their contrast floors on Soft dark. */
     --pn-label-gray-ink: #8e969d;
     --pn-label-red-ink: #ea7171;
     --pn-label-orange-ink: #f46d24;
-    --pn-label-yellow-ink: #f08c00;
+    --pn-label-yellow-ink: #fab005;
     --pn-label-green-ink: #33aa49;
     --pn-label-teal-ink: #0fa4bc;
     --pn-label-blue-ink: #469ae7;
@@ -3084,18 +3087,18 @@ select.pn-select {
     --pn-label-lime-ink: #82c91e;
     --pn-label-indigo-ink: #7c8ff5;
     --pn-label-grape-ink: #d67bf0;
-    --pn-label-gray-tint: rgb(134 142 150 / 0.10);
-    --pn-label-red-tint: rgb(255 107 107 / 0.10);
-    --pn-label-orange-tint: rgb(255 146 43 / 0.10);
-    --pn-label-yellow-tint: rgb(250 204 21 / 0.08);
-    --pn-label-green-tint: rgb(64 192 87 / 0.10);
-    --pn-label-teal-tint: rgb(18 184 134 / 0.10);
-    --pn-label-blue-tint: rgb(51 154 240 / 0.10);
-    --pn-label-purple-tint: rgb(151 117 250 / 0.10);
-    --pn-label-pink-tint: rgb(240 101 149 / 0.10);
-    --pn-label-lime-tint: rgb(148 216 45 / 0.08);
-    --pn-label-indigo-tint: rgb(92 124 250 / 0.10);
-    --pn-label-grape-tint: rgb(204 93 232 / 0.10);
+    --pn-label-gray-tint: rgb(134 142 150 / 0.15);
+    --pn-label-red-tint: rgb(255 107 107 / 0.15);
+    --pn-label-orange-tint: rgb(255 146 43 / 0.15);
+    --pn-label-yellow-tint: rgb(250 204 21 / 0.13);
+    --pn-label-green-tint: rgb(46 184 82 / 0.15);
+    --pn-label-teal-tint: rgb(12 184 192 / 0.15);
+    --pn-label-blue-tint: rgb(51 154 240 / 0.15);
+    --pn-label-purple-tint: rgb(151 117 250 / 0.15);
+    --pn-label-pink-tint: rgb(240 101 149 / 0.15);
+    --pn-label-lime-tint: rgb(164 222 34 / 0.13);
+    --pn-label-indigo-tint: rgb(92 124 250 / 0.15);
+    --pn-label-grape-tint: rgb(204 93 232 / 0.15);
     --pn-accent: 74 144 217; /* #4A90D9 - the dark half of the brand accent pair, Spec: docs/internal/design-decisions.md (brand spelling) */
     --pn-accent-hover: 116 170 226; /* #74AAE2 - lighter, so link hover and text-accent-strong keep 4.5:1, on a tint too */
     --pn-accent-fill: 61 120 180; /* #3D78B4 */
@@ -3590,7 +3593,8 @@ select.pn-select {
   }
   input,
   textarea:not(.pn-note-title),
-  select {
+  select,
+  .pn-phrase-mirror {
     font-size: max(16px, calc(16px * var(--pn-system-text))) !important; /* type-scale: exempt - iOS zooms into a field under 16px; grows with the iPhone text size */
   }
   [contenteditable='true'],

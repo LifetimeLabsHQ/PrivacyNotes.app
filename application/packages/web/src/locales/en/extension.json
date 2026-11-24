@@ -23,7 +23,6 @@
     "generatePassword": "Generate a password"
   },
   "note": {
-    "tagsPlaceholder": "#work #ideas",
     "tagsHelp": "Space or comma between tags. The # is optional.",
     "failed": "Could not save the note. Try again."
   },
@@ -213,5 +212,11 @@
     "unlockFirst": "Unlock to use your passkeys.",
     "offer": "Offer passkeys",
     "offerHelp": "Save and use passkeys on websites."
+  },
+  "organize": {
+    "title": "Folder & tags",
+    "unlockToPick": "Unlock Vault to pick",
+    "addTag": "Add tag...",
+    "proFolders": "Folders are a Pro feature. Open PrivacyNotes to upgrade."
   }
 }

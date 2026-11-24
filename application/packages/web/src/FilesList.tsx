@@ -7,12 +7,23 @@
  * "Upload files" creates a new note with the uploaded file attached.
  */
 
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback, useContext } from 'react';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { useTranslation } from 'react-i18next';
 import type { ContextMenuItem } from './ContextMenu';
 import type { LocalNote } from './db';
 import type { ListPrefs, ListPrefsStore } from './listPrefs';
-import { resolvePrefs, setPillarPrefs } from './listPrefs';
+import { resolveGroupBy, resolvePrefs, setPillarPrefs } from './listPrefs';
+import {
+  FILE_TYPE_ORDER,
+  fileTypeGroupKey,
+  folderGroupKey,
+  groupBasisFor,
+  groupOptionsForView,
+  orderItemsForGroup,
+} from './listGroups';
+import { FolderGroupLabelsContext, FolderNamesContext } from './folderNames';
+import { parseDay } from './localDate';
 import { formatBytes, parseSizeToBytes } from './formatBytes';
 import { StorageBar } from './StorageBar';
 import { editedAtOf, mimeToLabel } from './notesViewUtils';
@@ -33,7 +44,9 @@ import { Switch } from './Switch';
 import { ActiveFilterEntry, ActiveSearchEntry, FilteredEmpty, ListFilterChips } from './ListFilterChips';
 import type { View } from './views';
 import { ListNav } from './notesView/ListNav';
+import { PullToSyncBar, usePullToSync } from './pullToSync';
 import { ListPrefsPopover } from './ListPrefsPopover';
+import { useItemGroups, useToday } from './ListGroupHeader';
 import { IconUpgrade } from './UpgradeModal';
 import { proUnlocked } from './demo';
 import { LazyPdfCover, LazyPicture } from './LazyPicture';
@@ -212,6 +225,13 @@ export function visibleFileItems(
   if (!prefs.showLocked) out = out.filter((f) => !f.locked);
   if (!prefs.showProtected) out = out.filter((f) => !f.pinProtected);
   return out;
+}
+
+/** Whether a file row is pinned in Files: only a standalone file item
+ *  (`type === 'file'`) pins here. Pinning a content note does not pin every
+ *  embedded image or attachment inside it to the top of Files (GitHub #875). */
+export function isFilePinned(item: Pick<FileItem, 'standalone' | 'starred'>): boolean {
+  return item.standalone && item.starred;
 }
 
 /** A picture the grid can draw and the viewer can show. */
@@ -658,11 +678,15 @@ export function FilesList({
       },
       { type: 'separator' },
       // ── Per-file actions ─────────────────────────────────────────
-      {
-        label: starred ? t('shell:contextMenu.unpin') : t('shell:contextMenu.pin'),
-        icon: iconPin(starred),
-        onSelect: () => onToggleStar(item.noteId, !starred),
-      },
+      // Only a standalone file pins here: pinning an embedded file would pin
+      // its whole host note, which is a note action, not a file action (#875).
+      ...(item.standalone
+        ? [{
+            label: starred ? t('shell:contextMenu.unpin') : t('shell:contextMenu.pin'),
+            icon: iconPin(starred),
+            onSelect: () => onToggleStar(item.noteId, !starred),
+          }]
+        : []),
       // Images carry no name a reader ever sees here, so there is nothing
       // to rename on one yet.
       ...(item.kind === 'attachment' && !item.locked
@@ -722,6 +746,10 @@ export function FilesList({
       { key: 'unused', label: t('filesList.filterUnused'), Icon: FileDashed },
     ] as const).map((k) => ({ ...k, count: count(k.key) }));
   }, [visibleItems, isUnused, t]);
+  const folderGroupLabels = useContext(FolderGroupLabelsContext);
+  const fallbackFolderNames = useContext(FolderNamesContext);
+  const folderNames = folderGroupLabels.size > 0 ? folderGroupLabels : fallbackFolderNames;
+  const today = useToday();
   const filtered = useMemo(() => {
     let items = visibleItems;
     if (filter === 'unused') {
@@ -735,21 +763,62 @@ export function FilesList({
       const match = textMatcher(q);
       items = items.filter((f) => match(f.label) || match(f.name) || match(f.noteTitle));
     }
-    // Sort - pinned files always float to top, then user's chosen sort within each group.
+    // Sort - pinned standalone files always float to top, then user's chosen sort within each group.
     const dir = sortDir === 'asc' ? 1 : -1;
     items = [...items].sort((a, b) => {
-      if (a.starred !== b.starred) return a.starred ? -1 : 1;
+      const aPinned = isFilePinned(a);
+      const bPinned = isFilePinned(b);
+      if (aPinned !== bPinned) return aPinned ? -1 : 1;
       if (sortField === 'title') return dir * a.label.localeCompare(b.label);
       if (sortField === 'size') return dir * (a.size - b.size);
       if (sortField === 'created') return dir * (a.createdAt > b.createdAt ? 1 : a.createdAt < b.createdAt ? -1 : 0);
       // modified - by the parent note's last edit
       return dir * (a.editedAt > b.editedAt ? 1 : a.editedAt < b.editedAt ? -1 : 0);
     });
+    if (!q) {
+      return orderItemsForGroup(items, {
+        basis: groupBasisFor(resolveGroupBy(listPrefs), 'files'),
+        sortField,
+        sortDir,
+        now: parseDay(today),
+        isPinned: isFilePinned,
+        dateOf: (f) => new Date(sortField === 'created' ? f.createdAt : f.editedAt),
+        titleOf: (f) => f.label,
+        hidesTitle: () => false,
+        typeOf: (f) => fileTypeGroupKey(fileCategory(f)),
+        typeOrder: FILE_TYPE_ORDER,
+        folderOf: (f) => folderGroupKey(f.folderId, folderNames),
+        folderNames,
+      });
+    }
     return items;
-  }, [visibleItems, filter, isUnused, search, sortField, sortDir]);
+  }, [visibleItems, filter, isUnused, search, sortField, sortDir, listPrefs, folderNames, today]);
+  // Group headers (decoupled Group by dropdown + foldable Pinned band whenever
+  // pinned standalone files sit above unpinned ones).
+  // Spec: docs/internal/specs/list-groups.md
+  const grouping = useItemGroups<FileItem>({
+    items: filtered,
+    idOf: fileKey,
+    dateOf: (f) => new Date(sortField === 'created' ? f.createdAt : f.editedAt),
+    titleOf: (f) => f.label,
+    typeOf: (f) => fileTypeGroupKey(fileCategory(f)),
+    folderOf: (f) => folderGroupKey(f.folderId, folderNames),
+    isPinned: isFilePinned,
+    hidesTitle: () => false,
+    listPrefs,
+    search,
+    scope: 'files',
+    view: 'files',
+    selectionMode: selectedFileIds.size > 0,
+    selectedId: activeFileId,
+    onContextMenu,
+    as: 'div',
+  });
+  const revealTotal = grouping.entries ? grouping.entries.length : filtered.length;
   // The files arrive in slices of 200; a different list - a new type filter,
   // search, folder or tag - starts at its top.
-  const list = useItemList([filter, search, activeFolderName, activeTag, showNote], filtered.length, place);
+  const list = useItemList([filter, search, activeFolderName, activeTag, showNote], revealTotal, place);
+  const pull = usePullToSync(list.ref, true);
   const compactRows = useCompactRows();
 
   /**
@@ -786,7 +855,7 @@ export function FilesList({
   // Held back until the revealed slice covers the whole list, so a long
   // filtered list never draws it mid-scroll and then pushes it down again.
   const showFilterEntry =
-    (activeFolderName !== null || activeTag !== null) && selectedFileIds.size === 0 && list.reveal.visible >= filtered.length;
+    (activeFolderName !== null || activeTag !== null) && selectedFileIds.size === 0 && list.reveal.visible >= revealTotal;
 
   /**
    * A click on a picture or a PDF opens its note, as every file click does,
@@ -939,6 +1008,7 @@ export function FilesList({
             titleLabel={t('filesList.sortName')}
             pillar="files"
             showSizeToggle
+            groupOptions={groupOptionsForView('files')}
           />
         )}
       </div>
@@ -955,10 +1025,11 @@ export function FilesList({
       </div>
 
       {/* ── File list ─────────────────────────────────────────────── */}
+      <PullToSyncBar {...pull} />
       <div
         ref={list.ref as React.RefObject<HTMLDivElement>}
         onScroll={(e) => list.onScroll(e.currentTarget)}
-        className="flex-1 overflow-y-auto"
+        className="flex-1 overflow-y-auto overscroll-y-contain"
         onMouseDown={suppressShiftTextSelection}
       >
         {filtered.length === 0 && !search.trim() && (activeFolderName !== null || activeTag !== null) ? (
@@ -994,7 +1065,7 @@ export function FilesList({
                 <button
                   type="button"
                   onClick={() => onUploadFiles()}
-                  className="text-small font-medium text-white bg-accent-fill hover:bg-accent-fill-hover px-4 py-1.5 rounded-md transition"
+                  className={`text-small font-semibold ${PRIMARY_BTN_SKIN} px-4 py-1.5 rounded-md transition`}
                 >
                   {t('filesList.uploadFiles')}
                 </button>
@@ -1023,7 +1094,8 @@ export function FilesList({
           </div>
         ) : (
           <div className={itemGridClass(viewMode === 'grid')}>
-            {filtered.slice(0, list.reveal.visible).map((item, idx) => {
+            {(() => {
+              const renderFileItem = (item: FileItem, idx: number) => {
               const fk = fileKey(item);
               const isSelected = selectedFileIds.has(fk);
               const isOpen = activeFileId === fk;
@@ -1046,7 +1118,7 @@ export function FilesList({
               // blob is kept local because it does not fit the quota.
               const localOnly = quotaBlockedUuids.has(item.uuid);
               const flags: ItemFlag[] = [];
-              if (item.starred && selectedFileIds.size === 0) flags.push('pinned');
+              if (isFilePinned(item) && selectedFileIds.size === 0) flags.push('pinned');
               if (item.pinProtected) flags.push('pinProtected');
               if (item.locked) flags.push('readOnly');
               if (localOnly) flags.push('localOnly');
@@ -1159,7 +1231,15 @@ export function FilesList({
                   )}
                 </button>
               );
-            })}
+              };
+              return grouping.entries
+                ? grouping.entries.slice(0, list.reveal.visible).map((e) =>
+                    e.kind === 'header'
+                      ? grouping.header(e, viewMode === 'grid')
+                      : renderFileItem(e.item, e.index),
+                  )
+                : filtered.slice(0, list.reveal.visible).map((item, idx) => renderFileItem(item, idx));
+            })()}
             {/* The standing "a filter is on" entry, shared with the other
                 scoped pillars (ListFilterChips.tsx owns it). `FilteredEmpty`
                 above answers the empty case; this one answers the quiet one,

@@ -303,7 +303,11 @@
     "confirm": "ノートとして読み込む",
     "cancel": "ファイルとして保存",
     "bodySingle": "<strong>{{filename}}</strong>はMarkdownファイルのようです。ノートとして読み込んで閲覧・編集できるようにしますか?それとも暗号化された添付ファイルとして保存しますか?",
-    "bodyMulti": "これら{{count}}個のファイルはMarkdownのようです。ノートとして読み込んで閲覧・編集できるようにしますか?それとも暗号化された添付ファイルとして保存しますか?"
+    "bodyMulti": "これら{{count}}個のファイルはMarkdownのようです。ノートとして読み込んで閲覧・編集できるようにしますか?それとも暗号化された添付ファイルとして保存しますか?",
+    "backupTitle": "復元しますか、保存しますか?",
+    "backupConfirm": "バックアップを復元",
+    "backupCancel": "ファイルとして保存",
+    "backupBody": "<strong>{{filename}}</strong>はPrivacyNotesのバックアップです。ここからデータを復元しますか?それとも暗号化された添付ファイルとして保存しますか?"
   },
   "archiveConfirm": {
     "body_other": "<highlight>{{count}}件のアイテム</highlight>をアーカイブしますか?リストから外れ、「アーカイブ」ビューに入ります。「アーカイブを解除」で元に戻せます。"

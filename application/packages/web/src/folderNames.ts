@@ -15,6 +15,25 @@ import { createContext, useContext } from 'react';
 export const FolderNamesContext = createContext<ReadonlyMap<string, string>>(new Map());
 
 /**
+ * Folder id -> group header label (full path like "Prose / Arabic" so nested
+ * folders sharing a leaf name never render duplicate headers).
+ */
+export const FolderGroupLabelsContext = createContext<ReadonlyMap<string, string>>(new Map());
+
+// Latest folder id -> group label map, synced on every NotesView render (the
+// pattern of viewRows.ts `setViewOrder`), so pure list selectors like
+// `selectTaskNotes` can order by folder without changing their signature.
+let currentFolderGroupLabels: ReadonlyMap<string, string> = new Map();
+
+export function setFolderGroupLabels(names: ReadonlyMap<string, string>): void {
+  currentFolderGroupLabels = names;
+}
+
+export function getFolderGroupLabels(): ReadonlyMap<string, string> {
+  return currentFolderGroupLabels;
+}
+
+/**
  * The item's folder name, or null when it is unfiled - which is also what a
  * free account always gets, since it has no folders. Callers render nothing
  * on null, so an unfiled item never shows an empty chip.

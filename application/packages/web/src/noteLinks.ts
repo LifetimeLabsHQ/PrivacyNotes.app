@@ -38,6 +38,13 @@
 const NOTE_LINK_RE = /\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]|\[\[[^\]|][^\]]*/g;
 
 /**
+ * Marker appended after a note-link (`[[Note]]<!--suggested-->`) when it was
+ * inserted from Suggested connections, so the editor and Connections panel can
+ * show its sparkle mark after reload and sync while staying plain markdown.
+ */
+export const SUGGESTED_LINK_MARKER = '<!--suggested-->';
+
+/**
  * Regions markdown treats as code, where `[[x]]` is literal text the editor
  * never renders as a link. Rewriting inside one would edit the user's content.
  * Same set and same reasoning as `linkify.ts`, including its known gap: an
@@ -196,14 +203,14 @@ function codeSpans(body: string): Span[] {
 }
 
 /**
- * Every note-link target in `body`, in order, as written between the
- * brackets and without its label. Code regions and `![[embeds]]` are skipped,
- * by the same segmented walk `retargetNoteLinks` uses, so this lists exactly
- * the links the editor renders.
+ * Every note-link in `body`, in order, with its target (without label) and
+ * whether it carries `SUGGESTED_LINK_MARKER`. Code regions and `![[embeds]]`
+ * are skipped, by the same segmented walk `retargetNoteLinks` uses, so this
+ * lists exactly the links the editor renders.
  */
-export function noteLinkTargets(body: string): string[] {
+export function noteLinkEntries(body: string): { target: string; suggested: boolean }[] {
   if (!body || !body.includes('[[')) return [];
-  const out: string[] = [];
+  const out: { target: string; suggested: boolean }[] = [];
   const scan = (text: string, offset: number) => {
     NOTE_LINK_RE.lastIndex = 0;
     let m: RegExpExecArray | null;
@@ -212,7 +219,9 @@ export function noteLinkTargets(body: string): string[] {
       const abs = offset + m.index;
       if (abs > 0 && body[abs - 1] === '!') continue;
       const target = (m[1] ?? '').trim();
-      if (target) out.push(target);
+      if (!target) continue;
+      const suggested = body.startsWith(SUGGESTED_LINK_MARKER, abs + m[0].length);
+      out.push({ target, suggested });
     }
   };
   let cursor = 0;
@@ -222,6 +231,14 @@ export function noteLinkTargets(body: string): string[] {
   }
   if (cursor < body.length) scan(body.slice(cursor), cursor);
   return out;
+}
+
+/**
+ * Every note-link target in `body`, in order, as written between the
+ * brackets and without its label.
+ */
+export function noteLinkTargets(body: string): string[] {
+  return noteLinkEntries(body).map((e) => e.target);
 }
 
 /**

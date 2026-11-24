@@ -12,6 +12,9 @@ import {
   BACKUP_TOO_SMALL,
   bytesToBase64,
   base64urlToBytes,
+  phraseToSeed,
+  deriveEncryptionKey,
+  isValidPhrase,
 } from '@notes/shared';
 import type { BackupPayload, SitePasskey } from '@notes/shared';
 import i18n from './i18n';
@@ -2011,6 +2014,16 @@ export type DecryptedBackup = BackupPayload;
  * not verify tells you nothing about why. So the message names both causes and
  * leads with the one that is far more common, restoring into the wrong account.
  */
+/** Typed decryption error for encrypted backups whose authentication tag did
+ *  not verify under the active vault key (most commonly a backup exported
+ *  from another account or local-only device). Spec: docs/internal/specs/local-only-862.md (D1) */
+export class BackupWrongKeyError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'BackupWrongKeyError';
+  }
+}
+
 export function decryptBackup(
   data: Uint8Array,
   encryptionKey: Uint8Array
@@ -2029,7 +2042,36 @@ export function decryptBackup(
         i18n.t('importExport:decryptErrors.tooSmall', { size: data.length }),
       );
     }
-    throw new Error(i18n.t('importExport:decryptErrors.notThisAccount'));
+    throw new BackupWrongKeyError(i18n.t('importExport:decryptErrors.notThisAccount'));
+  }
+}
+
+/** Decrypt a .pnbackup file using a recovery phrase supplied for that backup
+ *  alone (bypassing the active vault's keyRing). Zeroes both the derived seed
+ *  and temporary key before returning or throwing. */
+export function decryptBackupWithForeignPhrase(
+  data: Uint8Array,
+  phrase: string,
+): DecryptedBackup {
+  const trimmed = phrase.trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!isValidPhrase(trimmed)) {
+    throw new BackupWrongKeyError(i18n.t('auth:importPhrase.invalidPhrase'));
+  }
+  const seed = phraseToSeed(trimmed);
+  const tempKey = deriveEncryptionKey(seed);
+  try {
+    return decodeBackup(data, tempKey);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : '';
+    if (msg === BACKUP_TOO_SMALL || msg.includes('tagLength')) {
+      throw new Error(
+        i18n.t('importExport:decryptErrors.tooSmall', { size: data.length }),
+      );
+    }
+    throw new BackupWrongKeyError(i18n.t('importExport:restoreForeign.wrongPhrase'));
+  } finally {
+    seed.fill(0);
+    tempKey.fill(0);
   }
 }
 
@@ -2044,7 +2086,33 @@ export function decryptFullBackupZip(bytes: Uint8Array, encryptionKey: Uint8Arra
     if (err instanceof Error && err.name === BACKUP_TOO_SMALL) {
       throw new Error(i18n.t('importExport:decryptErrors.tooSmall', { size: bytes.length }));
     }
-    throw new Error(i18n.t('importExport:decryptErrors.notThisAccount'));
+    throw new BackupWrongKeyError(i18n.t('importExport:decryptErrors.notThisAccount'));
+  }
+}
+
+/** Decrypt a .pnbackupz file using a recovery phrase supplied for that backup
+ *  alone (bypassing the active vault's keyRing). Zeroes both the derived seed
+ *  and temporary key before returning or throwing. */
+export function decryptFullBackupZipWithForeignPhrase(
+  bytes: Uint8Array,
+  phrase: string,
+): Uint8Array {
+  const trimmed = phrase.trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!isValidPhrase(trimmed)) {
+    throw new BackupWrongKeyError(i18n.t('auth:importPhrase.invalidPhrase'));
+  }
+  const seed = phraseToSeed(trimmed);
+  const tempKey = deriveEncryptionKey(seed);
+  try {
+    return decodeZipBackup(bytes, tempKey);
+  } catch (err) {
+    if (err instanceof Error && err.name === BACKUP_TOO_SMALL) {
+      throw new Error(i18n.t('importExport:decryptErrors.tooSmall', { size: bytes.length }));
+    }
+    throw new BackupWrongKeyError(i18n.t('importExport:restoreForeign.wrongPhrase'));
+  } finally {
+    seed.fill(0);
+    tempKey.fill(0);
   }
 }
 

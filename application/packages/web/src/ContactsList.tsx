@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { useTranslation } from 'react-i18next';
 import { ItemList, useContextTarget, useItemList } from './itemList';
 import type { LocalNote } from './db';
@@ -9,6 +10,8 @@ import { WindowedNoteRow as NoteRow, WindowedNoteCard as NoteCard } from './Wind
 import { ListNav } from './notesView/ListNav';
 import { ListSearchInput } from './ListSearchInput';
 import { ListPrefsPopover } from './ListPrefsPopover';
+import { useListGroups } from './ListGroupHeader';
+import { groupOptionsForView } from './listGroups';
 import { ActiveFilterEntry, ActiveSearchEntry, FilteredEmpty, ListFilterChips } from './ListFilterChips';
 import { SelectionToolbar } from './SelectionToolbar';
 import type { ContextMenuItem } from './ContextMenu';
@@ -52,6 +55,7 @@ export function ContactsList({
   onRequestNew,
   selectedId,
   onRowContextMenu,
+  onContextMenu,
   onOpenImport,
   selectionMode,
   selectedIds,
@@ -111,6 +115,7 @@ export function ContactsList({
   onRequestNew: () => void;
   selectedId: string | null;
   onRowContextMenu: (note: LocalNote, e: React.MouseEvent) => void;
+  onContextMenu?: (e: React.MouseEvent, items: ContextMenuItem[]) => void;
   onOpenImport: () => void;
   selectionMode: boolean;
   selectedIds: Set<string>;
@@ -157,20 +162,37 @@ export function ContactsList({
   });
 
   const showSearchEntry = !!q && contacts.length === 0 && !selectionMode;
-  const list = useItemList([search, activeFolderName, activeTag], contacts.length, place);
+  const grouping = useListGroups({
+    notes: contacts,
+    listPrefs,
+    search,
+    scope: 'contacts',
+    view: 'contacts',
+    selectionMode,
+    selectedId,
+    isNoteLocked,
+    onContextMenu,
+  });
+  const contactRowCount = grouping.entries ? grouping.entries.length : contacts.length;
+  const list = useItemList([search, activeFolderName, activeTag], contactRowCount, place);
   // Draw the list down to the open contact, as NotesList does: a contact
   // opened from outside the list (a note-link, Ninja's random item) can sit
   // past the revealed slice, and its row would not exist to scroll to.
   const { ensure } = list.reveal;
   useEffect(() => {
-    if (selectedId) ensure(contacts.findIndex((n) => n.id === selectedId));
-  }, [contacts, selectedId, ensure]);
+    if (!selectedId) return;
+    ensure(
+      grouping.entries
+        ? grouping.entries.findIndex((e) => e.kind === 'note' && e.note.id === selectedId)
+        : contacts.findIndex((n) => n.id === selectedId),
+    );
+  }, [grouping.entries, contacts, selectedId, ensure]);
   const showFilterEntry =
     !selectionMode &&
     (activeFolderName !== null || activeTag !== null) &&
     // Held back until the revealed slice covers the whole list, so a long
     // filtered list never draws it mid-scroll and then pushes it down again.
-    (showSearchEntry || (contacts.length > 0 && list.reveal.visible >= contacts.length));
+    (showSearchEntry || (contacts.length > 0 && list.reveal.visible >= contactRowCount));
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -254,6 +276,7 @@ export function ContactsList({
             anchorRef={sortBtnRef}
             className="absolute start-3 top-full mt-1"
             pillar="contacts"
+            groupOptions={groupOptionsForView('contacts')}
           />
         )}
       </div>
@@ -267,14 +290,14 @@ export function ContactsList({
         />
       )}
 
-      <ItemList list={list} grid={viewMode === 'grid'}>
+      <ItemList list={list} grid={viewMode === 'grid'} pullToSync>
         {empty && !filteredAway ? (
           <li className={`flex flex-col items-center justify-center text-center px-8 py-14 ${viewMode === 'grid' ? 'col-span-full' : ''}`}>
             <PILLAR_GLYPHS.contacts size={34} className="text-pn-muted" weight="duotone" aria-hidden="true" />
             <p className="text-compact text-pn-muted mt-3">{otherSpaceLine ?? t('contacts.emptyNone')}</p>
             <h3 className="text-row font-semibold mt-1 mb-4">{t('contacts.emptyTitle')}</h3>
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <button type="button" onClick={onRequestNew} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md bg-accent-fill px-3.5 py-2 text-compact font-medium text-white transition hover:bg-accent-fill/90">
+              <button type="button" onClick={onRequestNew} className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-md ${PRIMARY_BTN_SKIN} px-3.5 py-2 text-compact font-semibold transition`}>
                 <NEW_GLYPHS.contact />
                 {t('contacts.emptyAdd')}
               </button>
@@ -299,7 +322,8 @@ export function ContactsList({
             {!filteredAway && contacts.length === 0 && (
               <li className={`p-6 text-compact text-pn-muted text-center ${viewMode === 'grid' ? 'col-span-full' : ''}`}>{t('contacts.noMatches')}</li>
             )}
-            {contacts.slice(0, list.reveal.visible).map((n) => (
+            {(() => {
+              const renderContact = (n: LocalNote) => (
               viewMode === 'grid' ? (
               <NoteCard
                 windowed={contacts.length > 100}
@@ -353,7 +377,17 @@ export function ContactsList({
                 sortAwareDate
               />
               )
-            ))}
+              );
+              return grouping.entries
+                ? grouping.entries.slice(0, list.reveal.visible).map((e) =>
+                    e.kind === 'header'
+                      ? grouping.header(e, viewMode === 'grid')
+                      : e.kind === 'note'
+                        ? renderContact(e.note)
+                        : null,
+                  )
+                : contacts.slice(0, list.reveal.visible).map(renderContact);
+            })()}
             {showSearchEntry && (
               <ActiveSearchEntry
                 search={search}

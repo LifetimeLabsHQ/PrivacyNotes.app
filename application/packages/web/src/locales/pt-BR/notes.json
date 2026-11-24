@@ -321,7 +321,11 @@
     "confirm": "Importar como notas",
     "cancel": "Guardar como arquivos",
     "bodySingle": "<strong>{{filename}}</strong> parece um arquivo markdown. Importar como nota para você poder ler e editar, ou guardar como anexo de arquivo criptografado?",
-    "bodyMulti": "Estes {{count}} arquivos parecem markdown. Importá-los como notas para você poder ler e editar, ou guardá-los como anexos de arquivos criptografados?"
+    "bodyMulti": "Estes {{count}} arquivos parecem markdown. Importá-los como notas para você poder ler e editar, ou guardá-los como anexos de arquivos criptografados?",
+    "backupTitle": "Restaurar ou guardar?",
+    "backupConfirm": "Restaurar backup",
+    "backupCancel": "Guardar como arquivo",
+    "backupBody": "<strong>{{filename}}</strong> é um backup do PrivacyNotes. Restaurar seus dados a partir dele, ou guardar como anexo de arquivo criptografado?"
   },
   "archiveConfirm": {
     "body_one": "Arquivar <highlight>{{count}} item</highlight>? Ele sai das suas listas e fica esperando na visão Arquivo. Desarquivar o traz de volta.",

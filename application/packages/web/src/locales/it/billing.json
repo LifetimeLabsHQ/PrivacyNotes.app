@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "Sblocca tutto per {{price}}",
     "ctaOpening": "Apertura del pagamento...",
     "ctaSignUp": "Registrati per sbloccare",
+    "localOnlyHint": "Per passare a Pro, l'app si connette una volta per registrare il tuo account e attivare Pro. La sincronizzazione resta disattivata.",
+    "localOnlyOffline": "Connettiti a internet per passare a Pro.",
     "features": {
       "folders": "Cartelle nidificate",
       "lock": "Blocco e PIN",

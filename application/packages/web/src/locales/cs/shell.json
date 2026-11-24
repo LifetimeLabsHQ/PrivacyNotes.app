@@ -293,6 +293,8 @@
     "showNoteLinks": "Zobrazit odkazy v jiných položkách",
     "showNoteTasks": "Zobrazit úkoly v jiných položkách",
     "showGroups": "Zobrazit skupiny",
+    "groupBy": "Seskupit podle",
+    "groupLetter": "První písmeno",
     "groupsByDate": "Seskupeno podle data",
     "groupsByLetter": "Seskupeno podle prvního písmene",
     "groupsNoneForSize": "Při řazení podle velikosti není k dispozici",
@@ -317,6 +319,7 @@
     "nextWeek": "Další týden",
     "pickMonth": "{{month}}, vyber měsíc a rok",
     "pickMonthTip": "Vyber měsíc a rok",
+    "showToday": "Zobrazit dnešek",
     "showWholeMonth": "Zobrazit celý měsíc",
     "showOneWeek": "Zobrazit jeden týden"
   },
@@ -644,7 +647,10 @@
   "shareInbox": {
     "saved": "Uloženo do PrivacyNotes",
     "failed": "Do PrivacyNotes se nepodařilo uložit",
-    "tooLarge": "Příliš velké. Maximum je {{limit}} MB na soubor."
+    "tooLarge": "Příliš velké. Maximum je {{limit}} MB na soubor.",
+    "titlePlaceholder": "Název (nepovinné)",
+    "notePlaceholder": "Přidejte poznámku...",
+    "photoCount": "Fotky: {{count}}"
   },
   "shortcut": {
     "copyNote": "Kopírovat zástupce poznámky",
@@ -1027,9 +1033,8 @@
     "addressPlaceholder": "Vlož odkaz…",
     "savePictures": "Uložit obrázky",
     "savePicturesHint": "Až 20 obrázků, uložených s poznámkou. Započítávají se do tvého úložiště.",
-    "extensionTipTitle": "Ukládej stránky z prohlížeče, výsledek bude lepší",
-    "extensionTip": "Rozšíření prohlížeče uloží stránku tak, jak ji vidíš, i stránky za přihlášením.",
-    "extensionTipSetUp": "Nastavit rozšíření",
+    "extensionTipTitle": "Chceš mnohem lépe uložené stránky?",
+    "extensionTip": "Rozšíření prohlížeče čistě uloží jakoukoli stránku jedním kliknutím, i za přihlášením.",
     "downloading": "Stahuje se stránka…",
     "downloadingPictures": "Stahují se obrázky, {{done}} z {{total}}",
     "picturesLine_one": "{{count}} obrázek · {{size}}, uložený s poznámkou",
@@ -1069,7 +1074,7 @@
   "apps": {
     "railLabel": "Rozšíření",
     "title": "Rozšíření prohlížeče",
-    "subtitle": "Ukládání stránek a správce hesel v Chrome, Firefoxu, Edge, Brave a Vivaldi. Rozšíření nikdy nedrží klíč, který otevírá tvoje poznámky.",
+    "subtitle": "Ukládání stránek a správce hesel v prohlížečích Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf a Zen. Rozšíření nikdy nedrží klíč, který otevírá tvoje poznámky.",
     "loginsCopyFull": "Kopie tvých přihlašovacích údajů v rozšíření prohlížeče je plná. Nové přihlašovací údaje se do ní dostanou, až některé smažeš.",
     "stepInstall": "Nainstaluj rozšíření",
     "stepFeatures": "Vyber, co smí dělat",

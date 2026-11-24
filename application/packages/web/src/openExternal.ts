@@ -1,14 +1,20 @@
 /**
- * Open a URL in the user's browser - the programmatic sibling of the
- * anchor-click interceptor in App.tsx. Anchors are covered there (the
- * capture-phase listener hands external hrefs to the opener plugin on
- * desktop); this helper is for code paths with no anchor to click, like
- * a bookmark row's open action.
+ * Open a URL outside the app's WebView - shared by programmatic callers
+ * (bookmarks, editor clicks, vault/contact links, Ninja doors) and the
+ * capture-phase anchor interceptor in App.tsx.
  *
  * Web: window.open with noopener, same guarantees as rel="noopener".
  * Tauri (desktop + mobile wrappers): the opener plugin, because the
  * WebView swallows window.open the same way it swallows target=_blank.
  * Spec: docs/internal/macos-ios-setup.md (native flows use the same opener plugin)
+ *
+ * iOS target split (GitHub #898):
+ * - Default (`browser: false`): http(s) opens in the in-app SFSafariViewController
+ *   sheet (`inAppBrowser`), keeping app links (Privacy Policy, Terms of Service,
+ *   Settings, Help, About) inside the app per App Review guideline 4.
+ * - `browser: true`: opens in the user's default system browser via `openUrl(url)`
+ *   so links from user content (notes, bookmarks, contacts, vault items, drawings)
+ *   stay open in the browser while the user switches back and forth.
  *
  * Four schemes and nothing else: http(s) for the web, and tel:, sms: and
  * mailto: for a contact's rows, which the OS hands to the dialer, the
@@ -22,6 +28,36 @@ import { detectPlatform } from './devices';
 import { openShortcutInApp } from './noteShortcut';
 
 const OPENABLE = /^(https?|tel|sms|mailto):/i;
+
+export interface OpenExternalOptions {
+  /**
+   * iOS only: open http(s) in the user's default browser instead of the
+   * in-app SFSafariViewController sheet. Use for user-content links (note
+   * editor, bookmarks, vault/contact links, drawings); leave false for
+   * app-chrome links (Settings, Terms, Privacy Policy, Help, About).
+   */
+  browser?: boolean;
+}
+
+/**
+ * True when a clicked anchor belongs to user content and should open in the
+ * default browser on iOS rather than the in-app SFSafariViewController sheet:
+ * - `.ProseMirror`: note editor, read-only notes, Markdown preview, history, Home note widget
+ * - `.pn-detail-notes`: rendered Markdown notes inside vault items and bookmarks
+ * - `[data-open-browser]`: explicit user-content anchors such as DetailLink
+ */
+export function anchorOpensInDefaultBrowser(anchor: Element): boolean {
+  return anchor.closest('.ProseMirror, .pn-detail-notes, [data-open-browser]') !== null;
+}
+
+/**
+ * True when an anchor sits inside an editable region where `LinkModifierOpen`
+ * owns desktop mouse clicks, and false inside a `contenteditable="false"` atom
+ * island (such as `PlaceMapNode`) nested within `.ProseMirror`.
+ */
+export function isEditableAnchor(anchor: Element): boolean {
+  return anchor.closest('[contenteditable]')?.getAttribute('contenteditable') === 'true';
+}
 
 /**
  * True for a link the opener plugin's own script would hand to the browser as
@@ -60,7 +96,7 @@ export function pluginOpensThisApp(anchor: Element, keys: Pick<MouseEvent, 'ctrl
   }
 }
 
-export function openExternal(url: string): void {
+export function openExternal(url: string, opts?: OpenExternalOptions): void {
   // A site path ("/en/changelog", as `siteHref` gives one on a web host that
   // also serves the site: localhost, staging) opens on this origin.
   if (/^\/(?!\/)/.test(url) && detectPlatform() === 'web') url = new URL(url, window.location.origin).href;
@@ -70,16 +106,24 @@ export function openExternal(url: string): void {
   if (openShortcutInApp(url)) return;
   const platform = detectPlatform();
   if (platform !== 'web') {
-    // iOS: in-app SFSafariViewController sheet, mirroring the anchor
-    // interceptor in App.tsx (guideline 4 - keep the user in the app).
-    const openWith = platform === 'ios' && /^https?:/i.test(url) ? ('inAppBrowser' as const) : undefined;
+    // iOS: app-chrome web links stay in the in-app SFSafariViewController sheet
+    // (guideline 4), while user-content links (`browser: true`) open in the
+    // user's default browser (GitHub #898). Non-http schemes (tel/sms/mailto)
+    // and Android/desktop always use the plain OS handoff.
+    const openWith =
+      platform === 'ios' && !opts?.browser && /^https?:/i.test(url)
+        ? ('inAppBrowser' as const)
+        : undefined;
     void import('@tauri-apps/plugin-opener').then(async ({ openUrl }) => {
       try {
         await openUrl(url, openWith);
       } catch (err) {
-        // Same fallback as the anchor interceptor in App.tsx: `with` is
-        // ACL-checked, so a scope gap must degrade to the system browser
-        // rather than to a dead tap. See the comment there.
+        // Never let a link do nothing. `with` is part of the opener's ACL
+        // check - a scope that does not grant an explicit application
+        // rejects with ForbiddenUrl - and this call had no catch when the
+        // sheet first shipped, so a capability gap silently killed EVERY
+        // external link in the app (2026-08-26). Retry without the sheet:
+        // the system browser is far better than a dead tap.
         if (openWith) {
           console.warn('[links] in-app sheet refused, using the browser', err);
           await openUrl(url);

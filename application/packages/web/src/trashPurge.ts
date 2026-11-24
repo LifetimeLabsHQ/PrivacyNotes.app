@@ -126,7 +126,11 @@ export async function purgeExpiredTrash(
     const seenAt = Object.fromEntries(Object.entries(seen).map(([id, e]) => [id, e.at]));
     const expired = selectExpiredTrash(trashed, days, now, demo, seenAt);
     for (const n of expired) {
-      await db.notes.update(n.id, { deleted: 1, updatedAt: nextStamp(n.updatedAt), dirty: 1 });
+      if (demo && n.syncedNonce == null) {
+        await db.notes.delete(n.id);
+      } else {
+        await db.notes.update(n.id, { deleted: 1, updatedAt: nextStamp(n.updatedAt), dirty: 1 });
+      }
       delete seen[n.id];
     }
     await db.kv.put({ key: TRASH_SEEN_KEY, value: JSON.stringify(seen) });

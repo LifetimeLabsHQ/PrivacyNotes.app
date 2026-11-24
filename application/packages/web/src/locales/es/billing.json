@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "Desbloquea todo por {{price}}",
     "ctaOpening": "Abriendo el pago...",
     "ctaSignUp": "Regístrate para desbloquear",
+    "localOnlyHint": "Al mejorar tu plan, la app se conecta una vez para registrar tu cuenta y activar Pro. La sincronización sigue desactivada.",
+    "localOnlyOffline": "Conéctate a internet para mejorar tu plan.",
     "features": {
       "folders": "Carpetas anidadas",
       "lock": "Bloqueo y PIN",

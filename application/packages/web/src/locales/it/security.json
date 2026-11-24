@@ -228,7 +228,7 @@
     "removeTitle": "Rimuovere questa passkey?",
     "removeBody": "Non potrai più accedere con essa. La passkey resta nella tua app delle passkey finché non la elimini lì.",
     "retired": "Creata prima che la tua frase cambiasse. Rimuovila e aggiungila di nuovo.",
-    "noPrf": "Questa app delle passkey non può proteggere la tua frase, quindi la passkey non è stata aggiunta. Prova le passkey del tuo dispositivo, o un altro gestore di password.",
+    "noPrf": "Questa app delle passkey non può creare la chiave che protegge la tua frase, quindi la passkey non è stata aggiunta. Puoi ancora accedere con la tua frase. Quando il tuo password manager si offre di salvare la passkey, scegli invece di salvarla su questo dispositivo o su una chiave di sicurezza.",
     "tooMany": "Hai {{count}} passkey per accedere. Rimuovine una per aggiungerne un'altra.",
     "failed": "Non è stato possibile aggiungere la passkey. Controlla la connessione e riprova.",
     "appsOnly": "Aggiungi le passkey nel tuo browser su use.privacynotes.app. L'accesso con esse nelle app arriverà più avanti.",

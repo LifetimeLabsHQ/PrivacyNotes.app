@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { Trans, useTranslation } from 'react-i18next';
 import { useAuth } from './auth';
 import { useEscapeToClose } from './useEscapeToClose';
@@ -44,6 +45,7 @@ import { KeyCustodyTab } from './security/KeyCustodyTab';
 import type { UserSettings } from './userSettings';
 import { isDemoMode } from './demo';
 import { DemoAccountTeaser } from './DemoAccountTeaser';
+import { LocalOnlyNotice } from './LocalOnlyNotice';
 import { usePaneTab } from './settingsPaneTab';
 
 type Props = {
@@ -95,6 +97,10 @@ type Props = {
   initialSection?: 'overview' | 'connectedAccounts' | 'keyCustody';
   /** The ID & Sync tab a settings search hit opens. */
   initialMeSection?: 'overview' | 'dms';
+  /** Opens Settings > ID & Sync from a local-only notice. */
+  onOpenSync?: () => void;
+  /** Opens Settings > Backup > Automatic from the local-only sync panel. */
+  onOpenAutoBackup?: () => void;
 };
 
 /** What Remove acts on: one row of a slot, or every row in it. */
@@ -117,19 +123,21 @@ type RevokeTarget = { slot: DeviceSlot; rows: [DeviceRow, ...DeviceRow[]] };
  * Pro status is surfaced with a badge + an upsell block for free
  * users.
  */
-export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow, embedded = false, autoVerify = false, onOpenNote, onOpenImageSettings, tab: controlledTab, onTabChange, deviceLabels = {}, onRenameDevice, onOpenRating, onOpenPhrase, custodySettings, initialSection, initialMeSection }: Props) {
+export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow, embedded = false, autoVerify = false, onOpenNote, onOpenImageSettings, tab: controlledTab, onTabChange, deviceLabels = {}, onRenameDevice, onOpenRating, onOpenPhrase, custodySettings, initialSection, initialMeSection, onOpenSync, onOpenAutoBackup }: Props) {
   const { t } = useTranslation('settings');
+  const { auth, supabase, refreshProStatus, graduateLocalVault } = useAuth();
+  const authed = auth.status === 'authenticated' ? auth : null;
+  const localOnly = authed?.localOnly === true;
   // Real App Store / Play prices, already in the user's storefront currency.
   // Null everywhere else, and every use below falls back to the Paddle USD
   // figures. Spec: docs/internal/design-decisions.md (fair global pricing)
-  const storePrices = useStorePrices();
-  const { auth, supabase, refreshProStatus } = useAuth();
+  const storePrices = useStorePrices({ disabled: localOnly });
   // Seeded from the last-known figures for this account so the panel
   // paints immediately instead of holding an empty pane for a round-trip
   // (the reads below overwrite them within the same second). Null on a
   // first-ever open, in demo, or after a sign-out - the loading state
   // then behaves exactly as it always did. See accountPanelCache.ts.
-  const cachePubkey = auth.status === 'authenticated' ? auth.pubkey : null;
+  const cachePubkey = authed && !localOnly ? authed.pubkey : null;
   const cachedPanel = useMemo(
     () => (cachePubkey ? readPanelCache(cachePubkey) : null),
     [cachePubkey],
@@ -141,7 +149,6 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
   const [confirm, setConfirm] = useState<RevokeTarget | null>(null);
 
 
-  const authed = auth.status === 'authenticated' ? auth : null;
   // Pro status comes from auth state (set at sign-in by registerDevice).
   // Reading it from there instead of a fresh RPC avoids flipping the UI
   // to "Free" when the is_pro RPC fails due to a network blip.
@@ -190,7 +197,7 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
   const [billingRefresh, setBillingRefresh] = useState(0);
 
   useEffect(() => {
-    if (!authed) return;
+    if (!authed || localOnly) return;
     // Only two of the four panels draw any of this. The effect depends on
     // `tab`, so without this gate every entry to the Sync and Me panels would
     // pay for a device list, a quota read, a subscription read, a server
@@ -258,7 +265,7 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
       window.removeEventListener('focus', onReturn);
       document.removeEventListener('visibilitychange', onReturn);
     };
-  }, [authed, supabase, isPro, tab, billingRefresh]);
+  }, [authed, localOnly, supabase, isPro, tab, billingRefresh]);
 
   // Fetch the real prorated amount when the upgrade dialog opens, and again
   // on each retry.
@@ -307,7 +314,7 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
     setRestoreBusy(true);
     setRestoreOutcome(null);
     const outcome = await restoreNativePurchases(authed.pubkey);
-    if (outcome === 'restored' || outcome === 'none') {
+    if (!localOnly && (outcome === 'restored' || outcome === 'none')) {
       await refreshProStatus({ silent: true, attempts: 1 });
       const [q, subs] = await Promise.all([
         fetchQuotaUsage(supabase, true).catch(() => null),
@@ -639,11 +646,15 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                 <div className="rounded-md border border-divider bg-surface-1 p-4 text-small leading-relaxed">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                     <span className="text-pn-soft">
-                      <Trans
-                        i18nKey="settings:plan.freeLimit"
-                        values={{ count: freeLimit }}
-                        components={{ strong: <strong className="text-pn" /> }}
-                      />
+                      {localOnly ? (
+                        <strong className="text-pn">{t('plan.freeLocalOnly')}</strong>
+                      ) : (
+                        <Trans
+                          i18nKey="settings:plan.freeLimit"
+                          values={{ count: freeLimit }}
+                          components={{ strong: <strong className="text-pn" /> }}
+                        />
+                      )}
                     </span>
                     {devices && (
                       <span className="text-pn-muted tabular-nums">
@@ -675,9 +686,9 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
               )
             )}
 
-            {/* Restore purchases - only where purchases live in a store
-                account (iOS / Play build). Paddle platforms have nothing to
-                restore: entitlement follows the pubkey server-side. */}
+            {/* Restore purchases - always visible on native store builds
+                (Apple Guideline 3.1.1). While local-only, restoreNativePurchases
+                checks StoreKit/Play locally without contacting our backend. */}
             {authed && isNativeStoreBuild() && (
               <div className="rounded-md border border-divider bg-surface-1 p-4">
                 <SectionEyebrow setting="plan.restorePurchases" className="mb-1">{t('plan.restore.heading')}</SectionEyebrow>
@@ -713,16 +724,26 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
           <DemoAccountTeaser kind={accountSection === 'keyCustody' ? 'keyCustody' : 'accounts'} />
         )}
         {tab === 'plan' && accountPagesAvailable && accountSection === 'connectedAccounts' && (
-          <AccountLoginsPanel onOpenCustody={() => setAccountSection('keyCustody')} onOpenPhrase={onOpenPhrase} />
+          localOnly
+            ? <LocalOnlyNotice feature="connectedAccounts" onOpenSync={onOpenSync} />
+            : <AccountLoginsPanel onOpenCustody={() => setAccountSection('keyCustody')} onOpenPhrase={onOpenPhrase} />
         )}
         {tab === 'plan' && accountPagesAvailable && accountSection === 'keyCustody' && authed && custodySettings && onOpenPhrase && (
-          <KeyCustodyTab phrase={authed.phrase} pubkey={authed.pubkey} {...custodySettings}
-            onCancel={() => setAccountSection('overview')} onOpenPhrase={onOpenPhrase}
-            onOpenConnectedAccounts={() => setAccountSection('connectedAccounts')} />
+          localOnly
+            ? <LocalOnlyNotice feature="keyCustody" onOpenSync={onOpenSync} />
+            : <KeyCustodyTab phrase={authed.phrase} pubkey={authed.pubkey} {...custodySettings}
+                onCancel={() => setAccountSection('overview')} onOpenPhrase={onOpenPhrase}
+                onOpenConnectedAccounts={() => setAccountSection('connectedAccounts')} />
         )}
 
         {/* ── Storage tab ── */}
         {tab === 'storage' && (
+          localOnly ? (
+            <>
+              <LocalOnlyNotice feature="cloudStorage" onOpenSync={onOpenSync} />
+              <HelpChip surface="storage" />
+            </>
+          ) : (
           <>
             {/* Storage quota + add-on packages */}
             {authed && quota && isPro !== null && (
@@ -1073,7 +1094,7 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                                         setConfirmingUpgrade(null);
                                         void handleStorageAction('switch', target);
                                       }}
-                                      className="w-full rounded-md bg-blue-600 hover:bg-blue-700 text-white text-body font-medium py-2 transition disabled:opacity-50"
+                                      className={`w-full rounded-md ${PRIMARY_BTN_SKIN} text-body font-semibold py-2 transition disabled:opacity-50`}
                                     >
                                       {storageActionBusy ? t('storage.upgrading') : t('storage.upgradeAndPay')}
                                     </button>
@@ -1236,83 +1257,90 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
             )}
             <HelpChip surface="storage" />
           </>
+          )
         )}
 
         {/* ── Plan tab: devices ── */}
         {tab === 'plan' && accountSection === 'overview' && (
           <>
             {/* Active devices */}
-            <div>
-              <SectionEyebrow setting="plan.devices" className="mb-2" icon={Devices}>
-                {t('devices.heading')}
-              </SectionEyebrow>
-              {devices === null ? (
-                <div className="text-body text-pn-muted">{t('common:state.loading')}</div>
-              ) : slots.length === 0 ? (
-                <div className={SETTINGS_HELP}>
-                  {t('devices.empty')}
-                </div>
+            <div data-setting="plan.devices">
+              {localOnly ? (
+                <LocalOnlyNotice feature="multiDevice" onOpenSync={onOpenSync} />
               ) : (
-                <ul className="space-y-2">
-                  {slots.map((slot) => (
-                    slot.rows.length === 1 ? (
-                      <li
-                        key={slot.key}
-                        className="flex items-center justify-between gap-3 rounded-md border border-divider px-3 py-2"
-                      >
-                        <DeviceRowLabel row={slot.rows[0]} isSelf={slot.isSelf} label={deviceLabelOf(deviceLabels, slot.rows[0].device_id)} onRename={onRenameDevice} />
-                        <button
-                          type="button"
-                          onClick={() => setConfirm({ slot, rows: slot.rows })}
-                          disabled={busy !== null}
-                          className={REMOVE_BUTTON}
-                        >
-                          {t('common:actions.remove')}
-                        </button>
-                      </li>
-                    ) : (
-                      /* Several rows share one slot: a reinstall, a second
-                         browser, or a second machine the fingerprint merged.
-                         Each row keeps its own Remove; the whole slot is the
-                         explicit second action. */
-                      <li key={slot.key} className="rounded-md border border-divider px-3 pt-2 pb-1.5">
-                        <div className="text-meta text-pn-muted">
-                          {t('devices.sharedSlot', { count: slot.rows.length })}
-                        </div>
-                        <ul className="divide-y divide-divider">
-                          {slot.rows.map((row) => (
-                            <li key={row.device_id} className="flex items-center justify-between gap-3 py-2">
-                              <DeviceRowLabel row={row} isSelf={authed?.deviceId === row.device_id} label={deviceLabelOf(deviceLabels, row.device_id)} onRename={onRenameDevice} />
+                <>
+                  <SectionEyebrow setting="plan.devices" className="mb-2" icon={Devices}>
+                    {t('devices.heading')}
+                  </SectionEyebrow>
+                  {devices === null ? (
+                    <div className="text-body text-pn-muted">{t('common:state.loading')}</div>
+                  ) : slots.length === 0 ? (
+                    <div className={SETTINGS_HELP}>
+                      {t('devices.empty')}
+                    </div>
+                  ) : (
+                    <ul className="space-y-2">
+                      {slots.map((slot) => (
+                        slot.rows.length === 1 ? (
+                          <li
+                            key={slot.key}
+                            className="flex items-center justify-between gap-3 rounded-md border border-divider px-3 py-2"
+                          >
+                            <DeviceRowLabel row={slot.rows[0]} isSelf={slot.isSelf} label={deviceLabelOf(deviceLabels, slot.rows[0].device_id)} onRename={onRenameDevice} />
+                            <button
+                              type="button"
+                              onClick={() => setConfirm({ slot, rows: slot.rows })}
+                              disabled={busy !== null}
+                              className={REMOVE_BUTTON}
+                            >
+                              {t('common:actions.remove')}
+                            </button>
+                          </li>
+                        ) : (
+                          /* Several rows share one slot: a reinstall, a second
+                             browser, or a second machine the fingerprint merged.
+                             Each row keeps its own Remove; the whole slot is the
+                             explicit second action. */
+                          <li key={slot.key} className="rounded-md border border-divider px-3 pt-2 pb-1.5">
+                            <div className="text-meta text-pn-muted">
+                              {t('devices.sharedSlot', { count: slot.rows.length })}
+                            </div>
+                            <ul className="divide-y divide-divider">
+                              {slot.rows.map((row) => (
+                                <li key={row.device_id} className="flex items-center justify-between gap-3 py-2">
+                                  <DeviceRowLabel row={row} isSelf={authed?.deviceId === row.device_id} label={deviceLabelOf(deviceLabels, row.device_id)} onRename={onRenameDevice} />
+                                  <button
+                                    type="button"
+                                    onClick={() => setConfirm({ slot, rows: [row] })}
+                                    disabled={busy !== null}
+                                    className={REMOVE_BUTTON}
+                                  >
+                                    {t('common:actions.remove')}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                            <div className="flex justify-end border-t border-divider pt-1.5">
                               <button
                                 type="button"
-                                onClick={() => setConfirm({ slot, rows: [row] })}
+                                onClick={() => setConfirm({ slot, rows: slot.rows })}
                                 disabled={busy !== null}
-                                className={REMOVE_BUTTON}
+                                className="text-small text-pn-muted hover:text-pn transition disabled:opacity-50"
                               >
-                                {t('common:actions.remove')}
+                                {t('devices.removeAll')}
                               </button>
-                            </li>
-                          ))}
-                        </ul>
-                        <div className="flex justify-end border-t border-divider pt-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setConfirm({ slot, rows: slot.rows })}
-                            disabled={busy !== null}
-                            className="text-small text-pn-muted hover:text-pn transition disabled:opacity-50"
-                          >
-                            {t('devices.removeAll')}
-                          </button>
-                        </div>
-                      </li>
-                    )
-                  ))}
-                </ul>
+                            </div>
+                          </li>
+                        )
+                      ))}
+                    </ul>
+                  )}
+                </>
               )}
             </div>
 
             {/* Recently removed devices - informational, do not occupy a slot. */}
-            {cooldownDevices.length > 0 && !isPro && (
+            {!localOnly && cooldownDevices.length > 0 && !isPro && (
               <div>
                 <SectionEyebrow className="mb-2">
                   {t('devices.recentlyRemoved')}
@@ -1383,16 +1411,18 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
         )}
 
         {/* ── Sync tab ── */}
-        {tab === 'sync' && <SyncPanel onSyncNow={onSyncNow} supabase={supabase} onOpenNote={onOpenNote} />}
+        {tab === 'sync' && <SyncPanel onSyncNow={onSyncNow} supabase={supabase} onOpenNote={onOpenNote} onOpenAutoBackup={onOpenAutoBackup} onTurnOnLocalSync={() => graduateLocalVault({ enableSync: true })} />}
 
         {/* ── Me tab (ID & Sync - the full sync readout) ── */}
         {tab === 'me' && (meSection === 'overview' || !authed) && (
           <>
-            <SyncPanel pubkey={authed?.pubkey} onSyncNow={onSyncNow} supabase={supabase} autoVerify={autoVerify} onOpenNote={onOpenNote} />
+            <SyncPanel pubkey={authed?.pubkey} onSyncNow={onSyncNow} supabase={supabase} autoVerify={autoVerify} onOpenNote={onOpenNote} onOpenAutoBackup={onOpenAutoBackup} onTurnOnLocalSync={() => graduateLocalVault({ enableSync: true })} />
             <HelpChip surface="me" />
           </>
         )}
-        {tab === 'me' && meSection === 'dms' && authed && <DmsPanel />}
+        {tab === 'me' && meSection === 'dms' && authed && (
+          localOnly ? <LocalOnlyNotice feature="dms" onOpenSync={() => setMeSection('overview')} /> : <DmsPanel />
+        )}
 
         </PaneBody>
     </Modal>

@@ -19,6 +19,7 @@
     "proUnlimited": "· sınırsız cihaz",
     "earlySupporterThanks": "İlk Destekçi, en baştan burada olduğunuz için teşekkürler",
     "proThanks": "Her şey hazır. Projeye destek olduğunuz için teşekkürler",
+    "freeLocalOnly": "Ücretsiz plan",
     "freeLimit_one": "<strong>Ücretsiz plan</strong>, en fazla {{count}} cihaz.",
     "freeLimit_other": "<strong>Ücretsiz plan</strong>, en fazla {{count}} cihaz.",
     "freeUsage": "Şu anda {{limit}} cihazın {{used}} tanesi kullanılıyor.",
@@ -89,7 +90,25 @@
   },
   "images": {
     "spaceSaverTitle": "Alan tasarrufu",
-    "spaceSaverDesc": "{{px}} piksele sığdırılır ve %{{quality}} kalitede JPEG olarak kaydedilir. Az bir ayrıntı kaybı karşılığında çok daha az yer kaplar. Bir GIF animasyonunu korur, Kasa dosyaları ise olduğu gibi kalır.",
+    "spaceSaverDesc": "Yeni görselleri küçültür ve JPEG olarak kaydeder. Bir GIF animasyonunu korur, Kasa dosyaları ise olduğu gibi kalır.",
+    "compressionTitle": "Sıkıştırma",
+    "level": {
+      "standard": "Standart",
+      "small": "Küçük",
+      "tiny": "Çok küçük"
+    },
+    "levelSpec": "%{{quality}} JPEG kalitesinde {{px}} piksele sığar.",
+    "levelDesc": {
+      "standard": "Çok daha az yer kaplayarak keskin ayrıntı sunar.",
+      "small": "Fotoğrafları ve ekran görüntülerini net tutarken daha küçük dosyalar.",
+      "tiny": "Sınırlı depolama için en küçük boyut; ince yazılar yumuşayabilir."
+    },
+    "previewSample": "{{size}} telefon fotoğrafı",
+    "previewSavedAs": "Kaydedilen",
+    "previewCompressed": "~{{size}} JPEG ({{px}} px, %{{quality}})",
+    "previewOriginal": "{{size}} orijinal",
+    "previewBarLabel": "Orijinaliyle karşılaştırıldığında tahmini kaydedilen görsel boyutu",
+    "previewFits": "~{{count}} fotoğraf / {{storage}}",
     "removeLocationTitle": "Konum verisini kaldır",
     "removeLocationDesc": "Bir görselin çekildiği yer, görsel kaydedilmeden önce kaldırılır.",
     "contactTitle": "Küçük kişi fotoğrafları",
@@ -139,7 +158,8 @@
     "verifyNeverPushed_one": "buradaki {{count}} öğe sunucuya hiç ulaşmadı",
     "verifyNeverPushed_other": "buradaki {{count}} öğe sunucuya hiç ulaşmadı",
     "verifyRepairAction": "Her şeyi yeniden indir",
-    "verifyRepairQueued": "Sonraki eşitleme kasanızın tamamını yeniden okuyacak. Yüklenmeyi bekleyen hiçbir şey kaybolmaz."
+    "verifyRepairQueued": "Sonraki eşitleme kasanızın tamamını yeniden okuyacak. Yüklenmeyi bekleyen hiçbir şey kaybolmaz.",
+    "localOnlyOfflineError": "Çevrimdışısınız. Eşitlemeyi açmak için internete bağlanın."
   },
   "accountId": {
     "heading": "Hesap kimliği",
@@ -469,6 +489,7 @@
     "blockedByStorage": "Etkin bir depolama aboneliğiniz var. Hesabınızı silebilmek için önce ayarlardaki Depolama bölümünden iptal edin.",
     "localLabel": "Yerel verileri sil",
     "localDesc": "Notları, görselleri ve önbelleğe alınmış verileri bu cihazdan siler. Bu, hesabınızı silmez, yalnızca bu tarayıcıyı temizler.",
+    "localDescLocalOnly": "Tüm notları, görselleri ve dosyaları bu cihazdan siler. Bulutta hiçbir şey saklanmıyor.",
     "localRequired": "(hesap silinirken zorunlu)",
     "localUnsynced_one": "Bu cihazdaki {{items}} eşitlenmedi. Yerel verileri silerseniz kalıcı olarak yok olur.",
     "localUnsynced_other": "Bu cihazdaki {{items}} eşitlenmedi. Yerel verileri silerseniz kalıcı olarak yok olur.",
@@ -508,6 +529,8 @@
     "updateRequiredAria": "Güncelleme gerekli, eşitleme duraklatıldı",
     "paused": "Eşitleme kapalı",
     "pausedTooltip": "Bu cihazda eşitleme kapalı. Siz açana kadar notlarınız burada kalır.",
+    "localOnly": "Yalnızca yerel",
+    "localOnlyAria": "Yalnızca yerel. Notlarınız bu cihazda kalır",
     "wifiHold": "Wi-Fi bekleniyor",
     "wifiHoldTooltip": "Dosyalar Wi-Fi geldiğinde yüklenir. Notlar eşitlenmeye devam eder.",
     "notBackedUp": "Yedeklenmedi",
@@ -575,7 +598,27 @@
     "passPushFailed_one": "{{count}} başarısız",
     "passPushFailed_other": "{{count}} başarısız",
     "passHalted_one": "durdu, {{count}} bekliyor",
-    "passHalted_other": "durdu, {{count}} bekliyor"
+    "passHalted_other": "durdu, {{count}} bekliyor",
+    "localOnlyBody": "Notlarınız bu cihazda şifreli kalır ve sunucularımızla eşitlenmez.",
+    "localOnlyNotes_other": "Bu cihazda {{count}} not",
+    "localOnlyBackupHint": "Buluta hiçbir şey eşitlenmiyor. Başka bir sürücüde veya klasörde güvenli bir kopya tutmak için otomatik yedekleri kurun.",
+    "localOnlySetUpBackups": "Otomatik yedekleri kur",
+    "localOnlyTurnOnSync": "Eşitlemeyi aç",
+    "localOnlyTurningOn": "Eşitleme açılıyor...",
+    "localOnlyAccountIdHint": "Henüz sunucularımıza kayıtlı değil.",
+    "localOnlyNotes_one": "Bu cihazda {{count}} not"
+  },
+  "localOnlyNotice": {
+    "body": "{{feature}}: bu çevrimiçi özelliği kullanmak için Ayarlar > ID & Sync bölümünde eşitlemeyi açın.",
+    "cta": "ID & Sync bölümüne git",
+    "features": {
+      "multiDevice": "Çoklu cihaz yönetimi",
+      "keyCustody": "Bulutta anahtar saklama",
+      "cloudStorage": "Bulut depolama",
+      "twoFactorPasskeys": "İki faktörlü giriş ve geçiş anahtarları",
+      "phraseChange": "Kurtarma ifadenizi değiştirme",
+      "burnShare": "Okuduktan sonra yak bağlantıları"
+    }
   },
   "language": {
     "reportMistake": "Çeviri hatası bildir",

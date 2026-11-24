@@ -12,7 +12,7 @@
  * notes, P31). Save sends only the fields that changed, as a `loginedit` row.
  * Spec: docs/internal/plans/browser-extension-build.md (section 3.4, Add login); docs/contrib/passkeys.md (section 6)
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
 import { parseTotpInput } from '@notes/shared';
@@ -27,10 +27,13 @@ import { SETTINGS_HELP } from '@web/settingsUI';
 import { copyAndClear } from '../../src/copy';
 import { displayHost } from '../../src/favicon';
 import { matchLogins } from '../../src/match';
+import { mergeTags } from '../../src/organize';
 import type { LoginEditResult, SaveResult } from '../../src/save';
 import { loginEditBase, type LoginEditSet } from '../../src/pending';
+import type { OrganizeContext } from './ClipView';
 import type { Notice } from './Footer';
 import { GeneratorView } from './GeneratorView';
+import { OrganizeFields } from './OrganizeFields';
 import { DONE_HOLD_MS, SaveButton } from './SaveButton';
 import { SheetHeader } from './Sheet';
 
@@ -53,10 +56,11 @@ function knownUsernames(logins: LoginCopyEntry[]): string[] {
 /** What the website field becomes: an address with its scheme. */
 const siteValue = (text: string) => (text.trim() ? (/^https?:\/\//i.test(text.trim()) ? text.trim() : `https://${text.trim()}`) : '');
 
-export function AddLoginView({ url, logins, pro, onDone, edit }: {
+export function AddLoginView({ url, logins, pro, organize, onDone, edit }: {
   url: string;
   logins: LoginCopyEntry[];
   pro: boolean;
+  organize?: OrganizeContext;
   /** The login to change; none adds a new one. */
   edit?: LoginCopyEntry;
   /** Back to the popup, with the footer message of a save. */
@@ -72,10 +76,20 @@ export function AddLoginView({ url, logins, pro, onDone, edit }: {
   const [copied, setCopied] = useState(false);
   const [totp, setTotp] = useState(edit?.totp ?? '');
   const [notes, setNotes] = useState('');
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagDraft, setTagDraft] = useState('');
   const [generating, setGenerating] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const hydrated = organize?.hydrated ?? true;
+  useEffect(() => {
+    if (hydrated && (!organize?.canFolder || !organize.unlocked || !organize.pro) && folderId !== null) {
+      setFolderId(null);
+    }
+  }, [hydrated, organize?.canFolder, organize?.unlocked, organize?.pro, folderId]);
 
   const usernames = useMemo(() => knownUsernames(logins), [logins]);
   const twin = username.trim() !== '' && matchLogins(logins, site || url).some((l) => l.item !== edit?.item && l.username.trim().toLowerCase() === username.trim().toLowerCase());
@@ -112,7 +126,20 @@ export function AddLoginView({ url, logins, pro, onDone, edit }: {
     if (edit) return saveEdit(edit);
     setBusy(true);
     setError(null);
-    const request = { name: name.trim(), url: originOf(site.trim()) || (site.trim() ? `https://${site.trim()}` : ''), username, password, totp: totp.trim(), notes };
+    const nextTags = mergeTags(tags, tagDraft);
+    const folder = organize && organize.canFolder && organize.unlocked && organize.pro && folderId && organize.folders.some((f) => f.id === folderId)
+      ? folderId
+      : undefined;
+    const request = {
+      name: name.trim(),
+      url: originOf(site.trim()) || (site.trim() ? `https://${site.trim()}` : ''),
+      username,
+      password,
+      totp: totp.trim(),
+      notes,
+      ...(nextTags.length ? { tags: nextTags } : {}),
+      ...(folder ? { folder } : {}),
+    };
     const result = (await browser.runtime.sendMessage({ type: 'saveLogin', request })) as SaveResult | null;
     setBusy(false);
     if (result && (result.state === 'sent' || result.state === 'queued')) {
@@ -221,10 +248,23 @@ export function AddLoginView({ url, logins, pro, onDone, edit }: {
       </div>
       {/* The copy carries no notes, so an edit cannot show or send them (P31). */}
       {!edit && (
-        <div>
-          <FieldLabel icon={<NotePencil />} htmlFor="pn-notes">{t('common:cardForm.notes')}</FieldLabel>
-          <textarea id="pn-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={`${FIELD_CLASS} resize-y`} dir="auto" />
-        </div>
+        <>
+          <div>
+            <FieldLabel icon={<NotePencil />} htmlFor="pn-notes">{t('common:cardForm.notes')}</FieldLabel>
+            <textarea id="pn-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={`${FIELD_CLASS} resize-y`} dir="auto" />
+          </div>
+          {organize && (
+            <OrganizeFields
+              {...organize}
+              folderId={folderId}
+              onFolderChange={setFolderId}
+              tags={tags}
+              onTagsChange={setTags}
+              tagDraft={tagDraft}
+              onTagDraftChange={setTagDraft}
+            />
+          )}
+        </>
       )}
       {error && <Callout look="card" tone="danger">{error}</Callout>}
       <div className="grid grid-cols-2 gap-2">

@@ -321,7 +321,11 @@
     "confirm": "Not olarak içe aktar",
     "cancel": "Dosya olarak sakla",
     "bodySingle": "<strong>{{filename}}</strong> bir markdown dosyasına benziyor. Okuyup düzenleyebilmek için not olarak mı içe aktarılsın, yoksa şifrelenmiş bir dosya eki olarak mı saklansın?",
-    "bodyMulti": "Bu {{count}} dosya markdown gibi görünüyor. Okuyup düzenleyebilmek için not olarak mı içe aktarılsınlar, yoksa şifrelenmiş dosya ekleri olarak mı saklansınlar?"
+    "bodyMulti": "Bu {{count}} dosya markdown gibi görünüyor. Okuyup düzenleyebilmek için not olarak mı içe aktarılsınlar, yoksa şifrelenmiş dosya ekleri olarak mı saklansınlar?",
+    "backupTitle": "Geri yüklensin mi, saklansın mı?",
+    "backupConfirm": "Yedeği geri yükle",
+    "backupCancel": "Dosya olarak sakla",
+    "backupBody": "<strong>{{filename}}</strong> bir PrivacyNotes yedeği. Verileriniz bu yedekten geri yüklensin mi, yoksa şifreli bir dosya eki olarak mı saklansın?"
   },
   "archiveConfirm": {
     "body_one": "<highlight>{{count}} öğe</highlight> arşivlensin mi? Öğe listelerinizden çıkar ve Arşiv görünümünde bekler. Arşivden çıkar seçeneği onu geri getirir.",

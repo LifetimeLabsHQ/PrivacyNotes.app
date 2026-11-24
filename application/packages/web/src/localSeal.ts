@@ -121,7 +121,7 @@ interface TableSealConfig {
   /** json mode: fields that moved into the payload after the first format.
    *  Read from either place; written inside only while rowTypeSealActive(),
    *  because a bundle that predates the move refuses such a payload.
-   *  Spec: docs/internal/plans/row-type-seal.md (3.1) */
+   *  Spec: docs/internal/specs/row-type-seal.md (3.1) */
   lateFields?: readonly string[];
 }
 
@@ -242,9 +242,9 @@ export function sealedWritesOn(): boolean {
  * that holds it, so a stale tab or a rollback to one of them could not open
  * such a row. The release after the one that carries this reader turns it
  * on. With it false this bundle writes the bytes the released bundles write.
- * Spec: docs/internal/plans/row-type-seal.md (3.2, 6)
+ * Spec: docs/internal/specs/row-type-seal.md (3.2, 6)
  */
-export const ROW_TYPE_SEALED_IN_PRODUCTION = false;
+export const ROW_TYPE_SEALED_IN_PRODUCTION = true;
 
 let rowTypeSealed = false;
 
@@ -264,7 +264,7 @@ let olderBundleIndex = false;
 
 /** Read the gate from a connection's installed schema (Dexie rebuilds the
  *  core schema at every open, and no version change lands inside an open
- *  transaction). Spec: docs/internal/plans/row-type-seal.md (3.2) */
+ *  transaction). Spec: docs/internal/specs/row-type-seal.md (3.2) */
 export function noteInstalledSchema(schema: DBCoreSchema, log = true): void {
   const indexed = !!schema.tables.find((t) => t.name === 'notes')?.indexes.some((i) => i.name === 'type');
   // Once a profile meets an older bundle the move stays off until a schema
@@ -533,7 +533,7 @@ export function sealRow(table: string, row: RawRow): RawRow {
  * move is on and a late field sits beside the blob. A sealed row counts only
  * when this device holds the key of its blob's epoch, so a row it cannot
  * open waits for its key. Reads the markers only, no crypto.
- * Spec: docs/internal/plans/row-type-seal.md (3.4)
+ * Spec: docs/internal/specs/row-type-seal.md (3.4)
  */
 export function sealPending(table: string, row: RawRow): boolean {
   const cfg = SEALED_TABLES[table];

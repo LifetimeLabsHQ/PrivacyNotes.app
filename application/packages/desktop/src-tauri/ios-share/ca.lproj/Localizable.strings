@@ -1,3 +1,10 @@
 "saved" = "Desat a PrivacyNotes";
 "failed" = "No s'ha pogut desar a PrivacyNotes";
 "tooLarge" = "Massa gran. El màxim és {{limit}} MB per fitxer.";
+"save" = "Desa";
+"cancel" = "Cancel·la";
+"note" = "Nota";
+"files" = "Fitxers";
+"titlePlaceholder" = "Títol (opcional)";
+"notePlaceholder" = "Afegeix una nota...";
+"photoCount" = "{{count}} fotos";

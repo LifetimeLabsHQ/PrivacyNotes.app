@@ -7,6 +7,7 @@ import { startProCheckout, startCryptoProCheckout, cryptoCheckoutOffered, PRO_PR
 import { CRYPTO_TICKERS } from './cryptoCheckout';
 import { PRO_PRICE, EARLY_PRICE } from './pricing';
 import { useStorePrices } from './storePrices';
+import { useLocalOnly } from './localOnly';
 import { isDemoMode, DEMO_APP_URL } from './demo';
 import { withSource } from './campaignSource';
 import { Callout } from './ui';
@@ -20,6 +21,8 @@ type Props = {
    *  the "payment received, activation pending" banner (desktop return path,
    *  which fires whether or not the user actually paid). */
   onCheckoutComplete: (opts?: { silent?: boolean }) => void;
+  /** Registers a local-only vault once (keeping sync off) before checkout. */
+  onGraduateLocalVault?: () => Promise<{ ok: true } | { ok: false; error: string }>;
 };
 
 /** What Pro adds, in the order of the pass. Every Pro gate opens the same
@@ -53,8 +56,9 @@ const PAY_ROW = 'w-full grid grid-cols-[auto_1fr] items-center gap-x-3 rounded-l
  * one click. On a phone it is a sheet at the bottom of the screen.
  * Spec: docs/internal/design/patterns/181-190.md section 189
  */
-export function UpgradeModal({ onClose, pubkey, onCheckoutComplete }: Props) {
+export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, onGraduateLocalVault }: Props) {
   const { t } = useTranslation('billing');
+  const isLocalOnlyVault = useLocalOnly();
   useEscapeToClose(onClose);
   const titleId = useId();
   const [loading, setLoading] = useState(false);
@@ -62,6 +66,8 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete }: Props) {
   const configured = isPaddleConfigured();
 
   const nativeStore = isNativeStoreBuild();
+  // StoreKit / Play product pricing runs locally via the OS store plugin,
+  // never against PrivacyNotes servers, so keep live prices visible here.
   const storePrices = useStorePrices();
   const storePro = storePrices?.[PRO_PRODUCT_ID]?.formatted ?? null;
 
@@ -75,6 +81,22 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete }: Props) {
   // The card line names the methods Paddle shows; a store and the demo have their own.
   const showCardMethods = !demo && !nativeStore;
 
+  /** Local-only vaults register once before opening card/store or crypto
+   *  checkout, keeping sync paused so notes remain strictly on this device. */
+  async function ensureRegisteredForBilling(): Promise<boolean> {
+    if (!isLocalOnlyVault || !onGraduateLocalVault) return true;
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setPurchaseError(t('upgrade.localOnlyOffline'));
+      return false;
+    }
+    const result = await onGraduateLocalVault();
+    if (!result.ok) {
+      setPurchaseError(result.error);
+      return false;
+    }
+    return true;
+  }
+
   async function handleUpgrade() {
     // Demo has no account to attach a purchase to - send the user to
     // sign up on the real app instead of opening checkout.
@@ -86,6 +108,9 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete }: Props) {
     setLoading(true);
     setPurchaseError(null);
     try {
+      // Keep non-local-only callers free of any await before startProCheckout
+      // so web window.open stays synchronous inside the click handler.
+      if (isLocalOnlyVault && !(await ensureRegisteredForBilling())) return;
       await startProCheckout(
         pubkey,
         () => {
@@ -104,6 +129,19 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete }: Props) {
       );
     } catch (err) {
       console.error('Paddle checkout error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCryptoUpgrade() {
+    if (loading) return;
+    setLoading(true);
+    setPurchaseError(null);
+    try {
+      if (isLocalOnlyVault && !(await ensureRegisteredForBilling())) return;
+      startCryptoProCheckout(pubkey);
+      onClose();
     } finally {
       setLoading(false);
     }
@@ -167,6 +205,10 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete }: Props) {
 
           {purchaseError && <Callout tone="danger">{purchaseError}</Callout>}
 
+          {isLocalOnlyVault && (
+            <p className="text-small text-pn-muted">{t('upgrade.localOnlyHint')}</p>
+          )}
+
           <div className="grid gap-2">
             <button
               type="button"
@@ -187,10 +229,8 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete }: Props) {
             {showCrypto && (
               <button
                 type="button"
-                onClick={() => {
-                  startCryptoProCheckout(pubkey);
-                  onClose();
-                }}
+                disabled={loading}
+                onClick={() => void handleCryptoUpgrade()}
                 className={`${PAY_ROW} border-divider bg-surface-1 text-pn hover:bg-amber-50 dark:hover:bg-amber-950/30`}
               >
                 <CurrencyBtc size={20} aria-hidden="true" className="row-span-2 text-pro" />

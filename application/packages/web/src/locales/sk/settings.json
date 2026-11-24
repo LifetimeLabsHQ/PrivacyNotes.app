@@ -19,6 +19,7 @@
     "proUnlimited": "· neobmedzený počet zariadení",
     "earlySupporterThanks": "Ďakujeme, že podporuješ projekt od začiatku",
     "proThanks": "Všetko je pripravené. Ďakujeme, že podporuješ projekt",
+    "freeLocalOnly": "Bezplatný tarif",
     "freeLimit_one": "<strong>Bezplatný tarif</strong>, najviac {{count}} zariadenie.",
     "freeLimit_few": "<strong>Bezplatný tarif</strong>, najviac {{count}} zariadenia.",
     "freeLimit_many": "<strong>Bezplatný tarif</strong>, najviac {{count}} zariadenia.",
@@ -91,7 +92,25 @@
   },
   "images": {
     "spaceSaverTitle": "Šetrič miesta",
-    "spaceSaverDesc": "Zmenšené na {{px}} pixelov a uložené ako JPEG v kvalite {{quality}} %. Malá strata detailov za zlomok miesta. GIF si zachová animáciu a súbory v Trezore zostanú tak, ako sú.",
+    "spaceSaverDesc": "Zmenší nové obrázky a uloží ich ako JPEG. GIF si zachová animáciu a súbory v Trezore zostanú tak, ako sú.",
+    "compressionTitle": "Kompresia",
+    "level": {
+      "standard": "Štandardný",
+      "small": "Malý",
+      "tiny": "Veľmi malý"
+    },
+    "levelSpec": "Zmestí sa do {{px}} pixelov v kvalite JPEG {{quality}} %.",
+    "levelDesc": {
+      "standard": "Ostré detaily za zlomok miesta.",
+      "small": "Menšie súbory, pričom fotky aj snímky obrazovky zostanú ostré.",
+      "tiny": "Najmenšia veľkosť pri nedostatku miesta v úložisku; drobný text môže stratiť ostrosť."
+    },
+    "previewSample": "Fotka z telefónu ({{size}})",
+    "previewSavedAs": "Uložené ako",
+    "previewCompressed": "~{{size}} JPEG ({{px}} px, {{quality}} %)",
+    "previewOriginal": "{{size}} (originál)",
+    "previewBarLabel": "Odhadovaná veľkosť uloženého obrázka v porovnaní s originálom",
+    "previewFits": "~{{count}} fotiek / {{storage}}",
     "removeLocationTitle": "Odstrániť údaje o polohe",
     "removeLocationDesc": "Miesto, kde bol obrázok zhotovený, sa pred uložením odstráni.",
     "contactTitle": "Malé fotky kontaktov",
@@ -155,7 +174,8 @@
     "verifyNeverPushed_many": "{{count}} položky sa odtiaľto nikdy nedostalo na server",
     "verifyNeverPushed_other": "{{count}} položiek sa odtiaľto nikdy nedostalo na server",
     "verifyRepairAction": "Stiahnuť všetko znova",
-    "verifyRepairQueued": "Ďalšia synchronizácia znova načíta celý tvoj trezor. Nič, čo čaká na nahratie, sa nestratí."
+    "verifyRepairQueued": "Ďalšia synchronizácia znova načíta celý tvoj trezor. Nič, čo čaká na nahratie, sa nestratí.",
+    "localOnlyOfflineError": "Si offline. Ak chceš zapnúť synchronizáciu, pripoj sa k internetu."
   },
   "accountId": {
     "heading": "ID účtu",
@@ -492,6 +512,7 @@
     "blockedByStorage": "Máš aktívne predplatné úložiska. Skôr než budeš môcť odstrániť účet, zruš ho v časti Úložisko v nastaveniach.",
     "localLabel": "Odstrániť lokálne dáta",
     "localDesc": "Vymaže poznámky, obrázky a dáta vo vyrovnávacej pamäti z tohto zariadenia. Neodstráni tvoj účet, iba vyčistí tento prehliadač.",
+    "localDescLocalOnly": "Vymaže všetky poznámky, obrázky a súbory z tohto zariadenia. V cloude nie je nič uložené.",
     "localRequired": "(povinné pri odstraňovaní účtu)",
     "localUnsynced_one": "Na tomto zariadení sa nesynchronizovalo: {{items}}. Odstránenie lokálnych dát to natrvalo zničí.",
     "localUnsynced_few": "Na tomto zariadení sa nesynchronizovalo: {{items}}. Odstránenie lokálnych dát ich natrvalo zničí.",
@@ -541,6 +562,8 @@
     "updateRequiredAria": "Vyžaduje sa aktualizácia, synchronizácia je pozastavená",
     "paused": "Synchronizácia vypnutá",
     "pausedTooltip": "Synchronizácia je na tomto zariadení vypnutá. Poznámky zostanú tu, kým ju nezapneš.",
+    "localOnly": "Iba lokálne",
+    "localOnlyAria": "Iba lokálne. Tvoje poznámky zostávajú na tomto zariadení",
     "wifiHold": "Čaká sa na Wi-Fi",
     "wifiHoldTooltip": "Súbory sa nahrajú, keď sa Wi-Fi vráti. Poznámky sa synchronizujú ďalej.",
     "notBackedUp": "Bez zálohy",
@@ -630,7 +653,28 @@
     "passHalted_one": "zastavené, čaká: {{count}}",
     "passHalted_few": "zastavené, čaká: {{count}}",
     "passHalted_many": "zastavené, čaká: {{count}}",
-    "passHalted_other": "zastavené, čaká: {{count}}"
+    "passHalted_other": "zastavené, čaká: {{count}}",
+    "localOnlyBody": "Tvoje poznámky zostávajú šifrované na tomto zariadení a nesynchronizujú sa s našimi servermi.",
+    "localOnlyNotes_other": "{{count}} poznámok na tomto zariadení",
+    "localOnlyBackupHint": "Do cloudu sa nič nesynchronizuje. Nastav automatické zálohy, aby sa bezpečná kópia ukladala na iný disk alebo do iného priečinka.",
+    "localOnlySetUpBackups": "Nastaviť automatické zálohy",
+    "localOnlyTurnOnSync": "Zapnúť synchronizáciu",
+    "localOnlyTurningOn": "Zapína sa synchronizácia…",
+    "localOnlyAccountIdHint": "Zatiaľ neregistrované na našich serveroch.",
+    "localOnlyNotes_one": "{{count}} poznámka na tomto zariadení",
+    "localOnlyNotes_few": "{{count}} poznámky na tomto zariadení"
+  },
+  "localOnlyNotice": {
+    "body": "{{feature}}: ak chceš používať túto online funkciu, zapni synchronizáciu v Nastavenia > ID & Sync.",
+    "cta": "Prejsť na ID & Sync",
+    "features": {
+      "multiDevice": "Správa viacerých zariadení",
+      "keyCustody": "Správa kľúča v cloude",
+      "cloudStorage": "Cloudové úložisko",
+      "twoFactorPasskeys": "Dvojfaktorové prihlásenie a prístupové kľúče",
+      "phraseChange": "Zmena obnovovacej frázy",
+      "burnShare": "Odkazy na spálenie"
+    }
   },
   "language": {
     "reportMistake": "Nahlásiť chybu v preklade",

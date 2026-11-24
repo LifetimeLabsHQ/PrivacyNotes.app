@@ -1,6 +1,7 @@
 import { Trans, useTranslation } from 'react-i18next';
 import { Brand } from './Brand';
 import { Modal } from './ui';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 
 type Props = {
   reason: string;
@@ -35,7 +36,7 @@ export function DonationModal({ reason, onClose }: Props) {
             target="_blank"
             rel="noreferrer"
             onClick={onClose}
-            className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-4 py-2 text-body font-medium text-center transition"
+            className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold text-center transition`}
           >
             {t('donation.support')}
           </a>

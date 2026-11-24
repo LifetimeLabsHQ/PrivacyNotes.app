@@ -22,16 +22,21 @@ import { hasMedia, stripMediaReferences } from './imageProcessing';
 import i18n from './i18n';
 import { detectPlatform, readFnErrorBody, type FnError } from './devices';
 import { isDemoMode } from './demo';
+import { isLocalOnly, LocalOnlyNetworkBlockedError } from './localOnly';
 import { APEX_ORIGIN } from './hosts';
 import { readLineSpacing } from './theme';
 
 // Lightweight anon client - burn shares don't require auth.
 // persistSession: false avoids creating a duplicate GoTrueClient
 // instance that shares the same storage key as the main auth client.
+const burnFetch: typeof fetch = (input, init) => {
+  if (isLocalOnly()) return Promise.reject(new LocalOnlyNetworkBlockedError());
+  return fetch(input, init);
+};
 const supabase = createSupabaseClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY,
-  { persistSession: false, storageKey: 'sb-burn-share-auth' },
+  { persistSession: false, storageKey: 'sb-burn-share-auth', fetch: burnFetch },
 );
 
 /** Max plaintext bytes before encryption. ~32KB keeps payloads sane. */
@@ -64,6 +69,12 @@ export async function createBurnLink(
     return {
       ok: false,
       error: i18n.t('notesChrome:burnShare.demo'),
+    };
+  }
+  if (isLocalOnly()) {
+    return {
+      ok: false,
+      error: i18n.t('notesChrome:burnShare.localOnly'),
     };
   }
   // Burn links require a server round-trip - bail early with a friendly

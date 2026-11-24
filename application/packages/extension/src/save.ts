@@ -28,8 +28,8 @@ import { addPending } from './pending';
 import { fetchPictures } from './pictures';
 
 export type SaveRequest =
-  | { mode: 'note' | 'selection'; url: string; title: string; clip: Clip; pictures: boolean }
-  | { mode: 'bookmark'; url: string; title: string };
+  | { mode: 'note' | 'selection'; url: string; title: string; clip: Clip; pictures: boolean; tags?: string[]; folder?: string }
+  | { mode: 'bookmark'; url: string; title: string; tags?: string[]; folder?: string };
 
 export type SaveResult =
   /** `tooLong`: the page did not fit one row and was saved as a bookmark. */
@@ -45,6 +45,15 @@ function seal(connection: Connection, kind: InboxKind, id: string, plain: Uint8A
 
 // Spec: docs/internal/plans/browser-extension-build.md (section 4, 1.5 MiB a row)
 const ROW_MAX = 1572864;
+
+const sanitizeTags = (tags?: string[]): string[] | undefined => {
+  if (!tags?.length) return undefined;
+  const clean = [...new Set(tags.map((t) => t.replace(/^#+/, '').trim().slice(0, 200)).filter(Boolean))].slice(0, 20);
+  return clean.length ? clean : undefined;
+};
+
+const sanitizeFolder = (folder?: string): string | undefined =>
+  folder && folder.length <= 200 ? folder : undefined;
 
 async function sendRows(rows: Queued[], group: string): Promise<'sent' | 'queued' | 'full' | 'revoked' | 'failed'> {
   if (!(await enqueue(rows))) return 'full';
@@ -79,6 +88,8 @@ export async function saveClip(req: SaveRequest): Promise<SaveResult> {
       return id;
     });
   }
+  const tags = sanitizeTags(req.tags);
+  const folder = sanitizeFolder(req.folder);
   const payload: InboxClip = {
     v: 1,
     id: clipId,
@@ -86,13 +97,15 @@ export async function saveClip(req: SaveRequest): Promise<SaveResult> {
     url: req.url,
     title: req.title.slice(0, 1000),
     ...(req.mode === 'bookmark' ? {} : { clip: req.clip, pictures: pictureIds }),
+    ...(tags?.length ? { tags } : {}),
+    ...(folder ? { folder } : {}),
     clippedAt: new Date().toISOString(),
   };
   const clipRow = seal(connection, 'clip', clipId, padInboxJson(payload));
   // A clip that fits a note can still outgrow a row once it is JSON and
   // sealed (quotes and line breaks escape): the bookmark stands in.
   if (clipRow.payload.length > ROW_MAX) {
-    const bookmark = await saveClip({ mode: 'bookmark', url: req.url, title: req.title });
+    const bookmark = await saveClip({ mode: 'bookmark', url: req.url, title: req.title, ...(tags?.length ? { tags } : {}), ...(folder ? { folder } : {}) });
     return bookmark.state === 'sent' || bookmark.state === 'queued' ? { ...bookmark, tooLong: true } : bookmark;
   }
   rows.push(clipRow);
@@ -117,7 +130,14 @@ export async function saveLogin(req: LoginRequest): Promise<SaveResult> {
   if (!connection) return { state: 'notConnected' };
   if (!connection.logins) return { state: 'notAllowed' };
   const id = crypto.randomUUID();
-  const payload: InboxLogin = { v: 1, id, ...req };
+  const { tags, folder, ...rest } = req;
+  const cleanTags = sanitizeTags(tags);
+  const cleanFolder = sanitizeFolder(folder);
+  const payload: InboxLogin = {
+    v: 1, id, ...rest,
+    ...(cleanTags ? { tags: cleanTags } : {}),
+    ...(cleanFolder ? { folder: cleanFolder } : {}),
+  };
   try {
     const state = await sendRows([seal(connection, 'login', id, padInboxJson(payload))], id);
     return state === 'sent' || state === 'queued' ? { state, failedPictures: 0 } : { state };
@@ -200,6 +220,8 @@ export interface NoteRequest {
   title: string;
   markdown: string;
   tags: string[];
+  /** Optional folder id chosen in the extension (Pro). */
+  folder?: string;
 }
 
 export type NoteResult = { state: 'sent' | 'queued' } | { state: 'tooLong' | 'full' | 'notConnected' | 'notAllowed' | 'revoked' | 'failed' };
@@ -208,7 +230,7 @@ export type NoteResult = { state: 'sent' | 'queued' } | { state: 'tooLong' | 'fu
  * A note typed in the popup: sealed as the inbox kind `note`, with `from`
  * set so the app puts it at the root, not in the Agent folder. It needs the
  * clips permission, not the vault unlock, and waits in the queue offline.
- * Spec: docs/internal/plans/quick-note-694.md (section 4.2)
+ * Spec: docs/internal/specs/quick-note-694.md (section 4.2)
  */
 export async function saveNote(req: NoteRequest): Promise<NoteResult> {
   const connection = await readConnection();
@@ -216,7 +238,11 @@ export async function saveNote(req: NoteRequest): Promise<NoteResult> {
   if (!connection.clips) return { state: 'notAllowed' };
   const id = crypto.randomUUID();
   const title = req.title.trim() || inboxNoteTitle(req.markdown);
-  const note: InboxNote = { v: 1, id, title, markdown: req.markdown, tags: [...new Set(req.tags)], savedAt: new Date().toISOString(), from: 'browser' };
+  const cleanFolder = sanitizeFolder(req.folder);
+  const note: InboxNote = {
+    v: 1, id, title, markdown: req.markdown, tags: sanitizeTags(req.tags) ?? [], savedAt: new Date().toISOString(), from: 'browser',
+    ...(cleanFolder ? { folder: cleanFolder } : {}),
+  };
   // The app runs the same check: a note it would refuse is never sent.
   if (!parseInboxNote(note, id) || !inboxNoteFits(note.markdown)) return { state: 'tooLong' };
   const row = seal(connection, 'note', id, padInboxJson(note));

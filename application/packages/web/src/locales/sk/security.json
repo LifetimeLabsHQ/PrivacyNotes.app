@@ -230,7 +230,7 @@
     "removeTitle": "Odobrať tento prístupový kľúč?",
     "removeBody": "Už sa ním neprihlásiš. Samotný prístupový kľúč zostane v tvojej aplikácii na prístupové kľúče, kým ho tam neodstrániš.",
     "retired": "Vytvorený pred zmenou tvojej frázy. Odober ho a pridaj znova.",
-    "noPrf": "Táto aplikácia na prístupové kľúče nedokáže ochrániť tvoju frázu, preto prístupový kľúč nebol pridaný. Skús vlastné prístupové kľúče svojho zariadenia alebo iného správcu hesiel.",
+    "noPrf": "Táto aplikácia na prístupové kľúče nedokáže vytvoriť kľúč, ktorý chráni tvoju frázu, preto prístupový kľúč nebol pridaný. Frázou sa môžeš prihlasovať aj naďalej. Keď ti správca hesiel ponúkne uloženie prístupového kľúča, vyber uloženie do tohto zariadenia alebo na bezpečnostný kľúč.",
     "tooMany": "Počet prístupových kľúčov na prihlasovanie: {{count}}. Ak chceš pridať ďalší, jeden odober.",
     "failed": "Prístupový kľúč sa nepodarilo pridať. Skontroluj pripojenie a skús to znova.",
     "appsOnly": "Prístupové kľúče pridáš v prehliadači na use.privacynotes.app. Prihlasovanie nimi v aplikáciách príde neskôr.",

@@ -7,6 +7,7 @@ import type { DecorationSet } from '@tiptap/pm/view';
 import type { NoteType, SupabaseClient } from '@notes/shared';
 import type { LocalNote } from './db';
 import { Modal } from './ui';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { formatInstant } from './intlFormat';
 import { listNoteVersions, type NoteVersion } from './noteVersions';
 import { Editor } from './Editor';
@@ -20,6 +21,8 @@ import { loadLocalSettings } from './userSettings';
 import { listReplacedCopies, REPLACED_COPY_DAYS } from './replacedCopies';
 import type { ReplacedCopy } from './db';
 import { computeSnapshotTotalSize } from './notesViewUtils';
+import { useLocalTruthOnly } from './localOnly';
+import { LocalOnlyNotice } from './LocalOnlyNotice';
 
 // Its own chunk: the vault rows pull in the vault forms and the detail
 // rows, which the plain note preview never needs.
@@ -120,6 +123,8 @@ type Props = {
    *  drawing/DrawingItem.tsx). Handed down: this lazy chunk imports none of
    *  the drawing code (docs/contrib/bundle-size.md section 8). */
   drawingVersion?: (body: string) => React.ReactNode;
+  /** Opens Settings > ID & Sync from the local-only notice. */
+  onOpenSync?: () => void;
 };
 
 export function NoteHistoryModal({
@@ -131,8 +136,10 @@ export function NoteHistoryModal({
   onClose,
   onRestore,
   drawingVersion,
+  onOpenSync,
 }: Props) {
   const { t } = useTranslation('billing');
+  const localTruth = useLocalTruthOnly();
   const [versions, setVersions] = useState<NoteVersion[] | null>(null);
   // A read that failed, kept apart from an empty history: listNoteVersions
   // throws on failure, and the panel says so in the reader's language
@@ -156,6 +163,7 @@ export function NoteHistoryModal({
   const [diff, setDiff] = useState<NoteDiff | null | undefined>(undefined);
 
   useEffect(() => {
+    if (localTruth) return;
     let cancelled = false;
     (async () => {
       // The copies are local, so a server read that fails still shows them.
@@ -179,10 +187,10 @@ export function NoteHistoryModal({
     return () => {
       cancelled = true;
     };
-  }, [noteId, noteType, supabase, encryptionKey, serverHistory]);
+  }, [noteId, noteType, supabase, encryptionKey, serverHistory, localTruth]);
 
   useEffect(() => {
-    if (!compare || current) return;
+    if (localTruth || !compare || current) return;
     let cancelled = false;
     void getNote(noteId).then((n) => {
       if (!cancelled && n) setCurrent(n);
@@ -190,7 +198,7 @@ export function NoteHistoryModal({
     return () => {
       cancelled = true;
     };
-  }, [compare, current, noteId]);
+  }, [compare, current, noteId, localTruth]);
 
   useEffect(() => {
     if (!compare || !olderEditor || !currentEditor || olderEditor.isDestroyed || currentEditor.isDestroyed) return;
@@ -203,6 +211,21 @@ export function NoteHistoryModal({
       for (const ed of [olderEditor, currentEditor]) if (!ed.isDestroyed) ed.unregisterPlugin(DIFF_KEY);
     };
   }, [compare, olderEditor, currentEditor, t]);
+
+  if (localTruth) {
+    return (
+      <Modal
+        onClose={onClose}
+        title={t('shell:noteOptionsMenu.noteHistory')}
+        header="bar"
+        className="max-w-md flex flex-col overflow-hidden"
+      >
+        <div className="p-6">
+          <LocalOnlyNotice feature="noteHistory" onOpenSync={onOpenSync} />
+        </div>
+      </Modal>
+    );
+  }
 
   const selected = versions?.find((v) => v.id === selectedId) ?? null;
   const comparing = compare && canCompare && !!selected && !!current;
@@ -429,7 +452,7 @@ export function NoteHistoryModal({
                   <button
                     onClick={() => void handleRestore()}
                     disabled={busy}
-                    className="rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover disabled:opacity-50 px-3 py-2 text-body font-medium transition whitespace-nowrap"
+                    className={`rounded-md ${PRIMARY_BTN_SKIN} disabled:opacity-50 px-3 py-2 text-body font-semibold transition whitespace-nowrap`}
                   >
                     {busy ? t('history.restoring') : t('shell:contextMenu.restore')}
                   </button>

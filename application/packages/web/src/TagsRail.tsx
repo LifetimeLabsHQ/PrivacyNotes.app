@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { usePointMenuPosition } from './usePopoverPosition';
 import { VERSION } from './version';
 import { ExpandLabel } from './ui/ExpandLabel';
-import { BETA_COMMITS_URL, isBetaHost } from './hosts';
+import { isBetaHost } from './hosts';
 import { LogoIcon } from './LogoIcon';
 import { Brand } from './Brand';
 import { HoverLabel } from './HoverLabel';
@@ -864,7 +864,7 @@ export function TagsRail(props: TagsRailProps) {
         </h1>
         <HoverLabel label={t('common:updateToast.changelog')} position="end">
         <a
-          href={isBetaHost() ? BETA_COMMITS_URL : latestChangelogHref()}
+          href={latestChangelogHref()}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={t('common:updateToast.changelog')}

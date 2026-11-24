@@ -714,8 +714,8 @@ function withSecurityHeaders(response: Response, url: URL, status?: number): Res
   }
   // Prevent edge cache from serving stale HTML without headers.
   headers.set('Cache-Control', 'no-cache');
-  // Both sign-in returns carry a one-time code in the address.
-  if (url.pathname === '/auth/connect' || url.pathname === '/auth/desktop') {
+  // The sign-in returns carry a one-time code in the address.
+  if (url.pathname === '/auth/connect' || url.pathname === '/auth/desktop' || url.pathname === '/auth/callback') {
     headers.set('Cache-Control', 'no-store');
     headers.set('Referrer-Policy', 'no-referrer');
   }

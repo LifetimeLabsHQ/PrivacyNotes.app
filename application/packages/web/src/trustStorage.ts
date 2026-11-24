@@ -237,7 +237,7 @@ export const trustAwareStorage: Storage = {
     }
     const trusted = isTrustedDevice();
     if (isSessionName(key)) {
-      // Spec: docs/internal/plans/session-under-app-lock.md (section 2.2)
+      // Spec: docs/internal/specs/session-under-app-lock.md (section 2.2)
       // A tab that is not trusted keeps its session in memory and never seals.
       const sealing = trusted && sealsNow();
       const sealed = sealing ? sealSession(key, value) : null;

@@ -557,9 +557,9 @@ function renderInline(raw: string): string {
   const noteLink = (target: string, label: string) => (noteLinkAnchors
     ? stash(`<a href="#" data-note-link="${target}">`) + label + stash('</a>')
     : `<em>${label}</em>`);
-  t = t.replace(/\[\[([^\]|]+)\|([^\]]+)\]\]|\[\[[^\]|]*/g, (run: string, target?: string, label?: string) =>
+  t = t.replace(/\[\[([^\]|]+)\|([^\]]+)\]\](?:&lt;!--suggested--&gt;)?|\[\[[^\]|]*/g, (run: string, target?: string, label?: string) =>
     label === undefined ? run : noteLink(target!, label));
-  t = t.replace(/\[\[([^\]]+)\]\]|\[\[[^\]]*/g, (run: string, target?: string) =>
+  t = t.replace(/\[\[([^\]]+)\]\](?:&lt;!--suggested--&gt;)?|\[\[[^\]]*/g, (run: string, target?: string) =>
     target === undefined ? run : noteLink(target, noteLinkDisplayText(target)));
 
   // Links [text](url). URL itself is already HTML-escaped by the
@@ -1226,6 +1226,7 @@ function dirAttr(letter: string | null): string {
 interface ParsedListItem {
   indent: number;
   ordered: boolean;
+  start?: number;
   content: string;
   isTask: boolean;
   checked: boolean;
@@ -1245,9 +1246,9 @@ function detectListItem(line: string): ParsedListItem | null {
     return { indent, ordered: false, content, isTask: false, checked: false };
   }
 
-  const olMatch = trimmed.match(/^\d+\.\s+(.*)/);
+  const olMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
   if (olMatch) {
-    return { indent, ordered: true, content: olMatch[1]!, isTask: false, checked: false };
+    return { indent, ordered: true, start: Number(olMatch[1]), content: olMatch[2]!, isTask: false, checked: false };
   }
 
   return null;
@@ -1403,7 +1404,8 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
     if (letter && letterDirection(letter) === 'rtl' && listNumerals(letter, () => textOfHtml(body), () => notePersian === true)) {
       styles.push('list-style-type:persian');
     }
-    return [`<ol${dir}${styles.length ? ` style="${styles.join(';')}"` : ''}>${body}</ol>`, i];
+    const startAttr = first.start !== undefined && first.start !== 1 ? ` start="${first.start}"` : '';
+    return [`<ol${startAttr}${dir}${styles.length ? ` style="${styles.join(';')}"` : ''}>${body}</ol>`, i];
   }
   if (hasTask) {
     const taskStyle = `list-style:none;padding-inline-start:0${gutterPinned ? ';margin-inline-start:0' : ''}`;

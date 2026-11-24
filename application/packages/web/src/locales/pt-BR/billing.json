@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "Libere tudo por {{price}}",
     "ctaOpening": "Abrindo o checkout...",
     "ctaSignUp": "Cadastre-se para liberar",
+    "localOnlyHint": "Fazer upgrade conecta uma vez para registrar sua conta e ativar o Pro. A sincronização continua desativada.",
+    "localOnlyOffline": "Conecte-se à internet para fazer upgrade.",
     "features": {
       "folders": "Pastas aninhadas",
       "lock": "Bloqueio e PIN",

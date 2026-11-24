@@ -15,6 +15,7 @@ import {
   daysBetween,
   doseLenses,
   formatNumber,
+  formatPlain,
   formatValue,
   hasData,
   levelLabel,
@@ -75,7 +76,7 @@ function trackerLines(model: WellnessModel, t: TFunction, withSvg: boolean): Tra
         name,
         days: a.n,
         average: d.aggregate === 'sum' ? t('wellness.report.total', { value: formatNumber(a.sum) }) : formatValue(d, a.avg ?? 0, t),
-        lowHigh: `${formatNumber(a.low ?? 0)} / ${formatNumber(a.high ?? 0)}`,
+        lowHigh: `${formatPlain(d, a.low ?? 0, t)} / ${formatPlain(d, a.high ?? 0, t)}`,
         svg,
       });
     } else if (a.kind === 'yesno') {

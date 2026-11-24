@@ -321,7 +321,11 @@
     "confirm": "Import as notes",
     "cancel": "Store as files",
     "bodySingle": "<strong>{{filename}}</strong> looks like a markdown file. Import it as a note so you can read and edit it, or store it as an encrypted file attachment?",
-    "bodyMulti": "These {{count}} files look like markdown. Import them as notes so you can read and edit them, or store them as encrypted file attachments?"
+    "bodyMulti": "These {{count}} files look like markdown. Import them as notes so you can read and edit them, or store them as encrypted file attachments?",
+    "backupTitle": "Restore or store?",
+    "backupConfirm": "Restore backup",
+    "backupCancel": "Store as file",
+    "backupBody": "<strong>{{filename}}</strong> is a PrivacyNotes backup. Restore your data from it, or store it as an encrypted file attachment?"
   },
   "archiveConfirm": {
     "body_one": "Archive <highlight>{{count}} item</highlight>? It leaves your lists and waits in the Archive view. Unarchive brings it back.",

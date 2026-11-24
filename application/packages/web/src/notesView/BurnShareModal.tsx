@@ -3,6 +3,8 @@ import { Trans, useTranslation } from 'react-i18next';
 import { HelpChip } from '../HelpChip';
 import { Check, Copy, Fire, Warning } from '../icons';
 import { createBurnLink } from '../burnShare';
+import { useLocalOnly } from '../localOnly';
+import { LocalOnlyNotice } from '../LocalOnlyNotice';
 import type { VaultField } from '../vaultFields';
 import { Button, Modal, ModalFooter } from '../ui';
 import {
@@ -26,6 +28,7 @@ export function BurnShareModal({
   isMobile,
   onCreated,
   onClose,
+  onOpenSync,
 }: {
   title: string;
   body: string;
@@ -34,8 +37,11 @@ export function BurnShareModal({
   isMobile: boolean;
   onCreated: () => void;
   onClose: () => void;
+  /** Opens Settings > ID & Sync from the local-only notice. */
+  onOpenSync?: () => void;
 }) {
   const { t } = useTranslation('notesChrome');
+  const localOnly = useLocalOnly();
   const [readSeconds, setReadSeconds] = useState(DEFAULT_BURN_READ_SECONDS);
   const [lifetimeHours, setLifetimeHours] = useState(DEFAULT_BURN_LIFETIME_HOURS);
   const [url, setUrl] = useState<string | null>(null);
@@ -43,6 +49,17 @@ export function BurnShareModal({
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const share = isMobile && typeof navigator.share === 'function';
+
+  if (localOnly) {
+    return (
+      <Modal onClose={onClose} title={t('burnShareModal.title')} icon={<Fire className="text-orange-500" />} className="max-w-md p-6 space-y-4">
+        <LocalOnlyNotice feature="burnShare" onOpenSync={onOpenSync} />
+        <ModalFooter>
+          <Button action="cancel" onClick={onClose}>{t('common:actions.close')}</Button>
+        </ModalFooter>
+      </Modal>
+    );
+  }
 
   async function create(): Promise<string> {
     const result = await createBurnLink(title, body, fields, readSeconds, lifetimeHours);

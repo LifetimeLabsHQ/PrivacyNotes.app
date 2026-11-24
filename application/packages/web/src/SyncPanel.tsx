@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  Archive,
   ArrowsClockwise,
   CaretDown,
   Check,
@@ -20,6 +21,7 @@ import {
 } from './icons';
 import { type SupabaseClient } from '@notes/shared';
 import { isDemoMode } from './demo';
+import { clearNeverSynced, useLocalOnly, useLocalTruthOnly } from './localOnly';
 import { formatInstant, formatRelative } from './intlFormat';
 import { verifySync, resetSyncCursor, type SyncReport } from './syncVerify';
 import { recordCleanVerify } from './verifyStamp';
@@ -40,6 +42,7 @@ import { buildSupportReport } from './supportReport';
 import { deriveDisplayTitle } from './notesViewUtils';
 import { useVerifyStamp } from './verifyStamp';
 import { EYEBROW_ICON_ROW, EyebrowGlyph, SETTINGS_EYEBROW, SETTINGS_BTN_PRIMARY } from './settingsUI';
+import { Button, Callout, FeedbackButton, Spinner } from './ui';
 import { Switch } from './Switch';
 import { VERSION } from './version';
 import { SwissFlag } from './SwissFlag';
@@ -62,6 +65,8 @@ export function SyncPanel({
   supabase,
   autoVerify = false,
   onOpenNote,
+  onOpenAutoBackup,
+  onTurnOnLocalSync,
 }: {
   pubkey?: string;
   onSyncNow?: () => void | Promise<void>;
@@ -73,8 +78,14 @@ export function SyncPanel({
   /** Opens a note from the not-backed-up list. Absent where there is no
    *  editor to open it in. */
   onOpenNote?: (id: string) => void;
+  /** Opens Settings > Backup > Automatic from the local-only backup reminder. */
+  onOpenAutoBackup?: () => void;
+  /** Registers (if needed) and enables sync for a local-only or never-synced vault. */
+  onTurnOnLocalSync?: () => Promise<{ ok: true } | { ok: false; error: string }>;
 }) {
   const { t } = useTranslation('settings');
+  const localOnly = useLocalOnly();
+  const localTruth = useLocalTruthOnly();
   const online = useOnlineStatus();
   const syncing = useSyncing();
   const pending = usePendingUploads();
@@ -85,6 +96,50 @@ export function SyncPanel({
   const stamp = useVerifyStamp();
   const failures = usePushFailures();
   const halt = usePushHalt();
+  const [turningOnSync, setTurningOnSync] = useState(false);
+  const [turnOnError, setTurnOnError] = useState<{ message: string; offline: boolean } | null>(null);
+  const [localCounts, setLocalCounts] = useState<{ notes: number; files: number } | null>(null);
+  const showLocalOnlyView = localOnly || (localTruth && paused);
+
+  useEffect(() => {
+    if (!showLocalOnlyView) {
+      setLocalCounts(null);
+      return;
+    }
+    let cancelled = false;
+    void Promise.all([
+      db.notes.where('deleted').equals(0).count(),
+      db.imageCache.toCollection().primaryKeys(),
+      db.attachmentCache.toCollection().primaryKeys(),
+      db.blobGC.toCollection().primaryKeys(),
+    ]).then(([notes, imgIds, attIds, gcIds]) => {
+      if (cancelled) return;
+      const gcSet = new Set(gcIds);
+      const files =
+        imgIds.filter((id) => !gcSet.has(id)).length +
+        attIds.filter((id) => !gcSet.has(id)).length;
+      setLocalCounts({ notes, files });
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [showLocalOnlyView]);
+
+  async function handleTurnOnSync() {
+    if (turningOnSync) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      setTurnOnError({ message: t('sync.localOnlyOfflineError'), offline: true });
+      return;
+    }
+    if (!onTurnOnLocalSync) return;
+    setTurningOnSync(true);
+    setTurnOnError(null);
+    const result = await onTurnOnLocalSync();
+    setTurningOnSync(false);
+    if (!result.ok) {
+      setTurnOnError({ message: result.error, offline: false });
+      return;
+    }
+    void onSyncNow?.();
+  }
 
   // Titles for the not-backed-up list, read on demand: the failing notes
   // are the few the last pass refused, never the whole vault.
@@ -121,8 +176,8 @@ export function SyncPanel({
   // or the pause flips - the two moments the number can move.
   const [unsynced, setUnsynced] = useState(0);
   useEffect(() => {
-    if (!syncing) void countUnsyncedNotes().then(setUnsynced);
-  }, [syncing, paused]);
+    if (!syncing && !localOnly) void countUnsyncedNotes().then(setUnsynced);
+  }, [syncing, paused, localOnly]);
 
   // ── Verify (moved in from the deleted SyncVerifyBlock) ──────────
   // Exists because the pill and hero only know whether a pass RAN, not
@@ -155,6 +210,7 @@ export function SyncPanel({
   }
 
   useEffect(() => {
+    if (localOnly || (localTruth && paused)) return;
     if (autoVerify && supabase && navigator.onLine) void runVerify();
     // Mount-only: re-running on every online flip would fire the check
     // again each time the network blips.
@@ -167,6 +223,82 @@ export function SyncPanel({
   // that does not happen. It outranks every other state, same as the
   // pill (SyncStatus.tsx), and carries the same words the pill does.
   const demo = isDemoMode();
+
+  // Local-only mode (and registered-but-never-synced vaults with sync still
+  // off, e.g. after upgrading to Pro without sync, GitHub #862): calm neutral
+  // status card, live local counts, backup callout, explicit "Turn on sync"
+  // button, device card, and Account ID row. No amber warnings, no sync
+  // switches, no server pass bars or activity table.
+  if (showLocalOnlyView && !demo) {
+    const fileLabel = localCounts && localCounts.files > 0
+      ? ` · ${t('notesChrome:signOutConfirm.fileCount', { count: localCounts.files })}`
+      : '';
+    return (
+      <div className="space-y-3">
+        <div className="rounded-lg border border-divider border-s-[3px] border-s-pn-muted bg-surface-1 px-3.5 py-3">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex text-pn-muted"><Laptop /></span>
+            <span className="text-title font-semibold text-pn">{t('syncStatus.localOnly')}</span>
+          </div>
+          <p className="mt-1.5 text-help text-pn-soft">{t('syncPanel.localOnlyBody')}</p>
+          {localCounts && (
+            <p className="mt-1.5 text-small text-pn-muted tabular-nums">
+              {t('syncPanel.localOnlyNotes', { count: localCounts.notes })}{fileLabel}
+            </p>
+          )}
+        </div>
+
+        <Callout
+          tone="info"
+          action={
+            onOpenAutoBackup ? (
+              <FeedbackButton icon={<Archive aria-hidden="true" />} onClick={onOpenAutoBackup}>
+                {t('syncPanel.localOnlySetUpBackups')}
+              </FeedbackButton>
+            ) : undefined
+          }
+        >
+          {t('syncPanel.localOnlyBackupHint')}
+        </Callout>
+
+        <div className="space-y-2">
+          <Button
+            variant="primary"
+            disabled={turningOnSync}
+            icon={turningOnSync ? <Spinner size={15} /> : <ArrowsClockwise aria-hidden="true" />}
+            onClick={() => void handleTurnOnSync()}
+            className="w-full"
+          >
+            {turningOnSync ? t('syncPanel.localOnlyTurningOn') : t('syncPanel.localOnlyTurnOnSync')}
+          </Button>
+          {turnOnError && (
+            <Callout tone={turnOnError.offline ? 'info' : 'danger'}>{turnOnError.message}</Callout>
+          )}
+        </div>
+
+        <div data-setting="me.thisDevice" className="flex flex-col rounded-lg border border-divider px-3.5 py-3">
+          <span className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW} mb-2`}>
+            <EyebrowGlyph icon={Laptop} />{t('settings:devices.thisDevice')}
+          </span>
+          <div className="text-body font-medium">
+            {buildDeviceName()} - v{VERSION}
+          </div>
+        </div>
+
+        {pubkey && (
+          <AccountIdRow
+            pubkey={pubkey}
+            mode={localOnly ? 'local-only' : 'never-synced'}
+            unsynced={localCounts?.notes ?? 0}
+            pendingCount={0}
+            log={[]}
+            failed={[]}
+            hint={localOnly ? t('syncPanel.localOnlyAccountIdHint') : undefined}
+          />
+        )}
+      </div>
+    );
+  }
 
   // Same rule as the pill: no green check before a clean pull is logged.
   const standing = pullStanding(log);
@@ -452,7 +584,12 @@ export function SyncPanel({
               className="mt-auto border-t border-divider pt-2.5"
               label={t('syncPanel.pauseSync')}
               checked={paused}
-              onChange={(v) => setSyncPaused(v)}
+              onChange={(v) => {
+                // Turning sync on for the first time ends the local-truth
+                // state so future deletes use tombstones and sync normally.
+                if (!v) void clearNeverSynced();
+                setSyncPaused(v);
+              }}
             />
           )}
           {!demo && wifiOnlyAvailable() && (
@@ -487,7 +624,16 @@ export function SyncPanel({
       </div>
 
       {/* ── Account ID (ID & Sync only) ── */}
-      {pubkey && <AccountIdRow pubkey={pubkey} unsynced={unsynced} pendingCount={pending.count} log={log} failed={failedNotes} />}
+      {pubkey && (
+        <AccountIdRow
+          pubkey={pubkey}
+          mode={localTruth ? 'never-synced' : undefined}
+          unsynced={unsynced}
+          pendingCount={pending.count}
+          log={log}
+          failed={failedNotes}
+        />
+      )}
 
       {/* ── Recent activity ── */}
       {!demo && <ActivityList log={log} />}
@@ -551,18 +697,23 @@ function PassBars({ log }: { log: SyncPassEntry[] }) {
 
 function AccountIdRow({
   pubkey,
+  mode,
   unsynced,
   pendingCount,
   log,
   failed,
+  hint,
 }: {
   pubkey: string;
+  mode?: 'local-only' | 'never-synced';
   unsynced: number;
   pendingCount: number;
   /** The recent passes, newest last (syncLog.ts). */
   log: SyncPassEntry[];
   /** The notes the last pass could not push. */
   failed: ReadonlyArray<{ id: string; failure: PushFailure; chars: number }>;
+  /** Optional status hint under the ID row (used in local-only mode). */
+  hint?: string;
 }) {
   const { t } = useTranslation('settings');
   const [copied, setCopied] = useState<'id' | 'report' | null>(null);
@@ -575,6 +726,7 @@ function AccountIdRow({
             pubkey,
             device: buildDeviceName(),
             version: VERSION,
+            mode,
             unsynced,
             pendingUploads: pendingCount,
             lastOkAt: lastOkSyncAt(),
@@ -615,6 +767,7 @@ function AccountIdRow({
           onClick={() => void copy('report')}
         />
       </div>
+      {hint && <p className="mt-2 text-small text-pn-muted">{hint}</p>}
     </div>
   );
 }

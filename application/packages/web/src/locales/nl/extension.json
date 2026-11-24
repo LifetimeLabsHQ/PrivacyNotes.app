@@ -23,7 +23,6 @@
     "generatePassword": "Een wachtwoord genereren"
   },
   "note": {
-    "tagsPlaceholder": "#werk #ideeën",
     "tagsHelp": "Een spatie of komma tussen tags. De # is optioneel.",
     "failed": "Kan de notitie niet opslaan. Probeer het opnieuw."
   },
@@ -213,5 +212,11 @@
     "unlockFirst": "Ontgrendel om je passkeys te gebruiken.",
     "offer": "Passkeys aanbieden",
     "offerHelp": "Passkeys opslaan en gebruiken op websites."
+  },
+  "organize": {
+    "title": "Map en tags",
+    "unlockToPick": "Ontgrendel de Kluis om te kiezen",
+    "addTag": "Tag toevoegen...",
+    "proFolders": "Mappen zijn een Pro-functie. Open PrivacyNotes om te upgraden."
   }
 }

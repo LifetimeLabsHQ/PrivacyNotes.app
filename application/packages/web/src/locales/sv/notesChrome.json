@@ -69,6 +69,11 @@
     "appLockHint": "Delad enhet? Slå på applåset under Inställningar > Säkerhet.",
     "unopenedWarn_other": "{{count}} anteckningar har en serverkopia som den här enheten inte kan öppna. Om du loggar ut raderas kopiorna här, och de kan vara de enda fungerande. Skicka dem först igen under Inställningar > ID & Sync.",
     "unopenedKept_other": "{{count}} anteckningar har en serverkopia som den här enheten inte kan öppna. Kopiorna här finns kvar när du har loggat ut.",
+    "localOnlyTitle": "Radera allt på den här enheten?",
+    "localOnlyBody": "Dina anteckningar lagras bara på den här enheten och har aldrig synkats. Om du loggar ut raderas de permanent från den här enheten.",
+    "localOnlyCounts": "På den här enheten: {{items}}.",
+    "localOnlyExportBackup": "Exportera säkerhetskopia",
+    "localOnlyDeleteConfirm": "Radera och logga ut",
     "unopenedKept_one": "1 anteckning har en serverkopia som den här enheten inte kan öppna. Kopian här finns kvar när du har loggat ut.",
     "unopenedWarn_one": "1 anteckning har en serverkopia som den här enheten inte kan öppna. Om du loggar ut raderas kopian här, och den kan vara den enda fungerande. Skicka den först igen under Inställningar > ID & Sync."
   },
@@ -139,6 +144,7 @@
   "burnShare": {
     "offline": "Du är offline. Burn-länkar kräver kontakt med servern. Försök igen när du är uppkopplad.",
     "demo": "Burn-länkar lagras på en server, och demoläget kontaktar aldrig någon server. Skapa ett konto för att göra riktiga burn-länkar.",
+    "localOnly": "Burn-länkar kräver ett onlinekonto. Slå på synk under Inställningar > ID & Sync för att dela burn-länkar.",
     "tooLarge": "Anteckningen är för stor för att delas via burn-länk ({{size}} KB). Max är {{max}} KB.",
     "storeFailed": "Kunde inte lagra burn note på servern.",
     "rateLimited": "För många burn-länkar har skapats från den här anslutningen. Försök igen senare."

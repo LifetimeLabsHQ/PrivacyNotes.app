@@ -1,7 +1,7 @@
 import type { TFunction } from 'i18next';
 import type { DaySeries, TrackerDescriptor } from '../wellnessTypes';
 import { aggregate } from '../trackerSeries';
-import { formatNumber, formatValue, levelLabel, moodColor, trackerName } from './wellnessModel';
+import { formatNumber, formatPlain, formatValue, levelLabel, moodColor, trackerName } from './wellnessModel';
 
 /** The chart form a tracker's kind takes on a card and in Explore. */
 export function chartSpecFor(d: TrackerDescriptor, series: DaySeries, weekly: boolean) {
@@ -71,7 +71,7 @@ export function cardNumbers(d: TrackerDescriptor, series: DaySeries, t: TFunctio
       const sub = d.aggregate === 'sum'
         ? t('stats:wellness.trackers.sumDays', { count: a.n })
         : `${t('stats:wellness.trackers.avgDays', { count: a.n })}, ${t('stats:wellness.trackers.latestLowHigh', {
-            latest: formatValue(d, a.latest ?? 0, t), low: formatNumber(a.low ?? 0), high: formatNumber(a.high ?? 0),
+            latest: formatValue(d, a.latest ?? 0, t), low: formatPlain(d, a.low ?? 0, t), high: formatPlain(d, a.high ?? 0, t),
           })}`;
       return { headline, sub };
     }

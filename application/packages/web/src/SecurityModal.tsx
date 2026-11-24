@@ -1,8 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Fingerprint, Key, Lock, Shield } from './icons';
+import { useAuth } from './auth';
 import { isDemoMode } from './demo';
 import { DemoAccountTeaser } from './DemoAccountTeaser';
+import { LocalOnlyNotice } from './LocalOnlyNotice';
 import { SettingsTabStrip, settingsTabClass } from './settingsUI';
 import { Modal } from './ui';
 import { passkeysReleased } from './passkeysRelease';
@@ -22,6 +24,8 @@ type Props = {
   phrase: string;
   onClose: () => void;
   onOpenCustody?: () => void;
+  /** Opens Settings > ID & Sync from a local-only notice. */
+  onOpenSync?: () => void;
   /** Which tab to open on. Defaults to 'pin'. */
   defaultTab?: Tab;
   /** Why the PIN tab was opened, when something else opened it. */
@@ -58,6 +62,7 @@ export function SecurityModal({
   phrase,
   onClose,
   onOpenCustody,
+  onOpenSync,
   defaultTab = 'pin',
   reason,
   pinTimeoutMinutes,
@@ -70,6 +75,8 @@ export function SecurityModal({
   embedded = false,
 }: Props) {
   const { t } = useTranslation('security');
+  const { auth } = useAuth();
+  const localOnly = auth.status === 'authenticated' && auth.localOnly;
   const [paneTab, setTab] = usePaneTab<Tab>('security', defaultTab);
   // Passkeys share the 2FA tab, under it, while their release switch is on:
   // both are what a new device needs to get in.
@@ -120,9 +127,17 @@ export function SecurityModal({
   );
   const body = (
     <>
-    {tab === 'twoFactor' && (isDemoMode() ? <DemoAccountTeaser kind="twoFactor" /> : <TwoFactorTab />)}
+    {tab === 'twoFactor' && (
+      localOnly ? (
+        <LocalOnlyNotice feature="twoFactorPasskeys" onOpenSync={onOpenSync} />
+      ) : isDemoMode() ? (
+        <DemoAccountTeaser kind="twoFactor" />
+      ) : (
+        <TwoFactorTab />
+      )
+    )}
 
-    {tab === 'twoFactor' && passkeysShown && (
+    {tab === 'twoFactor' && !localOnly && passkeysShown && (
       <div data-setting="security.passkeys" className="pt-4">
         <PasskeysTab
           pubkey={pubkey}
@@ -177,8 +192,9 @@ export function SecurityModal({
         hasPin={Boolean(userSettings.pinHash && userSettings.pinSalt)}
         onCancel={onClose}
         pinCredential={`${userSettings.pinHash ?? ''}:${userSettings.pinSalt ?? ''}`}
-        onOpenCustody={isDemoMode() ? undefined : onOpenCustody}
+        onOpenCustody={isDemoMode() || localOnly ? undefined : onOpenCustody}
         onOpenTwoFactor={() => setTab('twoFactor')}
+        onOpenSync={onOpenSync}
         recovery={{ phrase, userSettings, onSettingsChange }}
       />
     )}

@@ -93,7 +93,10 @@
     "googleCalendar": "Google Calendar의 Settings > Import & export에서 받은 .zip, 또는 .ics 파일 하나. 일정은 시간, 반복, 미리 알림을 그대로 유지해요.",
     "appleNotes": "무료 Exporter 앱으로 Markdown 내보내기를 한 뒤 .zip을 여기에 놓으세요.",
     "appleJournal": "Mac이나 iPhone의 일기에서 내보낸 뒤 AppleJournalEntries 폴더를 압축해서 .zip을 여기에 놓으세요. 항목은 사진, 동영상, 음성 메모, 위치 정보와 함께 저널 항목으로 가져와요.",
+    "dayOne": "Day One 웹에서 Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media)를 선택하거나, Mac이나 iOS에서 File > Export > JSON을 선택하세요. .zip이나 .json을 여기에 놓으세요. 항목은 날짜, 태그, 별표, 장소, 날씨, 미디어를 그대로 유지해요.",
+    "todoist": "Todoist의 Settings > Backups (Pro)에서 백업 .zip을 다운로드하거나, 프로젝트를 열고 ... > Import & export > Export as CSV를 선택하세요. 각 프로젝트는 섹션, 하위 할 일, 우선순위, 마감일, 라벨, 설명, 댓글과 함께 할 일 목록이 돼요.",
     "daylio": "Daylio에서 More > Backup & Restore > Advanced Options > Export를 선택하고 Daylio를 닫은 다음 .daylio 파일을 놓으세요. 각 항목은 기분, 활동, 척도, 사진, 음성 메모와 함께 저널 항목이 돼요. More > Export Entries에서 받은 CSV도 되지만 사진은 빠져요.",
+    "diaro": "Diaro에서 Settings > Data > Backup & restore를 선택하고 +를 누른 뒤, 암호화는 끄고 첨부 파일은 켠 다음 .zip 백업을 여기에 놓으세요. DiaroBackup.xml 파일만 넣어도 되지만 사진은 빠져요. 항목은 날짜, 폴더, 태그, 기분, 장소, 날씨, 사진을 그대로 유지해요.",
     "diarium": "Diarium에서 Export를 선택하고 Attachments를 켠 채 JSON을 고른 다음 로컬 저장소에 저장하세요. .zip을 놓거나, 첨부 파일 없이 .json을 놓으세요. 항목은 평점(기분으로), 태그, 사람, 트래커, 장소, 첨부 파일을 그대로 유지해요.",
     "googleJournal": "Pixel의 Journal에서 Settings > Back up your journal을 켜세요. 그런 다음 Google Takeout에서 Journal을 선택하고 받은 .zip을 놓으세요. 항목은 날짜, 제목, 텍스트, 사진, 동영상을 그대로 유지해요.",
     "excalidraw": "excalidraw.com에서 저장한 드로잉이에요. .excalidraw 파일 하나, 또는 여러 개를 zip으로 묶어도 돼요. Obsidian의 Excalidraw 플러그인으로 만든 .excalidraw.md 파일도 가져올 수 있어요. 드로잉 안의 이미지도 함께 가져와요.",
@@ -104,6 +107,7 @@
     "obsidian": "Obsidian 볼트를 .zip으로. 태그, 노트 링크, 폴더 구조, 본문 속 #태그, 삽입한 이미지와 파일을 유지해요. 캔버스와 Excalidraw 드로잉은 드로잉이 되고, .canvas 파일 하나만 따로 가져올 수도 있어요.",
     "obsidianCanvas": "Obsidian 볼트의 .canvas 파일 하나, 또는 모든 캔버스를 가져오려면 볼트 전체를 .zip으로. 각 캔버스는 드로잉이 돼요. 카드, 그룹, 화살표, 색상이 함께 오고, .zip 안에 있는 이미지도 함께 와요.",
     "notesnook": "Notesnook 내보내기를 .zip으로. 내보낼 때 HTML을 선택하면 서식, 노트북, 태그, 첨부 파일이 유지돼요.",
+    "notion": "Notion에서 Settings > General > Export > Workspace content(또는 페이지 메뉴 > More > Export)를 선택하고, 하위 페이지와 폴더를 켠 채 \"Markdown & CSV\"를 고른 다음 .zip을 여기에 놓으세요. 제목과 폴더에서 Notion ID를 제거하고, 하위 페이지는 폴더로 유지하며, 콜아웃을 변환하고 내부 링크를 노트 링크로 바꾸며, 이미지, 파일, 데이터베이스 행 페이지도 함께 가져와요.",
     "bear": "Bear에서 File > Backup Notes...를 선택하고 .bear2bk 파일을 여기에 놓으세요. 태그와 중첩 태그, 고정, 아카이브, 휴지통, 색상이 있는 형광펜, 노트 링크, 첨부 파일도 함께 와요.",
     "joplin": "File > Export all > \"JEX - Joplin Export File\"로 내보낸 .jex 파일. 노트북은 폴더가 되고, 태그, 할 일, 노트 링크, 첨부 파일도 함께 와요.",
     "anytype": "공간 설정 > Export에서 파일과 아카이브된 개체를 포함해 만든 Any-Block v1 JSON .zip이에요. 컬렉션은 폴더가 되고, 태그, 할 일, 콜아웃, 토글, 표, 노트 링크, 파일도 함께 와요.",
@@ -130,7 +134,13 @@
     "fullBackupTitle": "전체 백업 (.zip)",
     "fullBackupDesc": "노트, 저널, 보관함 항목, 할 일, 이미지, 오디오, 파일을 복원해요. 이미 있는 노트는 그대로 두고, 백업에 더 새로운 버전이 있을 때만 업데이트해요.",
     "encryptedBackupTitle": "암호화 백업 (.pnbackup, .pnbackupz)",
-    "encryptedBackupDesc": "문구 키로 암호화 백업을 복원해요. .pnbackupz는 파일까지 전부 되돌리고, .pnbackup은 텍스트 콘텐츠와 메타데이터만 담고 있어요. 백업을 만든 계정과 같은 계정으로 로그인되어 있어야 해요."
+    "encryptedBackupDesc": "문구 키로 암호화 백업을 복원해요. .pnbackupz는 파일까지 전부 되돌리고, .pnbackup은 텍스트 콘텐츠와 메타데이터만 담고 있어요. 다른 기기나 계정에서 만든 백업은 해당 백업의 복구 문구를 요청해요."
+  },
+  "restoreForeign": {
+    "title": "다른 복구 문구로 잠금 해제",
+    "body": "이 백업은 현재 문구로 암호화되지 않았어요. 백업을 만든 기기의 복구 문구를 입력하거나 스캔하세요. 노트는 이 보관함으로 가져와요.",
+    "unlock": "백업 잠금 해제",
+    "wrongPhrase": "그 복구 문구로는 이 백업의 잠금을 해제하지 못했어요. 단어를 확인하고 다시 시도하세요."
   },
   "restoreGate": {
     "wait": "복원은 이 기기가 온라인이 되고 동기화를 마칠 때까지 기다려요. 백업을 계정에 이미 있는 노트와 대조해서 노트가 두 번 추가되지 않도록 하기 위해서예요.",
@@ -291,7 +301,8 @@
   "shareSheet": {
     "title_other": "항목 {{count}}개가 PrivacyNotes로 공유되었어요",
     "line": "선택하기 전에는 아무것도 저장되지 않아요.",
-    "saveAll": "모두 저장"
+    "saveAll": "모두 저장",
+    "saveAs": "저장 방식"
   },
   "destination": {
     "none": "폴더 없음",

@@ -5,18 +5,21 @@
  * draft is kept in session storage at every change, because a toolbar popup
  * closes at a click outside it; a save or Cancel clears it. Save says Saved
  * for a moment, then the footer says where the note went (pattern 177).
- * Spec: docs/internal/plans/quick-note-694.md (section 4.1); picture mockups/quick-note-694-10nov2026.html (B2)
+ * Spec: docs/internal/specs/quick-note-694.md (section 4.1); picture mockups/quick-note-694-10nov2026.html (B2)
  */
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
-import { FloppyDisk, Note, NotePencil, Tag } from '@web/icons';
+import { splitTagText } from '@notes/shared/extension';
+import { FloppyDisk, Note, NotePencil } from '@web/icons';
 import { Button } from '@web/ui/Button';
 import { Callout } from '@web/ui/feedback';
 import { FIELD_CLASS, FieldLabel } from '@web/formFields';
-import { SETTINGS_HELP } from '@web/settingsUI';
+import { mergeTags } from '../../src/organize';
 import type { NoteResult } from '../../src/save';
+import type { OrganizeContext } from './ClipView';
 import type { Notice } from './Footer';
+import { OrganizeFields } from './OrganizeFields';
 import { DONE_HOLD_MS, SaveButton } from './SaveButton';
 import { SheetHeader } from './Sheet';
 
@@ -25,19 +28,34 @@ const DRAFT_KEY = 'noteDraft';
 interface Draft {
   title: string;
   markdown: string;
-  tags: string;
+  tags: string[];
+  tagDraft: string;
+  folderId: string | null;
 }
 
-const EMPTY: Draft = { title: '', markdown: '', tags: '' };
+const EMPTY: Draft = { title: '', markdown: '', tags: [], tagDraft: '', folderId: null };
 
-/** "#work, ideas #2026" to ["work", "ideas", "2026"]. The app normalizes them. */
-function tagsOf(text: string): string[] {
-  return [...new Set(text.split(/[\s,]+/).map((s) => s.replace(/^#+/, '')).filter(Boolean))];
+function normalizeDraft(raw: unknown): Draft {
+  if (!raw || typeof raw !== 'object') return EMPTY;
+  const d = raw as Record<string, unknown>;
+  const tags = Array.isArray(d.tags)
+    ? d.tags.filter((x): x is string => typeof x === 'string')
+    : typeof d.tags === 'string'
+      ? splitTagText(d.tags)
+      : [];
+  return {
+    title: typeof d.title === 'string' ? d.title : '',
+    markdown: typeof d.markdown === 'string' ? d.markdown : '',
+    tags,
+    tagDraft: typeof d.tagDraft === 'string' ? d.tagDraft : '',
+    folderId: typeof d.folderId === 'string' && d.folderId ? d.folderId : null,
+  };
 }
 
-export function NoteView({ start, onDone }: {
+export function NoteView({ start, organize, onDone }: {
   /** Text to start from: a selection with its page, from the right-click menu. */
   start?: string;
+  organize: OrganizeContext;
   /** Back to the popup, with the footer message of a save. */
   onDone: (notice: Notice | null) => void;
 }) {
@@ -50,7 +68,7 @@ export function NoteView({ start, onDone }: {
 
   useEffect(() => {
     void browser.storage.session.get(DRAFT_KEY).then((got) => {
-      const kept = (got[DRAFT_KEY] as Draft | undefined) ?? EMPTY;
+      const kept = normalizeDraft(got[DRAFT_KEY]);
       // A selection goes under what the draft holds, never over it.
       const markdown = start ? (kept.markdown.trim() ? `${kept.markdown.trimEnd()}\n\n${start}` : start) : kept.markdown;
       setDraft({ ...kept, markdown });
@@ -60,6 +78,14 @@ export function NoteView({ start, onDone }: {
   useEffect(() => {
     if (draft) void browser.storage.session.set({ [DRAFT_KEY]: draft });
   }, [draft]);
+
+  // Clear any remembered folder id from the draft once vault hydration confirms it is locked or non-Pro.
+  const hydrated = organize.hydrated ?? true;
+  useEffect(() => {
+    if (hydrated && (!organize.canFolder || !organize.unlocked || !organize.pro) && draft?.folderId) {
+      setDraft((d) => (d ? { ...d, folderId: null } : d));
+    }
+  }, [hydrated, organize.canFolder, organize.unlocked, organize.pro, draft?.folderId]);
 
   // The text area takes the focus once the draft is in, with the caret at its end.
   const focused = useRef(false);
@@ -72,13 +98,21 @@ export function NoteView({ start, onDone }: {
   }, [draft]);
 
   if (!draft) return null;
-  const set = (patch: Partial<Draft>) => setDraft({ ...draft, ...patch });
+  const set = (patch: Partial<Draft>) => setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
   const ready = !busy && !done && draft.markdown.trim() !== '';
 
   const save = async () => {
     setBusy(true);
     setError(null);
-    const request = { title: draft.title, markdown: draft.markdown, tags: tagsOf(draft.tags) };
+    const folder = organize.canFolder && organize.unlocked && organize.pro && draft.folderId && organize.folders.some((f) => f.id === draft.folderId)
+      ? draft.folderId
+      : undefined;
+    const request = {
+      title: draft.title,
+      markdown: draft.markdown,
+      tags: mergeTags(draft.tags, draft.tagDraft),
+      ...(folder ? { folder } : {}),
+    };
     const result = (await browser.runtime.sendMessage({ type: 'saveNote', request })) as NoteResult | null;
     setBusy(false);
     if (result?.state === 'sent' || result?.state === 'queued') {
@@ -125,12 +159,15 @@ export function NoteView({ start, onDone }: {
           dir="auto"
         />
       </div>
-      <div>
-        <FieldLabel icon={<Tag />} htmlFor="pn-note-tags">{t('shell:tagsRail.tags')}</FieldLabel>
-        <input id="pn-note-tags" value={draft.tags} onChange={(e) => set({ tags: e.target.value })} placeholder={t('note.tagsPlaceholder')} autoComplete="off" aria-describedby="pn-note-tags-help" className={FIELD_CLASS} dir="auto" />
-        {/* Under the text in the field, not its border, so it reads as the field's own line. */}
-        <p id="pn-note-tags-help" className={`mt-1.5 px-3 ${SETTINGS_HELP}`}>{t('note.tagsHelp')}</p>
-      </div>
+      <OrganizeFields
+        {...organize}
+        folderId={draft.folderId}
+        onFolderChange={(folderId) => set({ folderId })}
+        tags={draft.tags}
+        onTagsChange={(tags) => set({ tags })}
+        tagDraft={draft.tagDraft}
+        onTagDraftChange={(tagDraft) => set({ tagDraft })}
+      />
       {error && <Callout look="card" tone="danger">{error}</Callout>}
       <div className="grid grid-cols-2 gap-2">
         {/* Cancel drops the draft; the back arrow and Escape keep it. */}

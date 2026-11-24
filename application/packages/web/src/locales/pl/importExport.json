@@ -105,7 +105,10 @@
     "googleCalendar": "Plik .zip z Settings > Import & export w Google Calendar albo pojedynczy plik .ics. Wydarzenia zachowują godziny, powtarzanie i przypomnienia.",
     "appleNotes": "Wyeksportuj darmową aplikacją Exporter jako Markdown, a potem upuść tutaj plik .zip.",
     "appleJournal": "Eksportuj z Dziennika na Macu lub iPhonie, skompresuj folder AppleJournalEntries i upuść tutaj plik .zip. Wpisy importują się jako wpisy w dzienniku razem ze zdjęciami, filmami, notatkami głosowymi i lokalizacjami.",
+    "dayOne": "W Day One wybierz Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media) w przeglądarce albo File > Export > JSON na Macu lub iOS. Upuść tutaj plik .zip lub .json. Wpisy zachowują dzień, tagi, gwiazdki, miejsce, pogodę i multimedia.",
+    "todoist": "W Todoist pobierz kopię zapasową .zip z Settings > Backups (Pro) albo otwórz projekt i wybierz ... > Import & export > Export as CSV. Każdy projekt staje się listą zadań z sekcjami, podzadaniami, priorytetami, terminami, etykietami, opisami i komentarzami.",
     "daylio": "W Daylio wybierz More > Backup & Restore > Advanced Options > Export, zamknij Daylio i upuść plik .daylio. Każdy wpis staje się wpisem w dzienniku z nastrojem, aktywnościami, skalami, zdjęciami i nagraniami głosowymi. Działa też plik CSV z More > Export Entries, ale bez zdjęć.",
+    "diaro": "W Diaro wybierz Settings > Data > Backup & restore, stuknij +, zostaw szyfrowanie wyłączone, a załączniki włączone, i upuść tutaj kopię zapasową .zip. Sam plik DiaroBackup.xml też działa, ale bez zdjęć. Wpisy zachowują dzień, foldery, tagi, nastroje, miejsca, pogodę i zdjęcia.",
     "diarium": "W Diarium wybierz Export, wybierz JSON z włączoną opcją Attachments i zapisz w pamięci lokalnej. Upuść plik .zip albo plik .json bez załączników. Wpisy zachowują ocenę jako nastrój, tagi, osoby, trackery, miejsce i załączniki.",
     "googleJournal": "W aplikacji Journal na swoim Pixelu włącz Settings > Back up your journal. Potem wybierz Journal w Google Takeout i upuść plik .zip, który dostaniesz. Wpisy zachowują dzień, tytuł, tekst, zdjęcia i filmy.",
     "excalidraw": "Rysunki zapisane z excalidraw.com: jeden plik .excalidraw albo kilka spakowanych w zip. Działają też rysunki z wtyczki Excalidraw do Obsidiana, jako pliki .excalidraw.md. Obrazy wewnątrz rysunku przechodzą razem z nim.",
@@ -116,6 +119,7 @@
     "obsidian": "Sejf Obsidiana jako .zip. Zachowuje tagi, linki do notatek, strukturę folderów, #tagi w tekście oraz osadzone obrazy i pliki. Płótna i rysunki Excalidraw stają się rysunkami, a pojedynczy plik .canvas też można zaimportować osobno.",
     "obsidianCanvas": "Jeden plik .canvas z Twojego sejfu Obsidiana albo cały sejf jako .zip, żeby przenieść wszystkie płótna. Każde płótno staje się rysunkiem: karty, grupy, strzałki i kolory przechodzą razem z nim, a obrazy też, jeśli są w pliku .zip.",
     "notesnook": "Eksport Notesnook jako .zip. Przy eksporcie wybierz HTML, aby zachować formatowanie, notesy, tagi i załączniki.",
+    "notion": "W Notion wybierz Settings > General > Export > Workspace content (albo menu strony > More > Export), wybierz „Markdown & CSV” z włączonymi podstronami i folderami, a potem upuść tutaj plik .zip. Usuwa identyfikatory Notion z tytułów i folderów, zachowuje podstrony jako foldery, konwertuje ramki, zamienia linki wewnętrzne na linki do notatek oraz przenosi obrazy, pliki i strony wierszy baz danych.",
     "bear": "W Bear wybierz File > Backup Notes... i upuść tutaj plik .bear2bk. Tagi i zagnieżdżone tagi, przypięcia, archiwum, kosz, wyróżnienia z ich kolorami, linki do notatek i załączniki przechodzą razem z nimi.",
     "joplin": "Plik .jex z File > Export all > „JEX - Joplin Export File”. Notesy stają się folderami, a tagi, zadania do zrobienia, linki do notatek i załączniki przechodzą razem z nimi.",
     "anytype": "Plik .zip w formacie Any-Block v1 JSON z ustawień przestrzeni > Export, z dołączonymi plikami i zarchiwizowanymi obiektami. Kolekcje stają się folderami, a tagi, zadania, ramki, sekcje rozwijane, tabele, linki do notatek i pliki przechodzą razem z nimi.",
@@ -142,7 +146,13 @@
     "fullBackupTitle": "Pełna kopia zapasowa (.zip)",
     "fullBackupDesc": "Przywróć notatki, dzienniki, elementy sejfu, zadania, obrazy, dźwięk i pliki. Notatka, którą już masz, zostaje zachowana albo zaktualizowana, jeśli kopia zawiera jej nowszą wersję.",
     "encryptedBackupTitle": "Zaszyfrowana kopia zapasowa (.pnbackup, .pnbackupz)",
-    "encryptedBackupDesc": "Przywróć zaszyfrowaną kopię zapasową kluczem z Twojej frazy. Plik .pnbackupz przywraca wszystko, razem z plikami; .pnbackup zawiera tylko tekst i metadane. Musisz być zalogowany na tym samym koncie, które ją utworzyło."
+    "encryptedBackupDesc": "Przywróć zaszyfrowaną kopię zapasową kluczem z Twojej frazy. Plik .pnbackupz przywraca wszystko, razem z plikami; .pnbackup zawiera tylko tekst i metadane. Przy kopii zapasowej z innego urządzenia lub konta aplikacja poprosi o jej frazę odzyskiwania."
+  },
+  "restoreForeign": {
+    "title": "Odblokuj inną frazą odzyskiwania",
+    "body": "Ta kopia zapasowa nie została zaszyfrowana Twoją obecną frazą. Wpisz lub zeskanuj frazę odzyskiwania z urządzenia, które ją utworzyło. Twoje notatki zostaną zaimportowane do tego sejfu.",
+    "unlock": "Odblokuj kopię zapasową",
+    "wrongPhrase": "Ta fraza odzyskiwania nie odblokowała tej kopii zapasowej. Sprawdź słowa i spróbuj ponownie."
   },
   "restoreGate": {
     "wait": "Przywracanie czeka, aż to urządzenie będzie online i ukończy synchronizację, żeby dopasować kopię zapasową do notatek, które już są na Twoim koncie, zamiast dodawać je po raz drugi.",
@@ -356,7 +366,8 @@
     "title_many": "Do PrivacyNotes udostępniono {{count}} elementów",
     "title_other": "Do PrivacyNotes udostępniono {{count}} elementu",
     "line": "Nic nie zostanie zapisane, dopóki nie wybierzesz.",
-    "saveAll": "Zapisz wszystko"
+    "saveAll": "Zapisz wszystko",
+    "saveAs": "Zapisz jako"
   },
   "destination": {
     "none": "Bez folderu",

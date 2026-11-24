@@ -143,7 +143,7 @@ export function setLocalLinkOpener(editor: { storage: unknown } | null, fn: Loca
 /** The link menu's "Open": the local opener first, the browser otherwise. */
 export function openLinkHref(editor: { storage: unknown }, href: string): void {
   if (linkOpenStorage(editor)?.openLocal?.(href)) return;
-  openExternal(href);
+  openExternal(href, { browser: true });
 }
 
 export const LinkModifierOpen = Extension.create<object, LinkOpenStorage>({
@@ -176,7 +176,7 @@ export const LinkModifierOpen = Extension.create<object, LinkOpenStorage>({
             // only takes addresses, so nothing else would open it.
             if (storage.openLocal?.(href)) return true;
             if (!clickOpensLink(view.editable)) return false;
-            openExternal(href);
+            openExternal(href, { browser: true });
             return true;
           },
           // `handleClick` runs on mouseup, so answering true there cancels

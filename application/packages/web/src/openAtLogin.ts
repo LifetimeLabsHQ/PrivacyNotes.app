@@ -14,8 +14,45 @@ import { readFlag } from './localStore';
 import { getTrayMode } from './trayMode';
 
 const KEY = 'privacynotes.startMinimized';
+// One-shot flag written right before an updater restart so a Windows launch
+// that originally started with `--autostart` reopens visibly instead of hiding
+// back into the tray when Start minimized is on. Expires after 5 minutes so a
+// cancelled or blocked installer does not affect a later Windows sign-in.
+const RELAUNCH_SHOW_KEY = 'privacynotes.relaunchShowWindow';
+const RELAUNCH_SHOW_TTL_MS = 5 * 60 * 1000;
 
 let on: boolean | null = null;
+let loginStartSent = false;
+
+/** Mark the next start as an explicit updater restart that should show its window. */
+export function markRelaunchShowWindow(): void {
+  try {
+    localStorage.setItem(RELAUNCH_SHOW_KEY, String(Date.now()));
+  } catch {
+    /* Storage refused: best effort. */
+  }
+}
+
+/** Clear the relaunch flag when an updater restart failed to leave the app. */
+export function clearRelaunchShowWindow(): void {
+  try {
+    localStorage.removeItem(RELAUNCH_SHOW_KEY);
+  } catch {
+    /* Storage refused: best effort. */
+  }
+}
+
+function consumeRelaunchShowWindow(): boolean {
+  try {
+    const raw = localStorage.getItem(RELAUNCH_SHOW_KEY);
+    if (!raw) return false;
+    localStorage.removeItem(RELAUNCH_SHOW_KEY);
+    const ts = Number(raw);
+    return Number.isFinite(ts) && Date.now() - ts >= 0 && Date.now() - ts < RELAUNCH_SHOW_TTL_MS;
+  } catch {
+    return false;
+  }
+}
 
 /** Off by default: a start at sign-in opens the window. Spec: docs/internal/plans/ninja-anywhere-694.md (N12) */
 function getStartMinimized(): boolean {
@@ -41,8 +78,11 @@ export function useStartMinimized(): boolean {
 
 /** At start: how a start at sign-in shows, with the tray switch, which Rust may not have yet. Any other start ignores it. */
 export function finishLoginStart(): void {
+  if (loginStartSent) return;
+  loginStartSent = true;
+  const minimized = consumeRelaunchShowWindow() ? false : getStartMinimized();
   void import('@tauri-apps/api/core')
-    .then(({ invoke }) => invoke('finish_login_start', { minimized: getStartMinimized(), tray: getTrayMode() }))
+    .then(({ invoke }) => invoke('finish_login_start', { minimized, tray: getTrayMode() }))
     .catch(() => {});
 }
 

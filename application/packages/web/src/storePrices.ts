@@ -88,11 +88,12 @@ async function loadStorePrices(): Promise<StorePriceMap | null> {
  * Store prices, or null while loading and on every non-store platform.
  * Native callers leave unknown prices blank; only non-store builds use web prices.
  */
-export function useStorePrices(): StorePriceMap | null {
-  const [prices, setPrices] = useState<StorePriceMap | null>(cache);
+export function useStorePrices(opts?: { disabled?: boolean }): StorePriceMap | null {
+  const disabled = opts?.disabled === true;
+  const [prices, setPrices] = useState<StorePriceMap | null>(disabled ? null : cache);
 
   useEffect(() => {
-    if (!isNativeStoreBuild()) return;
+    if (disabled || !isNativeStoreBuild()) return;
     let alive = true;
     const refresh = () => {
       if (document.hidden) return;
@@ -108,9 +109,9 @@ export function useStorePrices(): StorePriceMap | null {
       window.removeEventListener('focus', refresh);
       document.removeEventListener('visibilitychange', refresh);
     };
-  }, []);
+  }, [disabled]);
 
-  return prices;
+  return disabled ? null : prices;
 }
 
 /**

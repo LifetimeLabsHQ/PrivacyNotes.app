@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next';
-import { ArrowCircleDown, ArrowsClockwise, CloudCheck, CloudSlash, CloudWarning, CloudX, Database, PauseCircle, WifiHigh } from './icons';
+import { ArrowCircleDown, ArrowsClockwise, CloudCheck, CloudSlash, CloudWarning, CloudX, Database, Laptop, PauseCircle, WifiHigh } from './icons';
 import { useOnlineStatus } from './useOnlineStatus';
 import { usePendingUploads } from './usePendingUploads';
 import { useSyncing } from './syncingStore';
 import { HoverLabel } from './HoverLabel';
 import { isDemoMode } from './demo';
+import { useLocalOnly, useLocalTruthOnly } from './localOnly';
 import { useBelowVersionFloor } from './versionFloor';
 import { useSyncPaused } from './syncPause';
 import { useFilesWifiOnly } from './wifiOnly';
@@ -77,6 +78,8 @@ export function SyncStatus({ size = 20, onOpen, tipPosition = 'above-start', tip
   const syncing = useSyncing();
   const belowFloor = useBelowVersionFloor();
   const paused = useSyncPaused();
+  const localOnly = useLocalOnly();
+  const localTruth = useLocalTruthOnly();
   const wifi = useFilesWifiOnly();
   const failures = usePushFailures();
   const halt = usePushHalt();
@@ -109,7 +112,15 @@ export function SyncStatus({ size = 20, onOpen, tipPosition = 'above-start', tip
   // spinner would claim work that is deliberately not happening. The pill is
   // the permanent carrier of that truth, same job it does for demo's "Not
   // saved" - the required update toast can cover content, this cannot.
-  const state = belowFloor
+  // Local-only mode (and registered-but-never-synced vaults with sync still
+  // off) shows a calm neutral device icon instead of an amber warning.
+  const state = localOnly || (localTruth && paused)
+    ? {
+        body: <Laptop size={size} className="text-pn-muted" />,
+        tip: t('syncStatus.localOnly'),
+        aria: t('syncStatus.localOnlyAria'),
+      }
+    : belowFloor
     ? {
         body: <ArrowCircleDown size={size} className="text-warning" />,
         tip: t('common:updateToast.required'),

@@ -3,6 +3,7 @@ import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SupabaseClient } from '@notes/shared';
 import { fetchQuotaUsage } from '../devices';
+import { isLocalOnly } from '../localOnly';
 import type { AttachmentStore } from '../attachmentStore';
 import { formatFileSize, validateAttachment } from '../attachmentValidation';
 import { proUnlocked } from '../demo';
@@ -31,6 +32,12 @@ export interface LaterFile {
 }
 
 type UploadSource = File | LaterFile;
+
+const ENCRYPTED_BACKUP_EXT = /\.(pnbackup|pnbackupz)$/i;
+
+export type PendingFilesPrompt =
+  | { kind: 'markdown'; files: File[] }
+  | { kind: 'backup'; file: File };
 
 export function useFilesUpload({
   auth,
@@ -85,8 +92,9 @@ export function useFilesUpload({
   // Upload progress modal state
   const [uploadEntries, setUploadEntries] = useState<FileUploadEntry[] | null>(null);
   // Files-pillar upload: when the user picks .md/.zip files, ask whether
-  // to import-as-notes or store-as-attachments before proceeding.
-  const [pendingImportableFiles, setPendingImportableFiles] = useState<File[] | null>(null);
+  // to import-as-notes (or restore, for our own backup .zip) or store as
+  // encrypted attachments before proceeding.
+  const [pendingImportableFiles, setPendingImportableFiles] = useState<PendingFilesPrompt | null>(null);
   const filesUploadRef = useRef<HTMLInputElement | null>(null);
 
   /** Trigger file upload from the Files view. The picker accepts every
@@ -98,8 +106,9 @@ export function useFilesUpload({
 
   /** Handle file(s) selected via the hidden input.
    *  Single file → its own note. Multiple files → one shared note.
-   *  When every selected file is .md or .zip (importable markdown),
-   *  ask the user whether to import-as-notes or store-as-attachments. */
+   *  When every selected file is .md or .zip, sniff any .zip for a
+   *  PrivacyNotes backup manifest so our own backups route to Backup > Restore
+   *  instead of being flattened by the plain markdown importer. */
   async function handleFilesSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -109,6 +118,13 @@ export function useFilesUpload({
     // Reset so re-selecting the same file fires onChange again.
     e.target.value = '';
 
+    // A lone encrypted PrivacyNotes backup (.pnbackup / .pnbackupz) routes to
+    // the same Restore or store? prompt as a full backup .zip.
+    if (fileArr.length === 1 && ENCRYPTED_BACKUP_EXT.test(fileArr[0]!.name)) {
+      setPendingImportableFiles({ kind: 'backup', file: fileArr[0]! });
+      return;
+    }
+
     // Detect importable files: anything the markdown importer reads, plus a
     // zip. The extension list is the adapter's, not a second copy - a `.txt`
     // or `.markdown` the importer accepts but this check does not would be
@@ -117,7 +133,32 @@ export function useFilesUpload({
       (f) => SUPPORTED_EXT.test(f.name) || f.name.toLowerCase().endsWith('.zip'),
     );
     if (allImportable) {
-      setPendingImportableFiles(fileArr);
+      const zips = fileArr.filter((f) => f.name.toLowerCase().endsWith('.zip'));
+      if (zips.length > 0) {
+        let kinds: Array<'backup' | 'markdown' | 'attachment'>;
+        try {
+          // Dynamic import keeps jszip and the backup parser off the boot path.
+          const { classifyFilesZip } = await import('../import/privacynotes');
+          kinds = await Promise.all(zips.map((f) => classifyFilesZip(f)));
+        } catch {
+          // Offline or chunk load failure: store the files locally rather than dropping the upload.
+          await doAttachmentUpload(fileArr, store);
+          return;
+        }
+        if (fileArr.length === 1 && kinds[0] === 'backup') {
+          setPendingImportableFiles({ kind: 'backup', file: fileArr[0]! });
+          return;
+        }
+        if (kinds.every((k) => k === 'markdown')) {
+          setPendingImportableFiles({ kind: 'markdown', files: fileArr });
+          return;
+        }
+        // Non-markdown archives (HTML/Drawings/Calendar/photo/corrupt zips)
+        // and multi-file batches containing a backup zip store as files.
+        await doAttachmentUpload(fileArr, store);
+        return;
+      }
+      setPendingImportableFiles({ kind: 'markdown', files: fileArr });
       return; // Wait for user choice in the prompt dialog.
     }
 
@@ -222,12 +263,14 @@ export function useFilesUpload({
     // failure here just skips the gate.
     let freeBytes: number | null = null;
     let maxTotalBytes: number | null = null;
-    try {
-      const q = await fetchQuotaUsage(supabase, true);
-      freeBytes = Math.max(0, q.maxTotalBytes - q.totalBytes - q.imageBytes);
-      maxTotalBytes = q.maxTotalBytes;
-    } catch {
-      freeBytes = null;
+    if (!isLocalOnly()) {
+      try {
+        const q = await fetchQuotaUsage(supabase, true);
+        freeBytes = Math.max(0, q.maxTotalBytes - q.totalBytes - q.imageBytes);
+        maxTotalBytes = q.maxTotalBytes;
+      } catch {
+        freeBytes = null;
+      }
     }
 
     for (let i = 0; i < fileArr.length; i++) {

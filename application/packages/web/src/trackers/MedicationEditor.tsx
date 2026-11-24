@@ -1,6 +1,7 @@
 import { useId, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Bandaids, BellSimple, CalendarDots, Circle, Clock, DotsThree, Eyedropper, Flask, Hash, Package, Palette, Pill, Plus, Repeat as RepeatGlyph, Syringe, TextT, Wind, X, type Icon } from '../icons';
+import { BellSimple, CalendarDots, Clock, Hash, Package, Palette, Pill, Plus, Repeat as RepeatGlyph, TextT, X, type Icon } from '../icons';
+import { MedicationGlyph } from './icons';
 import { TEXT_COLORS } from '../editorColors';
 import { ColorSwatch } from '../ColorSwatch';
 import { MarkTile } from './CustomTrackerGlyph';
@@ -30,17 +31,6 @@ import { ProMark } from '../UpgradeModal';
  */
 
 const NO_DAYS: ReadonlySet<string> = new Set();
-/** One glyph per form, as the custom tracker types have. */
-const FORM_GLYPHS: Record<MedicationForm, Icon> = {
-  tablet: Circle,
-  capsule: Pill,
-  liquid: Flask,
-  injection: Syringe,
-  inhaler: Wind,
-  patch: Bandaids,
-  drops: Eyedropper,
-  other: DotsThree,
-};
 type RepeatKind = 'daily' | 'weekdays' | 'interval';
 type DoseDraft = { id: string; time?: string; amount: string };
 
@@ -426,12 +416,6 @@ function FieldPair({ cols, grow = false, first, second }: { cols: string; grow?:
       </div>
     </div>
   );
-}
-
-/** A medication's glyph: the one of its form, or a pill without one. */
-export function MedicationGlyph({ form, size = 12, className, style }: { form?: MedicationForm; size?: number; className?: string; style?: React.CSSProperties }) {
-  const Glyph = form ? FORM_GLYPHS[form] : Pill;
-  return <Glyph size={size} className={className} style={style} aria-hidden="true" />;
 }
 
 /** One line for a medication's row: the amount and how it is taken

@@ -4,6 +4,7 @@ import { ArrowCounterClockwise, At, ArrowsIn, ArrowsOut, Asterisk, CaretDown, Ca
 import { IconButton, Snackbar } from './ui';
 import type { LocalNote } from './db';
 import { EditorSlotPanel, SLOT_BADGE, SLOT_PANEL_ROW } from './EditorSlotPill';
+import { OverflowTip } from './OverflowTip';
 import { keyText } from './shortcutMatch';
 import { typeGlyph } from './NoteRow';
 import { deriveDisplayTitle } from './notesViewUtils';
@@ -18,6 +19,8 @@ export type ConnectionLists = {
   /** The open item is a file: `from` lists the notes that use it, titled "Used in" (#852). */
   usedIn: boolean;
   to: LocalNote[];
+  /** Ids in `to` whose link was added from Suggested connections. */
+  suggestedTo: ReadonlySet<string>;
   missing: string[];
   hidden: number;
   /** Notes about the same thing that no link joins, each with why (relatedNotes.ts). */
@@ -125,7 +128,9 @@ function NotRelatedLine({ notes, title, onRestore }: { notes: LocalNote[]; title
         <ul className="mt-0.5">
           {notes.map((n) => (
             <li key={n.id} className="flex items-center gap-2 py-0.5 ps-5">
-              <span className="min-w-0 flex-1 truncate text-pn-muted" dir="auto" title={title(n)}>{title(n)}</span>
+              <OverflowTip text={title(n)} className="min-w-0 flex-1 flex">
+                <span className="truncate text-pn-muted" dir="auto">{title(n)}</span>
+              </OverflowTip>
               <IconButton label={t('connections.restoreSuggestion')} position="start" onClick={() => onRestore(n)}>
                 <ArrowCounterClockwise />
               </IconButton>
@@ -140,35 +145,46 @@ function NotRelatedLine({ notes, title, onRestore }: { notes: LocalNote[]; title
 /** The actions of a link suggestion row. Absent on the other groups. */
 type SuggestionActions = { link?: LinkActions; onDismiss: () => void };
 
-function ConnectionRow({ note, title, why, actions, onOpen }: { note: LocalNote; title: string; why?: RelatedWhy; actions?: SuggestionActions; onOpen: () => void }) {
+function ConnectionRow({ note, title, why, suggested, actions, onOpen }: { note: LocalNote; title: string; why?: RelatedWhy; suggested?: boolean; actions?: SuggestionActions; onOpen: () => void }) {
   const { t } = useTranslation('notes');
   const { iconPaths: paths, row, icon } = useItemLook(note.id, note.tags, note.folderId);
   const { Icon, color } = typeGlyph(note.type);
   const WhyIcon = why ? WHY_ICON[why.kind] : null;
-  const iconClass = `shrink-0 ${icon ? '' : color}`;
+  const iconClass = `shrink-0 ${icon ? '' : actions ? 'text-success' : color}`;
+  const button = (
+    <button
+      type="button"
+      onClick={onOpen}
+      style={row}
+      className={`${SLOT_PANEL_ROW} px-2 text-pn-soft${actions ? ' min-w-0' : ''}`}
+    >
+      {paths
+        ? <PathGlyph paths={paths} size={16} className={iconClass} style={icon} />
+        : <Icon aria-hidden="true" className={iconClass} style={icon} />}
+      {why ? (
+        <span className="flex min-w-0 flex-1 flex-col">
+          <OverflowTip text={title} className="flex min-w-0">
+            <span className="truncate" dir="auto">{title}</span>
+          </OverflowTip>
+          <span className="flex min-w-0 items-center gap-1 text-small text-pn-muted">
+            {WhyIcon && <WhyIcon aria-hidden="true" className="shrink-0" />}
+            <OverflowTip text={why.sentence} className="flex min-w-0">
+              <span className="truncate" dir="auto">{why.text}</span>
+            </OverflowTip>
+            <span className="sr-only">{why.sentence}</span>
+          </span>
+        </span>
+      ) : (
+        <>
+          <span className="min-w-0 flex-1 truncate" dir="auto">{title}</span>
+          {suggested && <Sparkle weight="fill" aria-hidden="true" className="ms-auto shrink-0 text-success" />}
+        </>
+      )}
+    </button>
+  );
   return (
     <li className={actions ? 'group/row flex items-center gap-0.5' : undefined}>
-      <button
-        type="button"
-        onClick={onOpen}
-        title={why ? `${title}\n${why.sentence}` : title}
-        style={row}
-        className={`${SLOT_PANEL_ROW} px-2 text-pn-soft${actions ? ' min-w-0' : ''}`}
-      >
-        {paths
-          ? <PathGlyph paths={paths} size={16} className={iconClass} style={icon} />
-          : <Icon aria-hidden="true" className={iconClass} style={icon} />}
-        {why ? (
-          <span className="flex min-w-0 flex-col">
-            <span className="truncate" dir="auto">{title}</span>
-            <span className="flex min-w-0 items-center gap-1 text-small text-pn-muted">
-              {WhyIcon && <WhyIcon aria-hidden="true" className="shrink-0" />}
-              <span className="truncate" dir="auto">{why.text}</span>
-              <span className="sr-only">{why.sentence}</span>
-            </span>
-          </span>
-        ) : <span className="truncate" dir="auto">{title}</span>}
-      </button>
+      {why ? button : <OverflowTip text={title} className="block">{button}</OverflowTip>}
       {actions && (
         // On a device with a mouse the two tools show on hover or focus and
         // take no room otherwise, so a title is cut only while they show. A
@@ -230,8 +246,8 @@ export function ConnectionsPanel({
   onClose: () => void;
 }) {
   const { t } = useTranslation('notes');
-  const row = (n: LocalNote) => (
-    <ConnectionRow key={n.id} note={n} title={deriveDisplayTitle(n, isNoteLocked(n))} onOpen={() => onOpen(n)} />
+  const row = (n: LocalNote, suggested = false) => (
+    <ConnectionRow key={n.id} note={n} title={deriveDisplayTitle(n, isNoteLocked(n))} suggested={suggested} onOpen={() => onOpen(n)} />
   );
 
   // An empty group is left out. Each group carries its direction three ways
@@ -241,13 +257,13 @@ export function ConnectionsPanel({
   const group = (
     label: string,
     GroupIcon: typeof ArrowsIn,
-    tone: { bar: string; text: string },
+    tone: { bar: string; text: string; section?: string; title?: string },
     count: number,
     body: ReactNode,
     action?: ReactNode,
   ) => count === 0 && !body ? null : (
-    <section className={`mx-0.5 border-s-[3px] ${tone.bar}`}>
-      <div className="flex items-center gap-2 px-2 pt-1 pb-0.5 text-body font-semibold text-pn">
+    <section className={`mx-0.5 border-s-[3px] ${tone.bar}${tone.section ? ` ${tone.section}` : ''}`}>
+      <div className={`flex items-center gap-2 px-2 pt-1 pb-0.5 text-body font-semibold ${tone.title ?? 'text-pn'}`}>
         <GroupIcon weight="bold" aria-hidden="true" className={`shrink-0 ${tone.text}`} />
         {label}
         <span className={`font-normal ${SLOT_BADGE}`}>{count}</span>
@@ -258,8 +274,13 @@ export function ConnectionsPanel({
   );
   const inTone = { bar: 'border-warning', text: 'text-warning' };
   const outTone = { bar: 'border-accent', text: 'text-accent' };
-  // Related is a suggestion, not a link: a dashed bar in the success color.
-  const relatedTone = { bar: 'border-success border-dashed', text: 'text-success' };
+  // Related is a suggestion, not a link: a dashed bar and soft tint in the success color.
+  const relatedTone = {
+    bar: 'border-success border-dashed',
+    text: 'text-success',
+    section: 'rounded-e-lg bg-success/5 pb-0.5',
+    title: 'text-success',
+  };
   const hasIn = lists.from.length + lists.hidden > 0;
   const hasOut = lists.to.length + lists.missing.length > 0;
   const hasRelated = lists.related.length + lists.notRelated.length > 0;
@@ -283,7 +304,7 @@ export function ConnectionsPanel({
     >
       {group(lists.usedIn ? t('connections.usedIn') : t('connections.linkedFrom'), ArrowsIn, inTone, lists.from.length, hasIn && (
         <>
-          <ul>{lists.from.map(row)}</ul>
+          <ul>{lists.from.map((n) => row(n))}</ul>
           {lists.hidden > 0 && (
             <p className="flex items-center gap-2 px-2 py-1 text-small text-pn-muted">
               <LockSimple aria-hidden="true" className="shrink-0" />
@@ -295,11 +316,13 @@ export function ConnectionsPanel({
       {hasIn && hasOut && separator}
       {group(t('connections.linksTo'), ArrowsOut, outTone, lists.to.length + lists.missing.length, hasOut && (
         <ul>
-          {lists.to.map(row)}
+          {lists.to.map((n) => row(n, lists.suggestedTo.has(n.id)))}
           {lists.missing.map((name) => (
             <li key={name} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-body text-pn-muted">
               <FileDashed aria-hidden="true" className="shrink-0" />
-              <span className="truncate" dir="auto" title={name}>{name}</span>
+              <OverflowTip text={name} className="min-w-0 flex-1 flex">
+                <span className="truncate" dir="auto">{name}</span>
+              </OverflowTip>
               <span className="ms-auto shrink-0 text-small">{t('connections.missing')}</span>
             </li>
           ))}

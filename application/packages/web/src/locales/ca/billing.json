@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "Desbloqueja-ho tot per {{price}}",
     "ctaOpening": "S'està obrint la pàgina de pagament...",
     "ctaSignUp": "Registra't per desbloquejar-ho",
+    "localOnlyHint": "En millorar, l'app es connecta una vegada per registrar el teu compte i activar Pro. La sincronització continua desactivada.",
+    "localOnlyOffline": "Connecta't a internet per millorar el pla.",
     "features": {
       "folders": "Carpetes imbricades",
       "lock": "Bloqueig i PIN",

@@ -1,14 +1,17 @@
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmModal } from './ConfirmModal';
 import { formatFileSize } from './attachmentValidation';
 import { iconBookmark, iconFile, iconNote } from './icons';
-import type { SharedItem } from './useShareInbox';
+import { FIELD_CLASS, SettingsSegmented, TextField } from './ui';
+import { isSharedImage, type ShareApproval, type SharedItem } from './useShareInbox';
 
 /**
  * The question the Android app asks before it saves what other apps shared
  * into it. Any installed app can send a share with no step by the person, so
- * nothing is saved until they choose: Save all, Discard, or neither (the
- * window closed), which leaves the items for the next time the app opens.
+ * nothing is saved until they choose: Save (as a note or to Files for photos,
+ * Save all otherwise), Discard, or neither (the window closed), which leaves
+ * the items for the next time the app opens.
  * Spec: docs/internal/specs/share-into-app.md
  */
 /** Text from another app, with the direction controls that could make it
@@ -19,20 +22,71 @@ function stripBidiControls(text: string | undefined): string {
 
 export function ShareApprovalModal({ items, onChoice }: {
   items: SharedItem[];
-  onChoice: (choice: 'save' | 'discard' | 'later') => void;
+  onChoice: (choice: ShareApproval) => void;
 }) {
-  const { t } = useTranslation('importExport');
+  const { t } = useTranslation(['importExport', 'common', 'notes', 'shell']);
+  const allImages = items.length > 0 && items.every(isSharedImage);
+  const [mode, setMode] = useState<'note' | 'files'>('note');
+  const [title, setTitle] = useState('');
+  const [noteText, setNoteText] = useState('');
+  const decidedRef = useRef(false);
+
+  function decide(choice: ShareApproval) {
+    if (decidedRef.current) return;
+    decidedRef.current = true;
+    onChoice(choice);
+  }
+
   return (
     <ConfirmModal
-      title={t('shareSheet.title', { count: items.length })}
-      confirmLabel={t('shareSheet.saveAll')}
+      title={t('importExport:shareSheet.title', { count: items.length })}
+      confirmLabel={allImages ? t('common:actions.save') : t('importExport:shareSheet.saveAll')}
       variant="info"
-      cancelLabel={t('upload.discard')}
-      onConfirm={() => onChoice('save')}
-      onCancel={() => onChoice('discard')}
-      onClose={() => onChoice('later')}
+      cancelLabel={t('importExport:upload.discard')}
+      onConfirm={() =>
+        decide(
+          allImages && mode === 'note'
+            ? { action: 'save', asNote: { title: title.trim(), text: noteText.trim() } }
+            : 'save',
+        )}
+      onCancel={() => decide('discard')}
+      onClose={() => decide('later')}
     >
-      <p className="text-compact text-pn-muted mb-2">{t('shareSheet.line')}</p>
+      <p className="text-compact text-pn-muted mb-3">{t('importExport:shareSheet.line')}</p>
+      {allImages && (
+        <div className="space-y-2.5 mb-3">
+          <SettingsSegmented
+            value={mode}
+            onChange={setMode}
+            label={t('importExport:shareSheet.saveAs')}
+            className="w-full [&>button]:flex-1"
+            options={[
+              { value: 'note', label: t('notes:newMenu.note') },
+              { value: 'files', label: t('shell:tagsRail.files') },
+            ]}
+          />
+          {mode === 'note' && (
+            <div className="space-y-2">
+              <TextField
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={t('shell:shareInbox.titlePlaceholder')}
+                aria-label={t('shell:shareInbox.titlePlaceholder')}
+                maxLength={1000}
+                className="w-full"
+              />
+              <textarea
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder={t('shell:shareInbox.notePlaceholder')}
+                aria-label={t('shell:shareInbox.notePlaceholder')}
+                rows={2}
+                className={`w-full resize-none ${FIELD_CLASS}`}
+              />
+            </div>
+          )}
+        </div>
+      )}
       <ul className="max-h-60 overflow-y-auto divide-y divide-divider border-y border-divider">
         {items.map((item) => (
           <li key={item.id} className="flex items-center gap-2 py-1.5 text-compact text-pn min-w-0">

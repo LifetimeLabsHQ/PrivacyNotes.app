@@ -69,6 +69,11 @@
     "appLockHint": "Ortak cihaz mı? Ayarlar > Güvenlik'ten uygulama kilidini açın.",
     "unopenedWarn_other": "{{count}} notun bu cihazın açamadığı bir sunucu kopyası var. Çıkış yapmak buradaki kopyaları siler ve sağlam kopyalar yalnızca bunlar olabilir. Önce Ayarlar > ID & Sync bölümünden onları yeniden gönderin.",
     "unopenedKept_other": "{{count}} notun bu cihazın açamadığı bir sunucu kopyası var. Buradaki kopyalar çıkış yaptıktan sonra da kalır.",
+    "localOnlyTitle": "Bu cihazdaki her şey silinsin mi?",
+    "localOnlyBody": "Notlarınız yalnızca bu cihazda saklanıyor ve hiç eşitlenmedi. Çıkış yapmak onları bu cihazdan kalıcı olarak siler.",
+    "localOnlyCounts": "Bu cihazda: {{items}}.",
+    "localOnlyExportBackup": "Yedek dışa aktar",
+    "localOnlyDeleteConfirm": "Sil ve çıkış yap",
     "unopenedKept_one": "1 notun bu cihazın açamadığı bir sunucu kopyası var. Buradaki kopya çıkış yaptıktan sonra da kalır.",
     "unopenedWarn_one": "1 notun bu cihazın açamadığı bir sunucu kopyası var. Çıkış yapmak buradaki kopyayı siler ve sağlam kopya yalnızca bu olabilir. Önce Ayarlar > ID & Sync bölümünden onu yeniden gönderin."
   },
@@ -139,6 +144,7 @@
   "burnShare": {
     "offline": "Çevrimdışısınız. Yakma bağlantıları sunucuya gidip gelmeyi gerektirir. Yeniden çevrimiçi olduğunuzda tekrar deneyin.",
     "demo": "Yakma bağlantıları bir sunucuda saklanır, demo ise hiçbir sunucuya bağlanmaz. Gerçek yakma bağlantıları oluşturmak için kaydolun.",
+    "localOnly": "Yakma bağlantıları çevrimiçi bir hesap gerektirir. Yakma bağlantısı paylaşmak için Ayarlar > ID & Sync bölümünde eşitlemeyi açın.",
     "tooLarge": "Not, yakma bağlantısıyla paylaşılamayacak kadar büyük ({{size}}KB). En fazla {{max}}KB olabilir.",
     "storeFailed": "Burn note sunucuda saklanamadı.",
     "rateLimited": "Bu ağdan çok fazla yakma bağlantısı oluşturuldu. Daha sonra tekrar deneyin."

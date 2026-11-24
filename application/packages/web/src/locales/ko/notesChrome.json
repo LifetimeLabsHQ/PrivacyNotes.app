@@ -57,7 +57,12 @@
     "moreNotes": "외 {{count}}개",
     "appLockHint": "공유 기기인가요? 설정 > 보안에서 앱 잠금을 켜 주세요.",
     "unopenedWarn_other": "노트 {{count}}개에 이 기기에서 열 수 없는 서버 사본이 있어요. 로그아웃하면 여기 있는 사본이 삭제되는데, 그것이 유일하게 온전한 사본일 수 있어요. 먼저 설정 > ID & Sync에서 다시 보내세요.",
-    "unopenedKept_other": "노트 {{count}}개에 이 기기에서 열 수 없는 서버 사본이 있어요. 여기 있는 사본은 로그아웃한 뒤에도 남아요."
+    "unopenedKept_other": "노트 {{count}}개에 이 기기에서 열 수 없는 서버 사본이 있어요. 여기 있는 사본은 로그아웃한 뒤에도 남아요.",
+    "localOnlyTitle": "이 기기의 모든 내용을 삭제할까요?",
+    "localOnlyBody": "노트는 이 기기에만 저장되어 있고 한 번도 동기화되지 않았어요. 로그아웃하면 이 기기에서 영구적으로 삭제돼요.",
+    "localOnlyCounts": "이 기기에 있음: {{items}}.",
+    "localOnlyExportBackup": "백업 내보내기",
+    "localOnlyDeleteConfirm": "삭제하고 로그아웃"
   },
   "signOutUpload": {
     "uploading": "마지막 변경 사항을 업로드하는 중…",
@@ -122,6 +127,7 @@
   "burnShare": {
     "offline": "지금 오프라인이에요. burn 링크에는 서버 왕복이 필요해요. 다시 온라인이 되면 시도하세요.",
     "demo": "burn 링크는 서버에 저장되는데, 데모는 서버와 통신하지 않아요. 실제 burn 링크를 만들려면 가입하세요.",
+    "localOnly": "burn 링크에는 온라인 계정이 필요해요. burn 링크를 공유하려면 설정 > ID & Sync에서 동기화를 켜세요.",
     "tooLarge": "노트가 너무 커서 burn 링크로 공유할 수 없어요({{size}}KB). 최대 {{max}}KB예요.",
     "storeFailed": "서버에 burn note를 저장하지 못했어요.",
     "rateLimited": "이 인터넷 연결에서 burn 링크가 너무 많이 만들어졌어요. 나중에 다시 시도하세요."

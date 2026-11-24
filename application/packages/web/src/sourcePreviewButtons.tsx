@@ -15,7 +15,7 @@ import type { InsertMenuItem } from './ToolbarInsertMenu';
  *  not the window: the notes list takes part of the window. Here, not in
  *  SourcePreviewPane.tsx, so the pane loads on demand.
  *  Spec: docs/internal/plans/heading-folds-and-source-preview.md (Part 2),
- *  docs/internal/plans/side-by-side-notes.md (section 4) */
+ *  docs/internal/specs/side-by-side-notes.md (section 4) */
 const SOURCE_PREVIEW_MIN_WIDTH = 600;
 
 /** Whether this screen can ever show the preview beside the text. A phone

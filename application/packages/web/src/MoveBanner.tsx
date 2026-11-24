@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './auth';
 import { db } from './db';
@@ -130,7 +131,7 @@ export function MoveBanner({ onConflict }: { onConflict: (conflict: NoteConflict
         type="button"
         disabled={state === 'syncing'}
         onClick={() => void handleMove()}
-        className="shrink-0 rounded-lg bg-accent-fill hover:bg-accent-fill-hover text-white text-compact font-semibold px-3 py-1.5 transition disabled:opacity-60"
+        className={`shrink-0 rounded-lg ${PRIMARY_BTN_SKIN} text-compact font-semibold px-3 py-1.5 transition disabled:opacity-60`}
       >
         {state === 'syncing' ? t('moveBanner.syncing') : t('moveBanner.cta')}
       </button>

@@ -1,3 +1,10 @@
 "saved" = "Opgeslagen in PrivacyNotes";
 "failed" = "Opslaan in PrivacyNotes is mislukt";
 "tooLarge" = "Te groot. Maximaal {{limit}} MB per bestand.";
+"save" = "Opslaan";
+"cancel" = "Annuleren";
+"note" = "Notitie";
+"files" = "Bestanden";
+"titlePlaceholder" = "Titel (optioneel)";
+"notePlaceholder" = "Voeg een notitie toe...";
+"photoCount" = "{{count}} foto's";

@@ -1,3 +1,10 @@
 "saved" = "تم الحفظ في PrivacyNotes";
 "failed" = "تعذّر الحفظ في PrivacyNotes";
 "tooLarge" = "الملف كبير جدًا. الحد الأقصى {{limit}} ميغابايت لكل ملف.";
+"save" = "حفظ";
+"cancel" = "إلغاء";
+"note" = "ملاحظة";
+"files" = "الملفات";
+"titlePlaceholder" = "العنوان (اختياري)";
+"notePlaceholder" = "أضف ملاحظة...";
+"photoCount" = "الصور: {{count}}";

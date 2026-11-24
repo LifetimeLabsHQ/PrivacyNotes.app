@@ -482,7 +482,7 @@ export function ThemeBuilder({
             </button>
           ) : (
             <button type="button" onClick={() => onOpenUpgrade(code)} className={SETTINGS_BTN_PRIMARY}>
-              <IconUpgrade size={12} onFill />
+              <IconUpgrade size={12} />
               {t('appearance.custom.saveWithPro')}
             </button>
           )}

@@ -228,7 +228,7 @@
     "removeTitle": "Remove this passkey?",
     "removeBody": "You can no longer sign in with it. The passkey itself stays in your passkey app until you delete it there.",
     "retired": "Made before your phrase changed. Remove it and add it again.",
-    "noPrf": "This passkey app cannot protect your phrase, so the passkey was not added. Try your device's own passkeys, or another password manager.",
+    "noPrf": "This passkey app cannot make the key that protects your phrase, so the passkey was not added. Your phrase still signs you in. When your password manager offers to save the passkey, choose to save it on this device or a security key instead.",
     "tooMany": "You have {{count}} passkeys for signing in. Remove one to add another.",
     "failed": "The passkey could not be added. Check your connection and try again.",
     "appsOnly": "Add passkeys in your browser at use.privacynotes.app. Signing in with them in the apps comes later.",

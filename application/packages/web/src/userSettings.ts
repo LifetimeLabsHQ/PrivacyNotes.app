@@ -27,6 +27,7 @@ import { customThemesEqual, mergeCustomThemes, validateCustomThemes } from './cu
 import { calendarFeedsEqual, mergeCalendarFeeds, validateCalendarFeeds } from './calendarFeeds';
 import { formatBarSettingsEqual, mergeFormatBarSettings, validateFormatBarSetting } from './formatBar';
 import { dashboardSettingsEqual, mergeDashboardSettings, validateDashboardSetting } from './dashboard/dashboardLayout';
+import { mergePinnedTabs, pinnedTabsEqual, validatePinnedTabs } from './pinnedTabs';
 import { CREDENTIAL_FIELDS, defaultCalendarSettings, defaultCheckInSettings, defaultSettings, type CalendarSettings, type CheckInSettings, type UserSettings } from './userSettingsShape';
 import { isTime, type Alert } from './schedule';
 import { fromLockedRead, pickSealed, readableBase, readSealedSettings, removeSealedSettings, settingsSealOn, splitVersionHere, stripSealed, withPlaceholders, writeSealedSettings } from './settingsSeal';
@@ -70,7 +71,7 @@ import { jwtClaims } from './jwtClaims';
 
 // The settings shape and its defaults live in userSettingsShape.ts; callers
 // keep importing them from here.
-export { defaultSettings, toggleHiddenView, isShownInAll, withCredentialChanges, type CalendarSettings, type CheckInSettings, type ImageSwitch, type UserSettings } from './userSettingsShape';
+export { defaultSettings, toggleHiddenView, isShownInAll, withCredentialChanges, type CalendarSettings, type CheckInSettings, type ImageSwitch, type SpaceSaverLevel, type UserSettings } from './userSettingsShape';
 
 /** Merge a partial/legacy blob into a fully-populated settings object. */
 function hydrate(raw: unknown): UserSettings {
@@ -305,6 +306,9 @@ function hydrate(raw: unknown): UserSettings {
   if (obj.dashboard !== undefined) {
     base.dashboard = validateDashboardSetting(obj.dashboard);
   }
+  if (obj.pinnedTabs !== undefined) {
+    base.pinnedTabs = validatePinnedTabs(obj.pinnedTabs);
+  }
   if (typeof obj.tintNotes === 'boolean') {
     base.tintNotes = obj.tintNotes;
   }
@@ -323,6 +327,9 @@ function hydrate(raw: unknown): UserSettings {
   }
   if (obj.imageSpaceSaver === 'on' || obj.imageSpaceSaver === 'off') {
     base.imageSpaceSaver = obj.imageSpaceSaver;
+  }
+  if (obj.imageSpaceSaverLevel === 'standard' || obj.imageSpaceSaverLevel === 'small' || obj.imageSpaceSaverLevel === 'tiny') {
+    base.imageSpaceSaverLevel = obj.imageSpaceSaverLevel;
   }
   if (obj.imageStripMetadata === 'on' || obj.imageStripMetadata === 'off') {
     base.imageStripMetadata = obj.imageStripMetadata;
@@ -413,7 +420,7 @@ export function alertDefaults(s: Pick<UserSettings, 'calendar'>): { timed: Alert
  * every section lock on each device that pulled.
  * Spec: docs/internal/specs/section-lock.md
  */
-const NEWER_SCALARS = ['tintNotes', 'noteColorStyle', 'archivedInAll', 'includeSubfolders', 'sinkCheckedTasks', 'taskConfetti', 'agentFolder', 'typedSymbols', 'linkSuggestions', 'confirmTrash', 'confirmArchive', 'spaces', 'dateOrder', 'clock', 'weekStart', 'viewOrder', 'journalTitlePattern', 'calendar', 'checkIn', 'nestedNumbers', 'scopedListPrefs', 'dismissedSuggestions', 'protectedViews'] as const;
+const NEWER_SCALARS = ['tintNotes', 'noteColorStyle', 'archivedInAll', 'includeSubfolders', 'sinkCheckedTasks', 'taskConfetti', 'agentFolder', 'typedSymbols', 'linkSuggestions', 'confirmTrash', 'confirmArchive', 'spaces', 'dateOrder', 'clock', 'weekStart', 'viewOrder', 'journalTitlePattern', 'calendar', 'checkIn', 'nestedNumbers', 'scopedListPrefs', 'dismissedSuggestions', 'protectedViews', 'imageSpaceSaverLevel'] as const;
 
 /**
  * Whether the blob lacks a newer scalar this device holds at a value of its
@@ -805,7 +812,7 @@ const LEGACY_PIN_GROUP = [...PIN_GROUP, 'appLockEnabled'] as const;
  *  maximum, a flag that never goes back), never by the per-key base. */
 const OWN_RULE_KEYS = new Set<string>([
   'settingsRev', 'notesCreated', 'folders', 'foldersDeleted', 'itemStyles', 'deviceLabels', 'extensionKeys',
-  'customThemes', 'calendarFeeds', 'formatBar', 'dashboard', 'factors', 'customHabits', 'medications', 'trackerSettings',
+  'customThemes', 'calendarFeeds', 'formatBar', 'dashboard', 'pinnedTabs', 'factors', 'customHabits', 'medications', 'trackerSettings',
   'favoriteTags', 'dismissedAnnouncements', 'dismissedSuggestions', 'welcomeNoteSeeded', 'importHintDismissed',
   'milestonesSeen', 'firstSeenAt', 'ratingDone', 'importPromptDismissed', 'clipperHintDismissed', ...PIN_GROUP,
   ...DEVICE_SETTINGS, 'protectedViews',
@@ -2015,7 +2022,7 @@ function mergeTrackerSettings(
 }
 
 /** The fields `mergeAtEverySyncPoint` owns. */
-type EntryMerged = 'folders' | 'foldersDeleted' | 'itemStyles' | 'deviceLabels' | 'extensionKeys' | 'customThemes' | 'calendarFeeds' | 'formatBar' | 'dashboard' | 'factors' | 'customHabits';
+type EntryMerged = 'folders' | 'foldersDeleted' | 'itemStyles' | 'deviceLabels' | 'extensionKeys' | 'customThemes' | 'calendarFeeds' | 'formatBar' | 'dashboard' | 'pinnedTabs' | 'factors' | 'customHabits';
 
 /**
  * The folder tree, the folder and tag looks, the device labels, the custom
@@ -2045,6 +2052,7 @@ function mergeAtEverySyncPoint(
     calendarFeeds: mergeCalendarFeeds(local.calendarFeeds, remote.calendarFeeds),
     formatBar: mergeFormatBarSettings(local.formatBar, remote.formatBar),
     dashboard: mergeDashboardSettings(local.dashboard, remote.dashboard),
+    pinnedTabs: mergePinnedTabs(local.pinnedTabs, remote.pinnedTabs),
     factors: mergeTemplates<FactorDef>(local.factors, remote.factors, unstampedWinner),
     customHabits: mergeTemplates<CustomHabitDef>(local.customHabits, remote.customHabits, unstampedWinner),
   };
@@ -2394,6 +2402,7 @@ export async function syncUserSettings(
           !calendarFeedsEqual(pulled.calendarFeeds, remoteSettings.calendarFeeds) ||
           !formatBarSettingsEqual(pulled.formatBar, remoteSettings.formatBar) ||
           !dashboardSettingsEqual(pulled.dashboard, remoteSettings.dashboard) ||
+          !pinnedTabsEqual(pulled.pinnedTabs, remoteSettings.pinnedTabs) ||
           JSON.stringify(pulled.factors) !== JSON.stringify(remoteSettings.factors) ||
           JSON.stringify(pulled.customHabits) !== JSON.stringify(remoteSettings.customHabits);
         Object.assign(remoteSettings, pulled);

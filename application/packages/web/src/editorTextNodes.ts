@@ -2,6 +2,8 @@ import { Paragraph } from '@tiptap/extension-paragraph';
 import { Heading } from '@tiptap/extension-heading';
 import { HardBreak } from '@tiptap/extension-hard-break';
 import { Text } from '@tiptap/extension-text';
+import { Strike } from '@tiptap/extension-strike';
+import { OrderedList } from '@tiptap/extension-ordered-list';
 import { getHTMLFromFragment, mergeAttributes } from '@tiptap/core';
 import { Fragment, type Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { KEY_OS } from './shortcutMatch';
@@ -359,11 +361,74 @@ export const HeadingWithMarkdown = Heading.extend({
         serialize(state: any, node: any, parent: any, index: number) {
           if (serializeAlignedBlock(state, node, parent, index)) return;
           state.write(state.repeat('#', node.attrs.level) + ' ');
+          const contentStart = state.out.length;
           state.renderInline(node);
+          // CommonMark treats a trailing `#` run after space or tab (or
+          // filling the line after the opening `## `) as an optional closing
+          // sequence and drops it. Escaping the first `#` keeps it literal.
+          const content = state.out.slice(contentStart);
+          if (/(?:^|[ \t])#+[ \t]*$/.test(content)) {
+            state.out = state.out.slice(0, contentStart) + content.replace(/(^|[ \t])(#+[ \t]*)$/, '$1\\$2');
+          }
           state.closeBlock(node);
         },
         parse: {
           // Keep default markdown-it heading parsing.
+        },
+      },
+    };
+  },
+});
+
+/**
+ * Strike with `mixable: true` on its markdown serializer.
+ *
+ * tiptap-markdown omits `mixable: true` on strike, so prosemirror-markdown
+ * closes `~~` before any nested mark (bold, italic, link, highlight) and
+ * reopens it inside. When a space sits at that boundary the closing `~~`
+ * lands after the space, where GFM will not close a strike run, so the
+ * delimiters read back as literal text.
+ */
+export const StrikeWithMarkdown = Strike.extend({
+  addStorage() {
+    return {
+      markdown: {
+        serialize: { open: '~~', close: '~~', mixable: true, expelEnclosingWhitespace: true },
+        parse: {
+          // Handled by markdown-it.
+        },
+      },
+    };
+  },
+});
+
+/**
+ * Ordered list serializer that keeps a start of `0`.
+ *
+ * tiptap-markdown uses `node.attrs.start || 1`, which coerces `0` to `1`
+ * and silently renumbers zero-based lists on reopen. Everything else mirrors
+ * its serializer, including alternating `. ` and `) ` between adjacent lists.
+ */
+export const OrderedListWithMarkdown = OrderedList.extend({
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: any, node: ProseMirrorNode, parent: ProseMirrorNode, index: number) {
+          const start = typeof node.attrs['start'] === 'number' ? node.attrs['start'] : 1;
+          const maxW = String(start + node.childCount - 1).length;
+          const space = state.repeat(' ', maxW + 2);
+          let adjacent = 0;
+          while (index - adjacent > 0 && parent.child(index - adjacent - 1).type.name === node.type.name) {
+            adjacent++;
+          }
+          const separator = adjacent % 2 ? ') ' : '. ';
+          state.renderList(node, space, (i: number) => {
+            const nStr = String(start + i);
+            return state.repeat(' ', maxW - nStr.length) + nStr + separator;
+          });
+        },
+        parse: {
+          // Handled by markdown-it.
         },
       },
     };

@@ -172,7 +172,9 @@ const ROW_ENTRIES: SettingEntry[] = [
   importer('apple-notes', 'Apple Notes'),
   importer('bear', 'Bear'),
   importer('capacities', 'Capacities'),
+  importer('day-one', 'Day One'),
   importer('daylio', 'Daylio'),
+  importer('diaro', 'Diaro'),
   importer('diarium', 'Diarium'),
   importer('evernote', 'Evernote'),
   importer('excalidraw', 'Excalidraw'),
@@ -184,6 +186,7 @@ const ROW_ENTRIES: SettingEntry[] = [
   keyedImporter('markdown-folder', 'importExport:sourceLabel.markdownFolder'),
   importer('nextcloud-notes', 'Nextcloud Notes'),
   importer('notesnook', 'Notesnook'),
+  importer('notion', 'Notion'),
   importer('obsidian', 'Obsidian'),
   importer('obsidian-canvas', 'Obsidian Canvas'),
   importer('onenote', 'OneNote'),
@@ -192,6 +195,7 @@ const ROW_ENTRIES: SettingEntry[] = [
   importer('simplenote', 'Simplenote'),
   importer('siyuan', 'SiYuan'),
   importer('standard-notes', 'Standard Notes'),
+  importer('todoist', 'Todoist'),
   importer('typora', 'Typora'),
   importer('upnote', 'UpNote'),
   importer('zettlr', 'Zettlr'),
@@ -244,6 +248,7 @@ const ROW_ENTRIES: SettingEntry[] = [
   // Images, a tab of Storage since 2026-10-22
   { id: 'storage.images', section: 'storage', tab: 'images', label: 'notes:settings.imagesLabel', keywords: true },
   { id: 'images.spaceSaver', section: 'storage', tab: 'images', label: 'settings:images.spaceSaverTitle', keywords: true },
+  { id: 'images.compression', section: 'storage', tab: 'images', label: 'settings:images.compressionTitle', options: ['settings:images.level.standard', 'settings:images.level.small', 'settings:images.level.tiny'], keywords: true },
   { id: 'images.contactPhotos', section: 'storage', tab: 'images', label: 'settings:images.contactTitle' },
   { id: 'images.removeLocation', section: 'storage', tab: 'images', label: 'settings:images.removeLocationTitle', keywords: true },
 

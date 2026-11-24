@@ -207,7 +207,7 @@ fn write_launcher(launcher: &Path, text: &str) -> std::io::Result<()> {
 /// install, quoted the same way, and falls back to `command -v node`. With
 /// no recorded path it is the launcher from before, which never reads `$NODE`
 /// from the environment.
-/// Spec: docs/internal/plans/quick-note-694.md (section 3.1, Q7)
+/// Spec: docs/internal/specs/quick-note-694.md (section 3.1, Q7)
 #[cfg(not(windows))]
 fn launcher_text(stable: &Path, node: Option<&str>) -> String {
     sh_launcher(stable, node, "")

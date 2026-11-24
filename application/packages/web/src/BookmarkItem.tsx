@@ -202,12 +202,12 @@ export function BookmarkItem({
           {/* A fixed label keeps clipboard feedback from resizing the URL field. */}
           {t('common:actions.copy')}
         </Button>
-        <Button action="open" variant="accent" onClick={() => openExternal(savedUrl)} className={`shrink-0 ${wide ? '@max-[44rem]:flex-1' : '@max-[30rem]:flex-1'}`}>
+        <Button action="open" variant="accent" onClick={() => openExternal(savedUrl, { browser: true })} className={`shrink-0 ${wide ? '@max-[44rem]:flex-1' : '@max-[30rem]:flex-1'}`}>
           {t('shell:contacts.open')}
         </Button>
         {clip && savedUrl && (
           clip.job ? (
-            <Button variant="primary" icon={<Spinner size={15} className="text-white" />} disabled className={CLIP_BUTTON}>
+            <Button variant="primary" icon={<Spinner size={15} className="text-current" />} disabled className={CLIP_BUTTON}>
               {t('clipper.saving')}
             </Button>
           ) : clip.note ? (

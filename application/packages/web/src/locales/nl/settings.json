@@ -19,6 +19,7 @@
     "proUnlimited": "· onbeperkt veel apparaten",
     "earlySupporterThanks": "Early Supporter, bedankt dat je er als eerste bij was",
     "proThanks": "Je bent helemaal klaar. Bedankt voor je steun aan het project",
+    "freeLocalOnly": "Gratis plan",
     "freeLimit_one": "<strong>Gratis plan</strong>, tot {{count}} apparaat.",
     "freeLimit_other": "<strong>Gratis plan</strong>, tot {{count}} apparaten.",
     "freeUsage": "Je gebruikt er nu {{used}} van {{limit}}.",
@@ -89,7 +90,25 @@
   },
   "images": {
     "spaceSaverTitle": "Ruimtebespaarder",
-    "spaceSaverDesc": "Verkleind tot {{px}} pixels en opgeslagen als JPEG met {{quality}} % kwaliteit. Iets minder detail voor een fractie van de ruimte. Een GIF houdt zijn animatie, en bestanden in de Kluis blijven zoals ze zijn.",
+    "spaceSaverDesc": "Verkleint nieuwe afbeeldingen en slaat ze op als JPEG. Een GIF houdt zijn animatie, en bestanden in de Kluis blijven zoals ze zijn.",
+    "compressionTitle": "Compressie",
+    "level": {
+      "standard": "Standaard",
+      "small": "Klein",
+      "tiny": "Zeer klein"
+    },
+    "levelSpec": "Past in {{px}} pixels met {{quality}}% JPEG-kwaliteit.",
+    "levelDesc": {
+      "standard": "Scherp detail voor een fractie van de ruimte.",
+      "small": "Kleinere bestanden, terwijl foto's en schermafbeeldingen helder blijven.",
+      "tiny": "Kleinste formaat voor krappe opslag; fijne tekst kan minder scherp worden."
+    },
+    "previewSample": "Telefoonfoto van {{size}}",
+    "previewSavedAs": "Opgeslagen als",
+    "previewCompressed": "~{{size}} JPEG ({{px}} px, {{quality}}%)",
+    "previewOriginal": "{{size}} origineel",
+    "previewBarLabel": "Geschatte bestandsgrootte van de opgeslagen afbeelding vergeleken met het origineel",
+    "previewFits": "~{{count}} foto's / {{storage}}",
     "removeLocationTitle": "Locatiegegevens verwijderen",
     "removeLocationDesc": "De plek waar een afbeelding is gemaakt wordt verwijderd voordat hij wordt opgeslagen.",
     "contactTitle": "Kleine contactfoto's",
@@ -139,7 +158,8 @@
     "verifyNeverPushed_one": "{{count}} item hier heeft de server nooit bereikt",
     "verifyNeverPushed_other": "{{count}} items hier hebben de server nooit bereikt",
     "verifyRepairAction": "Alles opnieuw downloaden",
-    "verifyRepairQueued": "Bij de volgende synchronisatie wordt je hele kluis opnieuw gelezen. Er gaat niets verloren dat nog geüpload moet worden."
+    "verifyRepairQueued": "Bij de volgende synchronisatie wordt je hele kluis opnieuw gelezen. Er gaat niets verloren dat nog geüpload moet worden.",
+    "localOnlyOfflineError": "Je bent offline. Maak verbinding met internet om de synchronisatie aan te zetten."
   },
   "accountId": {
     "heading": "Account-ID",
@@ -469,6 +489,7 @@
     "blockedByStorage": "Je hebt een lopend opslagabonnement. Zet dat eerst stop bij Opslag in de instellingen voordat je je account kunt verwijderen.",
     "localLabel": "Lokale gegevens verwijderen",
     "localDesc": "Wist notities, afbeeldingen en gegevens uit de cache van dit apparaat. Dit verwijdert je account niet, het ruimt alleen deze browser op.",
+    "localDescLocalOnly": "Wist alle notities, afbeeldingen en bestanden van dit apparaat. Er staat niets in de cloud.",
     "localRequired": "(verplicht bij het verwijderen van je account)",
     "localUnsynced_one": "{{items}} op dit apparaat is niet gesynchroniseerd en gaat definitief verloren als je de lokale gegevens verwijdert.",
     "localUnsynced_other": "{{items}} op dit apparaat zijn niet gesynchroniseerd en gaan definitief verloren als je de lokale gegevens verwijdert.",
@@ -508,6 +529,8 @@
     "updateRequiredAria": "Update vereist, synchronisatie gepauzeerd",
     "paused": "Synchronisatie uit",
     "pausedTooltip": "De synchronisatie staat uit op dit apparaat. Je notities blijven hier tot je die aanzet.",
+    "localOnly": "Alleen lokaal",
+    "localOnlyAria": "Alleen lokaal. Je notities blijven op dit apparaat",
     "wifiHold": "Wacht op wifi",
     "wifiHoldTooltip": "Bestanden gaan omhoog zodra er wifi is. Notities blijven synchroniseren.",
     "notBackedUp": "Geen back-up",
@@ -575,7 +598,27 @@
     "passPushFailed_one": "{{count}} mislukt",
     "passPushFailed_other": "{{count}} mislukt",
     "passHalted_one": "gestopt, {{count}} wacht",
-    "passHalted_other": "gestopt, {{count}} wachten"
+    "passHalted_other": "gestopt, {{count}} wachten",
+    "localOnlyBody": "Je notities blijven versleuteld op dit apparaat en worden niet met onze servers gesynchroniseerd.",
+    "localOnlyNotes_other": "{{count}} notities op dit apparaat",
+    "localOnlyBackupHint": "Er wordt niets met de cloud gesynchroniseerd. Stel automatische back-ups in om een veilige kopie op een andere schijf of in een andere map te bewaren.",
+    "localOnlySetUpBackups": "Automatische back-ups instellen",
+    "localOnlyTurnOnSync": "Synchronisatie aanzetten",
+    "localOnlyTurningOn": "Synchronisatie aanzetten...",
+    "localOnlyAccountIdHint": "Nog niet geregistreerd op onze servers.",
+    "localOnlyNotes_one": "{{count}} notitie op dit apparaat"
+  },
+  "localOnlyNotice": {
+    "body": "{{feature}}: zet de synchronisatie aan in Instellingen > ID & Sync om deze online functie te gebruiken.",
+    "cta": "Ga naar ID & Sync",
+    "features": {
+      "multiDevice": "Beheer van meerdere apparaten",
+      "keyCustody": "Sleutelbeheer in de cloud",
+      "cloudStorage": "Cloudopslag",
+      "twoFactorPasskeys": "Aanmelden in twee stappen en passkeys",
+      "phraseChange": "Je herstelzin wijzigen",
+      "burnShare": "Burn-links"
+    }
   },
   "language": {
     "reportMistake": "Vertaalfout melden",

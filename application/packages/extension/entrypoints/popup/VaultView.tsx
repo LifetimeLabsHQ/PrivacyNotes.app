@@ -32,7 +32,7 @@ import { SectionEyebrow, SETTINGS_HELP } from '@web/settingsUI';
 import { ProMark } from '@web/proMark';
 import type { ContextMenuItem } from '@web/ContextMenu';
 import { forgetLocal, type Connection } from '../../src/connection';
-import { allEntries, dismissNotSaved, isUnlocked, lockLogins, pull, pullInFlight, ROWS_KEY, SESSION_KEY, shortcutUrl, unlock } from '../../src/logins';
+import { allEntries, dismissNotSaved, isUnlocked, lockLogins, pull, pullInFlight, ROWS_KEY, SESSION_KEY, shortcutUrl, unlock, type OrganizerData } from '../../src/logins';
 import { biometricReady, unlockWithBiometric } from '../../src/biometric';
 import { copyAndClear, copyPlain } from '../../src/copy';
 import { CLEAR_AFTER_MS } from '../../src/clipboard';
@@ -57,6 +57,8 @@ export interface Vault {
   /** null until the session storage was read. */
   unlocked: boolean | null;
   entries: CopyEntry[];
+  /** Synced folders and unlocked tags from the single organizer copy row. */
+  organizer: OrganizerData | null;
   pro: boolean;
   /** The copy was read at least once since the unlock. */
   loaded: boolean;
@@ -73,7 +75,7 @@ export interface Vault {
  *  background) and with the rows a pull writes. */
 export function useVault(enabled: boolean): Vault {
   const [unlocked, setUnlocked] = useState<boolean | null>(null);
-  const [data, setData] = useState<{ entries: CopyEntry[]; pro: boolean; notSaved?: NotSavedEdit[] } | null>(null);
+  const [data, setData] = useState<{ entries: CopyEntry[]; organizer: OrganizerData | null; pro: boolean; notSaved?: NotSavedEdit[] } | null>(null);
   const [pulling, setPulling] = useState(false);
 
   const load = useCallback(async () => {
@@ -121,6 +123,7 @@ export function useVault(enabled: boolean): Vault {
   return {
     unlocked,
     entries: data?.entries ?? [],
+    organizer: data?.organizer ?? null,
     pro: data?.pro ?? false,
     loaded: data !== null,
     pulling: pulling || pullInFlight(),

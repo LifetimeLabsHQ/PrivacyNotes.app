@@ -6,7 +6,7 @@ import { LoadingScreen } from './LoadingScreen';
 import { LockScreen } from './LockScreen';
 import { OAuthRetryScreen } from './OAuthRetryScreen';
 import { VersionUpdateToast } from './VersionUpdateToast';
-import { DesktopUpdater } from './DesktopUpdater';
+import { DesktopUpdater, releaseDownloadedUpdate } from './DesktopUpdater';
 import { AndroidUpdateToast } from './AndroidUpdateToast';
 import { StoreUpdateToast } from './StoreUpdateToast';
 import {
@@ -35,12 +35,14 @@ import { removedWhileLocked, wipeRemovedWhileLocked } from './lockRemovalCheck';
 import { loadLocalSettings, saveLocalSettings } from './userSettings';
 import { isTrustedDevice } from './trustStorage';
 import { isDemoMode } from './demo';
+import { hasLocalOnlyVault, isLocalOnly } from './localOnly';
+import { reopenDb } from './db';
 import { detectPlatform, isOpenLinkModifier } from './devices';
 import { isApexHost, usesOfficialServer } from './hosts';
 import { isTouchPointer } from './useIsMobile';
 import { readLinkModifier } from './theme';
-import { isComputerBrowser, openShortcutInApp, peekPendingShortcut } from './noteShortcut';
-import { isAppRelativeNewWindowLink, pluginOpensThisApp } from './openExternal';
+import { isComputerBrowser, peekPendingShortcut } from './noteShortcut';
+import { anchorOpensInDefaultBrowser, isAppRelativeNewWindowLink, isEditableAnchor, openExternal, pluginOpensThisApp } from './openExternal';
 import { localeFromPath } from './localeRoutes';
 import { setLanguage } from './languages';
 import { applyMarketingSeo } from './seo';
@@ -203,46 +205,17 @@ export default function App() {
       // still cancelled: the opener plugin's own script opens every
       // uncancelled `target="_blank"` click, so the link opened twice
       // (GitHub #701).
-      if (!isTouchPointer() && anchor?.closest('[contenteditable="true"]')) {
+      if (!isTouchPointer() && anchor && isEditableAnchor(anchor)) {
         e.preventDefault();
         return;
       }
       e.preventDefault();
       // "Open links with Cmd-click" covers a read-only note too (GitHub #633).
       if (readLinkModifier() && !isTouchPointer() && !isOpenLinkModifier(e) && anchor?.closest('.ProseMirror')) return;
-      // A shortcut to an item of this vault opens in place.
-      // Spec: docs/internal/specs/note-shortcuts.md (5.4)
-      if (openShortcutInApp(href)) return;
-      // iOS presents web links in an in-app SFSafariViewController sheet
-      // ('inAppBrowser' is built into the opener plugin) instead of
-      // switching to the Safari app - the same keep-the-user-in-app rule
-      // App Review applied to sign-in (guideline 4, 2026-08-22), and the
-      // API their letter suggests for web content. mailto: cannot render
-      // in a browser sheet and keeps the plain path. Android/desktop keep
-      // the system browser.
-      const openWith =
-        detectPlatform() === 'ios' && /^https?:/i.test(href)
-          ? ('inAppBrowser' as const)
-          : undefined;
-      void import('@tauri-apps/plugin-opener').then(async ({ openUrl }) => {
-        try {
-          await openUrl(href, openWith);
-        } catch (err) {
-          // Never let a link do nothing. `with` is part of the opener's ACL
-          // check - a scope that does not grant an explicit application
-          // rejects with ForbiddenUrl - and this call had no catch when the
-          // sheet first shipped, so a capability gap silently killed EVERY
-          // external link in the app (2026-08-26). Retry without the sheet:
-          // the system browser is a worse experience than the sheet and a
-          // far better one than a dead tap.
-          if (openWith) {
-            console.warn('[links] in-app sheet refused, using the browser', err);
-            await openUrl(href);
-            return;
-          }
-          console.error('[links] could not open', href, err);
-        }
-      });
+      // Delegate to openExternal so shortcut handling and the iOS split
+      // (default browser for user content, in-app SFSafariViewController sheet
+      // for Settings/legal/help/app chrome) live in one place (GitHub #898).
+      openExternal(href, { browser: anchor ? anchorOpensInDefaultBrowser(anchor) : false });
     };
     document.addEventListener('click', onClick, true);
     return () => document.removeEventListener('click', onClick, true);
@@ -382,7 +355,10 @@ export default function App() {
         syncRuns: syncPassRunning,
         cancelled,
         onQuiet: () => setLockReloading(true),
-        keep: () => import('./notesView/useReminders').then((m) => m.keepLockedPlan()),
+        keep: async () => {
+          await releaseDownloadedUpdate();
+          await import('./notesView/useReminders').then((m) => m.keepLockedPlan());
+        },
         reload: () => window.location.reload(),
       }).then((reloaded) => {
         // Offline by now, or out of the lock: the lock screen, as a curtain.
@@ -621,12 +597,14 @@ export default function App() {
     // and only the server can say so: this device has no record of it yet.
     // A cold start asks the server too, once the offline test says no: an
     // adopted device whose record went missing still takes its current phrase.
+    const localOnly = await hasLocalOnlyVault();
+    const onlineCheck = !localOnly;
     const belongsHere =
       auth.status === 'authenticated'
         ? phraseMatches(phrase, auth.phrase)
         : auth.status === 'phrase_replaced' && auth.pubkey !== null
-          ? await phraseSignsFor(phrase, auth.pubkey, true)
-          : await phraseOwnsThisDevice(phrase, true);
+          ? await phraseSignsFor(phrase, auth.pubkey, onlineCheck)
+          : await phraseOwnsThisDevice(phrase, onlineCheck);
     if (!belongsHere) return false;
     markAppUnlocked();
     unlockRecoverRef.current = recover;
@@ -662,9 +640,26 @@ export default function App() {
       // Not awaited and not surfaced: the user is in, and sync owns its
       // own error reporting from here. signInWithPhrase skips the phrase
       // persist while the lock is armed, so this cannot write the phrase
-      // back to disk and undo the lock.
-      void signInWithPhrase(phrase, isTrustedDevice(), false, undefined, false);
+      // back to disk and undo the lock. Local-only vaults stay offline.
+      if (!localOnly && !isLocalOnly()) {
+        void signInWithPhrase(phrase, isTrustedDevice(), false, undefined, false);
+      }
       return true;
+    }
+    if (localOnly || isLocalOnly()) {
+      // Never fall through to network sign-in for a local-only vault: a
+      // transient IndexedDB hiccup must not silently register/graduate the
+      // vault or strand an offline user on a network error screen. Retry
+      // once after reopening Dexie.
+      try { await reopenDb(); } catch { /* ignore */ }
+      if (await unlockLocally(phrase)) {
+        if (recover) await applyPinRecovery(phrase);
+        unlockPhraseRef.current = null;
+        setUnlockSignIn('idle');
+        setLocked(false);
+        return true;
+      }
+      return false;
     }
     // Nothing local to render (a wiped or brand-new device), so the
     // network sign-in is the only door, exactly as before.

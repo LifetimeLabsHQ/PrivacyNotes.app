@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { PRIMARY_BTN_SKIN } from '../settingsUI';
 import { useTranslation } from 'react-i18next';
 import { clearPinFailures, getPinLockoutState, holdPinSurface, markPinUnlocked, pinCredentialStamp, pinIsPasscode, recordPinFailure, shouldPromptForPin, verifyPin } from '../pin';
 import type { PinInputHandle } from '../PinInput';
@@ -184,7 +185,7 @@ function InlinePinGate({
         <button
           onClick={() => void submit(value)}
           disabled={!secretReady(kind, value) || disabled}
-          className="flex-1 rounded-md bg-accent-fill text-white hover:bg-accent-fill-hover px-3 py-2 text-body font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-3 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed`}
         >
           {busy ? t('security:lockScreen.checking') : t('security:lockScreen.unlock')}
         </button>

@@ -12,3 +12,7 @@ export const REOPEN_NOTE_KEY = credentialKey('privacynotes.lockReopenNote');
 
 /** The times-only reminder plan (`keepLockedPlan` in notesView/useReminders.tsx). */
 export const LOCKED_REMINDERS_KEY = credentialKey('privacynotes.lockReminders');
+
+/** An undismissed reminder toast kept across lock/unlock: key, item id and
+ *  fire time only, never a title or body (GitHub #895). */
+export const SHOWN_REMINDER_KEY = credentialKey('privacynotes.lockShownReminder');

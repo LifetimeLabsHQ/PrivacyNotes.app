@@ -42,7 +42,8 @@
     "extracted": "添付ファイルを展開中… {{done}} / {{total}}",
     "parsed": "解析中… {{done}} / {{total}}",
     "importedJournalEntries_other": "{{count}}件のエントリーを、それぞれ書かれた日の日付でジャーナルの記録として読み込みました。",
-    "foundPhotos_other": "読み込む写真が{{count}}枚見つかりました。"
+    "foundPhotos_other": "読み込む写真が{{count}}枚見つかりました。",
+    "backupUseRestore": "これはPrivacyNotesのバックアップです。ノートがIDで照合され、保管庫のアイテムが保管庫に残るように、設定 > バックアップ > 復元 > 完全バックアップ(.zip)から復元してください。"
   },
   "upnote": {
     "perNoteMarkdownWarning": "これはUpNoteのノート単位のMarkdown書き出しです。テキスト、リスト、表、コード、数式、リンク、画像、添付ファイルは保持されますが、UpNoteは書き出す前にコールアウト、文字色、配置、下付き・上付き文字を平らにし、ノートブック、ピン留め、元の日付も含めません。スマートフォンでは「Export to HTML」でその書式が保たれます。コンピューターでは Settings > Backup ですべてが保たれます。",
@@ -503,5 +504,55 @@
     "queries_other": "{{count}}個のクエリを省きました。クエリはCapacitiesの保存された検索で、それ自体のテキストを持ちません。",
     "collections_other": "{{count}}個のコレクションのリストを省きました。中のオブジェクトはコレクションなしで読み込まれます。",
     "deadLinks_other": "{{count}}件のリンクは、ゴミ箱にあるものなど、書き出しデータにないオブジェクトを指しているため、リンクの文字だけが残ります。"
+  },
+  "dayOne": {
+    "reading": "Day Oneの書き出しデータを読み取り中…",
+    "notDayOne": "これはDay OneのJSON書き出しデータではないようです。Day OneでジャーナルをJSON（.zipまたは.json）として書き出し、そのファイルを選んでください。",
+    "noJson": "このzipにはジャーナルの.jsonファイルが見つかりません。Day OneからジャーナルをJSONとして書き出し、その.zipをここにドロップしてください。",
+    "noEntries": "このDay Oneの書き出しデータにはエントリーが見つかりません。",
+    "journalsAsFolders_other": "{{count}}個のジャーナルをフォルダとして作り直しました。",
+    "foundFiles_other": "読み込む音声、動画、またはPDFの添付ファイルが{{count}}件見つかりました。",
+    "entryLinks_other": "Day Oneのエントリーへの{{count}}件のリンクをノートリンクに変換しました。",
+    "untitled_other": "見出しのない{{count}}件のエントリーに、日付からタイトルを付けました。",
+    "missingAttachments_other": "エントリーから参照されている{{count}}件の写真または添付ファイルがzipに含まれていませんでした。それらも一緒に読み込むには、メディアを含めてもう一度書き出してください。",
+    "noAttachmentsInJson_other": "{{count}}件の写真または添付ファイルが参照されていますが、単体の.jsonにはメディアが含まれません。それらも一緒に読み込むには、完全な.zipの書き出しデータをドロップしてください。",
+    "skipped_other": "読み取れる日付または内容がない{{count}}件のエントリーをスキップしました。",
+    "brokenLinks_other": "Day Oneのエントリーへの{{count}}件のリンクは、この書き出しデータの外を指しているため、文字だけを残しました。"
+  },
+  "todoist": {
+    "reading": "Todoistの書き出しデータを読み取り中…",
+    "readingProject": "プロジェクトを読み取り中… {{current}} / {{total}}",
+    "notTodoist": "これはTodoistの書き出しデータではないようです。Todoistで Settings > Backups からバックアップの.zipをダウンロードするか、プロジェクトのメニューからCSVとして書き出してください。",
+    "noCsv": "このzipにはプロジェクトの.csvファイルが見つかりません。Todoistのバックアップ.zip、または単一のプロジェクト.csvを選んでください。",
+    "noTasks": "このTodoistの書き出しデータにはタスクもノートも見つかりません。",
+    "untitledProject": "Todoistプロジェクト",
+    "dueValue": "期限: {{value}}",
+    "deadlineValue": "締切: {{value}}",
+    "commentLabel": "コメント",
+    "importedProjects_other": "{{count}}個のプロジェクトをタスクリストとして読み込みました（{{tasks}}件のタスク）。",
+    "sections_other": "{{count}}個のセクションを見出しとして保持しました。",
+    "comments_other": "{{count}}件のコメントを保持しました。",
+    "emptyProjects_other": "タスクのない空の{{count}}個のプロジェクトをスキップしました。",
+    "reminders_other": "{{count}}件のタスクにTodoistのリマインダーがありました。タスクリストの各行に対するリマインダーは引き継がれません。"
+  },
+  "notion": {
+    "notNotion": "このzipにはMarkdownページが見つかりません。Notionで Settings > General > Export > Workspace content（またはページのメニュー > More > Export）を選び、「Markdown & CSV」を選んでから、その.zipをここにドロップしてください。",
+    "subpageFolders_other": "{{count}}個のサブページグループをフォルダとして作り直しました。",
+    "callouts_other": "{{count}}個のNotionのコールアウトをコールアウトブロックに変換しました。",
+    "databases_other": "{{count}}個のデータベースCSVの表をスキップしました。各行のページは、それぞれのフォルダ内のノートとして読み込まれました。",
+    "deadLinks_other": "{{count}}件のリンクは、書き出しデータにないページを指しているため、文字だけを残しました。"
+  },
+  "diaro": {
+    "reading": "Diaroのバックアップを読み取り中…",
+    "notDiaro": "これはDiaroのバックアップではありません。Diaroで Settings > Data > Backup & restore を選び、暗号化していないバックアップを作成して、.zipまたはDiaroBackup.xmlをここにドロップしてください。",
+    "noXml": "この.zipにはDiaroBackup.xmlファイルが含まれていません。Diaroで Settings > Data > Backup & restore を選び、暗号化していないバックアップを作成して、その.zipをここにドロップしてください。",
+    "encrypted": "このDiaroのバックアップは暗号化されている（DiaroBackup.denc）ため、ここでは読み取れません。Diaroで Settings > Data > Backup & restore を開き、+ をタップして「Encrypt entries in backup file」のチェックを外したまま作成し、新しい.zipをここにドロップしてください。",
+    "tooLarge": "このDiaro XMLファイルは大きすぎて読み取れません。",
+    "noEntries": "このDiaroのバックアップにはエントリーがありません。",
+    "rebuiltFolders_other": "{{count}}個のDiaroのフォルダをフォルダとして作り直しました。",
+    "foundFiles_other": "読み込む添付ファイルが{{count}}件見つかりました。",
+    "missingAttachments_other": "エントリーから参照されている{{count}}件の写真または添付ファイルがバックアップに含まれていなかったため、スキップしました。それらも一緒に読み込むには、「Do not backup attachments」のチェックを外してバックアップを作り直してください。",
+    "noAttachmentsInXml_other": "{{count}}件の写真または添付ファイルは読み込まれませんでした。単体のDiaroBackup.xmlにはメディアが含まれません。それらも一緒に読み込むには、完全なバックアップの.zipをドロップしてください。",
+    "skipped_other": "日付を読み取れなかった{{count}}件のエントリーをスキップしました。"
   }
 }

@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentProps, ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -12,10 +12,14 @@ import type { ImporterEntry, ParsedImport, ImportedNote, RestoreCounts } from '.
 import { useAuth } from '../auth';
 import { recordAdminEvent, type ImportSource } from '../adminEvents';
 import type { LocalNote } from '../db';
-import { missingItemsLabel } from '../export';
+import { BackupWrongKeyError, missingItemsLabel } from '../export';
+import { isLocalOnly } from '../localOnly';
+import { extractPhraseFromScan } from '../qrSignIn';
+import { QrScannerModal } from '../QrScannerModal';
+import { useSecretOnScreen } from '../privacyScreen';
 import type { FolderDef } from '../folders';
 import { destinationGroups, existingImportFolder, type ImportDestination, type ImportTarget } from './destination';
-import { Archive, ArrowCounterClockwise, ClockCounterClockwise, Heartbeat, BookmarkSimple, BookOpenText, BracketsCurly, CalendarDots, CalendarPlus, Check, CircleNotch, Download, FileHtml, FileText, FileZip, Globe, Key, Lock, LockOpen, Note, Upload, AddressBook, NEW_GLYPHS, EXPORT_GLYPHS } from '../icons';
+import { Archive, ArrowCounterClockwise, ClockCounterClockwise, Heartbeat, BookmarkSimple, BookOpenText, BracketsCurly, CalendarDots, CalendarPlus, Check, CircleNotch, Download, FileHtml, FileText, FileZip, Globe, Key, Lock, LockOpen, Note, Scan, Upload, AddressBook, NEW_GLYPHS, EXPORT_GLYPHS, PILLAR_GLYPHS } from '../icons';
 import { goesToCalendarFile } from '../schedule';
 import { fetchQuotaUsage, recalculateQuota } from '../devices';
 import { estimateNoteStoredBytes, estimateBlobBytes } from '../notesViewUtils';
@@ -29,7 +33,7 @@ import { useEscapeToClose } from '../useEscapeToClose';
 import { perFileLimit } from '../attachmentValidation';
 import { contactPhotoOptions, processImage } from '../imageProcessing';
 import { SETTINGS_BTN, SETTINGS_HELP, SectionEyebrow, SettingsCallout, SettingsTabStrip, StatTile, settingsTabClass, ROW_TITLE, SETTINGS_CARD as CARD, SETTINGS_CARD_GRID as CARD_GRID, SETTINGS_CARD_REST as CARD_REST, SettingsCardIcon as RowIcon } from '../settingsUI';
-import { Button, Callout, Checkbox, ListSearchInput, Modal, Select, Spinner, TextField } from '../ui';
+import { Button, Callout, Checkbox, FIELD_CLASS, ListSearchInput, Modal, Select, Spinner, TextField } from '../ui';
 import { calendarFeedUrl, downloadCalendarFeed } from './calendarFeed';
 import { ClipError } from '../clipDownload';
 import { sessionTokenOf } from '../sessionToken';
@@ -178,6 +182,7 @@ export function ImportModal({
   onImported,
   section = 'transfer',
   initialTab,
+  initialRestoreFile,
   notes,
   onExportAllMdZip,
   onExportAllHtmlZip,
@@ -213,6 +218,9 @@ export function ImportModal({
    *  Backup (Manual, Automatic, Restore). */
   section?: 'transfer' | 'backup';
   initialTab?: ImportTab;
+  /** A full backup .zip handed in from another surface (e.g. Files upload):
+   *  runs directly through the normal Backup > Restore parse and preview flow. */
+  initialRestoreFile?: File;
   notes: LocalNote[];
   onExportAllMdZip: (ns: LocalNote[]) => void;
   onExportAllHtmlZip: (ns: LocalNote[]) => void;
@@ -227,11 +235,11 @@ export function ImportModal({
   onExportDrawings?: (ns: LocalNote[]) => void;
   /** Only the notes, as Markdown files in one .zip (#682). */
   onExportNotesMdZip: (ns: LocalNote[]) => void;
-  onImportEncrypted: (file: File) => Promise<RestoreCounts & { imported: number }>;
+  onImportEncrypted: (file: File, foreignPhrase?: string) => Promise<RestoreCounts & { imported: number }>;
   onExportEncryptedZip: (ns: LocalNote[]) => void;
   /** Decrypts a .pnbackupz into the plain full-backup zip; the modal
    *  then runs the normal zip restore flow on the result. */
-  decryptFullBackup: (file: File) => Promise<File>;
+  decryptFullBackup: (file: File, foreignPhrase?: string) => Promise<File>;
   /** Called after restoreBlobs writes images/attachments to IndexedDB.
    *  Parent should re-trigger processPendingUploads so blobs reach Supabase. */
   onBlobsRestored?: () => void;
@@ -272,6 +280,7 @@ export function ImportModal({
   type Phase =
     | { kind: 'pick' }
     | { kind: 'parsing'; importer: ImporterEntry; status: string }
+    | { kind: 'foreignPhrase'; importer: ImporterEntry; file: File; format: 'pnbackupz' | 'pnbackup' }
     | { kind: 'preview'; importer: ImporterEntry; parsed: ParsedImport; file: { name: string; size: number } }
     | { kind: 'applying'; importer: ImporterEntry }
     | { kind: 'error'; importer: ImporterEntry; message: string; detail?: string };
@@ -287,6 +296,7 @@ export function ImportModal({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   /** Keep the raw file around so restoreBlobs can re-read it after applyImport. */
   const selectedFileRef = useRef<File | null>(null);
+  const startedInitialRestore = useRef(false);
   const [activeImporter, setActiveImporter] = useState<ImporterEntry | null>(null);
   const [autoTag, setAutoTag] = useState(true);
   // With Work open, an import goes into a new Work folder: an unfiled item is
@@ -336,6 +346,70 @@ export function ImportModal({
     await runParseFlow(activeImporter, file);
   }
 
+  async function handleImportEncryptedFile(file: File) {
+    // A .pnbackupz is the full-backup zip sealed under
+    // the phrase key: decrypt, then run the NORMAL zip
+    // restore flow, preview and blob restore included.
+    // A wrong-key failure opens the inline foreign-phrase
+    // prompt so backups from another device or local-only
+    // vault can be unlocked without switching accounts.
+    if (file.name.toLowerCase().endsWith('.pnbackupz')) {
+      const imp = IMPORTERS.find((i) => i.restore);
+      if (!imp) return;
+      setPhase({ kind: 'parsing', importer: imp, status: t('status.decryptingBackup') });
+      try {
+        const zipFile = await decryptFullBackup(file);
+        await runParseFlow(imp, zipFile);
+      } catch (err) {
+        if (err instanceof BackupWrongKeyError) {
+          setPhase({ kind: 'foreignPhrase', importer: imp, file, format: 'pnbackupz' });
+          return;
+        }
+        setPhase({
+          kind: 'error',
+          importer: imp,
+          message: err instanceof Error ? err.message : t('errors.decryptionFailed'),
+        });
+      }
+      return;
+    }
+    const imp = encryptedBackupImporter();
+    setPhase({ kind: 'parsing', importer: imp, status: t('status.decryptingBackup') });
+    try {
+      const counts = await onImportEncrypted(file);
+      onImported(counts.imported, undefined, { updated: counts.updated, unchanged: counts.unchanged });
+      onClose();
+    } catch (err) {
+      if (err instanceof BackupWrongKeyError) {
+        setPhase({ kind: 'foreignPhrase', importer: imp, file, format: 'pnbackup' });
+        return;
+      }
+      setPhase({
+        kind: 'error',
+        importer: imp,
+        message: err instanceof Error ? err.message : t('errors.decryptionFailed'),
+      });
+    }
+  }
+
+  useEffect(() => {
+    if (!initialRestoreFile || startedInitialRestore.current) return;
+    // Wait on the calm RestorePickPhase callout until sync opens the gate,
+    // then start automatically without dropping the handed-in file.
+    if (restoreGate !== 'open') return;
+    startedInitialRestore.current = true;
+    const lower = initialRestoreFile.name.toLowerCase();
+    if (lower.endsWith('.pnbackup') || lower.endsWith('.pnbackupz')) {
+      void handleImportEncryptedFile(initialRestoreFile);
+      return;
+    }
+    const imp = IMPORTERS.find((i) => i.restore);
+    if (!imp) return;
+    void runParseFlow(imp, initialRestoreFile);
+    // Intentionally fires once for the initial file handed in on mount once the restore gate opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialRestoreFile, restoreGate]);
+
   /** Parse one file through one importer: progress, quota preflight,
    *  oversize warnings, preview. The picker enters here with the chosen
    *  file; the .pnbackupz restore enters with the DECRYPTED zip, so the
@@ -372,7 +446,10 @@ export function ImportModal({
       const photos = await sampleContactPhotos(parsed);
       setPhotoEstimate(photos ? { ...photos, available: null, fits: true } : null);
       setImportPhotos(true);
-      try {
+      if (isLocalOnly()) {
+        // Local-only vaults hold no server quota and never contact the backend.
+        setQuotaCheck(null);
+      } else try {
         // Recalculate before reading: the counter can trail a delete the
         // user just made, promising space the next recalc takes back.
         // Best-effort - a failed recalc still leaves a usable read.
@@ -738,37 +815,41 @@ export function ImportModal({
                 <RestorePickPhase
                   gate={restoreGate}
                   onPickRestore={handlePickImporter}
-                  onImportEncrypted={async (file) => {
-                    // A .pnbackupz is the full-backup zip sealed under
-                    // the phrase key: decrypt, then run the NORMAL zip
-                    // restore flow, preview and blob restore included.
-                    if (file.name.toLowerCase().endsWith('.pnbackupz')) {
-                      const imp = IMPORTERS.find((i) => i.restore);
-                      if (!imp) return;
-                      setPhase({ kind: 'parsing', importer: imp, status: t('status.decryptingBackup') });
+                  onImportEncrypted={(file) => void handleImportEncryptedFile(file)}
+                />
+              )}
+              {phase.kind === 'foreignPhrase' && (
+                <ForeignPhrasePhase
+                  onBack={handleBackToPick}
+                  onUnlock={async (phrase) => {
+                    if (phase.format === 'pnbackupz') {
                       try {
-                        const zipFile = await decryptFullBackup(file);
-                        await runParseFlow(imp, zipFile);
+                        const zipFile = await decryptFullBackup(phase.file, phrase);
+                        await runParseFlow(phase.importer, zipFile);
+                        return null;
                       } catch (err) {
+                        if (err instanceof BackupWrongKeyError) return err.message;
                         setPhase({
                           kind: 'error',
-                          importer: imp,
+                          importer: phase.importer,
                           message: err instanceof Error ? err.message : t('errors.decryptionFailed'),
                         });
+                        return null;
                       }
-                      return;
                     }
-                    setPhase({ kind: 'parsing', importer: encryptedBackupImporter(), status: t('status.decryptingBackup') });
                     try {
-                      const counts = await onImportEncrypted(file);
+                      const counts = await onImportEncrypted(phase.file, phrase);
                       onImported(counts.imported, undefined, { updated: counts.updated, unchanged: counts.unchanged });
                       onClose();
+                      return null;
                     } catch (err) {
+                      if (err instanceof BackupWrongKeyError) return err.message;
                       setPhase({
                         kind: 'error',
-                        importer: encryptedBackupImporter(),
+                        importer: phase.importer,
                         message: err instanceof Error ? err.message : t('errors.decryptionFailed'),
                       });
+                      return null;
                     }
                   }}
                 />
@@ -818,7 +899,7 @@ export function ImportModal({
         {/* A picking tab needs no footer: the X closes the window, and a lone
             line there reads as stray text. The footer comes back while an
             import runs, for Back and Import. */}
-        {!(tab === 'export' || tab === 'manual' || tab === 'automatic' || tab === 'wellness' || phase.kind === 'pick') && (
+        {!(tab === 'export' || tab === 'manual' || tab === 'automatic' || tab === 'wellness' || phase.kind === 'pick' || phase.kind === 'foreignPhrase') && (
         <div className="px-6 py-3 border-t border-divider flex items-center justify-between gap-3">
           {phase.kind === 'preview' ? (
             <>
@@ -849,6 +930,151 @@ export function ImportModal({
           onChange={handleFileSelected}
         />
     </Modal>
+  );
+}
+
+/**
+ * Inline phrase prompt shown when an encrypted backup (.pnbackup or .pnbackupz)
+ * fails decryption under the active vault's key (D1, GitHub #862). Lets the
+ * user type, upload a QR image, or scan a QR code for the backup's own
+ * recovery phrase without switching accounts. Phrase state stays local to this
+ * component so it is dropped as soon as unlock completes or cancels.
+ */
+function ForeignPhrasePhase({
+  onBack,
+  onUnlock,
+}: {
+  onBack: () => void;
+  /** Returns an inline error string on wrong/invalid phrase, or null when the
+   *  parent has transitioned out of this phase. */
+  onUnlock: (phrase: string) => Promise<string | null>;
+}) {
+  const { t } = useTranslation('importExport');
+  useSecretOnScreen(true);
+  const [input, setInput] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const qrInputRef = useRef<HTMLInputElement | null>(null);
+
+  async function handleSubmit() {
+    const trimmed = input.trim();
+    if (!trimmed || busy) return;
+    setBusy(true);
+    setError(null);
+    const err = await onUnlock(trimmed);
+    setBusy(false);
+    if (err) setError(err);
+  }
+
+  async function handleUploadQr(file: File) {
+    setScanning(true);
+    setError(null);
+    try {
+      const mod = await import('qr-scanner');
+      const QrScanner = (mod as unknown as { default?: { scanImage: (f: File) => Promise<string> }; scanImage?: (f: File) => Promise<string> }).default
+        ?? (mod as unknown as { scanImage: (f: File) => Promise<string> });
+      const decoded = await QrScanner.scanImage(file);
+      const phrase = extractPhraseFromScan(decoded);
+      if (!phrase) {
+        setError(t('auth:qrScanner.imageNotSignInCode'));
+        return;
+      }
+      setInput(phrase);
+    } catch {
+      setError(t('auth:qrScanner.imageUnreadable'));
+    } finally {
+      setScanning(false);
+      if (qrInputRef.current) qrInputRef.current.value = '';
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <div className="flex items-center gap-2 text-title font-semibold text-pn">
+          <Key className="text-accent" aria-hidden="true" />
+          <span>{t('restoreForeign.title')}</span>
+        </div>
+        <p className="text-body text-pn-soft leading-relaxed">
+          {t('restoreForeign.body')}
+        </p>
+      </div>
+
+      <textarea
+        value={input}
+        onChange={(e) => {
+          setInput(e.target.value);
+          setError(null);
+        }}
+        placeholder={t('auth:importPhrase.placeholder')}
+        rows={3}
+        dir="ltr"
+        spellCheck={false}
+        autoCapitalize="none"
+        autoCorrect="off"
+        autoComplete="off"
+        disabled={busy}
+        autoFocus
+        className={`${FIELD_CLASS} font-mono`}
+      />
+
+      <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
+        <Button
+          icon={<Upload aria-hidden="true" />}
+          onClick={() => qrInputRef.current?.click()}
+          disabled={scanning || busy}
+          className="w-full"
+        >
+          {scanning ? t('auth:qrScanner.readingImage') : t('auth:importPhrase.uploadQr')}
+        </Button>
+        <Button
+          icon={<Scan aria-hidden="true" />}
+          onClick={() => setShowScanner(true)}
+          disabled={busy}
+          className="w-full"
+        >
+          {t('auth:importPhrase.scanQr')}
+        </Button>
+      </div>
+
+      <input
+        ref={qrInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void handleUploadQr(file);
+        }}
+      />
+
+      {error && <Callout tone="danger">{error}</Callout>}
+
+      <div className="flex items-center justify-between gap-2 pt-2">
+        <Button action="back" onClick={onBack} disabled={busy} />
+        <Button
+          variant="primary"
+          icon={busy ? <Spinner size={15} /> : <LockOpen aria-hidden="true" />}
+          onClick={() => void handleSubmit()}
+          disabled={!input.trim() || busy}
+        >
+          {t('restoreForeign.unlock')}
+        </Button>
+      </div>
+
+      {showScanner && (
+        <QrScannerModal
+          onScanned={(phrase) => {
+            setInput(phrase);
+            setError(null);
+            setShowScanner(false);
+          }}
+          onClose={() => setShowScanner(false)}
+        />
+      )}
+    </div>
   );
 }
 
@@ -1124,7 +1350,8 @@ function ImportPickPhase({ onPick, onCalendarFeed, calendarFeeds }: { onPick: (i
   // its vault with the notes, its canvases alone as Obsidian Canvas. Each
   // group is alphabetical.
   const groups = [
-    { key: 'notes', icon: Note, title: t('shell:tagsRail.notes'), ids: ['anytype', 'apple-journal', 'apple-notes', 'bear', 'capacities', 'daylio', 'diarium', 'evernote', 'google-journal', 'google-keep', 'ia-writer', 'joplin', 'markdown-folder', 'nextcloud-notes', 'notesnook', 'obsidian', 'onenote', 'samsung-notes', 'simplenote', 'siyuan', 'standard-notes', 'typora', 'upnote', 'zettlr'] },
+    { key: 'notes', icon: Note, title: t('shell:tagsRail.notes'), ids: ['anytype', 'apple-journal', 'apple-notes', 'bear', 'capacities', 'day-one', 'daylio', 'diaro', 'diarium', 'evernote', 'google-journal', 'google-keep', 'ia-writer', 'joplin', 'markdown-folder', 'nextcloud-notes', 'notesnook', 'notion', 'obsidian', 'onenote', 'samsung-notes', 'simplenote', 'siyuan', 'standard-notes', 'typora', 'upnote', 'zettlr'] },
+    { key: 'tasks', icon: PILLAR_GLYPHS.tasks, title: t('shell:tagsRail.tasks'), ids: ['todoist'] },
     { key: 'drawings', icon: NEW_GLYPHS.drawing, title: t('shell:tagsRail.drawings'), ids: ['excalidraw', 'obsidian-canvas'] },
     { key: 'calendar', icon: CalendarDots, title: t('importPick.groupCalendar'), ids: ['google-calendar:apple-calendar', 'vcard', 'google-calendar', WEBCAL_ID] },
     { key: 'bookmarks', icon: BookmarkSimple, title: t('shell:tagsRail.bookmarks'), ids: [...browserTiles('browser-bookmarks', ['brave', 'chrome', 'edge', 'firefox']), 'raindrop', ...browserTiles('browser-bookmarks', ['safari', 'vivaldi'])] },

@@ -73,6 +73,12 @@ export function noteLink(target: string, label: string): string {
 /** An inline `text-align` other than the default, in an exported HTML style. */
 export const ALIGN_RE = /text-align:\s*(center|right|justify)/i;
 
+/** Escape raw `<script` / `</script` tags in prose so literal script tags stay text and never reach HTML parsing. */
+const SCRIPT_TAG_RE = /<(\/?\s*script\b)/gi;
+export function escapeScriptTags(prose: string): string {
+  return prose.replace(SCRIPT_TAG_RE, '\\<$1');
+}
+
 /** A `<` that would open raw HTML: before a letter, `/`, `!` or `?`, and not
  *  an autolink (`<https://x.com>`, `<me@x.com>`), which stays a link. */
 const TAG_OPEN_RE = /(?<!\\)<(?=[A-Za-z/!?])(?![A-Za-z][A-Za-z0-9+.-]{1,31}:[^\s<>]*>|[^\s<>@]+@[^\s<>]+>)/g;

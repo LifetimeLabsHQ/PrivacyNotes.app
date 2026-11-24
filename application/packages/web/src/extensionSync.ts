@@ -53,7 +53,13 @@ import {
   loginsRowId,
   newLoginsKey,
   openInbox,
+  ORGANIZER_ITEM_ID,
+  ORGANIZER_LIMITS,
+  padOrganizerEntry,
   parseCopyEntry,
+  parseInboxFolder,
+  parseInboxTags,
+  parseOrganizerEntry,
   SIGNED_INBOX_VERSION,
   loginEditProofOk,
   parseInboxLoginEdit,
@@ -66,8 +72,13 @@ import {
   type InboxKind,
   type InboxLoginEdit,
   type InboxNote,
+  type OrganizerCopyEntry,
+  type OrganizerFolder,
 } from '@notes/shared/extension';
 import { db, notesWriteCount, type LocalNote } from './db';
+import type { FolderDef } from './folders';
+import { inSection } from './sectionLock';
+import type { View } from './views';
 import { holdsEveryEpoch, onKeyEpochChange, openWithRing, ringKeyCopies } from './keyRing';
 import { onLocalDataKeyCleared } from './localKey';
 import { hash53 } from './noteMerge';
@@ -284,8 +295,16 @@ export interface ExtensionSyncDeps {
    *  while it exists, else null (the root). Spec: docs/internal/plans/agent-cli.md (section 3.4) */
   agentFolder?: () => string | null;
   /** Whether a folder id is in the tree: a quick note's folder may be gone
-   *  by the time the app opens it. Spec: docs/internal/plans/quick-note-694.md (Q3) */
+   *  by the time the app opens it. Spec: docs/internal/specs/quick-note-694.md (Q3) */
   hasFolder?: (id: string) => boolean;
+  /** Whether the account has Pro folders unlocked; when false, inbox folder ids
+   *  are ignored and no folder names enter the extension's encrypted copy. */
+  foldersUnlocked?: () => boolean;
+  /** The account's live folder tree, for the single organizer copy row. */
+  folders?: () => readonly FolderDef[];
+  /** Sidebar sections locked behind a PIN: tags from notes inside them (and
+   *  folders when Notes is protected) never enter the extension's copy. */
+  protectedViews?: () => readonly View[];
   now?: () => number;
   /** The tests' stand-in for `LOGINEDIT_QUEUED_AT_REQUIRED_FROM`. */
   queuedAtRequiredFrom?: string | null;
@@ -381,7 +400,7 @@ export async function runExtensionSync(deps: ExtensionSyncDeps): Promise<Extensi
 }
 
 /** What adoption needs; the copy's keys stay out. */
-export type AdoptDeps = Pick<ExtensionSyncDeps, 'store' | 'pubkey' | 'inboxSecret' | 'contentKey' | 'readKeys' | 'deviceId' | 'isCurrent' | 'storePicture' | 'agentFolder' | 'hasFolder' | 'now' | 'queuedAtRequiredFrom' | 'unsignedRefusedFrom' | 'settingsPulled'>;
+export type AdoptDeps = Pick<ExtensionSyncDeps, 'store' | 'pubkey' | 'inboxSecret' | 'contentKey' | 'readKeys' | 'deviceId' | 'isCurrent' | 'storePicture' | 'agentFolder' | 'hasFolder' | 'foldersUnlocked' | 'now' | 'queuedAtRequiredFrom' | 'unsignedRefusedFrom' | 'settingsPulled'>;
 
 /**
  * Adopt the inbox now, for Remove in Settings > Extension: removing a
@@ -674,6 +693,8 @@ interface ParsedClip {
     markdown: string; images: { src: string; alt: string }[];
   } | null;
   pictures: (string | null)[];
+  tags: string[];
+  folder?: string;
 }
 
 /** The shape check of a clip payload. Null refuses it. A note or selection
@@ -685,9 +706,11 @@ export function parseClip(value: unknown, rowId: string): ParsedClip | null {
   if (v.mode !== 'note' && v.mode !== 'selection' && v.mode !== 'bookmark') return null;
   const url = webUrl(v.url);
   if (!url || !isStr(v.title, MAX_TITLE)) return null;
+  const tags = parseInboxTags(v.tags) ?? [];
+  const folder = parseInboxFolder(v.folder) ?? undefined;
   const page = v.mode === 'bookmark' ? null : parseClipPage(v);
-  if (v.mode === 'bookmark' || !page) return { mode: 'bookmark', url, title: v.title, clip: null, pictures: [] };
-  return { mode: v.mode, url, title: v.title, ...page };
+  if (v.mode === 'bookmark' || !page) return { mode: 'bookmark', url, title: v.title, clip: null, pictures: [], tags, ...(folder ? { folder } : {}) };
+  return { mode: v.mode, url, title: v.title, ...page, tags, ...(folder ? { folder } : {}) };
 }
 
 function parseClipPage(v: Record<string, unknown>): Pick<ParsedClip, 'clip' | 'pictures'> | null {
@@ -733,7 +756,7 @@ export function parsePicture(plain: Uint8Array, rowId: string): { clip: string; 
 export function parseLogin(
   value: unknown,
   rowId: string,
-): { name: string; url: string; username: string; password: string; totp: string; notes: string } | null {
+): { name: string; url: string; username: string; password: string; totp: string; notes: string; tags: string[]; folder?: string } | null {
   const v = value as Record<string, unknown> | null;
   if (!v || typeof v !== 'object' || v.v !== 1 || v.id !== rowId) return null;
   if (!isStr(v.name, MAX_TITLE) || !isStr(v.username, MAX_TITLE) || !isStr(v.password, MAX_TITLE)) return null;
@@ -741,10 +764,12 @@ export function parseLogin(
   const totp = v.totp === undefined ? '' : v.totp;
   const notes = v.notes === undefined ? '' : v.notes;
   if (!isStr(totp, MAX_TITLE) || !isStr(notes, MAX_LOGIN_NOTES)) return null;
+  const tags = parseInboxTags(v.tags) ?? [];
+  const folder = parseInboxFolder(v.folder) ?? undefined;
   const url = v.url === '' ? '' : webUrl(v.url);
   if (url === null) return null;
   if (!v.username && !v.password) return null;
-  return { name: v.name, url, username: v.username, password: v.password, totp, notes };
+  return { name: v.name, url, username: v.username, password: v.password, totp, notes, tags, ...(folder ? { folder } : {}) };
 }
 
 // Spec: docs/contrib/passkeys.md (section 6, `loginedit`)
@@ -959,7 +984,8 @@ async function adoptPage(
       }
       if (!mine.has(id) || !deps.isCurrent()) continue;
       const body = serializeLoginBody({ url: login.url, username: login.username, password: login.password, totp: login.totp, notes: login.notes });
-      await createNote(login.name || login.url || login.username, body, [], false, 'login', null, { id: itemId, counted: false });
+      const tags = [...new Set(login.tags.map(normalizeTag).filter(Boolean))];
+      await createNote(login.name || login.url || login.username, body, tags, false, 'login', resolveInboxFolder(login.folder, deps), { id: itemId, counted: false });
       adopted += 1;
       continue;
     }
@@ -1185,11 +1211,22 @@ async function runEdit(
  * command line row goes to the Agent folder whatever its `from` says, since
  * the sender writes `from` (beta #184, item 5). A row from before 0141 has
  * none and keeps the rule by `from`.
- * Spec: docs/internal/plans/quick-note-694.md (Q3); docs/internal/plans/agent-cli.md (section 3.4)
+ * Spec: docs/internal/specs/quick-note-694.md (Q3); docs/internal/plans/agent-cli.md (section 3.4)
  */
-function inboxNoteFolder(note: InboxNote, deps: Pick<ExtensionSyncDeps, 'agentFolder' | 'hasFolder'>, client?: string | null): string | null {
+/** Resolve an inbox folder id: fails closed unless Pro folders are unlocked and the folder exists. */
+function resolveInboxFolder(folder: string | undefined, deps: Pick<AdoptDeps, 'hasFolder' | 'foldersUnlocked'>): string | null {
+  if (!folder) return null;
+  if (!(deps.foldersUnlocked?.() ?? false)) return null;
+  return deps.hasFolder?.(folder) ? folder : null;
+}
+
+function inboxNoteFolder(note: InboxNote, deps: Pick<ExtensionSyncDeps, 'agentFolder' | 'hasFolder' | 'foldersUnlocked'>, client?: string | null): string | null {
   if (client === 'cli' || !note.from) return deps.agentFolder?.() ?? null;
-  return note.folder && deps.hasFolder?.(note.folder) ? note.folder : null;
+  if (note.from === 'quick') {
+    if (deps.foldersUnlocked && !deps.foldersUnlocked()) return null;
+    return note.folder && deps.hasFolder?.(note.folder) ? note.folder : null;
+  }
+  return resolveInboxFolder(note.folder, deps);
 }
 
 /**
@@ -1202,7 +1239,7 @@ function inboxNoteFolder(note: InboxNote, deps: Pick<ExtensionSyncDeps, 'agentFo
 export async function createInboxNote(
   note: InboxNote,
   itemId: string,
-  deps: Pick<ExtensionSyncDeps, 'agentFolder' | 'hasFolder' | 'isCurrent'>,
+  deps: Pick<ExtensionSyncDeps, 'agentFolder' | 'hasFolder' | 'foldersUnlocked' | 'isCurrent'>,
   client?: string | null,
 ): Promise<'created' | 'refused' | 'stopped'> {
   const { inboxNoteBody } = await import('@notes/clipper');
@@ -1228,11 +1265,13 @@ async function adoptClip(
   itemId: string,
   held: ({ type: string; bytes: Uint8Array } | undefined)[],
 ): Promise<'created' | 'none' | 'stopped'> {
+  const tags = [...new Set(clip.tags.map(normalizeTag).filter(Boolean))];
+  const folderId = resolveInboxFolder(clip.folder, deps);
   const saveBookmark = async (): Promise<'created' | 'none' | 'stopped'> => {
     const bookmarked = buildLinkKeyMap(await liveNotesOfType(['link'])).has(linkDedupeKey(clip.url));
     if (!deps.isCurrent()) return 'stopped';
     if (bookmarked) return 'none';
-    await createNote(clip.title, buildLinkBody(clip.url), [], false, 'link', null, { id: itemId, counted: false });
+    await createNote(clip.title, buildLinkBody(clip.url), tags, false, 'link', folderId, { id: itemId, counted: false });
     return 'created';
   };
   if (clip.mode === 'bookmark' || !clip.clip) return saveBookmark();
@@ -1262,7 +1301,7 @@ async function adoptClip(
       storePicture,
     );
     if (!deps.isCurrent()) return 'stopped';
-    const note = await createNote(saved.title || clip.title, saved.body, [], false, 'note', null, { id: itemId, counted: false });
+    const note = await createNote(saved.title || clip.title, saved.body, tags, false, 'note', folderId, { id: itemId, counted: false });
     if (deps.isCurrent()) await updateNote(note.id, { trackers: clipTrackers(clip.url) }, undefined, { edit: false });
     return 'created';
   } catch {
@@ -1345,13 +1384,55 @@ async function vaultCopy(): Promise<CopyEntry[]> {
 }
 
 /**
+ * The single organizer copy row (folder names + tags from unlocked notes),
+ * packed into one 4 KiB-padded row under key P. Folders are included only when
+ * Pro folders are unlocked and the Notes section is not behind a PIN; tags
+ * skip trashed, deleted, PIN-protected, and locked-section items.
+ */
+async function organizerCopy(deps: Pick<ExtensionSyncDeps, 'folders' | 'foldersUnlocked' | 'protectedViews'>): Promise<OrganizerCopyEntry | null> {
+  const lockedViews = deps.protectedViews?.() ?? [];
+  const rawFolders = (deps.foldersUnlocked?.() ?? false) && !inSection({ type: 'note' }, lockedViews)
+    ? (deps.folders?.() ?? [])
+    : [];
+  const folders: OrganizerFolder[] = rawFolders
+    .map((f) => ({ id: f.id, name: f.name.slice(0, ORGANIZER_LIMITS.name), parentId: f.parentId, order: f.order }))
+    .sort((a, b) => (a.parentId ? 1 : 0) - (b.parentId ? 1 : 0) || a.order - b.order || a.name.localeCompare(b.name) || a.id.localeCompare(b.id))
+    .slice(0, ORGANIZER_LIMITS.folders);
+  const tagCounts = new Map<string, number>();
+  for (const n of await db.notes.toArray()) {
+    if (n.deleted === 1 || n.trashed === 1 || n.pinProtected === 1 || inSection(n, lockedViews)) continue;
+    for (const raw of n.tags ?? []) {
+      const tag = normalizeTag(raw);
+      if (tag && tag.length <= ORGANIZER_LIMITS.tag) tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+    }
+  }
+  const tags = [...tagCounts.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, ORGANIZER_LIMITS.tags)
+    .map(([tag]) => tag);
+  if (!folders.length && !tags.length) return null;
+  return padOrganizerEntry({ v: COPY_VERSION, kind: 'organizer', item: ORGANIZER_ITEM_ID, name: '', pinned: false, folders, tags });
+}
+
+/** Lightweight signature of settings that feed the organizer row, so a folder
+ *  rename or Pro/lock change runs the copy pass without waiting 10 minutes. */
+function organizerSettingsSig(deps: Pick<ExtensionSyncDeps, 'folders' | 'foldersUnlocked' | 'protectedViews'>): string {
+  const pro = deps.foldersUnlocked?.() ? '1' : '0';
+  const locked = [...(deps.protectedViews?.() ?? [])].sort().join(',');
+  const folders = pro === '1'
+    ? (deps.folders?.() ?? []).map((f) => `${f.id}:${f.parentId ?? ''}:${f.order}:${f.name}`).join('|')
+    : '';
+  return `${pro};${locked};${folders}`;
+}
+
+/**
  * The vault the last full copy read: while no note was written in this tab
  * and the server rows still match the memo, a new copy would write nothing,
  * so the vault is not read again. Reading every note each pass (every 30 s)
  * grew the desktop app's memory all day (issue #643). A full copy still runs
  * every ten minutes, for writes made in another tab.
  */
-let lastCopy: { pubkey: string; tag: string; writes: number; at: number } | null = null;
+let lastCopy: { pubkey: string; tag: string; writes: number; orgSig: string; at: number } | null = null;
 const FULL_COPY_MS = 10 * 60_000;
 
 /** Whether the last full pass left new rows out because the copy is at its
@@ -1419,19 +1500,29 @@ async function keepLoginsCopy(deps: ExtensionSyncDeps, state: ExtensionState): P
   const server = await deps.store.listCopy();
   const serverCurrent = new Map(server.filter((r) => r.key_tag === tag).map((r) => [r.id, r]));
   const writesNow = notesWriteCount();
+  const orgSig = organizerSettingsSig(deps);
   const liveOnServer = [...serverCurrent.values()].filter((r) => !r.deleted);
   if (
     lastCopy && lastCopy.pubkey === deps.pubkey && lastCopy.tag === tag &&
-    lastCopy.writes === writesNow && now - lastCopy.at < FULL_COPY_MS &&
+    lastCopy.writes === writesNow && lastCopy.orgSig === orgSig && now - lastCopy.at < FULL_COPY_MS &&
     server.every((r) => r.key_tag === tag) &&
     liveOnServer.length === Object.keys(memo.fps).length && liveOnServer.every((r) => r.id in memo.fps)
   ) return 0;
   const writes: CopyWrite[] = [];
   const nextFps: Record<string, string> = {};
-  const seal = (id: string, entry: CopyEntry) => {
+  const seal = (id: string, entry: CopyEntry | OrganizerCopyEntry) => {
     const { ciphertext, nonce } = encryptJsonAad(entry, p, loginsCopyAad(deps.pubkey, id));
     writes.push({ id, key_tag: tag, ciphertext: bytesToBase64(ciphertext), nonce: bytesToBase64(nonce), deleted: false });
   };
+  // Write the single organizer row first so a 5,000-row vault cap never starves it.
+  const organizer = await organizerCopy(deps);
+  if (organizer) {
+    const id = loginsRowId(idKey, organizer.item);
+    const fp = loginsFingerprint(idKey, `${tag}:${JSON.stringify(organizer)}`);
+    nextFps[id] = fp;
+    const have = serverCurrent.get(id);
+    if (!have || have.deleted || memo.fps[id] !== fp) seal(id, organizer);
+  }
   // Rows the memo says are current but that hold a login's passkeys: an
   // older app writes the same row without them, and its write leaves this
   // memo as it was, so each is opened and compared once a full pass.
@@ -1485,7 +1576,7 @@ async function keepLoginsCopy(deps: ExtensionSyncDeps, state: ExtensionState): P
   const stale = server.filter((r) => r.key_tag !== tag && !sentIds.has(r.id)).map((r) => r.id);
   if (stale.length && (await deps.store.state()).keyTag === tag) await deps.store.dropCopy(stale);
   writeMemo({ pubkey: deps.pubkey, tag, fps: nextFps });
-  lastCopy = { pubkey: deps.pubkey, tag, writes: writesNow, at: now };
+  lastCopy = { pubkey: deps.pubkey, tag, writes: writesNow, orgSig, at: now };
   return sent.length;
 }
 
@@ -1540,4 +1631,9 @@ async function takeFreshHalves(deps: ExtensionSyncDeps, state: ExtensionState, h
  *  the plaintext is not a copy entry this version knows. */
 export function openCopyRow(p: Uint8Array, pubkey: string, row: { id: string; ciphertext: string; nonce: string }): CopyEntry | null {
   return parseCopyEntry(decryptJsonAad<unknown>(base64ToBytes(row.ciphertext), base64ToBytes(row.nonce), p, loginsCopyAad(pubkey, row.id)));
+}
+
+/** Open the organizer copy row (folders + unlocked tags), or null for any other row. */
+export function openOrganizerRow(p: Uint8Array, pubkey: string, row: { id: string; ciphertext: string; nonce: string }): OrganizerCopyEntry | null {
+  return parseOrganizerEntry(decryptJsonAad<unknown>(base64ToBytes(row.ciphertext), base64ToBytes(row.nonce), p, loginsCopyAad(pubkey, row.id)));
 }

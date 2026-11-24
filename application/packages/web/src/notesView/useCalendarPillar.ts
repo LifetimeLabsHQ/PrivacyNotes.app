@@ -52,6 +52,14 @@ export function useCalendarPillar({ view, selectedId, setSelectedId, selectView 
   if (opened && opened.id !== selectedId) setOpened(null);
   const occurrence = opened && opened.id === selectedId ? opened.day : null;
   const hourScroll = useRef<number | null>(null);
+  // Bumped whenever Today is pressed (button or shortcut), so the agenda
+  // scrolls back to today even if `focus` is already today (#867).
+  const [todaySignal, setTodaySignal] = useState(0);
+
+  const goToday = useCallback(() => {
+    setFocus(toLocalIso(new Date()));
+    setTodaySignal((n) => n + 1);
+  }, []);
 
   const setMode = useCallback((next: CalendarMode) => {
     setModeState(next);
@@ -101,7 +109,7 @@ export function useCalendarPillar({ view, selectedId, setSelectedId, selectView 
     setSelectedId(null);
   }, [selectView, setSelectedId]);
 
-  return { mode, setMode, focus, setFocus, occurrence, openItem, back, openAt, newDay, hourScroll, count, setCount, countBoth, setCountBoth, openCount };
+  return { mode, setMode, focus, setFocus, todaySignal, goToday, occurrence, openItem, back, openAt, newDay, hourScroll, count, setCount, countBoth, setCountBoth, openCount };
 }
 
 export type CalendarPillar = ReturnType<typeof useCalendarPillar>;

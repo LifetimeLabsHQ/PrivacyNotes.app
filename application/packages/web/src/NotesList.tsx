@@ -32,6 +32,8 @@ import { ItemList, useContextTarget, useItemList } from './itemList';
 import { ImportPromptEntry, importPromptFor, type ImportOffer, type ImportPromptKind } from './ImportPrompt';
 import { useListKeys } from './listKeys';
 import { useListGroups, type ListEntry } from './ListGroupHeader';
+import { effectiveGroupByForView, groupOptionsForView } from './listGroups';
+import { resolveGroupBy } from './listPrefs';
 import { entryDayOf, type DayIndex } from './notesViewUtils';
 import { daysApart } from './localDate';
 import { relativeDayName } from './intlFormat';
@@ -368,14 +370,15 @@ export function NotesList({
   };
 
 
-  /* Group headers (#448): one switch, and the sort decides the groups.
-   * Spec: docs/internal/specs/list-groups.md */
+  /* Group headers (#448, #875, #896): decoupled Group by dropdown + universal
+   * Pinned fold on mixed lists. Spec: docs/internal/specs/list-groups.md */
+  const listView = view as View;
   const grouping = useListGroups({
     notes: displayNotes,
     listPrefs,
     search,
     scope: view,
-    entryDays: view === 'journal',
+    view: listView,
     selectionMode,
     selectedId,
     isNoteLocked,
@@ -384,7 +387,13 @@ export function NotesList({
   // While a tracker is in focus and the list runs by entry day, a line
   // between two entries says how many days lie between them.
   // Spec: docs/internal/specs/tracker-focus-771.md (section 4)
-  const gapsOn = !!trackerFocus && !search.trim() && viewMode !== 'grid' && listPrefs.sortField === 'created';
+  const activeGroup = effectiveGroupByForView(resolveGroupBy(listPrefs), listView);
+  const gapsOn =
+    !!trackerFocus &&
+    !search.trim() &&
+    viewMode !== 'grid' &&
+    listPrefs.sortField === 'created' &&
+    (activeGroup === 'none' || activeGroup === 'date');
   const entries = useMemo(
     () => (gapsOn ? withDayGaps(grouping.entries ?? displayNotes.map((note): ListEntry => ({ kind: 'note', note }))) : grouping.entries),
     [gapsOn, grouping.entries, displayNotes],
@@ -769,7 +778,7 @@ export function NotesList({
             prefsScope={prefsScope}
             scopeStore={scopedListPrefs}
             onScopeChange={onScopedListPrefsChange}
-            showGroupsToggle
+            groupOptions={groupOptionsForView(listView)}
             checkInCard={checkInCardToggle}
             medicationCard={medicationCardToggle}
             {...(view === 'journal' ? { createdLabel: t('shell:noteOptionsMenu.entryDate') } : {})}
@@ -802,7 +811,7 @@ export function NotesList({
         />
       )}
       {view === 'calendar' ? calendarBody : view === 'dashboard' ? dashboard?.body : (
-      <ItemList list={list} grid={viewMode === 'grid'} onMouseDown={suppressShiftTextSelection}>
+      <ItemList list={list} grid={viewMode === 'grid'} pullToSync onMouseDown={suppressShiftTextSelection}>
         {checkInCard}
         {view === 'journal' && calendarShown && !search.trim() && !selectionMode && (
           <JournalCalendarCard grid={viewMode === 'grid'} entries={calendarDays} onOpen={onOpenCalendarItem} onPick={onBackfillDate} onToday={() => onNew()} creates="journal" onEvent={onNewEvent} moodOf={moodLook && journalMoods && !focusMarks ? (d) => journalMoods.get(d) : undefined} marks={focusMarks ?? undefined} {...calendarExtras} />

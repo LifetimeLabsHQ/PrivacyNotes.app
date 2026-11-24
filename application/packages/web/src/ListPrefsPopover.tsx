@@ -1,4 +1,4 @@
-import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createPortal } from 'react-dom';
 import { useEscapeToClose } from './useEscapeToClose';
@@ -9,12 +9,14 @@ import { ViewModeContext, setDeviceCompactRows, useCompactRows } from './viewMod
 import { ViewModeToggle } from './ViewModeToggle';
 import { setJournalCalendarMood, setJournalCalendarShown, useJournalCalendarMood, useJournalCalendarShown } from './JournalCalendar';
 import { ArrowsInLineVertical, Folder, Pulse, Pill, Article, Calendar, Rows, Clock, Smiley, HardDrive, PencilSimpleSlash, Shield, SortAscending, SortDescending, Tag, TextAlignJustify } from './icons';
-import { CloseButton } from './ui';
+import { CloseButton, Select } from './ui';
 import {
   scopedPrefs,
+  resolveGroupBy,
   resolvePrefs,
   setScopedPrefs,
   setPillarPrefs,
+  type GroupBy,
   type ScopedListPrefsStore,
   type ListPrefs,
   type ListPrefsStore,
@@ -101,10 +103,11 @@ type Props = {
    */
   showSizeToggle?: boolean;
   /**
-   * Add "Show groups" to the VIEW section. Only the panes that draw group
-   * headers pass it. Spec: docs/internal/specs/list-groups.md
+   * Grouping options offered in the Group by dropdown directly under SORT BY.
+   * Omit on panes that do not draw group headers (e.g. Markdown folder).
+   * Spec: docs/internal/specs/list-groups.md
    */
-  showGroupsToggle?: boolean;
+  groupOptions?: readonly GroupBy[];
   /** Hide the OTHER toggles section (read-only, protected). */
   hideOtherSection?: boolean;
   /** Label for the title/name sort option. Defaults to "Title". */
@@ -142,7 +145,7 @@ export function ListPrefsPopover({
   hideViewSection = false,
   hideOtherSection = false,
   showSizeToggle = false,
-  showGroupsToggle = false,
+  groupOptions,
   titleLabel,
   createdLabel,
   pillar = 'global',
@@ -230,10 +233,22 @@ export function ListPrefsPopover({
   }, [beside]);
 
   function update<K extends keyof ListPrefs>(key: K, value: ListPrefs[K]) {
-    const nextPrefs: ListPrefs = { ...prefs, [key]: value };
+    writePrefs({ ...prefs, [key]: value });
+  }
+
+  function writePrefs(nextPrefs: ListPrefs) {
     if (scoped && prefsScope && onScopeChange) onScopeChange(setScopedPrefs(scopeStore, prefsScope, { ...scoped, prefs: nextPrefs }));
     else onChange(setPillarPrefs(store, pillar, nextPrefs));
   }
+
+  function setGroupBy(next: GroupBy) {
+    writePrefs({ ...prefs, groupBy: next, showGroups: next !== 'none' });
+  }
+
+  const groupSelectId = useId();
+  const groupBy = resolveGroupBy(prefs);
+  const activeGroupChoice: GroupBy =
+    groupOptions && groupOptions.includes(groupBy) ? groupBy : 'none';
 
   /** On: the folder or tag starts from what the list shows now. Off: it follows
    *  Global and this device's layout again. */
@@ -381,6 +396,39 @@ export function ListPrefsPopover({
         </div>
       </div>
 
+      {/* ── GROUP BY ─────────────────────────────────────────────── */}
+      {groupOptions && groupOptions.length > 0 && (
+      <div className="px-4 py-2.5 border-t border-divider flex items-center justify-between gap-3">
+        <label htmlFor={groupSelectId} className="flex items-center gap-1.5 text-body text-pn shrink-0">
+          <span className="inline-flex text-accent"><Rows aria-hidden="true" className="shrink-0" /></span>
+          <span>{t('listPrefs.groupBy')}</span>
+        </label>
+        <Select
+          id={groupSelectId}
+          size="sm"
+          value={activeGroupChoice}
+          onChange={(e) => setGroupBy(e.target.value as GroupBy)}
+          className="min-w-0 max-w-[9.5rem]"
+        >
+          {groupOptions.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt === 'none'
+                ? t('alerts.none')
+                : opt === 'date'
+                  ? t('contacts.itemDate')
+                  : opt === 'letter'
+                    ? t('listPrefs.groupLetter')
+                    : opt === 'type'
+                      ? t('quickAdd.syntax.type.label')
+                      : opt === 'folder'
+                        ? t('folders.chipUnfiled')
+                        : t('contacts.groupWebsite')}
+            </option>
+          ))}
+        </Select>
+      </div>
+      )}
+
       {/* ── VIEW ─────────────────────────────────────────────────── */}
       {!hideViewSection && (
       <div className="px-4 pt-2 pb-3 border-t border-divider">
@@ -422,24 +470,6 @@ export function ListPrefsPopover({
             checked={prefs.showTags}
             onChange={(v) => update('showTags', v)}
           />
-          {showGroupsToggle && (
-            <ToggleRow
-              label={t('listPrefs.showGroups')}
-              icon={<Rows aria-hidden="true" className="shrink-0" />}
-              // The sort decides the groups; size has none, so the switch
-              // waits for a sort that has some instead of claiming to be on.
-              checked={prefs.showGroups && prefs.sortField !== 'size'}
-              disabled={prefs.sortField === 'size'}
-              description={
-                prefs.sortField === 'size'
-                  ? t('listPrefs.groupsNoneForSize')
-                  : prefs.sortField === 'title'
-                    ? t('listPrefs.groupsByLetter')
-                    : t('listPrefs.groupsByDate')
-              }
-              onChange={(v) => update('showGroups', v)}
-            />
-          )}
         </div>
       </div>
       )}

@@ -23,7 +23,6 @@
     "generatePassword": "Genera una contrasenya"
   },
   "note": {
-    "tagsPlaceholder": "#feina #idees",
     "tagsHelp": "Un espai o una coma entre etiquetes. El # és opcional.",
     "failed": "No s'ha pogut desar la nota. Torna-ho a provar."
   },
@@ -213,5 +212,11 @@
     "unlockFirst": "Desbloqueja per fer servir les teves claus d'accés.",
     "offer": "Ofereix claus d'accés",
     "offerHelp": "Desa i fes servir claus d'accés als llocs web."
+  },
+  "organize": {
+    "title": "Carpeta i etiquetes",
+    "unlockToPick": "Desbloqueja la Caixa forta per triar",
+    "addTag": "Afegeix una etiqueta...",
+    "proFolders": "Les carpetes són una funció Pro. Obre PrivacyNotes per millorar el pla."
   }
 }

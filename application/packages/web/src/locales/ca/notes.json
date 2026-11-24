@@ -323,7 +323,11 @@
     "confirm": "Importa com a notes",
     "cancel": "Desa com a fitxers",
     "bodySingle": "<strong>{{filename}}</strong> sembla un fitxer markdown. Vols importar-lo com a nota per poder llegir-lo i editar-lo, o emmagatzemar-lo com a fitxer adjunt xifrat?",
-    "bodyMulti": "Aquests {{count}} fitxers semblen markdown. Vols importar-los com a notes per poder llegir-los i editar-los, o emmagatzemar-los com a fitxers adjunts xifrats?"
+    "bodyMulti": "Aquests {{count}} fitxers semblen markdown. Vols importar-los com a notes per poder llegir-los i editar-los, o emmagatzemar-los com a fitxers adjunts xifrats?",
+    "backupTitle": "Restaurar o emmagatzemar?",
+    "backupConfirm": "Restaura la còpia de seguretat",
+    "backupCancel": "Desa com a fitxer",
+    "backupBody": "<strong>{{filename}}</strong> és una còpia de seguretat de PrivacyNotes. Vols restaurar les teves dades a partir d'aquesta còpia, o emmagatzemar-la com a fitxer adjunt xifrat?"
   },
   "archiveConfirm": {
     "body_other": "Vols arxivar <highlight>{{count}} elements</highlight>? Surten de les teves llistes i esperen a la vista Arxiu. Desarxiva els recupera.",

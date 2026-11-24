@@ -123,7 +123,7 @@ export function deriveLocalDataKey(seed: Uint8Array): Uint8Array {
  * (web `sessionSeal.ts`). From the phrase's BIP-39 entropy, not the seed, so
  * it is ready before the seed's PBKDF2 at an unlock: every door of the lock
  * gives the phrase, and only the phrase gives this key. Never stored.
- * Spec: docs/internal/plans/session-under-app-lock.md (section 2.1)
+ * Spec: docs/internal/specs/session-under-app-lock.md (section 2.1)
  */
 export function deriveSessionSealKey(phrase: string): Uint8Array {
   return hkdf(sha256, phraseToEntropy(phrase), undefined, utf8.encode('privacynotes-session-seal-v1'), 32);

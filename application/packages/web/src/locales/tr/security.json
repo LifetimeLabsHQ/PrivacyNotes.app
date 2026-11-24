@@ -228,7 +228,7 @@
     "removeTitle": "Bu geçiş anahtarı kaldırılsın mı?",
     "removeBody": "Artık bununla giriş yapamazsınız. Geçiş anahtarının kendisi, siz orada silene kadar geçiş anahtarı uygulamanızda kalır.",
     "retired": "İfadeniz değişmeden önce oluşturuldu. Kaldırıp yeniden ekleyin.",
-    "noPrf": "Bu geçiş anahtarı uygulaması ifadenizi koruyamıyor, bu yüzden geçiş anahtarı eklenmedi. Cihazınızın kendi geçiş anahtarlarını veya başka bir parola yöneticisini deneyin.",
+    "noPrf": "Bu geçiş anahtarı uygulaması ifadenizi koruyan anahtarı oluşturamıyor, bu yüzden geçiş anahtarı eklenmedi. İfadenizle yine giriş yapabilirsiniz. Parola yöneticiniz geçiş anahtarını kaydetmeyi önerdiğinde, bunun yerine onu bu cihaza veya bir güvenlik anahtarına kaydetmeyi seçin.",
     "tooMany": "Giriş için {{count}} geçiş anahtarınız var. Yenisini eklemek için birini kaldırın.",
     "failed": "Geçiş anahtarı eklenemedi. Bağlantınızı kontrol edip tekrar deneyin.",
     "appsOnly": "Geçiş anahtarlarını tarayıcınızda use.privacynotes.app adresinden ekleyin. Uygulamalarda bunlarla giriş yapma daha sonra gelecek.",

@@ -228,7 +228,7 @@
     "removeTitle": "¿Quitar esta passkey?",
     "removeBody": "Ya no podrás iniciar sesión con ella. La passkey en sí se queda en tu app de passkeys hasta que la elimines allí.",
     "retired": "Creada antes de que cambiara tu frase. Quítala y vuelve a añadirla.",
-    "noPrf": "Esta app de passkeys no puede proteger tu frase, así que la passkey no se añadió. Prueba las passkeys de tu propio dispositivo u otro gestor de contraseñas.",
+    "noPrf": "Esta app de passkeys no puede crear la clave que protege tu frase, así que la passkey no se añadió. Tu frase sigue sirviendo para iniciar sesión. Cuando tu gestor de contraseñas te ofrezca guardar la passkey, elige guardarla en este dispositivo o en una llave de seguridad.",
     "tooMany": "Tienes {{count}} passkeys para iniciar sesión. Quita una para añadir otra.",
     "failed": "No se pudo añadir la passkey. Revisa tu conexión y vuelve a intentarlo.",
     "appsOnly": "Añade passkeys en tu navegador en use.privacynotes.app. Iniciar sesión con ellas en las apps llegará más adelante.",

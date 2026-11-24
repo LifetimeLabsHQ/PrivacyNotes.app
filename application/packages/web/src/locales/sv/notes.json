@@ -321,7 +321,11 @@
     "confirm": "Importera som anteckningar",
     "cancel": "Lagra som filer",
     "bodySingle": "<strong>{{filename}}</strong> ser ut att vara en markdown-fil. Vill du importera den som en anteckning så att du kan läsa och redigera den, eller lagra den som en krypterad filbilaga?",
-    "bodyMulti": "De här {{count}} filerna ser ut att vara markdown. Vill du importera dem som anteckningar så att du kan läsa och redigera dem, eller lagra dem som krypterade filbilagor?"
+    "bodyMulti": "De här {{count}} filerna ser ut att vara markdown. Vill du importera dem som anteckningar så att du kan läsa och redigera dem, eller lagra dem som krypterade filbilagor?",
+    "backupTitle": "Återställa eller lagra?",
+    "backupConfirm": "Återställ säkerhetskopia",
+    "backupCancel": "Lagra som fil",
+    "backupBody": "<strong>{{filename}}</strong> är en PrivacyNotes-säkerhetskopia. Vill du återställa dina data från den, eller lagra den som en krypterad filbilaga?"
   },
   "archiveConfirm": {
     "body_one": "Arkivera <highlight>{{count}} objekt</highlight>? Det lämnar dina listor och väntar i vyn Arkiv. Ta ur arkivet hämtar tillbaka det.",

@@ -262,7 +262,7 @@ function ExtraUrlRow({ url, id, copy, copied }: {
       icon={<Globe />}
       actions={
         <>
-          {href && <DetailAction label={t('shell:contacts.open')} onClick={() => openExternal(href)}><ArrowSquareOut /></DetailAction>}
+          {href && <DetailAction label={t('shell:contacts.open')} onClick={() => openExternal(href, { browser: true })}><ArrowSquareOut /></DetailAction>}
           <DetailCopyAction value={url} id={id} copied={copied} onCopy={copy} label={tip} />
         </>
       }
@@ -355,7 +355,7 @@ function LoginViewMode({ note, onEdit, copy, copied, isPro, onOpenUpgrade, files
             icon={<Globe />}
             actions={
               <>
-                <DetailAction label={t('shell:contacts.open')} onClick={() => openExternal(fullUrl)}><ArrowSquareOut /></DetailAction>
+                <DetailAction label={t('shell:contacts.open')} onClick={() => openExternal(fullUrl, { browser: true })}><ArrowSquareOut /></DetailAction>
                 <DetailCopyAction value={data.url} id="url" copied={copied} onCopy={copy} label={copyTip('url')} />
               </>
             }

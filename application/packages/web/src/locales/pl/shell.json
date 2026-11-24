@@ -292,6 +292,8 @@
     "showNoteLinks": "Pokaż linki w innych elementach",
     "showNoteTasks": "Pokaż zadania w innych elementach",
     "showGroups": "Pokaż grupy",
+    "groupBy": "Grupuj według",
+    "groupLetter": "Pierwsza litera",
     "groupsByDate": "Grupowanie według daty",
     "groupsByLetter": "Grupowanie według pierwszej litery",
     "groupsNoneForSize": "Niedostępne przy sortowaniu według rozmiaru",
@@ -316,6 +318,7 @@
     "nextWeek": "Następny tydzień",
     "pickMonth": "{{month}}, wybierz miesiąc i rok",
     "pickMonthTip": "Wybierz miesiąc i rok",
+    "showToday": "Pokaż dzisiaj",
     "showWholeMonth": "Pokaż cały miesiąc",
     "showOneWeek": "Pokaż jeden tydzień"
   },
@@ -645,7 +648,10 @@
   "shareInbox": {
     "saved": "Zapisano w PrivacyNotes",
     "failed": "Nie udało się zapisać w PrivacyNotes",
-    "tooLarge": "Za duży. Maksimum to {{limit}} MB na plik."
+    "tooLarge": "Za duży. Maksimum to {{limit}} MB na plik.",
+    "titlePlaceholder": "Tytuł (opcjonalnie)",
+    "notePlaceholder": "Dodaj notatkę...",
+    "photoCount": "Zdjęcia: {{count}}"
   },
   "shortcut": {
     "copyNote": "Kopiuj skrót do notatki",
@@ -1028,9 +1034,8 @@
     "addressPlaceholder": "Wklej link…",
     "savePictures": "Zapisz obrazy",
     "savePicturesHint": "Do 20 obrazów, przechowywanych razem z notatką. Wliczają się do twojej pamięci.",
-    "extensionTipTitle": "Przechwytuj z przeglądarki, aby uzyskać lepszy wynik",
-    "extensionTip": "Rozszerzenie przeglądarki zapisuje stronę tak, jak ją widzisz, także strony wymagające zalogowania.",
-    "extensionTipSetUp": "Skonfiguruj rozszerzenie",
+    "extensionTipTitle": "Chcesz znacznie lepiej przechwytywać strony?",
+    "extensionTip": "Rozszerzenie przeglądarki zapisuje każdą stronę w czystej formie jednym kliknięciem, nawet te wymagające zalogowania.",
     "downloading": "Pobieranie strony…",
     "downloadingPictures": "Pobieranie obrazów, {{done}} z {{total}}",
     "picturesLine_one": "{{count}} obraz · {{size}}, zapisany z notatką",
@@ -1070,7 +1075,7 @@
   "apps": {
     "railLabel": "Rozszerzenie",
     "title": "Rozszerzenie przeglądarki",
-    "subtitle": "Web clipper i menedżer haseł w Chrome, Firefoksie, Edge, Brave i Vivaldi. Rozszerzenie nigdy nie ma klucza, który otwiera twoje notatki.",
+    "subtitle": "Web clipper i menedżer haseł w przeglądarkach Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf i Zen. Rozszerzenie nigdy nie ma klucza, który otwiera twoje notatki.",
     "loginsCopyFull": "Kopia Twoich loginów w rozszerzeniu przeglądarki jest pełna. Nowe loginy trafią do niej, gdy usuniesz część z nich.",
     "stepInstall": "Zainstaluj rozszerzenie",
     "stepFeatures": "Wybierz, co może robić",

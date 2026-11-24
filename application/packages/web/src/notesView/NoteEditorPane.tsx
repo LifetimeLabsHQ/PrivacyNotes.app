@@ -348,7 +348,7 @@ export interface NoteEditorPaneProps {
   /** Two items side by side: false on the side that is not focused, which
    *  takes no keys and registers no commands, so they reach the focused side
    *  only. Absent (true) when the pane is alone.
-   *  Spec: docs/internal/plans/side-by-side-notes.md (section 6) */
+   *  Spec: docs/internal/specs/side-by-side-notes.md (section 6) */
   focused?: boolean;
   /** Two items side by side: closes this side, the header's X. */
   onCloseSide?: () => void;
@@ -605,7 +605,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     pane: paneEl,
     // Two items side by side keep the screen at two columns: no preview
     // beside the text on either side, and no Split view button (its "widen
-    // the window" tip would not be true). Spec: docs/internal/plans/side-by-side-notes.md (section 7)
+    // the window" tip would not be true). Spec: docs/internal/specs/side-by-side-notes.md (section 7)
     markdownShown: selectedEditorMode === 'markdown' && editorShown && !props.onCloseSide,
     showMarkdown: toggleEditorMode,
   });
@@ -842,7 +842,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   // Spec: docs/internal/plans/related-notes.md
   const [cursorNoteId, setCursorNoteId] = useState('');
   const cursorPlaced = cursorNoteId === selected.id;
-  const noteLinkNode = (n: LocalNote) => ({ type: 'wikiLink', attrs: { target: noteLinkName(n, isNoteLocked(n)), label: null } });
+  const noteLinkNode = (n: LocalNote) => ({ type: 'wikiLink', attrs: { target: noteLinkName(n, isNoteLocked(n)), label: null, suggested: true } });
   const linkAtCursor = (n: LocalNote) => {
     const editor = editorRef.current?.getEditor();
     if (!editor || !cursorPlaced) return;
@@ -971,7 +971,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
         {/* Two items side by side: each side closes on its own X, in the
             place the grid's X takes (it stands in for it while paired; the
             last side's X goes back to the grid).
-            Spec: docs/internal/plans/side-by-side-notes.md (section 3) */}
+            Spec: docs/internal/specs/side-by-side-notes.md (section 3) */}
         {props.onCloseSide && (
           <HoverLabel label={t('editor.closeSide')} position="below-start">
             <button
@@ -1748,6 +1748,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 ref={editorRef}
                 idle={idle}
                 noteId={selected.id}
+                noteTitle={selected.title || (selected.type === 'journal' ? entryDayOf(selected) : '')}
                 value={selected.body}
                 noSpellcheck={noteSpellOff}
                 place={readLocation(selected.trackers as Record<string, unknown> | undefined)}

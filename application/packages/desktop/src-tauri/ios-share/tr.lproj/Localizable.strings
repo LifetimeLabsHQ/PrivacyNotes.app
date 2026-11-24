@@ -1,3 +1,10 @@
 "saved" = "PrivacyNotes'a kaydedildi";
 "failed" = "PrivacyNotes'a kaydedilemedi";
 "tooLarge" = "Çok büyük. Dosya başına en fazla {{limit}} MB.";
+"save" = "Kaydet";
+"cancel" = "İptal";
+"note" = "Not";
+"files" = "Dosyalar";
+"titlePlaceholder" = "Başlık (isteğe bağlı)";
+"notePlaceholder" = "Not ekle...";
+"photoCount" = "{{count}} fotoğraf";

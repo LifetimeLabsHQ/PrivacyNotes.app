@@ -60,6 +60,8 @@ struct RawItem {
     text: Option<String>,
     name: Option<String>,
     mime: Option<String>,
+    target: Option<String>,
+    group: Option<String>,
 }
 
 /// One item, as the frontend receives it. A `file` carries no bytes here: the
@@ -82,6 +84,10 @@ pub struct SharedItem {
     pub mime: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub size: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub group: Option<String>,
 }
 
 /// A UUID in its canonical text form, either case. The only shape of name
@@ -155,7 +161,7 @@ fn read_capped(path: &Path, cap: u64) -> Capped {
 }
 
 enum ItemRead {
-    Item(SharedItem),
+    Item(Box<SharedItem>),
     Invalid,
     Unreadable,
 }
@@ -163,7 +169,7 @@ enum ItemRead {
 /// Read and validate one item folder.
 fn read_item(dir: &Path, id: &str) -> ItemRead {
     match read_capped(&dir.join(ITEM_FILE), MAX_ITEM_JSON_BYTES) {
-        Capped::Bytes(bytes) => parse_item(dir, id, &bytes).map_or(ItemRead::Invalid, ItemRead::Item),
+        Capped::Bytes(bytes) => parse_item(dir, id, &bytes).map_or(ItemRead::Invalid, |item| ItemRead::Item(Box::new(item))),
         Capped::Invalid => ItemRead::Invalid,
         Capped::Unreadable => ItemRead::Unreadable,
     }
@@ -184,6 +190,8 @@ fn parse_item(dir: &Path, id: &str, bytes: &[u8]) -> Option<SharedItem> {
         name: None,
         mime: None,
         size: None,
+        target: None,
+        group: None,
     };
     match raw.kind.as_str() {
         "url" => match web_url(raw.url.clone()) {
@@ -208,11 +216,17 @@ fn parse_item(dir: &Path, id: &str, bytes: &[u8]) -> Option<SharedItem> {
             if !meta.is_file() || meta.len() == 0 || meta.len() > MAX_PAYLOAD_BYTES {
                 return None;
             }
+            let target = matches!(raw.target.as_deref(), Some("note")).then_some("note");
+            let group = target.and_then(|_| raw.group.as_deref().filter(|g| is_uuid(g)).map(str::to_string));
             Some(SharedItem {
                 kind: "file",
                 name: Some(file_name(raw.name).unwrap_or_else(|| "file".to_string())),
                 mime: capped(raw.mime, MAX_SHORT_CHARS),
                 size: Some(meta.len()),
+                target,
+                group,
+                title: target.and_then(|_| capped(raw.title, MAX_SHORT_CHARS)),
+                text: target.and_then(|_| capped(raw.text, MAX_TEXT_CHARS)),
                 ..base
             })
         }
@@ -240,7 +254,7 @@ pub fn list_in(inbox: &Path) -> Vec<SharedItem> {
         }
         let read = if kind.is_dir() { read_item(&path, &id) } else { ItemRead::Invalid };
         match read {
-            ItemRead::Item(item) => items.push(item),
+            ItemRead::Item(item) => items.push(*item),
             ItemRead::Unreadable => {}
             ItemRead::Invalid => {
                 let _ = if kind.is_dir() { std::fs::remove_dir_all(&path) } else { std::fs::remove_file(&path) };
@@ -553,6 +567,37 @@ mod tests {
         let dir = inbox();
         put(&dir, A, r#"{"v":1,"kind":"text","text":"   "}"#, None);
         assert!(list_in(&dir).is_empty());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn reads_photo_note_fields_and_drops_untrusted_values() {
+        let dir = inbox();
+        let group = "0a1b2c3d-0000-4000-8000-000000000099";
+        put(
+            &dir,
+            A,
+            &format!(
+                r#"{{"v":1,"kind":"file","created":1,"name":"pic.jpg","mime":"image/jpeg","target":"note","group":"{group}","title":" Receipt ","text":" Lunch "}}"#
+            ),
+            Some(b"jpg"),
+        );
+        put(
+            &dir,
+            B,
+            r#"{"v":1,"kind":"file","created":2,"name":"doc.pdf","mime":"application/pdf","target":"other","group":"../escape","title":"Ignored","text":"Ignored"}"#,
+            Some(b"pdf"),
+        );
+        let items = list_in(&dir);
+        assert_eq!(items.len(), 2);
+        assert_eq!(items[0].target, Some("note"));
+        assert_eq!(items[0].group.as_deref(), Some(group));
+        assert_eq!(items[0].title.as_deref(), Some("Receipt"));
+        assert_eq!(items[0].text.as_deref(), Some("Lunch"));
+        assert_eq!(items[1].target, None);
+        assert_eq!(items[1].group, None);
+        assert_eq!(items[1].title, None);
+        assert_eq!(items[1].text, None);
         std::fs::remove_dir_all(&dir).unwrap();
     }
 }

@@ -61,7 +61,7 @@ export function EditorSlotPill({
       onClick={onClick}
       aria-label={label}
       aria-pressed={active}
-      className={`group pointer-events-auto mt-1 flex items-center h-8 overflow-hidden rounded-lg border shadow-lg text-body active:scale-95 transition outline-none ${
+      className={`group shrink-0 pointer-events-auto mt-1 flex items-center h-8 overflow-hidden rounded-lg border shadow-lg text-body active:scale-95 transition outline-none ${
         // Every state keeps an OPAQUE surface: the pill sits on the note's
         // own text, which reads straight through a translucent tint such as
         // `bg-accent/10` or `bg-pn/10`. ON says so with the border and the
@@ -140,7 +140,7 @@ export function EditorSlotPanel({
       onKeyDown={(e) => {
         if (e.key === 'Escape') { e.preventDefault(); onClose(); }
       }}
-      className="order-last pointer-events-auto mt-1 w-72 max-w-[75vw] flex flex-col overflow-hidden rounded-xl border border-divider bg-surface-1 shadow-lg"
+      className="order-last pointer-events-auto mt-1 min-w-0 w-max max-w-96 flex flex-col overflow-hidden rounded-xl border border-divider bg-surface-1 shadow-lg"
     >
       <div className="flex items-center gap-2 ps-3 pe-1.5 py-1.5 border-b border-divider">
         <span className="flex shrink-0 text-accent">{icon}</span>

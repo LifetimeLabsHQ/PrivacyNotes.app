@@ -18,6 +18,7 @@ import { useProGate } from './ui/proGate';
 import { SectionEyebrow } from './settingsUI';
 import { useAuth } from './auth';
 import { isDemoMode, DEMO_APP_URL, proUnlocked } from './demo';
+import { LocalOnlyNotice } from './LocalOnlyNotice';
 import { ExtensionCallError, loadExtensionState, removeExtension, type ExtensionRow } from './extensionApi';
 import { forgetSenderOf, PairingCodeBox, pushSettingsNow, useCodeWatch, type ExtensionAccess } from './BrowserPane';
 import { formatRelative } from './intlFormat';
@@ -49,6 +50,8 @@ export interface CommandLinePaneProps {
   createFolder: (name: string) => { id: string; created: boolean } | null;
   isPro: boolean | null | undefined;
   onUpgrade: () => void;
+  /** Opens Settings > ID & Sync from the local-only notice. */
+  onOpenSync?: () => void;
 }
 
 /** The examples from the homepage, one list (cliExamples.ts) in the app's
@@ -93,10 +96,11 @@ export function Step({ n, done, last = false, title, hint, children }: { n: numb
   );
 }
 
-export function CommandLinePane({ extensionKeys, settings, mutateSettings, createFolder, isPro, onUpgrade }: CommandLinePaneProps) {
+export function CommandLinePane({ extensionKeys, settings, mutateSettings, createFolder, isPro, onUpgrade, onOpenSync }: CommandLinePaneProps) {
   const { t } = useTranslation('shell');
   const { auth, supabase } = useAuth();
-  const access: ExtensionAccess | null = isDemoMode() || auth.status !== 'authenticated'
+  const localOnly = auth.status === 'authenticated' && auth.localOnly;
+  const access: ExtensionAccess | null = isDemoMode() || auth.status !== 'authenticated' || localOnly
     ? null
     : { supabase, pubkey: auth.pubkey, phrase: auth.phrase, contentKey: auth.encryptionKey, ...extensionKeys };
   const pubkey = access?.pubkey ?? '';
@@ -211,25 +215,29 @@ export function CommandLinePane({ extensionKeys, settings, mutateSettings, creat
       {!access || !folder ? (
         <section className="mx-auto max-w-3xl space-y-4">
           {pitch}
-          <div className="grid gap-2 @md:grid-cols-2">
-            {access ? (
-              // A free account gets the Pro door every other Pro button uses:
-              // secondary, so the rocket keeps its Pro color (a filled button
-              // turns it white).
-              <Button variant={isPro ? 'primary' : 'secondary'} pro={!isPro} icon={<Power aria-hidden="true" />} onClick={gate(turnOn)}>
-                {t('alerts.turnOn')}
-              </Button>
-            ) : (
-              <a href={DEMO_APP_URL} className={`${SETTINGS_BTN_PRIMARY} inline-flex justify-center`}>
-                <UserPlus aria-hidden="true" />
-                {t('cli.demoSignUp')}
+          {localOnly ? (
+            <LocalOnlyNotice feature="commandLine" onOpenSync={onOpenSync} />
+          ) : (
+            <div className="grid gap-2 @md:grid-cols-2">
+              {access ? (
+                // A free account gets the Pro door every other Pro button uses:
+                // secondary, so the rocket keeps its Pro color (a filled button
+                // turns it white).
+                <Button variant={isPro ? 'primary' : 'secondary'} pro={!isPro} icon={<Power aria-hidden="true" />} onClick={gate(turnOn)}>
+                  {t('alerts.turnOn')}
+                </Button>
+              ) : (
+                <a href={DEMO_APP_URL} className={`${SETTINGS_BTN_PRIMARY} inline-flex justify-center`}>
+                  <UserPlus aria-hidden="true" />
+                  {t('cli.demoSignUp')}
+                </a>
+              )}
+              <a href={helpHref} target="_blank" rel="noopener noreferrer" className={`${SETTINGS_BTN} inline-flex justify-center`}>
+                <BookOpen aria-hidden="true" />
+                {t('cli.howItWorks')}
               </a>
-            )}
-            <a href={helpHref} target="_blank" rel="noopener noreferrer" className={`${SETTINGS_BTN} inline-flex justify-center`}>
-              <BookOpen aria-hidden="true" />
-              {t('cli.howItWorks')}
-            </a>
-          </div>
+            </div>
+          )}
           <div className="space-y-2 pt-2">
             <SectionEyebrow icon={Sparkle}>{t('landing:cli.useHeading')}</SectionEyebrow>
             <CliExampleCards />

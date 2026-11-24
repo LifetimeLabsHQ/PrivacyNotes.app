@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowUp, ArrowClockwise } from './icons';
+import { Spinner } from './ui/feedback';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 
 /**
  * Shared "Update available" toast - single source of truth for both the web
@@ -27,6 +29,7 @@ export function UpdateToast({
   icon,
   meta,
   secondary,
+  busy = false,
 }: {
   /** Omitted by the store builds (Play/iOS), which only know the floor, not
    *  what the store will install - the meta line then collapses away. */
@@ -43,6 +46,8 @@ export function UpdateToast({
   icon?: ReactNode;
   meta?: string;
   secondary?: { label: string; onAction: () => void };
+  /** Disables the action button while an update restart is flushing editors. */
+  busy?: boolean;
 }) {
   const { t } = useTranslation('common');
   // Decimal MB, matching how every store and download page quotes an APK size.
@@ -54,7 +59,9 @@ export function UpdateToast({
       aria-live="polite"
       // A second button leaves a narrow toast no room for its title, so the
       // reminder's variant is wider: a question or an item title stays on one line.
-      className={`fixed z-[100] start-4 end-4 sm:start-auto sm:end-4 ${secondary ? 'sm:max-w-lg' : 'sm:max-w-sm'} pn-toast-in`}
+      // Above LockScreen (z-[90]) and modals (<= z-[80]), below blocking
+      // full-screen sign-out/progress overlays (z-[100]) and ContextMenu (z-[1000]).
+      className={`fixed z-[95] start-4 end-4 sm:start-auto sm:end-4 ${secondary ? 'sm:max-w-lg' : 'sm:max-w-sm'} pn-toast-in`}
       // Account for the iPhone home-indicator stripe (and any other bottom
       // safe-area inset). On platforms without a safe area env() returns 0,
       // so this collapses to a plain 1rem.
@@ -118,9 +125,10 @@ export function UpdateToast({
         <button
           type="button"
           onClick={onAction}
-          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-fill text-white text-body font-medium hover:bg-accent-fill-hover transition"
+          disabled={busy}
+          className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${PRIMARY_BTN_SKIN} text-body font-semibold disabled:opacity-60 transition`}
         >
-          {!icon && <ArrowClockwise className="w-3.5 h-3.5" aria-hidden="true" />}
+          {!icon && (busy ? <Spinner size={14} className="text-current" /> : <ArrowClockwise className="w-3.5 h-3.5" aria-hidden="true" />)}
           {actionLabel}
         </button>
         </div>

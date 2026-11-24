@@ -63,4 +63,12 @@ export const BORROWED_KEYS: readonly string[] = [
   // The Vault's notice for a login edit the queue had to drop (beta #130).
   'shell:markdown.notSaved',
   'common:updateToast.dismiss',
+  // Folder & tags picker (#788): reuse the app's own folder and tag labels.
+  'shell:folders.unfiled',
+  'shell:folders.chipUnfiled',
+  'shell:folders.searchPlaceholder',
+  'shell:folders.noFoldersYet',
+  'shell:folders.noMatches',
+  'common:tagInput.removeTag',
+  'security:lockScreen.unlock',
 ];

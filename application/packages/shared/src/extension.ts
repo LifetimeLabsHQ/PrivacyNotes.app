@@ -490,6 +490,10 @@ export interface InboxClip {
   /** One entry per picture of `clip.images`: the id of the picture row that
    *  carries it, or null when it was not downloaded. */
   pictures?: (string | null)[];
+  /** Optional tags chosen in the extension; older apps ignore this field. */
+  tags?: string[];
+  /** Optional folder id chosen in the extension (Pro); older apps ignore this field. */
+  folder?: string;
   clippedAt: string;
 }
 
@@ -505,6 +509,10 @@ export interface InboxLogin {
    *  older extension sends none. */
   totp?: string;
   notes?: string;
+  /** Optional tags chosen in the extension; older apps ignore this field. */
+  tags?: string[];
+  /** Optional folder id chosen in the extension (Pro); older apps ignore this field. */
+  folder?: string;
 }
 
 /** The fields an edit from the extension may set: what the copy shows, never
@@ -637,9 +645,9 @@ export interface InboxNote {
   savedAt: string;
   /** Where it was written: absent for `privacynotes` (the Agent folder), else
    *  the extension's New note or the Ninja box. Either lands at the root.
-   *  Spec: docs/internal/plans/quick-note-694.md (Q3) */
+   *  Spec: docs/internal/specs/quick-note-694.md (Q3) */
   from?: InboxNoteFrom;
-  /** The folder id the Ninja box read from the title line, `from: 'quick'` only. */
+  /** The folder id chosen in the Ninja box or the browser extension (`from: 'quick' | 'browser'`). */
   folder?: string;
 }
 
@@ -649,6 +657,26 @@ export type InboxNoteFrom = 'browser' | 'quick';
  *  clipper's `CLIP_MAX_BODY_BYTES` (tests/cliNote.test.ts keeps them equal).
  *  Spec: docs/internal/plans/agent-cli.md (sections 3.3 and 3.4) */
 export const INBOX_NOTE_LIMITS = { bodyBytes: 700 * 1024, title: 200, tags: 20 } as const;
+
+/** Split free-text tag input ("#work, ideas #2026") into clean unique tag names. */
+export function splitTagText(text: string): string[] {
+  return [...new Set(text.split(/[\s,،、，]+/).map((s) => s.replace(/^#+/, '').trim()).filter(Boolean))];
+}
+
+/** Validate an optional inbox `tags` field: absent means empty; invalid returns null. */
+export function parseInboxTags(value: unknown): string[] | null {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > INBOX_NOTE_LIMITS.tags) return null;
+  if (!value.every((t) => typeof t === 'string' && t.length <= 200)) return null;
+  return value as string[];
+}
+
+/** Validate an optional inbox `folder` id: absent means undefined; invalid returns null. */
+export function parseInboxFolder(value: unknown): string | undefined | null {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string' || value.length === 0 || value.length > 200) return null;
+  return value;
+}
 
 /** A note's title when none is given: the first `# ` heading, else the first
  *  line with text, cut to the limit. `privacynotes save` and the extension's
@@ -677,7 +705,7 @@ export function parseInboxNote(value: unknown, rowId: string): InboxNote | null 
   // An older app drops both fields and puts the note in the Agent folder:
   // a value this one does not know is dropped the same way.
   if (v.from === 'browser' || v.from === 'quick') note.from = v.from;
-  if (note.from === 'quick' && typeof v.folder === 'string' && v.folder.length > 0 && v.folder.length <= 200) note.folder = v.folder;
+  if ((note.from === 'quick' || note.from === 'browser') && typeof v.folder === 'string' && v.folder.length > 0 && v.folder.length <= 200) note.folder = v.folder;
   return note;
 }
 
@@ -790,6 +818,86 @@ export interface BookmarkCopyEntry extends CopyEntryBase {
   savedAt: string;
 }
 export type CopyEntry = LoginCopyEntry | CardCopyEntry | SshKeyCopyEntry | BookmarkCopyEntry;
+
+/** Fixed item id of the single organizer copy row (folders + unlocked tags),
+ *  packed into one row under key P so the server never sees folder/tag counts
+ *  and older extensions skip it via `parseCopyEntry`. */
+export const ORGANIZER_ITEM_ID = 'pn-organizer';
+export const ORGANIZER_LIMITS = { folders: 500, tags: 200, name: 200, tag: 100, padStep: 4096, maxBytes: 11 * 4096 } as const;
+
+export interface OrganizerFolder {
+  id: string;
+  name: string;
+  parentId: string | null;
+  order: number;
+}
+
+export interface OrganizerCopyEntry {
+  v: typeof COPY_VERSION;
+  kind: 'organizer';
+  item: typeof ORGANIZER_ITEM_ID;
+  name: '';
+  pinned: false;
+  folders: OrganizerFolder[];
+  /** Most-used tags from unlocked, non-trashed notes. */
+  tags: string[];
+  /** Deterministic space padding to 4 KiB steps so small changes hide from server size observation. */
+  pad?: string;
+}
+
+/** Trim to fit the copy row byte cap, then pad with spaces to an exact 4 KiB multiple. */
+export function padOrganizerEntry(entry: Omit<OrganizerCopyEntry, 'pad'>): OrganizerCopyEntry {
+  const { padStep, maxBytes } = ORGANIZER_LIMITS;
+  let folders = entry.folders.slice(0, ORGANIZER_LIMITS.folders);
+  let tags = entry.tags.slice(0, ORGANIZER_LIMITS.tags);
+  const fits = (f: OrganizerFolder[], t: string[]) => {
+    const len = utf8.encode(JSON.stringify({ ...entry, folders: f, tags: t })).length;
+    return len <= maxBytes && (len % padStep === 0 || len + 9 <= maxBytes);
+  };
+  while (tags.length > 0 && !fits(folders, tags)) {
+    tags = tags.slice(0, Math.floor(tags.length * 0.75));
+  }
+  while (folders.length > 0 && !fits(folders, tags)) {
+    folders = folders.slice(0, Math.floor(folders.length * 0.75));
+  }
+  const base = { ...entry, folders, tags };
+  const rawLen = utf8.encode(JSON.stringify(base)).length;
+  if (rawLen % padStep === 0) return base;
+  // Adding `,"pad":"..."` costs 9 bytes plus pad.length (including padLen === 0).
+  const target = Math.ceil((rawLen + 9) / padStep) * padStep;
+  const padLen = target - rawLen - 9;
+  return { ...base, pad: ' '.repeat(padLen) };
+}
+
+/** Parse the single organizer copy row, stripping padding. Returns null for any other kind or bad shape. */
+export function parseOrganizerEntry(value: unknown): OrganizerCopyEntry | null {
+  const r = value as Record<string, unknown> | null;
+  if (!r || typeof r !== 'object' || r.v !== COPY_VERSION || r.kind !== 'organizer' || r.item !== ORGANIZER_ITEM_ID) return null;
+  if (!Array.isArray(r.folders) || r.folders.length > ORGANIZER_LIMITS.folders) return null;
+  if (!Array.isArray(r.tags) || r.tags.length > ORGANIZER_LIMITS.tags) return null;
+  const folders: OrganizerFolder[] = [];
+  const seenIds = new Set<string>();
+  for (const raw of r.folders) {
+    const f = raw as Record<string, unknown> | null;
+    if (!f || typeof f !== 'object') return null;
+    if (!str(f.id) || f.id.length === 0 || f.id.length > ORGANIZER_LIMITS.name) return null;
+    if (!str(f.name) || f.name.length > ORGANIZER_LIMITS.name) return null;
+    if (f.parentId !== null && (!str(f.parentId) || f.parentId.length === 0 || f.parentId.length > ORGANIZER_LIMITS.name)) return null;
+    if (typeof f.order !== 'number' || !Number.isFinite(f.order)) return null;
+    if (seenIds.has(f.id)) continue;
+    seenIds.add(f.id);
+    folders.push({ id: f.id, name: f.name, parentId: f.parentId, order: f.order });
+  }
+  const tags: string[] = [];
+  const seenTags = new Set<string>();
+  for (const raw of r.tags) {
+    if (!str(raw) || raw.length === 0 || raw.length > ORGANIZER_LIMITS.tag) return null;
+    if (seenTags.has(raw)) continue;
+    seenTags.add(raw);
+    tags.push(raw);
+  }
+  return { v: COPY_VERSION, kind: 'organizer', item: ORGANIZER_ITEM_ID, name: '', pinned: false, folders, tags };
+}
 
 const str = (v: unknown): v is string => typeof v === 'string';
 const strs = (v: unknown): v is string[] => Array.isArray(v) && v.every(str);

@@ -4,7 +4,7 @@ import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view';
 import type { Node as PMNode } from '@tiptap/pm/model';
 import i18n from './i18n';
 import { CARET_ICON } from './editorCodeBlock';
-import { TIP_PILL, positionClasses, visibleBox } from './HoverLabel';
+import { TIP_PILL, fitTip, observeTip, positionClasses, visibleBox } from './HoverLabel';
 import { activeMatchRange } from './editorSearch';
 import { readNoteFolds, writeNoteFolds } from './editorPrefs';
 
@@ -154,6 +154,7 @@ const TOUCH_W = 32;
 class FoldGutter {
   private layer = document.createElement('div');
   private buttons = new Map<string, HTMLElement>();
+  private tipCleanups = new Map<string, () => void>();
   private placed = new Map<string, Placed>();
   private hovered: string | null = null;
   private frame = 0;
@@ -195,6 +196,8 @@ class FoldGutter {
     this.view.dom.removeEventListener('scroll', this.schedule);
     this.view.dom.removeEventListener('focus', this.onFocus);
     this.view.dom.removeEventListener('blur', this.onFocus);
+    for (const stop of this.tipCleanups.values()) stop();
+    this.tipCleanups.clear();
     this.layer.remove();
   }
 
@@ -326,6 +329,8 @@ class FoldGutter {
     }
     for (const [key, btn] of this.buttons) {
       if (this.placed.has(key)) continue;
+      this.tipCleanups.get(key)?.();
+      this.tipCleanups.delete(key);
       btn.remove();
       this.buttons.delete(key);
     }
@@ -357,25 +362,17 @@ class FoldGutter {
     btn.className = 'pn-fold-toggle pn-tip-host group/tip';
     btn.innerHTML = CARET_ICON;
     // `pn-tip-host`: no box until hovered, so it cannot widen the pane. Above
-    // the chevron, opening toward the text; below when the pane's top would
-    // cut it. A tip built outside HoverLabel does not fit itself
-    // (ui-patterns.md section 18a).
+    // the chevron, opening toward the text; `observeTip` + `fitTip` move it
+    // back inside the visible box and below the chevron whenever the pane's
+    // top or sticky bars (toolbar, tag row, notice row) would cover it.
     const tip = document.createElement('span');
     tip.setAttribute('aria-hidden', 'true');
+    tip.className = `${TIP_PILL} ${positionClasses['above-start']} whitespace-nowrap`;
     btn.append(tip);
-    const side = (pos: 'above-start' | 'below-start') => {
-      tip.className = `${TIP_PILL} ${positionClasses[pos]} whitespace-nowrap`;
-    };
-    side('above-start');
-    const fit = () => {
-      side('above-start');
-      const t = tip.getBoundingClientRect();
-      if (t.width === 0) return false;
-      if (t.top < visibleBox(btn).top) side('below-start');
-      return true;
-    };
-    btn.addEventListener('mouseenter', () => {
-      if (!fit()) requestAnimationFrame(fit);
+    const stop = observeTip(tip);
+    if (stop) this.tipCleanups.set(key, stop);
+    btn.addEventListener('pointerenter', (e) => {
+      if (e.pointerType !== 'touch') fitTip(tip, btn);
     });
     // No focus move off the text on the press.
     btn.addEventListener('mousedown', (e) => e.preventDefault());

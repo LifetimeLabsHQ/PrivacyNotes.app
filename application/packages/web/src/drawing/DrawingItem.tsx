@@ -124,7 +124,7 @@ export function DrawingItem({ note, readOnly, onBodyChange, onOpenNoteLink, open
   // browser (openExternal takes web, mail and phone links only).
   const openLink = useCallback((link: string) => {
     const target = wholeNoteLink(link);
-    if (target === null) openExternal(link);
+    if (target === null) openExternal(link, { browser: true });
     else onOpenNoteLink?.(target);
   }, [onOpenNoteLink]);
   // True while a closing or hidden tab writes the save still waiting.
@@ -247,7 +247,7 @@ export function DrawingVersion({ body }: { body: string }) {
           loadPicture={pictureDataUrl}
           storePicture={noPicture}
           toFile={noFile}
-          onOpenLink={openExternal}
+          onOpenLink={(link) => openExternal(link, { browser: true })}
         />
         <DrawingMenu host={host} />
       </Suspense>

@@ -1,3 +1,10 @@
 "saved" = "บันทึกใน PrivacyNotes แล้ว";
 "failed" = "บันทึกใน PrivacyNotes ไม่สำเร็จ";
 "tooLarge" = "ใหญ่เกินไป สูงสุด {{limit}} MB ต่อไฟล์";
+"save" = "บันทึก";
+"cancel" = "ยกเลิก";
+"note" = "โน้ต";
+"files" = "ไฟล์";
+"titlePlaceholder" = "ชื่อเรื่อง (ไม่บังคับ)";
+"notePlaceholder" = "เพิ่มโน้ต...";
+"photoCount" = "รูปถ่าย {{count}} รูป";

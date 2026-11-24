@@ -7,6 +7,7 @@ import { useEscapeToClose } from './useEscapeToClose';
 import { useAccountLogins } from './accountLogins';
 import { accountErrorKey } from './AccountSignInSetup';
 import { CloseButton } from './ui';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 
 /** A backup restores the authenticator. It never goes to an app endpoint. */
 export function MfaRecoveryHelp() {
@@ -104,7 +105,7 @@ export function MfaPrompt({ request, onSubmit, onDismiss, onRepair, repairing = 
           <div className="space-y-3">
             <p className="text-body text-pn-soft leading-relaxed">{t('mfaPrompt.wrongLogin')}</p>
             {repairError && <p role="alert" className="text-body text-danger">{t(repairError)}</p>}
-            <button type="button" onClick={onRepair} disabled={repairing} className="w-full rounded-md bg-accent-fill hover:bg-accent-fill-hover text-white text-body font-medium px-4 py-2 transition disabled:opacity-40 disabled:cursor-not-allowed">
+            <button type="button" onClick={onRepair} disabled={repairing} className={`w-full rounded-md ${PRIMARY_BTN_SKIN} text-body font-semibold px-4 py-2 transition disabled:opacity-40 disabled:cursor-not-allowed`}>
               {t(repairing ? 'connectedAccounts.working' : 'mfaPrompt.signInAgain')}
             </button>
           </div>
@@ -116,7 +117,7 @@ export function MfaPrompt({ request, onSubmit, onDismiss, onRepair, repairing = 
                 ariaLabel={t('mfaPrompt.codeLabel')} disabled={request.busy} />
             </div>
             {request.error && <p id={errorId} role="alert" className="text-body text-center text-danger">{t(request.error)}</p>}
-            <button type="submit" disabled={request.busy || code.length !== 6} className="w-full rounded-md bg-accent-fill hover:bg-accent-fill-hover text-white text-body font-medium px-4 py-2 transition disabled:opacity-40 disabled:cursor-not-allowed">
+            <button type="submit" disabled={request.busy || code.length !== 6} className={`w-full rounded-md ${PRIMARY_BTN_SKIN} text-body font-semibold px-4 py-2 transition disabled:opacity-40 disabled:cursor-not-allowed`}>
               {t(request.busy ? 'mfaPrompt.verifying' : 'mfaPrompt.verify')}
             </button>
           </form>

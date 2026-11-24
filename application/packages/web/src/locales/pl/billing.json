@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "Odblokuj wszystko za {{price}}",
     "ctaOpening": "Otwieranie płatności...",
     "ctaSignUp": "Zarejestruj się, aby odblokować",
+    "localOnlyHint": "Przejście na Pro łączy się raz, aby zarejestrować Twoje konto i aktywować Pro. Synchronizacja pozostaje wyłączona.",
+    "localOnlyOffline": "Połącz się z internetem, aby przejść na Pro.",
     "features": {
       "folders": "Zagnieżdżone foldery",
       "lock": "Blokada i PIN",

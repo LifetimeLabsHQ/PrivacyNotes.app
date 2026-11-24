@@ -1,4 +1,5 @@
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { Trans, useTranslation } from 'react-i18next';
 import { BellSimple, CalendarX, CalendarDots, Check, Clock, Repeat as RepeatGlyph, Sun, X, ArrowRight } from './icons';
 import type { LocalNote } from './db';
@@ -32,7 +33,7 @@ import {
 } from './scheduleText';
 import { intlLocale } from './languages';
 import { askForRemindersOnce } from './notesView/useReminders';
-import { Button } from './ui';
+import { Button, Select, TextField } from './ui';
 import { TimeInput } from './TimeInput';
 
 /**
@@ -78,12 +79,14 @@ type Props = {
 type Sub = 'main' | 'ends' | 'repeat' | 'repeatCustom' | 'alerts';
 
 const NO_DAYS: ReadonlySet<string> = new Set();
-const FIELD = 'w-[5.5rem] h-8 rounded-md border border-divider bg-surface-1 px-2 text-compact text-pn tabular-nums text-center focus:border-accent outline-none';
-const SELECT = 'h-8 rounded-md border border-divider bg-surface-1 px-1.5 text-compact text-pn focus:border-accent outline-none';
+const TIME_FIELD = 'w-[5.5rem] h-8 rounded-md border border-divider bg-track px-2 text-body text-pn tabular-nums text-center focus:border-accent outline-none';
+/** Hide native browser spin arrows on narrow number fields: they ignore the
+ *  app's theme and eat half the box; keyboard arrows still step (GitHub #894). */
+const NO_SPIN = '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
 
 /** A time field of this view: its box, and a cleared field clears the time. */
-function TimeField({ day, value, onCommit, onDraft, label }: { day: string; value: string | undefined; onCommit: (time: string | null) => void; onDraft?: (time: string | null) => void; label: string }) {
-  return <TimeInput day={day} value={value} label={label} onCommit={onCommit} onDraft={onDraft} className={FIELD} clearable />;
+function TimeField({ day, value, onCommit, onDraft, label, className = TIME_FIELD }: { day: string; value: string | undefined; onCommit: (time: string | null) => void; onDraft?: (time: string | null) => void; label: string; className?: string }) {
+  return <TimeInput day={day} value={value} label={label} onCommit={onCommit} onDraft={onDraft} className={className} clearable />;
 }
 
 export default function ScheduleView({
@@ -332,28 +335,56 @@ function AlertsView({ ui, day, timed, alerts, onBack, onChange }: { ui: MenuUi; 
           />
         ))}
       </Group>
-      {/* The custom alert in three fixed lines: its label, the fields in
-          reading order ("1 days at 10 AM"), and Add across the menu, so
-          nothing wraps into a different order at a narrow width. */}
+      {/* The custom alert in two balanced full-width rows: amount + unit on
+          row 1 (so longer translations never clip), and on row 2 the all-day
+          time beside Add (or Add across the row for timed alerts) (#894). */}
       <div className="px-4 py-2.5 flex flex-col gap-2 text-compact text-pn">
         <span className="text-small text-pn-muted">{t('alerts.custom')}</span>
         <div className="flex items-center gap-2">
-          <input type="number" min={0} max={999} value={amount} onChange={(e) => setAmount(e.target.value)} onKeyDown={(e) => e.stopPropagation()} aria-label={t('alerts.custom')} className={`${FIELD} w-14 shrink-0`} />
-          <select value={unit} onChange={(e) => setUnit(e.target.value as typeof unit)} className={`${SELECT} min-w-0`}>
+          <TextField
+            size="sm"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={999}
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            onKeyDown={(e) => e.stopPropagation()}
+            aria-label={t('alerts.custom')}
+            className={`w-14 shrink-0 !ps-2 !pe-2 text-center tabular-nums ${NO_SPIN}`}
+          />
+          <Select
+            size="sm"
+            value={unit}
+            onChange={(e) => setUnit(e.target.value as typeof unit)}
+            aria-label={t('alerts.custom')}
+            className="flex-1 min-w-0"
+          >
             {(timed ? (['minutes', 'hours', 'days', 'weeks'] as const) : (['days', 'weeks'] as const)).map((u) => (
               <option key={u} value={u}>{t(`alerts.units.${u}`)}</option>
             ))}
-          </select>
-          {!timed && (
-            <>
-              <span className="shrink-0 text-pn-muted">{t('alerts.at')}</span>
-              <TimeField day={day} value={at} label={t('alerts.at')} onCommit={(v) => v && setAt(v)} onDraft={setTypedAt} />
-            </>
-          )}
+          </Select>
         </div>
-        <Button action="add" disabled={full || taken} onClick={addCustom} className="w-full justify-center">
-          {t('common:actions.add')}
-        </Button>
+        {!timed ? (
+          <div className="flex items-center gap-2">
+            <span className="shrink-0 text-pn-muted">{t('alerts.at')}</span>
+            <TimeField
+              day={day}
+              value={at}
+              label={t('alerts.at')}
+              onCommit={(v) => v && setAt(v)}
+              onDraft={setTypedAt}
+              className="w-[5.25rem] shrink-0 rounded-md border border-divider bg-track px-2 py-1.5 text-body text-pn tabular-nums text-center focus:border-accent outline-none"
+            />
+            <Button action="add" disabled={full || taken} onClick={addCustom} className="flex-1 min-w-0 justify-center whitespace-nowrap">
+              {t('common:actions.add')}
+            </Button>
+          </div>
+        ) : (
+          <Button action="add" disabled={full || taken} onClick={addCustom} className="w-full justify-center">
+            {t('common:actions.add')}
+          </Button>
+        )}
         {full && <span className="text-small text-pn-muted">{t('alerts.max')}</span>}
       </div>
     </>
@@ -390,11 +421,28 @@ function CustomRepeat({ ui, day, current, onBack, onApply }: { ui: MenuUi; day: 
       <BackRow title={t('repeat.custom')} onBack={onBack} />
       <div className="px-4 py-3 space-y-3 text-compact text-pn">
         <div className="flex items-center gap-2">
-          <span>{t('repeat.every')}</span>
-          <input type="number" min={1} max={999} value={interval} onChange={(e) => setInterval(e.target.value)} onKeyDown={(e) => e.stopPropagation()} aria-label={t('repeat.every')} className={`${FIELD} w-14`} />
-          <select value={every} onChange={(e) => setEvery(e.target.value as RepeatUnit)} className={SELECT}>
+          <span className="shrink-0">{t('repeat.every')}</span>
+          <TextField
+            size="sm"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={999}
+            value={interval}
+            onChange={(e) => setInterval(e.target.value)}
+            onKeyDown={(e) => e.stopPropagation()}
+            aria-label={t('repeat.every')}
+            className={`w-14 h-8 shrink-0 !ps-2 !pe-2 py-0 text-center tabular-nums ${NO_SPIN}`}
+          />
+          <Select
+            size="sm"
+            value={every}
+            onChange={(e) => setEvery(e.target.value as RepeatUnit)}
+            aria-label={t('repeat.every')}
+            className="flex-1 min-w-0 h-8 py-0"
+          >
             {(['day', 'week', 'month', 'year'] as const).map((u) => <option key={u} value={u}>{t(`repeat.units.${u}`, { count: n })}</option>)}
-          </select>
+          </Select>
         </div>
         {every === 'week' && (
           <div role="group" aria-label={t('repeat.onDays')} className="flex gap-1">
@@ -437,7 +485,18 @@ function CustomRepeat({ ui, day, current, onBack, onApply }: { ui: MenuUi; day: 
               <span className="flex-1">{t(e === 'never' ? 'repeat.endsNever' : e === 'on' ? 'repeat.endsOn' : 'repeat.endsAfter')}</span>
               {e === 'on' && ends === 'on' && <span className="tabular-nums text-pn-muted">{formatDay(until, 'date')}</span>}
               {e === 'after' && ends === 'after' && (
-                <input type="number" min={1} max={999} value={count} onChange={(ev) => setCount(ev.target.value)} onKeyDown={(ev) => ev.stopPropagation()} aria-label={t('repeat.endsAfter')} className={`${FIELD} w-16`} />
+                <TextField
+                  size="sm"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={999}
+                  value={count}
+                  onChange={(ev) => setCount(ev.target.value)}
+                  onKeyDown={(ev) => ev.stopPropagation()}
+                  aria-label={t('repeat.endsAfter')}
+                  className={`w-16 h-8 shrink-0 !ps-2 !pe-2 py-0 text-center tabular-nums ${NO_SPIN}`}
+                />
               )}
             </label>
           ))}
@@ -448,7 +507,7 @@ function CustomRepeat({ ui, day, current, onBack, onApply }: { ui: MenuUi; day: 
           )}
         </div>
         <p className="text-small text-pn-muted">{describeRepeat(draft, day, t)}</p>
-        <button type="button" onClick={() => onApply(draft)} className="w-full h-9 rounded-md bg-accent-fill text-white text-compact font-medium">
+        <button type="button" onClick={() => onApply(draft)} className={`w-full h-9 rounded-md ${PRIMARY_BTN_SKIN} text-compact font-semibold transition`}>
           {t('repeat.apply')}
         </button>
       </div>

@@ -19,6 +19,7 @@
     "proUnlimited": "· 無上限裝置",
     "earlySupporterThanks": "早期支持者，謝謝你第一時間就在",
     "proThanks": "一切就緒。謝謝你支持這個專案",
+    "freeLocalOnly": "免費方案",
     "freeLimit_other": "<strong>免費方案</strong>，最多 {{count}} 部裝置。",
     "freeUsage": "目前使用 {{used}}/{{limit}} 部。",
     "ratePro": "留下評分能幫助更多人找到 PrivacyNotes。",
@@ -88,7 +89,25 @@
   },
   "images": {
     "spaceSaverTitle": "節省空間",
-    "spaceSaverDesc": "縮到 {{px}} 像素以內，以 {{quality}}% 品質存成 JPEG。少一點細節，換來只佔一小部分的空間。GIF 會保留動畫，保險庫的檔案則維持原樣。",
+    "spaceSaverDesc": "縮小新圖片並存成 JPEG。GIF 會保留動畫，保險庫的檔案則維持原樣。",
+    "compressionTitle": "壓縮",
+    "level": {
+      "standard": "標準",
+      "small": "小",
+      "tiny": "極小"
+    },
+    "levelSpec": "縮到 {{px}} 像素以內，JPEG 品質 {{quality}}%。",
+    "levelDesc": {
+      "standard": "細節清晰，卻只佔一小部分的空間。",
+      "small": "檔案更小，同時讓照片和螢幕截圖保持清晰。",
+      "tiny": "適合儲存空間吃緊時的最小體積；細小文字可能會略為模糊。"
+    },
+    "previewSample": "{{size}} 手機照片",
+    "previewSavedAs": "儲存為",
+    "previewCompressed": "~{{size}} JPEG（{{px}} px，{{quality}}%）",
+    "previewOriginal": "{{size}} 原圖",
+    "previewBarLabel": "與原圖相比的預估儲存圖片大小",
+    "previewFits": "~{{count}} 張照片 / {{storage}}",
     "removeLocationTitle": "移除位置資料",
     "removeLocationDesc": "圖片的拍攝地點會在儲存前移除。",
     "contactTitle": "小尺寸聯絡人照片",
@@ -131,7 +150,8 @@
     "verifyPendingDelete_other": "有 {{count}} 個項目已在別處刪除，這裡卻還留著",
     "verifyNeverPushed_other": "這裡有 {{count}} 個項目從未送達伺服器",
     "verifyRepairAction": "重新下載全部",
-    "verifyRepairQueued": "下次同步會重新讀取你的整個保險庫。任何等待上傳的內容都不會遺失。"
+    "verifyRepairQueued": "下次同步會重新讀取你的整個保險庫。任何等待上傳的內容都不會遺失。",
+    "localOnlyOfflineError": "你目前離線。請連上網路以開啟同步。"
   },
   "accountId": {
     "heading": "帳號 ID",
@@ -457,6 +477,7 @@
     "blockedByStorage": "你有使用中的儲存空間訂閱。請先到設定的「儲存空間」取消，才能刪除帳號。",
     "localLabel": "刪除本機資料",
     "localDesc": "抹除此裝置上的筆記、圖片與快取資料。這不會刪除你的帳號，只會清理這個瀏覽器。",
+    "localDescLocalOnly": "抹除這台裝置上的所有筆記、圖片與檔案。沒有任何資料儲存在雲端。",
     "localRequired": "（刪除帳號時必選）",
     "localUnsynced_other": "此裝置上有 {{items}}尚未同步。刪除本機資料會將其永久銷毀。",
     "unsyncedNotes_other": "{{count}} 則筆記",
@@ -491,6 +512,8 @@
     "updateRequiredAria": "需要更新，同步已暫停",
     "paused": "同步已關閉",
     "pausedTooltip": "這台裝置的同步已關閉。在你開啟同步之前，筆記會留在這裡。",
+    "localOnly": "僅限本機",
+    "localOnlyAria": "僅限本機。你的筆記留在這台裝置上",
     "wifiHold": "等待 Wi-Fi",
     "wifiHoldTooltip": "Wi-Fi 回來後就會上傳檔案。筆記仍照常同步。",
     "notBackedUp": "未備份",
@@ -547,7 +570,26 @@
     "unopenedNoCopy": "不在這台裝置上的筆記",
     "unopenedSeen": "於 {{ago}} 發現",
     "passPushFailed_other": "{{count}} 則失敗",
-    "passHalted_other": "已停止，{{count}} 則等待中"
+    "passHalted_other": "已停止，{{count}} 則等待中",
+    "localOnlyBody": "你的筆記會以加密形式留在這台裝置上，不會同步到我們的伺服器。",
+    "localOnlyNotes_other": "這台裝置上有 {{count}} 則筆記",
+    "localOnlyBackupHint": "沒有任何內容同步到雲端。設定自動備份，將安全副本存放在另一個磁碟機或資料夾中。",
+    "localOnlySetUpBackups": "設定自動備份",
+    "localOnlyTurnOnSync": "開啟同步",
+    "localOnlyTurningOn": "正在開啟同步…",
+    "localOnlyAccountIdHint": "尚未在我們的伺服器上註冊。"
+  },
+  "localOnlyNotice": {
+    "body": "{{feature}}：請到「設定 > ID & Sync」開啟同步，以使用這項線上功能。",
+    "cta": "前往 ID & Sync",
+    "features": {
+      "multiDevice": "多裝置管理",
+      "keyCustody": "雲端金鑰保管",
+      "cloudStorage": "雲端儲存空間",
+      "twoFactorPasskeys": "雙因素登入與密碼金鑰",
+      "phraseChange": "更換復原助憶詞",
+      "burnShare": "Burn After Reading 連結"
+    }
   },
   "language": {
     "reportMistake": "回報翻譯錯誤",

@@ -70,7 +70,12 @@
     "unopenedWarn_one": "1 nota tem uma cópia no servidor que este dispositivo não consegue abrir. Sair apaga a cópia daqui, que pode ser a única boa. Envie-a de novo em Configurações > ID & Sync antes.",
     "unopenedWarn_other": "{{count}} notas têm uma cópia no servidor que este dispositivo não consegue abrir. Sair apaga as cópias daqui, que podem ser as únicas boas. Envie-as de novo em Configurações > ID & Sync antes.",
     "unopenedKept_one": "1 nota tem uma cópia no servidor que este dispositivo não consegue abrir. A cópia daqui continua depois que você sair.",
-    "unopenedKept_other": "{{count}} notas têm uma cópia no servidor que este dispositivo não consegue abrir. As cópias daqui continuam depois que você sair."
+    "unopenedKept_other": "{{count}} notas têm uma cópia no servidor que este dispositivo não consegue abrir. As cópias daqui continuam depois que você sair.",
+    "localOnlyTitle": "Excluir tudo neste dispositivo?",
+    "localOnlyBody": "Suas notas ficam armazenadas só neste dispositivo e nunca foram sincronizadas. Ao sair, elas são excluídas permanentemente deste dispositivo.",
+    "localOnlyCounts": "Neste dispositivo: {{items}}.",
+    "localOnlyExportBackup": "Exportar backup",
+    "localOnlyDeleteConfirm": "Excluir e sair"
   },
   "signOutUpload": {
     "uploading": "Enviando suas últimas alterações…",
@@ -139,6 +144,7 @@
   "burnShare": {
     "offline": "Você está offline. Burn links exigem uma ida e volta ao servidor. Tente de novo quando estiver online.",
     "demo": "Burn links são armazenados em um servidor, e a demo não contata nenhum. Cadastre-se para criar burn links de verdade.",
+    "localOnly": "Burn links exigem uma conta online. Ative a sincronização em Configurações > ID & Sync para compartilhar burn links.",
     "tooLarge": "A nota é grande demais para compartilhar via burn link ({{size}}KB). O máximo é {{max}}KB.",
     "storeFailed": "Falha ao armazenar a burn note no servidor.",
     "rateLimited": "Muitos burn links foram criados a partir desta conexão. Tente de novo mais tarde."

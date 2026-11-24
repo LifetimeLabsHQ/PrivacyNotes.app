@@ -287,6 +287,8 @@
     "showNoteLinks": "Diğer öğelerdeki bağlantıları göster",
     "showNoteTasks": "Diğer öğelerdeki görevleri göster",
     "showGroups": "Grupları göster",
+    "groupBy": "Gruplama ölçütü",
+    "groupLetter": "İlk harf",
     "groupsByDate": "Tarihe göre gruplandı",
     "groupsByLetter": "İlk harfe göre gruplandı",
     "groupsNoneForSize": "Boyuta göre sıralamada kullanılamaz",
@@ -310,6 +312,7 @@
     "nextWeek": "Sonraki hafta",
     "pickMonth": "{{month}}, ay ve yıl seçin",
     "pickMonthTip": "Ay ve yıl seç",
+    "showToday": "Bugünü göster",
     "showWholeMonth": "Tüm ayı göster",
     "showOneWeek": "Bir hafta göster"
   },
@@ -625,7 +628,10 @@
   "shareInbox": {
     "saved": "PrivacyNotes'a kaydedildi",
     "failed": "PrivacyNotes'a kaydedilemedi",
-    "tooLarge": "Çok büyük. Dosya başına en fazla {{limit}} MB."
+    "tooLarge": "Çok büyük. Dosya başına en fazla {{limit}} MB.",
+    "titlePlaceholder": "Başlık (isteğe bağlı)",
+    "notePlaceholder": "Not ekle...",
+    "photoCount": "{{count}} fotoğraf"
   },
   "shortcut": {
     "copyNote": "Not kısayolunu kopyala",
@@ -984,9 +990,8 @@
     "addressPlaceholder": "Bir bağlantı yapıştırın…",
     "savePictures": "Görselleri kaydet",
     "savePicturesHint": "En fazla 20 görsel, notla birlikte saklanır. Depolama alanınızdan düşülür.",
-    "extensionTipTitle": "Daha iyi sonuç için tarayıcınızdan kırpın",
-    "extensionTip": "Tarayıcı uzantısı sayfayı gördüğünüz gibi kaydeder, oturum açmayı gerektiren sayfaları da.",
-    "extensionTipSetUp": "Uzantıyı kur",
+    "extensionTipTitle": "Çok daha iyi kırpmalar ister misiniz?",
+    "extensionTip": "Tarayıcı uzantısı her sayfayı tek tıkla temiz biçimde kaydeder, oturum açmayı gerektiren sayfaları bile.",
     "downloading": "Sayfa indiriliyor…",
     "downloadingPictures": "Görseller indiriliyor, {{done}} / {{total}}",
     "picturesLine_other": "{{count}} görsel · {{size}}, notla birlikte kaydedilir",
@@ -1023,7 +1028,7 @@
   "apps": {
     "railLabel": "Uzantı",
     "title": "Tarayıcı uzantısı",
-    "subtitle": "Chrome, Firefox, Edge, Brave ve Vivaldi'de web kırpıcı ve parola yöneticisi. Uzantı, notlarınızı açan anahtarı hiçbir zaman tutmaz.",
+    "subtitle": "Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf ve Zen'de web kırpıcı ve parola yöneticisi. Uzantı, notlarınızı açan anahtarı hiçbir zaman tutmaz.",
     "loginsCopyFull": "Tarayıcı uzantısındaki giriş bilgileri kopyası dolu. Bazılarını sildiğinizde yeni giriş bilgileri ona ulaşır.",
     "stepInstall": "Uzantıyı yükleyin",
     "stepFeatures": "Neler yapabileceğini seçin",

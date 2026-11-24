@@ -1,3 +1,10 @@
 "saved" = "PrivacyNotes에 저장했어요";
 "failed" = "PrivacyNotes에 저장하지 못했어요";
 "tooLarge" = "너무 커요. 파일당 최대 {{limit}} MB까지 가능해요.";
+"save" = "저장";
+"cancel" = "취소";
+"note" = "노트";
+"files" = "파일";
+"titlePlaceholder" = "제목(선택)";
+"notePlaceholder" = "노트 추가...";
+"photoCount" = "사진 {{count}}장";

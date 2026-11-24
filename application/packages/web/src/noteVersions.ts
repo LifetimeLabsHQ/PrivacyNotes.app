@@ -30,6 +30,7 @@ import { isPhraseReplacedRefusal, reportPhraseReplaced } from './phraseReplaced'
 import { computeSnapshotTotalSize } from './notesViewUtils';
 import { isServerWriteBlocked } from './syncPause';
 import { isDemoMode } from './demo';
+import { isLocalTruthOnly } from './localOnly';
 import { localDataKeyCopy } from './localKey';
 import { trackerContent } from './editStamp';
 
@@ -178,7 +179,7 @@ async function queueHash(hash: string): Promise<string | null> {
  * 2026-10-24, bug report 2). `drainVersionQueue` sends them after a sync pass.
  */
 export async function queueNoteVersion(note: LocalNote, encryptionKey: Uint8Array, hash: string): Promise<void> {
-  if (isDemoMode()) return;
+  if (isDemoMode() || isLocalTruthOnly()) return;
   const key = liveKey(encryptionKey);
   if (!key) return;
   try {
@@ -289,6 +290,9 @@ export async function createNoteVersion(
   // per-edit and would otherwise ship every keystroke batch to the server
   // while note sync itself is paused, defeating the pause. Guarded here so
   // both call sites (edit snapshots, pre-restore snapshots) are covered.
+  if (isLocalTruthOnly()) {
+    return { ok: false, code: 'local_only', message: 'note history requires sync' };
+  }
   if (isServerWriteBlocked()) {
     return { ok: false, code: 'below_version_floor', message: 'client below release floor' };
   }
@@ -356,6 +360,7 @@ export async function listNoteVersions(
   encryptionKey: Uint8Array,
   noteId: string
 ): Promise<NoteVersion[]> {
+  if (isLocalTruthOnly()) return [];
   if (isDemoMode()) {
     const rows = await db.demoVersions.where('noteId').equals(noteId).sortBy('createdAt');
     return rows.reverse().map((v) => ({

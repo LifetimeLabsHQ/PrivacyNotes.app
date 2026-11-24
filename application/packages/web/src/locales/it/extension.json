@@ -23,7 +23,6 @@
     "generatePassword": "Genera una password"
   },
   "note": {
-    "tagsPlaceholder": "#lavoro #idee",
     "tagsHelp": "Spazio o virgola tra i tag. Il # è facoltativo.",
     "failed": "Impossibile salvare la nota. Riprova."
   },
@@ -213,5 +212,11 @@
     "unlockFirst": "Sblocca per usare le tue passkey.",
     "offer": "Offri le passkey",
     "offerHelp": "Salva e usa le passkey sui siti web."
+  },
+  "organize": {
+    "title": "Cartella e tag",
+    "unlockToPick": "Sblocca la Cassaforte per scegliere",
+    "addTag": "Aggiungi tag...",
+    "proFolders": "Le cartelle sono una funzione Pro. Apri PrivacyNotes per passare a Pro."
   }
 }

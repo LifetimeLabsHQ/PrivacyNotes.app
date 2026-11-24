@@ -74,6 +74,11 @@
     "appLockHint": "Dispositiu compartit? Activa el bloqueig de l'app a Configuració > Seguretat.",
     "unopenedWarn_other": "{{count}} notes tenen una còpia al servidor que aquest dispositiu no pot obrir. En tancar la sessió se suprimeixen les còpies d'aquí, que potser són les úniques bones. Abans, torna-les a enviar a Configuració > ID & Sync.",
     "unopenedKept_other": "{{count}} notes tenen una còpia al servidor que aquest dispositiu no pot obrir. Les còpies d'aquí es queden després de tancar la sessió.",
+    "localOnlyTitle": "Vols suprimir-ho tot d'aquest dispositiu?",
+    "localOnlyBody": "Les teves notes només es guarden en aquest dispositiu i no s'han sincronitzat mai. En tancar la sessió se suprimeixen permanentment d'aquest dispositiu.",
+    "localOnlyCounts": "En aquest dispositiu: {{items}}.",
+    "localOnlyExportBackup": "Exporta una còpia de seguretat",
+    "localOnlyDeleteConfirm": "Suprimeix i tanca la sessió",
     "unopenedKept_one": "1 nota té una còpia al servidor que aquest dispositiu no pot obrir. La còpia d'aquí es queda després de tancar la sessió.",
     "unopenedWarn_one": "1 nota té una còpia al servidor que aquest dispositiu no pot obrir. En tancar la sessió se suprimeix la còpia d'aquí, que potser és l'única bona. Abans, torna-la a enviar a Configuració > ID & Sync."
   },
@@ -144,6 +149,7 @@
   "burnShare": {
     "offline": "Ets fora de línia. Els enllaços burn requereixen una connexió amb el servidor. Torna-ho a provar quan tornis a estar en línia.",
     "demo": "Els enllaços burn es desen en un servidor, i la demo no en contacta cap. Registra't per crear enllaços burn reals.",
+    "localOnly": "Els enllaços burn requereixen un compte en línia. Activa la sincronització a Configuració > ID & Sync per compartir enllaços burn.",
     "tooLarge": "La nota és massa gran per compartir-la amb un enllaç burn ({{size}}KB). El màxim és {{max}}KB.",
     "storeFailed": "No s'ha pogut desar la nota burn al servidor.",
     "rateLimited": "S'han creat massa enllaços burn des d'aquesta connexió. Torna-ho a provar més tard."

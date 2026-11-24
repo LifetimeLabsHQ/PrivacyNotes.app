@@ -5,6 +5,7 @@ import { LogoIcon } from './LogoIcon';
 import { Hourglass } from './icons';
 import { formatInstant } from './intlFormat';
 import { Button } from './ui';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 
 /**
  * Full-screen error state for a failed OAuth hydration
@@ -81,7 +82,7 @@ export function OAuthRetryScreen({ trust }: { trust: boolean }) {
                 setBusy(true);
                 void retryOAuthHydration(trust).finally(() => setBusy(false));
               }}
-              className="w-full rounded-lg bg-accent-fill text-white hover:bg-accent-fill-hover px-4 py-3 font-medium transition shadow-sm disabled:opacity-60"
+              className={`w-full rounded-lg ${PRIMARY_BTN_SKIN} px-4 py-3 font-semibold transition shadow-sm disabled:opacity-60`}
             >
               {t('signIn.tryAgain')}
             </button>

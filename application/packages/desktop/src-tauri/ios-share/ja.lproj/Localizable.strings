@@ -1,3 +1,10 @@
 "saved" = "PrivacyNotesに保存しました";
 "failed" = "PrivacyNotesに保存できませんでした";
 "tooLarge" = "大きすぎます。上限は1ファイルあたり{{limit}} MBです。";
+"save" = "保存";
+"cancel" = "キャンセル";
+"note" = "ノート";
+"files" = "ファイル";
+"titlePlaceholder" = "タイトル（任意）";
+"notePlaceholder" = "ノートを追加...";
+"photoCount" = "写真 {{count}}枚";

@@ -23,7 +23,6 @@
     "generatePassword": "비밀번호 생성"
   },
   "note": {
-    "tagsPlaceholder": "#업무 #아이디어",
     "tagsHelp": "태그 사이는 공백이나 쉼표로 구분하세요. #는 생략해도 돼요.",
     "failed": "노트를 저장하지 못했어요. 다시 시도하세요."
   },
@@ -210,5 +209,11 @@
     "unlockFirst": "패스키를 사용하려면 잠금을 해제하세요.",
     "offer": "패스키 제안",
     "offerHelp": "웹사이트에서 패스키를 저장하고 사용해요."
+  },
+  "organize": {
+    "title": "폴더 및 태그",
+    "unlockToPick": "보관함 잠금 해제하고 선택",
+    "addTag": "태그 추가...",
+    "proFolders": "폴더는 Pro 기능이에요. 업그레이드하려면 PrivacyNotes를 여세요."
   }
 }

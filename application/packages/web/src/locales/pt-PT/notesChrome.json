@@ -69,6 +69,11 @@
     "appLockHint": "Dispositivo partilhado? Ativa o bloqueio da app em Definições > Segurança.",
     "unopenedWarn_other": "{{count}} notas têm uma cópia no servidor que este dispositivo não consegue abrir. Terminar sessão elimina as cópias daqui, que podem ser as únicas boas. Envia-as de novo primeiro em Definições > ID & Sync.",
     "unopenedKept_other": "{{count}} notas têm uma cópia no servidor que este dispositivo não consegue abrir. As cópias daqui ficam depois de terminares sessão.",
+    "localOnlyTitle": "Eliminar tudo neste dispositivo?",
+    "localOnlyBody": "As tuas notas estão guardadas apenas neste dispositivo e nunca foram sincronizadas. Terminar sessão elimina-as permanentemente deste dispositivo.",
+    "localOnlyCounts": "Neste dispositivo: {{items}}.",
+    "localOnlyExportBackup": "Exportar backup",
+    "localOnlyDeleteConfirm": "Eliminar e terminar sessão",
     "unopenedKept_one": "1 nota tem uma cópia no servidor que este dispositivo não consegue abrir. A cópia daqui fica depois de terminares sessão.",
     "unopenedWarn_one": "1 nota tem uma cópia no servidor que este dispositivo não consegue abrir. Terminar sessão elimina a cópia daqui, que pode ser a única boa. Envia-a de novo primeiro em Definições > ID & Sync."
   },
@@ -139,6 +144,7 @@
   "burnShare": {
     "offline": "Estás offline. Os burn links exigem uma ida e volta ao servidor. Tenta de novo quando estiveres online.",
     "demo": "Os burn links são guardados num servidor, e a demo não contacta nenhum. Regista-te para criares burn links reais.",
+    "localOnly": "Os burn links exigem uma conta online. Ativa a sincronização em Definições > ID & Sync para partilhares burn links.",
     "tooLarge": "A nota é demasiado grande para partilhar por burn link ({{size}}KB). O máximo é {{max}}KB.",
     "storeFailed": "Falha ao armazenar a burn note no servidor.",
     "rateLimited": "Foram criados demasiados burn links a partir desta ligação à internet. Tenta de novo mais tarde."

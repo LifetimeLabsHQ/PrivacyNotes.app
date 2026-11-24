@@ -17,6 +17,7 @@
  * Spec: docs/internal/plans/crypto-payments.md (section 11b)
  */
 import { isDemoMode } from './demo';
+import { isBackendNetworkAllowed, isLocalOnly } from './localOnly';
 import { detectPlatform } from './devices';
 import { APEX_ORIGIN } from './hosts';
 
@@ -42,6 +43,7 @@ const STATES: readonly CryptoState[] = ['none', 'new', 'open', 'seen', 'partial'
 
 async function call<T>(body: Record<string, unknown>, accessToken?: string): Promise<CryptoResult<T>> {
   if (isDemoMode()) return { ok: false, code: 'demo' };
+  if (isLocalOnly() && !isBackendNetworkAllowed()) return { ok: false, code: 'local_only' };
   try {
     const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/crypto-checkout`, {
       method: 'POST',

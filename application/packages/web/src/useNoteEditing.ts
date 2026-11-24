@@ -5,6 +5,7 @@ import type { JournalTrackerData } from './trackerTypes';
 import { bulkRewriteBody, getNote, updateNote, updateNoteFrom } from './notesRepo';
 import { createNoteVersion, queueNoteVersion, unqueueNoteVersion } from './noteVersions';
 import { isDemoMode, proUnlocked } from './demo';
+import { isLocalTruthOnly } from './localOnly';
 import { gcOnBodyChange, holdBlobsForVersion, markVersionActivity } from './imageGC';
 import { noteLinkKey, retargetNoteLinks } from './noteLinks';
 import { attachmentLinks, fileNameForTitle, requestAttachmentName, unescapeMarkdownText } from './fileNames';
@@ -241,8 +242,10 @@ export function useNoteEditing({
    */
   function recordEdit(id: string, before: LocalNote | undefined, bodyAfter?: string) {
     // proUnlocked, not isPro: the demo keeps versions too, in its own local
-    // table rather than on the server (noteVersions.ts).
-    if (!before || !proUnlocked(auth.isPro)) return;
+    // table rather than on the server (noteVersions.ts). Local-truth vaults
+    // (local-only or never-synced) skip version history so buying Pro with
+    // Sync off never fills db.versionQueue.
+    if (!before || !proUnlocked(auth.isPro) || isLocalTruthOnly()) return;
     const bigLoss = bodyAfter !== undefined && isBigLoss(before.body, bodyAfter);
     const now = Date.now();
     const pending = pendingVersionRef.current.get(id);
@@ -307,7 +310,7 @@ export function useNoteEditing({
         oldBody,
         body,
         id,
-        auth.isPro ? { supabase, encryptionKey: auth.encryptionKey, noteId: id } : undefined,
+        auth.isPro && !isLocalTruthOnly() ? { supabase, encryptionKey: auth.encryptionKey, noteId: id } : undefined,
         attachmentStore,
       );
     })();

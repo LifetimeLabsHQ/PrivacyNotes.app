@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "Unlock everything for {{price}}",
     "ctaOpening": "Opening checkout...",
     "ctaSignUp": "Sign up to unlock",
+    "localOnlyHint": "Upgrading connects once to register your account and activate Pro. Sync stays off.",
+    "localOnlyOffline": "Connect to the internet to upgrade.",
     "features": {
       "folders": "Nested folders",
       "lock": "Lock and PIN",

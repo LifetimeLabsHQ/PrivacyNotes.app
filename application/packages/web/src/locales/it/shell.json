@@ -287,6 +287,8 @@
     "showNoteLinks": "Mostra i link in altri elementi",
     "showNoteTasks": "Mostra le attività in altri elementi",
     "showGroups": "Mostra gruppi",
+    "groupBy": "Raggruppa per",
+    "groupLetter": "Prima lettera",
     "groupsByDate": "Raggruppati per data",
     "groupsByLetter": "Raggruppati per iniziale",
     "groupsNoneForSize": "Non disponibile con l'ordinamento per dimensione",
@@ -310,6 +312,7 @@
     "nextWeek": "Settimana successiva",
     "pickMonth": "{{month}}, scegli mese e anno",
     "pickMonthTip": "Scegli mese e anno",
+    "showToday": "Mostra oggi",
     "showWholeMonth": "Mostra tutto il mese",
     "showOneWeek": "Mostra una settimana"
   },
@@ -625,7 +628,10 @@
   "shareInbox": {
     "saved": "Salvato in PrivacyNotes",
     "failed": "Impossibile salvare in PrivacyNotes",
-    "tooLarge": "Troppo grande. Il massimo è {{limit}} MB per file."
+    "tooLarge": "Troppo grande. Il massimo è {{limit}} MB per file.",
+    "titlePlaceholder": "Titolo (facoltativo)",
+    "notePlaceholder": "Aggiungi una nota...",
+    "photoCount": "{{count}} foto"
   },
   "shortcut": {
     "copyNote": "Copia la scorciatoia alla nota",
@@ -984,9 +990,8 @@
     "addressPlaceholder": "Incolla un link…",
     "savePictures": "Salva le immagini",
     "savePicturesHint": "Fino a 20 immagini, conservate con la nota. Contano sul tuo spazio di archiviazione.",
-    "extensionTipTitle": "Salva dal browser per un risultato migliore",
-    "extensionTip": "L'estensione del browser salva la pagina così come la vedi, anche le pagine dietro un accesso.",
-    "extensionTipSetUp": "Configura l'estensione",
+    "extensionTipTitle": "Vuoi salvare le pagine molto meglio?",
+    "extensionTip": "L'estensione del browser salva qualsiasi pagina in modo pulito con un clic, anche dietro un accesso.",
     "downloading": "Download della pagina…",
     "downloadingPictures": "Download delle immagini, {{done}} di {{total}}",
     "picturesLine_other": "{{count}} immagini · {{size}}, salvate con la nota",
@@ -1023,7 +1028,7 @@
   "apps": {
     "railLabel": "Estensione",
     "title": "Estensione del browser",
-    "subtitle": "Salvataggio di pagine web e gestore di password in Chrome, Firefox, Edge, Brave e Vivaldi. L'estensione non conserva mai la chiave che apre le tue note.",
+    "subtitle": "Salvataggio di pagine web e gestore di password in Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf e Zen. L'estensione non conserva mai la chiave che apre le tue note.",
     "loginsCopyFull": "La copia dei tuoi accessi nell'estensione del browser è piena. I nuovi accessi la raggiungono dopo che ne elimini alcuni.",
     "stepInstall": "Installa l'estensione",
     "stepFeatures": "Scegli cosa può fare",

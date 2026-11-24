@@ -12,7 +12,7 @@ type Variant = 'secondary' | 'accent' | 'primary' | 'danger' | 'dangerSoft' | 's
 function buttonLook(variant: Variant): string {
   switch (variant) {
     case 'secondary': return SETTINGS_BTN;
-    case 'accent': return `${SETTINGS_BTN} !border-accent/35 bg-accent/10 !text-accent-strong hover:!bg-accent/15`;
+    case 'accent': return `${SETTINGS_BTN} !border-accent/25 bg-accent/[0.06] !text-accent-strong hover:!bg-accent/12`;
     case 'primary': return SETTINGS_BTN_PRIMARY;
     case 'danger': return SETTINGS_BTN_DANGER;
     case 'dangerSoft': return `${SETTINGS_BTN} !border-danger/40 bg-danger/10 !text-danger hover:!bg-danger/15`;
@@ -62,7 +62,7 @@ export function Button({
       {!after && (Glyph ? <Glyph aria-hidden="true" className="shrink-0" /> : icon)}
       {children ?? (spec?.label ? t(`actions.${spec.label}`) : null)}
       {after && (Glyph ? <Glyph aria-hidden="true" className="shrink-0" /> : icon)}
-      {pro && <IconUpgrade size={12} onFill={look !== 'secondary'} />}
+      {pro && <IconUpgrade size={12} onFill={look === 'danger' || look === 'upgrade'} />}
     </button>
   );
 }

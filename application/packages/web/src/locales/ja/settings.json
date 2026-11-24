@@ -19,6 +19,7 @@
     "proUnlimited": "· デバイス無制限",
     "earlySupporterThanks": "アーリーサポーター、最初期からの応援に感謝します",
     "proThanks": "準備は完了です。プロジェクトの応援をありがとうございます",
+    "freeLocalOnly": "無料プラン",
     "freeLimit_other": "<strong>無料プラン</strong>、最大{{count}}台まで。",
     "freeUsage": "現在{{limit}}台中{{used}}台を使用中。",
     "ratePro": "評価は、ほかの方が PrivacyNotes を見つける助けになります。",
@@ -88,7 +89,25 @@
   },
   "images": {
     "spaceSaverTitle": "省スペース",
-    "spaceSaverDesc": "{{px}} ピクセルに収めて品質 {{quality}}% の JPEG として保存します。わずかな細部と引き換えに、容量はごく一部で済みます。GIF はアニメーションを保ち、保管庫のファイルはそのまま残ります。",
+    "spaceSaverDesc": "新しい画像を縮小して JPEG として保存します。GIF はアニメーションを保ち、保管庫のファイルはそのまま残ります。",
+    "compressionTitle": "圧縮",
+    "level": {
+      "standard": "標準",
+      "small": "小",
+      "tiny": "極小"
+    },
+    "levelSpec": "{{px}} ピクセルに収め、JPEG 品質は {{quality}}% です。",
+    "levelDesc": {
+      "standard": "ごくわずかな容量で、細部までくっきり残します。",
+      "small": "写真やスクリーンショットを見やすく保ちながら、ファイルを小さくします。",
+      "tiny": "ストレージに余裕がないときの最小サイズです。細かい文字がややぼやけることがあります。"
+    },
+    "previewSample": "{{size}} のスマートフォンの写真",
+    "previewSavedAs": "保存後",
+    "previewCompressed": "約 {{size}} JPEG ({{px}} px、{{quality}}%)",
+    "previewOriginal": "{{size}} オリジナル",
+    "previewBarLabel": "元の画像と比べた保存後の推定サイズ",
+    "previewFits": "写真 約 {{count}} 枚 / {{storage}}",
     "removeLocationTitle": "位置情報を削除",
     "removeLocationDesc": "画像の撮影場所は、保存前に取り除かれます。",
     "contactTitle": "連絡先の写真を小さく",
@@ -131,7 +150,8 @@
     "verifyPendingDelete_other": "他のデバイスで削除された {{count}} 件のアイテムがまだここにあります",
     "verifyNeverPushed_other": "ここにある {{count}} 件のアイテムはサーバーに届いていません",
     "verifyRepairAction": "すべて再ダウンロード",
-    "verifyRepairQueued": "次回の同期で保管庫全体を読み直します。アップロード待ちのものが失われることはありません。"
+    "verifyRepairQueued": "次回の同期で保管庫全体を読み直します。アップロード待ちのものが失われることはありません。",
+    "localOnlyOfflineError": "オフラインです。同期をオンにするには、インターネットに接続してください。"
   },
   "accountId": {
     "heading": "アカウントID",
@@ -457,6 +477,7 @@
     "blockedByStorage": "有効なストレージサブスクリプションがあります。アカウントを削除するには、先に設定のストレージから解約してください。",
     "localLabel": "ローカルデータを削除",
     "localDesc": "このデバイスからノート、画像、キャッシュデータを消去します。アカウントは削除されず、このブラウザが掃除されるだけです。",
+    "localDescLocalOnly": "このデバイスからすべてのノート、画像、ファイルを消去します。クラウドには何も保存されていません。",
     "localRequired": "(アカウント削除時は必須)",
     "localUnsynced_other": "このデバイスの{{items}}が同期されていません。ローカルデータを削除すると、完全に失われます。",
     "unsyncedNotes_other": "{{count}}件のノート",
@@ -491,6 +512,8 @@
     "updateRequiredAria": "アップデートが必要です。同期は一時停止中です",
     "paused": "同期オフ",
     "pausedTooltip": "このデバイスでは同期がオフです。オンにするまで、ノートはここに残ります。",
+    "localOnly": "ローカルのみ",
+    "localOnlyAria": "ローカルのみ。ノートはこのデバイスに残ります",
     "wifiHold": "Wi-Fi待ち",
     "wifiHoldTooltip": "Wi-Fiに戻るとファイルをアップロードします。ノートの同期は続きます。",
     "notBackedUp": "未バックアップ",
@@ -547,7 +570,26 @@
     "unopenedNoCopy": "このデバイスにないノート",
     "unopenedSeen": "{{ago}}に検出",
     "passPushFailed_other": "{{count}}件失敗",
-    "passHalted_other": "停止、{{count}}件が待機中"
+    "passHalted_other": "停止、{{count}}件が待機中",
+    "localOnlyBody": "ノートはこのデバイス上で暗号化されたまま残り、私たちのサーバーには同期されません。",
+    "localOnlyNotes_other": "このデバイスに{{count}}件のノート",
+    "localOnlyBackupHint": "クラウドには何も同期されていません。別のドライブやフォルダに安全なコピーを残すには、自動バックアップを設定してください。",
+    "localOnlySetUpBackups": "自動バックアップを設定",
+    "localOnlyTurnOnSync": "同期をオンにする",
+    "localOnlyTurningOn": "同期をオンにしています...",
+    "localOnlyAccountIdHint": "まだ私たちのサーバーに登録されていません。"
+  },
+  "localOnlyNotice": {
+    "body": "{{feature}}: このオンライン機能を使うには、設定 > ID & Syncで同期をオンにしてください。",
+    "cta": "ID & Syncへ移動",
+    "features": {
+      "multiDevice": "複数デバイスの管理",
+      "keyCustody": "クラウドでの鍵の管理",
+      "cloudStorage": "クラウドストレージ",
+      "twoFactorPasskeys": "二要素認証でのサインインとパスキー",
+      "phraseChange": "リカバリーフレーズの変更",
+      "burnShare": "Burn After Readingのリンク"
+    }
   },
   "language": {
     "reportMistake": "翻訳の誤りを報告",

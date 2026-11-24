@@ -32,8 +32,8 @@ import {
 } from './NoteLinkSuggestion';
 import { HoverLabel } from './HoverLabel';
 import { ContextMenu, useContextMenu, type ContextMenuItem } from './ContextMenu';
-import { iconExternal, iconTrash, Hash } from './icons';
-import { noteLinkDisplayText, noteLinkTarget, parseNoteLinkTarget } from './noteLinks';
+import { iconExternal, iconTrash, Hash, Sparkle } from './icons';
+import { noteLinkDisplayText, noteLinkTarget, parseNoteLinkTarget, SUGGESTED_LINK_MARKER } from './noteLinks';
 import { atomDeleteKeys } from './editorAtomKeys';
 
 /* ------------------------------------------------------------------ */
@@ -68,12 +68,12 @@ function WikiLinkView({
   deleteNode,
   updateAttributes,
 }: {
-  node: { attrs: { target: string; label: string | null } };
+  node: { attrs: { target: string; label: string | null; suggested?: boolean } };
   editor: Parameters<typeof wikiLinkHeadings>[0] & { storage: Record<string, Record<string, unknown>>; isEditable: boolean };
   deleteNode: () => void;
   updateAttributes: (attrs: { target: string }) => void;
 }) {
-  const { target, label } = node.attrs;
+  const { target, label, suggested } = node.attrs;
   const hasNote = wikiLinkHasNote(editor);
   const readable = noteLinkDisplayText(target, hasNote);
   const display = label || readable;
@@ -176,6 +176,14 @@ function WikiLinkView({
       className="text-accent hover:text-accent-hover underline underline-offset-2 cursor-pointer rounded px-0.5 -mx-0.5 hover:bg-accent/10 transition"
       aria-label={readable !== display ? readable : undefined}
     >
+      {suggested && (
+        <Sparkle
+          weight="fill"
+          aria-hidden="true"
+          style={{ display: 'inline-block', width: '0.95em', height: '0.95em', verticalAlign: '-0.14em' }}
+          className="me-0.5 text-success"
+        />
+      )}
       {display}
     </span>
   );
@@ -236,13 +244,15 @@ function wikiLinkRule(state: WikiLinkParseState): boolean {
 
   // Emit an HTML token that parseHTML will pick up.
   // Escape quotes in attrs to prevent injection.
+  const suggested = src.startsWith(SUGGESTED_LINK_MARKER, closeIdx + 2);
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const escText = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const tokenOpen = state.push('html_inline', '', 0);
   const labelAttr = label ? ` data-label="${esc(label)}"` : '';
-  tokenOpen.content = `<span data-wiki-link data-target="${esc(target)}"${labelAttr}>${escText(label || target)}</span>`;
+  const suggestedAttr = suggested ? ' data-suggested' : '';
+  tokenOpen.content = `<span data-wiki-link data-target="${esc(target)}"${labelAttr}${suggestedAttr}>${escText(label || target)}</span>`;
 
-  state.pos = closeIdx + 2;
+  state.pos = closeIdx + 2 + (suggested ? SUGGESTED_LINK_MARKER.length : 0);
   return true;
 }
 
@@ -260,6 +270,7 @@ export const WikiLink = Node.create({
     return {
       target: { default: '' },
       label: { default: null },
+      suggested: { default: false },
     };
   },
 
@@ -272,6 +283,7 @@ export const WikiLink = Node.create({
           return {
             target: dom.getAttribute('data-target') || '',
             label: dom.getAttribute('data-label') || null,
+            suggested: dom.hasAttribute('data-suggested'),
           };
         },
       },
@@ -279,20 +291,21 @@ export const WikiLink = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    // `target` and `label` are NODE attributes, not HTML ones, so they are
-    // taken out before the merge. Spreading them straight onto the tag wrote a
-    // second, meaningless `target="Some note"` beside the `data-target` that
-    // actually carries it. It is not cosmetic: a block that cannot be written
-    // as markdown - an aligned paragraph, a table that is not a pipe table -
-    // falls back to this HTML, so the junk attribute was stored in the user's
-    // own note and shown in the markdown source view.
-    const { target, label, ...rest } = HTMLAttributes;
+    // `target`, `label` and `suggested` are NODE attributes, not HTML ones, so
+    // they are taken out before the merge. Spreading them straight onto the tag
+    // wrote a second, meaningless `target="Some note"` beside the `data-target`
+    // that actually carries it. It is not cosmetic: a block that cannot be
+    // written as markdown - an aligned paragraph, a table that is not a pipe
+    // table - falls back to this HTML, so the junk attribute was stored in the
+    // user's own note and shown in the markdown source view.
+    const { target, label, suggested, ...rest } = HTMLAttributes;
     return [
       'span',
       mergeAttributes(rest, {
         'data-wiki-link': '',
         'data-target': target,
         'data-label': label || undefined,
+        'data-suggested': suggested ? '' : undefined,
       }),
       label || noteLinkDisplayText(target),
     ];
@@ -338,7 +351,7 @@ export const WikiLink = Node.create({
         props: {
           transformPasted(slice, view) {
             if (view.state.selection.$from.parent.type.spec.code) return slice;
-            const wikiRe = /\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\]/g;
+            const wikiRe = /\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\](<!--suggested-->)?/g;
 
             function walkFragment(fragment: Fragment): Fragment {
               const newNodes: PMNode[] = [];
@@ -360,6 +373,7 @@ export const WikiLink = Node.create({
                       type.create({
                         target: m[1]?.trim() ?? '',
                         label: m[2]?.trim() || null,
+                        suggested: Boolean(m[3]),
                       })
                     );
                     lastIdx = m.index + m[0].length;
@@ -401,15 +415,12 @@ export const WikiLink = Node.create({
       markdown: {
         serialize(
           state: { write: (s: string) => void; esc: (s: string) => string },
-          node: { attrs: { target: string; label: string | null } }
+          node: { attrs: { target: string; label: string | null; suggested?: boolean } }
         ) {
           const t = node.attrs.target;
           const l = node.attrs.label;
-          if (l && l !== t) {
-            state.write(`[[${t}|${l}]]`);
-          } else {
-            state.write(`[[${t}]]`);
-          }
+          const base = l && l !== t ? `[[${t}|${l}]]` : `[[${t}]]`;
+          state.write(node.attrs.suggested ? `${base}${SUGGESTED_LINK_MARKER}` : base);
         },
         parse: {
           setup(md: { inline: { ruler: { push: (name: string, fn: (state: WikiLinkParseState) => boolean) => void } } }) {

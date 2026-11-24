@@ -13,7 +13,7 @@
  */
 import { browser } from 'wxt/browser';
 import { base64ToBytes, bytesToBase64, bytesToHex, decryptJsonAad } from '@notes/shared';
-import { browserHalfId, joinLoginsKey, loginsCopyAad, padInboxJson, parseCopyEntry, type CopyEntry, type InboxKeyHalf } from '@notes/shared/extension';
+import { browserHalfId, joinLoginsKey, loginsCopyAad, padInboxJson, parseCopyEntry, parseOrganizerEntry, type CopyEntry, type InboxKeyHalf, type OrganizerFolder } from '@notes/shared/extension';
 import { call, type Answer } from './api';
 import { APP_URL } from './config';
 import { forgetLocal, readConnection, saveConnection, sealRow, settlePending, type Connection } from './connection';
@@ -64,6 +64,8 @@ export async function locksOn(state: 'active' | 'idle' | 'locked'): Promise<bool
 /** The session storage key that says the vault is open; the popup and the
  *  menus listen for it. */
 export const SESSION_KEY = 'unlocked';
+/** The session storage key for the last chosen clip folder (cleared on lock). */
+export const CLIP_FOLDER_SESSION_KEY = 'clipFolder';
 const PRO_HINT_KEY = 'proHint';
 /** The local storage key of the sealed rows; the list listens for it. */
 export const ROWS_KEY = 'loginRows';
@@ -71,6 +73,12 @@ export const ROWS_KEY = 'loginRows';
 /** Whether the account was Pro at the last unlock. */
 export async function proHint(): Promise<boolean> {
   return (await browser.storage.local.get(PRO_HINT_KEY))[PRO_HINT_KEY] === true;
+}
+
+/** Whether the account's Pro status is known from an earlier unlock (null before the first unlock). */
+export async function knownPro(): Promise<boolean | null> {
+  const val = (await browser.storage.local.get(PRO_HINT_KEY))[PRO_HINT_KEY];
+  return typeof val === 'boolean' ? val : null;
 }
 
 interface Unlocked {
@@ -99,8 +107,14 @@ export async function isUnlocked(): Promise<boolean> {
 }
 
 export async function lockLogins(): Promise<void> {
-  // A fingerprint set-up that never finished leaves nothing behind either.
-  await browser.storage.session.remove([SESSION_KEY, 'enrollProof']);
+  // A fingerprint set-up that never finished leaves nothing behind either;
+  // clear session-remembered folder ids so nothing lingers while locked.
+  const got = await browser.storage.session.get('noteDraft');
+  const draft = got.noteDraft as Record<string, unknown> | undefined;
+  if (draft && typeof draft === 'object' && draft.folderId) {
+    await browser.storage.session.set({ noteDraft: { ...draft, folderId: null } });
+  }
+  await browser.storage.session.remove([SESSION_KEY, 'enrollProof', CLIP_FOLDER_SESSION_KEY]);
   await browser.alarms.clear(KEEP_ALARM);
 }
 
@@ -287,6 +301,7 @@ async function pullNow(): Promise<PullResult> {
     if (state.pro !== body.pro) {
       state = { ...state, pro: body.pro === true };
       await browser.storage.session.set({ [SESSION_KEY]: state });
+      await browser.storage.local.set({ [PRO_HINT_KEY]: state.pro });
     }
     if (!body.more && answer.serverTime) stored.syncedAt = answer.serverTime;
     await browser.storage.local.set({ [ROWS_KEY]: stored });
@@ -300,33 +315,44 @@ async function pullNow(): Promise<PullResult> {
   return 'ok';
 }
 
+export interface OrganizerData {
+  folders: OrganizerFolder[];
+  tags: string[];
+}
+
 /** Every entry the copy holds, opened with P and checked for shape. A row
  *  that does not open or is not a kind this build knows is left out, never
- *  shown half. */
-export async function allEntries(): Promise<{ entries: CopyEntry[]; pro: boolean; notSaved?: NotSavedEdit[] } | null> {
+ *  shown half. The single organizer row (folders + unlocked tags) is returned
+ *  separately so Vault views never treat it as a vault item. */
+export async function allEntries(): Promise<{ entries: CopyEntry[]; organizer: OrganizerData | null; pro: boolean; notSaved?: NotSavedEdit[] } | null> {
   const [connection, state, stored] = await Promise.all([readConnection(), session(), readRows()]);
-  if (!connection || !state || !stored || stored.tag !== state.tag) return state ? { entries: [], pro: state.pro } : null;
+  if (!connection || !state || !stored || stored.tag !== state.tag) return state ? { entries: [], organizer: null, pro: state.pro } : null;
   const p = base64ToBytes(state.p);
   const entries: CopyEntry[] = [];
+  let organizer: OrganizerData | null = null;
   const changedAt = new Map<string, number>();
   for (const [id, row] of Object.entries(stored.rows)) {
     try {
-      const entry = parseCopyEntry(decryptJsonAad<unknown>(base64ToBytes(row.ciphertext), base64ToBytes(row.nonce), p, loginsCopyAad(connection.account, id)));
+      const raw = decryptJsonAad<unknown>(base64ToBytes(row.ciphertext), base64ToBytes(row.nonce), p, loginsCopyAad(connection.account, id));
+      const entry = parseCopyEntry(raw);
       if (entry) {
         entries.push(entry);
         if (row.at) changedAt.set(entry.item, Date.parse(row.at));
+        continue;
       }
+      const org = parseOrganizerEntry(raw);
+      if (org) organizer = { folders: org.folders, tags: org.tags };
     } catch {
       // Not under this key: a row the next pull replaces.
     }
   }
-  if (!passkeysReleased()) return { entries, pro: state.pro };
+  if (!passkeysReleased()) return { entries, organizer, pro: state.pro };
   // What this browser sent and the copy does not show yet (passkeys.md section 6).
   const pending = await readPending(p, state.tag, connection.account);
-  if (!pending.length) return { entries, pro: state.pro };
+  if (!pending.length) return { entries, organizer, pro: state.pro };
   const laid = overlayPending(entries, pending, changedAt, Date.now(), stored.syncedAt, await queuedIds());
   if (laid.kept.length !== pending.length) await writePending(laid.kept, p, state.tag, connection.account);
-  return { entries: laid.entries, pro: state.pro, notSaved: notSavedEdits(laid.kept, entries) };
+  return { entries: laid.entries, organizer, pro: state.pro, notSaved: notSavedEdits(laid.kept, entries) };
 }
 
 /** The person read the not-saved notice: the edit leaves the pending store. */

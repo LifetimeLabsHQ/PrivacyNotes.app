@@ -94,7 +94,12 @@
     "unopenedWarn_other": "{{count}} poznámek má na serveru kopii, kterou toto zařízení nedokáže otevřít. Odhlášením se kopie tady smažou, a ty můžou být jediné dobré. Nejdřív je znovu odešli v Nastavení > ID & Sync.",
     "unopenedKept_one": "1 poznámka má na serveru kopii, kterou toto zařízení nedokáže otevřít. Kopie tady po odhlášení zůstane.",
     "unopenedKept_few": "{{count}} poznámky mají na serveru kopii, kterou toto zařízení nedokáže otevřít. Kopie tady po odhlášení zůstanou.",
-    "unopenedKept_other": "{{count}} poznámek má na serveru kopii, kterou toto zařízení nedokáže otevřít. Kopie tady po odhlášení zůstanou."
+    "unopenedKept_other": "{{count}} poznámek má na serveru kopii, kterou toto zařízení nedokáže otevřít. Kopie tady po odhlášení zůstanou.",
+    "localOnlyTitle": "Smazat všechno na tomto zařízení?",
+    "localOnlyBody": "Tvoje poznámky jsou uložené jen na tomto zařízení a nikdy se nesynchronizovaly. Odhlášení je z tohoto zařízení nenávratně smaže.",
+    "localOnlyCounts": "Na tomto zařízení: {{items}}.",
+    "localOnlyExportBackup": "Exportovat zálohu",
+    "localOnlyDeleteConfirm": "Smazat a odhlásit se"
   },
   "signOutUpload": {
     "uploading": "Nahrávají se tvoje poslední změny…",
@@ -171,6 +176,7 @@
   "burnShare": {
     "offline": "Jsi offline. Odkazy ke spálení potřebují komunikaci se serverem. Zkus to znovu, až budeš znovu online.",
     "demo": "Odkazy ke spálení se ukládají na server a demo se k žádnému nepřipojuje. Zaregistruj se a vytvářej opravdové odkazy ke spálení.",
+    "localOnly": "Odkazy ke spálení vyžadují online účet. Pro sdílení odkazů ke spálení zapni synchronizaci v Nastavení > ID & Sync.",
     "tooLarge": "Poznámka je příliš velká na sdílení odkazem ke spálení ({{size}} KB). Maximum je {{max}} KB.",
     "storeFailed": "Poznámku ke spálení se nepodařilo uložit na server.",
     "rateLimited": "Z tohoto připojení vzniklo příliš mnoho odkazů ke spálení. Zkus to později."

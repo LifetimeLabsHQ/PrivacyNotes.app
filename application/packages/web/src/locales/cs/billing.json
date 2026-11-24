@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "Odemknout vše za {{price}}",
     "ctaOpening": "Otevírání platby...",
     "ctaSignUp": "Zaregistrovat se a odemknout",
+    "localOnlyHint": "Při přechodu na Pro se aplikace jednou připojí, aby zaregistrovala tvůj účet a aktivovala Pro. Synchronizace zůstane vypnutá.",
+    "localOnlyOffline": "Pokud chceš přejít na Pro, připoj se k internetu.",
     "features": {
       "folders": "Vnořené složky",
       "lock": "Zámek a PIN",

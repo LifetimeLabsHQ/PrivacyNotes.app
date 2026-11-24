@@ -10,6 +10,8 @@
     "ctaUnlockPrice": "{{price}}ですべてをアンロック",
     "ctaOpening": "チェックアウトを開いています...",
     "ctaSignUp": "サインアップしてアンロック",
+    "localOnlyHint": "アップグレードすると一度だけ接続してアカウントを登録し、Proを有効にします。同期はオフのままです。",
+    "localOnlyOffline": "アップグレードするには、インターネットに接続してください。",
     "features": {
       "folders": "ネストしたフォルダ",
       "lock": "ロックとPIN",

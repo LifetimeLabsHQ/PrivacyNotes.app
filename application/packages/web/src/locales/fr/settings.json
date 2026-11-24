@@ -19,6 +19,7 @@
     "proUnlimited": "· appareils illimités",
     "earlySupporterThanks": "Soutien de la première heure, merci d'être là parmi les premiers",
     "proThanks": "Tout est prêt. Merci de soutenir le projet",
+    "freeLocalOnly": "Forfait gratuit",
     "freeLimit_one": "<strong>Forfait gratuit</strong>, jusqu'à {{count}} appareil.",
     "freeLimit_other": "<strong>Forfait gratuit</strong>, jusqu'à {{count}} appareils.",
     "freeUsage": "Tu utilises actuellement {{used}} sur {{limit}}.",
@@ -89,7 +90,25 @@
   },
   "images": {
     "spaceSaverTitle": "Économiseur d'espace",
-    "spaceSaverDesc": "Réduites à {{px}} pixels et enregistrées en JPEG à {{quality}} % de qualité. Un peu moins de détail pour une fraction de l'espace. Un GIF garde son animation, et les fichiers du Coffre restent tels quels.",
+    "spaceSaverDesc": "Réduit les nouvelles images et les enregistre en JPEG. Un GIF garde son animation, et les fichiers du Coffre restent tels quels.",
+    "compressionTitle": "Compression",
+    "level": {
+      "standard": "Standard",
+      "small": "Petit",
+      "tiny": "Très petit"
+    },
+    "levelSpec": "Tient dans {{px}} pixels à {{quality}} % de qualité JPEG.",
+    "levelDesc": {
+      "standard": "Des détails nets pour une fraction de l'espace.",
+      "small": "Fichiers plus légers tout en gardant des photos et captures d'écran nettes.",
+      "tiny": "Taille minimale pour un stockage limité ; le texte fin peut perdre en netteté."
+    },
+    "previewSample": "Photo de téléphone de {{size}}",
+    "previewSavedAs": "Enregistrée en",
+    "previewCompressed": "~{{size}} JPEG ({{px}} px, {{quality}} %)",
+    "previewOriginal": "{{size}} d'origine",
+    "previewBarLabel": "Taille estimée de l'image enregistrée par rapport à l'original",
+    "previewFits": "~{{count}} photos / {{storage}}",
     "removeLocationTitle": "Supprimer les données de localisation",
     "removeLocationDesc": "Le lieu de prise de vue d'une image est retiré avant l'enregistrement.",
     "contactTitle": "Petites photos de contact",
@@ -139,7 +158,8 @@
     "verifyNeverPushed_one": "{{count}} élément ici n'a jamais atteint le serveur",
     "verifyNeverPushed_other": "{{count}} éléments ici n'ont jamais atteint le serveur",
     "verifyRepairAction": "Tout retélécharger",
-    "verifyRepairQueued": "La prochaine synchro relira tout ton coffre. Rien de ce qui attend d'être envoyé ne sera perdu."
+    "verifyRepairQueued": "La prochaine synchro relira tout ton coffre. Rien de ce qui attend d'être envoyé ne sera perdu.",
+    "localOnlyOfflineError": "Tu es hors ligne. Connecte-toi à Internet pour activer la synchronisation."
   },
   "accountId": {
     "heading": "ID de compte",
@@ -469,6 +489,7 @@
     "blockedByStorage": "Tu as un abonnement de stockage actif. Annule-le depuis Stockage dans les paramètres avant de pouvoir supprimer ton compte.",
     "localLabel": "Supprimer les données locales",
     "localDesc": "Efface les notes, images et données en cache de cet appareil. Cela ne supprime pas ton compte, ça nettoie seulement ce navigateur.",
+    "localDescLocalOnly": "Efface l'ensemble des notes, images et fichiers de cet appareil. Rien n'est stocké dans le cloud.",
     "localRequired": "(requis pour supprimer le compte)",
     "localUnsynced_one": "Cet appareil contient {{items}}. Supprimer les données locales l'efface définitivement.",
     "localUnsynced_other": "Cet appareil contient {{items}}. Supprimer les données locales les efface définitivement.",
@@ -508,6 +529,8 @@
     "updateRequiredAria": "Mise à jour requise, synchronisation en pause",
     "paused": "Synchro désactivée",
     "pausedTooltip": "La synchronisation est désactivée sur cet appareil. Tes notes restent ici jusqu'à ce que tu l'actives.",
+    "localOnly": "Local uniquement",
+    "localOnlyAria": "Local uniquement. Tes notes restent sur cet appareil",
     "wifiHold": "En attente du wifi",
     "wifiHoldTooltip": "Les fichiers partent dès le retour du wifi. Les notes continuent de se synchroniser.",
     "notBackedUp": "Non sauvegardé",
@@ -575,7 +598,27 @@
     "passPushFailed_one": "{{count}} en échec",
     "passPushFailed_other": "{{count}} en échec",
     "passHalted_one": "arrêtée, {{count}} en attente",
-    "passHalted_other": "arrêtée, {{count}} en attente"
+    "passHalted_other": "arrêtée, {{count}} en attente",
+    "localOnlyBody": "Tes notes restent chiffrées sur cet appareil et ne sont pas synchronisées avec nos serveurs.",
+    "localOnlyNotes_one": "{{count}} note sur cet appareil",
+    "localOnlyNotes_other": "{{count}} notes sur cet appareil",
+    "localOnlyBackupHint": "Rien n'est synchronisé dans le cloud. Configure des sauvegardes automatiques pour garder une copie en lieu sûr sur un autre disque ou dans un autre dossier.",
+    "localOnlySetUpBackups": "Configurer les sauvegardes automatiques",
+    "localOnlyTurnOnSync": "Activer la synchronisation",
+    "localOnlyTurningOn": "Activation de la synchronisation...",
+    "localOnlyAccountIdHint": "Pas encore enregistré sur nos serveurs."
+  },
+  "localOnlyNotice": {
+    "body": "{{feature}} : active la synchronisation dans Paramètres > ID & Sync pour utiliser cette fonctionnalité en ligne.",
+    "cta": "Aller à ID & Sync",
+    "features": {
+      "multiDevice": "Gestion multi-appareils",
+      "keyCustody": "Gestion des clés dans le cloud",
+      "cloudStorage": "Stockage cloud",
+      "twoFactorPasskeys": "Connexion à deux facteurs et passkeys",
+      "phraseChange": "Changer ta phrase de récupération",
+      "burnShare": "Liens Burn After Reading"
+    }
   },
   "language": {
     "reportMistake": "Signaler une erreur de traduction",

@@ -23,7 +23,6 @@
     "generatePassword": "パスワードを生成"
   },
   "note": {
-    "tagsPlaceholder": "#仕事 #アイデア",
     "tagsHelp": "タグの間はスペースかカンマで区切ります。# は省略できます。",
     "failed": "ノートを保存できませんでした。もう一度お試しください。"
   },
@@ -210,5 +209,11 @@
     "unlockFirst": "パスキーを使うには、ロックを解除してください。",
     "offer": "パスキーを提供",
     "offerHelp": "ウェブサイトでパスキーを保存して使います。"
+  },
+  "organize": {
+    "title": "フォルダとタグ",
+    "unlockToPick": "保管庫のロックを解除して選択",
+    "addTag": "タグを追加...",
+    "proFolders": "フォルダは Pro の機能です。アップグレードするには PrivacyNotes を開いてください。"
   }
 }

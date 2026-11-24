@@ -212,6 +212,8 @@ function paintTheme(theme: Theme): void {
   } else {
     root.classList.remove('dark');
   }
+  // Clear the pre-CSS background set by public/theme-boot.js now that index.css owns html.
+  root.style.removeProperty('background-color');
   paintThemeColorMeta(theme);
   paintNativeBars();
 }
@@ -854,6 +856,13 @@ export function getFavicons(): boolean {
 function applyFavicons(on: boolean): void {
   activeFavicons = on;
   localStorage.setItem(FAVICONS_KEY, on ? '1' : '0');
+}
+
+/** Update website icons outside the React hook (e.g. defaulting them off on a
+ *  new local-only vault, #862). Updates module state, localStorage and subscribers. */
+export function setFavicons(on: boolean): void {
+  try { applyFavicons(on); } catch { /* storage unavailable - module state stays updated */ }
+  emitThemeChange();
 }
 
 // ------------------------------------------------------------------

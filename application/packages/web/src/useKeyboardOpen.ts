@@ -168,8 +168,19 @@ export function useKeyboardOpen(): boolean {
       if (window.scrollY !== 0) window.scrollTo(0, 0);
       if (grew || moved) requestAnimationFrame(keepCaretVisible);
     };
-    const onResize = () => { check(); fit(false); };
-    const onScroll = () => fit(true);
+    // A pinch zoom shrinks the visual viewport like a keyboard does, but a
+    // keyboard never changes the scale. While zoomed in, leave the shell whole
+    // and the baseline alone (GitHub #854: the footer filled the screen in
+    // Firefox on macOS).
+    const zoomed = () => {
+      if (!((vv.scale ?? 1) > 1.01)) return false;
+      document.documentElement.style.removeProperty('--pn-app-h');
+      setSoftKeyboardUp(false);
+      setOpen(false);
+      return true;
+    };
+    const onResize = () => { if (zoomed()) return; check(); fit(false); };
+    const onScroll = () => { if (zoomed()) return; fit(true); };
     // Focus moving to another field while the keyboard stays up (the next
     // PIN box, the confirm row) changes no viewport size, so it is asked here.
     const onFocusIn = () => {

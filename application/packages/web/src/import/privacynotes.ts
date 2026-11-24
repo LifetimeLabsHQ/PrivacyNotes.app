@@ -22,13 +22,14 @@
  *      next sync uploads them to Supabase.
  */
 
+import type JSZip from 'jszip';
 import i18n from '../i18n';
 import { zipEntryMedia, zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
 import type { BackupManifest, MissingBlob } from '../export';
 import { stripFrontMatterPadding, unescapeQuotes, unescapeSingleQuotes } from '../noteMarkdown';
 import { FRONT_MATTER_LOCATION, FRONT_MATTER_LOCATION_NAME, LOCATION_KEY, parseFrontMatterLocation, type NoteLocation } from '../noteLocation';
-import { FRONT_MATTER } from '../markdownFolder/adapter';
+import { FRONT_MATTER, SUPPORTED_EXT } from '../markdownFolder/adapter';
 import type { ParsedImport, ImportedNote } from './types';
 import type { NoteType, SupabaseClient } from '@notes/shared';
 import { db } from '../db';
@@ -37,11 +38,11 @@ import type { AttachmentMeta } from '../attachmentStore';
 import { sha256Hex } from '../sha256Hex';
 import { formatBytes } from '../formatBytes';
 import { hasVaultFiles } from '../vaultBody';
-import { normalizeTagList } from './importHelpers';
+import { isJunkEntry, normalizeTagList } from './importHelpers';
 import { isUuid } from '../uuid';
 import { cleanFileName } from '../fileNames';
 import { createFolder, type FolderDef } from '../folders';
-import { IMPORT_FOLDER_LIMIT, parseFolderPath } from './folderImport';
+import { commonRootPrefix, IMPORT_FOLDER_LIMIT, parseFolderPath } from './folderImport';
 
 const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:privacynotes.${key}`, options);
 
@@ -220,6 +221,78 @@ function rebuildFolders(notes: ImportedNote[]): {
   return { folders, originalIds };
 }
 
+// ─── Detection (for Files upload routing and importer guards) ──────────
+
+/** Optional single wrapper folder in a re-zipped archive (e.g. Safari
+ *  auto-unzip followed by Finder Compress), ignoring `__MACOSX` and dotfiles. */
+function backupRootPrefix(zip: JSZip): string {
+  const paths: string[] = [];
+  zip.forEach((path, entry) => {
+    if (!entry.dir && !isJunkEntry(path)) paths.push(path);
+  });
+  return commonRootPrefix(paths);
+}
+
+/** True when an already-opened zip carries a PrivacyNotes backup manifest at
+ *  its root (or inside a single wrapper directory). Uses the bounded text
+ *  reader and swallows errors on corrupt or unrelated archives. */
+async function hasPrivacyNotesBackupManifest(
+  zip: JSZip,
+  prefix: string = backupRootPrefix(zip),
+): Promise<boolean> {
+  const manifestFile = zip.file(`${prefix}manifest.json`);
+  if (!manifestFile) return false;
+  try {
+    const manifest: unknown = JSON.parse(await zipEntryText(manifestFile));
+    return (
+      typeof manifest === 'object' &&
+      manifest !== null &&
+      (manifest as { format?: unknown }).format === 'privacynotes-backup'
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Guard for generic Markdown / Obsidian zip importers so a PrivacyNotes full
+ *  backup `.zip` never flattens into duplicate plain notes or leaks Vault JSON
+ *  outside the Vault. */
+export async function refusePrivacyNotesBackupZip(
+  zip: JSZip,
+  prefix?: string,
+): Promise<void> {
+  if (await hasPrivacyNotesBackupManifest(zip, prefix)) {
+    throw new Error(i18n.t('importLog:shared.backupUseRestore'));
+  }
+}
+
+/** Classify a `.zip` uploaded in Files in one central-directory pass:
+ *  - `'backup'`: PrivacyNotes full backup (`manifest.json` with `format: "privacynotes-backup"`)
+ *  - `'markdown'`: archive containing at least one Markdown/text note file
+ *  - `'attachment'`: anything else (HTML archive, Drawings/Calendar zips, photo
+ *    zips, encrypted or corrupt zips) - store as an encrypted file attachment. */
+export async function classifyFilesZip(
+  file: File,
+): Promise<'backup' | 'markdown' | 'attachment'> {
+  if (!file.name.toLowerCase().endsWith('.zip') && file.type !== 'application/zip') {
+    return 'attachment';
+  }
+  try {
+    const zip = await openZip(file);
+    const prefix = backupRootPrefix(zip);
+    if (await hasPrivacyNotesBackupManifest(zip, prefix)) return 'backup';
+    let hasMarkdown = false;
+    zip.forEach((path, entry) => {
+      if (hasMarkdown || entry.dir || isJunkEntry(path)) return;
+      const rel = prefix ? path.slice(prefix.length) : path;
+      if (SUPPORTED_EXT.test(rel)) hasMarkdown = true;
+    });
+    return hasMarkdown ? 'markdown' : 'attachment';
+  } catch {
+    return 'attachment';
+  }
+}
+
 // ─── Parse function (returns ParsedImport for applyImport) ────────────
 
 export async function parsePrivacyNotesBackup(
@@ -227,31 +300,40 @@ export async function parsePrivacyNotesBackup(
   onProgress?: (msg: string) => void,
 ): Promise<ParsedImport> {
   onProgress?.(msg('readingBackup'));
-  const zip = await openZip(await file.arrayBuffer());
+  const zip = await openZip(file);
+  const prefix = backupRootPrefix(zip);
 
   // Validate manifest
-  const manifestFile = zip.file('manifest.json');
+  const manifestFile = zip.file(`${prefix}manifest.json`);
   if (!manifestFile) {
     throw new Error(msg('noManifest'));
   }
 
-  const manifest: BackupManifest = JSON.parse(await zipEntryText(manifestFile));
+  const rawManifest: unknown = JSON.parse(await zipEntryText(manifestFile));
+  if (typeof rawManifest !== 'object' || rawManifest === null) {
+    throw new Error(msg('unrecognizedFormat', { format: String(rawManifest) }));
+  }
+  const manifest = rawManifest as BackupManifest;
   if (manifest.format !== 'privacynotes-backup') {
     throw new Error(msg('unrecognizedFormat', { format: manifest.format }));
   }
 
   onProgress?.(msg('parsingNotes'));
 
-  // Parse all .md files in the zip root (not in subdirectories)
+  // Parse all .md files at the backup root (not in subdirectories)
   const notes: ImportedNote[] = [];
   const warnings: string[] = [];
 
-  const mdFiles = Object.keys(zip.files).filter(
-    (name) => name.endsWith('.md') && !name.includes('/'),
-  );
+  const mdFiles = Object.keys(zip.files).filter((path) => {
+    if (zip.files[path]!.dir || isJunkEntry(path)) return false;
+    if (prefix && !path.startsWith(prefix)) return false;
+    const rel = prefix ? path.slice(prefix.length) : path;
+    return rel.endsWith('.md') && !rel.includes('/');
+  });
 
-  for (const filename of mdFiles) {
-    const content = await zipEntryText(zip.file(filename)!);
+  for (const zipPath of mdFiles) {
+    const filename = prefix ? zipPath.slice(prefix.length) : zipPath;
+    const content = await zipEntryText(zip.file(zipPath)!);
     const { meta, body } = parseFrontmatter(content);
 
     // The KEY decides, not its value. A backup always writes a `title` line,
@@ -332,11 +414,11 @@ export async function parsePrivacyNotesBackup(
   // will skip the blob anyway.
   let blobBytes = 0;
   const blobSizes: Record<string, number> = {};
-  for (const [uuid, att] of Object.entries(manifest.attachments)) {
-    const zipPath = att.file
+  for (const [uuid, att] of Object.entries(manifest.attachments || {})) {
+    const relPath = att.file
       ? `${att.folder}/${att.file}`
       : `${att.folder}/${uuid}.${extFromName(att.name)}`;
-    const entry = zip.files[zipPath] as unknown as
+    const entry = zip.files[`${prefix}${relPath}`] as unknown as
       | { _data?: { uncompressedSize?: number } }
       | undefined;
     const size = entry?._data?.uncompressedSize ?? att.size;
@@ -345,12 +427,15 @@ export async function parsePrivacyNotesBackup(
   }
   // For images, sum uncompressed sizes from zip entry metadata.
   for (const [path, entry] of Object.entries(zip.files)) {
-    if (!entry.dir && path.startsWith('images/')) {
+    if (entry.dir || isJunkEntry(path)) continue;
+    if (prefix && !path.startsWith(prefix)) continue;
+    const rel = prefix ? path.slice(prefix.length) : path;
+    if (rel.startsWith('images/')) {
       const internal = (entry as unknown as { _data?: { uncompressedSize?: number } })._data;
       // Fallback: conservative estimate per image (200 KB average JPEG).
       const size = internal?.uncompressedSize || 200 * 1024;
       blobBytes += size;
-      const uuid = path.slice('images/'.length).replace(/\.[^.]*$/, '');
+      const uuid = rel.slice('images/'.length).replace(/\.[^.]*$/, '');
       if (isUuid(uuid)) blobSizes[uuid] = size;
     }
   }
@@ -422,11 +507,16 @@ export async function restoreBlobs(
    *  server lacks goes up again (`uploadAgainAfterRestore`). */
   account?: { supabase: SupabaseClient; pubkey: string },
 ): Promise<{ images: number; attachments: number; missing: Pick<MissingBlob, 'id' | 'kind'>[] }> {
-  const zip = await openZip(await file.arrayBuffer());
-  const manifestFile = zip.file('manifest.json');
+  const zip = await openZip(file);
+  const prefix = backupRootPrefix(zip);
+  const manifestFile = zip.file(`${prefix}manifest.json`);
   if (!manifestFile) return { images: 0, attachments: 0, missing: [] };
 
-  const manifest: BackupManifest = JSON.parse(await zipEntryText(manifestFile));
+  const rawManifest: unknown = JSON.parse(await zipEntryText(manifestFile));
+  if (typeof rawManifest !== 'object' || rawManifest === null) {
+    return { images: 0, attachments: 0, missing: [] };
+  }
+  const manifest = rawManifest as BackupManifest;
   let imgCount = 0;
   let attCount = 0;
   const missing: Pick<MissingBlob, 'id' | 'kind'>[] = [];
@@ -441,12 +531,12 @@ export async function restoreBlobs(
     // Try multiple extensions - the exporter names the file after the
     // stored format (.jpg, .png, or the source's own format when the space
     // saver was off); older backups used .webp.
-    const imgFile = zip.file(`images/${uuid}.webp`)
-      || zip.file(`images/${uuid}.jpg`)
-      || zip.file(`images/${uuid}.jpeg`)
-      || zip.file(`images/${uuid}.png`)
-      || zip.file(`images/${uuid}.gif`)
-      || zip.file(`images/${uuid}.bmp`);
+    const imgFile = zip.file(`${prefix}images/${uuid}.webp`)
+      || zip.file(`${prefix}images/${uuid}.jpg`)
+      || zip.file(`${prefix}images/${uuid}.jpeg`)
+      || zip.file(`${prefix}images/${uuid}.png`)
+      || zip.file(`${prefix}images/${uuid}.gif`)
+      || zip.file(`${prefix}images/${uuid}.bmp`);
     if (!imgFile) {
       missing.push({ id: uuid, kind: 'image' });
       continue;
@@ -491,8 +581,8 @@ export async function restoreBlobs(
     if (!isUuid(uuid) || !info || typeof info.name !== 'string') continue;
     // v2 backups store the on-disk filename; v1 named files <uuid>.<ext>.
     const zipPath = info.file
-      ? `${info.folder}/${info.file}`
-      : `${info.folder}/${uuid}.${extFromName(info.name)}`;
+      ? `${prefix}${info.folder}/${info.file}`
+      : `${prefix}${info.folder}/${uuid}.${extFromName(info.name)}`;
 
     const attFile = zip.file(zipPath);
     if (!attFile) {

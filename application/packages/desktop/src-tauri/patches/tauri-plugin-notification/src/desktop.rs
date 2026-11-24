@@ -214,7 +214,24 @@ mod imp {
                 notification.auto_icon();
             }
             if let Some(sound) = self.sound {
-                notification.sound_name(&sound);
+                // Map the portable "default" token to each OS's system alert sound (#892).
+                let resolved = if sound == "default" {
+                    #[cfg(target_os = "macos")]
+                    {
+                        "NSUserNotificationDefaultSoundName"
+                    }
+                    #[cfg(windows)]
+                    {
+                        "Default"
+                    }
+                    #[cfg(all(unix, not(target_os = "macos")))]
+                    {
+                        "message-new-instant"
+                    }
+                } else {
+                    sound.as_str()
+                };
+                notification.sound_name(resolved);
             }
             #[cfg(windows)]
             {

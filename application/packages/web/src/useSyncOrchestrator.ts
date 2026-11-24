@@ -18,9 +18,11 @@ import { saveHeldPinRehash, syncPinWrap } from './pinRecovery';
 import { hasLiveSignIn, signInStamp, signedOutSince } from './liveSignIn';
 import { currentKeyEpoch } from './keyRing';
 import { seedOnboardingNotes } from './welcomeNote';
-import { isDemoMode } from './demo';
+import { isDemoMode, proUnlocked } from './demo';
+import { clearNeverSynced, isLocalOnly, isLocalTruthOnly } from './localOnly';
+import { isSyncPaused } from './syncPause';
 import { ninjaKeySupported, QUICK_NOTES_ADDED_EVENT } from './ninjaShortcut';
-import { reconcileOrphanBlobs, sweepBlobGC } from './imageGC';
+import { reconcileOrphanBlobs, sweepBlobGC, sweepLocalOnlyBlobGC } from './imageGC';
 import { drainVersionQueue } from './noteVersions';
 import { pullOpensTrashPurge } from './trashPurge';
 import { markPulledClean, wipeGenerationNow } from './pullState';
@@ -194,7 +196,7 @@ export function useSyncOrchestrator({
   // The Ninja box's quick notes (#694 request 2): at every unlock keep the
   // inbox public key for the next lock, then add the notes the box sealed
   // while the app was locked. Desktop only, where the box exists.
-  // Spec: docs/internal/plans/quick-note-694.md (section 5.2 steps 6 and 7)
+  // Spec: docs/internal/specs/quick-note-694.md (section 5.2 steps 6 and 7)
   useEffect(() => {
     if (!ninjaKeySupported() || isDemoMode()) return;
     const signedInAt = signInStamp();
@@ -241,7 +243,7 @@ export function useSyncOrchestrator({
   }, [refresh, isNoteLocked, gateCopy, editingBodyRef, setEditorRevision]);
 
   const runSync = useCallback(async () => {
-    if (isDemoMode()) return;
+    if (isDemoMode() || isLocalOnly()) return;
     if (!navigator.onLine) return;
     // A pass belongs to the live sign-in. One that would start after a
     // sign-out began, while this view stays mounted for the sign-out's
@@ -249,6 +251,13 @@ export function useSyncOrchestrator({
     // before it writes a PIN or the phrase back (liveSignIn.ts).
     if (!hasLiveSignIn()) return;
     const signedInAt = signInStamp();
+    // Defense-in-depth: if a registered never-synced vault (e.g. Pro without
+    // Sync) reaches an active sync pass, flush any 24h-queued local-only blob
+    // deletions and clear neverSynced before pushing anything to our servers.
+    if (!isSyncPaused() && isLocalTruthOnly()) {
+      await sweepLocalOnlyBlobGC(Date.now(), 0).catch(() => {});
+      await clearNeverSynced();
+    }
     // Flush any in-flight body edits into React state so the sync
     // picks up the latest content and dirty flags are correct.
     flushEditingBodyRef.current();
@@ -559,6 +568,9 @@ export function useSyncOrchestrator({
                 return agentFolder && folders.some((f) => f.id === agentFolder) ? agentFolder : null;
               },
               hasFolder: (id) => loadLocalSettings().folders.some((f) => f.id === id),
+              foldersUnlocked: () => proUnlocked(auth.isPro),
+              folders: () => loadLocalSettings().folders,
+              protectedViews: () => loadLocalSettings().protectedViews,
               // This pass read the server's settings: a sender that a stale
               // copy does not know yet is never refused (code review 2).
               settingsPulled: () => settingsPass.readServer && hasSettingsPulled(),
@@ -884,6 +896,7 @@ export function useSyncOrchestrator({
     // "Files on wifi only": the moment wifi returns, drain the held
     // upload queues instead of waiting out the post-sync retry cooldown.
     const onWifiRestored = () => {
+      if (isLocalOnly()) return;
       imageStoreRef.current?.processPendingUploads().catch(() => { /* retried next pass */ });
       attachmentStoreRef.current?.processPendingUploads().catch(() => { /* retried next pass */ });
     };

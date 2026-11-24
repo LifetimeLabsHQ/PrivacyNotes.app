@@ -285,3 +285,94 @@ export function daysLeft(med: MedicationTemplate, left: number | null): number |
   if (left === null || use <= 0) return null;
   return Math.floor(left / use);
 }
+
+// ── Time grouping ──────────────────────────────────────────────────
+
+export type TimeGroup = 'morning' | 'afternoon' | 'evening' | 'anytime';
+
+const TIME_GROUP_ORDER: readonly TimeGroup[] = ['morning', 'afternoon', 'evening', 'anytime'];
+
+/** Which part of the day a dose time (HH:MM) belongs to, or 'anytime' without one. */
+export function timeGroupOf(time: string | undefined): TimeGroup {
+  if (!time) return 'anytime';
+  if (time < '12:00') return 'morning';
+  if (time < '17:00') return 'afternoon';
+  return 'evening';
+}
+
+export type ScheduledDoseItem = {
+  med: MedicationTemplate;
+  dose: MedicationDose;
+  index: number;
+  total: number;
+  logId: string;
+  group: TimeGroup;
+};
+
+/** Flatten scheduled medication rows into chronological time-of-day groups.
+ *  Timed doses sort by HH:MM ascending (preserving template order on ties);
+ *  untimed doses keep their template order under 'anytime'. As-needed rows
+ *  are excluded so callers render them in their own section. */
+export function groupScheduledDoses(
+  rows: ReadonlyArray<{ med: MedicationTemplate; doses: MedicationDose[]; asNeeded: boolean }>,
+): Array<{ group: TimeGroup; items: ScheduledDoseItem[] }> {
+  const flat: Array<ScheduledDoseItem & { order: number }> = [];
+  let order = 0;
+  for (const r of rows) {
+    if (r.asNeeded) continue;
+    r.doses.forEach((dose, index) => {
+      flat.push({
+        med: r.med,
+        dose,
+        index,
+        total: r.doses.length,
+        logId: doseLogId(r.med.id, dose.id),
+        group: timeGroupOf(dose.time),
+        order: order++,
+      });
+    });
+  }
+  flat.sort((a, b) => {
+    if (a.dose.time && b.dose.time) {
+      if (a.dose.time !== b.dose.time) return a.dose.time < b.dose.time ? -1 : 1;
+      return a.order - b.order;
+    }
+    if (a.dose.time) return -1;
+    if (b.dose.time) return 1;
+    return a.order - b.order;
+  });
+  const byGroup = new Map<TimeGroup, ScheduledDoseItem[]>();
+  for (const item of flat) {
+    const list = byGroup.get(item.group) ?? [];
+    list.push(item);
+    byGroup.set(item.group, list);
+  }
+  return TIME_GROUP_ORDER.flatMap((group) => {
+    const items = byGroup.get(group);
+    return items?.length ? [{ group, items }] : [];
+  });
+}
+
+/** Partition chronological time groups into two balanced contiguous columns
+ *  for wide layouts, keeping chronological order intact when stacked in one
+ *  column on narrow panes. Returns `[groups, []]` when fewer than two groups
+ *  exist. */
+export function splitScheduledGroups<T extends { items: readonly unknown[] }>(
+  groups: readonly T[],
+): [T[], T[]] {
+  if (groups.length < 2) return [[...groups], []];
+  const weights = groups.map((g) => g.items.length + 1);
+  const total = weights.reduce((a, b) => a + b, 0);
+  let bestSplit = 1;
+  let bestDiff = Infinity;
+  let left = 0;
+  for (let i = 1; i < groups.length; i++) {
+    left += weights[i - 1]!;
+    const diff = Math.abs(left - (total - left));
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestSplit = i;
+    }
+  }
+  return [groups.slice(0, bestSplit), groups.slice(bestSplit)];
+}

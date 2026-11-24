@@ -791,7 +791,8 @@ export function toggleCodeBlockSmart(editor: TipTapEditor, language: string | nu
       else if (from >= selection.to) after.push(item);
       else picked.push(item);
     });
-    const start = Number(top.attrs['start'] ?? 1) || 1;
+    const rawStart = Number(top.attrs['start'] ?? 1);
+    const start = Number.isFinite(rawStart) ? rawStart : 1;
     const asList = (items: ProseMirrorNode[], first: number) =>
       top.type.create(top.type.name === 'orderedList' ? { ...top.attrs, start: first } : top.attrs, items);
     const lines = codeLinesOf(asList(picked, start + before.length), '');
@@ -859,7 +860,8 @@ function codeLinesOf(node: ProseMirrorNode, pad: string): string[] | null {
   if (name === 'blockquote') return childLines(node, pad + '> ');
   if (name === 'bulletList' || name === 'orderedList' || name === 'taskList') {
     const out: string[] = [];
-    let n = Number(node.attrs['start'] ?? 1) || 1;
+    const rawStart = Number(node.attrs['start'] ?? 1);
+    let n = Number.isFinite(rawStart) ? rawStart : 1;
     let ok = true;
     node.forEach((item) => {
       if (!ok) return;

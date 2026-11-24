@@ -22,7 +22,7 @@ export interface NinjaFrame {
   /** No Ninja here to show: the lock screen, sign-in, or a start not done. */
   locked?: boolean;
   /** Locked, and a quick note can still be sealed for the next unlock: the
-   *  box opens in note mode. Spec: docs/internal/plans/quick-note-694.md (section 5.2 step 2) */
+   *  box opens in note mode. Spec: docs/internal/specs/quick-note-694.md (section 5.2 step 2) */
   queue?: boolean;
   html?: string;
   value?: string;
@@ -152,7 +152,7 @@ export function remoteNinjaClosed(): void {
 
 /**
  * "Write a note" ran in the hidden Ninja: the box changes to its note mode
- * with the text typed, and stays on screen. Spec: docs/internal/plans/quick-note-694.md (section 5.2 step 1)
+ * with the text typed, and stays on screen. Spec: docs/internal/specs/quick-note-694.md (section 5.2 step 1)
  */
 export function openBoxNoteMode(title: string): void {
   handingOff = true;

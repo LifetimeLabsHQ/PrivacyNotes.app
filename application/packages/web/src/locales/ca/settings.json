@@ -19,6 +19,7 @@
     "proUnlimited": "· dispositius il·limitats",
     "earlySupporterThanks": "Pioner, gràcies per ser-hi des del primer dia",
     "proThanks": "Tot a punt. Gràcies per donar suport al projecte",
+    "freeLocalOnly": "Pla gratuït",
     "freeLimit_one": "<strong>Pla gratuït</strong>, fins a {{count}} dispositiu.",
     "freeLimit_other": "<strong>Pla gratuït</strong>, fins a {{count}} dispositius.",
     "freeUsage": "Ara mateix en fas servir {{used}} de {{limit}}.",
@@ -90,7 +91,25 @@
   },
   "images": {
     "spaceSaverTitle": "Estalvi d'espai",
-    "spaceSaverDesc": "Reduïdes a {{px}} píxels i desades com a JPEG al {{quality}} % de qualitat. Una mica menys de detall per una fracció de l'espai. Un GIF conserva l'animació, i els fitxers de la Caixa forta es queden tal com són.",
+    "spaceSaverDesc": "Redueix les imatges noves i les desa com a JPEG. Un GIF conserva l'animació, i els fitxers de la Caixa forta es queden tal com són.",
+    "compressionTitle": "Compressió",
+    "level": {
+      "standard": "Estàndard",
+      "small": "Petit",
+      "tiny": "Diminut"
+    },
+    "levelSpec": "S'ajusta a {{px}} píxels al {{quality}} % de qualitat JPEG.",
+    "levelDesc": {
+      "standard": "Detall nítid per una fracció de l'espai.",
+      "small": "Fitxers més petits mantenint clares les fotos i les captures de pantalla.",
+      "tiny": "La mida més petita per a un emmagatzematge just; el text fi es pot suavitzar."
+    },
+    "previewSample": "Foto de telèfon de {{size}}",
+    "previewSavedAs": "Desada com a",
+    "previewCompressed": "~{{size}} JPEG ({{px}} px, {{quality}} %)",
+    "previewOriginal": "{{size}} original",
+    "previewBarLabel": "Mida estimada de la imatge desada en comparació amb l'original",
+    "previewFits": "~{{count}} fotos / {{storage}}",
     "removeLocationTitle": "Elimina les dades d'ubicació",
     "removeLocationDesc": "El lloc on es va fer una imatge s'elimina abans de desar-la.",
     "contactTitle": "Fotos de contacte petites",
@@ -141,7 +160,8 @@
     "verifyNeverPushed_one": "{{count}} element d’aquí no ha arribat mai al servidor",
     "verifyNeverPushed_other": "{{count}} elements d’aquí no han arribat mai al servidor",
     "verifyRepairAction": "Torna a baixar-ho tot",
-    "verifyRepairQueued": "A la propera sincronització es tornarà a llegir tota la teva caixa forta. No es perdrà res del que estigui esperant a pujar-se."
+    "verifyRepairQueued": "A la propera sincronització es tornarà a llegir tota la teva caixa forta. No es perdrà res del que estigui esperant a pujar-se.",
+    "localOnlyOfflineError": "Ets fora de línia. Connecta't a internet per activar la sincronització."
   },
   "accountId": {
     "heading": "ID del compte",
@@ -474,6 +494,7 @@
     "blockedByStorage": "Tens una subscripció d'emmagatzematge activa. Cancel·la-la des d'Emmagatzematge a la configuració abans de poder suprimir el compte.",
     "localLabel": "Suprimeix les dades locals",
     "localDesc": "Esborra les notes, les imatges i les dades en memòria cau d'aquest dispositiu. No suprimeix el teu compte, només neteja aquest navegador.",
+    "localDescLocalOnly": "Esborra totes les notes, les imatges i els fitxers d'aquest dispositiu. No hi ha res emmagatzemat al núvol.",
     "localRequired": "(obligatori en suprimir el compte)",
     "localUnsynced_one": "Aquest dispositiu té {{items}}. Si suprimeixes les dades locals, es perd per sempre.",
     "localUnsynced_other": "Aquest dispositiu té {{items}}. Si suprimeixes les dades locals, es perden per sempre.",
@@ -513,6 +534,8 @@
     "updateRequiredAria": "Actualització necessària, sincronització en pausa",
     "paused": "Sincronització desactivada",
     "pausedTooltip": "La sincronització està desactivada en aquest dispositiu. Les teves notes es queden aquí fins que l'activis.",
+    "localOnly": "Només local",
+    "localOnlyAria": "Només local. Les teves notes es queden en aquest dispositiu",
     "wifiHold": "Esperant el wifi",
     "wifiHoldTooltip": "Els fitxers pugen quan torni el wifi. Les notes segueixen sincronitzant-se.",
     "notBackedUp": "Sense còpia de seguretat",
@@ -580,7 +603,27 @@
     "passPushFailed_one": "{{count}} ha fallat",
     "passPushFailed_other": "{{count}} han fallat",
     "passHalted_one": "aturada, {{count}} en espera",
-    "passHalted_other": "aturada, {{count}} en espera"
+    "passHalted_other": "aturada, {{count}} en espera",
+    "localOnlyBody": "Les teves notes es queden xifrades en aquest dispositiu i no se sincronitzen amb els nostres servidors.",
+    "localOnlyNotes_other": "{{count}} notes en aquest dispositiu",
+    "localOnlyBackupHint": "No se sincronitza res amb el núvol. Configura les còpies de seguretat automàtiques per conservar una còpia segura en una altra unitat o carpeta.",
+    "localOnlySetUpBackups": "Configura les còpies de seguretat automàtiques",
+    "localOnlyTurnOnSync": "Activa la sincronització",
+    "localOnlyTurningOn": "S'està activant la sincronització...",
+    "localOnlyAccountIdHint": "Encara no està registrat als nostres servidors.",
+    "localOnlyNotes_one": "{{count}} nota en aquest dispositiu"
+  },
+  "localOnlyNotice": {
+    "body": "{{feature}}: activa la sincronització a Configuració > ID & Sync per fer servir aquesta funció en línia.",
+    "cta": "Vés a ID & Sync",
+    "features": {
+      "multiDevice": "Gestió de diversos dispositius",
+      "keyCustody": "Custòdia de la clau al núvol",
+      "cloudStorage": "Emmagatzematge al núvol",
+      "twoFactorPasskeys": "Inici de sessió en dos passos i claus d'accés",
+      "phraseChange": "Canviar la teva frase de recuperació",
+      "burnShare": "Enllaços Burn After Reading"
+    }
   },
   "language": {
     "reportMistake": "Informa d’un error de traducció",

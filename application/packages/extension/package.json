@@ -17,11 +17,11 @@
     "@notes/clipper": "workspace:*",
     "@notes/shared": "workspace:*",
     "@phosphor-icons/react": "^2.1.7",
-    "i18next": "^27.1.1",
+    "i18next": "^27.2.2",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-i18next": "^18.0.1",
-    "tldts": "7.5.2"
+    "react-i18next": "^18.0.3",
+    "tldts": "7.5.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.5",

@@ -105,7 +105,11 @@ function PlaceMapView({ node, selected, editor, updateAttributes }: NodeViewProp
               draggable={false}
               className="truncate underline"
               dir="auto"
-              onClick={(e) => { e.preventDefault(); openExternal(osmUrl(place.lat, place.lng)); }}
+              onClick={(e) => {
+                if (e.defaultPrevented) return;
+                e.preventDefault();
+                openExternal(osmUrl(place.lat, place.lng), { browser: true });
+              }}
             >
               {place.label ?? formatCoordinates(place)}
             </a>

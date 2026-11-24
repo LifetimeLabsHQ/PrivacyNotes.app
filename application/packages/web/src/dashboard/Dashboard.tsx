@@ -646,7 +646,7 @@ export default function Dashboard({ widgets, onWrite, ownHome }: {
   return (
     <>
       <MonthModelContext.Provider value={month}>
-      <ItemList list={list} grid={false} className="pn-home-grid grid content-start min-h-0 overscroll-contain" style={{
+      <ItemList list={list} grid={false} pullToSync className="pn-home-grid grid content-start min-h-0 overscroll-contain" style={{
         padding: 16,
         gap: HOME_GAP_PX,
         gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,

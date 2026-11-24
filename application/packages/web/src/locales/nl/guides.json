@@ -439,6 +439,58 @@
         }
       ]
     },
+    "notion": {
+      "app": "Notion",
+      "title": "Je Notion-workspace exporteren",
+      "metaTitle": "Je Notion-workspace exporteren - PrivacyNotes",
+      "lead": "Exporteer je Notion-workspace als een Markdown & CSV-zip, en PrivacyNotes verwijdert de ID's van 32 tekens van Notion, bouwt subpagina's opnieuw op als mappen en maakt notitielinks van paginalinks.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/notion-settings.webp",
+            "alt": "De instellingen van Notion, pagina General, met de sectie Export en de knop Export naast Workspace content.",
+            "width": 1576,
+            "height": 754
+          },
+          "h": "Je hele workspace exporteren",
+          "steps": [
+            "Open Notion op het web of op je computer en open Settings in het workspacemenu.",
+            "Open onder Workspace de pagina General en scrol naar Export.",
+            "Klik op Export naast Workspace content.",
+            "Wil je liever één pagina met bijbehorende subpagina's exporteren, open dan het menu met de drie puntjes op die pagina en kies More > Export."
+          ],
+          "p": [
+            "Grote workspace-exports bouwt Notion op de achtergrond op, waarna je een downloadlink per e-mail krijgt. Sleep die .zip in PrivacyNotes zoals hij is, zonder hem uit te pakken - geneste deelzips in het archief worden automatisch verwerkt."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/notion-export.webp",
+            "alt": "Het Export-venster van Notion met Markdown & CSV geselecteerd, Page content ingesteld op Everything, en zowel Include private pages als Create folders for subpages aangezet.",
+            "width": 1576,
+            "height": 600
+          },
+          "h": "Kies Markdown & CSV, met mappen aan",
+          "steps": [
+            "Zet Export format op \"Markdown & CSV\".",
+            "Zet Page content op \"Everything\", zodat je afbeeldingen, pdf's en bijgevoegde bestanden meekomen.",
+            "Zet \"Include private pages\" (of \"Include subpages\" bij de export van één pagina) en \"Create folders for subpages\" aan.",
+            "Klik op Export en sla het .zip-bestand op."
+          ],
+          "p": [
+            "HTML- en pdf-exports bevatten geen Markdown-bestanden en kunnen niet worden gelezen door de Notion-importer. Kies \"Markdown & CSV\" zodat je structuur, links en opmaak netjes meekomen."
+          ]
+        },
+        {
+          "h": "Wat er meekomt",
+          "p": [
+            "Notion zet een ID van 32 tekens achter elke geëxporteerde bestandsnaam en interne link. PrivacyNotes haalt die ID's weg uit elke titel en mapnaam, verwijdert de bovenste map \"Private & Shared\" en bouwt geneste subpagina's opnieuw op als mappen.",
+            "Koppen, lijsten, geneste takenlijsten, tabellen, codeblokken met de taal erbij, wiskunde, onderstreping en citaten komen mee zoals ze waren. Notion-callouts worden aandachtsblokken in PrivacyNotes, [links en vermeldingen tussen geëxporteerde pagina's worden notitielinks](/nl/help/note-links), en geüploade afbeeldingen, pdf's en bestanden worden in je opslag geïmporteerd.",
+            "Rijpagina's uit een database worden geïmporteerd als notities in een map met de naam van de database, waarbij een eventuele eigenschap Tags als tags wordt toegevoegd. CSV-tabelbestanden van databases worden overgeslagen en geteld in de importsamenvatting. Notions eigen Markdown-export laat tekstkleuren, markeringen en pagina's in de prullenbak weg."
+          ]
+        }
+      ]
+    },
     "notesnook": {
       "app": "Notesnook",
       "title": "Je Notesnook-notities exporteren",
@@ -1281,6 +1333,53 @@
         }
       ]
     },
+    "diaro": {
+      "app": "Diaro",
+      "title": "Je Diaro-dagboek exporteren",
+      "metaTitle": "Je Diaro-back-up exporteren - PrivacyNotes",
+      "lead": "Diaro exporteert je hele dagboek als een .zip-back-up vanuit de mobiele app, en PrivacyNotes importeert elk item in Dagboeken met zijn mappen, tags, stemmingen, plaatsen, weer en foto's.",
+      "sections": [
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-menu.webp",
+            "alt": "Het scherm met Data-instellingen van Diaro, met Backup & restore en de opslagmap voor back-upbestanden",
+            "width": 1576,
+            "height": 732
+          },
+          "h": "Een onversleutelde back-up maken in de Diaro-app",
+          "steps": [
+            "Open Diaro op Android of iOS, open het linkermenu en tik op het tandwiel voor Settings.",
+            "Kies Data, scrol omlaag naar Backup & restore en tik op Backup & restore.",
+            "Tik rechtsboven op de knop +.",
+            "Laat \"Encrypt entries in backup file\" en \"Do not backup attachments\" uitgevinkt en tik dan op Backup.",
+            "Kopieer het bestand Diaro_YYYYMMDD.zip uit de back-upmap onder Storage directories (of uit Dropbox als je het daarheen hebt gesynchroniseerd) en sleep het in PrivacyNotes."
+          ],
+          "p": [
+            "Een back-up maken in de mobiele app is gratis en vereist geen Pro-abonnement. Diaro Online exporteert alleen PDF, DOCX en TXT op betaalde plannen en heeft geen knop om een back-up te downloaden."
+          ]
+        },
+        {
+          "img": {
+            "src": "/help/img/diaro-backup-dialog.webp",
+            "alt": "Het Backup-venster van Diaro, met zowel Encrypt entries in backup file als Do not backup attachments uitgevinkt",
+            "width": 1576,
+            "height": 817
+          },
+          "h": "Kies de onversleutelde .zip-back-up, niet PDF, TXT, CSV of versleutelde back-ups",
+          "p": [
+            "Een onversleutelde back-up schrijft DiaroBackup.xml en je map media/photo samen in één .zip-bestand. Als je \"Encrypt entries in backup file\" aanvinkt, schrijft Diaro in plaats daarvan DiaroBackup.denc weg; PrivacyNotes kan dat niet ontgrendelen en weigert het met de melding om versleuteling uit te zetten.",
+            "Een los bestand DiaroBackup.xml importeert op zichzelf alle tekst en metagegevens, zonder foto's, en de importsamenvatting telt elke ontbrekende afbeelding. Vink \"Do not backup attachments\" uit en sleep de volledige .zip erin om je foto's mee te nemen."
+          ]
+        },
+        {
+          "h": "Wat er meekomt",
+          "p": [
+            "[Elk item belandt in Dagboeken](/nl/help/journal) op de kalenderdag volgens het tijdzoneverschil dat bij het item is vastgelegd. Items zonder titel krijgen de datumtitel die een nieuwe dagboeknotitie van die dag krijgt, en kale weblinks worden klikbaar.",
+            "Diaro-mappen worden mappen, tags blijven tags, en stemmingen vullen [de stemmingstracker](/nl/help/choose-trackers) in op basis van hun gewicht in Diaro (eigen stemmingsnamen staan ook op de bovenste regel). Locaties met coördinaten vullen de locatiechip van het item, plaatsen met alleen een naam en het weer staan op één regel bovenaan, en foto's worden in hun oorspronkelijke volgorde geïmporteerd."
+          ]
+        }
+      ]
+    },
     "diarium": {
       "app": "Diarium",
       "title": "Je Diarium-dagboek exporteren",
@@ -1420,6 +1519,69 @@
             "Het notitieboek wordt een map, met daarin een map voor elke sectiegroep en sectie. Elke pagina wordt een notitie in de map van haar sectie, met de datum waarop OneNote haar maakte, en een subpagina staat in dezelfde map direct na haar pagina.",
             "Koppen, vet, cursief, onderstreping, kleuren, markeringen, lijsten met opsommingstekens en nummers, tabellen en codealinea's komen mee zoals ze waren. Een to-do-tag wordt een item in een takenlijst, afgevinkt als het gedaan was, en andere notitietags zoals Important of Question worden tags op de notitie. [Links tussen pagina's worden notitielinks](/nl/help/note-links), en afbeeldingen en bijgevoegde bestanden worden in je opslag geïmporteerd.",
             "Een los sectiebestand (.one) of een gezipte notitieboekmap werkt ook. Tekeningen met een pen, geluidsopnames en vergelijkingen hebben hier geen vorm, dus de importvoorvertoning telt ze, en pagina's in de prullenbak van OneNote horen niet bij het pakket."
+          ]
+        }
+      ]
+    },
+    "day-one": {
+      "app": "Day One",
+      "title": "Je Day One-dagboek exporteren",
+      "metaTitle": "Je Day One-dagboek exporteren - PrivacyNotes",
+      "lead": "Day One exporteert je dagboek als een JSON-.zip met media, en PrivacyNotes zet elk item in Dagboeken met zijn dag, tags, plaats, weer en foto's.",
+      "sections": [
+        {
+          "h": "Exporteren als JSON met media",
+          "steps": [
+            "Open Day One op het web en selecteer het dagboek dat je wilt verplaatsen.",
+            "Kies Edit Journal, open Journal Settings en kies Export Journal.",
+            "Kies Export journal JSON file en kies dan Include media. Day One slaat een .zip op met je items en bijlagen.",
+            "Sleep die .zip erin zoals hij is."
+          ],
+          "p": [
+            "Kies op Mac of iOS in plaats daarvan File > Export > JSON. Je kunt één dagboek tegelijk exporteren, of alle dagboeken samen in één .zip."
+          ]
+        },
+        {
+          "h": "Kies JSON, geen PDF of platte tekst",
+          "p": [
+            "JSON is het formaat dat datums, tijdzones, tags, sterren, locaties, weer, links tussen items en media bewaart. Een los .json-bestand importeert op zichzelf de tekst, zonder foto's of bestanden, en de importsamenvatting telt eventuele bijlagen die niet gevonden konden worden."
+          ]
+        },
+        {
+          "h": "Wat er meekomt",
+          "p": [
+            "[Elk item belandt in Dagboeken](/nl/help/journal) op de kalenderdag in de eigen tijdzone van het item. Een kop aan het begin wordt de titel, en een item zonder kop krijgt zijn datum als titel. Items met een ster en vastgezette items blijven vastgezet, en tags blijven tags.",
+            "Je locatie vult de locatiechip van het item, en het weer, de activiteit en de muziek staan op één regel bovenaan. Foto's worden geïmporteerd als afbeeldingen, audio, video en pdf's als bijlagen, en links tussen items worden [notitielinks](/nl/help/note-links). Als één .zip meerdere dagboeken bevat, wordt elk dagboek een map."
+          ]
+        }
+      ]
+    },
+    "todoist": {
+      "app": "Todoist",
+      "title": "Je Todoist-taken exporteren",
+      "metaTitle": "Je Todoist-taken exporteren - PrivacyNotes",
+      "lead": "Exporteer Todoist-projecten als een back-up-.zip of als .csv-bestanden per project, en PrivacyNotes maakt van elk project een takenlijst met secties, subtaken en opmerkingen.",
+      "sections": [
+        {
+          "h": "Een back-up downloaden of een project als CSV exporteren",
+          "steps": [
+            "Open in Todoist met een Pro- of Business-plan Settings > Backups en download je nieuwste back-up-.zip. Daarin zit één .csv-bestand voor elk actief project.",
+            "Open op het gratis plan een project, kies het menu met de drie puntjes > Import & export > Export as CSV, en sla het .csv-bestand op.",
+            "Sleep het .zip- of .csv-bestand in PrivacyNotes."
+          ]
+        },
+        {
+          "h": "Relatieve datums uitzetten bij het exporteren van één project",
+          "p": [
+            "Zet in het menu Export as CSV de optie \"Use relative dates\" uit, zodat vervaldatums worden opgeslagen als kalenderdatums zoals 2026-12-15 in plaats van \"over 21 dagen\". Allebei worden als tekst op de taakregel geïmporteerd, en kalenderdatums blijven ook later nog kloppen.",
+            "Todoist laat voltooide taken en gearchiveerde projecten weg uit CSV-exports en back-ups, dus alleen actieve taken staan in het bestand."
+          ]
+        },
+        {
+          "h": "Waar alles belandt",
+          "p": [
+            "Elk project wordt een takenlijst in [Taken](/nl/help/tasks) met de naam van het project, met secties als koppen in zowel lijst- als bordprojecten en subtaken even diep genest. Prioriteiten P1 tot en met P3, vervaldatums, tijdsduur, deadlines en inline @labels blijven op elke regel staan, en elk label wordt als tag aan de lijst toegevoegd.",
+            "Taakbeschrijvingen, taakopmerkingen en projectopmerkingen komen mee, en niet-afvinkbare koptaken blijven vetgedrukte opsommingstekens in plaats van selectievakjes. Herinneringen op losse taakregels komen niet mee en worden geteld in de importsamenvatting."
           ]
         }
       ]

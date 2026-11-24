@@ -117,8 +117,9 @@ export function SettingsSegmented<T extends string>({
  *  Upgrade is the upgrade window's own amber, so a door to it and the
  *  window read as one action. */
 const BTN_BASE = 'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-body transition disabled:opacity-40 disabled:cursor-not-allowed';
+export const PRIMARY_BTN_SKIN = 'border border-accent/35 bg-accent/12 text-accent-strong hover:border-accent/60 hover:bg-surface-2';
 export const SETTINGS_BTN = `${BTN_BASE} border border-divider font-medium text-pn-soft hover:text-pn hover:bg-surface-1`;
-export const SETTINGS_BTN_PRIMARY = `${BTN_BASE} border border-transparent bg-accent-fill hover:bg-accent-fill-hover font-semibold text-white`;
+export const SETTINGS_BTN_PRIMARY = `${BTN_BASE} ${PRIMARY_BTN_SKIN} font-semibold`;
 export const SETTINGS_BTN_UPGRADE = `${BTN_BASE} border border-transparent bg-amber-700 hover:bg-amber-800 font-semibold text-white`;
 export const SETTINGS_BTN_DANGER = `${BTN_BASE} border border-transparent bg-danger hover:opacity-90 font-semibold text-white`;
 

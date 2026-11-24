@@ -42,7 +42,8 @@
     "extracted": "첨부 파일 {{total}}개 중 {{done}}개 추출함...",
     "parsed": "{{total}}개 중 {{done}}개 분석함...",
     "importedJournalEntries_other": "항목 {{count}}개를 저널 항목으로 가져오고, 각각 작성한 날짜로 지정했어요.",
-    "foundPhotos_other": "가져올 사진 {{count}}장을 찾았어요."
+    "foundPhotos_other": "가져올 사진 {{count}}장을 찾았어요.",
+    "backupUseRestore": "이 파일은 PrivacyNotes 백업이에요. 노트가 ID로 대조되고 보관함 항목이 보관함에 그대로 남도록 설정 > 백업 > 복원 > 전체 백업 (.zip)에서 복원하세요."
   },
   "upnote": {
     "perNoteMarkdownWarning": "UpNote의 노트별 Markdown 내보내기예요. 텍스트, 목록, 표, 코드, 수식, 링크, 이미지, 첨부 파일은 유지되지만, UpNote가 파일을 쓰기 전에 콜아웃, 텍스트 색상, 정렬, 아래/위 첨자를 없애고, 노트북, 고정, 원래 날짜도 담지 않아요. 휴대폰에서는 \"Export to HTML\"을 쓰면 그 서식이 유지되고, 컴퓨터에서는 Settings > Backup을 쓰면 모든 것이 유지돼요.",
@@ -503,5 +504,55 @@
     "queries_other": "쿼리 {{count}}개를 뺐어요. 쿼리는 Capacities의 저장된 검색이고, 자체 텍스트가 없어요.",
     "collections_other": "컬렉션 목록 {{count}}개를 뺐어요. 그 안의 개체는 컬렉션 없이 함께 와요.",
     "deadLinks_other": "링크 {{count}}개가 휴지통에 있는 개체처럼 내보내기에 없는 개체를 가리켜요. 링크 텍스트만 유지돼요."
+  },
+  "dayOne": {
+    "reading": "Day One 내보내기 읽는 중...",
+    "notDayOne": "Day One JSON 내보내기가 아닌 것 같아요. Day One에서 저널을 JSON(.zip 또는 .json)으로 내보내고 그 파일을 선택하세요.",
+    "noJson": "이 zip 안에서 .json 저널 파일을 찾지 못했어요. Day One에서 저널을 JSON으로 내보내고 그 .zip을 여기에 놓으세요.",
+    "noEntries": "이 Day One 내보내기에서 항목을 찾지 못했어요.",
+    "journalsAsFolders_other": "저널 {{count}}개를 폴더로 다시 만들었어요.",
+    "foundFiles_other": "가져올 오디오, 동영상 또는 PDF 첨부 파일 {{count}}개를 찾았어요.",
+    "entryLinks_other": "Day One 항목 링크 {{count}}개를 노트 링크로 바꿨어요.",
+    "untitled_other": "제목이 없는 항목 {{count}}개에 날짜로 제목을 붙였어요.",
+    "missingAttachments_other": "항목이 가리키는 사진 또는 첨부 파일 {{count}}개가 zip에 없어요. 함께 가져오려면 미디어를 포함해 다시 내보내세요.",
+    "noAttachmentsInJson_other": "사진 또는 첨부 파일 {{count}}개가 참조되어 있지만, .json 파일만으로는 미디어가 담기지 않아요. 함께 가져오려면 전체 .zip 내보내기를 놓으세요.",
+    "skipped_other": "읽을 수 있는 날짜나 내용이 없는 항목 {{count}}개를 건너뛰었어요.",
+    "brokenLinks_other": "Day One 항목 링크 {{count}}개가 이 내보내기 밖을 가리켜서 텍스트만 유지했어요."
+  },
+  "todoist": {
+    "reading": "Todoist 내보내기 읽는 중...",
+    "readingProject": "프로젝트 읽는 중... {{total}}개 중 {{current}}개",
+    "notTodoist": "Todoist 내보내기가 아닌 것 같아요. Todoist의 Settings > Backups에서 백업 .zip을 다운로드하거나, 프로젝트 메뉴에서 CSV로 내보내세요.",
+    "noCsv": "이 zip 안에서 .csv 프로젝트 파일을 찾지 못했어요. Todoist 백업 .zip이나 프로젝트 .csv 파일 하나를 선택하세요.",
+    "noTasks": "이 Todoist 내보내기에서 할 일이나 노트를 찾지 못했어요.",
+    "untitledProject": "Todoist 프로젝트",
+    "dueValue": "마감일: {{value}}",
+    "deadlineValue": "기한: {{value}}",
+    "commentLabel": "댓글",
+    "importedProjects_other": "프로젝트 {{count}}개를 할 일 목록으로 가져왔어요(할 일 {{tasks}}개).",
+    "sections_other": "섹션 {{count}}개를 제목으로 유지했어요.",
+    "comments_other": "댓글 {{count}}개를 유지했어요.",
+    "emptyProjects_other": "할 일이 없는 빈 프로젝트 {{count}}개를 건너뛰었어요.",
+    "reminders_other": "할 일 {{count}}개에 Todoist 미리 알림이 있었어요. 개별 체크리스트 항목의 미리 알림은 넘어오지 않아요."
+  },
+  "notion": {
+    "notNotion": "이 zip에서 Markdown 페이지를 찾지 못했어요. Notion에서 Settings > General > Export > Workspace content(또는 페이지 메뉴 > More > Export)를 선택하고 \"Markdown & CSV\"를 고른 다음 .zip을 여기에 놓으세요.",
+    "subpageFolders_other": "하위 페이지 그룹 {{count}}개를 폴더로 다시 만들었어요.",
+    "callouts_other": "Notion 콜아웃 {{count}}개를 콜아웃 블록으로 바꿨어요.",
+    "databases_other": "데이터베이스 CSV 표 {{count}}개를 건너뛰었어요. 각 행 페이지는 해당 폴더 안의 노트로 들어왔어요.",
+    "deadLinks_other": "링크 {{count}}개가 내보내기에 없는 페이지를 가리켜서 텍스트만 유지했어요."
+  },
+  "diaro": {
+    "reading": "Diaro 백업 읽는 중...",
+    "notDiaro": "Diaro 백업이 아니에요. Diaro에서 Settings > Data > Backup & restore를 선택해 암호화되지 않은 백업을 만든 다음, .zip이나 DiaroBackup.xml을 여기에 놓으세요.",
+    "noXml": "이 .zip에는 DiaroBackup.xml 파일이 없어요. Diaro에서 Settings > Data > Backup & restore를 선택해 암호화되지 않은 백업을 만든 다음, 그 .zip을 여기에 놓으세요.",
+    "encrypted": "이 Diaro 백업은 암호화되어 있어서(DiaroBackup.denc) 여기서 읽을 수 없어요. Diaro에서 Settings > Data > Backup & restore를 열고 +를 누른 뒤, \"Encrypt entries in backup file\" 체크를 해제한 상태로 새 .zip을 만들어 여기에 놓으세요.",
+    "tooLarge": "이 Diaro XML 파일은 너무 커서 읽을 수 없어요.",
+    "noEntries": "이 Diaro 백업에는 항목이 없어요.",
+    "rebuiltFolders_other": "Diaro 폴더 {{count}}개를 폴더로 다시 만들었어요.",
+    "foundFiles_other": "가져올 첨부 파일 {{count}}개를 찾았어요.",
+    "missingAttachments_other": "항목이 가리키는 사진 또는 첨부 파일 {{count}}개가 백업에 없어서 건너뛰었어요. 함께 가져오려면 \"Do not backup attachments\" 체크를 해제하고 백업을 다시 만드세요.",
+    "noAttachmentsInXml_other": "사진 또는 첨부 파일 {{count}}개는 가져오지 않았어요. DiaroBackup.xml 파일만으로는 미디어가 담기지 않아요. 함께 가져오려면 전체 .zip 백업을 놓으세요.",
+    "skipped_other": "날짜를 읽을 수 없는 항목 {{count}}개를 건너뛰었어요."
   }
 }

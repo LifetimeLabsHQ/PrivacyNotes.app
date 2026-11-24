@@ -230,6 +230,8 @@ async function parseZip(
     if (!entry.dir && !shouldSkip(path)) allPaths.push(path);
   });
   const prefix = commonRootPrefix(allPaths);
+  const { refusePrivacyNotesBackupZip } = await import('./privacynotes');
+  await refusePrivacyNotesBackupZip(zip, prefix);
 
   const mdFiles: [string, JSZip.JSZipObject][] = [];
   const attachments: [string, JSZip.JSZipObject][] = [];

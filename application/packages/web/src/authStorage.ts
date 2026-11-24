@@ -12,6 +12,7 @@ import { phraseSignsFor } from './identity';
 import { tabSecrets, trustAwareStorage } from './trustStorage';
 import { settingsLocalKey } from './settingsLocalKey';
 import { forgetCryptoOrder } from './cryptoCheckout';
+import { clearLocalOnlyFlagsSync } from './localOnly';
 
 // Demo-bucketed (see credentialKey in demo.ts): a demo session must
 // never read or write a real account's credential keys on the same
@@ -228,6 +229,7 @@ export function clearAccountScopedUiState(): void {
     localStorage.removeItem('privacynotes.verifyStamp'); // verifyStamp.ts
     // Which items this account had open as tabs: ids only, but this account's.
     localStorage.removeItem('privacynotes.openTabs'); // notesView/useOpenTabs.ts
+    sessionStorage.removeItem('privacynotes.openTabs'); // notesView/useOpenTabs.ts (when reopenLastOpen is off)
     // The notes this account turned spell check off for: ids only.
     localStorage.removeItem('privacynotes.spellcheckOffNotes'); // theme.ts
     // The sections this account folded, keyed by note id.
@@ -274,14 +276,17 @@ export function clearAccountScopedUiState(): void {
     // switch and layout, and name nothing of the account.
   } catch { /* ignore */ }
   try {
-    // What a lock's reload handed this tab: the open note and the times-only
-    // reminder plan, both of this account.
+    // What a lock's reload handed this tab: the open note, the times-only
+    // reminder plan, and any undismissed reminder id, all of this account.
     sessionStorage.removeItem(credentialKey('privacynotes.lockReopenNote')); // lockReloadKeys.ts REOPEN_NOTE_KEY
     sessionStorage.removeItem(credentialKey('privacynotes.lockReminders')); // lockReloadKeys.ts LOCKED_REMINDERS_KEY
+    sessionStorage.removeItem(credentialKey('privacynotes.lockShownReminder')); // lockReloadKeys.ts SHOWN_REMINDER_KEY
   } catch { /* ignore */ }
   // A crypto order names the account and the order, and its status answers
   // with the payment (cryptoCheckout.ts).
   forgetCryptoOrder();
+  // Local-only mode flags belong to the vault leaving this device.
+  clearLocalOnlyFlagsSync();
 }
 
 /**
@@ -351,13 +356,17 @@ export async function hasLocalAccountState(): Promise<boolean> {
  * sentence nobody can stand behind. The mirror bounds that case to one
  * boot per install predating it.
  */
-export async function switchWouldWipe(phrase: string): Promise<boolean> {
+export async function switchWouldWipe(phrase: string, online = true): Promise<boolean> {
   if (await phraseOwnsThisDevice(phrase)) return false;
   // A phrase of a changed account this device has no record of yet: the
   // server says which account it signs for, so the account this device
   // holds never reads as another one. Spec: docs/internal/plans/phrase-change.md (4.6)
-  const owner = await claimedOwner();
-  if (owner && (await phraseSignsFor(phrase, owner, true))) return false;
+  // Offline local-only creation passes online = false: a freshly generated
+  // phrase cannot be a rotated signing key of a prior account.
+  if (online) {
+    const owner = await claimedOwner();
+    if (owner && (await phraseSignsFor(phrase, owner, true))) return false;
+  }
   return hasLocalAccountState();
 }
 

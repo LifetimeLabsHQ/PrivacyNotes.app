@@ -2,7 +2,7 @@ import { setCustomHabitsStore } from './habitList';
 import { setTaskConfetti } from './checkboxConfetti';
 import { Suspense, useEffect, useLayoutEffect, useRef, useState, useCallback, useMemo, useDeferredValue, useSyncExternalStore, type CSSProperties } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
-import { CaretRight, Folder, Fire, PILLAR_GLYPHS, Calendar as CalendarIcon, CalendarPlus, CalendarX, Ruler, ArrowRight as ArrowRightIcon, BoxArrowDown, Copy, Stack, Pause, Play, iconTrash, iconOpenInTab, iconSideBySide, Shield, LockSimple, LockSimpleOpen, Trash } from './icons';
+import { CaretRight, Folder, Fire, PILLAR_GLYPHS, Calendar as CalendarIcon, CalendarPlus, CalendarX, Ruler, ArrowRight as ArrowRightIcon, ArrowCounterClockwise, BoxArrowDown, BoxArrowUp, Copy, DotsThree, Stack, Pause, Play, iconTrash, iconOpenInTab, iconSideBySide, Shield, LockSimple, LockSimpleOpen, Trash } from './icons';
 import { SPACE_ICONS } from './SpaceSwitch';
 import { useAuth, type AuthState } from './auth';
 import type { SupabaseClient } from '@notes/shared';
@@ -42,10 +42,10 @@ import { TagPicker } from './TagPicker';
 import { noteLinkKey, noteLinkTarget, parseNoteLinkTarget, resolveNoteLinkMatches } from './noteLinks';
 import { noteHeadingsFor } from './noteHeadings';
 import { parseLinkBody, buildLinkBody, buildLinkKeyMap, duplicateBookmarkId, normalizeUrl, linkDomain } from './linkBody';
-import { branchPathLabels, canDeleteFolder, folderCounts as computeFolderCounts, folderScope, subtreeIds, UNFILED_ID } from './folders';
+import { branchPathLabels, canDeleteFolder, folderCounts as computeFolderCounts, folderPathLabels, folderScope, subtreeIds, UNFILED_ID } from './folders';
 import { countTags, sectionNotes } from './sidebarScope';
 import { isItemDrag, liveItemIds, readItemDrag } from './itemDrag';
-import { FolderNamesContext } from './folderNames';
+import { FolderGroupLabelsContext, FolderNamesContext, setFolderGroupLabels } from './folderNames';
 import { ChipFilterContext } from './chipFilter';
 import { SubfoldersSwitchContext } from './ListFilterChips';
 import { LooksContext, noteTintVars } from './looks/LookGlyph';
@@ -154,6 +154,7 @@ import { usePinExpiryPoll } from './usePinExpiryPoll';
 import { useShutViews } from './useShutViews';
 import { countWords } from './wordCountUtils';
 import { isDemoMode, proUnlocked } from './demo';
+import { clearNeverSynced, useLocalTruthOnly } from './localOnly';
 import { feedSpace, firstRootIn, folderSpaces, foldersIn, inSpace, readActiveSpace, saveActiveSpace, setFeedSpace, type Space, type SpaceView } from './spaces';
 import type { ImportTarget } from './import/destination';
 import { useViewMode, ViewModeContext } from './viewMode';
@@ -165,13 +166,14 @@ import { ImageStore, readImageSizes, listImageSizes } from './imageStore';
 import { EmptyTrashModal } from './EmptyTrashModal';
 import { DeleteNoteModal } from './DeleteNoteModal';
 import { ConfirmModal } from './ConfirmModal';
-import { setImageStore, setImageUploadContext } from './EncryptedImage';
+import { setImageStore, setImageUploadContext, storePictureWithOutcome } from './EncryptedImage';
+import { IMAGE_REF_PREFIX } from './mediaRefs';
 import { useClipper } from './notesView/useClipper';
 import type { BookmarkClip } from './BookmarkItem';
-import { setImagePolicy } from './imageProcessing';
+import { currentImageOptions, setImagePolicy } from './imageProcessing';
 import { AttachmentStore } from './attachmentStore';
 import { setAttachmentStore, setAttachmentUploadContext } from './EncryptedAttachment';
-import { gcOnNoteDelete, gcOnNotesDelete, markVersionActivity } from './imageGC';
+import { gcOnNoteDelete, gcOnNotesDelete, markVersionActivity, sweepLocalOnlyBlobGC } from './imageGC';
 import { useTrashAutoPurge } from './useTrashAutoPurge';
 import {
   extractAllTasks,
@@ -199,6 +201,8 @@ import { isSoftKeyboardDevice, suppressSoftKeyboard, createLongPressGuard } from
 import { useKeyboardOpen } from './useKeyboardOpen';
 import { useEscapeToClose, closeTopOverlay, hasOpenOverlay } from './useEscapeToClose';
 import { useEdgeSwipe, EDGE_START_PX } from './useEdgeSwipe';
+import { PullToSyncContext } from './pullToSync';
+import { SwipeRowActionsContext, closeOpenSwipeRow, hasOpenSwipeRow, type SwipeRowAction } from './swipeRow';
 import {
   SIDEBAR_WIDTH_DEFAULT, SIDEBAR_WIDTH_MIN, SIDEBAR_WIDTH_MAX,
   LIST_WIDTH_DEFAULT, LIST_WIDTH_MIN, LIST_WIDTH_MAX,
@@ -304,6 +308,8 @@ import {
   resolvePrefs,
   viewToPillar,
 } from './listPrefs';
+import { orderNotesForGroup } from './ListGroupHeader';
+import { parseDay } from './localDate';
 import {
   compareNotes,
   deriveDisplayTitle,
@@ -336,6 +342,7 @@ import {
   entryDayOf,
   isCheckIn,
   journalDateOf,
+  estimateBlobBytes,
   type DayEntry,
 } from './notesViewUtils';
 import { useCalendarFeeds } from './notesView/useCalendarFeeds';
@@ -358,6 +365,7 @@ import { useToday } from './ListGroupHeader';
 import type { NoteConflict } from './sync';
 import { activeMedications, trackersEqual, type JournalTrackerData, type MedicationLogEntry } from './trackerTypes';
 import { BurnShareModal } from './notesView/BurnShareModal';
+import { useUpdateAvailable } from './updateAvailable';
 import { FullFooter, MiniFooter, type FooterStats, type FooterStorage } from './notesView/AppFooter';
 import { useTagActions } from './notesView/useTagActions';
 import { useFolderActions } from './notesView/useFolderActions';
@@ -397,6 +405,7 @@ import { MobileDrawer } from './notesView/MobileDrawer';
 import { NoteEditorPane } from './notesView/NoteEditorPane';
 import TabStrip from './notesView/TabStrip';
 import { useOpenItemsInTabs, useOpenTabs } from './notesView/useOpenTabs';
+import type { PinnedTabsSetting } from './pinnedTabs';
 import type { QuickActionsTier } from './notesView/NoteQuickActions';
 import { QuotaExceededBanner } from './notesView/QuotaExceededBanner';
 import { isStorageConfigured } from './paddle';
@@ -427,7 +436,7 @@ import { MarkdownRail } from './markdownFolder/MarkdownRail';
 import { MarkdownExplainer, MarkdownPitch } from './markdownFolder/MarkdownExplainer';
 import { MarkdownDefaultAppCard } from './markdownFolder/MarkdownDefaultApp';
 import { markdownDefaultAppSupported } from './markdownFolder/defaultApp';
-import { useShareInbox, type SharedItem } from './useShareInbox';
+import { useShareInbox, type ShareApproval, type SharedItem } from './useShareInbox';
 import { ShareApprovalModal } from './ShareApprovalModal';
 import TasksList from './TasksList';
 import { offersDesktopApp, peekPendingShortcut, setShortcutOpener, shortcutNoun, shortcutUrl, takePendingShortcut, type ShortcutTarget } from './noteShortcut';
@@ -571,7 +580,7 @@ function stickyTagRow(): (node: HTMLDivElement | null) => void {
 }
 
 export function NotesView() {
-  const { auth, supabase, signOut, forceSignOut, refreshProStatus, revalidationExpired } = useAuth();
+  const { auth, supabase, signOut, forceSignOut, refreshProStatus, revalidationExpired, graduateLocalVault } = useAuth();
   if (auth.status !== 'authenticated') return null;
   return (
     <AuthenticatedView
@@ -581,6 +590,7 @@ export function NotesView() {
       forceSignOut={forceSignOut}
       refreshProStatus={refreshProStatus}
       revalidationExpired={revalidationExpired}
+      graduateLocalVault={graduateLocalVault}
     />
   );
 }
@@ -592,6 +602,7 @@ function AuthenticatedView({
   forceSignOut,
   refreshProStatus,
   revalidationExpired,
+  graduateLocalVault,
 }: {
   auth: Authed;
   supabase: SupabaseClient;
@@ -601,10 +612,12 @@ function AuthenticatedView({
   /** Boot revalidation hit a definitive CAPTCHA rejection - session is
    *  dead, show SessionExpiredModal. See auth.tsx, backlog #118. */
   revalidationExpired: boolean;
+  graduateLocalVault: (opts: { enableSync: boolean }) => Promise<{ ok: true } | { ok: false; error: string }>;
 }) {
   const { t } = useTranslation('notes');
 
   const isMobile = useIsMobile();
+  const updateAvailable = useUpdateAvailable();
   const keyboardOpen = useKeyboardOpen();
   const mobileTabIndex = isMobile ? -1 : undefined;
   // Every item in the store. Readers take `notes` below, the same list with
@@ -634,7 +647,7 @@ function AuthenticatedView({
   const latestSelectedIdRef = useRef(selectedId);
   latestSelectedIdRef.current = selectedId;
   // The share sheet's open question, answered by ShareApprovalModal.
-  const [shareAsk, setShareAsk] = useState<{ items: SharedItem[]; resolve: (choice: 'save' | 'discard' | 'later') => void } | null>(null);
+  const [shareAsk, setShareAsk] = useState<{ items: SharedItem[]; resolve: (choice: ShareApproval) => void } | null>(null);
   /** The note a `[[note-link]]` click just jumped to, held until the list
    *  catches up. `navigateToNoteByTitle` drops the filters that hide its
    *  target, but the list does not always widen in the same render: the
@@ -791,7 +804,7 @@ function AuthenticatedView({
   // Subscribe window (#619).
   const [feedEvent, setFeedEvent] = useState<{ id: string; occurrence?: string } | null>(null);
   const [importExportModal, setImportExportModal] = useState<
-    { open: false } | { open: true; tab: 'import' | 'export' | 'restore' }
+    { open: false } | { open: true; tab: 'import' | 'export' | 'restore'; file?: File }
   >({ open: false });
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -984,9 +997,6 @@ function AuthenticatedView({
     () => (shutViews.size ? allNotes.filter((n) => !inSection(n, shutViews)) : allNotes),
     [allNotes, shutViews],
   );
-  // Tabs draw from the list, but prune against the store: a shut section
-  // hides its items' tabs and keeps them, pinned ones too (beta #139).
-  const openTabs = useOpenTabs(notes, allNotes);
   const latestNotesForToast = useRef(notes);
   latestNotesForToast.current = notes;
   // Tag sort control (persisted). Field = what to sort by, dir = asc/desc.
@@ -1771,10 +1781,11 @@ function AuthenticatedView({
   useEffect(() => {
     setImagePolicy({
       spaceSaver: userSettings.imageSpaceSaver !== 'off',
+      spaceSaverLevel: userSettings.imageSpaceSaverLevel,
       stripMetadata: userSettings.imageStripMetadata !== 'off',
       contactCeiling: userSettings.imageContactCeiling !== 'off',
     });
-  }, [userSettings.imageSpaceSaver, userSettings.imageStripMetadata, userSettings.imageContactCeiling]);
+  }, [userSettings.imageSpaceSaver, userSettings.imageSpaceSaverLevel, userSettings.imageStripMetadata, userSettings.imageContactCeiling]);
 
   // Periodic revocation check - catches idle devices that aren't syncing.
   // Runs every 30s on a timer + on visibilitychange (tab/app foregrounded).
@@ -1787,6 +1798,7 @@ function AuthenticatedView({
   // all night (GitHub #189). Revocation is still caught the moment the app is
   // foregrounded again via the forced visibilitychange check below.
   useEffect(() => {
+    if (auth.localOnly) return;
     const check = async (force = false) => {
       if (!navigator.onLine) return;
       const ok = await heartbeat(supabase, auth.deviceId, force);
@@ -1808,7 +1820,7 @@ function AuthenticatedView({
       clearInterval(interval);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [supabase, auth.deviceId, auth.phrase, forceSignOut]);
+  }, [supabase, auth.deviceId, auth.phrase, auth.localOnly, forceSignOut]);
 
   // Mutate + persist user settings locally. The next regular runSync
   // pass picks up the dirty flag and pushes to the server - no need
@@ -2137,6 +2149,8 @@ function AuthenticatedView({
     return () => { void commitDerivedTitle(); };
   }, [selectedId]);
 
+  const localTruth = useLocalTruthOnly();
+
   // Quota for the storage bars (Files view + Trash view).
   const [viewQuota, setViewQuota] = useState<QuotaUsage | null>(null);
   /** Recompute blob bytes from Storage ground truth, then re-read the
@@ -2147,6 +2161,7 @@ function AuthenticatedView({
    *  recalculateQuota handles its own errors. Declared up here because every
    *  destructive path below chains off it. */
   const refreshStorage = useCallback(() => {
+    if (auth.localOnly) return Promise.resolve();
     return recalculateQuota(supabase)
       .then(() => fetchQuotaUsage(supabase, auth.isPro ?? false))
       .then((q) => {
@@ -2162,7 +2177,23 @@ function AuthenticatedView({
       // one place because several call sites are bare and a rejection from
       // any of them is an unhandled one.
       .catch((err) => { console.warn('[storage] quota refresh failed:', err); });
-  }, [supabase, auth.isPro]);
+  }, [supabase, auth.isPro, auth.localOnly]);
+
+  // Periodic local-only blob GC: purges cached local images/attachments whose
+  // 24h grace period has elapsed and that are no longer referenced by any live
+  // note or flushStash. Never touches Supabase Storage.
+  useEffect(() => {
+    if (!localTruth || isDemoMode()) return;
+    const timer = window.setTimeout(() => { void sweepLocalOnlyBlobGC(); }, 10_000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void sweepLocalOnlyBlobGC();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [localTruth]);
 
   // Every live item, archived ones included and whatever the space: what must
   // still FIND an item reads this - note-link resolution and the duplicate
@@ -2197,6 +2228,27 @@ function AuthenticatedView({
     () => (spaceScope ? notes.filter(spaceScope) : notes),
     [notes, spaceScope]
   );
+  const updatePinnedTabs = useCallback(
+    (updater: (prev: PinnedTabsSetting) => PinnedTabsSetting) => {
+      mutateSettings((prev) => {
+        const next = updater(prev.pinnedTabs);
+        return next === prev.pinnedTabs ? prev : { ...prev, pinnedTabs: next };
+      });
+    },
+    [mutateSettings],
+  );
+  const syncedPinnedTabs = useMemo(
+    () => ({
+      setting: userSettings.pinnedTabs,
+      onChange: updatePinnedTabs,
+      canPruneMissing: trashPurgeReady || localTruth || isDemoMode(),
+    }),
+    [userSettings.pinnedTabs, updatePinnedTabs, trashPurgeReady, localTruth],
+  );
+  // Tabs draw from the list, but prune against the store: a shut section
+  // hides its items' tabs and keeps them, pinned ones too (beta #139).
+  // Pinned tabs sync via userSettings.pinnedTabs; regular open tabs stay per device.
+  const openTabs = useOpenTabs(notes, allNotes, syncedPinnedTabs);
   // The strip shows the tabs of the open space only. The stored list keeps
   // every tab, so the other space's tabs come back with it, and a tab
   // follows its item when the item moves space. GitHub #539.
@@ -2248,8 +2300,9 @@ function AuthenticatedView({
   const allTrashedCount = useMemo(() => (shutViews.size ? allNotes.filter((n) => n.trashed === 1).length : trashedNotes.length), [allNotes, shutViews, trashedNotes]);
   // Auto-purge expired trash once per app open. The gate opens only after a
   // sync pass in this session read the notes and the settings from the
-  // server (trashPurgeReady); useTrashAutoPurge.ts has the rest.
-  useTrashAutoPurge({ ready: trashPurgeReady, demo: isDemoMode(), trashedCount: allTrashedCount, dayCount: userSettings.autoDeleteTrashDays, imageStoreRef, attachmentStoreRef, refresh, runSync, refreshStorage });
+  // server (trashPurgeReady); local-only and never-synced vaults purge locally
+  // without waiting for a server sync. useTrashAutoPurge.ts has the rest.
+  useTrashAutoPurge({ ready: trashPurgeReady || localTruth, demo: isDemoMode() || localTruth, trashedCount: allTrashedCount, dayCount: userSettings.autoDeleteTrashDays, imageStoreRef, attachmentStoreRef, refresh, runSync, refreshStorage });
 
   /**
    * Clear the placeholder titles a former version stored.
@@ -2599,7 +2652,7 @@ function AuthenticatedView({
       const missing = uuids.filter(
         (u) => !sizeMap.has(u) && !absentBlobs.current.has(u),
       );
-      if (missing.length > 0 && view === 'files' && !isDemoMode()) {
+      if (missing.length > 0 && view === 'files' && !isDemoMode() && !auth.localOnly) {
         try {
           const { sizes, absent } = await listImageSizes(supabase, auth.pubkey, missing);
           for (const [uuid, sz] of sizes) sizeMap.set(uuid, sz);
@@ -2626,12 +2679,14 @@ function AuthenticatedView({
         : rawFileItems);
     })();
     return () => { cancelled = true; };
-  }, [rawFileItems, supabase, auth.pubkey, view]);
+  }, [rawFileItems, supabase, auth.pubkey, auth.localOnly, view]);
 
   // One quota read at start for the footer's storage ring (#791), which
   // every screen shows: no recount, which the Files and Trash panes run on
-  // open. Demo reads its inert defaults and touches no server.
+  // open. Demo reads its inert defaults and touches no server. Local-only
+  // vaults hold no server quota and skip all backend calls.
   useEffect(() => {
+    if (auth.localOnly) return;
     let stale = false;
     void fetchQuotaUsage(supabase, auth.isPro ?? false).then((q) => {
       if (stale) return;
@@ -2639,15 +2694,16 @@ function AuthenticatedView({
       setViewQuota((prev) => prev ?? q);
     }).catch(() => { /* the ring waits for the next read */ });
     return () => { stale = true; };
-  }, [supabase, auth.isPro]);
+  }, [supabase, auth.isPro, auth.localOnly]);
 
   useEffect(() => {
+    if (auth.localOnly) return;
     if (view !== 'files' && view !== 'trash') return;
     void refreshStorage();
     let stale = false;
     let busy = false;
     const readQuota = () => {
-      if (document.hidden || busy || isDemoMode()) return;
+      if (document.hidden || busy || isDemoMode() || auth.localOnly) return;
       busy = true;
       void fetchQuotaUsage(supabase, auth.isPro ?? false).then((q) => {
         if (stale) return;
@@ -2667,7 +2723,7 @@ function AuthenticatedView({
       window.removeEventListener('focus', readQuota);
       document.removeEventListener('visibilitychange', readQuota);
     };
-  }, [view, refreshStorage, supabase, auth.isPro, auth.pubkey]);
+  }, [view, refreshStorage, supabase, auth.isPro, auth.pubkey, auth.localOnly]);
 
   // Every tag in the account. Tag pickers read this one, so a note tag can
   // still go on a login; the sidebar reads railTagCounts below.
@@ -2939,6 +2995,32 @@ function AuthenticatedView({
     return vaultKindCounts(pool, (n) => shut.has(n.id));
   }, [view, listedNotes, selectedTag, selectedFolder, inScope, listPrefs, gatedIdsKey]);
 
+  // While the open folder lists its whole branch, a subfolder's chip names
+  // its path below that folder instead, so two subfolders that share a name
+  // read apart. Safe only because TagChips, inside the list panes, is the one
+  // reader of `folderNames`. Spec: docs/internal/specs/folder-subfolders.md (D4)
+  const folderNames = useMemo(() => {
+    const names = new Map(userSettings.folders.map((f) => [f.id, f.name]));
+    if (selectedFolder && selectedFolder !== UNFILED_ID && userSettings.includeSubfolders) {
+      for (const [id, path] of branchPathLabels(userSettings.folders, selectedFolder)) names.set(id, path);
+    }
+    return names;
+  }, [userSettings.folders, selectedFolder, userSettings.includeSubfolders]);
+  // Full parent paths for Group by Folder headers ("Prose / Arabic", "Short / Arabic")
+  // so sibling subtrees sharing leaf names never render duplicate headers.
+  const folderGroupLabels = useMemo(() => {
+    const openBranch =
+      selectedFolder && selectedFolder !== UNFILED_ID && userSettings.includeSubfolders ? selectedFolder : null;
+    const labels = folderPathLabels(userSettings.folders, openBranch);
+    if (openBranch) {
+      const root = userSettings.folders.find((f) => f.id === openBranch);
+      if (root) labels.set(root.id, root.name);
+    }
+    return labels;
+  }, [userSettings.folders, selectedFolder, userSettings.includeSubfolders]);
+  setFolderGroupLabels(folderGroupLabels);
+  const listToday = useToday();
+
   const displayNotes = useMemo(() => {
     // Tasks view is not a notes list - the middle column renders its
     // own UI. Return an empty list so the auto-select effect below
@@ -3047,17 +3129,23 @@ function AuthenticatedView({
       }
       return ordered;
     }
-    // No search active - apply the user's sort pref. Copy the array
-    // because the upstream lists are memoised; mutating would cause
-    // stale equality checks elsewhere.
+    // No search active - apply the user's sort pref, then order into the active
+    // Group by buckets while keeping that sort intact inside each bucket.
     const sorted = list.slice();
     const shut = new Set(gatedIdsKey.split(' '));
     sorted.sort((a, b) => compareNotes(a, b, listPrefs, view === 'journal', (n) => shut.has(n.id)));
-    return sorted;
+    return orderNotesForGroup(sorted, {
+      view,
+      listPrefs,
+      now: parseDay(listToday),
+      isGated: (n) => shut.has(n.id),
+      viewOrder: userSettings.viewOrder,
+      folderNames: folderGroupLabels,
+    });
   // searchIndexVersion: searchNotes reads a module-level index that
   // updates AFTER the render a state change triggers - the version bump
   // is what re-runs this memo against the fresh index.
-  }, [activeNotes, listedNotes, archivedNotes, userSettings.archivedInAll, trashedNotes, deferredSearch, inScope, selectedTag, selectedFolder, view, listPrefs, vaultFilter, hiddenTypesInAll, searchIndexVersion, gatedIdsKey, hideCheckIns, checkInIds, listFocus, focusEngine]);
+  }, [activeNotes, listedNotes, archivedNotes, userSettings.archivedInAll, userSettings.viewOrder, trashedNotes, deferredSearch, inScope, selectedTag, selectedFolder, view, listPrefs, vaultFilter, hiddenTypesInAll, searchIndexVersion, gatedIdsKey, hideCheckIns, checkInIds, listFocus, focusEngine, folderGroupLabels, listToday]);
   // How many items this view would show in the other space, so an empty list
   // says where they are: a user took items in the other space for lost data.
   // Only while the list is empty. A folder belongs to one space, and a search
@@ -3132,7 +3220,7 @@ function AuthenticatedView({
     // gatedIdsKey: the lock predicate is a fresh function each render, and
     // this is the value that changes when its answer does.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [scopedActiveNotes, scopedAllTasks, deferredSearch, listPrefs, gatedIdsKey]
+    [scopedActiveNotes, scopedAllTasks, deferredSearch, listPrefs, gatedIdsKey, userSettings.viewOrder, folderGroupLabels, listToday]
   );
 
   // Mirror displayNotes into a ref so the multi-select callbacks
@@ -3476,7 +3564,7 @@ function AuthenticatedView({
   // focused side; the pair's other id is drawn beside it. Every path that
   // opens an item keeps acting on `selectedId`, so it lands on the focused
   // side, and a click in the other side selects that side's item.
-  // Spec: docs/internal/plans/side-by-side-notes.md
+  // Spec: docs/internal/specs/side-by-side-notes.md
   const [editorAreaEl, setEditorAreaEl] = useState<HTMLElement | null>(null);
   const [editorAreaWidth] = useSteppedWidth(editorAreaEl, (w) => (fitsSourcePreview(w) ? 'wide' : 'narrow'));
   const lastFocusRef = useRef<Side>('left');
@@ -3908,7 +3996,7 @@ function AuthenticatedView({
         opensBookmarkOnClick(match, isNoteLocked(match)) ? parseLinkBody(match.body).url : '';
       if (opts?.openBookmark !== false) {
         if (bookmarkUrl) {
-          openExternal(bookmarkUrl);
+          openExternal(bookmarkUrl, { browser: true });
           setDrawerOpen(false);
           return;
         }
@@ -4463,6 +4551,48 @@ function AuthenticatedView({
       void runSync();
       return created.id;
     },
+    addPhotoNote: async (title, text, files) => {
+      if (!imageStoreRef.current) throw new Error('no image store');
+      const handled: typeof files = [];
+      const imageLines: string[] = [];
+      let reserved = 0;
+      const opts = currentImageOptions();
+      for (const source of files) {
+        let file: File;
+        try {
+          file = await source.read();
+        } catch {
+          continue;
+        }
+        const out = await storePictureWithOutcome(file, opts, undefined, reserved);
+        if ('uuid' in out) {
+          reserved += estimateBlobBytes(out.bytes);
+          handled.push(source);
+          const alt = out.name.replace(/[\[\]\r\n]/g, '');
+          imageLines.push(`![${alt}](${IMAGE_REF_PREFIX}${out.uuid})`);
+        } else if (out.refused) {
+          handled.push(source);
+        }
+      }
+      if (imageLines.length === 0) return { noteId: null, handled };
+      const parts: string[] = [];
+      const trimmedText = text.trim();
+      if (trimmedText) parts.push(trimmedText);
+      parts.push(...imageLines);
+      const created = await createNote(
+        title.trim(),
+        parts.join('\n\n'),
+        [],
+        false,
+        'note',
+        spaceFolderForNew(),
+        { counted: false },
+      );
+      await refresh();
+      void runSync();
+      refreshStorage();
+      return { noteId: created.id, handled };
+    },
     // The upload answers which files the inbox may let go; a store that is
     // gone (the shell is closing) keeps them all.
     addFiles: async (files) => {
@@ -4856,7 +4986,7 @@ function AuthenticatedView({
     // Spec: docs/internal/specs/bookmarks-pillar.md (row click opens).
     const clicked = notes.find((n) => n.id === id);
     if (clicked && opensBookmarkOnClick(clicked, isNoteLocked(clicked))) {
-      openExternal(parseLinkBody(clicked.body).url);
+      openExternal(parseLinkBody(clicked.body).url, { browser: true });
       setDrawerOpen(false);
       return;
     }
@@ -5256,6 +5386,8 @@ function AuthenticatedView({
     // which zen hides and which must not open while typing in the list.
     isMobile && !drawerOpen && (!!selectedId || (!zenMode && !mobileKeyboard)),
     (t) => {
+      // Closing an open swiped row with a rightward swipe must never open the drawer.
+      if (hasOpenSwipeRow()) return false;
       if (t.clientX <= EDGE_START_PX) return true;
       const el = t.target instanceof Element ? t.target : null;
       if (!el || el.closest('input, textarea, [contenteditable="true"]')) return false;
@@ -5450,13 +5582,31 @@ function AuthenticatedView({
     void (async () => {
       // Unsynced notes, and files the server does not hold, open the
       // confirm for every account: custodial and "don't remind me again"
-      // skip only the phrase reminder (maySkipSignOutConfirm).
-      const atStake = await countOnlyOnThisDevice();
+      // skip only the phrase reminder (maySkipSignOutConfirm). Local-only
+      // vaults count every live note and cached file on this device and
+      // never skip the confirm.
+      const atStake = auth.localOnly
+        ? await (async () => {
+            const [notesCount, imgIds, attIds, gcIds] = await Promise.all([
+              db.notes.where('deleted').equals(0).count(),
+              db.imageCache.toCollection().primaryKeys(),
+              db.attachmentCache.toCollection().primaryKeys(),
+              db.blobGC.toCollection().primaryKeys(),
+            ]);
+            const gcSet = new Set(gcIds);
+            return {
+              notes: notesCount,
+              files:
+                imgIds.filter((id) => !gcSet.has(id)).length +
+                attIds.filter((id) => !gcSet.has(id)).length,
+            };
+          })()
+        : await countOnlyOnThisDevice();
       setUnsyncedCount(atStake.notes);
       setUnsyncedFiles(atStake.files);
-      setNeverBackedUpNotes(atStake.notes > 0 ? await listNeverBackedUp() : []);
+      setNeverBackedUpNotes(auth.localOnly ? [] : atStake.notes > 0 ? await listNeverBackedUp() : []);
       const dontRemind = window.localStorage.getItem('privacynotes.signOut.skipReminder') === '1';
-      if (maySkipSignOutConfirm(atStake, { custodial: auth.isCustodial, dontRemind })) {
+      if (maySkipSignOutConfirm(atStake, { custodial: auth.isCustodial, dontRemind, localOnly: auth.localOnly })) {
         void signOutAfterUpload();
         return;
       }
@@ -5466,10 +5616,17 @@ function AuthenticatedView({
   }
 
   async function confirmSignOut() {
-    if (signOutDontRemind) {
+    if (signOutDontRemind && !auth.localOnly) {
       window.localStorage.setItem('privacynotes.signOut.skipReminder', '1');
     }
     setShowSignOutConfirm(false);
+    // Local-only vaults have nothing to upload; sign out wipes this device
+    // directly without entering the upload-before-sign-out path.
+    if (auth.localOnly) {
+      setSigningOut(true);
+      await signOut();
+      return;
+    }
     // When this confirm was reached through SessionExpiredModal the
     // sign-out is forced, not chosen: the dead session means the final
     // flush cannot reach the server, so unsynced rows must survive the
@@ -5735,7 +5892,7 @@ function AuthenticatedView({
       setQuickSwitcherMount((n) => n + 1);
     },
     // A note from the box's note mode, while this window is unlocked.
-    // Spec: docs/internal/plans/quick-note-694.md (section 5.2 step 4)
+    // Spec: docs/internal/specs/quick-note-694.md (section 5.2 step 4)
     saveNote: async (input) => {
       const answer = await import('./quickNoteQueue').then((q) => q.saveQuickNote(input, hasLiveSignIn));
       if (answer === 'saved') await refresh();
@@ -5779,7 +5936,7 @@ function AuthenticatedView({
     // The Calendar's keys act on its month while no item is open over it.
     calendarKey: (key) => {
       if (selectedId) return false;
-      if (key === 'today') calendar.setFocus(toLocalIso(new Date()));
+      if (key === 'today') calendar.goToday();
       else if (key === 'new') openQuickAdd({ defaultDay: calendar.focus });
       else calendar.setMode(key);
       return true;
@@ -5947,8 +6104,20 @@ function AuthenticatedView({
         available: Boolean(selected && selected.pinProtected === 1 && !isNoteLocked(selected)),
         run: () => { if (selected) lockNote(selected.id); },
       },
-      syncNow: { available: signedIn && !syncPaused, run: () => void runSync() },
-      syncPause: { available: signedIn, run: () => setSyncPaused(!syncPaused) },
+      syncNow: { available: signedIn && !auth.localOnly && !syncPaused, run: () => void runSync() },
+      syncPause: {
+        available: signedIn && !auth.localOnly,
+        run: () => {
+          if (syncPaused) {
+            void sweepLocalOnlyBlobGC(Date.now(), 0)
+              .catch(() => {})
+              .then(() => clearNeverSynced())
+              .finally(() => setSyncPaused(false));
+            return;
+          }
+          setSyncPaused(true);
+        },
+      },
       // Always offered, so it is found: an empty trash says so.
       emptyTrash: { available: true, run: () => (trashedNotes.length ? handleEmptyTrash() : flashToast(t('common:ninja.trashEmpty'))) },
       // Offered while the list on screen holds another item to open (#801),
@@ -6148,7 +6317,7 @@ function AuthenticatedView({
       onNewBookmark: handleNewBookmark,
       onNewContact: () => handleNewContact(),
       onOpenGenerator: () => setShowGenerator(true),
-      onOpenBookmark: (n) => behindGate(n, () => openExternal(parseLinkBody(n.body).url)),
+      onOpenBookmark: (n) => behindGate(n, () => openExternal(parseLinkBody(n.body).url, { browser: true })),
       onCopyBookmarkUrl: (n) => behindGate(n, () => {
         void navigator.clipboard.writeText(parseLinkBody(n.body).url).then(() => {
           flashToast(t('shell:bookmarks.copiedUrl'));
@@ -6466,7 +6635,7 @@ function AuthenticatedView({
   // instead, so a right-click in the calendar never trashes a document.
   // Opening is not a change to the document, so the two ways to open an item
   // beside another come first, where the other lists' menus have them.
-  // Spec: docs/internal/plans/side-by-side-notes.md (section 2)
+  // Spec: docs/internal/specs/side-by-side-notes.md (section 2)
   const [scheduleAsk, setScheduleAsk] = useState<{ id: string; n: number } | null>(null);
   const calendarOpenRows = (id: string): ContextMenuItem[] => {
     const rows: ContextMenuItem[] = [
@@ -6847,17 +7016,6 @@ function AuthenticatedView({
   // Folder id -> name for the chip each row and tile draws beside its tags.
   // Memoized on the folder array so a keystroke in the search box does not
   // hand every visible chip a new context value.
-  // While the open folder lists its whole branch, a subfolder's chip names
-  // its path below that folder instead, so two subfolders that share a name
-  // read apart. Safe only because TagChips, inside the list panes, is the one
-  // reader of this map. Spec: docs/internal/specs/folder-subfolders.md (D4)
-  const folderNames = useMemo(() => {
-    const names = new Map(userSettings.folders.map((f) => [f.id, f.name]));
-    if (selectedFolder && selectedFolder !== UNFILED_ID && userSettings.includeSubfolders) {
-      for (const [id, path] of branchPathLabels(userSettings.folders, selectedFolder)) names.set(id, path);
-    }
-    return names;
-  }, [userSettings.folders, selectedFolder, userSettings.includeSubfolders]);
   // A click on a row's folder or tag chip filters like the sidebar does.
   // Stable through a ref so the memoized rows keep their props; null in
   // selection mode, where a chip click selects the row. Spec: issue #333.
@@ -7291,6 +7449,7 @@ function AuthenticatedView({
       onBulkExport={() => void handleBulkExport()}
       onBulkTrash={requestBulkTrash}
       onRowContextMenu={(note, e) => openRowMenu(e, buildNoteMenu(note))}
+      onContextMenu={openRowMenu}
       onOpenImport={() => setImportExportModal({ open: true, tab: 'import' })}
     />
   );
@@ -7370,13 +7529,14 @@ function AuthenticatedView({
       onBulkMoveToFolder={handleBulkMoveToFolder}
       onBulkExport={() => void handleBulkExport()}
       onBulkTrash={requestBulkTrash}
-      onOpen={(url) => openExternal(url)}
+      onOpen={(url) => openExternal(url, { browser: true })}
       onOpenNote={(noteId) => {
         setView('home');
         void handleSelectNote(noteId);
       }}
       onTrash={(note) => void handleTrash(note.id)}
       onRowContextMenu={(note, e) => openRowMenu(e, buildNoteMenu(note))}
+      onContextMenu={openRowMenu}
       onRowMenu={(note, e) => ctxMenu.open(e, buildNoteMenu(note))}
       onOpenImport={() => setImportExportModal({ open: true, tab: 'import' })}
       focusSignal={bookmarkFocusSignal}
@@ -7562,24 +7722,129 @@ function AuthenticatedView({
   };
   const dashboardPane = onHome ? {
     body: (
-      <DashboardEnvContext.Provider value={dashboardEnv}>
-        <Suspense fallback={<div className="flex-1" />}>
-          <DashboardLazy
-            widgets={homeWidgets}
-            onWrite={(next) => mutateSettings((prev) => ({ ...prev, dashboard: writeDashboardSetting(prev.dashboard, next, homeKey) }))}
-            ownHome={filterSpace ? {
-              space: filterSpace,
-              on: hasOwnHome(userSettings.dashboard, filterSpace),
-              set: (list) => mutateSettings((prev) => ({
-                ...prev,
-                dashboard: list ? writeDashboardSetting(prev.dashboard, list, filterSpace) : clearOwnHome(prev.dashboard, filterSpace),
-              })),
-            } : undefined}
-          />
-        </Suspense>
-      </DashboardEnvContext.Provider>
+      <SwipeRowActionsContext.Provider value={null}>
+        <DashboardEnvContext.Provider value={dashboardEnv}>
+          <Suspense fallback={<div className="flex-1" />}>
+            <DashboardLazy
+              widgets={homeWidgets}
+              onWrite={(next) => mutateSettings((prev) => ({ ...prev, dashboard: writeDashboardSetting(prev.dashboard, next, homeKey) }))}
+              ownHome={filterSpace ? {
+                space: filterSpace,
+                on: hasOwnHome(userSettings.dashboard, filterSpace),
+                set: (list) => mutateSettings((prev) => ({
+                  ...prev,
+                  dashboard: list ? writeDashboardSetting(prev.dashboard, list, filterSpace) : clearOwnHome(prev.dashboard, filterSpace),
+                })),
+              } : undefined}
+            />
+          </Suspense>
+        </DashboardEnvContext.Provider>
+      </SwipeRowActionsContext.Provider>
     ),
   } : undefined;
+
+  // Close any open swiped row when switching views, opening an item, or entering selection mode.
+  useEffect(() => {
+    closeOpenSwipeRow();
+  }, [selectionMode, view, selectedId]);
+
+  const pullToSyncTarget = useMemo(() => ({
+    available: auth.status === 'authenticated' && !isDemoMode() && !auth.localOnly && !syncPaused,
+    run: async () => {
+      await runSync();
+      refreshStorage();
+    },
+  }), [auth.status, auth.localOnly, syncPaused, runSync, refreshStorage]);
+
+  const swipeDepsRef = useRef({
+    t,
+    buildNoteMenu,
+    openMenu: ctxMenu.open,
+    handleToggleArchive,
+    requestTrash,
+    handleRestore,
+    setDeleteConfirm,
+    isNoteLocked,
+  });
+  swipeDepsRef.current = {
+    t,
+    buildNoteMenu,
+    openMenu: ctxMenu.open,
+    handleToggleArchive,
+    requestTrash,
+    handleRestore,
+    setDeleteConfirm,
+    isNoteLocked,
+  };
+  const swipeActionsForNote = useCallback((note: LocalNote): SwipeRowAction[] => {
+    const d = swipeDepsRef.current;
+    const openMore = (btn: HTMLElement) => {
+      const rect = btn.getBoundingClientRect();
+      const rtl = document.documentElement.dir === 'rtl';
+      d.openMenu(
+        {
+          clientX: rtl ? rect.left : rect.right,
+          clientY: rect.bottom + 4,
+          preventDefault() {},
+          stopPropagation() {},
+        },
+        d.buildNoteMenu(note, { alone: true }),
+        false,
+        undefined,
+        true,
+      );
+    };
+    const more: SwipeRowAction = {
+      key: 'more',
+      label: d.t('shell:selectionToolbar.more'),
+      icon: <DotsThree />,
+      tone: 'neutral',
+      onTrigger: openMore,
+    };
+    if (note.trashed === 1) {
+      return [
+        more,
+        {
+          key: 'restore',
+          label: d.t('shell:contextMenu.restore'),
+          shortLabel: d.t('shell:contextMenu.restore'),
+          icon: <ArrowCounterClockwise />,
+          tone: 'accent',
+          onTrigger: () => void d.handleRestore(note.id),
+        },
+        {
+          key: 'delete-forever',
+          label: d.t('shell:contextMenu.deleteForever'),
+          shortLabel: d.t('common:actions.delete'),
+          icon: <Trash />,
+          tone: 'danger',
+          onTrigger: () => d.setDeleteConfirm({ id: note.id, title: deriveDisplayTitle(note, d.isNoteLocked(note)) }),
+        },
+      ];
+    }
+    const archiveLabel = note.archived === 1
+      ? d.t('shell:contextMenu.unarchive')
+      : d.t('shell:contextMenu.archive');
+    return [
+      more,
+      {
+        key: 'archive',
+        label: archiveLabel,
+        shortLabel: archiveLabel,
+        icon: note.archived === 1 ? <BoxArrowUp /> : <BoxArrowDown />,
+        tone: 'accent',
+        onTrigger: () => void d.handleToggleArchive(note.id, note.archived !== 1),
+      },
+      {
+        key: 'delete',
+        label: d.t('common:actions.delete'),
+        shortLabel: d.t('common:actions.delete'),
+        icon: <Trash />,
+        tone: 'danger',
+        onTrigger: () => d.requestTrash([note.id]),
+      },
+    ];
+  }, []);
 
   const notesList = (
     <NotesList
@@ -7694,6 +7959,7 @@ function AuthenticatedView({
             strip={!tabsShown}
             trackers={calendarTrackersProp}
             weekNumbers={userSettings.calendar.weekNumbers}
+            todaySignal={calendar.todaySignal}
             dragPayload={(id) => {
               const n = liveNotes.find((x) => x.id === id);
               return n ? itemDragSelection([n], isNoteLocked) : { ids: [id], linkText: '' };
@@ -8034,7 +8300,10 @@ function AuthenticatedView({
             {/* Every list pane in one provider: the folder chip on a row or a
                 tile is drawn by TagChips, far below any of these panes. */}
             <NewButtonDock.Provider value={newButtonDock}>
+            <PullToSyncContext.Provider value={pullToSyncTarget}>
+            <SwipeRowActionsContext.Provider value={swipeActionsForNote}>
             <FolderNamesContext.Provider value={folderNames}>
+            <FolderGroupLabelsContext.Provider value={folderGroupLabels}>
               <ChipFilterContext.Provider value={selectionMode ? null : chipFilter}>
                 <SubfoldersSwitchContext.Provider value={subfoldersSwitch}>
                 <CheckInUnitsContext.Provider value={checkInUnits}>
@@ -8044,7 +8313,10 @@ function AuthenticatedView({
                 </CheckInUnitsContext.Provider>
                 </SubfoldersSwitchContext.Provider>
               </ChipFilterContext.Provider>
+            </FolderGroupLabelsContext.Provider>
             </FolderNamesContext.Provider>
+            </SwipeRowActionsContext.Provider>
+            </PullToSyncContext.Provider>
             </NewButtonDock.Provider>
           </aside>
         )}
@@ -8278,7 +8550,7 @@ function AuthenticatedView({
             {/* One side, or two side by side. The focused side is the open
                 item; the columns are keyed by side, so a focus swap, opening
                 a second side and closing one never remount an editor.
-                Spec: docs/internal/plans/side-by-side-notes.md */}
+                Spec: docs/internal/specs/side-by-side-notes.md */}
             <div className="flex min-h-0 flex-1">
             {(['left', 'right'] as const).map((at) => {
               const focused = at === focusAt;
@@ -8635,6 +8907,8 @@ function AuthenticatedView({
             openThemeBuilder,
             formatBarBoard,
             calendarFeeds: feedsControl,
+            storageLimitBytes: viewQuota?.maxTotalBytes,
+            updateAvailable,
           })}
         />
       )}
@@ -8722,8 +8996,28 @@ function AuthenticatedView({
         />
       )}
       {pendingImportableFiles && (() => {
-        // Snapshot files so the closure is stable even if state resets.
-        const files = pendingImportableFiles;
+        // Snapshot the prompt so the closure is stable even if state resets.
+        const pending = pendingImportableFiles;
+        if (pending.kind === 'backup') {
+          const { file } = pending;
+          return (
+            <ConfirmModal
+              title={t('importStore.backupTitle')}
+              confirmLabel={t('importStore.backupConfirm')}
+              cancelLabel={t('importStore.backupCancel')}
+              variant="info"
+              onConfirm={() => {
+                setPendingImportableFiles(null);
+                setImportExportModal({ open: true, tab: 'restore', file });
+              }}
+              onCancel={() => void handleAttachFromFiles([file])}
+              onClose={() => setPendingImportableFiles(null)}
+            >
+              <Trans i18nKey="notes:importStore.backupBody" values={{ filename: file.name }} components={{ strong: <strong /> }} />
+            </ConfirmModal>
+          );
+        }
+        const { files } = pending;
         return (
           <ConfirmModal
             title={t('importStore.title')}
@@ -8748,6 +9042,8 @@ function AuthenticatedView({
           custodySettings={{ hasPin: Boolean(userSettings.pinHash && userSettings.pinSalt), pinCredential: `${userSettings.pinHash ?? ''}:${userSettings.pinSalt ?? ''}`, pinTimeoutMinutes: userSettings.pinTimeoutMinutes,
                     userSettings, onSettingsChange: (next, base) => mutateSettings((prev) => withCredentialChanges(prev, base, next)) }}
           onOpenPhrase={() => { setShowSyncOptions(false); setShowSecurity({ tab: 'phrase' }); }}
+          onOpenSync={() => { setShowSyncOptions(false); setSettingsCategory('me'); setShowSettings(true); }}
+          onOpenAutoBackup={() => { setShowSyncOptions(false); setSettingsCategory('backup'); setSettingsRow({ id: 'import.automatic', tab: 'automatic' }); setShowSettings(true); }}
           deviceLabels={userSettings.deviceLabels}
           onRenameDevice={(deviceId, name, serverName) =>
             mutateSettings((prev) => ({
@@ -8823,6 +9119,7 @@ function AuthenticatedView({
           }}
           onClose={() => setShowSecurity(null)}
           onOpenCustody={() => { setShowSecurity(null); setSyncOptionsSection('keyCustody'); setShowSyncOptions(true); }}
+          onOpenSync={() => { setShowSecurity(null); setSettingsCategory('me'); setShowSettings(true); }}
           pubkey={auth.pubkey}
         />
       )}
@@ -8830,6 +9127,7 @@ function AuthenticatedView({
         <UpgradeModal
           pubkey={auth.pubkey}
           onCheckoutComplete={refreshProStatus}
+          onGraduateLocalVault={() => graduateLocalVault({ enableSync: false })}
           onClose={() => {
             // If we were teasing zen mode behind the modal, revert it
             // (unless they just upgraded and are now pro).
@@ -8854,6 +9152,7 @@ function AuthenticatedView({
           encryptionKey={auth.encryptionKey}
           serverHistory={proUnlocked(auth.isPro)}
           onClose={() => setHistoryForNoteId(null)}
+          onOpenSync={() => { setHistoryForNoteId(null); setSettingsCategory('me'); setShowSettings(true); }}
           onRestore={async (v) => {
             const id = historyNote.id;
             const current = await getNote(id);
@@ -9346,7 +9645,9 @@ function AuthenticatedView({
       {importExportModal.open && (
         <ImportModal
           onClose={() => setImportExportModal({ open: false })}
+          section={importExportModal.tab === 'restore' ? 'backup' : 'transfer'}
           initialTab={importExportModal.tab}
+          initialRestoreFile={importExportModal.file}
           notes={allNotes}
           calendarFeeds={feedsControl}
           onImportFolders={mergeImportedFolders}
@@ -9481,6 +9782,7 @@ function AuthenticatedView({
           imagesStripped={burnTarget.stripped}
           isMobile={isMobile}
           onCreated={() => recordAdminEvent(supabase, 'export', 'burn')}
+          onOpenSync={() => { setBurnTarget(null); setSettingsCategory('me'); setShowSettings(true); }}
           onClose={() => setBurnTarget(null)}
         />
       )}
@@ -9547,6 +9849,13 @@ function AuthenticatedView({
           unsyncedFiles={unsyncedFiles}
           unsyncedKept={sessionExpired || revalidationExpired}
           neverBackedUp={neverBackedUpNotes}
+          localOnly={auth.localOnly}
+          onExportBackup={() => {
+            setShowSignOutConfirm(false);
+            setSettingsCategory('backup');
+            setSettingsRow({ id: 'backup.manual', tab: 'manual' });
+            setShowSettings(true);
+          }}
           onStay={() => setShowSignOutConfirm(false)}
           onShowPhrase={() => {
             // "Don't remind me again" is intentionally NOT honoured on

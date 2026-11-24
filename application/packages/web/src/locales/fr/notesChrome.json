@@ -70,7 +70,12 @@
     "unopenedWarn_one": "1 note a une copie sur le serveur que cet appareil ne peut pas ouvrir. Te déconnecter supprime la copie d'ici, qui est peut-être la seule bonne. Renvoie-la d'abord dans Paramètres > ID & Sync.",
     "unopenedWarn_other": "{{count}} notes ont une copie sur le serveur que cet appareil ne peut pas ouvrir. Te déconnecter supprime les copies d'ici, qui sont peut-être les seules bonnes. Renvoie-les d'abord dans Paramètres > ID & Sync.",
     "unopenedKept_one": "1 note a une copie sur le serveur que cet appareil ne peut pas ouvrir. La copie d'ici reste après ta déconnexion.",
-    "unopenedKept_other": "{{count}} notes ont une copie sur le serveur que cet appareil ne peut pas ouvrir. Les copies d'ici restent après ta déconnexion."
+    "unopenedKept_other": "{{count}} notes ont une copie sur le serveur que cet appareil ne peut pas ouvrir. Les copies d'ici restent après ta déconnexion.",
+    "localOnlyTitle": "Tout supprimer sur cet appareil ?",
+    "localOnlyBody": "Tes notes sont stockées uniquement sur cet appareil et n'ont jamais été synchronisées. Te déconnecter les supprime définitivement de cet appareil.",
+    "localOnlyCounts": "Sur cet appareil : {{items}}.",
+    "localOnlyExportBackup": "Exporter une sauvegarde",
+    "localOnlyDeleteConfirm": "Supprimer et se déconnecter"
   },
   "signOutUpload": {
     "uploading": "Envoi de tes dernières modifications…",
@@ -139,6 +144,7 @@
   "burnShare": {
     "offline": "Tu es hors ligne. Les liens burn nécessitent un aller-retour vers le serveur. Réessaie quand tu seras de nouveau en ligne.",
     "demo": "Les liens burn sont stockés sur un serveur, et la démo n'en contacte aucun. Inscris-toi pour créer de vrais liens burn.",
+    "localOnly": "Les liens burn nécessitent un compte en ligne. Active la synchronisation dans Paramètres > ID & Sync pour partager des liens burn.",
     "tooLarge": "La note est trop volumineuse pour être partagée via un lien burn ({{size}} Ko). Le maximum est de {{max}} Ko.",
     "storeFailed": "Échec de l'enregistrement de la burn note sur le serveur.",
     "rateLimited": "Trop de liens burn ont été créés depuis cette connexion Internet. Réessaie plus tard."

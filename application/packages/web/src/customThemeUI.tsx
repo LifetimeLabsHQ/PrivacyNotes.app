@@ -1,4 +1,5 @@
 import { toggleQuickTheme } from './quickThemes';
+import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { parseThemeCode, resolveTheme, serializeThemeCode, themePasses, withoutAuthor, type CustomTheme } from './themeCode';
@@ -410,7 +411,7 @@ export function ThemePasteField({ ctx, onClose }: { ctx: ThemeGalleryCtx; onClos
       {entry && !passes && <p className="mt-1 text-small text-warning">{t('appearance.custom.pasteHard')}</p>}
       <div className="mt-2 flex flex-wrap gap-2">
         {entry && passes && savable && (
-          <button type="button" onClick={save} className={`${button} bg-accent-fill text-white hover:bg-accent-fill-hover`}>
+          <button type="button" onClick={save} className={`${button} ${PRIMARY_BTN_SKIN}`}>
             {t('common:actions.save')}
           </button>
         )}
@@ -418,16 +419,16 @@ export function ThemePasteField({ ctx, onClose }: { ctx: ThemeGalleryCtx; onClos
           <button
             type="button"
             onClick={ctx.openUpgrade}
-            className={`${button} inline-flex items-center gap-1.5 bg-accent-fill text-white hover:bg-accent-fill-hover`}
+            className={`${button} inline-flex items-center gap-1.5 ${PRIMARY_BTN_SKIN}`}
           >
-            <IconUpgrade size={12} onFill /> {t('appearance.custom.saveWithPro')}
+            <IconUpgrade size={12} /> {t('appearance.custom.saveWithPro')}
           </button>
         )}
         {entry && !passes && (
           <button
             type="button"
             onClick={() => ctx.openBuilder?.({ code: entry.snapshot.code })}
-            className={`${button} bg-accent-fill text-white hover:bg-accent-fill-hover`}
+            className={`${button} ${PRIMARY_BTN_SKIN}`}
           >
             {t('appearance.custom.openInBuilder')}
           </button>

@@ -99,6 +99,7 @@ class TauriNotificationManager(
       val importance = NotificationManager.IMPORTANCE_DEFAULT
       val channel = NotificationChannel(DEFAULT_NOTIFICATION_CHANNEL_ID, name, importance)
       channel.description = description
+      channel.enableVibration(true)
       val audioAttributes = AudioAttributes.Builder()
         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
         .setUsage(AudioAttributes.USAGE_ALARM)

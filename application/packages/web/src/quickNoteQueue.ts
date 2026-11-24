@@ -11,7 +11,7 @@
  * account it belongs to, so a cold start behind the lock screen has it. It is
  * public: the extension's pairing code carries it too. A full sign-out deletes
  * it and the queue (clearLocalDatabase).
- * Spec: docs/internal/plans/quick-note-694.md (section 5.2)
+ * Spec: docs/internal/specs/quick-note-694.md (section 5.2)
  */
 import { bytesToBase64, base64ToBytes, phraseToSeed } from '@notes/shared';
 import { deriveInboxKeyPair, padInboxJson, parseInboxNote, sealInbox, type InboxNote } from '@notes/shared/extension';
@@ -23,7 +23,7 @@ import { parseQuickAdd } from './quickAdd';
 import { quickAddContext } from './quickAddContext';
 import { toLocalIso } from './intlFormat';
 
-/** At most this many notes wait for an unlock. Spec: docs/internal/plans/quick-note-694.md (section 5.2 step 5) */
+/** At most this many notes wait for an unlock. Spec: docs/internal/specs/quick-note-694.md (section 5.2 step 5) */
 export const QUICK_NOTE_MAX = 100;
 
 interface InboxKeyEntry {

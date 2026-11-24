@@ -91,20 +91,49 @@ export function visibleBox(el: HTMLElement) {
 const EDGE = 4;
 const PLACED = ['left', 'right', 'top', 'bottom', 'translate', 'transform', 'margin-top', 'margin-bottom', 'inset-inline-start', 'inset-inline-end', 'margin-inline-start', 'margin-inline-end'];
 
+/** The unobstructed box where a tip anchored to `host` stays visible: the
+ *  clipping box narrowed past any sticky bars (such as the editor's tag row,
+ *  format bar, notice row or pinned footer) that sit above or below `host`
+ *  inside its vertical scroller. */
+function tipBounds(host: HTMLElement, h: DOMRect) {
+  let { left, top, right, bottom } = visibleBox(host);
+  for (let child: HTMLElement = host, parent = host.parentElement; parent; child = parent, parent = parent.parentElement) {
+    for (let sib = child.previousElementSibling; sib; sib = sib.previousElementSibling) {
+      const cs = getComputedStyle(sib);
+      if (cs.position !== 'sticky' || cs.pointerEvents === 'none' || cs.top === 'auto') continue;
+      const r = sib.getBoundingClientRect();
+      if (r.height > 0 && r.right > h.left && r.left < h.right && r.top <= h.top && r.bottom <= h.bottom) {
+        top = Math.max(top, r.bottom);
+      }
+    }
+    for (let sib = child.nextElementSibling; sib; sib = sib.nextElementSibling) {
+      const cs = getComputedStyle(sib);
+      if (cs.position !== 'sticky' || cs.pointerEvents === 'none' || cs.bottom === 'auto') continue;
+      const r = sib.getBoundingClientRect();
+      if (r.height > 0 && r.right > h.left && r.left < h.right && r.bottom >= h.bottom && r.top >= h.top) {
+        bottom = Math.min(bottom, r.top);
+      }
+    }
+    const pcs = getComputedStyle(parent);
+    if (pcs.overflowY !== 'visible' || pcs.position === 'fixed') break;
+  }
+  return { left, top, right, bottom };
+}
+
 /**
  * Moves a showing tip that sits above or below `host` back inside the
- * visible box: sideways first, then to the other side of the host when it
- * does not fit vertically and the other side does. A side tip (start, end)
- * keeps its place while it fits; with no room beside the host (a narrow
+ * unobstructed visible box: sideways first, then to the other side of the host
+ * when it does not fit vertically and the other side does. A side tip (start,
+ * end) keeps its place while it fits; with no room beside the host (a narrow
  * window) it drops below it and is fitted like any other.
  */
-function fitTip(tip: HTMLElement, host: HTMLElement) {
+export function fitTip(tip: HTMLElement, host: HTMLElement) {
   const s = tip.style;
   for (const p of PLACED) s.removeProperty(p);
   let t = tip.getBoundingClientRect();
   if (t.width === 0) return;
   const h = host.getBoundingClientRect();
-  const box = visibleBox(host);
+  const box = tipBounds(host, h);
   if (t.right <= h.left + 1 || t.left >= h.right - 1) {
     if (t.right <= box.right - EDGE && t.left >= box.left + EDGE) return;
     s.insetInlineStart = 'auto';

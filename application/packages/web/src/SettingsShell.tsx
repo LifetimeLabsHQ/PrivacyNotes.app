@@ -6,6 +6,8 @@ export type SettingsCategory = {
   /** The pane's headline, when it says more than the short rail label. */
   title?: string;
   icon: ReactNode;
+  /** Optional status dot on the icon with this hover tooltip (e.g. "Update available" on About). */
+  badgeTip?: string;
   /**
    * Optional section label. Consecutive categories sharing a group render
    * under one header; the header shows when the group changes. Categories

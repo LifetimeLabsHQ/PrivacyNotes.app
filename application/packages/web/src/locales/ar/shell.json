@@ -299,6 +299,8 @@
     "showNoteLinks": "إظهار الروابط في عناصر أخرى",
     "showNoteTasks": "إظهار المهام في عناصر أخرى",
     "showGroups": "إظهار المجموعات",
+    "groupBy": "التجميع حسب",
+    "groupLetter": "الحرف الأول",
     "groupsByDate": "مجمّعة حسب التاريخ",
     "groupsByLetter": "مجمّعة حسب الحرف الأول",
     "groupsNoneForSize": "غير متاح عند الفرز حسب الحجم",
@@ -326,6 +328,7 @@
     "nextWeek": "الأسبوع التالي",
     "pickMonth": "{{month}}، اختر الشهر والسنة",
     "pickMonthTip": "اختر الشهر والسنة",
+    "showToday": "إظهار اليوم",
     "showWholeMonth": "إظهار الشهر كاملًا",
     "showOneWeek": "إظهار أسبوع واحد"
   },
@@ -669,7 +672,10 @@
   "shareInbox": {
     "saved": "تم الحفظ في PrivacyNotes",
     "failed": "تعذّر الحفظ في PrivacyNotes",
-    "tooLarge": "الملف كبير جدًا. الحد الأقصى {{limit}} ميغابايت لكل ملف."
+    "tooLarge": "الملف كبير جدًا. الحد الأقصى {{limit}} ميغابايت لكل ملف.",
+    "titlePlaceholder": "العنوان (اختياري)",
+    "notePlaceholder": "أضف ملاحظة...",
+    "photoCount": "الصور: {{count}}"
   },
   "shortcut": {
     "copyNote": "نسخ اختصار الملاحظة",
@@ -1124,9 +1130,8 @@
     "addressPlaceholder": "الصق رابطًا…",
     "savePictures": "حفظ الصور",
     "savePicturesHint": "حتى 20 صورة تُخزَّن مع الملاحظة، وتُحتسب من مساحة التخزين الخاصة بك.",
-    "extensionTipTitle": "قصّ من متصفحك للحصول على نتيجة أفضل",
-    "extensionTip": "تحفظ إضافة المتصفح الصفحة كما تراها، حتى الصفحات التي تتطلب تسجيل الدخول.",
-    "extensionTipSetUp": "إعداد الإضافة",
+    "extensionTipTitle": "هل تريد قصاصات أفضل بكثير؟",
+    "extensionTip": "تحفظ إضافة المتصفح أي صفحة بشكل نظيف وبنقرة واحدة، حتى الصفحات التي تتطلب تسجيل الدخول.",
     "downloading": "جارٍ تنزيل الصفحة…",
     "downloadingPictures": "جارٍ تنزيل الصور، {{done}} من {{total}}",
     "picturesLine_zero": "{{count}} صور · {{size}}، محفوظة مع الملاحظة",
@@ -1175,7 +1180,7 @@
   "apps": {
     "railLabel": "الإضافة",
     "title": "إضافة المتصفح",
-    "subtitle": "أداة قصّ الويب ومدير كلمات المرور في Chrome وFirefox وEdge وBrave وVivaldi. لا تحمل الإضافة أبدًا المفتاح الذي يفتح ملاحظاتك.",
+    "subtitle": "أداة قصّ الويب ومدير كلمات المرور في Chrome وFirefox وEdge وBrave وVivaldi وOpera وArc وLibreWolf وZen. لا تحمل الإضافة أبدًا المفتاح الذي يفتح ملاحظاتك.",
     "loginsCopyFull": "امتلأت نسخة بيانات تسجيل الدخول لدى إضافة المتصفح. تصلها بيانات تسجيل الدخول الجديدة بمجرد أن تحذف بعضها.",
     "stepInstall": "تثبيت الإضافة",
     "stepFeatures": "اختيار ما يمكنها فعله",

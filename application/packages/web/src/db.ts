@@ -241,7 +241,7 @@ interface QueuedVersion {
 
 /** A quick note the Ninja box saved while the app was locked: sealed to the
  *  inbox public key, so it is never sealed at rest a second time.
- *  Spec: docs/internal/plans/quick-note-694.md (section 5.2) */
+ *  Spec: docs/internal/specs/quick-note-694.md (section 5.2) */
 interface QueuedQuickNote {
   id: string;
   /** The account whose inbox key sealed it, hex. */
@@ -581,7 +581,7 @@ class NotesDb extends Dexie {
     // v16 - quick notes the Ninja box saved behind the lock screen
     // (quickNoteQueue.ts). Already sealed to the inbox key, so the at-rest
     // seal does not cover the table. New table, nothing to back-fill.
-    // Spec: docs/internal/plans/quick-note-694.md (section 5.2)
+    // Spec: docs/internal/specs/quick-note-694.md (section 5.2)
     this.version(16).stores({
       notes: 'id, updatedAt, dirty, deleted, trashed, starred, type, folderId',
       imageCache: 'id, cachedAt',
@@ -648,8 +648,30 @@ class NotesDb extends Dexie {
     // index back when it opens the database (Dexie moves it to native version
     // 191); it then holds no entry for a row whose type is sealed, and the seal
     // stops moving types in while it is there (`rowTypeSealActive`).
-    // Spec: docs/internal/plans/row-type-seal.md (3.3)
+    // Spec: docs/internal/specs/row-type-seal.md (3.3)
     this.version(19).stores({
+      notes: 'id, updatedAt, dirty, deleted, trashed, starred, folderId',
+      imageCache: 'id, cachedAt',
+      imageDedup: 'hash, uuid',
+      attachmentCache: 'id, cachedAt',
+      attachmentDedup: 'hash, uuid',
+      blobGC: 'uuid, enqueuedAt',
+      editorDocCache: 'noteId, cachedAt',
+      demoVersions: 'id, noteId, createdAt',
+      kv: 'key',
+      dayLedger: 'date',
+      versionQueue: '++id, noteId, hash',
+      quickNotes: 'id, account',
+      replacedCopies: 'id, noteId, at',
+      appliedInbox: 'id, account, at',
+    });
+
+    // v20 - the same stores as v19, declared in the release that turns
+    // ROW_TYPE_SEALED_IN_PRODUCTION on: opening at v20 removes a `type`
+    // index that a bundle older than v19 added back, so the row type seal's
+    // gate (`rowTypeSealActive`) opens again. No upgrade function, no key.
+    // Spec: docs/internal/specs/row-type-seal.md (3.3)
+    this.version(20).stores({
       notes: 'id, updatedAt, dirty, deleted, trashed, starred, folderId',
       imageCache: 'id, cachedAt',
       imageDedup: 'hash, uuid',

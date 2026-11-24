@@ -55,7 +55,7 @@ export default function TabStrip({
   onTogglePin: (id: string) => void;
   /** Opens the tab's item beside the open one; absent where it cannot be
    *  offered, and `offers` is false for an item already on screen.
-   *  Spec: docs/internal/plans/side-by-side-notes.md (section 2) */
+   *  Spec: docs/internal/specs/side-by-side-notes.md (section 2) */
   sideBySide?: { offers: (id: string) => boolean; open: (id: string) => void };
   onMove: (id: string, beforeId: string | null) => void;
   /** List items dropped on the strip: each opens as a tab before `beforeId`

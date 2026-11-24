@@ -34,6 +34,7 @@ import {
   type CryptoStatus,
 } from '../cryptoCheckout';
 import { cryptoCheckoutReleased } from '../cryptoRelease';
+import { isLocalOnly } from '../localOnly';
 import { openExternal } from '../openExternal';
 import { Banner, FeedbackButton } from '../ui';
 
@@ -81,8 +82,8 @@ export function CryptoPaymentBanner({
   }, []);
 
   useEffect(() => {
-    // Release switch off: no order can start, so nothing to wait for.
-    if (!cryptoCheckoutReleased()) return;
+    // Release switch off or local-only vault: no order can start, so nothing to wait for.
+    if (!cryptoCheckoutReleased() || isLocalOnly()) return;
     const pending = pendingCryptoOrder(pubkey);
     if (!pending) return;
     // Pro from another route meanwhile: nothing left to wait for.

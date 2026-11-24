@@ -145,6 +145,7 @@ export type ImporterId =
   | 'standard-notes'
   | 'google-keep'
   | 'obsidian'
+  | 'notion'
   | 'notesnook'
   | 'onenote'
   | 'joplin'
@@ -155,12 +156,15 @@ export type ImporterId =
   | 'upnote'
   | 'apple-notes'
   | 'apple-journal'
+  | 'day-one'
   | 'daylio'
+  | 'diaro'
   | 'diarium'
   | 'google-journal'
   | 'evernote'
   | 'samsung-notes'
   | 'simplenote'
+  | 'todoist'
   | 'markdown-folder'
   // The four on-disk markdown apps. Each is an ALIAS of markdown-folder: same
   // parser, own row in the picker, own source tag, own guide. They exist

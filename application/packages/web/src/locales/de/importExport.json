@@ -97,7 +97,10 @@
     "googleCalendar": "Die .zip aus Google Kalender unter Settings > Import & export oder eine einzelne .ics-Datei. Termine behalten ihre Uhrzeiten, Wiederholungen und Erinnerungen.",
     "appleNotes": "Exportiere über die kostenlose Exporter-App als Markdown und lege dann die .zip hier ab.",
     "appleJournal": "Exportiere aus Journal auf dem Mac oder iPhone, komprimiere den Ordner AppleJournalEntries und lege die .zip hier ab. Einträge werden als Tagebucheinträge importiert, mit ihren Fotos, Videos, Sprachmemos und Orten.",
+    "dayOne": "Wähle in Day One im Web Edit Journal > Journal Settings > Export Journal > Export journal JSON file (with media), oder auf Mac oder iOS File > Export > JSON. Lege die .zip oder .json hier ab. Einträge behalten ihr Datum, ihre Tags, Sterne, ihren Ort, das Wetter und ihre Medien.",
+    "todoist": "Lade in Todoist eine Backup-.zip unter Settings > Backups (Pro) herunter, oder öffne ein Projekt und wähle ... > Import & export > Export as CSV. Jedes Projekt wird eine Aufgabenliste mit seinen Abschnitten, Unteraufgaben, Prioritäten, Fälligkeitsdaten, Labels, Beschreibungen und Kommentaren.",
     "daylio": "Wähle in Daylio More > Backup & Restore > Advanced Options > Export, schließe Daylio und lege die .daylio-Datei hier ab. Jeder Eintrag wird ein Tagebucheintrag mit seiner Stimmung, seinen Aktivitäten, Skalen, Fotos und Sprachmemos. Die CSV aus More > Export Entries funktioniert auch, ohne Fotos.",
+    "diaro": "Wähle in Diaro Settings > Data > Backup & restore, tippe auf +, lass die Verschlüsselung aus und Anhänge an und lege das .zip-Backup hier ab. Eine einzelne DiaroBackup.xml funktioniert auch, ohne Fotos. Einträge behalten ihr Datum, ihre Ordner, Tags, Stimmungen, Orte, das Wetter und ihre Fotos.",
     "diarium": "Wähle in Diarium Export, wähle JSON mit eingeschalteten Attachments und speichere im lokalen Speicher. Lege die .zip ab, oder eine .json ohne Anhänge. Einträge behalten ihre Bewertung als Stimmung, ihre Tags, Personen, Tracker, ihren Ort und ihre Anhänge.",
     "googleJournal": "Schalte in Journal auf deinem Pixel Settings > Back up your journal ein. Wähle dann in Google Takeout Journal aus und lege die .zip ab, die du bekommst. Einträge behalten ihren Tag, Titel, Text, ihre Fotos und Videos.",
     "excalidraw": "Zeichnungen, gespeichert auf excalidraw.com: eine .excalidraw-Datei oder mehrere zusammen in einer Zip. Zeichnungen aus dem Excalidraw-Plugin von Obsidian funktionieren auch, als .excalidraw.md-Dateien. Bilder in einer Zeichnung kommen mit.",
@@ -108,6 +111,7 @@
     "obsidian": "Obsidian-Vault als .zip. Erhält Tags, Notiz-Links, Ordnerstruktur, inline #tags sowie eingebettete Bilder und Dateien. Canvases und Excalidraw-Zeichnungen werden zu Zeichnungen, und eine einzelne .canvas-Datei lässt sich auch für sich importieren.",
     "obsidianCanvas": "Eine .canvas-Datei aus deinem Obsidian-Vault oder der ganze Vault als .zip, um jedes Canvas zu übernehmen. Jedes Canvas wird zu einer Zeichnung: Karten, Gruppen, Pfeile und Farben kommen mit, Bilder auch, wenn sie in der .zip liegen.",
     "notesnook": "Notesnook-Export als .zip. Wähle beim Exportieren HTML, um Formatierung, Notizbücher, Tags und Anhänge zu behalten.",
+    "notion": "Wähle in Notion Settings > General > Export > Workspace content (oder im Seitenmenü > More > Export), wähle \"Markdown & CSV\" mit eingeschalteten Unterseiten und Ordnern und lege dann die .zip hier ab. Entfernt Notion-IDs aus Titeln und Ordnern, behält Unterseiten als Ordner, wandelt Hinweisboxen um, macht interne Links zu Notiz-Links und bringt Bilder, Dateien und Seiten aus Datenbankzeilen mit.",
     "bear": "Wähle in Bear File > Backup Notes... und lege die .bear2bk-Datei hier ab. Tags und verschachtelte Tags, Pins, das Archiv, der Papierkorb, Hervorhebungen mit ihren Farben, Notiz-Links und Anhänge kommen mit.",
     "joplin": "Die .jex-Datei aus File > Export all > \"JEX - Joplin Export File\". Notizbücher werden zu Ordnern, und Tags, To-dos, Notiz-Links und Anhänge kommen mit.",
     "anytype": "Die Any-Block-v1-JSON-.zip aus den Space-Einstellungen > Export, mit Dateien und archivierten Objekten. Collections werden zu Ordnern, und Tags, Aufgaben, Hinweisboxen, Toggles, Tabellen, Notiz-Links und Dateien kommen mit.",
@@ -134,7 +138,13 @@
     "fullBackupTitle": "Vollständiges Backup (.zip)",
     "fullBackupDesc": "Stelle Notizen, Tagebücher, Tresor-Einträge, Aufgaben, Bilder, Audio und Dateien wieder her. Eine Notiz, die du schon hast, bleibt erhalten oder wird aktualisiert, wenn das Backup eine neuere Fassung davon enthält.",
     "encryptedBackupTitle": "Verschlüsseltes Backup (.pnbackup, .pnbackupz)",
-    "encryptedBackupDesc": "Stelle ein verschlüsseltes Backup mit deinem Phrasenschlüssel wieder her. Eine .pnbackupz-Datei bringt alles zurück, Dateien eingeschlossen; eine .pnbackup-Datei enthält nur Textinhalte und Metadaten. Du musst mit demselben Konto angemeldet sein, das es erstellt hat."
+    "encryptedBackupDesc": "Stelle ein verschlüsseltes Backup mit deinem Phrasenschlüssel wieder her. Eine .pnbackupz-Datei bringt alles zurück, Dateien eingeschlossen; eine .pnbackup-Datei enthält nur Textinhalte und Metadaten. Bei Backups von einem anderen Gerät oder Konto wirst du nach der Wiederherstellungsphrase dieses Backups gefragt."
+  },
+  "restoreForeign": {
+    "title": "Mit einer anderen Wiederherstellungsphrase entsperren",
+    "body": "Dieses Backup wurde nicht mit deiner aktuellen Phrase verschlüsselt. Gib die Wiederherstellungsphrase von dem Gerät ein, das es erstellt hat, oder scanne sie. Deine Notizen werden in diesen Tresor importiert.",
+    "unlock": "Backup entsperren",
+    "wrongPhrase": "Mit dieser Wiederherstellungsphrase ließ sich dieses Backup nicht entsperren. Prüfe die Wörter und versuch es erneut."
   },
   "restoreGate": {
     "wait": "Die Wiederherstellung wartet, bis dieses Gerät online ist und eine Synchronisierung abgeschlossen hat, damit dein Backup mit den Notizen abgeglichen wird, die schon in deinem Konto sind, und sie nicht doppelt angelegt werden.",
@@ -314,7 +324,8 @@
     "title_one": "{{count}} Element wurde mit PrivacyNotes geteilt",
     "title_other": "{{count}} Elemente wurden mit PrivacyNotes geteilt",
     "line": "Nichts wird gespeichert, bis du entscheidest.",
-    "saveAll": "Alle speichern"
+    "saveAll": "Alle speichern",
+    "saveAs": "Speichern als"
   },
   "destination": {
     "none": "Ohne Ordner",

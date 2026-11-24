@@ -317,7 +317,7 @@ async function copyMarkdown(page: CapturedPage | null): Promise<void> {
 }
 
 /** New note from selection: the selected text as a quote, the page under it.
- *  Spec: docs/internal/plans/quick-note-694.md (section 4.1) */
+ *  Spec: docs/internal/specs/quick-note-694.md (section 4.1) */
 function quoteOf(text: string, url: string): string {
   const quote = text.trim().split(/\r?\n/).map((line) => (line.trim() ? `> ${line}` : '>')).join('\n');
   return /^https?:\/\//i.test(url) ? `${quote}\n\n${url}\n` : `${quote}\n`;

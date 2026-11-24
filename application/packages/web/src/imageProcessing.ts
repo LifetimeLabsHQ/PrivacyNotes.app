@@ -43,6 +43,7 @@
 
 import type { ImageFormat } from './imageMetadata';
 import { MEDIA_FILE, MEDIA_PICTURE, markdownLinks, replaceMatches, type LinkMatch } from './linkScan';
+import type { SpaceSaverLevel } from './userSettingsShape';
 
 // The container walkers load on the first image operation, not at boot:
 // every editor session carries this module, and most sessions never
@@ -106,13 +107,36 @@ function canvasHasAlpha(
   return false;
 }
 
-/** The longest edge a space-saved image fits inside, in pixels. */
+/** The longest edge a standard space-saved image fits inside, in pixels. */
 // Spec: docs/internal/specs/image-quality-handoff.md (section 3, space saver)
 export const IMAGE_FIT_PX = 2048;
 
-/** JPEG quality (0-1). 0.85 is roughly Google Photos "Storage saver". */
+/** Default JPEG quality (0-1). 0.85 is roughly Google Photos "Storage saver". */
 // Spec: docs/internal/specs/image-quality-handoff.md (section 3, space saver)
 export const IMAGE_JPEG_QUALITY = 0.85;
+
+/** Typical phone photo size used for the Settings > Storage > Images live preview. */
+export const EXAMPLE_PHOTO_BYTES = 2_600_000;
+
+export type SpaceSaverPreset = {
+  /** Longest edge in pixels. */
+  fitBox: number;
+  /** JPEG quality (0-1). */
+  quality: number;
+  /** Typical saved size in bytes for EXAMPLE_PHOTO_BYTES. */
+  exampleBytes: number;
+};
+
+/** Ordered Space saver compression presets. Standard matches the original defaults. */
+// Spec: docs/internal/specs/image-quality-handoff.md (section 3, space saver)
+export const SPACE_SAVER_LEVELS: readonly SpaceSaverLevel[] = ['standard', 'small', 'tiny'];
+
+// Spec: docs/internal/specs/image-quality-handoff.md (section 3, space saver)
+export const SPACE_SAVER_PRESETS: Record<SpaceSaverLevel, SpaceSaverPreset> = {
+  standard: { fitBox: IMAGE_FIT_PX, quality: IMAGE_JPEG_QUALITY, exampleBytes: 1_000_000 },
+  small: { fitBox: 1280, quality: 0.75, exampleBytes: 260_000 },
+  tiny: { fitBox: 1024, quality: 0.6, exampleBytes: 130_000 },
+};
 
 /** The box a contact photo fits inside while "Keep contact photos small"
  *  is on: a ceiling, never a target, and never an upscale. The largest
@@ -179,31 +203,40 @@ const MIME_EXTENSIONS: Record<string, string[]> = {
  */
 export type ImageOptions = {
   fitBox: number | null;
+  /** JPEG quality (0-1) when re-encoding. Defaults to IMAGE_JPEG_QUALITY. */
+  quality?: number;
   stripMetadata: boolean;
   /** Always decode and draw again, a GIF too: a stranger's picture (the
    *  clipper) and a contact photo, which must fit its box. */
   redraw?: boolean;
 };
 
-type ImagePolicy = { spaceSaver: boolean; stripMetadata: boolean; contactCeiling: boolean };
+type ImagePolicy = {
+  spaceSaver: boolean;
+  spaceSaverLevel?: SpaceSaverLevel;
+  stripMetadata: boolean;
+  contactCeiling: boolean;
+};
 
-/** Every switch on: the behaviour every editor image path always had. */
-let policy: ImagePolicy = { spaceSaver: true, stripMetadata: true, contactCeiling: true };
+/** Every switch on, standard preset: the behaviour every editor image path always had. */
+let policy: ImagePolicy = { spaceSaver: true, spaceSaverLevel: 'standard', stripMetadata: true, contactCeiling: true };
 
 /**
- * NotesView mirrors the two synced switches here whenever they change. A
+ * NotesView mirrors the synced switches here whenever they change. A
  * module-level policy rather than a React context, because the doors are
  * ProseMirror plugins and importers with no component above them.
  */
 export function setImagePolicy(next: ImagePolicy): void {
-  policy = next;
+  policy = { ...next, spaceSaverLevel: next.spaceSaverLevel ?? 'standard' };
 }
 
-/** The options a door passes, derived from the two app-wide switches.
+/** The options a door passes, derived from the app-wide switches.
  *  `overrides` narrows them for a caller with a tighter ceiling. */
 export function currentImageOptions(overrides: Partial<ImageOptions> = {}): ImageOptions {
+  const preset = SPACE_SAVER_PRESETS[policy.spaceSaverLevel ?? 'standard'];
   return {
-    fitBox: policy.spaceSaver ? IMAGE_FIT_PX : null,
+    fitBox: policy.spaceSaver ? preset.fitBox : null,
+    ...(policy.spaceSaver ? { quality: preset.quality } : {}),
     stripMetadata: policy.stripMetadata,
     ...overrides,
   };
@@ -224,8 +257,9 @@ export function contactPhotoOptions(): ImageOptions {
  * Whether a File is one this module reads: by MIME, or by extension when
  * the picker left the type empty or generic (mobile galleries often do).
  */
-export function isSupportedImage(file: File): boolean {
-  if (file.type && ALLOWED_TYPES.has(file.type)) return true;
+export function isSupportedImage(file: { type: string; name: string }): boolean {
+  const mime = file.type.split(';')[0]!.trim().toLowerCase();
+  if (mime && ALLOWED_TYPES.has(mime)) return true;
   const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
   return ALLOWED_EXTENSIONS.has(ext);
 }
@@ -297,9 +331,9 @@ export async function processImage(file: File, opts: ImageOptions): Promise<Imag
       }
       // No raw state for this container: convert at the ceiling and keep
       // the metadata choice.
-      return await reencode(file, { fitBox: opts.fitBox ?? IMAGE_FIT_PX, stripMetadata: opts.stripMetadata }, bytes);
+      return await reencode(file, { fitBox: opts.fitBox ?? IMAGE_FIT_PX, quality: opts.quality, stripMetadata: opts.stripMetadata }, bytes);
     }
-    return await reencode(file, { fitBox: opts.fitBox, stripMetadata: opts.stripMetadata }, null);
+    return await reencode(file, { fitBox: opts.fitBox, quality: opts.quality, stripMetadata: opts.stripMetadata }, null);
   } catch (err) {
     return {
       ok: false,
@@ -340,7 +374,7 @@ export async function decodablePicture(file: File): Promise<Blob> {
  */
 async function reencode(
   file: File,
-  opts: { fitBox: number; stripMetadata: boolean },
+  opts: { fitBox: number; quality?: number; stripMetadata: boolean },
   source: Uint8Array | null,
 ): Promise<ImageProcessingResult> {
   if (file.size > MAX_DECODE_BYTES) {
@@ -386,10 +420,11 @@ async function reencode(
   const keepAlpha = mayHaveAlpha(file) && canvasHasAlpha(ctx, width, height);
   const outType: 'image/png' | 'image/jpeg' = keepAlpha ? 'image/png' : 'image/jpeg';
 
+  const quality = opts.quality ?? IMAGE_JPEG_QUALITY;
   let blob: Blob;
   if (canvas instanceof OffscreenCanvas) {
     blob = await canvas.convertToBlob(
-      outType === 'image/png' ? { type: outType } : { type: outType, quality: IMAGE_JPEG_QUALITY },
+      outType === 'image/png' ? { type: outType } : { type: outType, quality },
     );
   } else {
     blob = await new Promise<Blob>((resolve, reject) => {
@@ -397,7 +432,7 @@ async function reencode(
       canvas.toBlob(
         (b) => (b ? resolve(b) : reject(new Error('Canvas toBlob failed'))),
         outType,
-        IMAGE_JPEG_QUALITY,
+        quality,
       );
     });
   }
