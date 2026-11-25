@@ -21,7 +21,7 @@ export function Modal({
   embeddedClassName = '',
   children,
   ...rest
-}: Omit<HTMLAttributes<HTMLDivElement>, 'className' | 'onClick' | 'children'> & {
+}: Omit<HTMLAttributes<HTMLDivElement>, 'className' | 'onClick' | 'children' | 'title'> & {
   /** Escape and a click outside the panel call it. */
   onClose?: () => void;
   /** The window's title: the part draws the header and the close X, so no window draws its own. */
@@ -35,7 +35,7 @@ export function Modal({
   /** The panel's own size, padding and layout (`max-w-md p-6 space-y-4`). */
   className?: string;
   /** The stacking layer: a window over another window takes a higher one. */
-  layer?: 'z-50' | 'z-[60]' | 'z-[70]';
+  layer?: 'z-50' | 'z-[60]' | 'z-[70]' | 'z-[100]';
   /** False while Escape must not close it (a step is busy). */
   escape?: boolean;
   /** False while a click outside must not close it. */
@@ -104,7 +104,7 @@ export function ModalFooter({ bar = false, children }: { bar?: boolean; children
 
 function noop() {}
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), details > summary:first-of-type, [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
 
 /**
  * The keyboard belongs to the open window (WAI-ARIA dialog pattern). On open
@@ -112,7 +112,7 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([t
  * (`autoFocus`); on close it goes back to what had it before, the row a
  * shortcut acted on, so the arrow keys carry on from there.
  */
-function useWindowFocus(panel: RefObject<HTMLDivElement | null>, on: boolean) {
+export function useWindowFocus(panel: RefObject<HTMLDivElement | null>, on: boolean) {
   useEffect(() => {
     const el = panel.current;
     if (!on || !el) return;
@@ -129,7 +129,7 @@ function useWindowFocus(panel: RefObject<HTMLDivElement | null>, on: boolean) {
 }
 
 /** Tab and Shift+Tab go round the controls of the panel, never to the page under it. */
-function keepTabInside(e: KeyboardEvent<HTMLDivElement>, panel: HTMLDivElement | null) {
+export function keepTabInside(e: KeyboardEvent<HTMLDivElement>, panel: HTMLDivElement | null) {
   if (e.key !== 'Tab' || !panel) return;
   // A window opened from inside this one handles its own Tab.
   if ((e.target as HTMLElement).closest('[role="dialog"]') !== panel) return;

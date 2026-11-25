@@ -1,15 +1,49 @@
-import type { ComponentProps, ReactNode } from 'react';
-import { CheckCircle, CircleNotch, Info, Warning, WarningCircle } from '../icons';
+import type { AnchorHTMLAttributes, ComponentProps, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import { CheckCircle, CircleNotch, Info, Warning, WarningCircle, type Icon } from '../icons';
+import { SETTINGS_BTN } from '../settingsUI';
+import { ACTIONS, type ActionName } from './actions';
 import { Button } from './Button';
 import { IconTile } from './misc';
+
+type FeedbackActionProps =
+  | { action: ActionName; icon?: never }
+  | { action?: never; icon: ReactNode };
+
+type FeedbackLinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'children'> &
+  FeedbackActionProps & {
+    href: string;
+    iconEnd?: boolean;
+    children?: ReactNode;
+  };
+
+type FeedbackButtonProps =
+  | (ComponentProps<typeof Button> & { href?: never })
+  | FeedbackLinkProps;
 
 /**
  * @catalog FeedbackButton
  * use: recovery, navigation and dismissal actions inside Callout or Banner. A neutral surface and theme-text border keep the same outline visible on every feedback tone. Pass the canonical Button action or icon.
  * never: separate Retry and banner-action border styles; a primary fill for routine feedback recovery.
  */
-export function FeedbackButton(props: ComponentProps<typeof Button>) {
-  return <Button {...props} variant="secondary" className={`!border-pn/25 bg-surface-1 hover:!border-pn/50${props.className ? ` ${props.className}` : ''}`} />;
+export function FeedbackButton(props: FeedbackButtonProps) {
+  const { t } = useTranslation('common');
+  const skin = `!border-pn/25 bg-surface-1 hover:!border-pn/50${props.className ? ` ${props.className}` : ''}`;
+  if (props.href !== undefined) {
+    const { action, icon, iconEnd = false, className: _c, children, ...rest } = props;
+    const spec = action ? ACTIONS[action] : null;
+    const Glyph = spec?.icon;
+    const after = action === 'next' || iconEnd;
+    return (
+      <a {...rest} className={`${SETTINGS_BTN} ${skin}`}>
+        {!after && (Glyph ? <Glyph aria-hidden="true" className="shrink-0" /> : icon)}
+        {children ?? (spec?.label ? t(`actions.${spec.label}`) : null)}
+        {after && (Glyph ? <Glyph aria-hidden="true" className="shrink-0" /> : icon)}
+      </a>
+    );
+  }
+  const { href: _h, ...btnProps } = props;
+  return <Button {...btnProps} variant="secondary" className={skin} />;
 }
 
 export type Tone = 'info' | 'warning' | 'danger' | 'success';
@@ -74,16 +108,21 @@ export function Callout({ tone = 'info', title, action, look = 'tint', className
  * use: a strip across the top of a pane for a state of the whole app or account (storage full, sync paused, a pending Pro activation, a move): the tone's icon, one sentence, an optional `action` (a `Button`) and an optional dismiss (`onDismiss`).
  * never: a strip of your own with an underlined text link; a banner inside a window (use Callout).
  */
-export function Banner({ tone = 'warning', action, onDismiss, dismissLabel, children }: {
+export function Banner({ tone = 'warning', icon, action, onDismiss, dismissLabel, children }: {
   tone?: Tone;
+  icon?: Icon;
   action?: ReactNode;
   onDismiss?: () => void;
   dismissLabel?: string;
   children: ReactNode;
 }) {
-  const Glyph = GLYPH[tone];
+  const { t } = useTranslation('common');
+  const Glyph = icon ?? GLYPH[tone];
   return (
-    <div role="status" className={`flex flex-wrap items-center gap-3 border-b px-4 py-2 text-compact text-pn ${BOX[tone]}`}>
+    <div
+      role={tone === 'danger' ? 'alert' : 'status'}
+      className={`shrink-0 select-none flex flex-wrap items-center gap-3 border-b px-4 py-2 text-compact text-pn ${BOX[tone]}`}
+    >
       {/* As in Callout: on a phone the buttons wrap below the message and
           line up with its text. */}
       <div className="flex min-w-0 flex-[1_1_20rem] items-start gap-3">
@@ -92,7 +131,7 @@ export function Banner({ tone = 'warning', action, onDismiss, dismissLabel, chil
       </div>
       {(action || onDismiss) && <div className="ms-7 flex max-w-full flex-wrap items-center gap-2 sm:ms-auto">
         {onDismiss && (
-          <FeedbackButton action="cancel" onClick={onDismiss}>{dismissLabel}</FeedbackButton>
+          <FeedbackButton action="cancel" onClick={onDismiss}>{dismissLabel ?? t('updateToast.dismiss')}</FeedbackButton>
         )}
         {action}
       </div>}
@@ -105,12 +144,26 @@ export function Banner({ tone = 'warning', action, onDismiss, dismissLabel, chil
  * use: a short message after an action, at the bottom centre, in the accent: "Moved to Work", with an optional action ("Undo"). The caller shows it and hides it after a few seconds.
  * never: a pill of your own; a toast card for a one-line message (UpdateToast is for an update or a reminder).
  */
-export function Snackbar({ actionLabel, onAction, children }: { actionLabel?: string; onAction?: () => void; children: ReactNode }) {
+export function Snackbar({
+  tone = 'info',
+  icon,
+  actionLabel,
+  onAction,
+  children,
+}: {
+  tone?: 'info' | 'danger';
+  icon?: ReactNode;
+  actionLabel?: string;
+  onAction?: () => void;
+  children: ReactNode;
+}) {
   return (
     <div
-      role="status"
-      className={`fixed bottom-6 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-full bg-accent-fill py-1.5 ps-4 text-body font-medium text-white shadow-lg ${actionLabel ? 'pe-1.5' : 'pe-4'}`}
+      role={tone === 'danger' ? 'alert' : 'status'}
+      style={{ bottom: 'calc(var(--pn-safe-bottom, 0px) + 1.5rem)' }}
+      className={`fixed start-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-full ${tone === 'danger' ? 'bg-danger' : 'bg-accent-fill'} py-1.5 ps-4 text-body font-medium text-white shadow-lg ${actionLabel ? 'pe-1.5' : 'pe-4'}`}
     >
+      {icon && <span className="shrink-0 flex items-center" aria-hidden="true">{icon}</span>}
       <span className="min-w-0 truncate">{children}</span>
       {actionLabel && (
         <button type="button" onClick={onAction} className="shrink-0 rounded-full bg-white/20 px-3 py-1 hover:bg-white/30 transition">
@@ -183,17 +236,18 @@ export function StatusLine({ busy = false, tone, children }: { busy?: boolean; t
 
 /**
  * @catalog EmptyState
- * use: a list, a pane or a picker with nothing in it: a 48px duotone glyph in a round tile, a title, one line that says what goes here, and the actions (`Button`s: the primary, then Import). `compact` is one muted line, for a short list inside a pane.
+ * use: a list, a pane or a picker with nothing in it: a 32px duotone glyph in a 64px round tile, a title, one line that says what goes here, and the actions (`Button`s: the primary, then Import). `compact` is one muted line, for a short list inside a pane; `flush` drops its outer padding inside an already-padded card.
  * never: a grey line of your own; a 64px circle of your own.
  */
-export function EmptyState({ icon, title, children, actions, compact = false }: {
+export function EmptyState({ icon, title, children, actions, compact = false, flush = false }: {
   icon?: ReactNode;
   title?: ReactNode;
   children?: ReactNode;
   actions?: ReactNode;
   compact?: boolean;
+  flush?: boolean;
 }) {
-  if (compact) return <p className="px-4 py-6 text-center text-compact text-pn-muted">{children ?? title}</p>;
+  if (compact) return <p className={`${flush ? '' : 'px-4 py-6 '}text-center text-compact text-pn-muted`}>{children ?? title}</p>;
   return (
     <div className="flex flex-col items-center px-6 py-10 text-center">
       {icon && <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-track text-accent [&>svg]:h-8 [&>svg]:w-8">{icon}</div>}

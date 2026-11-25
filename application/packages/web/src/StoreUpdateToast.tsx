@@ -5,6 +5,7 @@ import { detectPlatform } from './devices';
 import { APP_STORE_URL, PLAY_STORE_URL, RELEASES_ORIGIN } from './hosts';
 import { knownVersionFloor, reportVersionFloor, useBelowVersionFloor } from './versionFloor';
 import { fetchPolicy } from './policySignature';
+import { openExternalAsync } from './openExternal';
 
 /**
  * Release-floor check for the STORE builds (Google Play, iOS App Store).
@@ -126,10 +127,7 @@ export function StoreUpdateToast() {
     <UpdateToast
       actionLabel={t('updateToast.update')}
       required
-      onAction={async () => {
-        const { openUrl } = await import('@tauri-apps/plugin-opener');
-        await openUrl(STORE_URL);
-      }}
+      onAction={() => openExternalAsync(STORE_URL, { browser: true })}
       // No version (we only know the floor, not what the store will install),
       // no changelog, no dismiss: required is the only shape this toast has.
     />

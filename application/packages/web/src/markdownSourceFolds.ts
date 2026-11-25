@@ -26,7 +26,7 @@ const QUOTES = /^(?:[ \t]*>[ \t]?)*/;
 const FENCE = /^([ \t]*)(`{3,}|~{3,})(.*)$/;
 /** Fences that are not code blocks, or never close (editorCodeBlock.ts). */
 const NEVER_FOLDS = new Set(['copy', 'map', 'doodle']);
-const NEVER_FOLDS_CALLOUT = new Set(['kanban', 'column']);
+const NEVER_FOLDS_CALLOUT = new Set(['kanban', 'column', 'columns', 'col']);
 
 type Spot = { line: number; folded: boolean; set: (folded: boolean) => string };
 

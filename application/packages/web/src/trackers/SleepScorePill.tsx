@@ -35,7 +35,7 @@ export function SleepScorePill({
       readOnly={readOnly}
     >
       <div className="max-w-[420px]">
-        <PanelQuestion>{t('sleepScore.prompt')}</PanelQuestion>
+        <PanelQuestion>{t('labels.sleepScore')}</PanelQuestion>
         <NumberStepper value={value} onChange={onChange} onClear={() => onChange(undefined)} min={0} max={100} step={1} quick={QUICK_SCORES} start={last} placeholder="75" expanded={expanded} />
       </div>
     </PillShell>

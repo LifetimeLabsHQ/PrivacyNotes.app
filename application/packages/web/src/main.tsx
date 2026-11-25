@@ -42,6 +42,11 @@ initTheme();
 // kind of device-local appearance choice, and it does not paint.
 initAppZoom();
 initSystemTextSize();
+// Windows omits country flag glyphs from Segoe UI Emoji; load the bundled
+// flag-only WOFF2 fallback on Windows only so every other OS pays zero bytes.
+if (typeof navigator !== 'undefined' && /\bWindows\b/i.test(navigator.userAgent)) {
+  void import('./looks/flagFont').then((m) => m.installWindowsFlagFont());
+}
 
 // Android back button entry point (#174) - must exist before the first
 // back press, even during onboarding (where an unhandled press
@@ -66,6 +71,11 @@ installStatusBarTap();
 // absent by default, because the plain grid is the state that always works.
 // Spec: docs/internal/design/ui-patterns.md (section 64)
 if (!isLinuxNative()) document.documentElement.dataset.lazyTiles = 'on';
+// WebKitGTK composites backdrop-filter on the CPU whenever DMA-BUF is off
+// (NVIDIA, or any software fallback), so sticky blur bars over the editor
+// re-blur on every keystroke and scroll (#806). Keep them solid in the Linux
+// desktop app; every other platform keeps the blur.
+if (isLinuxNative()) document.documentElement.dataset.noBlur = 'on';
 
 // Keep the public demo subdomain out of search results so it doesn't
 // compete with the marketing site (see demo.ts). Same for the dedicated

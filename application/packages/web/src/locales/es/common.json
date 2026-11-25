@@ -26,7 +26,6 @@
     "noResults": "Sin resultados"
   },
   "deleteNote": {
-    "confirm": "Eliminar para siempre",
     "body": "¿Eliminar de forma permanente <highlight>“{{title}}”</highlight>? Esto no se puede deshacer."
   },
   "emptyTrash": {
@@ -73,12 +72,15 @@
       "toggleSidebar": "Mostrar u ocultar la barra lateral",
       "toggleTheme": "Cambiar entre modo claro y oscuro",
       "openSettings": "Abrir ajustes",
+      "graph": "Espacio de trabajo de Grafo y Lugares",
       "zen": "Modo Zen",
+      "fullScreen": "Modo de pantalla completa",
       "markdownView": "Activar / desactivar la vista Markdown",
       "invisibles": "Mostrar u ocultar los caracteres invisibles",
       "find": "Buscar en la nota",
       "findReplace": "Buscar y reemplazar",
       "outline": "Mostrar u ocultar el esquema",
+      "connections": "Mostrar u ocultar las conexiones",
       "insertDate": "Insertar la fecha",
       "insertDateTime": "Insertar la fecha y la hora",
       "clearFilters": "Quitar los filtros",
@@ -134,8 +136,6 @@
     "goToFolder": "Ir a una carpeta",
     "createTag": "Crear la etiqueta #{{name}}",
     "createFolder": "Crear la carpeta «{{name}}»",
-    "newTag": "Nueva etiqueta",
-    "newFolder": "Nueva carpeta",
     "goToDay": "Ir al día",
     "inText": "En el texto",
     "actions": "acciones",
@@ -176,9 +176,9 @@
   "sshKeyForm": {
     "label": "Etiqueta",
     "labelPlaceholder": "p. ej. clave de despliegue de GitHub",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "Copiar clave pública",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "Copiar clave privada",
     "downloadPublicKey": "Descargar clave pública",
     "downloadPrivateKey": "Descargar clave privada",
@@ -291,6 +291,13 @@
     "features": {
       "stats": {
         "detail": "Tu escritura, tus rachas y tus registros a lo largo del tiempo"
+      },
+      "graph": {
+        "detail": "Tus enlaces entre notas, puentes inteligentes y núcleos como un mapa interactivo"
+      },
+      "placesMap": {
+        "label": "Mapa de lugares",
+        "detail": "Notas, entradas del diario y contactos ubicados en un mapa privado"
       },
       "trackers": {
         "detail": "Estado de ánimo, hábitos, factores y medicación"

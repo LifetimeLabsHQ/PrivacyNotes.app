@@ -230,6 +230,9 @@ export function clearAccountScopedUiState(): void {
     // Which items this account had open as tabs: ids only, but this account's.
     localStorage.removeItem('privacynotes.openTabs'); // notesView/useOpenTabs.ts
     sessionStorage.removeItem('privacynotes.openTabs'); // notesView/useOpenTabs.ts (when reopenLastOpen is off)
+    // Device-local graph positions (opaque UUID keys only) and last lens.
+    localStorage.removeItem('privacynotes.graph.layout'); // graph/graphModel.ts
+    localStorage.removeItem('privacynotes.graph.lens'); // graph/GraphModal.tsx
     // The notes this account turned spell check off for: ids only.
     localStorage.removeItem('privacynotes.spellcheckOffNotes'); // theme.ts
     // The sections this account folded, keyed by note id.

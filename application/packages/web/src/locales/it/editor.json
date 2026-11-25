@@ -38,7 +38,7 @@
     "blockMath": "Formula in blocco",
     "align": "Allineamento",
     "font": "Carattere",
-    "pictureFromFiles": "Immagine da File",
+    "pictureFromFiles": "Galleria",
     "date": "Data",
     "dateTime": "Data e ora",
     "footnote": "Nota a piè di pagina",
@@ -260,6 +260,15 @@
     "headingsIn": "Titoli in {{title}}",
     "noHeadingMatches": "Nessun titolo corrispondente"
   },
+  "slash": {
+    "label": "Inserisci blocco",
+    "linePlaceholder": "Premi / per inserire blocchi",
+    "filterHint": "Digita per filtrare…",
+    "basic": "Blocchi di base",
+    "smartDate": "Data intelligente",
+    "askNinja": "Chiedi a Ninja “{{query}}”",
+    "noMatches": "Nessun blocco corrispondente"
+  },
   "copyBox": {
     "placeholder": "Testo da copiare con un clic"
   },
@@ -370,6 +379,23 @@
     "moveTo": "Sposta in",
     "cardCount_one": "{{count}} scheda",
     "columnCount_one": "{{count}} colonna"
+  },
+  "columns": {
+    "narrowWide": "Stretta e larga",
+    "wideNarrow": "Larga e stretta",
+    "removeColumns": "Rimuovi colonne",
+    "resizeColumn": "Trascina per ridimensionare le colonne",
+    "barLabel": "Controlli colonne",
+    "borders": "Bordi delle colonne",
+    "borderBoxes": "Cornici",
+    "borderSolid": "Continuo",
+    "borderDashed": "Tratteggiato",
+    "borderDotted": "Punteggiato",
+    "borderThickness": "Spessore",
+    "borderThin": "Sottile",
+    "borderMedium": "Medio",
+    "borderColorDefault": "Colore predefinito",
+    "borderTint": "Tinta tenue per le colonne"
   },
   "doodle": {
     "title": "Scarabocchio",

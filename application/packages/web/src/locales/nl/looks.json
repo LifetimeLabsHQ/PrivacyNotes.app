@@ -8,8 +8,10 @@
   "applyToFolderItems": "Toepassen op alle items in deze map",
   "applyToTagItems": "Toepassen op alle items met deze tag",
   "icon": "Icoon",
+  "emoji": "Emoji",
   "searchPlaceholder": "Zoek iconen",
   "searchLogos": "Zoek logo’s",
+  "searchEmojis": "Zoek emoji’s",
   "moreLogos": "Meer logo’s",
   "allLogos": "Alle logo’s, van A tot Z",
   "recent": "Recent gebruikt",
@@ -41,7 +43,14 @@
     "games": "Games",
     "learning": "Leren en onderzoek",
     "trips": "Reizen en fitness",
-    "privacy": "Privacy en beveiliging"
+    "privacy": "Privacy en beveiliging",
+    "emojiSmileys": "Smileys en emoties",
+    "emojiPeople": "Mensen en lichaam",
+    "emojiAnimals": "Dieren en natuur",
+    "emojiActivities": "Activiteiten",
+    "emojiObjects": "Voorwerpen",
+    "emojiSymbols": "Symbolen en tekens",
+    "emojiFlags": "Vlaggen"
   },
   "icons": {
     "folder": "Map",

@@ -8,8 +8,10 @@
   "applyToFolderItems": "Aplicar a todos los elementos de esta carpeta",
   "applyToTagItems": "Aplicar a todos los elementos con esta etiqueta",
   "icon": "Icono",
+  "emoji": "Emoji",
   "searchPlaceholder": "Buscar iconos",
   "searchLogos": "Buscar logos",
+  "searchEmojis": "Buscar emojis",
   "moreLogos": "Más logos",
   "allLogos": "Todos los logos, de la A a la Z",
   "recent": "Usados recientemente",
@@ -41,7 +43,14 @@
     "games": "Juegos",
     "learning": "Aprendizaje e investigación",
     "trips": "Viajes y deporte",
-    "privacy": "Privacidad y seguridad"
+    "privacy": "Privacidad y seguridad",
+    "emojiSmileys": "Caras y emociones",
+    "emojiPeople": "Personas y cuerpo",
+    "emojiAnimals": "Animales y naturaleza",
+    "emojiActivities": "Actividades",
+    "emojiObjects": "Objetos",
+    "emojiSymbols": "Símbolos y señales",
+    "emojiFlags": "Banderas"
   },
   "icons": {
     "folder": "Carpeta",

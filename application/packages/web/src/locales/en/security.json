@@ -3,7 +3,7 @@
     "tabPin": "PIN",
     "tabBiometricShort": "Lock",
     "tabPhraseShort": "Phrase",
-    "tabPhrase": "Your Phrase",
+    "tabPhrase": "Your phrase",
     "tabTwoFactor": "2FA",
     "tabTwoFactorPasskeys": "2FA / Passkeys"
   },
@@ -214,7 +214,7 @@
     "blockCapture": "Hide from screen capture",
     "blockCaptureHint": "Keeps your notes out of screenshots, recordings and screen sharing where your device allows it. Applies to this device only.",
     "perDeviceNote": "Biometric unlock opens the same notes as your PIN. It stays on this device and never syncs.",
-    "disableConfirmTitle": "Disable Biometric",
+    "disableConfirmTitle": "Disable biometric",
     "disableConfirmLabel": "Disable",
     "disableConfirmBody": "Disable biometric unlock on this device?",
     "disableConfirmBodyAppLock": "Disable biometric unlock on this device? App lock will also be turned off."
@@ -272,7 +272,7 @@
     "setPinUnlock": "Set PIN and unlock",
     "pinRequired": "PIN required",
     "deleteSubtitle": "Enter your PIN to delete this protected item.",
-    "confirmDelete": "Confirm Delete",
+    "confirmDelete": "Confirm delete",
     "usePasscodeInstead": "Use passcode instead",
     "disableTitlePasscode": "Enter passcode to disable protection",
     "verifySubtitlePasscode": "Enter your passcode to unlock this item. The unlock lasts for the timeout you set in Security.",
@@ -309,7 +309,7 @@
     "tooManyAttempts": "Too many attempts. Try again in {{seconds}}s.",
     "checking": "Checking...",
     "unlock": "Unlock",
-    "recoveryPhrase": "Recovery Phrase",
+    "recoveryPhrase": "Recovery phrase",
     "recoveryPhraseSubtitle": "Enter your recovery phrase to unlock."
   },
   "deviceLimit": {

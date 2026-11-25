@@ -1,16 +1,15 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { useTranslation } from 'react-i18next';
-import { Fingerprint, Lock, ShieldSlash } from './icons';
+import { Fingerprint, Lock, LockKeyOpen, ShieldSlash, Trash } from './icons';
 import { PinInput, type PinInputHandle } from './PinInput';
 import { SecretInput } from './PasscodeInput';
 import { hashPin, hasPin, pinCredentialStamp, pinIsPasscode, verifyPin, recordPinFailure, clearPinFailures, getPinLockoutState, stagePinHash } from './pin';
 import { secretReady, type SecretKind } from './secretKind';
 import { hasBiometricCredential, unlockWithBiometricDetailed } from './biometric';
 import { ForgotPinLink, PinRecoveryForm } from './PinRecoveryForm';
-import { useEscapeToClose } from './useEscapeToClose';
 import { signInStamp, signedOutSince } from './liveSignIn';
 import { saveCredential, type UserSettings } from './userSettings';
+import { Button, Callout, Divider, GateCard, Modal, ModalFooter, SectionEyebrow } from './ui';
 
 /**
  * Inline gate for protected notes. Renders in the editor pane when
@@ -119,19 +118,23 @@ function GateBody({
   // PIN" step ends in the unlock the user came for.
   if (recovering) {
     return (
-      <div className="max-w-sm mx-auto mt-16 space-y-4">
-        <h2 className="text-heading font-semibold tracking-tight text-center">
-          {kind === 'passcode' ? t('pinRecovery.titlePasscode') : t('pinRecovery.title')}
-        </h2>
-        <PinRecoveryForm
-          kind={kind}
-          phrase={phrase}
-          userSettings={userSettings}
-          onSettingsChange={onSettingsChange}
-          onCleared={() => setRecovering(false)}
-          onCancel={() => setRecovering(false)}
-        />
-      </div>
+      <GateCard
+        maxWidth="max-w-sm"
+        className="mt-16"
+        icon={<Lock aria-hidden="true" />}
+        title={kind === 'passcode' ? t('pinRecovery.titlePasscode') : t('pinRecovery.title')}
+      >
+        <div className="text-start">
+          <PinRecoveryForm
+            kind={kind}
+            phrase={phrase}
+            userSettings={userSettings}
+            onSettingsChange={onSettingsChange}
+            onCleared={() => setRecovering(false)}
+            onCancel={() => setRecovering(false)}
+          />
+        </div>
+      </GateCard>
     );
   }
 
@@ -242,82 +245,82 @@ function BiometricMode({
   const { busy, run } = useBiometricUnlock(setErr);
   const offersRemove = Boolean(onStartRemove && onRemoveProtection);
 
-  return (
-    <div className={`max-w-sm mx-auto ${compact ? '' : 'mt-16 '}space-y-4 text-center`}>
-      <GateHeader
-        title={removing ? t('protectedGate.disableProtection') : section ? t('protectedGate.sectionTitle') : t('protectedGate.protectedItem')}
-        subtitle={removing
-          ? t('protectedGate.disableBiometricSubtitle')
-          : section ? t('protectedGate.sectionBiometricSubtitle') : t('protectedGate.biometricSubtitle')}
-        icon={removing ? 'removeProtection' : 'biometric'}
-      />
+  const subtitle = removing
+    ? t('protectedGate.disableBiometricSubtitle')
+    : section ? t('protectedGate.sectionBiometricSubtitle') : t('protectedGate.biometricSubtitle');
+
+  const controls = (
+    <>
       <div className="flex flex-col gap-2">
         <div className="flex gap-2">
           {onCancel && !removing && (
-            <button
-              onClick={onCancel}
-              className="md:hidden flex-1 rounded-md border border-divider hover:bg-surface-1 px-4 py-2 text-body transition"
-            >
-              {t('common:actions.cancel')}
-            </button>
+            <Button action="cancel" onClick={onCancel} className="md:hidden flex-1" />
           )}
-          <button
+          <Button
+            variant={removing ? 'danger' : 'primary'}
+            icon={removing ? <ShieldSlash aria-hidden="true" /> : <Fingerprint aria-hidden="true" />}
             onClick={() => void run(done)}
             disabled={busy}
-            className={`flex-1 inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed ${
-              removing ? 'bg-red-500 text-white hover:bg-red-600' : PRIMARY_BTN_SKIN
-            }`}
+            className="flex-1"
           >
-            {removing ? <ShieldSlash /> : <Fingerprint />}
             {busy
               ? t('security:lockScreen.verifying')
               : removing
                 ? t('protectedGate.disableProtection')
                 : t('security:lockScreen.unlock')}
-          </button>
+          </Button>
         </div>
         {showPinFallback && (
-          <button
-            onClick={onUsePin}
-            className="inline-flex items-center justify-center gap-2 rounded-md border border-divider text-pn-muted hover:bg-surface-1 px-4 py-2 text-body transition"
-          >
-            <Lock />
+          <Button variant="secondary" icon={<Lock aria-hidden="true" />} onClick={onUsePin} className="w-full">
             {pinKind === 'passcode' ? t('protectedGate.usePasscodeInstead') : t('protectedGate.usePinInstead')}
-          </button>
+          </Button>
         )}
         {offersRemove && (
           <>
             {/* The two above are ways INTO the note. What follows changes the
-                note itself, so it loses the border and sits under a rule
-                rather than reading as a third way in. */}
-            <div className="border-t border-divider mt-1" />
+                note itself, so it sits under a rule rather than reading as a
+                third way in. */}
+            <Divider />
             {removing ? (
-              <button
-                onClick={() => { setErr(null); onCancelRemove?.(); }}
-                className="rounded-md px-4 py-2 text-body text-pn-muted hover:bg-surface-1 transition"
-              >
-                {t('common:actions.cancel')}
-              </button>
+              <Button action="cancel" onClick={() => { setErr(null); onCancelRemove?.(); }} className="w-full" />
             ) : (
-              <button
-                // Sets the intent AND prompts, so the common case is one press.
-                // The callback is passed explicitly because `done` still reads
-                // the old intent during this render.
+              <Button
+                variant="danger"
+                icon={<ShieldSlash aria-hidden="true" />}
                 onClick={() => { onStartRemove?.(); void run(onRemoveProtection!); }}
                 disabled={busy}
-                className="inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-body text-danger hover:bg-red-50 dark:hover:bg-red-950/30 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full"
               >
-                <ShieldSlash />
                 {t('protectedGate.disableProtection')}
-              </button>
+              </Button>
             )}
           </>
         )}
       </div>
-      {err && (
-        <p className="text-body text-danger">{err}</p>
-      )}
-    </div>
+      {err && <p className="text-body text-danger">{err}</p>}
+    </>
+  );
+
+  if (compact) {
+    return (
+      <div className="space-y-4 text-center">
+        <p className="text-body text-pn-muted leading-relaxed">{subtitle}</p>
+        {controls}
+      </div>
+    );
+  }
+
+  return (
+    <GateCard
+      maxWidth="max-w-sm"
+      className="mt-16"
+      tone={removing ? 'danger' : 'info'}
+      icon={removing ? <ShieldSlash aria-hidden="true" /> : <Fingerprint aria-hidden="true" />}
+      title={removing ? t('protectedGate.disableProtection') : section ? t('protectedGate.sectionTitle') : t('protectedGate.protectedItem')}
+      subtitle={subtitle}
+    >
+      {controls}
+    </GateCard>
   );
 }
 
@@ -417,18 +420,20 @@ function VerifyMode({
   const disabled = busy || lockout.locked;
 
   return (
-    <div className="max-w-sm mx-auto mt-16 space-y-4 text-center">
-      <GateHeader
-        title={removing
-          ? kind === 'passcode' ? t('protectedGate.disableTitlePasscode') : t('protectedGate.disableTitle')
-          : section ? t('protectedGate.sectionTitle') : t('protectedGate.protectedItem')}
-        subtitle={removing
-          ? section ? t('protectedGate.sectionDisableSubtitle') : t('protectedGate.disableSubtitle')
-          : section
-            ? kind === 'passcode' ? t('protectedGate.sectionVerifySubtitlePasscode') : t('protectedGate.sectionVerifySubtitle')
-            : kind === 'passcode' ? t('protectedGate.verifySubtitlePasscode') : t('protectedGate.verifySubtitle')}
-        icon={removing ? 'removeProtection' : 'lock'}
-      />
+    <GateCard
+      maxWidth="max-w-sm"
+      className="mt-16"
+      tone={removing ? 'danger' : 'info'}
+      icon={removing ? <ShieldSlash aria-hidden="true" /> : <Lock aria-hidden="true" />}
+      title={removing
+        ? kind === 'passcode' ? t('protectedGate.disableTitlePasscode') : t('protectedGate.disableTitle')
+        : section ? t('protectedGate.sectionTitle') : t('protectedGate.protectedItem')}
+      subtitle={removing
+        ? section ? t('protectedGate.sectionDisableSubtitle') : t('protectedGate.disableSubtitle')
+        : section
+          ? kind === 'passcode' ? t('protectedGate.sectionVerifySubtitlePasscode') : t('protectedGate.sectionVerifySubtitle')
+          : kind === 'passcode' ? t('protectedGate.verifySubtitlePasscode') : t('protectedGate.verifySubtitle')}
+    >
       <SecretInput
         kind={kind}
         ref={inputRef}
@@ -452,61 +457,53 @@ function VerifyMode({
       <div className="flex flex-col gap-2">
         <div className="flex gap-2">
           {onCancel && !removing && (
-            <button
-              onClick={onCancel}
-              className="md:hidden flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-body transition"
-            >
-              {t('common:actions.cancel')}
-            </button>
+            <Button action="cancel" onClick={onCancel} className="md:hidden flex-1" />
           )}
-          <button
+          <Button
+            variant={removing ? 'danger' : 'primary'}
+            icon={removing ? <ShieldSlash aria-hidden="true" /> : <LockKeyOpen aria-hidden="true" />}
             onClick={() => void submit(value)}
             disabled={!secretReady(kind, value) || disabled}
-            className={`flex-1 rounded-md px-3 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed ${
-              removing ? 'bg-red-500 text-white hover:bg-red-600' : PRIMARY_BTN_SKIN
-            }`}
+            className="flex-1"
           >
             {busy
               ? t('security:lockScreen.checking')
               : removing
                 ? t('protectedGate.disableProtection')
                 : t('security:lockScreen.unlock')}
-          </button>
+          </Button>
         </div>
         {showBiometric && (
-          <button
+          <Button
+            variant="secondary"
+            icon={<Fingerprint aria-hidden="true" />}
             onClick={() => void bio.run(done)}
             disabled={bio.busy}
-            className="inline-flex items-center justify-center gap-2 rounded-md border border-divider text-pn-muted hover:bg-surface-1 px-4 py-2 text-body transition disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full"
           >
-            <Fingerprint />
             {bio.busy ? t('security:lockScreen.verifying') : t('protectedGate.useBiometricInstead')}
-          </button>
+          </Button>
         )}
         {onForgotPin && !removing && <ForgotPinLink kind={kind} onClick={onForgotPin} />}
         {onStartRemove && (
           <>
-            <div className="border-t border-divider mt-1" />
+            <Divider />
             {removing ? (
-              <button
-                onClick={() => { setErr(null); onCancelRemove?.(); }}
-                className="rounded-md px-4 py-2 text-body text-pn-muted hover:bg-surface-1 transition"
-              >
-                {t('common:actions.cancel')}
-              </button>
+              <Button action="cancel" onClick={() => { setErr(null); onCancelRemove?.(); }} className="w-full" />
             ) : (
-              <button
+              <Button
+                variant="danger"
+                icon={<ShieldSlash aria-hidden="true" />}
                 onClick={() => { setErr(null); onStartRemove(); }}
-                className="inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-body text-danger hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+                className="w-full"
               >
-                <ShieldSlash />
                 {t('protectedGate.disableProtection')}
-              </button>
+              </Button>
             )}
           </>
         )}
       </div>
-    </div>
+    </GateCard>
   );
 }
 
@@ -519,6 +516,7 @@ function BootstrapMode({
   onCancel,
   userSettings,
   onSettingsChange,
+  compact = false,
 }: {
   onUnlock: () => void;
   onCancel?: () => void;
@@ -526,6 +524,7 @@ function BootstrapMode({
   /** `base` is the copy this surface was rendered with; the parent applies
    *  only the credential keys that differ between it and `next`. */
   onSettingsChange: (next: UserSettings, base: UserSettings) => void;
+  compact?: boolean;
 }) {
   const { t } = useTranslation('security');
   const section = useContext(SectionWordsContext);
@@ -574,19 +573,16 @@ function BootstrapMode({
     }
   }
 
-  return (
-    <div className="max-w-sm mx-auto mt-12 space-y-4">
-      <GateHeader
-        title={t('protectedGate.bootstrapTitle')}
-        subtitle={section ? t('protectedGate.sectionBootstrapSubtitle') : t('protectedGate.bootstrapSubtitle')}
-      />
-      <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 text-warning text-small leading-relaxed px-3 py-2">
+  const subtitle = section ? t('protectedGate.sectionBootstrapSubtitle') : t('protectedGate.bootstrapSubtitle');
+  const fields = (
+    <div className="space-y-4 text-start">
+      <Callout tone="warning">
         {t('protectedGate.bootstrapWarning')}
-      </div>
+      </Callout>
       <div className="space-y-2">
-        <div className="text-small text-pn-muted uppercase tracking-wide text-center">
+        <SectionEyebrow className="justify-center">
           {t('security:pinTab.newPin')}
-        </div>
+        </SectionEyebrow>
         <PinInput
           value={pin}
           onChange={(v) => {
@@ -599,9 +595,9 @@ function BootstrapMode({
         />
       </div>
       <div className="space-y-2">
-        <div className="text-small text-pn-muted uppercase tracking-wide text-center">
+        <SectionEyebrow className="justify-center">
           {t('security:pinTab.confirmPin')}
-        </div>
+        </SectionEyebrow>
         <PinInput
           ref={confirmRef}
           value={confirm}
@@ -619,23 +615,41 @@ function BootstrapMode({
         </p>
       )}
       <div className="flex gap-2">
-        {onCancel && (
-          <button
-            onClick={onCancel}
-            className="md:hidden flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-body transition"
-          >
-            {t('common:actions.cancel')}
-          </button>
+        {onCancel && !compact && (
+          <Button action="cancel" onClick={onCancel} className="md:hidden flex-1" />
         )}
-        <button
+        <Button
+          variant="primary"
+          icon={<Lock aria-hidden="true" />}
           onClick={() => void submit(pin, confirm)}
           disabled={busy || pin.length !== 4 || confirm.length !== 4}
-          className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-3 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed`}
+          className="flex-1"
         >
           {busy ? t('common:state.saving') : t('protectedGate.setPinUnlock')}
-        </button>
+        </Button>
       </div>
     </div>
+  );
+
+  if (compact) {
+    return (
+      <div className="space-y-4">
+        <p className="text-body text-pn-muted leading-relaxed">{subtitle}</p>
+        {fields}
+      </div>
+    );
+  }
+
+  return (
+    <GateCard
+      maxWidth="max-w-sm"
+      className="mt-12"
+      icon={<Lock aria-hidden="true" />}
+      title={t('protectedGate.bootstrapTitle')}
+      subtitle={subtitle}
+    >
+      {fields}
+    </GateCard>
   );
 }
 
@@ -666,37 +680,42 @@ export function PinGateModal({
   const kind: SecretKind = pinIsPasscode() ? 'passcode' : 'pin';
   const bioEnrolled = hasBiometricCredential();
   const [usePin, setUsePin] = useState(false);
-  useEscapeToClose(onCancel);
+
+  const modalTitle = bioEnrolled && !usePin
+    ? t('protectedGate.protectedItem')
+    : pinIsSet
+      ? purpose === 'delete'
+        ? kind === 'passcode' ? t('protectedGate.passcodeRequired') : t('protectedGate.pinRequired')
+        : t('protectedGate.protectedItem')
+      : t('protectedGate.bootstrapTitle');
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70"
-      onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
+    <Modal
+      onClose={onCancel}
+      layer="z-[60]"
+      icon={<Lock aria-hidden="true" />}
+      title={modalTitle}
+      className="max-w-sm p-6 space-y-4"
     >
-      <div className="bg-surface-2 border border-divider rounded-lg text-pn w-full max-w-sm mx-4 p-6 space-y-4">
-        {bioEnrolled && !usePin ? (
-          <BiometricMode
-            done={onUnlock}
-            showPinFallback={pinIsSet}
-            pinKind={kind}
-            onUsePin={() => setUsePin(true)}
-            compact
-          />
-        ) : pinIsSet ? (
-          <ModalVerifyMode kind={kind} onUnlock={onUnlock} showBiometric={bioEnrolled} purpose={purpose} />
-        ) : (
-          /* No PIN and no fingerprint: set a PIN first, as the read gate on
-             the same note asks, and the action runs once it is stored. */
-          <BootstrapMode onUnlock={onUnlock} userSettings={userSettings} onSettingsChange={onSettingsChange} />
-        )}
-        <button
-          onClick={onCancel}
-          className="w-full rounded-md border border-divider text-pn-muted hover:bg-surface-1 px-3 py-2 text-body font-medium transition"
-        >
-          {t('common:actions.cancel')}
-        </button>
-      </div>
-    </div>
+      {bioEnrolled && !usePin ? (
+        <BiometricMode
+          done={onUnlock}
+          showPinFallback={pinIsSet}
+          pinKind={kind}
+          onUsePin={() => setUsePin(true)}
+          compact
+        />
+      ) : pinIsSet ? (
+        <ModalVerifyMode kind={kind} onUnlock={onUnlock} showBiometric={bioEnrolled} purpose={purpose} />
+      ) : (
+        /* No PIN and no fingerprint: set a PIN first, as the read gate on
+           the same note asks, and the action runs once it is stored. */
+        <BootstrapMode onUnlock={onUnlock} userSettings={userSettings} onSettingsChange={onSettingsChange} compact />
+      )}
+      <ModalFooter>
+        <Button action="cancel" onClick={onCancel} />
+      </ModalFooter>
+    </Modal>
   );
 }
 
@@ -773,20 +792,13 @@ function ModalVerifyMode({
   }
 
   const disabled = busy || lockout.locked;
+  const subtitle = purpose === 'delete'
+    ? kind === 'passcode' ? t('protectedGate.deleteSubtitlePasscode') : t('protectedGate.deleteSubtitle')
+    : kind === 'passcode' ? t('protectedGate.verifySubtitlePasscode') : t('protectedGate.verifySubtitle');
 
   return (
     <div className="space-y-4 text-center">
-      {purpose === 'delete' ? (
-        <GateHeader
-          title={kind === 'passcode' ? t('protectedGate.passcodeRequired') : t('protectedGate.pinRequired')}
-          subtitle={kind === 'passcode' ? t('protectedGate.deleteSubtitlePasscode') : t('protectedGate.deleteSubtitle')}
-        />
-      ) : (
-        <GateHeader
-          title={t('protectedGate.protectedItem')}
-          subtitle={kind === 'passcode' ? t('protectedGate.verifySubtitlePasscode') : t('protectedGate.verifySubtitle')}
-        />
-      )}
+      <p className="text-body text-pn-muted leading-relaxed">{subtitle}</p>
       <SecretInput
         kind={kind}
         ref={inputRef}
@@ -808,64 +820,29 @@ function ModalVerifyMode({
         </p>
       )}
       <div className="flex flex-col gap-2">
-        <button
+        <Button
+          variant={purpose === 'delete' ? 'danger' : 'primary'}
+          icon={purpose === 'delete' ? <Trash aria-hidden="true" /> : <LockKeyOpen aria-hidden="true" />}
           onClick={() => void submit(value)}
           disabled={!secretReady(kind, value) || disabled}
-          className={`w-full rounded-md px-3 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed ${
-            purpose === 'delete' ? 'bg-red-500 text-white hover:bg-red-600' : PRIMARY_BTN_SKIN
-          }`}
+          className="w-full"
         >
           {busy
             ? t('security:lockScreen.checking')
             : purpose === 'delete' ? t('protectedGate.confirmDelete') : t('security:lockScreen.unlock')}
-        </button>
+        </Button>
         {showBiometric && (
-          <button
+          <Button
+            variant="secondary"
+            icon={<Fingerprint aria-hidden="true" />}
             onClick={() => void bio.run(onUnlock)}
             disabled={bio.busy}
-            className="inline-flex items-center justify-center gap-2 rounded-md border border-divider text-pn-muted hover:bg-surface-1 px-3 py-2 text-body transition disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full"
           >
-            <Fingerprint />
             {bio.busy ? t('security:lockScreen.verifying') : t('protectedGate.useBiometricInstead')}
-          </button>
+          </Button>
         )}
       </div>
     </div>
-  );
-}
-
-/* ────────────────────────────────────────────────────────────────
- * Shared header
- * ──────────────────────────────────────────────────────────────── */
-
-function GateHeader({
-  title,
-  subtitle,
-  icon = 'lock',
-}: {
-  title: string;
-  subtitle: string;
-  icon?: 'lock' | 'biometric' | 'removeProtection';
-}) {
-  return (
-    <>
-      <div className="flex justify-center">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-accent/10 text-accent-strong">
-          {icon === 'biometric' ? (
-            <Fingerprint size={28} weight="duotone" aria-hidden="true" />
-          ) : icon === 'removeProtection' ? (
-            <ShieldSlash size={28} weight="duotone" aria-hidden="true" />
-          ) : (
-            <Lock size={28} weight="duotone" aria-hidden="true" />
-          )}
-        </div>
-      </div>
-      <div className="text-center">
-        <h2 className="text-heading font-semibold tracking-tight">{title}</h2>
-        <p className="text-body text-pn-muted mt-1 leading-relaxed">
-          {subtitle}
-        </p>
-      </div>
-    </>
   );
 }

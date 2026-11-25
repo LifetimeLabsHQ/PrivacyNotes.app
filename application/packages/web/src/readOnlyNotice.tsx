@@ -26,7 +26,7 @@ function StateHint({ icon, label, action, onAction, tip, className = '' }: {
     </button>
   );
   return (
-    <div className={`flex items-center gap-1.5 text-compact text-pn-muted ${className}`}>
+    <div className={`flex items-center gap-1.5 select-none text-compact text-pn-muted ${className}`}>
       {icon}
       <span className="truncate">{label}</span>
       <span aria-hidden="true">·</span>

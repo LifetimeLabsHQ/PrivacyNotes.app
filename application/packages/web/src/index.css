@@ -19,6 +19,55 @@
    chrome styled with utilities in JSX must NOT go in this layer. */
 @layer editor;
 
+/* Shared per-checkbox reminder pill (editor node view + TasksList rows). */
+.pn-task-reminder-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.12em 0.55em;
+  border-radius: 999px;
+  border: 1px solid rgb(var(--pn-accent) / 0.28);
+  background: rgb(var(--pn-accent) / 0.1);
+  color: rgb(var(--pn-accent));
+  font-size: 0.8em;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+.pn-task-reminder-chip:hover:not(:disabled) {
+  border-color: rgb(var(--pn-accent) / 0.6);
+  background: rgb(var(--pn-accent) / 0.16);
+}
+.pn-task-reminder-chip:disabled {
+  cursor: default;
+}
+.pn-task-reminder-chip.pn-task-reminder-overdue {
+  border-color: rgb(var(--pn-danger) / 0.35);
+  background: rgb(var(--pn-danger) / 0.1);
+  color: rgb(var(--pn-danger));
+}
+.pn-task-reminder-chip.pn-task-reminder-overdue:hover:not(:disabled) {
+  border-color: rgb(var(--pn-danger) / 0.65);
+}
+.pn-task-reminder-chip.pn-task-reminder-done {
+  border-color: rgb(var(--pn-divider));
+  background: rgb(var(--pn-surface-1));
+  color: rgb(var(--pn-text-muted));
+  text-decoration: line-through;
+  opacity: 0.72;
+}
+.pn-task-reminder-ico {
+  width: 0.95em;
+  height: 0.95em;
+  flex-shrink: 0;
+}
+.pn-task-reminder-dot {
+  opacity: 0.6;
+}
+
 @theme {
   --color-accent: rgb(var(--pn-accent));
   --color-accent-hover: rgb(var(--pn-accent-hover));
@@ -151,6 +200,14 @@
   still wins.
 */
 @layer base {
+  input,
+  textarea {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
+
+@layer base {
   :where(svg[data-pn-icon]:not([width])) {
     width: var(--icon-size);
     height: var(--icon-size);
@@ -270,6 +327,32 @@ select.pn-select {
 :root[data-note-font-serif] .ProseMirror [style*='ui-serif'] { font-family: var(--pn-font-serif) !important; }
 :root[data-note-font-mono] .ProseMirror [style*='ui-monospace'] { font-family: var(--pn-font-mono) !important; }
 
+/* Emoji glyphs drawn by PathGlyph, plus the Windows-only country flag webfont
+   fallback (looks/flagFont.ts). Only Windows sets data-pn-flag-font="on";
+   its @font-face narrows unicode-range to flag code points so regular text
+   keeps its own font. Spec: docs/internal/specs/folder-tag-icons.md (section 3.8) */
+.pn-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+  font-style: normal;
+  font-weight: 400;
+  user-select: none;
+  font-family: 'PN Country Flags', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}
+:root[data-pn-flag-font='on'] {
+  --font-sans: 'PN Country Flags', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-mono: 'PN Country Flags', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+:root[data-pn-flag-font='on'][data-note-font='serif'] .ProseMirror { font-family: 'PN Country Flags', ui-serif, Georgia, Cambria, serif; }
+:root[data-pn-flag-font='on'][data-note-font='mono'] .ProseMirror { font-family: 'PN Country Flags', ui-monospace, SFMono-Regular, Menlo, monospace; }
+:root[data-pn-flag-font='on'][data-note-font-custom] .ProseMirror { font-family: 'PN Country Flags', var(--pn-note-font-custom); }
+:root[data-pn-flag-font='on'][data-note-font-sans] .ProseMirror [style*='ui-sans-serif'] { font-family: 'PN Country Flags', var(--pn-font-sans) !important; }
+:root[data-pn-flag-font='on'][data-note-font-serif] .ProseMirror [style*='ui-serif'] { font-family: 'PN Country Flags', var(--pn-font-serif) !important; }
+:root[data-pn-flag-font='on'][data-note-font-mono] .ProseMirror [style*='ui-monospace'] { font-family: 'PN Country Flags', var(--pn-font-mono) !important; }
+
 /* ------------------------------------------------------------------
    Nested numbers (GitHub #689). On 'outline' a numbered list inside a
    numbered list counts the whole path, 1.1 and 1.1.1. The browser's own
@@ -379,6 +462,21 @@ select.pn-select {
   max-width: calc(2 * var(--pn-content-max));
 }
 
+/* Full-screen reading/presenting mode (GitHub #911). Multiplies the note's
+   own type scale without touching :root or app zoom, and widens the reading
+   column smoothly so large text stays comfortable to scan. */
+.pn-fullscreen-note {
+  --pn-text-scale: calc(var(--pn-text-step) * var(--pn-system-text) * var(--pn-fs-scale, 1.5));
+  --pn-editor-base: calc(18px * var(--pn-text-scale));
+  --pn-editor-body: calc(15px * var(--pn-text-scale));
+  --pn-content-max: var(--pn-fs-content-max, 70rem);
+}
+.pn-fullscreen-title {
+  font-size: calc(var(--pn-editor-body) * 2.1);
+  line-height: 1.2;
+  margin-bottom: 0.4em;
+}
+
 @layer editor {
   /* A colored note takes the color on the whole pane: the title bar, the tag
      row, the toolbar and the body. The tint is translucent, so it is laid on
@@ -463,7 +561,12 @@ select.pn-select {
   }
 
   .ProseMirror {
-    /* Placeholder rendering for TipTap's Placeholder extension */
+    /* Placeholder rendering for TipTap's Placeholder extension:
+       - Unfocused empty note keeps its calm document placeholder on line 1.
+       - Focused empty top-level paragraph shows "Press / to insert blocks"
+         (unless a custom document placeholder such as an event's is active on
+         the untouched first line, or the editor is in read-only/preview mode).
+       Spec: docs/internal/specs/slash-menu.md (section 3) */
     & :is(p, pn-p).is-editor-empty:first-child::before {
       content: attr(data-placeholder);
       float: inline-start;
@@ -471,8 +574,34 @@ select.pn-select {
       pointer-events: none;
       height: 0;
     }
+    &.ProseMirror-focused :is(p, pn-p).is-empty::before {
+      content: var(--pn-slash-ph, attr(data-placeholder));
+      float: inline-start;
+      color: rgb(var(--pn-text-muted));
+      pointer-events: none;
+      height: 0;
+    }
+    &[data-custom-placeholder].ProseMirror-focused :is(p, pn-p).is-editor-empty:first-child::before {
+      content: attr(data-placeholder);
+    }
+    & .pn-slash-active {
+      background-color: rgb(var(--pn-accent) / 0.12);
+      border-radius: 0.25rem;
+      padding-inline: 0.125rem;
+    }
+    & .pn-slash-hint {
+      color: rgb(var(--pn-text-muted));
+      pointer-events: none;
+      user-select: none;
+      padding-inline-start: 0.25rem;
+    }
     position: relative;
     min-height: 60vh;
+    /* Note prose stays selectable inside the select-none editor column, so
+       browser-native "Select all" on a read-only note (contenteditable=false)
+       lands inside the body instead of sweeping up chrome (#901). */
+    user-select: text;
+    -webkit-user-select: text;
     /* Uniform breathing room between the sticky toolbar and the first
        block, whatever its type. Block top-margins are zeroed on the
        first child (see the first-child rule in the rhythm block), so
@@ -632,6 +761,20 @@ select.pn-select {
          ~3em crater above every table. The wrapper owns the spacing; the table
          itself gets none. */
       margin: 0;
+    }
+    /* On phones, 16px editable text plus the sort-arrow gutter leaves fixed
+       equal columns breaking words once a table has more than a few columns.
+       Auto layout lets each column obey td/th min-width (80px) and fit its
+       header text while still honoring <col> percentages as targets, and
+       .tableWrapper scrolls wider tables sideways. Cap non-single-column cell
+       blocks so an unbroken URL cannot push a column wider than the screen. */
+    @media (max-width: 640px) {
+      & table.pn-table {
+        table-layout: auto;
+      }
+      & table.pn-table :is(td, th):not(:only-child) > * {
+        max-width: 70vw;
+      }
     }
     /* The border a drag would move: a line along the cell's end edge, drawn
        in every cell of the column (widget decorations from
@@ -1015,6 +1158,12 @@ select.pn-select {
          inherit the pre's monospace and the editor's tall line height. */
       font-family: var(--font-sans);
       line-height: 1.5;
+    }
+    & .pn-codeblock-head,
+    & .pn-codeblock > .pn-codeblock-lang,
+    & .pn-codeblock-fold {
+      user-select: none;
+      -webkit-user-select: none;
     }
     & .pn-codeblock-head {
       right: 0.5rem; /* rtl-ok: the pre is an LTR island */
@@ -1416,6 +1565,94 @@ select.pn-select {
     }
     &[contenteditable='false'] ul[data-type='taskList'] li > .pn-task-grip {
       display: none;
+    }
+    /* Per-checkbox reminder bell button beside the drag grip. Shown on hover
+       (or faintly on touch) only when the task does not already show a reminder pill. */
+    & ul[data-type='taskList'] li > .pn-task-remind-btn {
+      position: relative;
+      flex-shrink: 0;
+      height: calc(var(--pn-line-height) * 1em);
+      width: 1.5em;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 0.375rem;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+      user-select: none;
+      color: rgb(var(--pn-text-muted));
+      opacity: 0;
+      transition: opacity 0.12s ease, color 0.12s ease, background-color 0.12s ease;
+    }
+    /* Instant CSS tooltip rendered via ::after so it adds zero DOM text inside <li>. */
+    & ul[data-type='taskList'] li > .pn-task-remind-btn::after {
+      content: attr(data-pn-tip);
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      inset-inline-end: 0;
+      z-index: 50;
+      pointer-events: none;
+      user-select: none;
+      white-space: nowrap;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: var(--fs-small);
+      line-height: 1rem;
+      font-weight: 400;
+      background: #171717; /* theme-ok: dark tooltip pill */
+      border: 1px solid #262626; /* theme-ok: dark tooltip pill */
+      color: #f5f5f5; /* theme-ok: dark tooltip pill */
+      opacity: 0;
+      display: none;
+    }
+    @media (hover: hover) {
+      & ul[data-type='taskList'] li > .pn-task-remind-btn:hover::after {
+        display: block;
+        opacity: 1;
+      }
+      & ul[data-type='taskList'] li.pn-task-dragging > .pn-task-remind-btn::after {
+        display: none;
+      }
+    }
+    :root.dark & ul[data-type='taskList'] li > .pn-task-remind-btn::after {
+      background: #262626; /* theme-ok: dark tooltip pill */
+      border-color: #404040; /* theme-ok: dark tooltip pill */
+    }
+    & ul[data-type='taskList'] li > .pn-task-remind-btn svg {
+      width: 0.92em;
+      height: 0.92em;
+    }
+    & ul[data-type='taskList'] li:hover:not(:has(li:hover)) > .pn-task-remind-btn,
+    & ul[data-type='taskList'] li > .pn-task-remind-btn:focus-visible {
+      opacity: 1;
+    }
+    & ul[data-type='taskList'] li > .pn-task-remind-btn:hover {
+      color: rgb(var(--pn-accent));
+      background: rgb(var(--pn-accent) / 0.1);
+    }
+    @media (hover: none) {
+      & ul[data-type='taskList'] li > .pn-task-remind-btn {
+        opacity: 0.45;
+      }
+    }
+    & ul[data-type='taskList'] li[data-has-reminder='true'] > .pn-task-remind-btn,
+    &[contenteditable='false'] ul[data-type='taskList'] li > .pn-task-remind-btn {
+      display: none;
+    }
+    /* Inline reminder pill rendered by TaskReminderNode (:remind[...]). */
+    & .pn-task-reminder-wrap {
+      display: inline-flex;
+      vertical-align: baseline;
+      margin-inline-start: 0.25em;
+    }
+    & ul[data-type='taskList'] li[data-checked='true'] > div > p .pn-task-reminder-chip {
+      border-color: rgb(var(--pn-divider));
+      background: rgb(var(--pn-surface-1));
+      color: rgb(var(--pn-text-muted));
+      text-decoration: line-through;
+      opacity: 0.72;
     }
     /* A nested checklist reaches under its parent's grip (the grip's width
        plus the row's gap), so every grip of a tree sits in one column at the
@@ -2530,6 +2767,10 @@ select.pn-select {
     border: 1px solid rgb(var(--pn-divider));
     user-select: none;
     animation: pn-toolbar-in 0.1s ease-out;
+    @media (max-width: 640px) {
+      max-width: 100%;
+      overflow-x: auto;
+    }
   }
 }
 
@@ -2575,6 +2816,285 @@ select.pn-select {
     height: 16px;
     background: rgb(var(--pn-divider));
     margin: 0 2px;
+  }
+}
+
+/* Side-by-side columns (ColumnsBlock.tsx, ColumnsControls.tsx, #647).
+   Borderless by default; optional divider, boxes, or frame borders carry
+   `data-border-style` and `--pn-col-*` tokens. Dashed guides and drag
+   handles show only while the caret sits inside the block. On narrow screens
+   they stack cleanly into one column. */
+@layer editor {
+  .pn-columns {
+    .ProseMirror & {
+      position: relative;
+      margin: 0.75em 0;
+      container: pn-columns / inline-size;
+    }
+    .ProseMirror & > .pn-columns-content > div {
+      display: grid;
+      grid-template-columns: var(--pn-cols-template, repeat(2, minmax(0, 1fr)));
+      gap: var(--pn-cols-gap, 1.25rem);
+      align-items: start;
+    }
+    .ProseMirror &[data-border-style] > .pn-columns-content > div {
+      align-items: stretch;
+    }
+    .ProseMirror &[data-border-style='divider'] .pn-columns-col {
+      position: relative;
+    }
+    .ProseMirror &[data-border-style='divider'] .pn-columns-col + .pn-columns-col::before {
+      content: '';
+      position: absolute;
+      top: 2px;
+      bottom: 2px;
+      inset-inline-start: calc(-0.625rem - var(--pn-col-bw, 1px) / 2);
+      border-inline-start: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgb(var(--pn-text) / 0.24));
+      pointer-events: none;
+    }
+    .ProseMirror &[data-border-style='boxes'] .pn-columns-col {
+      padding: 10px 12px;
+      border-radius: 7px;
+      border: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgb(var(--pn-text) / 0.24));
+      background: var(--pn-col-bg, transparent);
+    }
+    .ProseMirror &[data-border-style='frame'] > .pn-columns-content > div {
+      border: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgb(var(--pn-text) / 0.24));
+      border-radius: 7px;
+      overflow: hidden;
+      background: var(--pn-col-bg, transparent);
+    }
+    .ProseMirror &[data-border-style='frame'] .pn-columns-col {
+      padding: 10px 12px;
+      border-radius: 0;
+    }
+    .ProseMirror &[data-border-style='frame'] .pn-columns-col + .pn-columns-col {
+      border-inline-start: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgb(var(--pn-text) / 0.24));
+    }
+    /* Keep chosen divider/frame lines unobscured behind the drag pill until hovered. */
+    .ProseMirror &[data-border-style='divider'] .pn-columns-handle::before,
+    .ProseMirror &[data-border-style='frame'] .pn-columns-handle::before {
+      background: transparent;
+    }
+    @container pn-columns (max-width: 30rem) {
+      .ProseMirror & > .pn-columns-content > div {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .ProseMirror & .pn-columns-handle {
+        display: none;
+      }
+      .ProseMirror &[data-border-style='divider'] .pn-columns-col + .pn-columns-col::before {
+        top: calc(-0.625rem - var(--pn-col-bw, 1px) / 2);
+        bottom: auto;
+        inset-inline: 2px;
+        border-inline-start: 0;
+        border-top: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgb(var(--pn-text) / 0.24));
+      }
+      .ProseMirror &[data-border-style='frame'] .pn-columns-col + .pn-columns-col {
+        border-inline-start: 0;
+        border-top: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgb(var(--pn-text) / 0.24));
+      }
+    }
+  }
+  .pn-columns-col {
+    .ProseMirror & {
+      min-width: 0;
+      padding: 4px 8px;
+      border-radius: 5px;
+    }
+    .ProseMirror & > :first-child {
+      margin-top: 0;
+    }
+    .ProseMirror & > :last-child {
+      margin-bottom: 0;
+    }
+    .ProseMirror .pn-columns-active:not([data-border-style='boxes']):not([data-border-style='frame']) & {
+      /* Inset outline so it is never clipped by .ProseMirror's overflow-x: auto. */
+      outline: 1px dashed rgb(var(--pn-text) / 0.22);
+      outline-offset: -1px;
+    }
+    .ProseMirror .pn-columns-active &.pn-columns-col-active {
+      outline: 1.5px solid rgb(var(--pn-accent) / 0.65);
+      outline-offset: -1.5px;
+    }
+    .ProseMirror .pn-columns-active[data-border-style='boxes'] &.pn-columns-col-active,
+    .ProseMirror .pn-columns-active[data-border-style='frame'] &.pn-columns-col-active {
+      outline-offset: -3px;
+    }
+  }
+  .pn-columns-handle {
+    .ProseMirror & {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 14px;
+      transform: translateX(-50%);
+      cursor: col-resize;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      touch-action: none;
+    }
+    .ProseMirror &:dir(rtl) {
+      transform: translateX(50%);
+    }
+    .ProseMirror .pn-columns-active & {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .ProseMirror &::before {
+      content: '';
+      width: 2px;
+      height: 100%;
+      border-radius: 2px;
+      background: rgb(var(--pn-divider));
+      transition: background 0.12s ease;
+    }
+    .ProseMirror &::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 20px;
+      border-radius: 4px;
+      background: rgb(var(--pn-surface-1));
+      border: 1.5px solid rgb(var(--pn-accent) / 0.7);
+    }
+    .ProseMirror &:hover::before,
+    .ProseMirror &.pn-columns-dragging::before {
+      background: rgb(var(--pn-accent));
+    }
+    .ProseMirror &:hover::after,
+    .ProseMirror &.pn-columns-dragging::after {
+      border-color: rgb(var(--pn-accent));
+    }
+  }
+  .pn-columns-drag-pill {
+    position: absolute;
+    top: -26px;
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: rgb(var(--pn-surface-1));
+    color: rgb(var(--pn-text));
+    border: 1px solid rgb(var(--pn-divider));
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.18);
+    font-size: var(--fs-meta);
+    font-weight: 600;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 15;
+  }
+  .pn-columns-drag-pill:dir(rtl) {
+    transform: translateX(50%);
+  }
+  .pn-columns-toolbar {
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.14);
+    flex-wrap: wrap;
+    max-width: calc(100% - 16px);
+  }
+  .pn-columns-grip {
+    cursor: grab;
+    & svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+  }
+  .pn-columns-preset-btn {
+    width: auto;
+    padding-inline: 7px;
+    gap: 5px;
+    font-size: var(--fs-meta);
+    font-weight: 500;
+  }
+  .pn-columns-preset-active {
+    background: rgb(var(--pn-accent) / 0.14);
+    color: rgb(var(--pn-accent));
+  }
+  .pn-columns-border-btn {
+    position: relative;
+  }
+  .pn-columns-border-dot {
+    position: absolute;
+    inset-inline-end: 3px;
+    bottom: 3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    border: 1px solid rgb(var(--pn-surface-1));
+    pointer-events: none;
+  }
+  .pn-columns-glyph {
+    display: inline-grid;
+    gap: 1.5px;
+    width: 17px;
+    height: 11px;
+    & i {
+      display: block;
+      border-radius: 1.5px;
+      background: currentColor;
+      opacity: 0.8;
+    }
+  }
+  .pn-columns-toolbar .pn-table-toolbar-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    &:hover {
+      background: transparent;
+      color: rgb(var(--pn-text-muted));
+    }
+  }
+  /* Burn viewer & non-editor HTML render of columns */
+  .pn-columns-col > :first-child {
+    margin-top: 0;
+  }
+  .pn-columns-col > :last-child {
+    margin-bottom: 0;
+  }
+  .pn-columns[data-border-style='divider'] > .pn-columns-col {
+    position: relative;
+  }
+  .pn-columns[data-border-style='divider'] > .pn-columns-col + .pn-columns-col::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    inset-inline-start: calc(-0.625rem - var(--pn-col-bw, 1px) / 2);
+    border-inline-start: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgb(var(--pn-text) / 0.24));
+  }
+  .pn-columns[data-border-style='boxes'] > .pn-columns-col {
+    padding: 0.65rem 0.85rem;
+    border-radius: 7px;
+    border: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgb(var(--pn-text) / 0.24));
+    background: var(--pn-col-bg, transparent);
+  }
+  .pn-columns[data-border-style='frame'] > .pn-columns-col {
+    padding: 0.65rem 0.85rem;
+  }
+  .pn-columns[data-border-style='frame'] > .pn-columns-col + .pn-columns-col {
+    border-inline-start: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgb(var(--pn-text) / 0.24));
+  }
+  @media (max-width: 560px) {
+    .pn-columns {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+    .pn-columns[data-border-style='divider'] > .pn-columns-col + .pn-columns-col::before {
+      top: calc(-0.625rem - var(--pn-col-bw, 1px) / 2);
+      bottom: auto;
+      inset-inline: 2px;
+      border-inline-start: 0;
+      border-top: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgb(var(--pn-text) / 0.24));
+    }
+    .pn-columns[data-border-style='frame'] > .pn-columns-col + .pn-columns-col {
+      border-inline-start: 0;
+      border-top: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgb(var(--pn-text) / 0.24));
+    }
   }
 }
 
@@ -3125,7 +3645,7 @@ select.pn-select {
     --pn-surface-1: 228 220 202; /* #E4DCCA - list */
     --pn-surface-2: 240 235 222; /* #F0EBDE - editor */
     --pn-divider: 203 193 168; /* #CBC1A8 */
-    --pn-track: 228 220 202; /* #E4DCCA - recessed well */
+    --pn-track: 220 211 191; /* #DCD3BF - recessed well */
     --pn-text-soft: 87 75 56; /* #574B38 - secondary text */
     --pn-text: 45 36 22; /* #2D2416 */
     --pn-text-muted: 100 89 68; /* #645944 */
@@ -3664,6 +4184,20 @@ select.pn-select {
 [data-lazy-tiles='on'] .pn-lazy-card {
   content-visibility: auto;
   contain-intrinsic-block-size: auto 180px;
+}
+/* WebKitGTK composites backdrop-filter on the CPU when DMA-BUF is off
+   (NVIDIA, or any software fallback), repainting sticky blur bars on every
+   keystroke and scroll (#806). Keep those bars solid in the Linux desktop app. */
+[data-no-blur='on'] [class*='backdrop-blur'] {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+[data-no-blur='on'] .pn-tagrow,
+[data-no-blur='on'] .pn-notice-row {
+  background-color: rgb(var(--pn-surface-1));
+}
+[data-no-blur='on'] .pn-editor-toolbar:not(.pn-toolbar-bottom) {
+  background-color: rgb(var(--pn-surface-2));
 }
 /* Windowed items must measure their contents, not an intrinsic-size estimate. */
 .pn-lazy-row[data-window-item],
@@ -4488,7 +5022,8 @@ select.pn-select {
    block near the top of this file) so the two can never disagree. Scoped to
    is-editor-empty, which means the WHOLE document is empty: a blank paragraph
    mid-note keeps its pilcrow, since seeing those is the point of the toggle. */
-.tiptap :is(p, pn-p).is-editor-empty:first-child > .tiptap-invisible-character {
+.tiptap :is(p, pn-p).is-editor-empty:first-child > .tiptap-invisible-character,
+.tiptap.ProseMirror-focused :is(p, pn-p).is-empty > .tiptap-invisible-character {
   display: none;
 }
 

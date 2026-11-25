@@ -28,8 +28,32 @@ function foldable(node: PMNode): boolean {
   return false;
 }
 
-// The toolbar asks on every transaction, so a doc it already counted is free.
+// The toolbar asks on every transaction, so a doc or unchanged child block it
+// already counted is free.
+const ZERO_SUMMARY: FoldSummary = { foldable: 0, open: 0 };
 const blockSummaries = new WeakMap<PMNode, FoldSummary>();
+
+function nodeSummary(node: PMNode): FoldSummary {
+  if (node.isTextblock && node.type.name !== 'codeBlock') return ZERO_SUMMARY;
+  const known = blockSummaries.get(node);
+  if (known) return known;
+  let count = 0;
+  let open = 0;
+  if (foldable(node)) {
+    count++;
+    if (!node.attrs['folded']) open++;
+  }
+  if (!node.isTextblock) {
+    node.forEach((child) => {
+      const sub = nodeSummary(child);
+      count += sub.foldable;
+      open += sub.open;
+    });
+  }
+  const summary = count === 0 ? ZERO_SUMMARY : { foldable: count, open };
+  blockSummaries.set(node, summary);
+  return summary;
+}
 
 /** The callouts and code blocks of a doc. */
 function blockSummary(doc: PMNode): FoldSummary {
@@ -37,15 +61,12 @@ function blockSummary(doc: PMNode): FoldSummary {
   if (known) return known;
   let count = 0;
   let open = 0;
-  doc.descendants((node) => {
-    if (foldable(node)) {
-      count++;
-      if (!node.attrs['folded']) open++;
-    }
-    // A textblock holds only inline content, so nothing below it can fold.
-    return !node.isTextblock;
+  doc.forEach((child) => {
+    const sub = nodeSummary(child);
+    count += sub.foldable;
+    open += sub.open;
   });
-  const summary = { foldable: count, open };
+  const summary = count === 0 ? ZERO_SUMMARY : { foldable: count, open };
   blockSummaries.set(doc, summary);
   return summary;
 }

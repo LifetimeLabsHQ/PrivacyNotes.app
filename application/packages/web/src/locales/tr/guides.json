@@ -443,7 +443,7 @@
       "app": "Notion",
       "title": "Notion çalışma alanınızı dışa aktarın",
       "metaTitle": "Notion çalışma alanı nasıl dışa aktarılır - PrivacyNotes",
-      "lead": "Notion çalışma alanınızı Markdown & CSV zip dosyası olarak dışa aktarın; PrivacyNotes, Notion'ın 32 karakterlik kimliklerini kaldırır, alt sayfaları klasör olarak yeniden kurar ve sayfa bağlantılarını not bağlantılarına dönüştürür.",
+      "lead": "Notion çalışma alanınızı HTML veya Markdown & CSV zip dosyası olarak dışa aktarın; PrivacyNotes, Notion'ın 32 karakterlik kimliklerini kaldırır, alt sayfaları klasör olarak yeniden kurar, sütunları ve renkleri korur ve sayfa bağlantılarını not bağlantılarına dönüştürür.",
       "sections": [
         {
           "img": {
@@ -470,23 +470,23 @@
             "width": 1576,
             "height": 600
           },
-          "h": "Klasörler açıkken Markdown & CSV seçin",
+          "h": "Klasörler açıkken HTML (önerilen) veya Markdown & CSV seçin",
           "steps": [
-            "Export format ayarını \"Markdown & CSV\" yapın.",
+            "Yan yana sütunları, sütun genişliklerini, metin renklerini ve vurguları korumak için Export format ayarını \"HTML\" yapın. Sütun veya renk kullanmıyorsanız \"Markdown & CSV\" de çalışır.",
             "Görsellerinizin, PDF'lerinizin ve ekli dosyalarınızın dahil olması için Page content ayarını \"Everything\" yapın.",
             "\"Include private pages\" (veya tek sayfa dışa aktarmasında \"Include subpages\") ve \"Create folders for subpages\" seçeneklerini açın.",
             "Export düğmesine tıklayın ve .zip dosyasını kaydedin."
           ],
           "p": [
-            "HTML ve PDF dışa aktarmaları Markdown dosyaları içermez ve Notion içe aktarıcısı tarafından okunamaz. Yapınızın, bağlantılarınızın ve biçimlendirmenizin temiz bir şekilde gelmesi için \"Markdown & CSV\" seçeneğini seçin."
+            "PDF dışa aktarmaları Notion içe aktarıcısı tarafından okunamaz. Sütunlarınızın, renklerinizin, yapınızın, bağlantılarınızın ve biçimlendirmenizin temiz bir şekilde gelmesi için \"HTML\" seçeneğini ya da düz Markdown için \"Markdown & CSV\" seçeneğini seçin."
           ]
         },
         {
           "h": "Neler geliyor",
           "p": [
             "Notion, dışa aktarılan her dosya adının ve iç bağlantının sonuna 32 karakterlik bir kimlik ekler. PrivacyNotes bu kimlikleri her başlık ve klasör adından kaldırır, en üst düzeydeki \"Private & Shared\" sarmalayıcısını çıkarır ve iç içe alt sayfaları klasör olarak yeniden kurar.",
-            "Başlıklar, listeler, iç içe onay listeleri, tablolar, dili belirtilmiş kod blokları, matematik, altı çizili metin ve alıntılar olduğu gibi gelir. Notion bilgi kutuları PrivacyNotes bilgi kutularına dönüşür, [dışa aktarılan sayfalar arasındaki bağlantılar ve bahsetmeler not bağlantılarına dönüşür](/tr/help/note-links) ve yüklenmiş görseller, PDF'ler ile dosyalar depolama alanınıza aktarılır.",
-            "Veritabanı satır sayfaları, veritabanının adını taşıyan bir klasör içinde not olarak içe aktarılır ve varsa Tags özelliği etiket olarak eklenir. Veritabanı CSV tablo dosyaları atlanır ve özette sayılır. Notion'ın kendi Markdown dışa aktarması metin renklerini, vurguları ve çöp kutusundaki sayfaları dışarıda bırakır."
+            "Başlıklar, listeler, iç içe onay listeleri, tablolar, dili belirtilmiş kod blokları, matematik, altı çizili metin ve alıntılar olduğu gibi gelir. HTML dışa aktarmasıyla yan yana sütunlar (2 ila 5 sütun, oranlarıyla birlikte), metin renkleri ve vurgular da gelir. Notion bilgi kutuları PrivacyNotes bilgi kutularına dönüşür, [dışa aktarılan sayfalar arasındaki bağlantılar ve bahsetmeler not bağlantılarına dönüşür](/tr/help/note-links) ve yüklenmiş görseller, PDF'ler ile dosyalar depolama alanınıza aktarılır.",
+            "Veritabanı satır sayfaları, veritabanının adını taşıyan bir klasör içinde not olarak içe aktarılır ve varsa Tags özelliği etiket olarak eklenir. Veritabanı CSV tablo dosyaları atlanır ve özette sayılır. Notion'ın kendi Markdown dışa aktarması sütunları düzleştirir; metin renklerini, vurguları ve çöp kutusundaki sayfaları dışarıda bırakır."
           ]
         }
       ]
@@ -1552,6 +1552,45 @@
           "p": [
             "[Her kayıt Günlükler'e iner](/tr/help/journal), kaydın kendi saat dilimindeki takvim gününde. En baştaki bir başlık kaydın başlığı olur; başlığı olmayan bir kayıt tarihini başlık olarak alır. Yıldızlı ve sabitlenmiş kayıtlar sabitlenmiş kalır, etiketler de etiket olarak kalır.",
             "Konumunuz kaydın konum rozetini doldurur; hava durumu, aktivite ve müzik en üstte tek bir satırda yer alır. Fotoğraflar görsel olarak, ses, video ve PDF'ler ek olarak içe aktarılır ve kayıtlar arasındaki bağlantılar [not bağlantısına](/tr/help/note-links) dönüşür. Tek bir .zip birkaç günlük içerdiğinde her günlük bir klasör olur."
+          ]
+        }
+      ]
+    },
+    "microsoft-to-do": {
+      "app": "Microsoft To Do",
+      "title": "Microsoft To Do Dışa Aktarıcı",
+      "metaTitle": "Microsoft To Do Dışa Aktarıcı - Ücretsiz Tarayıcı Aracı - PrivacyNotes",
+      "lead": "Haziran 2027'deki kapanıştan önce yalnızca tarayıcıda çalışan ücretsiz Microsoft To Do dışa aktarıcımızla Microsoft To Do listelerinizi, alt görevlerinizi, notlarınızı ve eklerinizi dışa aktarın.",
+      "sections": [
+        {
+          "h": "Microsoft To Do görevlerinizi üç adımda dışa aktarın",
+          "p": [
+            "Microsoft To Do'nun henüz yerleşik bir dışa aktarma düğmesi yok; bu yüzden Windows, Mac, Linux ve mobilde doğrudan tarayıcınızda çalışan ücretsiz, açık kaynak bir [Microsoft To Do dışa aktarıcısı](https://todo.privacynotes.app) geliştirdik."
+          ],
+          "steps": [
+            "[todo.privacynotes.app](https://todo.privacynotes.app) adresini açın ve **Sign in with Microsoft** düğmesine tıklayın.",
+            "Tarayıcınızın hiçbir şeyi değiştirmeden veya silmeden listelerinizi okuyabilmesi için salt okunur erişime (`Tasks.Read`) izin verin.",
+            "**Fetch my Microsoft To Do data** düğmesine, ardından listelerinizi, görevlerinizi, alt görevlerinizi, notlarınızı ve eklerinizi cihazınıza kaydetmek için **Download ZIP (recommended)** düğmesine tıklayın."
+          ]
+        },
+        {
+          "h": "Haziran 2027'den önce yalnızca tarayıcıda çalışan bir dışa aktarıcı neden önemli",
+          "p": [
+            "Microsoft, Microsoft To Do'nun 30 Haziran 2027'de kullanımdan kaldırılacağını ve kişisel Microsoft hesapları için yerine geçecek bir uygulama olmayacağını duyurdu. İş ve okul hesapları Microsoft Planner'a taşınıyor, kişisel kullanıcılara ise başka bir görev uygulamasına geçmeleri söyleniyor.",
+            "Komut satırı ikili dosyaları kurmak veya geliştirici belirteçlerini elle kopyalamak yerine web dışa aktarıcımız tarayıcınızı tek tıklamayla doğrudan Microsoft Graph'a bağlar ve hem kişisel hesaplarla (outlook.com, hotmail.com, live.com) hem de Microsoft 365 hesaplarıyla çalışır."
+          ]
+        },
+        {
+          "h": "Tasarımı gereği gizli - hiçbir şey sunucularımıza ulaşmaz",
+          "p": [
+            "Dışa aktarıcı, arka ucu ve izleyicisi olmayan statik bir sayfadır. Tarayıcınız görevlerinizi doğrudan Microsoft'tan alır ve ZIP dosyasını cihazınızda oluşturur; böylece listeleriniz sunucularımızdan asla geçmez. Giriş belirteçleri geçici tarayıcı oturum deposunda kalır ve çıkış yaptığınızda ya da sekmeyi kapattığınızda temizlenir."
+          ]
+        },
+        {
+          "h": "ZIP içinde neler var ve neler geliyor",
+          "p": [
+            "ZIP dosyası yapılandırılmış bir `microsoft-to-do-export.json` yedeği, her liste için okunabilir bir Markdown onay listesi, e-tabloya hazır bir `tasks.csv` ve indirilen eklerinizi içerir. Bu dışa aktarmayı PrivacyNotes'a veya başka herhangi bir Markdown ya da CSV uygulamasına içe aktarabilirsiniz.",
+            "PrivacyNotes'ta her liste bir [görev listesine](/tr/help/tasks) dönüşür; açık ve tamamlanmış görevleri, alt görevleri, Important işaretlerini, bitiş tarihlerini, tekrar zamanlamalarını, etiket olarak eklenen kategorileri, notları, bağlı öğeleri ve ekli dosyaları korur - ve notlarınız cihazınızda şifrelenir. Tek tek onay listesi hatırlatıcıları taşınmaz ve içe aktarma özetinde sayılır. Dışa aktarıcıdan veya Microsoft Graph API'sinden alınan tek başına bir `.json` dosyası da ekler olmadan içe aktarılır."
           ]
         }
       ]

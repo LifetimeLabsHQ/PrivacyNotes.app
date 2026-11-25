@@ -10,6 +10,7 @@ import { setUpdateAvailable } from './updateAvailable';
 import { knownVersionFloor, reportVersionFloor } from './versionFloor';
 import { fetchPolicy } from './policySignature';
 import { installedByStore } from './androidInstaller';
+import { openExternalAsync } from './openExternal';
 
 /**
  * Update prompt for the direct-download Android APK (the off-store channel for
@@ -188,10 +189,7 @@ export function AndroidUpdateToast() {
       actionLabel={t('updateToast.download')}
       required={required}
       sizeBytes={update.sizeBytes}
-      onAction={async () => {
-        const { openUrl } = await import('@tauri-apps/plugin-opener');
-        await openUrl(update.url);
-      }}
+      onAction={() => openExternalAsync(update.url, { browser: true })}
       // No changelog link on Android, deliberately: at 375px the meta line only
       // fits two of {version, size, changelog} next to the Download button and
       // the dismiss X, and the download size is the one that answers the

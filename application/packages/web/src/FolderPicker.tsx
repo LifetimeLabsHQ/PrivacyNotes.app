@@ -1,13 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useEscapeToClose } from './useEscapeToClose';
 import { ContextMenu, useContextMenu, type ContextMenuItem } from './ContextMenu';
 import { FolderTreeView } from './FolderTreeView';
 import { FolderNameInput } from './FolderNameInput';
 import { SIDEBAR_ROW_MENU_BUTTON } from './sidebarUI';
+import { isSoftKeyboardDevice } from './softKeyboard';
 import { textMatcher } from './textMatch';
 import { FolderGlyph } from './looks/LookGlyph';
-import { CloseButton } from './ui';
+import { DashedAddButton, PickerModal } from './ui';
 import {
   flattenFolderRows,
   INDENT_PX,
@@ -24,7 +24,7 @@ import {
   type FolderSortDir,
   type FolderSortField,
 } from './folders';
-import { Check, DotsThree, Folder, FolderPlus, MagnifyingGlass, PencilSimple, Prohibit, type Icon } from './icons';
+import { Check, DotsThree, Folder, FolderPlus, PencilSimple, Prohibit, type Icon } from './icons';
 
 /**
  * The shared folder picker (Pro folders feature) - the single "choose a
@@ -117,8 +117,11 @@ export function FolderPicker({
 }: FolderPickerProps) {
   const { t } = useTranslation('shell');
   const { expand, isExpanded } = useFolderExpansion();
-  useEscapeToClose(onClose);
   const [query, setQuery] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!isSoftKeyboardDevice()) searchRef.current?.focus({ preventScroll: true });
+  }, []);
   /** Parent id the inline "new folder" input is nested under; undefined = closed.
    *  null is the footer's own root-level create. Mirrors FolderTree. */
   const [creatingUnder, setCreatingUnder] = useState<string | null | undefined>(undefined);
@@ -358,148 +361,104 @@ export function FolderPicker({
   );
 
   return (
-    <div
-      className="fixed inset-0 bg-black/40 dark:bg-black/40 flex items-center justify-center p-4 sm:p-6 z-50"
-      onClick={onClose}
-    >
-      <div
-        role="dialog"
-        aria-label={t('shell:contextMenu.moveToFolder')}
-        // The global chrome menu means nothing on top of a picker, and it
-        // used to be the only menu a right-click here produced. Spec: #208.
-        data-no-app-menu
-        className="bg-surface-2/95 backdrop-blur-xl border border-divider/80 text-pn rounded-lg max-w-sm w-full max-h-[70vh] flex flex-col overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-2">
-          {/* One title for both modes. "Move folder" said the same thing in
-              a second dialog that was quietly missing half this one's
-              features, and a folder moves INTO a folder like anything else. */}
-          <h2 className="text-row font-semibold m-0">{title ?? t('shell:contextMenu.moveToFolder')}</h2>
-          <CloseButton onClick={onClose} />
-        </div>
-        <div className="px-4 pb-2 shrink-0">
-          <div className="flex items-center gap-2 rounded-md bg-surface-1 border border-divider px-2.5">
-            <MagnifyingGlass className="shrink-0 text-pn-muted" aria-hidden="true" />
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t('folders.searchPlaceholder')}
-              className="flex-1 min-w-0 h-9 bg-transparent text-body focus:outline-none placeholder:text-pn-muted"
-            />
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto px-2 pb-2 min-h-0">
-          {/* Search flattens the tree on purpose: a match three levels down
-              is easier to read as one row with its path than as a branch
-              the reader has to trace. Carets and indent come back the
-              moment the box is empty. */}
-          {searching ? (
-            matches.map((folder) => {
-              const disabled = isDisabled(folder);
-              const path = pathLabel(folder);
-              return (
-                <button
-                  key={folder.id}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => onPick(folder.id)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-body text-start transition ${
-                    disabled
-                      ? 'text-pn-muted/75 cursor-not-allowed'
-                      : checkedId === folder.id
-                        ? 'pn-on-tint bg-accent/15 text-accent-strong dark:bg-accent/20 hover:bg-accent/20 dark:hover:bg-accent/25'
-                        : 'text-pn hover:bg-pn/5'
-                  }`}
-                >
-                  <span className={`inline-flex shrink-0 ${disabled ? '' : 'text-label'}`}>
-                    <FolderGlyph folderId={folder.id} size={15} />
-                  </span>
-                  <span className="flex-1 min-w-0 truncate">
-                    {path && <span className="text-pn-muted">{path} / </span>}
-                    {folder.name}
-                  </span>
-                  {trailingFor(folder)}
-                </button>
-              );
-            })
-          ) : (
-            sections ? (
-              sections.map((sec, i) => (
-                <div key={sec.key} className={i > 0 ? 'mt-2 pt-2 border-t border-divider' : undefined}>
-                  <div className="flex items-center gap-1.5 px-3 pt-1 pb-1 text-small font-semibold text-pn-muted">
-                    <sec.icon size={13} aria-hidden="true" />
-                    {sec.label}
-                  </div>
-                  {renderTree(sec.folders)}
-                  {sec.unfiled && unfiledRow}
-                </div>
-              ))
-            ) : (
-              renderTree(folders)
-            )
-          )}
-          {/* Unfiled (note mode) / root level (folder mode) - see
-              clearWouldChange above. No check mark: it is never the
-              "current" row, only ever an action.
-
-              Under the tree, not over it, because that is where the sidebar
-              puts its own Unfiled row and the two are the same idea. It sat
-              on top while it was thought of as the dialog's primary action;
-              it is the LAST resort, and it now reads that way in both
-              places. Muted for the same reason the rail's is. */}
-          {!sections && unfiledRow}
-          {searching && matches.length === 0 && (
-            <div className="px-3 py-2 text-compact text-pn-muted">
-              {t('folders.noMatches')}
+    <PickerModal
+      title={title ?? t('shell:contextMenu.moveToFolder')}
+      onClose={onClose}
+      maxWidth="max-w-sm"
+      maxHeight="max-h-[70vh]"
+      search={{
+        value: query,
+        onChange: setQuery,
+        placeholder: t('folders.searchPlaceholder'),
+        inputRef: searchRef,
+      }}
+      footer={
+        onCreateFolder ? (
+          creatingUnder === null ? (
+            <div className="flex items-center gap-2 py-0.5">
+              <span className="inline-flex shrink-0 text-label">
+                <Folder />
+              </span>
+              <FolderNameInput
+                value={createDraft}
+                onChange={setCreateDraft}
+                onCommit={commitCreate}
+                onCancel={cancelCreate}
+                scale="dialog"
+              />
             </div>
-          )}
-        </div>
-        {onCreateFolder && (
-          <div className="shrink-0 border-t border-divider px-2 py-2 flex">
-            {creatingUnder === null ? (
-              <div className="flex items-center gap-2 px-3 py-1 flex-1">
-                <span className="inline-flex shrink-0 text-label">
-                  <Folder />
-                </span>
-                <FolderNameInput
-                  value={createDraft}
-                  onChange={setCreateDraft}
-                  onCommit={commitCreate}
-                  onCancel={cancelCreate}
-                  scale="dialog"
-                />
+          ) : (
+            <DashedAddButton
+              fullWidth
+              icon={<FolderPlus className="shrink-0 text-label" aria-hidden="true" />}
+              onClick={() => {
+                setRenamingId(null);
+                setCreateDraft('');
+                setCreatingUnder(null);
+              }}
+            >
+              {t('folders.new')}
+            </DashedAddButton>
+          )
+        ) : undefined
+      }
+    >
+      {/* Search flattens the tree on purpose: a match three levels down
+          is easier to read as one row with its path than as a branch
+          the reader has to trace. Carets and indent come back the
+          moment the box is empty. */}
+      {searching ? (
+        matches.map((folder) => {
+          const disabled = isDisabled(folder);
+          const path = pathLabel(folder);
+          return (
+            <button
+              key={folder.id}
+              type="button"
+              disabled={disabled}
+              onClick={() => onPick(folder.id)}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-body text-start transition ${
+                disabled
+                  ? 'text-pn-muted/75 cursor-not-allowed'
+                  : checkedId === folder.id
+                    ? 'pn-on-tint bg-accent/15 text-accent-strong dark:bg-accent/20 hover:bg-accent/20 dark:hover:bg-accent/25'
+                    : 'text-pn hover:bg-pn/5'
+              }`}
+            >
+              <span className={`inline-flex shrink-0 ${disabled ? '' : 'text-label'}`}>
+                <FolderGlyph folderId={folder.id} size={15} />
+              </span>
+              <span className="flex-1 min-w-0 truncate">
+                {path && <span className="text-pn-muted">{path} / </span>}
+                {folder.name}
+              </span>
+              {trailingFor(folder)}
+            </button>
+          );
+        })
+      ) : (
+        sections ? (
+          sections.map((sec, i) => (
+            <div key={sec.key} className={i > 0 ? 'mt-2 pt-2 border-t border-divider' : undefined}>
+              <div className="flex items-center gap-1.5 px-3 pt-1 pb-1 text-small font-semibold text-pn-muted">
+                <sec.icon size={13} aria-hidden="true" />
+                {sec.label}
               </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setRenamingId(null);
-                  setCreateDraft('');
-                  setCreatingUnder(null);
-                }}
-                /* Dashed, like the sidebar's: the rows above are places you
-                   go, this is a thing you make. Two buttons that do the same
-                   job in the two places that draw the same tree should not
-                   look like different controls.
-                   Spec: docs/internal/design/ui-patterns.md (section 76) */
-                className="flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-divider px-3 py-2 text-compact text-pn-muted transition hover:border-accent/50 hover:text-accent"
-              >
-                <FolderPlus className="shrink-0 text-label" />
-                {t('folders.new')}
-              </button>
-            )}
-          </div>
-        )}
-        {/* Inside the dialog on purpose. It portals to document.body, so the
-            dialog's `overflow-hidden` (and its backdrop-filter, which makes
-            the dialog the containing block for fixed children) cannot clip
-            it - but a portal still bubbles its clicks up the REACT tree, and
-            only in here does the dialog's stopPropagation keep a menu click
-            off the backdrop's close handler. */}
-        <ContextMenu state={rowMenu.state} onClose={rowMenu.close} />
-      </div>
-    </div>
+              {renderTree(sec.folders)}
+              {sec.unfiled && unfiledRow}
+            </div>
+          ))
+        ) : (
+          renderTree(folders)
+        )
+      )}
+      {!sections && unfiledRow}
+      {searching && matches.length === 0 && (
+        <div className="px-3 py-2 text-compact text-pn-muted">
+          {t('folders.noMatches')}
+        </div>
+      )}
+      <ContextMenu state={rowMenu.state} onClose={rowMenu.close} />
+    </PickerModal>
   );
 }

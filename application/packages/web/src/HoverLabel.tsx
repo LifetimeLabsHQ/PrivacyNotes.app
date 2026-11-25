@@ -1,4 +1,4 @@
-import type { PointerEvent, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 // Spec: docs/internal/design/ui-patterns.md (section 18 - instant CSS hover labels)
 
@@ -57,7 +57,7 @@ export const TIP_SKIN =
   // theme-ok: a tooltip is a dark pill in every theme
   'px-2 py-[3px] rounded-[5px] bg-neutral-900 dark:bg-neutral-800 border border-neutral-800 dark:border-neutral-700 text-small leading-4 text-neutral-100';
 
-const TIP_PILL_LOOK = `pn-tip pointer-events-none ${TIP_SKIN} z-50 [@media(hover:none)]:hidden`;
+const TIP_PILL_LOOK = `pn-tip pointer-events-none select-none ${TIP_SKIN} z-50 [@media(hover:none)]:hidden`;
 
 /**
  * The hover tip: the pill above, placed absolutely against its `group/tip`
@@ -67,12 +67,17 @@ const TIP_PILL_LOOK = `pn-tip pointer-events-none ${TIP_SKIN} z-50 [@media(hover
 export const TIP_PILL =
   `${TIP_PILL_LOOK} absolute opacity-0 [@media(hover:hover)]:group-hover/tip:opacity-100 transition-opacity duration-75`;
 
-/** The visible part of the window around `el`: the window cut down by every
- *  ancestor that clips an axis. A fixed ancestor ends the walk, because what
- *  sits above it in the tree cannot clip it. */
-export function visibleBox(el: HTMLElement) {
+type Box = { left: number; top: number; right: number; bottom: number };
+
+/** The visible part of the window around `el`, plus the vertical scroll
+ *  container (if any) where `position: sticky` siblings can obstruct a tip.
+ *  A fixed ancestor ends both walks, because nothing above it can clip `el`
+ *  or scroll a sticky bar over it. */
+function visibleBoxInfo(el: HTMLElement): { box: Box; stickyScope: HTMLElement | null } {
   let left = 0, top = 0, right = window.innerWidth, bottom = window.innerHeight;
-  for (let a = el.parentElement; a; a = a.parentElement) {
+  let stickyScope: HTMLElement | null = null;
+  let foundOverflowY = false;
+  for (let a = el.parentElement; a && a !== document.documentElement; a = a.parentElement) {
     const cs = getComputedStyle(a);
     const clipX = cs.overflowX !== 'visible';
     const clipY = cs.overflowY !== 'visible';
@@ -83,20 +88,35 @@ export function visibleBox(el: HTMLElement) {
       if (clipX) { left = Math.max(left, l); right = Math.min(right, l + a.clientWidth); }
       if (clipY) { top = Math.max(top, tp); bottom = Math.min(bottom, tp + a.clientHeight); }
     }
+    if (!foundOverflowY && (clipY || cs.position === 'fixed')) {
+      foundOverflowY = true;
+      if (cs.overflowY === 'auto' || cs.overflowY === 'scroll' || cs.overflowY === 'overlay') {
+        stickyScope = a;
+      }
+    }
     if (cs.position === 'fixed') break;
   }
-  return { left, top, right, bottom };
+  if (!foundOverflowY) stickyScope = document.documentElement;
+  return { box: { left, top, right, bottom }, stickyScope };
+}
+
+/** The visible part of the window around `el`: the window cut down by every
+ *  ancestor that clips an axis. A fixed ancestor ends the walk, because what
+ *  sits above it in the tree cannot clip it. */
+export function visibleBox(el: HTMLElement) {
+  return visibleBoxInfo(el).box;
 }
 
 const EDGE = 4;
 const PLACED = ['left', 'right', 'top', 'bottom', 'translate', 'transform', 'margin-top', 'margin-bottom', 'inset-inline-start', 'inset-inline-end', 'margin-inline-start', 'margin-inline-end'];
 
-/** The unobstructed box where a tip anchored to `host` stays visible: the
- *  clipping box narrowed past any sticky bars (such as the editor's tag row,
- *  format bar, notice row or pinned footer) that sit above or below `host`
- *  inside its vertical scroller. */
-function tipBounds(host: HTMLElement, h: DOMRect) {
-  let { left, top, right, bottom } = visibleBox(host);
+/** Narrows `box` past any sticky bars (such as the editor's tag row, format
+ *  bar, notice row or pinned footer) that sit above or below `host` inside its
+ *  vertical scroller (`stickyScope`). Skipped completely when `host` has no
+ *  vertical scroller (e.g. a sidebar rail inside an overflow-hidden shell). */
+function narrowForStickyBars(host: HTMLElement, h: DOMRect, box: Box, stickyScope: HTMLElement | null): Box {
+  if (!stickyScope) return box;
+  let { left, top, right, bottom } = box;
   for (let child: HTMLElement = host, parent = host.parentElement; parent; child = parent, parent = parent.parentElement) {
     for (let sib = child.previousElementSibling; sib; sib = sib.previousElementSibling) {
       const cs = getComputedStyle(sib);
@@ -114,8 +134,7 @@ function tipBounds(host: HTMLElement, h: DOMRect) {
         bottom = Math.min(bottom, r.top);
       }
     }
-    const pcs = getComputedStyle(parent);
-    if (pcs.overflowY !== 'visible' || pcs.position === 'fixed') break;
+    if (parent === stickyScope) break;
   }
   return { left, top, right, bottom };
 }
@@ -129,12 +148,14 @@ function tipBounds(host: HTMLElement, h: DOMRect) {
  */
 export function fitTip(tip: HTMLElement, host: HTMLElement) {
   const s = tip.style;
-  for (const p of PLACED) s.removeProperty(p);
+  if (s.length > 0) for (const p of PLACED) s.removeProperty(p);
   let t = tip.getBoundingClientRect();
   if (t.width === 0) return;
   const h = host.getBoundingClientRect();
-  const box = tipBounds(host, h);
+  const info = visibleBoxInfo(host);
+  let box = info.box;
   if (t.right <= h.left + 1 || t.left >= h.right - 1) {
+    // Side tips only need horizontal clearance; sticky bars only narrow top/bottom.
     if (t.right <= box.right - EDGE && t.left >= box.left + EDGE) return;
     s.insetInlineStart = 'auto';
     s.insetInlineEnd = 'auto';
@@ -146,6 +167,7 @@ export function fitTip(tip: HTMLElement, host: HTMLElement) {
     s.transform = 'none';
     t = tip.getBoundingClientRect();
   }
+  box = narrowForStickyBars(host, h, box, info.stickyScope);
   // A tip that hangs past an edge lines up with its own button's edge on that
   // side first, the way an end-aligned tip ("Note options") reads; only a tip
   // too wide for that is pushed to the edge of the visible box.
@@ -172,8 +194,6 @@ export function fitTip(tip: HTMLElement, host: HTMLElement) {
     s.marginBottom = '0';
   }
 }
-
-type Box = { left: number; top: number; right: number; bottom: number };
 
 /**
  * Where a fixed tip goes for a target that cannot hold a tip of its own: a
@@ -221,13 +241,6 @@ export function observeTip(tip: HTMLElement | null) {
   if (!tip || !tipObserver) return;
   tipObserver.observe(tip);
   return () => tipObserver.unobserve(tip);
-}
-
-/** A host that moved while its tip was hidden: fit again on entry. */
-function placeTip(e: PointerEvent<HTMLElement>) {
-  if (e.pointerType === 'touch') return;
-  const tip = e.currentTarget.querySelector<HTMLElement>(':scope > .pn-tip');
-  if (tip) fitTip(tip, e.currentTarget);
 }
 
 /** CSS-only instant hover label. Replaces native title="" attributes. */
@@ -285,7 +298,6 @@ export function HoverLabel({
   return (
     <Wrapper
       className={`pn-tip-host relative group/tip${inline ? ' inline' : ''}${className ? ` ${className}` : ''}`}
-      onPointerEnter={disabled ? undefined : placeTip}
     >
       {children}
       {!disabled && <Wrapper

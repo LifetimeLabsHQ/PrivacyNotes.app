@@ -26,7 +26,6 @@
     "noResults": "Žádné výsledky"
   },
   "deleteNote": {
-    "confirm": "Smazat navždy",
     "body": "Trvale smazat <highlight>„{{title}}“</highlight>? Tuto akci nelze vzít zpět."
   },
   "emptyTrash": {
@@ -75,12 +74,15 @@
       "toggleSidebar": "Zobrazit nebo skrýt boční panel",
       "toggleTheme": "Přepnout mezi světlým a tmavým",
       "openSettings": "Otevřít nastavení",
+      "graph": "Pracovní prostor Graf a Místa",
       "zen": "Režim Zen",
+      "fullScreen": "Režim celé obrazovky",
       "markdownView": "Zapnout nebo vypnout zobrazení Markdown",
       "invisibles": "Zapnout nebo vypnout netisknutelné znaky",
       "find": "Najít v poznámce",
       "findReplace": "Najít a nahradit",
       "outline": "Zobrazit nebo skrýt osnovu",
+      "connections": "Zobrazit nebo skrýt propojení",
       "insertDate": "Vložit datum",
       "insertDateTime": "Vložit datum a čas",
       "clearFilters": "Zrušit filtry",
@@ -138,8 +140,6 @@
     "goToFolder": "Přejít do složky",
     "createTag": "Vytvořit značku #{{name}}",
     "createFolder": "Vytvořit složku „{{name}}“",
-    "newTag": "Nová značka",
-    "newFolder": "Nová složka",
     "goToDay": "Přejít na den",
     "inText": "V textu",
     "actions": "akce",
@@ -182,9 +182,9 @@
   "sshKeyForm": {
     "label": "Popisek",
     "labelPlaceholder": "např. nasazovací klíč pro GitHub",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "Kopírovat veřejný klíč",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "Kopírovat privátní klíč",
     "downloadPublicKey": "Stáhnout veřejný klíč",
     "downloadPrivateKey": "Stáhnout privátní klíč",
@@ -301,6 +301,13 @@
     "features": {
       "stats": {
         "detail": "Tvoje psaní, série a sledované hodnoty v čase"
+      },
+      "graph": {
+        "detail": "Tvoje odkazy na poznámky, chytré mosty a hlavní uzly jako interaktivní mapa"
+      },
+      "placesMap": {
+        "label": "Mapa míst",
+        "detail": "Poznámky, záznamy v deníku a kontakty připnuté na soukromé mapě"
       },
       "trackers": {
         "detail": "Nálada, návyky, faktory a léky"

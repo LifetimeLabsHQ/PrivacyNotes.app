@@ -26,7 +26,6 @@
     "noResults": "Inga träffar"
   },
   "deleteNote": {
-    "confirm": "Radera för alltid",
     "body": "Radera <highlight>”{{title}}”</highlight> permanent? Det går inte att ångra."
   },
   "emptyTrash": {
@@ -73,12 +72,15 @@
       "toggleSidebar": "Visa eller dölj sidofältet",
       "toggleTheme": "Växla mellan ljust och mörkt",
       "openSettings": "Öppna inställningar",
+      "graph": "Vyn Graf och platser",
       "zen": "Zen-läge",
+      "fullScreen": "Helskärmsläge",
       "markdownView": "Markdown-vy på eller av",
       "invisibles": "Osynliga tecken på eller av",
       "find": "Sök i anteckning",
       "findReplace": "Sök och ersätt",
       "outline": "Visa eller dölj översikten",
+      "connections": "Visa eller dölj kopplingar",
       "insertDate": "Infoga datumet",
       "insertDateTime": "Infoga datum och tid",
       "clearFilters": "Rensa filter",
@@ -134,8 +136,6 @@
     "goToFolder": "Gå till en mapp",
     "createTag": "Skapa taggen #{{name}}",
     "createFolder": "Skapa mappen ”{{name}}”",
-    "newTag": "Ny tagg",
-    "newFolder": "Ny mapp",
     "goToDay": "Gå till dag",
     "inText": "I texten",
     "actions": "åtgärder",
@@ -176,9 +176,9 @@
   "sshKeyForm": {
     "label": "Etikett",
     "labelPlaceholder": "t.ex. GitHub-distributionsnyckel",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "Kopiera publik nyckel",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "Kopiera privat nyckel",
     "downloadPublicKey": "Ladda ner publik nyckel",
     "downloadPrivateKey": "Ladda ner privat nyckel",
@@ -291,6 +291,13 @@
     "features": {
       "stats": {
         "detail": "Ditt skrivande, dina sviter och dina mätvärden över tid"
+      },
+      "graph": {
+        "detail": "Dina anteckningslänkar, smarta bryggor och nav som en interaktiv karta"
+      },
+      "placesMap": {
+        "label": "Platskarta",
+        "detail": "Anteckningar, dagboksinlägg och kontakter fästa på en privat karta"
       },
       "trackers": {
         "detail": "Humör, vanor, faktorer och medicin"

@@ -1,11 +1,12 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Terminal, X } from './icons';
+import { MagnifyingGlass, Terminal, X } from './icons';
 import { HoverLabel } from './HoverLabel';
 import { keyText } from './shortcutMatch';
 import { isImeComposing } from './imeComposing';
 import { hasOpenOverlay } from './useEscapeToClose';
 import { COMMAND_PREFIX, CommandPaletteContext } from './commandPalette';
+import { NO_TEXT_ASSIST } from './formFields';
 
 /**
  * The search input shared by the three pillar lists (notes, tasks, files).
@@ -100,6 +101,10 @@ export function ListSearchInput({
 
   return (
     <div className="relative flex-1 min-w-0">
+      <MagnifyingGlass
+        aria-hidden="true"
+        className="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-pn-muted"
+      />
       <input
         ref={inputRef}
         data-search-field=""
@@ -119,7 +124,9 @@ export function ListSearchInput({
           }
         }}
         enterKeyHint="search"
-        className={`pn-search-well w-full h-10 rounded-md bg-surface-2 border border-divider ps-3 ${
+        autoComplete="off"
+        {...NO_TEXT_ASSIST}
+        className={`pn-search-well w-full h-10 rounded-md bg-surface-2 border border-divider ps-8 ${
           draft || commandsHere ? 'pe-10' : 'pe-3'
         } text-row focus:outline-none focus:border-accent placeholder:text-pn-muted`}
       />

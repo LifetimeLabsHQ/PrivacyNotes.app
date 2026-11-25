@@ -41,6 +41,7 @@
     "noDocuments": "Geen documenten.",
     "noImages": "Geen afbeeldingen.",
     "noAudioFiles": "Geen audiobestanden.",
+    "noUnusedFiles": "Geen ongebruikte bestanden.",
     "emptyTypesHint": "Afbeeldingen, documenten, audio, video en zip-bestanden. Tot {{max}} MB per bestand.",
     "uploadFiles": "Bestanden uploaden",
     "menuShow": "Tonen",
@@ -233,7 +234,7 @@
     "tagCount_other": "{{count}} tags",
     "entryDate": "Dagboekdatum",
     "noDate": "Geen",
-    "schedule": "Planning",
+    "schedule": "Datum & herinneringen",
     "ends": "Eindigt",
     "sameDay": "Zelfde dag",
     "starts": "Begint",
@@ -317,7 +318,6 @@
     "showOneWeek": "Eén week tonen"
   },
   "contextMenu": {
-    "newNote": "Nieuwe notitie",
     "newTask": "Nieuwe taak",
     "newKanban": "Nieuw kanbanbord",
     "newDrawing": "Nieuwe tekening",
@@ -326,15 +326,12 @@
     "newSshKey": "Nieuwe SSH-sleutel",
     "newJournal": "Nieuwe dagboeknotitie",
     "newFile": "Nieuw bestand",
-    "exitZenMode": "Zen-modus verlaten",
-    "zenMode": "Zen-modus",
     "showSidebar": "Zijbalk tonen",
     "hideSidebar": "Zijbalk verbergen",
     "showNotesList": "Notitielijst tonen",
     "hideNotesList": "Notitielijst verbergen",
     "resetPaneWidths": "Paneelbreedtes herstellen",
     "settings": "Instellingen",
-    "signOut": "Afmelden",
     "deselect": "Selectie opheffen",
     "select": "Selecteren",
     "selectedCount_one": "{{count}} item geselecteerd",
@@ -364,8 +361,7 @@
     "closeOtherTabs": "Andere tabbladen sluiten",
     "closeAllTabs": "Alle tabbladen sluiten",
     "pinTab": "Tabblad vastzetten",
-    "unpinTab": "Tabblad losmaken",
-    "newEvent": "Nieuwe afspraak"
+    "unpinTab": "Tabblad losmaken"
   },
   "demoBanner": {
     "title": "Probeer het zonder risico",
@@ -836,6 +832,25 @@
     "hoursBefore_one": "{{count}} uur van tevoren",
     "minutesBefore_one": "{{count}} minuut van tevoren"
   },
+  "taskReminder": {
+    "set": "Herinnering instellen",
+    "edit": "Herinnering bewerken",
+    "laterToday": "Later vandaag",
+    "pickDateTime": "Kies een datum & tijd",
+    "dateTime": "Datum & tijd",
+    "remove": "Herinnering verwijderen",
+    "onSchedule": "Volgens schema",
+    "afterCompletion": "Na afronding",
+    "afterDone": "{{count}} {{unit}} na afronding",
+    "afterDoneHint": "Telt vanaf de dag waarop je deze taak afvinkt.",
+    "weekdaysShort": "Werkdagen",
+    "everyWeeks_other": "Om de {{count}} weken",
+    "everyMonths_other": "Om de {{count}} maanden",
+    "everyYears_other": "Om de {{count}} jaar",
+    "everyYears_one": "Elk jaar",
+    "everyMonths_one": "Elke maand",
+    "everyWeeks_one": "Elke week"
+  },
   "quickAdd": {
     "group": "Aanmaken",
     "items": "Items",
@@ -1028,7 +1043,8 @@
   "apps": {
     "railLabel": "Extensie",
     "title": "Browserextensie",
-    "subtitle": "Webclipper en wachtwoordmanager in Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf en Zen. De extensie heeft nooit de sleutel die je notities opent.",
+    "subtitle": "Webclipper en wachtwoordmanager voor op Chromium en Firefox gebaseerde browsers. De extensie heeft nooit de sleutel die je notities opent.",
+    "allSupported": "Werkt in elke op Chromium of Firefox gebaseerde browser.",
     "loginsCopyFull": "De kopie van je logins in de browserextensie is vol. Nieuwe logins komen erin zodra je er een paar verwijdert.",
     "stepInstall": "De extensie installeren",
     "stepFeatures": "Kies wat hij mag doen",
@@ -1039,7 +1055,7 @@
     "thisBrowser": "Deze browser",
     "otherApps": "Desktop- en telefoonapps:",
     "desktopAll": "Alle downloads",
-    "extensionComputersOnly": "De extensie is voor Chrome, Firefox en Edge op een computer.",
+    "extensionComputersOnly": "De extensie is voor op Chromium en Firefox gebaseerde browsers op een computer.",
     "demoSignUp": "Registreer je om een browser te verbinden"
   },
   "cli": {

@@ -41,6 +41,7 @@
     "noDocuments": "Документів немає.",
     "noImages": "Зображень немає.",
     "noAudioFiles": "Аудіофайлів немає.",
+    "noUnusedFiles": "Невикористаних файлів немає.",
     "emptyTypesHint": "Зображення, документи, аудіо, відео й zip-файли. До {{max}} МБ на файл.",
     "uploadFiles": "Вивантажити файли",
     "menuShow": "Показати",
@@ -238,7 +239,7 @@
     "tagCount_other": "{{count}} тегу",
     "entryDate": "Дата запису",
     "noDate": "Немає",
-    "schedule": "Розклад",
+    "schedule": "Дата й нагадування",
     "ends": "Кінець",
     "sameDay": "Того ж дня",
     "starts": "Початок",
@@ -323,7 +324,6 @@
     "showOneWeek": "Показати один тиждень"
   },
   "contextMenu": {
-    "newNote": "Нова нотатка",
     "newTask": "Нове завдання",
     "newKanban": "Нова канбан-дошка",
     "newDrawing": "Новий малюнок",
@@ -332,15 +332,12 @@
     "newSshKey": "Новий SSH-ключ",
     "newJournal": "Новий запис у щоденнику",
     "newFile": "Новий файл",
-    "exitZenMode": "Вийти з режиму дзен",
-    "zenMode": "Режим дзен",
     "showSidebar": "Показати бічну панель",
     "hideSidebar": "Сховати бічну панель",
     "showNotesList": "Показати список нотаток",
     "hideNotesList": "Сховати список нотаток",
     "resetPaneWidths": "Скинути ширину панелей",
     "settings": "Налаштування",
-    "signOut": "Вийти",
     "deselect": "Скасувати вибір",
     "select": "Вибрати",
     "selectedCount_one": "Вибрано {{count}} елемент",
@@ -372,8 +369,7 @@
     "closeOtherTabs": "Закрити інші вкладки",
     "closeAllTabs": "Закрити всі вкладки",
     "pinTab": "Закріпити вкладку",
-    "unpinTab": "Відкріпити вкладку",
-    "newEvent": "Нова подія"
+    "unpinTab": "Відкріпити вкладку"
   },
   "demoBanner": {
     "title": "Спробуйте без жодного ризику",
@@ -879,6 +875,28 @@
     "minutesBefore_few": "За {{count}} хвилини",
     "minutesBefore_many": "За {{count}} хвилин"
   },
+  "taskReminder": {
+    "set": "Установити нагадування",
+    "edit": "Редагувати нагадування",
+    "laterToday": "Пізніше сьогодні",
+    "pickDateTime": "Вибрати дату й час",
+    "dateTime": "Дата й час",
+    "remove": "Прибрати нагадування",
+    "onSchedule": "За розкладом",
+    "afterCompletion": "Після виконання",
+    "afterDone": "Через {{count}} {{unit}} після виконання",
+    "afterDoneHint": "Відлічується від дня, коли ви позначите це завдання виконаним.",
+    "weekdaysShort": "Будні",
+    "everyWeeks_many": "Кожні {{count}} тижнів",
+    "everyWeeks_one": "Кожен {{count}} тиждень",
+    "everyMonths_many": "Кожні {{count}} місяців",
+    "everyMonths_one": "Кожен {{count}} місяць",
+    "everyYears_many": "Кожні {{count}} років",
+    "everyYears_one": "Кожен {{count}} рік",
+    "everyYears_few": "Кожні {{count}} роки",
+    "everyMonths_few": "Кожні {{count}} місяці",
+    "everyWeeks_few": "Кожні {{count}} тижні"
+  },
   "quickAdd": {
     "group": "Створити",
     "items": "Елементи",
@@ -1078,7 +1096,8 @@
   "apps": {
     "railLabel": "Розширення",
     "title": "Розширення браузера",
-    "subtitle": "Збереження сторінок і менеджер паролів у Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf і Zen. Розширення ніколи не має ключа, що відкриває ваші нотатки.",
+    "subtitle": "Збереження сторінок і менеджер паролів для браузерів на базі Chromium і Firefox. Розширення ніколи не має ключа, що відкриває ваші нотатки.",
+    "allSupported": "Працює в будь-якому браузері на базі Chromium або Firefox.",
     "loginsCopyFull": "Копія ваших логінів у розширенні браузера заповнена. Нові логіни потраплятимуть до неї, щойно ви видалите деякі.",
     "stepInstall": "Установіть розширення",
     "stepFeatures": "Виберіть, що воно може робити",
@@ -1089,7 +1108,7 @@
     "thisBrowser": "Цей браузер",
     "otherApps": "Застосунки для комп’ютера й телефона:",
     "desktopAll": "Усі завантаження",
-    "extensionComputersOnly": "Розширення призначене для Chrome, Firefox і Edge на комп’ютері.",
+    "extensionComputersOnly": "Розширення призначене для браузерів на базі Chromium і Firefox на комп’ютері.",
     "demoSignUp": "Зареєструйтеся, щоб підключити браузер"
   },
   "cli": {

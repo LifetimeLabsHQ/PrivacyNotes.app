@@ -443,7 +443,7 @@
       "app": "Notion",
       "title": "Exporte o seu workspace do Notion",
       "metaTitle": "Como exportar o seu workspace do Notion - PrivacyNotes",
-      "lead": "Exporte o seu workspace do Notion como um zip Markdown & CSV, e o PrivacyNotes remove os IDs de 32 caracteres do Notion, reconstrói as subpáginas como pastas e transforma os links entre páginas em links entre notas.",
+      "lead": "Exporte o seu workspace do Notion como um zip HTML ou Markdown & CSV, e o PrivacyNotes remove os IDs de 32 caracteres do Notion, reconstrói as subpáginas como pastas, mantém colunas e cores e transforma os links entre páginas em links entre notas.",
       "sections": [
         {
           "img": {
@@ -470,23 +470,23 @@
             "width": 1576,
             "height": 600
           },
-          "h": "Escolha Markdown & CSV, com pastas ativadas",
+          "h": "Escolha HTML (recomendado) ou Markdown & CSV, com pastas ativadas",
           "steps": [
-            "Defina Export format como \"Markdown & CSV\".",
+            "Defina Export format como \"HTML\" para manter colunas lado a lado, larguras das colunas, cores de texto e destaques. \"Markdown & CSV\" também funciona se você não usa colunas nem cores.",
             "Defina Page content como \"Everything\" para incluir suas imagens, PDFs e arquivos anexados.",
             "Ative \"Include private pages\" (ou \"Include subpages\" ao exportar uma única página) e \"Create folders for subpages\".",
             "Clique em Export e salve o arquivo .zip."
           ],
           "p": [
-            "As exportações em HTML e PDF não contêm arquivos Markdown e não podem ser lidas pelo importador do Notion. Escolha \"Markdown & CSV\" para que a estrutura, os links e a formatação cheguem sem perda."
+            "As exportações em PDF não podem ser lidas pelo importador do Notion. Escolha \"HTML\" para que suas colunas, cores, estrutura, links e formatação cheguem sem perda, ou \"Markdown & CSV\" para Markdown simples."
           ]
         },
         {
           "h": "O que vem junto",
           "p": [
             "O Notion acrescenta um ID de 32 caracteres a cada nome de arquivo e link interno exportado. O PrivacyNotes remove esses IDs de todos os títulos e nomes de pasta, tira a pasta principal \"Private & Shared\" e reconstrói as subpáginas aninhadas como pastas.",
-            "Títulos, listas, listas de tarefas aninhadas, tabelas, blocos de código com linguagem, matemática, sublinhado e citações chegam como estavam. Os avisos do Notion viram avisos do PrivacyNotes, [links e menções entre páginas exportadas viram links entre notas](/br/help/note-links), e as imagens, PDFs e arquivos enviados são importados para o seu armazenamento.",
-            "As páginas de linhas de banco de dados são importadas como notas dentro de uma pasta com o nome do banco de dados, e qualquer propriedade `Tags` é adicionada como etiqueta. Os arquivos de tabela CSV dos bancos de dados são pulados e contados no resumo. A própria exportação em Markdown do Notion deixa de fora cores de texto, destaques e páginas na Lixeira."
+            "Títulos, listas, listas de tarefas aninhadas, tabelas, blocos de código com linguagem, matemática, sublinhado e citações chegam como estavam. Com a exportação em HTML, colunas lado a lado (de 2 a 5 colunas, com proporções), cores de texto e destaques também vêm junto. Os avisos do Notion viram avisos do PrivacyNotes, [links e menções entre páginas exportadas viram links entre notas](/br/help/note-links), e as imagens, PDFs e arquivos enviados são importados para o seu armazenamento.",
+            "As páginas de linhas de banco de dados são importadas como notas dentro de uma pasta com o nome do banco de dados, e qualquer propriedade `Tags` é adicionada como etiqueta. Os arquivos de tabela CSV dos bancos de dados são pulados e contados no resumo. A própria exportação em Markdown do Notion achata as colunas e deixa de fora cores de texto, destaques e páginas na Lixeira."
           ]
         }
       ]
@@ -1552,6 +1552,45 @@
           "p": [
             "[Cada entrada vai parar em Diários](/br/help/journal) no dia do calendário no fuso horário da própria entrada. Um título no início vira o título da entrada, e uma entrada sem ele usa a própria data como título. Entradas com estrela e fixadas continuam fixadas, e as etiquetas continuam etiquetas.",
             "A sua localização preenche o chip de localização da entrada, e o clima, a atividade e a música ficam em uma linha no topo. As fotos são importadas como imagens; áudios, vídeos e PDFs entram como anexos, e os links entre entradas viram [links entre notas](/br/help/note-links). Quando um .zip contém vários diários, cada diário vira uma pasta."
+          ]
+        }
+      ]
+    },
+    "microsoft-to-do": {
+      "app": "Microsoft To Do",
+      "title": "Exportador do Microsoft To Do",
+      "metaTitle": "Exportador do Microsoft To Do - Ferramenta gratuita no navegador - PrivacyNotes",
+      "lead": "Exporte suas listas, subtarefas, notas e anexos do Microsoft To Do com nosso exportador gratuito do Microsoft To Do que roda só no navegador antes do encerramento em junho de 2027.",
+      "sections": [
+        {
+          "h": "Exporte suas tarefas do Microsoft To Do em três passos",
+          "p": [
+            "O Microsoft To Do ainda não tem um botão de exportação integrado, por isso criamos um [exportador do Microsoft To Do](https://todo.privacynotes.app) gratuito e open source que roda diretamente no seu navegador no Windows, Mac, Linux e celular."
+          ],
+          "steps": [
+            "Abra [todo.privacynotes.app](https://todo.privacynotes.app) e clique em **Sign in with Microsoft**.",
+            "Permita o acesso somente leitura (`Tasks.Read`) para que seu navegador possa ler suas listas sem alterar nem excluir nada.",
+            "Clique em **Fetch my Microsoft To Do data** e depois clique em **Download ZIP (recommended)** para salvar suas listas, tarefas, subtarefas, notas e anexos localmente."
+          ]
+        },
+        {
+          "h": "Por que um exportador só no navegador importa antes de junho de 2027",
+          "p": [
+            "A Microsoft anunciou que o Microsoft To Do será encerrado em 30 de junho de 2027, sem substituto para contas pessoais da Microsoft. Contas corporativas e escolares migram para o Microsoft Planner, enquanto usuários pessoais são orientados a mudar para outro app de tarefas.",
+            "Em vez de instalar binários de linha de comando ou copiar tokens de desenvolvedor manualmente, nosso exportador web conecta seu navegador direto ao Microsoft Graph em um clique e funciona tanto com contas pessoais (outlook.com, hotmail.com, live.com) quanto com contas do Microsoft 365."
+          ]
+        },
+        {
+          "h": "Privado por design - nada passa pelos nossos servidores",
+          "p": [
+            "O exportador é uma página estática sem backend e sem rastreamento. Seu navegador busca suas tarefas diretamente da Microsoft e monta o ZIP no seu dispositivo, então suas listas nunca passam pelos nossos servidores. Os tokens de login ficam no armazenamento temporário da sessão do navegador e são limpos quando você sai ou fecha a aba."
+          ]
+        },
+        {
+          "h": "O que há dentro do ZIP e o que vem junto",
+          "p": [
+            "O ZIP contém um backup estruturado `microsoft-to-do-export.json`, uma lista de tarefas legível em Markdown por lista, um arquivo `tasks.csv` pronto para planilhas e seus anexos baixados. Você pode importar essa exportação para o PrivacyNotes ou para qualquer outro app de Markdown ou CSV.",
+            "No PrivacyNotes, cada lista vira uma [lista de tarefas](/br/help/tasks) mantendo tarefas abertas e concluídas, subtarefas, marcações de Importante, datas de vencimento, programações de repetição, categorias como etiquetas, notas, itens vinculados e arquivos anexados - e suas notas são criptografadas no seu dispositivo. Lembretes individuais de tarefas não são importados e são contados no resumo da importação. Um arquivo `.json` avulso do exportador ou da API Microsoft Graph também pode ser importado sem anexos."
           ]
         }
       ]

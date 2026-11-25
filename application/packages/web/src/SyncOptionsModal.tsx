@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { Trans, useTranslation } from 'react-i18next';
 import { useAuth } from './auth';
 import { useEscapeToClose } from './useEscapeToClose';
@@ -20,7 +19,7 @@ import {
 } from './devices';
 import { groupDeviceSlots, shortDeviceId, type DeviceSlot } from './deviceSlots';
 import { readPanelCache, writePanelCache } from './accountPanelCache';
-import { ArrowsClockwise, Check, CreditCard, Database, Devices, Hourglass, PencilSimple, SignIn, SignOut, User, Vault, X, HardDrives } from './icons';
+import { ArrowsClockwise, Check, CreditCard, Database, Devices, Hourglass, PencilSimple, SignIn, SignOut, Trash, User, Vault, HardDrives } from './icons';
 import { InlineRenameField } from './InlineRenameField';
 import { DEVICE_LABEL_MAX, deviceLabelOf, type DeviceLabels } from './deviceLabels';
 import { HoverLabel } from './HoverLabel';
@@ -28,15 +27,14 @@ import { DeviceIcon } from './DeviceIcon';
 import { deviceVersionFloor, isBelowFloor } from './deviceLook';
 import { DangerZone } from './DangerZone';
 import { QuotaRing } from './QuotaRing';
-import { IconUpgrade } from './UpgradeModal';
 import { RatingStar } from './RatingStar';
 import { isStorageConfigured, getStoragePackages, isBetaPricing } from './paddle';
 import { startStorageCheckout, startStorageUpgrade, openNativeSubscriptionManagement, storageProductId, PRO_PRODUCT_ID, isNativeStoreBuild, restoreNativePurchases, type RestoreOutcome } from './billing';
 import { STORAGE_ADDON_PRICE, STORAGE_PACKAGES, PRO_PRICE, EARLY_PRICE } from './pricing';
 import { useStorePrices, type StorePrice } from './storePrices';
 import { formatInstant, formatRelative } from './intlFormat';
-import { SectionEyebrow, SettingsCallout, SETTINGS_BTN, SETTINGS_BTN_UPGRADE, SETTINGS_HELP, SettingsTabStrip, settingsTabClass } from './settingsUI';
-import { Callout, CloseButton, Modal } from './ui';
+import { SectionEyebrow, SETTINGS_HELP, SettingsTabStrip, settingsTabClass } from './settingsUI';
+import { Badge, Button, Callout, IconButton, IconUpgrade, Modal, ModalFooter, ProgressBar, StatusLine, Step } from './ui';
 import { SyncPanel } from './SyncPanel';
 import { DmsPanel } from './DmsPanel';
 import { HelpChip } from './HelpChip';
@@ -70,12 +68,21 @@ type Props = {
   autoVerify?: boolean;
   /** Opens a note from ID & Sync's not-backed-up list. */
   onOpenNote?: (id: string) => void;
-  /**
-   * Opens the Images settings pane. The Storage tab is where somebody
+  /** Opens the Images settings pane. The Storage tab is where somebody
    * stares at a full quota bar, so the lever that shrinks new images is
    * linked from here. Absent when no caller can navigate.
    */
   onOpenImageSettings?: () => void;
+  /** Opens the Storage > Usage breakdown tab from the Storage tab. */
+  onOpenUsage?: () => void;
+  /** Local vault byte total shown in the UI ring (instant drops on delete).
+   *  Falls back to server quota until hydrated. */
+  vaultUsedBytes?: number;
+  /** Local vault byte total passed independently to the Support report so
+   *  offline reports still include `local=...` even if server quota failed. */
+  localStorageBytes?: number;
+  /** Server + local storage totals for ID & Sync's Support report. */
+  storageReport?: { serverNotesBytes: number; serverFilesBytes: number; localBytes?: number };
   /**
    * Whether a sync pass is running right now. Owned by the app shell,
    * passed in so this panel can report the same live state the footer
@@ -123,7 +130,7 @@ type RevokeTarget = { slot: DeviceSlot; rows: [DeviceRow, ...DeviceRow[]] };
  * Pro status is surfaced with a badge + an upsell block for free
  * users.
  */
-export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow, embedded = false, autoVerify = false, onOpenNote, onOpenImageSettings, tab: controlledTab, onTabChange, deviceLabels = {}, onRenameDevice, onOpenRating, onOpenPhrase, custodySettings, initialSection, initialMeSection, onOpenSync, onOpenAutoBackup }: Props) {
+export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow, embedded = false, autoVerify = false, onOpenNote, onOpenImageSettings, onOpenUsage, vaultUsedBytes, localStorageBytes, storageReport, tab: controlledTab, onTabChange, deviceLabels = {}, onRenameDevice, onOpenRating, onOpenPhrase, custodySettings, initialSection, initialMeSection, onOpenSync, onOpenAutoBackup }: Props) {
   const { t } = useTranslation('settings');
   const { auth, supabase, refreshProStatus, graduateLocalVault } = useAuth();
   const authed = auth.status === 'authenticated' ? auth : null;
@@ -299,10 +306,6 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [confirmingUpgrade, authed, supabase, upgradePreviewRun]);
 
-  // Esc closes only the upgrade dialog when it's open (topmost wins via the
-  // hook's LIFO stack), leaving the Settings shell behind it open.
-  useEscapeToClose(() => setConfirmingUpgrade(null), confirmingUpgrade !== null);
-
   // Manual restore (native store builds only). The automatic recheck in
   // authProStatus.ts already self-heals the common cases; this button exists
   // for Apple 3.1.1 and for support ("tap Restore purchases"). On success,
@@ -427,30 +430,29 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
           {t('storage.cancelScheduled')}
         </div>
       ) : confirmingCancel ? (
-        <div className="mt-3 rounded-md border border-red-300 dark:border-red-900/60 px-2.5 py-2">
-          <div className="text-meta text-pn-soft mb-1.5 leading-relaxed">
+        <div className="mt-3 rounded-md border border-danger/40 bg-danger/5 px-3 py-2.5">
+          <div className="text-meta text-pn-soft mb-2 leading-relaxed">
             {confirmLine}
           </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="danger"
+              icon={<Trash aria-hidden="true" />}
               disabled={storageActionBusy}
               onClick={() => {
                 setConfirmingCancel(false);
                 void handleStorageAction('cancel', undefined, sub);
               }}
-              className="text-small rounded-md bg-red-600 hover:bg-red-700 text-white px-2.5 py-1 transition disabled:opacity-50"
             >
               {storageActionBusy ? t('storage.cancelling') : t('storage.yesCancel')}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              action="cancel"
               disabled={storageActionBusy}
               onClick={() => setConfirmingCancel(false)}
-              className="text-small rounded-md border border-divider hover:bg-surface-1 px-2.5 py-1 transition disabled:opacity-50"
             >
               {t('storage.keepStorage')}
-            </button>
+            </Button>
           </div>
         </div>
       ) : (
@@ -608,16 +610,16 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                   <div className="flex items-center gap-4">
                     {/* Rocket medallion with hanging ribbon tails - the Pro mark, gilded for everyone. */}
                     <div className="shrink-0 w-9 text-center">
-                      <div className="relative z-[2] mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/15">
+                      <div className="relative z-[2] mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-pro/15">
                         <IconUpgrade size={20} />
                       </div>
                       <div className="relative -mt-1 h-[18px]">
                         <span
-                          className="absolute start-1.5 top-0 h-[18px] w-2.5 bg-amber-500"
+                          className="absolute start-1.5 top-0 h-[18px] w-2.5 bg-pro"
                           style={{ clipPath: 'polygon(0 0,100% 0,100% 100%,50% 70%,0 100%)', transform: 'skewX(-8deg)' }}
                         />
                         <span
-                          className="absolute end-1.5 top-0 h-[18px] w-2.5 bg-amber-600"
+                          className="absolute end-1.5 top-0 h-[18px] w-2.5 bg-pro/85"
                           style={{ clipPath: 'polygon(0 0,100% 0,100% 100%,50% 70%,0 100%)', transform: 'skewX(8deg)' }}
                         />
                       </div>
@@ -636,9 +638,9 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                     <div className="mt-3 flex items-center gap-3 border-t border-divider pt-3 text-small">
                       <RatingStar size={16} />
                       <span className="flex-1 text-pn-soft">{t('plan.ratePro')}</span>
-                      <button type="button" onClick={onOpenRating} className={RATE_BUTTON}>
+                      <Button icon={<RatingStar size={14} />} onClick={onOpenRating} className="shrink-0">
                         {t('plan.rateCta')}
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -663,10 +665,11 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                     )}
                   </div>
                   {devices && (
-                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-divider" aria-hidden="true">
-                      <div
-                        className={`h-full rounded-full ${slots.length >= freeLimit ? 'bg-amber-500' : 'bg-accent-fill'}`}
-                        style={{ width: `${Math.min(slots.length / freeLimit, 1) * 100}%` }}
+                    <div className="mt-2">
+                      <ProgressBar
+                        value={Math.min(slots.length / freeLimit, 1)}
+                        tone={slots.length >= freeLimit ? 'warning' : 'info'}
+                        label={t('plan.freeUsage', { used: slots.length, limit: freeLimit })}
                       />
                     </div>
                   )}
@@ -677,9 +680,9 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                         <div className="text-body font-medium text-pn">{t('plan.rateFreeTitle')}</div>
                         <div className="text-pn-soft">{t('plan.rateFreeBody')}</div>
                       </div>
-                      <button type="button" onClick={onOpenRating} className={RATE_BUTTON}>
+                      <Button icon={<RatingStar size={14} />} onClick={onOpenRating} className="shrink-0">
                         {t('plan.rateCta')}
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -693,14 +696,14 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
               <div className="rounded-md border border-divider bg-surface-1 p-4">
                 <SectionEyebrow setting="plan.restorePurchases" className="mb-1">{t('plan.restore.heading')}</SectionEyebrow>
                 <p className={`${SETTINGS_HELP} leading-relaxed`}>{t('plan.restore.body')}</p>
-                <button
-                  type="button"
+                <Button
+                  action="restore"
                   disabled={restoreBusy}
                   onClick={() => void handleRestore()}
-                  className="mt-3 rounded-md border border-divider bg-surface-2 hover:bg-track disabled:opacity-60 disabled:cursor-not-allowed px-3 py-1.5 text-small font-medium text-pn transition"
+                  className="mt-3"
                 >
                   {restoreBusy ? t('plan.restore.ctaBusy') : t('plan.restore.cta')}
-                </button>
+                </Button>
                 {restoreOutcome && (
                   <p
                     className={`mt-2 text-small leading-relaxed ${
@@ -754,32 +757,36 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                       <QuotaRing
                         compact
                         label={t('storage.quotaLabel')}
-                        usedBytes={quota.totalBytes + quota.imageBytes}
+                        usedBytes={vaultUsedBytes ?? (quota.totalBytes + quota.imageBytes)}
                         maxBytes={quota.maxTotalBytes}
                       />
-                      <p className={`${SETTINGS_HELP} -mt-3`}>
-                        {t('common:storageBar.cleanupInfo')}
-                        {onOpenImageSettings && (
-                          <>
-                            {' '}
+                      {(onOpenUsage || onOpenImageSettings) && (
+                        <p className={`${SETTINGS_HELP} -mt-3 flex flex-wrap items-center gap-x-2 gap-y-1`}>
+                          {onOpenUsage && (
+                            <button type="button" onClick={onOpenUsage} className="text-accent hover:underline">
+                              {t('storage.seeBreakdown')}
+                            </button>
+                          )}
+                          {onOpenUsage && onOpenImageSettings && <span aria-hidden="true">·</span>}
+                          {onOpenImageSettings && (
                             <button type="button" onClick={onOpenImageSettings} className="text-accent hover:underline">
                               {t('storage.imageSettingsLink')}
                             </button>
-                          </>
-                        )}
-                      </p>
+                          )}
+                        </p>
+                      )}
                       {(activeStorageSub || isStorageConfigured()) ? (
                           <div>
                             <SectionEyebrow setting="storage.addon" className="mb-1" icon={HardDrives}>
                               {t('storage.addonHeading')}
                             </SectionEyebrow>
-                            <SettingsCallout className="mb-4">
+                            <Callout className="mb-4">
                               {t('storage.addonFileSizePerk')}
-                            </SettingsCallout>
+                            </Callout>
                             {storagePurchaseError && (
-                              <div className="mb-3 rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-body p-3">
+                              <Callout tone="danger" className="mb-3">
                                 {storagePurchaseError}
-                              </div>
+                              </Callout>
                             )}
                             {(() => {
                               /* Dual-layout package picker. The PANE's own width decides the
@@ -903,7 +910,7 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                                               v.owned
                                                 ? 'border-accent border-2'
                                                 : v.isBest
-                                                  ? 'border-green-600/70 dark:border-green-600/50 border-2 bg-green-50/60 dark:bg-green-950/20'
+                                                  ? 'border-success/60 border-2 bg-success/10'
                                                   : 'border-divider'
                                             } p-3.5 ${v.isDowngrade ? 'opacity-40' : ''}`}
                                           >
@@ -942,20 +949,15 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                                                 {t('storage.maxFileFeat', { mb: 100 })}
                                               </span>
                                             </div>
-                                            <button
-                                              type="button"
+                                            <Button
+                                              variant={v.owned || v.isDowngrade ? 'secondary' : v.isBest ? 'primary' : 'secondary'}
+                                              icon={v.owned ? <Check aria-hidden="true" /> : <HardDrives aria-hidden="true" />}
                                               disabled={!v.actionable}
                                               onClick={() => selectPkg(v)}
-                                              className={`mt-3 w-full rounded-md py-1.5 text-small transition disabled:opacity-50 ${
-                                                v.owned || v.isDowngrade
-                                                  ? 'border border-divider font-medium text-pn-muted cursor-default'
-                                                  : v.isBest
-                                                    ? 'bg-green-600 hover:bg-green-700 text-white font-semibold'
-                                                    : 'border border-divider font-medium hover:bg-surface-1'
-                                              }`}
+                                              className="mt-3 w-full"
                                             >
                                               {ctaLabel(v)}
-                                            </button>
+                                            </Button>
                                           </div>
                                         </HoverLabel>
                                         {renewLineFor(v)}
@@ -975,7 +977,7 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                                               v.owned
                                                 ? 'border-accent border-2'
                                                 : v.isBest
-                                                  ? 'border-green-600/70 dark:border-green-600/50 border-2'
+                                                  ? 'border-success/60 border-2'
                                                   : 'border-divider'
                                             } px-3.5 py-3 text-start transition ${
                                               v.actionable
@@ -1032,94 +1034,84 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                               );
                             })()}
                             {confirmingUpgrade && (
-                              <div
-                                className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
-                                onClick={() => { if (!storageActionBusy) setConfirmingUpgrade(null); }}
+                              <Modal
+                                layer="z-[60]"
+                                onClose={storageActionBusy ? undefined : () => setConfirmingUpgrade(null)}
+                                escape={!storageActionBusy}
+                                closeOnBackdrop={!storageActionBusy}
+                                icon={<IconUpgrade size={16} />}
+                                title={t('storage.upgradeTitle', { gb: confirmingUpgrade.gb })}
+                                subtitle={t('storage.upgradeTotal', { total: 0.5 + confirmingUpgrade.gb })}
+                                className="max-w-sm p-6 space-y-4"
                               >
-                                <div
-                                  className="relative w-[340px] max-w-full rounded-xl border border-divider bg-surface-2 p-6 text-center"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <CloseButton onClick={() => setConfirmingUpgrade(null)} disabled={storageActionBusy} className="absolute top-2.5 end-2.5" />
-                                  <div className="mx-auto mb-3 w-11 h-11 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                                    <IconUpgrade size={20} />
-                                  </div>
-                                  <div className="text-title font-medium text-pn">
-                                    {t('storage.upgradeTitle', { gb: confirmingUpgrade.gb })}
-                                  </div>
-                                  <div className="text-body text-pn-soft mt-0.5 mb-4">
-                                    {t('storage.upgradeTotal', { total: 0.5 + confirmingUpgrade.gb })}
-                                  </div>
-                                  <div className="rounded-md bg-track px-3 py-2.5 text-body text-start text-pn-soft leading-relaxed mb-4">
-                                    {(() => {
-                                      const amount = storeSheetUpgrade || upgradePreviewFailed
-                                        ? t('storage.proratedAmount')
-                                        : (upgradeDue?.dueToday ?? '…');
-                                      const renewPrice = confirmingUpgrade.priceLabel;
-                                      // Apple runs the opposite mechanic to the other two rails, so it
-                                      // needs its own sentence. Paddle and Play both charge the
-                                      // DIFFERENCE now and leave the renewal date alone (Play via
-                                      // PLAY_CHARGE_PRORATED_PRICE), which is what the two strings
-                                      // below describe. Apple charges the new price in FULL, refunds
-                                      // the unused remainder of the old term itself, and restarts the
-                                      // year today - so "charged X for the rest of your current year"
-                                      // is wrong on iOS in all three of its claims, and there is no
-                                      // "rest of your current year" left to bill for.
-                                      if (activeStorageSub?.source === 'apple') {
-                                        return t('storage.upgradeChargeApple', { price: renewPrice });
-                                      }
-                                      return activeStorageSub?.current_period_ends_at
-                                        ? t('storage.upgradeChargeUntil', { amount, date: formatInstant(activeStorageSub.current_period_ends_at, 'date'), price: renewPrice })
-                                        : t('storage.upgradeCharge', { amount, price: renewPrice });
-                                    })()}
-                                    {upgradePreviewFailed && (
-                                      <div role="alert" className="mt-2 text-small text-danger">
-                                        {t('storage.upgradeAmountFailed')}{' '}
-                                        <button
-                                          type="button"
-                                          onClick={() => setUpgradePreviewRun((n) => n + 1)}
-                                          className="font-medium text-accent hover:underline"
-                                        >
-                                          {t('auth:signIn.tryAgain')}
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex flex-col gap-2">
-                                    <button
-                                      type="button"
-                                      disabled={storageActionBusy || (!storeSheetUpgrade && !upgradeDue)}
-                                      onClick={() => {
-                                        const target = { priceId: confirmingUpgrade.priceId, gb: confirmingUpgrade.gb, quote: upgradeDue?.quote };
-                                        setConfirmingUpgrade(null);
-                                        void handleStorageAction('switch', target);
-                                      }}
-                                      className={`w-full rounded-md ${PRIMARY_BTN_SKIN} text-body font-semibold py-2 transition disabled:opacity-50`}
-                                    >
-                                      {storageActionBusy ? t('storage.upgrading') : t('storage.upgradeAndPay')}
-                                    </button>
-                                    <button
-                                      type="button"
-                                      disabled={storageActionBusy}
-                                      onClick={() => setConfirmingUpgrade(null)}
-                                      className="w-full rounded-md border border-divider hover:bg-surface-1 text-body py-2 transition disabled:opacity-50"
-                                    >
-                                      {t('billing:donation.maybeLater')}
-                                    </button>
-                                  </div>
+                                <div className="rounded-md bg-track px-3 py-2.5 text-body text-start text-pn-soft leading-relaxed">
+                                  {(() => {
+                                    const amount = storeSheetUpgrade || upgradePreviewFailed
+                                      ? t('storage.proratedAmount')
+                                      : (upgradeDue?.dueToday ?? '…');
+                                    const renewPrice = confirmingUpgrade.priceLabel;
+                                    // Apple runs the opposite mechanic to the other two rails, so it
+                                    // needs its own sentence. Paddle and Play both charge the
+                                    // DIFFERENCE now and leave the renewal date alone (Play via
+                                    // PLAY_CHARGE_PRORATED_PRICE), which is what the two strings
+                                    // below describe. Apple charges the new price in FULL, refunds
+                                    // the unused remainder of the old term itself, and restarts the
+                                    // year today - so "charged X for the rest of your current year"
+                                    // is wrong on iOS in all three of its claims, and there is no
+                                    // "rest of your current year" left to bill for.
+                                    if (activeStorageSub?.source === 'apple') {
+                                      return t('storage.upgradeChargeApple', { price: renewPrice });
+                                    }
+                                    return activeStorageSub?.current_period_ends_at
+                                      ? t('storage.upgradeChargeUntil', { amount, date: formatInstant(activeStorageSub.current_period_ends_at, 'date'), price: renewPrice })
+                                      : t('storage.upgradeCharge', { amount, price: renewPrice });
+                                  })()}
+                                  {upgradePreviewFailed && (
+                                    <div role="alert" className="mt-2 text-small text-danger">
+                                      {t('storage.upgradeAmountFailed')}{' '}
+                                      <button
+                                        type="button"
+                                        onClick={() => setUpgradePreviewRun((n) => n + 1)}
+                                        className="font-medium text-accent hover:underline"
+                                      >
+                                        {t('auth:signIn.tryAgain')}
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
-                              </div>
+                                <ModalFooter>
+                                  <Button
+                                    action="cancel"
+                                    disabled={storageActionBusy}
+                                    onClick={() => setConfirmingUpgrade(null)}
+                                  >
+                                    {t('billing:donation.maybeLater')}
+                                  </Button>
+                                  <Button
+                                    action="confirm"
+                                    variant="primary"
+                                    disabled={storageActionBusy || (!storeSheetUpgrade && !upgradeDue)}
+                                    onClick={() => {
+                                      const target = { priceId: confirmingUpgrade.priceId, gb: confirmingUpgrade.gb, quote: upgradeDue?.quote };
+                                      setConfirmingUpgrade(null);
+                                      void handleStorageAction('switch', target);
+                                    }}
+                                  >
+                                    {storageActionBusy ? t('storage.upgrading') : t('storage.upgradeAndPay')}
+                                  </Button>
+                                </ModalFooter>
+                              </Modal>
                             )}
                             {storageBusy && (
-                              <div className="text-meta text-pn-muted mt-1.5">{t('billing:upgrade.ctaOpening')}</div>
+                              <div className="mt-1.5"><StatusLine busy>{t('billing:upgrade.ctaOpening')}</StatusLine></div>
                             )}
                             {storageActionBusy && (
-                              <div className="text-meta text-pn-muted mt-1.5">{t('storage.updatingPlan')}</div>
+                              <div className="mt-1.5"><StatusLine busy>{t('storage.updatingPlan')}</StatusLine></div>
                             )}
                             {error && (
-                              <div className="mt-2 rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-small p-2.5">
+                              <Callout tone="danger" className="mt-2">
                                 {error}
-                              </div>
+                              </Callout>
                             )}
                             {activeStorageSub && !activeStorageSub.scheduled_cancel_at && storageCancelControls(activeStorageSub, t('storage.cancelConfirm'))}
                             {/* Subscription terms plus the two legal links, on the
@@ -1159,20 +1151,24 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                       <QuotaRing
                         compact
                         label={t('storage.quotaLabel')}
-                        usedBytes={quota.totalBytes + quota.imageBytes}
+                        usedBytes={vaultUsedBytes ?? (quota.totalBytes + quota.imageBytes)}
                         maxBytes={quota.maxTotalBytes}
                       />
-                      <p className={`${SETTINGS_HELP} -mt-3`}>
-                        {t('common:storageBar.cleanupInfo')}
-                        {onOpenImageSettings && (
-                          <>
-                            {' '}
+                      {(onOpenUsage || onOpenImageSettings) && (
+                        <p className={`${SETTINGS_HELP} -mt-3 flex flex-wrap items-center gap-x-2 gap-y-1`}>
+                          {onOpenUsage && (
+                            <button type="button" onClick={onOpenUsage} className="text-accent hover:underline">
+                              {t('storage.seeBreakdown')}
+                            </button>
+                          )}
+                          {onOpenUsage && onOpenImageSettings && <span aria-hidden="true">·</span>}
+                          {onOpenImageSettings && (
                             <button type="button" onClick={onOpenImageSettings} className="text-accent hover:underline">
                               {t('storage.imageSettingsLink')}
                             </button>
-                          </>
-                        )}
-                      </p>
+                          )}
+                        </p>
+                      )}
                       {waitingStorageSub && (
                         <div className="rounded-md border border-divider bg-surface-1 p-4">
                           <div className="flex flex-wrap items-center gap-2">
@@ -1204,51 +1200,43 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                             place the ceiling and the add-on price are stated
                             before the purchase. The price is the store's own
                             string on a native build, pricing.ts otherwise. */}
-                        <div className="flex gap-3">
-                          <div className="flex flex-col items-center">
-                            <div className="w-6 h-6 rounded-full bg-amber-600 text-white text-small font-semibold flex items-center justify-center shrink-0">1</div>
-                            <div className="flex-1 w-px bg-divider my-1" />
-                          </div>
-                          <div className="flex-1 min-w-0 pb-4">
-                            <div className="text-body font-medium text-pn">{t('plan.upgradeToPro')}</div>
-                            <p className="text-body text-pn-soft leading-relaxed mt-0.5">{t('storage.stepProBody')}</p>
+                        <ol className="space-y-0">
+                          <Step n={1} done={false} title={t('plan.upgradeToPro')} hint={t('storage.stepProBody')}>
                             {isBetaPricing() && !isNativeStoreBuild() ? (
-                              <div className="mt-2 flex flex-wrap items-center gap-2.5">
-                                <span className="text-display-2 font-bold tracking-tight text-amber-900 dark:text-amber-100">${EARLY_PRICE}</span>
+                              <div className="pt-0.5 flex flex-wrap items-center gap-2.5">
+                                <span className="text-display-2 font-bold tracking-tight text-pn">${EARLY_PRICE}</span>
                                 <span className="text-heading font-semibold line-through text-warning">${PRO_PRICE}</span>
-                                <span className="text-meta font-semibold text-amber-900 dark:text-amber-100 bg-amber-200 dark:bg-amber-800/70 rounded-full px-2.5 py-0.5">
+                                <Badge tone="warning">
                                   {t('storage.earlyAdopterSave', { amount: PRO_PRICE - EARLY_PRICE })}
-                                </span>
+                                </Badge>
                               </div>
                             ) : (
-                              <div className="mt-2 flex items-baseline gap-2">
-                                <span className="text-display-2 font-bold tracking-tight text-amber-900 dark:text-amber-100">{storePrices?.[PRO_PRODUCT_ID]?.formatted ?? (isNativeStoreBuild() ? '…' : `$${PRO_PRICE}`)}</span>
-                                <span className="text-body font-medium text-amber-700/70 dark:text-amber-300/70">{t('billing:upgrade.oneTime')}</span>
+                              <div className="pt-0.5 flex items-baseline gap-2">
+                                <span className="text-display-2 font-bold tracking-tight text-pn">{storePrices?.[PRO_PRODUCT_ID]?.formatted ?? (isNativeStoreBuild() ? '…' : `$${PRO_PRICE}`)}</span>
+                                <span className="text-body font-medium text-pn-muted">{t('billing:upgrade.oneTime')}</span>
                               </div>
                             )}
-                            <button
-                              type="button"
+                            <Button
+                              variant="upgrade"
+                              icon={<IconUpgrade size={16} />}
                               onClick={onOpenUpgrade}
                               disabled={!onOpenUpgrade}
-                              className="mt-2 inline-flex items-center justify-center gap-2 rounded-md bg-amber-600 hover:bg-amber-700 text-white text-body font-semibold px-5 py-2 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                              className="mt-1"
                             >
-                              <IconUpgrade size={16} onFill />
                               {t('plan.upgradeToPro')}
-                            </button>
-                          </div>
-                        </div>
-                        <div className="flex gap-3">
-                          <div className="w-6 h-6 rounded-full border border-divider text-pn-soft text-small font-semibold flex items-center justify-center shrink-0">2</div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-body font-medium text-pn-soft">{t('storage.stepAddonTitle')}</div>
-                            <p className="text-body text-pn-soft leading-relaxed mt-0.5">
-                              {t('storage.stepAddonBody', {
-                                price: storePrices?.[storageProductId(1)]?.formatted ?? (isNativeStoreBuild() ? '…' : `$${STORAGE_ADDON_PRICE.toFixed(2)}`),
-                                total: 0.5 + STORAGE_PACKAGES.reduce((m, p) => Math.max(m, p.gb), 0),
-                              })}
-                            </p>
-                          </div>
-                        </div>
+                            </Button>
+                          </Step>
+                          <Step
+                            n={2}
+                            done={false}
+                            last
+                            title={t('storage.stepAddonTitle')}
+                            hint={t('storage.stepAddonBody', {
+                              price: storePrices?.[storageProductId(1)]?.formatted ?? (isNativeStoreBuild() ? '…' : `$${STORAGE_ADDON_PRICE.toFixed(2)}`),
+                              total: 0.5 + STORAGE_PACKAGES.reduce((m, p) => Math.max(m, p.gb), 0),
+                            })}
+                          />
+                        </ol>
                       </div>
                     </>
                   )}
@@ -1287,14 +1275,13 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                             className="flex items-center justify-between gap-3 rounded-md border border-divider px-3 py-2"
                           >
                             <DeviceRowLabel row={slot.rows[0]} isSelf={slot.isSelf} label={deviceLabelOf(deviceLabels, slot.rows[0].device_id)} onRename={onRenameDevice} />
-                            <button
-                              type="button"
+                            <Button
+                              action="remove"
+                              variant="danger"
                               onClick={() => setConfirm({ slot, rows: slot.rows })}
                               disabled={busy !== null}
-                              className={REMOVE_BUTTON}
-                            >
-                              {t('common:actions.remove')}
-                            </button>
+                              className="shrink-0"
+                            />
                           </li>
                         ) : (
                           /* Several rows share one slot: a reinstall, a second
@@ -1309,14 +1296,13 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
                               {slot.rows.map((row) => (
                                 <li key={row.device_id} className="flex items-center justify-between gap-3 py-2">
                                   <DeviceRowLabel row={row} isSelf={authed?.deviceId === row.device_id} label={deviceLabelOf(deviceLabels, row.device_id)} onRename={onRenameDevice} />
-                                  <button
-                                    type="button"
+                                  <Button
+                                    action="remove"
+                                    variant="danger"
                                     onClick={() => setConfirm({ slot, rows: [row] })}
                                     disabled={busy !== null}
-                                    className={REMOVE_BUTTON}
-                                  >
-                                    {t('common:actions.remove')}
-                                  </button>
+                                    className="shrink-0"
+                                  />
                                 </li>
                               ))}
                             </ul>
@@ -1367,39 +1353,38 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
             )}
 
             {error && (
-              <div className="rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-body p-3">
+              <Callout tone="danger">
                 {error}
-              </div>
+              </Callout>
             )}
 
             {/* Upgrade CTA (free users only) */}
             {!isPro && authed && (
-              <button
-                type="button"
+              <Button
+                variant="upgrade"
+                icon={<IconUpgrade size={16} />}
                 data-setting="plan.upgrade"
                 onClick={onOpenUpgrade}
                 disabled={!onOpenUpgrade}
-                className={`w-full ${SETTINGS_BTN_UPGRADE}`}
+                className="w-full"
               >
-                <IconUpgrade size={16} onFill />
                 {t('plan.upgradeToPro')}
-              </button>
+              </Button>
             )}
 
             {/* Sign out */}
             {authed && onSignOut && (
-              <button
-                type="button"
+              <Button
+                icon={<SignOut className="text-accent" aria-hidden="true" />}
                 data-setting="plan.signOut"
                 onClick={() => {
                   onClose();
                   onSignOut();
                 }}
-                className={`w-full ${SETTINGS_BTN}`}
+                className="w-full"
               >
-                <SignOut className="text-accent" />
                 {t('account.signOut')}
-              </button>
+              </Button>
             )}
 
             {/* Danger zone - lives with the account actions, right below
@@ -1416,7 +1401,7 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
         {/* ── Me tab (ID & Sync - the full sync readout) ── */}
         {tab === 'me' && (meSection === 'overview' || !authed) && (
           <>
-            <SyncPanel pubkey={authed?.pubkey} onSyncNow={onSyncNow} supabase={supabase} autoVerify={autoVerify} onOpenNote={onOpenNote} onOpenAutoBackup={onOpenAutoBackup} onTurnOnLocalSync={() => graduateLocalVault({ enableSync: true })} />
+            <SyncPanel pubkey={authed?.pubkey} onSyncNow={onSyncNow} supabase={supabase} autoVerify={autoVerify} onOpenNote={onOpenNote} onOpenAutoBackup={onOpenAutoBackup} localStorageBytes={localStorageBytes ?? vaultUsedBytes} storageReport={storageReport ?? (quota ? { serverNotesBytes: quota.totalBytes, serverFilesBytes: quota.imageBytes, localBytes: localStorageBytes ?? vaultUsedBytes } : undefined)} onTurnOnLocalSync={() => graduateLocalVault({ enableSync: true })} />
             <HelpChip surface="me" />
           </>
         )}
@@ -1441,12 +1426,6 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
     </>
   );
 }
-
-const RATE_BUTTON =
-  'shrink-0 rounded-md border border-divider bg-surface-2 hover:bg-track px-2.5 py-1.5 text-small font-medium text-pn transition';
-
-const REMOVE_BUTTON =
-  'text-small rounded-md border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30 px-2.5 py-1.5 transition disabled:opacity-50';
 
 /**
  * Name line plus the meta that tells two identically named rows apart. The
@@ -1520,24 +1499,15 @@ export function DeviceRowLabel({
             <>
               <span className="truncate" dir="auto">{label ?? row.device_name}</span>
               {onRename && (
-                <HoverLabel label={t('common:actions.rename')}>
-                  <button
-                    type="button"
-                    onClick={start}
-                    aria-label={t('common:actions.rename')}
-                    className="shrink-0 -m-1.5 p-1.5 rounded text-pn-muted hover:text-pn hover:bg-surface-1 transition"
-                  >
-                    <PencilSimple aria-hidden="true" />
-                  </button>
-                </HoverLabel>
+                <IconButton label={t('common:actions.rename')} onClick={start} className="-m-1">
+                  <PencilSimple aria-hidden="true" />
+                </IconButton>
               )}
             </>
           )}
           {badge}
           {isSelf && (
-            <span className="shrink-0 text-meta uppercase tracking-wide text-accent">
-              {t('devices.thisDevice')}
-            </span>
+            <Badge tone="info">{t('devices.thisDevice')}</Badge>
           )}
         </div>
         <div className="text-meta text-pn-muted">
@@ -1626,24 +1596,12 @@ function RevokeConfirm({
             {wholeSlot ? t('revoke.freeNote') : t('revoke.freeNoteKept')}
           </p>
         )}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={busy !== null}
-            className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-body transition"
-          >
-            {t('common:actions.cancel')}
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={busy !== null}
-            className="flex-1 rounded-md bg-red-600 hover:bg-red-700 text-white px-3 py-2 text-body transition disabled:opacity-50"
-          >
+        <ModalFooter>
+          <Button action="cancel" onClick={onCancel} disabled={busy !== null} />
+          <Button action="remove" variant="danger" onClick={onConfirm} disabled={busy !== null}>
             {busy === slot.key ? t('security:deviceLimit.removing') : t('common:actions.remove')}
-          </button>
-        </div>
+          </Button>
+        </ModalFooter>
     </Modal>
   );
 }

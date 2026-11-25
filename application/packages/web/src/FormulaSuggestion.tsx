@@ -29,6 +29,7 @@ import { PluginKey, TextSelection } from '@tiptap/pm/state';
 import { textMatcher } from './textMatch';
 import { FORMULA_MENU, caretCell, formulaInsertion } from './tableFormulaInsert';
 import { placeAtCaret } from './usePopoverPosition';
+import { SuggestionItem, SuggestionPopup } from './ui';
 
 type FormulaItem = { name: string };
 
@@ -78,30 +79,25 @@ const FormulaList = forwardRef<ListRef, ListProps>(({ items, command }, ref) => 
 
   if (items.length === 0) {
     return (
-      <div className="z-50 w-64 rounded-lg border border-divider bg-surface-2 shadow-lg overflow-hidden">
+      <SuggestionPopup className="z-50 w-64">
         <div className="px-3 py-2 text-body text-pn-muted">{t('table.formulaNoMatch')}</div>
-      </div>
+      </SuggestionPopup>
     );
   }
 
   return (
-    <div ref={listRef} className="z-50 w-72 max-h-64 overflow-y-auto rounded-lg border border-divider bg-surface-2 shadow-lg">
+    <SuggestionPopup ref={listRef} className="z-50 w-72">
       {items.map((item, index) => (
-        <button
+        <SuggestionItem
           key={item.name}
-          type="button"
-          data-selected={index === selectedIndex}
-          onClick={() => command(item)}
+          active={index === selectedIndex}
+          onSelect={() => command(item)}
           onMouseEnter={() => setSelectedIndex(index)}
-          className={`w-full text-start px-3 py-1.5 text-body flex items-baseline gap-2 transition ${
-            index === selectedIndex ? 'bg-accent/10 text-accent-strong dark:bg-accent/20' : 'text-pn hover:bg-pn/5'
-          }`}
-        >
-          <span className="font-mono shrink-0">{item.name}</span>
-          <span className="text-small text-pn-muted truncate">{t(`table.formula.${item.name}`)}</span>
-        </button>
+          label={<span className="font-mono">{item.name}</span>}
+          hint={t(`table.formula.${item.name}`)}
+        />
       ))}
-    </div>
+    </SuggestionPopup>
   );
 });
 FormulaList.displayName = 'FormulaList';

@@ -918,6 +918,10 @@ function feedbackBlock(prompt: string): string {
  */
 const CONTENT_BASELINE = '2026-08-26';
 const CONTENT_UPDATED: Record<string, string> = {
+  'slash-commands': '2026-11-25',
+  'paste-screenshots': '2026-11-25',
+  'image-quality': '2026-11-24',
+  'local-only': '2026-11-24',
   'lock-reload': '2026-11-19',
   'phrase-not-saved': '2026-11-19',
   'session-expired': '2026-11-19',

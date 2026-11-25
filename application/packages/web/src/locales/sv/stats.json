@@ -327,6 +327,7 @@
       "noEntry": "inget inlägg",
       "doseLens": "Humöret låg i snitt på {{before}} under de {{nBefore}} dagarna före och på {{after}} under de {{nAfter}} dagarna efter.",
       "doseLensHeading": "Kring varje dosändring",
+      "doseLensLocked": "Uppgradera till Pro för att se hur dosändringar påverkar ditt humör",
       "doseLensShort_one": "{{count}} loggad dag till runt den behövs.",
       "doseLensShort_other": "{{count}} loggade dagar till runt den behövs."
     },

@@ -10,10 +10,11 @@ import { useTranslation } from 'react-i18next';
 import type { LocalNote } from '../db';
 import NoteRow from '../NoteRow';
 import { Button, EmptyState, ProgressBar, TaskCheckbox } from '../ui';
-import { Cake, CalendarDots, CheckFat, FileImage, FileText, NotePencil } from '../icons';
+import { BellSimple, Cake, CalendarDots, CheckFat, FileImage, FileText, NotePencil } from '../icons';
 import type { DayKind } from '../notesViewUtils';
 import { editedAtOf, entryDayOf, journalOn, stripToPlainText, toLocalIso } from '../notesViewUtils';
 import type { TaskItem } from '../tasks';
+import { formatTaskReminderLabel, isTaskReminderOverdue } from '../taskReminderText';
 import { contactBirthday, contactDisplayName, parseContactBody } from '../contactBody';
 import { computeStats, type Stats } from '../stats';
 import { milestoneLabel, milestoneProgress } from '../milestones';
@@ -160,8 +161,8 @@ function Rows({ notes, prefs }: { notes: LocalNote[]; prefs?: ListPrefs }) {
  *  line's own padding would cut a second line off in the smallest card. */
 function Empty({ children }: { children: string }) {
   return (
-    <div className="flex h-full items-center justify-center [&>p]:p-0">
-      <EmptyState compact>{children}</EmptyState>
+    <div className="flex h-full items-center justify-center">
+      <EmptyState compact flush>{children}</EmptyState>
     </div>
   );
 }
@@ -253,27 +254,39 @@ export function TasksWidget({ tasks }: { tasks: TaskItem[] }) {
   const fit = useFitRows();
   const shown = tasks.slice(0, MAX_ROWS);
   if (!shown.length) return <Empty>{t('dashboard.empty.tasks')}</Empty>;
+  const todayIso = toLocalIso(new Date());
   return (
     <ul ref={fit} className="flex flex-col gap-0.5">
-      {shown.map((task) => (
-        <li key={`${task.noteId}:${task.lineIdx}`} className="flex items-start gap-2 min-w-0">
-          <TaskCheckbox
-            checked={task.checked}
-            onChange={(e) => env.toggleTask(task, e.target.checked)}
-            aria-label={t('tasksList.markComplete')}
-            className="mt-1"
-          />
-          <button
-            type="button"
-            onClick={() => env.openTaskSource(task)}
-            title={task.noteTitle}
-            className={`${ROW_BUTTON} flex-col gap-0`}
-          >
-            <span className="block truncate">{stripToPlainText(task.text)}</span>
-            <span className="block truncate text-meta text-pn-muted">{task.noteTitle}</span>
-          </button>
-        </li>
-      ))}
+      {shown.map((task) => {
+        const overdue = task.reminder ? isTaskReminderOverdue(task.reminder) : false;
+        return (
+          <li key={`${task.noteId}:${task.lineIdx}`} className="flex items-start gap-2 min-w-0">
+            <TaskCheckbox
+              checked={task.checked}
+              onChange={(e) => env.toggleTask(task, e.target.checked)}
+              aria-label={t('tasksList.markComplete')}
+              className="mt-1"
+            />
+            <button
+              type="button"
+              onClick={() => env.openTaskSource(task)}
+              title={task.noteTitle}
+              className={`${ROW_BUTTON} flex-col gap-0`}
+            >
+              <span className="block truncate">{stripToPlainText(task.text)}</span>
+              <span className="flex items-center gap-1.5 min-w-0 text-meta text-pn-muted">
+                <span className="truncate">{task.noteTitle}</span>
+                {task.reminder && (
+                  <span className={`shrink-0 inline-flex items-center gap-0.5 ${overdue ? 'text-danger' : 'text-accent'}`}>
+                    <BellSimple aria-hidden="true" />
+                    <span>{formatTaskReminderLabel(task.reminder, todayIso)}</span>
+                  </span>
+                )}
+              </span>
+            </button>
+          </li>
+        );
+      })}
     </ul>
   );
 }

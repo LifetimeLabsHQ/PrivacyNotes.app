@@ -7,9 +7,15 @@ import { useCopyToClipboard } from './clipboard';
 import { proUnlocked } from './demo';
 import { PasswordText } from './PasswordText';
 import { isImeComposing } from './imeComposing';
-import { IconUpgrade } from './proMark';
+// Leaf imports rather than the ./ui barrel: the browser extension imports this
+// panel and packs only the modules it reaches into its Firefox source archive.
 import { Button } from './ui/Button';
+import { Checkbox } from './ui/Checkbox';
 import { Callout } from './ui/feedback';
+import { RangeSlider } from './ui/RangeSlider';
+import { FIELD_CLASS } from './formFields';
+import { IconUpgrade } from './proMark';
+import { SETTINGS_TRACK, settingsChipClass, settingsSegClass } from './settingsUI';
 import {
   EXACT_COUNT_MAX,
   PASSPHRASE_WORDS,
@@ -41,29 +47,10 @@ import {
  * Spec: docs/internal/pro-features.md (passphrase generator)
  * ──────────────────────────────────────────────────────────────── */
 
-
 const generate = (g: PwGen) => generateFrom(g, BIP39_WORDS);
 
 const LENGTH_PRESETS = [12, 16, 20, 32, 64];
 const WORD_PRESETS = [4, 8, 12, 16, 20];
-
-const PILL_ON = 'border-accent bg-accent/10 text-accent-strong font-medium';
-const PILL_OFF = 'border-divider text-pn-muted hover:bg-pn/5';
-
-/** A segment of a pill row: one press selects it. */
-function Pill({ active, onClick, children, label }: { active: boolean; onClick: () => void; children: ReactNode; label?: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      aria-label={label}
-      className={`flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 text-small py-1.5 px-2 rounded-md border transition ${active ? PILL_ON : PILL_OFF}`}
-    >
-      {children}
-    </button>
-  );
-}
 
 /** A small round chip under a slider that jumps it to one value. */
 function Preset({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
@@ -72,7 +59,7 @@ function Preset({ active, onClick, children }: { active: boolean; onClick: () =>
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`text-meta px-2 py-0.5 rounded-full border tabular-nums transition ${active ? PILL_ON : PILL_OFF}`}
+      className={`${settingsChipClass(active)} !rounded-full !px-2 !py-0.5 !text-meta tabular-nums`}
     >
       {children}
     </button>
@@ -107,14 +94,13 @@ function CountSlider({ label, value, min, max, onChange }: {
   return (
     <div className="flex items-center gap-2">
       <label className={`${LABEL} w-14 shrink-0`}>{label}</label>
-      <input
-        type="range"
+      <RangeSlider
         min={min}
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         aria-label={label}
-        className="flex-1 min-w-0 accent-accent"
+        className="flex-1 min-w-0"
       />
       {/* A text field with a numeric keyboard, the same as the PIN and card
           fields: a number input draws the platform's spin buttons, which
@@ -133,7 +119,7 @@ function CountSlider({ label, value, min, max, onChange }: {
         onBlur={commitDraft}
         onKeyDown={(e) => { if (e.key === 'Enter' && !isImeComposing(e)) commitDraft(); }}
         aria-label={label}
-        className="w-14 shrink-0 text-small text-center tabular-nums px-1.5 py-1 rounded border border-divider bg-surface-0"
+        className={`${FIELD_CLASS} !w-14 shrink-0 !text-small text-center tabular-nums !px-1.5 !py-1 !bg-surface-0`}
       />
     </div>
   );
@@ -162,10 +148,10 @@ function Stepper({ value, max, onChange, decreaseLabel, increaseLabel }: {
 
 const TIER_SEGMENTS: Record<Strength, number> = { weak: 1, fair: 2, strong: 3, veryStrong: 4 };
 const TIER_FILL: Record<Strength, string> = {
-  weak: 'bg-red-500',
-  fair: 'bg-amber-500',
-  strong: 'bg-emerald-500',
-  veryStrong: 'bg-emerald-600 dark:bg-emerald-500',
+  weak: 'bg-danger',
+  fair: 'bg-warning',
+  strong: 'bg-success',
+  veryStrong: 'bg-success',
 };
 const TIER_TEXT: Record<Strength, string> = {
   weak: 'text-danger',
@@ -287,27 +273,36 @@ export function PasswordGenerator({ isPro, onOpenUpgrade, onGenerate, initial, o
 
       <div>
         <p className={`${LABEL} mb-1`}>{t('loginForm.separatorLabel')}</p>
-        <div className="flex gap-1.5">
+        <div role="group" aria-label={t('loginForm.separatorLabel')} className={SETTINGS_TRACK}>
           {SEPARATORS.map((sep) => (
-            <Pill key={sep} active={gen.separator === sep} onClick={() => update({ separator: sep })} label={sep === ' ' ? t('loginForm.separatorSpace') : undefined}>
+            <button
+              key={sep}
+              type="button"
+              aria-pressed={gen.separator === sep}
+              aria-label={sep === ' ' ? t('loginForm.separatorSpace') : undefined}
+              onClick={() => update({ separator: sep })}
+              className={`${settingsSegClass(gen.separator === sep, true)} inline-flex items-center justify-center`}
+            >
               {sep === ' ' ? t('loginForm.separatorSpace') : <span className="font-mono">{sep}</span>}
-            </Pill>
+            </button>
           ))}
         </div>
       </div>
 
       <div>
         <p className={`${LABEL} mb-1`}>{t('loginForm.optionsLabel')}</p>
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {([
             ['capitalize', t('loginForm.capitalizeWord')],
             ['addNumber', t('loginForm.addNumber')],
             ['addSymbol', t('loginForm.addSymbol')],
           ] as const).map(([key, label]) => (
-            <label key={key} className="flex items-center gap-1.5 text-small cursor-pointer">
-              <input type="checkbox" checked={gen[key]} onChange={() => update({ [key]: !gen[key] })} className="rounded accent-accent" />
-              {label}
-            </label>
+            <Checkbox
+              key={key}
+              checked={gen[key]}
+              onChange={(checked) => update({ [key]: checked })}
+              label={label}
+            />
           ))}
         </div>
       </div>
@@ -316,12 +311,24 @@ export function PasswordGenerator({ isPro, onOpenUpgrade, onGenerate, initial, o
 
   return (
     <div className="p-3 space-y-3">
-      <div className="flex gap-1.5">
-        <Pill active={!passphrase} onClick={selectPassword}>{t('auth:loginForm.passwordLabel')}</Pill>
-        <Pill active={passphrase} onClick={selectPassphrase}>
+      <div role="group" aria-label={t('auth:loginForm.generatePassword')} className={SETTINGS_TRACK}>
+        <button
+          type="button"
+          aria-pressed={!passphrase}
+          onClick={selectPassword}
+          className={`${settingsSegClass(!passphrase, true)} inline-flex items-center justify-center gap-1.5`}
+        >
+          {t('auth:loginForm.passwordLabel')}
+        </button>
+        <button
+          type="button"
+          aria-pressed={passphrase}
+          onClick={selectPassphrase}
+          className={`${settingsSegClass(passphrase, true)} inline-flex items-center justify-center gap-1.5`}
+        >
           {t('loginForm.modePassphrase')}
           {!isPro && <RocketLaunch weight="fill" className="text-pro" />}
-        </Pill>
+        </button>
       </div>
 
       <div className="bg-surface-0 rounded px-3 py-2">
@@ -392,12 +399,22 @@ export function PasswordGenerator({ isPro, onOpenUpgrade, onGenerate, initial, o
             <div className="flex gap-1.5">
               {/* One letter set always stays on: the fill pool is letters,
                   and a pool with nothing in it has nothing to draw. */}
-              <Pill active={gen.lowercase} onClick={() => { if (gen.uppercase) update({ lowercase: !gen.lowercase }); }}>
-                <span className="font-mono">a-z</span>
-              </Pill>
-              <Pill active={gen.uppercase} onClick={() => { if (gen.lowercase) update({ uppercase: !gen.uppercase }); }}>
-                <span className="font-mono">A-Z</span>
-              </Pill>
+              <button
+                type="button"
+                aria-pressed={gen.lowercase}
+                onClick={() => { if (gen.uppercase) update({ lowercase: !gen.lowercase }); }}
+                className={`${settingsChipClass(gen.lowercase)} flex-1 min-w-0 justify-center font-mono`}
+              >
+                a-z
+              </button>
+              <button
+                type="button"
+                aria-pressed={gen.uppercase}
+                onClick={() => { if (gen.lowercase) update({ uppercase: !gen.uppercase }); }}
+                className={`${settingsChipClass(gen.uppercase)} flex-1 min-w-0 justify-center font-mono`}
+              >
+                A-Z
+              </button>
             </div>
             <p className="mt-1 text-meta text-pn-muted">{t('loginForm.lettersHint')}</p>
           </div>
@@ -433,7 +450,7 @@ export function PasswordGenerator({ isPro, onOpenUpgrade, onGenerate, initial, o
           belongs to the caller (the window's X, the sheet's arrow). While
           teasing nothing can be taken away, so the row is the Pro door. */}
       {teasing ? (
-        <Button variant="upgrade" icon={<IconUpgrade size={15} onFill />} onClick={onOpenUpgrade} className="w-full">
+        <Button variant="upgrade" icon={<IconUpgrade size={15} />} onClick={onOpenUpgrade} className="w-full">
           {t('loginForm.unlockPro')}
         </Button>
       ) : (

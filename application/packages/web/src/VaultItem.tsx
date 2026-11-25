@@ -12,6 +12,7 @@ import { exemptOpts } from './i18nExempt';
 import { Copy, Check, Download, ArrowSquareOut, X, Key, CreditCard, Fingerprint, Lock, Globe, User, Calendar, MapPin, Tag, Shield, RocketLaunch } from './icons';
 import { openExternal } from './openExternal';
 import { DETAIL_COLUMN, DetailAction, DetailCopyAction, DetailHero, DetailLink, DetailNotes, DetailRow, DetailTile } from './detailPane';
+import { Button, IconUpgrade } from './ui';
 import { useCopyToClipboard } from './clipboard';
 import { useFavicons } from './theme';
 import { parseTotpInput, generateTotpCode, totpSecondsRemaining } from '@notes/shared';
@@ -137,10 +138,10 @@ function LoginTile({ domain }: { domain: string }) {
 function TypeBadge({ type }: { type: 'login' | 'card' | 'ssh-key' }) {
   const { t } = useTranslation('shell');
   const cfg = {
-    login: { label: t('vaultItem.badgeLogin'), bg: 'bg-blue-50 dark:bg-blue-950/50', text: 'text-blue-700 dark:text-blue-300', icon: (
+    login: { label: t('vaultItem.badgeLogin'), bg: 'bg-accent/10', text: 'text-accent-strong', icon: (
       <Lock size={10} />
     )},
-    card: { label: t('vaultItem.badgeCard'), bg: 'bg-amber-50 dark:bg-amber-950/50', text: 'text-amber-700 dark:text-amber-300', icon: (
+    card: { label: t('vaultItem.badgeCard'), bg: 'bg-warning/15', text: 'text-warning', icon: (
       <CreditCard size={10} />
     )},
     // theme-ok: each kind badge keeps its own fixed color
@@ -192,7 +193,7 @@ function TotpField({ raw, isPro, onOpenUpgrade, copy, copied }: {
   const label = (
     <span className="flex items-center gap-1.5">
       {t('security:mfaPrompt.codeLabel')}
-      {!isPro && <RocketLaunch size={11} weight="fill" className="text-pro" />}
+      {!isPro && <IconUpgrade size={11} />}
     </span>
   );
 
@@ -207,13 +208,15 @@ function TotpField({ raw, isPro, onOpenUpgrade, copy, copied }: {
             <TotpRing secondsLeft={params.period} period={params.period} danger={false} static />
           </span>
         </DetailRow>
-        <button
-          type="button"
+        <Button
+          variant="upgrade"
+          pro
+          icon={<Shield aria-hidden="true" />}
           onClick={() => onOpenUpgrade('totp')}
-          className="mb-2 w-full py-1.5 rounded-md text-small font-medium bg-accent/8 text-accent-strong hover:bg-accent/15 transition"
+          className="mb-2 w-full justify-center"
         >
           {t('vaultItem.totpUnlockCta')}
-        </button>
+        </Button>
         <p className="mb-2 text-meta text-pn-muted">{t('vaultItem.totpProNote')}</p>
       </div>
     );

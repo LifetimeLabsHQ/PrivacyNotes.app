@@ -13,3 +13,4 @@ export { indentListItem, indentText, EmptyListItemEnter } from './editorIndent';
 export { clipboardRenderer, markdownForClipboard } from './editorClipboard';
 export { TypedSymbols } from './editorTypedSymbols';
 export { InlineIcon } from './editorIcon';
+export { TaskReminderNode } from './editorTaskReminder';

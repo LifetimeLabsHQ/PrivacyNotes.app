@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode,
 import { createPortal } from 'react-dom';
 import { HoverLabel } from './HoverLabel';
 import { keyText } from './shortcutMatch';
+import { useEscapeToClose } from './useEscapeToClose';
 import { Kbd } from './ui/misc';
 import { CaretDown, PlusCircle } from './icons';
 
@@ -95,6 +96,7 @@ export function NewDropdown({ options, label }: { options: NewMenuOption[]; labe
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { docked, slot } = useContext(NewButtonDock);
+  useEscapeToClose(() => setOpen(false), open);
   // The bar's slot comes and goes with an open item; a menu left open would
   // greet the person on the way back.
   useEffect(() => setOpen(false), [slot]);

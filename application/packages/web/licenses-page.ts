@@ -194,6 +194,17 @@ export function woff2Names(buf: Buffer): Record<number, string> {
   return {};
 }
 
+/** Metadata for bundled WOFF2 fonts whose own name table omits copyright or
+ *  license fields (e.g. fonttools subsets). Keyed by the raw family name. */
+const FONT_METADATA_FALLBACK: Record<string, Font> = {
+  'Twemoji Mozilla': {
+    family: 'Twemoji Country Flags',
+    copyright: 'Copyright (c) 2022 TalkJS; Emoji artwork Copyright 2020 Twitter, Inc and other contributors',
+    license: 'Font subset licensed under the MIT License; Twemoji artwork licensed under Creative Commons Attribution 4.0 International (CC BY 4.0).',
+    url: 'https://github.com/talkjs/country-flag-emoji-polyfill',
+  },
+};
+
 /** One entry per font family that ships, from the files' own metadata. */
 export function collectFonts(woff2: Array<{ file: string; source: Buffer }>): Font[] {
   const families = new Map<string, Font>();
@@ -201,16 +212,24 @@ export function collectFonts(woff2: Array<{ file: string; source: Buffer }>): Fo
     const n = woff2Names(source);
     // The typographic family (16) groups the weights; the legacy family (1)
     // names each weight apart, as "Assistant SemiBold".
-    const family = (n[16] ?? n[1] ?? 'Unknown').replace(/ Regular$/, '');
+    const rawFamily = (n[16] ?? n[1] ?? 'Unknown').replace(/ Regular$/, '');
+    const fallback = FONT_METADATA_FALLBACK[rawFamily];
+    const family = fallback?.family ?? rawFamily;
     if (families.has(family)) continue;
     families.set(family, {
       family,
-      copyright: (n[0] ?? '').trim(),
-      license: (n[13] ?? '').trim(),
-      url: (n[14] ?? '').trim(),
+      copyright: (n[0] ?? '').trim() || fallback?.copyright || '',
+      license: (n[13] ?? '').trim() || fallback?.license || '',
+      url: (n[14] ?? '').trim() || fallback?.url || '',
     });
   }
   return [...families.values()].sort((a, b) => a.family.localeCompare(b.family));
+}
+
+/** Bundled app font files outside node_modules (for the dev route and tests). */
+export function bundledFontFiles(): Array<{ file: string; source: Buffer }> {
+  const file = path.resolve(__dirname, 'src/looks/TwemojiCountryFlags.woff2');
+  return fs.existsSync(file) ? [{ file: 'TwemojiCountryFlags.woff2', source: fs.readFileSync(file) }] : [];
 }
 
 /** Excalidraw's font files, for the dev route, which has no bundle to read them from. */
@@ -533,7 +552,7 @@ export function licensesPagePlugin(): Plugin {
             .filter((f) => f.endsWith('.woff2'))
             .map((f) => ({ file: f, source: fs.readFileSync(path.join(katexFonts, f)) }));
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
-          res.end(renderHtml(collectPackages(ids), collectFonts([...woff2, ...excalidrawFontFiles()]), collectCrates()));
+          res.end(renderHtml(collectPackages(ids), collectFonts([...woff2, ...excalidrawFontFiles(), ...bundledFontFiles()]), collectCrates()));
         } catch (err) {
           next(err);
         }

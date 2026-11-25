@@ -41,6 +41,7 @@
     "noDocuments": "No hay documentos.",
     "noImages": "No hay imágenes.",
     "noAudioFiles": "No hay archivos de audio.",
+    "noUnusedFiles": "No hay archivos sin usar.",
     "emptyTypesHint": "Imágenes, documentos, audio, vídeo y archivos zip. Hasta {{max}} MB por archivo.",
     "uploadFiles": "Subir archivos",
     "menuShow": "Mostrar",
@@ -233,7 +234,7 @@
     "tagCount_other": "{{count}} etiquetas",
     "entryDate": "Fecha de la entrada",
     "noDate": "Ninguna",
-    "schedule": "Programación",
+    "schedule": "Fecha y recordatorios",
     "ends": "Termina",
     "sameDay": "El mismo día",
     "starts": "Empieza",
@@ -317,8 +318,7 @@
     "showOneWeek": "Mostrar una semana"
   },
   "contextMenu": {
-    "newNote": "Nota nueva",
-    "newTask": "Tarea nueva",
+    "newTask": "Nueva tarea",
     "newKanban": "Nuevo tablero Kanban",
     "newDrawing": "Nuevo dibujo",
     "newLogin": "Nuevo inicio de sesión",
@@ -326,15 +326,12 @@
     "newSshKey": "Nueva clave SSH",
     "newJournal": "Nuevo diario",
     "newFile": "Nuevo archivo",
-    "exitZenMode": "Salir del modo Zen",
-    "zenMode": "Modo Zen",
     "showSidebar": "Mostrar barra lateral",
     "hideSidebar": "Ocultar barra lateral",
     "showNotesList": "Mostrar lista de notas",
     "hideNotesList": "Ocultar lista de notas",
     "resetPaneWidths": "Restablecer ancho de los paneles",
     "settings": "Ajustes",
-    "signOut": "Cerrar sesión",
     "deselect": "Deseleccionar",
     "select": "Seleccionar",
     "selectedCount_one": "{{count}} elemento seleccionado",
@@ -364,8 +361,7 @@
     "closeOtherTabs": "Cerrar las demás pestañas",
     "closeAllTabs": "Cerrar todas las pestañas",
     "pinTab": "Fijar pestaña",
-    "unpinTab": "Dejar de fijar pestaña",
-    "newEvent": "Evento nuevo"
+    "unpinTab": "Dejar de fijar pestaña"
   },
   "demoBanner": {
     "title": "Pruébalo sin ningún riesgo",
@@ -836,6 +832,25 @@
     "hoursBefore_one": "{{count}} hora antes",
     "minutesBefore_one": "{{count}} minuto antes"
   },
+  "taskReminder": {
+    "set": "Establecer recordatorio",
+    "edit": "Editar recordatorio",
+    "laterToday": "Más tarde hoy",
+    "pickDateTime": "Elegir fecha y hora",
+    "dateTime": "Fecha y hora",
+    "remove": "Quitar recordatorio",
+    "onSchedule": "Según lo programado",
+    "afterCompletion": "Al completarla",
+    "afterDone": "{{count}} {{unit}} tras completarla",
+    "afterDoneHint": "Cuenta desde el día en que marcas esta tarea como hecha.",
+    "weekdaysShort": "Laborables",
+    "everyWeeks_other": "Cada {{count}} semanas",
+    "everyMonths_other": "Cada {{count}} meses",
+    "everyYears_other": "Cada {{count}} años",
+    "everyYears_one": "Cada año",
+    "everyMonths_one": "Cada mes",
+    "everyWeeks_one": "Cada semana"
+  },
   "quickAdd": {
     "group": "Crear",
     "items": "Elementos",
@@ -1028,7 +1043,8 @@
   "apps": {
     "railLabel": "Extensión",
     "title": "Extensión del navegador",
-    "subtitle": "Recortes web y gestor de contraseñas en Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf y Zen. La extensión nunca tiene la clave que abre tus notas.",
+    "subtitle": "Recortes web y gestor de contraseñas para navegadores basados en Chromium y Firefox. La extensión nunca tiene la clave que abre tus notas.",
+    "allSupported": "Funciona en cualquier navegador basado en Chromium o Firefox.",
     "loginsCopyFull": "La copia de tus inicios de sesión en la extensión del navegador está llena. Los inicios de sesión nuevos llegarán a ella cuando elimines algunos.",
     "stepInstall": "Instala la extensión",
     "stepFeatures": "Elige lo que puede hacer",
@@ -1039,7 +1055,7 @@
     "thisBrowser": "Este navegador",
     "otherApps": "Apps de escritorio y móvil:",
     "desktopAll": "Todas las descargas",
-    "extensionComputersOnly": "La extensión es para Chrome, Firefox y Edge en un ordenador.",
+    "extensionComputersOnly": "La extensión es para navegadores basados en Chromium y Firefox en un ordenador.",
     "demoSignUp": "Regístrate para conectar un navegador"
   },
   "cli": {

@@ -11,6 +11,12 @@ import { createNote, getNote, updateNoteFrom } from './notesRepo';
 import { textMatcher } from './textMatch';
 import { escapeMarkdownText, guardMarkdownLineStart } from './markdownEscape';
 import { activeLocale } from './languages';
+import {
+  extractTaskReminder,
+  nextTaskReminder,
+  replaceTaskReminderInText,
+  type TaskReminder,
+} from './taskReminderSyntax';
 
 /**
  * Tasks as a derived view over existing notes.
@@ -54,6 +60,8 @@ export type TaskItem = {
   checked: boolean;
   /** The parent note's "last edited" date, for sorting. */
   editedAt: string;
+  /** Parsed inline `:remind[...]` reminder on this task line, if any. */
+  reminder?: TaskReminder;
 };
 
 /**
@@ -71,13 +79,16 @@ function extractTasksFromNote(note: LocalNote): TaskItem[] {
   for (let i = 0; i < lines.length; i++) {
     const m = prose[i] ? matchTask(lines[i]!) : null;
     if (!m) continue;
+    const text = taskText(m[4]);
+    const reminder = extractTaskReminder(text) ?? undefined;
     out.push({
       noteId: note.id,
       noteTitle: title,
       lineIdx: i,
-      text: taskText(m[4]),
+      text,
       checked: m[3] === 'x' || m[3] === 'X',
       editedAt: editedAtOf(note),
+      ...(reminder ? { reminder } : {}),
     });
   }
   return out;
@@ -558,15 +569,93 @@ function takesTaskEdit(n: LocalNote, isGated: (n: LocalNote) => boolean): boolea
 }
 
 /**
+ * Rewrite one task line's reminder token in a Markdown body. Returns the new
+ * body, or null if `lineIdx` no longer holds the task `text`.
+ */
+export function setTaskReminderInBody(
+  body: string,
+  lineIdx: number,
+  expectedText: string,
+  reminder: TaskReminder | null,
+): string | null {
+  const lines = body.split(/\r?\n/);
+  const line = lines[lineIdx];
+  if (line == null || !outsideFences(lines)[lineIdx]) return null;
+  const m = matchTask(line);
+  if (!m || taskText(m[4]) !== expectedText) return null;
+  const [, indent, marker, box, rest] = m;
+  const nextRest = replaceTaskReminderInText(rest ?? '', reminder);
+  lines[lineIdx] = `${m.quote}${indent}${marker} [${box}] ${nextRest}`.replace(/\s+$/, '');
+  return lines.join('\n');
+}
+
+/**
+ * Rewrite a repeating task when ticked off in a Markdown body:
+ *   1. The ticked item becomes `[x]` with its `:remind[...]` stripped (so the
+ *      completed history entry no longer rings or duplicates the series).
+ *   2. A fresh unchecked `[ ]` copy is created with its `:remind[...]` advanced
+ *      to the next occurrence and any nested sub-checkboxes reset to `[ ]`.
+ *   3. With `sinkChecked`, the completed copy sinks to the top of the done
+ *      group while the fresh copy stays in place; otherwise the fresh copy
+ *      sits right before the completed one.
+ */
+export function completeRepeatingTaskInBody(
+  body: string,
+  lineIdx: number,
+  expectedText: string,
+  todayIso: string,
+  sinkChecked = false,
+): string | null {
+  const lines = body.split(/\r?\n/);
+  const line = lines[lineIdx];
+  if (line == null || !outsideFences(lines)[lineIdx]) return null;
+  const m = matchTask(line);
+  if (!m || taskText(m[4]) !== expectedText) return null;
+  const current = extractTaskReminder(m[4] ?? '');
+  if (!current?.repeat) return null;
+  const next = nextTaskReminder(current, todayIso);
+  if (!next) return null;
+
+  let changed = false;
+  const out = mapTaskLists(body, (items) => {
+    const self = items.findIndex((it) => it.line === lineIdx);
+    if (self < 0) return items;
+    const orig = items[self]!;
+    const headMatch = matchTask(orig.head);
+    if (!headMatch) return items;
+    const [, indent, marker, , rest] = headMatch;
+    const doneHead = `${headMatch.quote}${indent}${marker} [x] ${replaceTaskReminderInText(rest ?? '', null)}`.replace(/\s+$/, '');
+    const nextHead = `${headMatch.quote}${indent}${marker} [ ] ${replaceTaskReminderInText(rest ?? '', next)}`.replace(/\s+$/, '');
+    const doneNode: TaskNode = { ...orig, head: doneHead, checked: true };
+    const nextRest = orig.rest.length ? uncheckAllTasksInBody(orig.rest.join('\n')).split('\n') : [];
+    const nextNode: TaskNode = { ...orig, head: nextHead, rest: nextRest, checked: false };
+    changed = true;
+
+    const others = items.slice();
+    if (!sinkChecked) {
+      others.splice(self, 1, nextNode, doneNode);
+      return others;
+    }
+    // Keep the new open occurrence in place and sink the completed copy to the
+    // edge of the open group (matching moveTaskToGroupEdgeInBody).
+    others.splice(self, 1, nextNode);
+    let lastOpen = -1;
+    others.forEach((it, k) => { if (!it.checked) lastOpen = k; });
+    others.splice(lastOpen + 1, 0, doneNode);
+    return others;
+  });
+  return changed ? out : null;
+}
+
+/**
  * Tick or untick one task line inside the note that holds it, through the
- * normal note write. With `sinkChecked`, the task then moves to the edge of
- * its list's open group, as it does when ticked in the editor. Returns the body written, or null when nothing was: the
- * note is gone, it takes no edits (see `takesTaskEdit`), or the line no
- * longer holds the task the list was drawn from because the note changed.
- * The change is built from the row inside the write, so a pull or another
- * tab that stored a newer body since the list was drawn is ticked in, never
- * overwritten (#497). Tested in tests/lockGateWrites.test.ts and
- * tests/taskWriteRace.test.ts.
+ * normal note write. When ticking a repeating task, spawns the next unchecked
+ * occurrence with the advanced reminder date. With `sinkChecked`, the ticked
+ * task moves to the edge of its list's open group, as it does when ticked in
+ * the editor. Returns the body written, or null when nothing was: the note is
+ * gone, it takes no edits (see `takesTaskEdit`), or the line no longer holds
+ * the task the list was drawn from because the note changed.
+ * Tested in tests/lockGateWrites.test.ts and tests/taskWriteRace.test.ts.
  */
 export async function toggleTaskInNote(
   task: TaskItem,
@@ -574,12 +663,35 @@ export async function toggleTaskInNote(
   isGated: (n: LocalNote) => boolean,
   sinkChecked = false,
 ): Promise<string | null> {
+  const todayIso = toLocalIso(new Date());
   const written = await updateNoteFrom(task.noteId, (current) => {
     if (!takesTaskEdit(current, isGated)) return null;
+    if (checked && task.reminder?.repeat) {
+      const advanced = completeRepeatingTaskInBody(current.body, task.lineIdx, task.text, todayIso, sinkChecked);
+      if (advanced != null) return { body: advanced };
+    }
     const flipped = setTaskCheckedInBody(current.body, task.lineIdx, checked, task.text);
     if (flipped == null) return null;
     // The same move a tick makes in the editor, when the setting asks for it.
     return { body: sinkChecked ? moveTaskToGroupEdgeInBody(flipped, task.lineIdx) : flipped };
+  });
+  return written?.body ?? null;
+}
+
+/**
+ * Set, update, or remove a reminder on one task line inside its parent note.
+ * Refuses read-only and PIN-gated notes, and guards against concurrent edits.
+ */
+export async function setTaskReminderInNote(
+  task: TaskItem,
+  reminder: TaskReminder | null,
+  isGated: (n: LocalNote) => boolean,
+): Promise<string | null> {
+  const written = await updateNoteFrom(task.noteId, (current) => {
+    if (!takesTaskEdit(current, isGated)) return null;
+    const next = setTaskReminderInBody(current.body, task.lineIdx, task.text, reminder);
+    if (next == null) return null;
+    return { body: next };
   });
   return written?.body ?? null;
 }

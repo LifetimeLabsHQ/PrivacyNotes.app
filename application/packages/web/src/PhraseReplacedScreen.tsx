@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth, type OAuthProvider } from './auth';
+import { NO_TEXT_ASSIST } from './formFields';
 import { ConfirmModal } from './ConfirmModal';
 import { db } from './db';
 import { BoxArrowUp, Key, QrCode, SignOut, UserCircle } from './icons';
@@ -8,7 +9,7 @@ import { listNotes } from './notesRepo';
 import { PROVIDER_CONTINUE_KEY, PROVIDER_ICON, PROVIDER_ORDER } from './providerIcons';
 import { QrScannerModal } from './QrScannerModal';
 import { isTrustedDevice } from './trustStorage';
-import { Button, Callout, Divider, Modal, RowTitle, SETTINGS_HELP, SETTINGS_ROW, TextField } from './ui';
+import { Button, Callout, Divider, FieldLabel, Modal, PhraseInput, RowTitle, SETTINGS_HELP, SETTINGS_ROW, TextField } from './ui';
 import { loadLocalSettings } from './userSettings';
 
 /**
@@ -125,17 +126,19 @@ export function PhraseReplacedScreen() {
           void enter(phrase);
         }}
       >
-        <TextField
-          label={t('phraseReplaced.phraseLabel')}
-          icon={<Key />}
-          value={phrase}
-          onChange={(e) => setPhrase(e.target.value)}
-          autoComplete="off"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          disabled={busy}
-        />
+        <div className="space-y-1.5">
+          <FieldLabel icon={<Key aria-hidden="true" />}>{t('phraseReplaced.phraseLabel')}</FieldLabel>
+          <PhraseInput
+            value={phrase}
+            onChange={(next) => {
+              setPhrase(next);
+              setError(null);
+            }}
+            placeholder={t('importPhrase.placeholder')}
+            disabled={busy}
+            autoFocus
+          />
+        </div>
         {error && <Callout tone="danger">{error}</Callout>}
         <div className="flex flex-wrap gap-2">
           <Button type="submit" action="next" disabled={busy || !phrase.trim()}>
@@ -176,7 +179,7 @@ export function PhraseReplacedScreen() {
                   value={pastedCode}
                   onChange={(e) => setPastedCode(e.target.value)}
                   autoComplete="off"
-                  spellCheck={false}
+                  {...NO_TEXT_ASSIST}
                   disabled={busy}
                 />
                 <Button action="next" disabled={busy || !pastedCode.trim()} onClick={() => void finishProvider()}>

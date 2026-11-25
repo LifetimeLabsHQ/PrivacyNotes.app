@@ -14,8 +14,8 @@ export function DeleteNoteModal({ noteTitle, noteId, onConfirm, onClose }: Props
   const { t } = useTranslation('common');
   return (
     <ConfirmModal
-      title={t('common:deleteNote.confirm')}
-      confirmLabel={t('deleteNote.confirm')}
+      title={t('shell:contextMenu.deleteForever')}
+      confirmLabel={t('shell:contextMenu.deleteForever')}
       variant="danger"
       onConfirm={onConfirm}
       onClose={onClose}

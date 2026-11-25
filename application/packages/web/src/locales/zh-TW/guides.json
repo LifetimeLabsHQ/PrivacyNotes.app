@@ -443,7 +443,7 @@
       "app": "Notion",
       "title": "匯出你的 Notion 工作區",
       "metaTitle": "如何匯出 Notion 工作區 - PrivacyNotes",
-      "lead": "將你的 Notion 工作區匯出成 Markdown & CSV 的 .zip 檔，PrivacyNotes 會移除 Notion 的 32 字元 ID、將子頁面重建為資料夾，並把頁面連結轉成筆記連結。",
+      "lead": "將你的 Notion 工作區匯出成 HTML 或 Markdown & CSV 的 .zip 檔，PrivacyNotes 會移除 Notion 的 32 字元 ID、將子頁面重建為資料夾、保留多欄版面與顏色，並把頁面連結轉成筆記連結。",
       "sections": [
         {
           "img": {
@@ -470,23 +470,23 @@
             "width": 1576,
             "height": 600
           },
-          "h": "選「Markdown & CSV」，並開啟資料夾選項",
+          "h": "選「HTML」（建議）或「Markdown & CSV」，並開啟資料夾選項",
           "steps": [
-            "將「Export format」設為「Markdown & CSV」。",
+            "將「Export format」設為「HTML」，以保留並排多欄、欄寬、文字顏色與螢光標記。如果你不使用多欄版面或顏色，「Markdown & CSV」也可以。",
             "將「Page content」設為「Everything」，讓你的圖片、PDF 和附加的檔案一併包含在內。",
             "開啟「Include private pages」（匯出單一頁面時為「Include subpages」）和「Create folders for subpages」。",
             "點按「Export」並儲存 .zip 檔案。"
           ],
           "p": [
-            "HTML 與 PDF 匯出不含 Markdown 檔案，Notion 匯入器無法讀取。請選擇「Markdown & CSV」，讓你的結構、連結和格式都能乾淨完整地過來。"
+            "Notion 匯入器無法讀取 PDF 匯出檔。請選擇「HTML」，讓你的多欄版面、顏色、結構、連結和格式都能乾淨完整地過來，或選擇「Markdown & CSV」取得純 Markdown。"
           ]
         },
         {
           "h": "哪些內容會跟著過來",
           "p": [
             "Notion 會在每個匯出的檔名與內部連結後方加上 32 字元的 ID。PrivacyNotes 會從每個標題與資料夾名稱移除這些 ID、去掉最上層的「Private & Shared」外層資料夾，並將巢狀子頁面重建為資料夾。",
-            "標題、清單、巢狀核取清單、表格、附語言的程式碼區塊、數學公式、底線與引言都會原樣過來。Notion 標註會轉換成 PrivacyNotes 標註，[匯出頁面之間的連結與提及會變成筆記連結](/tw/help/note-links)，而上傳的圖片、PDF 與檔案會匯入你的儲存空間。",
-            "資料庫列頁面會以筆記的形式匯入以該資料庫命名的資料夾中，而任何「Tags」屬性都會加為標籤。資料庫的 CSV 表格檔案會略過，並在匯入摘要中計數。Notion 自己的 Markdown 匯出不包含文字顏色、螢光標示以及垃圾桶中的頁面。"
+            "標題、清單、巢狀核取清單、表格、附語言的程式碼區塊、數學公式、底線與引言都會原樣過來。使用 HTML 匯出時，並排多欄（2 至 5 欄，含欄寬比例）、文字顏色與螢光標記也會一起過來。Notion 標註會轉換成 PrivacyNotes 標註，[匯出頁面之間的連結與提及會變成筆記連結](/tw/help/note-links)，而上傳的圖片、PDF 與檔案會匯入你的儲存空間。",
+            "資料庫列頁面會以筆記的形式匯入以該資料庫命名的資料夾中，而任何「Tags」屬性都會加為標籤。資料庫的 CSV 表格檔案會略過，並在匯入摘要中計數。Notion 自己的 Markdown 匯出會壓平多欄版面，而且不包含文字顏色、螢光標記以及垃圾桶中的頁面。"
           ]
         }
       ]
@@ -1552,6 +1552,45 @@
           "p": [
             "[每一則紀錄都會進到「日誌」](/tw/help/journal)，並依該則紀錄本身的時區落在對應的日曆日期。開頭的標題會成為紀錄標題，沒有標題的紀錄則會以日期作為標題。加星號與已釘選的紀錄都會保持釘選，標籤仍是標籤。",
             "你的位置會填入該則紀錄的地點膠囊，天氣、活動與音樂則放在最上方的一行。照片會匯入成圖片，音訊、影片與 PDF 會匯入成附件，紀錄之間的連結則會變成[筆記連結](/tw/help/note-links)。如果一個 .zip 裡有多本日誌，每本日誌會變成一個資料夾。"
+          ]
+        }
+      ]
+    },
+    "microsoft-to-do": {
+      "app": "Microsoft To Do",
+      "title": "Microsoft To Do 匯出工具",
+      "metaTitle": "Microsoft To Do 匯出工具 - 免費瀏覽器工具 - PrivacyNotes",
+      "lead": "在 2027 年 6 月停用之前，使用我們免費的純瀏覽器 Microsoft To Do 匯出工具，匯出你的 Microsoft To Do 清單、子任務、筆記與附件。",
+      "sections": [
+        {
+          "h": "三個步驟匯出你的 Microsoft To Do 任務",
+          "p": [
+            "Microsoft To Do 目前還沒有內建匯出按鈕，因此我們打造了一款免費、開放原始碼的 [Microsoft To Do 匯出工具](https://todo.privacynotes.app)，直接在你的 Windows、Mac、Linux 與手機瀏覽器中執行。"
+          ],
+          "steps": [
+            "開啟 [todo.privacynotes.app](https://todo.privacynotes.app)，並點按 **Sign in with Microsoft**。",
+            "允許唯讀存取權限（`Tasks.Read`），讓你的瀏覽器可以讀取你的清單，但不會變更或刪除任何內容。",
+            "點按 **Fetch my Microsoft To Do data**，再點按 **Download ZIP (recommended)**，將你的清單、任務、子任務、筆記與附件儲存到本機。"
+          ]
+        },
+        {
+          "h": "為什麼在 2027 年 6 月前，純瀏覽器匯出工具很重要",
+          "p": [
+            "Microsoft 宣布 Microsoft To Do 將於 2027 年 6 月 30 日退役，且個人 Microsoft 帳號沒有替代服務。公司和學校帳號會移轉至 Microsoft Planner，而個人使用者則被告知要改用其他任務應用程式。",
+            "不必安裝命令列執行檔或手動複製開發者權杖，我們的網頁匯出工具只要點一下就能把你的瀏覽器直接連到 Microsoft Graph，並同時支援個人帳號（outlook.com、hotmail.com、live.com）與 Microsoft 365 帳號。"
+          ]
+        },
+        {
+          "h": "從設計就保護隱私 - 任何資料都不會經過我們的伺服器",
+          "p": [
+            "這個匯出工具是一個沒有後端、沒有追蹤的靜態網頁。你的瀏覽器直接從 Microsoft 抓取你的任務，並在你的裝置上建立 ZIP 檔案，所以你的清單絕不會經過我們的伺服器。登入權杖只留在瀏覽器的暫時工作階段儲存空間中，登出或關閉分頁時就會清除。"
+          ]
+        },
+        {
+          "h": "ZIP 檔案裡有什麼，以及哪些內容會跟著過來",
+          "p": [
+            "這個 ZIP 包含結構化的 `microsoft-to-do-export.json` 備份、每份清單各一個易讀的 Markdown 核取清單、可直接匯入試算表的 `tasks.csv`，以及你下載的附件。你可以把這份匯出檔匯入 PrivacyNotes，或任何其他 Markdown 或 CSV 應用程式。",
+            "在 PrivacyNotes 中，每份清單都會變成一份[任務清單](/tw/help/tasks)，保留未完成與已完成的任務、子任務、Important 標記、到期日、重複排程、轉為標籤的類別、筆記、連結項目與附加的檔案 - 而且你的筆記都在你的裝置上加密。個別核取清單項目的提醒不會帶過來，並會在匯入摘要中計數。來自匯出工具或 Microsoft Graph API 的單獨 `.json` 檔案也可以匯入，只是不含附件。"
           ]
         }
       ]

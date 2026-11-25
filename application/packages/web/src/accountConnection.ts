@@ -3,6 +3,7 @@ import { isDemoMode } from './demo';
 import { takeDeepLinks } from './deepLinks';
 import { OAUTH_APP_LINK_REDIRECT } from './authStorage';
 import { APP_ORIGIN } from './hosts';
+import { openExternalAsync } from './openExternal';
 import type { ConnectedAccountProvider } from './ConnectedAccounts';
 
 type Proof = { code: string; codeVerifier: string };
@@ -78,6 +79,7 @@ export function beginAccountConnection(provider: ConnectedAccountProvider, optio
 
   if (platform === 'web') {
     // A fresh unnamed window cannot reuse another tab's account flow.
+    // link-ok: OAuth popup requires a synchronous blank window handle for postMessage
     try { popup = window.open('about:blank', '_blank', 'popup,width=520,height=720'); }
     catch { finish(undefined, new AccountConnectionError('popupBlocked')); return handle; }
     if (!popup) { finish(undefined, new AccountConnectionError('popupBlocked')); return handle; }
@@ -132,8 +134,7 @@ export function beginAccountConnection(provider: ConnectedAccountProvider, optio
           await link.ready;
           if (settled) return;
         }
-        const { openUrl } = await import('@tauri-apps/plugin-opener');
-        if (!settled) await openUrl(authorize.toString());
+        if (!settled) await openExternalAsync(authorize.toString(), { browser: true });
       }
     } catch {
       finish();

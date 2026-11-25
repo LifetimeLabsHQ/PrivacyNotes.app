@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
 import { PencilSimpleSlash, Shield, ClockCounterClockwise, Copy, Folder, Repeat } from '../icons';
 import type { LocalNote } from '../db';
-import { HoverLabel } from '../HoverLabel';
+import { HoverLabel, ProGlyph } from '../ui';
 import { noteActionGuards, type NoteActionGuardDeps } from '../noteActionGuards';
 import { proUnlocked } from '../demo';
 import { isConvertSource } from '../noteTypes';
@@ -143,12 +143,12 @@ function QuickButton({
   onClick: () => void;
   children: ReactNode;
   active?: boolean;
-  /** Pro-gated for this user. Marked with a corner dot, not a badge. */
+  /** Pro-gated for this user. Marked with a corner rocket glyph. */
   pro?: boolean;
   disabled?: boolean;
 }) {
   return (
-    <HoverLabel label={label} position="below">
+    <HoverLabel label={label} pro={pro} position="below">
       <button
         type="button"
         onClick={onClick}
@@ -161,17 +161,7 @@ function QuickButton({
             : 'text-pn-soft [@media(hover:hover)]:hover:text-accent [@media(hover:hover)]:hover:bg-pn/10 active:scale-95'
         }`}
       >
-        {children}
-        {/* The menu's "Pro" word badge has no room next to a bare glyph, so
-            the gate is a corner dot in the same amber the upgrade surfaces
-            use. It marks the feature, it does not block the click: the
-            action opens the upgrade modal instead of applying. */}
-        {pro && (
-          <span
-            aria-hidden="true"
-            className="absolute top-1 end-1 h-1.5 w-1.5 rounded-full bg-amber-500"
-          />
-        )}
+        <ProGlyph pro={!!pro}>{children}</ProGlyph>
       </button>
     </HoverLabel>
   );

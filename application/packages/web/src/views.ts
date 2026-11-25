@@ -105,3 +105,26 @@ export const VIEW_NOTE_TYPES: Partial<Record<View, NoteType[]>> = {
   calendar: ['event'],
   drawings: ['drawing'],
 };
+
+/**
+ * Whether entering `view` clears active folder and tag filters.
+ * Trash lists deleted items (contradicting active folder/tag counts), and Home
+ * and Calendar draw their own surfaces that ignore folder and tag filters, so a
+ * filter kept on any of them would sit visibly active while filtering nothing.
+ * Spec: docs/internal/specs/dashboard.md (section 2)
+ * Spec: docs/internal/specs/calendar-pillar-spec.md (section 6, step 3)
+ */
+export function isFilterExclusiveView(view: View): boolean {
+  return view === 'trash' || view === 'dashboard' || view === 'calendar';
+}
+
+/**
+ * The view a folder or tag filter pick lands on from `current`.
+ * Views that cannot take a vault folder or tag filter (exclusive views and the
+ * disk-backed Markdown pillar) bounce to All ('home') so the list pane shows
+ * the filtered items; clearing a filter (`hasFilter === false`) stays put.
+ */
+export function viewForFilterPick(current: View, hasFilter = true): View {
+  if (!hasFilter) return current;
+  return isFilterExclusiveView(current) || current === 'markdown' ? 'home' : current;
+}

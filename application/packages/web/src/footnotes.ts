@@ -757,7 +757,7 @@ function definitionAround(state: EditorState): { node: ProseMirrorNode; pos: num
  */
 export function insertFootnote(
   editor: TipTapEditor,
-  { at = editor.state.selection.to, inline }: { at?: number; inline?: ProseMirrorNode[] } = {},
+  { at = editor.state.selection.to, inline, focus = true }: { at?: number; inline?: ProseMirrorNode[]; focus?: boolean } = {},
 ): boolean {
   if (!editor.isEditable) return false;
   const { state, view } = editor;
@@ -770,7 +770,7 @@ export function insertFootnote(
   tr.setSelection(TextSelection.create(tr.doc, endOfDefinition(tr.doc, defAt)));
   tr.setMeta(jumpKey, { backTo: at });
   view.dispatch(tr.scrollIntoView());
-  view.focus();
+  if (focus) view.focus();
   requestAnimationFrame(() => flash(view.nodeDOM(defAt)));
   return true;
 }

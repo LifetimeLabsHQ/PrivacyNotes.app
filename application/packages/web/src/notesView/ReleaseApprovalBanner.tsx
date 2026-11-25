@@ -14,8 +14,7 @@ import { useAuth } from '../auth';
 import { isDemoMode } from '../demo';
 import { formatInstant } from '../intlFormat';
 import { decideReleaseRequest, pendingReleaseRequests, requestCode, type ReleaseRequest } from '../releaseNotice';
-import { Button } from '../ui';
-import { Banner, FeedbackButton } from '../ui/feedback';
+import { Banner, Button, FeedbackButton } from '../ui';
 
 // Spec: docs/internal/plans/custodial-release-hardening.md (13.2: every minute)
 const LOOK_EVERY_MS = 60_000;

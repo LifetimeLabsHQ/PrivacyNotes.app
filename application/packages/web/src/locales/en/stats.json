@@ -327,6 +327,7 @@
       "noEntry": "no entry",
       "doseLens": "Mood averaged {{before}} in the {{nBefore}} days before and {{after}} in the {{nAfter}} days after.",
       "doseLensHeading": "Around each dose change",
+      "doseLensLocked": "Upgrade to Pro to see how dosage changes move your mood",
       "doseLensShort_one": "{{count}} more logged day around it needed.",
       "doseLensShort_other": "{{count}} more logged days around it needed."
     },

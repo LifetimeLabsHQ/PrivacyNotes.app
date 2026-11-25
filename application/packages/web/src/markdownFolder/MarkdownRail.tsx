@@ -23,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { Folder, Hash } from '../icons';
 import { OverflowTip } from '../OverflowTip';
 import { SIDEBAR_ACTIVE } from '../sidebarUI';
+import { SETTINGS_EYEBROW } from '../ui';
 import type { DirectoryEntry } from './fileAccess';
 
 /**
@@ -133,7 +134,7 @@ export function MarkdownRail({
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto px-3 pb-3">
-      <p className="text-meta uppercase tracking-wide text-pn-muted px-2 pt-3 pb-1">
+      <p className={`${SETTINGS_EYEBROW} !font-normal !text-pn-muted px-2 pt-3 pb-1`}>
         {t('markdown.railFolders')}
       </p>
       <button type="button" onClick={() => onSelectDir(null)} className={folderRowClass(selectedDir === null)}>
@@ -175,7 +176,7 @@ export function MarkdownRail({
 
       {sortedTags.length > 0 && (
         <>
-          <p className="text-meta uppercase tracking-wide text-pn-muted px-2 pt-4 pb-1">
+          <p className={`${SETTINGS_EYEBROW} !font-normal !text-pn-muted px-2 pt-4 pb-1`}>
             {t('markdown.railTags')}
           </p>
           {/* Filter only. A rename here would rewrite front matter across every

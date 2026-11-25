@@ -38,7 +38,7 @@
     "blockMath": "Blockformel",
     "align": "Justering",
     "font": "Teckensnitt",
-    "pictureFromFiles": "Bild från Filer",
+    "pictureFromFiles": "Galleri",
     "date": "Datum",
     "dateTime": "Datum och tid",
     "footnote": "Fotnot",
@@ -260,6 +260,15 @@
     "headingsIn": "Rubriker i {{title}}",
     "noHeadingMatches": "Inga matchande rubriker"
   },
+  "slash": {
+    "label": "Infoga block",
+    "linePlaceholder": "Tryck på / för att infoga block",
+    "filterHint": "Skriv för att filtrera…",
+    "basic": "Grundblock",
+    "smartDate": "Smart datum",
+    "askNinja": "Fråga Ninja efter ”{{query}}”",
+    "noMatches": "Inga matchande block"
+  },
   "copyBox": {
     "placeholder": "Text att kopiera med ett klick"
   },
@@ -369,6 +378,23 @@
     "addColumn": "Lägg till kolumn",
     "removeBoard": "Ta bort tavla",
     "moveTo": "Flytta till"
+  },
+  "columns": {
+    "narrowWide": "Smal och bred",
+    "wideNarrow": "Bred och smal",
+    "removeColumns": "Ta bort kolumner",
+    "resizeColumn": "Dra för att ändra kolumnbredd",
+    "barLabel": "Kolumnkontroller",
+    "borders": "Kantlinjer för kolumner",
+    "borderBoxes": "Rutor",
+    "borderSolid": "Heldragen",
+    "borderDashed": "Streckad",
+    "borderDotted": "Prickad",
+    "borderThickness": "Tjocklek",
+    "borderThin": "Tunn",
+    "borderMedium": "Medel",
+    "borderColorDefault": "Standardfärg",
+    "borderTint": "Mjuk kolumntoning"
   },
   "doodle": {
     "title": "Klotter",

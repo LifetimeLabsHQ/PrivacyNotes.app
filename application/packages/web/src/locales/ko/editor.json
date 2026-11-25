@@ -38,7 +38,7 @@
     "blockMath": "블록 수식",
     "align": "정렬",
     "font": "글꼴",
-    "pictureFromFiles": "파일에서 이미지",
+    "pictureFromFiles": "갤러리",
     "date": "날짜",
     "dateTime": "날짜와 시간",
     "footnote": "각주",
@@ -255,6 +255,15 @@
     "headingsIn": "{{title}}의 제목",
     "noHeadingMatches": "일치하는 제목 없음"
   },
+  "slash": {
+    "label": "블록 삽입",
+    "linePlaceholder": "/를 입력해 블록 삽입",
+    "filterHint": "입력하여 필터링…",
+    "basic": "기본 블록",
+    "smartDate": "스마트 날짜",
+    "askNinja": "Ninja에게 “{{query}}” 묻기",
+    "noMatches": "일치하는 블록 없음"
+  },
   "copyBox": {
     "placeholder": "클릭 한 번으로 복사할 텍스트"
   },
@@ -361,6 +370,23 @@
     "addColumn": "열 추가",
     "removeBoard": "보드 제거",
     "moveTo": "이동할 열"
+  },
+  "columns": {
+    "narrowWide": "좁은 열과 넓은 열",
+    "wideNarrow": "넓은 열과 좁은 열",
+    "removeColumns": "열 제거",
+    "resizeColumn": "끌어서 열 너비 조절",
+    "barLabel": "열 컨트롤",
+    "borders": "열 테두리",
+    "borderBoxes": "상자",
+    "borderSolid": "실선",
+    "borderDashed": "파선",
+    "borderDotted": "점선",
+    "borderThickness": "두께",
+    "borderThin": "얇게",
+    "borderMedium": "보통",
+    "borderColorDefault": "기본 색상",
+    "borderTint": "은은한 열 배경색"
   },
   "doodle": {
     "title": "낙서",

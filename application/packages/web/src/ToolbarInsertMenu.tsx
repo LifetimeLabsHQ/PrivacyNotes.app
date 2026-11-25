@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { Icon } from './icons';
 import { Plus as PlusIcon } from './icons';
 import { HoverLabel } from './HoverLabel';
+import { SETTINGS_EYEBROW } from './ui';
 import { TB_BTN_ACTIVE, TB_BTN_BASE, TB_BTN_REST, TB_ICON } from './editorToolbarParts';
 import { usePopoverPosition } from './usePopoverPosition';
 import { useEscapeToClose } from './useEscapeToClose';
@@ -109,7 +110,7 @@ export function ToolbarInsertMenu({ items, anchorRef, press, tabIndex, tipSide }
                   the previous entry is enough, and a group with no entry left
                   shows no header. */}
               {(i === 0 || items[i - 1]!.group !== item.group) && (
-                <div className="px-3 pt-2 pb-0.5 text-meta uppercase tracking-wide text-pn-muted">
+                <div className={`px-3 pt-2 pb-0.5 ${SETTINGS_EYEBROW} !font-normal !text-pn-muted`}>
                   {t(`insertGroup.${item.group}`)}
                 </div>
               )}

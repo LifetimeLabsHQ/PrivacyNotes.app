@@ -111,9 +111,6 @@
       "great": "最高"
     }
   },
-  "sleepScore": {
-    "prompt": "睡眠スコア"
-  },
   "heartRate": {
     "prompt": "平均心拍数"
   },

@@ -131,9 +131,6 @@
       "great": "ممتاز"
     }
   },
-  "sleepScore": {
-    "prompt": "درجة النوم"
-  },
   "heartRate": {
     "prompt": "متوسط معدل ضربات القلب"
   },

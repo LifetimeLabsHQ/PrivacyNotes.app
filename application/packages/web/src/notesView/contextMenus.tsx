@@ -184,7 +184,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
   // sidebar row's own menu (newForView). Spec: docs/internal/specs/section-lock.md (section 4)
   const newEntries = {
     all: {
-      label: i18n.t('shell:contextMenu.newNote'),
+      label: i18n.t('notes:header.newNote'),
       icon: iconNote(),
       onSelect: createInPillar('all'),
     },
@@ -217,7 +217,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
       onSelect: createInPillar('journal'),
     },
     calendar: {
-      label: i18n.t('shell:contextMenu.newEvent'),
+      label: i18n.t('notes:header.newEvent'),
       icon: <NEW_GLYPHS.event />,
       // An event is made in the quick add, which shows what it can read.
       onSelect: () => deps.onQuickAdd(),
@@ -273,7 +273,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
     newEntries.bookmarks,
     { type: 'separator' },
     {
-      label: deps.zenMode ? i18n.t('shell:contextMenu.exitZenMode') : i18n.t('shell:contextMenu.zenMode'),
+      label: deps.zenMode ? i18n.t('notes:zen.exitHover') : i18n.t('common:palette.commands.zen'),
       icon: iconZen(),
       pro: !deps.isPro,
       onSelect: () => {
@@ -303,7 +303,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
       onSelect: () => deps.setShowSettings(true),
     },
     {
-      label: i18n.t('shell:contextMenu.signOut'),
+      label: i18n.t('settings:signOut'),
       icon: iconSignOut(),
       destructive: true,
       onSelect: () => deps.handleSignOutClick(),

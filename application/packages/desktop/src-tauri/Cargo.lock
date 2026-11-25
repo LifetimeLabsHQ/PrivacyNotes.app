@@ -3040,7 +3040,7 @@ dependencies = [
 
 [[package]]
 name = "privacynotes"
-version = "0.831.2"
+version = "0.836.3"
 dependencies = [
  "auto-launch",
  "base64 0.22.1",
@@ -4490,11 +4490,10 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-opener"
 version = "2.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d39404b2572927e0d3ed30a7ca226037f7508d22e79c96ee6ef0d42b6a4b3345"
 dependencies = [
  "dunce",
  "glob",
+ "libc",
  "objc2-app-kit",
  "objc2-foundation",
  "open",

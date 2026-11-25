@@ -519,6 +519,33 @@
     "skipped_other": "読み取れる日付または内容がない{{count}}件のエントリーをスキップしました。",
     "brokenLinks_other": "Day Oneのエントリーへの{{count}}件のリンクは、この書き出しデータの外を指しているため、文字だけを残しました。"
   },
+  "microsoftToDo": {
+    "reading": "Microsoft To Doの書き出しデータを読み取り中…",
+    "readingList": "Microsoft To Doのリストを読み取り中… {{current}} / {{total}}",
+    "readingAttachments": "Microsoft To Doの添付ファイルを読み取り中… {{done}} / {{total}}",
+    "notMicrosoftToDo": "これはMicrosoft To Doの書き出しデータではないようです。todo.privacynotes.app でタスクを書き出し、その.zipまたは.jsonファイルをここにドロップしてください。",
+    "noJson": "このzipにはMicrosoft To DoのJSONファイルが見つかりません。todo.privacynotes.app からダウンロードした.zip、またはMicrosoft To Doの.json書き出しファイルを選んでください。",
+    "tooLarge": "このMicrosoft To DoのJSONファイルは大きすぎて読み取れません。",
+    "noTasks": "このMicrosoft To Doの書き出しデータにはタスクが見つかりません。",
+    "untitledList": "Microsoft To Doリスト",
+    "untitledTask": "無題のタスク",
+    "dueValue": "期限: {{value}}",
+    "repeatsValue": "繰り返し: {{value}}",
+    "statusWaiting": "他者の対応待ち",
+    "statusDeferred": "保留中",
+    "linkLabel": "リンクされた項目",
+    "cloudAttachmentLabel": "クラウド添付ファイル",
+    "missingAttachmentLine": "含まれていない添付ファイル: {{name}}",
+    "emptyLists_other": "タスクのない空の{{count}}個のMicrosoft To Doリストをスキップしました。",
+    "reminders_other": "{{count}}件のタスクにMicrosoft To Doのリマインダーがありました。タスクリストの各行に対するリマインダーは引き継がれません。",
+    "noAttachmentsInJson_other": "{{count}}件のMicrosoft To Doの添付ファイルが記載されていますが、単体の.jsonにはファイルが含まれません。それらも一緒に読み込むには、.zipの書き出しデータをドロップしてください。",
+    "missingAttachments_other": "{{count}}件のMicrosoft To Doの添付ファイルはzipに含まれていなかったため、ファイル名だけを残しました。",
+    "importedLists_other": "{{count}}個のMicrosoft To Doリストをタスクリストとして読み込みました（{{tasks}}件のタスク）。",
+    "completedTasks_other": "完了済みの{{count}}件のタスクをチェック済みのまま保持しました。",
+    "subtasks_other": "{{count}}件のサブタスクのステップを保持しました。",
+    "attachmentsImported_other": "{{count}}件のタスクの添付ファイルを読み込みました。",
+    "remindersImported_other": "{{count}}件のタスクのリマインダーを保持しました。"
+  },
   "todoist": {
     "reading": "Todoistの書き出しデータを読み取り中…",
     "readingProject": "プロジェクトを読み取り中… {{current}} / {{total}}",
@@ -533,12 +560,15 @@
     "sections_other": "{{count}}個のセクションを見出しとして保持しました。",
     "comments_other": "{{count}}件のコメントを保持しました。",
     "emptyProjects_other": "タスクのない空の{{count}}個のプロジェクトをスキップしました。",
-    "reminders_other": "{{count}}件のタスクにTodoistのリマインダーがありました。タスクリストの各行に対するリマインダーは引き継がれません。"
+    "reminders_other": "{{count}}件のタスクにTodoistのリマインダーがありました。タスクリストの各行に対するリマインダーは引き継がれません。",
+    "remindersImported_other": "{{count}}件のTodoistのリマインダーを保持しました。"
   },
   "notion": {
-    "notNotion": "このzipにはMarkdownページが見つかりません。Notionで Settings > General > Export > Workspace content（またはページのメニュー > More > Export）を選び、「Markdown & CSV」を選んでから、その.zipをここにドロップしてください。",
+    "notNotion": "このzipにはNotionのページが見つかりません。Notionで Settings > General > Export > Workspace content（またはページのメニュー > More > Export）を選び、「HTML」（カラムと色を保持）または「Markdown & CSV」を選んでから、その.zipをここにドロップしてください。",
     "subpageFolders_other": "{{count}}個のサブページグループをフォルダとして作り直しました。",
     "callouts_other": "{{count}}個のNotionのコールアウトをコールアウトブロックに変換しました。",
+    "columns_other": "{{count}}件のカラムレイアウトを保持しました。",
+    "colors": "Notionの文字色とハイライトを保持しました。",
     "databases_other": "{{count}}個のデータベースCSVの表をスキップしました。各行のページは、それぞれのフォルダ内のノートとして読み込まれました。",
     "deadLinks_other": "{{count}}件のリンクは、書き出しデータにないページを指しているため、文字だけを残しました。"
   },

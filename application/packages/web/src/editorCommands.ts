@@ -1,4 +1,6 @@
+import type { ComponentType } from 'react';
 import type { Editor } from '@tiptap/core';
+import type { IconProps } from './icons';
 import { formatInstant } from './intlFormat';
 
 /**
@@ -12,7 +14,10 @@ import { formatInstant } from './intlFormat';
  * Spec: docs/internal/specs/keyboard-shortcuts.md (decision D5, command mode),
  * docs/internal/specs/dates.md (section 3.6)
  */
-export type EditorCommand = 'find' | 'findReplace' | 'outline' | 'connections' | 'markdownView' | 'insertDate' | 'insertDateTime';
+export const EDITOR_COMMAND_IDS = [
+  'find', 'findReplace', 'outline', 'connections', 'markdownView', 'insertDate', 'insertDateTime',
+] as const;
+export type EditorCommand = (typeof EDITOR_COMMAND_IDS)[number];
 
 export const editorCommands: Partial<Record<EditorCommand, () => void>> = {};
 
@@ -22,6 +27,29 @@ export function registerEditorCommand(id: EditorCommand, run: () => void): () =>
   return () => {
     if (editorCommands[id] === run) delete editorCommands[id];
   };
+}
+
+/** One live toolbar action published by the mounted editor for Ninja. */
+export interface LiveEditorAction {
+  key: string;
+  label: string;
+  icon: ComponentType<IconProps>;
+  run: () => void;
+}
+
+let liveActionsGetter: (() => readonly LiveEditorAction[]) | null = null;
+
+/** Registers the active editor toolbar's live Ninja actions getter (zero churn on transactions). */
+export function registerEditorActions(getter: () => readonly LiveEditorAction[]): () => void {
+  liveActionsGetter = getter;
+  return () => {
+    if (liveActionsGetter === getter) liveActionsGetter = null;
+  };
+}
+
+/** Live editor actions offered in Ninja while an editable note toolbar is mounted. */
+export function getLiveEditorActions(): readonly LiveEditorAction[] {
+  return liveActionsGetter ? liveActionsGetter() : [];
 }
 
 /**

@@ -1,10 +1,10 @@
-import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
+import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { BellSimple, CalendarX, CalendarDots, Check, Clock, Repeat as RepeatGlyph, Sun, X, ArrowRight } from './icons';
 import type { LocalNote } from './db';
-import { MonthGrid, useWeekStart } from './MonthGrid';
-import { formatDay, weekdayDate, weekdayLabel } from './intlFormat';
+import { MonthGrid } from './MonthGrid';
+import { formatDay, toLocalIso, weekdayDate, weekdayLabel } from './intlFormat';
+import { timeLabel } from './JournalCalendar';
 import { entryDayOf, journalDateOf, type JournalDays } from './notesViewUtils';
 import { pushEscapeHandler } from './useEscapeToClose';
 import {
@@ -31,6 +31,9 @@ import {
   repeatPresets,
   sameRule,
 } from './scheduleText';
+import { taskReminderPresets } from './taskReminderSyntax';
+import { taskReminderDayLabel } from './taskReminderText';
+import { NO_SPIN, RepeatIntervalFields } from './RepeatIntervalFields';
 import { intlLocale } from './languages';
 import { askForRemindersOnce } from './notesView/useReminders';
 import { Button, Select, TextField } from './ui';
@@ -80,9 +83,6 @@ type Sub = 'main' | 'ends' | 'repeat' | 'repeatCustom' | 'alerts';
 
 const NO_DAYS: ReadonlySet<string> = new Set();
 const TIME_FIELD = 'w-[5.5rem] h-8 rounded-md border border-divider bg-track px-2 text-body text-pn tabular-nums text-center focus:border-accent outline-none';
-/** Hide native browser spin arrows on narrow number fields: they ignore the
- *  app's theme and eat half the box; keyboard arrows still step (GitHub #894). */
-const NO_SPIN = '[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
 
 /** A time field of this view: its box, and a cleared field clears the time. */
 function TimeField({ day, value, onCommit, onDraft, label, className = TIME_FIELD }: { day: string; value: string | undefined; onCommit: (time: string | null) => void; onDraft?: (time: string | null) => void; label: string; className?: string }) {
@@ -116,6 +116,28 @@ export default function ScheduleView({
       return;
     }
     if (day !== shownDay) onEdit({ shiftDays: dayNumber(day) - dayNumber(shownDay) });
+  }
+
+  const todayIso = toLocalIso(new Date());
+  const quickPresets = useMemo(
+    () => (journal ? [] : taskReminderPresets(new Date(), '09:00')),
+    [journal, todayIso],
+  );
+
+  function pickQuickPreset(day: string, time: string) {
+    const alerts: Alert[] | undefined =
+      alertsUnlocked && (!s?.alerts || s.alerts.length === 0) ? [{ before: 0 }] : undefined;
+    if (alerts) askForRemindersOnce();
+    if (!shownDay) {
+      onEdit({ day, time, ...(alerts ? { alerts } : {}) });
+      return;
+    }
+    const shiftDays = dayNumber(day) - dayNumber(shownDay);
+    onEdit({
+      ...(shiftDays ? { shiftDays } : {}),
+      time,
+      ...(alerts ? { alerts } : {}),
+    });
   }
 
   if (sub === 'ends' && shownDay) {
@@ -189,6 +211,38 @@ export default function ScheduleView({
   return (
     <>
       <BackRow title={title} onBack={onBack} />
+      {quickPresets.length > 0 && (
+        <div className="grid grid-cols-3 gap-1.5 px-3 pt-2.5 pb-2">
+          {quickPresets.map((p) => {
+            const label =
+              p.key === 'laterToday'
+                ? t('taskReminder.laterToday')
+                : p.key === 'tomorrow'
+                  ? taskReminderDayLabel(p.day, todayIso)
+                  : t('monthGrid.nextWeek');
+            const sub =
+              p.key === 'laterToday'
+                ? timeLabel(p.day, p.time)
+                : `${formatDay(p.day, 'weekdayShort')}, ${timeLabel(p.day, p.time)}`;
+            const active = shownDay === p.day && s?.time === p.time;
+            return (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => pickQuickPreset(p.day, p.time)}
+                className={`flex flex-col items-center rounded-lg px-1.5 py-1.5 text-center transition ${
+                  active
+                    ? 'bg-accent/15 text-accent'
+                    : 'bg-surface-1 text-pn hover:bg-accent/10 hover:text-accent'
+                }`}
+              >
+                <span className="max-w-full truncate text-meta font-semibold leading-tight">{label}</span>
+                <span className="max-w-full truncate text-meta text-pn-muted leading-tight mt-0.5">{sub}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
       <div className="flex justify-center px-2 pt-3 pb-2">
         <MonthGrid
           key={note.id}
@@ -404,7 +458,6 @@ function CustomRepeat({ ui, day, current, onBack, onApply }: { ui: MenuUi; day: 
   const [until, setUntil] = useState(current?.until ?? shiftDay(day, 30));
   const [count, setCount] = useState(String(current?.count ?? 10));
   const n = Math.max(1, Math.min(999, Number(interval) || 1));
-  const weekStart = useWeekStart();
   const nth = nthOf(day) > 4 ? -1 : (nthOf(day) as 1 | 2 | 3 | 4);
   const draft: Repeat = {
     every,
@@ -420,49 +473,17 @@ function CustomRepeat({ ui, day, current, onBack, onApply }: { ui: MenuUi; day: 
     <>
       <BackRow title={t('repeat.custom')} onBack={onBack} />
       <div className="px-4 py-3 space-y-3 text-compact text-pn">
-        <div className="flex items-center gap-2">
-          <span className="shrink-0">{t('repeat.every')}</span>
-          <TextField
-            size="sm"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={999}
-            value={interval}
-            onChange={(e) => setInterval(e.target.value)}
-            onKeyDown={(e) => e.stopPropagation()}
-            aria-label={t('repeat.every')}
-            className={`w-14 h-8 shrink-0 !ps-2 !pe-2 py-0 text-center tabular-nums ${NO_SPIN}`}
-          />
-          <Select
-            size="sm"
-            value={every}
-            onChange={(e) => setEvery(e.target.value as RepeatUnit)}
-            aria-label={t('repeat.every')}
-            className="flex-1 min-w-0 h-8 py-0"
-          >
-            {(['day', 'week', 'month', 'year'] as const).map((u) => <option key={u} value={u}>{t(`repeat.units.${u}`, { count: n })}</option>)}
-          </Select>
-        </div>
-        {every === 'week' && (
-          <div role="group" aria-label={t('repeat.onDays')} className="flex gap-1">
-            {Array.from({ length: 7 }, (_, i) => (weekStart + i) % 7).map((w) => {
-              const on = weekdays.includes(w);
-              return (
-                <button
-                  key={w}
-                  type="button"
-                  aria-pressed={on}
-                  aria-label={weekdayLabel(weekdayDate(w), 'long')}
-                  onClick={() => setWeekdays((cur) => (on ? (cur.length > 1 ? cur.filter((x) => x !== w) : cur) : [...cur, w]))}
-                  className={`w-8 h-8 rounded-full text-small font-semibold transition ${on ? 'bg-accent-fill text-white' : 'bg-surface-1 text-pn-muted hover:text-pn'}`}
-                >
-                  {weekdayLabel(weekdayDate(w), 'narrow')}
-                </button>
-              );
-            })}
-          </div>
-        )}
+        <RepeatIntervalFields
+          interval={interval}
+          onIntervalChange={setInterval}
+          every={every}
+          onEveryChange={setEvery}
+          showWeekdays={every === 'week'}
+          weekdays={weekdays}
+          onToggleWeekday={(w) =>
+            setWeekdays((cur) => (cur.includes(w) ? (cur.length > 1 ? cur.filter((x) => x !== w) : cur) : [...cur, w]))
+          }
+        />
         {every === 'month' && (
           <div className="flex flex-col gap-1.5">
             {(['day', 'weekday'] as const).map((m) => (
@@ -507,9 +528,9 @@ function CustomRepeat({ ui, day, current, onBack, onApply }: { ui: MenuUi; day: 
           )}
         </div>
         <p className="text-small text-pn-muted">{describeRepeat(draft, day, t)}</p>
-        <button type="button" onClick={() => onApply(draft)} className={`w-full h-9 rounded-md ${PRIMARY_BTN_SKIN} text-compact font-semibold transition`}>
+        <Button action="apply" onClick={() => onApply(draft)} className="w-full justify-center">
           {t('repeat.apply')}
-        </button>
+        </Button>
       </div>
     </>
   );

@@ -26,7 +26,6 @@
     "noResults": "沒有結果"
   },
   "deleteNote": {
-    "confirm": "永久刪除",
     "body": "要永久刪除 <highlight>「{{title}}」</highlight>嗎？此動作無法復原。"
   },
   "emptyTrash": {
@@ -72,12 +71,15 @@
       "toggleSidebar": "顯示或隱藏側邊欄",
       "toggleTheme": "切換淺色與深色",
       "openSettings": "開啟設定",
+      "graph": "關聯圖與地點工作區",
       "zen": "Zen 模式",
+      "fullScreen": "全螢幕模式",
       "markdownView": "開啟或關閉 Markdown 檢視",
       "invisibles": "開啟或關閉編輯標記",
       "find": "在筆記中尋找",
       "findReplace": "尋找與取代",
       "outline": "顯示或隱藏大綱",
+      "connections": "顯示或隱藏關聯",
       "insertDate": "插入日期",
       "insertDateTime": "插入日期與時間",
       "clearFilters": "清除篩選",
@@ -131,8 +133,6 @@
     "goToFolder": "前往資料夾",
     "createTag": "建立標籤 #{{name}}",
     "createFolder": "建立資料夾「{{name}}」",
-    "newTag": "新增標籤",
-    "newFolder": "新增資料夾",
     "goToDay": "前往日期",
     "inText": "在內文中",
     "actions": "動作",
@@ -172,9 +172,9 @@
   "sshKeyForm": {
     "label": "名稱",
     "labelPlaceholder": "例如 GitHub 部署金鑰",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "複製公鑰",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "複製私鑰",
     "downloadPublicKey": "下載公鑰",
     "downloadPrivateKey": "下載私鑰",
@@ -285,6 +285,13 @@
     "features": {
       "stats": {
         "detail": "你的寫作、連續紀錄和追蹤項目的長期變化"
+      },
+      "graph": {
+        "detail": "以互動地圖呈現你的筆記連結、智慧橋接與樞紐"
+      },
+      "placesMap": {
+        "label": "地點地圖",
+        "detail": "釘選在私密地圖上的筆記、日誌紀錄與聯絡人"
       },
       "trackers": {
         "detail": "心情、習慣、因素和用藥"

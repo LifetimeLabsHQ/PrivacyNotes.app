@@ -25,11 +25,13 @@ import { matchesKey } from './shortcutMatch';
  *
  * On touch a long-press is the platform's own gesture (select + copy) and
  * the app's multi-select gesture on list rows, so it does not open this
- * menu there - see isTouchContextMenu. Touch reaches it three ways: an
+ * menu there - see isTouchContextMenu. Touch reaches it four ways: an
  * explicit button that calls `open` from its click (the "..." a bookmark
- * row wears on touch), a note-link's long press (NoteLink.tsx), and a long
+ * row wears on touch), a note-link's long press (NoteLink.tsx), a long
  * press on a URL link in the note body (Editor.tsx), which leaves the
- * platform's word selection in place.
+ * platform's word selection in place, and a sidebar section row's long
+ * press via `useLongPressContextMenu` (iOS WebKit never fires `contextmenu`
+ * on touch long press).
  *
  * Usage:
  *   const ctx = useContextMenu();
@@ -131,13 +133,15 @@ export function isTouchContextMenu(e: React.MouseEvent): boolean {
   if (isLongPressEcho(e.nativeEvent)) return true;
   const pointerType = (e.nativeEvent as PointerEvent).pointerType;
   if (pointerType) return pointerType !== 'mouse';
-  return typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    && window.matchMedia('(hover: none)').matches;
 }
 
 /** The second `contextmenu` of an Android long press, described above. */
 export function isLongPressEcho(e: MouseEvent): boolean {
   return (e as PointerEvent).pointerType === 'mouse' && e.button === -1
-    && typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
+    && typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    && window.matchMedia('(hover: none)').matches;
 }
 
 /**
@@ -162,6 +166,15 @@ export function closedMenuJustNow(button: Element): boolean {
   return hit;
 }
 
+export type ContextMenuAnchorEvent = {
+  clientX: number;
+  clientY: number;
+  preventDefault: () => void;
+  stopPropagation: () => void;
+  /** Optional band to stay clear of (e.g. the pressed row on touch). */
+  clear?: () => { top: number; bottom: number };
+};
+
 export function useContextMenu() {
   const [state, setState] = useState<ContextMenuState>(null);
   const open = (
@@ -178,6 +191,163 @@ export function useContextMenu() {
   };
   const close = () => setState(null);
   return { state, open, close };
+}
+
+/** Delay before a touch hold opens a row menu (iOS standard, matches useMultiSelect). */
+const LONG_PRESS_MS = 500;
+/** Finger travel that cancels a long press so scrolling and drawer swipes win. */
+const LONG_PRESS_MOVE_PX = 10;
+/** Window after touchend in which a synthetic click from the long press is dropped. */
+const LONG_PRESS_CLICK_GUARD_MS = 500;
+
+/**
+ * Bind right-click (`contextmenu`) and touch long-press to one row menu.
+ *
+ * iOS Safari and WKWebView never fire `contextmenu` on a touch long press, so
+ * a row whose only way into its menu is `onContextMenu` cannot be reached on
+ * iPhone or iPad. Desktop right-click and the Menu key run `onContextMenu`
+ * directly; a 500ms touch hold (within 10px of travel) opens the menu clear of
+ * the pressed row so lifting the finger cannot tap a menu item, and drops the
+ * trailing click so the row itself does not also navigate. On Android, a native
+ * `contextmenu` cancels any pending timer when it arrives first, or re-anchors
+ * to the same row band when it arrives just after.
+ */
+export function useLongPressContextMenu<T>(
+  open: (e: ContextMenuAnchorEvent, target: T) => void,
+  canOpen?: (target: T) => boolean,
+) {
+  const stateRef = useRef<{
+    timer: number | null;
+    touchId: number | null;
+    startX: number;
+    startY: number;
+    fired: boolean;
+    suppressClickUntil: number;
+  }>({
+    timer: null,
+    touchId: null,
+    startX: 0,
+    startY: 0,
+    fired: false,
+    suppressClickUntil: 0,
+  });
+
+  const openRef = useRef(open);
+  openRef.current = open;
+  const canOpenRef = useRef(canOpen);
+  canOpenRef.current = canOpen;
+
+  const cancelTimer = () => {
+    const s = stateRef.current;
+    if (s.timer !== null) {
+      window.clearTimeout(s.timer);
+      s.timer = null;
+    }
+    s.touchId = null;
+  };
+
+  useEffect(() => cancelTimer, []);
+
+  const bandFor = (el: HTMLElement) => () => {
+    const r = el.getBoundingClientRect();
+    return { top: r.top - 4, bottom: r.bottom + 4 };
+  };
+
+  return (target: T) => ({
+    onContextMenu: (e: React.MouseEvent<HTMLElement>) => {
+      cancelTimer();
+      const s = stateRef.current;
+      if (s.fired || isTouchContextMenu(e)) {
+        const el = e.currentTarget;
+        openRef.current({
+          clientX: e.clientX,
+          clientY: e.clientY,
+          preventDefault: () => e.preventDefault(),
+          stopPropagation: () => e.stopPropagation(),
+          clear: bandFor(el),
+        }, target);
+        return;
+      }
+      openRef.current(e, target);
+    },
+    onTouchStart: (e: React.TouchEvent<HTMLElement>) => {
+      cancelTimer();
+      const s = stateRef.current;
+      s.fired = false;
+      s.suppressClickUntil = 0;
+      if (e.touches.length !== 1) return;
+      if (canOpenRef.current && !canOpenRef.current(target)) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+      const el = e.currentTarget;
+      const x = touch.clientX;
+      const y = touch.clientY;
+      s.touchId = touch.identifier;
+      s.startX = x;
+      s.startY = y;
+      s.timer = window.setTimeout(() => {
+        s.timer = null;
+        s.fired = true;
+        s.suppressClickUntil = Infinity;
+        openRef.current({
+          clientX: x,
+          clientY: y,
+          preventDefault() {},
+          stopPropagation() {},
+          clear: bandFor(el),
+        }, target);
+      }, LONG_PRESS_MS);
+    },
+    onTouchMove: (e: React.TouchEvent<HTMLElement>) => {
+      const s = stateRef.current;
+      if (s.timer === null || s.touchId === null) return;
+      if (e.touches.length > 1) {
+        cancelTimer();
+        return;
+      }
+      let touch: React.Touch | undefined;
+      for (let i = 0; i < e.touches.length; i++) {
+        if (e.touches[i]?.identifier === s.touchId) {
+          touch = e.touches[i];
+          break;
+        }
+      }
+      if (!touch) {
+        cancelTimer();
+        return;
+      }
+      const dx = touch.clientX - s.startX;
+      const dy = touch.clientY - s.startY;
+      if (dx * dx + dy * dy > LONG_PRESS_MOVE_PX * LONG_PRESS_MOVE_PX) {
+        cancelTimer();
+      }
+    },
+    onTouchEnd: (e: React.TouchEvent<HTMLElement>) => {
+      cancelTimer();
+      const s = stateRef.current;
+      if (s.fired) {
+        s.fired = false;
+        s.suppressClickUntil = performance.now() + LONG_PRESS_CLICK_GUARD_MS;
+        if (e.cancelable) e.preventDefault();
+      }
+    },
+    onTouchCancel: () => {
+      cancelTimer();
+      const s = stateRef.current;
+      if (s.fired) {
+        s.fired = false;
+        s.suppressClickUntil = performance.now() + LONG_PRESS_CLICK_GUARD_MS;
+      }
+    },
+    onClickCapture: (e: React.MouseEvent<HTMLElement>) => {
+      const s = stateRef.current;
+      if (performance.now() < s.suppressClickUntil) {
+        s.suppressClickUntil = 0;
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    },
+  });
 }
 
 export function ContextMenu({

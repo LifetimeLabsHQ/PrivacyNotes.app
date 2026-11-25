@@ -24,7 +24,7 @@ import {
 import type { ComponentType } from 'react';
 import type { IconProps } from '@phosphor-icons/react';
 
-type Variant = 'secondary' | 'accent' | 'primary' | 'danger' | 'upgrade';
+type Variant = 'secondary' | 'primary' | 'danger' | 'upgrade';
 
 /**
  * One icon, one label and one look per action, so every Save in the app shows
@@ -56,7 +56,7 @@ export const ACTIONS = {
   download: { icon: DownloadSimple, label: null, variant: 'secondary' },
   import: { icon: BoxArrowDown, label: null, variant: 'secondary' },
   export: { icon: BoxArrowUp, label: null, variant: 'secondary' },
-  generate: { icon: Password, label: null, variant: 'accent' },
+  generate: { icon: Password, label: null, variant: 'primary' },
   regenerate: { icon: ArrowsClockwise, label: null, variant: 'secondary' },
   retry: { icon: ArrowClockwise, label: null, variant: 'secondary' },
 } as const satisfies Record<string, { icon: ComponentType<IconProps>; label: string | null; variant: Variant }>;

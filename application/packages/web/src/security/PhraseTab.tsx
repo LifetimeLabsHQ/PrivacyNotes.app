@@ -4,7 +4,8 @@ import { PhraseView } from './PhraseView';
 import { PhraseOdds } from './PhraseOdds';
 import { PhrasePinGate, type PinGateRecovery } from './PhrasePinGate';
 import { HelpChip } from '../HelpChip';
-import { RedditLogo, Vault, Warning } from '../icons';
+import { RedditLogo, Vault } from '../icons';
+import { Callout } from '../ui';
 import { isDemoMode } from '../demo';
 import { ReencryptProgressLine } from '../reencryptProgress';
 
@@ -39,10 +40,7 @@ export function PhraseTab({
   return <PhrasePinGate pubkey={pubkey} pinTimeoutMinutes={pinTimeoutMinutes} hasPin={hasPin}
     pinCredential={pinCredential} onCancel={onCancel} recovery={recovery}>
     <div className="space-y-4">
-      {isDemoMode() && <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 px-3 py-2.5 text-compact leading-relaxed text-warning flex items-start gap-2.5">
-        <Warning aria-hidden="true" className="shrink-0 mt-0.5" />
-        <span>{t('phraseView.demoPhrase')}</span>
-      </div>}
+      {isDemoMode() && <Callout tone="warning">{t('phraseView.demoPhrase')}</Callout>}
       <PhraseView phrase={phrase} onCancel={onCancel} hideDismiss gated hasPin={hasPin} />
       <Suspense fallback={null}><PhraseLength words={phrase.trim().split(/\s+/).length} onOpenTwoFactor={onOpenTwoFactor} onOpenSync={onOpenSync} /></Suspense>
       {onOpenCustody && <button type="button" className="inline-flex items-center gap-2 text-body text-accent hover:underline" onClick={onOpenCustody}>

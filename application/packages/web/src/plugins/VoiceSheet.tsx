@@ -5,7 +5,7 @@ import { useCopyToClipboard } from '../clipboard';
 import { detectPlatform } from '../devices';
 import { FIELD_CLASS, FieldLabel } from '../formFields';
 import { activeLocale, SUPPORTED_LOCALES } from '../i18n';
-import { Button, Modal, ProgressBar, Select, StatusLine } from '../ui';
+import { Button, PluginSheet, ProgressBar, Select, StatusLine } from '../ui';
 import { audioSeconds, MAX_AUDIO_S } from './decodeAudio';
 import { cancelJob, dropJob, memoryLooksLow, onJobGone, startJob, useJobs, watchJob } from './jobs';
 import { checkKeptPlugin } from './pluginManager';
@@ -165,8 +165,31 @@ export function VoiceSheet({ request, noteId, resumeJob, isPro, onOpenCard, onCl
     'worker-died': 'lowMemory',
   }[job?.error ?? ''] ?? 'transcribeFailed';
 
+  const footer = !job ? (
+    <Button action="next" onClick={start} disabled={!request}>
+      {t('transcribe')}
+    </Button>
+  ) : job.status === 'error' ? (
+    <Button action="done" onClick={close} />
+  ) : job.status === 'waiting' || job.status === 'running' ? (
+    <Button action="cancel" onClick={cancel} />
+  ) : !text ? (
+    <Button action="done" onClick={close} />
+  ) : (
+    <>
+      <Button action="copy" variant={canAdd ? 'secondary' : 'primary'} onClick={() => copy(text, 'voice')}>
+        {copied ? t('auth:createPhrase.copied') : undefined}
+      </Button>
+      {canAdd && (
+        <Button action="add" onClick={add}>
+          {t('addText')}
+        </Button>
+      )}
+    </>
+  );
+
   return (
-    <Modal title={t('transcribe')} icon={<Waveform />} onClose={close} layer="z-[60]" className="max-w-lg w-full p-6 space-y-4">
+    <PluginSheet title={t('transcribe')} icon={<Waveform />} onClose={close} footer={footer}>
       {!job ? (
         <>
           <div>
@@ -184,62 +207,32 @@ export function VoiceSheet({ request, noteId, resumeJob, isPro, onOpenCard, onCl
             </Select>
           </div>
           {engine === 'web' && memoryLooksLow() && <p className="text-small text-pn-muted">{t('lowMemoryWarn')}</p>}
-          <div className="flex justify-end">
-            <Button action="next" onClick={start} disabled={!request}>
-              {t('transcribe')}
-            </Button>
-          </div>
         </>
       ) : job.status === 'error' ? (
-        <>
-          <StatusLine tone="danger">{t(failure)}</StatusLine>
-          <div className="flex justify-end">
-            <Button action="done" onClick={close} />
-          </div>
-        </>
+        <StatusLine tone="danger">{t(failure)}</StatusLine>
       ) : job.status === 'waiting' || job.status === 'running' ? (
-        <>
-          {model !== null ? (
-            <>
-              <StatusLine busy>{t('appleLanguage')}</StatusLine>
-              <ProgressBar value={model} label={t('appleLanguage')} />
-            </>
-          ) : (
-            <>
-              <ProgressBar value={job.status === 'waiting' || !p ? undefined : p.done / Math.max(p.total, 1)} label={t('transcribe')} />
-              <StatusLine busy>
-                {job.status === 'waiting' ? t('importExport:upload.statusWaiting') : left !== null ? t('timeLeft', { time: timeLeft(left, ui) }) : t('transcribe')}
-              </StatusLine>
-              {phone && seconds > LONG_ON_PHONE_S && <p className="text-small text-pn-muted">{t('longAudio')}</p>}
-            </>
-          )}
-          <div className="flex justify-end">
-            <Button action="cancel" onClick={cancel} />
-          </div>
-        </>
+        model !== null ? (
+          <>
+            <StatusLine busy>{t('appleLanguage')}</StatusLine>
+            <ProgressBar value={model} label={t('appleLanguage')} />
+          </>
+        ) : (
+          <>
+            <ProgressBar value={job.status === 'waiting' || !p ? undefined : p.done / Math.max(p.total, 1)} label={t('transcribe')} />
+            <StatusLine busy>
+              {job.status === 'waiting' ? t('importExport:upload.statusWaiting') : left !== null ? t('timeLeft', { time: timeLeft(left, ui) }) : t('transcribe')}
+            </StatusLine>
+            {phone && seconds > LONG_ON_PHONE_S && <p className="text-small text-pn-muted">{t('longAudio')}</p>}
+          </>
+        )
       ) : !text ? (
-        <>
-          <p className="text-body text-pn-soft">{t('transcribeFailed')}</p>
-          <div className="flex justify-end">
-            <Button action="done" onClick={close} />
-          </div>
-        </>
+        <p className="text-body text-pn-soft">{t('transcribeFailed')}</p>
       ) : (
         <>
           <textarea rows={10} className={`${FIELD_CLASS} resize-y`} value={text} dir="auto" onChange={(e) => setText(e.target.value)} />
           {insert && !canAdd && <p className="text-small text-pn-muted">{t('addTextGone')}</p>}
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button action="copy" variant={canAdd ? 'secondary' : 'primary'} onClick={() => copy(text, 'voice')}>
-              {copied ? t('auth:createPhrase.copied') : undefined}
-            </Button>
-            {canAdd && (
-              <Button action="add" onClick={add}>
-                {t('addText')}
-              </Button>
-            )}
-          </div>
         </>
       )}
-    </Modal>
+    </PluginSheet>
   );
 }

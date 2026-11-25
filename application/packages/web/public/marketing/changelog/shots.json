@@ -1402,5 +1402,107 @@
       "bytes": 35814,
       "sha256": "26dc35bda6b556c4a69010d1f57a0026b8a5059eab4a9c4066998e2985cdc21e"
     }
+  },
+  "0.839": {
+    "browsers-18": {
+      "w": 2000,
+      "h": 1618,
+      "bytes": 186726,
+      "sha256": "b460b82bac75857055b67164713992c952c0f03ea9ad687a4a4f76d2421722c2"
+    }
+  },
+  "0.840": {
+    "importers-tasks": {
+      "w": 2000,
+      "h": 1618,
+      "bytes": 195164,
+      "sha256": "45a7a251e231a2193f8c91cdf2bddf7087f360f05796b0884ebac49bc91f7cdb"
+    }
+  },
+  "0.841": {
+    "storage-usage": {
+      "w": 2000,
+      "h": 1618,
+      "bytes": 146862,
+      "sha256": "a21cf74bda054a8cc548df0a934a0028fa6b3be9f493910ade067b87bacc4b58"
+    }
+  },
+  "0.842": {
+    "full-screen": {
+      "w": 2000,
+      "h": 1250,
+      "bytes": 72482,
+      "sha256": "c23de5aaefb7c4a479a58574b83fede5d0fdad659b121eefbca99665f3c83b52"
+    },
+    "note-menu-shortcuts": {
+      "w": 1444,
+      "h": 1790,
+      "bytes": 148258,
+      "sha256": "84fdc6cec9e25620446ee1203e7935ff75878e65932b89f8053f95dd69ec6a11"
+    }
+  },
+  "0.843": {
+    "emoji-picker": {
+      "w": 888,
+      "h": 1288,
+      "bytes": 111396,
+      "sha256": "d5b087201c497b436daf0baa75ede39d87044e1d258fb7e21a0bc4a725b7dddd"
+    }
+  },
+  "0.844": {
+    "task-reminder-popover": {
+      "w": 1444,
+      "h": 1320,
+      "bytes": 45250,
+      "sha256": "486e91117571e05d2443795d962ee4cc4b04c1c1bc2f337058c33705fb712e12"
+    },
+    "task-reminders": {
+      "w": 1444,
+      "h": 1036,
+      "bytes": 38284,
+      "sha256": "dbcea5b1342b88ad540749549816e2e59b0385522b7ae1dbae8bef0d983550ba"
+    }
+  },
+  "0.845": {
+    "slash-menu": {
+      "w": 1444,
+      "h": 1280,
+      "bytes": 35264,
+      "sha256": "c758b8042b3199eedf3c7bee3b9b140a60918c7d3eac4dfc1055bdb1b03db49b"
+    }
+  },
+  "0.846": {
+    "columns-borders": {
+      "w": 1444,
+      "h": 1620,
+      "bytes": 58224,
+      "sha256": "ed6cd31f35e1aef7e2f0cbd14a94550bf83139559a650cd7dfa6ddd8e4f3782b"
+    },
+    "columns-layout": {
+      "w": 1444,
+      "h": 1386,
+      "bytes": 58478,
+      "sha256": "e183e1496ce4ffc05741f54b6642d8c7465f7d104d93fc8a13ae014a28b32150"
+    }
+  },
+  "0.847": {
+    "graph-canvas": {
+      "w": 2000,
+      "h": 1347,
+      "bytes": 106542,
+      "sha256": "db0035f3b4fecb2c14594a2cb8a7923672b8b266375dc9baebd98efd77c72a5c"
+    },
+    "local-graph": {
+      "w": 1444,
+      "h": 1190,
+      "bytes": 94844,
+      "sha256": "7ac07e56e684c73eb79bf065a3db73c908e7194c63437f69f5ad4807fec869b1"
+    },
+    "places-map": {
+      "w": 2000,
+      "h": 1347,
+      "bytes": 610244,
+      "sha256": "4b85b4d1d686696b620669dffb48c22a8e415fd2af74a62d9762cc113b0e633b"
+    }
   }
 }

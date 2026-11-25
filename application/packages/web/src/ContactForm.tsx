@@ -1,9 +1,8 @@
-import { Button, Callout } from './ui';
+import { Button, Callout, DeleteButton, Disclosure, PinProtectToggle, Spinner } from './ui';
 import { useRef, useState, type Dispatch, type SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ContextMenu, type ContextMenuItem, type ContextMenuState } from './ContextMenu';
 import { hasPin } from './pin';
-import { PinInfoModal } from './PinInfoModal';
 import {
   BIRTHDAY_LABEL,
   CONTACT_FIELD_TYPES,
@@ -20,12 +19,11 @@ import {
 } from './contactBody';
 import { CustomFieldEditor } from './CustomFields';
 import { isPublicField } from './loginExtras';
-import { DeleteButton } from './ui/DeleteButton';
 import { ContactChip } from './NoteRow';
 import { storePicture } from './EncryptedImage';
 import { contactPhotoOptions } from './imageProcessing';
-import { Camera, CaretDown, iconTrash, Info, Minus, NotePencil, Plus, Rows, Spinner, User } from './icons';
-import { FIELD_CLASS, FieldLabel, GroupHeading } from './formFields';
+import { Camera, CaretDown, iconTrash, Minus, NotePencil, Plus, Rows, User } from './icons';
+import { FIELD_CLASS, FieldLabel, GroupHeading, NO_TEXT_ASSIST } from './formFields';
 import { isImeComposing } from './imeComposing';
 
 /**
@@ -142,7 +140,6 @@ export function ContactForm({
   // can appear or vanish while the toggle below is on screen, and
   // localStorage fires nothing that would refresh a frozen value.
   const pinConfigured = hasPin();
-  const [showPinInfo, setShowPinInfo] = useState(false);
   const [menu, setMenu] = useState<ContextMenuState>(null);
   /** Singles the user added this session, so an empty field stays on screen. */
   const [added, setAdded] = useState<Set<string>>(() => new Set());
@@ -318,7 +315,7 @@ export function ContactForm({
           onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === 'Escape') && !isImeComposing(e)) { e.preventDefault(); setCustomLabel(null); } }}
           placeholder={t('contacts.labelNone')}
           maxLength={LABEL_MAX}
-          className="w-28 shrink-0 rounded-md border border-accent bg-surface-1 px-2 py-2 text-small focus:outline-none"
+          className={`${FIELD_CLASS} !w-28 shrink-0 !border-accent !bg-surface-1 !px-2 !py-2 !text-small`}
         />
       );
     }
@@ -365,6 +362,7 @@ export function ContactForm({
                 maxLength={VALUE_MAX}
                 inputMode={inputMode}
                 autoComplete="off"
+                {...(kind === 'related' ? {} : NO_TEXT_ASSIST)}
                 dir="auto"
                 className={fieldClass}
               />
@@ -393,7 +391,7 @@ export function ContactForm({
           >
             <ContactChip name={title} initials={contactInitialsFor(title, draft)} photo={draft.photo} size={56} />
             <span className="absolute -bottom-0.5 -end-0.5 w-5 h-5 rounded-full bg-surface-1 border border-divider inline-flex items-center justify-center text-pn-soft group-hover:border-accent group-hover:text-accent transition">
-              {photoBusy ? <Spinner className="animate-spin" /> : <Camera />}
+              {photoBusy ? <Spinner size={12} /> : <Camera />}
             </span>
           </button>
           <input
@@ -587,54 +585,31 @@ export function ContactForm({
         </div>
 
         {draft.extras.length > 0 && (
-          <div className="rounded-md border border-divider">
-            <button
-              type="button"
-              onClick={() => setExtrasOpen((v) => !v)}
-              aria-expanded={extrasOpen}
-              className="w-full flex items-center gap-2 px-3 py-2 text-compact text-pn-soft"
+          <div className="rounded-md border border-divider px-3 py-2">
+            <Disclosure
+              open={extrasOpen}
+              onOpenChange={setExtrasOpen}
+              label={t('contacts.alsoInFile')}
+              meta={t('contacts.extrasCount', { count: draft.extras.length })}
+              panelClassName="pt-2 pb-1 flex flex-col gap-1"
             >
-              <CaretDown className={`shrink-0 transition-transform ${extrasOpen ? '' : '-rotate-90'}`} aria-hidden="true" />
-              {t('contacts.alsoInFile')}
-              <span className="ms-auto text-small text-pn-muted">{t('contacts.extrasCount', { count: draft.extras.length })}</span>
-            </button>
-            {extrasOpen && (
-              <div className="px-3 pb-3 flex flex-col gap-1">
-                {draft.extras.map((x, i) => (
-                  <div key={i} className="flex gap-3 text-small">
-                    <span className="shrink-0 w-36 truncate font-mono text-pn-muted" dir="ltr">{x.name}</span>
-                    <span className="min-w-0 break-all text-pn-soft" dir="auto">{x.value}</span>
-                  </div>
-                ))}
-                <p className="mt-1 text-meta text-pn-muted">{t('contacts.extrasNote')}</p>
-              </div>
-            )}
+              {draft.extras.map((x, i) => (
+                <div key={i} className="flex gap-3 text-small">
+                  <span className="shrink-0 w-36 truncate font-mono text-pn-muted" dir="ltr">{x.name}</span>
+                  <span className="min-w-0 break-all text-pn-soft" dir="auto">{x.value}</span>
+                </div>
+              ))}
+              <p className="mt-1 text-meta text-pn-muted">{t('contacts.extrasNote')}</p>
+            </Disclosure>
           </div>
         )}
 
         {/* PIN-protect toggle - the vault form's exact block. */}
-        <label className={`flex items-center gap-2 pt-2 border-t border-divider ${!pinConfigured && !pinProtected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-          <input
-            type="checkbox"
-            checked={pinProtected}
-            onChange={(e) => onPinProtectedChange(e.target.checked)}
-            disabled={!pinConfigured && !pinProtected}
-            className="rounded accent-accent"
-          />
-          <span className="text-body text-pn-muted">{t('common:cardForm.requirePin')}</span>
-          <button
-            type="button"
-            onClick={(e) => { e.preventDefault(); setShowPinInfo(true); }}
-            className="text-accent/60 hover:text-accent transition p-1 -m-1"
-            aria-label={t('common:cardForm.whatDoesThisDo')}
-          >
-            <Info />
-          </button>
-        </label>
-        {showPinInfo && <PinInfoModal onClose={() => setShowPinInfo(false)} />}
-        {!pinConfigured && !pinProtected && (
-          <p className="text-meta text-pn-muted -mt-3">{t('common:cardForm.setUpPinFirst')}</p>
-        )}
+        <PinProtectToggle
+          checked={pinProtected}
+          pinConfigured={pinConfigured}
+          onChange={onPinProtectedChange}
+        />
 
         {saveError && <Callout tone="danger">{saveError}</Callout>}
         <div className="flex items-center justify-end gap-2">

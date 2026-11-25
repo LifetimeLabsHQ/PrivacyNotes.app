@@ -20,18 +20,30 @@ export function storedVaultKeys(previous: string): Record<string, unknown> {
 }
 
 /** The form items whose JSON body has a freeform `notes` field. */
-const NOTES_FIELD_TYPES = new Set(['contact', 'login', 'card', 'ssh-key']);
+const NOTES_FIELD_TYPES = new Set(['contact', 'link', 'login', 'card', 'ssh-key']);
 
 /**
- * The freeform notes of a contact, login, card or SSH key, or '' for any
- * other item. A note-link typed there joins the Connections of the note it
- * names, so a contact can link to a meeting note.
+ * The freeform notes of a contact, bookmark, login, card or SSH key, or '' for
+ * any other item. A note-link typed there joins the Connections of the note it
+ * names, so a contact or bookmark can link to a note.
  * Spec: docs/internal/issues/0852.md (more connections)
  */
 export function formNotesText(note: { type?: string; body: string }): string {
   if (!NOTES_FIELD_TYPES.has(note.type ?? '')) return '';
   const notes = storedVaultKeys(note.body).notes;
   return typeof notes === 'string' ? notes : '';
+}
+
+/**
+ * Return a form item's JSON body with its `notes` field updated while keeping
+ * every other key untouched. Removes `notes` when blank ("empty is absent" in
+ * contactBody.ts and updateLinkBody in linkBody.ts).
+ */
+export function withFormNotes(body: string, notes: string): string {
+  const data = storedVaultKeys(body);
+  if (notes.trim()) data.notes = notes;
+  else delete data.notes;
+  return JSON.stringify(data);
 }
 
 /**

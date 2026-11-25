@@ -5,6 +5,7 @@ import type { Stats } from '../stats';
 import { NO_FACTORS, type FactorDef, type MedicationTemplate, type TrackerSettings } from '../trackerTypes';
 import { computeTrackerStats } from '../trackerStats';
 import { SectionEyebrow } from '../settingsUI';
+import { ProgressBar } from '../ui';
 import { Bell, CalendarBlank, CaretRight, ChartBar, ChartLineUp, Clock, Fire, Flag, NotePencil, PencilSimple, Plus, Pulse, SquaresFour, Tag } from '../icons';
 import { formatDay, formatInstant } from '../intlFormat';
 import { toLocalIso } from '../notesViewUtils';
@@ -262,7 +263,9 @@ export function OverviewTab({ notes, stats, isNoteLocked, trackerSettings, facto
             <div key={row.family} className="rounded-lg border border-divider bg-surface-2 px-3 py-2.5">
               <p className="text-small text-pn-muted truncate">{t('milestones.next', { label: milestoneLabel(row.family, row.next!) })}</p>
               <p className="text-title font-semibold tabular-nums">{t('milestones.ofTarget', { current: fmt(row.current), target: fmt(row.next!) })}</p>
-              <div className="mt-1.5 h-1.5 rounded-full bg-surface-0 overflow-hidden"><div className="h-full rounded-full bg-accent-fill" style={{ width: `${Math.round(row.progress * 100)}%` }} /></div>
+              <div className="mt-1.5">
+                <ProgressBar value={row.progress} label={milestoneLabel(row.family, row.next!)} />
+              </div>
             </div>
           ))}
         </div>

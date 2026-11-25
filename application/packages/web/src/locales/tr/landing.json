@@ -344,7 +344,7 @@
     "extensionKeyLogin": "Bu sitenin giriş bilgisini doldur",
     "extensionKeyBookmark": "Bu sayfayı yer imi olarak kaydet",
     "extensionAria": "Uzantıyı {{name}} tarayıcısına ekle",
-    "extensionNote": "Yalnızca bilgisayarlarda."
+    "extensionNote": "Chromium veya Firefox tabanlı tüm tarayıcılarda çalışır. Yalnızca bilgisayarlarda."
   },
   "ctaRepeat": {
     "getStarted": "Başlayın"

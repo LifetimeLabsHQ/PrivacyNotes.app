@@ -8,8 +8,10 @@
   "applyToFolderItems": "Använd på alla objekt i den här mappen",
   "applyToTagItems": "Använd på alla objekt med den här taggen",
   "icon": "Ikon",
+  "emoji": "Emoji",
   "searchPlaceholder": "Sök ikoner",
   "searchLogos": "Sök logotyper",
+  "searchEmojis": "Sök emojis",
   "moreLogos": "Fler logotyper",
   "allLogos": "Alla logotyper, A till Z",
   "recent": "Senast använda",
@@ -41,7 +43,14 @@
     "games": "Spel",
     "learning": "Lärande och forskning",
     "trips": "Resor och träning",
-    "privacy": "Integritet och säkerhet"
+    "privacy": "Integritet och säkerhet",
+    "emojiSmileys": "Smileys och känslor",
+    "emojiPeople": "Människor och kropp",
+    "emojiAnimals": "Djur och natur",
+    "emojiActivities": "Sport och fritid",
+    "emojiObjects": "Föremål",
+    "emojiSymbols": "Symboler och tecken",
+    "emojiFlags": "Flaggor"
   },
   "icons": {
     "folder": "Mapp",

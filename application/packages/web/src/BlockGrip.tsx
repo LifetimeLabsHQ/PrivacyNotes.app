@@ -10,10 +10,11 @@ import { TIP_PILL, positionClasses } from './HoverLabel';
  * document, and it shows only while the note can be edited. Its hover tip
  * lands before it, so it never covers the block's own title.
  */
-export function BlockGrip({ editor, getPos, className }: {
+export function BlockGrip({ editor, getPos, className, tipPosition = 'start' }: {
   editor: TipTapEditor;
   getPos: () => number | undefined;
   className: string;
+  tipPosition?: 'start' | 'below';
 }) {
   const { t } = useTranslation('editor');
   const ref = useRef<HTMLSpanElement | null>(null);
@@ -37,7 +38,7 @@ export function BlockGrip({ editor, getPos, className }: {
       aria-hidden="true"
       onMouseDown={(e) => e.preventDefault()}
     >
-      <span className={`${TIP_PILL} ${positionClasses.start} whitespace-nowrap`}>{t('callout.dragGrip')}</span>
+      <span className={`${TIP_PILL} ${positionClasses[tipPosition]} whitespace-nowrap`}>{t('callout.dragGrip')}</span>
     </span>
   );
 }

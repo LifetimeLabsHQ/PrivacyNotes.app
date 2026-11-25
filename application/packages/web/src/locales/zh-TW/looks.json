@@ -8,8 +8,10 @@
   "applyToFolderItems": "套用到此資料夾中的所有項目",
   "applyToTagItems": "套用到所有含此標籤的項目",
   "icon": "圖示",
+  "emoji": "表情符號",
   "searchPlaceholder": "搜尋圖示",
   "searchLogos": "搜尋標誌",
+  "searchEmojis": "搜尋表情符號",
   "moreLogos": "更多標誌",
   "allLogos": "所有標誌（A 到 Z）",
   "recent": "最近使用",
@@ -41,7 +43,14 @@
     "games": "遊戲",
     "learning": "學習與研究",
     "trips": "旅遊與健身",
-    "privacy": "隱私與安全"
+    "privacy": "隱私與安全",
+    "emojiSmileys": "笑臉與情緒",
+    "emojiPeople": "人物與身體",
+    "emojiAnimals": "動物與自然",
+    "emojiActivities": "活動",
+    "emojiObjects": "物品",
+    "emojiSymbols": "符號與標記",
+    "emojiFlags": "旗幟"
   },
   "icons": {
     "folder": "資料夾",

@@ -8,8 +8,10 @@
   "applyToFolderItems": "تطبيق على كل العناصر في هذا المجلد",
   "applyToTagItems": "تطبيق على كل العناصر التي تحمل هذا الوسم",
   "icon": "الأيقونة",
+  "emoji": "الرموز التعبيرية",
   "searchPlaceholder": "ابحث عن أيقونة",
   "searchLogos": "ابحث عن شعار",
+  "searchEmojis": "ابحث عن رمز تعبيري",
   "moreLogos": "مزيد من الشعارات",
   "allLogos": "كل الشعارات، من A إلى Z",
   "recent": "المستخدمة مؤخرًا",
@@ -41,7 +43,14 @@
     "games": "الألعاب",
     "learning": "التعلّم والبحث العلمي",
     "trips": "السفر واللياقة",
-    "privacy": "الخصوصية والأمان"
+    "privacy": "الخصوصية والأمان",
+    "emojiSmileys": "الوجوه التعبيرية والمشاعر",
+    "emojiPeople": "الأشخاص والجسم",
+    "emojiAnimals": "الحيوانات والطبيعة",
+    "emojiActivities": "الأنشطة",
+    "emojiObjects": "الأشياء",
+    "emojiSymbols": "الرموز والعلامات",
+    "emojiFlags": "الأعلام"
   },
   "icons": {
     "folder": "مجلد",

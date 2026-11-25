@@ -344,7 +344,7 @@
     "extensionKeyLogin": "Emplena l'inici de sessió d'aquest lloc",
     "extensionKeyBookmark": "Desa aquesta pàgina com a marcador",
     "extensionAria": "Afegeix l'extensió a {{name}}",
-    "extensionNote": "Només en ordinadors."
+    "extensionNote": "Funciona en qualsevol navegador basat en Chromium o Firefox. Només en ordinadors."
   },
   "ctaRepeat": {
     "getStarted": "Comença"

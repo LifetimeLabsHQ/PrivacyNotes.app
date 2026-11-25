@@ -166,6 +166,7 @@ export function ListFilterChips({
           label={t('trackerChip.answerLabel', { tracker: tracker.name })}
           value={tracker.answer.value}
           onChange={tracker.answer.onChange}
+          className="ring-1 ring-inset ring-divider/60"
           options={[
             { value: 'yes', label: t('trackers:custom.yes') },
             { value: 'no', label: t('trackers:custom.no') },

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { CalendarPlus, Globe } from './icons';
 import { Button, DeleteButton, GlyphTile, IconButton, Spinner, StatusLine, TextField } from './ui';
 import { ColorSwatchRow } from './ColorSwatch';
+import { NO_TEXT_ASSIST } from './formFields';
 import { ROW_TITLE, SettingsSegmented } from './settingsUI';
 import { SPACE_ICONS } from './SpaceSwitch';
 import type { SpaceView } from './spaces';
@@ -122,7 +123,7 @@ export function FeedSubscribeForm({ feeds, autoFocus = false, onBusy }: { feeds:
           type="url"
           inputMode="url"
           autoComplete="off"
-          spellCheck={false}
+          {...NO_TEXT_ASSIST}
           autoFocus={autoFocus}
           aria-label={t('webcal.fieldLabel')}
           placeholder="webcal://"

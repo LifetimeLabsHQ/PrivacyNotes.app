@@ -17,6 +17,7 @@ import { browser } from 'wxt/browser';
 import { ORGANIZER_LIMITS, type OrganizerFolder } from '@notes/shared/extension';
 import { CaretDown, Check, Folder, LockSimple, MagnifyingGlass, Tag, X } from '@web/icons';
 import { ProMark } from '@web/proMark';
+import { NO_TEXT_ASSIST } from '@web/formFields';
 import { SETTINGS_HELP } from '@web/settingsUI';
 import { isImeComposing } from '@web/imeComposing';
 import { useEscapeToClose } from '@web/useEscapeToClose';
@@ -236,6 +237,8 @@ export function OrganizeFields({
                         }}
                         placeholder={t('shell:folders.searchPlaceholder')}
                         aria-label={t('shell:folders.searchPlaceholder')}
+                        autoComplete="off"
+                        {...NO_TEXT_ASSIST}
                         className="pn-ext-compact-input flex-1 min-w-0 bg-transparent text-small text-pn placeholder:text-pn-muted outline-none"
                         dir="auto"
                       />
@@ -329,6 +332,7 @@ export function OrganizeFields({
                   ref={tagInputRef}
                   value={tagDraft}
                   maxLength={ORGANIZER_LIMITS.tag}
+                  {...NO_TEXT_ASSIST}
                   onChange={(e) => {
                     const next = e.target.value;
                     if (/[\s,،、，]$/.test(next) && next.trim()) {

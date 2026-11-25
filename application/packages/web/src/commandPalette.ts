@@ -45,8 +45,8 @@ export type PaletteEntry = {
 export type CommandPaletteContextValue = {
   /** The one field that offers command mode: the app's list search. */
   searchInputRef: RefObject<HTMLInputElement | null>;
-  /** Opens the quick switcher in command mode. */
-  openCommands: () => void;
+  /** Opens the quick switcher in command mode, optionally prefilled with a query. */
+  openCommands: (seed?: string) => void;
   /** Opens the quick switcher; the list header's button below lg calls it. */
   openSwitcher: () => void;
 };

@@ -19,9 +19,8 @@ import type { LocalNote } from '../db';
 import { ItemList, useItemList } from '../itemList';
 import { proUnlocked } from '../demo';
 import type { ContextMenuItem } from '../ContextMenu';
-import { ProMark } from '../UpgradeModal';
 import {
-  Button, ContextMenu, DropLine, EmptyState, GridCard, IconButton, Snackbar, DRAG_SOURCE, halfOf, useContextMenu, usePointerReorder,
+  Button, ContextMenu, DropLine, EmptyState, GridCard, IconButton, ProMark, Snackbar, DRAG_SOURCE, halfOf, useContextMenu, usePointerReorder,
 } from '../ui';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Briefcase, CalendarCheck, House, ClockClockwise, DotsSix, NotePencil, Notches, PenNib, Plus, SquaresFour, Trash, PILLAR_GLYPHS } from '../icons';
 import { useSteppedWidth } from '../useElementSize';
@@ -627,8 +626,8 @@ export default function Dashboard({ widgets, onWrite, ownHome }: {
     let body: ReactNode;
     if (def.target && target.state !== 'ok') {
       body = (
-        <div className="flex h-full flex-col items-center justify-center gap-2 [&>p]:p-0">
-          <EmptyState compact>{t(target.state === 'gone' ? 'dashboard.gone' : 'dashboard.otherSpace')}</EmptyState>
+        <div className="flex h-full flex-col items-center justify-center gap-2">
+          <EmptyState compact flush>{t(target.state === 'gone' ? 'dashboard.gone' : 'dashboard.otherSpace')}</EmptyState>
           {canEdit && <Button action="edit" onClick={() => setChooser({ kind: def.target!, widgetId: w.i })}>{t('dashboard.choose')}</Button>}
         </div>
       );

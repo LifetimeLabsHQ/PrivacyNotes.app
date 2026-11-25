@@ -47,6 +47,7 @@
     "plan_dangerZone": "アカウント削除, 退会, 消去, データ削除, アカウントを閉じる",
     "storage_quota": "使用容量, 容量, 使用量, 上限",
     "storage_addon": "容量追加, 容量を増やす, ストレージ購入, 追加ストレージ",
+    "storage_usage": "内訳, 大きい, 容量, 空き容量, 掃除, クリーンアップ, 履歴, ノート履歴, ファイルサイズ, 使用状況",
     "images_spaceSaver": "圧縮, リサイズ, 縮小, 画像を小さく, 画質",
     "images_compression": "高圧縮, 強圧縮, 小, 極小, 最小, 標準, 品質, 画質, サイズ, ストレージ, 容量",
     "images_removeLocation": "GPS, 位置情報, EXIF, メタデータ, ジオタグ",

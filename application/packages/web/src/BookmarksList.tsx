@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PRIMARY_BTN_SKIN } from './settingsUI';
+import { NO_TEXT_ASSIST } from './formFields';
 import { useTranslation } from 'react-i18next';
+import { Button, EmptyState } from './ui';
 import type { LocalNote } from './db';
 import { setPillarPrefs, type ListPrefs, type ListPrefsStore } from './listPrefs';
 import type { View } from './views';
@@ -495,6 +497,8 @@ export function BookmarksList({
             placeholder={t('bookmarks.quickAddPlaceholder')}
             enterKeyHint="next"
             dir="ltr"
+            autoComplete="off"
+            {...NO_TEXT_ASSIST}
             className="flex-1 min-w-0 bg-transparent text-row focus:outline-none placeholder:text-pn-muted"
           />
           {draft.trim() && (
@@ -532,27 +536,23 @@ export function BookmarksList({
 
       <ItemList list={list} grid={viewMode === 'grid'} pullToSync>
         {empty && !filteredAway ? (
-          <li className={`flex flex-col items-center justify-center text-center px-8 py-14 ${viewMode === 'grid' ? 'col-span-full' : ''}`}>
-            <BookmarkSimple size={34} className="text-pn-muted" weight="duotone" aria-hidden="true" />
-            {/* States the fact before it pitches, the way every other pillar
-                does ("No notes yet.", "Vault is empty."). The heading under
-                it is the invitation, not the status. */}
-            <p className="text-compact text-pn-muted mt-3">{otherSpaceLine ?? t('bookmarks.emptyNone')}</p>
-            <h3 className="text-row font-semibold mt-1 mb-4">{t('bookmarks.emptyTitle')}</h3>
-            {/* The pane is a resizable COLUMN, so the two buttons run out of
-                room long before the viewport does: they wrap onto their own
-                lines instead of squeezing, and each label stays on one line
-                so the wrap actually triggers. */}
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <button type="button" onClick={() => quickInputRef.current?.focus()} className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-md ${PRIMARY_BTN_SKIN} px-3.5 py-2 text-compact font-semibold transition`}>
-                <NEW_GLYPHS.bookmark />
-                {t('bookmarks.emptyAdd')}
-              </button>
-              <button type="button" onClick={onOpenImport} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-divider bg-surface-1 px-3.5 py-2 text-compact transition hover:bg-pn/10">
-                <Download />
-                {t('bookmarks.emptyImport')}
-              </button>
-            </div>
+          <li className={viewMode === 'grid' ? 'col-span-full' : ''}>
+            <EmptyState
+              icon={<BookmarkSimple weight="duotone" aria-hidden="true" />}
+              title={t('bookmarks.emptyTitle')}
+              actions={
+                <>
+                  <Button variant="primary" icon={<NEW_GLYPHS.bookmark aria-hidden="true" />} onClick={() => quickInputRef.current?.focus()}>
+                    {t('bookmarks.emptyAdd')}
+                  </Button>
+                  <Button icon={<Download aria-hidden="true" />} onClick={onOpenImport}>
+                    {t('bookmarks.emptyImport')}
+                  </Button>
+                </>
+              }
+            >
+              {otherSpaceLine ?? t('bookmarks.emptyNone')}
+            </EmptyState>
           </li>
         ) : (
           <>
@@ -571,7 +571,9 @@ export function BookmarksList({
               </li>
             )}
             {!filteredAway && bookmarks.length === 0 && shownDerived.length === 0 && (
-              <li className={`p-6 text-compact text-pn-muted text-center ${viewMode === 'grid' ? 'col-span-full' : ''}`}>{t('bookmarks.noMatches')}</li>
+              <li className={viewMode === 'grid' ? 'col-span-full' : ''}>
+                <EmptyState compact>{t('bookmarks.noMatches')}</EmptyState>
+              </li>
             )}
             {(() => {
               const renderBookmark = (n: LocalNote) => (

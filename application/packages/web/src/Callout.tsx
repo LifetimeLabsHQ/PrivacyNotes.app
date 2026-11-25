@@ -43,6 +43,8 @@ import { CALLOUT_BY_TYPE, canonicalCalloutType, type CalloutType } from './callo
 import { KanbanBoardView, KanbanColumnView, type KanbanOptions } from './KanbanBoard';
 import { BlockGrip } from './BlockGrip';
 import { isBoard, isColumn, kanbanNormalizePlugin } from './kanban';
+import { canInsertColumns, insertColumnsInTr, parseColumnWidth } from './columns';
+import { formatColumnBorder, parseColumnBorder } from './columnBorders';
 import { calloutSuggestion } from './CalloutSuggestion';
 
 declare module '@tiptap/core' {
@@ -309,10 +311,34 @@ function calloutBlockRule(state: MdBlockState, startLine: number, endLine: numbe
     bodyLines.push(text.replace(/^>\s?/, ''));
   }
 
-  const type = canonicalCalloutType(m[1]!);
+  const rawType = m[1]!.trim().toLowerCase();
   const meta = m[2] ?? null;
   const folded = m[3] === '-';
   const title = m[4] ?? '';
+
+  // Side-by-side borderless columns (#647): parsed as dedicated columnsBlock /
+  // columnsCol nodes so there is no phantom calloutTitle for the caret to enter.
+  if (rawType === 'columns' || rawType === 'col') {
+    const isWrap = rawType === 'columns';
+    const open = state.push(isWrap ? 'columns_open' : 'columns_col_open', 'div', 1);
+    open.block = true;
+    open.map = [startLine, nextLine];
+    const width = isWrap ? null : parseColumnWidth(meta);
+    const borderMeta = isWrap ? formatColumnBorder(parseColumnBorder(meta)) : null;
+    open.attrs = isWrap
+      ? [['data-columns', ''], ...(borderMeta ? [['data-border', borderMeta] as [string, string]] : []), ['class', 'pn-columns']]
+      : [['data-columns-col', ''], ...(width ? [['data-width', String(width)] as [string, string]] : []), ['class', 'pn-columns-col']];
+    const allLines = isWrap ? bodyLines : title.trim() !== '' ? [title, ...bodyLines] : bodyLines;
+    const bodyStr = allLines.join('\n');
+    if (bodyStr.trim() !== '') {
+      state.md.block.parse(bodyStr, state.md, state.env, state.tokens);
+    }
+    state.push(isWrap ? 'columns_close' : 'columns_col_close', 'div', -1);
+    state.line = nextLine;
+    return true;
+  }
+
+  const type = canonicalCalloutType(m[1]!);
 
   const open = state.push('callout_open', 'div', 1);
   open.block = true;
@@ -369,6 +395,16 @@ function registerCalloutMarkdown(md: MdInstance) {
   md.renderer.rules.callout_close = () => '</div>';
   md.renderer.rules.callout_title_open = () => '<div data-callout-title>';
   md.renderer.rules.callout_title_close = () => '</div>';
+  md.renderer.rules.columns_open = (tokens, idx) => {
+    const border = tokens[idx]!.attrGet('data-border');
+    return `<div data-columns${border ? ` data-border="${border}"` : ''} class="pn-columns">`;
+  };
+  md.renderer.rules.columns_close = () => '</div>';
+  md.renderer.rules.columns_col_open = (tokens, idx) => {
+    const width = tokens[idx]!.attrGet('data-width');
+    return `<div data-columns-col${width ? ` data-width="${width}"` : ''} class="pn-columns-col">`;
+  };
+  md.renderer.rules.columns_col_close = () => '</div>';
 }
 
 /* ------------------------------------------------------------------ */
@@ -613,6 +649,19 @@ export const Callout = Node.create<KanbanOptions>({
         find: /^\[!([\w-]+)\]([+-]?)\s$/,
         handler: ({ state, range, match, chain }) => {
           const typed = match[1] || 'info';
+          const lower = typed.toLowerCase();
+          if (lower === 'columns') {
+            if (!canInsertColumns(state)) return null;
+            chain()
+              .deleteRange(range)
+              .command(({ state: s, tr, dispatch }) => {
+                if (!s.schema.nodes.columnsBlock || !s.schema.nodes.columnsCol || !s.schema.nodes.paragraph) return false;
+                return dispatch ? insertColumnsInTr(tr, s.schema) : true;
+              })
+              .run();
+            return;
+          }
+          if (lower === 'col') return null;
           const type = canonicalCalloutType(typed);
           const keyword = typed === type ? null : typed;
           const folded = match[2] === '-';

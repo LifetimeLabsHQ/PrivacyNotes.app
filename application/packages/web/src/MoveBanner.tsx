@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './auth';
 import { db } from './db';
@@ -7,8 +6,8 @@ import { sync } from './sync';
 import { APP_ORIGIN, isApexHost } from './hosts';
 import { isDemoMode } from './demo';
 import { detectPlatform } from './devices';
-import { X } from './icons';
 import type { NoteConflict } from './sync';
+import { Banner, FeedbackButton, Spinner } from './ui';
 
 /**
  * The two user-facing halves of the domain move, both rendered as
@@ -103,46 +102,40 @@ export function MoveBanner({ onConflict }: { onConflict: (conflict: NoteConflict
   }
 
   const showFeedback = state === 'error' || state === 'conflict';
+  const tone = state === 'error' ? 'danger' : state === 'conflict' ? 'warning' : 'info';
 
   return (
-    <div className="shrink-0 flex items-center gap-2 sm:gap-3 border-b border-accent/40 bg-accent/5 dark:bg-accent/10 px-3 sm:px-4 py-2">
-      <p
-        className={`min-w-0 flex-1 text-compact leading-snug text-pn ${showFeedback ? '' : 'truncate'}`}
-      >
-        <span className={showFeedback ? 'hidden sm:inline font-semibold' : 'font-semibold'}>
-          {t('moveScreen.title')}
-        </span>
-        {/* Mini on phones: the description drops, leaving title + CTA.
-            Error/conflict feedback instead REPLACES the title there and
-            is allowed to wrap - feedback inside the hidden span made a
-            failed move look like a dead button on phones. */}
-        <span
-          className={`${showFeedback ? 'inline' : 'hidden sm:inline'} text-pn-muted`}
-        >
-          {' '}
-          {state === 'conflict'
-            ? t('moveBanner.conflict')
-            : state === 'error'
-              ? t('moveBanner.error')
-              : t('moveBanner.bodySignIn', { scanQr: t('importPhrase.scanQr', { ns: 'auth' }) })}
-        </span>
-      </p>
-      <button
-        type="button"
-        disabled={state === 'syncing'}
-        onClick={() => void handleMove()}
-        className={`shrink-0 rounded-lg ${PRIMARY_BTN_SKIN} text-compact font-semibold px-3 py-1.5 transition disabled:opacity-60`}
-      >
-        {state === 'syncing' ? t('moveBanner.syncing') : t('moveBanner.cta')}
-      </button>
-      <button
-        type="button"
-        onClick={handleDismiss}
-        aria-label={t('common:updateToast.dismiss')}
-        className="shrink-0 rounded-md p-1 text-pn-muted hover:bg-accent/10 transition"
-      >
-        <X />
-      </button>
-    </div>
+    <Banner
+      tone={tone}
+      action={
+        state === 'syncing' ? (
+          <FeedbackButton icon={<Spinner size={14} />} disabled>
+            {t('moveBanner.syncing')}
+          </FeedbackButton>
+        ) : (
+          <FeedbackButton action="next" onClick={() => void handleMove()}>
+            {t('moveBanner.cta')}
+          </FeedbackButton>
+        )
+      }
+      onDismiss={handleDismiss}
+      dismissLabel={t('common:updateToast.dismiss')}
+    >
+      <span className={showFeedback ? 'hidden sm:inline font-semibold' : 'font-semibold'}>
+        {t('moveScreen.title')}
+      </span>
+      {/* Mini on phones: the description drops, leaving title + CTA.
+          Error/conflict feedback instead REPLACES the title there and
+          is allowed to wrap - feedback inside the hidden span made a
+          failed move look like a dead button on phones. */}
+      <span className={`${showFeedback ? 'inline' : 'hidden sm:inline'} ${state === 'error' ? 'text-danger' : 'text-pn-soft'}`}>
+        {' '}
+        {state === 'conflict'
+          ? t('moveBanner.conflict')
+          : state === 'error'
+            ? t('moveBanner.error')
+            : t('moveBanner.bodySignIn', { scanQr: t('importPhrase.scanQr', { ns: 'auth' }) })}
+      </span>
+    </Banner>
   );
 }

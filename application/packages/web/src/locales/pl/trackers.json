@@ -120,9 +120,6 @@
       "great": "Świetnie"
     }
   },
-  "sleepScore": {
-    "prompt": "Wynik snu"
-  },
   "heartRate": {
     "prompt": "Średnie tętno"
   },

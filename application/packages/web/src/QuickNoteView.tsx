@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LockSimple } from './icons';
-import { Button, Kbd } from './ui';
+import { Button, Kbd, StatusLine } from './ui';
 import { KEY_OS } from './shortcutMatch';
 import { isImeComposing } from './imeComposing';
 import type { QuickNoteAnswer } from './quickNoteQueue';
@@ -113,7 +113,11 @@ export function QuickNoteView({ draft, onDraft, locked, onSave, onBack, onSaved,
       />
       <div className="flex flex-nowrap items-center gap-x-2.5 border-t border-divider px-3.5 py-2 text-small text-pn-muted">
         {line ? (
-          <span role="status" className={`min-w-0 truncate ${line.ok ? 'text-success' : 'text-danger'}`}>{line.text}</span>
+          <div className="min-w-0">
+            <StatusLine tone={line.ok ? 'success' : 'danger'}>
+              <span className="block truncate">{line.text}</span>
+            </StatusLine>
+          </div>
         ) : locked ? (
           <Button action="open" onClick={onOpenApp}>{t('settings:appearance.trayOpen')}</Button>
         ) : (

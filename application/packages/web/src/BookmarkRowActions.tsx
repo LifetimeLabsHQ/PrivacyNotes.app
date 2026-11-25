@@ -4,6 +4,7 @@ import type { LocalNote } from './db';
 import { HoverLabel } from './HoverLabel';
 import { useIsTouchDevice } from './useIsMobile';
 import { DotsThreeOutlineVertical, PencilSimple, Trash } from './icons';
+import { SETTINGS_BTN } from './ui';
 import { ARMED_MS } from './ui/DeleteButton';
 
 /**
@@ -83,13 +84,12 @@ export function BookmarkRowActions({
       <button
         type="button"
         onClick={arm}
-        /* Opaque, and bordered like the two icon buttons it replaces. This
-           cluster leaves the flow on a tile and on a hovered row, so it sits
-           ON the title - `dark:bg-red-950/30` let the title read straight
-           through the armed pill, worst on a mini tile where the two overlap
-           almost completely (reported 2026-08-23).
+        /* Opaque bg-surface-2, and bordered like the two icon buttons it
+           replaces. This cluster leaves the flow on a tile and on a hovered
+           row, so it sits ON the title - a translucent fill let the title
+           read straight through the armed pill (reported 2026-08-23).
            Spec: docs/internal/design/ui-patterns.md (section 74) */
-        className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-small font-medium text-red-600 transition hover:bg-red-100 dark:border-red-900 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900"
+        className={`${SETTINGS_BTN} !rounded-full !border-danger/50 !bg-surface-2 !px-2.5 !py-1 !text-small !text-danger hover:!border-danger`}
       >
         <Trash />
         {t('common:actions.deleteConfirm')}
@@ -114,12 +114,10 @@ export function BookmarkRowActions({
           type="button"
           onClick={arm}
           aria-label={t('common:actions.delete')}
-          /* Opaque on hover, for the same reason the armed pill above is:
-             this cluster leaves the flow and sits ON the row title, so a
-             tinted `dark:hover:bg-red-950/30` let the title read straight
-             through the button (reported 2026-08-25).
+          /* Opaque bg-surface-1 / hover:bg-surface-2 so the row title underneath
+             never bleeds through on hover (reported 2026-08-25).
              Spec: docs/internal/design/ui-patterns.md (section 74) */
-          className="w-7 h-7 rounded-md border border-divider bg-surface-1 text-danger inline-flex items-center justify-center transition hover:border-red-400 hover:bg-red-50 dark:hover:bg-red-950"
+          className="w-7 h-7 rounded-md border border-divider bg-surface-1 text-danger inline-flex items-center justify-center transition hover:border-danger hover:bg-surface-2"
         >
           <Trash />
         </button>

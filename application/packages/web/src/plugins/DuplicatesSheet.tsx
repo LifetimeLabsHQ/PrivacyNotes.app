@@ -9,7 +9,7 @@ import { editedAtOf } from '../notesViewUtils';
 import { countWords } from '../wordCountUtils';
 import { hiddenPairs } from '../dismissedSuggestions';
 import { suggestionPairKey } from '../relatedLoader';
-import { Button, EmptyState, Modal, StatusLine } from '../ui';
+import { Button, EmptyState, PluginSheet, StatusLine } from '../ui';
 
 /**
  * Find duplicate notes: pairs of notes that say almost the same thing, best
@@ -55,7 +55,13 @@ export function DuplicatesSheet({ notes, folders, dismissed, onNotDuplicates, on
   };
 
   return (
-    <Modal title={t('plugins.smart.duplicates')} icon={<Copy />} onClose={onClose} layer="z-[60]" className="max-w-xl p-6 space-y-4">
+    <PluginSheet
+      title={t('plugins.smart.duplicates')}
+      icon={<Copy />}
+      onClose={onClose}
+      maxWidth="max-w-xl"
+      footer={pairs === null ? <Button action="cancel" onClick={onClose} /> : <Button action="done" onClick={onClose} />}
+    >
       {pairs === null ? (
         <StatusLine busy>{t('plugins.smart.reading')}</StatusLine>
       ) : pairs.length === 0 ? (
@@ -83,6 +89,6 @@ export function DuplicatesSheet({ notes, folders, dismissed, onNotDuplicates, on
           })}
         </ul>
       )}
-    </Modal>
+    </PluginSheet>
   );
 }

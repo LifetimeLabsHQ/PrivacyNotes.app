@@ -8,8 +8,10 @@
   "applyToFolderItems": "Auf alle Einträge in diesem Ordner übertragen",
   "applyToTagItems": "Auf alle Einträge mit diesem Tag übertragen",
   "icon": "Symbol",
+  "emoji": "Emoji",
   "searchPlaceholder": "Symbole suchen",
   "searchLogos": "Logos suchen",
+  "searchEmojis": "Emojis suchen",
   "moreLogos": "Weitere Logos",
   "allLogos": "Alle Logos, A bis Z",
   "recent": "Zuletzt verwendet",
@@ -41,7 +43,14 @@
     "games": "Spiele",
     "learning": "Lernen und Forschung",
     "trips": "Reisen und Fitness",
-    "privacy": "Datenschutz und Sicherheit"
+    "privacy": "Datenschutz und Sicherheit",
+    "emojiSmileys": "Smileys und Emotionen",
+    "emojiPeople": "Personen und Körper",
+    "emojiAnimals": "Tiere und Natur",
+    "emojiActivities": "Aktivitäten",
+    "emojiObjects": "Objekte",
+    "emojiSymbols": "Symbole und Zeichen",
+    "emojiFlags": "Flaggen"
   },
   "icons": {
     "folder": "Ordner",

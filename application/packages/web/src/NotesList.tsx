@@ -221,6 +221,7 @@ export interface NotesListProps {
   // Storage quota (shown in trash view)
   quotaUsedBytes?: number;
   quotaMaxBytes?: number;
+  onOpenStorage?: () => void;
 
   // Auto-delete trash
   autoDeleteTrashDays: number;
@@ -325,6 +326,7 @@ export function NotesList({
   onVaultFilterChange,
   quotaUsedBytes,
   quotaMaxBytes,
+  onOpenStorage,
   autoDeleteTrashDays,
   onAutoDeleteTrashDaysChange,
 }: NotesListProps) {
@@ -693,6 +695,7 @@ export function NotesList({
           usedBytes={quotaUsedBytes}
           maxBytes={quotaMaxBytes}
           onRefresh={onRefreshStorage}
+          onOpen={onOpenStorage}
         />
       )}
       {/* Auto-delete toggle - shown in trash view. */}

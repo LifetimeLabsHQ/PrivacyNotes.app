@@ -344,7 +344,7 @@
     "extensionKeyLogin": "填入這個網站的登入資訊",
     "extensionKeyBookmark": "將這個網頁加入書籤",
     "extensionAria": "將擴充功能加入 {{name}}",
-    "extensionNote": "僅限電腦。"
+    "extensionNote": "支援任何基於 Chromium 或 Firefox 的瀏覽器。僅限電腦。"
   },
   "ctaRepeat": {
     "getStarted": "開始使用"

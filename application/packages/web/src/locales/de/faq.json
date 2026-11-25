@@ -307,6 +307,16 @@
         "Ja. Die App ist local-first: [Deine Notizen liegen in einer Datenbank auf deinem Gerät](/de/help/data-location), also funktionieren Lesen, Schreiben und [Suchen ganz ohne Verbindung](/de/help/search-local). Änderungen synchronisieren sich automatisch, sobald du wieder online bist, und [ein Bild oder eine Datei, die du offline hinzufügst, wartet auf diesem Gerät](/de/help/upload-failed) und wird dann ebenfalls hochgeladen. [Ninja](/de/help/ninja) funktioniert ebenfalls offline; nur das Speichern einer Webseite als Notiz wartet auf eine Verbindung."
       ]
     },
+    "local-only": {
+      "q": "Wie nutze ich einen Tresor nur lokal ohne Konto?",
+      "a": [
+        "Öffne die Desktop- oder Handy-App (macOS, Windows, Linux, iOS oder Android), wähle auf dem Anmeldebildschirm \"Phrase erzeugen\" und lass das Häkchen bei \"Über Geräte hinweg synchronisieren\" entfernt, was die Voreinstellung ist. Damit wird ein verschlüsselter Tresor auf deinem Gerät ohne Registrierung auf dem Server erstellt, sodass er von Anfang an offline funktioniert.",
+        "**So funktioniert der Modus \"Nur lokal\":**",
+        "- **Standardmäßig offline:** Notizen, Aufgaben, Tagebücher, Tresor-Einträge, Dateien, Bilder, PIN und biometrische Sperre, Suche und [automatische Backups](/de/help/automatic-backups) funktionieren alle ohne Konto auf deinem Gerät.\n- **Sichere deinen Tresor:** Da nichts unsere Server erreicht, gehen deine Notizen verloren, wenn du das Gerät verlierst oder die App deinstallierst. Schalte [automatische Backups](/de/help/automatic-backups) unter **Einstellungen > Backup > Automatisch** ein oder exportiere eine manuelle Kopie unter Einstellungen > Backup > Manuell.\n- **Synchronisierung einschalten oder später upgraden:** Öffne Einstellungen > ID & Sync und wähle jederzeit \"Synchronisierung einschalten\". Du kannst auch auf Pro upgraden, während die Synchronisierung aus bleibt: Der Kauf registriert eine Konto-ID für Pro, während deine Notizen lokal bleiben.\n- **Backups von einem anderen Gerät wiederherstellen:** Öffne Einstellungen > Backup > Wiederherstellung und wähle \"Verschlüsseltes Backup (.pnbackup, .pnbackupz)\". Stammt die Datei aus einem anderen Tresor, fragt die App nach der Wiederherstellungsphrase dieses Backups (eingetippt oder per QR) und importiert alles unter dem Schlüssel deines lokalen Tresors.",
+        "**Hast du schon ein synchronisiertes Konto?** Wähle die Schritte für deinen Tarif:",
+        "- **Kostenloses Konto (zu \"Nur lokal\" wechseln):** Exportiere unter Einstellungen > Backup > Manuell eine Kopie und wähle \"Alles, verschlüsselt (.pnbackupz)\". [Lösche dann dein Cloud-Konto](/de/help/delete-account) unter Einstellungen > Konto über \"Konto und Daten löschen...\", starte in der Desktop- oder Handy-App mit \"Phrase erzeugen\" einen lokalen Tresor und [stelle das Backup wieder her](/de/help/restore-backup), indem du deine alte Wiederherstellungsphrase verwendest.\n- **Pro-Konto (Pro behalten und Synchronisierung stoppen):** Lösche dein Konto nicht, denn beim Löschen des Kontos entfällt Pro. Öffne **Einstellungen > ID & Sync** und schalte [\"Synchronisierung pausieren\"](/de/help/pause-sync) ein. Pro bleibt aktiv und nichts Neues wird hochgeladen.\n- **Pro-Konto (auch synchronisierte Notizen vom Server entfernen):** Exportiere zuerst \"Alles, verschlüsselt (.pnbackupz)\", lösche alle Notizen, leere den Papierkorb, drücke \"Jetzt synchronisieren\" und warte, bis \"Synchronisiert\" angezeigt wird (Dateien in der Cloud werden nach fünf Tagen automatisch entfernt). Schalte \"Synchronisierung pausieren\" unter **Einstellungen > ID & Sync** ein und stelle dann, bevor du die App schließt, dein Backup unter Einstellungen > Backup > Wiederherstellung wieder her. Deine Notizen kehren lokal unter neuen IDs zurück, während Pro aktiv bleibt."
+      ]
+    },
     "sync-conflicts": {
       "q": "Was passiert, wenn ich dieselbe Notiz auf zwei Geräten gleichzeitig bearbeite?",
       "a": [
@@ -504,6 +514,13 @@
         "[Die Formatierungsleiste](/de/help/format-bar) und ihr Menü \"Einfügen\" ergänzen den Rest: [Tabellen](/de/help/table-formulas), Hinweisboxen, die sich zuklappen lassen, Unterstreichen, Hoch- und Tiefstellen, Textausrichtung, Text- und Hervorhebungsfarben, Schriftarten, Links, Bilder und Dateianhänge. Alles bleibt vollständig Markdown: \"Markdown anzeigen\" unter jeder Notiz zeigt den Rohtext, und [Exporte sind saubere .md-Dateien](/de/help/export) - nichts, was du schreibst, ist in ein proprietäres Format eingesperrt."
       ]
     },
+    "slash-commands": {
+      "q": "Kann ich /-Slash-Befehle nutzen, um Blöcke einzufügen?",
+      "a": [
+        "Ja. Tippe `/` am Anfang einer Zeile oder nach einem Leerzeichen, um das Blockmenü zu öffnen, tippe dann ein Wort wie `/tabelle`, `/h2`, `/kanban` oder `/warn` und drücke Enter. Deine zuletzt gewählten Einträge bleiben oben, und du kannst auch ein [natürliches Datum](/de/help/ninja-dates) wie `/freitag` oder `/morgen`, `/erinnerung` innerhalb einer Aufgabe für eine [Erinnerung](/de/help/reminders) oder `/formel` innerhalb einer Tabellenzelle für [Tabellenformeln](/de/help/table-formulas) eingeben. Das Slash-Menü ist kostenlos; Blöcke, die Pro brauchen, zeigen ein Pro-Badge.",
+        "Das Menü funktioniert neben [Live-Markdown](/de/help/markdown-syntax) und bleibt verfügbar, wenn du Schaltflächen in [der Formatleiste](/de/help/format-bar) ausblendest oder im [Zen-Modus](/de/help/zen-mode) schreibst. Passt nichts im Menü zu dem, was du getippt hast, drücke Enter, um die Suche direkt an [Ninja](/de/help/ninja) weiterzugeben. Ein `/` innerhalb einer Webadresse, eines Datums, eines Bruchs, eines Codeblocks oder in eingefügtem Text bleibt normaler Text und öffnet das Menü nie; drücke Escape oder die Leertaste direkt nach `/`, um es zu schließen."
+      ]
+    },
     "tasks": {
       "q": "Wie funktionieren Aufgaben?",
       "a": [
@@ -569,7 +586,7 @@
     "browser-extension": {
       "q": "Gibt es eine Browser-Erweiterung für PrivacyNotes?",
       "a": [
-        "Ja, für Chrome, Edge und Firefox auf dem Computer, und sie ist kostenlos. Sie speichert die Seite, die du liest, als Notiz, mit Haupttext und Bildern, oder als Lesezeichen, sie schreibt eine neue Notiz von dir, und sie kann die Logins, Karten, SSH-Schlüssel und Lesezeichen für die aktuelle Website anzeigen. Kopiere einen Wert mit einem Klick, oder wähle Ausfüllen (oder drücke Alt+Shift+L), und die Erweiterung trägt den Login für diese Website in die Seite ein. Formulare füllt sie nie von selbst aus.",
+        "Ja, für Chromium- und Firefox-basierte Browser auf dem Computer, und sie ist kostenlos. Sie speichert die Seite, die du liest, als Notiz, mit Haupttext und Bildern, oder als Lesezeichen, sie schreibt eine neue Notiz von dir, und sie kann die Logins, Karten, SSH-Schlüssel und Lesezeichen für die aktuelle Website anzeigen. Kopiere einen Wert mit einem Klick, oder wähle Ausfüllen (oder drücke Alt+Shift+L), und die Erweiterung trägt den Login für diese Website in die Seite ein. Formulare füllt sie nie von selbst aus.",
         "Öffne Einstellungen > Erweiterung, füge die Erweiterung aus dem Store deines Browsers hinzu, wähle, was sie darf, und wähle dann Code erstellen. Kopiere den einmaligen Code und füge ihn in die Erweiterung ein. Zum Entfernen wähle neben ihr Entfernen unter Browser-Erweiterungen auf derselben Seite. Eine Erweiterung belegt keinen deiner Geräteplätze. Ein kostenloses Konto verbindet einen Browser; Pro verbindet bis zu 10. [So schützt sie deine Notizen](/de/help/browser-extension-security)."
       ]
     },
@@ -825,6 +842,13 @@
       "a": [
         "Ja. Beide Einstellungen sind standardmäßig an, weil wir unsere Nutzer lieben: Du sollst [Speicherplatz sparen](/de/help/storage-usage) und deine Privatsphäre behalten. Platzsparer verkleinert ein großes Bild und speichert es als JPEG: Standard (Voreinstellung) passt in 2048 Pixel bei 85 % Qualität, Klein in 1280 Pixel bei 75 % und Winzig in 1024 Pixel bei 60 % für die kleinsten Dateien. Standortdaten entfernen streicht die EXIF-Metadaten, die eine Kamera in ein Foto schreibt, samt GPS-Position, bevor das Bild gespeichert wird. Beides gilt für jedes Bild, das die App lesen kann: in eine Notiz eingefügt, als Datei hinzugefügt oder importiert. Ein Bild, das sie nicht lesen kann, etwa AVIF, SVG oder eines, das sich nicht öffnen lässt, wird beim Hinzufügen als Datei oder beim Import so gespeichert, wie es ankam, Standortdaten eingeschlossen. Zwei Ausnahmen: Ein GIF behält seine Größe, damit seine Animation weiter läuft, und eine Datei, die an einem Eintrag im Tresor hängt, bleibt genau so, wie sie war.",
         "Du kannst beide Optionen unter **Einstellungen > Speicher > Bilder** einzeln ausschalten; dort gibt es für Kontaktfotos einen dritten Schalter, der sie bei 512 Pixeln hält. Die Einstellungen gelten nur für neue Bilder; Dateien, die keine Bilder sind, werden genau so gespeichert, wie sie sind. HEIC- und TIFF-Bilder werden in JPEG umgewandelt, weil nur Safari sie anzeigen kann. [Ein Backup, das du wiederherstellst](/de/help/restore-backup), wird Byte für Byte zurückgeschrieben."
+      ]
+    },
+    "paste-screenshots": {
+      "q": "Werden eingefügte Screenshots auch komprimiert?",
+      "a": [
+        "Ja. Screenshots und Bilder, die du kopierst und direkt in eine Notiz einfügst, durchlaufen dieselbe [Platzsparer-Komprimierung](/de/help/image-quality) wie angehängte Dateien, hineingezogene Bilder und Importe. Normale, undurchsichtige Screenshots werden auf deine gewählte Stufe verkleinert und als JPEG gespeichert, was einen typischen Screenshot auf einen Bruchteil seiner ursprünglichen Größe schrumpft und dir hilft, mehr aus deinem [Speicher](/de/help/storage-usage) herauszuholen.",
+        "Wähle unter Einstellungen > Speicher > Bilder zwischen Standard (2048 Pixel bei 85 % Qualität), Klein (1280 Pixel bei 75 %) und Winzig (1024 Pixel bei 60 %), oder schalte Platzsparer aus, um Originale zu behalten. Ein Screenshot mit transparenten Rändern, etwa eine Fensteraufnahme mit Schlagschatten, wird weiterhin auf dein gewähltes Limit verkleinert und als PNG gespeichert, damit die Transparenz erhalten bleibt."
       ]
     },
     "storage-usage": {
@@ -1125,7 +1149,7 @@
       "a": [
         "Ja. Tippe `=` in eine Tabellenzelle, um eine Funktion auszuwählen, oder schreibe die Formel selbst. Die Zelle zeigt dann das Ergebnis statt des Textes, und jedes Ergebnis aktualisiert sich sofort, wenn du eine Zelle änderst, die es liest. Zellen heißen nach Spaltenbuchstabe und Zeilennummer, die Kopfzeile zählt als Zeile 1, deine erste Datenzeile ist also Zeile 2. Die Ergebnisse funktionieren in jedem Konto; die Auswahl über das Menü ist Pro.",
         "Um alles auf einmal auszuprobieren, lade die Beispielnotiz herunter, öffne dann Einstellungen > Transfer > Import, wähle **Markdown-Dateien** und nimm die Datei.",
-        "[Beispielnotiz (.md)](/marketing/table-formulas-examples.md)",
+        "[Beispielnotiz (.md)](/help/table-formulas-examples.md)",
         "Das sind die Funktionen, und sie lassen sich mit `+`, `-`, `*`, `/`, `^` für eine Potenz und Klammern kombinieren:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` und `COUNT` arbeiten über einen Bereich, wie in `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` und `LOG` arbeiten mit einem einzelnen Wert, wie in `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` und `PHI` sind Konstanten, und `RAND` liefert eine Zufallszahl\n- `=B7-B2` zieht eine Zelle von einer anderen ab, und `=SUM(B2:B10)*0.2` berechnet einen Prozentsatz einer Summe",
         "Klicke auf eine Zelle, die ein Ergebnis zeigt, und die Formel kommt zurück, bereit zum Ändern. Deine Notiz speichert die Formel selbst, nie das Ergebnis, sodass ein Export und jede andere Markdown-App `=SUM(B2:B10)` genau so zeigen, wie du es geschrieben hast."

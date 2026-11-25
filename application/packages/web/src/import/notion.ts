@@ -1,35 +1,36 @@
 /**
- * Notion "Markdown & CSV" importer.
+ * Notion "HTML" and "Markdown & CSV" importer.
  *
  * Reads the `.zip` from Notion > Settings > General > Export > Workspace
- * content (or a single page's ... > More > Export) in "Markdown & CSV"
- * format. Format facts verified against a real Notion Web export (2026-11-24,
- * importer-lab app file `notion.md`):
+ * content (or a single page's ... > More > Export) in either "HTML" (keeps
+ * side-by-side columns, column widths, text colors, and highlights) or
+ * "Markdown & CSV" format. Format facts verified against real Notion Web
+ * exports (2026-11-24 and 2026-11-25, importer-lab app file `notion.md`):
  *
  * - Workspace exports may wrap one or more `ExportBlock-<uuid>-Part-N.zip`
  *   archives inside an outer `.zip`; inner zips are expanded one level.
  * - Exports typically wrap content under `Private & Shared/` (stripped when
  *   it is the single common root directory).
- * - Every exported `.md` file (and in older exports, folders too) carries a
- *   trailing 32-character hex ID (`Trip plan 1a2b3c4d...md`), which is
+ * - Every exported `.html` / `.md` file (and in older exports, folders too)
+ *   carries a trailing 32-character hex ID (`Trip plan 1a2b3c4d...`), which is
  *   stripped from note titles and folder names.
- * - Every `.md` file opens with `# <Title>`, holding the full untruncated
- *   title; stripped when it matches the file's clean title.
  * - Sub-pages live in a folder named after their parent page; that tree
  *   rebuilds into PrivacyNotes folders.
- * - Internal links are relative URL-encoded `.md` paths (Notion encodes
- *   spaces as `%20` while leaving `(1)`, `&` and `#` unencoded) or Notion
- *   web URLs carrying the 32-char hex ID. Both become `[[Title]]` note-links.
- * - Callouts export as `<aside>...</aside>` blocks; mapped to PrivacyNotes
- *   `> [!type]+` callouts. `<details><summary>` folds go through `detailsToFold`.
- * - Task items export with two spaces after `[ ]` / `[x]`; normalized to one.
- * - Underline exports as `<u>...</u>`, while typed `<script>` / `<b>` arrives
- *   unescaped; `<u>` pairs are preserved and all other raw tags go through
- *   `escapeTypedTags`.
- * - Databases export as `<Name> <id>.csv` (and `<Name> <id>_all.csv`) next to
- *   a folder of row `.md` pages. Row pages import into the database's folder
- *   (with leading `Tags:` properties added to `note.tags`), while the CSV
- *   table files are skipped with a warning.
+ * - Internal links are relative URL-encoded `.html` / `.md` paths (Notion
+ *   encodes spaces as `%20` while leaving `(1)`, `&` and `#` unencoded),
+ *   `data-notion-page-id` attributes, or Notion web URLs carrying the 32-char
+ *   hex ID. All become `[[Title]]` note-links.
+ * - In HTML exports, `<div class="column-list">` / `<div class="column">`
+ *   blocks convert to PrivacyNotes `> [!columns]+` / `> > [!col|W]+` blocks
+ *   (2 to 5 columns; overflow columns merge into column 5 and nested columns
+ *   flatten so zero text is lost), and `<mark data-notion-highlight>` maps to
+ *   editor palette text colors and highlights.
+ * - Callouts (`<aside>`) map to PrivacyNotes `> [!type]+` callouts;
+ *   `<details><summary>` toggles convert to `> [!fold]` callouts.
+ * - Databases export as `<Name> <id>.csv` (and in HTML exports a matching
+ *   `<Name> <id>.html` table) next to a folder of row pages. Row pages import
+ *   into the database's folder (with `Tags` properties added to `note.tags`),
+ *   while CSV files are skipped with a warning.
  */
 
 import type JSZip from 'jszip';
@@ -42,6 +43,7 @@ import { isBlobReferenced } from './blobImport';
 import { mapOutsideCode, mapOutsideFences } from './codeSegments';
 import { detailsToFold } from './detailsFold';
 import { cleanPath, escapeTypedTags, isJunkEntry, normalizeTagList, noteLink } from './importHelpers';
+import { parseNotionHtml } from './notionHtml';
 import { refusePrivacyNotesBackupZip } from './privacynotes';
 import { isUntitledStem } from '../exportNames';
 import type { ImportedNote, ParsedImport } from './types';
@@ -85,6 +87,25 @@ const CALLOUT_EMOJI: readonly [string, string][] = [
   ['📝', 'note'],
   ['📌', 'note'],
 ];
+
+/** Map a leading Notion callout emoji to a PrivacyNotes callout keyword. */
+function calloutTypeForEmoji(emoji: string): string {
+  const trimmed = emoji.trim();
+  for (const [icon, type] of CALLOUT_EMOJI) {
+    if (trimmed.startsWith(icon)) return type;
+  }
+  return 'note';
+}
+
+/** Extract `<h1 class="page-title">` text from a Notion HTML export without running the full body walker. */
+function readHtmlPageTitle(html: string): string {
+  const m = /<h1\b[^>]*class="[^"]*\bpage-title\b[^"]*"[^>]*>([\s\S]*?)<\/h1>/i.exec(html);
+  if (!m) return '';
+  const inner = m[1]!;
+  if (!inner.includes('<') && !inner.includes('&')) return inner.replace(/\s+/g, ' ').trim();
+  const doc = new DOMParser().parseFromString(`<h1>${inner}</h1>`, 'text/html');
+  return (doc.body.textContent ?? '').replace(/\s+/g, ' ').trim();
+}
 
 /** Strip Notion's trailing 32-char hex ID from a filename stem or folder name. */
 export function stripNotionId(raw: string): { clean: string; id: string | null } {
@@ -186,8 +207,8 @@ async function collectZipEntries(file: File): Promise<Map<string, JSZip.JSZipObj
   const entries = new Map<string, JSZip.JSZipObject>();
   readInto(outer, entries);
 
-  const hasMd = [...entries.keys()].some((p) => /\.md$/i.test(p));
-  if (!hasMd) {
+  const hasDoc = [...entries.keys()].some((p) => /\.(?:md|html?)$/i.test(p));
+  if (!hasDoc) {
     const innerZips = [...entries.entries()].filter(([p]) => /\.zip$/i.test(p)).slice(0, MAX_INNER_ZIPS);
     if (innerZips.length > 0) {
       const merged = new Map<string, JSZip.JSZipObject>();
@@ -212,6 +233,7 @@ interface NotionDoc {
   notionId: string | null;
   title: string;
   body: string;
+  isHtml: boolean;
   isDbRow: boolean;
   entryDate: Date | null;
 }
@@ -223,10 +245,13 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
   const entries = await collectZipEntries(file);
 
   const mdPaths = [...entries.keys()].filter((p) => /\.md$/i.test(p)).sort();
-  if (mdPaths.length === 0) throw new Error(msg('notNotion'));
+  const htmlPaths = [...entries.keys()].filter((p) => /\.html?$/i.test(p)).sort();
+  const isHtmlExport = mdPaths.length === 0 && htmlPaths.length > 0;
+  const docPaths = isHtmlExport ? htmlPaths : mdPaths;
+  if (docPaths.length === 0) throw new Error(msg('notNotion'));
 
-  // Strip one top-level wrapper folder when every .md file sits inside it (e.g. `Private & Shared/`).
-  const rootPrefix = commonRootPrefix(mdPaths);
+  // Strip one top-level wrapper folder when every page sits inside it (e.g. `Private & Shared/`).
+  const rootPrefix = commonRootPrefix(docPaths);
   const stripRoot = (p: string) => (rootPrefix && p.startsWith(rootPrefix) ? p.slice(rootPrefix.length) : p);
 
   // Identify database CSV files and their matching row-page folders.
@@ -256,15 +281,15 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
   const fallbackIso = new Date(fileTimeMs).toISOString();
 
   const docs: NotionDoc[] = [];
-  onProgress?.(i18n.t('importLog:shared.foundNotes', { count: mdPaths.length }));
+  onProgress?.(i18n.t('importLog:shared.foundNotes', { count: docPaths.length }));
 
-  for (const rawPath of mdPaths) {
+  for (const rawPath of docPaths) {
     const entry = entries.get(rawPath)!;
     const rawText = (await zipEntryText(entry)).replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
     const slash = rawPath.lastIndexOf('/');
     const rawDir = slash >= 0 ? rawPath.slice(0, slash) : '';
     const filename = slash >= 0 ? rawPath.slice(slash + 1) : rawPath;
-    const stem = filename.replace(/\.md$/i, '');
+    const stem = filename.replace(/\.(?:md|html?)$/i, '');
     const { clean: cleanStem, id: notionId } = stripNotionId(stem);
 
     const relPath = stripRoot(rawPath);
@@ -278,17 +303,25 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
           .join('/')
       : '';
 
-    let body = rawText.replace(/^\n+/, '');
+    let body = rawText;
     let title = isUntitledStem(cleanStem) ? '' : cleanStem;
-    const h1 = /^# ([^\n]+)(?:\n|$)/.exec(body);
-    if (h1) {
-      const h1Text = h1[1]!.trim();
-      if (isUntitledStem(cleanStem) && isUntitledStem(h1Text)) {
-        title = '';
-        body = body.slice(h1[0].length).replace(/^\n+/, '');
-      } else if (h1MatchesStem(h1Text, cleanStem)) {
-        title = h1Text;
-        body = body.slice(h1[0].length).replace(/^\n+/, '');
+    if (isHtmlExport) {
+      const htmlTitle = readHtmlPageTitle(rawText);
+      if (htmlTitle) {
+        title = isUntitledStem(cleanStem) && isUntitledStem(htmlTitle) ? '' : htmlTitle;
+      }
+    } else {
+      body = rawText.replace(/^\n+/, '');
+      const h1 = /^# ([^\n]+)(?:\n|$)/.exec(body);
+      if (h1) {
+        const h1Text = h1[1]!.trim();
+        if (isUntitledStem(cleanStem) && isUntitledStem(h1Text)) {
+          title = '';
+          body = body.slice(h1[0].length).replace(/^\n+/, '');
+        } else if (h1MatchesStem(h1Text, cleanStem)) {
+          title = h1Text;
+          body = body.slice(h1[0].length).replace(/^\n+/, '');
+        }
       }
     }
 
@@ -304,6 +337,7 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
       notionId,
       title,
       body,
+      isHtml: isHtmlExport,
       isDbRow: Boolean(cleanFolderDir) && dbFolderDirs.has(cleanFolderDir),
       entryDate,
     });
@@ -314,13 +348,13 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
   for (const d of docs) {
     if (d.notionId && !docById.has(d.notionId)) docById.set(d.notionId, d);
   }
-  const mdResolve = fileResolver(mdPaths);
+  const docResolve = fileResolver(docPaths);
   const csvResolve = fileResolver(csvPaths);
-  const mediaPaths = [...entries.keys()].filter((p) => !/\.(?:md|csv)$/i.test(p));
+  const mediaPaths = [...entries.keys()].filter((p) => (isHtmlExport ? !/\.(?:html?|csv)$/i.test(p) : !/\.(?:md|csv)$/i.test(p)));
   const mediaResolve = fileResolver(mediaPaths);
   const keys = new FileKeys('ntfile');
 
-  const counts = { noteLinks: 0, deadLinks: 0, callouts: 0, untitled: 0 };
+  const counts = { noteLinks: 0, deadLinks: 0, callouts: 0, columns: 0, colors: 0, untitled: 0 };
   const kept: { doc: NotionDoc; note: ImportedNote }[] = [];
 
   onProgress?.(i18n.t('importLog:shared.buildingNotes'));
@@ -328,67 +362,120 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
   for (const d of docs) {
     if (!d.title) counts.untitled++;
 
-    const tags = d.isDbRow ? extractDbRowTags(d.body) : [];
+    let body: string;
+    let tags: string[];
 
-    // 1. Convert <aside> callouts and <details> folds.
-    const asides = convertAsides(d.body);
-    counts.callouts += asides.count;
-    let body = detailsToFold(asides.text);
-
-    // 2. Normalize Notion's double-spaced task checkboxes (`- [ ]  text` -> `- [ ] text`) outside code fences.
-    body = mapOutsideFences(body, (chunk) =>
-      chunk.replace(/^([ \t]*- \[[ xX]\]) {2,}/gm, '$1 '),
-    );
-
-    // 3. Escape raw typed HTML tags (`<script>`, `<b>`) while keeping Notion's `<u>...</u>` underline.
-    body = escapeNonUnderlineHtml(body);
-
-    // 4. Rewrite internal page links (relative `.md` paths and Notion web URLs with known 32-char IDs) to note-links.
-    body = mapOutsideCode(body, (prose) =>
-      prose.replace(MD_LINK, (whole, label: string, angled?: string, bare?: string) => {
-        const target = (angled ?? bare!.replace(/\s+"[^"\n]*"\s*$/, '')).trim();
-        if (!target) return whole;
-
-        // First try resolving as a .md path in the export (try full target before stripping #fragment so `#` in titles like `#2` works).
-        let mdHit = mdResolve(target, d.rawDir);
-        if (!mdHit && target.includes('#') && !target.startsWith('#')) {
-          const base = target.slice(0, target.lastIndexOf('#'));
-          if (/\.md$/i.test(base)) mdHit = mdResolve(base, d.rawDir);
-        }
-        if (mdHit) {
-          const dest = docByPath.get(mdHit);
-          if (dest) {
-            if (!dest.title) return label.trim();
-            counts.noteLinks++;
-            return noteLink(dest.title, label);
+    if (d.isHtml) {
+      const parsedHtml = parseNotionHtml(d.body, {
+        resolveCalloutType: calloutTypeForEmoji,
+        resolveLink: (href, label, plainText, pageId) => {
+          // 1. Resolve relative .html path in the export (try full target before stripping #fragment so `#` in titles like `#2` works).
+          let hit = docResolve(href, d.rawDir);
+          if (!hit && href.includes('#') && !href.startsWith('#')) {
+            const base = href.slice(0, href.lastIndexOf('#'));
+            if (/\.html?$/i.test(base)) hit = docResolve(base, d.rawDir);
           }
-        }
-
-        // Database `.csv` link inside a parent page: keep its readable label instead of a broken `.csv` link.
-        if (/\.csv$/i.test(target) && csvResolve(target, d.rawDir)) {
-          return label.trim();
-        }
-
-        // Notion web URL pointing to a page that IS in this export (matched by 32-char hex ID).
-        const urlId = NOTION_URL_ID.exec(target)?.[1]?.toLowerCase();
-        if (urlId) {
-          const dest = docById.get(urlId);
-          if (dest && dest.title) {
-            counts.noteLinks++;
-            return noteLink(dest.title, label);
+          if (hit) {
+            const dest = docByPath.get(hit);
+            if (dest) {
+              if (!dest.title) return plainText;
+              counts.noteLinks++;
+              return noteLink(dest.title, plainText);
+            }
           }
+
+          // 2. Database .csv link: keep readable text.
+          if (/\.csv$/i.test(href) && csvResolve(href, d.rawDir)) {
+            return plainText;
+          }
+
+          // 3. Match by data-notion-page-id or Notion web URL 32-char hex ID.
+          const idHit = pageId ?? NOTION_URL_ID.exec(href)?.[1]?.toLowerCase() ?? null;
+          if (idHit) {
+            const dest = docById.get(idHit);
+            if (dest && dest.title) {
+              counts.noteLinks++;
+              return noteLink(dest.title, plainText);
+            }
+          }
+
+          // 4. Unresolved relative .html link (outside exported subtree or missing): keep text, count warning.
+          if (!/^[a-z][a-z0-9+.-]*:/i.test(href) && !href.startsWith('#') && /\.html?(?:$|\?|#)/i.test(href)) {
+            counts.deadLinks++;
+            return plainText || href;
+          }
+
+          return `[${label}](${href})`;
+        },
+      });
+      body = parsedHtml.body;
+      tags = parsedHtml.tags;
+      counts.callouts += parsedHtml.callouts;
+      counts.columns += parsedHtml.columns;
+      counts.colors += parsedHtml.colors;
+    } else {
+      tags = d.isDbRow ? extractDbRowTags(d.body) : [];
+
+      // 1. Convert <aside> callouts and <details> folds.
+      const asides = convertAsides(d.body);
+      counts.callouts += asides.count;
+      body = detailsToFold(asides.text);
+
+      // 2. Normalize Notion's double-spaced task checkboxes (`- [ ]  text` -> `- [ ] text`) outside code fences.
+      body = mapOutsideFences(body, (chunk) =>
+        chunk.replace(/^([ \t]*- \[[ xX]\]) {2,}/gm, '$1 '),
+      );
+
+      // 3. Escape raw typed HTML tags (`<script>`, `<b>`) while keeping Notion's `<u>...</u>` underline.
+      body = escapeNonUnderlineHtml(body);
+
+      // 4. Rewrite internal page links (relative `.md` paths and Notion web URLs with known 32-char IDs) to note-links.
+      body = mapOutsideCode(body, (prose) =>
+        prose.replace(MD_LINK, (whole, label: string, angled?: string, bare?: string) => {
+          const target = (angled ?? bare!.replace(/\s+"[^"\n]*"\s*$/, '')).trim();
+          if (!target) return whole;
+
+          // First try resolving as a .md path in the export (try full target before stripping #fragment so `#` in titles like `#2` works).
+          let mdHit = docResolve(target, d.rawDir);
+          if (!mdHit && target.includes('#') && !target.startsWith('#')) {
+            const base = target.slice(0, target.lastIndexOf('#'));
+            if (/\.md$/i.test(base)) mdHit = docResolve(base, d.rawDir);
+          }
+          if (mdHit) {
+            const dest = docByPath.get(mdHit);
+            if (dest) {
+              if (!dest.title) return label.trim();
+              counts.noteLinks++;
+              return noteLink(dest.title, label);
+            }
+          }
+
+          // Database `.csv` link inside a parent page: keep its readable label instead of a broken `.csv` link.
+          if (/\.csv$/i.test(target) && csvResolve(target, d.rawDir)) {
+            return label.trim();
+          }
+
+          // Notion web URL pointing to a page that IS in this export (matched by 32-char hex ID).
+          const urlId = NOTION_URL_ID.exec(target)?.[1]?.toLowerCase();
+          if (urlId) {
+            const dest = docById.get(urlId);
+            if (dest && dest.title) {
+              counts.noteLinks++;
+              return noteLink(dest.title, label);
+            }
+            return whole;
+          }
+
+          // Unresolved relative `.md` link (outside exported subtree or missing): keep text, count warning.
+          if (!/^[a-z][a-z0-9+.-]*:/i.test(target) && !target.startsWith('#') && /\.md(?:$|\?|#)/i.test(target)) {
+            counts.deadLinks++;
+            return label.trim() || target;
+          }
+
           return whole;
-        }
-
-        // Unresolved relative `.md` link (outside exported subtree or missing): keep text, count warning.
-        if (!/^[a-z][a-z0-9+.-]*:/i.test(target) && !target.startsWith('#') && /\.md(?:$|\?|#)/i.test(target)) {
-          counts.deadLinks++;
-          return label.trim() || target;
-        }
-
-        return whole;
-      }),
-    );
+        }),
+      );
+    }
 
     // 5. Key referenced images and attachments under fixed-width `ntfile:` keys.
     body = keyFileRefs(body, d.rawDir, mediaResolve, keys);
@@ -427,7 +514,9 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
   const warnings: string[] = [];
   if (folders.length) transforms.push(msg('subpageFolders', { count: folders.length }));
   if (counts.noteLinks) transforms.push(i18n.t('importLog:shared.noteLinks', { count: counts.noteLinks }));
+  if (counts.columns) transforms.push(msg('columns', { count: counts.columns }));
   if (counts.callouts) transforms.push(msg('callouts', { count: counts.callouts }));
+  if (counts.colors) transforms.push(msg('colors'));
   if (blobs.size) transforms.push(i18n.t('importLog:shared.attachments', { count: blobs.size }));
   const tagged = notes.filter((n) => n.tags.length).length;
   if (tagged) transforms.push(i18n.t('importLog:shared.tags', { count: tagged }));

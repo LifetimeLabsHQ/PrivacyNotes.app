@@ -34,11 +34,12 @@ import { railLabels, runSettingsSearch, tabOf } from './settingsSearch/SettingsS
 import { FolderGlyph, PathGlyph, TagGlyph, useItemLookResolver, useNoteIconPaths } from './looks/LookGlyph';
 import { normalizeTag } from './notesRepo';
 import { foldText } from './textFold';
-import { ProMark } from './ui';
+import { ProMark, SETTINGS_EYEBROW } from './ui';
 import { SECTIONS_IN_FEATURES, noteRecentCommand, readRecentCommands } from './ninjaFeatures';
 import { DARK_THEMES, LIGHT_THEMES, THEME_DISPLAY_NAME, customChoice, isFreeTheme, themeSwatch, useTheme, type CustomSnapshot, type Theme, type ThemeChoice } from './theme';
 import { customThemeEntries, teamThemeEntries } from './customThemeUI';
 import type { CustomThemes } from './customThemes';
+import { NO_TEXT_ASSIST } from './formFields';
 
 /** How many items the list shows at most. */
 const LIMIT = 30;
@@ -119,7 +120,7 @@ const optionId = (i: number) => `pn-quick-switcher-${i}`;
 const GROUP_RULE = 'mt-1.5 pt-1 border-t border-divider';
 /** Sticks to the list's lower edge (or above the pinned row) and takes no room: a negative margin as tall as itself. */
 const LIST_FADE = 'pointer-events-none sticky z-10 -mt-8 h-8 bg-gradient-to-t from-surface-2 to-transparent';
-const GROUP_HEADER = 'px-3.5 pt-2.5 pb-1 text-meta font-semibold uppercase tracking-wider text-accent';
+const GROUP_HEADER = `${SETTINGS_EYEBROW} px-3.5 pt-2.5 pb-1 !tracking-wider !text-accent`;
 const GROUP_ICONS: Record<PaletteGroup, Icon> = { features: Sparkle, commands: Terminal, new: Plus, goTo: Compass, themes: Palette };
 /** A theme row shows once the query is this long: an empty ">" stays short;
  *  without ">" it takes one more letter, so a short title query stays on items. */
@@ -529,8 +530,8 @@ export default function QuickSwitcher({
           ...(filters.folders.length
             ? [{ id: PREFIX_ENTRY.folders, group: 'goTo', label: t('quickSwitcher.goToFolder'), keys: FOLDER_PREFIX, icon: Folder, run: () => {} } satisfies PaletteEntry]
             : []),
-          { id: PREFIX_ENTRY.newTag, group: 'new', label: t('quickSwitcher.newTag'), icon: Hash, run: () => {} } satisfies PaletteEntry,
-          { id: PREFIX_ENTRY.newFolder, group: 'new', label: t('quickSwitcher.newFolder'), icon: Folder, run: () => {} } satisfies PaletteEntry,
+          { id: PREFIX_ENTRY.newTag, group: 'new', label: t('shell:tagsRail.createTag'), icon: Hash, run: () => {} } satisfies PaletteEntry,
+          { id: PREFIX_ENTRY.newFolder, group: 'new', label: t('shell:folders.new'), icon: Folder, run: () => {} } satisfies PaletteEntry,
         ]
       : []),
   ]);
@@ -1348,7 +1349,7 @@ export default function QuickSwitcher({
         item.icon,
         <span className="inline-flex items-center gap-2">
           <span className={item.destructive ? 'text-danger' : undefined}>{item.label}</span>
-          {item.pro && <span className="text-meta font-semibold text-accent">Pro</span>}
+          {item.pro && <ProMark />}
           {item.checked && <Check className="text-accent" aria-hidden="true" />}
         </span>,
         null,
@@ -1577,8 +1578,7 @@ export default function QuickSwitcher({
           {/* Commands, dates and names, not prose: no red lines, no autocorrect. */}
           <input
             autoFocus
-            spellCheck={false}
-            autoCorrect="off"
+            {...NO_TEXT_ASSIST}
             autoComplete="off"
             value={query}
             onChange={(e) => {

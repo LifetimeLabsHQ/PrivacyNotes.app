@@ -115,9 +115,6 @@
       "great": "Uitstekend"
     }
   },
-  "sleepScore": {
-    "prompt": "Slaapscore"
-  },
   "heartRate": {
     "prompt": "Gemiddelde hartslag"
   },

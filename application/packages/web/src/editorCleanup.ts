@@ -303,7 +303,7 @@ export const NbspParagraphCleaner = Extension.create({
           doc.descendants((node, pos, parent) => {
             if (
               node.type.name === 'paragraph' &&
-              (parent?.type.name === 'callout' || parent?.type.name === 'blockquote') &&
+              (parent?.type.name === 'callout' || parent?.type.name === 'blockquote' || parent?.type.name === 'columnsCol') &&
               node.content.size > 0
             ) {
               let onlyNbsp = true;

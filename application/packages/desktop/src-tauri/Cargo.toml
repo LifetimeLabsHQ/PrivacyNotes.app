@@ -1,6 +1,6 @@
 [package]
 name = "privacynotes"
-version = "0.831.2"
+version = "0.836.3"
 description = "PrivacyNotes - private notes, encrypted on your device"
 authors = ["Lifetime Labs LLC <hi@lifetimelabs.dev>"]
 homepage = "https://privacynotes.app"
@@ -264,6 +264,13 @@ tauri-plugin-notification = { path = "patches/tauri-plugin-notification" }
 # on the Mac cannot create it (beta issue #174). Drop it once a release keeps
 # the socket out of `/tmp` or checks who answers before sending the arguments.
 tauri-plugin-single-instance = { path = "patches/tauri-plugin-single-instance" }
+# patches/tauri-plugin-opener is 2.7.0 with two fixes for silent dead links:
+# on Linux, strips AppImage library/GTK/GIO/fontconfig environment variables
+# before spawning xdg-open/gio/kde-open, checks fast non-zero exits instead of
+# double-forking blindly, and falls back to the OpenURI D-Bus portal (#806);
+# on iOS, falls back to the key window when manager.viewController is nil and
+# rejects invalid URLs or failed opens instead of silently resolving.
+tauri-plugin-opener = { path = "patches/tauri-plugin-opener" }
 
 [features]
 default = []

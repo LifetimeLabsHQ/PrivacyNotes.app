@@ -18,7 +18,7 @@ import {
   type SignInPasskeySlot,
 } from '../passkeySignIn';
 import { SectionEyebrow, SETTINGS_HELP } from '../settingsUI';
-import { Button, Callout, EmptyState, Spinner, TextField } from '../ui';
+import { Button, Callout, EmptyState, FeedbackButton, Spinner, TextField } from '../ui';
 import { PhrasePinGate, type PinGateRecovery } from './PhrasePinGate';
 
 type Props = {
@@ -122,7 +122,7 @@ export function PasskeysTab({ pubkey, hasPin, pinCredential, pinTimeoutMinutes, 
       <p className={`${SETTINGS_HELP} leading-relaxed`}>{t('passkeysTab.intro')}</p>
 
       {loadFailed ? (
-        <Callout tone="danger" action={<Button action="retry" onClick={() => void load()}>{t('twoFactor.retry')}</Button>}>
+        <Callout tone="danger" action={<FeedbackButton action="retry" onClick={() => void load()}>{t('twoFactor.retry')}</FeedbackButton>}>
           {t('passkeysTab.loadFailed')}
         </Callout>
       ) : slots === null ? (

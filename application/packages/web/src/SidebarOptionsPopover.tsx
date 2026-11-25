@@ -1,7 +1,6 @@
-import { useEffect, useRef, type RefObject } from 'react';
-import { usePopoverPosition } from './usePopoverPosition';
-import { useEscapeToClose } from './useEscapeToClose';
+import type { RefObject } from 'react';
 import { Check, type Icon } from './icons';
+import { Popover } from './ui';
 import type { View } from './views';
 
 export interface SidebarOption {
@@ -45,35 +44,13 @@ export function SidebarOptionsPopover({
   onToggle: (key: View) => void;
   onClose: () => void;
 }) {
-  const popoverRef = useRef<HTMLDivElement>(null);
-  const pos = usePopoverPosition(true, anchorRef, popoverRef, { align: 'start', gap: 6 });
-
-  useEscapeToClose(onClose, true);
-
-  useEffect(() => {
-    function handler(e: PointerEvent) {
-      const target = e.target as Node | null;
-      if (!target) return;
-      if (popoverRef.current?.contains(target)) return;
-      // The trigger toggles the menu itself; closing here too would reopen it.
-      if (anchorRef.current?.contains(target)) return;
-      onClose();
-    }
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
-  }, [anchorRef, onClose]);
-
   return (
-    <div
-      ref={popoverRef}
-      role="dialog"
-      aria-label={title}
-      className="fixed z-[9999] w-56 rounded-lg border border-divider bg-surface-2 shadow-lg py-2"
-      style={{
-        top: pos?.top ?? 0,
-        left: pos?.left ?? 0,
-        visibility: pos ? 'visible' : 'hidden',
-      }}
+    <Popover
+      open
+      anchorRef={anchorRef}
+      onClose={onClose}
+      label={title}
+      className="w-56 !px-0 !py-2 !z-[9999]"
     >
       <div className="px-3 pb-1.5 text-meta font-semibold tracking-wider uppercase text-pn-muted">
         {title}
@@ -92,7 +69,7 @@ export function SidebarOptionsPopover({
           <ViewCheckBox checked={o.checked} />
         </button>
       ))}
-    </div>
+    </Popover>
   );
 }
 

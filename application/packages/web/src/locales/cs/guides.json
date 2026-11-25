@@ -443,7 +443,7 @@
       "app": "Notion",
       "title": "Vyexportuj si pracovní prostor z Notionu",
       "metaTitle": "Jak exportovat pracovní prostor z Notionu - PrivacyNotes",
-      "lead": "Vyexportuj si pracovní prostor z Notionu jako zip ve formátu Markdown & CSV. PrivacyNotes odstraní 32znaková ID Notionu, znovu postaví podstránky jako složky a odkazy mezi stránkami převede na odkazy na poznámky.",
+      "lead": "Vyexportuj si pracovní prostor z Notionu jako zip ve formátu HTML nebo Markdown & CSV. PrivacyNotes odstraní 32znaková ID Notionu, znovu postaví podstránky jako složky, zachová sloupce i barvy a odkazy mezi stránkami převede na odkazy na poznámky.",
       "sections": [
         {
           "img": {
@@ -470,23 +470,23 @@
             "width": 1576,
             "height": 600
           },
-          "h": "Zvol Markdown & CSV se zapnutými složkami",
+          "h": "Zvol HTML (doporučeno) nebo Markdown & CSV se zapnutými složkami",
           "steps": [
-            "Nastav Export format na „Markdown & CSV“.",
+            "Nastav Export format na „HTML“, aby se zachovaly sloupce vedle sebe, šířky sloupců, barvy textu i zvýraznění. „Markdown & CSV“ funguje taky, pokud sloupce ani barvy nepoužíváš.",
             "Nastav Page content na „Everything“, aby se zahrnuly tvoje obrázky, PDF a přiložené soubory.",
             "Zapni „Include private pages“ (případně „Include subpages“ při exportu jedné stránky) a „Create folders for subpages“.",
             "Klikni na Export a ulož soubor .zip."
           ],
           "p": [
-            "Exporty do HTML a PDF neobsahují soubory Markdown a import z Notionu je neumí přečíst. Zvol „Markdown & CSV“, aby se tvoje struktura, odkazy i formátování přenesly čistě."
+            "Exporty do PDF import z Notionu neumí přečíst. Zvol „HTML“, aby se tvoje sloupce, barvy, struktura, odkazy i formátování přenesly čistě, nebo „Markdown & CSV“ pro obyčejný Markdown."
           ]
         },
         {
           "h": "Co se přenese",
           "p": [
             "Notion přidává ke každému exportovanému názvu souboru a internímu odkazu 32znakové ID. PrivacyNotes tahle ID odstraní ze všech názvů poznámek i složek, odebere nejvyšší složku „Private & Shared“ a znovu postaví vnořené podstránky jako složky.",
-            "Nadpisy, seznamy, vnořené seznamy úkolů, tabulky, bloky kódu s jazykem, matematika, podtržení a citace se přenesou tak, jak byly. Callouty z Notionu se převedou na callouty PrivacyNotes, [odkazy a zmínky mezi exportovanými stránkami se změní na odkazy na poznámky](/cs/help/note-links) a nahrané obrázky, PDF i soubory se naimportují do tvého úložiště.",
-            "Stránky řádků databází se naimportují jako poznámky ve složce pojmenované podle databáze a případná vlastnost Tags se přidá jako značky. Tabulkové soubory CSV z databází se přeskočí a spočítají v souhrnu. Vlastní export Notionu do Markdownu vynechává barvy textu, zvýraznění a stránky v koši."
+            "Nadpisy, seznamy, vnořené seznamy úkolů, tabulky, bloky kódu s jazykem, matematika, podtržení a citace se přenesou tak, jak byly. Při exportu do HTML se přenesou i sloupce vedle sebe (2 až 5 sloupců včetně jejich poměrů), barvy textu a zvýraznění. Callouty z Notionu se převedou na callouty PrivacyNotes, [odkazy a zmínky mezi exportovanými stránkami se změní na odkazy na poznámky](/cs/help/note-links) a nahrané obrázky, PDF i soubory se naimportují do tvého úložiště.",
+            "Stránky řádků databází se naimportují jako poznámky ve složce pojmenované podle databáze a případná vlastnost Tags se přidá jako značky. Tabulkové soubory CSV z databází se přeskočí a spočítají v souhrnu. Vlastní export Notionu do Markdownu srovná sloupce pod sebe a vynechává barvy textu, zvýraznění a stránky v koši."
           ]
         }
       ]
@@ -1552,6 +1552,45 @@
           "p": [
             "[Každý záznam skončí v Denících](/cs/help/journal) v kalendářním dni podle vlastního časového pásma záznamu. Úvodní nadpis se stane názvem a záznam bez něj dostane jako název své datum. Záznamy s hvězdičkou a připnuté záznamy zůstanou připnuté a značky zůstanou značkami.",
             "Tvoje poloha vyplní štítek polohy u záznamu a počasí, aktivita a hudba se zapíšou na jeden řádek nahoře. Fotky se importují jako obrázky, zvuk, video a PDF jako přílohy a odkazy mezi záznamy se změní na [odkazy na poznámky](/cs/help/note-links). Když jeden .zip obsahuje více deníků, každý deník se stane složkou."
+          ]
+        }
+      ]
+    },
+    "microsoft-to-do": {
+      "app": "Microsoft To Do",
+      "title": "Exportér Microsoft To Do",
+      "metaTitle": "Exportér Microsoft To Do - Bezplatný nástroj v prohlížeči - PrivacyNotes",
+      "lead": "Vyexportuj si seznamy, podúkoly, poznámky a přílohy z Microsoft To Do pomocí našeho bezplatného exportéru Microsoft To Do přímo v prohlížeči ještě před ukončením služby v červnu 2027.",
+      "sections": [
+        {
+          "h": "Vyexportuj si úkoly z Microsoft To Do ve třech krocích",
+          "p": [
+            "Microsoft To Do zatím nemá vestavěné tlačítko pro export, a tak jsme vytvořili bezplatný open source [exportér Microsoft To Do](https://todo.privacynotes.app), který běží přímo v tvém prohlížeči na Windows, Macu, Linuxu i v mobilu."
+          ],
+          "steps": [
+            "Otevři [todo.privacynotes.app](https://todo.privacynotes.app) a klikni na **Sign in with Microsoft**.",
+            "Povol přístup jen pro čtení (`Tasks.Read`), aby tvůj prohlížeč mohl přečíst tvoje seznamy, aniž by cokoli měnil nebo mazal.",
+            "Klikni na **Fetch my Microsoft To Do data** a potom na **Download ZIP (recommended)**, čímž lokálně uložíš své seznamy, úkoly, podúkoly, poznámky i přílohy."
+          ]
+        },
+        {
+          "h": "Proč se exportér přímo v prohlížeči hodí před červnem 2027",
+          "p": [
+            "Microsoft oznámil, že Microsoft To Do končí 30. června 2027 bez náhrady pro osobní účty Microsoft. Pracovní a školní účty přecházejí na Microsoft Planner, zatímco uživatelé s osobním účtem mají přejít na jinou aplikaci pro úkoly.",
+            "Místo instalování nástrojů příkazového řádku nebo ručního kopírování vývojářských tokenů náš webový exportér jedním kliknutím propojí tvůj prohlížeč přímo s Microsoft Graph a funguje s osobními účty (outlook.com, hotmail.com, live.com) i s účty Microsoft 365."
+          ]
+        },
+        {
+          "h": "Soukromí od základu - nic se nedotkne našich serverů",
+          "p": [
+            "Exportér je statická stránka bez backendu a bez sledování. Tvůj prohlížeč stáhne úkoly přímo od Microsoftu a sestaví ZIP na tvém zařízení, takže tvoje seznamy nikdy neprojdou přes naše servery. Přihlašovací tokeny zůstávají v dočasném úložišti relace prohlížeče a po odhlášení nebo zavření karty se vymažou."
+          ]
+        },
+        {
+          "h": "Co je uvnitř ZIPu a co se přenese",
+          "p": [
+            "ZIP obsahuje strukturovanou zálohu `microsoft-to-do-export.json`, jeden čitelný seznam úkolů v Markdownu pro každý seznam, soubor `tasks.csv` připravený pro tabulkový procesor a tvoje stažené přílohy. Tento export můžeš naimportovat do PrivacyNotes nebo do jakékoli jiné aplikace pro Markdown či CSV.",
+            "V PrivacyNotes se každý seznam stane [seznamem úkolů](/cs/help/tasks) a zachová otevřené i hotové úkoly, podúkoly, příznaky Important, termíny, opakování, kategorie jako značky, poznámky, propojené položky i přiložené soubory - a tvoje poznámky jsou šifrované na tvém zařízení. Připomínky u jednotlivých úkolů se nepřenášejí a spočítají se v souhrnu importu. Samotný soubor `.json` z exportéru nebo z Microsoft Graph API se také naimportuje, jen bez příloh."
           ]
         }
       ]

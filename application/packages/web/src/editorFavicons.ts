@@ -27,35 +27,35 @@
 
 import { Extension } from '@tiptap/core';
 import type { Editor } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Plugin, PluginKey, type Transaction } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { Node as PMNode } from '@tiptap/pm/model';
 import { domainFromUrlString, faviconUrl } from './favicon';
 import { ensureFavicon } from './faviconQueue';
 import { getFavicons } from './theme';
+import { touchedRanges } from './editorDirection';
 
 const faviconKey = new PluginKey<DecorationSet>('pnFavicons');
 
-function build(doc: PMNode, onResolved: () => void): DecorationSet {
-  if (!getFavicons()) return DecorationSet.empty;
-
-  const decos: Decoration[] = [];
+/** Collect link favicon decorations inside `node` (at document position `base`). */
+function collectInNode(node: PMNode, base: number, onResolved: () => void, out: Decoration[]): void {
   // A single link can span several text nodes (bold or coloured runs inside
   // it). Only the first of a run gets a chip.
   let prevEnd = -1;
   let prevHref = '';
 
-  doc.descendants((node, pos) => {
-    if (!node.isText) return;
-    const link = node.marks.find((m) => m.type.name === 'link');
+  node.descendants((child, offset) => {
+    if (!child.isText) return;
+    const link = child.marks.find((m) => m.type.name === 'link');
     if (!link) {
       prevEnd = -1;
       return;
     }
 
+    const pos = base + 1 + offset;
     const href: string = link.attrs.href || '';
     const continued = pos === prevEnd && href === prevHref;
-    prevEnd = pos + node.nodeSize;
+    prevEnd = pos + child.nodeSize;
     prevHref = href;
     if (continued || !/^https?:\/\//i.test(href)) return;
 
@@ -64,10 +64,49 @@ function build(doc: PMNode, onResolved: () => void): DecorationSet {
     if (!url) return;
 
     const icon = ensureFavicon(url, onResolved);
-    if (icon) decos.push(Decoration.inline(pos, pos + 1, { style: `--fav:url(${icon})` }));
+    if (icon) out.push(Decoration.inline(pos, pos + 1, { style: `--fav:url(${icon})` }));
   });
+}
 
+function build(doc: PMNode, onResolved: () => void): DecorationSet {
+  if (!getFavicons()) return DecorationSet.empty;
+  const decos: Decoration[] = [];
+  doc.forEach((node, offset) => collectInNode(node, offset, onResolved, decos));
   return DecorationSet.create(doc, decos);
+}
+
+/** Every leaf textblock whose span intersects a touched range, so typing in one
+ *  bullet of a 500-item list never re-walks or recreates links in the other 499. */
+function touchedTextblocks(tr: Transaction): Map<number, PMNode> {
+  const doc = tr.doc;
+  const touched = new Map<number, PMNode>();
+  for (const [from, to] of touchedRanges(tr)) {
+    doc.nodesBetween(from, to, (node, pos) => {
+      if (node.isTextblock) {
+        touched.set(pos, node);
+        return false;
+      }
+      return true;
+    });
+  }
+  return touched;
+}
+
+/** Update only the textblocks an edit touched so untouched link
+ *  decorations stay mapped in place without a full-document or full-list scan. */
+function update(tr: Transaction, current: DecorationSet, onResolved: () => void): DecorationSet {
+  if (!getFavicons()) return DecorationSet.empty;
+  let decos = current.map(tr.mapping, tr.doc);
+  const added: Decoration[] = [];
+  for (const [pos, node] of touchedTextblocks(tr)) {
+    const end = pos + node.nodeSize;
+    const old = decos.find(pos, end).filter((d) => d.from >= pos && d.to <= end);
+    if (old.length) decos = decos.remove(old);
+    collectInNode(node, pos, onResolved, added);
+  }
+  if (!added.length) return decos;
+  added.sort((a, b) => a.from - b.from);
+  return decos.add(tr.doc, added);
 }
 
 /** Recompute the chips without touching the document. Used when an icon
@@ -91,7 +130,11 @@ export const FaviconChips = Extension.create({
         state: {
           init: (_config, state) => build(state.doc, onResolved),
           apply: (tr, current, _old, state) =>
-            tr.docChanged || tr.getMeta(faviconKey) ? build(state.doc, onResolved) : current,
+            tr.getMeta(faviconKey)
+              ? build(state.doc, onResolved)
+              : tr.docChanged
+                ? update(tr, current, onResolved)
+                : current,
         },
         props: {
           decorations(state) { return faviconKey.getState(state); },
@@ -100,3 +143,8 @@ export const FaviconChips = Extension.create({
     ];
   },
 });
+
+/** The full pass, for tests. */
+export function faviconDecorations(doc: PMNode): DecorationSet {
+  return build(doc, () => {});
+}

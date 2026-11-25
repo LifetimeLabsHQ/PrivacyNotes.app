@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Shield } from './icons';
+import { ArrowClockwise, Shield } from './icons';
 import { PinInput, type PinInputHandle } from './PinInput';
 import { MfaCancelledError, submitMfaCode, dismissMfaPrompt, type MfaPromptRequest } from './mfaStep';
-import { useEscapeToClose } from './useEscapeToClose';
 import { useAccountLogins } from './accountLogins';
 import { accountErrorKey } from './AccountSignInSetup';
-import { CloseButton } from './ui';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
+import { Button, Modal } from './ui';
 
 /** A backup restores the authenticator. It never goes to an app endpoint. */
 export function MfaRecoveryHelp() {
@@ -61,75 +59,63 @@ export function MfaPrompt({ request, onSubmit, onDismiss, onRepair, repairing = 
 }) {
   const { t } = useTranslation('security');
   const [code, setCode] = useState('');
-  const titleId = useId();
   const errorId = useId();
   const input = useRef<PinInputHandle>(null);
-  const dialog = useRef<HTMLDivElement>(null);
-  useEscapeToClose(onDismiss);
   useEffect(() => {
     setCode('');
-    const previous = document.activeElement;
-    if (input.current) input.current.focus();
-    else dialog.current?.querySelector<HTMLElement>('summary, button')?.focus();
-    return () => { if (previous instanceof HTMLElement && previous.isConnected) previous.focus(); };
+    input.current?.focus();
   }, [request.id]);
   useEffect(() => { if (request.error) { setCode(''); input.current?.clear(); } }, [request.error]);
   const submit = (value: string) => { if (!request.busy && /^\d{6}$/.test(value)) void onSubmit(value); };
 
   return (
-    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center p-4 z-[80]">
-      <div
-        ref={dialog}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className="bg-surface-2 border border-divider text-pn rounded-lg max-w-sm w-full p-6 space-y-4 max-h-[90dvh] overflow-y-auto"
-        onKeyDown={(event) => {
-          if (event.key !== 'Tab') return;
-          const controls = dialog.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), summary');
-          if (!controls?.length) return;
-          const first = controls[0];
-          const last = controls[controls.length - 1];
-          if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
-          else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
-        }}
-      >
-        <div className="flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5">
-            <Shield size={20} className="text-accent shrink-0" aria-hidden="true" />
-            <h2 id={titleId} className="text-heading font-semibold">{t(request.wrongLogin ? 'mfaPrompt.wrongLoginTitle' : 'mfaPrompt.title')}</h2>
-          </div>
-          <CloseButton onClick={onDismiss} />
+    <Modal
+      onClose={onDismiss}
+      closeOnBackdrop={false}
+      layer="z-[100]"
+      icon={<Shield />}
+      title={t(request.wrongLogin ? 'mfaPrompt.wrongLoginTitle' : 'mfaPrompt.title')}
+      className="max-w-sm p-6 space-y-4 max-h-[90dvh] overflow-y-auto"
+    >
+      {request.wrongLogin ? (
+        <div className="space-y-3">
+          <p className="text-body text-pn-soft leading-relaxed">{t('mfaPrompt.wrongLogin')}</p>
+          {repairError && <p role="alert" className="text-body text-danger">{t(repairError)}</p>}
+          <Button
+            variant="primary"
+            icon={<ArrowClockwise aria-hidden="true" />}
+            onClick={onRepair}
+            disabled={repairing}
+            className="w-full justify-center"
+          >
+            {t(repairing ? 'connectedAccounts.working' : 'mfaPrompt.signInAgain')}
+          </Button>
         </div>
-        {request.wrongLogin ? (
-          <div className="space-y-3">
-            <p className="text-body text-pn-soft leading-relaxed">{t('mfaPrompt.wrongLogin')}</p>
-            {repairError && <p role="alert" className="text-body text-danger">{t(repairError)}</p>}
-            <button type="button" onClick={onRepair} disabled={repairing} className={`w-full rounded-md ${PRIMARY_BTN_SKIN} text-body font-semibold px-4 py-2 transition disabled:opacity-40 disabled:cursor-not-allowed`}>
-              {t(repairing ? 'connectedAccounts.working' : 'mfaPrompt.signInAgain')}
-            </button>
+      ) : (
+        <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); submit(code); }}>
+          <p className="text-body text-pn-soft">{t('mfaPrompt.enterCode')}</p>
+          <div aria-describedby={request.error ? errorId : undefined}>
+            <PinInput ref={input} value={code} onChange={setCode} onComplete={submit} length={6} reveal compact
+              ariaLabel={t('mfaPrompt.codeLabel')} disabled={request.busy} />
           </div>
-        ) : (
-          <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); submit(code); }}>
-            <p className="text-body text-pn-soft">{t('mfaPrompt.enterCode')}</p>
-            <div aria-describedby={request.error ? errorId : undefined}>
-              <PinInput ref={input} value={code} onChange={setCode} onComplete={submit} length={6} reveal compact
-                ariaLabel={t('mfaPrompt.codeLabel')} disabled={request.busy} />
-            </div>
-            {request.error && <p id={errorId} role="alert" className="text-body text-center text-danger">{t(request.error)}</p>}
-            <button type="submit" disabled={request.busy || code.length !== 6} className={`w-full rounded-md ${PRIMARY_BTN_SKIN} text-body font-semibold px-4 py-2 transition disabled:opacity-40 disabled:cursor-not-allowed`}>
-              {t(request.busy ? 'mfaPrompt.verifying' : 'mfaPrompt.verify')}
-            </button>
-          </form>
-        )}
-        {!request.wrongLogin && <MfaRecoveryHelp />}
-        {request.allowLocalUse && <>
-          {!request.wrongLogin && <p className="text-body text-pn-soft">{t('mfaPrompt.localNotes')}</p>}
-          <button type="button" onClick={onDismiss} className="w-full rounded-md border border-divider text-pn hover:bg-surface-1 px-4 py-2 text-body transition">
-            {t('mfaPrompt.useLocalNotes')}
-          </button>
-        </>}
-      </div>
-    </div>
+          {request.error && <p id={errorId} role="alert" className="text-body text-center text-danger">{t(request.error)}</p>}
+          <Button
+            type="submit"
+            action="confirm"
+            disabled={request.busy || code.length !== 6}
+            className="w-full justify-center"
+          >
+            {t(request.busy ? 'mfaPrompt.verifying' : 'mfaPrompt.verify')}
+          </Button>
+        </form>
+      )}
+      {!request.wrongLogin && <MfaRecoveryHelp />}
+      {request.allowLocalUse && <>
+        {!request.wrongLogin && <p className="text-body text-pn-soft">{t('mfaPrompt.localNotes')}</p>}
+        <Button action="cancel" onClick={onDismiss} className="w-full justify-center">
+          {t('mfaPrompt.useLocalNotes')}
+        </Button>
+      </>}
+    </Modal>
   );
 }

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { PatternInsight, TrackerStats } from '../trackerStats';
 import { insightText } from '../trackerStats';
 import { EYEBROW_ICON_ROW, EyebrowGlyph, SectionEyebrow, SETTINGS_EYEBROW, SettingsSegmented } from '../settingsUI';
-import { ProMark } from '../UpgradeModal';
+import { ProMark, ProTeaserCard } from '../ui';
 import { CalendarBlank, ChartLineUp, Fire, Sparkle, TrendUp, type Icon } from '../icons';
 import { compareAll } from '../trackerCompare';
 import { EffectBarRow, SureDots } from './statsParts';
@@ -84,9 +84,9 @@ export function PatternsSubTab({ model, stats, unlocked, isPro, onOpenUpgrade }:
               <p className="text-small text-pn-muted mt-1">{t('home.footnoteShort')}</p>
             </>
           ) : (
-            <button type="button" onClick={onOpenUpgrade} className="w-full rounded-lg border border-dashed border-divider p-3 text-small text-pn-muted hover:text-pn hover:border-pn-muted transition-colors text-center">
+            <ProTeaserCard compact onUpgrade={onOpenUpgrade}>
               {t('wellness.patterns.tableLocked')}
-            </button>
+            </ProTeaserCard>
           )}
         </div>
       )}
@@ -102,9 +102,9 @@ export function PatternsSubTab({ model, stats, unlocked, isPro, onOpenUpgrade }:
               {others.map((p, i) => <PatternCard key={`p${i}`} text={insightText(p, t)} icon={PATTERN_ICONS[p.type] ?? Sparkle} />)}
             </div>
           ) : (
-            <button type="button" onClick={onOpenUpgrade} className="w-full rounded-lg border border-dashed border-divider p-3 text-small text-pn-muted hover:text-pn hover:border-pn-muted transition-colors text-center">
+            <ProTeaserCard compact onUpgrade={onOpenUpgrade}>
               {t('wellness.patterns.insightsLocked', { count: insightCount })}
-            </button>
+            </ProTeaserCard>
           )}
         </div>
       )}

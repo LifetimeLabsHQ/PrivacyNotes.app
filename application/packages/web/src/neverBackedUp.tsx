@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { liveQuery } from 'dexie';
-import { WarningCircle } from './icons';
 import { db, type LocalNote } from './db';
+import { Callout } from './ui';
 import { countUnsyncedNotes } from './notesRepo';
 import { countUnopenedCopiesHere } from './unopenedNotes';
 import { deriveDisplayTitle } from './notesViewUtils';
@@ -180,12 +180,11 @@ export function NeverBackedUpNotice({ ids }: { ids: readonly string[] | null }) 
   if (only === 0 && changes === 0) return null;
   const single = (ids?.length ?? 0) === 1;
   return (
-    <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-compact leading-snug p-3">
-      <WarningCircle className="shrink-0 mt-0.5" />
-      <span className="space-y-1">
+    <Callout tone="warning" className="mt-3">
+      <span className="block space-y-1">
         {only > 0 && <span className="block">{single ? t('neverBackedUp.one') : t('neverBackedUp.some', { count: only })}</span>}
         {changes > 0 && <span className="block">{single ? t('neverBackedUp.changesOne') : t('neverBackedUp.changesSome', { count: changes })}</span>}
       </span>
-    </div>
+    </Callout>
   );
 }

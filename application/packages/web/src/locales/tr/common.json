@@ -26,7 +26,6 @@
     "noResults": "Sonuç yok"
   },
   "deleteNote": {
-    "confirm": "Kalıcı olarak sil",
     "body": "<highlight>“{{title}}”</highlight> kalıcı olarak silinsin mi? Bu işlem geri alınamaz."
   },
   "emptyTrash": {
@@ -73,12 +72,15 @@
       "toggleSidebar": "Kenar çubuğunu göster veya gizle",
       "toggleTheme": "Açık ve koyu arasında geçiş yap",
       "openSettings": "Ayarları aç",
+      "graph": "Graf ve Yerler çalışma alanı",
       "zen": "Zen modu",
+      "fullScreen": "Tam ekran modu",
       "markdownView": "Markdown görünümünü aç/kapat",
       "invisibles": "Görünmez karakterleri aç/kapat",
       "find": "Notta bul",
       "findReplace": "Bul ve değiştir",
       "outline": "Ana hattı göster veya gizle",
+      "connections": "Bağlantıları göster veya gizle",
       "insertDate": "Tarihi ekle",
       "insertDateTime": "Tarih ve saati ekle",
       "clearFilters": "Filtreleri temizle",
@@ -134,8 +136,6 @@
     "goToFolder": "Bir klasöre git",
     "createTag": "#{{name}} etiketini oluştur",
     "createFolder": "“{{name}}” klasörünü oluştur",
-    "newTag": "Yeni etiket",
-    "newFolder": "Yeni klasör",
     "goToDay": "Güne git",
     "inText": "Metnin içinde",
     "actions": "eylemler",
@@ -176,9 +176,9 @@
   "sshKeyForm": {
     "label": "Etiket",
     "labelPlaceholder": "örn. GitHub dağıtım anahtarı",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "Genel anahtarı kopyala",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "Özel anahtarı kopyala",
     "downloadPublicKey": "Genel anahtarı indir",
     "downloadPrivateKey": "Özel anahtarı indir",
@@ -291,6 +291,13 @@
     "features": {
       "stats": {
         "detail": "Zaman içinde yazdıklarınız, serileriniz ve takipleriniz"
+      },
+      "graph": {
+        "detail": "Not bağlantılarınız, akıllı köprüler ve merkezler etkileşimli bir haritada"
+      },
+      "placesMap": {
+        "label": "Yerler haritası",
+        "detail": "Özel bir harita üzerinde işaretlenmiş notlar, günlük kayıtları ve kişiler"
       },
       "trackers": {
         "detail": "Ruh hali, alışkanlıklar, etkenler ve ilaçlar"

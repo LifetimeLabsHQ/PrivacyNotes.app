@@ -1,14 +1,13 @@
 import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePointMenuPosition } from './usePopoverPosition';
 import { VERSION } from './version';
 import { ExpandLabel } from './ui/ExpandLabel';
 import { isBetaHost } from './hosts';
+import { NO_TEXT_ASSIST } from './formFields';
 import { LogoIcon } from './LogoIcon';
 import { Brand } from './Brand';
 import { HoverLabel } from './HoverLabel';
 import { SortRow } from './ListPrefsPopover';
-import { useEscapeToClose } from './useEscapeToClose';
 import { SidebarOptionsPopover } from './SidebarOptionsPopover';
 import { allViewRows, hiddenAtZero, sidebarViewRows } from './viewRows';
 import { onRowListKeyDown, onSwitchKeyDown } from './sidebarKeys';
@@ -19,7 +18,7 @@ import { FolderTree, type FolderTreeProps } from './FolderTree';
 import { useFolderExpansion } from './folderTreeState';
 import { useRailItemDrop } from './useRailItemDrop';
 import type { FolderSortDir, FolderSortField } from './folders';
-import { ProGlyph, ProMark } from './UpgradeModal';
+import { DashedAddButton, Kbd, Popover, ProGlyph } from './ui';
 import { Star, Hash, DotsThree, PencilSimple, Palette, Trash, X, CaretDown, PushPin, File, NotePencil, CheckFat, Shield, Key, Folder, Book, Notebook, FunnelSimple, ArrowsInLineVertical, ArrowsOutLineVertical, Eye, Download, Plus, Prohibit, Chat, Devices, Question, FileMd, Bookmarks, BellSimple, LockSimple, LockSimpleOpen, type Icon, PILLAR_GLYPHS } from './icons';
 import { KATANA_LINE, NinjaIcon } from './NinjaIcon';
 import { useUnseenAlerts } from './reminders';
@@ -27,7 +26,8 @@ import { SPACE_ICONS, SpaceMoveLabel, SpaceSwitch } from './SpaceSwitch';
 import type { Space, SpaceView } from './spaces';
 import { keyText, sectionKeyText } from './shortcutMatch';
 import { isViewShown, type View } from './views';
-import type { SectionLockControls } from './sectionLock';
+import { isProtectableView, type SectionLockControls } from './sectionLock';
+import { ContextMenu, closedMenuJustNow, useLongPressContextMenu, type ContextMenuItem } from './ContextMenu';
 import { exemptOpts } from './i18nExempt';
 import { SIDEBAR_ACTIVE, SIDEBAR_DROP_INSIDE, SIDEBAR_ROW_MENU_BUTTON } from './sidebarUI';
 import { marketingHomeHref, siteHref } from './siteLinks';
@@ -512,28 +512,6 @@ export function TagsRail(props: TagsRailProps) {
   const viewsGutter = useScrollbarWidth(viewsListRef, !viewsCollapsed);
   const allMenuBtnRef = useRef<HTMLButtonElement>(null);
   const tagSortContainerRef = useRef<HTMLDivElement | null>(null);
-  // One menu is open at a time, so a single ref/position serves whichever tag
-  // row's actions menu is showing. The hook measures it and clamps on-screen.
-  const tagMenuRef = useRef<HTMLDivElement>(null);
-  const tagMenuPos = usePointMenuPosition(
-    openTagMenu ? { x: openTagMenu.x, y: openTagMenu.y } : null,
-    tagMenuRef,
-  );
-
-  // Close tag-sort popover on click-outside
-  useEffect(() => {
-    if (!tagSortOpen) return;
-    function handler(e: PointerEvent) {
-      const target = e.target as Node | null;
-      if (!target) return;
-      if (tagSortContainerRef.current?.contains(target)) return;
-      setTagSortOpen(false);
-    }
-    window.addEventListener('pointerdown', handler, true);
-    return () => window.removeEventListener('pointerdown', handler, true);
-  }, [tagSortOpen]);
-
-  useEscapeToClose(() => setTagSortOpen(false), tagSortOpen);
 
   /** A switched-off row still draws while it IS the open view. */
   const showRow = (v: View) => isViewShown(v, userSettings.hiddenViews, view);
@@ -575,9 +553,11 @@ export function TagsRail(props: TagsRailProps) {
     </div>
   );
 
+  const sectionMenuProps = useLongPressContextMenu(sectionLock.openMenu, isProtectableView);
+
   const trashRow = (trashedCount > 0 || view === 'trash' || sectionLock.stateOf('trash') !== 'none') && (
     <div className="mt-2 -mx-3 px-3 border-t border-divider pt-2">
-      <div className="relative" onContextMenu={(e) => sectionLock.openMenu(e, 'trash')}>
+      <div className="relative select-none" style={{ WebkitTouchCallout: 'none' }} {...sectionMenuProps('trash')}>
         <button
           onClick={() => handleSelectView('trash')}
           className={viewBtnClass(view === 'trash')}
@@ -608,108 +588,67 @@ export function TagsRail(props: TagsRailProps) {
     if (!openTagMenu) return null;
     const tag = openTagMenu.tag;
     const isFavorite = favoriteTagsList.some(([name]) => name === tag);
+    const items: ContextMenuItem[] = [
+      {
+        label: isFavorite ? t('tagsRail.removeFavorite') : t('tagsRail.markAsFavorite'),
+        icon: <Star weight={isFavorite ? 'fill' : 'bold'} className={isFavorite ? 'text-amber-400' : undefined} />,
+        onSelect: () => toggleFavoriteTag(tag),
+      },
+      {
+        label: t('common:actions.rename'),
+        icon: <PencilSimple />,
+        onSelect: () => {
+          // The menu also opens from a tag chip (NotesView) while
+          // the rail shows folders, and the rename field lives on
+          // the tag row.
+          if (browseMode !== 'tags') onBrowseChange('tags');
+          setRenameBuffer(tag);
+          setRenamingTag(tag);
+        },
+      },
+      {
+        label: t('looks.menu'),
+        icon: <Palette />,
+        pro: !isPro,
+        onSelect: () => openLook({ kind: 'tag', lookKey: tagLookKey(tag), name: tag, favorite: isFavorite }),
+      },
+      ...(props.home
+        ? [
+            {
+              label: props.home.has('tag', tag) ? t('dashboard.removeFromHome') : t('dashboard.showOnHome'),
+              icon: <PILLAR_GLYPHS.dashboard />,
+              onSelect: () => props.home!.toggle('tag', tag),
+            } satisfies ContextMenuItem,
+          ]
+        : []),
+      {
+        label: t('tagsRail.createTag'),
+        icon: <Plus />,
+        onSelect: () => {
+          setNewTagDraft('');
+          setCreatingTag(true);
+        },
+      },
+      { type: 'separator' },
+      {
+        label: t('tagsRail.deleteTag'),
+        icon: <Trash />,
+        destructive: true,
+        onSelect: () => {
+          void handleDeleteTag(tag);
+        },
+      },
+      /* "Delete Tag & Notes" is disabled for now - we may bring
+         it back later. Keep the handler + i18n keys wired so
+         re-enabling is a one-line uncomment:
+         { label: t('tagsRail.deleteTagAndNotes'), icon: <Trash />, destructive: true, onSelect: () => void handleDeleteTagAndNotes(tag) }
+      */
+    ];
     return (
-      <>
-        {/* invisible backdrop so any click outside closes the menu */}
-        <div
-          className="fixed inset-0 z-[55]"
-          onClick={() => setOpenTagMenu(null)}
-        />
-        <div
-          ref={tagMenuRef}
-          style={{
-            top: tagMenuPos?.top ?? openTagMenu.y,
-            left: tagMenuPos?.left ?? openTagMenu.x,
-            visibility: tagMenuPos ? 'visible' : 'hidden',
-          }}
-          className="fixed z-[60] min-w-[180px] rounded-md border border-divider bg-surface-2 shadow-lg py-1"
-        >
-          <button
-            onClick={() => {
-              setOpenTagMenu(null);
-              toggleFavoriteTag(tag);
-            }}
-            className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
-          >
-            <Star weight={isFavorite ? 'fill' : 'bold'} className={isFavorite ? 'text-amber-400' : 'text-accent'} />
-            {isFavorite ? t('tagsRail.removeFavorite') : t('tagsRail.markAsFavorite')}
-          </button>
-          <button
-            onClick={() => {
-              setOpenTagMenu(null);
-              // The menu also opens from a tag chip (NotesView) while
-              // the rail shows folders, and the rename field lives on
-              // the tag row.
-              if (browseMode !== 'tags') onBrowseChange('tags');
-              setRenameBuffer(tag);
-              setRenamingTag(tag);
-            }}
-            className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
-          >
-            <PencilSimple className="text-accent" />
-            {t('common:actions.rename')}
-          </button>
-          <button
-            onClick={() => {
-              setOpenTagMenu(null);
-              openLook({ kind: 'tag', lookKey: tagLookKey(tag), name: tag, favorite: isFavorite });
-            }}
-            className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
-          >
-            <Palette className="text-accent" />
-            <span className="flex-1">{t('looks.menu')}</span>
-            {!isPro && <ProMark />}
-          </button>
-          {props.home && (
-            <button
-              onClick={() => {
-                setOpenTagMenu(null);
-                props.home!.toggle('tag', tag);
-              }}
-              className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
-            >
-              <PILLAR_GLYPHS.dashboard className="text-accent" />
-              {props.home.has('tag', tag) ? t('dashboard.removeFromHome') : t('dashboard.showOnHome')}
-            </button>
-          )}
-          <button
-            onClick={() => {
-              setOpenTagMenu(null);
-              setNewTagDraft('');
-              setCreatingTag(true);
-            }}
-            className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
-          >
-            <Plus className="text-accent" />
-            {t('tagsRail.createTag')}
-          </button>
-          <div className="my-1 border-t border-divider" />
-          <button
-            onClick={() => {
-              setOpenTagMenu(null);
-              void handleDeleteTag(tag);
-            }}
-            className="w-full text-start px-3 py-1.5 text-compact text-danger hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2"
-          >
-            <Trash />
-            {t('tagsRail.deleteTag')}
-          </button>
-          {/* "Delete Tag & Notes" is disabled for now - we may bring
-              it back later. Keep the handler + i18n keys wired so
-              re-enabling is a one-line uncomment.
-          <button
-            onClick={() => {
-              setOpenTagMenu(null);
-              void handleDeleteTagAndNotes(tag);
-            }}
-            className="w-full text-start px-3 py-1.5 text-compact text-danger hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2"
-          >
-            <Trash />
-            {t('tagsRail.deleteTagAndNotes')}
-          </button>
-          */}
-        </div>
-      </>
+      <ContextMenu
+        state={{ x: openTagMenu.x, y: openTagMenu.y, items }}
+        onClose={() => setOpenTagMenu(null)}
+      />
     );
   };
 
@@ -752,42 +691,20 @@ export function TagsRail(props: TagsRailProps) {
             setOpenTagMenu({ tag, x: e.clientX, y: e.clientY });
           }}
         >
-          <button
-            type="button"
-            onClick={(e) => {
-              if (isRenaming) return;
-              if (glyphOpensLook && (e.target as HTMLElement).closest('[data-tag-glyph]')) {
-                openLook({ kind: 'tag', lookKey: tagLookKey(tag), name: tag, favorite: isFavorite });
-                return;
-              }
-              // Second click on the active tag clears the filter, the way a
-              // folder row does (FolderTree.renderRow). With tag + folder +
-              // view composing, nothing else in the rail would.
-              void handleSelectTag(active ? null : tag);
-            }}
-            data-row-name={tag}
-            aria-current={active || undefined}
-            className="flex-1 min-w-0 flex items-center gap-2 px-2 py-2 text-start"
-          >
-            {/* Amber, like a folder glyph, and accent while the row is
-                active - the same two states FolderTree.renderRow uses. A tag
-                and a folder are the same kind of thing (a filter you keep),
-                and amber is what this app now paints filters with: the chips
-                in the list pane, the folder rail, this rail. A favourite
-                keeps its brighter amber-400 on top of that, around its star
-                or around the icon it wears. A tag's own color wins over
-                both (TagGlyph). */}
-            <span
-              data-tag-glyph
-              className={`inline-flex shrink-0 ${active ? 'text-accent' : isFavorite ? 'text-amber-400' : 'text-label'}${glyphOpensLook ? ' pn-look-glyph' : ''}`}
-            >
-              <TagGlyph tag={tag} favorite={isFavorite} size={16} />
-            </span>
-            {isRenaming ? (
+          {isRenaming ? (
+            <div className="flex-1 min-w-0 flex items-center gap-2 px-2 py-2 text-start">
+              <span
+                data-tag-glyph
+                className={`inline-flex shrink-0 ${active ? 'text-accent' : isFavorite ? 'text-amber-400' : 'text-label'}`}
+              >
+                <TagGlyph tag={tag} favorite={isFavorite} size={16} />
+              </span>
               <input
                 autoFocus
                 tabIndex={mobileTabIndex}
                 value={renameBuffer}
+                autoComplete="off"
+                {...NO_TEXT_ASSIST}
                 onChange={(e) => setRenameBuffer(e.target.value)}
                 onKeyDown={(e) => {
                   if (isImeComposing(e)) return;
@@ -803,15 +720,47 @@ export function TagsRail(props: TagsRailProps) {
                 onClick={(e) => e.stopPropagation()}
                 className="min-w-0 flex-1 bg-transparent border-b border-accent/50 focus:border-accent outline-none text-row font-medium text-pn"
               />
-            ) : (
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                if (glyphOpensLook && (e.target as HTMLElement).closest('[data-tag-glyph]')) {
+                  openLook({ kind: 'tag', lookKey: tagLookKey(tag), name: tag, favorite: isFavorite });
+                  return;
+                }
+                // Second click on the active tag clears the filter, the way a
+                // folder row does (FolderTree.renderRow). With tag + folder +
+                // view composing, nothing else in the rail would.
+                void handleSelectTag(active ? null : tag);
+              }}
+              data-row-name={tag}
+              aria-current={active || undefined}
+              className="flex-1 min-w-0 flex items-center gap-2 px-2 py-2 text-start"
+            >
+              {/* Amber, like a folder glyph, and accent while the row is
+                  active - the same two states FolderTree.renderRow uses. A tag
+                  and a folder are the same kind of thing (a filter you keep),
+                  and amber is what this app now paints filters with: the chips
+                  in the list pane, the folder rail, this rail. A favourite
+                  keeps its brighter amber-400 on top of that, around its star
+                  or around the icon it wears. A tag's own color wins over
+                  both (TagGlyph). */}
+              <span
+                data-tag-glyph
+                className={`inline-flex shrink-0 ${active ? 'text-accent' : isFavorite ? 'text-amber-400' : 'text-label'}${glyphOpensLook ? ' pn-look-glyph' : ''}`}
+              >
+                <TagGlyph tag={tag} favorite={isFavorite} size={16} />
+              </span>
               <span className="truncate">{tag}</span>
-            )}
-          </button>
+            </button>
+          )}
           {!isRenaming && (
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
+                if (closedMenuJustNow(e.currentTarget)) return;
                 if (menuOpen) {
                   setOpenTagMenu(null);
                 } else {
@@ -922,7 +871,7 @@ export function TagsRail(props: TagsRailProps) {
                 <span aria-hidden="true" className="pn-sb-wide grid grid-cols-[0fr] transition-[grid-template-columns] duration-200 group-hover:grid-cols-[1fr] group-focus-visible:grid-cols-[1fr] [@media(hover:none)]:hidden">
                   <span className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap text-compact font-semibold opacity-0 transition-[opacity,padding] duration-200 group-hover:opacity-100 group-hover:ps-1.5 group-focus-visible:opacity-100 group-focus-visible:ps-1.5">
                     {t('common:quickSwitcher.jumpTo')}
-                    <kbd dir="ltr" className="rounded border border-accent/30 px-1 font-sans text-meta font-normal leading-4">{keyText('quickSwitcher')}</kbd>
+                    <span dir="ltr" className="inline-flex"><Kbd>{keyText('quickSwitcher')}</Kbd></span>
                   </span>
                 </span>
               </button>
@@ -938,9 +887,9 @@ export function TagsRail(props: TagsRailProps) {
             <span className="pn-jump-charge" aria-hidden="true" />
             <NinjaIcon size={24} className="shrink-0" />
             <span className="flex-1 truncate text-start">{t('common:quickSwitcher.jumpTo')}</span>
-            <kbd dir="ltr" className="pn-sb-wide shrink-0 rounded border border-accent/30 px-1.5 font-sans text-meta font-normal leading-5">
-              {keyText('quickSwitcher')}
-            </kbd>
+            <span dir="ltr" className="pn-sb-wide shrink-0 inline-flex">
+              <Kbd>{keyText('quickSwitcher')}</Kbd>
+            </span>
           </button>
         )}
       </div>
@@ -1081,7 +1030,7 @@ export function TagsRail(props: TagsRailProps) {
           const count = viewCounts[r.key];
           const sectionKey = sectionKeyText(sectionRows.indexOf(r.key) + 2);
           const row = (
-            <div className="relative w-full group/sec" onContextMenu={(e) => sectionLock.openMenu(e, r.key)}>
+            <div className="relative w-full group/sec select-none" style={{ WebkitTouchCallout: 'none' }} {...sectionMenuProps(r.key)}>
             <button
               onClick={() => handleSelectView(r.key)}
               className={viewBtnClass(view === r.key)}
@@ -1199,93 +1148,91 @@ export function TagsRail(props: TagsRailProps) {
                   </button>
                 </HoverLabel>
               )}
-              {tagSortOpen && (
-                <div
-                  role="dialog"
-                  aria-label={sortLabel}
-                  className="absolute start-0 top-full mt-1 z-50 w-52 rounded-lg border border-divider bg-surface-2 shadow-lg"
-                >
-                  <div className="px-4 pt-3 pb-2">
-                    <div className="text-meta font-semibold tracking-wider text-pn-muted uppercase mb-1.5 mt-1">
-                      {t('shell:listPrefs.sortBy')}
-                    </div>
-                    {browseMode === 'tags' ? (
-                      <div className="space-y-0.5">
-                        <SortRow
-                          label={t('tagsRail.sortEntries')}
-                          active={tagSortField === 'entries'}
-                          dir={tagSortField === 'entries' ? tagSortDir : null}
-                          onSelect={() => setTagSortField('entries')}
-                          onToggleDir={() => setTagSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
-                        />
-                        <SortRow
-                          label={t('tagsRail.sortName')}
-                          active={tagSortField === 'name'}
-                          dir={tagSortField === 'name' ? tagSortDir : null}
-                          onSelect={() => setTagSortField('name')}
-                          onToggleDir={() => setTagSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
-                        />
-                        <SortRow
-                          label={t('tagsRail.sortLastActive')}
-                          active={tagSortField === 'modified'}
-                          dir={tagSortField === 'modified' ? tagSortDir : null}
-                          onSelect={() => setTagSortField('modified')}
-                          onToggleDir={() => setTagSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
-                        />
-                      </div>
-                    ) : (
-                      <div className="space-y-0.5">
-                        <SortRow
-                          label={t('tagsRail.sortName')}
-                          active={folderSortField === 'name'}
-                          dir={folderSortField === 'name' ? folderSortDir : null}
-                          onSelect={() => setFolderSortField('name')}
-                          onToggleDir={() => setFolderSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
-                        />
-                        <SortRow
-                          label={t('tagsRail.sortEntries')}
-                          active={folderSortField === 'entries'}
-                          dir={folderSortField === 'entries' ? folderSortDir : null}
-                          onSelect={() => setFolderSortField('entries')}
-                          onToggleDir={() => setFolderSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
-                        />
-                        {/* No direction control: ascending and descending
-                            mean nothing in an order the user made by hand,
-                            and `dir={null}` is what hides the arrow. The
-                            hint carries what one word cannot say. */}
-                        <SortRow
-                          label={t('tagsRail.sortCustom')}
-                          hint={t('tagsRail.sortCustomHint')}
-                          active={folderSortField === 'custom'}
-                          dir={null}
-                          onSelect={() => setFolderSortField('custom')}
-                          onToggleDir={() => {}}
-                        />
-                      </div>
-                    )}
-                    {browseMode === 'folders' && treeHasBranches && (
-                      <div className="mt-2 pt-2 border-t border-divider">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (anyFolderOpen) folderExpansion.collapseAll(folders);
-                            else folderExpansion.expandAll(folders);
-                            setTagSortOpen(false);
-                          }}
-                          className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-compact text-pn-soft hover:bg-surface-1 transition"
-                        >
-                          {anyFolderOpen ? (
-                            <ArrowsInLineVertical className="text-accent" aria-hidden="true" />
-                          ) : (
-                            <ArrowsOutLineVertical className="text-accent" aria-hidden="true" />
-                          )}
-                          {anyFolderOpen ? t('folders.collapseAll') : t('folders.expandAll')}
-                        </button>
-                      </div>
-                    )}
-                  </div>
+              <Popover
+                open={tagSortOpen}
+                anchorRef={tagSortContainerRef}
+                onClose={() => setTagSortOpen(false)}
+                label={sortLabel}
+                className="w-52 !px-4 !pt-3 !pb-2"
+              >
+                <div className="text-meta font-semibold tracking-wider text-pn-muted uppercase mb-1.5 mt-1">
+                  {t('shell:listPrefs.sortBy')}
                 </div>
-              )}
+                {browseMode === 'tags' ? (
+                  <div className="space-y-0.5">
+                    <SortRow
+                      label={t('tagsRail.sortEntries')}
+                      active={tagSortField === 'entries'}
+                      dir={tagSortField === 'entries' ? tagSortDir : null}
+                      onSelect={() => setTagSortField('entries')}
+                      onToggleDir={() => setTagSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+                    />
+                    <SortRow
+                      label={t('tagsRail.sortName')}
+                      active={tagSortField === 'name'}
+                      dir={tagSortField === 'name' ? tagSortDir : null}
+                      onSelect={() => setTagSortField('name')}
+                      onToggleDir={() => setTagSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+                    />
+                    <SortRow
+                      label={t('tagsRail.sortLastActive')}
+                      active={tagSortField === 'modified'}
+                      dir={tagSortField === 'modified' ? tagSortDir : null}
+                      onSelect={() => setTagSortField('modified')}
+                      onToggleDir={() => setTagSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-0.5">
+                    <SortRow
+                      label={t('tagsRail.sortName')}
+                      active={folderSortField === 'name'}
+                      dir={folderSortField === 'name' ? folderSortDir : null}
+                      onSelect={() => setFolderSortField('name')}
+                      onToggleDir={() => setFolderSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+                    />
+                    <SortRow
+                      label={t('tagsRail.sortEntries')}
+                      active={folderSortField === 'entries'}
+                      dir={folderSortField === 'entries' ? folderSortDir : null}
+                      onSelect={() => setFolderSortField('entries')}
+                      onToggleDir={() => setFolderSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))}
+                    />
+                    {/* No direction control: ascending and descending
+                        mean nothing in an order the user made by hand,
+                        and `dir={null}` is what hides the arrow. The
+                        hint carries what one word cannot say. */}
+                    <SortRow
+                      label={t('tagsRail.sortCustom')}
+                      hint={t('tagsRail.sortCustomHint')}
+                      active={folderSortField === 'custom'}
+                      dir={null}
+                      onSelect={() => setFolderSortField('custom')}
+                      onToggleDir={() => {}}
+                    />
+                  </div>
+                )}
+                {browseMode === 'folders' && treeHasBranches && (
+                  <div className="mt-2 pt-2 border-t border-divider">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (anyFolderOpen) folderExpansion.collapseAll(folders);
+                        else folderExpansion.expandAll(folders);
+                        setTagSortOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-compact text-pn-soft hover:bg-surface-1 transition"
+                    >
+                      {anyFolderOpen ? (
+                        <ArrowsInLineVertical className="text-accent" aria-hidden="true" />
+                      ) : (
+                        <ArrowsOutLineVertical className="text-accent" aria-hidden="true" />
+                      )}
+                      {anyFolderOpen ? t('folders.collapseAll') : t('folders.expandAll')}
+                    </button>
+                  </div>
+                )}
+              </Popover>
             </div>
           )}
           {/* The space switch's look: a tinted track, the open segment a
@@ -1419,6 +1366,8 @@ export function TagsRail(props: TagsRailProps) {
                 ref={newTagInputRef}
                 tabIndex={mobileTabIndex}
                 value={newTagDraft}
+                autoComplete="off"
+                {...NO_TEXT_ASSIST}
                 onChange={(e) => setNewTagDraft(e.target.value)}
                 onKeyDown={(e) => {
                   if (isImeComposing(e)) return;
@@ -1447,22 +1396,21 @@ export function TagsRail(props: TagsRailProps) {
             </div>
           </div>
         ) : (
-          <button
-            type="button"
+          /* The folder rail's "New folder" button, glyph for glyph: the
+             rows above are places you go, this is a thing you make, and a
+             plain row reads as one more tag. The two rails share one slot
+             behind one toggle, so they share this button too.
+             Spec: docs/internal/design/ui-patterns.md (section 76) */
+          <DashedAddButton
+            icon={<Plus className="shrink-0 text-label" aria-hidden="true" />}
             onClick={() => {
               setNewTagDraft('');
               setCreatingTag(true);
             }}
-            /* The folder rail's "New folder" button, glyph for glyph: the
-               rows above are places you go, this is a thing you make, and a
-               plain row reads as one more tag. The two rails share one slot
-               behind one toggle, so they share this button too.
-               Spec: docs/internal/design/ui-patterns.md (section 76) */
-            className="w-full mt-2 rounded-md border border-dashed border-divider hover:border-accent/50 text-row font-medium transition flex items-center justify-start gap-2 ps-[7px] pe-2 py-2 text-pn-muted hover:text-accent"
+            className="mt-2"
           >
-            <Plus className="shrink-0 text-label" />
-            <span className="truncate">{t('tagsRail.createTag')}</span>
-          </button>
+            {t('tagsRail.createTag')}
+          </DashedAddButton>
         )}
         </>)}
 

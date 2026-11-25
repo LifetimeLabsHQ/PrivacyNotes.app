@@ -330,6 +330,7 @@
       "noEntry": "sense entrada",
       "doseLens": "L'ànim va fer una mitjana de {{before}} els {{nBefore}} dies abans i de {{after}} els {{nAfter}} dies després.",
       "doseLensHeading": "Al voltant de cada canvi de dosi",
+      "doseLensLocked": "Millora a Pro per veure com afecten els canvis de dosi al teu ànim",
       "doseLensShort_one": "Falta {{count}} dia registrat més al voltant.",
       "doseLensShort_other": "Falten {{count}} dies registrats més al voltant."
     },

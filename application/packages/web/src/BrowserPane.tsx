@@ -390,14 +390,14 @@ export function BrowserPane({ extensionKeys, isPro, onUpgrade, onOpenSync }: {
 
       <section className="space-y-3">
         <SectionEyebrow icon={DownloadSimple} setting="browser.install">{t('apps.stepInstall')}</SectionEyebrow>
-        {/* Nine cards, three to a row on a wide pane (the three stores,
-            then Chromium browsers on the Chrome Web Store and Firefox-based
-            browsers on Firefox Add-ons); one column on a phone. */}
+        {/* Three to a row on a wide pane (the three stores, then Chromium
+            browsers on the Chrome Web Store and Firefox-based browsers on
+            Firefox Add-ons); one column on a phone. */}
         <div className="grid gap-1.5 @md:grid-cols-3">
-          {installLinks().map(({ browser, url, store }) => {
+          {installLinks().map(({ browser, icon, url, store }) => {
             const body = (
               <>
-                <SettingsCardIcon src={`/help/icons/${browser.toLowerCase()}.svg`} />
+                <SettingsCardIcon src={`/help/icons/${icon}.svg`} />
                 <span className="min-w-0">
                   <span className="flex items-center gap-1.5 text-body font-medium">
                     {browser}
@@ -415,6 +415,7 @@ export function BrowserPane({ extensionKeys, isPro, onUpgrade, onOpenSync }: {
             );
           })}
         </div>
+        <p className={SETTINGS_HELP}>{t('apps.allSupported')}</p>
       </section>
 
       {access ? (
@@ -457,6 +458,8 @@ function currentBrowser(): InstallBrowser | null {
   if (/Vivaldi\//.test(ua)) return 'Vivaldi';
   if (/OPR\//.test(ua)) return 'Opera';
   if (/Edg\//.test(ua)) return 'Edge';
+  if (/Waterfox\//.test(ua)) return 'Waterfox';
+  if (/Floorp\//.test(ua)) return 'Floorp';
   if (/Firefox\//.test(ua)) return 'Firefox';
   if (/Chrome\//.test(ua)) return 'Chrome';
   return null;

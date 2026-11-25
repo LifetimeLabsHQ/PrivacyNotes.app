@@ -12,13 +12,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { useEscapeToClose } from './useEscapeToClose';
-import { ListSearchInput } from './ListSearchInput';
 import { LazyPicture } from './LazyPicture';
 import { isSoftKeyboardDevice } from './softKeyboard';
 import { textMatcher } from './textMatch';
 import type { MediaRef } from './mediaRefs';
-import { CloseButton } from './ui';
+import { PickerModal } from './ui';
 
 export function PicturePicker({ items, onPick, onClose }: {
   items: MediaRef[];
@@ -28,8 +26,6 @@ export function PicturePicker({ items, onPick, onClose }: {
   const { t } = useTranslation('media');
   const [query, setQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
-  const downOnBackdrop = useRef(false);
-  useEscapeToClose(onClose);
 
   // Straight into the search box where a keyboard is already out; a phone
   // would otherwise raise its keyboard over the pictures on open.
@@ -45,63 +41,49 @@ export function PicturePicker({ items, onPick, onClose }: {
   }, [items, query]);
 
   return createPortal(
-    <div
-      className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center p-4 z-50"
-      onPointerDown={(e) => { downOnBackdrop.current = e.target === e.currentTarget; }}
-      onClick={(e) => { if (downOnBackdrop.current && e.target === e.currentTarget) onClose(); }}
-      role="dialog"
-      aria-modal="true"
-      aria-label={t('picker.title')}
+    <PickerModal
+      title={t('picker.title')}
+      onClose={onClose}
+      maxWidth="max-w-lg"
+      maxHeight="max-h-[calc(100dvh-2rem)]"
+      bodyClassName={`flex-1 min-h-0 overflow-y-auto px-5 pb-3${items.length === 0 ? ' pt-3' : ''}`}
+      search={
+        items.length > 0
+          ? { value: query, onChange: setQuery, placeholder: t('picker.search'), inputRef: searchRef }
+          : undefined
+      }
+      footer={
+        items.length > 0 ? (
+          <p className="w-full text-small text-pn-muted">{t('picker.noCopy')}</p>
+        ) : undefined
+      }
     >
-      <div className="bg-surface-2 border border-divider text-pn rounded-lg w-full max-w-lg flex flex-col max-h-[calc(100dvh-2rem)]">
-        <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3">
-          <h2 className="text-heading font-semibold">{t('picker.title')}</h2>
-          <CloseButton onClick={onClose} className="shrink-0" />
+      {items.length === 0 ? (
+        <p className="py-10 text-body text-center text-pn-muted">{t('picker.empty')}</p>
+      ) : shown.length === 0 ? (
+        <p className="py-10 text-body text-center text-pn-muted">{t('picker.noMatch')}</p>
+      ) : (
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+          {shown.map((it) => (
+            <button
+              key={it.src}
+              type="button"
+              onClick={() => onPick(it)}
+              aria-label={it.name}
+              className="relative block aspect-square rounded-lg overflow-hidden border border-divider hover:border-accent focus-visible:outline-2 focus-visible:outline-accent transition"
+            >
+              <LazyPicture src={it.src} />
+              <span
+                className="absolute inset-x-0 bottom-0 block px-1.5 pb-1 pt-4 bg-gradient-to-t from-black/80 to-transparent text-meta text-white text-start truncate"
+                dir="auto"
+              >
+                {it.name}
+              </span>
+            </button>
+          ))}
         </div>
-        {items.length > 0 && (
-          <div className="px-5 pb-3">
-            <ListSearchInput
-              value={query}
-              onChange={setQuery}
-              placeholder={t('picker.search')}
-              inputRef={searchRef}
-            />
-          </div>
-        )}
-        <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-3">
-          {items.length === 0 ? (
-            <p className="py-10 text-body text-center text-pn-muted">{t('picker.empty')}</p>
-          ) : shown.length === 0 ? (
-            <p className="py-10 text-body text-center text-pn-muted">{t('picker.noMatch')}</p>
-          ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {shown.map((it) => (
-                <button
-                  key={it.src}
-                  type="button"
-                  onClick={() => onPick(it)}
-                  aria-label={it.name}
-                  className="relative block aspect-square rounded-lg overflow-hidden border border-divider hover:border-accent focus-visible:outline-2 focus-visible:outline-accent transition"
-                >
-                  <LazyPicture src={it.src} />
-                  <span
-                    className="absolute inset-x-0 bottom-0 block px-1.5 pb-1 pt-4 bg-gradient-to-t from-black/80 to-transparent text-meta text-white text-start truncate"
-                    dir="auto"
-                  >
-                    {it.name}
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        {items.length > 0 && (
-          <p className="px-5 py-3 border-t border-divider text-small text-pn-muted">
-            {t('picker.noCopy')}
-          </p>
-        )}
-      </div>
-    </div>,
+      )}
+    </PickerModal>,
     document.body,
   );
 }

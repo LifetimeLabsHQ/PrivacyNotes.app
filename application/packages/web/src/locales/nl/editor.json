@@ -38,7 +38,7 @@
     "blockMath": "Formuleblok",
     "align": "Uitlijning",
     "font": "Lettertype",
-    "pictureFromFiles": "Afbeelding uit Bestanden",
+    "pictureFromFiles": "Galerij",
     "date": "Datum",
     "dateTime": "Datum en tijd",
     "footnote": "Voetnoot",
@@ -260,6 +260,15 @@
     "headingsIn": "Koppen in {{title}}",
     "noHeadingMatches": "Geen overeenkomende koppen"
   },
+  "slash": {
+    "label": "Blok invoegen",
+    "linePlaceholder": "Druk op / om blokken in te voegen",
+    "filterHint": "Typ om te filteren…",
+    "basic": "Basisblokken",
+    "smartDate": "Slimme datum",
+    "askNinja": "Vraag Ninja om “{{query}}”",
+    "noMatches": "Geen overeenkomende blokken"
+  },
   "copyBox": {
     "placeholder": "Tekst om met één klik te kopiëren"
   },
@@ -369,6 +378,23 @@
     "addColumn": "Kolom toevoegen",
     "removeBoard": "Bord verwijderen",
     "moveTo": "Verplaatsen naar"
+  },
+  "columns": {
+    "narrowWide": "Smal en breed",
+    "wideNarrow": "Breed en smal",
+    "removeColumns": "Kolommen verwijderen",
+    "resizeColumn": "Sleep om de kolombreedte aan te passen",
+    "barLabel": "Kolombediening",
+    "borders": "Kolomranden",
+    "borderBoxes": "Vakken",
+    "borderSolid": "Doorgetrokken",
+    "borderDashed": "Gestreept",
+    "borderDotted": "Gestippeld",
+    "borderThickness": "Dikte",
+    "borderThin": "Dun",
+    "borderMedium": "Gemiddeld",
+    "borderColorDefault": "Standaardkleur",
+    "borderTint": "Zachte kolomtint"
   },
   "doodle": {
     "title": "Krabbel",

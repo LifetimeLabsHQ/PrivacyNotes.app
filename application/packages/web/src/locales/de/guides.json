@@ -443,7 +443,7 @@
       "app": "Notion",
       "title": "Deinen Notion-Workspace exportieren",
       "metaTitle": "So exportierst du deinen Notion-Workspace - PrivacyNotes",
-      "lead": "Exportiere deinen Notion-Workspace als Zip im Format \"Markdown & CSV\", und PrivacyNotes entfernt Notions 32-stellige IDs, baut Unterseiten als Ordner nach und macht aus Seitenlinks Notiz-Links.",
+      "lead": "Exportiere deinen Notion-Workspace als Zip im Format \"HTML\" oder \"Markdown & CSV\", und PrivacyNotes entfernt Notions 32-stellige IDs, baut Unterseiten als Ordner nach, behält Spalten und Farben und macht aus Seitenlinks Notiz-Links.",
       "sections": [
         {
           "img": {
@@ -470,23 +470,23 @@
             "width": 1576,
             "height": 600
           },
-          "h": "Wähle Markdown & CSV mit eingeschalteter Ordner-Option",
+          "h": "Wähle HTML (empfohlen) oder Markdown & CSV mit eingeschalteter Ordner-Option",
           "steps": [
-            "Stelle Export format auf \"Markdown & CSV\".",
+            "Stelle Export format auf \"HTML\", damit Spalten nebeneinander, Spaltenbreiten, Textfarben und Hervorhebungen erhalten bleiben. \"Markdown & CSV\" funktioniert auch, wenn du keine Spalten oder Farben nutzt.",
             "Stelle Page content auf \"Everything\", damit deine Bilder, PDFs und angehängten Dateien dabei sind.",
-            "Schalte \"Include private pages\" (oder bei einem Einzel-Seiten-Export \"Include subpages\") und \"Create folders for subpages\" ein.",
+            "Schalte \"Include private pages\" (oder bei einem Einzelseiten-Export \"Include subpages\") und \"Create folders for subpages\" ein.",
             "Klicke auf Export und speichere die .zip-Datei."
           ],
           "p": [
-            "HTML- und PDF-Exporte enthalten keine Markdown-Dateien und können vom Notion-Importer nicht gelesen werden. Wähle \"Markdown & CSV\", damit deine Struktur, Links und Formatierung sauber ankommen."
+            "PDF-Exporte können vom Notion-Importer nicht gelesen werden. Wähle \"HTML\", damit deine Spalten, Farben, Struktur, Links und Formatierung sauber ankommen, oder \"Markdown & CSV\" für einfaches Markdown."
           ]
         },
         {
           "h": "Was mitkommt",
           "p": [
             "Notion hängt an jeden exportierten Dateinamen und internen Link eine 32-stellige ID an. PrivacyNotes entfernt diese IDs aus jedem Titel und Ordnernamen, entfernt den übergeordneten Ordner \"Private & Shared\" und baut verschachtelte Unterseiten als Ordner nach.",
-            "Überschriften, Listen, verschachtelte Aufgabenlisten, Tabellen, Codeblöcke mit ihrer Sprache, Formeln, Unterstreichungen und Zitate kommen so an, wie sie waren. Notion-Hinweisboxen werden zu PrivacyNotes-Hinweisboxen, [Links und Erwähnungen zwischen exportierten Seiten werden zu Notiz-Links](/de/help/note-links), und hochgeladene Bilder, PDFs und Dateien werden in deinen Speicher importiert.",
-            "Seiten aus Datenbankzeilen werden als Notizen in einem Ordner mit dem Namen der Datenbank importiert, und Werte einer Tags-Eigenschaft werden als Tags übernommen. CSV-Tabellendateien von Datenbanken werden übersprungen und in der Zusammenfassung gezählt. Notions eigener Markdown-Export lässt Textfarben, Hervorhebungen und Seiten im Papierkorb weg."
+            "Überschriften, Listen, verschachtelte Aufgabenlisten, Tabellen, Codeblöcke mit ihrer Sprache, Formeln, Unterstreichungen und Zitate kommen so an, wie sie waren. Beim HTML-Export kommen auch Spalten nebeneinander (2 bis 5 Spalten, mit Breitenverhältnissen), Textfarben und Hervorhebungen mit. Notion-Hinweisboxen werden zu PrivacyNotes-Hinweisboxen, [Links und Erwähnungen zwischen exportierten Seiten werden zu Notiz-Links](/de/help/note-links), und hochgeladene Bilder, PDFs und Dateien werden in deinen Speicher importiert.",
+            "Seiten aus Datenbankzeilen werden als Notizen in einem Ordner mit dem Namen der Datenbank importiert, und Werte einer Tags-Eigenschaft werden als Tags übernommen. CSV-Tabellendateien von Datenbanken werden übersprungen und in der Zusammenfassung gezählt. Notions eigener Markdown-Export löst Spalten auf und lässt Textfarben, Hervorhebungen und Seiten im Papierkorb weg."
           ]
         }
       ]
@@ -1552,6 +1552,45 @@
           "p": [
             "[Jeder Eintrag landet in den Tagebüchern](/de/help/journal) an dem Kalendertag in der eigenen Zeitzone des Eintrags. Eine Überschrift ganz am Anfang wird zum Titel, und ein Eintrag ohne Überschrift bekommt sein Datum als Titel. Mit Stern markierte und angepinnte Einträge bleiben angepinnt, und Tags bleiben Tags.",
             "Dein Standort füllt den Standort-Chip des Eintrags, und Wetter, Aktivität und Musik stehen in einer Zeile ganz oben. Fotos werden als Bilder importiert, Audio, Video und PDFs als Anhänge, und Links zwischen Einträgen werden zu [Notiz-Links](/de/help/note-links). Enthält eine .zip mehrere Tagebücher, wird jedes Tagebuch zu einem Ordner."
+          ]
+        }
+      ]
+    },
+    "microsoft-to-do": {
+      "app": "Microsoft To Do",
+      "title": "Microsoft To Do Exporter",
+      "metaTitle": "Microsoft To Do Exporter - Kostenloses Browser-Tool - PrivacyNotes",
+      "lead": "Exportiere deine Listen, Unteraufgaben, Notizen und Anhänge aus Microsoft To Do vor der Abschaltung im Juni 2027 mit unserem kostenlosen, rein im Browser laufenden Microsoft-To-Do-Exporter.",
+      "sections": [
+        {
+          "h": "Deine Microsoft-To-Do-Aufgaben in drei Schritten exportieren",
+          "p": [
+            "Microsoft To Do hat noch keine eingebaute Export-Schaltfläche. Deshalb haben wir einen kostenlosen [Microsoft-To-Do-Exporter](https://todo.privacynotes.app) als Open Source gebaut, der direkt in deinem Browser unter Windows, Mac, Linux und auf dem Handy läuft."
+          ],
+          "steps": [
+            "Öffne [todo.privacynotes.app](https://todo.privacynotes.app) und klicke auf **Sign in with Microsoft**.",
+            "Erlaube den Lesezugriff (`Tasks.Read`), damit dein Browser deine Listen lesen kann, ohne etwas zu ändern oder zu löschen.",
+            "Klicke auf **Fetch my Microsoft To Do data** und dann auf **Download ZIP (recommended)**, um deine Listen, Aufgaben, Unteraufgaben, Notizen und Anhänge lokal zu speichern."
+          ]
+        },
+        {
+          "h": "Warum ein reiner Browser-Exporter vor Juni 2027 wichtig ist",
+          "p": [
+            "Microsoft hat angekündigt, Microsoft To Do am 30. Juni 2027 einzustellen, ohne Ersatz für private Microsoft-Konten. Arbeits- und Schulkonten wechseln zu Microsoft Planner, während privaten Nutzern empfohlen wird, zu einer anderen Aufgaben-App zu wechseln.",
+            "Statt Kommandozeilen-Programme zu installieren oder Entwickler-Token von Hand zu kopieren, verbindet unser Web-Exporter deinen Browser mit einem Klick direkt mit Microsoft Graph und funktioniert sowohl mit privaten Konten (outlook.com, hotmail.com, live.com) als auch mit Microsoft-365-Konten."
+          ]
+        },
+        {
+          "h": "Von Grund auf privat - nichts berührt unsere Server",
+          "p": [
+            "Der Exporter ist eine statische Seite ohne Backend und ohne Tracking. Dein Browser ruft deine Aufgaben direkt bei Microsoft ab und erstellt die ZIP auf deinem Gerät, sodass deine Listen nie über unsere Server laufen. Anmelde-Token bleiben im temporären Sitzungsspeicher des Browsers und werden gelöscht, sobald du dich abmeldest oder den Tab schließt."
+          ]
+        },
+        {
+          "h": "Was in der ZIP steckt und was mitkommt",
+          "p": [
+            "Die ZIP enthält ein strukturiertes `microsoft-to-do-export.json`-Backup, eine lesbare Markdown-Aufgabenliste pro Liste, eine tabellenfertige `tasks.csv` und deine heruntergeladenen Anhänge. Du kannst diesen Export in PrivacyNotes oder in jede andere Markdown- oder CSV-App importieren.",
+            "In PrivacyNotes wird jede Liste zu einer [Aufgabenliste](/de/help/tasks), die offene und erledigte Aufgaben, Unteraufgaben, Markierungen als \"Important\", Fälligkeitsdaten, Wiederholungen, Kategorien als Tags, Notizen, verknüpfte Elemente und angehängte Dateien behält - und deine Notizen sind auf deinem Gerät verschlüsselt. Einzelne Aufgaben-Erinnerungen werden nicht übernommen und in der Import-Zusammenfassung gezählt. Eine einzelne `.json`-Datei aus dem Exporter oder der Microsoft-Graph-API lässt sich ebenfalls importieren, ohne Anhänge."
           ]
         }
       ]

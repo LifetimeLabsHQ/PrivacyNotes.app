@@ -307,6 +307,16 @@
         "Sí. L'aplicació és local primer (local-first): [les teves notes viuen en una base de dades al teu dispositiu](/ca/help/data-location), de manera que llegir, escriure i [cercar funcionen sense cap connexió](/ca/help/search-local). Els canvis se sincronitzen automàticament quan tornes a ser en línia, i [una imatge o un fitxer que afegeixis fora de línia espera en aquest dispositiu](/ca/help/upload-failed) i també es puja llavors. [Ninja](/ca/help/ninja) també funciona fora de línia; només desar una pàgina web com a nota espera una connexió."
       ]
     },
+    "local-only": {
+      "q": "Com puc fer servir una caixa forta només local sense compte?",
+      "a": [
+        "Obre l'app d'escriptori o de mòbil (macOS, Windows, Linux, iOS o Android), tria \"Genera una frase\" a la pantalla d'inici de sessió i deixa \"Sincronitza entre dispositius\" desmarcat, que és el valor per defecte. Això crea una caixa forta xifrada al teu dispositiu sense cap registre al servidor, de manera que funciona fora de línia des del principi.",
+        "**Com funciona el mode només local:**",
+        "- **Fora de línia per defecte:** notes, tasques, diaris, elements de la caixa forta, fitxers, imatges, PIN i bloqueig biomètric, cerca i [còpies de seguretat automàtiques](/ca/help/automatic-backups) funcionen tots al teu dispositiu sense compte.\n- **Fes còpia de seguretat de la teva caixa forta:** com que no arriba res als nostres servidors, si perds el dispositiu o desinstal·les l'app desapareixen les teves notes. Activa les [còpies de seguretat automàtiques](/ca/help/automatic-backups) a Configuració > Còpia de seguretat > Automàtiques, o exporta una còpia manual a Configuració > Còpia de seguretat > Manuals.\n- **Activa la sincronització o millora més endavant:** obre Configuració > ID & Sync i tria \"Activa la sincronització\" quan vulguis. També pots millorar a Pro mantenint la sincronització desactivada: el pagament registra un ID del compte per a Pro mentre les teves notes es queden en local.\n- **Restaura còpies de seguretat d'un altre dispositiu:** obre Configuració > Còpia de seguretat > Restaura i tria \"Còpia de seguretat xifrada (.pnbackup, .pnbackupz)\". Si el fitxer prové d'una altra caixa forta, l'app et demana la frase de recuperació d'aquella còpia (escrita o en QR) i ho importa tot sota la clau de la teva caixa forta local.",
+        "**Ja tens un compte sincronitzat?** Tria els passos del teu pla:",
+        "- **Compte gratuït (passa a només local):** exporta una còpia a Configuració > Còpia de seguretat > Manuals i tria \"Tot, xifrat (.pnbackupz)\". Després [suprimeix el teu compte al núvol](/ca/help/delete-account) a Configuració > Compte mitjançant \"Suprimeix el compte i les dades...\", comença una caixa forta local a l'app d'escriptori o de mòbil amb \"Genera una frase\", i [restaura la còpia de seguretat](/ca/help/restore-backup) fent servir la teva frase de recuperació antiga.\n- **Compte Pro (conserva Pro i deixa de sincronitzar):** no suprimeixis el teu compte, perquè suprimir un compte elimina Pro. Obre **Configuració > ID & Sync** i activa [\"Posa la sincronització en pausa\"](/ca/help/pause-sync). Pro continua actiu i no es puja res de nou.\n- **Compte Pro (neteja també les notes sincronitzades del servidor):** exporta primer \"Tot, xifrat (.pnbackupz)\", suprimeix totes les notes, buida la paperera, prem \"Sincronitza ara\" i espera fins que mostri Sincronitzat (els fitxers al núvol s'eliminen automàticament al cap de cinc dies). Activa \"Posa la sincronització en pausa\" a **Configuració > ID & Sync** i, abans de tancar l'app, restaura la còpia de seguretat a Configuració > Còpia de seguretat > Restaura. Les teves notes tornen en local amb identificadors nous mentre Pro continua actiu."
+      ]
+    },
     "sync-conflicts": {
       "q": "Què passa si edito la mateixa nota en dos dispositius alhora?",
       "a": [
@@ -504,6 +514,13 @@
         "[La barra d'eines de format](/ca/help/format-bar) i el seu menú Insereix hi afegeixen la resta: [taules](/ca/help/table-formulas), requadres destacats que es poden plegar, subratllat, superíndex i subíndex, alineació del text, colors de text i de ressaltat, tipus de lletra, enllaços, imatges i fitxers adjunts. Tot es manté en Markdown d'anada i tornada: «Mostra el markdown» sota qualsevol nota en mostra el codi font, i [les exportacions són fitxers .md nets](/ca/help/export), així que res del que escrius no queda lligat a cap format propietari."
       ]
     },
+    "slash-commands": {
+      "q": "Puc fer servir ordres amb / per inserir blocs?",
+      "a": [
+        "Sí. Escriu `/` al començament d'una línia o després d'un espai per obrir el menú de blocs, després escriu una paraula com `/taula`, `/h2`, `/kanban` o `/avís` i prem Retorn. Les teves tries recents es queden a dalt, i també pots escriure una [data natural](/ca/help/ninja-dates) com ara `/divendres` o `/demà`, `/recordatori` dins d'una tasca per a un [recordatori](/ca/help/reminders), o `/fórmula` dins d'una cel·la de taula per a les [fórmules de taula](/ca/help/table-formulas). El menú / és gratuït; els blocs que requereixen Pro mostren una insígnia Pro.",
+        "El menú funciona juntament amb el [Markdown en directe](/ca/help/markdown-syntax) i continua disponible quan amagues botons a [la barra de format](/ca/help/format-bar) o escrius en [mode Zen](/ca/help/zen-mode). Si res del menú no coincideix amb el que has escrit, prem Retorn per passar la cerca directament a [Ninja](/ca/help/ninja). Escriure `/` dins d'una adreça web, una data, una fracció, un bloc de codi o text enganxat es queda com a text pla i no obre mai el menú; prem Esc o un espai just després de `/` per tancar-lo."
+      ]
+    },
     "tasks": {
       "q": "Com funcionen les tasques?",
       "a": [
@@ -569,7 +586,7 @@
     "browser-extension": {
       "q": "Hi ha una extensió de PrivacyNotes per al navegador?",
       "a": [
-        "Sí, per a Chrome, Edge i Firefox en un ordinador, i és gratuïta. Desa la pàgina que estàs llegint com a nota, amb el text principal i les imatges, o com a marcador, et deixa escriure una nota nova pròpia, i pot mostrar els inicis de sessió, les targetes, les claus SSH i els marcadors del lloc on ets. Copia un valor amb un clic, o tria Emplena (o prem Alt+Shift+L) i l'extensió escriu a la pàgina l'inici de sessió d'aquest lloc. Mai no emplena formularis per si sola.",
+        "Sí, per a navegadors basats en Chromium i en Firefox en un ordinador, i és gratuïta. Desa la pàgina que estàs llegint com a nota, amb el text principal i les imatges, o com a marcador, et deixa escriure una nota nova pròpia, i pot mostrar els inicis de sessió, les targetes, les claus SSH i els marcadors del lloc on ets. Copia un valor amb un clic, o tria Emplena (o prem Alt+Shift+L) i l'extensió escriu a la pàgina l'inici de sessió d'aquest lloc. Mai no emplena formularis per si sola.",
         "Obre Configuració > Extensió, afegeix l'extensió des de la botiga del navegador, tria què pot fer i després tria Crea un codi. Copia el codi d'un sol ús i enganxa'l a l'extensió. Per eliminar-la, tria Elimina al costat seu, a Extensions del navegador, a la mateixa pàgina. Una extensió no ocupa cap plaça de dispositiu. Un compte gratuït connecta un navegador; Pro en connecta fins a 10. [Com protegeix les teves notes](/ca/help/browser-extension-security)."
       ]
     },
@@ -825,6 +842,13 @@
       "a": [
         "Sí. Les dues opcions estan activades per defecte perquè estimem els nostres usuaris: volem que [estalviïs espai](/ca/help/storage-usage) i conservis la teva privadesa. Estalvi d'espai redueix una imatge gran i la desa com a JPEG: Estàndard (per defecte) s'ajusta a 2048 píxels al 85 % de qualitat, Petit s'ajusta a 1280 píxels al 75 %, i Diminut s'ajusta a 1024 píxels al 60 % per als fitxers més petits. Elimina les dades d'ubicació treu les metadades EXIF que una càmera escriu en una foto, inclosa la posició GPS, abans de desar la imatge. Totes dues s'apliquen a cada imatge que l'app pot llegir: enganxada en una nota, afegida com a fitxer o importada. Una imatge que no pot llegir, com ara AVIF, SVG o una que no s'obre, es desa tal com ha arribat quan l'afegeixes com a fitxer o la importes, dades d'ubicació incloses. Dues excepcions: un GIF conserva la mida perquè l'animació continuï funcionant, i un fitxer adjunt a un element de la Caixa forta es desa exactament tal com era.",
         "Desactiva qualsevol de les dues a **Configuració > Emmagatzematge > Imatges**, on les fotos de contacte tenen un tercer interruptor que les manté a 512 píxels. Les opcions només afecten les imatges noves; els fitxers que no són imatges es desen exactament tal com són. Les imatges HEIC i TIFF es converteixen a JPEG, perquè només Safari les pot mostrar. [Una còpia de seguretat que restauris](/ca/help/restore-backup) s'escriu byte a byte."
+      ]
+    },
+    "paste-screenshots": {
+      "q": "Les captures de pantalla enganxades també es comprimeixen?",
+      "a": [
+        "Sí. Les captures de pantalla i les imatges que copies i enganxes directament en una nota passen per la mateixa [compressió d'Estalvi d'espai](/ca/help/image-quality) que els fitxers adjunts, les imatges arrossegades i les importacions. Les captures de pantalla opaques habituals es redimensionen per ajustar-se al nivell que hagis triat i es desen com a JPEG, cosa que redueix una captura típica a una fracció de la seva mida original i t'ajuda a aprofitar millor la [quota d'emmagatzematge](/ca/help/storage-usage).",
+        "Tria entre Estàndard (2048 píxels al 85 % de qualitat), Petit (1280 píxels al 75 %) i Diminut (1024 píxels al 60 %) a Configuració > Emmagatzematge > Imatges, o desactiva Estalvi d'espai per conservar els originals. Una captura de pantalla amb vores transparents, com ara una captura de finestra amb ombra paral·lela, es redimensiona igualment fins al límit que hagis triat i es desa com a PNG per conservar-ne la transparència."
       ]
     },
     "storage-usage": {
@@ -1125,7 +1149,7 @@
       "a": [
         "Sí. Escriu `=` en una cel·la de la taula per triar una funció, o escriu tu mateix la fórmula. La cel·la mostra el resultat en lloc del text, i cada resultat s'actualitza en el moment que canvies una cel·la que llegeix. Les cel·les es nomenen amb la lletra de la columna i el número de la fila, i la capçalera compta com a fila 1, de manera que la primera fila de dades és la fila 2. Els resultats funcionen a tots els comptes; triar des del menú és Pro.",
         "Per provar-ho tot d'un cop, baixa la nota d'exemple, obre Configuració > Transferència > Importa, tria **Fitxers Markdown** i selecciona el fitxer.",
-        "[Nota d'exemple (.md)](/marketing/table-formulas-examples.md)",
+        "[Nota d'exemple (.md)](/help/table-formulas-examples.md)",
         "Aquestes són les funcions, i es combinen amb `+`, `-`, `*`, `/`, `^` per a una potència, i parèntesis:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` i `COUNT` actuen sobre un interval, com a `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` i `LOG` actuen sobre un sol valor, com a `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` i `PHI` són constants, i `RAND` dona un nombre aleatori\n- `=B7-B2` resta una cel·la d'una altra, i `=SUM(B2:B10)*0.2` calcula un percentatge d'un total",
         "Fes clic en una cel·la que mostra un resultat i la fórmula torna, a punt per canviar-la. La teva nota desa la fórmula mateixa, mai el resultat, així que una exportació i qualsevol altra app de Markdown mostren `=SUM(B2:B10)` exactament com ho vas escriure."

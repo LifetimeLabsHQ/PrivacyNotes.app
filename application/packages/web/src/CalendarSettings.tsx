@@ -1,9 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { ArrowLineDown, BellRinging, BellSimple, CalendarCheck, CalendarDots, Cake, Clock, Devices, Hash, Eye, Globe, Sun } from './icons';
 import { FeedSubscribeForm, SubscribedFeeds, type FeedsControl } from './calendarFeedUI';
-import { ROW_TITLE, RowTitle, SectionEyebrow, SETTINGS_HELP, SETTINGS_ROW, SETTINGS_SELECT, SETTINGS_TRACK, settingsSegClass, SettingsCallout, ResetDefaultsButton } from './settingsUI';
+import { ROW_TITLE, RowTitle, SectionEyebrow, SETTINGS_HELP, SETTINGS_ROW, SETTINGS_TRACK, settingsSegClass, ResetDefaultsButton } from './settingsUI';
 import { Switch } from './Switch';
-import { ProMark } from './UpgradeModal';
+import { Callout, ProMark, Select } from './ui';
 import { formatDay, toLocalIso, weekdayDate, weekdayLabel, WEEK_STARTS, WEEK_START_DAY, type WeekStart } from './intlFormat';
 import { intlLocale } from './languages';
 import { firstWeekday } from './MonthGrid';
@@ -23,8 +23,6 @@ import { ReminderPermissionControl, useReminderPermission, useRemindersThrough, 
  * Spec: docs/internal/specs/calendar-pillar-spec.md (decisions 11, 12, 15; step 7; section 14)
  */
 
-// The end padding keeps the browser's own arrow off the border.
-const SELECT = SETTINGS_SELECT;
 const FIELD = 'w-24 rounded-md bg-track border border-divider px-2.5 py-1.5 text-body text-pn text-center tabular-nums focus:border-accent focus:outline-none';
 const NONE = 'none';
 
@@ -64,17 +62,17 @@ export function CalendarSettings({ value, onChange, weekStart, onWeekStartChange
     <div className={SETTINGS_ROW}>
       <RowTitle icon={icon}>{title}</RowTitle>
       <div className="flex items-center gap-2 text-body">
-        <select
+        <Select
+          size="sm"
           value={current === null ? NONE : String(current.days)}
           onChange={(e) => guard(() => write(e.target.value === NONE ? null : { days: Number(e.target.value), at: current?.at ?? '09:00' }))()}
           aria-label={title}
-          className={SELECT}
         >
           <option value={NONE}>{ts('alerts.none')}</option>
           {ALL_DAY_ALERTS.map((days) => (
             <option key={days} value={days}>{days === 0 ? ts('alerts.onDay') : ts('alerts.daysBefore', { count: days })}</option>
           ))}
-        </select>
+        </Select>
         {current && <>
           <span className="text-pn-muted">{ts('alerts.at')}</span>
           <TimeInput value={current.at} label={title} onCommit={(at) => guard(() => write({ ...current, at }))()} />
@@ -131,7 +129,7 @@ export function CalendarSettings({ value, onChange, weekStart, onWeekStartChange
             <RowTitle icon={Devices}>{t('calendar.whereTitle')}</RowTitle>
             <p className={`${SETTINGS_HELP} mt-0.5`}>{t(`calendar.reminderHint.${REMINDER_PLATFORM}`)}</p>
             {through && <p className={`${SETTINGS_HELP} mt-0.5`}>{t('calendar.scheduledThrough', { date: formatDay(through, 'date') })}</p>}
-            {permission === 'denied' && <SettingsCallout className="mt-1.5">{t('calendar.permissionDenied')}</SettingsCallout>}
+            {permission === 'denied' && <Callout className="mt-1.5">{t('calendar.permissionDenied')}</Callout>}
           </div>
           <ReminderPermissionControl />
         </div>
@@ -152,17 +150,17 @@ export function CalendarSettings({ value, onChange, weekStart, onWeekStartChange
       <div className="px-6 pb-4 divide-y divide-divider">
         <div data-setting="calendar.alertTimed" className={SETTINGS_ROW}>
           <RowTitle icon={Clock}>{t('calendar.alertTimed')}</RowTitle>
-          <select
+          <Select
+            size="sm"
             value={value.alertTimed === null ? NONE : String(value.alertTimed)}
             onChange={(e) => guard(() => set({ alertTimed: e.target.value === NONE ? null : Number(e.target.value) }))()}
             aria-label={t('calendar.alertTimed')}
-            className={SELECT}
           >
             <option value={NONE}>{ts('alerts.none')}</option>
             {TIMED_ALERTS.map((before) => (
               <option key={before} value={before}>{alertLabel({ before }, today, ts)}</option>
             ))}
-          </select>
+          </Select>
         </div>
         <div data-setting="calendar.alertAllDay">{dayAlertRow(Sun, t('calendar.alertAllDay'), value.alertAllDay, (v) => set({ alertAllDay: v }))}</div>
         <div data-setting="calendar.alertBirthday">{dayAlertRow(Cake, ts('calendar.birthdays'), value.alertBirthday, (v) => set({ alertBirthday: v }))}</div>

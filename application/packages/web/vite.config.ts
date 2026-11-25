@@ -252,6 +252,7 @@ function stripMarketingAssets(): Plugin {
         force: true,
       });
       fs.rmSync(path.resolve(__dirname, 'dist/help/img'), { recursive: true, force: true });
+      fs.rmSync(path.resolve(__dirname, 'dist/help/table-formulas-examples.md'), { force: true });
     },
   };
 }

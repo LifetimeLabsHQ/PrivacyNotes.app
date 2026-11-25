@@ -26,7 +26,6 @@
     "noResults": "Keine Ergebnisse"
   },
   "deleteNote": {
-    "confirm": "Endgültig löschen",
     "body": "<highlight>„{{title}}“</highlight> endgültig löschen? Das kann nicht rückgängig gemacht werden."
   },
   "emptyTrash": {
@@ -73,12 +72,15 @@
       "toggleSidebar": "Seitenleiste ein-/ausblenden",
       "toggleTheme": "Hell / Dunkel umschalten",
       "openSettings": "Einstellungen öffnen",
+      "graph": "Arbeitsbereich „Graph und Orte“",
       "zen": "Zen-Modus",
+      "fullScreen": "Vollbildmodus",
       "markdownView": "Markdown-Ansicht ein / aus",
       "invisibles": "Unsichtbare Zeichen ein / aus",
       "find": "In Notiz suchen",
       "findReplace": "Suchen und ersetzen",
       "outline": "Gliederung ein-/ausblenden",
+      "connections": "Verknüpfungen ein-/ausblenden",
       "insertDate": "Datum einfügen",
       "insertDateTime": "Datum und Uhrzeit einfügen",
       "clearFilters": "Filter aufheben",
@@ -134,8 +136,6 @@
     "goToFolder": "Zu einem Ordner springen",
     "createTag": "Tag #{{name}} erstellen",
     "createFolder": "Ordner „{{name}}“ erstellen",
-    "newTag": "Neues Tag",
-    "newFolder": "Neuer Ordner",
     "goToDay": "Zum Tag springen",
     "inText": "Im Text",
     "actions": "Aktionen",
@@ -176,9 +176,9 @@
   "sshKeyForm": {
     "label": "Bezeichnung",
     "labelPlaceholder": "z. B. GitHub-Deploy-Key",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "Öffentlichen Schlüssel kopieren",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "Privaten Schlüssel kopieren",
     "downloadPublicKey": "Öffentlichen Schlüssel herunterladen",
     "downloadPrivateKey": "Privaten Schlüssel herunterladen",
@@ -291,6 +291,13 @@
     "features": {
       "stats": {
         "detail": "Dein Schreiben, deine Serien und Tracker im Zeitverlauf"
+      },
+      "graph": {
+        "detail": "Deine Notiz-Links, intelligenten Brücken und Knotenpunkte als interaktive Karte"
+      },
+      "placesMap": {
+        "label": "Karte der Orte",
+        "detail": "Notizen, Tagebucheinträge und Kontakte auf einer privaten Karte markiert"
       },
       "trackers": {
         "detail": "Stimmung, Gewohnheiten, Faktoren und Medikamente"

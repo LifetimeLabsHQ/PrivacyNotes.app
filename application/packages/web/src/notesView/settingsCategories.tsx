@@ -37,8 +37,11 @@ import { setDeviceLabel } from '../deviceLabels';
 import type { ThemeBuilderTarget } from './useThemeBuilder';
 import type { UpgradeTrigger } from '../UpgradeModal';
 import type { FeedsControl } from '../calendarFeedUI';
+import type { VaultStorageBreakdown } from '../vaultStorage';
+import type { SupabaseClient } from '@notes/shared';
 
 export const StatsModal = lazyModal(() => import('../StatsModal').then((m) => m.StatsModal));
+export const GraphModal = lazyModal(() => import('../graph/GraphModal').then((m) => m.GraphModal));
 export const AboutModal = lazyModal(() => import('../AboutModal').then((m) => m.AboutModal));
 const HotkeysPane = lazyModal(() => import('../HotkeysPane').then((m) => m.HotkeysPane));
 export const FeedbackModal = lazyModal(() => import('../FeedbackModal').then((m) => m.FeedbackModal));
@@ -56,6 +59,7 @@ export const PicturePicker = lazyModal(() => import('../PicturePicker').then((m)
 export const SettingsShell = lazyModal(() => import('../SettingsWindow').then((m) => m.SettingsWindow));
 export const AppearanceSheet = lazyModal(() => import('../AppearanceSheet').then((m) => m.AppearanceSheet));
 const ImagesSheet = lazyModal(() => import('../ImagesSheet').then((m) => m.ImagesSheet));
+const StorageUsagePane = lazyModal(() => import('../StorageUsagePane').then((m) => m.StorageUsagePane));
 const LanguageSheet = lazyModal(() => import('../LanguageSheet').then((m) => m.LanguageSheet));
 const DateSheet = lazyModal(() => import('../LanguageSheet').then((m) => m.DateSheet));
 const CalendarSettings = lazyModal(() => import('../CalendarSettings').then((m) => m.CalendarSettings));
@@ -153,6 +157,14 @@ export function buildSettingsCategories({
   formatBarBoard,
   calendarFeeds,
   storageLimitBytes,
+  vaultStorage,
+  displayStorageUsedBytes,
+  storageReport,
+  onResolveStorageImageSizes,
+  onOpenTrashFromSettings,
+  onOpenFilesFromSettings,
+  supabase,
+  onRefreshStorage,
   updateAvailable,
 }: {
   t: TFunction;
@@ -234,6 +246,22 @@ export function buildSettingsCategories({
   calendarFeeds: FeedsControl;
   /** The account's total storage limit in bytes, for the Images live preview. */
   storageLimitBytes?: number;
+  /** Local vault storage breakdown shown on Settings > Storage > Usage and
+   *  used as the headline ring figure on Settings > Storage. */
+  vaultStorage: VaultStorageBreakdown;
+  /** Display byte total for the Storage ring (falls back to server quota until
+   *  initial sync lands). */
+  displayStorageUsedBytes?: number;
+  /** Server + local storage totals for ID & Sync's Support report. */
+  storageReport?: { serverNotesBytes: number; serverFilesBytes: number; localBytes?: number };
+  /** Resolve any uncached remote image sizes when Storage > Usage opens. */
+  onResolveStorageImageSizes?: () => void;
+  /** Navigate to Trash or Files from Settings > Storage > Usage. */
+  onOpenTrashFromSettings?: () => void;
+  onOpenFilesFromSettings?: () => void;
+  /** Supabase client + quota refresh for inspecting/clearing removed files in Note History. */
+  supabase: SupabaseClient;
+  onRefreshStorage?: () => void;
   /** Outstanding desktop/direct-APK update version, for the About row's dot. */
   updateAvailable?: string | null;
 }): SettingsCategory[] {
@@ -402,19 +430,43 @@ export function buildSettingsCategories({
               render: ({ initialTab, navigate }) => (
                 <StoragePane
                   initialTab={initialTab}
-                  storage={(openImages) => (
+                  storage={({ openUsage, openImages }) => (
                     <SyncOptionsModal
                       embedded
                       tab="storage"
                       onSyncNow={runSync}
                       onOpenNote={onOpenNote}
                       onOpenImageSettings={openImages}
+                      onOpenUsage={openUsage}
+                      vaultUsedBytes={displayStorageUsedBytes}
+                      localStorageBytes={vaultStorage.totalBytes}
+                      storageReport={storageReport}
                       onOpenSync={() => navigate('me', 'overview')}
                       onClose={() => setShowSettings(false)}
                       onOpenUpgrade={() => { setShowSettings(false); setShowUpgrade({ trigger: 'storage' }); }}
                       onSignOut={handleSignOutClick}
                     />
                   )}
+                  usage={
+                    <StorageUsagePane
+                      breakdown={vaultStorage}
+                      maxBytes={auth.localOnly ? null : (storageLimitBytes ?? (proUnlocked(auth.isPro) ? 500_000_000 : 50_000_000))}
+                      isPro={auth.isPro}
+                      localOnly={auth.localOnly === true}
+                      onOpenNote={onOpenNote}
+                      onOpenTrash={onOpenTrashFromSettings}
+                      onOpenFiles={onOpenFilesFromSettings}
+                      onResolveImageSizes={onResolveStorageImageSizes}
+                      historyContext={{
+                        supabase,
+                        pubkey: auth.pubkey,
+                        encryptionKey: auth.encryptionKey,
+                        imageStore: imageStoreRef.current,
+                        onSyncBeforeClear: runSync,
+                        onCleared: onRefreshStorage,
+                      }}
+                    />
+                  }
                   images={
                     <ImagesSheet
                       spaceSaver={userSettings.imageSpaceSaver}
@@ -619,6 +671,8 @@ export function buildSettingsCategories({
                   initialMeSection={initialTab === 'dms' ? 'dms' : undefined}
                   onSyncNow={runSync}
                   onOpenNote={onOpenNote}
+                  localStorageBytes={vaultStorage.totalBytes}
+                  storageReport={storageReport}
                   onOpenSync={() => navigate('me', 'overview')}
                   onOpenAutoBackup={() => navigate('backup', 'automatic')}
                   autoVerify={settingsAutoVerify}

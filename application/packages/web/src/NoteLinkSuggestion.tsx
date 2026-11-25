@@ -32,6 +32,7 @@ import { noteLinkKey, noteLinkTarget, resolveNoteLinkMatches } from './noteLinks
 import { headingsFromDoc, uniqueHeadings, type NoteHeadingsAnswer } from './noteHeadings';
 import { placeAtCaret } from './usePopoverPosition';
 import { OverflowTip } from './OverflowTip';
+import { Divider, SuggestionItem, SuggestionPopup } from './ui';
 
 /* ------------------------------------------------------------------ */
 /* Note titles provider - set from NotesView                          */
@@ -140,13 +141,13 @@ interface SuggestionListRef {
  * inserts `[[Note#Heading]]`; an `info` row says why a note lists no
  * headings and inserts nothing of its own.
  */
-type SuggestionItem =
+type LinkSuggestionEntry =
   | { kind: 'note'; id: string; title: string }
   | { kind: 'heading'; id: string; title: string; level: number; target: string; note: string }
   | { kind: 'info'; id: string; title: string; note: string };
 
 interface SuggestionListProps {
-  items: SuggestionItem[];
+  items: LinkSuggestionEntry[];
   query: string;
   command: (item: { target: string }) => void;
 }
@@ -167,7 +168,7 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
     }, [selectedIndex]);
 
     const headingMode = items.length > 0 && items[0]!.kind !== 'note';
-    const pick = (item: SuggestionItem | undefined) => {
+    const pick = (item: LinkSuggestionEntry | undefined) => {
       // A title can hold `|` or `]` ("Recipes | 2024"), which the link syntax
       // reads as its label or its end; the importers write the same target.
       if (item?.kind === 'note') command({ target: noteLinkTarget(item.title) });
@@ -205,11 +206,11 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
 
     if (items.length === 0 && !showCreate) {
       return (
-        <div className="z-50 w-64 max-w-[calc(100vw-16px)] rounded-lg border border-divider bg-surface-2 shadow-lg overflow-hidden">
+        <SuggestionPopup className="z-50 w-64 max-w-[calc(100vw-16px)]">
           <div className="px-3 py-2 text-body text-pn-muted">
             {t('noteLinkSuggestion.noMatches')}
           </div>
-        </div>
+        </SuggestionPopup>
       );
     }
 
@@ -219,32 +220,25 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
       const top = Math.min(...items.map((i) => (i.kind === 'heading' ? i.level : 1)));
       const headingsLabel = t('noteLinkSuggestion.headingsIn', { title: 'note' in first ? first.note : '' });
       return (
-        <div
+        <SuggestionPopup
           ref={listRef}
-          className="z-50 min-w-[min(18rem,calc(100vw-16px))] w-max max-w-[min(32rem,calc(100vw-16px))] max-h-64 overflow-y-auto rounded-lg border border-divider bg-surface-2 shadow-lg"
+          className="z-50 min-w-[min(18rem,calc(100vw-16px))] w-max max-w-[min(32rem,calc(100vw-16px))]"
         >
           <OverflowTip text={headingsLabel} className="block">
-            <div className="px-3 pt-2 pb-1 text-small text-pn-muted truncate" dir="auto">
+            <div className="px-3 pt-1 pb-1 text-small text-pn-muted truncate" dir="auto">
               {headingsLabel}
             </div>
           </OverflowTip>
           {items.map((item, index) =>
             item.kind === 'heading' ? (
               <OverflowTip key={item.id} text={item.title} className="block">
-                <button
-                  type="button"
-                  data-selected={index === selectedIndex}
-                  onClick={() => pick(item)}
+                <SuggestionItem
+                  active={index === selectedIndex}
+                  onSelect={() => pick(item)}
                   onMouseEnter={() => setSelectedIndex(index)}
                   style={{ paddingInlineStart: `${12 + (item.level - top) * 12}px` }}
-                  className={`block w-full text-start pe-3 py-1.5 text-body truncate transition ${
-                    index === selectedIndex
-                      ? 'bg-accent/10 text-accent-strong dark:bg-accent/20'
-                      : 'text-pn hover:bg-pn/5'
-                  }`}
-                >
-                  {highlightMatch(item.title, filter)}
-                </button>
+                  label={highlightMatch(item.title, filter)}
+                />
               </OverflowTip>
             ) : (
               <div key={item.id} className="px-3 py-2 text-body text-pn-muted">
@@ -252,53 +246,39 @@ const SuggestionList = forwardRef<SuggestionListRef, SuggestionListProps>(
               </div>
             ),
           )}
-        </div>
+        </SuggestionPopup>
       );
     }
 
     return (
-      <div
+      <SuggestionPopup
         ref={listRef}
-        className="z-50 min-w-[min(18rem,calc(100vw-16px))] w-max max-w-[min(32rem,calc(100vw-16px))] max-h-64 overflow-y-auto rounded-lg border border-divider bg-surface-2 shadow-lg"
+        className="z-50 min-w-[min(18rem,calc(100vw-16px))] w-max max-w-[min(32rem,calc(100vw-16px))]"
       >
         {items.map((item, index) => (
           <OverflowTip key={item.id} text={item.title} className="block">
-            <button
-              type="button"
-              data-selected={index === selectedIndex}
-              onClick={() => pick(item)}
+            <SuggestionItem
+              active={index === selectedIndex}
+              onSelect={() => pick(item)}
               onMouseEnter={() => setSelectedIndex(index)}
-              className={`block w-full text-start px-3 py-2 text-body truncate transition ${
-                index === selectedIndex
-                  ? 'bg-accent/10 text-accent-strong dark:bg-accent/20'
-                  : 'text-pn hover:bg-pn/5'
-              }`}
-            >
-              {highlightMatch(item.title, query)}
-            </button>
+              className="py-2"
+              label={highlightMatch(item.title, query)}
+            />
           </OverflowTip>
         ))}
         {showCreate && (
           <>
-            {items.length > 0 && (
-              <div className="border-t border-divider" />
-            )}
-            <button
-              type="button"
-              data-selected={selectedIndex === items.length}
-              onClick={() => command({ target: query.trim() })}
+            {items.length > 0 && <Divider />}
+            <SuggestionItem
+              active={selectedIndex === items.length}
+              onSelect={() => command({ target: query.trim() })}
               onMouseEnter={() => setSelectedIndex(items.length)}
-              className={`w-full text-start px-3 py-2 text-body transition ${
-                selectedIndex === items.length
-                  ? 'bg-accent/10 text-accent-strong dark:bg-accent/20'
-                  : 'text-pn-muted hover:bg-pn/5'
-              }`}
-            >
-              {t('noteLinkSuggestion.create', { query: query.trim() })}
-            </button>
+              className={`py-2${selectedIndex === items.length ? '' : ' text-pn-muted'}`}
+              label={t('noteLinkSuggestion.create', { query: query.trim() })}
+            />
           </>
         )}
-      </div>
+      </SuggestionPopup>
     );
   }
 );
@@ -338,7 +318,7 @@ export function allowNoteLinkSuggestion(state: EditorState, from: number): boole
  * Called from WikiLink.addProseMirrorPlugins().
  */
 export function wikiLinkSuggestion(editor: Editor): ReturnType<typeof Suggestion> {
-  const options: SuggestionOptions<SuggestionItem, { target: string }> = {
+  const options: SuggestionOptions<LinkSuggestionEntry, { target: string }> = {
     pluginKey: new PluginKey('wikiLinkSuggestion'),
     editor,
     char: '[[',
@@ -351,7 +331,7 @@ export function wikiLinkSuggestion(editor: Editor): ReturnType<typeof Suggestion
       const headings = headingItems(editor, query);
       if (headings) return headings;
       const titles = getNoteTitles(editor);
-      const asItem = (e: NoteTitleEntry): SuggestionItem => ({ kind: 'note', id: e.id, title: e.title });
+      const asItem = (e: NoteTitleEntry): LinkSuggestionEntry => ({ kind: 'note', id: e.id, title: e.title });
       if (!query) return titles.slice(0, 20).map(asItem);
       return ranked(titles, query, (e) => e.title).slice(0, 20).map(asItem);
     },
@@ -377,12 +357,12 @@ export function wikiLinkSuggestion(editor: Editor): ReturnType<typeof Suggestion
       let dismissed = false;
 
       return {
-        onStart(props: SuggestionProps<SuggestionItem, { target: string }>) {
+        onStart(props: SuggestionProps<LinkSuggestionEntry, { target: string }>) {
           dismissed = false;
           mount(props);
         },
 
-        onUpdate(props: SuggestionProps<SuggestionItem, { target: string }>) {
+        onUpdate(props: SuggestionProps<LinkSuggestionEntry, { target: string }>) {
           // The suggestion stays active across a lost focus while the dropdown
           // does not, so an update can arrive with nothing on screen. It has to
           // be rebuilt, not re-propped: on Android a backspace blurs and
@@ -418,7 +398,7 @@ export function wikiLinkSuggestion(editor: Editor): ReturnType<typeof Suggestion
         },
       };
 
-      function mount(props: SuggestionProps<SuggestionItem, { target: string }>) {
+      function mount(props: SuggestionProps<LinkSuggestionEntry, { target: string }>) {
         component = new ReactRenderer(SuggestionList, {
           props: {
             items: props.items,
@@ -483,7 +463,7 @@ function ranked<T>(list: readonly T[], query: string, text: (item: T) => string)
  * the query is still a note name. A title that starts with the whole query
  * keeps the note list, so `C# t` still finds the note "C# tips".
  */
-function headingItems(editor: Editor, query: string): SuggestionItem[] | null {
+function headingItems(editor: Editor, query: string): LinkSuggestionEntry[] | null {
   if (!query.includes('#')) return null;
   const match = textMatcher(query);
   if (getNoteTitles(editor).some((e) => match(e.title)?.start === 0)) return null;

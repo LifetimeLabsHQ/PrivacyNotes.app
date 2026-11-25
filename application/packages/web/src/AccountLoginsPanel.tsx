@@ -9,6 +9,7 @@ import { ConnectedAccounts, ProviderLabel, type ConnectedAccountProvider } from 
 import { mfaSessionIdentity } from './sessionWriteGuard';
 import { isDemoMode } from './demo';
 import { SETTINGS_HELP, SectionEyebrow } from './settingsUI';
+import { Badge, Button, StatusLine, TextField } from './ui';
 
 const PROVIDERS: ConnectedAccountProvider[] = ['google', 'apple', 'github'];
 
@@ -112,7 +113,7 @@ function RealAccountLoginsPanel({ onOpenCustody, onOpenPhrase, autoFocus }: { on
         <div className="divide-y divide-divider rounded-md border border-divider">
           {PROVIDERS.map((provider) => <div key={provider} className="flex items-center justify-between gap-2 p-3">
             <ProviderLabel provider={provider} detail={signedIn.provider === provider ? signedIn.email || t('connectedAccounts.emailHidden') : undefined} />
-            {signedIn.provider === provider && <span className="shrink-0 text-small text-accent">{t('connectedAccounts.signedInNow')}</span>}
+            {signedIn.provider === provider && <Badge tone="info">{t('connectedAccounts.signedInNow')}</Badge>}
           </div>)}
         </div>
         {!signedIn.provider && <p className={SETTINGS_HELP}>{t('connectedAccounts.signedInPhrase')}</p>}
@@ -137,20 +138,26 @@ function RealAccountLoginsPanel({ onOpenCustody, onOpenPhrase, autoFocus }: { on
       }} onOpenCustody={onOpenCustody} onOpenPhrase={onOpenPhrase}
     />}
     {connection && <div className="rounded-md border border-divider bg-track p-3 space-y-3">
-      <p role="status" className={SETTINGS_HELP}>{t('connectedAccounts.connectWaiting')}</p>
+      <StatusLine busy>{t('connectedAccounts.connectWaiting')}</StatusLine>
       {(connection.platform === 'desktop' || connection.platform === 'web') && <form className="space-y-2"
         onSubmit={(event) => { event.preventDefault(); setInvalidReturn(!connection.acceptReturn(returnUrl.trim())); }}>
-        <label className="block text-small text-pn-soft">
-          {t('connectedAccounts.returnLink')}
-          <input type="text" value={returnUrl} dir="ltr" maxLength={16384} autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false}
-            onChange={(event) => { setReturnUrl(event.target.value); setInvalidReturn(false); }}
-            className="mt-1 w-full rounded-md border border-divider bg-surface-1 px-3 py-2 text-body text-pn" />
-        </label>
-        <p className={SETTINGS_HELP}>{t('connectedAccounts.returnHelp')}</p>
-        {invalidReturn && <p role="alert" className="text-small text-danger">{t('connectedAccounts.invalidReturn')}</p>}
-        <button type="submit" disabled={!returnUrl.trim()} className="text-body text-accent disabled:opacity-40">{t('connectedAccounts.finishConnection')}</button>
+        <TextField
+          label={t('connectedAccounts.returnLink')}
+          hint={t('connectedAccounts.returnHelp')}
+          error={invalidReturn ? t('connectedAccounts.invalidReturn') : undefined}
+          type="text"
+          value={returnUrl}
+          dir="ltr"
+          maxLength={16384}
+          autoComplete="off"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          onChange={(event) => { setReturnUrl(event.target.value); setInvalidReturn(false); }}
+        />
+        <Button action="confirm" variant="primary" type="submit" disabled={!returnUrl.trim()}>{t('connectedAccounts.finishConnection')}</Button>
       </form>}
-      <button type="button" className="text-body text-accent" onClick={() => controller.current?.abort()}>{t('connectedAccounts.cancelConnection')}</button>
+      <Button action="cancel" onClick={() => controller.current?.abort()}>{t('connectedAccounts.cancelConnection')}</Button>
     </div>}
   </div>;
 }

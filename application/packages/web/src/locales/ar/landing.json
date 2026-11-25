@@ -344,7 +344,7 @@
     "extensionKeyLogin": "تعبئة بيانات تسجيل الدخول لهذا الموقع",
     "extensionKeyBookmark": "إضافة إشارة مرجعية لهذه الصفحة",
     "extensionAria": "تثبيت الإضافة في {{name}}",
-    "extensionNote": "على أجهزة الكمبيوتر فقط."
+    "extensionNote": "تعمل في أي متصفح مبني على Chromium أو Firefox. على أجهزة الكمبيوتر فقط."
   },
   "ctaRepeat": {
     "getStarted": "البدء"

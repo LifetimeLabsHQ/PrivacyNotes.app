@@ -596,7 +596,7 @@ export function MarkdownListPane({
                 {/* Amber, the same `text-label` the
                     rail gives its folder glyphs - the app's "this is on your own
                     disk" colour. Accent blue here made it read as a control. */}
-                <Folder className="text-amber-600/90 dark:text-amber-500/90 shrink-0" />
+                <Folder className="text-label shrink-0" />
                 {/* Full-strength text at 13px: which folder is open is the
                     load-bearing fact of this whole pillar - it is what every
                     edit writes into - and at 12px it was the smallest thing in

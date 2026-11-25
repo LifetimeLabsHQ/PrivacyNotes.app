@@ -44,7 +44,7 @@ import {
 } from './theme';
 import { allLocalFonts, canListAllFonts, fontInstalled, installedCandidates } from './localFonts';
 import { intlLocale } from './languages';
-import { IconUpgrade, ProMark, type UpgradeTrigger } from './UpgradeModal';
+import type { UpgradeTrigger } from './UpgradeModal';
 import { proUnlocked } from './demo';
 import { PencilSimpleSlash, ArrowCounterClockwise, Folder, Intersect, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, ClockCounterClockwise, Layout, Tabs, Paragraph, Hash, LinkSimple, Eye, Brain, TextAa, ListNumbers, ListChecks, Check, ListMagnifyingGlass, CheckSquare, Confetti, CircleHalf, PaintBucket, Sun, Moon, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, BoxArrowDown, MapPin, PILLAR_GLYPHS, type Icon } from './icons';
 import { setLineNumbersPref, useLineNumbersPref } from './editorPrefs';
@@ -52,7 +52,7 @@ import type { BUILTIN_THEME_CODES } from './builtinThemeCodes';
 import type { CustomThemes } from './customThemes';
 import type { ThemeGalleryCtx } from './customThemeUI';
 import type { ThemeBuilderTarget } from './notesView/useThemeBuilder';
-import { CardMenuButton, ProCorner, QuickCorner, QuickStarButton } from './ThemeCardMenuButton';
+import { CardMenuButton, QuickStarButton } from './ThemeCardMenuButton';
 import { QUICK_THEMES_MAX, quickThemesFor, restoreQuickThemes, toggleQuickTheme, useQuickThemeMarks } from './quickThemes';
 import { ContextMenu, useContextMenu, type ContextMenuItem } from './ContextMenu';
 import { DRAG_SOURCE, DropLine, halfOf, nearestRow, usePointerReorder } from './ui';
@@ -67,7 +67,7 @@ const ThemePasteField = lazyPart(() => import('./customThemeUI').then((m) => m.T
 const FormatBarBoard = lazyPart(() => import('./FormatBarBoard').then((m) => m.FormatBarBoard));
 // Loads the model code only when the Behavior tab opens: off the boot path.
 import { exemptOpts } from './i18nExempt';
-import { AccentBar, DeviceOnlyTip, EYEBROW_ICON_ROW, EyebrowGlyph, HeadlineRule, ROW_TITLE, ResetDefaultsButton, RowTitle, SectionEyebrow, SETTINGS_BTN, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_SELECT, SettingsTabStrip, settingsTabClass, SETTINGS_TRACK } from './settingsUI';
+import { AccentBar, DeviceOnlyTip, EYEBROW_ICON_ROW, EyebrowGlyph, HeadlineRule, ROW_TITLE, ResetDefaultsButton, RowTitle, SectionEyebrow, SETTINGS_BTN, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_SELECT, SettingsTabStrip, settingsSegClass, settingsTabClass, SETTINGS_TRACK } from './settingsUI';
 import { Switch } from './Switch';
 import { pluginsShown, useMeaningState } from './onDeviceAi';
 import { canReadPosition } from './currentPosition';
@@ -82,7 +82,7 @@ import { ViewMenu } from './ViewMenu';
 import type { View } from './views';
 import { defaultSettings, isShownInAll, type BindSetting } from './userSettings';
 import { NOTE_COLOR_CHOICES, NOTE_COLOR_LABEL, noteColorChoice, type NoteColorChoice } from './itemStyles';
-import { Button, CloseButton, Popover } from './ui';
+import { Button, CloseButton, IconUpgrade, Popover, ProMark, ThemeSwatchCard } from './ui';
 import { NoteColorExample } from './looks/NoteColorExample';
 import { usePaneTab } from './settingsPaneTab';
 import { clearToolbarTab, readToolbarTab } from './toolbarSettingsTab';
@@ -436,16 +436,6 @@ function IconWord({ icon: Glyph, children }: { icon: Icon; children?: ReactNode 
   );
 }
 
-/** Segmented-control option states, shared by both layouts. */
-const SEG_ACTIVE = 'bg-surface-2 shadow-sm text-pn font-semibold';
-const SEG_IDLE = 'text-pn-soft hover:text-pn font-medium';
-/**
- * Option width inside a segmented track, embedded pane only: the options
- * split the track evenly while the row is stacked (narrow), and shrink back
- * to hugging their labels once the row is one line (lg and up).
- */
-const SEG_FILL = 'flex-1 px-3 lg:flex-none';
-
 export type AppearancePane = 'design' | 'editor' | 'formatBar' | 'lists';
 
 /**
@@ -745,40 +735,33 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     // Badge only - keyed off isPro, not themesUnlocked, so the demo still
     // shows which palettes are Pro while using them.
     const locked = !isPro && !FREE_THEMES.has(ct);
-    const [c1, c2, c3] = themeSwatch(ct, mode === 'dark');
-    const card = (
-      <button
-        key={`${mode}-${ct}`}
-        type="button"
-        onClick={() => handleThemeClick(mode, ct)}
-        aria-pressed={active}
-        className={`w-full min-w-0 rounded-lg border transition flex flex-col items-center ${compact ? 'p-1.5 gap-1' : 'p-2 gap-1.5'} ${
-          active ? 'border-accent ring-1 ring-accent/30' : 'border-divider hover:border-pn-muted'
-        }`}
-      >
-        <span className={`relative w-full ${compact ? 'h-6' : 'h-9'} rounded overflow-hidden flex`}>
-          <span className="flex-1" style={{ backgroundColor: c1 }} />
-          <span className="flex-1" style={{ backgroundColor: c2 }} />
-          <span className="flex-1" style={{ backgroundColor: c3 }} />
-          {locked && <ProCorner />}
-          {!compact && !onOpenThemeBuilder && quickMarks[mode].includes(ct) && <QuickCorner />}
-        </span>
-        <span className={`${compact ? 'text-meta' : 'text-meta'} font-medium text-pn-muted flex items-center gap-1 max-w-full`}>
-          <span className="line-clamp-2 text-center break-words">{THEME_DISPLAY_NAME[ct]}</span>
-        </span>
-      </button>
-    );
-    if (compact || !onOpenThemeBuilder) return card;
+    const name = THEME_DISPLAY_NAME[ct];
+    const showActions = !compact && !!onOpenThemeBuilder;
     return (
-      <div key={`${mode}-${ct}`} className="group/card relative min-w-0">
-        {card}
-        <QuickStarButton
-          name={THEME_DISPLAY_NAME[ct]}
-          marked={quickMarks[mode].includes(ct)}
-          onToggle={() => starTheme(mode, ct)}
-        />
-        <CardMenuButton name={THEME_DISPLAY_NAME[ct]} onClick={(e) => openBuiltinMenu(e, mode, ct)} />
-      </div>
+      <ThemeSwatchCard
+        key={`${mode}-${ct}`}
+        name={name}
+        colors={themeSwatch(ct, mode === 'dark')}
+        active={active}
+        compact={compact}
+        pro={locked}
+        proLabel={t('appearance.custom.proTheme')}
+        quick={!compact && !onOpenThemeBuilder && quickMarks[mode].includes(ct)}
+        quickLabel={t('appearance.quickMenuMarked')}
+        onClick={() => handleThemeClick(mode, ct)}
+        actions={
+          showActions ? (
+            <>
+              <QuickStarButton
+                name={name}
+                marked={quickMarks[mode].includes(ct)}
+                onToggle={() => starTheme(mode, ct)}
+              />
+              <CardMenuButton name={name} onClick={(e) => openBuiltinMenu(e, mode, ct)} />
+            </>
+          ) : undefined
+        }
+      />
     );
   }
 
@@ -844,11 +827,10 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   const modeButtons = THEME_MODES.map((mode) => (
     <button
       key={mode}
+      type="button"
       onClick={() => handleModeClick(mode)}
       aria-pressed={themeMode === mode}
-      className={`${embedded ? SEG_FILL : 'flex-1'} inline-flex items-center justify-center gap-1.5 text-small py-1.5 rounded transition ${
-        themeMode === mode ? SEG_ACTIVE : SEG_IDLE
-      }`}
+      className={`${settingsSegClass(themeMode === mode, !embedded)} inline-flex items-center justify-center gap-1.5`}
     >
       {mode === 'auto' && <Sparkle />}
       {mode === 'auto'
@@ -864,6 +846,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   const textSizeButtons = TEXT_SIZES.map((size) => (
     <button
       key={size}
+      type="button"
       onClick={() => {
         setTextSize(size);
         revealExample();
@@ -873,9 +856,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
       title={t(TEXT_SIZE_LABEL[size])}
       // A sample of the size, not text: outside the type roles.
       data-type-exempt=""
-      className={`${embedded ? 'flex-1 lg:flex-none lg:w-9' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded transition ${TEXT_SIZE_GLYPH[size]} ${
-        textSize === size ? SEG_ACTIVE : SEG_IDLE
-      }`}
+      className={`${settingsSegClass(textSize === size, !embedded)} ${embedded ? '!px-0 lg:w-9' : '!px-2'} inline-flex items-center justify-center ${TEXT_SIZE_GLYPH[size]}`}
     >
       A
     </button>
@@ -886,11 +867,10 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   const contentWidthButtons = CONTENT_WIDTHS.map((w) => (
     <button
       key={w}
+      type="button"
       onClick={() => setContentWidth(w)}
       aria-pressed={contentWidth === w}
-      className={`${embedded ? 'flex-1 lg:flex-none lg:px-3' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded text-small transition ${
-        contentWidth === w ? SEG_ACTIVE : SEG_IDLE
-      }`}
+      className={`${settingsSegClass(contentWidth === w, !embedded)} inline-flex items-center justify-center`}
     >
       {t(CONTENT_WIDTH_LABEL[w])}
     </button>
@@ -903,14 +883,13 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   const lineSpacingButtons = LINE_SPACINGS.map((sp) => (
     <button
       key={sp}
+      type="button"
       onClick={() => {
         onLineSpacingChange(sp);
         revealExample();
       }}
       aria-pressed={lineSpacing === sp}
-      className={`${embedded ? 'flex-1 lg:flex-none lg:px-3' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded text-small transition ${
-        lineSpacing === sp ? SEG_ACTIVE : SEG_IDLE
-      }`}
+      className={`${settingsSegClass(lineSpacing === sp, !embedded)} inline-flex items-center justify-center`}
     >
       {t(LINE_SPACING_LABEL[sp])}
     </button>
@@ -919,14 +898,13 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   const noteColorButtons = NOTE_COLOR_CHOICES.map((c) => (
     <button
       key={c}
+      type="button"
       onClick={() => {
         onNoteColorsChange(c);
         if (embedded) setNoteExampleOpen(true);
       }}
       aria-pressed={noteColors === c}
-      className={`${embedded ? 'flex-1 lg:flex-none lg:px-3' : 'flex-auto'} inline-flex items-center justify-center py-1.5 rounded text-small transition ${
-        noteColors === c ? SEG_ACTIVE : SEG_IDLE
-      }`}
+      className={`${settingsSegClass(noteColors === c, !embedded)} inline-flex items-center justify-center`}
     >
       {t(NOTE_COLOR_LABEL[c])}
     </button>
@@ -994,25 +972,22 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
               <RowTitle icon={Palette}>{t('common:palette.groups.themes')}</RowTitle>
               {onOpenThemeBuilder && (
                 <div className="flex flex-wrap items-center gap-2 text-body">
-                  <button
-                    type="button"
+                  <Button
+                    icon={<Plus aria-hidden="true" />}
                     onClick={() => onOpenThemeBuilder({})}
-                    className="inline-flex items-center gap-1.5 rounded-md border border-divider px-3 py-1.5 font-medium text-pn-soft hover:text-pn hover:border-pn-muted transition"
                   >
-                    <Plus aria-hidden="true" /> {t('settings:appearance.custom.builderNew')}
+                    {t('settings:appearance.custom.builderNew')}
                     {!isPro && <IconUpgrade size={12} />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPasteOpen((open) => !open)}
+                  </Button>
+                  <Button
+                    icon={<ClipboardText aria-hidden="true" />}
                     aria-expanded={pasteOpen}
-                    className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 font-medium transition ${
-                      pasteOpen ? 'border-accent text-pn' : 'border-divider text-pn-soft hover:text-pn hover:border-pn-muted'
-                    }`}
+                    onClick={() => setPasteOpen((open) => !open)}
+                    className={pasteOpen ? '!border-accent !text-pn' : undefined}
                   >
-                    <ClipboardText aria-hidden="true" /> {t('appearance.custom.pasteCode')}
+                    {t('appearance.custom.pasteCode')}
                     {!isPro && <IconUpgrade size={12} />}
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -1216,16 +1191,15 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             <RowTitle icon={TextAa} hint={<DeviceOnlyTip />}>{t('appearance.noteFontTitle')}</RowTitle>
             <p className={`${SETTINGS_HELP} mt-0.5`}>{t('appearance.noteFontDesc')}</p>
           </div>
-          <div className={track}>
+          <div role="group" aria-label={t('appearance.noteFontTitle')} className={track}>
             {NOTE_FONTS.map((font) => (
               <button
                 key={font}
+                type="button"
                 onClick={() => setNoteFont(font)}
                 aria-pressed={noteFont === font}
                 style={{ fontFamily: noteFontStack(font, customFonts) }}
-                className={`${SEG_FILL} text-small py-1.5 rounded transition ${
-                  noteFont === font ? SEG_ACTIVE : SEG_IDLE
-                }`}
+                className={settingsSegClass(noteFont === font)}
               >
                 {t(`editor:font.families.${font}`)}
               </button>
@@ -1248,18 +1222,17 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             <RowTitle icon={ListNumbers}>{t('appearance.nestedNumbersTitle')}</RowTitle>
             <p className={`${SETTINGS_HELP} mt-0.5`}>{t('appearance.nestedNumbersDesc')}</p>
           </div>
-          <div className={track}>
+          <div role="group" aria-label={t('appearance.nestedNumbersTitle')} className={track}>
             {NESTED_NUMBERS.map((style) => (
               <button
                 key={style}
+                type="button"
                 onClick={() => {
                   onNestedNumbersChange(style);
                   if (embedded) setNumbersExampleOpen(true);
                 }}
                 aria-pressed={nestedNumbers === style}
-                className={`${SEG_FILL} text-small py-1.5 rounded transition ${
-                  nestedNumbers === style ? SEG_ACTIVE : SEG_IDLE
-                }`}
+                className={settingsSegClass(nestedNumbers === style)}
               >
                 {t(style === 'flat' ? 'appearance.nestedNumbersFlat' : 'appearance.nestedNumbersOutline')}
               </button>
@@ -1320,15 +1293,14 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             <RowTitle icon={PencilLine}>{t('notes:settings.editorLabel')}</RowTitle>
             <p className={helpExplain}>{t('appearance.editorDesc')}</p>
           </div>
-          <div className={track}>
+          <div role="group" aria-label={t('notes:settings.editorLabel')} className={track}>
             {(['formatted', 'markdown'] as const).map((mode) => (
               <button
                 key={mode}
+                type="button"
                 onClick={() => onEditorModeChange(mode)}
                 aria-pressed={editorMode === mode}
-                className={`${SEG_FILL} text-small py-1.5 rounded transition ${
-                  editorMode === mode ? SEG_ACTIVE : SEG_IDLE
-                }`}
+                className={settingsSegClass(editorMode === mode)}
               >
                 {mode === 'formatted' ? t('appearance.editorFormatted') : t('appearance.editorMarkdown')}
               </button>
@@ -1396,15 +1368,14 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             <RowTitle icon={Copy} hint={<DeviceOnlyTip />}>{t('appearance.copyFormatTitle')}</RowTitle>
             <p className={helpExplain}>{t('appearance.copyFormatDesc')}</p>
           </div>
-          <div className={track}>
+          <div role="group" aria-label={t('appearance.copyFormatTitle')} className={track}>
             {(['markdown', 'plain'] as const).map((format) => (
               <button
                 key={format}
+                type="button"
                 onClick={() => setCopyFormat(format)}
                 aria-pressed={copyFormat === format}
-                className={`${SEG_FILL} text-small py-1.5 rounded transition ${
-                  copyFormat === format ? SEG_ACTIVE : SEG_IDLE
-                }`}
+                className={settingsSegClass(copyFormat === format)}
               >
                 {format === 'markdown' ? t('appearance.copyFormatMarkdown') : t('appearance.copyFormatPlain')}
               </button>
@@ -1421,15 +1392,14 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             <RowTitle icon={ClipboardText} hint={<DeviceOnlyTip />}>{t('appearance.pasteFormatTitle')}</RowTitle>
             <p className={helpExplain}>{t('appearance.pasteFormatDesc')}</p>
           </div>
-          <div className={track}>
+          <div role="group" aria-label={t('appearance.pasteFormatTitle')} className={track}>
             {(['formatted', 'plain'] as const).map((format) => (
               <button
                 key={format}
+                type="button"
                 onClick={() => setPasteFormat(format)}
                 aria-pressed={pasteFormat === format}
-                className={`${SEG_FILL} text-small py-1.5 rounded transition ${
-                  pasteFormat === format ? SEG_ACTIVE : SEG_IDLE
-                }`}
+                className={settingsSegClass(pasteFormat === format)}
               >
                 {format === 'formatted' ? t('appearance.pasteFormatFormatted') : t('settings:appearance.copyFormatPlain')}
               </button>
@@ -1637,15 +1607,14 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             <RowTitle icon={Layout}>{t('appearance.viewTitle')}</RowTitle>
             <p className={helpExplain}>{t('appearance.viewDesc')}</p>
           </div>
-          <div className={track}>
+          <div role="group" aria-label={t('appearance.viewTitle')} className={track}>
             {(['auto', 'list', 'grid'] as const).map((mode) => (
               <button
                 key={mode}
+                type="button"
                 onClick={() => onViewModeChange(mode)}
                 aria-pressed={viewMode === mode}
-                className={`${SEG_FILL} inline-flex items-center justify-center gap-1.5 text-small py-1.5 rounded transition ${
-                  viewMode === mode ? SEG_ACTIVE : SEG_IDLE
-                }`}
+                className={`${settingsSegClass(viewMode === mode)} inline-flex items-center justify-center gap-1.5`}
               >
                 {mode === 'list' ? <List /> : mode === 'grid' ? <SquaresFour /> : <Sparkle />}
                 {mode === 'list' ? t('appearance.viewList') : mode === 'grid' ? t('appearance.viewGrid') : t('appearance.viewAuto', exemptOpts('settings:appearance.viewAuto'))}
@@ -1884,24 +1853,20 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
               <div className="px-6 pb-4">
                 {board.previewing ? (
                   <div className="pt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
-                    <button
-                      type="button"
+                    <Button
+                      icon={<ArrowCounterClockwise aria-hidden="true" />}
                       onClick={board.onDiscard}
-                      className="inline-flex items-center gap-1.5 rounded-md border border-divider px-3 py-1.5 text-body font-medium text-pn-soft hover:text-pn transition"
                     >
-                      <ArrowCounterClockwise aria-hidden="true" />
                       {t('editor:formatBar.discard')}
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="upgrade"
+                      icon={<IconUpgrade size={15} />}
                       onClick={board.onKeep}
-                      // The upgrade window's own button colors, so the door and the
-                      // window read as one action.
-                      className="ms-auto inline-flex items-center gap-1.5 rounded-md bg-amber-700 hover:bg-amber-800 px-3 py-1.5 text-body font-semibold text-white transition"
+                      className="ms-auto"
                     >
-                      <IconUpgrade size={15} onFill />
                       {t('editor:formatBar.keepLayout')}
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                   board.locked && <p className="pt-3 text-small text-pn-muted">{t('editor:formatBar.tryIt')}</p>

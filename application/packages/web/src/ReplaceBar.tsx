@@ -5,6 +5,7 @@ import { MagnifyingGlass, ArrowsLeftRight, TextAa, X } from './icons';
 import { HoverLabel } from './HoverLabel';
 import { isImeComposing } from './imeComposing';
 import { BAR_BTN, BAR_INPUT, MatchNav, ReplaceToggle, TEXT_BTN } from './MatchNav';
+import { NO_TEXT_ASSIST } from './formFields';
 import { bindingKeyText, keyText } from './shortcutMatch';
 import {
   setSearchQuery,
@@ -180,7 +181,7 @@ export function ReplaceBar({ editor, focusTick, startQuery, onSwap, swapPro = fa
           onKeyDown={onSearchKeyDown}
           placeholder={t('common:palette.commands.find')}
           aria-label={t('common:palette.commands.find')}
-          spellCheck={false}
+          {...NO_TEXT_ASSIST}
           autoComplete="off"
           className={BAR_INPUT}
         />
@@ -221,7 +222,7 @@ export function ReplaceBar({ editor, focusTick, startQuery, onSwap, swapPro = fa
           onKeyDown={onReplaceKeyDown}
           placeholder={t('find.replacePlaceholder')}
           aria-label={t('find.replaceLabel')}
-          spellCheck={false}
+          {...NO_TEXT_ASSIST}
           autoComplete="off"
           className={BAR_INPUT}
         />

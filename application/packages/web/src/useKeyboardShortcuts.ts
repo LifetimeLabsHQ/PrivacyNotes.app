@@ -9,8 +9,8 @@ import { editorCommands } from './editorCommands';
 import type { LocalNote } from './db';
 import type { View } from './views';
 import {
-  ArrowCounterClockwise, ArrowsLeftRight, ArrowsOutSimple, Browsers, Calendar, CaretLeft, CaretRight, Clock, FunnelSimpleX, Gear,
-  Keyboard, Lightning, ListBullets, MagnifyingGlass, MagnifyingGlassMinus, MagnifyingGlassPlus, MarkdownLogo,
+  ArrowCounterClockwise, ArrowsLeftRight, ArrowsOut, ArrowsOutSimple, Browsers, Calendar, CaretLeft, CaretRight, Clock, FunnelSimpleX, Gear,
+  Graph, Keyboard, Lightning, ListBullets, MagnifyingGlass, MagnifyingGlassMinus, MagnifyingGlassPlus, MarkdownLogo,
   Paragraph, Sidebar, Sun, Trash, X, type IconProps,
 } from './icons';
 
@@ -21,6 +21,13 @@ export interface KeyboardShortcutHandlers {
   // True when Zen is usable: Pro users, or anyone in the public demo (which
   // unlocks it as a teaser). Gates the Cmd+Shift+F shortcut below.
   zenUnlocked: boolean;
+  // Full-screen reading/presenting mode (free, desktop; GitHub #911)
+  fullScreenMode: boolean;
+  canFullScreen: boolean;
+  toggleFullScreen: () => void;
+  exitFullScreen: () => void;
+  // Graph workspace (free; Places lens inside it is Pro).
+  openGraph: () => void;
   onOpenUpgrade: (trigger: string) => void;
 
   // New items
@@ -161,8 +168,8 @@ export function useKeyboardShortcuts(h: KeyboardShortcutHandlers): PaletteRunner
  * Each runs what its key runs (commandPalette.ts).
  */
 export const PALETTE_COMMANDS = [
-  'quickSwitcher', 'historyBack', 'historyForward', 'toggleSidebar', 'toggleTheme', 'openSettings', 'zen',
-  'markdownView', 'invisibles', 'find', 'findReplace', 'outline', 'insertDate', 'insertDateTime', 'clearFilters', 'moveToTrash',
+  'quickSwitcher', 'historyBack', 'historyForward', 'toggleSidebar', 'toggleTheme', 'openSettings', 'graph', 'zen', 'fullScreen',
+  'markdownView', 'invisibles', 'find', 'findReplace', 'outline', 'connections', 'insertDate', 'insertDateTime', 'clearFilters', 'moveToTrash',
   'closeTab', 'nextTab', 'previousTab', 'zoomIn', 'zoomOut', 'zoomReset', 'help',
 ] as const;
 export type PaletteCommand = (typeof PALETTE_COMMANDS)[number];
@@ -182,12 +189,15 @@ export const PALETTE_ICONS = {
   toggleSidebar: Sidebar,
   toggleTheme: Sun,
   openSettings: Gear,
+  graph: Graph,
   zen: ArrowsOutSimple,
+  fullScreen: ArrowsOut,
   markdownView: MarkdownLogo,
   invisibles: Paragraph,
   find: MagnifyingGlass,
   findReplace: ArrowsLeftRight,
   outline: ListBullets,
+  connections: Graph,
   insertDate: Calendar,
   insertDateTime: Clock,
   clearFilters: FunnelSimpleX,
@@ -209,11 +219,14 @@ function commandAvailable(id: PaletteCommand, h: KeyboardShortcutHandlers): bool
     case 'find':
     case 'findReplace':
     case 'outline':
+    case 'connections':
     case 'insertDate':
     case 'insertDateTime':
       return !!editorCommands[id];
     case 'clearFilters':
       return h.hasFilters;
+    case 'fullScreen':
+      return h.fullScreenMode || h.canFullScreen;
     case 'moveToTrash':
       return !!h.selectedId && h.view !== 'trash' && h.view !== 'tasks';
     case 'closeTab':
@@ -238,14 +251,19 @@ function runCommand(id: PaletteCommand, h: KeyboardShortcutHandlers): void {
     case 'toggleSidebar': return h.setSidebarCollapsed((v) => !v);
     case 'toggleTheme': return h.toggleTheme();
     case 'openSettings': return h.setShowSettings(true);
+    case 'graph': return h.openGraph();
     case 'zen':
       if (!h.zenUnlocked) h.onOpenUpgrade('zen');
       else h.setZenMode((z) => !z);
+      return;
+    case 'fullScreen':
+      if (h.fullScreenMode || h.canFullScreen) h.toggleFullScreen();
       return;
     case 'markdownView':
     case 'find':
     case 'findReplace':
     case 'outline':
+    case 'connections':
     case 'insertDate':
     case 'insertDateTime':
       return editorCommands[id]?.();
@@ -307,6 +325,18 @@ function runShortcut(e: KeyboardEvent, h: KeyboardShortcutHandlers): boolean | t
     if (behind) return true;
     if (!h.zenUnlocked) h.onOpenUpgrade('zen');
     else h.setZenMode((z) => !z);
+    return true;
+  }
+
+  if (is('fullScreen')) {
+    if (behind) return true;
+    if (!h.fullScreenMode && !h.canFullScreen) return false;
+    h.toggleFullScreen();
+    return true;
+  }
+
+  if (is('graph')) {
+    if (!behind) h.openGraph();
     return true;
   }
 
@@ -489,6 +519,10 @@ function runShortcut(e: KeyboardEvent, h: KeyboardShortcutHandlers): boolean | t
 }
 
 function runEscape(h: KeyboardShortcutHandlers): boolean {
+  if (h.fullScreenMode) {
+    h.exitFullScreen();
+    return true;
+  }
   if (h.search) {
     h.setSearch('');
     h.searchInputRef.current?.blur();

@@ -1,18 +1,17 @@
 import { VaultFieldAction } from './ui/VaultFieldAction';
-import { Button } from './ui/Button';
+import { Button, PinProtectToggle } from './ui';
 import { VaultFormActions } from './ui/VaultFormActions';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Fingerprint, Globe, Info, Lock, Plus, Shield, Tag, Trash, User } from './icons';
+import { Fingerprint, Globe, Lock, Plus, Shield, Tag, Trash, User } from './icons';
 import { hasPin } from './pin';
-import { PinInfoModal } from './PinInfoModal';
 import { HoverLabel } from './HoverLabel';
 import { useCopyToClipboard } from './clipboard';
 import { parseTotpInput, generateTotpCode, totpSecondsRemaining } from '@notes/shared';
 import { proUnlocked } from './demo';
 import { domainFromUrlString } from './favicon';
 import { PasswordField } from './PasswordText';
-import { FIELD_BUTTON, FIELD_CLASS, FieldLabel } from './formFields';
+import { FIELD_BUTTON, FIELD_CLASS, FieldLabel, NO_TEXT_ASSIST } from './formFields';
 import { NotesField } from './NotesField';
 import { PasswordGeneratorModal } from './PasswordGenerator';
 import type { UpgradeTrigger } from './UpgradeModal';
@@ -82,7 +81,6 @@ export function LoginForm({
   // can appear or vanish while the toggle below is on screen, and
   // localStorage fires nothing that would refresh a frozen value.
   const pinConfigured = hasPin();
-  const [showPinInfo, setShowPinInfo] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showGenerator, setShowGenerator] = useState(false);
   const urlRef = useRef<HTMLInputElement>(null);
@@ -157,6 +155,7 @@ export function LoginForm({
               placeholder="user@example.com"
               disabled={locked}
               autoComplete="off"
+              {...NO_TEXT_ASSIST}
               className={fieldClass}
             />
             <VaultFieldAction kind="copy"
@@ -217,7 +216,7 @@ export function LoginForm({
               placeholder={t('loginForm.totpPlaceholder')}
               disabled={locked}
               autoComplete="off"
-              spellCheck={false}
+              {...NO_TEXT_ASSIST}
               className={`${fieldClass} font-mono`}
             />
             <VaultFieldAction kind="copy"
@@ -267,6 +266,7 @@ export function LoginForm({
               placeholder="https://github.com"
               disabled={locked}
               autoComplete="off"
+              {...NO_TEXT_ASSIST}
               className={fieldClass}
             />
             <VaultFieldAction kind="copy"
@@ -287,6 +287,7 @@ export function LoginForm({
                 placeholder="https://"
                 disabled={locked}
                 autoComplete="off"
+                {...NO_TEXT_ASSIST}
                 aria-label={t('loginForm.websiteLabel')}
                 className={fieldClass}
               />
@@ -324,6 +325,7 @@ export function LoginForm({
                   field={f}
                   types={LOGIN_FIELD_TYPES}
                   locked={locked}
+                  noTextAssist
                   onChange={(patch) => patchField(f.id, patch)}
                   onRemove={() => setFields(extras.fields.filter((x) => x.id !== f.id))}
                   copy={copy}
@@ -357,35 +359,11 @@ export function LoginForm({
         />
 
         {/* PIN-protect toggle */}
-        <label className={`flex items-center gap-2 pt-2 border-t border-divider ${!pinConfigured && !pinProtected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-          <input
-            type="checkbox"
-            checked={pinProtected}
-            onChange={(e) => onPinProtectedChange(noteId, e.target.checked)}
-            // Read-only locks CONTENT, not protection: toggling the PIN gate
-            // changes no data, so it stays available on a locked item.
-            disabled={!pinConfigured && !pinProtected}
-            className="rounded accent-accent"
-          />
-          <span className="text-body text-pn-muted">
-            {t('common:cardForm.requirePin')}
-          </span>
-          <button
-            type="button"
-            onClick={(e) => { e.preventDefault(); setShowPinInfo(true); }}
-            className="text-accent/60 hover:text-accent transition p-1 -m-1"
-            aria-label={t('common:cardForm.whatDoesThisDo')}
-          >
-            <Info />
-          </button>
-        </label>
-
-        {showPinInfo && <PinInfoModal onClose={() => setShowPinInfo(false)} />}
-        {!pinConfigured && !pinProtected && (
-          <p className="text-meta text-pn-muted -mt-2">
-            {t('common:cardForm.setUpPinFirst')}
-          </p>
-        )}
+        <PinProtectToggle
+          checked={pinProtected}
+          pinConfigured={pinConfigured}
+          onChange={(next) => onPinProtectedChange(noteId, next)}
+        />
 
         <VaultFormActions locked={locked} isNew={isNew} saveError={saveError} onSave={onSave} onCancel={onCancel} />
       </div>

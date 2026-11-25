@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useAuth } from './auth';
+import { NO_TEXT_ASSIST } from './formFields';
 import { deleteAccountServer } from './devices';
 import { deleteEntireLocalDatabase } from './notesRepo';
 import { describeOnlyHere, useOnlyOnThisDevice } from './neverBackedUp';
 import { setDeletingAccount } from './sync';
+import { Trash } from './icons';
 import { SectionEyebrow } from './settingsUI';
+import { Button, Callout, Checkbox, TextField } from './ui';
 import { isDemoMode, isDemoOwnedKey } from './demo';
 import { settingsLocalKey } from './settingsLocalKey';
 import { HelpChip } from './HelpChip';
@@ -336,19 +339,20 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
   if (!expanded) {
     return (
       <div>
-        <button
-          type="button"
+        <Button
+          variant="danger"
+          icon={<Trash aria-hidden="true" />}
           onClick={() => setExpanded(true)}
-          className="w-full rounded-md border border-transparent bg-red-500/10 hover:bg-red-500/20 text-danger text-body font-medium px-3 py-1.5 transition"
+          className="w-full"
         >
           {t('danger.deleteCta')}
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="rounded-md border border-red-300 dark:border-red-900/60 p-4 space-y-3">
+    <div className="rounded-md border border-danger/40 bg-danger/5 p-4 space-y-3">
       <SectionEyebrow danger setting="plan.dangerZone">
         {t('danger.heading')}
       </SectionEyebrow>
@@ -360,98 +364,82 @@ export function DangerZone({ onDeleteStarted }: { onDeleteStarted: () => void })
       <HelpChip surface="deleteAccount" />
 
       {blockedByStorageSub && (
-        <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 text-warning text-small leading-relaxed px-3 py-2">
+        <Callout tone="warning">
           {t('danger.blockedByStorage')}
-        </div>
+        </Callout>
       )}
 
-      <label className="flex items-start gap-2 text-body cursor-pointer">
-        <input
-          type="checkbox"
-          checked={effectiveDeleteLocal}
-          onChange={(e) => setDeleteLocal(e.target.checked)}
-          disabled={busy || deleteServer}
-          className="mt-0.5 accent-red-600"
-        />
-        <span className={`${deleteServer && !deleteLocal ? 'text-pn-muted' : 'text-pn-soft'}`}>
-          {t('danger.localLabel')}
-          <span className="block text-small text-pn-soft">
+      <Checkbox
+        checked={effectiveDeleteLocal}
+        onChange={(e) => setDeleteLocal(e.target.checked)}
+        disabled={busy || deleteServer}
+        label={t('danger.localLabel')}
+        description={
+          <>
             {t(isLocalOnlyVault ? 'danger.localDescLocalOnly' : 'danger.localDesc')}
             {deleteServer && !deleteLocal && ` ${t('danger.localRequired')}`}
-          </span>
-        </span>
-      </label>
+          </>
+        }
+      />
 
       {!noServerAccount && (
-      <label className="flex items-start gap-2 text-body cursor-pointer">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={deleteServer}
           onChange={(e) => setDeleteServer(e.target.checked)}
           disabled={busy}
-          className="mt-0.5 accent-red-600"
+          label={t('danger.cloudLabel')}
+          description={t('danger.cloudDesc')}
         />
-        <span className="text-pn-soft">
-          {t('danger.cloudLabel')}
-          <span className="block text-small text-pn-soft">
-            {t('danger.cloudDesc')}
-          </span>
-        </span>
-      </label>
       )}
 
       {localOnly && atStakeLine && (
-        <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 text-warning text-small leading-relaxed px-3 py-2">
+        <Callout tone="warning">
           {atStakeLine}
-        </div>
+        </Callout>
       )}
 
-      <div>
-        <label className="block text-small text-pn-soft mb-1">
+      <TextField
+        label={
           <Trans
             i18nKey="settings:danger.confirmPrompt"
             components={{ kbd: <span className="font-mono font-semibold text-danger" /> }}
           />
-        </label>
-        <input
-          type="text"
-          value={confirmText}
-          onChange={(e) => setConfirmText(e.target.value)}
-          disabled={busy}
-          placeholder="DELETE"
-          autoComplete="off"
-          spellCheck={false}
-          className="w-full rounded-md border border-divider bg-surface-2 text-body px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-red-500 dark:focus:ring-red-600 placeholder:text-pn-muted"
-        />
-      </div>
+        }
+        type="text"
+        value={confirmText}
+        onChange={(e) => setConfirmText(e.target.value)}
+        disabled={busy}
+        placeholder="DELETE"
+        autoComplete="off"
+        {...NO_TEXT_ASSIST}
+      />
 
       {error && (
-        <div className="rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-small p-2">
+        <Callout tone="danger">
           {error}
-        </div>
+        </Callout>
       )}
 
       <div className="flex gap-2">
-        <button
-          type="button"
+        <Button
+          action="cancel"
           onClick={() => {
             setExpanded(false);
             setConfirmText('');
             setError(null);
           }}
           disabled={busy}
-          className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-body transition"
-        >
-          {t('common:actions.cancel')}
-        </button>
-        <button
-          type="button"
+          className="flex-1"
+        />
+        <Button
+          action="delete"
+          variant="danger"
           onClick={() => void handleDelete()}
           disabled={!canDelete || busy}
-          className="flex-1 rounded-md bg-red-600 hover:bg-red-700 disabled:bg-red-600/50 text-white px-3 py-2 text-body font-semibold transition disabled:cursor-not-allowed"
+          className="flex-1"
         >
           {busy ? t('danger.deleting') : t('danger.deletePermanently')}
-        </button>
+        </Button>
       </div>
     </div>
   );

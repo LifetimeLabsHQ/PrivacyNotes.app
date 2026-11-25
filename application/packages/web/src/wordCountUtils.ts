@@ -37,7 +37,8 @@ export function stripMarkdown(md: string): string {
     .replace(/<\/?[a-zA-Z][^>]*(>)?/g, (run, close?: string) => (close ? ' ' : run))
     .replace(/&(?:[a-zA-Z]+|#\d+|#x[0-9a-fA-F]+);/g, ' ') // HTML entities incl. &nbsp; (empty-paragraph marker)
     .replace(/^#{1,6}\s+/gm, '')           // heading markers
-    .replace(/^>\s?/gm, '')                 // blockquotes
+    .replace(/^(?:>\s?)+\[!(?:columns|col)(?:\|[\w-]+)?\][+-]?\s*$/gim, '') // column block syntax markers
+    .replace(/^(?:>\s?)+/gm, '')           // blockquotes (incl. nested columns/callouts)
     .replace(/^- \[[ xX]\]\s*/gm, '')       // task list markers
     .replace(/^[-*+]\s+/gm, '')             // unordered list markers
     .replace(/^\d+\.\s+/gm, '')             // ordered list markers
@@ -93,6 +94,9 @@ export function countLines(md: string): number {
     if (!s) continue;
     if (/^(```|~~~)/.test(s)) continue;
     if (/^\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?$/.test(s) && s.includes('|')) continue;
+    // Skip column block/column markers, bare quote separators, and empty-column &nbsp; lines.
+    const unquoted = s.replace(/^(?:>\s*)+/, '').trim();
+    if (!unquoted || unquoted === '&nbsp;' || /^\[!(?:columns|col)(?:\|[\w-]+)?\][+-]?$/i.test(unquoted)) continue;
     n += 1;
   }
   return n;

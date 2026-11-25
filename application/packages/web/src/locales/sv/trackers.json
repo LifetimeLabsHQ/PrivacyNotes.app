@@ -115,9 +115,6 @@
       "great": "Toppen"
     }
   },
-  "sleepScore": {
-    "prompt": "Sömnpoäng"
-  },
   "heartRate": {
     "prompt": "Genomsnittlig puls"
   },

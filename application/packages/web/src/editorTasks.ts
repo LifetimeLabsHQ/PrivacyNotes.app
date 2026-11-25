@@ -1,3 +1,4 @@
+import i18n from './i18n';
 import { TASK_CHECK_PATH } from './ui/TaskCheckbox';
 import type { Editor as TipTapEditor } from '@tiptap/react';
 import TaskItem, { type TaskItemOptions } from '@tiptap/extension-task-item';
@@ -10,6 +11,8 @@ import { isSoftKeyboardDevice, suppressSoftKeyboard } from './softKeyboard';
 import { isStoredAlignment } from './editorAlignment';
 import { dragCard, kanbanCardOf, markCardGrip, openCardMenu } from './kanbanDrag';
 import { scrollParentOf } from './scrollParent';
+import { toLocalIso } from './intlFormat';
+import { completeRepeatingTaskItem, hasTaskReminderInItem } from './editorTaskReminder';
 
 /**
  * Markdown autoformatting for task lists. StarterKit ships input rules for
@@ -56,8 +59,9 @@ function moveTaskToGroupEdge(tr: Transaction, pos: number): number | null {
     if (index !== self && !child.attrs.checked) target = offset;
   });
   if (target === pos || target === pos + item.nodeSize) return null;
+  const deleteStep = tr.steps.length;
   tr.delete(pos, pos + item.nodeSize);
-  const insertAt = tr.mapping.map(target);
+  const insertAt = tr.mapping.slice(deleteStep).map(target);
   tr.insert(insertAt, item);
   return insertAt;
 }
@@ -115,8 +119,9 @@ export function moveWithinParent(tr: Transaction, pos: number, toIndex: number):
   for (let k = 0; k < before && k < parent.childCount; k++) target += parent.child(k).nodeSize;
   const { from, to } = tr.selection;
   const inside = from > pos && to < pos + node.nodeSize;
+  const deleteStep = tr.steps.length;
   tr.delete(pos, pos + node.nodeSize);
-  const at = tr.mapping.map(target);
+  const at = tr.mapping.slice(deleteStep).map(target);
   tr.insert(at, node);
   if (inside) tr.setSelection(TextSelection.between(tr.doc.resolve(at + from - pos), tr.doc.resolve(at + to - pos)));
   return tr;
@@ -245,6 +250,8 @@ export function dragBlock(event: PointerEvent, getPos: () => number | undefined,
 export const GRIP_SVG =
   '<svg viewBox="0 0 10 16"><circle cx="2.5" cy="3" r="1.4"/><circle cx="7.5" cy="3" r="1.4"/><circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/><circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/></svg>';
 const CHECK_SVG = `<svg viewBox="0 0 12 12"><path d="${TASK_CHECK_PATH}"/></svg>`;
+const BELL_SVG =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
 
 /** Each icon is parsed once and cloned for every task: a note with thousands
  *  of tasks otherwise parses the same markup thousands of times on open. */
@@ -286,11 +293,14 @@ export const TaskItemMobileSafe = TaskItem.extend<TaskItemOptions & {
   /** Whether a ticked task moves below the open ones. Read at each tick, so
    *  the setting applies to an editor that is already open. */
   sinkChecked: () => boolean;
+  /** Opens the per-checkbox reminder picker anchored to the row's bell button. */
+  onOpenReminder?: (anchor: HTMLElement, taskPos: number) => void;
 }>({
   addOptions() {
     return {
       ...(this.parent?.() as TaskItemOptions),
       sinkChecked: () => true,
+      onOpenReminder: undefined,
     };
   },
 
@@ -414,6 +424,27 @@ export const TaskItemMobileSafe = TaskItem.extend<TaskItemOptions & {
         if (event.detail !== 0 || typeof getPos !== 'function' || !kanbanCardOf(listItem)) return;
         openCardMenu(grip, getPos, editor as TipTapEditor);
       });
+      const remindLabel = i18n.t('shell:taskReminder.set', { defaultValue: 'Set reminder' });
+      const remindBtn = document.createElement('button');
+      remindBtn.type = 'button';
+      remindBtn.className = 'pn-task-remind-btn';
+      remindBtn.contentEditable = 'false';
+      remindBtn.setAttribute('aria-label', remindLabel);
+      remindBtn.dataset.pnTip = remindLabel;
+      remindBtn.append(svgCopy(BELL_SVG));
+      remindBtn.addEventListener('mousedown', (event) => event.preventDefault());
+      remindBtn.addEventListener(
+        'touchstart',
+        () => suppressSoftKeyboard(editor.view.dom as HTMLElement),
+        { passive: true },
+      );
+      remindBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!editor.isEditable || typeof getPos !== 'function') return;
+        const pos = getPos();
+        if (typeof pos === 'number') this.options.onOpenReminder?.(remindBtn, pos);
+      });
       const checkboxWrapper = document.createElement('label');
       const checkboxStyler = document.createElement('span');
       const checkbox = document.createElement('input');
@@ -467,6 +498,13 @@ export const TaskItemMobileSafe = TaskItem.extend<TaskItemOptions & {
               if (typeof position !== 'number') {
                 return false;
               }
+              if (checked) {
+                const donePos = completeRepeatingTaskItem(tr, position, toLocalIso(new Date()));
+                if (donePos !== null) {
+                  movedTo = this.options.sinkChecked() ? moveTaskToGroupEdge(tr, donePos) : null;
+                  return true;
+                }
+              }
               const currentNode = tr.doc.nodeAt(position);
               tr.setNodeMarkup(position, undefined, {
                 ...currentNode?.attrs,
@@ -493,9 +531,10 @@ export const TaskItemMobileSafe = TaskItem.extend<TaskItemOptions & {
         listItem.setAttribute(key, value as string);
       });
       listItem.dataset.checked = String(node.attrs.checked);
+      listItem.dataset.hasReminder = hasTaskReminderInItem(node) ? 'true' : 'false';
       checkbox.checked = node.attrs.checked;
       checkboxWrapper.append(checkbox, checkboxStyler);
-      listItem.append(checkboxWrapper, content, grip);
+      listItem.append(checkboxWrapper, content, remindBtn, grip);
       Object.entries(HTMLAttributes).forEach(([key, value]) => {
         listItem.setAttribute(key, value as string);
       });
@@ -505,12 +544,13 @@ export const TaskItemMobileSafe = TaskItem.extend<TaskItemOptions & {
         contentDOM: content,
         // A drag restyles the item and its grip; that is not an edit.
         ignoreMutation: (mutation) =>
-          mutation.type === 'attributes' && (mutation.target === listItem || mutation.target === grip),
+          mutation.type === 'attributes' && (mutation.target === listItem || mutation.target === grip || mutation.target === remindBtn),
         update: (updatedNode: typeof node) => {
           if (updatedNode.type !== this.type) {
             return false;
           }
           listItem.dataset.checked = String(updatedNode.attrs.checked);
+          listItem.dataset.hasReminder = hasTaskReminderInItem(updatedNode) ? 'true' : 'false';
           checkbox.checked = updatedNode.attrs.checked;
           updateA11Y();
           return true;

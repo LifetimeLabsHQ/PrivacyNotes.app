@@ -3,6 +3,7 @@ import { isTime } from './schedule';
 import { timeLabel } from './JournalCalendar';
 import { toLocalIso } from './intlFormat';
 import { parseTimeLabel } from './timeLabel';
+import { NO_TEXT_ASSIST } from './formFields';
 import { isTouchOnly } from './touchOnly';
 import { detectDeviceOs } from './deviceFingerprint';
 
@@ -100,6 +101,8 @@ export function TimeInput({ value, onCommit, onDraft, label, className, day, cle
     <input
       type="text"
       inputMode="text"
+      autoComplete="off"
+      {...NO_TEXT_ASSIST}
       value={draft ?? (value ? timeLabel(day ?? toLocalIso(new Date()), value) : '')}
       placeholder="--:--"
       onFocus={(e) => e.currentTarget.select()}

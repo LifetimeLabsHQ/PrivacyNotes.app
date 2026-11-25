@@ -111,9 +111,6 @@
       "great": "極佳"
     }
   },
-  "sleepScore": {
-    "prompt": "睡眠分數"
-  },
   "heartRate": {
     "prompt": "平均心率"
   },

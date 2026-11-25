@@ -38,7 +38,7 @@
     "blockMath": "Formelblock",
     "align": "Ausrichtung",
     "font": "Schrift",
-    "pictureFromFiles": "Bild aus Dateien",
+    "pictureFromFiles": "Galerie",
     "date": "Datum",
     "dateTime": "Datum und Uhrzeit",
     "footnote": "Fußnote",
@@ -260,6 +260,15 @@
     "headingsIn": "Überschriften in {{title}}",
     "noHeadingMatches": "Keine passenden Überschriften"
   },
+  "slash": {
+    "label": "Block einfügen",
+    "linePlaceholder": "Drücke /, um Blöcke einzufügen",
+    "filterHint": "Zum Filtern tippen…",
+    "basic": "Basisblöcke",
+    "smartDate": "Intelligentes Datum",
+    "askNinja": "Ninja nach „{{query}}“ fragen",
+    "noMatches": "Keine passenden Blöcke"
+  },
   "copyBox": {
     "placeholder": "Text, den du mit einem Klick kopierst"
   },
@@ -369,6 +378,23 @@
     "addColumn": "Spalte hinzufügen",
     "removeBoard": "Board entfernen",
     "moveTo": "Verschieben nach"
+  },
+  "columns": {
+    "narrowWide": "Schmal und breit",
+    "wideNarrow": "Breit und schmal",
+    "removeColumns": "Spalten entfernen",
+    "resizeColumn": "Ziehen, um die Spaltenbreite anzupassen",
+    "barLabel": "Spaltensteuerung",
+    "borders": "Spaltenrahmen",
+    "borderBoxes": "Kästen",
+    "borderSolid": "Durchgezogen",
+    "borderDashed": "Gestrichelt",
+    "borderDotted": "Gepunktet",
+    "borderThickness": "Stärke",
+    "borderThin": "Dünn",
+    "borderMedium": "Mittel",
+    "borderColorDefault": "Standardfarbe",
+    "borderTint": "Sanfte Spaltentönung"
   },
   "doodle": {
     "title": "Kritzelei",

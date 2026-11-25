@@ -26,7 +26,6 @@
     "noResults": "Geen resultaten"
   },
   "deleteNote": {
-    "confirm": "Definitief verwijderen",
     "body": "<highlight>“{{title}}”</highlight> definitief verwijderen? Dit kan niet ongedaan worden gemaakt."
   },
   "emptyTrash": {
@@ -73,12 +72,15 @@
       "toggleSidebar": "Zijbalk tonen of verbergen",
       "toggleTheme": "Wisselen tussen licht en donker",
       "openSettings": "Instellingen openen",
+      "graph": "Werkruimte Graaf en Plaatsen",
       "zen": "Zen-modus",
+      "fullScreen": "Volledig scherm",
       "markdownView": "Markdown-weergave aan of uit",
       "invisibles": "Onzichtbare tekens aan of uit",
       "find": "Zoeken in notitie",
       "findReplace": "Zoeken en vervangen",
       "outline": "Overzicht tonen of verbergen",
+      "connections": "Verbanden tonen of verbergen",
       "insertDate": "Datum invoegen",
       "insertDateTime": "Datum en tijd invoegen",
       "clearFilters": "Filters wissen",
@@ -134,8 +136,6 @@
     "goToFolder": "Naar een map gaan",
     "createTag": "Tag #{{name}} aanmaken",
     "createFolder": "Map ‘{{name}}’ aanmaken",
-    "newTag": "Nieuwe tag",
-    "newFolder": "Nieuwe map",
     "goToDay": "Naar dag gaan",
     "inText": "In de tekst",
     "actions": "acties",
@@ -176,9 +176,9 @@
   "sshKeyForm": {
     "label": "Label",
     "labelPlaceholder": "bijv. GitHub deploy key",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "Openbare sleutel kopiëren",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "Privésleutel kopiëren",
     "downloadPublicKey": "Openbare sleutel downloaden",
     "downloadPrivateKey": "Privésleutel downloaden",
@@ -291,6 +291,13 @@
     "features": {
       "stats": {
         "detail": "Je schrijven, reeksen en trackers door de tijd"
+      },
+      "graph": {
+        "detail": "Je notitielinks, slimme bruggen en hubs als interactieve kaart"
+      },
+      "placesMap": {
+        "label": "Plaatsenkaart",
+        "detail": "Notities, dagboeknotities en contacten vastgezet op een privékaart"
       },
       "trackers": {
         "detail": "Stemming, gewoonten, factoren en medicatie"

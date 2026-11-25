@@ -1,8 +1,7 @@
 import { Check, ShieldSlash, Timer } from '../icons';
-import { Button, Callout, CompareTiles, type CompareTile } from '../ui';
+import { Button, Callout, CompareTiles, Modal, ModalFooter, type CompareTile } from '../ui';
 import { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { useEscapeToClose } from '../useEscapeToClose';
 import {
   buildPinWrap,
   hasBiometricCredential,
@@ -47,7 +46,7 @@ import {
   secretReady,
   type SecretKind,
 } from '../secretKind';
-import { SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, SettingsCallout } from '../settingsUI';
+import { SectionEyebrow, SETTINGS_HELP } from '../settingsUI';
 import { loadLocalSettings, saveCredential, takePinChangeLost, type UserSettings } from '../userSettings';
 
 /**
@@ -439,7 +438,7 @@ export function PinTab({
       {changeLost && <Callout tone="danger">{t('pinTab.changeLost')}</Callout>}
       {phraseUnwrapped && <Callout tone="danger">{t('pinTab.phraseUnwrapped')}</Callout>}
       {needsOldPin && biometricWeaker && (
-        <SettingsCallout>{t('pinTab.biometricWeaker')}</SettingsCallout>
+        <Callout>{t('pinTab.biometricWeaker')}</Callout>
       )}
       {needsOldPin ? (
         <>
@@ -469,20 +468,22 @@ export function PinTab({
               {oldPinError}
             </p>
           )}
-          <button
+          <Button
+            action="confirm"
+            variant="primary"
             onClick={() => void verifyOldPin(oldPin)}
             disabled={!secretReady(existingKind, oldPin) || oldPinBusy}
-            className={`w-full ${SETTINGS_BTN_PRIMARY}`}
+            className="w-full"
           >
             {oldPinBusy ? t('security:lockScreen.checking') : t('pinTab.verify')}
-          </button>
+          </Button>
           <ForgotPinLink kind={existingKind} onClick={() => setRecovering(true)} />
         </>
       ) : (
         <>
           <div className="space-y-2">
             {reason === 'protect' && (
-              <SettingsCallout>{t('pinTab.protectReason')}</SettingsCallout>
+              <Callout>{t('pinTab.protectReason')}</Callout>
             )}
             {recovered && (
               <p className="text-body text-accent">
@@ -514,7 +515,7 @@ export function PinTab({
             }}
           />
           {biometricWeaker && (
-            <SettingsCallout>{t('pinTab.biometricWeaker')}</SettingsCallout>
+            <Callout>{t('pinTab.biometricWeaker')}</Callout>
           )}
 
           {newKind === 'passcode' ? (
@@ -579,19 +580,21 @@ export function PinTab({
           )}
 
           <div data-setting="security.setPin" className="flex gap-2">
-            <button
+            <Button
+              action="save"
+              variant="primary"
               onClick={() => void submit(pin, confirm)}
               disabled={busy || (newKind === 'passcode'
                 ? !isValidPasscode(pin) || normalizeSecret(pin) !== normalizeSecret(confirm)
                 : pin.length !== 4 || confirm.length !== 4)}
-              className={`flex-1 ${SETTINGS_BTN_PRIMARY}`}
+              className="flex-1"
             >
               {busy
                 ? t('common:state.saving')
                 : newKind === 'passcode'
                   ? t('pinTab.setPasscode')
                   : pinExists ? t('pinTab.updatePin') : t('pinTab.setPin')}
-            </button>
+            </Button>
             {pinExists && (
               <Button
                 data-setting="security.removePin"
@@ -674,8 +677,6 @@ function RemovePinDialog({
   const inputRef = useRef<PinInputHandle>(null);
   const hasBio = hasBiometricCredential();
 
-  useEscapeToClose(onClose);
-
   useEffect(() => {
     if (!lockout.locked) return;
     const id = setInterval(() => {
@@ -721,57 +722,49 @@ function RemovePinDialog({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    <Modal
+      onClose={onClose}
+      title={kind === 'passcode' ? t('security:removePinDialog.removePasscode') : t('security:pinTab.removePin')}
+      icon={<ShieldSlash />}
+      layer="z-[60]"
+      className="max-w-sm p-5 space-y-4"
     >
-      <div className="bg-surface-2 border border-divider rounded-lg max-w-sm w-full mx-4 p-5 space-y-4 text-pn">
-        <h2 className="text-heading font-semibold">
-          {kind === 'passcode' ? t('security:removePinDialog.removePasscode') : t('security:pinTab.removePin')}
-        </h2>
-        <p className="text-body text-pn-soft leading-relaxed">
-          {kind === 'passcode'
-            ? (hasBio ? t('removePinDialog.introWithBioPasscode') : t('removePinDialog.introNoBioPasscode'))
-            : (hasBio ? t('removePinDialog.introWithBio') : t('removePinDialog.introNoBio'))}
+      <p className="text-body text-pn-soft leading-relaxed">
+        {kind === 'passcode'
+          ? (hasBio ? t('removePinDialog.introWithBioPasscode') : t('removePinDialog.introNoBioPasscode'))
+          : (hasBio ? t('removePinDialog.introWithBio') : t('removePinDialog.introNoBio'))}
+      </p>
+      <SecretInput
+        kind={kind}
+        ref={inputRef}
+        value={pin}
+        onChange={(v) => {
+          setPin(v);
+          setError(null);
+        }}
+        onComplete={(v) => void submit(v)}
+        autoFocus
+        disabled={busy || lockout.locked}
+      />
+      {error && (
+        <p className="text-body text-danger text-center">
+          {error}
         </p>
-        <SecretInput
-          kind={kind}
-          ref={inputRef}
-          value={pin}
-          onChange={(v) => {
-            setPin(v);
-            setError(null);
-          }}
-          onComplete={(v) => void submit(v)}
-          autoFocus
-          disabled={busy || lockout.locked}
-        />
-        {error && (
-          <p className="text-body text-danger text-center">
-            {error}
-          </p>
-        )}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-body transition"
-          >
-            {t('common:actions.cancel')}
-          </button>
-          <button
-            type="button"
-            onClick={() => void submit(pin)}
-            disabled={!secretReady(kind, pin) || busy || lockout.locked}
-            className="flex-1 rounded-md bg-red-600 text-white hover:bg-red-700 px-3 py-2 text-body font-medium transition disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {busy
-              ? t('security:lockScreen.verifying')
-              : kind === 'passcode' ? t('removePinDialog.removePasscode') : t('security:pinTab.removePin')}
-          </button>
-        </div>
-      </div>
-    </div>
+      )}
+      <ModalFooter>
+        <Button action="cancel" onClick={onClose} />
+        <Button
+          action="remove"
+          variant="danger"
+          onClick={() => void submit(pin)}
+          disabled={!secretReady(kind, pin) || busy || lockout.locked}
+        >
+          {busy
+            ? t('security:lockScreen.verifying')
+            : kind === 'passcode' ? t('removePinDialog.removePasscode') : t('security:pinTab.removePin')}
+        </Button>
+      </ModalFooter>
+    </Modal>
   );
 }
 

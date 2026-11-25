@@ -3,7 +3,8 @@ import { HoverLabel } from './HoverLabel';
 import { AccentBar, HeadlineRule } from './settingsUI';
 import { openExternal } from './openExternal';
 import { noteLinkDisplayText } from './noteLinks';
-import { Check, Copy, PencilSimple } from './icons';
+import { Check, Copy } from './icons';
+import { Button } from './ui/Button';
 
 /**
  * The detail-pane kit: what a contact and a vault item share when they sit
@@ -45,13 +46,9 @@ export function DetailHero({ tile, title, subtitle, onEdit, editLabel }: {
         </div>
       </div>
       {onEdit && (
-        <button
-          type="button"
-          onClick={onEdit}
-          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-small font-medium bg-surface-1 border border-divider text-pn-soft hover:bg-pn/10 transition"
-        >
-          <PencilSimple /> {editLabel}
-        </button>
+        <Button action="edit" onClick={onEdit} className="shrink-0">
+          {editLabel}
+        </Button>
       )}
     </div>
   );
@@ -127,7 +124,15 @@ export function DetailAction({ label, onClick, href, children }: {
     <span className="inline-flex border-s border-divider first:border-s-0 first:rounded-s-[5px] last:rounded-e-[5px] hover:bg-accent/10 transition">
       <HoverLabel label={label} position="start">
         {href ? (
-          <a href={href} aria-label={label} className={cls}>{children}</a>
+          <a
+            href={href}
+            target={href.startsWith('http') ? '_blank' : undefined}
+            rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
+            aria-label={label}
+            className={cls}
+          >
+            {children}
+          </a>
         ) : (
           <button type="button" onClick={onClick} aria-label={label} className={cls}>{children}</button>
         )}
@@ -146,7 +151,7 @@ export function DetailCopyAction({ value, id, copied, onCopy, label }: {
 }) {
   return (
     <DetailAction label={label} onClick={() => onCopy(value, id)}>
-      {copied === id ? <Check className="text-green-500" /> : <Copy />}
+      {copied === id ? <Check className="text-success" /> : <Copy />}
     </DetailAction>
   );
 }

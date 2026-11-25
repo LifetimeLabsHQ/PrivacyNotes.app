@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Editor as TipTapEditor } from '@tiptap/react';
-import { MagnifyingGlass, X } from './icons';
-import { HoverLabel } from './HoverLabel';
+import { MagnifyingGlass } from './icons';
+import { CloseButton } from './ui';
 import { isImeComposing } from './imeComposing';
-import { BAR_BTN, MatchNav, ReplaceToggle } from './MatchNav';
+import { MatchNav, ReplaceToggle } from './MatchNav';
+import { NO_TEXT_ASSIST } from './formFields';
 import { keyText } from './shortcutMatch';
 import {
   setSearchQuery,
@@ -147,27 +148,21 @@ export function FindBar({ editor, focusTick, initialQuery, startQuery, onSwap, s
         onKeyDown={onKeyDown}
         placeholder={t('common:palette.commands.find')}
         aria-label={t('common:palette.commands.find')}
-        spellCheck={false}
+        {...NO_TEXT_ASSIST}
         autoComplete="off"
         className="w-36 sm:w-44 bg-transparent text-body text-pn placeholder:text-pn-muted outline-none px-1"
       />
       <MatchNav count={count} noHits={noHits} canStep={info.total > 0} onStep={go} />
       {onSwap && <ReplaceToggle open={false} pro={swapPro} onClick={() => onSwap(query)} />}
       <div className="w-px h-5 bg-divider mx-0.5 shrink-0" aria-hidden="true" />
-      <HoverLabel label={t('common:actions.close')} keys={keyText('find')} position="below-end">
-        <button
-          type="button"
-          onMouseDown={(e) => e.preventDefault()}
-          // NOT `close` - that is `window.close`, a DOM global. When the local
-          // `close` helper was removed here, `onClick={close}` kept
-          // type-checking against it and silently did nothing at runtime.
-          onClick={onClose}
-          aria-label={t('find.close')}
-          className={BAR_BTN}
-        >
-          <X />
-        </button>
-      </HoverLabel>
+      <CloseButton
+        label={t('common:actions.close')}
+        keys={keyText('find')}
+        onMouseDown={(e) => e.preventDefault()}
+        // NOT `close` - that is `window.close`, a DOM global.
+        onClick={onClose}
+        className="!h-7 !w-7"
+      />
     </div>
   );
 }

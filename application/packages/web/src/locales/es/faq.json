@@ -307,6 +307,16 @@
         "Sí. La app es local-first: [tus notas viven en una base de datos en tu dispositivo](/es/help/data-location), así que leer, escribir y [buscar funcionan sin conexión](/es/help/search-local). Los cambios se sincronizan solos cuando vuelves a estar en línea, y [una imagen o un archivo que añadas sin conexión espera en este dispositivo](/es/help/upload-failed) y también se sube entonces. [Ninja](/es/help/ninja) también funciona sin conexión; solo guardar una página web como nota espera a que haya conexión."
       ]
     },
+    "local-only": {
+      "q": "¿Cómo uso una bóveda solo local sin una cuenta?",
+      "a": [
+        "Abre la app de escritorio o móvil (macOS, Windows, Linux, iOS o Android), elige \"Generar una frase\" en la pantalla de inicio de sesión y deja desmarcada \"Sincronizar entre dispositivos\", que es lo predeterminado. Eso crea una bóveda cifrada en tu dispositivo sin registrarla en el servidor, así que funciona sin conexión desde el principio.",
+        "**Cómo funciona el modo solo local:**",
+        "- **Sin conexión por defecto:** notas, tareas, diarios, elementos de la bóveda, archivos, imágenes, PIN y bloqueo biométrico, búsqueda y [copias de seguridad automáticas](/es/help/automatic-backups) funcionan en tu dispositivo sin cuenta.\n- **Haz copia de seguridad de tu bóveda:** como nada llega a nuestros servidores, perder el dispositivo o desinstalar la app elimina tus notas. Activa las [copias de seguridad automáticas](/es/help/automatic-backups) en Ajustes > Copia de seguridad > Automático, o exporta una copia manual en Ajustes > Copia de seguridad > Manual.\n- **Activa la sincronización o mejora a Pro más adelante:** abre Ajustes > ID & Sync y elige \"Activar sincronización\" cuando quieras. También puedes mejorar a Pro manteniendo la sincronización desactivada: el proceso de pago registra un ID de cuenta para Pro mientras tus notas se quedan en local.\n- **Restaura copias de seguridad de otro dispositivo:** abre Ajustes > Copia de seguridad > Restaurar y elige \"Copia de seguridad cifrada (.pnbackup, .pnbackupz)\". Si el archivo proviene de otra bóveda, la app te pide la frase de recuperación de esa copia (escrita o por QR) e importa todo bajo la clave de tu bóveda local.",
+        "**¿Ya tienes una cuenta sincronizada?** Elige los pasos para tu plan:",
+        "- **Cuenta gratuita (pasar a solo local):** exporta una copia en Ajustes > Copia de seguridad > Manual y elige \"Todo, cifrado (.pnbackupz)\". Después [elimina tu cuenta en la nube](/es/help/delete-account) en Ajustes > Cuenta con \"Eliminar cuenta y datos...\", crea una bóveda local en la app de escritorio o móvil con \"Generar una frase\" y [restaura la copia de seguridad](/es/help/restore-backup) usando tu frase de recuperación anterior.\n- **Cuenta Pro (mantener Pro y dejar de sincronizar):** no elimines tu cuenta, porque eliminar una cuenta elimina Pro. Abre **Ajustes > ID & Sync** y activa [\"Pausar sincronización\"](/es/help/pause-sync). Pro sigue activo y no se sube nada nuevo.\n- **Cuenta Pro (borrar además las notas sincronizadas del servidor):** exporta primero \"Todo, cifrado (.pnbackupz)\", elimina todas las notas, vacía la papelera, pulsa \"Sincronizar ahora\" y espera hasta que muestre Sincronizado (los archivos en la nube se eliminan solos tras cinco días). Activa \"Pausar sincronización\" en **Ajustes > ID & Sync** y luego, antes de cerrar la app, restaura tu copia de seguridad en Ajustes > Copia de seguridad > Restaurar. Tus notas vuelven en local con nuevos identificadores mientras Pro sigue activo."
+      ]
+    },
     "sync-conflicts": {
       "q": "¿Qué pasa si edito la misma nota en dos dispositivos a la vez?",
       "a": [
@@ -504,6 +514,13 @@
         "[La barra de formato](/es/help/format-bar) y su menú Insertar añaden el resto: [tablas](/es/help/table-formulas), avisos que se pueden plegar, subrayado, superíndice y subíndice, alineación del texto, colores de texto y de resaltado, fuentes, enlaces, imágenes y archivos adjuntos. Todo va y vuelve como Markdown: \"Ver markdown\" bajo cualquier nota revela el código fuente en bruto, y [las exportaciones son archivos .md limpios](/es/help/export), así que nada de lo que escribes queda encerrado en un formato propietario."
       ]
     },
+    "slash-commands": {
+      "q": "¿Puedo usar comandos con / para insertar bloques?",
+      "a": [
+        "Sí. Escribe `/` al principio de una línea o después de un espacio para abrir el menú de bloques, luego escribe una palabra como `/tabla`, `/h2`, `/kanban` o `/warn` y pulsa Intro. Tus selecciones recientes se quedan arriba, y también puedes escribir una [fecha natural](/es/help/ninja-dates) como `/friday` o `/tomorrow`, `/remind` dentro de una tarea para un [recordatorio](/es/help/reminders), o `/formula` dentro de una celda de tabla para las [fórmulas de tabla](/es/help/table-formulas). El menú / es gratuito; los bloques que requieren Pro muestran una insignia Pro.",
+        "El menú funciona junto con [el Markdown en vivo](/es/help/markdown-syntax) y sigue disponible cuando ocultas botones en [la barra de formato](/es/help/format-bar) o escribes en [el modo Zen](/es/help/zen-mode). Si nada del menú coincide con lo que escribiste, pulsa Intro para pasar la búsqueda directamente a [Ninja](/es/help/ninja). Escribir `/` dentro de una dirección web, una fecha, una fracción, un bloque de código o texto pegado se queda como texto sin formato y nunca abre el menú; pulsa Esc o un espacio justo después de `/` para cerrarlo."
+      ]
+    },
     "tasks": {
       "q": "¿Cómo funcionan las tareas?",
       "a": [
@@ -569,7 +586,7 @@
     "browser-extension": {
       "q": "¿Hay una extensión de PrivacyNotes para el navegador?",
       "a": [
-        "Sí, para Chrome, Edge y Firefox en un ordenador, y es gratis. Guarda la página que estás leyendo como nota, con su texto principal y sus imágenes, o como marcador, escribe una nota nueva por ti, y puede mostrar los inicios de sesión, las tarjetas, las claves SSH y los marcadores del sitio en el que estás. Copia un valor con un clic, o elige Rellenar (o pulsa Alt+Shift+L) y la extensión escribe en la página el inicio de sesión de ese sitio. Nunca rellena formularios por sí sola.",
+        "Sí, para navegadores basados en Chromium y Firefox en un ordenador, y es gratis. Guarda la página que estás leyendo como nota, con su texto principal y sus imágenes, o como marcador, te permite escribir una nota nueva propia y puede mostrar los inicios de sesión, las tarjetas, las claves SSH y los marcadores del sitio en el que estás. Copia un valor con un clic, o elige Rellenar (o pulsa Alt+Shift+L) y la extensión escribe en la página el inicio de sesión de ese sitio. Nunca rellena formularios por sí sola.",
         "Abre Ajustes > Extensión, añade la extensión desde la tienda de tu navegador, elige qué puede hacer y luego elige Generar un código. Copia el código de un solo uso y pégalo en la extensión. Para quitarla, elige Quitar junto a ella, en Extensiones del navegador, en la misma página. Una extensión no ocupa una de tus plazas de dispositivo. Una cuenta gratuita conecta un navegador; Pro conecta hasta 10. [Cómo protege tus notas](/es/help/browser-extension-security)."
       ]
     },
@@ -825,6 +842,13 @@
       "a": [
         "Sí. Los dos ajustes vienen activados porque queremos a nuestros usuarios: queremos que [ahorres espacio](/es/help/storage-usage) y conserves tu privacidad. Ahorro de espacio reduce una imagen grande y la guarda como JPEG: Estándar (predeterminado) se ajusta a 2048 píxeles al 85 % de calidad, Pequeño se ajusta a 1280 píxeles al 75 %, y Diminuto se ajusta a 1024 píxeles al 60 % para los archivos más pequeños. Quitar datos de ubicación elimina los metadatos EXIF que una cámara escribe en una foto, incluida la posición GPS, antes de guardar la imagen. Los dos se aplican a cada imagen que la app puede leer: pegada en una nota, añadida como archivo o importada. Una imagen que no puede leer, como AVIF, SVG o una que no se abre, se guarda tal como llegó cuando la añades como archivo o la importas, datos de ubicación incluidos. Dos excepciones: un GIF conserva su tamaño para que su animación siga funcionando, y un archivo adjunto a un elemento de la Bóveda se guarda exactamente como estaba.",
         "Desactiva cualquiera de los dos en **Ajustes > Almacenamiento > Imágenes**, donde las fotos de contacto tienen un tercer interruptor que las mantiene en 512 píxeles. Los ajustes solo afectan a las imágenes nuevas; los archivos que no son imágenes se guardan exactamente como están. Las imágenes HEIC y TIFF se convierten a JPEG, porque solo Safari puede mostrarlas. [Una copia de seguridad que restaures](/es/help/restore-backup) se escribe byte a byte."
+      ]
+    },
+    "paste-screenshots": {
+      "q": "¿Las capturas de pantalla pegadas también se comprimen?",
+      "a": [
+        "Sí. Las capturas de pantalla y las imágenes que copias y pegas directamente en una nota pasan por la misma [compresión de Ahorro de espacio](/es/help/image-quality) que los archivos adjuntos, las imágenes arrastradas y las importaciones. Las capturas de pantalla opacas normales se redimensionan al ajuste que hayas elegido y se guardan como JPEG, lo que reduce una captura habitual a una fracción de su tamaño original y ayuda a aprovechar mejor tu [almacenamiento](/es/help/storage-usage).",
+        "Elige entre Estándar (2048 píxeles al 85 % de calidad), Pequeño (1280 píxeles al 75 %) y Diminuto (1024 píxeles al 60 %) en Ajustes > Almacenamiento > Imágenes, o desactiva Ahorro de espacio para conservar los originales. Una captura de pantalla con bordes transparentes, como una captura de ventana con sombra paralela, se redimensiona igualmente al límite que hayas elegido y se guarda como PNG para conservar su transparencia."
       ]
     },
     "storage-usage": {
@@ -1125,7 +1149,7 @@
       "a": [
         "Sí. Escribe `=` en una celda de la tabla para elegir una función, o escribe tú mismo la fórmula. La celda muestra el resultado en lugar del texto, y cada resultado se actualiza en cuanto cambias una celda que lee. Las celdas se nombran con la letra de la columna y el número de la fila, y el encabezado cuenta como fila 1, así que tu primera fila de datos es la fila 2. Los resultados funcionan en todas las cuentas; elegir desde el menú es Pro.",
         "Para probarlo todo de una vez, descarga la nota de ejemplo, abre Ajustes > Transferencia > Importar, elige **Archivos Markdown** y selecciona el archivo.",
-        "[Nota de ejemplo (.md)](/marketing/table-formulas-examples.md)",
+        "[Nota de ejemplo (.md)](/help/table-formulas-examples.md)",
         "Estas son las funciones, y se combinan con `+`, `-`, `*`, `/`, `^` para una potencia, y paréntesis:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` y `COUNT` trabajan sobre un rango, como en `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` y `LOG` trabajan sobre un solo valor, como en `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` y `PHI` son constantes, y `RAND` da un número aleatorio\n- `=B7-B2` resta una celda de otra, y `=SUM(B2:B10)*0.2` calcula un porcentaje de un total",
         "Haz clic en una celda que muestre un resultado y la fórmula vuelve, lista para cambiarla. Tu nota guarda la fórmula en sí, nunca el resultado, así que una exportación y cualquier otra app de Markdown muestran `=SUM(B2:B10)` tal como la escribiste."

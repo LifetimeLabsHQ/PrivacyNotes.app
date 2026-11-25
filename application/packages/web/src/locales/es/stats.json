@@ -328,6 +328,7 @@
       "noEntry": "sin entrada",
       "doseLens": "El ánimo promedió {{before}} en los {{nBefore}} días anteriores y {{after}} en los {{nAfter}} días posteriores.",
       "doseLensHeading": "En torno a cada cambio de dosis",
+      "doseLensLocked": "Mejora a Pro para ver cómo los cambios de dosis mueven tu ánimo",
       "doseLensShort_one": "Falta {{count}} día registrado más a su alrededor.",
       "doseLensShort_other": "Faltan {{count}} días registrados más a su alrededor."
     },

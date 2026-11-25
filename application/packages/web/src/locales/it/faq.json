@@ -307,6 +307,16 @@
         "Sì. L'app è local-first: [le tue note vivono in un database sul tuo dispositivo](/it/help/data-location), quindi puoi leggere, scrivere e [cercare senza alcuna connessione](/it/help/search-local). Le modifiche si sincronizzano da sole appena torni online, e [un'immagine o un file che aggiungi offline aspetta su questo dispositivo](/it/help/upload-failed) e viene caricato anche lui in quel momento. Anche [Ninja](/it/help/ninja) funziona offline; solo salvare una pagina web come nota aspetta una connessione."
       ]
     },
+    "local-only": {
+      "q": "Come uso una cassaforte solo locale senza un account?",
+      "a": [
+        "Apri l'app desktop o mobile (macOS, Windows, Linux, iOS o Android), scegli \"Genera una frase\" nella schermata di accesso e lascia deselezionata l'opzione \"Sincronizza tra dispositivi\", che è l'impostazione predefinita. Questo crea una cassaforte cifrata sul tuo dispositivo senza alcuna registrazione sul server, così funziona offline fin dall'inizio.",
+        "**Come funziona la modalità solo locale:**",
+        "- **Offline per impostazione predefinita:** note, attività, pagine di diario, elementi della cassaforte, file, immagini, blocco con PIN e sblocco biometrico, ricerca e [backup automatici](/it/help/automatic-backups) funzionano tutti sul tuo dispositivo senza alcun account.\n- **Fai il backup della tua cassaforte:** poiché nulla raggiunge i nostri server, perdere il dispositivo o disinstallare l'app rimuove le tue note. Attiva i [backup automatici](/it/help/automatic-backups) in Impostazioni > Backup > Automatico, oppure esporta una copia manuale in Impostazioni > Backup > Manuale.\n- **Attiva la sincronizzazione o passa a Pro più tardi:** apri Impostazioni > ID & Sync e scegli \"Attiva la sincronizzazione\" in qualsiasi momento. Puoi anche passare a Pro lasciando la sincronizzazione disattivata: il checkout registra un ID account per Pro mentre le tue note restano locali.\n- **Ripristina backup da un altro dispositivo:** apri Impostazioni > Backup > Ripristina e scegli \"Backup cifrato (.pnbackup, .pnbackupz)\". Se il file proviene da un'altra cassaforte, l'app chiede la frase di recupero di quel backup (digitata o tramite QR) e importa tutto sotto la chiave della tua cassaforte locale.",
+        "**Hai già un account sincronizzato?** Scegli i passaggi per il tuo piano:",
+        "- **Account gratuito (passa a solo locale):** esporta una copia in Impostazioni > Backup > Manuale e scegli \"Tutto, cifrato (.pnbackupz)\". Poi [elimina il tuo account nel cloud](/it/help/delete-account) in Impostazioni > Account tramite \"Elimina account e dati...\", avvia una cassaforte locale nell'app desktop o mobile con \"Genera una frase\" e [ripristina il backup](/it/help/restore-backup) usando la tua vecchia frase di recupero.\n- **Account Pro (mantieni Pro e smetti di sincronizzare):** non eliminare il tuo account, perché eliminare un account rimuove Pro. Apri **Impostazioni > ID & Sync** e attiva [\"Metti in pausa\"](/it/help/pause-sync). Pro resta attivo e nulla di nuovo viene caricato.\n- **Account Pro (rimuovi dal server anche le note sincronizzate):** esporta prima \"Tutto, cifrato (.pnbackupz)\", elimina tutte le note, svuota il Cestino, premi \"Sincronizza ora\" e aspetta finché non mostra Sincronizzato (i file nel cloud si eliminano in automatico dopo cinque giorni). Attiva \"Metti in pausa\" in **Impostazioni > ID & Sync**, poi prima di chiudere l'app ripristina il backup in Impostazioni > Backup > Ripristina. Le tue note tornano in locale con nuovi ID mentre Pro resta attivo."
+      ]
+    },
     "sync-conflicts": {
       "q": "Cosa succede se modifico la stessa nota su due dispositivi contemporaneamente?",
       "a": [
@@ -504,6 +514,13 @@
         "[La barra di formattazione](/it/help/format-bar) e il suo menu Inserisci aggiungono il resto: [tabelle](/it/help/table-formulas), riquadri che si possono richiudere, sottolineato, apice e pedice, allineamento del testo, colori di testo ed evidenziazione, caratteri, link, immagini e allegati. Tutto si converte in Markdown e viceversa: \"Mostra markdown\" sotto ogni nota rivela il sorgente grezzo, e [le esportazioni sono file .md puliti](/it/help/export), quindi nulla di ciò che scrivi resta imprigionato in un formato proprietario."
       ]
     },
+    "slash-commands": {
+      "q": "Posso usare i comandi / (slash) per inserire blocchi?",
+      "a": [
+        "Sì. Digita `/` all'inizio di una riga o dopo uno spazio per aprire il menu dei blocchi, poi scrivi una parola come `/tabella`, `/h2`, `/kanban` o `/avviso` e premi Invio. Le tue scelte recenti restano in cima, e puoi anche digitare una [data naturale](/it/help/ninja-dates) come `/venerdì` o `/domani`, `/promemoria` dentro un'attività per un [promemoria](/it/help/reminders), oppure `/formula` dentro una cella di una tabella per le [formule nelle tabelle](/it/help/table-formulas). Il menu slash è gratuito; i blocchi che richiedono Pro mostrano un badge Pro.",
+        "Il menu funziona insieme al [Markdown in tempo reale](/it/help/markdown-syntax) e resta disponibile anche quando nascondi dei pulsanti nella [barra di formattazione](/it/help/format-bar) o scrivi in [modalità Zen](/it/help/zen-mode). Se nel menu nulla corrisponde a ciò che hai digitato, premi Invio per passare la ricerca direttamente a [Ninja](/it/help/ninja). Digitare `/` dentro un indirizzo web, una data, una frazione, un blocco di codice o un testo incollato resta testo semplice e non apre mai il menu; premi Esc o uno spazio subito dopo `/` per chiuderlo."
+      ]
+    },
     "tasks": {
       "q": "Come funzionano le attività?",
       "a": [
@@ -569,7 +586,7 @@
     "browser-extension": {
       "q": "Esiste un’estensione del browser di PrivacyNotes?",
       "a": [
-        "Sì, per Chrome, Edge e Firefox su computer, ed è gratuita. Salva la pagina che stai leggendo come nota, con il testo principale e le immagini, oppure come segnalibro, ti permette di scrivere una nuova nota tutta tua, e può mostrare gli accessi, le carte, le chiavi SSH e i segnalibri del sito in cui ti trovi. Copia un valore con un clic, oppure scegli Compila (o premi Alt+Shift+L) e l’estensione inserisce nella pagina l’accesso per quel sito. Non compila mai i moduli da sola.",
+        "Sì, per browser basati su Chromium e Firefox su computer, ed è gratuita. Salva la pagina che stai leggendo come nota, con il testo principale e le immagini, oppure come segnalibro, ti permette di scrivere una nuova nota tutta tua, e può mostrare gli accessi, le carte, le chiavi SSH e i segnalibri del sito in cui ti trovi. Copia un valore con un clic, oppure scegli Compila (o premi Alt+Shift+L) e l’estensione inserisce nella pagina l’accesso per quel sito. Non compila mai i moduli da sola.",
         "Apri Impostazioni > Estensione, aggiungi l’estensione dallo store del tuo browser, scegli cosa può fare, poi scegli Crea un codice. Copia il codice monouso e incollalo nell’estensione. Per rimuoverla, scegli Rimuovi accanto a essa sotto Estensioni del browser, nella stessa pagina. Un’estensione non occupa uno slot dispositivo. Un account gratuito collega un browser; Pro ne collega fino a 10. [Come protegge le tue note](/it/help/browser-extension-security)."
       ]
     },
@@ -825,6 +842,13 @@
       "a": [
         "Sì. Entrambe le impostazioni sono attive per impostazione predefinita perché amiamo i nostri utenti: vogliamo che tu [risparmi spazio](/it/help/storage-usage) e mantenga la tua privacy. Risparmio spazio riduce un'immagine grande e la salva come JPEG: Standard (predefinito) sta in 2048 pixel all'85% di qualità, Piccolo sta in 1280 pixel al 75% e Molto piccolo sta in 1024 pixel al 60% per i file più piccoli. Rimuovi dati di posizione elimina i metadati EXIF che una fotocamera scrive in una foto, posizione GPS compresa, prima che l'immagine venga salvata. Entrambe valgono per ogni immagine che l'app riesce a leggere: incollata in una nota, aggiunta come file o importata. Un'immagine che non riesce a leggere, come AVIF, SVG o una che non si apre, viene salvata così com'è arrivata quando la aggiungi come file o la importi, dati di posizione compresi. Due eccezioni: una GIF mantiene la sua dimensione perché la sua animazione continui a funzionare, e un file allegato a un elemento della Cassaforte resta esattamente com'era.",
         "Disattiva l'una o l'altra in **Impostazioni > Archiviazione > Immagini**, dove le foto dei contatti hanno un terzo interruttore che le tiene a 512 pixel. Le impostazioni valgono solo per le nuove immagini; i file che non sono immagini vengono salvati esattamente come sono. Le immagini HEIC e TIFF vengono convertite in JPEG, perché solo Safari può mostrarle. [Un backup che ripristini](/it/help/restore-backup) viene riscritto byte per byte."
+      ]
+    },
+    "paste-screenshots": {
+      "q": "Anche gli screenshot incollati vengono compressi?",
+      "a": [
+        "Sì. Gli screenshot e le immagini che copi e incolli direttamente in una nota passano dalla stessa [compressione di Risparmio spazio](/it/help/image-quality) usata per i file allegati, le immagini trascinate e le importazioni. I normali screenshot opachi vengono ridimensionati in base al livello che hai scelto e salvati come JPEG, il che riduce uno screenshot tipico a una frazione della sua dimensione originale e aiuta a far durare di più [il tuo spazio di archiviazione](/it/help/storage-usage).",
+        "Scegli tra Standard (2048 pixel all'85% di qualità), Piccolo (1280 pixel al 75%) e Molto piccolo (1024 pixel al 60%) in Impostazioni > Archiviazione > Immagini, oppure disattiva Risparmio spazio per conservare gli originali. Uno screenshot con bordi trasparenti, come la cattura di una finestra con l'ombra esterna, viene comunque ridimensionato entro il limite scelto e salvato come PNG per mantenere la trasparenza."
       ]
     },
     "storage-usage": {
@@ -1125,7 +1149,7 @@
       "a": [
         "Sì. Scrivi `=` in una cella della tabella per scegliere una funzione, oppure scrivi tu la formula. La cella mostra il risultato al posto del testo, e ogni risultato si aggiorna appena cambi una cella che legge. Le celle si indicano con la lettera della colonna e il numero della riga, e l'intestazione conta come riga 1, quindi la tua prima riga di dati è la riga 2. I risultati funzionano su ogni account; scegliere dal menu è Pro.",
         "Per provare tutto in un colpo solo, scarica la nota di esempio, poi apri Impostazioni > Trasferimento > Importa, scegli **File Markdown** e seleziona il file.",
-        "[Nota di esempio (.md)](/marketing/table-formulas-examples.md)",
+        "[Nota di esempio (.md)](/help/table-formulas-examples.md)",
         "Queste sono le funzioni, e si combinano con `+`, `-`, `*`, `/`, `^` per una potenza, e le parentesi:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` e `COUNT` lavorano su un intervallo, come in `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` e `LOG` lavorano su un solo valore, come in `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` e `PHI` sono costanti, e `RAND` restituisce un numero casuale\n- `=B7-B2` sottrae una cella da un'altra, e `=SUM(B2:B10)*0.2` calcola una percentuale di un totale",
         "Fai clic su una cella che mostra un risultato e la formula torna visibile, pronta da modificare. La tua nota salva la formula stessa, mai il risultato, quindi un'esportazione e qualsiasi altra app Markdown mostrano `=SUM(B2:B10)` esattamente come l'hai scritta."
@@ -1207,7 +1231,7 @@
     "zen-mode": {
       "q": "Cos'è la modalità Zen?",
       "a": [
-        "La modalità Zen nasconde tutto tranne la nota che stai scrivendo: la barra laterale, l'elenco e il piè di pagina, e anche la barra di formattazione parte nascosta. Le schede aperte restano in alto. Premi Cmd+Shift+F su Mac o Ctrl+Shift+F su Windows e Linux, fai clic su **Modalità Zen** nel piè di pagina, oppure fai clic destro su un'area vuota e scegli **Modalità Zen**.",
+        "La modalità Zen nasconde tutto tranne la nota che stai scrivendo: la barra laterale, l'elenco e il piè di pagina, e anche la barra di formattazione parte nascosta. Le schede aperte restano in alto. Premi Cmd+Shift+F su Mac o Ctrl+Shift+F su Windows e Linux, fai clic su **Zen** nel piè di pagina, oppure fai clic destro su un'area vuota e scegli **Modalità Zen**.",
         "Premi Esc, di nuovo gli stessi tasti, oppure **Esci da Zen** in cima alla nota per tornare indietro. **Mostra barra di formattazione** riporta la barra di formattazione mentre resti in modalità Zen. La modalità Zen fa parte di Pro, e la [demo](https://try.privacynotes.app) ti permette di provarla senza un account."
       ]
     },

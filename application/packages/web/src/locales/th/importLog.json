@@ -519,6 +519,33 @@
     "skipped_other": "ข้ามรายการ {{count}} รายการที่ไม่มีวันที่หรือเนื้อหาที่อ่านได้",
     "brokenLinks_other": "ลิงก์รายการ Day One {{count}} ลิงก์ชี้ไปนอกไฟล์ส่งออกนี้ จึงเก็บไว้แค่ข้อความ"
   },
+  "microsoftToDo": {
+    "reading": "กำลังอ่านไฟล์ส่งออก Microsoft To Do...",
+    "readingList": "กำลังอ่านรายการ Microsoft To Do {{current}} จาก {{total}}...",
+    "readingAttachments": "กำลังอ่านไฟล์แนบ Microsoft To Do {{done}} จาก {{total}}...",
+    "notMicrosoftToDo": "ไฟล์นี้ดูไม่เหมือนไฟล์ส่งออกของ Microsoft To Do ส่งออกงานของคุณที่ todo.privacynotes.app แล้วลากไฟล์ .zip หรือ .json มาวางที่นี่",
+    "noJson": "ไม่พบไฟล์ JSON ของ Microsoft To Do ใน zip นี้ เลือกไฟล์ .zip ที่ดาวน์โหลดจาก todo.privacynotes.app หรือไฟล์ส่งออก .json ของ Microsoft To Do",
+    "tooLarge": "ไฟล์ JSON ของ Microsoft To Do นี้ใหญ่เกินกว่าจะอ่านได้",
+    "noTasks": "ไม่พบงานในไฟล์ส่งออก Microsoft To Do นี้",
+    "untitledList": "รายการ Microsoft To Do",
+    "untitledTask": "งานที่ไม่มีชื่อ",
+    "dueValue": "ครบกำหนด {{value}}",
+    "repeatsValue": "ทำซ้ำ {{value}}",
+    "statusWaiting": "รอผู้อื่น",
+    "statusDeferred": "เลื่อนออกไป",
+    "linkLabel": "รายการที่ลิงก์",
+    "cloudAttachmentLabel": "ไฟล์แนบบนคลาวด์",
+    "missingAttachmentLine": "ไม่ได้รวมไฟล์แนบมาด้วย: {{name}}",
+    "emptyLists_other": "ข้ามรายการว่างของ Microsoft To Do {{count}} รายการที่ไม่มีงาน",
+    "reminders_other": "งาน {{count}} รายการมีการเตือนจาก Microsoft To Do การเตือนในแต่ละบรรทัดของเช็กลิสต์จะไม่ถูกนำเข้ามาด้วย",
+    "noAttachmentsInJson_other": "มีการระบุไฟล์แนบของ Microsoft To Do {{count}} ไฟล์ แต่ไฟล์ .json ไฟล์เดียวไม่มีไฟล์อยู่ข้างใน ลากไฟล์ส่งออก .zip มาวางเพื่อนำมาด้วย",
+    "missingAttachments_other": "ไฟล์แนบของ Microsoft To Do {{count}} ไฟล์ไม่ได้รวมอยู่ใน zip จึงเก็บไว้เฉพาะชื่อไฟล์",
+    "importedLists_other": "นำเข้ารายการ Microsoft To Do {{count}} รายการเป็นรายการงาน ({{tasks}} งาน)",
+    "completedTasks_other": "เก็บงานที่เสร็จแล้ว {{count}} รายการโดยทำเครื่องหมายไว้ตามเดิม",
+    "subtasks_other": "เก็บขั้นตอนงานย่อย {{count}} รายการไว้",
+    "attachmentsImported_other": "นำเข้าไฟล์แนบของงาน {{count}} ไฟล์แล้ว",
+    "remindersImported_other": "เก็บการเตือนของงาน {{count}} รายการไว้"
+  },
   "todoist": {
     "reading": "กำลังอ่านไฟล์ส่งออก Todoist...",
     "readingProject": "กำลังอ่านโปรเจกต์ {{current}} จาก {{total}}...",
@@ -533,12 +560,15 @@
     "sections_other": "เก็บส่วน {{count}} ส่วนไว้เป็นหัวข้อ",
     "comments_other": "เก็บความคิดเห็น {{count}} รายการไว้",
     "emptyProjects_other": "ข้ามโปรเจกต์ว่าง {{count}} โปรเจกต์ที่ไม่มีงาน",
-    "reminders_other": "งาน {{count}} รายการมีการเตือนจาก Todoist การเตือนในแต่ละบรรทัดของเช็กลิสต์จะไม่ถูกนำเข้ามาด้วย"
+    "reminders_other": "งาน {{count}} รายการมีการเตือนจาก Todoist การเตือนในแต่ละบรรทัดของเช็กลิสต์จะไม่ถูกนำเข้ามาด้วย",
+    "remindersImported_other": "เก็บการเตือนของ Todoist {{count}} รายการไว้"
   },
   "notion": {
-    "notNotion": "ไม่พบหน้า Markdown ใน zip นี้ ใน Notion เลือก Settings > General > Export > Workspace content (หรือเมนูของหน้า > More > Export) เลือก “Markdown & CSV” แล้วลากไฟล์ .zip มาวางที่นี่",
+    "notNotion": "ไม่พบหน้า Notion ใน zip นี้ ใน Notion เลือก Settings > General > Export > Workspace content (หรือเมนูของหน้า > More > Export) เลือก “HTML” (เก็บคอลัมน์และสีไว้) หรือ “Markdown & CSV” แล้วลากไฟล์ .zip มาวางที่นี่",
     "subpageFolders_other": "สร้างกลุ่มหน้าย่อย {{count}} กลุ่มใหม่เป็นโฟลเดอร์",
     "callouts_other": "แปลงกล่องเน้นข้อความของ Notion {{count}} กล่องเป็นบล็อกกล่องเน้นข้อความ",
+    "columns_other": "เก็บเลย์เอาต์คอลัมน์ {{count}} รายการไว้",
+    "colors": "เก็บสีข้อความและไฮไลต์ของ Notion ไว้",
     "databases_other": "ข้ามตาราง CSV ของฐานข้อมูล {{count}} ตาราง หน้าของแต่ละแถวถูกนำเข้าเป็นโน้ตภายในโฟลเดอร์ของตัวเองแล้ว",
     "deadLinks_other": "ลิงก์ {{count}} ลิงก์ชี้ไปยังหน้าที่ไม่อยู่ในไฟล์ส่งออก จึงเก็บไว้แค่ข้อความ"
   },

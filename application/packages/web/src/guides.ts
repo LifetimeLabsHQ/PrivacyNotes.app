@@ -77,6 +77,7 @@ export const GUIDE_META: Record<string, { name: string; icon?: string }> = {
   keepassxc: { name: 'KeePassXC', icon: 'keepassxc.svg' },
   lastpass: { name: 'LastPass', icon: 'lastpass.svg' },
   markdown: { name: 'Markdown', icon: 'markdown.svg' },
+  'microsoft-to-do': { name: 'Microsoft To Do', icon: 'microsoft-to-do.svg' },
   msecure: { name: 'mSecure', icon: 'msecure.svg' },
   'nextcloud-notes': { name: 'Nextcloud Notes', icon: 'nextcloud-notes.svg' },
   nordpass: { name: 'NordPass', icon: 'nordpass.webp' },

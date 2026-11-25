@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { PRIMARY_BTN_SKIN } from '../settingsUI';
 import { useTranslation } from 'react-i18next';
+import { Lock, LockKeyOpen } from '../icons';
 import { clearPinFailures, getPinLockoutState, holdPinSurface, markPinUnlocked, pinCredentialStamp, pinIsPasscode, recordPinFailure, shouldPromptForPin, verifyPin } from '../pin';
 import type { PinInputHandle } from '../PinInput';
 import { SecretInput } from '../PasscodeInput';
 import { secretReady, type SecretKind } from '../secretKind';
 import { ForgotPinLink, PinRecoveryForm } from '../PinRecoveryForm';
 import type { UserSettings } from '../userSettings';
+import { Button, GateCard } from '../ui';
 
 /** What the gate needs to offer the phrase reset for a forgotten PIN. */
 export type PinGateRecovery = {
@@ -148,10 +149,13 @@ function InlinePinGate({
   }
 
   return (
-    <div className="space-y-4">
-      <p className="text-body text-pn-soft leading-relaxed">
-        {t(kind === 'passcode' ? PASSCODE_PROMPTS[prompt] ?? prompt : prompt)}
-      </p>
+    <GateCard
+      maxWidth="max-w-sm"
+      icon={<Lock aria-hidden="true" />}
+      title={kind === 'passcode' ? t('protectedGate.passcodeRequired') : t('protectedGate.pinRequired')}
+      subtitle={t(kind === 'passcode' ? PASSCODE_PROMPTS[prompt] ?? prompt : prompt)}
+      footer={recovery ? <ForgotPinLink kind={kind} onClick={() => setRecovering(true)} /> : undefined}
+    >
       <SecretInput
         kind={kind}
         ref={inputRef}
@@ -176,21 +180,17 @@ function InlinePinGate({
         </p>
       )}
       <div className="flex gap-2">
-        <button
-          onClick={onCancel}
-          className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-body transition"
-        >
-          {t('common:actions.cancel')}
-        </button>
-        <button
+        <Button action="cancel" onClick={onCancel} className="flex-1" />
+        <Button
+          variant="primary"
+          icon={<LockKeyOpen aria-hidden="true" />}
           onClick={() => void submit(value)}
           disabled={!secretReady(kind, value) || disabled}
-          className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-3 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed`}
+          className="flex-1"
         >
           {busy ? t('security:lockScreen.checking') : t('security:lockScreen.unlock')}
-        </button>
+        </Button>
       </div>
-      {recovery && <ForgotPinLink kind={kind} onClick={() => setRecovering(true)} />}
-    </div>
+    </GateCard>
   );
 }

@@ -1,7 +1,9 @@
-import { Suspense, lazy, useEffect, useMemo } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Graph } from './icons';
 import type { LocalNote } from './db';
+import type { FolderDef } from './folders';
+import type { ItemStyles } from './itemStyles';
 import { EditorSlotPill } from './EditorSlotPill';
 import { registerEditorCommand } from './editorCommands';
 import { keyText } from './shortcutMatch';
@@ -44,6 +46,12 @@ export function ConnectionsPill({
   onDismissSuggestion,
   onRestoreSuggestion,
   meaningDoor,
+  itemStyles,
+  folders,
+  isPro,
+  onOpenFullGraph,
+  pinnedCenterId,
+  onPinnedCenterChange,
   isNoteLocked,
   onOpen,
   open,
@@ -79,6 +87,12 @@ export function ConnectionsPill({
   onRestoreSuggestion: (n: LocalNote) => void;
   /** The panel's line that offers the meaning model (Offline AI). */
   meaningDoor: MeaningDoor;
+  itemStyles: ItemStyles;
+  folders: readonly FolderDef[];
+  isPro: boolean;
+  onOpenFullGraph: (focusNoteId: string) => void;
+  pinnedCenterId?: string | null;
+  onPinnedCenterChange?: (id: string | null) => void;
   isNoteLocked: (n: LocalNote) => boolean;
   onOpen: (n: LocalNote) => void;
   open: boolean;
@@ -89,19 +103,26 @@ export function ConnectionsPill({
   idle?: boolean;
 }) {
   const { t } = useTranslation('notes');
+  const [localPinnedId, setLocalPinnedId] = useState<string | null>(null);
+  const pinnedId = onPinnedCenterChange ? (pinnedCenterId ?? null) : localPinnedId;
+  const setPinnedId = onPinnedCenterChange ?? setLocalPinnedId;
+  useEffect(() => {
+    if (!open && pinnedId !== null) setPinnedId(null);
+  }, [open, pinnedId, setPinnedId]);
 
   const byId = useMemo(() => new Map(notes.map((n) => [n.id, n])), [notes]);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- isNoteLocked changes identity every render; the names it gates follow `notes`.
-  const resolver = useMemo(() => linkResolver(notes, (n) => noteLinkName(n, isNoteLocked(n))), [notes]);
+  const gatedKey = notes.filter(isNoteLocked).map((n) => n.id).join(' ');
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- isNoteLocked changes identity every render; gatedKey carries what it reads.
+  const resolver = useMemo(() => linkResolver(notes, (n) => noteLinkName(n, isNoteLocked(n))), [notes, gatedKey]);
   // The items a note can suggest by name (mentions.ts): every item that is
   // not markdown (a contact, a bookmark, a vault item, a drawing), never one
   // behind a PIN. Only the name is read.
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- isNoteLocked changes identity every render; the names it gates follow `notes`.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- isNoteLocked changes identity every render; gatedKey carries what it reads.
   const mentionIndex = useMemo(() => buildMentionIndex(
     notes
       .filter((n) => hasStructuredBody(n.type) && n.pinProtected !== 1 && !isNoteLocked(n))
       .map((n) => ({ id: n.id, name: noteLinkName(n) })),
-  ), [notes]);
+  ), [notes, gatedKey]);
   const lists = useMemo((): ConnectionLists => {
     const pick = (ids: readonly string[] | undefined) =>
       (ids ?? [])
@@ -181,13 +202,52 @@ export function ConnectionsPill({
         })
         : [],
     };
-    // isNoteLocked changes identity every render; the titles it gates follow `notes`.
-    // The open note's own text is read through `note`, so a save re-scores it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, fileUse, byId, resolver, mentionIndex, note, liveBody, relatedIndexVersion, linkSuggestions, dismissedSuggestions, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- isNoteLocked changes identity every render; gatedKey carries what it reads.
+  }, [index, fileUse, byId, resolver, mentionIndex, note, liveBody, relatedIndexVersion, linkSuggestions, dismissedSuggestions, gatedKey, t]);
+
+  const pinnedNote = useMemo(() => {
+    if (!open || !pinnedId) return null;
+    const found = byId.get(pinnedId);
+    if (!found || found.trashed !== 0 || found.pinProtected === 1 || isNoteLocked(found)) return null;
+    return found;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- isNoteLocked changes identity every render; gatedKey carries what it reads.
+  }, [open, pinnedId, byId, gatedKey]);
+  const activeCenterNote = pinnedNote ?? note;
+  const effectiveIndex = useMemo((): LinkIndex => {
+    if (!open) return index;
+    const outgoing = new Map(index.outgoing);
+    outgoing.set(note.id, linksInBody(liveBody, note.id, resolver));
+    return {
+      incoming: index.incoming,
+      protectedIncoming: index.protectedIncoming,
+      outgoing,
+    };
+  }, [open, index, note.id, liveBody, resolver]);
+  const centerRelated = useMemo((): { note: LocalNote; why: RelatedWhy }[] => {
+    if (!open) return [];
+    if (activeCenterNote.id === note.id) return lists.related;
+    const ranking = relatedModule();
+    if (!ranking || !linkSuggestions || hasStructuredBody(activeCenterNote.type) || isNoteLocked(activeCenterNote)) return [];
+    const dismissed = hiddenPairs(dismissedSuggestions);
+    const isListable = (id: string) => {
+      const n = byId.get(id);
+      return !!n && n.trashed === 0 && n.pinProtected !== 1 && !isNoteLocked(n) && !hasStructuredBody(n.type) && !dismissed.has(suggestionPairKey(activeCenterNote.id, id));
+    };
+    const links: RelatedLinks = {
+      incoming: effectiveIndex.incoming,
+      outgoing: { get: (id) => effectiveIndex.outgoing.get(id) },
+    };
+    return ranking
+      .relatedNotes(activeCenterNote, links, isListable, (skip, limit) => meaningHits(activeCenterNote, skip, limit))
+      .map((hit) => ({
+        note: byId.get(hit.id)!,
+        why: { kind: 'meaning' as const, text: '', sentence: '' },
+      }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- isNoteLocked changes identity every render; gatedKey carries what it reads.
+  }, [open, activeCenterNote, note.id, lists.related, linkSuggestions, dismissedSuggestions, byId, effectiveIndex, relatedIndexVersion, gatedKey]);
 
   const shown = lists.from.length + lists.to.length + lists.missing.length + lists.related.length + lists.notRelated.length;
-  const visible = shown + lists.hidden > 0;
+  const visible = shown + lists.hidden > 0 || (open && pinnedNote !== null);
 
   // The key (Mod+Shift+X) runs this toggle, and only while the pill is on screen.
   useEffect(() => {
@@ -207,7 +267,28 @@ export function ConnectionsPill({
 
   return (
     <Suspense fallback={null}>
-      <ConnectionsPanel lists={lists} onHideSuggestions={onHideSuggestions} linkActions={linkActions} onDismissSuggestion={onDismissSuggestion} onRestoreSuggestion={onRestoreSuggestion} meaningDoor={meaningDoor} isNoteLocked={isNoteLocked} onOpen={onOpen} onClose={() => onOpenChange(false)} />
+      <ConnectionsPanel
+        lists={lists}
+        centerNote={activeCenterNote}
+        notes={notes}
+        linkIndex={effectiveIndex}
+        itemStyles={itemStyles}
+        folders={folders}
+        centerRelated={centerRelated}
+        pinned={pinnedNote !== null}
+        pinnedTitle={pinnedNote ? deriveDisplayTitle(pinnedNote, isNoteLocked(pinnedNote)) : null}
+        onTogglePin={() => setPinnedId(pinnedNote ? null : activeCenterNote.id)}
+        isPro={isPro}
+        onOpenFullGraph={onOpenFullGraph}
+        onHideSuggestions={onHideSuggestions}
+        linkActions={linkActions}
+        onDismissSuggestion={onDismissSuggestion}
+        onRestoreSuggestion={onRestoreSuggestion}
+        meaningDoor={meaningDoor}
+        isNoteLocked={isNoteLocked}
+        onOpen={onOpen}
+        onClose={() => { setPinnedId(null); onOpenChange(false); }}
+      />
     </Suspense>
   );
 }

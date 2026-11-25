@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { GithubLogo, X } from './icons';
+import { GithubLogo } from './icons';
 import { ANNOUNCEMENTS, type Announcement } from './announcements';
+import { Banner, CloseButton, FeedbackButton } from './ui';
 
 type Props = {
   surface: 'app' | 'site';
@@ -47,47 +48,39 @@ export function AnnouncementBanner({ surface, dismissedIds, onDismiss }: Props) 
   );
 
   const cta = (
-    <a
+    <FeedbackButton
+      action="open"
       href={active.href}
       target="_blank"
       rel="noopener noreferrer"
-      className="shrink-0 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-compact font-semibold px-3 py-1.5 transition"
     >
       <span className="hidden md:inline">{t(active.ctaKey)}</span>
       <span className="md:hidden">{t(active.ctaNarrowKey)}</span>
-    </a>
-  );
-
-  const dismiss = (
-    <button
-      type="button"
-      onClick={() => onDismiss(active.id)}
-      aria-label={t('announcement.dismiss')}
-      className="shrink-0 rounded-md p-1 text-success hover:bg-emerald-100 dark:hover:bg-emerald-900 transition"
-    >
-      <X />
-    </button>
+    </FeedbackButton>
   );
 
   if (surface === 'site') {
     return (
-      <div className="border-b border-emerald-300/80 dark:border-emerald-800/70 bg-emerald-50 dark:bg-emerald-950/90">
+      <div className="border-b border-success/30 bg-success/10">
         <div className="mx-auto max-w-5xl xl:max-w-7xl px-5 sm:px-8 py-2.5 flex items-center gap-3">
           <GithubLogo weight="fill" className="shrink-0 text-success" aria-hidden="true" />
-          <p className="min-w-0 flex-1 md:truncate text-body leading-snug text-emerald-950 dark:text-emerald-100">{text}</p>
+          <p className="min-w-0 flex-1 md:truncate text-body leading-snug text-pn">{text}</p>
           {cta}
-          {dismiss}
+          <CloseButton onClick={() => onDismiss(active.id)} label={t('announcement.dismiss')} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="shrink-0 flex items-center gap-2 sm:gap-3 border-b border-emerald-300/80 dark:border-emerald-800/70 bg-emerald-50 dark:bg-emerald-950/90 px-3 sm:px-4 py-2">
-      <GithubLogo weight="fill" className="shrink-0 text-success" aria-hidden="true" />
-      <p className="min-w-0 flex-1 md:truncate text-compact leading-snug text-emerald-950 dark:text-emerald-100">{text}</p>
-      {cta}
-      {dismiss}
-    </div>
+    <Banner
+      tone="success"
+      icon={GithubLogo}
+      action={cta}
+      onDismiss={() => onDismiss(active.id)}
+      dismissLabel={t('announcement.dismiss')}
+    >
+      {text}
+    </Banner>
   );
 }

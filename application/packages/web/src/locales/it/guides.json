@@ -443,7 +443,7 @@
       "app": "Notion",
       "title": "Esporta il tuo workspace di Notion",
       "metaTitle": "Come esportare il tuo workspace di Notion - PrivacyNotes",
-      "lead": "Esporta il tuo workspace di Notion come zip Markdown & CSV, e PrivacyNotes rimuove gli ID di 32 caratteri di Notion, ricostruisce le sottopagine come cartelle e trasforma i link fra pagine in collegamenti fra note.",
+      "lead": "Esporta il tuo workspace di Notion come zip HTML o Markdown & CSV, e PrivacyNotes rimuove gli ID di 32 caratteri di Notion, ricostruisce le sottopagine come cartelle, mantiene colonne e colori e trasforma i link fra pagine in collegamenti fra note.",
       "sections": [
         {
           "img": {
@@ -470,23 +470,23 @@
             "width": 1576,
             "height": 600
           },
-          "h": "Scegli Markdown & CSV, con le cartelle attive",
+          "h": "Scegli HTML (consigliato) o Markdown & CSV, con le cartelle attive",
           "steps": [
-            "Imposta Export format su \"Markdown & CSV\".",
+            "Imposta Export format su \"HTML\" per mantenere le colonne affiancate, le larghezze delle colonne, i colori del testo e le evidenziazioni. Funziona anche \"Markdown & CSV\" se non usi colonne o colori.",
             "Imposta Page content su \"Everything\", così vengono inclusi immagini, PDF e file allegati.",
             "Attiva \"Include private pages\" (oppure \"Include subpages\" se esporti una singola pagina) e \"Create folders for subpages\".",
             "Fai clic su Export e salva il file .zip."
           ],
           "p": [
-            "Le esportazioni in HTML e PDF non contengono file Markdown e non possono essere lette dall'importatore di Notion. Scegli \"Markdown & CSV\", così struttura, link e formattazione arrivano in modo pulito."
+            "Le esportazioni in PDF non possono essere lette dall'importatore di Notion. Scegli \"HTML\", così colonne, colori, struttura, link e formattazione arrivano in modo pulito, oppure \"Markdown & CSV\" per il Markdown semplice."
           ]
         },
         {
           "h": "Cosa arriva",
           "p": [
             "Notion aggiunge un ID di 32 caratteri a ogni nome di file esportato e a ogni link interno. PrivacyNotes rimuove quegli ID da ogni titolo e nome di cartella, elimina il contenitore principale \"Private & Shared\" e ricostruisce le sottopagine annidate come cartelle.",
-            "Titoli, elenchi, checklist annidate, tabelle, blocchi di codice con il loro linguaggio, formule matematiche, sottolineato e citazioni arrivano com'erano. I riquadri di Notion si convertono in riquadri di PrivacyNotes, [i collegamenti e le menzioni fra pagine esportate diventano collegamenti fra note](/it/help/note-links) e immagini, PDF e file caricati vengono importati nel tuo spazio di archiviazione.",
-            "Le pagine delle righe dei database vengono importate come note dentro una cartella con il nome del database, con ogni proprietà Tags aggiunta come tag. I file CSV delle tabelle di database vengono saltati e contati nel riepilogo. L'esportazione Markdown di Notion lascia fuori i colori del testo, le evidenziazioni e le pagine nel cestino."
+            "Titoli, elenchi, checklist annidate, tabelle, blocchi di codice con il loro linguaggio, formule matematiche, sottolineato e citazioni arrivano com'erano. Con l'esportazione HTML arrivano anche le colonne affiancate (da 2 a 5 colonne, con le loro proporzioni), i colori del testo e le evidenziazioni. I riquadri di Notion si convertono in riquadri di PrivacyNotes, [i collegamenti e le menzioni fra pagine esportate diventano collegamenti fra note](/it/help/note-links) e immagini, PDF e file caricati vengono importati nel tuo spazio di archiviazione.",
+            "Le pagine delle righe dei database vengono importate come note dentro una cartella con il nome del database, con ogni proprietà Tags aggiunta come tag. I file CSV delle tabelle di database vengono saltati e contati nel riepilogo. L'esportazione Markdown di Notion appiattisce le colonne e lascia fuori i colori del testo, le evidenziazioni e le pagine nel cestino."
           ]
         }
       ]
@@ -1552,6 +1552,45 @@
           "p": [
             "[Ogni pagina finisce in Diario](/it/help/journal) nel giorno di calendario del suo fuso orario. Un titolo iniziale diventa il titolo della pagina, e una pagina senza titolo prende la sua data come titolo. Le pagine con la stella e quelle fissate restano fissate, e i tag restano tag.",
             "La tua posizione compila il chip Posizione della pagina, mentre meteo, attività e musica stanno su una riga in cima. Le foto si importano come immagini, audio, video e PDF come allegati, e i link fra pagine diventano [collegamenti fra note](/it/help/note-links). Quando un unico .zip contiene più diari, ogni diario diventa una cartella."
+          ]
+        }
+      ]
+    },
+    "microsoft-to-do": {
+      "app": "Microsoft To Do",
+      "title": "Esportatore per Microsoft To Do",
+      "metaTitle": "Esportatore per Microsoft To Do - Strumento gratuito da browser - PrivacyNotes",
+      "lead": "Esporta elenchi, sottoattività, note e allegati di Microsoft To Do con il nostro esportatore gratuito per Microsoft To Do che funziona solo nel browser, prima della chiusura di giugno 2027.",
+      "sections": [
+        {
+          "h": "Esporta le tue attività di Microsoft To Do in tre passaggi",
+          "p": [
+            "Microsoft To Do non ha ancora un pulsante di esportazione integrato, quindi abbiamo creato un [esportatore per Microsoft To Do](https://todo.privacynotes.app) gratuito e open source che funziona direttamente nel browser su Windows, Mac, Linux e dispositivi mobili."
+          ],
+          "steps": [
+            "Apri [todo.privacynotes.app](https://todo.privacynotes.app) e fai clic su **Sign in with Microsoft**.",
+            "Consenti l'accesso in sola lettura (`Tasks.Read`) così il browser può leggere i tuoi elenchi senza modificare né eliminare nulla.",
+            "Fai clic su **Fetch my Microsoft To Do data**, poi su **Download ZIP (recommended)** per salvare in locale elenchi, attività, sottoattività, note e allegati."
+          ]
+        },
+        {
+          "h": "Perché è importante un esportatore solo da browser prima di giugno 2027",
+          "p": [
+            "Microsoft ha annunciato che Microsoft To Do chiuderà il 30 giugno 2027, senza un sostituto per gli account Microsoft personali. Gli account aziendali e scolastici passeranno a Microsoft Planner, mentre agli utenti personali viene chiesto di passare a un'altra app di attività.",
+            "Invece di installare programmi da riga di comando o copiare a mano token per sviluppatori, il nostro esportatore web collega il browser direttamente a Microsoft Graph con un clic e funziona sia con gli account personali (outlook.com, hotmail.com, live.com) sia con gli account Microsoft 365."
+          ]
+        },
+        {
+          "h": "Privato fin dalla progettazione - nulla tocca i nostri server",
+          "p": [
+            "L'esportatore è una pagina statica senza backend e senza tracciamento. Il browser recupera le tue attività direttamente da Microsoft e crea lo ZIP sul tuo dispositivo, quindi i tuoi elenchi non passano mai dai nostri server. I token di accesso restano nella memoria temporanea della sessione del browser e vengono rimossi quando esci o chiudi la scheda."
+          ]
+        },
+        {
+          "h": "Cosa c'è nello ZIP e cosa arriva",
+          "p": [
+            "Lo ZIP contiene un backup strutturato `microsoft-to-do-export.json`, una checklist Markdown leggibile per ogni elenco, un file `tasks.csv` pronto per un foglio di calcolo e i tuoi allegati scaricati. Puoi importare quell'esportazione in PrivacyNotes o in qualsiasi altra app Markdown o CSV.",
+            "In PrivacyNotes, ogni elenco diventa un [elenco di attività](/it/help/tasks) che mantiene attività aperte e completate, sottoattività, contrassegni Important, date di scadenza, ripetizioni, categorie come tag, note, elementi collegati e file allegati - e le tue note sono cifrate sul tuo dispositivo. I singoli promemoria della checklist non vengono importati e sono contati nel riepilogo dell'importazione. Funziona anche un semplice file `.json` prodotto dall'esportatore o dall'API Microsoft Graph, senza allegati."
           ]
         }
       ]

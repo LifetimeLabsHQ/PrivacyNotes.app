@@ -21,15 +21,17 @@ export const TextField = forwardRef<HTMLInputElement, Omit<InputHTMLAttributes<H
   hint?: ReactNode;
   error?: ReactNode;
   size?: 'md' | 'sm';
-}>(function TextField({ label, icon, hint, error, size = 'md', className = '', id, ...rest }, ref) {
+}>(function TextField({ label, icon, hint, error, size = 'md', className = '', id, 'aria-describedby': describedBy, ...rest }, ref) {
   const auto = useId();
   const fieldId = id ?? auto;
+  const descId = error || hint ? `${fieldId}-desc` : undefined;
   const wrapped = Boolean(label || hint || error);
   const field = (
     <input
       ref={ref}
       id={fieldId}
       aria-invalid={error ? true : undefined}
+      aria-describedby={describedBy ?? descId}
       {...rest}
       className={`min-w-0${wrapped ? ' w-full' : ''} ${BOX[size]}${error ? ' border-danger' : ''}${className ? ` ${className}` : ''}`}
     />
@@ -44,7 +46,11 @@ export const TextField = forwardRef<HTMLInputElement, Omit<InputHTMLAttributes<H
         </label>
       )}
       {field}
-      {error ? <p role="alert" className="mt-1 text-small text-danger">{error}</p> : hint && <p className={`mt-1 ${SETTINGS_HELP}`}>{hint}</p>}
+      {error ? (
+        <p id={descId} role="alert" className="mt-1 text-small text-danger">{error}</p>
+      ) : hint && (
+        <p id={descId} className={`mt-1 ${SETTINGS_HELP}`}>{hint}</p>
+      )}
     </div>
   );
 });

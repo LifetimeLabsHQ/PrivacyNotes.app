@@ -65,7 +65,7 @@ import type { AttachmentStore } from './attachmentStore';
 import { hasQueuedVersions, listNoteVersions } from './noteVersions';
 import { decryptNote, base64ToBytes, type SupabaseClient } from '@notes/shared';
 import { db } from './db';
-import { openWithRing } from './keyRing';
+import { epochOf, openWithRing } from './keyRing';
 import { isDemoMode } from './demo';
 import { isLocalOnly, isLocalTruthOnly } from './localOnly';
 import { readFlushStashBodies } from './flushStash';
@@ -96,6 +96,40 @@ const BLOB_GC_GRACE_MS = 24 * 60 * 60 * 1000;
  *  Spec: docs/internal/design-decisions.md (deferred blob GC; the orphan
  *  reconcile reads the server's clock). */
 const RECONCILE_GRACE_MS = BLOB_GC_GRACE_MS;
+
+/**
+ * How long a file removed from a note stays restorable via Note History before
+ * blob cleanup is allowed to reclaim it (7 days). Note text snapshots remain
+ * untouched up to the per-note cap; only removed image/attachment blobs expire
+ * after this window so deleting a photo from a Pro note actually frees storage
+ * instead of pinning the blob forever.
+ */
+const HISTORY_BLOB_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+
+/**
+ * True when a version snapshot timestamp falls within the retention window (or
+ * is missing/unparseable, failing closed so corrupt metadata never deletes a
+ * blob). Uses server-assigned `created_at` when available.
+ */
+function versionWithinRetention(timestamp: string | undefined, nowMs: number, maxAgeMs: number): boolean {
+  if (!timestamp) return true;
+  const ts = Date.parse(timestamp);
+  if (!Number.isFinite(ts)) return true;
+  return nowMs - ts <= maxAgeMs;
+}
+
+/**
+ * Read the server's current clock via a fresh quota recount + `updated_at`
+ * stamp, never trusting the device's own clock (which can be days fast and
+ * make fresh snapshots look expired). Returns null when unavailable.
+ */
+async function readServerNow(supabase: SupabaseClient): Promise<number | null> {
+  if (!await recalculateQuota(supabase)) return null;
+  const stamped = await supabase.from('pubkey_quotas').select('updated_at').maybeSingle();
+  const serverNow = Date.parse((stamped.data as { updated_at?: string } | null)?.updated_at ?? '');
+  if (stamped.error || !Number.isFinite(serverNow)) return null;
+  return serverNow;
+}
 
 /**
  * Check which blob UUIDs are still referenced by any note other than
@@ -240,6 +274,9 @@ export async function gcOnBodyChange(
       );
       versionImgIds = new Set<string>();
       versionAttIds = new Set<string>();
+      // Protect every snapshot returned here regardless of device clock skew;
+      // snapshots older than 7 days expire in reconcileOrphanBlobs using the
+      // server's own clock.
       for (const v of versions) {
         for (const id of extractImageIds(v.body)) versionImgIds.add(id);
         for (const id of extractAttachmentIds(v.body)) versionAttIds.add(id);
@@ -568,7 +605,16 @@ export async function sweepBlobGC(
     // answers one count. A History that cannot be read removes nothing.
     let historyKnown = true;
     if (uuids.some((id) => !referenced.has(id))) {
-      const versionRefs = await collectVersionBlobRefs(history.supabase, history.pubkey, history.encryptionKey);
+      // Anchor the 7-day History retention window to the server's clock, never
+      // Date.now(); if server time cannot be read, fail closed and protect all
+      // snapshots.
+      const serverNow = await readServerNow(history.supabase);
+      const versionRefs = await collectVersionBlobRefs(
+        history.supabase,
+        history.pubkey,
+        history.encryptionKey,
+        serverNow !== null ? { maxAgeMs: HISTORY_BLOB_RETENTION_MS, nowMs: serverNow } : undefined,
+      );
       if (versionRefs) {
         for (const id of uuids) if (versionRefs.has(id)) referenced.add(id);
       } else {
@@ -793,7 +839,13 @@ export async function reconcileOrphanBlobs(
       // its queue, and the server purge checks nothing (beta #197 item 2).
       const rest = foreign.filter((uuid) => !inUse.has(uuid));
       if (rest.length > 0) {
-        const versionRefs = await collectVersionBlobRefs(supabase, pubkey, encryptionKey);
+        const serverNow = await readServerNow(supabase);
+        const versionRefs = await collectVersionBlobRefs(
+          supabase,
+          pubkey,
+          encryptionKey,
+          serverNow !== null ? { maxAgeMs: HISTORY_BLOB_RETENTION_MS, nowMs: serverNow } : undefined,
+        );
         for (const uuid of rest) if (!versionRefs || versionRefs.has(uuid)) inUse.add(uuid);
       }
       if (inUse.size > 0) {
@@ -873,8 +925,13 @@ export async function reconcileOrphanBlobs(
       return;
     }
 
-    // Gate 4: history snapshots. Only paid for once something looks orphaned.
-    const versionRefs = await collectVersionBlobRefs(supabase, pubkey, encryptionKey);
+    // Gate 4: history snapshots within the 7-day file retention window. Only
+    // paid for once something looks orphaned. Snapshots older than 7 days keep
+    // their text but stop pinning removed blobs forever.
+    const versionRefs = await collectVersionBlobRefs(supabase, pubkey, encryptionKey, {
+      maxAgeMs: HISTORY_BLOB_RETENTION_MS,
+      nowMs: serverNow,
+    });
     if (!versionRefs) return; // unreadable - never delete on a partial set
     candidates = candidates.filter((uuid) => !versionRefs.has(uuid));
     if (candidates.length === 0) {
@@ -927,6 +984,7 @@ async function collectVersionBlobRefs(
   supabase: SupabaseClient,
   pubkey: string,
   encryptionKey: Uint8Array,
+  opts?: { maxAgeMs?: number; nowMs?: number },
 ): Promise<Set<string> | null> {
   const { count, error: countErr } = await supabase
     .from('note_versions')
@@ -942,12 +1000,14 @@ async function collectVersionBlobRefs(
     return null;
   }
 
+  const maxAgeMs = opts?.maxAgeMs;
+  const nowMs = opts?.nowMs ?? Date.now();
   const refs = new Set<string>();
   let seen = 0;
   for (let from = 0; from < count; from += LIST_PAGE) {
     const { data, error } = await supabase
       .from('note_versions')
-      .select('ciphertext, nonce')
+      .select('ciphertext, nonce, created_at, key_epoch')
       .eq('user_pubkey', pubkey)
       .order('created_at', { ascending: true })
       .order('id', { ascending: true })
@@ -956,15 +1016,18 @@ async function collectVersionBlobRefs(
       console.warn('[imageGC] reconcile version scan failed:', error.message);
       return null;
     }
-    const rows = (data ?? []) as { ciphertext: string; nonce: string }[];
+    const rows = (data ?? []) as { ciphertext: string; nonce: string; created_at?: string; key_epoch?: number }[];
     if (rows.length === 0) break;
     seen += rows.length;
     for (const row of rows) {
+      if (maxAgeMs != null && !versionWithinRetention(row.created_at, nowMs, maxAgeMs)) {
+        continue;
+      }
       let body: string;
       try {
         const ct = base64ToBytes(row.ciphertext);
         const nonce = base64ToBytes(row.nonce);
-        body = openWithRing('sync', encryptionKey, (key) => decryptNote(ct, nonce, key)).body ?? '';
+        body = openWithRing('sync', encryptionKey, (key) => decryptNote(ct, nonce, key), epochOf(row.key_epoch)).body ?? '';
       } catch {
         // A snapshot we cannot read is a reference we cannot rule out.
         return null;
@@ -978,4 +1041,146 @@ async function collectVersionBlobRefs(
     return null;
   }
   return refs;
+}
+
+export interface HistoryOnlyBlobsSummary {
+  count: number;
+  bytes: number;
+  uuids: string[];
+}
+
+/**
+ * Inspect stored files currently kept alive ONLY by Note History snapshots
+ * (not referenced by any live, archived or trashed note, and not already
+ * queued for deletion). Runs under the same completeness gates as
+ * `reconcileOrphanBlobs` so an incomplete mirror never misclassifies a live
+ * file. Returns null when the account cannot be verified safely right now.
+ */
+/**
+ * Combine `findRefsAnywhere` (every local note row, trashed and unconfirmed
+ * tombstones included) with any un-replayed local editor flush-stash bodies.
+ */
+async function findRefsInNotesOrStash(uuids: string[]): Promise<Set<string>> {
+  const referenced = await findRefsAnywhere(uuids);
+  if (referenced.size === uuids.length) return referenced;
+  const remaining = uuids.filter((id) => !referenced.has(id));
+  for (const body of readFlushStashBodies()) {
+    for (const id of remaining) {
+      if (body.includes(id)) referenced.add(id);
+    }
+  }
+  return referenced;
+}
+
+export async function inspectHistoryOnlyBlobs(
+  supabase: SupabaseClient,
+  pubkey: string,
+  encryptionKey: Uint8Array,
+): Promise<HistoryOnlyBlobsSummary | null> {
+  if (isDemoMode() || isLocalTruthOnly() || isServerWriteBlocked() || navigator.onLine === false) return null;
+  let sessionMoved = false;
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    if (session?.user?.app_metadata?.pubkey !== pubkey) sessionMoved = true;
+  });
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session?.user?.app_metadata?.pubkey !== pubkey) return null;
+    if ((await db.notes.where('dirty').anyOf(1, 2).count()) > 0) return null;
+    if (await hasQueuedVersions()) return null;
+    if (!await recalculateQuota(supabase)) return null;
+    const usage = await fetchQuotaUsage(supabase);
+    const localLive = await db.notes.where('deleted').equals(0).count();
+    if (localLive !== usage.noteCount) return null;
+
+    const objects = await listBucket(supabase, pubkey);
+    if (!objects) return null;
+    if (objects.length === 0) return { count: 0, bytes: 0, uuids: [] };
+
+    const queued = new Set((await db.blobGC.toArray()).map((e) => e.uuid));
+    const checkIds = objects.map((o) => o.uuid).filter((id) => !queued.has(id) && !heldForVersion(id));
+    const referenced = await findRefsInNotesOrStash(checkIds);
+    const unreferenced = objects.filter((o) => !queued.has(o.uuid) && !heldForVersion(o.uuid) && !referenced.has(o.uuid));
+    if (unreferenced.length === 0) return { count: 0, bytes: 0, uuids: [] };
+
+    // Read ALL Note History snapshots (no age limit) so both <7d grace blobs
+    // and older snapshots waiting for the next daily reconcile appear here.
+    const versionRefs = await collectVersionBlobRefs(supabase, pubkey, encryptionKey);
+    if (!versionRefs || sessionMoved) return null;
+
+    const held = unreferenced.filter((o) => versionRefs.has(o.uuid));
+    return {
+      count: held.length,
+      bytes: held.reduce((sum, o) => sum + (o.size ?? 0), 0),
+      uuids: held.map((o) => o.uuid),
+    };
+  } catch (err) {
+    console.warn('[imageGC] inspectHistoryOnlyBlobs failed:', err);
+    return null;
+  } finally {
+    subscription.unsubscribe();
+  }
+}
+
+/**
+ * Remove blobs that the user explicitly chose to clear from Note History
+ * ("Clear now" in Settings > Storage > Usage). Caller MUST run a clean sync
+ * pull immediately before invoking this so cross-device restores are visible
+ * in `db.notes`. Re-runs the mirror completeness, flush-stash, and live-ref
+ * checks immediately before deletion; text history rows stay intact.
+ */
+export async function clearHistoryOnlyBlobs(
+  supabase: SupabaseClient,
+  pubkey: string,
+  encryptionKey: Uint8Array,
+  imageStore: ImageStore,
+  targetUuids: readonly string[],
+): Promise<{ removedCount: number; removedBytes: number } | null> {
+  if (targetUuids.length === 0) return { removedCount: 0, removedBytes: 0 };
+  if (isDemoMode() || isLocalTruthOnly() || isServerWriteBlocked() || navigator.onLine === false) return null;
+  let sessionMoved = false;
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    if (session?.user?.app_metadata?.pubkey !== pubkey) sessionMoved = true;
+  });
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session?.user?.app_metadata?.pubkey !== pubkey) return null;
+    if ((await db.notes.where('dirty').anyOf(1, 2).count()) > 0) return null;
+    if (await hasQueuedVersions()) return null;
+    if (!await recalculateQuota(supabase)) return null;
+    const usage = await fetchQuotaUsage(supabase);
+    const localLive = await db.notes.where('deleted').equals(0).count();
+    if (localLive !== usage.noteCount) return null;
+
+    const objects = await listBucket(supabase, pubkey);
+    if (!objects) return null;
+    const sizeByUuid = new Map(objects.map((o) => [o.uuid, o.size ?? 0]));
+
+    const queued = new Set((await db.blobGC.toArray()).map((e) => e.uuid));
+    const uniqueTargets = [...new Set(targetUuids)].filter(
+      (id) => sizeByUuid.has(id) && !queued.has(id) && !heldForVersion(id),
+    );
+    if (uniqueTargets.length === 0) return { removedCount: 0, removedBytes: 0 };
+
+    // Only delete blobs that are genuinely unreferenced by every note/stash
+    // AND confirmed to be held by Note History (never a fresh in-flight upload).
+    const versionRefs = await collectVersionBlobRefs(supabase, pubkey, encryptionKey);
+    if (!versionRefs) return null;
+    const referenced = await findRefsInNotesOrStash(uniqueTargets);
+    const safe = uniqueTargets.filter((id) => versionRefs.has(id) && !referenced.has(id) && !heldForVersion(id));
+    if (safe.length === 0 || sessionMoved) return { removedCount: 0, removedBytes: 0 };
+
+    const { removed } = await imageStore.removeRemoteOnly(safe);
+    if (removed.length > 0) {
+      await dropLocalCopies(removed);
+      await imageStore.clearPendingGC(removed).catch(() => false);
+      await recalculateQuota(supabase);
+    }
+    const removedBytes = removed.reduce((sum, id) => sum + (sizeByUuid.get(id) ?? 0), 0);
+    return { removedCount: removed.length, removedBytes };
+  } catch (err) {
+    console.warn('[imageGC] clearHistoryOnlyBlobs failed:', err);
+    return null;
+  } finally {
+    subscription.unsubscribe();
+  }
 }

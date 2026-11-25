@@ -137,6 +137,7 @@ export const FAQ_SOURCES: Readonly<Record<string, readonly FaqSource[]>> = {
   // Sync & devices
   'add-second-device': [{ doc: 'threatModel', heading: 'QR sign-in and phrase handoff' }],
   'what-syncs': [{ doc: 'security', heading: 'What the server sees' }],
+  'local-only': [{ doc: 'threatModel', heading: 'Local storage at rest' }],
   'sync-conflicts': [{ doc: 'threatModel', heading: 'Sync, conflicts, and deletion' }],
   'remove-device': [{ doc: 'threatModel', heading: 'Devices and fingerprint hashes' }],
   'over-quota': [{ doc: 'security', heading: 'Quotas' }],

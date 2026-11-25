@@ -8,8 +8,10 @@
   "applyToFolderItems": "Použít na všechny položky v této složce",
   "applyToTagItems": "Použít na všechny položky s touto značkou",
   "icon": "Ikona",
+  "emoji": "Emoji",
   "searchPlaceholder": "Hledat ikony",
   "searchLogos": "Hledat loga",
+  "searchEmojis": "Hledat emoji",
   "moreLogos": "Další loga",
   "allLogos": "Všechna loga, od A do Z",
   "recent": "Nedávno použité",
@@ -41,7 +43,14 @@
     "games": "Hry",
     "learning": "Vzdělávání a výzkum",
     "trips": "Cestování a fitness",
-    "privacy": "Soukromí a zabezpečení"
+    "privacy": "Soukromí a zabezpečení",
+    "emojiSmileys": "Smajlíci a emoce",
+    "emojiPeople": "Lidé a tělo",
+    "emojiAnimals": "Zvířata a příroda",
+    "emojiActivities": "Aktivity",
+    "emojiObjects": "Předměty",
+    "emojiSymbols": "Symboly a znaky",
+    "emojiFlags": "Vlajky"
   },
   "icons": {
     "folder": "Složka",

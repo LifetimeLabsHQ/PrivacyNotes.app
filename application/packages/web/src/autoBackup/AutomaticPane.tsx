@@ -9,7 +9,7 @@
  */
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Step } from '../CommandLinePane';
+import { Step } from '../ui/Step';
 import { askForRemindersOnce } from '../notesView/useReminders';
 import { detectPlatform } from '../devices';
 import { STEP_LABELS } from '../ExportProgressModal';

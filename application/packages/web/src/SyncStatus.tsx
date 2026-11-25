@@ -1,5 +1,6 @@
+import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowCircleDown, ArrowsClockwise, CloudCheck, CloudSlash, CloudWarning, CloudX, Database, Laptop, PauseCircle, WifiHigh } from './icons';
+import { ArrowCircleDown, ArrowsClockwise, Database, Laptop, PauseCircle, WifiHigh } from './icons';
 import { useOnlineStatus } from './useOnlineStatus';
 import { usePendingUploads } from './usePendingUploads';
 import { useSyncing } from './syncingStore';
@@ -11,6 +12,102 @@ import { useSyncPaused } from './syncPause';
 import { useFilesWifiOnly } from './wifiOnly';
 import { usePushFailures, usePushHalt } from './pushFailures';
 import { pullStanding, useSyncLog } from './syncLog';
+
+/** Phosphor bold `ArrowsClockwise` path (256x256 viewBox), shared across the
+ *  sync ring states so every footer status icon shares one round silhouette
+ *  with the Settings gear and the storage ring. */
+const ARROWS_CLOCKWISE_BOLD_D =
+  'M228,48V96a12,12,0,0,1-12,12H168a12,12,0,0,1,0-24h19l-7.8-7.8a75.55,75.55,0,0,0-53.32-22.26h-.43A75.49,75.49,0,0,0,72.39,75.57,12,12,0,1,1,55.61,58.41a99.38,99.38,0,0,1,69.87-28.47H126A99.42,99.42,0,0,1,196.2,59.23L204,67V48a12,12,0,0,1,24,0ZM183.61,180.43a75.49,75.49,0,0,1-53.09,21.63h-.43A75.55,75.55,0,0,1,76.77,179.8L69,172H88a12,12,0,0,0,0-24H40a12,12,0,0,0-12,12v48a12,12,0,0,0,24,0V189l7.8,7.8A99.42,99.42,0,0,0,130,226.06h.56a99.38,99.38,0,0,0,69.87-28.47,12,12,0,0,0-16.78-17.16Z';
+
+export type SyncArrowsMark = 'x' | 'slash' | 'warning';
+
+/**
+ * Circular `ArrowsClockwise` glyph carrying its state (`warning` bottom-right
+ * cutout badge for not synced, `x` bottom-right danger cutout badge for demo
+ * not saved, or a masked diagonal `slash` for offline), matching Phosphor's
+ * bold weight. Synced uses plain `ArrowsClockwise` in `text-success`.
+ */
+export function SyncArrowsIcon({
+  mark,
+  size = 20,
+  className = '',
+}: {
+  mark: SyncArrowsMark;
+  size?: number;
+  className?: string;
+}) {
+  const maskId = useId();
+  const badgeMaskId = useId();
+  if (mark === 'slash') {
+    return (
+      <svg
+        viewBox="0 0 256 256"
+        width={size}
+        height={size}
+        fill="currentColor"
+        aria-hidden="true"
+        data-pn-icon=""
+        className={className}
+      >
+        <defs>
+          <mask id={maskId}>
+            <rect width="256" height="256" fill="white" />
+            <line x1="48" y1="40" x2="208" y2="216" stroke="black" strokeWidth="48" strokeLinecap="round" />
+          </mask>
+        </defs>
+        <path d={ARROWS_CLOCKWISE_BOLD_D} mask={`url(#${maskId})`} />
+        <line
+          x1="48"
+          y1="40"
+          x2="208"
+          y2="216"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="22"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+  const badgeFill = mark === 'x' ? 'rgb(var(--pn-danger))' : 'rgb(var(--pn-warning))';
+  return (
+    <svg
+      viewBox="0 0 256 256"
+      width={size}
+      height={size}
+      fill="currentColor"
+      aria-hidden="true"
+      data-pn-icon=""
+      className={className}
+    >
+      <defs>
+        <mask id={maskId}>
+          <rect width="256" height="256" fill="white" />
+          <circle cx="198" cy="196" r="66" fill="black" />
+        </mask>
+        <mask id={badgeMaskId}>
+          <rect width="256" height="256" fill="white" />
+          {mark === 'warning' ? (
+            <>
+              <line x1="198" y1="171" x2="198" y2="198" stroke="black" strokeWidth="17" strokeLinecap="round" />
+              <circle cx="198" cy="221" r="10" fill="black" />
+            </>
+          ) : (
+            <path
+              d="M179 177 L217 215 M217 177 L179 215"
+              fill="none"
+              stroke="black"
+              strokeWidth="17"
+              strokeLinecap="round"
+            />
+          )}
+        </mask>
+      </defs>
+      <path d={ARROWS_CLOCKWISE_BOLD_D} mask={`url(#${maskId})`} />
+      <circle cx="198" cy="196" r="50" fill={badgeFill} mask={`url(#${badgeMaskId})`} />
+    </svg>
+  );
+}
 
 interface SyncStatusProps {
   /** Icon size in px: the footer's 20, the phone bar's 22. The icon is the whole status, so it is larger than a glyph beside a word. */
@@ -51,23 +148,25 @@ interface SyncStatusProps {
  * every note; the footer slot fits one short word, so the fuller "not
  * backed up" lives in the tooltip and in ID & Sync) > Not synced (amber,
  * no clean pull in the log yet, or the newest pull failed) > Uploading (accent
- * spinner, blobs still queued) > Synced (green check).
+ * spinner, blobs still queued) > Synced (accent check).
  *
- * The green check is a promise that nothing is still on its way up, so
+ * The check is a promise that nothing is still on its way up, so
  * it must not show while blobs wait in the upload queue - "Synced" next
  * to ID & Sync's "58 files waiting to upload" is a contradiction, and a
  * user who trusts the check closes the app before the files ever leave.
  *
- * Icon only (owner, 2026-11-21): one glyph per state, and the words live in
- * the tip (the state's short word) and the `aria-label` (the full
- * sentence), so they translate in every language. The footer once showed a word beside the icon and kept it in
- * English for width. Cloud with a check, in the accent: synced. Turning
- * arrows, faint and gray so a running pass does not pull the eye: syncing
- * or uploading. Cloud struck: offline. Cloud with a
- * warning: not synced. Pause: paused by the person. Wi-Fi: files wait for
- * Wi-Fi. Database: storage full. Arrow down: an update is required. Cloud
- * with an X: the demo saves nothing. The counts live in ID & Sync, one click
- * away. Spec: docs/internal/design/ui-patterns.md section 205
+ * Icon only (owner, 2026-11-21; round `ArrowsClockwise` states, 2026-11-25):
+ * one round glyph per state so the gear, the storage ring and the sync icon
+ * balance in the footer, while the words live in the tip (the state's short
+ * word) and the `aria-label` (the full sentence), which translate in every
+ * language. Clean circular arrows (`ArrowsClockwise`) in `text-success`: synced.
+ * Turning arrows, faint and gray so a running pass does not pull the eye: syncing
+ * or uploading. Circular arrows struck: offline. Circular arrows with a bottom-right
+ * cutout `!` badge: not synced. Pause circle: paused by the person. Wi-Fi: files
+ * wait for Wi-Fi. Database: storage full. Arrow circle down: an update is
+ * required. Circular arrows with a bottom-right cutout danger `x` badge: the demo
+ * saves nothing. The counts live in ID & Sync, one click away.
+ * Spec: docs/internal/design/ui-patterns.md section 205
  */
 export function SyncStatus({ size = 20, onOpen, tipPosition = 'above-start', tipHostClassName, ready = true }: SyncStatusProps) {
   const { t } = useTranslation('settings');
@@ -87,17 +186,17 @@ export function SyncStatus({ size = 20, onOpen, tipPosition = 'above-start', tip
 
   if (!ready) return null;
 
-  // Demo mode never saves anything - don't show a green "Synced" check
+  // Demo mode never saves anything - don't show a "Synced" check
   // that implies durability. Say so plainly instead.
   if (isDemoMode()) {
     return (
       <HoverLabel label={t('syncStatus.notSaved')} position={tipPosition} className={tipHostClassName}>
         <span
-          className="inline-flex items-center gap-1.5"
+          className="inline-flex items-center justify-center p-1"
           aria-live="polite"
           aria-label={t('syncStatus.demoAria')}
         >
-          <CloudX size={size} className="text-warning" />
+          <SyncArrowsIcon mark="x" size={size} className="text-warning" />
         </span>
       </HoverLabel>
     );
@@ -108,7 +207,7 @@ export function SyncStatus({ size = 20, onOpen, tipPosition = 'above-start', tip
   // what the server holds. Clicking it opens ID & Sync and runs the
   // verification, so the claim is at least one click from being tested.
   // Below the release floor sync is PAUSED (versionFloor.ts gates every
-  // server write), so this outranks every other state: a green check or a
+  // server write), so this outranks every other state: a check or a
   // spinner would claim work that is deliberately not happening. The pill is
   // the permanent carrier of that truth, same job it does for demo's "Not
   // saved" - the required update toast can cover content, this cannot.
@@ -129,7 +228,7 @@ export function SyncStatus({ size = 20, onOpen, tipPosition = 'above-start', tip
     : paused
     ? {
         // The user's own pause (syncPause.ts). Outranks everything below:
-        // offline, spinners and the green check all describe work that is
+        // offline, spinners and the check all describe work that is
         // deliberately not happening. Never auto-clears, so the pill is
         // the permanent carrier of the paused state.
         body: <PauseCircle size={size} className="text-warning" />,
@@ -138,7 +237,7 @@ export function SyncStatus({ size = 20, onOpen, tipPosition = 'above-start', tip
       }
     : !online
     ? {
-        body: <CloudSlash size={size} className="text-warning" />,
+        body: <SyncArrowsIcon mark="slash" size={size} className="text-warning" />,
         tip: t('syncStatus.offline'),
         aria: t('syncStatus.offline'),
       }
@@ -152,12 +251,12 @@ export function SyncStatus({ size = 20, onOpen, tipPosition = 'above-start', tip
         ? {
             // The last pass could not push these notes (pushFailures.ts),
             // or its push stopped with notes still waiting. Outranks every
-            // upload state below: a green check or an "Uploading" spinner
+            // upload state below: a check or an "Uploading" spinner
             // would claim the notes are on their way while the server has
             // refused them or was never reached. The stop speaks for the
             // pass; the count and the reason per note live in ID & Sync,
             // one click away.
-            body: <CloudWarning size={size} className="text-warning" />,
+            body: <SyncArrowsIcon mark="warning" size={size} className="text-warning" />,
             tip: t('syncStatus.notSynced'),
             aria: halt
               ? t('syncStatus.haltedAria', { count: halt.unreached })
@@ -170,7 +269,7 @@ export function SyncStatus({ size = 20, onOpen, tipPosition = 'above-start', tip
             // this device holds what the server holds while a fresh
             // browser can still be thousands of notes short of it, which
             // reads as lost notes.
-            body: <CloudWarning size={size} className="text-warning" />,
+            body: <SyncArrowsIcon mark="warning" size={size} className="text-warning" />,
             tip: t('syncStatus.notSynced'),
             aria: standing === 'never' ? t('syncStatus.firstSyncPending') : t('syncStatus.pullFailed'),
           }
@@ -198,7 +297,7 @@ export function SyncStatus({ size = 20, onOpen, tipPosition = 'above-start', tip
             aria: t('syncStatus.pendingBlobs', { count: pendingUploads.count }),
           }
         : {
-            body: <CloudCheck size={size} className="text-accent" />,
+            body: <ArrowsClockwise size={size} className="text-success" />,
             tip: t('syncStatus.synced'),
             aria: onOpen ? t('syncStatus.syncedVerifyAria') : t('syncStatus.synced'),
           };

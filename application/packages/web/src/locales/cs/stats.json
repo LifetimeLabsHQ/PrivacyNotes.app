@@ -345,6 +345,7 @@
       "noEntry": "bez záznamu",
       "doseLens": "Nálada byla v průměru {{before}} během {{nBefore}} dní před a {{after}} během {{nAfter}} dní po.",
       "doseLensHeading": "Kolem každé změny dávky",
+      "doseLensLocked": "Přejdi na Pro a uvidíš, jak změny dávkování hýbou tvou náladou",
       "doseLensShort_one": "Chybí ještě {{count}} zapsaný den kolem ní.",
       "doseLensShort_few": "Chybí ještě {{count}} zapsané dny kolem ní.",
       "doseLensShort_many": "Chybí ještě {{count}} zapsaného dne kolem ní.",

@@ -47,6 +47,7 @@
     "plan_dangerZone": "刪除帳號, 清除, 刪除資料, 關閉帳號",
     "storage_quota": "已用空間, 配額, 用量",
     "storage_addon": "更多空間, 購買空間, 額外空間, 擴充容量",
+    "storage_usage": "明細, 最大, 佔用空間, 清理, 清除, 歷史記錄, 筆記歷史, 檔案大小, 用量",
     "images_spaceSaver": "壓縮, 縮小, 調整大小, 較小的圖片, 圖片品質",
     "images_compression": "高度壓縮, 超強壓縮, 壓縮, 小, 極小, 標準, 品質, 畫質, 大小, 儲存空間",
     "images_removeLocation": "GPS, 定位, 位置資訊, EXIF, 中繼資料, 地理標記",

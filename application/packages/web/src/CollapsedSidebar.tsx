@@ -2,11 +2,12 @@ import { useLayoutEffect, useRef, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LogoIcon } from './LogoIcon';
 import { HoverLabel } from './HoverLabel';
-import { ProGlyph } from './UpgradeModal';
+import { ProGlyph } from './ui';
 import { Plus, PushPin, File, CheckSquare, Shield, Folder, Book, Hash, Trash, Question, CaretRight, Devices, FileMd, BookmarkSimple, NotePencil, CheckFat, Notebook, Bookmarks, Key, LockSimple, LockSimpleOpen } from './icons';
 import { KATANA_LINE, NinjaIcon } from './NinjaIcon';
 import { isViewShown, type View } from './views';
-import type { SectionLockControls } from './sectionLock';
+import { isProtectableView, type SectionLockControls } from './sectionLock';
+import { useLongPressContextMenu } from './ContextMenu';
 import { hiddenAtZero, viewRows } from './viewRows';
 import { exemptOpts } from './i18nExempt';
 import { SIDEBAR_ACTIVE } from './sidebarUI';
@@ -139,6 +140,7 @@ export function CollapsedSidebar({
   const updateTipLabel = `${t('tagsRail.downloads', exemptOpts('shell:tagsRail.downloads'))} - ${t('updateToast.available', { ns: 'common' })}`;
   const railRef = useRef<HTMLDivElement>(null);
   useRailFit(railRef);
+  const sectionMenuProps = useLongPressContextMenu(sectionLock.openMenu, isProtectableView);
   return (
     <div ref={railRef} className="pn-rail h-full flex flex-col items-center gap-1 w-[52px]">
       {/* Logo - h-14 + border-b matches expanded sidebar brand row */}
@@ -204,8 +206,9 @@ export function CollapsedSidebar({
               <button
                 type="button"
                 onClick={() => handleSelectView(r.key)}
-                onContextMenu={(e) => sectionLock.openMenu(e, r.key)}
-                className={`relative ${iconBtn(view === r.key)}`}
+                {...sectionMenuProps(r.key)}
+                style={{ WebkitTouchCallout: 'none' }}
+                className={`relative select-none ${iconBtn(view === r.key)}`}
                 aria-label={r.label}
               >
                 <r.icon size={18} />
@@ -244,8 +247,9 @@ export function CollapsedSidebar({
         <button
           type="button"
           onClick={() => handleSelectView('trash')}
-          onContextMenu={(e) => sectionLock.openMenu(e, 'trash')}
-          className={`relative ${dimIconBtn(view === 'trash')}`}
+          {...sectionMenuProps('trash')}
+          style={{ WebkitTouchCallout: 'none' }}
+          className={`relative select-none ${dimIconBtn(view === 'trash')}`}
           aria-label={t('pillars.trash')}
         >
           <Trash />

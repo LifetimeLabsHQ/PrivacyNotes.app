@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next';
+import { HardDrives } from '../icons';
+import { Banner, FeedbackButton } from '../ui';
 
 /**
  * Storage-quota warning banner pinned below the header. Three states:
@@ -52,35 +54,19 @@ export function QuotaExceededBanner({
   const ctaLabel = storageConfigured ? t('quota.manageStorage') : t('quota.viewUsage');
 
   return (
-    <div className={`flex items-center justify-between gap-2 border-b text-body px-4 py-2 ${
-      syncFrozen
-        ? 'bg-red-50 dark:bg-red-950/30 border-red-300 dark:border-red-800 text-red-800 dark:text-red-300'
-        : 'bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300'
-    }`}>
+    <Banner
+      tone={syncFrozen ? 'danger' : 'warning'}
+      action={
+        <FeedbackButton icon={<HardDrives aria-hidden="true" />} onClick={onManageStorage}>
+          {ctaLabel}
+        </FeedbackButton>
+      }
+      onDismiss={syncFrozen ? undefined : onDismiss}
+      dismissLabel={t('common:updateToast.dismiss')}
+    >
       {/* The server counts a deleted file until its object is removed, a day
           later (imageGC.ts, BLOB_GC_GRACE_MS; beta #204 item 3). */}
-      <span>{message} {t('quota.deletedSpace')}</span>
-      <div className="flex items-center gap-2 shrink-0">
-        <button
-          type="button"
-          onClick={onManageStorage}
-          className="text-small font-medium underline hover:no-underline"
-        >
-          {ctaLabel}
-        </button>
-        {!syncFrozen && (
-          <button
-            type="button"
-            onClick={onDismiss}
-            className={syncFrozen
-              ? 'text-danger hover:text-red-900 dark:hover:text-red-200'
-              : 'text-warning hover:text-amber-900 dark:hover:text-amber-200'}
-            aria-label={t('common:updateToast.dismiss')}
-          >
-            ×
-          </button>
-        )}
-      </div>
-    </div>
+      {message} {t('quota.deletedSpace')}
+    </Banner>
   );
 }

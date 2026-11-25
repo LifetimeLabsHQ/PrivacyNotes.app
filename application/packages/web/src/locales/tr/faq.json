@@ -307,6 +307,16 @@
         "Evet. Uygulama yerel öncelikli: [notlarınız cihazınızdaki bir veritabanında durur](/tr/help/data-location), yani okuma, yazma ve [arama bağlantı olmadan çalışır](/tr/help/search-local). Değişiklikler siz tekrar çevrimiçi olduğunuzda otomatik eşitlenir; [çevrimdışıyken eklediğiniz bir görsel ya da dosya da bu cihazda bekler](/tr/help/upload-failed) ve o zaman yüklenir. [Ninja](/tr/help/ninja) da çevrimdışı çalışır; yalnızca bir web sayfasını not olarak kaydetmek bağlantı bekler."
       ]
     },
+    "local-only": {
+      "q": "Hesap olmadan yalnızca yerel bir kasayı nasıl kullanırım?",
+      "a": [
+        "Masaüstü veya mobil uygulamayı (macOS, Windows, Linux, iOS veya Android) açın, giriş ekranında \"Bir ifade oluştur\" seçeneğini seçin ve varsayılan olarak işaretsiz gelen \"Cihazlar arasında eşitle\" kutusunu boş bırakın. Bu, sunucuya kayıt olmadan cihazınızda şifreli bir kasa oluşturur; böylece en baştan çevrimdışı çalışır.",
+        "**Yalnızca yerel mod nasıl çalışır:**",
+        "- **Varsayılan olarak çevrimdışı:** notlar, görevler, günlükler, kasa öğeleri, dosyalar, görseller, PIN ve biyometrik kilit, arama ve [otomatik yedekler](/tr/help/automatic-backups) hesap olmadan cihazınızda çalışır.\n- **Kasanızı yedekleyin:** sunucularımıza hiçbir şey ulaşmadığı için cihazı kaybetmek veya uygulamayı kaldırmak notlarınızı siler. Ayarlar > Yedekleme > Otomatik bölümünde [otomatik yedekleri](/tr/help/automatic-backups) açın veya Ayarlar > Yedekleme > Manuel bölümünde elle bir kopya dışa aktarın.\n- **Eşitlemeyi sonradan açın veya yükseltin:** istediğiniz zaman Ayarlar > ID & Sync bölümünü açıp \"Eşitlemeyi aç\" seçeneğini seçin. Eşitlemeyi kapalı tutarken Pro'ya da yükseltebilirsiniz: ödeme işlemi Pro için bir Hesap kimliği kaydeder, notlarınız ise yerelde kalır.\n- **Başka bir cihazdaki yedekleri geri yükleyin:** Ayarlar > Yedekleme > Geri yükle bölümünü açın ve \"Şifreli yedek (.pnbackup, .pnbackupz)\" seçeneğini seçin. Dosya başka bir kasadan geldiyse uygulama o yedeğin kurtarma ifadesini (yazarak veya QR ile) ister ve her şeyi yerel kasanızın anahtarı altında içe aktarır.",
+        "**Zaten eşitlenen bir hesabınız mı var?** Planınıza uygun adımları seçin:",
+        "- **Ücretsiz hesap (yalnızca yerele geçiş):** Ayarlar > Yedekleme > Manuel bölümünde \"Her şey, şifreli (.pnbackupz)\" seçeneğiyle bir kopya dışa aktarın. Ardından Ayarlar > Hesap bölümünde \"Hesabı ve verileri sil...\" ile [bulut hesabınızı silin](/tr/help/delete-account), masaüstü veya mobil uygulamada \"Bir ifade oluştur\" ile yerel bir kasa başlatın ve eski kurtarma ifadenizi kullanarak [yedeği geri yükleyin](/tr/help/restore-backup).\n- **Pro hesap (Pro'yu koruyup eşitlemeyi durdurma):** hesabınızı silmeyin, çünkü hesabı silmek Pro'yu da kaldırır. Ayarlar > ID & Sync bölümünü açın ve [\"Eşitlemeyi duraklat\"](/tr/help/pause-sync) seçeneğini açın. Pro etkin kalır ve yeni hiçbir şey yüklenmez.\n- **Pro hesap (eşitlenmiş notları sunucudan da temizleme):** önce \"Her şey, şifreli (.pnbackupz)\" dışa aktarın, tüm notları silin, Çöp kutusunu boşaltın, \"Şimdi eşitle\" düğmesine basın ve Eşitlendi görünene kadar bekleyin (bulut dosyaları beş gün sonra otomatik olarak tamamen silinir). Ayarlar > ID & Sync bölümünde \"Eşitlemeyi duraklat\" seçeneğini açın, ardından uygulamayı kapatmadan önce Ayarlar > Yedekleme > Geri yükle bölümünden yedeğinizi geri yükleyin. Pro etkin kalırken notlarınız yeni kimliklerle yerel olarak geri döner."
+      ]
+    },
     "sync-conflicts": {
       "q": "Aynı notu iki cihazda aynı anda düzenlersem ne olur?",
       "a": [
@@ -504,6 +514,13 @@
         "Gerisini [biçimlendirme araç çubuğu](/tr/help/format-bar) ve onun Ekle menüsü ekler: [tablolar](/tr/help/table-formulas), katlanabilen bilgi kutuları, altı çizili metin, üst simge ve alt simge, metin hizalama, metin ve vurgu renkleri, yazı tipleri, bağlantılar, görseller ve dosya ekleri. Her şey Markdown olarak gidip gelir: herhangi bir notun altındaki “Markdown'ı göster” ham kaynağı açar ve [dışa aktarımlar temiz .md dosyalarıdır](/tr/help/export), yani yazdığınız hiçbir şey tescilli bir formata hapsolmaz."
       ]
     },
+    "slash-commands": {
+      "q": "Blok eklemek için / eğik çizgi komutlarını kullanabilir miyim?",
+      "a": [
+        "Evet. Blok menüsünü açmak için satır başında veya bir boşluktan sonra `/` yazın, ardından `/tablo`, `/h2`, `/kanban` veya `/warn` gibi bir sözcük yazıp Enter'a basın. Son seçimleriniz en üstte kalır; ayrıca `/cuma` veya `/yarın` gibi [doğal bir tarih](/tr/help/ninja-dates), bir [hatırlatıcı](/tr/help/reminders) için bir görevin içinde `/remind` ya da [tablo formülleri](/tr/help/table-formulas) için bir tablo hücresinin içinde `/formula` yazabilirsiniz. Eğik çizgi menüsü ücretsizdir; Pro gerektiren bloklarda Pro rozeti görünür.",
+        "Menü [canlı Markdown](/tr/help/markdown-syntax) ile birlikte çalışır ve [biçimlendirme araç çubuğundaki](/tr/help/format-bar) düğmeleri gizlediğinizde ya da [Zen modunda](/tr/help/zen-mode) yazarken kullanılabilir kalır. Menüde yazdığınızla eşleşen bir şey yoksa aramayı doğrudan [Ninja'ya](/tr/help/ninja) aktarmak için Enter'a basın. Bir web adresi, tarih, kesir, kod bloğu veya yapıştırılan metin içinde `/` yazmak düz metin olarak kalır ve menüyü hiç açmaz; kapatmak için Esc'ye basın veya `/` işaretinden hemen sonra boşluk bırakın."
+      ]
+    },
     "tasks": {
       "q": "Görevler nasıl çalışıyor?",
       "a": [
@@ -569,7 +586,7 @@
     "browser-extension": {
       "q": "PrivacyNotes için bir tarayıcı uzantısı var mı?",
       "a": [
-        "Evet, bilgisayarda Chrome, Edge ve Firefox için var ve ücretsiz. Okuduğunuz sayfayı ana metni ve görselleriyle not olarak ya da yer imi olarak kaydeder, kendi yeni notunuzu yazar; bulunduğunuz site için giriş bilgilerini, kartları, SSH anahtarlarını ve yer imlerini de gösterebilir. Bir değeri tek tıklamayla kopyalayın ya da Doldur'u seçin (veya Alt+Shift+L tuşlarına basın); uzantı o sitenin giriş bilgisini sayfaya yazar. Formları kendiliğinden asla doldurmaz.",
+        "Evet, bilgisayarda Chromium ve Firefox tabanlı tarayıcılar için var ve ücretsiz. Okuduğunuz sayfayı ana metni ve görselleriyle not olarak ya da yer imi olarak kaydeder, kendi yeni notunuzu yazar; bulunduğunuz site için giriş bilgilerini, kartları, SSH anahtarlarını ve yer imlerini de gösterebilir. Bir değeri tek tıklamayla kopyalayın ya da Doldur'u seçin (veya Alt+Shift+L tuşlarına basın); uzantı o sitenin giriş bilgisini sayfaya yazar. Formları kendiliğinden asla doldurmaz.",
         "Ayarlar > Uzantı bölümünü açın, uzantıyı tarayıcınızın mağazasından ekleyin, neler yapabileceğini seçin, ardından Kod oluştur'u seçin. Tek kullanımlık kodu kopyalayıp uzantıya yapıştırın. Uzantıyı kaldırmak için aynı sayfada Tarayıcı uzantıları altında yanındaki Kaldır'ı seçin. Bir uzantı cihaz yuvalarınızdan birini kullanmaz. Ücretsiz bir hesap bir tarayıcı bağlar; Pro 10 taneye kadar bağlar. [Notlarınızı nasıl güvende tuttuğu](/tr/help/browser-extension-security)."
       ]
     },
@@ -825,6 +842,13 @@
       "a": [
         "Evet. İki ayar da varsayılan olarak açık, çünkü kullanıcılarımızı seviyoruz: [depolama alanından tasarruf etmenizi](/tr/help/storage-usage) ve gizliliğinizi korumanızı istiyoruz. Alan tasarrufu büyük bir görseli küçültür ve JPEG olarak kaydeder: Standart (varsayılan) %85 kalitede 2048 piksele sığar, Küçük %75 kalitede 1280 piksele sığar ve Çok küçük en küçük dosyalar için %60 kalitede 1024 piksele sığar. Konum verisini kaldır, bir kameranın fotoğrafa yazdığı EXIF meta verisini, GPS konumu dahil, görsel kaydedilmeden önce siler. İkisi de uygulamanın okuyabildiği her görsel için geçerli: bir nota yapıştırılan, dosya olarak eklenen veya içe aktarılan. Okuyamadığı bir görsel, örneğin AVIF, SVG ya da açılmayan biri, dosya olarak eklediğinizde veya içe aktardığınızda konum verisi dahil geldiği gibi saklanır. İki istisna var: bir GIF, animasyonu oynamaya devam etsin diye boyutunu korur ve bir kasa öğesine eklenen dosya tam olarak olduğu gibi saklanır.",
         "İkisinden birini **Ayarlar > Depolama > Görseller** altında kapatın; orada kişi fotoğrafları için onları 512 pikselde tutan üçüncü bir anahtar var. Ayarlar yalnızca yeni görseller için geçerlidir; görsel olmayan dosyalar olduğu gibi saklanır. HEIC ve TIFF görselleri JPEG'e dönüştürülür, çünkü onları yalnızca Safari gösterebilir. [Geri yüklediğiniz bir yedek](/tr/help/restore-backup) bayt bayt geri yazılır."
+      ]
+    },
+    "paste-screenshots": {
+      "q": "Yapıştırılan ekran görüntüleri de sıkıştırılıyor mu?",
+      "a": [
+        "Evet. Kopyalayıp doğrudan bir nota yapıştırdığınız ekran görüntüleri ve görseller; ekli dosyalar, sürüklenen görseller ve içe aktarmalarla aynı [Alan tasarrufu sıkıştırmasından](/tr/help/image-quality) geçer. Sıradan saydam olmayan ekran görüntüleri seçtiğiniz ayara sığacak şekilde yeniden boyutlandırılır ve JPEG olarak kaydedilir; bu da tipik bir ekran görüntüsünü özgün boyutunun çok küçük bir kesrine indirerek [depolama kotanızın](/tr/help/storage-usage) daha uzun süre yetmesine yardımcı olur.",
+        "Ayarlar > Depolama > Görseller altında Standart (%85 kalitede 2048 piksel), Küçük (%75 kalitede 1280 piksel) ve Çok küçük (%60 kalitede 1024 piksel) arasından seçim yapın ya da orijinalleri korumak için Alan tasarrufu seçeneğini kapatın. Gölge efektli bir pencere görüntüsü gibi saydam kenarları olan bir ekran görüntüsü ise yine seçtiğiniz sınıra göre yeniden boyutlandırılır ve saydamlığını korumak için PNG olarak kaydedilir."
       ]
     },
     "storage-usage": {
@@ -1125,7 +1149,7 @@
       "a": [
         "Evet. Bir işlev seçmek için tablo hücresine `=` yazın ya da formülü kendiniz yazın. Hücre metin yerine sonucu gösterir ve okuduğu bir hücreyi değiştirdiğiniz anda her sonuç güncellenir. Hücreler sütun harfi ve satır numarasıyla adlandırılır; başlık 1. satır sayılır, yani ilk veri satırınız 2. satırdır. Sonuçlar her hesapta çalışır; menüden seçim yapmak Pro'dur.",
         "Hepsini bir arada denemek için örnek notu indirin, ardından Ayarlar > Aktarım > İçe aktar bölümünü açın, **Markdown dosyaları** seçeneğini seçin ve dosyayı seçin.",
-        "[Örnek not (.md)](/marketing/table-formulas-examples.md)",
+        "[Örnek not (.md)](/help/table-formulas-examples.md)",
         "İşlevler şunlardır; `+`, `-`, `*`, `/`, üs almak için `^` ve parantezlerle birleştirilebilirler:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` ve `COUNT` bir aralık üzerinde çalışır, örneğin `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` ve `LOG` tek bir değer üzerinde çalışır, örneğin `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` ve `PHI` sabittir, `RAND` ise rastgele bir sayı verir\n- `=B7-B2` bir hücreyi diğerinden çıkarır, `=SUM(B2:B10)*0.2` ise bir toplamın yüzdesini alır",
         "Sonuç gösteren bir hücreye tıklayın; formül değiştirmeye hazır halde geri gelir. Notunuz sonucu değil formülün kendisini saklar, bu yüzden bir dışa aktarma ve diğer tüm Markdown uygulamaları `=SUM(B2:B10)` ifadesini tam yazdığınız gibi gösterir."
@@ -1207,7 +1231,7 @@
     "zen-mode": {
       "q": "Zen modu nedir?",
       "a": [
-        "Zen modu, yazdığınız not dışındaki her şeyi gizler: kenar çubuğu, liste ve alt bilgi; araç çubuğu da gizli başlar. Açık sekmeler üstte kalır. Mac'te Cmd+Shift+F, Windows ve Linux'ta Ctrl+Shift+F tuşlarına basın, alt bilgideki **Zen modu** düğmesine tıklayın ya da boş bir alana sağ tıklayıp **Zen modu** seçeneğini seçin.",
+        "Zen modu, yazdığınız not dışındaki her şeyi gizler: kenar çubuğu, liste ve alt bilgi; araç çubuğu da gizli başlar. Açık sekmeler üstte kalır. Mac'te Cmd+Shift+F, Windows ve Linux'ta Ctrl+Shift+F tuşlarına basın, alt bilgideki **Zen** düğmesine tıklayın ya da boş bir alana sağ tıklayıp **Zen modu** seçeneğini seçin.",
         "Geri dönmek için Esc'ye, aynı tuşlara ya da notun üstündeki **Zen'den çık** düğmesine basın. **Biçimlendirme araç çubuğunu göster**, Zen modunda kalırken araç çubuğunu geri getirir. Zen modu Pro'nun bir parçasıdır ve [demo](https://try.privacynotes.app) hesap olmadan denemenizi sağlar."
       ]
     },

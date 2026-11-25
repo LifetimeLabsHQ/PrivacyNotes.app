@@ -1,34 +1,43 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Database, Image as ImageIcon } from '../icons';
+import { ChartPieSlice, Database, Image as ImageIcon } from '../icons';
 import { SettingsTabStrip, settingsTabClass } from '../settingsUI';
 import { usePaneTab } from '../settingsPaneTab';
 
-type Section = 'storage' | 'images';
+type Section = 'storage' | 'usage' | 'images';
+
+function resolveSection(initialTab?: string): Section {
+  if (initialTab === 'images') return 'images';
+  if (initialTab === 'usage') return 'usage';
+  return 'storage';
+}
 
 /**
- * Settings > Storage: the storage plan on one tab, the image settings on the
- * other. Images moved in from a category of their own (2026-10-22), because
- * what they decide is how much room pictures take. `storage` gets the way to
- * the Images tab, for its "image settings" links.
+ * Settings > Storage: plan and add-ons on Storage, the unified local vault
+ * breakdown on Usage (same screen for Free, Pro, local-only and own-storage),
+ * and image compression settings on Images.
  * Spec: docs/internal/specs/image-quality-handoff.md (section 9)
  */
 export function StoragePane({
   initialTab,
   storage,
+  usage,
   images,
 }: {
   initialTab?: string;
-  storage: (openImages: () => void) => ReactNode;
+  storage: (actions: { openUsage: () => void; openImages: () => void }) => ReactNode;
+  usage: ReactNode;
   images: ReactNode;
 }) {
-  const { t } = useTranslation('notes');
-  const [section, setSection] = usePaneTab<Section>('storage', initialTab === 'images' ? 'images' : 'storage');
-  useEffect(() => { setSection(initialTab === 'images' ? 'images' : 'storage'); }, [initialTab]);
-  // The Images tab carries the search id of the whole image settings, so a
-  // search for "images" still lands on it.
+  const { t } = useTranslation(['notes', 'settings']);
+  const [section, setSection] = usePaneTab<Section>('storage', resolveSection(initialTab));
+  useEffect(() => {
+    setSection(resolveSection(initialTab));
+  }, [initialTab, setSection]);
+  // The Images and Usage tabs carry search ids so Settings search lands on them.
   const tabs = [
-    { id: 'storage', setting: undefined, label: t('settings.storageLabel'), Icon: Database },
+    { id: 'storage', setting: undefined, label: t('notes:settings.storageLabel'), Icon: Database },
+    { id: 'usage', setting: 'storage.usage', label: t('settings:storage.usage.tab'), Icon: ChartPieSlice },
     { id: 'images', setting: 'storage.images', label: t('notes:settings.imagesLabel'), Icon: ImageIcon },
   ] as const;
   return (
@@ -48,7 +57,11 @@ export function StoragePane({
           </button>
         ))}
       </SettingsTabStrip>
-      {section === 'storage' ? storage(() => setSection('images')) : images}
+      {section === 'storage'
+        ? storage({ openUsage: () => setSection('usage'), openImages: () => setSection('images') })
+        : section === 'usage'
+          ? usage
+          : images}
     </div>
   );
 }

@@ -1,8 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
-import { Monitor, X } from './icons';
+import { Monitor } from './icons';
 import { desktopShortcutUrl, dismissDesktopOffer, type ShortcutTarget } from './noteShortcut';
-import { useEscapeToClose } from './useEscapeToClose';
+import { Banner, Button, FeedbackButton, Modal, ModalFooter, SETTINGS_BTN_PRIMARY } from './ui';
 
 /**
  * The offer to open a shortcut in the desktop app, in a computer browser.
@@ -20,25 +19,19 @@ export function ShortcutDesktopBar({ target, onClose }: { target: ShortcutTarget
     onClose();
   }
   return (
-    <div className="shrink-0 flex items-center gap-2 sm:gap-3 border-b border-divider bg-accent/10 px-3 sm:px-4 py-2">
-      <Monitor className="shrink-0 text-accent" aria-hidden="true" />
-      <p className="min-w-0 flex-1 truncate text-compact leading-snug text-pn">{t('shortcut.offerText')}</p>
-      <a
-        href={desktopShortcutUrl(target)}
-        onClick={onClose}
-        className={`shrink-0 rounded-lg ${PRIMARY_BTN_SKIN} text-compact font-semibold px-3 py-1.5 transition`}
-      >
-        {t('shortcut.offerOpen')}
-      </a>
-      <button
-        type="button"
-        onClick={dismiss}
-        aria-label={t('shortcut.offerDismiss')}
-        className="shrink-0 rounded-md p-1 text-pn-muted hover:bg-accent/15 transition"
-      >
-        <X />
-      </button>
-    </div>
+    <Banner
+      tone="info"
+      icon={Monitor}
+      action={
+        <FeedbackButton action="open" href={desktopShortcutUrl(target)} onClick={onClose}>
+          {t('shortcut.offerOpen')}
+        </FeedbackButton>
+      }
+      onDismiss={dismiss}
+      dismissLabel={t('shortcut.offerDismiss')}
+    >
+      {t('shortcut.offerText')}
+    </Banner>
   );
 }
 
@@ -46,30 +39,24 @@ export function ShortcutDesktopBar({ target, onClose }: { target: ShortcutTarget
  *  closes it and leaves the shortcut waiting for the vault. */
 export function ShortcutSignInCard({ target, onSignIn }: { target: ShortcutTarget; onSignIn: () => void }) {
   const { t } = useTranslation('shell');
-  useEscapeToClose(onSignIn);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div role="dialog" aria-modal="true" aria-labelledby="shortcut-card-title" className="w-full max-w-sm rounded-2xl border border-divider bg-surface-2 p-6 text-center shadow-xl">
-        <Monitor size={28} className="mx-auto text-accent" aria-hidden="true" />
-        <h2 id="shortcut-card-title" className="mt-3 text-heading font-semibold text-pn">{t('shortcut.cardTitle')}</h2>
-        <p className="mt-1 text-body text-pn-muted">{t('shortcut.cardBody')}</p>
-        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <a
-            href={desktopShortcutUrl(target)}
-            className={`rounded-lg ${PRIMARY_BTN_SKIN} text-body font-semibold px-4 py-2 transition`}
-          >
-            {t('shortcut.cardOpen')}
-          </a>
-          <button
-            type="button"
-            onClick={onSignIn}
-            className="rounded-lg border border-divider text-pn text-body font-medium px-4 py-2 hover:bg-surface-1 transition"
-          >
-            {t('shortcut.cardSignIn')}
-          </button>
-        </div>
-        <p className="mt-4 text-small text-pn-muted">{t('shortcut.cardAfter')}</p>
-      </div>
-    </div>
+    <Modal
+      onClose={onSignIn}
+      title={t('shortcut.cardTitle')}
+      icon={<Monitor />}
+      className="max-w-sm p-6 space-y-4"
+    >
+      <p className="text-body text-pn-muted">{t('shortcut.cardBody')}</p>
+      <ModalFooter>
+        <Button action="next" variant="secondary" onClick={onSignIn}>
+          {t('shortcut.cardSignIn')}
+        </Button>
+        <a href={desktopShortcutUrl(target)} className={SETTINGS_BTN_PRIMARY}>
+          <Monitor aria-hidden="true" className="shrink-0" />
+          {t('shortcut.cardOpen')}
+        </a>
+      </ModalFooter>
+      <p className="text-small text-pn-muted">{t('shortcut.cardAfter')}</p>
+    </Modal>
   );
 }

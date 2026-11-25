@@ -23,9 +23,8 @@
  */
 import { useTranslation } from 'react-i18next';
 import { FileMd, Robot, Book, GitBranch, Sparkle, Eye, ListChecks, Tag, Table, Laptop, CloudSlash, Brain } from '../icons';
-import { useEscapeToClose } from '../useEscapeToClose';
 import { MarkdownDefaultAppRow } from './MarkdownDefaultApp';
-import { CloseButton, FeaturePitch, PitchBadge } from '../ui';
+import { Button, FeaturePitch, Modal, PitchBadge } from '../ui';
 
 /**
  * The pitch itself, without any modal chrome.
@@ -84,44 +83,24 @@ export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
 
 export function MarkdownExplainer({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation('shell');
-  useEscapeToClose(onClose);
-
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/50 dark:bg-black/70 flex items-center justify-center p-4 sm:p-6"
-      onClick={onClose}
+    <Modal
+      onClose={onClose}
+      title={t('markdown.explainTitle')}
+      icon={<FileMd />}
+      className="max-w-md p-5 space-y-3 max-h-[calc(100dvh-2rem)] overflow-y-auto"
     >
-      <div
-        className="w-full max-w-md rounded-lg border border-divider bg-surface-2 p-5"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="markdown-explainer-title"
-      >
-        <div className="flex items-center gap-2.5 mb-3">
-          <FileMd size={20} className="text-pn-muted shrink-0" />
-          <h2 id="markdown-explainer-title" className="flex-1 text-heading font-semibold text-pn">
-            {t('markdown.explainTitle')}
-          </h2>
-          <CloseButton onClick={onClose} className="shrink-0" />
-        </div>
-
-        {/* One dismiss, no confirm. This was also the first-folder-pick gate
-            until 2026-08-14, when that mode was removed as redundant - the
-            empty state renders this same pitch, so the gate showed the reader
-            what was already on screen. Now it is only the reference card. */}
-        <MarkdownPitch
-          actions={
-            <button
-              type="button"
-              onClick={onClose}
-              className="shrink-0 text-compact px-3 py-1.5 rounded-md border border-divider hover:bg-surface-1 transition"
-            >
-              {t('markdown.explainDone')}
-            </button>
-          }
-        />
-      </div>
-    </div>
+      {/* One dismiss, no confirm. This was also the first-folder-pick gate
+          until 2026-08-14, when that mode was removed as redundant - the
+          empty state renders this same pitch, so the gate showed the reader
+          what was already on screen. Now it is only the reference card. */}
+      <MarkdownPitch
+        actions={
+          <Button action="done" variant="secondary" onClick={onClose} className="shrink-0">
+            {t('markdown.explainDone')}
+          </Button>
+        }
+      />
+    </Modal>
   );
 }

@@ -13,7 +13,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, type PointerE
 import { createPortal } from 'react-dom';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
-import { Checkbox, Modal, Popover, Select } from '../ui';
+import { Checkbox, Modal, Popover, RangeSlider, Select } from '../ui';
 import { ResetDefaultsButton } from '../settingsUI';
 import { GroupHeading } from '../formFields';
 import { ColorSwatch } from '../ColorSwatch';
@@ -577,15 +577,14 @@ function SliderRow({ label, value, range, onChange }: {
   return (
     <div className="grid grid-cols-[6.5rem_minmax(0,1fr)_2.75rem] items-center gap-2">
       <label htmlFor={id} className="text-small text-pn">{label}</label>
-      <input
+      <RangeSlider
         id={id}
-        type="range"
         min={range.min}
         max={range.max}
         step={range.step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="min-w-0 accent-accent"
+        className="min-w-0"
       />
       <span className="text-end text-small tabular-nums text-pn-muted">{value.toFixed(range.step < 1 ? 2 : 0)}</span>
     </div>

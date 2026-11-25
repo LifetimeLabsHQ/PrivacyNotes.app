@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { useTranslation } from 'react-i18next';
+import { Button, EmptyState } from './ui';
 import { ItemList, useContextTarget, useItemList } from './itemList';
 import type { LocalNote } from './db';
 import type { ListPrefs, ListPrefsStore } from './listPrefs';
@@ -292,20 +292,23 @@ export function ContactsList({
 
       <ItemList list={list} grid={viewMode === 'grid'} pullToSync>
         {empty && !filteredAway ? (
-          <li className={`flex flex-col items-center justify-center text-center px-8 py-14 ${viewMode === 'grid' ? 'col-span-full' : ''}`}>
-            <PILLAR_GLYPHS.contacts size={34} className="text-pn-muted" weight="duotone" aria-hidden="true" />
-            <p className="text-compact text-pn-muted mt-3">{otherSpaceLine ?? t('contacts.emptyNone')}</p>
-            <h3 className="text-row font-semibold mt-1 mb-4">{t('contacts.emptyTitle')}</h3>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <button type="button" onClick={onRequestNew} className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-md ${PRIMARY_BTN_SKIN} px-3.5 py-2 text-compact font-semibold transition`}>
-                <NEW_GLYPHS.contact />
-                {t('contacts.emptyAdd')}
-              </button>
-              <button type="button" onClick={onOpenImport} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-divider bg-surface-1 px-3.5 py-2 text-compact transition hover:bg-pn/10">
-                <Download />
-                {t('contacts.emptyImport')}
-              </button>
-            </div>
+          <li className={viewMode === 'grid' ? 'col-span-full' : ''}>
+            <EmptyState
+              icon={<PILLAR_GLYPHS.contacts weight="duotone" aria-hidden="true" />}
+              title={t('contacts.emptyTitle')}
+              actions={
+                <>
+                  <Button variant="primary" icon={<NEW_GLYPHS.contact aria-hidden="true" />} onClick={onRequestNew}>
+                    {t('contacts.emptyAdd')}
+                  </Button>
+                  <Button icon={<Download aria-hidden="true" />} onClick={onOpenImport}>
+                    {t('contacts.emptyImport')}
+                  </Button>
+                </>
+              }
+            >
+              {otherSpaceLine ?? t('contacts.emptyNone')}
+            </EmptyState>
           </li>
         ) : (
           <>
@@ -320,7 +323,9 @@ export function ContactsList({
               </li>
             )}
             {!filteredAway && contacts.length === 0 && (
-              <li className={`p-6 text-compact text-pn-muted text-center ${viewMode === 'grid' ? 'col-span-full' : ''}`}>{t('contacts.noMatches')}</li>
+              <li className={viewMode === 'grid' ? 'col-span-full' : ''}>
+                <EmptyState compact>{t('contacts.noMatches')}</EmptyState>
+              </li>
             )}
             {(() => {
               const renderContact = (n: LocalNote) => (

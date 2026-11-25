@@ -92,7 +92,8 @@ export function recordSyncPass(entry: SyncPassEntry): void {
   for (const cb of listeners) cb();
 }
 
-function getSyncLog(): SyncPassEntry[] {
+/** Snapshot of the in-memory sync pass log (oldest first). */
+export function getSyncLog(): SyncPassEntry[] {
   return entries;
 }
 

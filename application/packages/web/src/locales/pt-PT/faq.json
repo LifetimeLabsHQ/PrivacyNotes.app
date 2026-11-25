@@ -307,6 +307,16 @@
         "Sim. A app é local-first: [as tuas notas vivem numa base de dados no teu dispositivo](/pt/help/data-location), por isso ler, escrever e [procurar funcionam sem ligação nenhuma](/pt/help/search-local). As alterações sincronizam sozinhas quando voltares a ficar online, e [uma imagem ou um ficheiro que adiciones offline fica à espera neste dispositivo](/pt/help/upload-failed) e também é enviado nessa altura. O [Ninja](/pt/help/ninja) também funciona offline; só guardar uma página web como nota espera por uma ligação."
       ]
     },
+    "local-only": {
+      "q": "Como uso um cofre apenas local sem conta?",
+      "a": [
+        "Abre a app para computador ou telemóvel (macOS, Windows, Linux, iOS ou Android), escolhe \"Gerar uma frase\" no ecrã de início de sessão e deixa \"Sincronizar entre dispositivos\" desmarcado, que é a predefinição. Isto cria um cofre encriptado no teu dispositivo sem registo no servidor, por isso funciona offline desde o início.",
+        "**Como funciona o modo apenas local:**",
+        "- **Offline por predefinição:** notas, tarefas, diários, itens do cofre, ficheiros, imagens, bloqueio por PIN e biométrico, pesquisa e [backups automáticos](/pt/help/automatic-backups) funcionam todos no teu dispositivo sem conta.\n- **Faz backup do teu cofre:** como nada chega aos nossos servidores, perder o dispositivo ou desinstalar a app apaga as tuas notas. Ativa os [backups automáticos](/pt/help/automatic-backups) em Definições > Backup > Automático, ou exporta uma cópia manual em Definições > Backup > Manual.\n- **Ativa a sincronização ou passa para Pro mais tarde:** abre Definições > ID & Sync e escolhe \"Ativar sincronização\" a qualquer momento. Também podes passar para Pro mantendo a sincronização desativada: o pagamento regista um ID da conta para o Pro enquanto as tuas notas ficam locais.\n- **Restaura backups de outro dispositivo:** abre Definições > Backup > Restaurar e escolhe \"Backup encriptado (.pnbackup, .pnbackupz)\". Se o ficheiro vier de outro cofre, a app pede a frase de recuperação desse backup (escrita ou por código QR) e importa tudo com a chave do teu cofre local.",
+        "**Já tens uma conta sincronizada?** Escolhe os passos para o teu plano:",
+        "- **Conta gratuita (passar para apenas local):** exporta uma cópia em Definições > Backup > Manual e escolhe \"Tudo, encriptado (.pnbackupz)\". Depois [elimina a tua conta na nuvem](/pt/help/delete-account) em Definições > Conta através de \"Eliminar a conta e os dados...\", inicia um cofre local na app para computador ou telemóvel com \"Gerar uma frase\" e [restaura o backup](/pt/help/restore-backup) com a tua frase de recuperação antiga.\n- **Conta Pro (manter o Pro e parar a sincronização):** não elimines a tua conta, porque eliminar uma conta remove o Pro. Abre **Definições > ID & Sync** e ativa [\"Pausar sincronização\"](/pt/help/pause-sync). O Pro mantém-se ativo e nada de novo é enviado.\n- **Conta Pro (apagar também as notas sincronizadas do servidor):** exporta primeiro \"Tudo, encriptado (.pnbackupz)\", elimina todas as notas, esvazia o Lixo, carrega em \"Sincronizar agora\" e espera até aparecer Sincronizado (os ficheiros na nuvem são eliminados automaticamente ao fim de cinco dias). Ativa \"Pausar sincronização\" em **Definições > ID & Sync** e, antes de fechares a app, restaura o teu backup em Definições > Backup > Restaurar. As tuas notas regressam localmente com novos identificadores enquanto o Pro se mantém ativo."
+      ]
+    },
     "sync-conflicts": {
       "q": "O que acontece se editar a mesma nota em dois dispositivos ao mesmo tempo?",
       "a": [
@@ -504,6 +514,13 @@
         "[A barra de formatação](/pt/help/format-bar) e o seu menu Inserir acrescentam o resto: [tabelas](/pt/help/table-formulas), avisos que podem fechar-se, sublinhado, sobrescrito e subscrito, alinhamento do texto, cores de texto e de destaque, tipos de letra, ligações, imagens e anexos de ficheiros. Tudo se mantém como Markdown nos dois sentidos: \"Ver markdown\" por baixo de qualquer nota revela o código-fonte em bruto, e [as exportações são ficheiros .md limpos](/pt/help/export), por isso nada do que escreves fica preso num formato proprietário."
       ]
     },
+    "slash-commands": {
+      "q": "Posso usar comandos com / para inserir blocos?",
+      "a": [
+        "Sim. Escreve `/` no início de uma linha ou depois de um espaço para abrir o menu de blocos, depois escreve uma palavra como `/tabela`, `/h2`, `/kanban` ou `/warn` e carrega em Enter. As tuas escolhas recentes ficam no topo, e também podes escrever uma [data natural](/pt/help/ninja-dates) como `/sexta` ou `/amanhã`, `/remind` dentro de uma tarefa para um [lembrete](/pt/help/reminders), ou `/formula` dentro de uma célula de tabela para [fórmulas de tabela](/pt/help/table-formulas). O menu de barra é gratuito; os blocos que exigem Pro mostram um distintivo Pro.",
+        "O menu funciona em conjunto com o [Markdown ao vivo](/pt/help/markdown-syntax) e continua disponível quando escondes botões na [barra de formatação](/pt/help/format-bar) ou escreves no [modo Zen](/pt/help/zen-mode). Se nada no menu corresponder ao que escreveste, carrega em Enter para passar a pesquisa diretamente ao [Ninja](/pt/help/ninja). Escrever `/` dentro de um endereço web, de uma data, de uma fração, de um bloco de código ou de texto colado fica como texto simples e nunca abre o menu; carrega em Esc ou num espaço logo a seguir a `/` para o fechar."
+      ]
+    },
     "tasks": {
       "q": "Como funcionam as tarefas?",
       "a": [
@@ -569,7 +586,7 @@
     "browser-extension": {
       "q": "Existe uma extensão do navegador do PrivacyNotes?",
       "a": [
-        "Sim, para Chrome, Edge e Firefox no computador, e é gratuita. Guarda a página que estás a ler como nota, com o texto principal e as imagens, ou como marcador, escreve uma nova nota tua e pode mostrar os logins, cartões, chaves SSH e marcadores do site em que estás. Copia um valor com um clique, ou escolhe Preencher (ou carrega em Alt+Shift+L) e a extensão escreve na página o login desse site. Nunca preenche formulários sozinha.",
+        "Sim, para navegadores baseados em Chromium e Firefox no computador, e é gratuita. Guarda a página que estás a ler como nota, com o texto principal e as imagens, ou como marcador, escreve uma nova nota tua e pode mostrar os logins, cartões, chaves SSH e marcadores do site em que estás. Copia um valor com um clique, ou escolhe Preencher (ou carrega em Alt+Shift+L) e a extensão escreve na página o login desse site. Nunca preenche formulários sozinha.",
         "Abre Definições > Extensão, adiciona a extensão a partir da loja do teu navegador, escolhe o que ela pode fazer e depois escolhe Criar um código. Copia o código de utilização única e cola-o na extensão. Para a remover, escolhe Remover junto dela em Extensões do navegador, na mesma página. Uma extensão não ocupa nenhuma das tuas vagas de dispositivo. Uma conta gratuita liga um navegador; o Pro liga até 10. [Como mantém as tuas notas seguras](/pt/help/browser-extension-security)."
       ]
     },
@@ -825,6 +842,13 @@
       "a": [
         "Sim. Ambas as definições vêm ligadas porque gostamos dos nossos utilizadores: queremos que [poupes espaço](/pt/help/storage-usage) e mantenhas a tua privacidade. Poupança de espaço reduz uma imagem grande e guarda-a como JPEG: Padrão (predefinido) ajusta para 2048 píxeis a 85% de qualidade, Pequeno ajusta para 1280 píxeis a 75% e Muito pequeno ajusta para 1024 píxeis a 60% para os ficheiros mais pequenos. Remover dados de localização apaga os metadados EXIF que uma câmara escreve numa foto, incluindo a posição GPS, antes de a imagem ser guardada. Ambas se aplicam a todas as imagens que a app consegue ler: coladas numa nota, adicionadas como ficheiro ou importadas. Uma imagem que a app não consegue ler, como AVIF, SVG ou uma que não abra, é guardada tal como chegou quando a adicionas como ficheiro ou a importas, com os dados de localização incluídos. Duas exceções: um GIF mantém o tamanho para que a animação continue a funcionar, e um ficheiro anexado a um item do Cofre é mantido exatamente como estava.",
         "Desliga qualquer uma delas em **Definições > Armazenamento > Imagens**, onde as fotos de contactos têm um terceiro interruptor que as mantém em 512 píxeis. As definições só se aplicam a imagens novas; ficheiros que não são imagens são guardados exatamente como estão. As imagens HEIC e TIFF são convertidas para JPEG, porque só o Safari as consegue mostrar. [Um backup que restaures](/pt/help/restore-backup) é reescrito byte a byte."
+      ]
+    },
+    "paste-screenshots": {
+      "q": "As capturas de ecrã coladas também são comprimidas?",
+      "a": [
+        "Sim. As capturas de ecrã e as imagens que copias e colas diretamente numa nota passam pela mesma [compressão da Poupança de espaço](/pt/help/image-quality) que os ficheiros anexados, as imagens arrastadas e as importações. As capturas de ecrã opacas normais são redimensionadas para caberem na predefinição que escolheste e guardadas como JPEG, o que reduz uma captura de ecrã típica a uma fração do seu tamanho original e ajuda a esticar a tua [quota de armazenamento](/pt/help/storage-usage).",
+        "Escolhe entre Padrão (2048 píxeis com 85% de qualidade), Pequeno (1280 píxeis a 75%) e Muito pequeno (1024 píxeis a 60%) em Definições > Armazenamento > Imagens, ou desliga a Poupança de espaço para manteres os originais. Uma captura de ecrã com margens transparentes, como uma captura de janela com sombra projetada, continua a ser redimensionada para o limite que escolheste e é guardada como PNG para manter a transparência."
       ]
     },
     "storage-usage": {
@@ -1125,7 +1149,7 @@
       "a": [
         "Sim. Escreve `=` numa célula da tabela para escolher uma função, ou escreve tu a fórmula. A célula mostra a resposta em vez do texto, e cada resposta atualiza-se no instante em que mudas uma célula que ela lê. As células têm o nome da letra da coluna e do número da linha, e o cabeçalho conta como linha 1, por isso a tua primeira linha de dados é a linha 2. As respostas funcionam em todas as contas; escolher a partir do menu é Pro.",
         "Para experimentares tudo de uma vez, transfere a nota de exemplo, abre Definições > Transferência > Importar, escolhe **Ficheiros Markdown** e seleciona o ficheiro.",
-        "[Nota de exemplo (.md)](/marketing/table-formulas-examples.md)",
+        "[Nota de exemplo (.md)](/help/table-formulas-examples.md)",
         "Estas são as funções, e combinam-se com `+`, `-`, `*`, `/`, `^` para uma potência, e parênteses:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` e `COUNT` funcionam num intervalo, como em `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` e `LOG` funcionam com um só valor, como em `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` e `PHI` são constantes, e `RAND` dá um número aleatório\n- `=B7-B2` subtrai uma célula a outra, e `=SUM(B2:B10)*0.2` calcula uma percentagem de um total",
         "Clica numa célula que mostra uma resposta e a fórmula volta, pronta a mudar. A tua nota guarda a própria fórmula, nunca o resultado, por isso uma exportação e qualquer outra app de Markdown mostram `=SUM(B2:B10)` exatamente como a escreveste."

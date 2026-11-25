@@ -189,7 +189,21 @@ export const COMMAND_KEYS = {
   ],
   zoomOut: [{ mod: true, key: '-', repeat: true, desktop: true }],
   zoomReset: [{ mod: true, key: '0', desktop: true }],
+  graph: [
+    { mod: true, alt: true, key: 'g', os: 'mac' },
+    { alt: true, shift: true, key: 'g', os: 'pc' },
+  ],
   zen: [{ mod: true, shift: true, key: 'f' }],
+  // Full-screen reading/presenting mode (#911). F11 is the standard key on
+  // Windows and Linux; on Mac laptops F11 is a system/media key, so Mac
+  // leads with Mod+Shift+Enter and keeps F11 as an alias (and PC keeps
+  // Mod+Shift+Enter as an alias when a browser claims F11).
+  fullScreen: [
+    { mod: true, shift: true, key: 'Enter', os: 'mac' },
+    { key: 'F11', os: 'pc' },
+    { mod: true, shift: true, key: 'Enter', os: 'pc', alias: true },
+    { key: 'F11', os: 'mac', alias: true },
+  ],
   help: [{ key: '?' }],
 
   // ── Owned by the editor's keymap (TipTap); listed for the help ──
@@ -252,7 +266,7 @@ export function visibleBindings(id: CommandId, os: KeyOs, desktop: boolean): Key
 }
 
 const MAC_NAMES: Record<string, string> = {
-  Backspace: '⌫', Delete: '⌦', Escape: 'Esc', Enter: '↩', Tab: 'Tab',
+  Backspace: '⌫', Delete: '⌦', Escape: 'Esc', Enter: '↩\uFE0E', Tab: 'Tab',
   ArrowLeft: '←', ArrowRight: '→', ArrowUp: '↑', ArrowDown: '↓',
 };
 const PC_NAMES: Record<string, string> = {

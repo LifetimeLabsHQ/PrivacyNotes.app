@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowUp, ArrowClockwise } from './icons';
+import { Button, CloseButton } from './ui/Button';
 import { Spinner } from './ui/feedback';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
 
 /**
  * Shared "Update available" toast - single source of truth for both the web
@@ -72,8 +72,8 @@ export function UpdateToast({
         // buttons take their own line below the text and the close X.
         className={`flex items-center gap-3 ${secondary ? 'flex-wrap sm:flex-nowrap' : ''} rounded-lg border border-divider border-s-[3px] border-e-[3px] bg-surface-2 px-3 py-2.5 shadow-2xl ${
           required
-            ? 'border-l-amber-500 border-r-amber-500'
-            : 'border-l-accent border-r-accent'
+            ? 'border-s-amber-500 border-e-amber-500'
+            : 'border-s-accent border-e-accent'
         }`}
       >
         <div
@@ -112,36 +112,23 @@ export function UpdateToast({
             </div>
           )}
         </div>
-        <div className={`flex shrink-0 items-center gap-3 ${secondary ? 'order-last basis-full justify-end sm:order-none sm:basis-auto' : ''}`}>
+        <div className={`flex shrink-0 items-center gap-2 ${secondary ? 'order-last basis-full justify-end sm:order-none sm:basis-auto' : ''}`}>
         {secondary && (
-          <button
-            type="button"
-            onClick={secondary.onAction}
-            className="shrink-0 px-2.5 py-1.5 rounded-lg border border-divider text-body font-medium text-pn hover:bg-pn/5 transition"
-          >
+          <Button variant="secondary" icon={null} onClick={secondary.onAction} className="shrink-0">
             {secondary.label}
-          </button>
+          </Button>
         )}
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          icon={!icon ? (busy ? <Spinner size={14} className="text-current" /> : <ArrowClockwise aria-hidden="true" />) : null}
           onClick={onAction}
           disabled={busy}
-          className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${PRIMARY_BTN_SKIN} text-body font-semibold disabled:opacity-60 transition`}
+          className="shrink-0"
         >
-          {!icon && (busy ? <Spinner size={14} className="text-current" /> : <ArrowClockwise className="w-3.5 h-3.5" aria-hidden="true" />)}
           {actionLabel}
-        </button>
+        </Button>
         </div>
-        {onDismiss && (
-          <button
-            type="button"
-            onClick={onDismiss}
-            aria-label={t('updateToast.dismiss')}
-            className="shrink-0 text-pn-muted hover:text-pn px-1 text-heading leading-none -me-0.5"
-          >
-            ×
-          </button>
-        )}
+        {onDismiss && <CloseButton onClick={onDismiss} label={t('updateToast.dismiss')} className="-me-1" />}
       </div>
     </div>
   );

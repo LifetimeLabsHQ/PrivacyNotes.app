@@ -313,6 +313,7 @@
       "noEntry": "기록 없음",
       "doseLens": "기분은 바뀌기 전 {{nBefore}}일 동안 평균 {{before}}, 바뀐 뒤 {{nAfter}}일 동안 평균 {{after}}였어요.",
       "doseLensHeading": "각 용량 변경 전후",
+      "doseLensLocked": "용량 변경이 기분을 어떻게 움직이는지 보려면 Pro로 업그레이드하세요",
       "doseLensShort_other": "전후로 기록한 날이 {{count}}일 더 필요해요."
     },
     "sourceLine": "여기 있는 모든 것은 저널 항목의 트래커에서 와요.",

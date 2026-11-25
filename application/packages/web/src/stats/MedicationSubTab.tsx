@@ -4,8 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { MedicationTemplate } from '../trackerTypes';
 import type { TrackerStats } from '../trackerStats';
-import { SectionEyebrow } from '../settingsUI';
-import { ProMark } from '../UpgradeModal';
+import { Button, EmptyState, ProgressBar, ProMark, SectionEyebrow } from '../ui';
 import { ArrowsLeftRight, CalendarBlank, ClockCounterClockwise, Pill } from '../icons';
 import { formatDay } from '../intlFormat';
 import { TrackerChart } from '../TrackerChart';
@@ -64,12 +63,13 @@ function MedTimeline({ medications }: { medications: MedicationTemplate[] }) {
 }
 
 /** Spec: docs/internal/specs/wellness-statistics.md (section 10) */
-export function MedicationSubTab({ model, stats, medications, unlocked, isPro, onOpenDay }: {
+export function MedicationSubTab({ model, stats, medications, unlocked, isPro, onOpenUpgrade, onOpenDay }: {
   model: WellnessModel;
   stats: TrackerStats;
   medications: MedicationTemplate[];
   unlocked: boolean;
   isPro: boolean;
+  onOpenUpgrade?: () => void;
   onOpenDay?: (date: string) => void;
 }) {
   const { t } = useTranslation('stats');
@@ -94,10 +94,9 @@ export function MedicationSubTab({ model, stats, medications, unlocked, isPro, o
 
   if (stats.medBreakdown.length === 0 && meds.length === 0) {
     return (
-      <div className="text-center py-8 text-pn-muted">
-        <p className="text-body">{t('wellness.medication.empty.title')}</p>
-        <p className="text-small mt-1">{t('wellness.medication.empty.hint')}</p>
-      </div>
+      <EmptyState title={t('wellness.medication.empty.title')}>
+        {t('wellness.medication.empty.hint')}
+      </EmptyState>
     );
   }
   return (
@@ -110,8 +109,12 @@ export function MedicationSubTab({ model, stats, medications, unlocked, isPro, o
           {stats.medBreakdown.map((m) => (
             <div key={m.id} className="flex items-center gap-2">
               <span className="text-small text-pn-soft flex-1 truncate">{m.name}</span>
-              <div className="w-24 h-3 bg-surface-0 rounded overflow-hidden">
-                <div className="h-full rounded" style={{ width: `${m.pct}%`, backgroundColor: m.pct >= 80 ? PALETTE.green : m.pct >= 50 ? PALETTE.yellow : PALETTE.red }} />
+              <div className="w-24">
+                <ProgressBar
+                  value={m.pct / 100}
+                  tone={m.pct >= 80 ? 'success' : m.pct >= 50 ? 'warning' : 'danger'}
+                  label={m.name}
+                />
               </div>
               <span className="text-meta text-pn-muted w-12 text-end">{m.pct}%</span>
             </div>
@@ -181,7 +184,7 @@ export function MedicationSubTab({ model, stats, medications, unlocked, isPro, o
             <SectionEyebrow icon={ArrowsLeftRight}>{t('wellness.medCalendar.doseLensHeading')}</SectionEyebrow>
             {!isPro && <ProMark />}
           </div>
-          {unlocked && (
+          {unlocked ? (
             <div className="space-y-1.5">
               {lenses.map((l) => (
                 <div key={l.medicationId + l.date} className="rounded-md bg-track border border-divider px-3 py-2 text-small text-pn-soft">
@@ -192,6 +195,10 @@ export function MedicationSubTab({ model, stats, medications, unlocked, isPro, o
                 </div>
               ))}
             </div>
+          ) : (
+            <Button action="open" pro onClick={onOpenUpgrade}>
+              {t('wellness.medCalendar.doseLensLocked')}
+            </Button>
           )}
         </div>
       )}

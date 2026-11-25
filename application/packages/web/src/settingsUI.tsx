@@ -2,7 +2,6 @@ import { useEffect, useLayoutEffect, useRef, useState, type HTMLAttributes, type
 import { useTranslation } from 'react-i18next';
 import { ClockClockwise, CloudSlash, Question, type Icon } from './icons';
 import { observeTip, positionClasses, TIP_SKIN } from './HoverLabel';
-import { Callout } from './ui/feedback';
 import { ARMED_MS } from './ui/DeleteButton';
 
 /**
@@ -19,8 +18,6 @@ import { ARMED_MS } from './ui/DeleteButton';
  * - SETTINGS_EYEBROW: the one uppercase section-header style.
  * - SETTINGS_EYEBROW_DANGER: the red variant (e.g. the danger zone).
  * - SETTINGS_HELP: the one helper / description / footnote style.
- * - SettingsCallout: the one container for important notes that must not
- *   read as a footnote (limits, bonuses, anything involving money).
  *
  * Use the SectionEyebrow component for plain section headers. For an
  * eyebrow that is not a plain <div> (a <span>, a centered field label,
@@ -118,10 +115,13 @@ export function SettingsSegmented<T extends string>({
  *  window read as one action. */
 const BTN_BASE = 'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-body transition disabled:opacity-40 disabled:cursor-not-allowed';
 export const PRIMARY_BTN_SKIN = 'border border-accent/35 bg-accent/12 text-accent-strong hover:border-accent/60 hover:bg-surface-2';
+export const DANGER_BTN_SKIN = 'border border-danger/35 bg-danger/12 text-danger hover:border-danger/60 hover:bg-surface-2';
+export const WARNING_BTN_SKIN = 'border border-warning/38 bg-warning/12 text-warning hover:border-warning/60 hover:bg-surface-2';
+const UPGRADE_BTN_SKIN = 'border border-warning/38 bg-warning/12 text-warning dark:border-pro/38 dark:bg-pro/14 dark:text-pro hover:border-warning/60 dark:hover:border-pro/60 hover:bg-surface-2';
 export const SETTINGS_BTN = `${BTN_BASE} border border-divider font-medium text-pn-soft hover:text-pn hover:bg-surface-1`;
 export const SETTINGS_BTN_PRIMARY = `${BTN_BASE} ${PRIMARY_BTN_SKIN} font-semibold`;
-export const SETTINGS_BTN_UPGRADE = `${BTN_BASE} border border-transparent bg-amber-700 hover:bg-amber-800 font-semibold text-white`;
-export const SETTINGS_BTN_DANGER = `${BTN_BASE} border border-transparent bg-danger hover:opacity-90 font-semibold text-white`;
+export const SETTINGS_BTN_UPGRADE = `${BTN_BASE} ${UPGRADE_BTN_SKIN} font-semibold`;
+export const SETTINGS_BTN_DANGER = `${BTN_BASE} ${DANGER_BTN_SKIN} font-semibold`;
 
 /** A select or a short text field in a settings pane. */
 export const SETTINGS_SELECT = 'rounded-md bg-track border border-divider ps-2.5 pe-3.5 py-1.5 text-body text-pn focus:border-accent focus:outline-none';
@@ -207,8 +207,8 @@ export function SettingsTabStrip({ className = '', children, ...rest }: HTMLAttr
   const [row, setRow] = useState(false);
   const [tight, setTight] = useState(false);
 
-  // No dependency list: a re-render can carry new labels (a language change),
-  // and the check is a handful of text measurements.
+  // Re-check when the tab children change (e.g. a language switch), without
+  // tearing down the ResizeObserver on our own layout-state updates.
   useLayoutEffect(() => {
     const strip = ref.current;
     if (!strip || typeof ResizeObserver === 'undefined') return;
@@ -243,7 +243,7 @@ export function SettingsTabStrip({ className = '', children, ...rest }: HTMLAttr
     const observer = new ResizeObserver(check);
     observer.observe(strip);
     return () => observer.disconnect();
-  });
+  }, [children]);
 
   return (
     <div ref={ref} {...rest} data-row={row || undefined} data-tight={tight || undefined} className={`${SETTINGS_TAB_STRIP} ${className}`}>
@@ -329,22 +329,6 @@ export function AccentBar() {
  */
 export function HeadlineRule() {
   return <div className="h-px flex-1 bg-divider" aria-hidden="true" />;
-}
-
-/**
- * Important note row - accent-tinted so it can never be mistaken for a
- * muted footnote. For copy the user must not skim past: limits, plan
- * perks, anything that affects what they pay or lose.
- */
-export function SettingsCallout({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  /** Layout-only classes (spacing), e.g. "mb-4". */
-  className?: string;
-}) {
-  return <Callout className={className}>{children}</Callout>;
 }
 
 /** A chip in Settings (a tracker, a factor, a custom tracker's type, a

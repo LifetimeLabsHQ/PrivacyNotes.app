@@ -32,7 +32,7 @@ import {
   type NoteColorStyle,
   type NoteLook,
 } from '../itemStyles';
-import { useLookPaths } from './lookIconsLoader';
+import { useLookPaths, type LookArt } from './lookIconsLoader';
 
 export interface LooksValue {
   styles: ItemStyles;
@@ -87,7 +87,7 @@ function noteIconId(
 export function useNoteIconPaths(
   noteId: string,
   n?: { tags: readonly string[]; folderId?: string | null },
-): readonly string[] | null {
+): LookArt | null {
   const looks = useContext(LooksContext);
   const id = n ? noteIconId(looks, { id: noteId, ...n }) : noteOwnIcon(looks.styles, noteId);
   return useLookPaths(id) ?? null;
@@ -148,7 +148,7 @@ export function itemLookDraw(look: NoteLook | null): ItemLookDraw {
 
 /** An item's look and the icon it shows (null without one), from the looks
  *  context: its own, else its tag's or folder's (resolveNoteIcon). */
-export function useItemLook(noteId: string, tags: readonly string[], folderId: string | null): ItemLookDraw & { iconPaths: readonly string[] | null } {
+export function useItemLook(noteId: string, tags: readonly string[], folderId: string | null): ItemLookDraw & { iconPaths: LookArt | null } {
   const look = useNoteLook(noteId, tags, folderId);
   const iconPaths = useNoteIconPaths(noteId, { tags, folderId });
   return { ...itemLookDraw(look), iconPaths };
@@ -159,7 +159,7 @@ export function useItemLook(noteId: string, tags: readonly string[], folderId: s
  *  it shows as a tinted chip (the background strength) whatever the note
  *  color setting says, as calendar apps draw a calendar's color.
  *  Spec: docs/internal/specs/calendar-pillar-spec.md (section 14) */
-export function useFeedLook(feedId: string | null): (ItemLookDraw & { iconPaths: readonly string[] | null }) | null {
+export function useFeedLook(feedId: string | null): (ItemLookDraw & { iconPaths: LookArt | null }) | null {
   const { styles } = useContext(LooksContext);
   const look = feedId ? lookOf(styles, feedLookKey(feedId)) : null;
   const iconPaths = useLookPaths(look?.icon) ?? null;
@@ -189,9 +189,9 @@ export function inkStyle(color: LookColor | null): CSSProperties | undefined {
 }
 
 /**
- * A look icon or logo from its generated paths: Phosphor's own 256 box and
- * bold weight (the logos are scaled into it), filled with the current color
- * like every Phosphor icon, and sized by the caller the same way.
+ * A look icon, logo or emoji: SVG paths in Phosphor's 256 box (filled with the
+ * current color like every Phosphor icon), or a native Unicode emoji sized to
+ * match the same square box.
  */
 export function PathGlyph({
   paths,
@@ -199,11 +199,22 @@ export function PathGlyph({
   className,
   style,
 }: {
-  paths: readonly string[];
+  paths: LookArt;
   size?: number;
   className?: string;
   style?: CSSProperties;
 }) {
+  if (typeof paths === 'string') {
+    return (
+      <span
+        className={className ? `pn-emoji ${className}` : 'pn-emoji'}
+        style={{ width: size, height: size, fontSize: Math.round(size * 0.92), ...style }}
+        aria-hidden="true"
+      >
+        {paths}
+      </span>
+    );
+  }
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

@@ -42,6 +42,7 @@ import { planIsPro } from './plugins/pluginState';
 import { insertTextAfter } from './plugins/insertText';
 import { DeleteButton } from './ui/DeleteButton';
 import { Callout, FeedbackButton, Snackbar, Spinner } from './ui/feedback';
+import { RangeSlider } from './ui/RangeSlider';
 import { isBlobDamaged } from './blobDamaged';
 import { formatDuration } from './formatDuration';
 import {
@@ -961,7 +962,7 @@ function EncryptedAttachmentView({
   // footer; everywhere else the row is the whole chip.
   const frameTone = selected
     ? 'border-accent'
-    : error ? 'border-red-300 dark:border-red-800' : 'border-divider';
+    : error ? 'border-danger/40' : 'border-divider';
   const rowClass = showPreview
     ? `px-3.5 py-3 border-t transition ${
         selected ? 'border-accent bg-accent/10 dark:bg-accent/20' : 'border-divider'
@@ -970,7 +971,7 @@ function EncryptedAttachmentView({
         selected
           ? 'border-accent bg-accent/10 dark:bg-accent/20'
           : 'border-divider bg-surface-2'
-      } ${error ? 'border-red-300 dark:border-red-800' : ''}`;
+      } ${error ? 'border-danger/40' : ''}`;
 
   const tileContent = isImage && thumbnailUrl && !showPreview ? (
     <img
@@ -1201,8 +1202,7 @@ function EncryptedAttachmentView({
               {duration <= 0 ? (
                 <div aria-hidden="true" className="flex-1 h-1 rounded-full bg-track" />
               ) : (
-              <input
-                type="range"
+              <RangeSlider
                 min={0}
                 max={duration || 1}
                 step={0.1}
@@ -1222,8 +1222,7 @@ function EncryptedAttachmentView({
                 onDragStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
                 aria-label={t('attachment.seek')}
                 aria-valuetext={formatDuration(position)}
-                className="flex-1 h-1.5 cursor-pointer disabled:cursor-default disabled:opacity-50"
-                style={{ accentColor: 'rgb(var(--pn-accent))' }}
+                className="flex-1"
               />
               )}
               <span className="shrink-0 text-meta text-pn-muted tabular-nums">

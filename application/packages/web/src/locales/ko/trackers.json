@@ -111,9 +111,6 @@
       "great": "아주 좋음"
     }
   },
-  "sleepScore": {
-    "prompt": "수면 점수"
-  },
   "heartRate": {
     "prompt": "평균 심박수"
   },

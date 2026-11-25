@@ -8,8 +8,10 @@
   "applyToFolderItems": "Применять ко всем элементам в этой папке",
   "applyToTagItems": "Применять ко всем элементам с этим тегом",
   "icon": "Значок",
+  "emoji": "Эмодзи",
   "searchPlaceholder": "Поиск значков",
   "searchLogos": "Поиск логотипов",
+  "searchEmojis": "Поиск эмодзи",
   "moreLogos": "Другие логотипы",
   "allLogos": "Все логотипы от A до Z",
   "recent": "Недавние",
@@ -41,7 +43,14 @@
     "games": "Игры",
     "learning": "Учёба и исследования",
     "trips": "Путешествия и фитнес",
-    "privacy": "Конфиденциальность и безопасность"
+    "privacy": "Конфиденциальность и безопасность",
+    "emojiSmileys": "Смайлы и эмоции",
+    "emojiPeople": "Люди и тело",
+    "emojiAnimals": "Животные и природа",
+    "emojiActivities": "Занятия",
+    "emojiObjects": "Предметы",
+    "emojiSymbols": "Символы и знаки",
+    "emojiFlags": "Флаги"
   },
   "icons": {
     "folder": "Папка",

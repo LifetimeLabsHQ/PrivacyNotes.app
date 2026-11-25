@@ -56,14 +56,17 @@ import { isSoftKeyboardDevice, suppressSoftKeyboard } from './softKeyboard';
 import { readColorPref } from './editorPrefs';
 import { toggleCodeBlockSmart, ALIGNMENT_VALUES, COPY_BOX_LANGUAGE } from './editorExtensions';
 import { bindingKeyText, keyText } from './shortcutMatch';
-import { insertDateText } from './editorCommands';
+import { insertDateText, registerEditorActions, type LiveEditorAction } from './editorCommands';
+import { typeCalloutTrigger } from './CalloutSuggestion';
+import type { SlashAction } from './SlashSuggestion';
 import { insertKanbanBoard } from './KanbanBoard';
+import { insertColumnsBlock } from './columns';
 import { LocationPanel } from './notesView/NoteLocationChip';
 import { Popover, Snackbar } from './ui';
 import { PlaceMapNode } from './PlaceMapNode';
 import type { NoteLocation } from './noteLocation';
 import { FormatBarContext } from './formatBarContext';
-import { barForWidth, formatBarItem, isSeparatorKey } from './formatBar';
+import { NINJA_FORMAT_BAR_KEYS, SLASH_FORMAT_BAR_KEYS, barForWidth, formatBarItem, isSeparatorKey } from './formatBar';
 import { FORMAT_BAR_HINT, FORMAT_BAR_LOOK } from './formatBarItems';
 import { ToolbarFrame } from './ToolbarFrame';
 import { sourcePreviewButtons, sourcePreviewMenuItems, type SourcePreviewControls } from './sourcePreviewButtons';
@@ -145,12 +148,18 @@ type ToolbarProps = {
    *  with its preview. Absent in the phone layout and where the note has no
    *  Markdown view. */
   sourcePreview?: SourcePreviewControls;
+  /** When true, hides the bar chrome while keeping hidden inputs, pickers, and live Ninja/slash actions mounted. */
+  barHidden?: boolean;
+  /** Anchor used for popovers opened from `/` or Ninja while the bar itself is hidden. */
+  fallbackAnchorRef?: RefObject<HTMLElement | null>;
+  /** Per-editor live slash actions ref read by `SlashSuggestion`. */
+  slashActionsRef?: MutableRefObject<readonly SlashAction[]>;
 };
 
 // The heading button's glyph for the level the caret is in, 0 for body text.
 const HEADING_ICONS = [TextH, TextHOne, TextHTwo, TextHThree, TextHFour, TextHFive, TextHSix] as const;
 
-export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, linkBtnRef, onAudioStateChange, audioStopRef, hideEncryptedMedia = false, onInsertFiles, onShowMarkdown, sourcePreview }: ToolbarProps) {
+export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, linkBtnRef, onAudioStateChange, audioStopRef, hideEncryptedMedia = false, onInsertFiles, onShowMarkdown, sourcePreview, barHidden = false, fallbackAnchorRef, slashActionsRef }: ToolbarProps) {
   const { t } = useTranslation('editor');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
@@ -224,35 +233,40 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
    */
   useEditorState({
     editor,
-    selector: ({ editor: e }) => !e ? null : ({
-      bold: e.isActive('bold'),
-      italic: e.isActive('italic'),
-      underline: e.isActive('underline'),
-      strike: e.isActive('strike'),
-      code: e.isActive('code'),
-      codeBlock: e.isActive('codeBlock'),
-      highlight: e.isActive('highlight'),
-      link: e.isActive('link'),
-      superscript: e.isActive('superscript'),
-      subscript: e.isActive('subscript'),
-      spoiler: e.isActive('spoiler'),
-      blockquote: e.isActive('blockquote'),
-      bulletList: e.isActive('bulletList'),
-      orderedList: e.isActive('orderedList'),
-      taskList: e.isActive('taskList'),
-      table: e.isActive('table'),
-      callout: e.isActive('callout'),
-      heading: e.isActive('heading') ? (e.getAttributes('heading').level ?? 0) : 0,
-      // The three attribute-driven controls. textAlign is why this exists.
-      textAlign: ALIGNMENT_VALUES.find((v) => e.isActive({ textAlign: v })) ?? null,
-      fontFamily: e.getAttributes('textStyle').fontFamily ?? null,
-      fontSize: e.getAttributes('textStyle').fontSize ?? null,
-      color: e.getAttributes('textStyle').color ?? null,
-      highlightColor: e.getAttributes('highlight').color ?? null,
-      // Collapse all / Expand all: its label, and whether it does anything.
-      foldable: foldSummary(e.state).foldable,
-      foldOpen: foldSummary(e.state).open,
-    }),
+    selector: ({ editor: e }) => {
+      if (!e) return null;
+      const folds = foldSummary(e.state);
+      return {
+        bold: e.isActive('bold'),
+        italic: e.isActive('italic'),
+        underline: e.isActive('underline'),
+        strike: e.isActive('strike'),
+        code: e.isActive('code'),
+        codeBlock: e.isActive('codeBlock'),
+        highlight: e.isActive('highlight'),
+        link: e.isActive('link'),
+        superscript: e.isActive('superscript'),
+        subscript: e.isActive('subscript'),
+        spoiler: e.isActive('spoiler'),
+        blockquote: e.isActive('blockquote'),
+        bulletList: e.isActive('bulletList'),
+        orderedList: e.isActive('orderedList'),
+        taskList: e.isActive('taskList'),
+        table: e.isActive('table'),
+        callout: e.isActive('callout'),
+        columns: e.isActive('columnsBlock'),
+        heading: e.isActive('heading') ? (e.getAttributes('heading').level ?? 0) : 0,
+        // The three attribute-driven controls. textAlign is why this exists.
+        textAlign: ALIGNMENT_VALUES.find((v) => e.isActive({ textAlign: v })) ?? null,
+        fontFamily: e.getAttributes('textStyle').fontFamily ?? null,
+        fontSize: e.getAttributes('textStyle').fontSize ?? null,
+        color: e.getAttributes('textStyle').color ?? null,
+        highlightColor: e.getAttributes('highlight').color ?? null,
+        // Collapse all / Expand all: its label, and whether it does anything.
+        foldable: folds.foldable,
+        foldOpen: folds.open,
+      };
+    },
   });
 
   const handleImagePick = useCallback((e: ChangeEvent<HTMLInputElement>) => {
@@ -428,6 +442,9 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
     useToolbarPopover('button');
   // Starts a recording from the attach menu, where no recorder button shows.
   const audioStartRef = useRef<(() => void) | null>(null);
+  // Publishes the mounted toolbar's live Ninja actions via a getter (zero churn on transactions).
+  const ninjaActionsRef = useRef<readonly LiveEditorAction[]>([]);
+  useEffect(() => registerEditorActions(() => ninjaActionsRef.current), []);
 
   // Callout type picker. Same portal + outside-click pattern as the color
   // swatch so it escapes the toolbar's overflow clipping.
@@ -831,6 +848,7 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
       run: () => toggleCodeBlockSmart(editor, COPY_BOX_LANGUAGE),
     },
     kanban: { hint: null, active: false, run: () => insertKanbanBoard(editor, t) },
+    columns: { hint: null, active: isActive('columnsBlock'), run: () => insertColumnsBlock(editor) },
     inlinecode: { hint: FORMAT_BAR_HINT.inlinecode, active: isActive('code'), run: () => editor.chain().focus().toggleCode().run() },
     // The selected text becomes the formula. The insert commands do not
     // replace a selection, so it is deleted first.
@@ -936,6 +954,69 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
   const recorderShown = onBarOrEnd('audio') || soloAttach === 'audio';
   if (attachKeys.includes('audio')) {
     actions.audio = { hint: null, active: false, run: () => audioStartRef.current?.() };
+  }
+
+  // Publish live Ninja actions derived automatically from FORMAT_BAR_ITEMS so
+  // every new '+' menu / attach-menu block reaches Cmd+K without a second list.
+  const liveNinjaActions: LiveEditorAction[] = [];
+  for (const key of NINJA_FORMAT_BAR_KEYS) {
+    if (!offered(key)) continue;
+    const look = FORMAT_BAR_LOOK[key];
+    if (!look) continue;
+    if (key === 'callout') {
+      liveNinjaActions.push({ key, label: lookLabel(key), icon: look.Icon, run: () => typeCalloutTrigger(editor) });
+      continue;
+    }
+    if (key === 'splitView') {
+      if (sourcePreview?.fits) {
+        liveNinjaActions.push({ key, label: lookLabel(key), icon: look.Icon, run: () => sourcePreview.onToggle() });
+      }
+      continue;
+    }
+    if (key === 'audio') {
+      liveNinjaActions.push({ key, label: lookLabel(key), icon: look.Icon, run: () => audioStartRef.current?.() });
+      continue;
+    }
+    const action = actions[key];
+    if (!action) continue;
+    liveNinjaActions.push({
+      key,
+      label: action.label ?? lookLabel(key),
+      icon: action.Icon ?? look.Icon,
+      run: action.run,
+    });
+  }
+  ninjaActionsRef.current = liveNinjaActions;
+
+  if (slashActionsRef) {
+    const liveSlashActions: SlashAction[] = [];
+    for (const key of SLASH_FORMAT_BAR_KEYS) {
+      if (!offered(key)) continue;
+      const look = FORMAT_BAR_LOOK[key];
+      if (!look) continue;
+      if (key === 'callout') {
+        liveSlashActions.push({ key, label: lookLabel(key), icon: look.Icon, hint: '[!', run: () => { typeCalloutTrigger(editor); } });
+        continue;
+      }
+      if (key === 'link') {
+        liveSlashActions.push({ key, label: lookLabel(key), icon: look.Icon, hint: keyText('insertLink') ?? null, run: onOpenLinkPopover });
+        continue;
+      }
+      if (key === 'audio') {
+        liveSlashActions.push({ key, label: lookLabel(key), icon: look.Icon, hint: null, run: () => audioStartRef.current?.() });
+        continue;
+      }
+      const action = actions[key];
+      if (!action) continue;
+      liveSlashActions.push({
+        key,
+        label: action.label ?? lookLabel(key),
+        icon: action.Icon ?? look.Icon,
+        hint: action.hint,
+        run: action.run,
+      });
+    }
+    slashActionsRef.current = liveSlashActions;
   }
 
   // A menu item the person moved onto the bar: a plain button whose tip
@@ -1055,19 +1136,8 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
     return action ? [{ key, group: formatBarItem(key)!.group, Icon: FORMAT_BAR_LOOK[key]!.Icon, label: lookLabel(key), ...action }] : [];
   });
 
-  return (
-    <ToolbarFrame
-      fit={fitState}
-      row={formatButtons}
-      holdOpen={holdOpen}
-      menu={menuItems}
-      press={press}
-      end={endButtons}
-      atBottom={atBottom}
-      strip={strip}
-      onHideKeyboard={() => editor.commands.blur()}
-      tabIndex={mobileTabIndex}
-    >
+  const sharedOverlays = (
+    <>
       <input
         ref={fileInputRef}
         type="file"
@@ -1169,10 +1239,10 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
       {editor && (
         <Popover
           open={locationOpen}
-          anchorRef={rightClusterRef}
+          anchorRef={barHidden && fallbackAnchorRef ? fallbackAnchorRef : rightClusterRef}
           onClose={() => setLocationOpen(false)}
           title={t('notes:location.title')}
-          align="end"
+          align={barHidden ? 'start' : 'end'}
           className="w-80"
         >
           <LocationPanel
@@ -1205,6 +1275,46 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
           />
         </Suspense>
       )}
+    </>
+  );
+
+  if (barHidden) {
+    return (
+      <>
+        {offered('audio') && (
+          <AudioRecorder
+            key="audio"
+            editorView={editor.view}
+            tabIndex={mobileTabIndex}
+            onStateChange={(state, duration) => {
+              setRecording(state !== 'idle');
+              onAudioStateChange?.(state, duration);
+            }}
+            stopRef={audioStopRef}
+            startRef={audioStartRef}
+            idleHidden
+            tipSide={tipSide}
+          />
+        )}
+        {sharedOverlays}
+      </>
+    );
+  }
+
+  return (
+    <ToolbarFrame
+      fit={fitState}
+      row={formatButtons}
+      holdOpen={holdOpen}
+      menu={menuItems}
+      press={press}
+      end={endButtons}
+      atBottom={atBottom}
+      strip={strip}
+      onHideKeyboard={() => editor.commands.blur()}
+      tabIndex={mobileTabIndex}
+    >
+      {sharedOverlays}
     </ToolbarFrame>
   );
 }

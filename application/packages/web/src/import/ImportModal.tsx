@@ -3,6 +3,7 @@ import type { ComponentProps, ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { isOversizeImport } from '../noteSplit';
+import { NO_TEXT_ASSIST } from '../formFields';
 import i18n, { ensureImportLogLoaded } from '../i18n';
 import { IMPORTERS } from './registry';
 import { runImport } from './importRun';
@@ -32,8 +33,8 @@ import { textMatcher } from '../textMatch';
 import { useEscapeToClose } from '../useEscapeToClose';
 import { perFileLimit } from '../attachmentValidation';
 import { contactPhotoOptions, processImage } from '../imageProcessing';
-import { SETTINGS_BTN, SETTINGS_HELP, SectionEyebrow, SettingsCallout, SettingsTabStrip, StatTile, settingsTabClass, ROW_TITLE, SETTINGS_CARD as CARD, SETTINGS_CARD_GRID as CARD_GRID, SETTINGS_CARD_REST as CARD_REST, SettingsCardIcon as RowIcon } from '../settingsUI';
-import { Button, Callout, Checkbox, FIELD_CLASS, ListSearchInput, Modal, Select, Spinner, TextField } from '../ui';
+import { SETTINGS_BTN, SETTINGS_HELP, SectionEyebrow, SettingsTabStrip, StatTile, settingsTabClass, ROW_TITLE, SETTINGS_CARD as CARD, SETTINGS_CARD_GRID as CARD_GRID, SETTINGS_CARD_REST as CARD_REST, SettingsCardIcon as RowIcon } from '../settingsUI';
+import { Button, Callout, Checkbox, FIELD_CLASS, IconUpgrade, ListSearchInput, Modal, ModalFooter, Select, Spinner, TextField } from '../ui';
 import { calendarFeedUrl, downloadCalendarFeed } from './calendarFeed';
 import { ClipError } from '../clipDownload';
 import { sessionTokenOf } from '../sessionToken';
@@ -45,7 +46,6 @@ import { HelpChip } from '../HelpChip';
 import { ImportFileError } from './zipEntry';
 import { holdLockReload } from '../lockReload';
 import { WellnessExportTab } from '../stats/WellnessExport';
-import { IconUpgrade } from '../UpgradeModal';
 import { usePaneTab } from '../settingsPaneTab';
 import { AutomaticCallout, AutomaticPane } from '../autoBackup/AutomaticPane';
 
@@ -900,7 +900,7 @@ export function ImportModal({
             line there reads as stray text. The footer comes back while an
             import runs, for Back and Import. */}
         {!(tab === 'export' || tab === 'manual' || tab === 'automatic' || tab === 'wellness' || phase.kind === 'pick' || phase.kind === 'foreignPhrase') && (
-        <div className="px-6 py-3 border-t border-divider flex items-center justify-between gap-3">
+        <ModalFooter bar>
           {phase.kind === 'preview' ? (
             <>
               <Button action="back" onClick={handleBackToPick} />
@@ -918,7 +918,7 @@ export function ImportModal({
               {t('shell.working')}
             </div>
           )}
-        </div>
+        </ModalFooter>
         )}
 
         {/* Hidden file input - shared by all importer cards. */}
@@ -1052,7 +1052,7 @@ function ForeignPhrasePhase({
 
       {error && <Callout tone="danger">{error}</Callout>}
 
-      <div className="flex items-center justify-between gap-2 pt-2">
+      <ModalFooter>
         <Button action="back" onClick={onBack} disabled={busy} />
         <Button
           variant="primary"
@@ -1062,7 +1062,7 @@ function ForeignPhrasePhase({
         >
           {t('restoreForeign.unlock')}
         </Button>
-      </div>
+      </ModalFooter>
 
       {showScanner && (
         <QrScannerModal
@@ -1247,7 +1247,7 @@ function CalendarFeedForm({ onFile, feeds }: { onFile: (file: File) => void; fee
             type="url"
             inputMode="url"
             autoComplete="off"
-            spellCheck={false}
+            {...NO_TEXT_ASSIST}
             aria-label={t('webcal.fieldLabel')}
             placeholder="webcal://"
             value={address}
@@ -1351,7 +1351,7 @@ function ImportPickPhase({ onPick, onCalendarFeed, calendarFeeds }: { onPick: (i
   // group is alphabetical.
   const groups = [
     { key: 'notes', icon: Note, title: t('shell:tagsRail.notes'), ids: ['anytype', 'apple-journal', 'apple-notes', 'bear', 'capacities', 'day-one', 'daylio', 'diaro', 'diarium', 'evernote', 'google-journal', 'google-keep', 'ia-writer', 'joplin', 'markdown-folder', 'nextcloud-notes', 'notesnook', 'notion', 'obsidian', 'onenote', 'samsung-notes', 'simplenote', 'siyuan', 'standard-notes', 'typora', 'upnote', 'zettlr'] },
-    { key: 'tasks', icon: PILLAR_GLYPHS.tasks, title: t('shell:tagsRail.tasks'), ids: ['todoist'] },
+    { key: 'tasks', icon: PILLAR_GLYPHS.tasks, title: t('shell:tagsRail.tasks'), ids: ['microsoft-to-do', 'todoist'] },
     { key: 'drawings', icon: NEW_GLYPHS.drawing, title: t('shell:tagsRail.drawings'), ids: ['excalidraw', 'obsidian-canvas'] },
     { key: 'calendar', icon: CalendarDots, title: t('importPick.groupCalendar'), ids: ['google-calendar:apple-calendar', 'vcard', 'google-calendar', WEBCAL_ID] },
     { key: 'bookmarks', icon: BookmarkSimple, title: t('shell:tagsRail.bookmarks'), ids: [...browserTiles('browser-bookmarks', ['brave', 'chrome', 'edge', 'firefox']), 'raindrop', ...browserTiles('browser-bookmarks', ['safari', 'vivaldi'])] },
@@ -1472,7 +1472,7 @@ function RestorePickPhase({ gate, onPickRestore, onImportEncrypted }: {
         {t('restorePick.intro')}
       </p>
 
-      {gate !== 'open' && <SettingsCallout>{t(RESTORE_WAIT_LINE[gate])}</SettingsCallout>}
+      {gate !== 'open' && <Callout>{t(RESTORE_WAIT_LINE[gate])}</Callout>}
 
       <div className="space-y-1.5">
         <ActionRow
@@ -1524,7 +1524,7 @@ function ParsingPhase({
   return (
     <div className="flex flex-col items-center justify-center py-10 text-center">
       <div className="mb-4">
-        <CircleNotch size={32} className="animate-spin text-accent" />
+        <Spinner size={32} />
       </div>
       <div className="text-body font-medium">{importerLabel}</div>
       <div className="text-small text-pn-muted mt-1">
@@ -1885,7 +1885,7 @@ function PreviewPhase({
         </p>
       )}
 
-      <SettingsCallout>
+      <Callout>
         <strong className="text-pn">
           {t('preview.headsUpLabel')}
         </strong>{' '}
@@ -1904,7 +1904,7 @@ function PreviewPhase({
               : allEvents
                 ? t('preview.eventSkipNote')
                 : t('preview.duplicateWarning')}
-      </SettingsCallout>
+      </Callout>
 
       <p className={SETTINGS_HELP}>{t('preview.nothingWritten')}</p>
       </div>

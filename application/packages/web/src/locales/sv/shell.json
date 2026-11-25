@@ -41,6 +41,7 @@
     "noDocuments": "Inga dokument.",
     "noImages": "Inga bilder.",
     "noAudioFiles": "Inga ljudfiler.",
+    "noUnusedFiles": "Inga oanvända filer.",
     "emptyTypesHint": "Bilder, dokument, ljud, video och zip-filer. Upp till {{max}} MB per fil.",
     "uploadFiles": "Ladda upp filer",
     "menuShow": "Visa",
@@ -233,7 +234,7 @@
     "tagCount_other": "{{count}} taggar",
     "entryDate": "Inläggsdatum",
     "noDate": "Inget",
-    "schedule": "Schema",
+    "schedule": "Datum och påminnelser",
     "ends": "Slutar",
     "sameDay": "Samma dag",
     "starts": "Börjar",
@@ -317,7 +318,6 @@
     "showOneWeek": "Visa en vecka"
   },
   "contextMenu": {
-    "newNote": "Ny anteckning",
     "newTask": "Ny uppgift",
     "newKanban": "Ny kanbantavla",
     "newDrawing": "Ny teckning",
@@ -326,15 +326,12 @@
     "newSshKey": "Ny SSH-nyckel",
     "newJournal": "Nytt dagboksinlägg",
     "newFile": "Ny fil",
-    "exitZenMode": "Avsluta zenläge",
-    "zenMode": "Zenläge",
     "showSidebar": "Visa sidofält",
     "hideSidebar": "Dölj sidofält",
     "showNotesList": "Visa anteckningslistan",
     "hideNotesList": "Dölj anteckningslistan",
     "resetPaneWidths": "Återställ panelbredder",
     "settings": "Inställningar",
-    "signOut": "Logga ut",
     "deselect": "Avmarkera",
     "select": "Markera",
     "selectedCount_one": "{{count}} objekt markerat",
@@ -364,8 +361,7 @@
     "closeOtherTabs": "Stäng andra flikar",
     "closeAllTabs": "Stäng alla flikar",
     "pinTab": "Fäst flik",
-    "unpinTab": "Lossa flik",
-    "newEvent": "Ny händelse"
+    "unpinTab": "Lossa flik"
   },
   "demoBanner": {
     "title": "Testa helt utan risk",
@@ -836,6 +832,25 @@
     "hoursBefore_one": "{{count}} timme före",
     "minutesBefore_one": "{{count}} minut före"
   },
+  "taskReminder": {
+    "set": "Ställ in påminnelse",
+    "edit": "Redigera påminnelse",
+    "laterToday": "Senare i dag",
+    "pickDateTime": "Välj datum och tid",
+    "dateTime": "Datum och tid",
+    "remove": "Ta bort påminnelse",
+    "onSchedule": "Enligt schema",
+    "afterCompletion": "Efter slutförande",
+    "afterDone": "{{count}} {{unit}} efter slutförande",
+    "afterDoneHint": "Räknas från den dag du bockar av den här uppgiften.",
+    "weekdaysShort": "Vardagar",
+    "everyWeeks_other": "Var {{count}}:e vecka",
+    "everyMonths_other": "Var {{count}}:e månad",
+    "everyYears_other": "Vart {{count}}:e år",
+    "everyYears_one": "Varje år",
+    "everyMonths_one": "Varje månad",
+    "everyWeeks_one": "Varje vecka"
+  },
   "quickAdd": {
     "group": "Skapa",
     "items": "Objekt",
@@ -1028,7 +1043,8 @@
   "apps": {
     "railLabel": "Tillägg",
     "title": "Webbläsartillägg",
-    "subtitle": "Webbklippare och lösenordshanterare i Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf och Zen. Tillägget har aldrig nyckeln som öppnar dina anteckningar.",
+    "subtitle": "Webbklippare och lösenordshanterare för Chromium- och Firefox-baserade webbläsare. Tillägget har aldrig nyckeln som öppnar dina anteckningar.",
+    "allSupported": "Fungerar i alla Chromium- eller Firefox-baserade webbläsare.",
     "loginsCopyFull": "Webbläsartilläggets kopia av dina inloggningar är full. Nya inloggningar når den när du har raderat några.",
     "stepInstall": "Installera tillägget",
     "stepFeatures": "Välj vad det får göra",
@@ -1039,7 +1055,7 @@
     "thisBrowser": "Den här webbläsaren",
     "otherApps": "Appar för dator och telefon:",
     "desktopAll": "Alla nedladdningar",
-    "extensionComputersOnly": "Tillägget är för Chrome, Firefox och Edge på en dator.",
+    "extensionComputersOnly": "Tillägget är för Chromium- och Firefox-baserade webbläsare på en dator.",
     "demoSignUp": "Skapa ett konto för att ansluta en webbläsare"
   },
   "cli": {

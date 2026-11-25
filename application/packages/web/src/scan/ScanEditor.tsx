@@ -352,7 +352,7 @@ function CornerEditor({ photo, quad, onChange, onEnter }: {
       <img src={photo.url} alt="" className="absolute inset-0 h-full w-full rounded-md object-contain" draggable={false} />
       <svg viewBox={`0 0 ${photo.w} ${photo.h}`} className="absolute inset-0 h-full w-full" aria-hidden="true">
         <path d={`M0,0 H${photo.w} V${photo.h} H0 Z M${pts.replace(/ /g, ' L')} Z`} fill="rgba(0,0,0,0.45)" fillRule="evenodd" />
-        <polygon points={pts} fill="none" stroke={ok ? 'var(--pn-accent, #3b82f6)' : 'var(--pn-danger, #dc2626)'} strokeWidth={photo.w / 300} />
+        <polygon points={pts} fill="none" stroke={ok ? 'rgb(var(--pn-accent))' : 'rgb(var(--pn-danger))'} strokeWidth={photo.w / 300} />
       </svg>
       {Array.from({ length: 8 }, (_, i) => {
         const p = handlePoint(i);

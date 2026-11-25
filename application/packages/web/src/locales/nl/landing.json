@@ -344,7 +344,7 @@
     "extensionKeyLogin": "De login van deze site invullen",
     "extensionKeyBookmark": "Deze pagina als bladwijzer opslaan",
     "extensionAria": "De extensie toevoegen aan {{name}}",
-    "extensionNote": "Alleen op computers."
+    "extensionNote": "Werkt in elke op Chromium of Firefox gebaseerde browser. Alleen op computers."
   },
   "ctaRepeat": {
     "getStarted": "Aan de slag"

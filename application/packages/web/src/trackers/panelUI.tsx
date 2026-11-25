@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Minus, Plus } from '@phosphor-icons/react';
 import { useCommitOnCollapse } from './PillShell';
+import { NO_TEXT_ASSIST } from '../formFields';
 
 /**
  * The one language of every tracker panel, in the check-in card and in the
@@ -101,7 +102,7 @@ export function Segmented<T extends string>({ options, value, onPick, tone = 'ac
             aria-pressed={on}
             onClick={() => onPick(o.key)}
             title={o.icon ? o.label : undefined}
-            className={`flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 ${size === 'sm' ? 'px-2.5 h-7 text-small' : 'px-3 h-8 [@media(hover:none)]:h-9 text-small'} font-medium transition-colors ${i > 0 ? 'border-s border-divider' : ''} ${
+            className={`flex-1 ${o.icon ? 'min-w-0' : 'shrink-0 whitespace-nowrap'} inline-flex items-center justify-center gap-1.5 ${size === 'sm' ? 'px-2.5 h-7 text-small' : 'px-3 h-8 [@media(hover:none)]:h-9 text-small'} font-medium transition-colors ${i > 0 ? 'border-s border-divider' : ''} ${
               on ? fill : 'bg-surface-2 text-pn-muted hover:bg-pn/5 hover:text-pn'
             }`}
           >
@@ -237,6 +238,8 @@ export function NumberStepper({ value, onChange, onClear, min, max, step = 1, un
           <input
             type="text"
             inputMode="decimal"
+            autoComplete="off"
+            {...NO_TEXT_ASSIST}
             value={draft}
             placeholder={hint}
             autoFocus={autoFocus}

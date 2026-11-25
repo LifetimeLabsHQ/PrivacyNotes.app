@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { HelpChip } from '../HelpChip';
-import { Check, Copy, Fire, Warning } from '../icons';
+import { Check, Copy, Fire } from '../icons';
 import { createBurnLink } from '../burnShare';
 import { useLocalOnly } from '../localOnly';
 import { LocalOnlyNotice } from '../LocalOnlyNotice';
 import type { VaultField } from '../vaultFields';
-import { Button, Modal, ModalFooter } from '../ui';
+import { Button, Callout, Modal, ModalFooter, Select, TextField } from '../ui';
 import {
   BURN_LIFETIME_HOURS,
   BURN_READ_SECONDS,
@@ -54,9 +54,6 @@ export function BurnShareModal({
     return (
       <Modal onClose={onClose} title={t('burnShareModal.title')} icon={<Fire className="text-orange-500" />} className="max-w-md p-6 space-y-4">
         <LocalOnlyNotice feature="burnShare" onOpenSync={onOpenSync} />
-        <ModalFooter>
-          <Button action="cancel" onClick={onClose}>{t('common:actions.close')}</Button>
-        </ModalFooter>
       </Modal>
     );
   }
@@ -114,9 +111,6 @@ export function BurnShareModal({
       .finally(() => setBusy(false));
   }
 
-  const selectClass =
-    'w-full rounded-md border border-divider bg-surface-1 text-body px-2.5 py-2 disabled:opacity-60';
-
   return (
     <Modal onClose={onClose} title={t('burnShareModal.title')} icon={<Fire className="text-orange-500" />} className="max-w-md p-6 space-y-4">
         <p className="text-body text-pn-muted leading-relaxed">
@@ -127,16 +121,12 @@ export function BurnShareModal({
         </p>
         <HelpChip surface="burn" />
         {imagesStripped && (
-          <div className="flex items-center gap-2 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-compact px-3 py-2">
-            <Warning className="shrink-0" />
-            {t('burnShareModal.imagesStripped')}
-          </div>
+          <Callout tone="warning">{t('burnShareModal.imagesStripped')}</Callout>
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="block text-compact">
             <span className="block mb-1">{t('burnShareModal.readTime')}</span>
-            <select
-              className={selectClass}
+            <Select
               value={readSeconds}
               disabled={url !== null || busy}
               onChange={(e) => setReadSeconds(Number(e.target.value))}
@@ -148,13 +138,12 @@ export function BurnShareModal({
                     : t('burnShareModal.hours', { count: s / 3600 })}
                 </option>
               ))}
-            </select>
+            </Select>
             <span className="block mt-1 text-small text-pn-muted">{t('burnShareModal.readTimeHint')}</span>
           </label>
           <label className="block text-compact">
             <span className="block mb-1">{t('burnShareModal.lifetime')}</span>
-            <select
-              className={selectClass}
+            <Select
               value={lifetimeHours}
               disabled={url !== null || busy}
               onChange={(e) => setLifetimeHours(Number(e.target.value))}
@@ -166,16 +155,17 @@ export function BurnShareModal({
                     : t('burnShareModal.afterDays', { count: h / 24 })}
                 </option>
               ))}
-            </select>
+            </Select>
             <span className="block mt-1 text-small text-pn-muted">{t('burnShareModal.lifetimeHint')}</span>
           </label>
         </div>
         {url && (
-          <input
+          <TextField
             type="text"
             readOnly
             value={url}
-            className="w-full rounded-md border border-divider bg-surface-1 text-pn-soft text-body px-3 py-2.5 font-mono truncate focus:outline-none"
+            dir="ltr"
+            className="font-mono text-pn-soft truncate"
             onFocus={(e) => e.target.select()}
           />
         )}

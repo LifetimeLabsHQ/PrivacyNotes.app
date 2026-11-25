@@ -1,5 +1,5 @@
-import type { MouseEvent } from 'react';
 import type { NoteType } from '@notes/shared';
+import type { ContextMenuAnchorEvent } from './ContextMenu';
 import { VIEW_NOTE_TYPES, type View } from './views';
 
 /**
@@ -130,5 +130,5 @@ export interface SectionLockControls {
   stateOf: (view: View) => SectionState;
   lockNow: (view: View) => void;
   /** The row menu: right-click, long press, the Menu key. */
-  openMenu: (e: MouseEvent, view: View) => void;
+  openMenu: (e: ContextMenuAnchorEvent, view: View) => void;
 }

@@ -26,7 +26,6 @@
     "noResults": "Brak wyników"
   },
   "deleteNote": {
-    "confirm": "Usuń na zawsze",
     "body": "Trwale usunąć <highlight>„{{title}}”</highlight>? Tej operacji nie można cofnąć."
   },
   "emptyTrash": {
@@ -75,12 +74,15 @@
       "toggleSidebar": "Pokaż lub ukryj panel boczny",
       "toggleTheme": "Przełącz między jasnym a ciemnym",
       "openSettings": "Otwórz ustawienia",
+      "graph": "Obszar roboczy Graf i Miejsca",
       "zen": "Tryb Zen",
+      "fullScreen": "Tryb pełnoekranowy",
       "markdownView": "Włącz lub wyłącz widok Markdown",
       "invisibles": "Włącz lub wyłącz znaki niedrukowane",
       "find": "Znajdź w notatce",
       "findReplace": "Znajdź i zamień",
       "outline": "Pokaż lub ukryj konspekt",
+      "connections": "Pokaż lub ukryj powiązania",
       "insertDate": "Wstaw datę",
       "insertDateTime": "Wstaw datę i godzinę",
       "clearFilters": "Usuń filtry",
@@ -136,8 +138,6 @@
     "goToFolder": "Przejdź do folderu",
     "createTag": "Utwórz tag #{{name}}",
     "createFolder": "Utwórz folder „{{name}}”",
-    "newTag": "Nowy tag",
-    "newFolder": "Nowy folder",
     "goToDay": "Przejdź do dnia",
     "inText": "W treści",
     "actions": "akcje",
@@ -182,9 +182,9 @@
   "sshKeyForm": {
     "label": "Etykieta",
     "labelPlaceholder": "np. klucz wdrożeniowy GitHub",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "Kopiuj klucz publiczny",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "Kopiuj klucz prywatny",
     "downloadPublicKey": "Pobierz klucz publiczny",
     "downloadPrivateKey": "Pobierz klucz prywatny",
@@ -301,6 +301,13 @@
     "features": {
       "stats": {
         "detail": "Twoje pisanie, serie i trackery w czasie"
+      },
+      "graph": {
+        "detail": "Twoje linki do notatek, inteligentne mosty i główne węzły na interaktywnej mapie"
+      },
+      "placesMap": {
+        "label": "Mapa miejsc",
+        "detail": "Notatki, wpisy w dzienniku i kontakty przypięte na prywatnej mapie"
       },
       "trackers": {
         "detail": "Nastrój, nawyki, czynniki i leki"

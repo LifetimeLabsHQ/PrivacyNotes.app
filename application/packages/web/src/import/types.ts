@@ -164,6 +164,7 @@ export type ImporterId =
   | 'evernote'
   | 'samsung-notes'
   | 'simplenote'
+  | 'microsoft-to-do'
   | 'todoist'
   | 'markdown-folder'
   // The four on-disk markdown apps. Each is an ALIAS of markdown-folder: same

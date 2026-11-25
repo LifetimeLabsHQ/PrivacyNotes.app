@@ -11,6 +11,8 @@ import { type Editor as TipTapEditor } from '@tiptap/react';
 import { getActiveMatchRange } from './editorSearch';
 import { isImeComposing } from './imeComposing';
 import { APP_KEYS, matchesKey } from './shortcutMatch';
+import { isEditableTarget } from './ContextMenu';
+import { hasOpenOverlay } from './useEscapeToClose';
 import { editorCommands, insertDateText, registerEditorCommand } from './editorCommands';
 import { readConnectionsPref, readOutlinePref, writeConnectionsPref, writeOutlinePref } from './editorPrefs';
 import { proUnlocked } from './demo';
@@ -18,7 +20,63 @@ import { FormatBarContext } from './formatBarContext';
 import { SLOT_PILL_HEIGHT, SLOT_PILL_WIDTH } from './EditorSlotPill';
 
 /**
- * The note body's top padding (`.ProseMirror` in index.css). The corner
+ * Selects every child node inside `el`. Used for Cmd/Ctrl+A in a read-only
+ * note, where `.ProseMirror` has `contenteditable="false"` so the browser
+ * has no editing host to scope Select All to (#901).
+ */
+function selectElementContents(el: HTMLElement) {
+  const sel = window.getSelection();
+  if (!sel) return;
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+/**
+ * Keeps a browser-native "Select all" (mobile long-press -> Select all,
+ * Edit -> Select All, Firefox) inside a read-only note body.
+ *
+ * App chrome carries `select-none`, so Chrome and WebKit already land inside
+ * `.ProseMirror` without mutating the selection (critical on mobile, where
+ * rewriting a selection can dismiss the floating Copy toolbar). This clamps
+ * the remaining escapes - Firefox, side-by-side notes, or any sibling text -
+ * only when a selection that started inside `container` expands past it.
+ *
+ * Returns whether the resulting selection lives inside `container`.
+ */
+export function clampReadOnlySelection(
+  sel: Selection | null,
+  container: HTMLElement,
+  wasInside: boolean,
+): boolean {
+  if (!sel || sel.rangeCount === 0) return false;
+  const range = sel.getRangeAt(0);
+  const startIn = container.contains(range.startContainer);
+  const endIn = container.contains(range.endContainer);
+  if (startIn && endIn) return true;
+  if (!wasInside || sel.isCollapsed) return false;
+  let overlaps = startIn || endIn;
+  if (!overlaps) {
+    try {
+      overlaps = range.comparePoint(container, 0) <= 0
+        && range.comparePoint(container, container.childNodes.length) >= 0;
+    } catch {
+      overlaps = false;
+    }
+  }
+  if (!overlaps) return false;
+  const clamped = document.createRange();
+  if (startIn) clamped.setStart(range.startContainer, range.startOffset);
+  else clamped.setStart(container, 0);
+  if (endIn) clamped.setEnd(range.endContainer, range.endOffset);
+  else clamped.setEnd(container, container.childNodes.length);
+  sel.removeAllRanges();
+  sel.addRange(clamped);
+  return true;
+}
+
+/** The note body's top padding (`.ProseMirror` in index.css). The corner
  * pills and the outline panel start at the top of that padding, so the
  * float that keeps text beside them only covers what hangs below it.
  */
@@ -323,6 +381,19 @@ export function useEditorPanels({
         return;
       }
 
+      // Select all in a read-only note: without contenteditable="true" the
+      // browser has no editing host and selects the whole page (#901). Keep
+      // it inside this note's body unless a text field, an overlay, or list
+      // multi-select owns the shortcut.
+      if (readOnly && matchesKey(e, APP_KEYS.selectAll)) {
+        const pm = editorRef.current?.view.dom;
+        if (!pm || hasOpenOverlay() || isEditableTarget(e.target) || isEditableTarget(ae)) return;
+        if (document.querySelector('[data-selection-mode]')) return;
+        e.preventDefault();
+        selectElementContents(pm);
+        return;
+      }
+
       // The date keys run the insert registered while the note can be
       // edited; with none registered, the key is left to the browser.
       const insert = matchesKey(e, APP_KEYS.insertDate)
@@ -383,7 +454,27 @@ export function useEditorPanels({
     };
     document.addEventListener('keydown', onKeyDown, true);
     return () => document.removeEventListener('keydown', onKeyDown, true);
-  }, [preview, idle, toggleFind, toggleReplace]);
+  }, [preview, idle, readOnly, toggleFind, toggleReplace]);
+
+  // Keep browser-native "Select all" inside a read-only note body (even in
+  // `preview`, e.g. version history or split preview) without touching
+  // selections that already sit inside `.ProseMirror`.
+  useEffect(() => {
+    if (!readOnly || !editor || editor.isDestroyed) return;
+    const pm = editor.view.dom;
+    let wasInside = false;
+    const onSelectionChange = () => {
+      if (editor.isDestroyed) return;
+      const inOverlay = !!pm.closest('[role="dialog"], [aria-modal="true"]');
+      if (hasOpenOverlay() && !inOverlay) {
+        wasInside = false;
+        return;
+      }
+      wasInside = clampReadOnlySelection(window.getSelection(), pm, wasInside);
+    };
+    document.addEventListener('selectionchange', onSelectionChange);
+    return () => document.removeEventListener('selectionchange', onSelectionChange);
+  }, [readOnly, editor]);
 
 
   // The pill row's footprint becomes a top-right spacer (see

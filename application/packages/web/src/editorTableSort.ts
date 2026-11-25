@@ -4,6 +4,7 @@ import { closeHistory } from '@tiptap/pm/history';
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view';
 import i18n, { activeLocale } from './i18n';
 import { TIP_PILL, positionClasses } from './HoverLabel';
+import { blockContains, touchesTopBlock } from './editorDirection';
 import { isFormulaText } from './tableFormula';
 import { stripToPlainText } from './notesViewUtils';
 
@@ -20,7 +21,10 @@ import { stripToPlainText } from './notesViewUtils';
  * Spec: docs/internal/specs/table-cell-colors.md (section Sort)
  */
 
-const sortKey = new PluginKey<DecorationSet>('pnTableSort');
+type SortPluginState = { decorations: DecorationSet; ready: boolean; locale: string };
+
+const sortKey = new PluginKey<SortPluginState>('pnTableSort');
+const hasTable = (node: ProseMirrorNode) => blockContains(node, (n) => n.type.name === 'table');
 
 export type SortState = 'asc' | 'desc' | null;
 
@@ -287,12 +291,14 @@ function infoOf(table: ProseMirrorNode, locale: string, toMarkdown: ToMarkdown):
   return states;
 }
 
-function sortDecorations(state: EditorState, toMarkdown: ToMarkdown): DecorationSet {
+function sortDecorations(state: EditorState, toMarkdown: ToMarkdown): SortPluginState {
   const decorations: Decoration[] = [];
   const locale = activeLocale();
+  let ready = true;
   state.doc.descendants((node, pos) => {
-    if (node.type.name !== 'table') return true;
+    if (node.type.name !== 'table') return !node.inlineContent;
     const states = infoOf(node, locale, toMarkdown);
+    if (node.firstChild && toMarkdown(node.firstChild) === null) ready = false;
     if (!states) return false;
     let cellPos = pos + 2;
     node.firstChild!.forEach((cell, _offset, col) => {
@@ -310,18 +316,30 @@ function sortDecorations(state: EditorState, toMarkdown: ToMarkdown): Decoration
     });
     return false;
   });
-  return DecorationSet.create(state.doc, decorations);
+  return {
+    decorations: decorations.length ? DecorationSet.create(state.doc, decorations) : DecorationSet.empty,
+    ready,
+    locale,
+  };
 }
 
-export function tableSortPlugin(toMarkdown: ToMarkdown): Plugin<DecorationSet> {
-  return new Plugin<DecorationSet>({
+export function tableSortPlugin(toMarkdown: ToMarkdown): Plugin<SortPluginState> {
+  return new Plugin<SortPluginState>({
     key: sortKey,
     state: {
       init: (_config, state) => sortDecorations(state, toMarkdown),
-      apply: (tr, old, _prev, state) => (tr.docChanged ? sortDecorations(state, toMarkdown) : old),
+      apply: (tr, old, _prev, state) => {
+        if (!tr.docChanged) return old;
+        if (old.ready && activeLocale() === old.locale && !touchesTopBlock(tr, hasTable)) {
+          return old.decorations === DecorationSet.empty
+            ? old
+            : { ...old, decorations: old.decorations.map(tr.mapping, state.doc) };
+        }
+        return sortDecorations(state, toMarkdown);
+      },
     },
     props: {
-      decorations: (state) => sortKey.getState(state),
+      decorations: (state) => sortKey.getState(state)?.decorations,
     },
   });
 }

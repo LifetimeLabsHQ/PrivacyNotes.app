@@ -8,8 +8,10 @@
   "applyToFolderItems": "ใช้กับทุกรายการในโฟลเดอร์นี้",
   "applyToTagItems": "ใช้กับทุกรายการที่มีแท็กนี้",
   "icon": "ไอคอน",
+  "emoji": "อีโมจิ",
   "searchPlaceholder": "ค้นหาไอคอน",
   "searchLogos": "ค้นหาโลโก้",
+  "searchEmojis": "ค้นหาอีโมจิ",
   "moreLogos": "โลโก้เพิ่มเติม",
   "allLogos": "โลโก้ทั้งหมด เรียง A ถึง Z",
   "recent": "ใช้ล่าสุด",
@@ -41,7 +43,14 @@
     "games": "เกม",
     "learning": "การเรียนรู้และการวิจัย",
     "trips": "การเดินทางและฟิตเนส",
-    "privacy": "ความเป็นส่วนตัวและความปลอดภัย"
+    "privacy": "ความเป็นส่วนตัวและความปลอดภัย",
+    "emojiSmileys": "หน้ายิ้มและอารมณ์",
+    "emojiPeople": "ผู้คนและร่างกาย",
+    "emojiAnimals": "สัตว์และธรรมชาติ",
+    "emojiActivities": "กิจกรรม",
+    "emojiObjects": "สิ่งของ",
+    "emojiSymbols": "สัญลักษณ์และเครื่องหมาย",
+    "emojiFlags": "ธง"
   },
   "icons": {
     "folder": "โฟลเดอร์",

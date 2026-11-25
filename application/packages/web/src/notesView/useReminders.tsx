@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import type { LocalNote } from '../db';
 import type { View } from '../views';
 import { inSection } from '../sectionLock';
-import { BellSimple, Check } from '../icons';
+import { BellSimple, Check, Gear } from '../icons';
+import { Button } from '../ui/Button';
 import { UpdateToast } from '../UpdateToast';
 import { formatInstant, toLocalIso } from '../intlFormat';
 import { contactBirthday, parseContactBody } from '../contactBody';
@@ -14,6 +15,7 @@ import { isDemoMode } from '../demo';
 import { CHECK_IN_REMINDER_ID, checkInReminderItem } from '../checkIn';
 import { MEDICATION_REMINDER_PREFIX } from '../medicationReminders';
 import { BACKUP_REMINDER_ID } from '../autoBackup/reminder';
+import { TASK_REMINDER_PREFIX, taskReminderItems } from '../taskReminders';
 import { mayWriteUnstamped } from '../liveSignIn';
 import { LOCKED_REMINDERS_KEY, SHOWN_REMINDER_KEY } from '../lockReloadKeys';
 import {
@@ -572,8 +574,9 @@ export function ReminderPermissionControl() {
       <button
         type="button"
         onClick={() => void askReminderPermission().catch(() => {})}
-        className={`shrink-0 rounded-md ${PRIMARY_BTN_SKIN} px-3 py-1.5 text-body font-semibold transition`}
+        className={`shrink-0 inline-flex items-center gap-1.5 rounded-md ${PRIMARY_BTN_SKIN} px-3 py-1.5 text-body font-semibold transition`}
       >
+        <BellSimple aria-hidden="true" className="shrink-0" />
         {t('calendar.permissionAsk')}
       </button>
     );
@@ -588,13 +591,13 @@ export function ReminderPermissionControl() {
   }
   if (permission === 'denied' && REMINDER_PLATFORM === 'mobile') {
     return (
-      <button
-        type="button"
+      <Button
+        icon={<Gear aria-hidden="true" />}
         onClick={() => void openReminderSettings().catch(() => {})}
-        className="shrink-0 rounded-md border border-divider px-3 py-1.5 text-body font-medium text-pn hover:bg-track transition"
+        className="shrink-0 !py-1.5 !text-body"
       >
         {t('common:palette.commands.openSettings')}
-      </button>
+      </Button>
     );
   }
   return null;
@@ -620,8 +623,14 @@ async function showNow(title: string, body: string, onClick: () => void) {
  *  bell, and on a desktop or in a browser show the system notification. */
 function ringAlert(a: Pick<PlannedAlert, 'key' | 'itemId'> & { title: string; body: string }, onClick: () => void) {
   markFired(a.key);
-  // The bell is the Calendar row's; the check-in has no item there.
-  if (a.itemId !== CHECK_IN_REMINDER_ID && a.itemId !== BACKUP_REMINDER_ID && !a.itemId.startsWith(MEDICATION_REMINDER_PREFIX)) markUnseen(a.itemId);
+  // The bell is the Calendar row's; the check-in, backups, medications and
+  // per-checkbox task reminders have no Calendar row entry.
+  if (
+    a.itemId !== CHECK_IN_REMINDER_ID
+    && a.itemId !== BACKUP_REMINDER_ID
+    && !a.itemId.startsWith(MEDICATION_REMINDER_PREFIX)
+    && !a.itemId.startsWith(TASK_REMINDER_PREFIX)
+  ) markUnseen(a.itemId);
   if (!NATIVE_MOBILE) void showNow(a.title, a.body, onClick);
 }
 
@@ -810,6 +819,7 @@ export function useReminders({
     if (backup) out.push(backup);
     if (!alertsUnlocked) return out;
     out.push(...medications);
+    out.push(...taskReminderItems(notes, { protectedViews, titleOf }));
     for (const n of notes) {
       if (n.deleted !== 0 || n.trashed !== 0 || n.archived === 1) continue;
       let s: Schedule | null = null;

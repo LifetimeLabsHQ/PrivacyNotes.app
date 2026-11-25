@@ -307,6 +307,16 @@
         "Tak. Aplikacja jest local-first: Twoje [notatki żyją w bazie danych na Twoim urządzeniu](/pl/help/data-location), więc czytanie, pisanie i [wyszukiwanie działają bez połączenia](/pl/help/search-local). Zmiany synchronizują się automatycznie, gdy wrócisz online, a [obraz albo plik dodany offline czeka na tym urządzeniu](/pl/help/upload-failed) i wtedy też zostaje przesłany. [Ninja](/pl/help/ninja) też działa offline; na połączenie czeka tylko zapisanie strony internetowej jako notatki."
       ]
     },
+    "local-only": {
+      "q": "Jak korzystać z sejfu tylko lokalnie, bez konta?",
+      "a": [
+        "Otwórz aplikację na komputer lub telefon (macOS, Windows, Linux, iOS lub Android), wybierz „Wygeneruj frazę” na ekranie logowania i zostaw opcję „Synchronizacja między urządzeniami” odznaczoną (to ustawienie domyślne). Tworzy to zaszyfrowany sejf na Twoim urządzeniu bez rejestracji na serwerze, więc od początku działa offline.",
+        "**Jak działa tryb Tylko lokalnie:**",
+        "- **Offline domyślnie:** notatki, zadania, dzienniki, elementy sejfu, pliki, obrazy, PIN i blokada biometryczna, wyszukiwanie oraz [automatyczne kopie zapasowe](/pl/help/automatic-backups) działają na Twoim urządzeniu bez konta.\n- **Rób kopię zapasową sejfu:** ponieważ nic nie trafia na nasze serwery, utrata urządzenia lub odinstalowanie aplikacji usuwa Twoje notatki. Włącz [automatyczne kopie zapasowe](/pl/help/automatic-backups) w **Ustawienia > Kopia zapasowa > Automatyczne** albo wyeksportuj ręczną kopię w Ustawienia > Kopia zapasowa > Ręczne.\n- **Włącz synchronizację lub przejdź na Pro później:** otwórz Ustawienia > ID & Sync i wybierz „Włącz synchronizację” w dowolnym momencie. Możesz też przejść na Pro z wyłączoną synchronizacją: zakup rejestruje ID konta dla Pro, podczas gdy Twoje notatki zostają lokalnie.\n- **Przywracaj kopie zapasowe z innego urządzenia:** otwórz Ustawienia > Kopia zapasowa > Przywracanie i wybierz „Zaszyfrowana kopia zapasowa (.pnbackup, .pnbackupz)”. Jeśli plik pochodzi z innego sejfu, aplikacja poprosi o frazę odzyskiwania tej kopii (wpisaną albo z kodu QR) i zaimportuje wszystko pod kluczem Twojego lokalnego sejfu.",
+        "**Masz już zsynchronizowane konto?** Wybierz kroki dla swojego planu:",
+        "- **Konto darmowe (przejście na tryb Tylko lokalnie):** wyeksportuj kopię w Ustawienia > Kopia zapasowa > Ręczne i wybierz „Wszystko, zaszyfrowane (.pnbackupz)”. Potem [usuń swoje konto w chmurze](/pl/help/delete-account) w Ustawienia > Konto przez „Usuń konto i dane...”, załóż lokalny sejf w aplikacji na komputer lub telefon opcją „Wygeneruj frazę” i [przywróć kopię zapasową](/pl/help/restore-backup), używając starej frazy odzyskiwania.\n- **Konto Pro (zachowaj Pro i zatrzymaj synchronizację):** nie usuwaj konta, bo usunięcie konta usuwa Pro. Otwórz **Ustawienia > ID & Sync** i włącz [„Wstrzymaj synchronizację”](/pl/help/pause-sync). Pro zostaje aktywne i nic nowego nie jest przesyłane.\n- **Konto Pro (usuń też zsynchronizowane notatki z serwera):** najpierw wyeksportuj „Wszystko, zaszyfrowane (.pnbackupz)”, usuń wszystkie notatki, opróżnij Kosz, naciśnij „Synchronizuj teraz” i poczekaj, aż pojawi się status Zsynchronizowano (pliki w chmurze usuwają się automatycznie po pięciu dniach). Włącz „Wstrzymaj synchronizację” w **Ustawienia > ID & Sync**, a następnie przed zamknięciem aplikacji przywróć swoją kopię w Ustawienia > Kopia zapasowa > Przywracanie. Twoje notatki wrócą lokalnie pod nowymi identyfikatorami, a Pro pozostanie aktywne."
+      ]
+    },
     "sync-conflicts": {
       "q": "Co się stanie, jeśli edytuję tę samą notatkę na dwóch urządzeniach naraz?",
       "a": [
@@ -504,6 +514,13 @@
         "[Pasek formatowania](/pl/help/format-bar) i jego menu Wstaw dodają resztę: [tabele](/pl/help/table-formulas), ramki informacyjne, które można zwijać, podkreślenie, indeks górny i dolny, wyrównanie tekstu, kolory tekstu i podświetlenia, czcionki, linki, obrazy i załączniki plików. Wszystko zapisuje się z powrotem jako Markdown: „Pokaż markdown” pod każdą notatką odsłania surowe źródło, a [eksporty to czyste pliki .md](/pl/help/export), więc nic, co napiszesz, nie zostaje zamknięte w zastrzeżonym formacie."
       ]
     },
+    "slash-commands": {
+      "q": "Czy mogę używać poleceń po ukośniku /, aby wstawiać bloki?",
+      "a": [
+        "Tak. Wpisz `/` na początku wiersza albo po spacji, aby otworzyć menu bloków, a potem wpisz słowo, na przykład `/tabela`, `/h2`, `/kanban` albo `/warn`, i naciśnij Enter. Twoje ostatnie wybory zostają na górze; możesz też wpisać [naturalną datę](/pl/help/ninja-dates), taką jak `/piątek` albo `/jutro`, `/remind` wewnątrz zadania, aby dodać [przypomnienie](/pl/help/reminders), albo `/formula` w komórce tabeli dla [formuł w tabelach](/pl/help/table-formulas). Menu po ukośniku jest darmowe; bloki wymagające Pro mają odznakę Pro.",
+        "Menu działa równolegle z [Markdownem na żywo](/pl/help/markdown-syntax) i pozostaje dostępne, gdy ukryjesz przyciski na [pasku formatowania](/pl/help/format-bar) albo piszesz w [trybie Zen](/pl/help/zen-mode). Jeśli nic w menu nie pasuje do tego, co wpisano, naciśnij Enter, aby przekazać wyszukiwanie prosto do [Ninja](/pl/help/ninja). Wpisanie `/` w adresie strony, dacie, ułamku, bloku kodu albo wklejonym tekście pozostaje zwykłym tekstem i nigdy nie otwiera menu; naciśnij Escape albo spację zaraz po `/`, aby je zamknąć."
+      ]
+    },
     "tasks": {
       "q": "Jak działają zadania?",
       "a": [
@@ -569,7 +586,7 @@
     "browser-extension": {
       "q": "Czy jest rozszerzenie przeglądarki PrivacyNotes?",
       "a": [
-        "Tak, do Chrome, Edge i Firefoksa na komputerze, i jest bezpłatne. Zapisuje stronę, którą czytasz, jako notatkę (jej główny tekst i obrazy) albo jako zakładkę, tworzy nową notatkę napisaną przez ciebie, a do tego może pokazać loginy, karty, klucze SSH i zakładki dla strony, na której jesteś. Skopiuj wartość jednym kliknięciem albo wybierz Wypełnij (lub naciśnij Alt+Shift+L), a rozszerzenie wpisze login dla tej strony na stronie. Nigdy samo nie wypełnia formularzy.",
+        "Tak, do przeglądarek opartych na Chromium i Firefoksie na komputerze, i jest bezpłatne. Zapisuje stronę, którą czytasz, jako notatkę (jej główny tekst i obrazy) albo jako zakładkę, tworzy nową notatkę napisaną przez ciebie, a do tego może pokazać loginy, karty, klucze SSH i zakładki dla strony, na której jesteś. Skopiuj wartość jednym kliknięciem albo wybierz Wypełnij (lub naciśnij Alt+Shift+L), a rozszerzenie wpisze na stronie login dla tej witryny. Nigdy samo nie wypełnia formularzy.",
         "Otwórz Ustawienia > Rozszerzenie, dodaj rozszerzenie ze sklepu swojej przeglądarki, wybierz, co może robić, a potem wybierz Utwórz kod. Skopiuj jednorazowy kod i wklej go w rozszerzeniu. Aby je usunąć, wybierz Usuń obok niego w sekcji Rozszerzenia przeglądarki na tej samej stronie. Rozszerzenie nie zajmuje jednego z twoich miejsc na urządzenie. Konto darmowe łączy jedną przeglądarkę; Pro łączy do 10. [Jak chroni twoje notatki](/pl/help/browser-extension-security)."
       ]
     },
@@ -825,6 +842,13 @@
       "a": [
         "Tak. Oba ustawienia są domyślnie włączone, bo kochamy naszych użytkowników: chcemy pomóc Ci [oszczędzać miejsce](/pl/help/storage-usage) i chronić prywatność. Oszczędzanie miejsca zmniejsza duży obraz i zapisuje go jako JPEG: Standardowy (domyślny) mieści go w 2048 pikselach w jakości 85%, Mały w 1280 pikselach w jakości 75%, a Bardzo mały w 1024 pikselach w jakości 60%, dając najmniejsze pliki. Opcja „Usuń dane lokalizacji” wymazuje metadane EXIF, które aparat zapisuje w zdjęciu, łącznie z pozycją GPS, zanim obraz zostanie zapisany. Oba dotyczą każdego obrazu, który aplikacja potrafi odczytać: wklejonego do notatki, dodanego jako plik lub zaimportowanego. Obraz, którego nie potrafi odczytać, taki jak AVIF, SVG albo taki, który się nie otwiera, jest zapisywany w takiej postaci, w jakiej przyszedł, gdy dodasz go jako plik lub zaimportujesz, łącznie z danymi lokalizacji. Dwa wyjątki: GIF zachowuje swój rozmiar, aby jego animacja nadal działała, a plik dołączony do elementu Sejfu jest przechowywany dokładnie w takiej postaci, w jakiej był.",
         "Wyłącz dowolne z nich w **Ustawienia > Pamięć > Obrazy**, gdzie zdjęcia kontaktów mają trzeci przełącznik, który trzyma je w 512 pikselach. Ustawienia dotyczą tylko nowych obrazów; pliki, które nie są obrazami, są zapisywane dokładnie takie, jakie są. Obrazy HEIC i TIFF są konwertowane do JPEG, bo tylko Safari potrafi je wyświetlić. [Kopia zapasowa, którą przywracasz](/pl/help/restore-backup), jest zapisywana bajt po bajcie."
+      ]
+    },
+    "paste-screenshots": {
+      "q": "Czy wklejane zrzuty ekranu też są kompresowane?",
+      "a": [
+        "Tak. Zrzuty ekranu i obrazy, które kopiujesz i wklejasz prosto do notatki, przechodzą przez tę samą [kompresję Oszczędzania miejsca](/pl/help/image-quality) co załączone pliki, przeciągnięte obrazy i importy. Zwykłe, nieprzezroczyste zrzuty ekranu są zmniejszane do wybranego ustawienia i zapisywane jako JPEG, co zmniejsza typowy zrzut do ułamka oryginalnego rozmiaru i pozwala lepiej wykorzystać Twój [limit pamięci](/pl/help/storage-usage).",
+        "Wybierz Standardowy (2048 pikseli przy jakości 85%), Mały (1280 pikseli przy 75%) albo Bardzo mały (1024 piksele przy 60%) w Ustawienia > Pamięć > Obrazy lub wyłącz Oszczędzanie miejsca, aby zachować oryginały. Zrzut ekranu z przezroczystymi krawędziami, na przykład zrzut okna z cieniem, nadal jest zmniejszany do wybranego limitu, ale zapisywany jako PNG, aby zachować przezroczystość."
       ]
     },
     "storage-usage": {
@@ -1125,7 +1149,7 @@
       "a": [
         "Tak. Wpisz `=` w komórce tabeli, żeby wybrać funkcję, albo napisz formułę samodzielnie. Komórka pokazuje wynik zamiast tekstu, a każdy wynik odświeża się w chwili, gdy zmienisz komórkę, z której korzysta. Komórki nazywa się literą kolumny i numerem wiersza, a nagłówek liczy się jako wiersz 1, więc pierwszy wiersz danych to wiersz 2. Wyniki działają na każdym koncie, a wybieranie z menu jest w Pro.",
         "Żeby wypróbować wszystko naraz, pobierz przykładową notatkę, a potem otwórz Ustawienia > Przenoszenie > Import, wybierz **Pliki Markdown** i wskaż plik.",
-        "[Przykładowa notatka (.md)](/marketing/table-formulas-examples.md)",
+        "[Przykładowa notatka (.md)](/help/table-formulas-examples.md)",
         "Oto funkcje, które możesz łączyć za pomocą `+`, `-`, `*`, `/`, `^` do potęgowania i nawiasów:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` i `COUNT` działają na zakresie, jak w `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` i `LOG` działają na jednej wartości, jak w `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` i `PHI` są stałymi, a `RAND` daje liczbę losową\n- `=B7-B2` odejmuje jedną komórkę od drugiej, a `=SUM(B2:B10)*0.2` liczy procent z sumy",
         "Kliknij komórkę z wynikiem, a formuła wróci, gotowa do zmiany. Notatka przechowuje samą formułę, nigdy wynik, więc eksport i każda inna aplikacja Markdown pokażą `=SUM(B2:B10)` dokładnie tak, jak to zapisano."

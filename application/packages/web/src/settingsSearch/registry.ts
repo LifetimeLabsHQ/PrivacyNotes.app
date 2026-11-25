@@ -95,6 +95,8 @@ export const TAB_LABEL: Record<string, string> = {
   'plan/connectedAccounts': 'security:accountTabs.accounts',
   'plan/keyCustody': 'security:accountTabs.keyCustody',
   'plan/overview': 'security:accountTabs.overview',
+  'storage/usage': 'settings:storage.usage.tab',
+  'storage/images': 'notes:settings.imagesLabel',
   'date/format': 'notes:settings.dateTabFormat',
   'date/calendar': 'notes:settings.calendarLabel',
   'editor/display': 'settings:appearance.editorTabDisplay',
@@ -184,6 +186,7 @@ const ROW_ENTRIES: SettingEntry[] = [
   importer('ia-writer', 'iA Writer'),
   importer('joplin', 'Joplin'),
   keyedImporter('markdown-folder', 'importExport:sourceLabel.markdownFolder'),
+  importer('microsoft-to-do', 'Microsoft To Do'),
   importer('nextcloud-notes', 'Nextcloud Notes'),
   importer('notesnook', 'Notesnook'),
   importer('notion', 'Notion'),
@@ -244,6 +247,7 @@ const ROW_ENTRIES: SettingEntry[] = [
   // Storage
   { id: 'storage.quota', section: 'storage', label: 'settings:storage.quotaLabel', keywords: true },
   { id: 'storage.addon', section: 'storage', label: 'settings:storage.addonHeading', keywords: true },
+  { id: 'storage.usage', section: 'storage', tab: 'usage', label: 'settings:storage.usage.tab', keywords: true },
 
   // Images, a tab of Storage since 2026-10-22
   { id: 'storage.images', section: 'storage', tab: 'images', label: 'notes:settings.imagesLabel', keywords: true },

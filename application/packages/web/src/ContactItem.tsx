@@ -22,8 +22,9 @@ import { useCopyToClipboard } from './clipboard';
 import { openExternal } from './openExternal';
 import { dateLocale } from './intlFormat';
 import { HoverLabel } from './HoverLabel';
-import { ArrowSquareOut, At, Cake, Calendar, CaretDown, ChatCircle, EnvelopeSimple, Globe, MapPin, Phone, User, Users } from './icons';
+import { ArrowSquareOut, At, Cake, Calendar, ChatCircle, EnvelopeSimple, Globe, MapPin, Phone, User, Users } from './icons';
 import { DETAIL_COLUMN, DETAIL_TILE_PX, DetailAction, DetailCopyAction, DetailGroup, DetailHero, DetailLink, DetailNotes, DetailRow } from './detailPane';
+import { Disclosure, IconUpgrade } from './ui';
 import { openMediaViewer } from './mediaRefs';
 import { CustomFieldRow } from './CustomFields';
 
@@ -84,6 +85,8 @@ export function ContactItem({
   onTitleChange,
   onBodyChange,
   onPinProtectedChange,
+  onShowOnMap,
+  placesPro = false,
 }: {
   note: LocalNote;
   isTrash: boolean;
@@ -93,6 +96,8 @@ export function ContactItem({
   onTitleChange: (id: string, title: string) => void;
   onBodyChange: (id: string, body: string) => void;
   onPinProtectedChange: (id: string, value: boolean) => void;
+  onShowOnMap?: () => void;
+  placesPro?: boolean;
 }) {
   const { t } = useTranslation('shell');
   const saved = useMemo(() => parseContactBody(note.body), [note.body]);
@@ -178,7 +183,7 @@ export function ContactItem({
   if (!editing && !isNew) {
     return (
       <div className={`flex-1 overflow-y-auto p-6 ${DETAIL_COLUMN}`}>
-        <ContactView note={note} contact={saved} locked={locked} onEdit={handleEdit} />
+        <ContactView note={note} contact={saved} locked={locked} onEdit={handleEdit} onShowOnMap={onShowOnMap} placesPro={placesPro} />
       </div>
     );
   }
@@ -210,11 +215,13 @@ function webHref(value: string): string | null {
   return null;
 }
 
-function ContactView({ note, contact, locked, onEdit }: {
+function ContactView({ note, contact, locked, onEdit, onShowOnMap, placesPro = false }: {
   note: LocalNote;
   contact: Contact;
   locked: boolean;
   onEdit: () => void;
+  onShowOnMap?: () => void;
+  placesPro?: boolean;
 }) {
   const { t } = useTranslation('shell');
   const { copy, copied } = useCopyToClipboard();
@@ -308,7 +315,29 @@ function ContactView({ note, contact, locked, onEdit }: {
       {contact.addresses.length > 0 && group(t('contacts.groupAddress'), contact.addresses.map((a, i) => {
         const lines = formatAddressLines(a);
         return (
-          <DetailRow key={`ad${i}`} icon={<MapPin />} label={labelText(a.label)} multiline actions={copyAction(lines.join('\n'), `ad${i}`)}>
+          <DetailRow
+            key={`ad${i}`}
+            icon={<MapPin />}
+            label={labelText(a.label)}
+            multiline
+            actions={
+              <>
+                {onShowOnMap && (
+                  <DetailAction label={t('notes:location.showOnMap')} onClick={onShowOnMap}>
+                    <span className="relative flex">
+                      <MapPin />
+                      {placesPro && (
+                        <span className="pointer-events-none absolute -top-1.5 -end-1.5 flex" aria-hidden="true">
+                          <IconUpgrade size={9} />
+                        </span>
+                      )}
+                    </span>
+                  </DetailAction>
+                )}
+                {copyAction(lines.join('\n'), `ad${i}`)}
+              </>
+            }
+          >
             <span className="whitespace-pre-line">{lines.join('\n')}</span>
           </DetailRow>
         );
@@ -370,28 +399,22 @@ function ContactView({ note, contact, locked, onEdit }: {
       ))}
 
       {contact.extras.length > 0 && (
-        <div className="mt-5 rounded-md border border-divider">
-          <button
-            type="button"
-            onClick={() => setExtrasOpen((v) => !v)}
-            aria-expanded={extrasOpen}
-            className="w-full flex items-center gap-2 px-3 py-2 text-compact text-pn-soft"
+        <div className="mt-5 rounded-md border border-divider px-3 py-2">
+          <Disclosure
+            open={extrasOpen}
+            onOpenChange={setExtrasOpen}
+            label={t('contacts.alsoInFile')}
+            meta={t('contacts.extrasCount', { count: contact.extras.length })}
+            panelClassName="mt-2 flex flex-col gap-1"
           >
-            <CaretDown className={`shrink-0 transition-transform ${extrasOpen ? '' : '-rotate-90'}`} aria-hidden="true" />
-            {t('contacts.alsoInFile')}
-            <span className="ms-auto text-small text-pn-muted">{t('contacts.extrasCount', { count: contact.extras.length })}</span>
-          </button>
-          {extrasOpen && (
-            <div className="px-3 pb-3 flex flex-col gap-1">
-              {contact.extras.map((x, i) => (
-                <div key={i} className="flex gap-3 text-small">
-                  <span className="shrink-0 w-36 truncate font-mono text-pn-muted" dir="ltr">{x.name}</span>
-                  <span className="min-w-0 break-all text-pn-soft" dir="auto">{x.value}</span>
-                </div>
-              ))}
-              <p className="mt-1 text-meta text-pn-muted">{t('contacts.extrasNote')}</p>
-            </div>
-          )}
+            {contact.extras.map((x, i) => (
+              <div key={i} className="flex gap-3 text-small">
+                <span className="shrink-0 w-36 truncate font-mono text-pn-muted" dir="ltr">{x.name}</span>
+                <span className="min-w-0 break-all text-pn-soft" dir="auto">{x.value}</span>
+              </div>
+            ))}
+            <p className="mt-1 text-meta text-pn-muted">{t('contacts.extrasNote')}</p>
+          </Disclosure>
         </div>
       )}
     </div>

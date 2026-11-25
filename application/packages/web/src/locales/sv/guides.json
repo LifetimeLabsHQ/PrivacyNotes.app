@@ -443,7 +443,7 @@
       "app": "Notion",
       "title": "Exportera din Notion-arbetsyta",
       "metaTitle": "Så exporterar du din Notion-arbetsyta - PrivacyNotes",
-      "lead": "Exportera din Notion-arbetsyta som en zipfil i formatet Markdown & CSV, så tar PrivacyNotes bort Notions ID:n på 32 tecken, bygger upp undersidor som mappar och gör om sidlänkar till anteckningslänkar.",
+      "lead": "Exportera din Notion-arbetsyta som en zipfil i formatet HTML eller Markdown & CSV, så tar PrivacyNotes bort Notions ID:n på 32 tecken, bygger upp undersidor som mappar, behåller kolumner och färger och gör om sidlänkar till anteckningslänkar.",
       "sections": [
         {
           "img": {
@@ -470,23 +470,23 @@
             "width": 1576,
             "height": 600
           },
-          "h": "Välj Markdown & CSV, med mappar på",
+          "h": "Välj HTML (rekommenderas) eller Markdown & CSV, med mappar på",
           "steps": [
-            "Ställ in Export format på \"Markdown & CSV\".",
+            "Ställ in Export format på \"HTML\" för att behålla kolumner sida vid sida, kolumnbredder, textfärger och överstrykningar. \"Markdown & CSV\" fungerar också om du inte använder kolumner eller färger.",
             "Ställ in Page content på \"Everything\" så att dina bilder, PDF-filer och bifogade filer följer med.",
             "Slå på \"Include private pages\" (eller \"Include subpages\" vid export av en enskild sida) och \"Create folders for subpages\".",
             "Klicka på Export och spara .zip-filen."
           ],
           "p": [
-            "HTML- och PDF-exporter innehåller inga Markdown-filer och kan inte läsas av Notion-importverktyget. Välj \"Markdown & CSV\" så att din struktur, dina länkar och din formatering kommer med rent och helt."
+            "PDF-exporter kan inte läsas av Notion-importverktyget. Välj \"HTML\" så att dina kolumner, färger, din struktur, dina länkar och din formatering kommer med rent och helt, eller \"Markdown & CSV\" för ren Markdown."
           ]
         },
         {
           "h": "Vad som följer med",
           "p": [
             "Notion lägger till ett ID på 32 tecken i varje exporterat filnamn och varje intern länk. PrivacyNotes tar bort de ID:na från varje titel och mappnamn, tar bort den översta mappen \"Private & Shared\" och bygger upp nästlade undersidor som mappar.",
-            "Rubriker, listor, nästlade checklistor, tabeller, kodblock med sitt språk, matematik, understrykning och citat kommer med som de var. Notions informationsrutor görs om till informationsrutor i PrivacyNotes, [länkar och omnämnanden mellan exporterade sidor blir anteckningslänkar](/sv/help/note-links), och uppladdade bilder, PDF-filer och filer importeras till din lagring.",
-            "Sidor för databasrader importeras som anteckningar i en mapp uppkallad efter databasen, och en eventuell Tags-egenskap läggs till som taggar. Databasernas CSV-tabellfiler hoppas över och räknas i sammanfattningen. Notions egen Markdown-export utelämnar textfärger, markeringar och sidor i papperskorgen."
+            "Rubriker, listor, nästlade checklistor, tabeller, kodblock med sitt språk, matematik, understrykning och citat kommer med som de var. Med HTML-export kommer även kolumner sida vid sida (2 till 5 kolumner, med breddförhållanden), textfärger och överstrykningar med. Notions informationsrutor görs om till informationsrutor i PrivacyNotes, [länkar och omnämnanden mellan exporterade sidor blir anteckningslänkar](/sv/help/note-links), och uppladdade bilder, PDF-filer och filer importeras till din lagring.",
+            "Sidor för databasrader importeras som anteckningar i en mapp uppkallad efter databasen, och en eventuell Tags-egenskap läggs till som taggar. Databasernas CSV-tabellfiler hoppas över och räknas i sammanfattningen. Notions egen Markdown-export plattar ut kolumner och utelämnar textfärger, överstrykningar och sidor i papperskorgen."
           ]
         }
       ]
@@ -1552,6 +1552,45 @@
           "p": [
             "[Varje inlägg hamnar i Dagböcker](/sv/help/journal) på kalenderdagen i inläggets egen tidszon. En inledande rubrik blir titeln, och ett inlägg utan rubrik får sitt datum som titel. Stjärnmärkta och fästa inlägg förblir fästa, och taggar förblir taggar.",
             "Din plats fyller inläggets platsbricka, och väder, aktivitet och musik hamnar på en rad överst. Foton importeras som bilder, ljud, video och PDF-filer som bilagor, och länkar mellan inlägg blir [anteckningslänkar](/sv/help/note-links). När en enda .zip innehåller flera dagböcker blir varje dagbok en mapp."
+          ]
+        }
+      ]
+    },
+    "microsoft-to-do": {
+      "app": "Microsoft To Do",
+      "title": "Exportverktyg för Microsoft To Do",
+      "metaTitle": "Exportverktyg för Microsoft To Do - Gratis webbläsarverktyg - PrivacyNotes",
+      "lead": "Exportera dina listor, deluppgifter, anteckningar och bilagor från Microsoft To Do med vårt kostnadsfria exportverktyg för Microsoft To Do direkt i webbläsaren före nedläggningen i juni 2027.",
+      "sections": [
+        {
+          "h": "Exportera dina Microsoft To Do-uppgifter i tre steg",
+          "p": [
+            "Microsoft To Do har ingen inbyggd exportknapp än, så vi har byggt ett gratis [exportverktyg för Microsoft To Do](https://todo.privacynotes.app) med öppen källkod som körs direkt i din webbläsare på Windows, Mac, Linux och mobil."
+          ],
+          "steps": [
+            "Öppna [todo.privacynotes.app](https://todo.privacynotes.app) och klicka på **Sign in with Microsoft**.",
+            "Tillåt skrivskyddad åtkomst (`Tasks.Read`) så att din webbläsare kan läsa dina listor utan att ändra eller radera någonting.",
+            "Klicka på **Fetch my Microsoft To Do data** och sedan på **Download ZIP (recommended)** för att spara dina listor, uppgifter, deluppgifter, anteckningar och bilagor lokalt."
+          ]
+        },
+        {
+          "h": "Varför ett exportverktyg i webbläsaren spelar roll före juni 2027",
+          "p": [
+            "Microsoft har meddelat att Microsoft To Do läggs ned den 30 juni 2027, utan någon ersättare för personliga Microsoft-konton. Arbets- och skolkonton flyttas till Microsoft Planner, medan privatpersoner hänvisas till en annan uppgiftsapp.",
+            "I stället för att installera kommandoradsverktyg eller kopiera utvecklartoken för hand ansluter vårt webbverktyg din webbläsare direkt till Microsoft Graph med ett klick, och fungerar med både personliga konton (outlook.com, hotmail.com, live.com) och Microsoft 365-konton."
+          ]
+        },
+        {
+          "h": "Privat från grunden - ingenting passerar våra servrar",
+          "p": [
+            "Exportverktyget är en statisk sida utan backend och utan spårning. Din webbläsare hämtar dina uppgifter direkt från Microsoft och bygger ZIP-filen på din enhet, så dina listor passerar aldrig våra servrar. Inloggningstoken stannar i webbläsarens tillfälliga sessionslagring och rensas när du loggar ut eller stänger fliken."
+          ]
+        },
+        {
+          "h": "Vad som finns i ZIP-filen och vad som följer med",
+          "p": [
+            "ZIP-filen innehåller en strukturerad `microsoft-to-do-export.json`-säkerhetskopia, en lättläst Markdown-checklista per lista, en kalkylarksfärdig `tasks.csv` och dina nedladdade bilagor. Du kan importera den exporten till PrivacyNotes eller vilken annan Markdown- eller CSV-app som helst.",
+            "I PrivacyNotes blir varje lista en [uppgiftslista](/sv/help/tasks) som behåller öppna och klara uppgifter, deluppgifter, Important-markeringar, förfallodatum, upprepningsscheman, kategorier som taggar, anteckningar, länkade objekt och bifogade filer - och dina anteckningar är krypterade på din enhet. Enskilda påminnelser på uppgiftsrader följer inte med och räknas i importsammanfattningen. En fristående `.json`-fil från exportverktyget eller från Microsoft Graph API går också att importera, utan bilagor."
           ]
         }
       ]

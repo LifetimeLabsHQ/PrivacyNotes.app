@@ -42,7 +42,7 @@ import { isApexHost, usesOfficialServer } from './hosts';
 import { isTouchPointer } from './useIsMobile';
 import { readLinkModifier } from './theme';
 import { isComputerBrowser, peekPendingShortcut } from './noteShortcut';
-import { anchorOpensInDefaultBrowser, isAppRelativeNewWindowLink, isEditableAnchor, openExternal, pluginOpensThisApp } from './openExternal';
+import { handleNativeAnchorClick } from './openExternal';
 import { localeFromPath } from './localeRoutes';
 import { setLanguage } from './languages';
 import { applyMarketingSeo } from './seo';
@@ -175,47 +175,18 @@ export default function App() {
   // External links are dead in the native (Tauri) webview: an
   // <a target="_blank"> click is silently swallowed by WKWebView (no new
   // window, no navigation), and a same-tab href would replace the app
-  // itself. So on desktop we intercept clicks on external links in the
-  // capture phase and hand them to the system browser via the opener
-  // plugin. Web is untouched - the listener is never installed. OAuth
-  // (auth.tsx) and the updater (DesktopUpdater.tsx) already call openUrl
-  // directly; this covers every other link (note content, footer,
-  // About/Feedback/Donation modals, etc.).
+  // itself. So on native builds we intercept clicks on external links in the
+  // capture phase and route them through openExternal. Web is untouched - the
+  // listener is never installed.
   // Spec: docs/internal/macos-ios-setup.md (native flows use the same opener plugin)
   useEffect(() => {
     if (!IS_DESKTOP) return;
     const onClick = (e: MouseEvent) => {
-      if (e.defaultPrevented || e.button !== 0) return;
-      const anchor = (e.target as Element | null)?.closest('a');
-      // Trimmed, as the cleaner and the plugin's script read it (beta #200).
-      const href = anchor?.getAttribute('href')?.trim();
-      // A click the plugin's own script would turn into an address of the
-      // app itself does nothing, on every platform (beta issues 169, 200).
-      if (anchor && (pluginOpensThisApp(anchor, e) || (href && isAppRelativeNewWindowLink(anchor, href)))) {
-        e.preventDefault();
-        return;
-      }
-      // tel: and sms: ride along with mailto:: a contact's number is a
-      // handoff to the dialer, which the WebView cannot make on its own.
-      // Spec: docs/internal/specs/contacts-pillar.md (section 9, tap to call)
-      if (!href || !/^(https?:|mailto:|tel:|sms:)/i.test(href)) return;
-      // A mouse click on a link inside a note being written is opened by
-      // `editorLinks.ts` (on mouseup, before this click), which also knows a
-      // file link from an address. A finger keeps this route. The click is
-      // still cancelled: the opener plugin's own script opens every
-      // uncancelled `target="_blank"` click, so the link opened twice
-      // (GitHub #701).
-      if (!isTouchPointer() && anchor && isEditableAnchor(anchor)) {
-        e.preventDefault();
-        return;
-      }
-      e.preventDefault();
-      // "Open links with Cmd-click" covers a read-only note too (GitHub #633).
-      if (readLinkModifier() && !isTouchPointer() && !isOpenLinkModifier(e) && anchor?.closest('.ProseMirror')) return;
-      // Delegate to openExternal so shortcut handling and the iOS split
-      // (default browser for user content, in-app SFSafariViewController sheet
-      // for Settings/legal/help/app chrome) live in one place (GitHub #898).
-      openExternal(href, { browser: anchor ? anchorOpensInDefaultBrowser(anchor) : false });
+      handleNativeAnchorClick(e, {
+        isTouch: isTouchPointer(),
+        linkModifier: readLinkModifier(),
+        isModifier: isOpenLinkModifier(e),
+      });
     };
     document.addEventListener('click', onClick, true);
     return () => document.removeEventListener('click', onClick, true);

@@ -48,6 +48,7 @@
     "plan_dangerZone": "delete account, erase, remove data, close account",
     "storage_quota": "space used, quota, usage",
     "storage_addon": "more space, buy storage, extra storage",
+    "storage_usage": "breakdown, largest, what takes space, cleanup, history, files size",
     "images_spaceSaver": "compress, resize, smaller images, image quality",
     "images_compression": "super compress, small, tiny, standard, quality, size, storage",
     "images_removeLocation": "gps, exif, metadata, geotag",

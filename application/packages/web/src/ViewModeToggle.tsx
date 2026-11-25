@@ -2,11 +2,11 @@ import { useTranslation } from 'react-i18next';
 import { HoverLabel } from './HoverLabel';
 import { exemptOpts } from './i18nExempt';
 import { List, Sparkle, SquaresFour } from './icons';
-import { SIDEBAR_ACTIVE } from './sidebarUI';
+import { SETTINGS_TRACK, settingsSegClass } from './settingsUI';
 import type { ViewMode } from './viewMode';
 
 /**
- * The layout switch: an Auto icon button beside a List / Grid segmented pair.
+ * The layout switch: Auto (icon), List, and Grid in one shared segmented track.
  * Drawn in the list preferences menu of every pane; the choice is this
  * device's own (viewMode.ts).
  */
@@ -14,40 +14,30 @@ export function ViewModeToggle({ mode, onChange }: { mode: ViewMode; onChange: (
   const { t } = useTranslation('shell');
   const autoLabel = t('tagsRail.viewAuto', exemptOpts('shell:tagsRail.viewAuto'));
   return (
-    <div className="flex items-stretch gap-1.5">
+    <div role="group" aria-label={t('listPrefs.layout', { defaultValue: 'Layout' })} className={SETTINGS_TRACK}>
       <HoverLabel label={autoLabel} position="end">
         <button
           type="button"
           onClick={() => onChange('auto')}
           aria-pressed={mode === 'auto'}
           aria-label={autoLabel}
-          className={`h-full px-2 rounded-md border inline-flex items-center justify-center transition ${
-            mode === 'auto'
-              ? `${SIDEBAR_ACTIVE} border-accent`
-              : 'border-divider text-pn-muted hover:text-accent hover:border-accent/50 dark:hover:text-accent'
-          }`}
+          className={`${settingsSegClass(mode === 'auto')} !flex-none inline-flex items-center justify-center !px-2.5`}
         >
-          <Sparkle />
+          <Sparkle aria-hidden="true" />
         </button>
       </HoverLabel>
-      <div className="flex-1 min-w-0 flex rounded-md border border-divider overflow-hidden">
-        {(['list', 'grid'] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => onChange(m)}
-            aria-pressed={mode === m}
-            className={`flex-auto min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1 text-small font-medium transition ${
-              mode === m
-                ? SIDEBAR_ACTIVE
-                : 'text-pn-muted hover:text-accent dark:hover:text-accent'
-            }`}
-          >
-            {m === 'list' ? <List className="shrink-0" /> : <SquaresFour className="shrink-0" />}
-            <span className="truncate">{m === 'list' ? t('settings:appearance.viewList') : t('settings:appearance.viewGrid')}</span>
-          </button>
-        ))}
-      </div>
+      {(['list', 'grid'] as const).map((m) => (
+        <button
+          key={m}
+          type="button"
+          onClick={() => onChange(m)}
+          aria-pressed={mode === m}
+          className={`${settingsSegClass(mode === m)} min-w-0 inline-flex items-center justify-center gap-1`}
+        >
+          {m === 'list' ? <List className="shrink-0" aria-hidden="true" /> : <SquaresFour className="shrink-0" aria-hidden="true" />}
+          <span className="truncate">{m === 'list' ? t('settings:appearance.viewList') : t('settings:appearance.viewGrid')}</span>
+        </button>
+      ))}
     </div>
   );
 }

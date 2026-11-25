@@ -7,6 +7,7 @@ import { APEX_ORIGIN, RELEASES_ORIGIN, usesOfficialServer } from './hosts';
 import { createListeners } from './listeners';
 import { holdLockReload } from './lockReload';
 import { clearRelaunchShowWindow, markRelaunchShowWindow } from './openAtLogin';
+import { openExternalAsync } from './openExternal';
 import { marketingHomeHref } from './siteLinks';
 import { compareSemver } from './versionCheck';
 import { VERSION } from './version';
@@ -564,8 +565,7 @@ export async function applyDesktopUpdate(): Promise<void> {
 
 export async function openDesktopChangelog(): Promise<void> {
   try {
-    const { openUrl } = await import('@tauri-apps/plugin-opener');
-    await openUrl(CHANGELOG_URL);
+    await openExternalAsync(CHANGELOG_URL, { browser: true });
   } catch (e) {
     console.warn('[updater] open changelog failed', e);
   }
@@ -584,11 +584,10 @@ async function copyScoopSwitchCommand(): Promise<void> {
 
 export async function openDesktopDownloads(): Promise<void> {
   try {
-    const { openUrl } = await import('@tauri-apps/plugin-opener');
     // Locale-aware, matching the in-app Downloads button: on desktop
     // marketingHomeHref() is the absolute /<lang> homepage, and #downloads
     // reveals both Linux formats. Spec: docs/internal/linux-release.md (homepage carries both AppImage and .deb buttons).
-    await openUrl(`${marketingHomeHref()}#downloads`);
+    await openExternalAsync(`${marketingHomeHref()}#downloads`, { browser: true });
   } catch (e) {
     console.warn('[updater] open downloads failed', e);
   }

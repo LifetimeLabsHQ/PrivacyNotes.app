@@ -29,8 +29,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { ArrowRight, Fingerprint, LockKeyOpen, Pause, Play } from './icons';
-import { Button, IconButton } from './ui';
+import { ArrowRight, Fingerprint, Key, LockKeyOpen, Pause, Play } from './icons';
+import { Button, Callout, GateCard, IconButton, PhraseInput, StatusLine } from './ui';
 import { TypewriterRotation } from './LoadingScreen';
 import { linesStartPaused } from './typewriter';
 import {
@@ -199,14 +199,14 @@ export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWr
       <LockShell>
         <div className="space-y-4 text-center">
           {signInState === 'busy' ? (
-            <p className="text-body text-pn-muted">
-              {t('lockScreen.signingIn')}
-            </p>
+            <div className="flex justify-center">
+              <StatusLine busy>{t('lockScreen.signingIn')}</StatusLine>
+            </div>
           ) : (
             <>
-              <p className="text-body text-danger">
+              <Callout tone="danger" className="text-start">
                 {t('lockScreen.signInFailed')}
-              </p>
+              </Callout>
               <Button action="retry" variant="primary" onClick={onRetrySignIn} className="w-full">
                 {t('lockScreen.retrySignIn')}
               </Button>
@@ -605,36 +605,27 @@ function PhraseUnlock({
   }
 
   return (
-    <div className="space-y-5">
-      {/* One way out, Cancel below: a Back link here did the same. */}
-      <div className="text-center space-y-2">
-        <h2 className="text-heading font-semibold text-pn">
-          {!recover
-            ? t('lockScreen.recoveryPhrase')
-            : kind === 'passcode' ? t('pinRecovery.titlePasscode') : t('pinRecovery.title')}
-        </h2>
-        <p className="text-body text-pn-muted text-balance">
-          {!recover
-            ? t('lockScreen.recoveryPhraseSubtitle')
-            : kind === 'passcode' ? t('pinRecovery.lockIntroPasscode') : t('pinRecovery.lockIntro')}
-        </p>
-      </div>
-
-      <textarea
+    <GateCard
+      maxWidth="max-w-sm"
+      icon={<Key aria-hidden="true" />}
+      title={
+        !recover
+          ? t('lockScreen.recoveryPhrase')
+          : kind === 'passcode' ? t('pinRecovery.titlePasscode') : t('pinRecovery.title')
+      }
+      subtitle={
+        !recover
+          ? t('lockScreen.recoveryPhraseSubtitle')
+          : kind === 'passcode' ? t('pinRecovery.lockIntroPasscode') : t('pinRecovery.lockIntro')
+      }
+    >
+      <PhraseInput
         value={input}
-        onChange={(e) => {
-          setInput(e.target.value);
+        onChange={(next) => {
+          setInput(next);
           setError(null);
         }}
         placeholder={t('auth:importPhrase.placeholder')}
-        // A phone keyboard must neither rewrite a phrase word nor learn it.
-        spellCheck={false}
-        autoCapitalize="none"
-        autoCorrect="off"
-        autoComplete="off"
-        rows={3}
-        dir="ltr" // rtl-ok: BIP-39 phrase words, always LTR
-        className="w-full rounded-md bg-surface-1 border border-divider text-pn focus:border-accent p-3 text-body font-mono focus:outline-none placeholder:text-pn-muted"
         autoFocus
       />
 
@@ -656,6 +647,6 @@ function PhraseUnlock({
           {t('lockScreen.unlock')}
         </Button>
       </div>
-    </div>
+    </GateCard>
   );
 }

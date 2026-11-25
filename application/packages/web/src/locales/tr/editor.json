@@ -38,7 +38,7 @@
     "blockMath": "Blok formül",
     "align": "Hizalama",
     "font": "Yazı tipi",
-    "pictureFromFiles": "Dosyalar'dan görsel",
+    "pictureFromFiles": "Galeri",
     "date": "Tarih",
     "dateTime": "Tarih ve saat",
     "footnote": "Dipnot",
@@ -260,6 +260,15 @@
     "headingsIn": "{{title}} içindeki başlıklar",
     "noHeadingMatches": "Eşleşen başlık yok"
   },
+  "slash": {
+    "label": "Blok ekle",
+    "linePlaceholder": "Blok eklemek için / tuşuna basın",
+    "filterHint": "Filtrelemek için yazın…",
+    "basic": "Temel bloklar",
+    "smartDate": "Akıllı tarih",
+    "askNinja": "“{{query}}” için Ninja'ya sor",
+    "noMatches": "Eşleşen blok yok"
+  },
   "copyBox": {
     "placeholder": "Tek tıkla kopyalanacak metin"
   },
@@ -369,6 +378,23 @@
     "moveTo": "Şuraya taşı",
     "cardCount_one": "{{count}} kart",
     "columnCount_one": "{{count}} sütun"
+  },
+  "columns": {
+    "narrowWide": "Dar ve geniş",
+    "wideNarrow": "Geniş ve dar",
+    "removeColumns": "Sütunları kaldır",
+    "resizeColumn": "Sütunları yeniden boyutlandırmak için sürükleyin",
+    "barLabel": "Sütun denetimleri",
+    "borders": "Sütun kenarlıkları",
+    "borderBoxes": "Kutular",
+    "borderSolid": "Düz",
+    "borderDashed": "Kesikli",
+    "borderDotted": "Noktalı",
+    "borderThickness": "Kalınlık",
+    "borderThin": "İnce",
+    "borderMedium": "Orta",
+    "borderColorDefault": "Varsayılan renk",
+    "borderTint": "Hafif sütun tonu"
   },
   "doodle": {
     "title": "Karalama",

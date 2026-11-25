@@ -29,14 +29,15 @@ import { Protocol } from 'pmtiles';
 import { language_script_pairs, layers, namedFlavor } from '@protomaps/basemaps';
 import type { MapSource } from '../noteLocation';
 import { MagnifyingGlassMinus, MagnifyingGlassPlus } from '../icons';
-import { IconButton } from '../ui';
+import { CanvasControlBar, IconButton } from '../ui';
 
 /** How long the first draw may take before the map counts as failed. */
 const LOAD_TIMEOUT_MS = 15_000;
 
-let setUp = false;
+const PMTILES_GUARD_KEY = '__pnMapLibrePmtilesReady';
 function ensureSetUp(): void {
-  if (setUp) return;
+  const host = globalThis as Record<string, unknown>;
+  if (host[PMTILES_GUARD_KEY]) return;
   setWorkerUrl(workerUrl);
   const reader = new Protocol();
   // The reader keeps one archive for each address and, in it, the answer of
@@ -45,15 +46,19 @@ function ensureSetUp(): void {
   // place on another note, a map that is still open) asks the host again
   // instead of getting the same failure until the app reloads. A removed
   // map aborts its reads, which is no failure of the host.
-  addProtocol('pmtiles', async (request, abort) => {
-    try {
-      return await reader.tile(request, abort);
-    } catch (error) {
-      if ((error as { name?: string } | undefined)?.name !== 'AbortError') reader.tiles.clear();
-      throw error;
-    }
-  });
-  setUp = true;
+  try {
+    addProtocol('pmtiles', async (request, abort) => {
+      try {
+        return await reader.tile(request, abort);
+      } catch (error) {
+        if ((error as { name?: string } | undefined)?.name !== 'AbortError') reader.tiles.clear();
+        throw error;
+      }
+    });
+  } catch {
+    // Another map chunk already registered the pmtiles protocol in this session.
+  }
+  host[PMTILES_GUARD_KEY] = true;
 }
 
 export default function NoteLocationMap({ lat, lng, dark, lang, source, label, pin, scrollZoom, bleed, height, onFail }: {
@@ -164,14 +169,14 @@ export default function NoteLocationMap({ lat, lng, dark, lang, source, label, p
   return (
     <div className={`relative${height === '100%' ? ' h-full' : ''}`}>
       <div ref={ref} role="img" aria-label={label} style={{ height }} className={`w-full overflow-hidden ${bleed ? 'border-y border-divider' : 'rounded-md border border-divider'}`} />
-      <div className="absolute top-1.5 end-1.5 flex flex-col rounded-md border border-divider bg-surface-2">
+      <CanvasControlBar orientation="vertical" className="absolute top-1.5 end-1.5 z-10 !p-0.5">
         <IconButton label={t('viewer.zoomIn')} position="start" onClick={() => mapRef.current?.zoomIn()}>
           <MagnifyingGlassPlus aria-hidden="true" />
         </IconButton>
         <IconButton label={t('viewer.zoomOut')} position="start" onClick={() => mapRef.current?.zoomOut()}>
           <MagnifyingGlassMinus aria-hidden="true" />
         </IconButton>
-      </div>
+      </CanvasControlBar>
     </div>
   );
 }

@@ -313,6 +313,7 @@
       "noEntry": "記録なし",
       "doseLens": "気分の平均は、変更前{{nBefore}}日間が{{before}}、変更後{{nAfter}}日間が{{after}}でした。",
       "doseLensHeading": "各用量変更の前後",
+      "doseLensLocked": "Proにアップグレードすると、用量の変更が気分にどう影響するかを見られます",
       "doseLensShort_other": "前後の記録日があと{{count}}日必要です。"
     },
     "sourceLine": "ここにあるものはすべて、ジャーナルの記録のトラッカーから来ています。",

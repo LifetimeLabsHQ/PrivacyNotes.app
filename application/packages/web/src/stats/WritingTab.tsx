@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { LocalNote } from '../db';
 import type { Stats } from '../stats';
 import { SectionEyebrow, SettingsSegmented, StatTile as Tile } from '../settingsUI';
+import { ProgressBar } from '../ui';
 import { BookOpen, Books, CalendarBlank, ChartLineUp, Check, Clock, FileText, Fire, Hash, PencilSimple, TextAa, Timer, Trophy } from '../icons';
 import { formatDay, weekdayDate, weekdayLabel } from '../intlFormat';
 import { toLocalIso } from '../notesViewUtils';
@@ -310,7 +311,9 @@ export function WritingTab({ notes, stats, isNoteLocked, notesCreated, firstSeen
           {meters.filter((row) => row.next !== null).map((row) => (
             <div key={row.family} className="flex items-center gap-3">
               <span className="w-40 shrink-0 truncate text-small text-pn">{t('milestones.next', { label: milestoneLabel(row.family, row.next!) })}</span>
-              <span className="flex-1 h-1.5 rounded-full bg-surface-0 overflow-hidden"><span className="block h-full rounded-full bg-accent-fill" style={{ width: `${Math.round(row.progress * 100)}%` }} /></span>
+              <div className="flex-1">
+                <ProgressBar value={row.progress} label={milestoneLabel(row.family, row.next!)} />
+              </div>
               <span className="shrink-0 text-meta text-pn-muted tabular-nums">{t('milestones.ofTarget', { current: fmt(row.current), target: fmt(row.next!) })}</span>
             </div>
           ))}

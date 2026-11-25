@@ -307,6 +307,16 @@
         "Áno. Aplikácia je local-first: tvoje poznámky sú [v databáze v tvojom zariadení](/sk/help/data-location), takže čítanie, písanie aj [vyhľadávanie fungujú bez pripojenia](/sk/help/search-local). Zmeny sa automaticky synchronizujú, keď sa vrátiš online, a [obrázok alebo súbor, ktorý pridáš offline, počká v tomto zariadení](/sk/help/upload-failed) a nahrá sa vtedy tiež. [Ninja](/sk/help/ninja) funguje offline tiež; na pripojenie čaká iba uloženie webovej stránky ako poznámky."
       ]
     },
+    "local-only": {
+      "q": "Ako môžem používať trezor iba lokálne bez účtu?",
+      "a": [
+        "Otvor desktopovú alebo mobilnú aplikáciu (macOS, Windows, Linux, iOS alebo Android), na prihlasovacej obrazovke zvoľ „Vygenerovať frázu“ a nechaj „Synchronizácia medzi zariadeniami“ nezaškrtnuté, čo je predvolené nastavenie. Tým sa vytvorí šifrovaný trezor na tvojom zariadení bez registrácie na serveri, takže funguje offline od začiatku.",
+        "**Ako funguje režim Iba lokálne:**",
+        "- **Predvolene offline:** poznámky, úlohy, denníky, položky trezora, súbory, obrázky, PIN a biometrický zámok, vyhľadávanie aj [automatické zálohy](/sk/help/automatic-backups) fungujú na tvojom zariadení bez účtu.\n- **Zálohuj si trezor:** keďže sa nič nedostáva na naše servery, strata zariadenia alebo odinštalovanie aplikácie odstráni tvoje poznámky. Zapni [automatické zálohy](/sk/help/automatic-backups) v **Nastavenia > Zálohovanie > Automatické** alebo exportuj ručnú kópiu v Nastavenia > Zálohovanie > Ručné.\n- **Zapni synchronizáciu alebo prejdi na Pro neskôr:** kedykoľvek otvor Nastavenia > ID & Sync a zvoľ „Zapnúť synchronizáciu“. Môžeš tiež prejsť na Pro a nechať synchronizáciu vypnutú: platba zaregistruje ID účtu pre Pro, zatiaľ čo tvoje poznámky zostanú lokálne.\n- **Obnov zálohy z iného zariadenia:** otvor Nastavenia > Zálohovanie > Obnova a zvoľ „Šifrovaná záloha (.pnbackup, .pnbackupz)“. Ak súbor pochádza z iného trezora, aplikácia si vypýta obnovovaciu frázu danej zálohy (napísanú alebo cez QR) a všetko naimportuje pod kľúčom tvojho lokálneho trezora.",
+        "**Už máš synchronizovaný účet?** Vyber postup podľa svojho tarifu:",
+        "- **Bezplatný účet (prechod na režim Iba lokálne):** exportuj kópiu v Nastavenia > Zálohovanie > Ručné a vyber „Všetko, šifrované (.pnbackupz)“. Potom [odstráň svoj cloudový účet](/sk/help/delete-account) v Nastavenia > Účet cez „Odstrániť účet a dáta…“, vytvor lokálny trezor v desktopovej alebo mobilnej aplikácii cez „Vygenerovať frázu“ a [obnov zálohu](/sk/help/restore-backup) pomocou svojej starej obnovovacej frázy.\n- **Účet Pro (ponechať Pro a zastaviť synchronizáciu):** neodstraňuj svoj účet, pretože odstránenie účtu odstráni aj Pro. Otvor **Nastavenia > ID & Sync** a zapni [„Pozastaviť synchronizáciu“](/sk/help/pause-sync). Pro zostane aktívne a nič nové sa nenahrá.\n- **Účet Pro (a zároveň vymazať synchronizované poznámky zo servera):** najprv exportuj „Všetko, šifrované (.pnbackupz)“, odstráň všetky poznámky, vyprázdni kôš, stlač „Synchronizovať teraz“ a počkaj, kým sa nezobrazí Synchronizované (súbory v cloude sa automaticky odstránia po piatich dňoch). Zapni „Pozastaviť synchronizáciu“ v **Nastavenia > ID & Sync** a potom ešte pred zavretím aplikácie obnov zálohu v Nastavenia > Zálohovanie > Obnova. Tvoje poznámky sa vrátia lokálne pod novými ID, zatiaľ čo Pro zostane aktívne."
+      ]
+    },
     "sync-conflicts": {
       "q": "Čo sa stane, ak upravím tú istú poznámku na dvoch zariadeniach naraz?",
       "a": [
@@ -504,6 +514,13 @@
         "[Formátovacia lišta](/sk/help/format-bar) a jej ponuka Vložiť pridávajú zvyšok: [tabuľky](/sk/help/table-formulas), callouty, ktoré sa dajú zbaliť, podčiarknutie, horný a dolný index, zarovnanie textu, farby textu a zvýraznenia, písma, odkazy, obrázky a prílohy. Všetko sa uloží a znova načíta ako Markdown: „Zobraziť markdown“ pod každou poznámkou odhalí zdrojový text a [exporty sú čisté súbory .md](/sk/help/export), takže nič, čo napíšeš, nie je zamknuté v uzavretom formáte."
       ]
     },
+    "slash-commands": {
+      "q": "Môžem na vkladanie blokov používať príkazy s lomkou /?",
+      "a": [
+        "Áno. Napíš `/` na začiatku riadka alebo po medzere, čím otvoríš ponuku blokov, potom napíš slovo ako `/tabuľka`, `/h2`, `/kanban` alebo `/warn` a stlač Enter. Tvoje posledné voľby zostávajú navrchu a môžeš tiež napísať [prirodzený dátum](/sk/help/ninja-dates), napríklad `/piatok` alebo `/zajtra`, `/remind` vnútri úlohy pre [pripomienku](/sk/help/reminders), alebo `/formula` vnútri bunky tabuľky pre [tabuľkové vzorce](/sk/help/table-formulas). Ponuka s lomkou je zadarmo; bloky, ktoré vyžadujú Pro, zobrazujú značku Pro.",
+        "Ponuka funguje popri [živom Markdowne](/sk/help/markdown-syntax) a zostáva dostupná, aj keď skryješ tlačidlá na [lište formátovania](/sk/help/format-bar) alebo píšeš v [režime Zen](/sk/help/zen-mode). Ak nič v ponuke nezodpovedá tomu, čo napíšeš, stlač Enter a vyhľadávanie sa odovzdá priamo do [Ninja](/sk/help/ninja). Napísanie `/` vnútri webovej adresy, dátumu, zlomku, bloku kódu alebo vloženého textu zostane obyčajným textom a ponuku nikdy neotvorí; zavrieš ju klávesom Escape alebo medzerou hneď po `/`."
+      ]
+    },
     "tasks": {
       "q": "Ako fungujú úlohy?",
       "a": [
@@ -569,7 +586,7 @@
     "browser-extension": {
       "q": "Existuje rozšírenie prehliadača pre PrivacyNotes?",
       "a": [
-        "Áno, pre Chrome, Edge a Firefox na počítači, a je zadarmo. Uloží stránku, ktorú čítaš, ako poznámku (jej hlavný text a obrázky) alebo ako záložku, umožní napísať vlastnú novú poznámku a dokáže zobraziť prihlasovacie údaje, karty, kľúče SSH a záložky pre stránku, na ktorej si. Hodnotu skopíruješ jedným kliknutím, alebo zvoľ Vyplniť (alebo stlač Alt+Shift+L) a rozšírenie vpíše prihlasovacie údaje pre tento web do stránky. Formuláre nikdy nevypĺňa samo.",
+        "Áno, pre prehliadače založené na Chromiu a Firefoxe na počítači, a je zadarmo. Uloží stránku, ktorú čítaš, ako poznámku (jej hlavný text a obrázky) alebo ako záložku, umožní napísať vlastnú novú poznámku a dokáže zobraziť prihlasovacie údaje, karty, kľúče SSH a záložky pre stránku, na ktorej si. Hodnotu skopíruješ jedným kliknutím, alebo zvoľ Vyplniť (alebo stlač Alt+Shift+L) a rozšírenie vpíše prihlasovacie údaje pre tento web do stránky. Formuláre nikdy nevypĺňa samo.",
         "Otvor Nastavenia > Rozšírenie, pridaj rozšírenie z obchodu svojho prehliadača, vyber, čo môže robiť, a potom zvoľ Vytvoriť kód. Skopíruj jednorazový kód a vlož ho do rozšírenia. Ak ho chceš odstrániť, zvoľ Odobrať vedľa neho v časti Rozšírenia prehliadača na tej istej stránke. Rozšírenie nezaberá jedno z tvojich miest pre zariadenie. Bezplatný účet pripojí jeden prehliadač; Pro pripojí až 10. [Ako chráni tvoje poznámky](/sk/help/browser-extension-security)."
       ]
     },
@@ -825,6 +842,13 @@
       "a": [
         "Áno. Obe nastavenia sú predvolene zapnuté, pretože máme radi svojich používateľov: chceme ti [ušetriť miesto v úložisku](/sk/help/storage-usage) a ochrániť tvoje súkromie. Šetrič miesta zmenší veľký obrázok a uloží ho ako JPEG: Štandardný (predvolený) sa zmestí do 2048 pixelov v kvalite 85 %, Malý do 1280 pixelov v kvalite 75 % a Veľmi malý do 1024 pixelov v kvalite 60 % pre najmenšie súbory. Odstrániť údaje o polohe odstráni metadáta EXIF, ktoré fotoaparát zapisuje do fotky, vrátane polohy GPS, ešte pred uložením obrázka. Obe sa uplatňujú na každý obrázok, ktorý aplikácia dokáže prečítať: vložený do poznámky, pridaný ako súbor alebo importovaný. Obrázok, ktorý prečítať nedokáže, napríklad AVIF, SVG alebo taký, ktorý sa neotvorí, sa pri pridaní ako súbor alebo pri importe uloží tak, ako prišiel, vrátane údajov o polohe. Dve výnimky: GIF si zachová svoju veľkosť, aby sa jeho animácia stále prehrávala, a súbor pripojený k položke Trezoru sa uchová presne taký, aký bol.",
         "Ktorékoľvek vypni v **Nastavenia > Úložisko > Obrázky**, kde majú fotky kontaktov tretí prepínač, ktorý ich drží na 512 pixeloch. Nastavenia platia iba pre nové obrázky; súbory, ktoré nie sú obrázky, sa ukladajú presne tak, ako sú. Obrázky HEIC a TIFF sa prevádzajú na JPEG, pretože ich dokáže zobraziť iba Safari. [Záloha, ktorú obnovíš](/sk/help/restore-backup), sa zapíše späť bajt po bajte."
+      ]
+    },
+    "paste-screenshots": {
+      "q": "Komprimujú sa aj vložené snímky obrazovky?",
+      "a": [
+        "Áno. Snímky obrazovky a obrázky, ktoré skopíruješ a vložíš priamo do poznámky, prechádzajú rovnakou [kompresiou Šetriča miesta](/sk/help/image-quality) ako priložené súbory, pretiahnuté obrázky a importy. Bežné nepriehľadné snímky obrazovky sa zmenšia podľa zvolenej úrovne a uložia ako JPEG, čím sa typická snímka zmenší na zlomok pôvodnej veľkosti a pomôže ti lepšie využiť [limit úložiska](/sk/help/storage-usage).",
+        "V Nastavenia > Úložisko > Obrázky si vyber medzi možnosťami Štandardný (2048 pixelov v kvalite 85 %), Malý (1280 pixelov v kvalite 75 %) a Veľmi malý (1024 pixelov v kvalite 60 %), alebo vypni Šetrič miesta, ak chceš zachovať originály. Snímka obrazovky s priehľadnými okrajmi, napríklad zachytené okno s tieňom, sa aj tak zmenší na zvolený limit a uloží ako PNG, aby si zachovala priehľadnosť."
       ]
     },
     "storage-usage": {
@@ -1205,7 +1229,7 @@
       "a": [
         "Áno. Napíš `=` do bunky tabuľky, vyber funkciu alebo napíš vzorec sám. Bunka namiesto textu ukáže výsledok a každý výsledok sa prepočíta hneď, ako zmeníš bunku, z ktorej vychádza. Bunky sa označujú písmenom stĺpca a číslom riadka, pričom hlavička je riadok 1, takže tvoj prvý riadok s údajmi je riadok 2. Výsledky fungujú v každom účte; výber z ponuky je v Pro.",
         "Ak chceš vyskúšať všetko naraz, stiahni si ukážkovú poznámku, potom otvor Nastavenia > Prenos > Import, zvoľ **Súbory Markdown** a vyber súbor.",
-        "[Ukážková poznámka (.md)](/marketing/table-formulas-examples.md)",
+        "[Ukážková poznámka (.md)](/help/table-formulas-examples.md)",
         "Toto sú funkcie a dajú sa kombinovať s `+`, `-`, `*`, `/`, `^` pre mocninu a zátvorkami:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` a `COUNT` pracujú s rozsahom, napríklad `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` a `LOG` pracujú s jednou hodnotou, napríklad `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` a `PHI` sú konštanty a `RAND` vráti náhodné číslo\n- `=B7-B2` odpočíta jednu bunku od druhej a `=SUM(B2:B10)*0.2` vypočíta percento zo súčtu",
         "Klikni na bunku, ktorá ukazuje výsledok, a vzorec sa vráti, pripravený na úpravu. Poznámka ukladá samotný vzorec, nikdy výsledok, takže export aj akákoľvek iná aplikácia na Markdown ukážu `=SUM(B2:B10)` presne v tvare, v akom ho zadáš."
@@ -1453,8 +1477,8 @@
     "trackers-in-backup": {
       "q": "Čo obsahuje úplná záloha?",
       "a": [
-        "Všetko, čo si vytvoril: poznámky, záznamy denníka so všetkými hodnotami, ktoré si zapísal, úlohy, udalosti, položky trezora, záložky, kontakty, kresby, obrázky, zvuk a súbory, aj tie v koši. Obsahuje aj to, čo si nastavil ručne: priečinky a ich farby, pripnuté značky, vlastné motívy, tvoje lieky, vlastné sledované hodnoty, faktory a otázky na návyky, zapnuté sledované hodnoty a ich jednotky, odoberané kalendáre a rozloženie tvojho Domova.",
-        "Vynecháva PIN zámku aplikácie, históriu poznámok, zoznam tvojich zariadení a vzhľad aplikácie, napríklad motív a veľkosť textu. [Obnova](/sk/help/restore-backup) pridá, čo tvojmu účtu chýba, a ponechá tvoje neskoršie úpravy. Poznámka presunutá do koša alebo odstránená po zálohe sa vráti. Ak chceš mať svoje sledované hodnoty v súbore, ktorý vieš otvoriť, použi **Stiahnuť JSON** v Nastavenia > Prenos > Sledované hodnoty ([súbory sledovaných hodnôt](/sk/help/tracker-json-csv))."
+        "Všetko, čo máš vytvorené: poznámky, záznamy v denníku so všetkými zapísanými hodnotami, úlohy, udalosti, položky trezora, záložky, kontakty, kresby, obrázky, zvuk a súbory, aj tie v koši. Obsahuje aj tvoje ručné nastavenia: priečinky a ich farby, pripnuté značky, vlastné motívy, tvoje lieky, vlastné sledované hodnoty, faktory a otázky na návyky, zapnuté sledované hodnoty a ich jednotky, odoberané kalendáre a rozloženie tvojho Domova.",
+        "Vynecháva PIN zámku aplikácie, históriu poznámky, zoznam tvojich zariadení a vzhľad aplikácie, napríklad motív a veľkosť textu. [Obnova](/sk/help/restore-backup) pridá, čo tvojmu účtu chýba, a ponechá tvoje neskoršie úpravy. Poznámka presunutá do koša alebo odstránená po zálohe sa vráti. Ak chceš mať svoje sledované hodnoty v súbore, ktorý vieš otvoriť, použi **Stiahnuť JSON** v Nastavenia > Prenos > Sledované hodnoty ([súbory sledovaných hodnôt](/sk/help/tracker-json-csv))."
       ]
     }
   }

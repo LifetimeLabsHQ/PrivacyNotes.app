@@ -17,7 +17,8 @@ import { HoverLabel } from './HoverLabel';
 
 import { useState, useRef, useCallback, useEffect, type MutableRefObject } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Microphone as MicIcon, CircleNotch } from './icons';
+import { Microphone as MicIcon } from './icons';
+import { Spinner } from './ui';
 import type { EditorView } from '@tiptap/pm/view';
 import { triggerAttachmentUpload } from './EncryptedAttachment';
 import { formatDuration } from './formatDuration';
@@ -203,7 +204,7 @@ export function AudioRecorder({ editorView, tabIndex, onStateChange, stopRef, st
         className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-accent"
         aria-label={t('audio.uploadingRecording')}
       >
-        <CircleNotch className="animate-spin h-3.5 w-3.5" />
+        <Spinner size={14} />
         <span className="text-small font-medium">{t('importExport:upload.statusUploading')}</span>
       </span>
       </HoverLabel>
@@ -219,7 +220,7 @@ export function AudioRecorder({ editorView, tabIndex, onStateChange, stopRef, st
         onMouseDown={(e) => e.preventDefault()}
         onClick={stopRecording}
         aria-label={t('audio.stopRecording')}
-        className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-danger hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+        className="inline-flex items-center gap-1.5 rounded px-2 py-1 text-danger hover:bg-danger/10 transition"
       >
         {/* Pulsing red dot */}
         <span className="relative flex h-2.5 w-2.5">
@@ -244,7 +245,7 @@ export function AudioRecorder({ editorView, tabIndex, onStateChange, stopRef, st
       onMouseDown={(e) => e.preventDefault()}
       onClick={startRecording}
       aria-label={t('audio.recordAudio')}
-      className="flex items-center justify-center w-9 h-9 rounded-lg text-pn-soft [@media(hover:hover)]:hover:bg-pn/10 active:scale-95 transition outline-none shrink-0"
+      className="flex items-center justify-center w-8 h-8 rounded-lg text-pn-soft [@media(hover:hover)]:hover:bg-pn/10 active:scale-95 transition outline-none shrink-0"
     >
       <MicIcon size={19} />
     </button>
@@ -272,7 +273,7 @@ export function AudioRecordingBanner({
   if (state === 'uploading') {
     return (
       <div className="flex items-center gap-2 px-3 py-2 bg-accent/10 dark:bg-accent/15 border-b border-accent/20 text-body text-accent-strong">
-        <CircleNotch className="animate-spin h-4 w-4 shrink-0" />
+        <Spinner size={16} />
         <span className="font-medium">{t('audio.savingRecording')}</span>
         <span className="text-small opacity-70">{formatDuration(duration)}</span>
       </div>
@@ -287,18 +288,18 @@ export function AudioRecordingBanner({
   return (
     <div className={`relative border-b text-body ${
       warn
-        ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/50'
-        : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/50'
+        ? 'bg-warning/10 border-warning/30'
+        : 'bg-danger/10 border-danger/30'
     }`}>
       {/* Progress bar */}
       <div
-        className={`absolute inset-0 opacity-15 transition-colors ${warn ? 'bg-amber-500' : 'bg-red-500'}`}
+        className={`absolute inset-0 opacity-15 transition-colors ${warn ? 'bg-warning' : 'bg-danger'}`}
         style={{ width: `${pct}%` }}
       />
       <div className="relative flex items-center gap-2 px-3 py-2">
         <span className="relative flex h-3 w-3 shrink-0">
-          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${warn ? 'bg-amber-500' : 'bg-red-500'}`} />
-          <span className={`relative inline-flex rounded-full h-3 w-3 ${warn ? 'bg-amber-600' : 'bg-red-600'}`} />
+          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${warn ? 'bg-warning' : 'bg-danger'}`} />
+          <span className={`relative inline-flex rounded-full h-3 w-3 ${warn ? 'bg-warning' : 'bg-danger'}`} />
         </span>
         <span className={`font-medium ${warn ? 'text-warning' : 'text-danger'}`}>
           {t('audio.recording')}
@@ -314,8 +315,8 @@ export function AudioRecordingBanner({
         <button
           type="button"
           onClick={onStop}
-          className={`ml-auto rounded px-2.5 py-0.5 text-small font-medium text-white transition ${
-            warn ? 'bg-amber-600 hover:bg-amber-700' : 'bg-red-600 hover:bg-red-700'
+          className={`ms-auto rounded px-2.5 py-0.5 text-small font-medium text-white transition hover:opacity-90 ${
+            warn ? 'bg-warning' : 'bg-danger'
           }`}
         >
           {t('audio.stop')}

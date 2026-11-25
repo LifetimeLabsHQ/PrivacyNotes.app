@@ -1,13 +1,13 @@
 import { QRCodeCanvas } from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { CaretDown, Check, EyeSlash, FileText, Warning, iconCopy, iconDownload } from '../icons';
+import { CaretDown, Check, Copy, EyeSlash, FileText } from '../icons';
 import { buildPhraseFile, PHRASE_FILE_NAME } from '../phraseFile';
 import { buildSignInCode } from '../qrSignIn';
 import { RevealGate } from '../RevealGate';
 import { useSecretOnScreen } from '../privacyScreen';
 import { saveBlob, type SaveResult } from '../saveFile';
-import { SETTINGS_HELP } from '../ui';
+import { Button, Callout, SETTINGS_HELP } from '../ui';
 
 /**
  * Phrase display - words-first layout: a full-width 2-column word grid
@@ -163,12 +163,9 @@ export function PhraseView({
   return (
     <div className="space-y-3">
       {showCallout && (
-        <div className="rounded-md border border-divider bg-track p-3 text-body leading-relaxed text-pn flex items-start gap-2.5">
-          <Warning aria-hidden="true" className="shrink-0 mt-0.5 text-warning" />
-          <span>
-            <Trans i18nKey="security:phraseView.calloutWords" count={words.length} components={{ strong: <strong /> }} />
-          </span>
-        </div>
+        <Callout tone="warning">
+          <Trans i18nKey="security:phraseView.calloutWords" count={words.length} components={{ strong: <strong /> }} />
+        </Callout>
       )}
 
       {sealed ? (
@@ -211,45 +208,41 @@ export function PhraseView({
               the bar drains alongside it, so the reader can see the reveal
               expiring without reading a number. */}
           {gated && (
-            <button
+            <Button
+              icon={<EyeSlash aria-hidden="true" />}
               onClick={() => {
                 setShowQR(false);
                 setSealed(true);
               }}
-              className="w-full overflow-hidden rounded-md border border-divider hover:bg-surface-1 text-body text-pn-soft transition"
+              className="w-full relative overflow-hidden"
             >
-              <span className="flex items-center justify-center gap-1.5 px-3 py-2">
-                <EyeSlash aria-hidden="true" />
-                {t('phraseView.hidePhraseIn', { seconds: secondsLeft })}
-              </span>
-              <span className="block h-0.5 bg-divider">
+              {t('phraseView.hidePhraseIn', { seconds: secondsLeft })}
+              <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 bg-divider">
                 <span
-                  className="block h-full bg-amber-500 transition-[width] duration-1000 ease-linear"
+                  className="block h-full bg-warning transition-[width] duration-1000 ease-linear"
                   style={{ width: `${(secondsLeft / AUTO_HIDE_SECONDS) * 100}%` }}
                 />
               </span>
-            </button>
+            </Button>
           )}
 
           {/* QR collapsed behind a toggle - most people read or copy the
               words; the QR is only for device-to-device migration via scan. */}
           <div className="grid grid-cols-2 gap-2">
-            <button
+            <Button
               data-setting="security.qrCode"
+              icon={<CaretDown aria-hidden="true" className={`transition-transform ${showQR ? 'rotate-180' : ''}`} />}
               onClick={() => setShowQR((s) => !s)}
               aria-expanded={showQR}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-divider hover:bg-surface-1 px-2 py-2 text-body text-pn-soft transition"
             >
-              <CaretDown aria-hidden="true" className={`transition-transform ${showQR ? 'rotate-180' : ''}`} />
               {showQR ? t('phraseView.hideQr') : t('phraseView.showQr')}
-            </button>
-            <button
+            </Button>
+            <Button
+              icon={<FileText aria-hidden="true" />}
               onClick={() => { void handleDownloadTxt(); }}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-divider hover:bg-surface-1 px-2 py-2 text-body text-pn-soft transition"
             >
-              <FileText aria-hidden="true" />
               {t('auth:createPhrase.downloadTxt')}
-            </button>
+            </Button>
           </div>
 
           {/*
@@ -281,35 +274,18 @@ export function PhraseView({
 
           {/* Save QR + Copy - 2-column */}
           <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={handleDownloadQR}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-divider hover:bg-surface-1 px-2 py-2 text-body transition"
-            >
-              {iconDownload()}
+            <Button action="download" onClick={handleDownloadQR}>
               {t('phraseView.saveQr')}
-            </button>
+            </Button>
 
-            <button
-              onClick={handleCopy}
+            <Button
               data-setting="security.copyPhrase"
-              className={`inline-flex items-center justify-center gap-1.5 rounded-md border px-2 py-2 text-body transition ${
-                copied
-                  ? 'bg-accent/10 text-accent-strong border-accent'
-                  : 'border-divider hover:bg-surface-1'
-              }`}
+              variant={copied ? 'primary' : 'secondary'}
+              icon={copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+              onClick={handleCopy}
             >
-              {copied ? (
-                <>
-                  <Check aria-hidden="true" />
-                  {t('auth:createPhrase.copied')}
-                </>
-              ) : (
-                <>
-                  {iconCopy()}
-                  {t('phraseView.copyPhrase')}
-                </>
-              )}
-            </button>
+              {copied ? t('auth:createPhrase.copied') : t('phraseView.copyPhrase')}
+            </Button>
           </div>
 
           {failedFiles.size > 0 && (
@@ -317,12 +293,9 @@ export function PhraseView({
           )}
 
           {!hideDismiss && (
-            <button
-              onClick={onCancel}
-              className="w-full rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-body transition"
-            >
+            <Button action="done" variant="secondary" onClick={onCancel} className="w-full">
               {cancelLabel ?? t('common:actions.done')}
-            </button>
+            </Button>
           )}
         </>
       )}

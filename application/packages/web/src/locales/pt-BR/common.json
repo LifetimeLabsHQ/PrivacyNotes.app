@@ -26,7 +26,6 @@
     "noResults": "Nenhum resultado"
   },
   "deleteNote": {
-    "confirm": "Excluir Para Sempre",
     "body": "Excluir permanentemente <highlight>“{{title}}”</highlight>? Isso não pode ser desfeito."
   },
   "emptyTrash": {
@@ -52,7 +51,7 @@
     "copyCommand": "Copiar comando"
   },
   "hotkeys": {
-    "heading": "Ajuda de Atalhos",
+    "heading": "Ajuda de atalhos",
     "typingNote": "A maioria dos atalhos é ignorada enquanto você digita num campo de texto, então teclas normais como J e K continuam digitando J e K.",
     "cheatSheet": "Folha de referência para imprimir"
   },
@@ -73,12 +72,15 @@
       "toggleSidebar": "Mostrar ou ocultar a barra lateral",
       "toggleTheme": "Alternar entre claro e escuro",
       "openSettings": "Abrir configurações",
+      "graph": "Área de Grafo e Lugares",
       "zen": "Modo zen",
+      "fullScreen": "Modo tela cheia",
       "markdownView": "Ativar ou desativar a visualização Markdown",
       "invisibles": "Ativar ou desativar caracteres invisíveis",
       "find": "Buscar na nota",
       "findReplace": "Buscar e substituir",
       "outline": "Mostrar ou ocultar a estrutura",
+      "connections": "Mostrar ou ocultar as conexões",
       "insertDate": "Inserir a data",
       "insertDateTime": "Inserir a data e a hora",
       "clearFilters": "Remover os filtros",
@@ -134,8 +136,6 @@
     "goToFolder": "Ir para uma pasta",
     "createTag": "Criar etiqueta #{{name}}",
     "createFolder": "Criar pasta “{{name}}”",
-    "newTag": "Nova etiqueta",
-    "newFolder": "Nova pasta",
     "goToDay": "Ir para o dia",
     "inText": "No texto",
     "actions": "ações",
@@ -146,9 +146,9 @@
     "ninjaLockedBody": "Abra o PrivacyNotes e desbloqueie-o. Depois o Ninja encontra suas notas a partir de qualquer app."
   },
   "cardForm": {
-    "cardholderName": "Nome do Titular",
+    "cardholderName": "Nome do titular",
     "cardholderPlaceholder": "João da Silva",
-    "cardNumber": "Número do Cartão",
+    "cardNumber": "Número do cartão",
     "cardNumberPlaceholder": "4242 4242 4242 4242",
     "showNumber": "Mostrar número",
     "hideNumber": "Ocultar número",
@@ -165,7 +165,7 @@
     "showCvv": "Mostrar CVV",
     "hideCvv": "Ocultar CVV",
     "expiredHint": "Este cartão parece estar vencido.",
-    "billingZip": "CEP de Cobrança",
+    "billingZip": "CEP de cobrança",
     "billingZipPlaceholder": "01310-100",
     "notes": "Notas",
     "notesPlaceholder": "Notas adicionais (opcional)",
@@ -176,9 +176,9 @@
   "sshKeyForm": {
     "label": "Rótulo",
     "labelPlaceholder": "ex.: chave de deploy do GitHub",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "Copiar chave pública",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "Copiar chave privada",
     "downloadPublicKey": "Baixar chave pública",
     "downloadPrivateKey": "Baixar chave privada",
@@ -291,6 +291,13 @@
     "features": {
       "stats": {
         "detail": "Sua escrita, sequências e rastreadores ao longo do tempo"
+      },
+      "graph": {
+        "detail": "Seus links entre notas, pontes inteligentes e hubs em um mapa interativo"
+      },
+      "placesMap": {
+        "label": "Mapa de lugares",
+        "detail": "Notas, entradas de diário e contatos fixados em um mapa privado"
       },
       "trackers": {
         "detail": "Humor, hábitos, fatores e medicação"

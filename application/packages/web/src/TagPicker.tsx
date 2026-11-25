@@ -1,12 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { normalizeTag } from './notesRepo';
+import { isSoftKeyboardDevice } from './softKeyboard';
 import { textMatcher } from './textMatch';
 import { isImeComposing } from './imeComposing';
-import { useEscapeToClose } from './useEscapeToClose';
-import { MagnifyingGlass } from './icons';
+import { Plus } from './icons';
 import { TagMark } from './looks/LookGlyph';
-import { CloseButton } from './ui';
+import { PickerModal } from './ui';
 
 /**
  * Pick a tag for one item or for a selection: filter the existing tags,
@@ -31,16 +31,19 @@ export function TagPicker({
 }) {
   const { t } = useTranslation('shell');
   const [filter, setFilter] = useState('');
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  useEscapeToClose(onClose);
+  useEffect(() => {
+    if (!isSoftKeyboardDevice()) searchRef.current?.focus({ preventScroll: true });
+  }, []);
 
+  const sortedTags = useMemo(() => [...allTags].sort((a, b) => a[0].localeCompare(b[0])), [allTags]);
   const needle = filter.replace(/^#/, '').trim();
   const filtered = useMemo(() => {
-    const sorted = [...allTags].sort((a, b) => a[0].localeCompare(b[0]));
-    if (!needle) return sorted;
+    if (!needle) return sortedTags;
     const match = textMatcher(needle);
-    return sorted.filter(([tag]) => match(tag));
-  }, [allTags, needle]);
+    return sortedTags.filter(([tag]) => match(tag));
+  }, [sortedTags, needle]);
 
   // The create row appears when what was typed is not already a tag.
   const normalizedFilter = normalizeTag(filter);
@@ -51,77 +54,66 @@ export function TagPicker({
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== 'Enter' || isImeComposing(e)) return;
     e.preventDefault();
-    if (showCreate) onSelect(normalizedFilter);
-    else if (filtered.length === 1 && filtered[0]) onSelect(filtered[0][0]);
+    const raw = e.currentTarget.value;
+    const curNormalized = normalizeTag(raw);
+    const curShowCreate =
+      curNormalized &&
+      !allTags.some(([tag]) => tag.toLowerCase() === curNormalized.toLowerCase());
+    if (curShowCreate) {
+      onSelect(curNormalized);
+      return;
+    }
+    const curNeedle = raw.replace(/^#/, '').trim();
+    const curMatch = curNeedle ? textMatcher(curNeedle) : null;
+    const curFiltered = curMatch ? sortedTags.filter(([tag]) => curMatch(tag)) : sortedTags;
+    if (curFiltered.length === 1 && curFiltered[0]) onSelect(curFiltered[0][0]);
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-black/40 dark:bg-black/40 flex items-center justify-center p-4 sm:p-6 z-50"
-      onClick={onClose}
+    <PickerModal
+      title={t('selectionToolbar.tag')}
+      onClose={onClose}
+      maxWidth="max-w-sm"
+      maxHeight="max-h-[70vh]"
+      search={{
+        value: filter,
+        onChange: setFilter,
+        placeholder: t('selectionToolbar.addTagPlaceholder'),
+        onKeyDown: handleKeyDown,
+        inputRef: searchRef,
+      }}
     >
-      <div
-        role="dialog"
-        aria-label={t('selectionToolbar.tag')}
-        // The global chrome menu means nothing on top of a picker.
-        data-no-app-menu
-        className="bg-surface-2/95 backdrop-blur-xl border border-divider/80 text-pn rounded-lg max-w-sm w-full max-h-[70vh] flex flex-col overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-2">
-          <h2 className="text-row font-semibold m-0">{t('selectionToolbar.tag')}</h2>
-          <CloseButton onClick={onClose} />
+      {filtered.map(([tag, count]) => (
+        <button
+          key={tag}
+          type="button"
+          onClick={() => onSelect(tag)}
+          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-body cursor-pointer hover:bg-pn/5 transition min-h-[36px]"
+        >
+          <span className="text-pn-muted text-small shrink-0 inline-flex">
+            <TagMark tag={tag} size={13} />
+          </span>
+          <span className="truncate text-start">{tag}</span>
+          <span className="ms-auto shrink-0 text-small text-pn-muted tabular-nums">{count}</span>
+        </button>
+      ))}
+
+      {filtered.length === 0 && !showCreate && (
+        <div className="px-2.5 py-2 text-body text-pn-muted">
+          {t('selectionToolbar.noTagsFound')}
         </div>
+      )}
 
-        <div className="px-4 pb-2 shrink-0">
-          <div className="flex items-center gap-2 rounded-md bg-surface-1 border border-divider px-2.5">
-            <MagnifyingGlass className="shrink-0 text-pn-muted" aria-hidden="true" />
-            <input
-              autoFocus
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={t('selectionToolbar.addTagPlaceholder')}
-              autoComplete="off"
-              className="flex-1 min-w-0 h-9 bg-transparent text-body focus:outline-none placeholder:text-pn-muted"
-            />
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-2 pb-2 min-h-0">
-          {filtered.map(([tag, count]) => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => onSelect(tag)}
-              className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-body cursor-pointer hover:bg-surface-1 transition min-h-[36px]"
-            >
-              <span className="text-pn-muted text-small shrink-0 inline-flex">
-                <TagMark tag={tag} size={13} />
-              </span>
-              <span className="truncate text-start">{tag}</span>
-              <span className="ms-auto shrink-0 text-small text-pn-muted tabular-nums">{count}</span>
-            </button>
-          ))}
-
-          {filtered.length === 0 && !showCreate && (
-            <div className="px-2.5 py-2 text-body text-pn-muted">
-              {t('selectionToolbar.noTagsFound')}
-            </div>
-          )}
-
-          {showCreate && (
-            <button
-              type="button"
-              onClick={() => onSelect(normalizedFilter)}
-              className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-body cursor-pointer hover:bg-surface-1 transition text-pn-muted min-h-[36px]"
-            >
-              <span className="text-small shrink-0">+</span>
-              <span className="truncate text-start">{t('selectionToolbar.createTag', { tag: normalizedFilter })}</span>
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
+      {showCreate && (
+        <button
+          type="button"
+          onClick={() => onSelect(normalizedFilter)}
+          className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-body cursor-pointer hover:bg-pn/5 transition text-pn-muted min-h-[36px]"
+        >
+          <Plus size={13} className="shrink-0" aria-hidden="true" />
+          <span className="truncate text-start">{t('selectionToolbar.createTag', { tag: normalizedFilter })}</span>
+        </button>
+      )}
+    </PickerModal>
   );
 }

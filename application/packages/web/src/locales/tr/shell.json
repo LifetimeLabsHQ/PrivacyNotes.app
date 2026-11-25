@@ -41,6 +41,7 @@
     "noDocuments": "Belge yok.",
     "noImages": "Görsel yok.",
     "noAudioFiles": "Ses dosyası yok.",
+    "noUnusedFiles": "Kullanılmayan dosya yok.",
     "emptyTypesHint": "Görseller, belgeler, ses, video ve zip dosyaları. Dosya başına {{max}} MB'a kadar.",
     "uploadFiles": "Dosya yükle",
     "menuShow": "Göster",
@@ -233,7 +234,7 @@
     "tagCount_other": "{{count}} etiket",
     "entryDate": "Kayıt tarihi",
     "noDate": "Yok",
-    "schedule": "Zamanlama",
+    "schedule": "Tarih ve hatırlatıcılar",
     "ends": "Bitiş",
     "sameDay": "Aynı gün",
     "starts": "Başlangıç",
@@ -317,7 +318,6 @@
     "showOneWeek": "Bir hafta göster"
   },
   "contextMenu": {
-    "newNote": "Yeni not",
     "newTask": "Yeni görev",
     "newKanban": "Yeni Kanban panosu",
     "newDrawing": "Yeni çizim",
@@ -326,15 +326,12 @@
     "newSshKey": "Yeni SSH anahtarı",
     "newJournal": "Yeni günlük",
     "newFile": "Yeni dosya",
-    "exitZenMode": "Zen modundan çık",
-    "zenMode": "Zen modu",
     "showSidebar": "Kenar çubuğunu göster",
     "hideSidebar": "Kenar çubuğunu gizle",
     "showNotesList": "Not listesini göster",
     "hideNotesList": "Not listesini gizle",
     "resetPaneWidths": "Bölme genişliklerini sıfırla",
     "settings": "Ayarlar",
-    "signOut": "Çıkış yap",
     "deselect": "Seçimi kaldır",
     "select": "Seç",
     "selectedCount_one": "{{count}} öğe seçildi",
@@ -352,7 +349,7 @@
     "moveToFolder": "Klasöre taşı",
     "exportAsMarkdown": "Markdown olarak dışa aktar",
     "exportAsHtml": "HTML olarak dışa aktar",
-    "newContact": "Yeni Kişi",
+    "newContact": "Yeni kişi",
     "copyBookmarkUrl": "URL'yi kopyala",
     "editBookmark": "Yer imini düzenle",
     "saveAsNote": "Not olarak kaydet",
@@ -364,8 +361,7 @@
     "closeOtherTabs": "Diğer sekmeleri kapat",
     "closeAllTabs": "Tüm sekmeleri kapat",
     "pinTab": "Sekmeyi sabitle",
-    "unpinTab": "Sekmenin sabitlemesini kaldır",
-    "newEvent": "Yeni etkinlik"
+    "unpinTab": "Sekmenin sabitlemesini kaldır"
   },
   "demoBanner": {
     "title": "Risksiz deneyin",
@@ -836,6 +832,25 @@
     "hoursBefore_one": "{{count}} saat önce",
     "minutesBefore_one": "{{count}} dakika önce"
   },
+  "taskReminder": {
+    "set": "Hatırlatıcı ayarla",
+    "edit": "Hatırlatıcıyı düzenle",
+    "laterToday": "Bugün daha sonra",
+    "pickDateTime": "Tarih ve saat seç",
+    "dateTime": "Tarih ve saat",
+    "remove": "Hatırlatıcıyı kaldır",
+    "onSchedule": "Zamanlamaya göre",
+    "afterCompletion": "Tamamlandıktan sonra",
+    "afterDone": "Tamamlandıktan {{count}} {{unit}} sonra",
+    "afterDoneHint": "Bu görevi işaretlediğiniz günden itibaren sayar.",
+    "weekdaysShort": "Hafta içi",
+    "everyWeeks_other": "{{count}} haftada bir",
+    "everyMonths_other": "{{count}} ayda bir",
+    "everyYears_other": "{{count}} yılda bir",
+    "everyYears_one": "Her yıl",
+    "everyMonths_one": "Her ay",
+    "everyWeeks_one": "Her hafta"
+  },
   "quickAdd": {
     "group": "Oluştur",
     "items": "Öğeler",
@@ -1028,7 +1043,8 @@
   "apps": {
     "railLabel": "Uzantı",
     "title": "Tarayıcı uzantısı",
-    "subtitle": "Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf ve Zen'de web kırpıcı ve parola yöneticisi. Uzantı, notlarınızı açan anahtarı hiçbir zaman tutmaz.",
+    "subtitle": "Chromium ve Firefox tabanlı tarayıcılar için web kırpıcı ve parola yöneticisi. Uzantı, notlarınızı açan anahtarı hiçbir zaman tutmaz.",
+    "allSupported": "Chromium veya Firefox tabanlı tüm tarayıcılarda çalışır.",
     "loginsCopyFull": "Tarayıcı uzantısındaki giriş bilgileri kopyası dolu. Bazılarını sildiğinizde yeni giriş bilgileri ona ulaşır.",
     "stepInstall": "Uzantıyı yükleyin",
     "stepFeatures": "Neler yapabileceğini seçin",
@@ -1039,7 +1055,7 @@
     "thisBrowser": "Bu tarayıcı",
     "otherApps": "Masaüstü ve telefon uygulamaları:",
     "desktopAll": "Tüm indirmeler",
-    "extensionComputersOnly": "Uzantı, bilgisayardaki Chrome, Firefox ve Edge içindir.",
+    "extensionComputersOnly": "Uzantı, bilgisayardaki Chromium ve Firefox tabanlı tarayıcılar içindir.",
     "demoSignUp": "Bir tarayıcı bağlamak için kaydolun"
   },
   "cli": {

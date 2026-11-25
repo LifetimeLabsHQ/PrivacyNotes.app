@@ -26,7 +26,6 @@
     "noResults": "No results"
   },
   "deleteNote": {
-    "confirm": "Delete Forever",
     "body": "Permanently delete <highlight>“{{title}}”</highlight>? This cannot be undone."
   },
   "emptyTrash": {
@@ -52,7 +51,7 @@
     "copyCommand": "Copy command"
   },
   "hotkeys": {
-    "heading": "Hotkeys Help",
+    "heading": "Hotkeys help",
     "typingNote": "Most shortcuts are ignored while you're typing in a text field, so regular keys like J and K still type J and K.",
     "cheatSheet": "Printable cheat sheet"
   },
@@ -73,12 +72,15 @@
       "toggleSidebar": "Show or hide the sidebar",
       "toggleTheme": "Switch between light and dark",
       "openSettings": "Open settings",
+      "graph": "Graph and Places workspace",
       "zen": "Zen mode",
+      "fullScreen": "Full screen mode",
       "markdownView": "Markdown view on or off",
       "invisibles": "Invisible characters on or off",
       "find": "Find in note",
       "findReplace": "Find and replace",
       "outline": "Show or hide the outline",
+      "connections": "Show or hide connections",
       "insertDate": "Insert the date",
       "insertDateTime": "Insert the date and time",
       "clearFilters": "Clear filters",
@@ -134,8 +136,6 @@
     "goToFolder": "Go to a folder",
     "createTag": "Create tag #{{name}}",
     "createFolder": "Create folder “{{name}}”",
-    "newTag": "New Tag",
-    "newFolder": "New Folder",
     "goToDay": "Go to day",
     "inText": "In the text",
     "actions": "actions",
@@ -146,9 +146,9 @@
     "ninjaLockedBody": "Open PrivacyNotes and unlock it. Then Ninja finds your notes from any app."
   },
   "cardForm": {
-    "cardholderName": "Cardholder Name",
+    "cardholderName": "Cardholder name",
     "cardholderPlaceholder": "John Doe",
-    "cardNumber": "Card Number",
+    "cardNumber": "Card number",
     "cardNumberPlaceholder": "4242 4242 4242 4242",
     "showNumber": "Show number",
     "hideNumber": "Hide number",
@@ -165,7 +165,7 @@
     "showCvv": "Show CVV",
     "hideCvv": "Hide CVV",
     "expiredHint": "This card appears to be expired.",
-    "billingZip": "Billing ZIP / Postal Code",
+    "billingZip": "Billing ZIP / postal code",
     "billingZipPlaceholder": "10001",
     "notes": "Notes",
     "notesPlaceholder": "Additional notes (optional)",
@@ -176,9 +176,9 @@
   "sshKeyForm": {
     "label": "Label",
     "labelPlaceholder": "e.g. GitHub deploy key",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "Copy public key",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "Copy private key",
     "downloadPublicKey": "Download public key",
     "downloadPrivateKey": "Download private key",
@@ -277,6 +277,13 @@
     "features": {
       "stats": {
         "detail": "Your writing, streaks and trackers over time"
+      },
+      "graph": {
+        "detail": "Your note-links, smart bridges and hubs as an interactive map"
+      },
+      "placesMap": {
+        "label": "Places map",
+        "detail": "Notes, journal entries and contacts pinned on a private map"
       },
       "trackers": {
         "detail": "Mood, habits, factors and medication"

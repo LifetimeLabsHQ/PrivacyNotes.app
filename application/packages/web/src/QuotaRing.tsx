@@ -29,7 +29,7 @@ function Ring({ pct, stroke, radius = 43, className, size }: { pct: number; stro
         strokeDasharray={circumference}
         strokeDashoffset={dashOffset}
         transform="rotate(-90 50 50)"
-        className={`transition-all ${pct > 80 ? 'stroke-amber-500 dark:stroke-amber-400' : 'stroke-accent'}`}
+        className={`transition-all ${pct > 80 ? 'stroke-warning' : 'stroke-accent'}`}
       />
     </svg>
   );

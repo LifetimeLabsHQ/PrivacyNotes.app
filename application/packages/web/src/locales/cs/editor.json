@@ -38,7 +38,7 @@
     "blockMath": "Blokový vzorec",
     "align": "Zarovnání",
     "font": "Písmo",
-    "pictureFromFiles": "Obrázek ze Souborů",
+    "pictureFromFiles": "Galerie",
     "date": "Datum",
     "dateTime": "Datum a čas",
     "footnote": "Poznámka pod čarou",
@@ -269,6 +269,15 @@
     "headingsIn": "Nadpisy: {{title}}",
     "noHeadingMatches": "Žádné odpovídající nadpisy"
   },
+  "slash": {
+    "label": "Vložit blok",
+    "linePlaceholder": "Stiskni / pro vložení bloků",
+    "filterHint": "Piš pro filtrování…",
+    "basic": "Základní bloky",
+    "smartDate": "Chytré datum",
+    "askNinja": "Zeptat se Ninja na „{{query}}“",
+    "noMatches": "Žádné odpovídající bloky"
+  },
   "copyBox": {
     "placeholder": "Text ke zkopírování jedním kliknutím"
   },
@@ -382,6 +391,23 @@
     "addColumn": "Přidat sloupec",
     "removeBoard": "Odebrat tabuli",
     "moveTo": "Přesunout do"
+  },
+  "columns": {
+    "narrowWide": "Úzký a široký",
+    "wideNarrow": "Široký a úzký",
+    "removeColumns": "Odebrat sloupce",
+    "resizeColumn": "Přetažením změníš šířku sloupců",
+    "barLabel": "Ovládání sloupců",
+    "borders": "Ohraničení sloupců",
+    "borderBoxes": "Rámečky",
+    "borderSolid": "Plné",
+    "borderDashed": "Čárkované",
+    "borderDotted": "Tečkované",
+    "borderThickness": "Tloušťka",
+    "borderThin": "Tenká",
+    "borderMedium": "Střední",
+    "borderColorDefault": "Výchozí barva",
+    "borderTint": "Jemné tónování sloupců"
   },
   "doodle": {
     "title": "Čmáranice",

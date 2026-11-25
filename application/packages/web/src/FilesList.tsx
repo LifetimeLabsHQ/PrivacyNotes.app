@@ -8,7 +8,6 @@
  */
 
 import { useState, useMemo, useRef, useEffect, useCallback, useContext } from 'react';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { useTranslation } from 'react-i18next';
 import type { ContextMenuItem } from './ContextMenu';
 import type { LocalNote } from './db';
@@ -34,7 +33,7 @@ import { itemLookDraw, useNoteLook } from './looks/LookGlyph';
 import { itemGridClass, routeItemClick, useContextTarget, useItemList } from './itemList';
 import { useCompactRows } from './viewMode';
 import { iconPin, iconTrash, iconEditPencil, Check, Folder, LinkSimple, Upload, FunnelSimple, Files, PILLAR_GLYPHS, Image, MusicNotes, File, FileDashed } from './icons';
-import { Button, KindChips, type KindChip } from './ui';
+import { Button, EmptyState, IconUpgrade, KindChips, SelectionCountStrip, type KindChip } from './ui';
 import { NewButton } from './NewButton';
 import { HoverLabel } from './HoverLabel';
 import { SelectionToolbar } from './SelectionToolbar';
@@ -47,7 +46,6 @@ import { ListNav } from './notesView/ListNav';
 import { PullToSyncBar, usePullToSync } from './pullToSync';
 import { ListPrefsPopover } from './ListPrefsPopover';
 import { useItemGroups, useToday } from './ListGroupHeader';
-import { IconUpgrade } from './UpgradeModal';
 import { proUnlocked } from './demo';
 import { LazyPdfCover, LazyPicture } from './LazyPicture';
 import { IMAGE_REF_RE, isMail, isPdf, isPictureMime, openMediaViewer, type MediaRef } from './mediaRefs';
@@ -409,7 +407,7 @@ function ProUpsell({ onUpgrade, className = '' }: { onUpgrade: () => void; class
           </span>
         </div>
       ))}
-      <Button variant="upgrade" icon={<IconUpgrade size={15} onFill />} onClick={onUpgrade} className="mt-2 w-full">
+      <Button variant="upgrade" icon={<IconUpgrade size={15} />} onClick={onUpgrade} className="mt-2 w-full">
         {t('settings:plan.upgradeToPro')}
       </Button>
     </div>
@@ -934,19 +932,13 @@ export function FilesList({
 
       {/* ── Selection count strip ──────────────────────────────── */}
       {selectedFileIds.size > 0 && (
-        <div className="shrink-0 px-4 py-2 border-b border-divider bg-accent/5 dark:bg-accent/10 flex items-center justify-between gap-2 text-compact">
-          <span className="font-medium text-pn-soft tabular-nums">
-            {t('filesList.selectedOf', { selected: selectedFileIds.size, total: filtered.length })}
-          </span>
-          {filtered.length > 0 && (
-            <button
-              onClick={selectedFileIds.size >= filtered.length ? clearFileSelection : selectAllFiles}
-              className="font-semibold text-accent hover:underline"
-            >
-              {selectedFileIds.size >= filtered.length ? t('notes:selection.deselectAll') : t('notes:selection.selectAll')}
-            </button>
-          )}
-        </div>
+        <SelectionCountStrip
+          selectedCount={selectedFileIds.size}
+          totalCount={filtered.length}
+          label={t('filesList.selectedOf', { selected: selectedFileIds.size, total: filtered.length })}
+          onSelectAll={selectAllFiles}
+          onDeselectAll={clearFileSelection}
+        />
       )}
 
       {/* ── Storage bar: one line that opens Settings > Storage; the
@@ -1043,34 +1035,38 @@ export function FilesList({
             onClearTag={onClearTag}
           />
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center px-6 py-12">
-            <div className="w-16 h-16 rounded-full bg-track flex items-center justify-center mb-4">
-              <Folder size={28} className="text-pn-muted" />
-            </div>
-            <p className="text-body font-medium text-pn-soft mb-1">
-              {search.trim()
-                ? t('notes:empty.noMatches')
-                : filter === 'all'
-                  ? t('filesList.noFilesYet')
-                  : filter === 'document' ? t('filesList.noDocuments') : filter === 'image' ? t('filesList.noImages') : t('filesList.noAudioFiles')}
-            </p>
-            {!search.trim() && (
-              <>
-                <p className="text-small text-pn-muted max-w-[220px] mb-4">
-                  {/* States the real cap, so it follows proUnlocked (the demo
-                      uploads at the Pro limit). The free-vs-Pro table above
-                      is the upsell and stays keyed off isPro. */}
-                  {t('filesList.emptyTypesHint', { max: proUnlocked(isPro) ? (hasStorageSub ? '100' : '50') : '5' })}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => onUploadFiles()}
-                  className={`text-small font-semibold ${PRIMARY_BTN_SKIN} px-4 py-1.5 rounded-md transition`}
-                >
-                  {t('filesList.uploadFiles')}
-                </button>
-              </>
-            )}
+          <div className="flex flex-col items-center justify-center h-full px-6 py-12">
+            <EmptyState
+              flush
+              icon={<Folder weight="duotone" aria-hidden="true" />}
+              title={
+                search.trim()
+                  ? t('notes:empty.noMatches')
+                  : filter === 'all'
+                    ? t('filesList.noFilesYet')
+                    : filter === 'document'
+                      ? t('filesList.noDocuments')
+                      : filter === 'image'
+                        ? t('filesList.noImages')
+                        : filter === 'unused'
+                          ? t('filesList.noUnusedFiles')
+                          : t('filesList.noAudioFiles')
+              }
+              actions={
+                !search.trim() && filter !== 'unused' ? (
+                  <Button variant="primary" icon={<Upload aria-hidden="true" />} className="whitespace-nowrap" onClick={() => onUploadFiles()}>
+                    {t('filesList.uploadFiles')}
+                  </Button>
+                ) : undefined
+              }
+            >
+              {/* States the real cap, so it follows proUnlocked (the demo
+                  uploads at the Pro limit). The free-vs-Pro table above
+                  is the upsell and stays keyed off isPro. */}
+              {!search.trim() && filter !== 'unused'
+                ? t('filesList.emptyTypesHint', { max: proUnlocked(isPro) ? (hasStorageSub ? '100' : '50') : '5' })
+                : undefined}
+            </EmptyState>
             {/* Tile shape in both layouts: an empty pane draws no list and no
                 grid, so the entry has to be a card that stands on its own. */}
             {showSearchEntry && (

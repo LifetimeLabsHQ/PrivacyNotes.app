@@ -2,8 +2,9 @@ import { SignIn } from './icons';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isValidPhrase } from '@notes/shared';
-import { SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, SettingsCallout } from './settingsUI';
+import { SectionEyebrow, SETTINGS_HELP } from './settingsUI';
 import { PROVIDER_ICON, PROVIDER_NAME } from './providerIcons';
+import { Button, Callout, FeedbackButton, StatusLine, TextField } from './ui';
 
 export type ConnectedAccountProvider = 'google' | 'apple' | 'github';
 export type ConnectedAccount = { id: string; provider: ConnectedAccountProvider; email: string };
@@ -12,7 +13,6 @@ type Confirmation = { kind: 'connect'; provider: ConnectedAccountProvider }
   | { kind: 'disconnect'; accountId: string };
 
 const PROVIDERS: ConnectedAccountProvider[] = ['google', 'apple', 'github'];
-const BUTTON = 'rounded-md border border-divider px-3 py-2 text-body text-pn-soft hover:bg-surface-1 transition disabled:opacity-40 disabled:cursor-not-allowed';
 
 /** Logo, brand name and one line under it, the same in every account row. */
 export function ProviderLabel({ provider, detail }: { provider: ConnectedAccountProvider; detail?: string }) {
@@ -147,37 +147,51 @@ export function ConnectedAccounts({
     <section className="space-y-3">
       <SectionEyebrow setting="account.connectedAccounts" icon={SignIn}>{t('connectedAccounts.title')}</SectionEyebrow>
       <p className={SETTINGS_HELP}>{t('connectedAccounts.description')}</p>
-      <SettingsCallout>
+      <Callout>
         <p>{t(isCustodial ? 'connectedAccounts.custodial' : 'connectedAccounts.selfCustody')}</p>
         {mfaEnabled && <p className="mt-1">{t('connectedAccounts.mfaRequired')}</p>}
-      </SettingsCallout>
+      </Callout>
 
-      {unavailable ? <div className="space-y-2">
-        <p className={SETTINGS_HELP}>{t('connectedAccounts.unavailable')}</p>
-        {!error && <button type="button" className={BUTTON} disabled={busy || working}
-          onClick={onRetry}>{t('connectedAccounts.retry')}</button>}
-      </div> : (
+      {unavailable ? (
+        <Callout
+          tone="info"
+          action={!error ? (
+            <FeedbackButton action="retry" disabled={busy || working} onClick={onRetry}>
+              {t('connectedAccounts.retry')}
+            </FeedbackButton>
+          ) : undefined}
+        >
+          {t('connectedAccounts.unavailable')}
+        </Callout>
+      ) : (
         <>
-          {accounts === null && !error && <p role="status" className={SETTINGS_HELP}>{t('connectedAccounts.loading')}</p>}
+          {accounts === null && !error && <StatusLine busy>{t('connectedAccounts.loading')}</StatusLine>}
           {accounts !== null && (
             <div className="divide-y divide-divider rounded-md border border-divider">
               {accounts.map((entry) => (
                 <div key={entry.id} className="flex flex-wrap items-center justify-between gap-2 p-3">
                   <ProviderLabel provider={entry.provider} detail={entry.email || t('connectedAccounts.emailHidden')} />
-                  <button type="button" className={BUTTON} disabled={blocked}
+                  <Button
+                    action="remove"
+                    variant="secondary"
+                    disabled={blocked}
                     aria-label={t('connectedAccounts.disconnectAccount', { provider: providerName(entry.provider), email: entry.email })}
-                    onClick={() => confirm({ kind: 'disconnect', accountId: entry.id })}>
+                    onClick={() => confirm({ kind: 'disconnect', accountId: entry.id })}
+                  >
                     {t('connectedAccounts.disconnect')}
-                  </button>
+                  </Button>
                 </div>
               ))}
               {PROVIDERS.map((provider) => (
                 <div key={provider} className="flex flex-wrap items-center justify-between gap-2 p-3">
                   <ProviderLabel provider={provider} />
-                  <button type="button" className={BUTTON} disabled={blocked}
-                    onClick={() => confirm({ kind: 'connect', provider })}>
+                  <Button
+                    icon={<SignIn aria-hidden="true" />}
+                    disabled={blocked}
+                    onClick={() => confirm({ kind: 'connect', provider })}
+                  >
                     {t(accounts.some((entry) => entry.provider === provider) ? 'connectedAccounts.connectAnotherProvider' : 'connectedAccounts.connectProvider', { provider: providerName(provider) })}
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -186,12 +200,19 @@ export function ConnectedAccounts({
         </>
       )}
 
-      {(error || failed) && <div role="alert" className="space-y-2">
-        <p className="text-small text-danger">{error || t('security:custody.changeFailed')}</p>
-        <button type="button" className={BUTTON} disabled={busy || working}
-          onClick={() => { setFailed(false); onRetry(); }}>{t('connectedAccounts.retry')}</button>
-      </div>}
-      {completed && <p role="status" className={SETTINGS_HELP}>{t(`connectedAccounts.${completed}Done`)}</p>}
+      {(error || failed) && (
+        <Callout
+          tone="danger"
+          action={
+            <FeedbackButton action="retry" disabled={busy || working} onClick={() => { setFailed(false); onRetry(); }}>
+              {t('connectedAccounts.retry')}
+            </FeedbackButton>
+          }
+        >
+          {error || t('security:custody.changeFailed')}
+        </Callout>
+      )}
+      {completed && <StatusLine tone="success">{t(`connectedAccounts.${completed}Done`)}</StatusLine>}
 
       {confirmation && (
         <form ref={formRef} className="space-y-3 rounded-md border border-divider bg-track p-3"
@@ -205,10 +226,10 @@ export function ConnectedAccounts({
               <p className={SETTINGS_HELP}>{t('connectedAccounts.noMerge')}</p>
               {mfaEnabled && <p className={SETTINGS_HELP}>{t('connectedAccounts.freshMfa')}</p>}
               <div className="flex flex-wrap gap-2">
-                <button type="submit" disabled={blocked} className={SETTINGS_BTN_PRIMARY}>
+                <Button action="next" variant="primary" type="submit" disabled={blocked}>
                   {working ? t('connectedAccounts.working') : t('connectedAccounts.continueProvider', { provider: providerName(confirmation.provider) })}
-                </button>
-                <button type="button" disabled={busy || working} onClick={reset} className={BUTTON}>{t('common:actions.cancel')}</button>
+                </Button>
+                <Button action="cancel" disabled={busy || working} onClick={reset} />
               </div>
             </>
           ) : (
@@ -218,32 +239,46 @@ export function ConnectedAccounts({
               </h3>
               {account && <p className="break-all text-small text-pn-soft">{account.email}</p>}
               {lastCustodialAccount ? (
-                <>
-                  <SettingsCallout>{t('connectedAccounts.lastCustodial')}</SettingsCallout>
-                  <button type="button" disabled={busy || working} className={BUTTON} onClick={() => openCustody()}>
-                    {t('connectedAccounts.openCustody')}
-                  </button>
-                </>
+                <Callout
+                  tone="warning"
+                  action={
+                    <FeedbackButton icon={<SignIn aria-hidden="true" />} disabled={busy || working} onClick={() => openCustody()}>
+                      {t('connectedAccounts.openCustody')}
+                    </FeedbackButton>
+                  }
+                >
+                  {t('connectedAccounts.lastCustodial')}
+                </Callout>
               ) : (
                 <>
                   <p className={SETTINGS_HELP}>{t(remaining.length ? 'connectedAccounts.remainingAccounts' : 'connectedAccounts.phraseOnly', { providers: remainingNames })}</p>
                   {mfaEnabled && <p className={SETTINGS_HELP}>{t('connectedAccounts.freshMfa')}</p>}
                   <p className={SETTINGS_HELP}>{t('connectedAccounts.confirmSavedPhrase')}</p>
-                  <label htmlFor={phraseId} className="block text-small text-pn-soft">{t('connectedAccounts.savedPhrase')}</label>
-                  <input ref={inputRef} id={phraseId} type="password" value={answer} dir="ltr"
-                    autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false}
-                    disabled={blocked} onChange={(event) => setAnswer(event.target.value)}
-                    className="w-full rounded-md border border-divider bg-surface-1 px-3 py-2 text-body text-pn focus:outline-none focus:ring-2 focus:ring-accent/40" />
+                  <TextField
+                    ref={inputRef}
+                    id={phraseId}
+                    label={t('connectedAccounts.savedPhrase')}
+                    type="password"
+                    value={answer}
+                    dir="ltr"
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    disabled={blocked}
+                    onChange={(event) => setAnswer(event.target.value)}
+                  />
                   <button type="button" className="text-small text-accent hover:underline disabled:opacity-40"
                     disabled={busy || working} onClick={() => openCustody(true)}>{t('connectedAccounts.savePhrase')}</button>
                 </>
               )}
               <div className="flex flex-wrap gap-2">
-                {!lastCustodialAccount && <button type="submit" disabled={blocked || !account || !savedPhraseMatches}
-                  className="rounded-md border border-red-500/40 px-3 py-2 text-body text-danger disabled:opacity-40">
-                  {working ? t('connectedAccounts.working') : t('connectedAccounts.confirmRemoval')}
-                </button>}
-                <button type="button" disabled={busy || working} onClick={reset} className={BUTTON}>{t('common:actions.cancel')}</button>
+                {!lastCustodialAccount && (
+                  <Button action="remove" variant="danger" type="submit" disabled={blocked || !account || !savedPhraseMatches}>
+                    {working ? t('connectedAccounts.working') : t('connectedAccounts.confirmRemoval')}
+                  </Button>
+                )}
+                <Button action="cancel" disabled={busy || working} onClick={reset} />
               </div>
             </>
           )}

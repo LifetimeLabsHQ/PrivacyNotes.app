@@ -116,9 +116,6 @@
       "great": "Molt bo"
     }
   },
-  "sleepScore": {
-    "prompt": "Puntuació del son"
-  },
   "heartRate": {
     "prompt": "Freqüència cardíaca mitjana"
   },

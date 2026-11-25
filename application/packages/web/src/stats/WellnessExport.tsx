@@ -7,7 +7,8 @@ import { generateAIPrompt, generateDoctorReport } from './wellnessReport';
 import { saveBlob } from '../saveFile';
 import { detectPlatform } from '../devices';
 import { proUnlocked } from '../demo';
-import { SETTINGS_HELP, SETTINGS_SELECT } from '../settingsUI';
+import { SETTINGS_HELP } from '../settingsUI';
+import { FIELD_CLASS, Select } from '../ui';
 import { toLocalIso } from '../notesViewUtils';
 import type { RangeId } from '../wellnessTypes';
 import { buildWellnessModel, levelLabel, trackerName } from './wellnessModel';
@@ -97,6 +98,7 @@ export function WellnessExportTab({ notes, isNoteLocked, trackerSettings, factor
     if (!unlocked) { onOpenUpgrade?.(); return; }
     const html = generateDoctorReport(stats, medications, t, model);
     if (detectPlatform() === 'web') {
+      // link-ok: blank print window populated synchronously with generated HTML
       const w = window.open('', '_blank');
       if (w) { w.document.write(html); w.document.close(); }
     } else {
@@ -114,14 +116,14 @@ export function WellnessExportTab({ notes, isNoteLocked, trackerSettings, factor
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <p className={`${SETTINGS_HELP} min-w-0 flex-1`}>{t('wellness.export.intro')}</p>
-        <select
+        <Select
+          size="sm"
           value={rangeId}
           onChange={(e) => pickRange(e.target.value as RangeId)}
           aria-label={t('writing.timeRangeAria')}
-          className={SETTINGS_SELECT}
         >
           {RANGE_IDS.map((id) => <option key={id} value={id}>{t(`range.${id}`)}</option>)}
-        </select>
+        </Select>
       </div>
 
       {model.entries.length === 0 ? (
@@ -138,7 +140,7 @@ export function WellnessExportTab({ notes, isNoteLocked, trackerSettings, factor
       {promptText !== null && (
         <div>
           <p className="text-meta text-pn-muted mb-1">{t('wellness.export.promptShown')}</p>
-          <textarea readOnly value={promptText} className="w-full h-56 rounded-md border border-divider bg-surface-0 text-small text-pn-soft p-2 font-mono resize-y" />
+          <textarea readOnly value={promptText} className={`${FIELD_CLASS} h-56 !bg-surface-0 !text-small text-pn-soft !p-2 font-mono resize-y`} />
         </div>
       )}
       {saveFailed && <p className="text-small text-danger">{t('wellness.export.saveFailed')}</p>}

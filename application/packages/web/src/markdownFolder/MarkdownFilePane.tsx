@@ -29,6 +29,7 @@ import { applyAssets, assetsKey, restoreAssets, useAssets } from './useAssets';
 import { trackExitWrite } from '../flushStash';
 import { isLocalHref, noteLinkPathFor, resolveNoteLinkPath, resolveRelativeLinkPath } from './links';
 import type { OpenedMarkdownDir, OpenedMarkdownFile, SaveState } from './types';
+import { Banner, FeedbackButton, SettingsSegmented } from '../ui';
 
 /** Idle gap before an edit reaches the disk. Longer than the encrypted
  *  editor's 300ms on purpose: this folder is very likely watched by git,
@@ -624,12 +625,16 @@ export function MarkdownFilePane({
     <div className="flex-1 min-h-0 flex flex-col">
     <div ref={scrollerRef} className="flex-1 min-h-0 overflow-y-auto">
       {state.kind === 'stale' && (
-        <div className="flex items-center gap-3 px-6 py-2 text-compact bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-b border-amber-200 dark:border-amber-900">
-          <span>{t('markdown.changedOnDisk')}</span>
-          <button type="button" onClick={() => void reloadFromDisk()} className="underline underline-offset-2">
-            {t('markdown.reload')}
-          </button>
-        </div>
+        <Banner
+          tone="warning"
+          action={
+            <FeedbackButton action="retry" onClick={() => void reloadFromDisk()}>
+              {t('markdown.reload')}
+            </FeedbackButton>
+          }
+        >
+          {t('markdown.changedOnDisk')}
+        </Banner>
       )}
       {/* Same header as the encrypted editor: fixed h-14 so its bottom border
           lines up with the sidebar brand row and the list header across all
@@ -722,18 +727,16 @@ export function MarkdownFilePane({
               pattern and stays for consistency; this one is here because the
               choice matters more in a folder of foreign files than it does for
               a note, and having it in reach beats remembering it exists. */}
-          <span className="shrink-0 inline-flex h-10 items-stretch rounded-md border border-divider overflow-hidden">
-            {(['rich', 'source'] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMode(m)}
-                className={`px-2.5 text-small transition ${mode === m ? 'bg-track text-pn' : 'text-pn-muted hover:text-pn'}`}
-              >
-                {m === 'rich' ? t('markdown.modeRich') : t('markdown.modeSource')}
-              </button>
-            ))}
-          </span>
+          <SettingsSegmented
+            label={t('markdown.modeRich')}
+            value={mode}
+            onChange={setMode}
+            className="shrink-0"
+            options={[
+              { value: 'rich', label: t('markdown.modeRich') },
+              { value: 'source', label: t('markdown.modeSource') },
+            ]}
+          />
         </div>
       </div>
       {/* flex-col + min-h-full so the footer's `mt-auto` reaches the bottom of

@@ -15,7 +15,10 @@ import { LOGO_SHARD_STARTS } from './logos/shards.gen';
 
 type LookIconsModule = typeof import('./lookIcons');
 type LookLogosModule = typeof import('./lookLogos.gen');
+type LookEmojisModule = typeof import('./lookEmojis.gen');
 type LogoPaths = Readonly<Record<string, readonly string[]>>;
+/** Either the SVG paths of an icon/logo, or a single Unicode emoji string. */
+export type LookArt = readonly string[] | string;
 /** The name of every logo outside the curated set, for the search. */
 export interface LogoIndex {
   logos: readonly (readonly [id: string, name: string])[];
@@ -42,6 +45,7 @@ function lazyModule<T>(load: () => Promise<T>) {
 
 const icons = lazyModule(() => import('./lookIcons'));
 const logos = lazyModule(() => import('./lookLogos.gen'));
+const emojis = lazyModule(() => import('./lookEmojis.gen'));
 const logoIndex = lazyModule<LogoIndex>(() =>
   import('./logos/index.gen.json').then((m) => m.default as unknown as LogoIndex),
 );
@@ -105,9 +109,29 @@ export function preloadLookLogos(): void {
   logos.load().catch(() => {});
 }
 
-/** A logo's id; every other id is a look icon. */
+/** The emoji catalog, loaded only when the Emoji tab opens. */
+export function useLookEmojis(wanted = true): LookEmojisModule | null {
+  return useLazyModule(emojis, wanted);
+}
+
+/** Starts the emoji catalog early, on a pointer or focus on the Emoji tab. */
+export function preloadLookEmojis(): void {
+  emojis.load().catch(() => {});
+}
+
+/** A logo's id; every other id is a look icon or an emoji. */
 export function isLogoId(id: string | null | undefined): boolean {
   return !!id && id.startsWith('logo:');
+}
+
+/** An emoji's stored look id (`emoji:<char>`). */
+export function isEmojiId(id: string | null | undefined): boolean {
+  return !!id && id.startsWith('emoji:') && id.length > 'emoji:'.length;
+}
+
+/** The Unicode emoji character(s) of an emoji look id, else null. */
+export function emojiChar(id: string | null | undefined): string | null {
+  return isEmojiId(id) ? id!.slice('emoji:'.length) : null;
 }
 
 /** The names of the logos outside the curated set, once here, else null. */
@@ -142,13 +166,16 @@ export function useLogoPaths(ids: readonly (string | null | undefined)[]): (id: 
   return (id) => curated?.LOOK_LOGO_PATHS[id] ?? (isLogoId(id) ? shardBox(shardNumber(id)).loaded?.[id] : undefined);
 }
 
-/** The paths of a picked icon or logo, from the catalog it lives in, or
- *  undefined while that catalog loads or for an id this build does not know. */
-export function useLookPaths(id: string | null | undefined): readonly string[] | undefined {
-  const logo = isLogoId(id);
-  const iconCatalog = useLookIcons(!!id && !logo);
+/** The artwork of a picked icon, logo or emoji: SVG paths from the catalog it
+ *  lives in, the emoji string itself (synchronous, no chunk load), or undefined
+ *  while a catalog loads or for an id this build does not know. */
+export function useLookPaths(id: string | null | undefined): LookArt | undefined {
+  const emoji = emojiChar(id);
+  const logo = !emoji && isLogoId(id);
+  const iconCatalog = useLookIcons(!!id && !logo && !emoji);
   const logoPaths = useLogoPaths(logo ? [id] : []);
   if (!id) return undefined;
+  if (emoji) return emoji;
   return logo ? logoPaths(id) : iconCatalog?.LOOK_ICONS[id];
 }
 
@@ -157,7 +184,7 @@ export function useLookPaths(id: string | null | undefined): readonly string[] |
 export async function loadLookPaths(ids: readonly string[]): Promise<Map<string, readonly string[]>> {
   const out = new Map<string, readonly string[]>();
   const logoIds = ids.filter(isLogoId);
-  const iconIds = ids.filter((id) => !isLogoId(id));
+  const iconIds = ids.filter((id) => !isLogoId(id) && !isEmojiId(id));
   const [iconMod, curated] = await Promise.all([
     iconIds.length ? icons.load() : null,
     logoIds.length ? logos.load() : null,

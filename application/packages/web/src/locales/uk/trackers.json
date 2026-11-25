@@ -123,9 +123,6 @@
       "great": "Чудово"
     }
   },
-  "sleepScore": {
-    "prompt": "Оцінка сну"
-  },
   "heartRate": {
     "prompt": "Середній пульс"
   },

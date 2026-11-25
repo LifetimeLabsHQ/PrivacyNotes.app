@@ -7,7 +7,7 @@ import { formatBytes } from '../formatBytes';
 import { FieldLabel } from '../formFields';
 import { activeLocale } from '../i18n';
 import { prepareRender, renderMarkdownSafe } from '../markdownRender';
-import { Button, Modal, ProgressBar, Select, StatusLine } from '../ui';
+import { Button, PluginSheet, ProgressBar, Select, StatusLine } from '../ui';
 import { cancelJob, dropJob, startJob, useJobs } from './jobs';
 import { checkKeptPlugin, downloadPlugin, setPluginOn } from './pluginManager';
 import { usePluginStates, type PluginKey } from './pluginState';
@@ -176,8 +176,21 @@ export function TranslateSheet({ request, noteId, isPro, onUpgrade, onClose }: {
 
   if (!unlocked) return null;
   const progress = job?.progress;
+  const hasActiveFlow = from !== undefined && !nothing && from !== null && missing.length === 0 && job?.status !== 'error';
+  const footer = !hasActiveFlow ? undefined : result === null ? (
+    <Button action="cancel" onClick={close} />
+  ) : (
+    <>
+      <Button action="copy" variant="secondary" onClick={() => copy(result, 'translate')}>
+        {copied ? t('auth:createPhrase.copied') : undefined}
+      </Button>
+      <Button action="save" disabled={saving} onClick={() => void save()}>
+        {t('translate.saveAsNote')}
+      </Button>
+    </>
+  );
   return (
-    <Modal title={t('translate.action')} icon={<Translate />} onClose={close} layer="z-[60]" className="max-w-2xl w-full p-6 space-y-4">
+    <PluginSheet title={t('translate.action')} icon={<Translate />} onClose={close} maxWidth="max-w-2xl" footer={footer}>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <FieldLabel htmlFor={ids.from}>{t('translate.from')}</FieldLabel>
@@ -238,12 +251,7 @@ export function TranslateSheet({ request, noteId, isPro, onUpgrade, onClose }: {
       ) : job?.status === 'error' ? (
         <StatusLine tone="danger">{t(job.error === 'worker-died' ? 'media:lowMemory' : 'translate.failed')}</StatusLine>
       ) : result === null ? (
-        <div className="flex flex-col gap-2">
-          <ProgressBar value={progress ? progress.done / Math.max(progress.total, 1) : undefined} label={t('translate.action')} />
-          <div className="flex justify-end">
-            <Button action="cancel" onClick={close} />
-          </div>
-        </div>
+        <ProgressBar value={progress ? progress.done / Math.max(progress.total, 1) : undefined} label={t('translate.action')} />
       ) : (
         <>
           {done!.untranslated > 0 && <StatusLine>{t('translate.untranslated', { count: done!.untranslated })}</StatusLine>}
@@ -253,16 +261,8 @@ export function TranslateSheet({ request, noteId, isPro, onUpgrade, onClose }: {
             // Rendered by markdownRender.ts, which sanitizes every link and HTML block.
             dangerouslySetInnerHTML={{ __html: html }}
           />
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button action="copy" variant="secondary" onClick={() => copy(result, 'translate')}>
-              {copied ? t('auth:createPhrase.copied') : undefined}
-            </Button>
-            <Button action="save" disabled={saving} onClick={() => void save()}>
-              {t('translate.saveAsNote')}
-            </Button>
-          </div>
         </>
       )}
-    </Modal>
+    </PluginSheet>
   );
 }

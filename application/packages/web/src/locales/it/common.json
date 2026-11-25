@@ -26,7 +26,6 @@
     "noResults": "Nessun risultato"
   },
   "deleteNote": {
-    "confirm": "Elimina per sempre",
     "body": "Eliminare definitivamente <highlight>“{{title}}”</highlight>? L'operazione è irreversibile."
   },
   "emptyTrash": {
@@ -73,12 +72,15 @@
       "toggleSidebar": "Mostra/nascondi barra laterale",
       "toggleTheme": "Passa tra modalità chiara / scura",
       "openSettings": "Apri impostazioni",
+      "graph": "Area di lavoro Grafo e Luoghi",
       "zen": "Modalità Zen",
+      "fullScreen": "Modalità a schermo intero",
       "markdownView": "Attiva / disattiva la vista Markdown",
       "invisibles": "Mostra / nascondi i caratteri invisibili",
       "find": "Trova nella nota",
       "findReplace": "Trova e sostituisci",
       "outline": "Mostra/nascondi struttura",
+      "connections": "Mostra/nascondi collegamenti",
       "insertDate": "Inserisci la data",
       "insertDateTime": "Inserisci data e ora",
       "clearFilters": "Rimuovi i filtri",
@@ -134,8 +136,6 @@
     "goToFolder": "Vai a una cartella",
     "createTag": "Crea il tag #{{name}}",
     "createFolder": "Crea la cartella “{{name}}”",
-    "newTag": "Nuovo tag",
-    "newFolder": "Nuova cartella",
     "goToDay": "Vai al giorno",
     "inText": "Nel testo",
     "actions": "azioni",
@@ -165,7 +165,7 @@
     "showCvv": "Mostra CVV",
     "hideCvv": "Nascondi CVV",
     "expiredHint": "Questa carta sembra scaduta.",
-    "billingZip": "CAP di fatturazione",
+    "billingZip": "CAP / codice postale di fatturazione",
     "billingZipPlaceholder": "10001",
     "notes": "Note",
     "notesPlaceholder": "Note aggiuntive (facoltativo)",
@@ -176,9 +176,9 @@
   "sshKeyForm": {
     "label": "Etichetta",
     "labelPlaceholder": "es. chiave di deploy GitHub",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "Copia chiave pubblica",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "Copia chiave privata",
     "downloadPublicKey": "Scarica chiave pubblica",
     "downloadPrivateKey": "Scarica chiave privata",
@@ -291,6 +291,13 @@
     "features": {
       "stats": {
         "detail": "La tua scrittura, le serie e i tracker nel tempo"
+      },
+      "graph": {
+        "detail": "I tuoi collegamenti fra note, ponti intelligenti e hub come mappa interattiva"
+      },
+      "placesMap": {
+        "label": "Mappa dei luoghi",
+        "detail": "Note, pagine di diario e contatti segnati su una mappa privata"
       },
       "trackers": {
         "detail": "Umore, abitudini, fattori e farmaci"

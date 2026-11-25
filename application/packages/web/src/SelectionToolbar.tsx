@@ -23,7 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { HoverLabel } from './HoverLabel';
 import { keyText } from './shortcutMatch';
 import { TagPicker } from './TagPicker';
-import { IconUpgrade } from './UpgradeModal';
+import { IconUpgrade } from './ui';
 import { ContextMenu, useContextMenu, type ContextMenuItem } from './ContextMenu';
 import { X, PushPin, Tag, Folder, Download, Trash, ArrowCounterClockwise, DotsThreeOutlineVertical, iconArchive } from './icons';
 
@@ -195,7 +195,7 @@ export function SelectionToolbar({
   };
 
   return (
-    <div ref={rowRef} className="shrink-0 h-14 px-3 border-b border-divider flex items-center justify-between gap-1 bg-accent/5 dark:bg-accent/10">
+    <div ref={rowRef} className="shrink-0 h-11 md:h-14 px-3 border-b border-divider flex items-center justify-between gap-1 bg-accent/5 dark:bg-accent/10">
       <HoverLabel label={t('shell:selectionToolbar.exitSelection')} keys={keyText('escape')} position="below">
       <button
         onClick={onClear}

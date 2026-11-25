@@ -54,6 +54,19 @@ export const num = (v: unknown): number | null => (typeof v === 'number' && Numb
 /** A string from loose JSON, else empty. */
 export const str = (v: unknown): string => (typeof v === 'string' ? v : '');
 
+/** Strips a leading UTF-8 BOM (written by Windows browsers and some exporters). */
+export function stripBom(text: string): string {
+  return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+}
+
+/** Indents every non-empty line with `prefix` (for Markdown list item continuations). */
+export function indentLines(text: string, prefix: string): string {
+  return text
+    .split('\n')
+    .map((line) => (line === '' ? '' : `${prefix}${line}`))
+    .join('\n');
+}
+
 /**
  * A note-link to another note's title. The target goes through
  * `noteLinkTarget` because a real title can hold a pipe or a bracket, and

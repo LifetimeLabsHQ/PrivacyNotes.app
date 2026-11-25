@@ -1,6 +1,20 @@
 import type { PushFailureReason } from './pushFailures';
 import type { SyncFault } from './syncFaults';
 import type { SyncPassEntry } from './syncLog';
+import { formatBytes } from './formatBytes';
+
+/** Compact privacy-safe storage summary included in the support report.
+ *  Counts and byte totals only - never titles, filenames or paths. */
+export type SupportStorageSummary = {
+  serverNotesBytes: number;
+  serverFilesBytes: number;
+  localBytes?: number;
+  pendingGc: number;
+};
+
+function compactSize(bytes: number): string {
+  return formatBytes(bytes).replace(/\.0(\s)/, '$1').replace(/\s+/g, '');
+}
 
 /**
  * The text behind the "Support report" button in ID & Sync.
@@ -53,6 +67,8 @@ export function buildSupportReport(input: {
   version: string;
   /** Set when the vault is local-only or registered without ever syncing. */
   mode?: 'local-only' | 'never-synced';
+  /** Server vs local byte totals and pending blob GC count (safe to publish). */
+  storage?: SupportStorageSummary;
   unsynced: number;
   pendingUploads: number;
   lastOkAt: number | null;
@@ -65,15 +81,21 @@ export function buildSupportReport(input: {
   /** Oldest first, as authDiag.ts keeps them. */
   breadcrumbs: Breadcrumb[];
 }): string {
-  const { pubkey, failed, passes, faults, breadcrumbs } = input;
+  const { pubkey, failed, passes, faults, breadcrumbs, storage } = input;
   // Spec: docs/internal/specs/sync-diagnostics.md (decision D1: first 6, last 4)
   const account = `${pubkey.slice(0, 6)}...${pubkey.slice(-4)}`;
+  const storageLine = storage
+    ? `Storage: server notes=${compactSize(storage.serverNotesBytes)} files=${compactSize(storage.serverFilesBytes)}${
+        storage.localBytes !== undefined ? `, local=${compactSize(storage.localBytes)}` : ''
+      }, pending_gc=${storage.pendingGc}`
+    : null;
   return [
     'PrivacyNotes support report',
     `Account: ${account}`,
     `Device: ${input.device}`,
     `Version: ${input.version}`,
     ...(input.mode ? [`Mode: ${input.mode}`] : []),
+    ...(storageLine ? [storageLine] : []),
     `Unsynced notes: ${input.unsynced}`,
     `Pending file uploads: ${input.pendingUploads}`,
     `Last sync: ${input.lastOkAt !== null ? new Date(input.lastOkAt).toISOString() : 'never'}`,

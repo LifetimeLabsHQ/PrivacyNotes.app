@@ -307,6 +307,16 @@
         "Ja. Appen är lokal först: [dina anteckningar bor i en databas på din enhet](/sv/help/data-location), så att läsa, skriva och [söka fungerar helt utan uppkoppling](/sv/help/search-local). Ändringar synkas automatiskt när du är online igen, och [en bild eller fil du lägger till offline väntar på den här enheten](/sv/help/upload-failed) och laddas upp då också. [Ninja](/sv/help/ninja) fungerar också offline; det är bara att spara en webbsida som anteckning som väntar på uppkoppling."
       ]
     },
+    "local-only": {
+      "q": "Hur använder jag ett lokalt valv utan konto?",
+      "a": [
+        "Öppna skrivbords- eller mobilappen (macOS, Windows, Linux, iOS eller Android), välj \"Skapa en fras\" på inloggningsskärmen och låt \"Synka mellan enheter\" vara avmarkerad, vilket är standard. Det skapar ett krypterat valv på din enhet utan någon serverregistrering, så det fungerar offline från start.",
+        "**Så fungerar läget Endast lokalt:**",
+        "- **Offline som standard:** anteckningar, uppgifter, dagböcker, valvposter, filer, bilder, PIN och biometriskt lås, sökning och [automatiska säkerhetskopior](/sv/help/automatic-backups) fungerar alla på din enhet utan konto.\n- **Säkerhetskopiera ditt valv:** eftersom ingenting når våra servrar försvinner dina anteckningar om du förlorar enheten eller avinstallerar appen. Slå på [automatiska säkerhetskopior](/sv/help/automatic-backups) under Inställningar > Säkerhetskopiering > Automatiskt, eller exportera en manuell kopia under Inställningar > Säkerhetskopiering > Manuellt.\n- **Slå på synk eller uppgradera senare:** öppna Inställningar > ID & Sync och välj \"Slå på synk\" när som helst. Du kan också uppgradera till Pro medan synk är avstängd: kassan registrerar ett Konto-ID för Pro medan dina anteckningar stannar lokalt.\n- **Återställ säkerhetskopior från en annan enhet:** öppna Inställningar > Säkerhetskopiering > Återställ och välj \"Krypterad säkerhetskopia (.pnbackup, .pnbackupz)\". Om filen kommer från ett annat valv ber appen om den säkerhetskopians återställningsfras (skriven eller via QR) och importerar allt under ditt lokala valvs nyckel.",
+        "**Har du redan ett synkat konto?** Följ stegen för din plan:",
+        "- **Gratiskonto (flytta till Endast lokalt):** exportera en kopia under Inställningar > Säkerhetskopiering > Manuellt och välj \"Allt, krypterat (.pnbackupz)\". [Radera sedan ditt molnkonto](/sv/help/delete-account) under Inställningar > Konto via \"Radera konto och data...\", starta ett lokalt valv i skrivbords- eller mobilappen med \"Skapa en fras\" och [återställ säkerhetskopian](/sv/help/restore-backup) med din gamla återställningsfras.\n- **Pro-konto (behåll Pro och sluta synka):** radera inte ditt konto, eftersom Pro försvinner när ett konto raderas. Öppna Inställningar > ID & Sync och slå på [\"Pausa synkning\"](/sv/help/pause-sync). Pro förblir aktivt och inget nytt laddas upp.\n- **Pro-konto (rensa även synkade anteckningar från servern):** exportera \"Allt, krypterat (.pnbackupz)\" först, radera alla anteckningar, töm papperskorgen, tryck på \"Synka nu\" och vänta tills det står Synkat (molnfiler rensas automatiskt efter fem dagar). Slå på \"Pausa synkning\" under Inställningar > ID & Sync, och återställ sedan din säkerhetskopia under Inställningar > Säkerhetskopiering > Återställ innan du stänger appen. Dina anteckningar kommer tillbaka lokalt med nya id:n medan Pro förblir aktivt."
+      ]
+    },
     "sync-conflicts": {
       "q": "Vad händer om jag redigerar samma anteckning på två enheter samtidigt?",
       "a": [
@@ -504,6 +514,13 @@
         "[Formateringsverktygsfältet](/sv/help/format-bar) och dess Infoga-meny lägger till resten: [tabeller](/sv/help/table-formulas), informationsrutor som kan fällas ihop, understrykning, upphöjd och nedsänkt text, textjustering, text- och överstrykningsfärger, typsnitt, länkar, bilder och filbilagor. Allt överlever resan till Markdown och tillbaka: ”Visa markdown” under varje anteckning visar råkällan, och [exporterna är rena .md-filer](/sv/help/export), så ingenting du skriver låses in i ett proprietärt format."
       ]
     },
+    "slash-commands": {
+      "q": "Kan jag använda /-kommandon för att infoga block?",
+      "a": [
+        "Ja. Skriv `/` i början av en rad eller efter ett mellanslag för att öppna blockmenyn, skriv sedan ett ord som `/tabell`, `/h2`, `/kanban` eller `/varning` och tryck på Enter. Dina senaste val stannar högst upp, och du kan också skriva ett [naturligt datum](/sv/help/ninja-dates) som `/fredag` eller `/i morgon`, `/påminn` inuti en uppgift för en [påminnelse](/sv/help/reminders), eller `/formel` inuti en tabellcell för [tabellformler](/sv/help/table-formulas). Menyn är gratis; block som kräver Pro visar ett Pro-märke.",
+        "Menyn fungerar sida vid sida med [live-Markdown](/sv/help/markdown-syntax) och fortsätter fungera när du döljer knappar i [formatfältet](/sv/help/format-bar) eller skriver i [zenläget](/sv/help/zen-mode). Om inget i menyn matchar det du skrev trycker du på Enter för att skicka sökningen direkt till [Ninja](/sv/help/ninja). Om du skriver `/` inuti en webbadress, ett datum, ett bråktal, ett kodblock eller inklistrad text förblir det vanlig text och öppnar aldrig menyn; tryck på Escape eller ett mellanslag direkt efter `/` för att stänga den."
+      ]
+    },
     "tasks": {
       "q": "Hur fungerar uppgifter?",
       "a": [
@@ -569,7 +586,7 @@
     "browser-extension": {
       "q": "Finns det ett webbläsartillägg för PrivacyNotes?",
       "a": [
-        "Ja, för Chrome, Edge och Firefox på en dator, och det är gratis. Det sparar sidan du läser som en anteckning, med huvudtext och bilder, eller som ett bokmärke, det skriver en ny egen anteckning, och det kan visa inloggningar, kort, SSH-nycklar och bokmärken för webbplatsen du är på. Kopiera ett värde med ett klick, eller välj Fyll i (eller tryck på Alt+Shift+L) så skriver tillägget in inloggningen för webbplatsen på sidan. Det fyller aldrig i formulär av sig självt.",
+        "Ja, för Chromium- och Firefox-baserade webbläsare på en dator, och det är gratis. Det sparar sidan du läser som en anteckning, med huvudtext och bilder, eller som ett bokmärke, det skriver en ny egen anteckning, och det kan visa inloggningar, kort, SSH-nycklar och bokmärken för webbplatsen du är på. Kopiera ett värde med ett klick, eller välj Fyll i (eller tryck på Alt+Shift+L) så skriver tillägget in inloggningen för webbplatsen på sidan. Det fyller aldrig i formulär av sig självt.",
         "Öppna Inställningar > Tillägg, lägg till tillägget från webbläsarens butik, välj vad det får göra och välj sedan Skapa en kod. Kopiera engångskoden och klistra in den i tillägget. Vill du ta bort det väljer du Ta bort bredvid det under Webbläsartillägg på samma sida. Ett tillägg använder inte en av dina enhetsplatser. Ett gratiskonto ansluter en webbläsare; Pro ansluter upp till 10. [Så skyddar det dina anteckningar](/sv/help/browser-extension-security)."
       ]
     },
@@ -825,6 +842,13 @@
       "a": [
         "Ja. Båda inställningarna är på som standard eftersom vi älskar våra användare: vi vill att du [sparar lagringsutrymme](/sv/help/storage-usage) och behåller din integritet. Utrymmessparare krymper en stor bild och sparar den som JPEG: Standard (förvalt) ryms inom 2048 pixlar med 85 % kvalitet, Liten ryms inom 1280 pixlar med 75 % och Mycket liten ryms inom 1024 pixlar med 60 % för de minsta filerna. Ta bort platsdata rensar EXIF-metadata som en kamera skriver in i ett foto, inklusive GPS-positionen, innan bilden sparas. Båda gäller varje bild som appen kan läsa: inklistrad i en anteckning, tillagd som fil eller importerad. En bild som den inte kan läsa, till exempel AVIF, SVG eller en som inte går att öppna, sparas som den kom när du lägger till den som fil eller importerar den, platsdata inräknade. Två undantag: en GIF behåller sin storlek så att animationen fortfarande spelas, och en fil som är bifogad till en valvpost behålls exakt som den var.",
         "Stäng av endera under **Inställningar > Lagring > Bilder**, där kontaktfoton har en tredje brytare som håller dem på 512 pixlar. Inställningarna gäller bara nya bilder; filer som inte är bilder sparas exakt som de är. HEIC- och TIFF-bilder konverteras till JPEG, eftersom bara Safari kan visa dem. [En säkerhetskopia du återställer](/sv/help/restore-backup) skrivs tillbaka byte för byte."
+      ]
+    },
+    "paste-screenshots": {
+      "q": "Komprimeras även inklistrade skärmdumpar?",
+      "a": [
+        "Ja. Skärmdumpar och bilder som du kopierar och klistrar in direkt i en anteckning går igenom samma [komprimering i Utrymmessparare](/sv/help/image-quality) som bifogade filer, indragna bilder och importer. Vanliga skärmdumpar utan transparens skalas ner för att rymmas inom ditt valda förval och sparas som JPEG, vilket minskar en typisk skärmdump till en bråkdel av originalstorleken och gör att [ditt lagringsutrymme](/sv/help/storage-usage) räcker längre.",
+        "Välj mellan Standard (2048 pixlar med 85 % kvalitet), Liten (1280 pixlar med 75 %) och Mycket liten (1024 pixlar med 60 %) under Inställningar > Lagring > Bilder, eller stäng av Utrymmessparare för att behålla originalen. En skärmdump med transparenta kanter, till exempel en fönsterbild med skugga, skalas ändå ner till din valda gräns och sparas som PNG för att behålla transparensen."
       ]
     },
     "storage-usage": {
@@ -1125,7 +1149,7 @@
       "a": [
         "Ja. Skriv `=` i en tabellcell för att välja en funktion, eller skriv formeln själv. Cellen visar svaret i stället för texten, och varje svar uppdateras i samma stund som du ändrar en cell som det läser. Celler namnges med kolumnbokstav och radnummer, och rubriken räknas som rad 1, så din första rad med data är rad 2. Svaren fungerar på alla konton; att välja från menyn är Pro.",
         "Om du vill prova allt på en gång laddar du ner exempelanteckningen, öppnar sedan Inställningar > Överföring > Importera, väljer **Markdown-filer** och pekar ut filen.",
-        "[Exempelanteckning (.md)](/marketing/table-formulas-examples.md)",
+        "[Exempelanteckning (.md)](/help/table-formulas-examples.md)",
         "Det här är funktionerna, och de kan kombineras med `+`, `-`, `*`, `/`, `^` för en potens och parenteser:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` och `COUNT` fungerar över ett område, som i `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` och `LOG` fungerar på ett enskilt värde, som i `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` och `PHI` är konstanter, och `RAND` ger ett slumptal\n- `=B7-B2` drar en cell från en annan, och `=SUM(B2:B10)*0.2` tar en procentandel av en summa",
         "Klicka på en cell som visar ett svar så kommer formeln tillbaka, redo att ändras. Din anteckning lagrar själva formeln, aldrig resultatet, så en export och vilken annan Markdown-app som helst visar `=SUM(B2:B10)` precis som du skrev den."
@@ -1426,7 +1450,7 @@
       "q": "Vad ingår i en fullständig säkerhetskopia?",
       "a": [
         "Allt du har gjort: anteckningar, dagboksinlägg med varje värde du loggade, uppgifter, händelser, valvposter, bokmärken, kontakter, teckningar, bilder, ljud och filer, även de som ligger i papperskorgen. Den innehåller också det du har ställt in för hand: mappar och deras färger, fästa taggar, egna teman, dina mediciner, egna mätvärden, faktorer och vanefrågor, de mätvärden du har slagit på och deras enheter, prenumererade kalendrar och din Hem-layout.",
-        "Den lämnar utanför din PIN-kod för applåset, Anteckningshistorik, listan över dina enheter och hur appen ser ut, till exempel temat och textstorleken. En [återställning](/sv/help/restore-backup) lägger till det som ditt konto saknar och behåller dina senare ändringar. En anteckning du flyttade till papperskorgen eller raderade efter säkerhetskopian kommer tillbaka. Vill du ha dina mätvärden i en fil du kan öppna, använd **Ladda ner JSON** under Inställningar > Överföring > Mätvärden ([mätvärdesfiler](/sv/help/tracker-json-csv))."
+        "Den lämnar utanför din PIN-kod för applåset, anteckningshistorik, listan över dina enheter och hur appen ser ut, till exempel temat och textstorleken. En [återställning](/sv/help/restore-backup) lägger till det som ditt konto saknar och behåller dina senare ändringar. En anteckning du flyttade till papperskorgen eller raderade efter säkerhetskopian kommer tillbaka. Vill du ha dina mätvärden i en fil du kan öppna, använd **Ladda ner JSON** under Inställningar > Överföring > Mätvärden ([mätvärdesfiler](/sv/help/tracker-json-csv))."
       ]
     },
     "session-expired": {

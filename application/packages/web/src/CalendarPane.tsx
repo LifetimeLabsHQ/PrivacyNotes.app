@@ -5,6 +5,7 @@ import { SPACE_ICONS } from './SpaceSwitch';
 import { typeGlyph } from './NoteRow';
 import { Switch } from './Switch';
 import { HoverLabel } from './HoverLabel';
+import { SETTINGS_TRACK, settingsSegClass } from './ui';
 import { keyText } from './shortcutMatch';
 import { CalendarHeader, MonthGrid, addDays, dayAtNoon, dayKindColor, monthCells, useWeekStart, weekCells, type DayCounter } from './MonthGrid';
 import { DayCountStrip } from './DayCountStrip';
@@ -371,7 +372,7 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
   // raised option, an icon each. A narrow header keeps the icons; the tip
   // names each one and its key at every width.
   const viewSwitch = (
-    <div role="group" aria-label={t('calendar.viewLabel')} className="shrink-0 flex gap-1 rounded-md bg-track p-1">
+    <div role="group" aria-label={t('calendar.viewLabel')} className={`shrink-0 ${SETTINGS_TRACK}`}>
       {VIEW_MODES.map(({ mode: m, Icon, key }) => (
         <HoverLabel key={m} label={t(`calendar.views.${m}`)} keys={keyText(key)} position="below">
           <button
@@ -379,9 +380,7 @@ export default function CalendarPane({ index, pillar, onOpen, onItemMenu, onDayM
             aria-pressed={mode === m}
             aria-label={t(`calendar.views.${m}`)}
             onClick={() => setMode(m)}
-            className={`inline-flex items-center gap-1.5 h-6 px-1.5 @min-[420px]/calhead:px-2.5 rounded text-small transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ${
-              mode === m ? 'bg-surface-2 shadow-sm text-pn font-semibold' : 'text-pn-soft hover:text-pn font-medium'
-            }`}
+            className={`${settingsSegClass(mode === m)} inline-flex items-center gap-1.5 !h-6 !py-0 !px-1.5 @min-[420px]/calhead:!px-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40`}
           >
             <Icon aria-hidden="true" />
             <span aria-hidden="true" className="hidden @min-[420px]/calhead:inline">{t(`calendar.views.${m}`)}</span>

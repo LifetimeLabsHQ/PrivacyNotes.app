@@ -8,8 +8,10 @@
   "applyToFolderItems": "Appliquer à tous les éléments de ce dossier",
   "applyToTagItems": "Appliquer à tous les éléments avec cette étiquette",
   "icon": "Icône",
+  "emoji": "Émoji",
   "searchPlaceholder": "Rechercher des icônes",
   "searchLogos": "Rechercher des logos",
+  "searchEmojis": "Rechercher des émojis",
   "moreLogos": "Plus de logos",
   "allLogos": "Tous les logos, de A à Z",
   "recent": "Utilisées récemment",
@@ -41,7 +43,14 @@
     "games": "Jeux",
     "learning": "Apprentissage et recherche",
     "trips": "Voyage et sport",
-    "privacy": "Confidentialité et sécurité"
+    "privacy": "Confidentialité et sécurité",
+    "emojiSmileys": "Smileys et émotions",
+    "emojiPeople": "Personnes et corps",
+    "emojiAnimals": "Animaux et nature",
+    "emojiActivities": "Activités",
+    "emojiObjects": "Objets",
+    "emojiSymbols": "Symboles et signes",
+    "emojiFlags": "Drapeaux"
   },
   "icons": {
     "folder": "Dossier",

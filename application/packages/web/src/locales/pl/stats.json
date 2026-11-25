@@ -350,6 +350,7 @@
       "noEntry": "brak wpisu",
       "doseLens": "Nastrój wynosił średnio {{before}} przez {{nBefore}} dni przed i {{after}} przez {{nAfter}} dni po.",
       "doseLensHeading": "Wokół każdej zmiany dawki",
+      "doseLensLocked": "Przejdź na Pro, aby zobaczyć, jak zmiany dawki wpływają na Twój nastrój",
       "doseLensShort_one": "Potrzeba jeszcze {{count}} zapisanego dnia wokół niej.",
       "doseLensShort_few": "Potrzeba jeszcze {{count}} zapisanych dni wokół niej.",
       "doseLensShort_many": "Potrzeba jeszcze {{count}} zapisanych dni wokół niej.",

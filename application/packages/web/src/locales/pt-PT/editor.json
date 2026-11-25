@@ -38,7 +38,7 @@
     "blockMath": "Fórmula em bloco",
     "align": "Alinhamento",
     "font": "Tipo de letra",
-    "pictureFromFiles": "Imagem de Ficheiros",
+    "pictureFromFiles": "Galeria",
     "date": "Data",
     "dateTime": "Data e hora",
     "footnote": "Nota de rodapé",
@@ -260,6 +260,15 @@
     "headingsIn": "Títulos em {{title}}",
     "noHeadingMatches": "Nenhum título correspondente"
   },
+  "slash": {
+    "label": "Inserir bloco",
+    "linePlaceholder": "Carrega em / para inserir blocos",
+    "filterHint": "Escreve para filtrar…",
+    "basic": "Blocos básicos",
+    "smartDate": "Data inteligente",
+    "askNinja": "Perguntar ao Ninja por “{{query}}”",
+    "noMatches": "Nenhum bloco correspondente"
+  },
   "copyBox": {
     "placeholder": "Texto para copiar com um clique"
   },
@@ -370,6 +379,23 @@
     "moveTo": "Mover para",
     "cardCount_one": "{{count}} cartão",
     "columnCount_one": "{{count}} coluna"
+  },
+  "columns": {
+    "narrowWide": "Estreita e larga",
+    "wideNarrow": "Larga e estreita",
+    "removeColumns": "Remover colunas",
+    "resizeColumn": "Arrasta para redimensionar as colunas",
+    "barLabel": "Controlos de colunas",
+    "borders": "Contornos das colunas",
+    "borderBoxes": "Caixas",
+    "borderSolid": "Sólido",
+    "borderDashed": "Tracejado",
+    "borderDotted": "Pontilhado",
+    "borderThickness": "Espessura",
+    "borderThin": "Fina",
+    "borderMedium": "Média",
+    "borderColorDefault": "Cor padrão",
+    "borderTint": "Tom suave nas colunas"
   },
   "doodle": {
     "title": "Rabisco",

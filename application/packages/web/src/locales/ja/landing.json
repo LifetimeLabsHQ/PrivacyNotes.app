@@ -344,7 +344,7 @@
     "extensionKeyLogin": "このサイトのログイン情報を自動入力",
     "extensionKeyBookmark": "このページをブックマーク",
     "extensionAria": "{{name}} に拡張機能を追加",
-    "extensionNote": "パソコンのみ対応です。"
+    "extensionNote": "ChromiumベースまたはFirefoxベースのどのブラウザでも使えます。コンピューターのみ対応です。"
   },
   "ctaRepeat": {
     "getStarted": "始める"

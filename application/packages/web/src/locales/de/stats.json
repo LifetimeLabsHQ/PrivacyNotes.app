@@ -327,6 +327,7 @@
       "noEntry": "kein Eintrag",
       "doseLens": "Die Stimmung lag im Schnitt bei {{before}} in den {{nBefore}} Tagen davor und bei {{after}} in den {{nAfter}} Tagen danach.",
       "doseLensHeading": "Rund um jede Dosisänderung",
+      "doseLensLocked": "Mit einem Upgrade auf Pro siehst du, wie Dosisänderungen deine Stimmung beeinflussen",
       "doseLensShort_one": "Noch {{count}} erfasster Tag rundherum nötig.",
       "doseLensShort_other": "Noch {{count}} erfasste Tage rundherum nötig."
     },

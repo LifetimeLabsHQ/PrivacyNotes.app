@@ -16,15 +16,12 @@
  */
 
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import { createPortal } from 'react-dom';
 import { isImeComposing } from './imeComposing';
 import { useTranslation } from 'react-i18next';
 import { useEscapeToClose } from './useEscapeToClose';
 import { useKeyboardRect } from './useKeyboardOpen';
-import { usePopoverPosition } from './usePopoverPosition';
-import { CloseButton } from './ui/Button';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
-import { TextField } from './ui';
+import { NO_TEXT_ASSIST } from './formFields';
+import { Button, CloseButton, Popover, TextField } from './ui';
 import { CaretDown, CaretRight } from './icons';
 import { getMarkRange } from '@tiptap/core';
 import { looksLikeUrl, normalizeUrl } from './editorLinks';
@@ -45,7 +42,6 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
   const { t } = useTranslation('editor');
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const urlRef = useRef<HTMLInputElement | null>(null);
-  const pos = usePopoverPosition(!isMobile, anchorRef, sheetRef, { align: 'start', gap: 6 });
   const keyboard = useKeyboardRect(isMobile);
 
   // Existing link attributes (if cursor is inside a link).
@@ -85,19 +81,7 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
     });
   }, [existingHref]);
 
-  // Outside-click dismisses (desktop).
-  useEffect(() => {
-    if (isMobile) return;
-    function handler(e: PointerEvent) {
-      if (sheetRef.current && !sheetRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    }
-    document.addEventListener('pointerdown', handler);
-    return () => document.removeEventListener('pointerdown', handler);
-  }, [isMobile, onClose]);
-
-  useEscapeToClose(onClose);
+  useEscapeToClose(onClose, isMobile);
 
   function validate(): boolean {
     const trimmed = url.trim();
@@ -185,18 +169,20 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
   const hasSelection = from !== to;
   const isEditing = !!existingHref;
 
+  const dialogTitle = isEditing ? t('editor:link.menuEdit') : t('editor:toolbar.addLink');
+
   // Shared form content - used in both mobile and desktop layouts.
   const form = (
     <>
-      <label className="block text-meta font-medium text-pn-muted mb-1">
-        {t('link.urlLabel')}
-      </label>
-      <input
+      <TextField
         ref={urlRef}
         type="url"
         inputMode="url"
         autoComplete="off"
+        {...NO_TEXT_ASSIST}
+        label={t('link.urlLabel')}
         placeholder={t('link.urlPlaceholder')}
+        error={urlError || undefined}
         value={url}
         onChange={(e) => { setUrl(e.target.value); if (urlError) setUrlError(''); }}
         onKeyDown={(e) => {
@@ -204,40 +190,25 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
           if (e.key === 'Enter') { e.preventDefault(); apply(); }
           if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); onClose(); }
         }}
-        className={`w-full rounded-md border ${
-          urlError
-            ? 'border-red-400 dark:border-red-500'
-            : 'border-divider'
-        } bg-surface-2 px-3 py-2 text-body text-pn focus:outline-none focus:ring-1 focus:ring-accent`}
       />
-      {urlError && (
-        <p className="text-meta text-danger mt-1">{urlError}</p>
-      )}
 
-      <label className="block text-meta font-medium text-pn-muted mb-1 mt-3">
-        {t('link.textLabel')}
-      </label>
-      <input
-        type="text"
-        autoComplete="off"
-        placeholder={hasSelection ? '' : t('link.textPlaceholder')}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (isImeComposing(e)) return;
-          if (e.key === 'Enter') { e.preventDefault(); apply(); }
-          if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); onClose(); }
-        }}
-        disabled={hasSelection && !isEditing}
-        className={`w-full rounded-md border border-divider bg-surface-2 px-3 py-2 text-body text-pn focus:outline-none focus:ring-1 focus:ring-accent ${
-          hasSelection && !isEditing ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
-      />
-      {hasSelection && !isEditing && (
-        <p className="text-meta text-pn-muted mt-1">
-          {t('link.selectedTextHint')}
-        </p>
-      )}
+      <div className="mt-3">
+        <TextField
+          type="text"
+          autoComplete="off"
+          label={t('link.textLabel')}
+          placeholder={hasSelection ? '' : t('link.textPlaceholder')}
+          hint={hasSelection && !isEditing ? t('link.selectedTextHint') : undefined}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (isImeComposing(e)) return;
+            if (e.key === 'Enter') { e.preventDefault(); apply(); }
+            if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); onClose(); }
+          }}
+          disabled={hasSelection && !isEditing}
+        />
+      </div>
 
       <button
         type="button"
@@ -267,44 +238,31 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
         </div>
       )}
 
-      <div className="flex gap-2 mt-4">
+      <div className="flex flex-wrap items-center gap-2 mt-4">
         {isEditing && (
-          <button
-            type="button"
+          <Button
+            action="remove"
+            variant="danger"
             onMouseDown={(e) => e.preventDefault()}
             onClick={remove}
-            className="rounded-md px-3 py-2 text-body font-medium text-danger hover:bg-red-100 dark:hover:bg-red-900/30 transition"
-          >
-            {t('common:actions.remove')}
-          </button>
+          />
         )}
         <div className="flex-1" />
-        <button
-          type="button"
+        <Button
+          action="cancel"
           onMouseDown={(e) => e.preventDefault()}
           onClick={onClose}
-          className="rounded-md px-3 py-2 text-body font-medium text-pn-muted hover:bg-pn/5 transition"
-        >
-          {t('common:actions.cancel')}
-        </button>
-        <button
-          type="button"
+        />
+        <Button
+          action="apply"
           onMouseDown={(e) => e.preventDefault()}
           onClick={apply}
           disabled={!url.trim()}
-          className={`rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed`}
         >
           {isEditing ? t('link.update') : t('link.apply')}
-        </button>
+        </Button>
       </div>
     </>
-  );
-
-  const header = (
-    <div className="mb-3 flex items-center justify-between gap-2">
-      <h3 className="text-title font-semibold text-pn">{isEditing ? t('editor:link.menuEdit') : t('editor:toolbar.addLink')}</h3>
-      <CloseButton onClick={onClose} className="-me-2" />
-    </div>
   );
 
   if (isMobile) {
@@ -331,36 +289,30 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
             maxHeight: keyboard.height,
           } : undefined}
           role="dialog"
-          aria-label={isEditing ? t('editor:link.menuEdit') : t('editor:toolbar.addLink')}
+          aria-label={dialogTitle}
         >
           {/* Handle */}
           <div className="w-8 h-1 bg-pn-muted/35 rounded-full mx-auto mb-4" />
-          {header}
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h3 className="text-title font-semibold text-pn">{dialogTitle}</h3>
+            <CloseButton onClick={onClose} className="-me-2" />
+          </div>
           {form}
         </div>
       </>
     );
   }
 
-  // Desktop - panel anchored under the link button. It goes through a portal
-  // for the same reason the toolbar's own dropdowns do: the toolbar row clips
-  // its overflow, and a panel laid out inside the editor tree centres on the
-  // pane rather than on the button that opened it.
-  return createPortal(
-    <div
-      ref={sheetRef}
-      className="fixed z-50 w-80 bg-surface-1 border border-divider rounded-lg p-4 shadow-lg"
-      style={{
-        top: pos?.top ?? 0,
-        left: pos?.left ?? 0,
-        visibility: pos ? 'visible' : 'hidden',
-      }}
-      role="dialog"
-      aria-label={isEditing ? t('editor:link.menuEdit') : t('editor:toolbar.addLink')}
+  // Desktop - panel anchored under the link button via canonical Popover.
+  return (
+    <Popover
+      open
+      anchorRef={anchorRef}
+      onClose={onClose}
+      title={dialogTitle}
+      className="w-80 p-4"
     >
-      {header}
       {form}
-    </div>,
-    document.body,
+    </Popover>
   );
 }

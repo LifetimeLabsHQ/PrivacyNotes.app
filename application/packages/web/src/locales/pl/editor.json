@@ -38,7 +38,7 @@
     "blockMath": "Wzór blokowy",
     "align": "Wyrównanie",
     "font": "Czcionka",
-    "pictureFromFiles": "Obraz z Plików",
+    "pictureFromFiles": "Galeria",
     "date": "Data",
     "dateTime": "Data i godzina",
     "footnote": "Przypis",
@@ -269,6 +269,15 @@
     "headingsIn": "Nagłówki w: {{title}}",
     "noHeadingMatches": "Brak pasujących nagłówków"
   },
+  "slash": {
+    "label": "Wstaw blok",
+    "linePlaceholder": "Naciśnij /, aby wstawić bloki",
+    "filterHint": "Wpisz, aby filtrować…",
+    "basic": "Podstawowe bloki",
+    "smartDate": "Inteligentna data",
+    "askNinja": "Zapytaj Ninja o „{{query}}”",
+    "noMatches": "Brak pasujących bloków"
+  },
   "copyBox": {
     "placeholder": "Tekst do skopiowania jednym kliknięciem"
   },
@@ -382,6 +391,23 @@
     "cardCount_many": "{{count}} kart",
     "columnCount_few": "{{count}} kolumny",
     "columnCount_many": "{{count}} kolumn"
+  },
+  "columns": {
+    "narrowWide": "Wąska i szeroka",
+    "wideNarrow": "Szeroka i wąska",
+    "removeColumns": "Usuń kolumny",
+    "resizeColumn": "Przeciągnij, aby zmienić szerokość kolumn",
+    "barLabel": "Sterowanie kolumnami",
+    "borders": "Obramowanie kolumn",
+    "borderBoxes": "Ramki",
+    "borderSolid": "Ciągła",
+    "borderDashed": "Kreskowana",
+    "borderDotted": "Kropkowana",
+    "borderThickness": "Grubość",
+    "borderThin": "Cienka",
+    "borderMedium": "Średnia",
+    "borderColorDefault": "Domyślny kolor",
+    "borderTint": "Delikatne podbarwienie kolumn"
   },
   "doodle": {
     "title": "Szkic odręczny",

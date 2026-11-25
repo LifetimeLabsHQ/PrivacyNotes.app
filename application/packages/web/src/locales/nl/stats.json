@@ -327,6 +327,7 @@
       "noEntry": "geen notitie",
       "doseLens": "De stemming zat gemiddeld op {{before}} in de {{nBefore}} dagen ervoor en op {{after}} in de {{nAfter}} dagen erna.",
       "doseLensHeading": "Rond elke doseringswijziging",
+      "doseLensLocked": "Upgrade naar Pro om te zien hoe doseringswijzigingen je stemming beïnvloeden",
       "doseLensShort_one": "Nog {{count}} vastgelegde dag eromheen nodig.",
       "doseLensShort_other": "Nog {{count}} vastgelegde dagen eromheen nodig."
     },

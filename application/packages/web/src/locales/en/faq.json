@@ -307,6 +307,16 @@
         "Yes. The app is local-first: [your notes live in a database on your device](/help/data-location), so reading, writing, and [search all work with no connection](/help/search-local). Changes sync automatically when you are back online, and [a picture or file you add offline waits on this device](/help/upload-failed) and uploads then too. [Ninja](/help/ninja) works offline too; only saving a web page as a note waits for a connection."
       ]
     },
+    "local-only": {
+      "q": "How do I use a local-only vault without an account?",
+      "a": [
+        "Open the desktop or mobile app (macOS, Windows, Linux, iOS, or Android), choose \"Generate a phrase\" on the sign-in screen, and leave \"Sync across devices\" unchecked, the default. That creates an encrypted vault on your device with no server registration, so it works offline from the start.",
+        "**How local-only mode works:**",
+        "- **Offline by default:** notes, tasks, journals, vault items, files, images, PIN and biometric lock, search, and [automatic backups](/help/automatic-backups) all work on your device with no account.\n- **Back up your vault:** because nothing reaches our servers, losing the device or uninstalling the app removes your notes. Turn on [automatic backups](/help/automatic-backups) in Settings > Backup > Automatic, or export a manual copy in Settings > Backup > Manual.\n- **Turn on sync or upgrade later:** open Settings > ID & Sync and choose \"Turn on sync\" anytime. You can also upgrade to Pro while keeping sync off: checkout registers an Account ID for Pro while your notes stay local.\n- **Restore backups from another device:** open Settings > Backup > Restore and choose \"Encrypted backup (.pnbackup, .pnbackupz)\". If the file came from another vault, the app asks for that backup's recovery phrase (typed or QR) and imports everything under your local vault's key.",
+        "**Already have a synced account?** Choose the steps for your plan:",
+        "- **Free account (move to local-only):** export a copy in Settings > Backup > Manual and choose \"Everything, encrypted (.pnbackupz)\". Then [delete your cloud account](/help/delete-account) in Settings > Account via \"Delete account & data...\", start a local vault in the desktop or mobile app with \"Generate a phrase\", and [restore the backup](/help/restore-backup) using your old recovery phrase.\n- **Pro account (keep Pro and stop syncing):** do not delete your account, because deleting an account removes Pro. Open Settings > ID & Sync and turn on [\"Pause sync\"](/help/pause-sync). Pro stays active and nothing new uploads.\n- **Pro account (also clear synced notes from the server):** export \"Everything, encrypted (.pnbackupz)\" first, delete all notes, empty Trash, press \"Sync now\", and wait until it shows Synced (cloud files auto-purge after five days). Turn on \"Pause sync\" in Settings > ID & Sync, then before closing the app restore your backup in Settings > Backup > Restore. Your notes return locally under fresh ids while Pro stays active."
+      ]
+    },
     "sync-conflicts": {
       "q": "What happens if I edit the same note on two devices at once?",
       "a": [
@@ -504,6 +514,13 @@
         "[The formatting toolbar](/help/format-bar) and its Insert menu add the rest: [tables](/help/table-formulas), callouts that can fold closed, underline, superscript and subscript, text alignment, text and highlight colors, fonts, links, images, and file attachments. Everything round-trips as Markdown: \"Show markdown\" below any note reveals the raw source, and [exports are clean .md files](/help/export), so nothing you write is locked into a proprietary format."
       ]
     },
+    "slash-commands": {
+      "q": "Can I use / slash commands to insert blocks?",
+      "a": [
+        "Yes. Type `/` at the start of a line or after a space to open the block menu, then type a word like `/table`, `/h2`, `/kanban` or `/warn` and press Enter. Your recent picks stay at the top, and you can also type a [natural date](/help/ninja-dates) such as `/friday` or `/tomorrow`, `/remind` inside a task for a [reminder](/help/reminders), or `/formula` inside a table cell for [table formulas](/help/table-formulas). The slash menu is free; blocks that require Pro show a Pro badge.",
+        "The menu works alongside [live Markdown](/help/markdown-syntax) and stays available when you hide buttons in [the formatting toolbar](/help/format-bar) or write in [Zen mode](/help/zen-mode). If nothing in the menu matches what you typed, press Enter to hand the search straight to [Ninja](/help/ninja). Typing `/` inside a web address, a date, a fraction, a code block or pasted text stays plain text and never opens the menu; press Escape or a space right after `/` to close it."
+      ]
+    },
     "tasks": {
       "q": "How do tasks work?",
       "a": [
@@ -569,7 +586,7 @@
     "browser-extension": {
       "q": "Is there a PrivacyNotes browser extension?",
       "a": [
-        "Yes, for Chrome, Edge and Firefox on a computer, and it is free. It saves the page you are reading as a note, its main text and pictures, or as a bookmark, it writes a new note of your own, and it can show the logins, cards, SSH keys and bookmarks for the site you are on. Copy a value with one click, or choose Fill (or press Alt+Shift+L) and the extension types the login for that site into the page. It never fills forms by itself.",
+        "Yes, for Chromium and Firefox-based browsers on a computer, and it is free. It saves the page you are reading as a note, its main text and pictures, or as a bookmark, it writes a new note of your own, and it can show the logins, cards, SSH keys and bookmarks for the site you are on. Copy a value with one click, or choose Fill (or press Alt+Shift+L) and the extension types the login for that site into the page. It never fills forms by itself.",
         "Open Settings > Extension, add the extension from your browser's store, pick what it may do, then choose Make a code. Copy the one-time code and paste it into the extension. To remove it, choose Remove next to it under Browser extensions on the same page. An extension does not use one of your device slots. A free account connects one browser; Pro connects up to 10. [How it keeps your notes safe](/help/browser-extension-security)."
       ]
     },
@@ -825,6 +842,13 @@
       "a": [
         "Yes. Both settings are on by default because we love our users: we want you to [save storage space](/help/storage-usage) and keep your privacy. Space saver shrinks a large image and saves it as JPEG: Standard (default) fits 2048 pixels at 85% quality, Small fits 1280 pixels at 75%, and Tiny fits 1024 pixels at 60% for the smallest files. Remove location data strips the EXIF metadata a camera writes into a photo, including the GPS location, before the image is saved. Both apply to every picture the app can read: pasted into a note, added as a file, or imported. A picture it cannot read, such as AVIF, SVG or one that does not open, is stored as it arrived when you add it as a file or import it, location data included. Two exceptions: a GIF keeps its size so its animation still plays, and a file attached to a Vault item is kept exactly as it was.",
         "Turn either off under **Settings > Storage > Images**, where contact photos have a third switch that keeps them at 512 pixels. The settings apply to new images only; files that are not images are stored exactly as they are. HEIC and TIFF images are converted to JPEG, because only Safari can show them. [A backup you restore](/help/restore-backup) is written back byte for byte."
+      ]
+    },
+    "paste-screenshots": {
+      "q": "Are pasted screenshots compressed too?",
+      "a": [
+        "Yes. Screenshots and images you copy and paste straight into a note go through the same [Space saver compression](/help/image-quality) as attached files, dragged pictures, and imports. Regular opaque screenshots are resized to fit your chosen preset and saved as JPEG, which cuts a typical screenshot to a fraction of its original size and helps stretch your [storage quota](/help/storage-usage).",
+        "Choose between Standard (2048 pixels at 85% quality), Small (1280 pixels at 75%), and Tiny (1024 pixels at 60%) under Settings > Storage > Images, or turn Space saver off to keep originals. A screenshot with transparent edges, such as a window capture with a drop shadow, is still resized to your chosen limit and saved as PNG to keep its transparency."
       ]
     },
     "storage-usage": {
@@ -1205,7 +1229,7 @@
       "a": [
         "Yes. Type `=` in a table cell to pick a function, or write the formula yourself. The cell shows the answer instead of the text, and every answer updates the moment you change a cell it reads. Cells are named by column letter and row number, and the header counts as row 1, so your first row of data is row 2. The answers work on every account; picking from the menu is Pro.",
         "To try everything at once, download the example note, then open Settings > Transfer > Import, choose **Markdown files** and pick the file.",
-        "[Example note (.md)](/marketing/table-formulas-examples.md)",
+        "[Example note (.md)](/help/table-formulas-examples.md)",
         "These are the functions, and they combine with `+`, `-`, `*`, `/`, `^` for a power, and brackets:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` and `COUNT` work across a range, as in `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` and `LOG` work on one value, as in `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` and `PHI` are constants, and `RAND` gives a random number\n- `=B7-B2` subtracts one cell from another, and `=SUM(B2:B10)*0.2` takes a percentage of a total",
         "Click a cell that shows an answer and the formula comes back, ready to change. Your note stores the formula itself, never the result, so an export and any other Markdown app show `=SUM(B2:B10)` exactly as you wrote it."
@@ -1256,7 +1280,7 @@
     "zen-mode": {
       "q": "What is Zen mode?",
       "a": [
-        "Zen mode hides everything except the note you are writing: the sidebar, the list and the footer, and the toolbar starts hidden too. Tabs you have open stay at the top. Press Cmd+Shift+F on a Mac or Ctrl+Shift+F on Windows and Linux, click **Zen** in the footer, or right-click an empty area and choose **Zen Mode**.",
+        "Zen mode hides everything except the note you are writing: the sidebar, the list and the footer, and the toolbar starts hidden too. Tabs you have open stay at the top. Press Cmd+Shift+F on a Mac or Ctrl+Shift+F on Windows and Linux, click **Zen** in the footer, or right-click an empty area and choose **Zen mode**.",
         "Press Escape, the same keys again, or **Exit Zen** at the top of the note to come back. **Show formatting toolbar** brings the toolbar back while you stay in Zen mode. Zen mode is part of Pro, and the [demo](https://try.privacynotes.app) lets you try it without an account."
       ]
     },
@@ -1454,7 +1478,7 @@
       "q": "What does a full backup include?",
       "a": [
         "Everything you made: notes, journal entries with every value you logged, tasks, events, vault items, bookmarks, contacts, drawings, pictures, audio and files, also the ones in the trash. It also holds what you set up by hand: folders and their colors, pinned tags, custom themes, your medications, custom trackers, factors and habit questions, the trackers you turned on and their units, subscribed calendars and your Home layout.",
-        "It leaves out your app lock PIN, Note History, the list of your devices, and how the app looks, such as the theme and the text size. A [restore](/help/restore-backup) adds what your account is missing and keeps your later edits. A note you moved to the Trash or deleted after the backup comes back. To keep your trackers in a file you can open, use **Download JSON** in Settings > Transfer > Trackers ([tracker files](/help/tracker-json-csv))."
+        "It leaves out your app lock PIN, Note history, the list of your devices, and how the app looks, such as the theme and the text size. A [restore](/help/restore-backup) adds what your account is missing and keeps your later edits. A note you moved to the Trash or deleted after the backup comes back. To keep your trackers in a file you can open, use **Download JSON** in Settings > Transfer > Trackers ([tracker files](/help/tracker-json-csv))."
       ]
     }
   }

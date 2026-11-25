@@ -1,12 +1,12 @@
 import { VaultFieldAction } from './ui/VaultFieldAction';
 import { VaultFormActions } from './ui/VaultFormActions';
+import { PinProtectToggle, Select } from './ui';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { hasPin } from './pin';
-import { PinInfoModal } from './PinInfoModal';
-import { Calendar, CreditCard, Info, Lock, MapPin, User } from './icons';
+import { Calendar, CreditCard, Lock, MapPin, User } from './icons';
 import { useCopyToClipboard } from './clipboard';
-import { FIELD_CLASS, FieldLabel } from './formFields';
+import { FIELD_CLASS, FieldLabel, NO_TEXT_ASSIST } from './formFields';
 import { NotesField } from './NotesField';
 
 export { parseCardBody, serializeCardBody, detectCardNetwork, type CardData } from './cardBody';
@@ -72,7 +72,6 @@ export function CardForm({
   // can appear or vanish while the toggle below is on screen, and
   // localStorage fires nothing that would refresh a frozen value.
   const pinConfigured = hasPin();
-  const [showPinInfo, setShowPinInfo] = useState(false);
   const [showNumber, setShowNumber] = useState(false);
   const [numberFocused, setNumberFocused] = useState(false);
   const [showCvv, setShowCvv] = useState(false);
@@ -138,6 +137,7 @@ export function CardForm({
             placeholder={t('cardForm.cardholderPlaceholder')}
             disabled={locked}
             autoComplete="off"
+            {...NO_TEXT_ASSIST}
             className={fieldClass}
           />
         </div>
@@ -159,6 +159,7 @@ export function CardForm({
                 placeholder={t('cardForm.cardNumberPlaceholder')}
                 disabled={locked}
                 autoComplete="off"
+                {...NO_TEXT_ASSIST}
                 inputMode="numeric"
                 className={`${fieldClass} font-mono`}
               />
@@ -193,27 +194,27 @@ export function CardForm({
           <div className="flex-1">
             <FieldLabel icon={<Calendar />}>{t('cardForm.expiry')}</FieldLabel>
             <div className="flex gap-1.5">
-              <select
+              <Select
                 value={data.expMonth}
                 onChange={(e) => updateBody({ expMonth: e.target.value })}
                 disabled={locked}
-                className={`${fieldClass} appearance-none`}
+                className="w-full"
               >
                 <option value="">{t('cardForm.monthPlaceholder')}</option>
                 {Array.from({ length: 12 }, (_, i) => {
                   const m = String(i + 1).padStart(2, '0');
                   return <option key={m} value={m}>{m}</option>;
                 })}
-              </select>
-              <select
+              </Select>
+              <Select
                 value={expYearOption}
                 onChange={(e) => updateBody({ expYear: e.target.value })}
                 disabled={locked}
-                className={`${fieldClass} appearance-none`}
+                className="w-full"
               >
                 <option value="">{t('cardForm.yearPlaceholder')}</option>
                 {expYearOptions.map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
+              </Select>
             </div>
           </div>
           <div className="w-28">
@@ -226,6 +227,7 @@ export function CardForm({
                 placeholder={t('cardForm.cvvPlaceholder')}
                 disabled={locked}
                 autoComplete="off"
+                {...NO_TEXT_ASSIST}
                 inputMode="numeric"
                 maxLength={4}
                 className={`${fieldClass} font-mono`}
@@ -249,6 +251,7 @@ export function CardForm({
             placeholder={t('cardForm.billingZipPlaceholder')}
             disabled={locked}
             autoComplete="off"
+            {...NO_TEXT_ASSIST}
             className={fieldClass}
           />
         </div>
@@ -263,35 +266,11 @@ export function CardForm({
         />
 
         {/* PIN-protect toggle */}
-        <label className={`flex items-center gap-2 pt-2 border-t border-divider ${!pinConfigured && !pinProtected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-          <input
-            type="checkbox"
-            checked={pinProtected}
-            onChange={(e) => onPinProtectedChange(noteId, e.target.checked)}
-            // Read-only locks CONTENT, not protection: toggling the PIN gate
-            // changes no data, so it stays available on a locked item.
-            disabled={!pinConfigured && !pinProtected}
-            className="rounded accent-accent"
-          />
-          <span className="text-body text-pn-muted">
-            {t('cardForm.requirePin')}
-          </span>
-          <button
-            type="button"
-            onClick={(e) => { e.preventDefault(); setShowPinInfo(true); }}
-            className="text-accent/60 hover:text-accent transition p-1 -m-1"
-            aria-label={t('cardForm.whatDoesThisDo')}
-          >
-            <Info />
-          </button>
-        </label>
-
-        {showPinInfo && <PinInfoModal onClose={() => setShowPinInfo(false)} />}
-        {!pinConfigured && !pinProtected && (
-          <p className="text-meta text-pn-muted -mt-2">
-            {t('cardForm.setUpPinFirst')}
-          </p>
-        )}
+        <PinProtectToggle
+          checked={pinProtected}
+          pinConfigured={pinConfigured}
+          onChange={(next) => onPinProtectedChange(noteId, next)}
+        />
 
         <VaultFormActions locked={locked} isNew={isNew} saveError={saveError} onSave={onSave} onCancel={onCancel} />
       </div>

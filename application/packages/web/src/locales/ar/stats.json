@@ -383,6 +383,7 @@
       "noEntry": "لا تدوينة يومية",
       "doseLens": "بلغ متوسط المزاج {{before}} في الأيام الـ{{nBefore}} السابقة و{{after}} في الأيام الـ{{nAfter}} التالية.",
       "doseLensHeading": "حول كل تغيير جرعة",
+      "doseLensLocked": "الترقية إلى Pro لمعرفة كيف تحرّك تغييرات الجرعة مزاجك",
       "doseLensShort_zero": "مطلوب {{count}} أيام مسجّلة إضافية حوله.",
       "doseLensShort_one": "مطلوب يوم مسجّل إضافي واحد حوله.",
       "doseLensShort_two": "مطلوب يومان مسجّلان إضافيان حوله.",

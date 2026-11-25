@@ -41,6 +41,7 @@
     "noDocuments": "Nessun documento.",
     "noImages": "Nessuna immagine.",
     "noAudioFiles": "Nessun file audio.",
+    "noUnusedFiles": "Nessun file non usato.",
     "emptyTypesHint": "Immagini, documenti, audio, video e file zip. Fino a {{max}} MB per file.",
     "uploadFiles": "Carica file",
     "menuShow": "Mostra",
@@ -233,7 +234,7 @@
     "tagCount_other": "{{count}} tag",
     "entryDate": "Data della pagina",
     "noDate": "Nessuna",
-    "schedule": "Pianificazione",
+    "schedule": "Data e promemoria",
     "ends": "Fine",
     "sameDay": "Stesso giorno",
     "starts": "Inizio",
@@ -317,7 +318,6 @@
     "showOneWeek": "Mostra una settimana"
   },
   "contextMenu": {
-    "newNote": "Nuova nota",
     "newTask": "Nuova attività",
     "newKanban": "Nuova bacheca Kanban",
     "newDrawing": "Nuovo disegno",
@@ -326,15 +326,12 @@
     "newSshKey": "Nuova chiave SSH",
     "newJournal": "Nuova pagina di diario",
     "newFile": "Nuovo file",
-    "exitZenMode": "Esci dalla modalità Zen",
-    "zenMode": "Modalità Zen",
     "showSidebar": "Mostra barra laterale",
     "hideSidebar": "Nascondi barra laterale",
     "showNotesList": "Mostra elenco note",
     "hideNotesList": "Nascondi elenco note",
     "resetPaneWidths": "Reimposta larghezza pannelli",
     "settings": "Impostazioni",
-    "signOut": "Esci",
     "deselect": "Deseleziona",
     "select": "Seleziona",
     "selectedCount_one": "{{count}} elemento selezionato",
@@ -364,8 +361,7 @@
     "closeOtherTabs": "Chiudi le altre schede",
     "closeAllTabs": "Chiudi tutte le schede",
     "pinTab": "Blocca scheda",
-    "unpinTab": "Sblocca scheda",
-    "newEvent": "Nuovo evento"
+    "unpinTab": "Sblocca scheda"
   },
   "demoBanner": {
     "title": "Provalo senza rischi",
@@ -836,6 +832,25 @@
     "hoursBefore_one": "{{count}} ora prima",
     "minutesBefore_one": "{{count}} minuto prima"
   },
+  "taskReminder": {
+    "set": "Imposta promemoria",
+    "edit": "Modifica promemoria",
+    "laterToday": "Più tardi oggi",
+    "pickDateTime": "Scegli data e ora",
+    "dateTime": "Data e ora",
+    "remove": "Rimuovi promemoria",
+    "onSchedule": "A cadenza fissa",
+    "afterCompletion": "Dopo il completamento",
+    "afterDone": "{{count}} {{unit}} dopo il completamento",
+    "afterDoneHint": "Conta dal giorno in cui spunti questa attività.",
+    "weekdaysShort": "Giorni feriali",
+    "everyWeeks_other": "Ogni {{count}} settimane",
+    "everyMonths_other": "Ogni {{count}} mesi",
+    "everyYears_other": "Ogni {{count}} anni",
+    "everyYears_one": "Ogni anno",
+    "everyMonths_one": "Ogni mese",
+    "everyWeeks_one": "Ogni settimana"
+  },
   "quickAdd": {
     "group": "Crea",
     "items": "Elementi",
@@ -1028,7 +1043,8 @@
   "apps": {
     "railLabel": "Estensione",
     "title": "Estensione del browser",
-    "subtitle": "Salvataggio di pagine web e gestore di password in Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf e Zen. L'estensione non conserva mai la chiave che apre le tue note.",
+    "subtitle": "Salvataggio di pagine web e gestore di password per i browser basati su Chromium e Firefox. L'estensione non conserva mai la chiave che apre le tue note.",
+    "allSupported": "Funziona in qualsiasi browser basato su Chromium o Firefox.",
     "loginsCopyFull": "La copia dei tuoi accessi nell'estensione del browser è piena. I nuovi accessi la raggiungono dopo che ne elimini alcuni.",
     "stepInstall": "Installa l'estensione",
     "stepFeatures": "Scegli cosa può fare",
@@ -1039,7 +1055,7 @@
     "thisBrowser": "Questo browser",
     "otherApps": "App per computer e telefono:",
     "desktopAll": "Tutti i download",
-    "extensionComputersOnly": "L'estensione è per Chrome, Firefox ed Edge su un computer.",
+    "extensionComputersOnly": "L'estensione è per i browser basati su Chromium e Firefox su un computer.",
     "demoSignUp": "Registrati per collegare un browser"
   },
   "cli": {

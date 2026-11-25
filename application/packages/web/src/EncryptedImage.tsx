@@ -301,7 +301,7 @@ function ImageToolbar({
       {/* One labelled button, not two bare icons: nobody found those (owner, 2026-11-18). */}
       {onText && (
         <Button
-          variant="accent"
+          variant="primary"
           icon={<TextT />}
           onPointerDown={keepEditorFocus}
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onText(e.currentTarget); }}
@@ -815,9 +815,7 @@ const EncryptedImageView = memo(function EncryptedImageView({
           </Callout>
         )}
         {error && (
-          <div className="flex items-center justify-center bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-md p-4 text-danger text-body">
-            {error}
-          </div>
+          <Callout tone="danger">{error}</Callout>
         )}
         {objectUrl && !error && (
           <img

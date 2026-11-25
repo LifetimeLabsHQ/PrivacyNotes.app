@@ -268,7 +268,12 @@ function wordHits(note: Pick<LocalNote, 'id' | 'title' | 'body'>, skip: (id: str
   return out.sort((a, b) => b.score - a.score).slice(0, PER_SIGNAL);
 }
 
-function linkHits(id: string, links: RelatedLinks, skip: (id: string) => boolean): Ranked<RelatedReason> {
+function linkHits(
+  id: string,
+  links: RelatedLinks,
+  skip: (id: string) => boolean,
+  isListable: (id: string) => boolean,
+): Ranked<RelatedReason> {
   const score = new Map<string, { score: number; best: number; reason: RelatedReason }>();
   const add = (other: string, weight: number, reason: RelatedReason) => {
     if (skip(other)) return;
@@ -279,8 +284,10 @@ function linkHits(id: string, links: RelatedLinks, skip: (id: string) => boolean
       if (weight > cur.best) Object.assign(cur, { best: weight, reason });
     }
   };
-  // Both link to the same note.
+  // Both link to the same note (skipping non-listable intermediates such as
+  // PIN-protected notes or vault credentials so they never leak as bridge reasons).
   for (const via of links.outgoing.get(id)?.ids ?? []) {
+    if (!isListable(via)) continue;
     const sources = links.incoming.get(via) ?? [];
     if (sources.length < 2 || sources.length > MAX_HUB_LINKS) continue;
     const weight = 1 / Math.log(1 + sources.length);
@@ -288,6 +295,7 @@ function linkHits(id: string, links: RelatedLinks, skip: (id: string) => boolean
   }
   // Both linked from the same note.
   for (const via of links.incoming.get(id) ?? []) {
+    if (!isListable(via)) continue;
     const targets = links.outgoing.get(via)?.ids ?? [];
     if (targets.length < 2 || targets.length > MAX_HUB_LINKS) continue;
     const weight = 1 / Math.log(1 + targets.length);
@@ -340,7 +348,7 @@ export function relatedNotes(
   const skip = (id: string) => linked.has(id) || !isListable(id);
   const meaningList: Ranked<RelatedReason> = (meaning?.(skip, PER_SIGNAL) ?? [])
     .map((id, rank) => ({ id, score: -rank, reason: { kind: 'meaning' } }));
-  const signals = [wordHits(note, skip), linkHits(note.id, links, skip), tagHits(note, skip), meaningList];
+  const signals = [wordHits(note, skip), linkHits(note.id, links, skip, isListable), tagHits(note, skip), meaningList];
   const reasonOf = new Map<string, RelatedReason>();
   // The reason shown is the signal where the note ranks best; words win a tie.
   const bestRank = new Map<string, number>();

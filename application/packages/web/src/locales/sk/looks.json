@@ -8,8 +8,10 @@
   "applyToFolderItems": "Použiť na všetky položky v tomto priečinku",
   "applyToTagItems": "Použiť na všetky položky s touto značkou",
   "icon": "Ikona",
+  "emoji": "Emoji",
   "searchPlaceholder": "Hľadaj ikony",
   "searchLogos": "Hľadaj logá",
+  "searchEmojis": "Hľadaj emoji",
   "moreLogos": "Ďalšie logá",
   "allLogos": "Všetky logá, od A po Z",
   "recent": "Nedávno použité",
@@ -41,7 +43,14 @@
     "games": "Hry",
     "learning": "Vzdelávanie a výskum",
     "trips": "Cestovanie a fitnes",
-    "privacy": "Súkromie a zabezpečenie"
+    "privacy": "Súkromie a zabezpečenie",
+    "emojiSmileys": "Smajlíky a emócie",
+    "emojiPeople": "Ľudia a telo",
+    "emojiAnimals": "Zvieratá a príroda",
+    "emojiActivities": "Aktivity",
+    "emojiObjects": "Predmety",
+    "emojiSymbols": "Symboly a znaky",
+    "emojiFlags": "Vlajky"
   },
   "icons": {
     "folder": "Priečinok",

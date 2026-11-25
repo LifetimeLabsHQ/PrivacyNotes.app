@@ -443,7 +443,7 @@
       "app": "Notion",
       "title": "Export your Notion workspace",
       "metaTitle": "How to export your Notion workspace - PrivacyNotes",
-      "lead": "Export your Notion workspace as a Markdown & CSV zip, and PrivacyNotes strips Notion's 32-character IDs, rebuilds subpages as folders, and turns page links into note-links.",
+      "lead": "Export your Notion workspace as an HTML or Markdown & CSV zip, and PrivacyNotes strips Notion's 32-character IDs, rebuilds subpages as folders, keeps columns and colors, and turns page links into note-links.",
       "sections": [
         {
           "img": {
@@ -470,23 +470,23 @@
             "width": 1576,
             "height": 600
           },
-          "h": "Pick Markdown & CSV, with folders on",
+          "h": "Pick HTML (recommended) or Markdown & CSV, with folders on",
           "steps": [
-            "Set Export format to \"Markdown & CSV\".",
+            "Set Export format to \"HTML\" to keep side-by-side columns, column widths, text colors and highlights. \"Markdown & CSV\" works too if you do not use columns or colors.",
             "Set Page content to \"Everything\" so your images, PDFs and attached files are included.",
             "Turn on \"Include private pages\" (or \"Include subpages\" on a single-page export) and \"Create folders for subpages\".",
             "Click Export and save the .zip file."
           ],
           "p": [
-            "HTML and PDF exports do not contain Markdown files and cannot be read by the Notion importer. Choose \"Markdown & CSV\" so your structure, links and formatting come across cleanly."
+            "PDF exports cannot be read by the Notion importer. Choose \"HTML\" so your columns, colors, structure, links and formatting come across cleanly, or \"Markdown & CSV\" for plain Markdown."
           ]
         },
         {
           "h": "What comes across",
           "p": [
             "Notion appends a 32-character ID to every exported filename and internal link. PrivacyNotes strips those IDs from every title and folder name, removes the top-level \"Private & Shared\" wrapper, and rebuilds nested subpages as folders.",
-            "Headings, lists, nested checklists, tables, code blocks with language, math, underline and quotes come across as they were. Notion callouts convert into PrivacyNotes callouts, [links and mentions between exported pages become note-links](/help/note-links), and uploaded images, PDFs and files are imported into your storage.",
-            "Database row pages import as notes inside a folder named after the database, with any Tags property added as tags. Database CSV table files are skipped and counted in the summary. Notion's own Markdown export leaves out text colors, highlights and pages in the Trash."
+            "Headings, lists, nested checklists, tables, code blocks with language, math, underline and quotes come across as they were. With HTML export, side-by-side columns (2 to 5 columns, with ratios), text colors and highlights come across too. Notion callouts convert into PrivacyNotes callouts, [links and mentions between exported pages become note-links](/help/note-links), and uploaded images, PDFs and files are imported into your storage.",
+            "Database row pages import as notes inside a folder named after the database, with any Tags property added as tags. Database CSV table files are skipped and counted in the summary. Notion's own Markdown export flattens columns and leaves out text colors, highlights and pages in the Trash."
           ]
         }
       ]
@@ -1552,6 +1552,45 @@
           "p": [
             "[Every entry lands in Journals](/help/journal) on the calendar day in the entry's own time zone. A leading heading becomes the title, and an entry without one takes its date as title. Starred and pinned entries stay pinned, and tags stay tags.",
             "Your location fills the entry's place chip, and weather, activity and music sit on one line at the top. Photos import as pictures, audio, video and PDFs as attachments, and links between entries become [note-links](/help/note-links). When one .zip holds several journals, each journal becomes a folder."
+          ]
+        }
+      ]
+    },
+    "microsoft-to-do": {
+      "app": "Microsoft To Do",
+      "title": "Microsoft To Do Exporter",
+      "metaTitle": "Microsoft To Do Exporter - Free Browser Tool - PrivacyNotes",
+      "lead": "Export your Microsoft To Do lists, subtasks, notes, and attachments with our free browser-only Microsoft To Do exporter before the June 2027 shutdown.",
+      "sections": [
+        {
+          "h": "Export your Microsoft To Do tasks in three steps",
+          "p": [
+            "Microsoft To Do has no built-in export button yet, so we built a free, open-source [Microsoft To Do exporter](https://todo.privacynotes.app) that runs directly in your browser on Windows, Mac, Linux, and mobile."
+          ],
+          "steps": [
+            "Open [todo.privacynotes.app](https://todo.privacynotes.app) and click **Sign in with Microsoft**.",
+            "Allow read-only access (`Tasks.Read`) so your browser can read your lists without changing or deleting anything.",
+            "Click **Fetch my Microsoft To Do data**, then click **Download ZIP (recommended)** to save your lists, tasks, subtasks, notes, and attachments locally."
+          ]
+        },
+        {
+          "h": "Why a browser-only exporter matters before June 2027",
+          "p": [
+            "Microsoft announced that Microsoft To Do retires on June 30, 2027, with no replacement for personal Microsoft accounts. Work and school accounts move to Microsoft Planner, while personal users are told to switch to another task app.",
+            "Instead of installing command-line binaries or copying developer tokens by hand, our web exporter connects your browser straight to Microsoft Graph in one click and works with both personal accounts (outlook.com, hotmail.com, live.com) and Microsoft 365 accounts."
+          ]
+        },
+        {
+          "h": "Private by design - nothing touches our servers",
+          "p": [
+            "The exporter is a static page with no backend and no tracking. Your browser fetches your tasks directly from Microsoft and builds the ZIP on your device, so your lists never pass through our servers. Sign-in tokens stay in temporary browser session storage and clear when you sign out or close the tab."
+          ]
+        },
+        {
+          "h": "What is inside the ZIP and what comes across",
+          "p": [
+            "The ZIP holds a structured `microsoft-to-do-export.json` backup, one readable Markdown checklist per list, a spreadsheet-ready `tasks.csv`, and your downloaded attachments. You can import that export into PrivacyNotes or any other Markdown or CSV app.",
+            "In PrivacyNotes, every list becomes a [task list](/help/tasks) keeping open and completed tasks, subtasks, Important flags, due dates, repeat schedules, categories as tags, notes, linked items, and attached files - and your notes are encrypted on your device. Individual checklist reminders do not carry over and are counted in the import summary. A bare `.json` file from the exporter or from the Microsoft Graph API also imports without attachments."
           ]
         }
       ]

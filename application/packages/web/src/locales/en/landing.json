@@ -344,7 +344,7 @@
     "extensionKeyLogin": "Fill this site's login",
     "extensionKeyBookmark": "Bookmark this page",
     "extensionAria": "Add the extension to {{name}}",
-    "extensionNote": "On computers only."
+    "extensionNote": "Works in any Chromium or Firefox-based browser. On computers only."
   },
   "ctaRepeat": {
     "getStarted": "Get started"

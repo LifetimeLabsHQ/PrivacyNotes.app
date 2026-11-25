@@ -1,6 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useAuth } from '../auth';
+import { NO_TEXT_ASSIST } from '../formFields';
 import { countLocalNotes, getDmsWipe, subscribeDmsWipe } from '../dms';
 import { Download, Hourglass } from '../icons';
 import { formatInstant } from '../intlFormat';
@@ -73,7 +74,7 @@ export function DmsReturnModal({ onBackup, hidden }: { onBackup: () => void; hid
             disabled={busy}
             placeholder="DELETE"
             autoComplete="off"
-            spellCheck={false}
+            {...NO_TEXT_ASSIST}
           />
           <ModalFooter>
             <Button action="cancel" disabled={busy} onClick={() => { setConfirming(false); setTyped(''); }} />

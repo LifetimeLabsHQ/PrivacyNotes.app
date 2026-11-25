@@ -38,7 +38,7 @@
     "blockMath": "Fórmula en bloque",
     "align": "Alineación",
     "font": "Fuente",
-    "pictureFromFiles": "Imagen de Archivos",
+    "pictureFromFiles": "Galería",
     "date": "Fecha",
     "dateTime": "Fecha y hora",
     "footnote": "Nota al pie",
@@ -260,6 +260,15 @@
     "headingsIn": "Encabezados de {{title}}",
     "noHeadingMatches": "No hay encabezados coincidentes"
   },
+  "slash": {
+    "label": "Insertar bloque",
+    "linePlaceholder": "Pulsa / para insertar bloques",
+    "filterHint": "Escribe para filtrar…",
+    "basic": "Bloques básicos",
+    "smartDate": "Fecha inteligente",
+    "askNinja": "Preguntar a Ninja por “{{query}}”",
+    "noMatches": "No hay bloques coincidentes"
+  },
   "copyBox": {
     "placeholder": "Texto para copiar con un clic"
   },
@@ -372,6 +381,23 @@
     "cardCount_many": "{{count}} tarjetas",
     "columnCount_one": "{{count}} columna",
     "columnCount_many": "{{count}} columnas"
+  },
+  "columns": {
+    "narrowWide": "Estrecha y ancha",
+    "wideNarrow": "Ancha y estrecha",
+    "removeColumns": "Quitar columnas",
+    "resizeColumn": "Arrastra para cambiar el tamaño de las columnas",
+    "barLabel": "Controles de columnas",
+    "borders": "Bordes de las columnas",
+    "borderBoxes": "Recuadros",
+    "borderSolid": "Continuo",
+    "borderDashed": "Discontinuo",
+    "borderDotted": "Punteado",
+    "borderThickness": "Grosor",
+    "borderThin": "Fino",
+    "borderMedium": "Medio",
+    "borderColorDefault": "Color predeterminado",
+    "borderTint": "Tinte suave en las columnas"
   },
   "doodle": {
     "title": "Garabato",

@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CaretDown, Check, FloppyDisk, Scales, Warning, SignIn, Vault } from '../icons';
+import { CaretDown, Check, Scales, SignIn, Vault } from '../icons';
 import { PrivacyLadder } from '../PrivacyLadder';
 import { isValidPhrase } from '@notes/shared';
 import { PhraseWordCheck, usePhraseCheck } from './PhraseWordCheck';
 import { useAuth } from '../auth';
-import { SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HELP } from '../settingsUI';
+import { SectionEyebrow, SETTINGS_HELP } from '../settingsUI';
 import { isDemoMode } from '../demo';
 import { MfaCancelledError } from '../mfaStep';
 import { useAccountLogins } from '../accountLogins';
+import { Button, Callout, FeedbackButton, StatusLine } from '../ui';
 
 type Mode = 'custodial' | 'self-custody';
 
@@ -287,7 +288,7 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
               : tAuth('custody.maxSecurityTitle')}
           </span>
           {current === mode && (
-            <span className="ml-auto mt-0.5 text-meta text-pn-muted shrink-0">
+            <span className="ms-auto mt-0.5 text-meta text-pn-muted shrink-0">
               {t('custody.current')}
             </span>
           )}
@@ -331,12 +332,14 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
     <div className="@container space-y-2.5">
       <SectionEyebrow setting="security.custody" icon={Vault}>{t('security:accountTabs.keyCustody')}</SectionEyebrow>
 
-      {sessionState.kind === 'loading' && <p className={SETTINGS_HELP} role="status">{t('custody.checkingSession')}</p>}
+      {sessionState.kind === 'loading' && <StatusLine busy>{t('custody.checkingSession')}</StatusLine>}
       {sessionState.kind === 'error' && (
-        <div className="space-y-2">
-          <p className={SETTINGS_HELP} role="alert">{t('custody.sessionUnavailable')}</p>
-          <button type="button" onClick={() => void readSession()} disabled={busy} className="text-body text-accent">{t('custody.retrySession')}</button>
-        </div>
+        <Callout
+          tone="danger"
+          action={<FeedbackButton action="retry" onClick={() => void readSession()} disabled={busy}>{t('custody.retrySession')}</FeedbackButton>}
+        >
+          {t('custody.sessionUnavailable')}
+        </Callout>
       )}
       {(sessionState.kind === 'signedOut' || sessionState.kind === 'wrongVault') && (
         <p className={SETTINGS_HELP}>{t(sessionState.kind === 'wrongVault' ? 'custody.wrongVaultSession' : 'custody.signInToChange')}</p>
@@ -381,19 +384,17 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
 
           {changing && pick === 'self-custody' && (
             <>
-              <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 px-3 py-2.5 text-compact leading-relaxed text-warning flex items-start gap-2.5">
-                <Warning aria-hidden="true" className="shrink-0 mt-0.5" />
-                <span>{t('custody.releaseWarning')}</span>
-              </div>
+              <Callout tone="warning">
+                {t('custody.releaseWarning')}
+              </Callout>
               {!releaseCheck ? (
-                <button
-                  type="button"
+                <Button
+                  icon={<Vault aria-hidden="true" />}
                   disabled={busy || !phraseReady}
                   onClick={() => { setReleaseCheck(true); onReleaseCheckChange(true); check.reset(); }}
-                  className="rounded-md border border-divider px-3 py-2 text-body text-pn-soft hover:bg-surface-1 transition"
                 >
                   {t('custody.checkSavedPhrase')}
-                </button>
+                </Button>
               ) : (
                 <>
                 <p className={`${SETTINGS_HELP} leading-relaxed`}>{t('custody.hiddenChallengePrompt')}</p>
@@ -405,9 +406,9 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
           )}
 
           {error && (
-            <div role="alert" className="rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-small p-2">
+            <Callout tone="danger">
               {error}
-            </div>
+            </Callout>
           )}
 
           {/* No Cancel. With the section always open there is nothing
@@ -422,11 +423,11 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
               cards above it, so the pane's width decides, not the
               viewport's. */}
           <div className="grid grid-cols-1 @xl:grid-cols-2 gap-2">
-            <button
-              type="button"
+            <Button
+              action="save"
+              variant="primary"
               onClick={() => void handleConfirm()}
               disabled={!canConfirm || busy}
-              className={SETTINGS_BTN_PRIMARY}
             >
               {/* Neutral label until a different option is actually
                   picked. Naming the destructive direction while the
@@ -434,7 +435,6 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
                   threat rather than a description. The disk stays put
                   through all three: it marks the control, the label says
                   which way the save goes. */}
-              <FloppyDisk aria-hidden="true" />
               {busy
                 ? t('common:state.saving')
                 : !changing
@@ -442,21 +442,19 @@ export function CustodyPanel({ phrase, onReleaseCheckChange, onOpenConnectedAcco
                   : pick === 'custodial'
                     ? t('custody.adoptConfirm')
                     : t('custody.releaseConfirm')}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              icon={<Scales aria-hidden="true" />}
               onClick={() => setLadderOpen((v) => !v)}
               aria-expanded={ladderOpen}
               aria-controls="pn-custody-ladder"
-              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-divider px-3 py-2 text-body text-pn-soft hover:bg-surface-2 transition"
             >
-              <Scales aria-hidden="true" />
               {tAuth('chooseMode.compareOptions')}
               <CaretDown
                 aria-hidden="true"
                 className={`transition-transform ${ladderOpen ? 'rotate-180' : ''}`}
               />
-            </button>
+            </Button>
           </div>
 
           {ladderOpen && <PrivacyLadder id="pn-custody-ladder" />}

@@ -21,6 +21,7 @@ import { useFolderRefresh } from '../markdownFolder/useFolderRefresh';
 export function useMarkdownPillar({
   view,
   setView,
+  openMarkdownView,
   notes,
   setNotes,
   setSelectedId,
@@ -34,6 +35,10 @@ export function useMarkdownPillar({
 }: {
   view: View;
   setView: Dispatch<SetStateAction<View>>;
+  /** Switches to the Markdown pillar through the shell's view handler so any
+   *  open note (tabbed or not) clears out of the editor pane instead of hiding
+   *  the opened file underneath it. */
+  openMarkdownView: () => void;
   notes: LocalNote[];
   setNotes: Dispatch<SetStateAction<LocalNote[]>>;
   setSelectedId: Dispatch<SetStateAction<string | null>>;
@@ -238,12 +243,13 @@ export function useMarkdownPillar({
   // selection dropped by a background refresh would be its own bug.
   useFolderRefresh(markdownDir, setMarkdownDir);
   // A double-click in Finder or Explorer lands here, once auth and the app lock
-  // are behind us. Switching the view is part of honouring it: opening a file
-  // into a pillar the user cannot see would look like nothing happened.
+  // are behind us. Switching through `openMarkdownView` clears any open note
+  // (tabbed or not), so the file is shown straight away instead of sitting
+  // behind an active tab.
   usePendingFileOpens(
     (file, launched) => {
       setMarkdownFile(file);
-      setView('markdown');
+      openMarkdownView();
       // Started by the file: the window takes the file window size too. An app
       // that was already open keeps its size; only the panes fold.
       if (launched) void import('../markdownFolder/fileWindow').then((m) => m.enterFileWindow());

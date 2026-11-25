@@ -344,7 +344,7 @@
     "extensionKeyLogin": "이 사이트의 로그인 채우기",
     "extensionKeyBookmark": "이 페이지 북마크",
     "extensionAria": "{{name}}에 확장 프로그램 추가",
-    "extensionNote": "컴퓨터에서만 사용할 수 있어요."
+    "extensionNote": "Chromium 또는 Firefox 계열 브라우저 어디서나 작동해요. 컴퓨터에서만 사용할 수 있어요."
   },
   "ctaRepeat": {
     "getStarted": "시작하기"

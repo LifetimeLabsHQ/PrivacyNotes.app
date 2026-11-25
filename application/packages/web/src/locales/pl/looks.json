@@ -8,8 +8,10 @@
   "applyToFolderItems": "Zastosuj do wszystkich elementów w tym folderze",
   "applyToTagItems": "Zastosuj do wszystkich elementów z tym tagiem",
   "icon": "Ikona",
+  "emoji": "Emoji",
   "searchPlaceholder": "Szukaj ikon",
   "searchLogos": "Szukaj logo",
+  "searchEmojis": "Szukaj emoji",
   "moreLogos": "Więcej logo",
   "allLogos": "Wszystkie loga, od A do Z",
   "recent": "Ostatnio używane",
@@ -41,7 +43,14 @@
     "games": "Gry",
     "learning": "Nauka i badania",
     "trips": "Podróże i fitness",
-    "privacy": "Prywatność i bezpieczeństwo"
+    "privacy": "Prywatność i bezpieczeństwo",
+    "emojiSmileys": "Buźki i emocje",
+    "emojiPeople": "Ludzie i ciało",
+    "emojiAnimals": "Zwierzęta i przyroda",
+    "emojiActivities": "Aktywności",
+    "emojiObjects": "Przedmioty",
+    "emojiSymbols": "Symbole i znaki",
+    "emojiFlags": "Flagi"
   },
   "icons": {
     "folder": "Folder",

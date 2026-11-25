@@ -13,6 +13,7 @@ import { ReminderPermissionHint } from './notesView/useReminders';
 import { useProgressiveReveal } from './useProgressiveReveal';
 import { routeItemClick } from './itemList';
 import { DayMarks, TrackersMenu, type CalendarTrackers } from './CalendarTrackers';
+import { Button, EmptyState } from './ui';
 
 /**
  * The Calendar pillar's list pane: the agenda. The coming days with their
@@ -277,7 +278,7 @@ export default function CalendarAgenda({ index, onOpen, search, strip, weekNumbe
       )}
       <ReminderPermissionHint />
       <div ref={scroller} onScroll={onScroll} className="@container/agenda relative flex-1 min-h-0 overflow-y-auto overscroll-contain pb-16">
-        {days.length === 0 && <p className="p-4 text-compact text-pn-muted text-center">{t('notes:empty.noMatches')}</p>}
+        {days.length === 0 && <EmptyState compact>{t('notes:empty.noMatches')}</EmptyState>}
         <ul>
           {days.filter((d) => d.offset < reveal.visible).map(({ day, entries, offset }, i) => {
             const prev = days[i - 1];
@@ -352,14 +353,14 @@ export default function CalendarAgenda({ index, onOpen, search, strip, weekNumbe
         {!query && <div ref={tail} aria-hidden="true" />}
       </div>
       {todayOut && (
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          icon={<ArrowLineDown aria-hidden="true" className={todayOut === 'above' ? 'rotate-180' : ''} />}
           onClick={() => goTo(today)}
-          className="absolute bottom-4 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-20 inline-flex items-center gap-1.5 rounded-full bg-accent-fill text-white shadow-lg px-3 py-1.5 text-compact font-semibold"
+          className="absolute bottom-4 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-20 !rounded-full !bg-accent-fill !text-white !border-transparent shadow-lg !px-3 !py-1.5 !text-compact"
         >
-          <ArrowLineDown aria-hidden="true" className={todayOut === 'above' ? 'rotate-180' : ''} />
           {(() => { const w = relativeDayName(0); return `${w.charAt(0).toLocaleUpperCase(intlLocale())}${w.slice(1)}`; })()}
-        </button>
+        </Button>
       )}
     </div>
   );

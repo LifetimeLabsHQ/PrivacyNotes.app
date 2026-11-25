@@ -260,8 +260,11 @@ export const TableWithMarkdown = Table.extend<TableOptions & TableFormulaOptions
   addOptions() {
     // `formulasUnlocked` is a callback, not a flag: Editor.tsx reads the Pro
     // state through a ref, so an upgrade mid-session opens the menu without
-    // rebuilding the extension set.
-    return { ...this.parent!(), View: ColumnWidthTableView, formulasUnlocked: () => false };
+    // rebuilding the extension set. `cellMinWidth: 80` replaces TipTap's 25px
+    // default (narrower than a sortable header's padding) and matches the
+    // 80px cell floor in index.css so wide tables scroll in `.tableWrapper`
+    // instead of crushing columns on narrow viewports or split panes.
+    return { ...this.parent!(), cellMinWidth: 80, View: ColumnWidthTableView, formulasUnlocked: () => false };
   },
   addAttributes() {
     return {

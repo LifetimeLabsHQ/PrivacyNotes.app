@@ -38,7 +38,7 @@
     "blockMath": "สูตรแบบบล็อก",
     "align": "การจัดแนว",
     "font": "แบบอักษร",
-    "pictureFromFiles": "รูปภาพจากไฟล์",
+    "pictureFromFiles": "แกลเลอรี",
     "date": "วันที่",
     "dateTime": "วันที่และเวลา",
     "footnote": "เชิงอรรถ",
@@ -255,6 +255,15 @@
     "headingsIn": "หัวเรื่องใน {{title}}",
     "noHeadingMatches": "ไม่พบหัวเรื่องที่ตรงกัน"
   },
+  "slash": {
+    "label": "แทรกบล็อก",
+    "linePlaceholder": "กด / เพื่อแทรกบล็อก",
+    "filterHint": "พิมพ์เพื่อกรอง…",
+    "basic": "บล็อกพื้นฐาน",
+    "smartDate": "วันที่อัจฉริยะ",
+    "askNinja": "ถาม Ninja หา “{{query}}”",
+    "noMatches": "ไม่พบบล็อกที่ตรงกัน"
+  },
   "copyBox": {
     "placeholder": "ข้อความที่คัดลอกได้ในคลิกเดียว"
   },
@@ -361,6 +370,23 @@
     "addColumn": "เพิ่มคอลัมน์",
     "removeBoard": "นำบอร์ดออก",
     "moveTo": "ย้ายไปที่"
+  },
+  "columns": {
+    "narrowWide": "แคบและกว้าง",
+    "wideNarrow": "กว้างและแคบ",
+    "removeColumns": "นำคอลัมน์ออก",
+    "resizeColumn": "ลากเพื่อปรับขนาดคอลัมน์",
+    "barLabel": "ตัวควบคุมคอลัมน์",
+    "borders": "เส้นขอบคอลัมน์",
+    "borderBoxes": "แบบกล่อง",
+    "borderSolid": "เส้นทึบ",
+    "borderDashed": "เส้นประ",
+    "borderDotted": "เส้นจุด",
+    "borderThickness": "ความหนา",
+    "borderThin": "บาง",
+    "borderMedium": "ปานกลาง",
+    "borderColorDefault": "สีเริ่มต้น",
+    "borderTint": "สีพื้นคอลัมน์อ่อน"
   },
   "doodle": {
     "title": "ภาพขีดเขียน",

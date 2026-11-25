@@ -41,6 +41,7 @@
     "noDocuments": "文書はありません。",
     "noImages": "画像はありません。",
     "noAudioFiles": "音声ファイルはありません。",
+    "noUnusedFiles": "未使用のファイルはありません。",
     "emptyTypesHint": "画像、文書、音声、動画、zipファイル。1ファイルあたり最大{{max}} MB。",
     "uploadFiles": "ファイルをアップロード",
     "menuShow": "表示",
@@ -230,7 +231,7 @@
     "tagCount_other": "{{count}}個のタグ",
     "entryDate": "ジャーナルの日付",
     "noDate": "なし",
-    "schedule": "スケジュール",
+    "schedule": "日付とリマインダー",
     "ends": "終了日",
     "sameDay": "同じ日",
     "starts": "開始",
@@ -313,7 +314,6 @@
     "showOneWeek": "1週間を表示"
   },
   "contextMenu": {
-    "newNote": "新規ノート",
     "newTask": "新規タスク",
     "newKanban": "新規カンバンボード",
     "newDrawing": "新規ドローイング",
@@ -322,15 +322,12 @@
     "newSshKey": "新規SSH鍵",
     "newJournal": "新規ジャーナル",
     "newFile": "新規ファイル",
-    "exitZenMode": "Zenモードを終了",
-    "zenMode": "Zenモード",
     "showSidebar": "サイドバーを表示",
     "hideSidebar": "サイドバーを隠す",
     "showNotesList": "ノートリストを表示",
     "hideNotesList": "ノートリストを隠す",
     "resetPaneWidths": "ペインの幅をリセット",
     "settings": "設定",
-    "signOut": "サインアウト",
     "deselect": "選択解除",
     "select": "選択",
     "selectedCount_other": "{{count}}件を選択中",
@@ -359,8 +356,7 @@
     "closeOtherTabs": "ほかのタブを閉じる",
     "closeAllTabs": "すべてのタブを閉じる",
     "pinTab": "タブをピン留め",
-    "unpinTab": "タブのピン留めを解除",
-    "newEvent": "新規予定"
+    "unpinTab": "タブのピン留めを解除"
   },
   "demoBanner": {
     "title": "リスクなしでお試しください",
@@ -804,6 +800,22 @@
     "offOnPhone": "このスマートフォンではリマインダーがオフです",
     "turnOn": "オンにする"
   },
+  "taskReminder": {
+    "set": "リマインダーを設定",
+    "edit": "リマインダーを編集",
+    "laterToday": "今日のあとで",
+    "pickDateTime": "日時を選択",
+    "dateTime": "日時",
+    "remove": "リマインダーを削除",
+    "onSchedule": "予定どおり",
+    "afterCompletion": "完了後",
+    "afterDone": "完了から{{count}}{{unit}}",
+    "afterDoneHint": "このタスクにチェックを入れた日から数えます。",
+    "weekdaysShort": "平日",
+    "everyWeeks_other": "{{count}}週間ごと",
+    "everyMonths_other": "{{count}}か月ごと",
+    "everyYears_other": "{{count}}年ごと"
+  },
   "quickAdd": {
     "group": "作成",
     "items": "アイテム",
@@ -990,7 +1002,8 @@
   "apps": {
     "railLabel": "拡張機能",
     "title": "ブラウザ拡張機能",
-    "subtitle": "Chrome、Firefox、Edge、Brave、Vivaldi、Opera、Arc、LibreWolf、Zen で使えるウェブクリッパーとパスワードマネージャーです。ノートを開く鍵を拡張機能が持つことはありません。",
+    "subtitle": "ChromiumベースおよびFirefoxベースのブラウザで使えるウェブクリッパーとパスワードマネージャーです。ノートを開く鍵を拡張機能が持つことはありません。",
+    "allSupported": "ChromiumベースまたはFirefoxベースのどのブラウザでも使えます。",
     "loginsCopyFull": "ブラウザ拡張機能が持つログイン情報のコピーがいっぱいです。いくつか削除すると、新しいログイン情報が届くようになります。",
     "stepInstall": "拡張機能をインストール",
     "stepFeatures": "使う機能を選ぶ",
@@ -1001,7 +1014,7 @@
     "thisBrowser": "このブラウザ",
     "otherApps": "デスクトップ・スマートフォン用アプリ:",
     "desktopAll": "すべてのダウンロード",
-    "extensionComputersOnly": "拡張機能は、コンピューターの Chrome、Firefox、Edge 用です。",
+    "extensionComputersOnly": "拡張機能は、コンピューターのChromiumベースおよびFirefoxベースのブラウザ向けです。",
     "demoSignUp": "ブラウザを接続するにはアカウントを作成してください"
   },
   "cli": {

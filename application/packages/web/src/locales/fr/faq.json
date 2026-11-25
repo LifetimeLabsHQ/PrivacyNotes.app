@@ -307,6 +307,16 @@
         "Oui. L'appli est local-first : [tes notes vivent dans une base de données sur ton appareil](/fr/help/data-location), donc lire, écrire et [chercher fonctionnent sans aucune connexion](/fr/help/search-local). Les changements se synchronisent automatiquement dès que tu repasses en ligne, et [une image ou un fichier ajouté hors ligne attend sur cet appareil](/fr/help/upload-failed) et s'envoie à ce moment-là aussi. [Ninja](/fr/help/ninja) fonctionne aussi hors ligne ; seul l'enregistrement d'une page web en note attend une connexion."
       ]
     },
+    "local-only": {
+      "q": "Comment utiliser un coffre local uniquement, sans compte ?",
+      "a": [
+        "Ouvre l'app de bureau ou mobile (macOS, Windows, Linux, iOS ou Android), choisis \"Générer une phrase\" sur l'écran de connexion et laisse \"Synchroniser entre tes appareils\" décoché, le choix par défaut. Cela crée un coffre chiffré sur ton appareil sans aucun enregistrement sur le serveur, et il fonctionne hors ligne dès le départ.",
+        "**Comment fonctionne le mode Local uniquement :**",
+        "- **Hors ligne par défaut :** notes, tâches, journaux, éléments du coffre, fichiers, images, verrouillage par PIN et biométrique, recherche et [sauvegardes automatiques](/fr/help/automatic-backups) fonctionnent tous sur ton appareil, sans compte.\n- **Sauvegarde ton coffre :** comme rien n'atteint nos serveurs, perdre l'appareil ou désinstaller l'app supprime tes notes. Active les [sauvegardes automatiques](/fr/help/automatic-backups) dans Paramètres > Sauvegarde > Automatique, ou exporte une copie manuelle dans Paramètres > Sauvegarde > Manuelle.\n- **Active la synchronisation ou passe à Pro plus tard :** ouvre Paramètres > ID & Sync et choisis \"Activer la synchronisation\" à tout moment. Tu peux aussi passer à Pro tout en gardant la synchronisation désactivée : le paiement enregistre un ID de compte pour Pro tandis que tes notes restent locales.\n- **Restaure des sauvegardes d'un autre appareil :** ouvre Paramètres > Sauvegarde > Restaurer et choisis \"Sauvegarde chiffrée (.pnbackup, .pnbackupz)\". Si le fichier provient d'un autre coffre, l'app demande la phrase de récupération de cette sauvegarde (saisie ou QR) et importe tout sous la clé de ton coffre local.",
+        "**Tu as déjà un compte synchronisé ?** Choisis les étapes correspondant à ton forfait :",
+        "- **Compte gratuit (passer en local uniquement) :** exporte une copie dans Paramètres > Sauvegarde > Manuelle et choisis \"Tout, chiffré (.pnbackupz)\". Ensuite, [supprime ton compte cloud](/fr/help/delete-account) dans Paramètres > Compte via \"Supprimer le compte et les données...\", démarre un coffre local dans l'app de bureau ou mobile avec \"Générer une phrase\", puis [restaure la sauvegarde](/fr/help/restore-backup) à l'aide de ton ancienne phrase de récupération.\n- **Compte Pro (garder Pro et arrêter la synchronisation) :** ne supprime pas ton compte, car la suppression d'un compte supprime Pro. Ouvre **Paramètres > ID & Sync** et active [\"Mettre en pause\"](/fr/help/pause-sync). Pro reste actif et rien de nouveau n'est envoyé.\n- **Compte Pro (effacer aussi les notes synchronisées du serveur) :** exporte d'abord \"Tout, chiffré (.pnbackupz)\", supprime toutes tes notes, vide la corbeille, appuie sur \"Synchroniser\" et attends qu'il affiche Synchronisé (les fichiers dans le cloud s'effacent automatiquement au bout de cinq jours). Active \"Mettre en pause\" dans **Paramètres > ID & Sync**, puis, avant de fermer l'app, restaure ta sauvegarde dans Paramètres > Sauvegarde > Restaurer. Tes notes reviennent en local sous de nouveaux identifiants tandis que Pro reste actif."
+      ]
+    },
     "sync-conflicts": {
       "q": "Que se passe-t-il si je modifie la même note sur deux appareils en même temps ?",
       "a": [
@@ -504,6 +514,13 @@
         "[La barre de mise en forme](/fr/help/format-bar) et son menu Insérer ajoutent le reste : [tableaux](/fr/help/table-formulas), encadrés qui peuvent se replier, souligné, exposant et indice, alignement du texte, couleurs de texte et de surlignage, polices, liens, images et pièces jointes. Tout fait l'aller-retour en Markdown : \"Afficher le markdown\" sous n'importe quelle note révèle la source brute, et [les exports sont des fichiers .md propres](/fr/help/export), donc rien de ce que tu écris n'est enfermé dans un format propriétaire."
       ]
     },
+    "slash-commands": {
+      "q": "Puis-je utiliser les commandes slash / pour insérer des blocs ?",
+      "a": [
+        "Oui. Tape `/` en début de ligne ou après un espace pour ouvrir le menu des blocs, puis tape un mot comme `/tableau`, `/h2`, `/kanban` ou `/avertissement` et appuie sur Entrée. Tes choix récents restent en haut, et tu peux aussi taper une [date en langage courant](/fr/help/ninja-dates) comme `/vendredi` ou `/demain`, `/rappel` dans une tâche pour un [rappel](/fr/help/reminders), ou `/formule` dans une cellule de tableau pour les [formules de tableau](/fr/help/table-formulas). Le menu slash est gratuit ; les blocs qui nécessitent Pro affichent un badge Pro.",
+        "Le menu fonctionne en parallèle du [Markdown en direct](/fr/help/markdown-syntax) et reste disponible quand tu masques des boutons dans [la barre de mise en forme](/fr/help/format-bar) ou quand tu écris en [mode Zen](/fr/help/zen-mode). Si rien dans le menu ne correspond à ce que tu as tapé, appuie sur Entrée pour confier directement la recherche à [Ninja](/fr/help/ninja). Taper `/` dans une adresse web, une date, une fraction, un bloc de code ou du texte collé reste du texte brut et n'ouvre jamais le menu ; appuie sur Esc ou sur un espace juste après `/` pour le fermer."
+      ]
+    },
     "tasks": {
       "q": "Comment fonctionnent les tâches ?",
       "a": [
@@ -569,7 +586,7 @@
     "browser-extension": {
       "q": "Existe-t-il une extension de navigateur PrivacyNotes ?",
       "a": [
-        "Oui, pour Chrome, Edge et Firefox sur ordinateur, et elle est gratuite. Elle enregistre la page que tu lis en note, avec son texte principal et ses images, ou en signet, elle écrit une nouvelle note de ton cru, et elle peut afficher les identifiants, les cartes bancaires, les clés SSH et les signets du site où tu te trouves. Copie une valeur en un clic, ou choisis Remplir (ou appuie sur Alt+Shift+L) et l’extension saisit l’identifiant de ce site dans la page. Elle ne remplit jamais de formulaires toute seule.",
+        "Oui, pour les navigateurs basés sur Chromium et Firefox sur ordinateur, et elle est gratuite. Elle enregistre la page que tu lis en note, avec son texte principal et ses images, ou en signet, elle écrit une nouvelle note de ton cru, et elle peut afficher les identifiants, les cartes, les clés SSH et les signets du site où tu te trouves. Copie une valeur en un clic, ou choisis Remplir (ou appuie sur Alt+Maj+L) et l’extension saisit l’identifiant de ce site dans la page. Elle ne remplit jamais de formulaires toute seule.",
         "Ouvre Paramètres > Extension, ajoute l’extension depuis la boutique de ton navigateur, choisis ce qu’elle a le droit de faire, puis choisis Créer un code. Copie le code à usage unique et colle-le dans l’extension. Pour la retirer, choisis Retirer à côté d’elle sous Extensions de navigateur, sur la même page. Une extension n’occupe aucune place d’appareil. Un compte gratuit connecte un navigateur ; Pro en connecte jusqu’à 10. [Comment elle protège tes notes](/fr/help/browser-extension-security)."
       ]
     },
@@ -825,6 +842,13 @@
       "a": [
         "Oui. Les deux paramètres sont activés par défaut parce que nous aimons nos utilisateurs : nous voulons que tu [économises de l'espace de stockage](/fr/help/storage-usage) et que tu préserves ta vie privée. Économiseur d'espace réduit une grande image et l'enregistre en JPEG : Standard (par défaut) tient dans 2048 pixels à 85 % de qualité, Petit dans 1280 pixels à 75 %, et Très petit dans 1024 pixels à 60 % pour les plus petits fichiers. Supprimer les données de localisation retire les métadonnées EXIF qu'un appareil photo écrit dans une photo, position GPS comprise, avant l'enregistrement de l'image. Les deux s'appliquent à chaque image que l'app sait lire : collée dans une note, ajoutée comme fichier ou importée. Une image qu'elle ne sait pas lire, comme un AVIF, un SVG ou un fichier qui ne s'ouvre pas, est stockée telle qu'elle est arrivée quand tu l'ajoutes comme fichier ou l'importes, données de localisation comprises. Deux exceptions : un GIF garde sa taille pour que son animation fonctionne toujours, et un fichier joint à un élément du Coffre est conservé exactement tel qu'il était.",
         "Désactive l'un ou l'autre dans **Paramètres > Stockage > Images**, où les photos de contact ont un troisième interrupteur qui les garde à 512 pixels. Les paramètres ne concernent que les nouvelles images ; les fichiers qui ne sont pas des images sont stockés exactement tels quels. Les images HEIC et TIFF sont converties en JPEG, parce que seul Safari peut les afficher. [Une sauvegarde que tu restaures](/fr/help/restore-backup) est réécrite octet par octet."
+      ]
+    },
+    "paste-screenshots": {
+      "q": "Les captures d'écran collées sont-elles aussi compressées ?",
+      "a": [
+        "Oui. Les captures d'écran et les images que tu copies et colles directement dans une note passent par la même [compression Économiseur d'espace](/fr/help/image-quality) que les fichiers joints, les images glissées et les imports. Les captures d'écran opaques classiques sont redimensionnées selon le niveau que tu as choisi et enregistrées en JPEG, ce qui réduit une capture typique à une fraction de sa taille d'origine et aide à ménager ton [quota de stockage](/fr/help/storage-usage).",
+        "Choisis entre Standard (2048 pixels à 85 % de qualité), Petit (1280 pixels à 75 %) et Très petit (1024 pixels à 60 %) dans Paramètres > Stockage > Images, ou désactive Économiseur d'espace pour conserver les originaux. Une capture d'écran aux bords transparents, comme une capture de fenêtre avec une ombre portée, est tout de même redimensionnée selon la limite choisie et enregistrée en PNG pour conserver sa transparence."
       ]
     },
     "storage-usage": {
@@ -1125,7 +1149,7 @@
       "a": [
         "Oui. Tape `=` dans une cellule de tableau pour choisir une fonction, ou écris la formule toi-même. La cellule affiche le résultat à la place du texte, et chaque résultat se met à jour dès que tu modifies une cellule qu'il lit. Les cellules se nomment par lettre de colonne et numéro de ligne, et l'en-tête compte pour la ligne 1 : ta première ligne de données est donc la ligne 2. Les résultats fonctionnent sur tous les comptes ; choisir dans le menu est réservé à Pro.",
         "Pour tout essayer d'un coup, télécharge la note d'exemple, ouvre ensuite Paramètres > Transfert > Importer, choisis **Fichiers Markdown** et sélectionne le fichier.",
-        "[Note d'exemple (.md)](/marketing/table-formulas-examples.md)",
+        "[Note d'exemple (.md)](/help/table-formulas-examples.md)",
         "Voici les fonctions, et elles se combinent avec `+`, `-`, `*`, `/`, `^` pour une puissance, et des parenthèses :",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` et `COUNT` travaillent sur une plage, comme dans `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` et `LOG` travaillent sur une seule valeur, comme dans `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` et `PHI` sont des constantes, et `RAND` donne un nombre aléatoire\n- `=B7-B2` soustrait une cellule d'une autre, et `=SUM(B2:B10)*0.2` calcule un pourcentage d'un total",
         "Clique sur une cellule qui affiche un résultat et la formule revient, prête à être modifiée. Ta note enregistre la formule elle-même, jamais le résultat : un export et toute autre appli Markdown affichent donc `=SUM(B2:B10)` exactement comme tu l'as écrit."
@@ -1426,7 +1450,7 @@
       "q": "Que contient une sauvegarde complète ?",
       "a": [
         "Tout ce que tu as créé : notes, entrées de journal avec chaque valeur notée, tâches, événements, éléments du coffre, signets, contacts, dessins, images, audio et fichiers, y compris ceux de la corbeille. Elle contient aussi ce que tu as réglé à la main : dossiers et leurs couleurs, étiquettes épinglées, thèmes personnalisés, tes médicaments, suivis personnalisés, facteurs et questions d'habitudes, les suivis que tu as activés et leurs unités, calendriers abonnés et ta disposition de l'Accueil.",
-        "Elle laisse de côté le PIN du verrouillage de l'app, l'historique des notes, la liste de tes appareils et l'apparence de l'app, comme le thème et la taille du texte. Une [restauration](/fr/help/restore-backup) ajoute ce qui manque à ton compte et garde tes modifications ultérieures. Une note que tu as mise à la corbeille ou supprimée après la sauvegarde revient. Pour garder tes suivis dans un fichier que tu peux ouvrir, utilise **Télécharger le JSON** dans Paramètres > Transfert > Suivis ([fichiers de suivis](/fr/help/tracker-json-csv))."
+        "Elle laisse de côté le PIN du verrouillage de l'app, l'historique de la note, la liste de tes appareils et l'apparence de l'app, comme le thème et la taille du texte. Une [restauration](/fr/help/restore-backup) ajoute ce qui manque à ton compte et garde tes modifications ultérieures. Une note que tu as mise à la corbeille ou supprimée après la sauvegarde revient. Pour garder tes suivis dans un fichier que tu peux ouvrir, utilise **Télécharger le JSON** dans Paramètres > Transfert > Suivis ([fichiers de suivis](/fr/help/tracker-json-csv))."
       ]
     },
     "session-expired": {

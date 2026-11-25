@@ -1,7 +1,7 @@
 import { Trans, useTranslation } from 'react-i18next';
 import { Brand } from './Brand';
-import { Modal } from './ui';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
+import { Heart } from './icons';
+import { Button, Modal, ModalFooter, SETTINGS_BTN_PRIMARY } from './ui';
 
 type Props = {
   reason: string;
@@ -24,23 +24,21 @@ export function DonationModal({ reason, onClose }: Props) {
           {t('donation.proBenefits')}
         </p>
 
-        <div className="flex gap-2 pt-2">
-          <button
-            onClick={onClose}
-            className="flex-1 rounded-md border border-divider hover:bg-pn/5 px-4 py-2 text-body transition"
-          >
+        <ModalFooter>
+          <Button action="cancel" onClick={onClose}>
             {t('donation.maybeLater')}
-          </button>
+          </Button>
           <a
             href="https://github.com/LifetimeLabsHQ/PrivacyNotes.app"
             target="_blank"
             rel="noreferrer"
             onClick={onClose}
-            className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold text-center transition`}
+            className={SETTINGS_BTN_PRIMARY}
           >
+            <Heart aria-hidden="true" className="shrink-0" />
             {t('donation.support')}
           </a>
-        </div>
+        </ModalFooter>
     </Modal>
   );
 }

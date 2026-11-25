@@ -5,9 +5,9 @@
     "factors": "Factors",
     "habits": "Habits",
     "sleep": "Sleep",
-    "sleepScore": "Sleep Score",
-    "heartRate": "Heart Rate",
-    "bloodPressure": "Blood Pressure",
+    "sleepScore": "Sleep score",
+    "heartRate": "Heart rate",
+    "bloodPressure": "Blood pressure",
     "activity": "Activity",
     "medication": "Medication",
     "meds": "Meds",
@@ -16,7 +16,7 @@
     "weight": "Weight",
     "steps": "Steps",
     "water": "Water",
-    "screenTime": "Screen Time",
+    "screenTime": "Screen time",
     "caffeine": "Caffeine",
     "pain": "Pain",
     "social": "Social",
@@ -114,9 +114,6 @@
       "good": "Good",
       "great": "Great"
     }
-  },
-  "sleepScore": {
-    "prompt": "Sleep score"
   },
   "heartRate": {
     "prompt": "Average heart rate"

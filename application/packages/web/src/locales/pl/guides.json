@@ -443,7 +443,7 @@
       "app": "Notion",
       "title": "Wyeksportuj swoją przestrzeń roboczą Notion",
       "metaTitle": "Jak wyeksportować przestrzeń roboczą Notion - PrivacyNotes",
-      "lead": "Wyeksportuj swoją przestrzeń roboczą Notion jako plik .zip w formacie Markdown & CSV, a PrivacyNotes usunie 32-znakowe identyfikatory Notion, odtworzy podstrony jako foldery i zamieni linki do stron w linki do notatek.",
+      "lead": "Wyeksportuj swoją przestrzeń roboczą Notion jako plik .zip w formacie HTML albo Markdown & CSV, a PrivacyNotes usunie 32-znakowe identyfikatory Notion, odtworzy podstrony jako foldery, zachowa kolumny i kolory oraz zamieni linki do stron w linki do notatek.",
       "sections": [
         {
           "img": {
@@ -470,23 +470,23 @@
             "width": 1576,
             "height": 600
           },
-          "h": "Wybierz Markdown & CSV z włączonymi folderami",
+          "h": "Wybierz HTML (zalecane) albo Markdown & CSV z włączonymi folderami",
           "steps": [
-            "Ustaw Export format na „Markdown & CSV”.",
+            "Ustaw Export format na „HTML”, aby zachować kolumny obok siebie, ich szerokości, kolory tekstu i wyróżnienia. „Markdown & CSV” też działa, jeśli nie używasz kolumn ani kolorów.",
             "Ustaw Page content na „Everything”, aby dołączyć swoje obrazy, pliki PDF i załączone pliki.",
             "Włącz „Include private pages” (lub „Include subpages” przy eksporcie jednej strony) oraz „Create folders for subpages”.",
             "Kliknij Export i zapisz plik .zip."
           ],
           "p": [
-            "Eksporty HTML i PDF nie zawierają plików Markdown i importer Notion nie może ich odczytać. Wybierz „Markdown & CSV”, aby struktura, linki i formatowanie przeszły bez zakłóceń."
+            "Importer Notion nie potrafi odczytać eksportów PDF. Wybierz „HTML”, aby Twoje kolumny, kolory, struktura, linki i formatowanie przeszły bez zakłóceń, albo „Markdown & CSV” dla czystego Markdowna."
           ]
         },
         {
           "h": "Co przechodzi",
           "p": [
             "Notion dopisuje 32-znakowy identyfikator do każdej wyeksportowanej nazwy pliku i linku wewnętrznego. PrivacyNotes usuwa te identyfikatory z każdego tytułu i nazwy folderu, pozbywa się nadrzędnego folderu „Private & Shared” i odtwarza zagnieżdżone podstrony jako foldery.",
-            "Nagłówki, listy, zagnieżdżone listy zadań, tabele, bloki kodu z językiem, wzory matematyczne, podkreślenie i cytaty przechodzą bez zmian. Ramki z Notion zamieniają się w ramki PrivacyNotes, [linki i wzmianki między wyeksportowanymi stronami stają się linkami do notatek](/pl/help/note-links), a przesłane obrazy, pliki PDF i inne pliki są importowane do Twojej pamięci.",
-            "Strony wierszy bazy danych importują się jako notatki w folderze nazwanym od tej bazy, a wartości z właściwości Tags są dodawane jako tagi. Pliki CSV tabel baz danych są pomijane i zliczane w podsumowaniu. Własny eksport Markdown z Notion pomija kolory tekstu, podświetlenia i strony w koszu."
+            "Nagłówki, listy, zagnieżdżone listy zadań, tabele, bloki kodu z językiem, wzory matematyczne, podkreślenie i cytaty przechodzą bez zmian. Przy eksporcie HTML kolumny obok siebie (od 2 do 5 kolumn, z zachowaniem proporcji), kolory tekstu i wyróżnienia też przechodzą bez zmian. Ramki z Notion zamieniają się w ramki PrivacyNotes, [linki i wzmianki między wyeksportowanymi stronami stają się linkami do notatek](/pl/help/note-links), a przesłane obrazy, pliki PDF i inne pliki są importowane do Twojej pamięci.",
+            "Strony wierszy bazy danych importują się jako notatki w folderze nazwanym od tej bazy, a wartości z właściwości Tags są dodawane jako tagi. Pliki CSV tabel baz danych są pomijane i zliczane w podsumowaniu. Własny eksport Markdown z Notion spłaszcza kolumny i pomija kolory tekstu, wyróżnienia oraz strony w koszu."
           ]
         }
       ]
@@ -1552,6 +1552,45 @@
           "p": [
             "[Każdy wpis ląduje w Dziennikach](/pl/help/journal) w dniu kalendarzowym z własnej strefy czasowej wpisu. Nagłówek na początku staje się tytułem, a wpis bez niego przyjmuje jako tytuł swoją datę. Wpisy z gwiazdką i przypięte zostają przypięte, a tagi pozostają tagami.",
             "Twoja lokalizacja wypełnia chip lokalizacji wpisu, a pogoda, aktywność i muzyka trafiają w jedną linijkę na górze. Zdjęcia importują się jako obrazy, a nagrania audio, filmy i pliki PDF jako załączniki; linki między wpisami stają się [linkami do notatek](/pl/help/note-links). Gdy jeden plik .zip zawiera kilka dzienników, każdy dziennik staje się folderem."
+          ]
+        }
+      ]
+    },
+    "microsoft-to-do": {
+      "app": "Microsoft To Do",
+      "title": "Eksporter Microsoft To Do",
+      "metaTitle": "Eksporter Microsoft To Do - Darmowe narzędzie w przeglądarce - PrivacyNotes",
+      "lead": "Wyeksportuj swoje listy, podzadania, notatki i załączniki z Microsoft To Do za pomocą naszego darmowego, działającego wyłącznie w przeglądarce eksportera Microsoft To Do przed zamknięciem usługi w czerwcu 2027 r.",
+      "sections": [
+        {
+          "h": "Wyeksportuj zadania z Microsoft To Do w trzech krokach",
+          "p": [
+            "Microsoft To Do nie ma jeszcze wbudowanego przycisku eksportu, więc stworzyliśmy darmowy [eksporter Microsoft To Do](https://todo.privacynotes.app) open source, który działa bezpośrednio w Twojej przeglądarce na Windowsie, Macu, Linuksie i telefonach."
+          ],
+          "steps": [
+            "Otwórz [todo.privacynotes.app](https://todo.privacynotes.app) i kliknij **Sign in with Microsoft**.",
+            "Zezwól na dostęp tylko do odczytu (`Tasks.Read`), aby przeglądarka mogła odczytać Twoje listy bez zmieniania ani usuwania czegokolwiek.",
+            "Kliknij **Fetch my Microsoft To Do data**, a potem **Download ZIP (recommended)**, aby zapisać lokalnie swoje listy, zadania, podzadania, notatki i załączniki."
+          ]
+        },
+        {
+          "h": "Dlaczego eksporter działający w przeglądarce ma znaczenie przed czerwcem 2027 r.",
+          "p": [
+            "Microsoft ogłosił, że Microsoft To Do zostanie wycofane 30 czerwca 2027 r. bez następcy dla prywatnych kont Microsoft. Konta służbowe i szkolne przejdą do Microsoft Planner, a użytkownicy prywatni muszą przenieść się do innej aplikacji do zadań.",
+            "Zamiast instalować narzędzia wiersza poleceń albo ręcznie kopiować tokeny programistyczne, nasz eksporter w przeglądarce łączy Twoją przeglądarkę prosto z Microsoft Graph jednym kliknięciem i działa zarówno z kontami prywatnymi (outlook.com, hotmail.com, live.com), jak i z kontami Microsoft 365."
+          ]
+        },
+        {
+          "h": "Prywatne z założenia - nic nie trafia na nasze serwery",
+          "p": [
+            "Eksporter to statyczna strona bez backendu i bez śledzenia. Twoja przeglądarka pobiera zadania bezpośrednio z Microsoftu i tworzy plik ZIP na Twoim urządzeniu, więc Twoje listy nigdy nie przechodzą przez nasze serwery. Tokeny logowania pozostają w tymczasowej pamięci sesji przeglądarki i są usuwane, gdy się wylogujesz albo zamkniesz kartę."
+          ]
+        },
+        {
+          "h": "Co jest w pliku ZIP i co przechodzi",
+          "p": [
+            "Plik ZIP zawiera ustrukturyzowaną kopię zapasową `microsoft-to-do-export.json`, jedną czytelną listę zadań w Markdownie na każdą listę, gotowy do arkusza kalkulacyjnego plik `tasks.csv` oraz Twoje pobrane załączniki. Ten eksport możesz zaimportować do PrivacyNotes albo dowolnej innej aplikacji obsługującej Markdown lub CSV.",
+            "W PrivacyNotes każda lista staje się [listą zadań](/pl/help/tasks), zachowując otwarte i ukończone zadania, podzadania, oznaczenia „Important”, terminy, reguły powtarzania, kategorie jako tagi, notatki, powiązane elementy oraz załączone pliki - a Twoje notatki są zaszyfrowane na Twoim urządzeniu. Pojedyncze przypomnienia przy zadaniach nie przechodzą i są zliczane w podsumowaniu importu. Sam plik `.json` z eksportera albo z Microsoft Graph API też się importuje, ale bez załączników."
           ]
         }
       ]

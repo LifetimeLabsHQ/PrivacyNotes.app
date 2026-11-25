@@ -26,7 +26,6 @@
     "noResults": "ไม่พบผลลัพธ์"
   },
   "deleteNote": {
-    "confirm": "ลบถาวร",
     "body": "ลบ <highlight>“{{title}}”</highlight> อย่างถาวรหรือไม่? การดำเนินการนี้ย้อนกลับไม่ได้"
   },
   "emptyTrash": {
@@ -51,7 +50,7 @@
     "copyCommand": "คัดลอกคำสั่ง"
   },
   "hotkeys": {
-    "heading": "แป้นพิมพ์ลัด",
+    "heading": "คู่มือแป้นพิมพ์ลัด",
     "typingNote": "ขณะพิมพ์ในช่องข้อความ แป้นพิมพ์ลัดส่วนใหญ่จะไม่ทำงาน ปุ่มธรรมดาอย่าง J และ K จึงยังพิมพ์ J และ K ตามปกติ",
     "cheatSheet": "สรุปแป้นพิมพ์ลัดสำหรับพิมพ์"
   },
@@ -72,12 +71,15 @@
       "toggleSidebar": "แสดงหรือซ่อนแถบด้านข้าง",
       "toggleTheme": "สลับระหว่างสว่างและมืด",
       "openSettings": "เปิดการตั้งค่า",
+      "graph": "พื้นที่ทำงานกราฟและสถานที่",
       "zen": "โหมดเซน",
+      "fullScreen": "โหมดเต็มหน้าจอ",
       "markdownView": "เปิดหรือปิดมุมมอง Markdown",
       "invisibles": "เปิดหรือปิดอักขระที่มองไม่เห็น",
       "find": "ค้นหาในโน้ต",
       "findReplace": "ค้นหาและแทนที่",
       "outline": "แสดงหรือซ่อนเค้าโครง",
+      "connections": "แสดงหรือซ่อนการเชื่อมโยง",
       "insertDate": "แทรกวันที่",
       "insertDateTime": "แทรกวันที่และเวลา",
       "clearFilters": "ล้างตัวกรอง",
@@ -131,8 +133,6 @@
     "goToFolder": "ไปที่โฟลเดอร์",
     "createTag": "สร้างแท็ก #{{name}}",
     "createFolder": "สร้างโฟลเดอร์ “{{name}}”",
-    "newTag": "แท็กใหม่",
-    "newFolder": "โฟลเดอร์ใหม่",
     "goToDay": "ไปที่วัน",
     "inText": "ในข้อความ",
     "actions": "การดำเนินการ",
@@ -172,9 +172,9 @@
   "sshKeyForm": {
     "label": "ป้ายกำกับ",
     "labelPlaceholder": "เช่น คีย์ deploy สำหรับ GitHub",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "คัดลอกคีย์สาธารณะ",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "คัดลอกคีย์ส่วนตัว",
     "downloadPublicKey": "ดาวน์โหลดคีย์สาธารณะ",
     "downloadPrivateKey": "ดาวน์โหลดคีย์ส่วนตัว",
@@ -285,6 +285,13 @@
     "features": {
       "stats": {
         "detail": "การเขียน ช่วงต่อเนื่อง และตัวติดตามของคุณตามช่วงเวลา"
+      },
+      "graph": {
+        "detail": "ลิงก์ระหว่างโน้ต สะพานเชื่อมอัจฉริยะ และจุดศูนย์รวมของคุณในแผนผังแบบโต้ตอบ"
+      },
+      "placesMap": {
+        "label": "แผนที่สถานที่",
+        "detail": "โน้ต บันทึกประจำวัน และรายชื่อติดต่อที่ปักหมุดไว้บนแผนที่ส่วนตัว"
       },
       "trackers": {
         "detail": "อารมณ์ นิสัย ปัจจัย และการใช้ยา"

@@ -52,7 +52,7 @@ export function MarkdownEmptyState({
             The card is English, so it is an LTR island, whole. */}
         <div
           dir="ltr"
-          className="w-full max-w-sm mx-auto my-auto flex flex-col items-center text-center gap-3"
+          className="w-full max-w-sm mx-auto my-auto rounded-xl border border-divider bg-surface-2 p-6 shadow-sm flex flex-col items-center text-center gap-3"
         >
           <SlidersHorizontal size={26} weight="duotone" className="text-pn-muted" />
           {/* Every string in this card reads English in every catalog, held by
@@ -72,16 +72,15 @@ export function MarkdownEmptyState({
             <code className="flex-1 min-w-0 truncate text-start font-mono text-small text-pn-soft">
               {BRAVE_FLAG_URL}
             </code>
-            <button
-              type="button"
+            <Button
+              icon={copied === 'brave-flag' ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
               onClick={() => copy(BRAVE_FLAG_URL, 'brave-flag')}
-              className="shrink-0 inline-flex items-center gap-1 text-small font-medium px-2 py-1 rounded border border-divider hover:bg-surface-2 transition"
+              className="shrink-0 !px-2 !py-1 !text-small"
             >
-              {copied === 'brave-flag' ? <Check /> : <Copy />}
               {copied === 'brave-flag'
                 ? t('markdown.braveCopied')
                 : t('markdown.braveCopy')}
-            </button>
+            </Button>
           </div>
           {/* Body size, matching the sibling empty state: this line carries the
               whole instruction now, and it is the last thing that should be
@@ -105,30 +104,32 @@ export function MarkdownEmptyState({
 
   if (support === 'needs-desktop-app') {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-center px-6 py-10 gap-3">
-        <Download size={26} weight="duotone" className="text-pn-muted" />
-        <p className="text-row font-semibold">{t('markdown.needsAppTitle')}</p>
-        {/* Two sentences, one per line: as a single string it stretched the
-            full width of the pane on a desktop window and read as a wall. The
-            break sits on the sentence boundary, so it survives translation. */}
-        <p className="text-compact text-pn-muted leading-relaxed">
-          {t('markdown.needsAppBody')}
-          <br />
-          {t('markdown.needsAppWhere')}
-        </p>
-        {/* The state exists to sell the app, so it offers the remedy it
-            names. Same target as the sidebar's Downloads entry,
-            built through `marketingHomeHref()` so it carries the reader's
-            locale slug and cannot land on the bare apex, which boots the app
-            for a signed-in visitor instead of showing the page. */}
-        <a
-          href={`${marketingHomeHref()}#downloads`}
-          target="_blank"
-          rel="noreferrer"
-          className={`text-compact font-semibold px-3 py-1.5 rounded-md ${PRIMARY_BTN_SKIN} transition mt-1`}
-        >
-          {t('markdown.getDesktopApp')}
-        </a>
+      <div className="h-full overflow-y-auto flex flex-col px-6 py-10">
+        <div className="w-full max-w-sm mx-auto my-auto rounded-xl border border-divider bg-surface-2 p-6 shadow-sm flex flex-col items-center text-center gap-3">
+          <Download size={26} weight="duotone" className="text-pn-muted" />
+          <p className="text-row font-semibold">{t('markdown.needsAppTitle')}</p>
+          {/* Two sentences, one per line: as a single string it stretched the
+              full width of the pane on a desktop window and read as a wall. The
+              break sits on the sentence boundary, so it survives translation. */}
+          <p className="text-compact text-pn-muted leading-relaxed">
+            {t('markdown.needsAppBody')}
+            <br />
+            {t('markdown.needsAppWhere')}
+          </p>
+          {/* The state exists to sell the app, so it offers the remedy it
+              names. Same target as the sidebar's Downloads entry,
+              built through `marketingHomeHref()` so it carries the reader's
+              locale slug and cannot land on the bare apex, which boots the app
+              for a signed-in visitor instead of showing the page. */}
+          <a
+            href={`${marketingHomeHref()}#downloads`}
+            target="_blank"
+            rel="noreferrer"
+            className={`text-compact font-semibold px-3 py-1.5 rounded-md ${PRIMARY_BTN_SKIN} transition mt-1`}
+          >
+            {t('markdown.getDesktopApp')}
+          </a>
+        </div>
       </div>
     );
   }
@@ -143,7 +144,7 @@ export function MarkdownEmptyState({
     // collapse to zero once the content overflows, so it centres when it fits
     // and scrolls from the top when it does not.
     <div className="h-full overflow-y-auto flex flex-col px-6 py-10">
-      <div className="w-full max-w-md mx-auto my-auto">
+      <div className="w-full max-w-lg mx-auto my-auto rounded-xl border border-divider bg-surface-2 p-6 shadow-sm">
         <MarkdownPitch />
         {reopenName && (
           <div className="rounded-lg border border-divider bg-surface-1 p-3 mt-4">

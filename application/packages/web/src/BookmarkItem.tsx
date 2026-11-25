@@ -3,15 +3,15 @@ import { useTranslation } from 'react-i18next';
 import type { LocalNote } from './db';
 import { parseLinkBody, updateLinkBody, normalizeUrl, linkDomain, duplicateBookmarkId } from './linkBody';
 import { NotesField } from './NotesField';
+import { NO_TEXT_ASSIST } from './formFields';
 import { BOOKMARK_NOTES_OFFERED } from './bookmarkNotesLaunch';
 import { SiteChip } from './NoteRow';
 import { useCopyToClipboard } from './clipboard';
 import { openExternal } from './openExternal';
 import { hasPin } from './pin';
-import { PinInfoModal } from './PinInfoModal';
 import { CaretDown, Info, NotePencil, NEW_GLYPHS } from './icons';
 import { isImeComposing } from './imeComposing';
-import { Button, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, Spinner } from './ui';
+import { Button, PinProtectToggle, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, Spinner, StatusLine } from './ui';
 import { formatInstant } from './intlFormat';
 import { DEMO_APP_URL } from './demo';
 import { withSource } from './campaignSource';
@@ -79,7 +79,6 @@ export function BookmarkItem({
   // can appear or vanish while the toggle below is on screen, and
   // localStorage fires nothing that would refresh a frozen value.
   const pinConfigured = hasPin();
-  const [showPinInfo, setShowPinInfo] = useState(false);
   /** The website-icon explainer under the URL field, collapsed by default. */
   const [iconHintOpen, setIconHintOpen] = useState(false);
   const pinProtected = note.pinProtected === 1;
@@ -190,6 +189,8 @@ export function BookmarkItem({
             readOnly={isTrash || note.locked === 1}
             dir="ltr"
             enterKeyHint="done"
+            autoComplete="off"
+            {...NO_TEXT_ASSIST}
             className="w-full min-w-0 bg-transparent px-3 py-2 text-body focus:outline-none"
           />
         </div>
@@ -202,7 +203,7 @@ export function BookmarkItem({
           {/* A fixed label keeps clipboard feedback from resizing the URL field. */}
           {t('common:actions.copy')}
         </Button>
-        <Button action="open" variant="accent" onClick={() => openExternal(savedUrl, { browser: true })} className={`shrink-0 ${wide ? '@max-[44rem]:flex-1' : '@max-[30rem]:flex-1'}`}>
+        <Button action="open" onClick={() => openExternal(savedUrl, { browser: true })} className={`shrink-0 ${wide ? '@max-[44rem]:flex-1' : '@max-[30rem]:flex-1'}`}>
           {t('shell:contacts.open')}
         </Button>
         {clip && savedUrl && (
@@ -222,14 +223,18 @@ export function BookmarkItem({
         )}
       </div>
       {clip?.job && (
-        <p className={`mt-1.5 ${SETTINGS_HELP}`} role="status">
-          {clip.job.step === 'page' ? t('clipper.stepPage') : t('clipper.stepPictures', { done: clip.job.done, total: clip.job.total })}
-        </p>
+        <div className="mt-1.5">
+          <StatusLine busy>
+            {clip.job.step === 'page' ? t('clipper.stepPage') : t('clipper.stepPictures', { done: clip.job.done, total: clip.job.total })}
+          </StatusLine>
+        </div>
       )}
       {clip?.note && !clip.job && (
-        <p className={`mt-1.5 ${SETTINGS_HELP} text-success`}>
-          {t('clipper.savedOn', { date: formatInstant(clip.note.createdAt, 'date') })}
-        </p>
+        <div className="mt-1.5">
+          <StatusLine tone="success">
+            {t('clipper.savedOn', { date: formatInstant(clip.note.createdAt, 'date') })}
+          </StatusLine>
+        </div>
       )}
       {clip?.notice && !clip.job && (
         <div className="mt-1.5 space-y-2" role="alert">
@@ -293,36 +298,12 @@ export function BookmarkItem({
       {/* PIN-protect toggle - the vault form's exact block (LoginForm),
           same strings, same info modal, same disabled state without a PIN. */}
       {!isTrash && (
-        <>
-          <label className={`mt-6 flex items-center gap-2 pt-2 border-t border-divider ${!pinConfigured && !pinProtected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-            <input
-              type="checkbox"
-              checked={pinProtected}
-              onChange={(e) => onPinProtectedChange(note.id, e.target.checked)}
-              // Read-only locks CONTENT, not protection: toggling the PIN gate
-              // changes no data, so it stays available on a locked item.
-              disabled={!pinConfigured && !pinProtected}
-              className="rounded accent-accent"
-            />
-            <span className="text-body text-pn-muted">
-              {t('common:cardForm.requirePin')}
-            </span>
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); setShowPinInfo(true); }}
-              className="text-accent/60 hover:text-accent transition p-1 -m-1"
-              aria-label={t('common:cardForm.whatDoesThisDo')}
-            >
-              <Info />
-            </button>
-          </label>
-          {showPinInfo && <PinInfoModal onClose={() => setShowPinInfo(false)} />}
-          {!pinConfigured && !pinProtected && (
-            <p className="mt-2 ps-6 text-meta text-pn-muted">
-              {t('common:cardForm.setUpPinFirst')}
-            </p>
-          )}
-        </>
+        <PinProtectToggle
+          checked={pinProtected}
+          pinConfigured={pinConfigured}
+          onChange={(next) => onPinProtectedChange(note.id, next)}
+          className="mt-6"
+        />
       )}
     </div>
   );

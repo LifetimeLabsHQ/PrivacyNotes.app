@@ -26,7 +26,6 @@
     "noResults": "結果なし"
   },
   "deleteNote": {
-    "confirm": "完全に削除",
     "body": "<highlight>「{{title}}」</highlight>を完全に削除しますか?この操作は取り消せません。"
   },
   "emptyTrash": {
@@ -72,12 +71,15 @@
       "toggleSidebar": "サイドバーを表示 / 非表示",
       "toggleTheme": "ライトとダークを切り替え",
       "openSettings": "設定を開く",
+      "graph": "グラフと場所のワークスペース",
       "zen": "Zenモード",
+      "fullScreen": "全画面モード",
       "markdownView": "Markdown表示のオン / オフ",
       "invisibles": "編集記号の表示のオン / オフ",
       "find": "ノート内を検索",
       "findReplace": "検索と置換",
       "outline": "アウトラインを表示 / 非表示",
+      "connections": "つながりを表示 / 非表示",
       "insertDate": "日付を挿入",
       "insertDateTime": "日付と時刻を挿入",
       "clearFilters": "フィルターを解除",
@@ -131,8 +133,6 @@
     "goToFolder": "フォルダへ移動",
     "createTag": "タグ #{{name}} を作成",
     "createFolder": "フォルダ「{{name}}」を作成",
-    "newTag": "新しいタグ",
-    "newFolder": "新規フォルダ",
     "goToDay": "日付へ移動",
     "inText": "本文内",
     "actions": "操作",
@@ -172,9 +172,9 @@
   "sshKeyForm": {
     "label": "ラベル",
     "labelPlaceholder": "例: GitHubデプロイキー",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "公開鍵をコピー",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "秘密鍵をコピー",
     "downloadPublicKey": "公開鍵をダウンロード",
     "downloadPrivateKey": "秘密鍵をダウンロード",
@@ -285,6 +285,13 @@
     "features": {
       "stats": {
         "detail": "執筆、連続記録、トラッカーの推移"
+      },
+      "graph": {
+        "detail": "ノートリンク、スマートブリッジ、ハブをインタラクティブなマップで表示"
+      },
+      "placesMap": {
+        "label": "場所の地図",
+        "detail": "ノート、ジャーナルの記録、連絡先をプライベートな地図にピン留め"
       },
       "trackers": {
         "detail": "気分、習慣、要因、服薬"

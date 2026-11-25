@@ -3,9 +3,9 @@ import type { TrackerSetupTab } from '../TrackerConfig';
 import type { SpaceMove } from '../NoteOptionsMenu';
 import { lazy, Suspense, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import type { UpgradeTrigger } from '../UpgradeModal';
-import type { Dispatch, ReactNode, RefObject, SetStateAction } from 'react';
+import type { CSSProperties, Dispatch, ReactNode, RefObject, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUUpLeft as Undo2Icon, ArrowUUpRight as Redo2Icon, X, ArrowLeft, ArrowCounterClockwise, Trash, DotsThreeOutlineVertical, CaretLeft, CaretRight, MarkdownLogo, TextAa, ArticleMedium, Paragraph, PushPin, MagnifyingGlass, FrameCorners, ArrowCircleUp, ArrowCircleDown, CalendarDots, CalendarPlus } from '../icons';
+import { ArrowUUpLeft as Undo2Icon, ArrowUUpRight as Redo2Icon, X, ArrowLeft, ArrowCounterClockwise, Trash, DotsThreeOutlineVertical, CaretLeft, CaretRight, MarkdownLogo, TextAa, ArticleMedium, Paragraph, PushPin, MagnifyingGlass, FrameCorners, ArrowCircleUp, ArrowCircleDown, CalendarDots, CalendarPlus, ArrowsOut } from '../icons';
 import type { AuthState } from '../auth';
 import { captureAnchor, followAnchor, type ViewAnchor } from '../viewSwitchAnchor';
 import { noteAnchor, rememberNoteAnchor } from './listPlace';
@@ -63,12 +63,19 @@ import { NoteQuickActions, HeaderDivider, type QuickActionsTier } from './NoteQu
 import { canTranslate, noteActionGuards, protectionFromForm, type NoteActionGuardDeps } from '../noteActionGuards';
 import { WeekInReview } from './WeekInReview';
 import { isImeComposing } from '../imeComposing';
+import { Banner } from '../ui';
 import { convertTypedSymbol, undoTypedSymbol, type TypedSymbolChange } from '../typedSymbols';
 import type { JournalDays } from '../notesViewUtils';
 import type { ScheduleEdit } from '../schedule';
 import { NoteStateRow, noteStates } from '../readOnlyNotice';
 import { NoteLocationChip } from './NoteLocationChip';
 import { readLocation } from '../noteLocation';
+import type { GraphLens } from '../graph/GraphModal';
+import { lazyPart } from '../chunkLoad';
+import { canOpenFullScreen, fullScreenContentWidth, type FullScreenScale } from '../fullScreen';
+
+// Loaded only when the reader enters Full screen mode (keeps controls off the boot path).
+const FullScreenControls = lazyPart(() => import('./FullScreenControls').then((m) => m.FullScreenControls));
 
 type Authed = Extract<AuthState, { status: 'authenticated' }>;
 
@@ -173,6 +180,16 @@ interface NoteEditorZen {
   setZenMode: Dispatch<SetStateAction<boolean>>;
   zenToolbar: boolean;
   setZenToolbar: Dispatch<SetStateAction<boolean>>;
+}
+
+/** Full-screen reading/presenting mode (free, desktop; GitHub #911). */
+interface NoteEditorFullScreen {
+  active: boolean;
+  scale: FullScreenScale;
+  onEnter: () => void;
+  onExit: () => void;
+  onStepScale: (direction: 1 | -1) => void;
+  onResetScale: () => void;
 }
 
 /** How much of the header row fits, and the previous/next arrows. */
@@ -301,6 +318,8 @@ export interface NoteEditorPaneProps {
   auth: Authed;
   /** Opens Settings › Wellness, the one tracker setup. */
   onOpenTrackerSettings: (tab: TrackerSetupTab) => void;
+  /** Opens the Graph and Places workspace on a specific lens and focus item. */
+  onOpenGraph?: (opts?: { lens?: GraphLens; focusId?: string | null }) => void;
 
   spellcheck: boolean;
   invisibles: boolean;
@@ -392,6 +411,7 @@ export interface NoteEditorPaneProps {
 
   layout: NoteEditorLayout;
   zen: NoteEditorZen;
+  fullScreen: NoteEditorFullScreen;
   headerNav: NoteEditorHeaderNav;
   paneRefs: NoteEditorPaneRefs;
   editing: NoteEditorEditing;
@@ -421,6 +441,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     bookmarkClip,
     auth,
     onOpenTrackerSettings,
+    onOpenGraph,
     spellcheck,
     invisibles,
     setInvisibles,
@@ -469,6 +490,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     setFolderPicker,
     layout: { gridMode, isMobile, mobileTabIndex, mobileEditing, footerVisible, keyboardUp, noteJump },
     zen: { zenMode, setZenMode, zenToolbar, setZenToolbar },
+    fullScreen,
     headerNav: { quickActionsTier, headerCompact, navTabs, canGoPrev, canGoNext, onNavigateList },
     paneRefs: {
       titleInputRef, tagInputRef, editorRef, drawingFlushRef, setHeaderRow, noteOptionsButtonRef,
@@ -507,6 +529,11 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
    * switches a bar that is not on screen.
    */
   const markdownBody = !structuredBody && !isNoteLocked(selected);
+  // Full-screen reading/presenting mode: desktop text notes only (drawings
+  // have their own full-screen canvas button in the same header slot).
+  const canFullScreen = !hasPhoneBar && canOpenFullScreen(selected, view, isNoteLocked(selected), removingProtection);
+  const inFullScreen = fullScreen.active && canFullScreen;
+  const fullScreenTitle = selected.title.trim() || (selected.type === 'journal' ? entryDayOf(selected) : '');
   /**
    * "Open notes read-only" (#824): this device opens a text note read-only
    * without writing a thing to it. Turn off edits it until the note is left;
@@ -536,7 +563,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   // shows no format bar (the bar turned off, a read-only note), and not for
   // a person who hid both: hidden in Settings means hidden everywhere.
   // Spec: docs/internal/specs/format-bar.md
-  const barShown = editorShown && (zenMode ? zenToolbar : toolbarVisible) && view !== 'trash' && !readOnlyText;
+  const barShown = !inFullScreen && editorShown && (zenMode ? zenToolbar : toolbarVisible) && view !== 'trash' && !readOnlyText;
   const barHasHistory = barShown || (barLayout.hidden.includes('undo') && barLayout.hidden.includes('redo'));
   const session = useEditorSession(
     selected,
@@ -570,6 +597,11 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
       ...prev,
       [selected.id]: selectedEditorMode === 'markdown' ? 'formatted' : 'markdown',
     }));
+  };
+  const enterFullScreen = () => {
+    editorRef.current?.flushPendingSave();
+    session.flush();
+    fullScreen.onEnter();
   };
   /**
    * The markdown row shows in the "..." menu on exactly the notes whose
@@ -874,6 +906,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     const link = editor.schema.nodeFromJSON(noteLinkNode(n));
     insertFootnote(editor, { at, inline: [link] });
   };
+  const [pinnedGraphCenterId, setPinnedGraphCenterId] = useState<string | null>(null);
   const connections = (open: boolean, onOpenChange: (open: boolean) => void) => (
     <ConnectionsPill
       note={selected}
@@ -895,10 +928,21 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
         dismissedSuggestions: setPairHidden(prev.dismissedSuggestions, suggestionPairKey(selected.id, n.id), false),
       }))}
       meaningDoor={{ pro: !proUnlocked(auth.isPro), onOpen: onOpenOnDeviceAi }}
+      itemStyles={userSettings.itemStyles}
+      folders={userSettings.folders}
+      isPro={proUnlocked(auth.isPro)}
+      pinnedCenterId={pinnedGraphCenterId}
+      onPinnedCenterChange={setPinnedGraphCenterId}
+      onOpenFullGraph={(id) => {
+        onOpenGraph?.({ lens: 'graph', focusId: id });
+      }}
       isNoteLocked={isNoteLocked}
       onOpen={onRevealNote}
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) setPinnedGraphCenterId(null);
+        onOpenChange(nextOpen);
+      }}
       tabIndex={isMobile ? -1 : undefined}
       idle={idle}
     />
@@ -912,7 +956,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   };
 
   // A drawing always shows its toolbar: the canvas has no other one.
-  const barBelow = barPosition === 'bottom' && (selected.type === 'drawing'
+  const barBelow = !inFullScreen && barPosition === 'bottom' && (selected.type === 'drawing'
     || ((zenMode ? zenToolbar : toolbarVisible) && view !== 'trash' && !readOnlyText));
 
   // The format bar's row when it sits at the bottom: outside the scrolling
@@ -936,7 +980,8 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           per-note actions collapse into the "..." menu and the
           markdown-toolbar + Exit Zen toggles sit at the row's end. */}
       {/* data-pn-dock-header: the docked Settings panel starts below it (#741). */}
-      <div data-pn-dock-header className={`flex justify-center min-h-11 sm:min-h-14 py-1.5 sm:py-0 sm:h-14 border-b border-divider shrink-0`}>
+      {!inFullScreen && (
+      <div data-pn-dock-header className={`flex justify-center min-h-11 sm:min-h-14 py-1.5 sm:py-0 sm:h-14 border-b border-divider shrink-0 select-none`}>
         <div
           ref={setHeaderRow}
           // min-w-0 is load-bearing twice over. A flex item defaults to
@@ -1226,6 +1271,19 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
             </button>
           </HoverLabel>
         )}
+        {/* Full-screen reading/presenting mode for text notes on desktop (#911). */}
+        {canFullScreen && !headerCompact && !zenMode && (
+          <HoverLabel label={t('notes:drawing.fullScreen')} keys={keyText('fullScreen')} position="below">
+            <button
+              type="button"
+              onClick={enterFullScreen}
+              aria-label={t('notes:drawing.fullScreen')}
+              className={HEADER_BTN}
+            >
+              <ArrowsOut size={HEADER_ICON} aria-hidden="true" />
+            </button>
+          </HoverLabel>
+        )}
         {/* The toolbar toggle holds this place in both views: the Markdown
             view has a bar of its own, which ends with the way back to
             formatted text. Spec: docs/internal/specs/editor-mode-toggle.md */}
@@ -1343,6 +1401,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               {...(canSwitchEditorMode
                 ? { editorMode: selectedEditorMode, onToggleEditorMode: toggleEditorMode }
                 : {})}
+              {...(canFullScreen ? { onFullScreen: enterFullScreen } : {})}
               // Only while the device switch is on: a note never turns it on (S2, S6).
               {...(canSwitchEditorMode && spellcheck
                 ? { spellcheck: { on: !noteSpellOff, onToggle: () => setNoteSpellcheck(selected.id, noteSpellOff) } }
@@ -1390,19 +1449,17 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
         )}
         </div>
       </div>
+      )}
       {/* Not backed up: the server refused this note on the last pass. Sits
           under the header so the header keeps its fixed height, and has no
           dismiss - the only thing that clears it is a pass that pushes the
           note. Spec: docs/internal/design/ui-patterns.md (the not-backed-up state) */}
-      {pushFailure && (
-        <div
-          role="status"
-          className="shrink-0 border-b border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-4 sm:px-6 py-2 text-body text-amber-800 dark:text-amber-300"
-        >
+      {!inFullScreen && pushFailure && (
+        <Banner tone="warning">
           {pushFailure.reason === 'too_large'
             ? t('editor.notBackedUpTooLarge')
             : t('editor.notBackedUpFailed', { message: pushFailure.message })}
-        </div>
+        </Banner>
       )}
       {/* PIN-protect gate - covers the editor until the user
           unlocks. Unlocking here sets the shared session
@@ -1509,6 +1566,8 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               onTitleChange={handleTitleChange}
               onBodyChange={(id, body) => void handleBodyChange(id, body)}
               onPinProtectedChange={setProtectionFromForm}
+              onShowOnMap={onOpenGraph && view !== 'trash' && selected.pinProtected !== 1 ? () => onOpenGraph({ lens: 'places', focusId: selected.id }) : undefined}
+              placesPro={!auth.isPro}
             />
           ) : selected.type === 'link' ? (
             <BookmarkItem
@@ -1546,7 +1605,28 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
         </NotesDockContext.Provider>
       ) : (
         <>
-        <div ref={setScroller} className={`flex-1 overflow-y-auto overflow-x-hidden pt-0 ${footerVisible ? (footerPinned && bodyOverflows ? PINNED_SCROLLER : 'pb-2') : 'pb-[max(0.5rem,var(--pn-safe-bottom))]'}`}>
+        {inFullScreen && (
+          <Suspense fallback={null}>
+            <FullScreenControls
+              scale={fullScreen.scale}
+              onStep={fullScreen.onStepScale}
+              onReset={fullScreen.onResetScale}
+              onExit={fullScreen.onExit}
+            />
+          </Suspense>
+        )}
+        <div
+          ref={setScroller}
+          style={inFullScreen ? ({
+            '--pn-fs-scale': String(fullScreen.scale),
+            '--pn-fs-content-max': fullScreenContentWidth(fullScreen.scale),
+          } as CSSProperties) : undefined}
+          className={`flex-1 overflow-y-auto overflow-x-hidden select-none ${
+            inFullScreen
+              ? 'pn-fullscreen-note py-12 sm:py-16'
+              : `pt-0 ${footerVisible ? (footerPinned && bodyOverflows ? PINNED_SCROLLER : 'pb-2') : 'pb-[max(0.5rem,var(--pn-safe-bottom))]'}`
+          }`}
+        >
           {/* Tags + tracker pills + week-in-review scroll with the
               editor so they don't permanently eat vertical space
               on mobile. The toolbar inside Editor is sticky.
@@ -1555,10 +1635,15 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               editor wrapper below handles horizontal scroll.
               pn-content-col caps the reading width so nothing
               stretches edge-to-edge on ultrawide displays. */}
-          <div className="pn-content-col flex min-h-full flex-col" data-content-col data-split={split ? '' : undefined}>
+          <div className="pn-content-col flex min-h-full flex-col" data-content-col data-split={!inFullScreen && split ? '' : undefined}>
+          {inFullScreen && fullScreenTitle && (
+            <h1 dir="auto" className="pn-fullscreen-title select-text px-4 sm:px-6 font-bold tracking-tight text-pn">
+              {fullScreenTitle}
+            </h1>
+          )}
           {/* A read-only note keeps its folder and tags in view, as text that
               does not change here (GitHub #706). */}
-          {!zenMode && view !== 'trash' && traits.tagRow && (
+          {!zenMode && !inFullScreen && view !== 'trash' && traits.tagRow && (
             <div ref={setStickyTagRow} className="pn-tagrow sticky top-0 z-20 bg-surface-1/95 backdrop-blur">
             <TagInput
               key={`tags-${selected.id}`}
@@ -1578,6 +1663,8 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                     open={locationOpenFor === selected.id}
                     onOpenChange={(o) => setLocationOpenFor(o ? selected.id : null)}
                     onPatch={(patch) => handleTrackersPatch(selected.id, patch as JournalTrackerData)}
+                    onShowOnMap={onOpenGraph && selected.pinProtected !== 1 ? () => onOpenGraph({ lens: 'places', focusId: selected.id }) : undefined}
+                    placesPro={!auth.isPro}
                     {...(traits.autoPlace ? { autoType: traits.autoPlace } : {})}
                   />
                 </>
@@ -1677,7 +1764,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
             />
             </div>
           )}
-          {!zenMode && view !== 'trash' && selected.type === 'event' && (() => {
+          {!zenMode && !inFullScreen && view !== 'trash' && selected.type === 'event' && (() => {
             const s = scheduleOf(selected.trackers as Record<string, unknown> | undefined, 'event');
             if (!s) return null;
             return (
@@ -1693,7 +1780,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               />
             );
           })()}
-          {!zenMode && selected.type === 'journal' && (
+          {!zenMode && !inFullScreen && selected.type === 'journal' && (
             <TrackerPills
               data={(selected.trackers as JournalTrackerData) ?? {}}
               onChange={(next) => handleTrackersChange(selected.id, next)}
@@ -1708,16 +1795,16 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               onOpenSetup={onOpenTrackerSettings}
             />
           )}
-          {proUnlocked(auth.isPro) && selected.type === 'journal' && isWeekJournal(selected) && (
+          {!inFullScreen && proUnlocked(auth.isPro) && selected.type === 'journal' && isWeekJournal(selected) && (
             <WeekInReview notes={notes} medications={userSettings.medications} isNoteLocked={isNoteLocked} />
           )}
           {/* The rich editor shows the hint itself, on the row of its corner
               pills; the markdown source view has no pills, so it goes here. */}
           {/* Pinned under the tag row, as over the rich editor (#830). A
               read-only note has no source bar to share the place with. */}
-          {selectedEditorMode === 'markdown' && <NoteStateRow states={states} place="source" {...stateActions} />}
+          {!inFullScreen && selectedEditorMode === 'markdown' && <NoteStateRow states={states} place="source" {...stateActions} />}
           <div className="px-4 sm:px-6 flex flex-1 flex-col min-w-0">
-            {selectedEditorMode === 'markdown' ? (
+            {!inFullScreen && selectedEditorMode === 'markdown' ? (
               /* No corner pills here. Find and replace come from the keys
                  and the "..." menu and open in the view's own bar; the
                  outline has no headings to read off a plain textarea. The
@@ -1753,12 +1840,13 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 noSpellcheck={noteSpellOff}
                 place={readLocation(selected.trackers as Record<string, unknown> | undefined)}
                 onChange={session.onChange}
-                readOnly={view === 'trash' || readOnlyText}
+                readOnly={inFullScreen || view === 'trash' || readOnlyText}
                 onFocusChange={(focused) => {
                   setEditorFocused(focused);
                   if (focused) setCursorNoteId(selected.id);
                 }}
-                toolbarVisible={zenMode ? zenToolbar : toolbarVisible}
+                toolbarVisible={inFullScreen ? false : (zenMode ? zenToolbar : toolbarVisible)}
+                hideChrome={inFullScreen}
                 isPro={auth.isPro ?? false}
                 onOpenUpgrade={(trigger) => setShowUpgrade({ trigger })}
                 // A note created from a single uploaded file carries that
@@ -1805,7 +1893,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 pointer on it holds it. Hidden, it is inert, so it never catches
                 a click meant for the text. Phones carry the arrow in the bottom
                 bar instead. */}
-            {noteJump && (
+            {!inFullScreen && noteJump && (
               <div
                 inert={!noteJump.scrolling}
                 onMouseEnter={() => noteJump.keepShown(true)}
@@ -1820,7 +1908,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 </EditorSlotPill>
               </div>
             )}
-            {!zenMode && (
+            {!zenMode && !inFullScreen && (
               // Pinned, the row sticks to the pane's bottom edge on screens
               // with the desktop footer, so the counts stay in view in a long
               // note; the jump pill above moves up to clear it. Its fill is the pane's own, so it reads as no band; a note that does not scroll keeps it in place. Phones keep

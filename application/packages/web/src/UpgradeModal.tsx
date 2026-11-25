@@ -266,10 +266,9 @@ export function UpgradeModal({ onClose, pubkey, onCheckoutComplete, onGraduateLo
  *  for every gate; NotesView keeps the value for what happens around it: the
  *  zen preview behind the window and the theme builder's return after it. */
 export type UpgradeTrigger =
-  | 'lock' | 'protect' | 'history' | 'devices' | 'zen' | 'theme' | 'storage'
+  | 'lock' | 'protect' | 'history' | 'devices' | 'graph' | 'zen' | 'theme' | 'storage'
   | 'fileSize' | 'folders' | 'looks' | 'noteIcon' | 'spaces' | 'formatBar' | 'totp' | 'replace' | 'passphrase' | 'alerts' | 'vaultFiles' | 'cli' | 'browsers' | 'smartConnections' | 'ocr' | 'translate' | 'cleanup' | null;
 
 // The Pro mark lives in proMark.tsx, a leaf the UI parts import without this
 // window and its billing code.
-export { IconUpgrade, ProGlyph, ProMark } from './proMark';
 import { IconUpgrade } from './proMark';

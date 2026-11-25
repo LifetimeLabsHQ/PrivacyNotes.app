@@ -7,6 +7,7 @@ import { decryptJson, hexToBytes, createSupabaseClient } from '@notes/shared';
 import { keepBlankLines, renderMarkdownSafe, renderNoteBody, prepareRender } from './markdownRender';
 import { marketingHomeHref } from './siteLinks';
 import { Brand } from './Brand';
+import { Callout, FeedbackButton } from './ui';
 import { readBurnSeconds } from './burnOptions';
 
 /**
@@ -272,17 +273,18 @@ export default function BurnNote() {
         {phase === 'revealed' && note && (
           <div className="space-y-4">
             {/* Self-destruct banner */}
-            <div className="flex items-center justify-between rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-4 py-2.5">
-              <span className="text-body text-danger font-mono">
+            <Callout
+              tone="danger"
+              action={
+                <FeedbackButton icon={<Fire aria-hidden="true" />} onClick={handleDestroy}>
+                  {t('burnView.revealed.clearNow')}
+                </FeedbackButton>
+              }
+            >
+              <span className="font-mono">
                 {t('burnView.revealed.countdown', { time: formatTime(countdown ?? 0) })}
               </span>
-              <button
-                onClick={handleDestroy}
-                className="text-small font-medium text-red-500 hover:text-red-700 dark:hover:text-red-300 transition"
-              >
-                {t('burnView.revealed.clearNow')}
-              </button>
-            </div>
+            </Callout>
 
             {/* Note content. `contain: paint` makes the card the containing
                 block and stacking context for everything inside it, so a
@@ -387,14 +389,9 @@ export default function BurnNote() {
 
         {/* Error state */}
         {phase === 'error' && (
-          <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-8 text-center space-y-3">
-            <p className="text-heading font-semibold text-danger">
-              {t('burnView.error.heading')}
-            </p>
-            <p className="text-body text-pn-muted">
-              {errorMsg || t('burnView.error.fallback')}
-            </p>
-          </div>
+          <Callout tone="danger" title={t('burnView.error.heading')}>
+            {errorMsg || t('burnView.error.fallback')}
+          </Callout>
         )}
 
         {/* No payload in the URL */}

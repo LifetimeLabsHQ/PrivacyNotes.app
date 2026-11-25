@@ -33,6 +33,7 @@ import { ensureLevel2, MfaCancelledError, mfaSessionIdentity } from './mfaStep';
 import { consumeOAuthPending, markOAuthPending } from './oauthPending';
 import { holdLocalDataLock } from './localDataLock';
 import { exchangeAccountOAuth, type AccountOAuthProvider } from './accountOAuth';
+import { openExternalAsync } from './openExternal';
 import { takeDeepLinks } from './deepLinks';
 import { withBackendNetworkAllowed } from './localOnly';
 import type { AuthState, AuthMethod, OAuthProvider } from './auth';
@@ -701,8 +702,7 @@ export function useOAuthFlows({
             return { ok: false as const, error: String(e) };
           }
         }
-        const { openUrl } = await import('@tauri-apps/plugin-opener');
-        await openUrl(data.url);
+        await openExternalAsync(data.url, { browser: true });
         // Desktop gets no callback back: the browser stops on our return
         // page and the person carries the code across. Say so, or the
         // sign-in screen sits on "Redirecting..." for ever waiting for a

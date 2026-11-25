@@ -115,9 +115,6 @@
       "great": "Ottimo"
     }
   },
-  "sleepScore": {
-    "prompt": "Punteggio del sonno"
-  },
   "heartRate": {
     "prompt": "Frequenza cardiaca media"
   },

@@ -149,17 +149,19 @@ export const HOTKEY_GROUPS: HotkeyGroup[] = [
     title: 'View',
     i18nKey: 'view',
     rows: [
-      { commands: ['openSettings'], label: 'Open settings', i18nKey: 'openSettings' },
+      // One row, so the printed sheet stays on one page.
+      { commands: ['openSettings', 'help'], label: 'Settings / keyboard help', i18nKey: 'openSettings' },
       { commands: ['toggleSidebar'], label: 'Toggle sidebar', i18nKey: 'toggleSidebar' },
       { commands: ['toggleTheme'], label: 'Toggle light / dark mode', i18nKey: 'toggleTheme' },
       // In a browser the same keys are the browser's own zoom, which does
       // the same thing without passing through the page.
       { commands: ['zoomIn', 'zoomOut'], label: 'App bigger / smaller', i18nKey: 'appZoom' },
       { commands: ['zoomReset'], label: 'App back to normal size', i18nKey: 'appZoomReset' },
+      { commands: ['graph'], label: 'Graph & Places', i18nKey: 'graphWorkspace' },
       // ⌘⇧F ("focus"), not ⌘⇧Z: Z is the editor's redo, and zen must be
-      // reachable WHILE writing. Plain ⌘F stays find-in-note.
-      { commands: ['zen'], label: 'Zen / Focus mode (Pro)', i18nKey: 'zenMode' },
-      { commands: ['help'], label: 'Toggle this help', i18nKey: 'toggleHelp' },
+      // reachable WHILE writing. Plain ⌘F stays find-in-note. Combined with
+      // Full screen (#911) on one row so the printed sheet stays on one page.
+      { commands: ['zen', 'fullScreen'], label: 'Zen (Pro) / Full screen', i18nKey: 'zenMode' },
     ],
   },
 ];

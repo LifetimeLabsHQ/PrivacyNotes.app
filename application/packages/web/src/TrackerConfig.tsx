@@ -22,14 +22,13 @@ import { ColorSwatch } from './ColorSwatch';
 import { setItemLook } from './itemStyles';
 import { loadLocalSettings } from './userSettings';
 import { proUnlocked } from './demo';
-import { IconUpgrade } from './UpgradeModal';
 import { HoverLabel } from './HoverLabel';
 import { isImeComposing } from './imeComposing';
 import { toLocalIso } from './notesViewUtils';
 import { formatDay } from './intlFormat';
 import { Switch } from './Switch';
 import { EYEBROW_ICON_ROW, EyebrowGlyph, ROW_TITLE, RowTitle, SETTINGS_BTN, SETTINGS_BTN_PRIMARY, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_ROW, SETTINGS_SELECT, SectionEyebrow, SettingsSegmented, SettingsTabStrip, settingsTabClass, settingsChipClass, ResetDefaultsButton } from './settingsUI';
-import { Badge, Button, DeleteButton, EditRow, GlyphTile, IconButton, ItemSwitcher, SubViewHeader, TextField, type SwitcherItem } from './ui';
+import { Badge, Button, DeleteButton, EditRow, GlyphTile, IconButton, IconUpgrade, ItemSwitcher, SubViewHeader, TextField, type SwitcherItem } from './ui';
 import { TimeInput } from './CalendarSettings';
 import { setCheckInCardShown, setMedicationCardShown, useMedicationCardShown } from './checkInCardSwitch';
 import { DEFAULT_CHECK_IN_TIME, setCheckInReminder, useCheckInReminder } from './checkIn';
@@ -1027,8 +1026,9 @@ function AddCustomView({
         <div className="flex flex-col gap-1.5">
         <RowTitle icon={TextT}>{t('shell:filesList.sortName')}</RowTitle>
         <div className="relative">
-          <input
+          <TextField
             ref={nameRef}
+            size="sm"
             type="text"
             placeholder={t('config.trackerNamePlaceholder')}
             aria-label={t('config.trackerNamePlaceholder')}
@@ -1036,7 +1036,7 @@ function AddCustomView({
             aria-describedby={nameMissing ? nameErrorId : undefined}
             value={name}
             onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setNameMissing(false); }}
-            className={`w-full h-9 ps-3 pe-14 rounded-md text-compact border bg-surface-0 text-pn outline-none ${nameMissing ? 'border-danger' : 'border-divider focus:border-accent'}`}
+            className={`w-full h-9 !pe-14 !bg-surface-0${nameMissing ? ' !border-danger' : ''}`}
             maxLength={24}
             onKeyDown={(e) => { if (e.key === 'Enter' && !isImeComposing(e)) handleSubmit(); }}
           />

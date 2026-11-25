@@ -6,7 +6,7 @@
  */
 import { useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Banner } from '../ui/feedback';
+import { Banner } from '../ui';
 import { dismissPresenceGateNotice, onPresenceGateNoticeChange, presenceGateRemovedNotice } from '../biometric';
 
 export function PresenceGateRemovedBanner() {

@@ -1,7 +1,7 @@
 import { Trans, useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { HoverLabel } from './HoverLabel';
-import { ProGlyph } from './UpgradeModal';
+import { ProGlyph } from './ui';
 import { Briefcase, House, Stack, type Icon } from './icons';
 import type { Space, SpaceView } from './spaces';
 

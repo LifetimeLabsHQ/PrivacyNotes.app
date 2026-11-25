@@ -1,9 +1,9 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChartBar, EyeSlash, Heartbeat, MagnifyingGlass } from './icons';
+import { ChartBar, EyeSlash, Heartbeat } from './icons';
 import { HoverLabel } from './HoverLabel';
 import { Switch } from './Switch';
-import { Button, Popover, SETTINGS_EYEBROW, TextField } from './ui';
+import { Button, ListSearchInput, Popover, SETTINGS_EYEBROW } from './ui';
 import { PILL_TONE, type PillTone } from './trackerTone';
 import { textMatcher } from './textMatch';
 import { formatDay } from './intlFormat';
@@ -166,15 +166,14 @@ export function TrackersMenu({ trackers }: { trackers: CalendarTrackers }) {
       <Popover open={open} anchorRef={anchor} onClose={() => { setOpen(false); setQuery(''); }} title={label} align="end">
         <div className="max-h-80 overflow-y-auto space-y-0.5">
           {trackers.choices.length > 8 && (
-            <TextField
-              size="sm"
-              icon={<MagnifyingGlass aria-hidden="true" />}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t('calendar.findTracker')}
-              aria-label={t('calendar.findTracker')}
-              className="mb-2"
-            />
+            <div className="mb-2">
+              <ListSearchInput
+                value={query}
+                onChange={setQuery}
+                placeholder={t('calendar.findTracker')}
+                ariaLabel={t('calendar.findTracker')}
+              />
+            </div>
           )}
           {groups.map((g) => (
             <div key={g.key} className="pt-1">

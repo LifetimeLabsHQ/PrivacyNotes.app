@@ -18,7 +18,7 @@ import { normalizeTag, sortTags, TAG_COMMA, TAG_MAX_LENGTH, TAG_SEPARATOR_RUN } 
 import { textMatcher } from './textMatch';
 import { isImeComposing } from './imeComposing';
 import { useIsMobile } from './useIsMobile';
-import { useTheme } from './theme';
+import { NO_TEXT_ASSIST } from './formFields';
 import { TagMark } from './looks/LookGlyph';
 
 type Props = {
@@ -78,7 +78,6 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isMobile = useIsMobile();
-  const { spellcheck } = useTheme();
 
   // The chip strip scrolls horizontally instead of wrapping. Keep the
   // input (always the right-most element) in view when a tag is ADDED,
@@ -359,7 +358,7 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
             >
               <span className="text-pn-muted text-small">#</span>
               <span className="text-pn truncate">{boldPrefix(tag)}</span>
-              <span className="ml-auto text-small text-pn-muted tabular-nums shrink-0">
+              <span className="ms-auto text-small text-pn-muted tabular-nums shrink-0">
                 {count}
               </span>
             </button>
@@ -393,7 +392,7 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
   return (
     <div
       ref={containerRef}
-      className="flex items-center gap-1.5 px-4 sm:px-6 py-2 border-b border-divider shrink-0 min-w-0"
+      className="flex items-center gap-1.5 px-4 sm:px-6 py-2 border-b border-divider shrink-0 min-w-0 select-none"
     >
       {/* Single-line chip strip - scrolls horizontally, never wraps. The
           folder chip scrolls WITH the tags rather than staying pinned at
@@ -433,6 +432,7 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
               {tag}
             </span>
             {!readOnly && <button
+              type="button"
               onClick={() => remove(tag)}
               className="text-accent/60 hover:text-danger transition text-meta leading-none"
               aria-label={t('tagInput.removeTag', { tag })}
@@ -458,7 +458,7 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
           }
           enterKeyHint="done"
           autoComplete="off"
-          spellCheck={spellcheck ? undefined : false}
+          {...NO_TEXT_ASSIST}
           className="flex-1 min-w-[80px] shrink-0 bg-transparent text-small focus:outline-none placeholder:text-pn-muted py-0.5"
         />}
       </div>

@@ -8,8 +8,10 @@
   "applyToFolderItems": "이 폴더의 모든 항목에 적용",
   "applyToTagItems": "이 태그가 있는 모든 항목에 적용",
   "icon": "아이콘",
+  "emoji": "이모지",
   "searchPlaceholder": "아이콘 검색",
   "searchLogos": "로고 검색",
+  "searchEmojis": "이모지 검색",
   "moreLogos": "로고 더 보기",
   "allLogos": "모든 로고 (A-Z 순)",
   "recent": "최근 사용",
@@ -41,7 +43,14 @@
     "games": "게임",
     "learning": "학습과 연구",
     "trips": "여행과 피트니스",
-    "privacy": "개인정보 보호와 보안"
+    "privacy": "개인정보 보호와 보안",
+    "emojiSmileys": "표정과 감정",
+    "emojiPeople": "사람과 신체",
+    "emojiAnimals": "동물과 자연",
+    "emojiActivities": "활동",
+    "emojiObjects": "사물",
+    "emojiSymbols": "기호와 표지",
+    "emojiFlags": "깃발"
   },
   "icons": {
     "folder": "폴더",

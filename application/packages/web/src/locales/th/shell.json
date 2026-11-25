@@ -41,6 +41,7 @@
     "noDocuments": "ไม่มีเอกสาร",
     "noImages": "ไม่มีรูปภาพ",
     "noAudioFiles": "ไม่มีไฟล์เสียง",
+    "noUnusedFiles": "ไม่มีไฟล์ที่ไม่ได้ใช้",
     "emptyTypesHint": "รูปภาพ เอกสาร เสียง วิดีโอ และไฟล์ zip สูงสุด {{max}} MB ต่อไฟล์",
     "uploadFiles": "อัปโหลดไฟล์",
     "menuShow": "แสดง",
@@ -230,7 +231,7 @@
     "tagCount_other": "{{count}} แท็ก",
     "entryDate": "วันที่ของรายการ",
     "noDate": "ไม่มี",
-    "schedule": "กำหนดการ",
+    "schedule": "วันที่และการเตือน",
     "ends": "สิ้นสุด",
     "sameDay": "วันเดียวกัน",
     "starts": "เริ่ม",
@@ -313,7 +314,6 @@
     "showOneWeek": "แสดงหนึ่งสัปดาห์"
   },
   "contextMenu": {
-    "newNote": "โน้ตใหม่",
     "newTask": "งานใหม่",
     "newKanban": "บอร์ดคัมบังใหม่",
     "newDrawing": "ภาพวาดใหม่",
@@ -322,15 +322,12 @@
     "newSshKey": "คีย์ SSH ใหม่",
     "newJournal": "บันทึกประจำวันใหม่",
     "newFile": "ไฟล์ใหม่",
-    "exitZenMode": "ออกจากโหมดเซน",
-    "zenMode": "โหมดเซน",
     "showSidebar": "แสดงแถบด้านข้าง",
     "hideSidebar": "ซ่อนแถบด้านข้าง",
     "showNotesList": "แสดงรายการโน้ต",
     "hideNotesList": "ซ่อนรายการโน้ต",
     "resetPaneWidths": "รีเซ็ตความกว้างแผง",
     "settings": "การตั้งค่า",
-    "signOut": "ออกจากระบบ",
     "deselect": "ยกเลิกการเลือก",
     "select": "เลือก",
     "selectedCount_other": "เลือกแล้ว {{count}} รายการ",
@@ -359,8 +356,7 @@
     "closeOtherTabs": "ปิดแท็บอื่น",
     "closeAllTabs": "ปิดแท็บทั้งหมด",
     "pinTab": "ปักหมุดแท็บ",
-    "unpinTab": "เลิกปักหมุดแท็บ",
-    "newEvent": "กิจกรรมใหม่"
+    "unpinTab": "เลิกปักหมุดแท็บ"
   },
   "demoBanner": {
     "title": "ลองใช้ได้โดยไม่มีความเสี่ยง",
@@ -804,6 +800,22 @@
     "offOnPhone": "การเตือนปิดอยู่บนโทรศัพท์เครื่องนี้",
     "turnOn": "เปิดใช้"
   },
+  "taskReminder": {
+    "set": "ตั้งการเตือน",
+    "edit": "แก้ไขการเตือน",
+    "laterToday": "ภายหลังวันนี้",
+    "pickDateTime": "เลือกวันที่และเวลา",
+    "dateTime": "วันที่และเวลา",
+    "remove": "นำการเตือนออก",
+    "onSchedule": "ตามกำหนดการ",
+    "afterCompletion": "หลังทำเสร็จ",
+    "afterDone": "{{count}} {{unit}} หลังทำเสร็จ",
+    "afterDoneHint": "นับจากวันที่คุณทำเครื่องหมายว่างานนี้เสร็จแล้ว",
+    "weekdaysShort": "วันธรรมดา",
+    "everyWeeks_other": "ทุก {{count}} สัปดาห์",
+    "everyMonths_other": "ทุก {{count}} เดือน",
+    "everyYears_other": "ทุก {{count}} ปี"
+  },
   "quickAdd": {
     "group": "สร้าง",
     "items": "รายการ",
@@ -990,7 +1002,8 @@
   "apps": {
     "railLabel": "ส่วนขยาย",
     "title": "ส่วนขยายเบราว์เซอร์",
-    "subtitle": "ตัวตัดเก็บหน้าเว็บและตัวจัดการรหัสผ่านใน Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf และ Zen ส่วนขยายไม่เคยถือกุญแจที่ใช้เปิดโน้ตของคุณ",
+    "subtitle": "ตัวตัดเก็บหน้าเว็บและตัวจัดการรหัสผ่านสำหรับเบราว์เซอร์ที่พัฒนาบน Chromium และ Firefox ส่วนขยายไม่เคยถือกุญแจที่ใช้เปิดโน้ตของคุณ",
+    "allSupported": "ใช้งานได้ในทุกเบราว์เซอร์ที่พัฒนาบน Chromium หรือ Firefox",
     "loginsCopyFull": "สำเนาล็อกอินของคุณในส่วนขยายเบราว์เซอร์เต็มแล้ว ล็อกอินใหม่จะไปถึงส่วนขยายเมื่อคุณลบบางรายการออก",
     "stepInstall": "ติดตั้งส่วนขยาย",
     "stepFeatures": "เลือกสิ่งที่ส่วนขยายทำได้",
@@ -1001,7 +1014,7 @@
     "thisBrowser": "เบราว์เซอร์นี้",
     "otherApps": "แอปเดสก์ท็อปและโทรศัพท์:",
     "desktopAll": "ดาวน์โหลดทั้งหมด",
-    "extensionComputersOnly": "ส่วนขยายนี้ใช้กับ Chrome, Firefox และ Edge บนคอมพิวเตอร์",
+    "extensionComputersOnly": "ส่วนขยายนี้ใช้กับเบราว์เซอร์ที่พัฒนาบน Chromium และ Firefox บนคอมพิวเตอร์",
     "demoSignUp": "สมัครเพื่อเชื่อมต่อเบราว์เซอร์"
   },
   "cli": {

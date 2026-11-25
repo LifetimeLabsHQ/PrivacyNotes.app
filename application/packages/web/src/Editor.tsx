@@ -9,10 +9,12 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+import { CommandPaletteContext } from './commandPalette';
 import { FormatBarContext } from './formatBarContext';
 import { useEditor, EditorContent, type Editor as TipTapEditor, type JSONContent } from '@tiptap/react';
 import { readDocCache, writeDocCache, DOC_CACHE_MIN_BYTES } from './editorDocCache';
@@ -58,10 +60,13 @@ import { AudioRecordingBanner, type AudioRecordingState } from './AudioRecorder'
 import { LinkSheet } from './LinkSheet';
 import { SLOT_PILL_HEIGHT } from './EditorSlotPill';
 import { Callout, CalloutTitle } from './Callout';
+import { ColumnsBlock, ColumnsCol } from './ColumnsBlock';
+import { ColumnsControls } from './ColumnsControls';
 import { PlaceMapNode } from './PlaceMapNode';
 import { DoodleNode } from './doodle/DoodleNode';
 import type { NoteLocation } from './noteLocation';
 import { typeCalloutTrigger } from './CalloutSuggestion';
+import { SlashSuggestion, type SlashAction } from './SlashSuggestion';
 import { proUnlocked } from './demo';
 import { stepKanban } from './kanban';
 import { Footnotes, carriedSection } from './footnotes';
@@ -96,6 +101,9 @@ import { useDebouncedMarkdownSave } from './useDebouncedMarkdownSave';
 import { lineGutter, NUMBER_GAP, NUMBER_GAP_FOLDS } from './lineNumbers';
 // Line numbers are off by default: their layer loads on demand, off the boot path.
 const BlockLineNumbers = lazy(() => import('./BlockLineNumbers').then((m) => ({ default: m.BlockLineNumbers })));
+const TaskReminderPopover = lazy(() => import('./TaskReminderPopover'));
+import { findTaskReminderInItem, setTaskItemReminder } from './editorTaskReminder';
+import type { TaskReminder } from './taskReminderSyntax';
 import {
   TextStyleMarkdown,
   TaskListInputRule,
@@ -133,6 +141,7 @@ import {
   markdownForClipboard,
   replaceBodyUndoably,
   InlineIcon,
+  TaskReminderNode,
 } from './editorExtensions';
 import { FocusClickCaret } from './editorFocusCaret';
 import type { SourcePreviewControls } from './sourcePreviewButtons';
@@ -153,6 +162,9 @@ type Props = {
   /** When true, nothing edits the note: no toolbar, no "Add a line at
    *  the top" zone, no replace. Find and the outline stay, because they only read it. */
   readOnly?: boolean;
+  /** True while the editor renders in full-screen reading/presenting mode:
+   *  hides corner pills and the read-only notice without disabling folds. */
+  hideChrome?: boolean;
   /**
    * A static rendering: the note history preview. Read-only, and without the
    * corner, the bars or their shortcuts. The note editor stays mounted
@@ -173,7 +185,7 @@ type Props = {
   /** Whether the user has Pro. Gates the replace bar. */
   isPro?: boolean;
   /** Opens the upgrade modal when a free account asks for the replace bar. */
-  onOpenUpgrade?: (trigger: 'replace' | null) => void;
+  onOpenUpgrade?: (trigger: 'replace' | 'alerts' | null) => void;
   /** Hides the encrypted image / attachment / audio group - see Toolbar. */
   hideEncryptedMedia?: boolean;
   /** Takes the picture and file buttons' files when that group is hidden - see Toolbar. */
@@ -301,7 +313,7 @@ export type EditorHandle = {
 const TOUCH_HANDLE_HEIGHT = 32;
 
 const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }>(function EditorInner(
-  { value, onChange, readOnly = false, noSpellcheck = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, noteTitle, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, notice, connections, toolbarSlot, onShowMarkdown, sourcePreview, lineNumbers, place, onRenameFile, fileNote = false, preview = false, idle = false, sinkCheckedTasks = true, typedSymbols = false, placeholder, onReady },
+  { value, onChange, readOnly = false, noSpellcheck = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, noteTitle, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, notice, connections, toolbarSlot, onShowMarkdown, sourcePreview, lineNumbers, place, onRenameFile, fileNote = false, hideChrome = false, preview = false, idle = false, sinkCheckedTasks = true, typedSymbols = false, placeholder, onReady },
   ref
 ) {
   const { t } = useTranslation('editor');
@@ -340,6 +352,10 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
   isProRef.current = isPro;
   const onOpenUpgradeRef = useRef(onOpenUpgrade);
   onOpenUpgradeRef.current = onOpenUpgrade;
+  const slashActionsRef = useRef<readonly SlashAction[]>([]);
+  const commandPalette = useContext(CommandPaletteContext);
+  const commandPaletteRef = useRef(commandPalette);
+  commandPaletteRef.current = commandPalette;
 
   const isMobile = useIsMobile();
   const { spellcheck: deviceSpellcheck, invisibles, favicons } = useTheme();
@@ -584,6 +600,23 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
   const [audioDuration, setAudioDuration] = useState(0);
   const audioStopRef = useRef<(() => void) | null>(null);
 
+  // Per-checkbox reminder popover state (opened by the task row bell or chip).
+  const [reminderPicker, setReminderPicker] = useState<{
+    taskPos: number;
+    current: TaskReminder | null;
+  } | null>(null);
+  const reminderAnchorRef = useRef<HTMLElement | null>(null);
+  const openTaskReminderRef = useRef<(anchor: HTMLElement, taskPos: number, current?: TaskReminder | null) => void>(() => {});
+  openTaskReminderRef.current = (anchor, taskPos, explicitCurrent) => {
+    const ed = editorRef.current;
+    if (!ed || !ed.isEditable) return;
+    const item = ed.state.doc.nodeAt(taskPos);
+    if (!item || item.type.name !== 'taskItem') return;
+    const current = explicitCurrent !== undefined ? explicitCurrent : (findTaskReminderInItem(item)?.reminder ?? null);
+    reminderAnchorRef.current = anchor;
+    setReminderPicker({ taskPos, current });
+  };
+
   const handleAudioStateChange = useCallback(
     (state: AudioRecordingState, duration: number) => {
       setAudioState(state);
@@ -721,6 +754,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           class: 'task-item',
         },
         sinkChecked: () => sinkCheckedRef.current,
+        onOpenReminder: (anchor, taskPos) => openTaskReminderRef.current(anchor, taskPos),
       }),
       // Enter on an empty item that holds a sub-list ends the list (#709).
       EmptyListItemEnter,
@@ -766,13 +800,27 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         filePreview: fileNote,
       }),
       WikiLink,
+      ...(preview ? [] : [SlashSuggestion.configure({
+        getActions: () => slashActionsRef.current,
+        openReminder: (anchor, taskPos) => openTaskReminderRef.current(anchor, taskPos),
+        isPro: () => isProRef.current,
+        proUnlocked: () => proUnlocked(isProRef.current),
+        onUpgrade: () => onOpenUpgradeRef.current?.(null),
+        askNinja: () => commandPaletteRef.current?.openCommands ?? null,
+      })]),
       // :icon[name] / :logo[slug] - an icon or logo in the text (Insert > Icons & logos).
       InlineIcon,
+      // :remind[YYYY-MM-DD HH:MM ...] - per-checkbox reminder and repeat chip.
+      TaskReminderNode.configure({
+        onOpenReminder: (anchor, taskPos, current) => openTaskReminderRef.current(anchor, taskPos, current),
+      }),
       CalloutTitle,
       Callout.configure({
         kanbanUnlocked: () => proUnlocked(isProRef.current),
         onUpgrade: () => onOpenUpgradeRef.current?.(null),
       }),
+      ColumnsCol,
+      ColumnsBlock,
       Footnotes,
       TrailingParagraph,
       PlainEscape,
@@ -870,6 +918,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // keyboard. Users still tap to focus - only the automatic chain
         // is broken.
         ...(isMobile ? { tabindex: '-1' } : {}),
+        ...(placeholder ? { 'data-custom-placeholder': 'true' } : {}),
         // spellcheck is inherited, so one attribute on the contenteditable
         // root covers headings, tables, callouts, code blocks and task items
         // alike. Emitted ONLY in the off case: with spell check on we leave
@@ -1061,6 +1110,26 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
   useEffect(() => {
     editorRef.current = editor ?? null;
   }, [editor]);
+
+  // Keep reminderPicker.taskPos mapped across edits/syncs while the popover is open
+  // or lazy-loading; close it if the underlying taskItem was deleted or replaced.
+  const reminderPickerOpen = reminderPicker !== null;
+  useEffect(() => {
+    if (!editor || !reminderPickerOpen) return;
+    const onTx = ({ transaction }: { transaction: { docChanged: boolean; mapping: { mapResult: (pos: number) => { pos: number; deleted: boolean } } } }) => {
+      if (!transaction.docChanged) return;
+      setReminderPicker((cur) => {
+        if (!cur) return cur;
+        const mapped = transaction.mapping.mapResult(cur.taskPos);
+        if (mapped.deleted) return null;
+        const node = editor.state.doc.nodeAt(mapped.pos);
+        if (!node || node.type.name !== 'taskItem') return null;
+        return mapped.pos === cur.taskPos ? cur : { ...cur, taskPos: mapped.pos };
+      });
+    };
+    editor.on('transaction', onTx);
+    return () => { editor.off('transaction', onTx); };
+  }, [editor, reminderPickerOpen]);
 
   // Sync the persisted invisible-characters preference to the extension. The
   // `visible` option only seeds the plugin at construction time, so the footer
@@ -1323,7 +1392,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       {/* Toolbar visibility is controlled by the parent (NotesView) so the
           Hide/Show toggle can live on the tag row instead of overlapping
           the note body. */}
-      {!readOnly && toolbarVisible && barAtBottom && toolbarSlot && createPortal(
+      {!readOnly && !preview && toolbarVisible && barAtBottom && toolbarSlot && createPortal(
         // At the bottom the bar lives outside the scrolling column, so it
         // never moves with the note: a sticky bar inside the column is left
         // behind by a trackpad bounce (Firefox) and by the page shift iOS
@@ -1340,10 +1409,12 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           onInsertFiles={onInsertFiles}
           onShowMarkdown={onShowMarkdown}
           sourcePreview={sourcePreview}
+          fallbackAnchorRef={linkFallbackRef}
+          slashActionsRef={slashActionsRef}
         />,
         toolbarSlot,
       )}
-      {!readOnly && toolbarVisible && !barAtBottom && (
+      {!readOnly && !preview && (!toolbarVisible || !barAtBottom || !toolbarSlot) && (
         <Toolbar
           editor={editor}
           place={place}
@@ -1356,6 +1427,9 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           onInsertFiles={onInsertFiles}
           onShowMarkdown={onShowMarkdown}
           sourcePreview={sourcePreview}
+          barHidden={!toolbarVisible || (barAtBottom && !toolbarSlot)}
+          fallbackAnchorRef={linkFallbackRef}
+          slashActionsRef={slashActionsRef}
         />
       )}
       {/* Where the link panel falls back to when the link button is not on
@@ -1369,6 +1443,22 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           anchorRef={linkAnchorRef}
           onClose={() => setLinkPopoverOpen(false)}
         />
+      )}
+      {editor && !readOnly && reminderPicker && (
+        <Suspense fallback={null}>
+          <TaskReminderPopover
+            open
+            anchorRef={reminderAnchorRef}
+            current={reminderPicker.current}
+            alertsUnlocked={proUnlocked(isPro)}
+            showPro={!isPro}
+            onUpgrade={() => onOpenUpgradeRef.current?.('alerts')}
+            onSave={(next) => {
+              setTaskItemReminder(editor, reminderPicker.taskPos, next);
+            }}
+            onClose={() => setReminderPicker(null)}
+          />
+        </Suspense>
       )}
       {/* Find or replace bar, pinned top-right just under the toolbar. The
           sticky wrapper keeps its row in the flow, so the note starts below
@@ -1405,7 +1495,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           recording is running: the floating pill sits exactly on the
           banner's Stop button otherwise (reported during the TipTap 3
           verification pass). */}
-      {bar === 'none' && !preview && editor && audioState === 'idle' && (
+      {bar === 'none' && !preview && !hideChrome && editor && audioState === 'idle' && (
         <div
           className="sticky z-[5] flex h-0 items-start justify-end gap-1.5 overflow-visible pointer-events-none"
           style={{ top: 'calc(var(--pn-tagrow-h, 0px) + var(--pn-editor-toolbar-h, 0px))' }}
@@ -1430,7 +1520,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           the corner pills, so a long read-only note still says it is
           read-only after a scroll (#830). It bleeds into the gutters as the
           toolbar does, so text scrolling under it never shows at its sides. */}
-      {notice && (
+      {notice && !hideChrome && (
         <div
           ref={setNoticeEl}
           className="pn-notice-row sticky z-[4] -mx-4 sm:-mx-6 px-4 sm:px-6 bg-surface-1/95 backdrop-blur"
@@ -1485,7 +1575,14 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       )}
       <EditorContent
         editor={editor}
-        style={numberText !== null ? { paddingInlineStart: lineGutter(numberText.split('\n').length, numberGap) } : undefined}
+        style={
+          numberText !== null || (!preview && !hideChrome && !readOnly)
+            ? ({
+                ...(numberText !== null ? { paddingInlineStart: lineGutter(numberText.split('\n').length, numberGap) } : {}),
+                ...(!preview && !hideChrome && !readOnly ? { '--pn-slash-ph': JSON.stringify(t('slash.linePlaceholder')) } : {}),
+              } as CSSProperties)
+            : undefined
+        }
       />
       {editor && numberText !== null && (
         <Suspense fallback={null}>
@@ -1504,6 +1601,14 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
           component, which a transaction does not cause. */}
       {editor && !readOnly && (
         <TableControls editor={editor} formulasUnlocked={proUnlocked(isPro)} onUpgrade={() => onOpenUpgradeRef.current?.(null)} />
+      )}
+      {editor && !readOnly && (
+        <ColumnsControls
+          editor={editor}
+          isPro={isPro}
+          columnsUnlocked={proUnlocked(isPro)}
+          onUpgrade={() => onOpenUpgradeRef.current?.(null)}
+        />
       )}
       {editor && !readOnly && linkPopoverOpen && isMobile && (
         <LinkSheet editor={editor} isMobile={true} anchorRef={linkAnchorRef} onClose={() => setLinkPopoverOpen(false)} />

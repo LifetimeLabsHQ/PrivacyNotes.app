@@ -1,7 +1,6 @@
 import type { MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DotsThree, UsersThree, Star } from './icons';
-import { IconUpgrade } from './UpgradeModal';
+import { DotsThree, Star } from './icons';
 
 /** The "..." on a theme card: a sibling of the card button inside a
  *  `relative` wrapper, never a button nested in a button. */
@@ -16,33 +15,6 @@ export function CardMenuButton({ name, onClick }: { name: string; onClick: (e: M
     >
       <DotsThree weight="bold" aria-hidden="true" />
     </button>
-  );
-}
-
-/**
- * The Pro mark of a locked theme card, in the top start corner of its swatch
- * on a chip of the card's own surface, where the mark's contrast is measured.
- * The name row below stays free for the name, so no name truncates in the
- * four-in-a-row popover; the menu button owns the end corner.
- */
-/**
- * The mark of a community theme, a code that credits its author: the bottom
- * end corner of the swatch, clear of the Pro mark in the top start corner
- * even on the small cards of the Design menu, on the same chip as that mark. The author's
- * name is in the card's hover tip.
- */
-/** The mark of a theme shown in the Design quick menu: a star in the bottom
- *  end corner of the swatch, on the same chip as the other marks. */
-export function QuickCorner() {
-  const { t } = useTranslation('settings');
-  return (
-    <span
-      role="img"
-      aria-label={t('appearance.quickMenuMarked')}
-      className="absolute bottom-0.5 end-0.5 flex rounded bg-surface-2/90 p-0.5 text-pro"
-    >
-      <Star size={10} weight="fill" aria-hidden="true" />
-    </span>
   );
 }
 
@@ -75,31 +47,5 @@ export function QuickStarButton({ name, marked, onToggle }: { name: string; mark
       <Star weight="bold" className={outline} aria-hidden="true" />
       <span className="hidden group-hover/card:block" aria-hidden="true">{t(marked ? 'appearance.favoriteRemoveShort' : 'common:actions.add')}</span>
     </button>
-  );
-}
-
-export function CommunityCorner() {
-  const { t } = useTranslation('settings');
-  return (
-    <span
-      role="img"
-      aria-label={t('appearance.custom.communityTheme')}
-      className="absolute bottom-0.5 end-0.5 flex rounded bg-surface-2/90 p-0.5 text-pn-soft"
-    >
-      <UsersThree size={10} weight="bold" aria-hidden="true" />
-    </span>
-  );
-}
-
-export function ProCorner() {
-  const { t } = useTranslation('settings');
-  return (
-    <span
-      role="img"
-      aria-label={t('appearance.custom.proTheme')}
-      className="absolute top-0.5 start-0.5 flex rounded bg-surface-2/90 p-0.5"
-    >
-      <IconUpgrade size={10} />
-    </span>
   );
 }

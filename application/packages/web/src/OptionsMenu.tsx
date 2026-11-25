@@ -12,6 +12,11 @@ import { createPortal } from 'react-dom';
 import { useEscapeToClose } from './useEscapeToClose';
 import { usePopoverPosition } from './usePopoverPosition';
 import { CaretRight } from './icons';
+import { ProBadge } from './proMark';
+import { isTouchOnly } from './touchOnly';
+import { Kbd } from './ui/misc';
+
+export { ProBadge };
 
 export function OptionsMenu({
   anchorRef,
@@ -132,15 +137,6 @@ export function Group({ children }: { children: React.ReactNode }) {
   return <div className="py-1">{children}</div>;
 }
 
-/** The quiet Pro marker: grey, no icon, never louder than the label. */
-export function ProBadge() {
-  return (
-    <span className="shrink-0 rounded-md px-1.5 py-0.5 text-meta font-medium leading-none bg-pn/10 text-pn-soft">
-      Pro
-    </span>
-  );
-}
-
 export function ToggleItem({
   label,
   icon,
@@ -181,6 +177,7 @@ export function ActionItem({
   icon,
   onClick,
   pro,
+  shortcut,
   disabled,
   value,
   chevron,
@@ -190,6 +187,8 @@ export function ActionItem({
   icon: React.ReactNode;
   onClick: () => void;
   pro?: boolean;
+  /** Keyboard shortcut shown at the end of the row on devices with a keyboard. */
+  shortcut?: string;
   disabled?: boolean;
   /** A short value at the end of the row: a size, a color. */
   value?: React.ReactNode;
@@ -207,6 +206,11 @@ export function ActionItem({
       <span className={`shrink-0 ${TONE_TEXT[tone]}`}>{icon}</span>
       <span className="flex-1 min-w-0 truncate">{label}</span>
       {pro && <ProBadge />}
+      {shortcut && !isTouchOnly() && (
+        <span dir="ltr" className="shrink-0 inline-flex"> {/* rtl-ok: modifier-key sequence never reorders */}
+          <Kbd>{shortcut}</Kbd>
+        </span>
+      )}
       {value !== undefined && (
         <span className="shrink min-w-0 max-w-[45%] text-compact text-pn-muted">
           {value}

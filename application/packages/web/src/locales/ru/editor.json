@@ -38,7 +38,7 @@
     "blockMath": "Формула отдельным блоком",
     "align": "Выравнивание",
     "font": "Шрифт",
-    "pictureFromFiles": "Изображение из Файлов",
+    "pictureFromFiles": "Галерея",
     "date": "Дата",
     "dateTime": "Дата и время",
     "footnote": "Сноска",
@@ -270,6 +270,15 @@
     "headingsIn": "Заголовки в «{{title}}»",
     "noHeadingMatches": "Нет подходящих заголовков"
   },
+  "slash": {
+    "label": "Вставить блок",
+    "linePlaceholder": "Нажмите /, чтобы вставить блок",
+    "filterHint": "Начните вводить для фильтрации…",
+    "basic": "Основные блоки",
+    "smartDate": "Умная дата",
+    "askNinja": "Спросить Ninja про «{{query}}»",
+    "noMatches": "Нет подходящих блоков"
+  },
   "copyBox": {
     "placeholder": "Текст для копирования одним щелчком"
   },
@@ -385,6 +394,23 @@
     "columnCount_few": "{{count}} колонки",
     "columnCount_many": "{{count}} колонок",
     "columnCount_other": "{{count}} колонки"
+  },
+  "columns": {
+    "narrowWide": "Узкая и широкая",
+    "wideNarrow": "Широкая и узкая",
+    "removeColumns": "Убрать колонки",
+    "resizeColumn": "Перетащите, чтобы изменить ширину колонок",
+    "barLabel": "Управление колонками",
+    "borders": "Границы колонок",
+    "borderBoxes": "Рамки",
+    "borderSolid": "Сплошная",
+    "borderDashed": "Пунктирная",
+    "borderDotted": "Точечная",
+    "borderThickness": "Толщина",
+    "borderThin": "Тонкая",
+    "borderMedium": "Средняя",
+    "borderColorDefault": "Цвет по умолчанию",
+    "borderTint": "Лёгкий оттенок колонок"
   },
   "doodle": {
     "title": "Набросок",

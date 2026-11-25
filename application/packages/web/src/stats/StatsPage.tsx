@@ -5,10 +5,9 @@ import type { LocalNote } from '../db';
 import { NO_FACTORS, type FactorDef, type MedicationTemplate, type TrackerSettings } from '../trackerTypes';
 import { computeTrackerStats, journalsInRange } from '../trackerStats';
 import { proUnlocked } from '../demo';
-import { SETTINGS_BTN, SETTINGS_HELP, SectionEyebrow, SettingsSegmented, StatTile } from '../settingsUI';
-import { IconUpgrade, ProMark } from '../UpgradeModal';
+import { SETTINGS_HELP, SectionEyebrow, SettingsSegmented, StatTile } from '../settingsUI';
 import { HelpChip } from '../HelpChip';
-import { Button, ItemSwitcher, SubViewHeader, type SwitcherItem } from '../ui';
+import { Button, EmptyState, IconUpgrade, ItemSwitcher, ProMark, SubViewHeader, type SwitcherItem } from '../ui';
 import { intlLocale } from '../languages';
 import { toLocalIso } from '../notesViewUtils';
 import { TrackerChart } from '../TrackerChart';
@@ -116,7 +115,7 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
       <div data-setting="stats.medication" className="space-y-6">
         {back(<span className="text-body font-semibold text-pn">{t('wellness.subTabs.medication')}</span>)}
         {range}
-        <MedicationSubTab model={model} stats={stats} medications={medications} unlocked={unlocked} isPro={isPro} onOpenDay={onOpenDay} />
+        <MedicationSubTab model={model} stats={stats} medications={medications} unlocked={unlocked} isPro={isPro} onOpenUpgrade={onOpenUpgrade} onOpenDay={onOpenDay} />
         <HelpChip surface="wellness" className="pt-1" />
       </div>
     );
@@ -166,9 +165,10 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
       )}
 
       {hasEntries ? <Overview model={model} today={today} medAdherence={stats.medAdherence} /> : (
-        <div className="rounded-lg border border-divider bg-track px-4 py-6 text-center">
-          <p className="text-body text-pn">{t('wellness.empty.title')}</p>
-          <p className="text-small text-pn-muted mt-1">{t('wellness.empty.hint')}</p>
+        <div className="rounded-lg border border-divider bg-track px-4 py-6">
+          <EmptyState flush title={t('wellness.empty.title')}>
+            {t('wellness.empty.hint')}
+          </EmptyState>
         </div>
       )}
 
@@ -198,7 +198,7 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
           {unlocked ? (
             <WeekRecap model={model} notes={notes} reflection={weekReflection} onReflectionChange={onWeekReflectionChange} />
           ) : (
-            <Button variant="upgrade" icon={<IconUpgrade size={14} onFill />} onClick={onOpenUpgrade}>
+            <Button variant="upgrade" icon={<IconUpgrade size={14} />} onClick={onOpenUpgrade}>
               {t('wellness.week.locked')}
             </Button>
           )}
@@ -211,10 +211,9 @@ export function StatsPage({ notes, isNoteLocked, trackerSettings, factors = NO_F
       {/* The exports live in Settings > Import & Export > Trackers, with
           every other export; this door leads there, after the data it exports. */}
       {hasEntries && onOpenExport && (
-        <button type="button" onClick={onOpenExport} className={`${SETTINGS_BTN} self-start`}>
-          <DownloadSimple className="text-accent" aria-hidden="true" />
+        <Button icon={<DownloadSimple aria-hidden="true" />} onClick={onOpenExport} className="self-start">
           {t('wellness.export.openExport')}
-        </button>
+        </Button>
       )}
       <HelpChip surface="wellness" className="pt-1" />
     </div>

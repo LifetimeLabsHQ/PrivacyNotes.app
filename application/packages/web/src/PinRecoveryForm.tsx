@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { useTranslation } from 'react-i18next';
 import { clearPin, phraseMatches, restoreUnsavedClear } from './pinRecovery';
 import type { SecretKind } from './secretKind';
+import { Button, PhraseInput } from './ui';
 import { saveCredential, type UserSettings } from './userSettings';
 
 /**
@@ -72,22 +72,14 @@ export function PinRecoveryForm({
       <p className="text-small text-pn-soft leading-relaxed">
         {kind === 'passcode' ? t('pinRecovery.introPasscode') : t('pinRecovery.intro')}
       </p>
-      <textarea
+      <PhraseInput
         value={input}
-        onChange={(e) => {
-          setInput(e.target.value);
+        onChange={(next) => {
+          setInput(next);
           setError(null);
         }}
         placeholder={t('auth:importPhrase.placeholder')}
-        // A phone keyboard must neither rewrite a phrase word nor learn it.
-        spellCheck={false}
-        autoCapitalize="none"
-        autoCorrect="off"
-        autoComplete="off"
-        rows={3}
-        dir="ltr" // rtl-ok: BIP-39 phrase words, always LTR
         autoFocus
-        className="w-full rounded-md bg-surface-1 border border-divider text-pn focus:border-accent p-2.5 text-body font-mono focus:outline-none placeholder:text-pn-muted"
       />
       <p className="text-small text-pn-soft leading-relaxed">
         {kind === 'passcode' ? t('pinRecovery.consequencePasscode') : t('pinRecovery.consequence')}
@@ -96,21 +88,16 @@ export function PinRecoveryForm({
         <p className="text-body text-danger">{error}</p>
       )}
       <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-3 py-2 text-body transition"
-        >
-          {t('common:actions.cancel')}
-        </button>
-        <button
-          type="button"
+        <Button action="cancel" onClick={onCancel} className="flex-1 justify-center" />
+        <Button
+          action="confirm"
+          variant="primary"
           onClick={() => void submit()}
           disabled={!input.trim()}
-          className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-3 py-2 text-body font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed`}
+          className="flex-1 justify-center"
         >
           {kind === 'passcode' ? t('pinRecovery.clearPasscode') : t('pinRecovery.clearPin')}
-        </button>
+        </Button>
       </div>
     </div>
   );

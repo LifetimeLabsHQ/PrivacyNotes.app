@@ -8,8 +8,10 @@
   "applyToFolderItems": "Bu klasördeki tüm öğelere uygula",
   "applyToTagItems": "Bu etiketi taşıyan tüm öğelere uygula",
   "icon": "Simge",
+  "emoji": "Emoji",
   "searchPlaceholder": "Simgelerde ara",
   "searchLogos": "Logolarda ara",
+  "searchEmojis": "Emojilerde ara",
   "moreLogos": "Daha fazla logo",
   "allLogos": "Tüm logolar, A'dan Z'ye",
   "recent": "Son kullanılanlar",
@@ -41,7 +43,14 @@
     "games": "Oyunlar",
     "learning": "Öğrenme ve araştırma",
     "trips": "Seyahat ve fitness",
-    "privacy": "Gizlilik ve güvenlik"
+    "privacy": "Gizlilik ve güvenlik",
+    "emojiSmileys": "Gülen yüzler ve duygular",
+    "emojiPeople": "İnsanlar ve vücut",
+    "emojiAnimals": "Hayvanlar ve doğa",
+    "emojiActivities": "Aktiviteler",
+    "emojiObjects": "Nesneler",
+    "emojiSymbols": "Semboller ve işaretler",
+    "emojiFlags": "Bayraklar"
   },
   "icons": {
     "folder": "Klasör",

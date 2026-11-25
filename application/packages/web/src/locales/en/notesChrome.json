@@ -112,7 +112,7 @@
     "sealed": {
       "heading": "You received an encrypted note.",
       "subheading": "This message will self-destruct after reading. Unread links expire on their own.",
-      "reveal": "Reveal Message",
+      "reveal": "Reveal message",
       "warning": "The server deletes the note the moment you reveal it. No second chances."
     },
     "revealed": {

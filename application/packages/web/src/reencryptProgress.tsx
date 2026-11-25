@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SETTINGS_HELP } from './settingsUI';
+import { StatusLine } from './ui';
 
 /**
  * How far the background pass of a phrase change has come, and the one
@@ -41,5 +41,5 @@ export function ReencryptProgressLine() {
   const { t } = useTranslation('security');
   const percent = useReencryptProgress();
   if (percent === null) return null;
-  return <p className={SETTINGS_HELP} role="status">{t('reencryptPass.progress', { percent })}</p>;
+  return <StatusLine busy>{t('reencryptPass.progress', { percent })}</StatusLine>;
 }

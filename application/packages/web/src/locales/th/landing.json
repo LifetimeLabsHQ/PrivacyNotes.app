@@ -344,7 +344,7 @@
     "extensionKeyLogin": "กรอกล็อกอินของเว็บไซต์นี้",
     "extensionKeyBookmark": "บุ๊กมาร์กหน้านี้",
     "extensionAria": "เพิ่มส่วนขยายลงใน {{name}}",
-    "extensionNote": "บนคอมพิวเตอร์เท่านั้น"
+    "extensionNote": "ใช้งานได้ในทุกเบราว์เซอร์ที่พัฒนาบน Chromium หรือ Firefox บนคอมพิวเตอร์เท่านั้น"
   },
   "ctaRepeat": {
     "getStarted": "เริ่มต้นใช้งาน"

@@ -14,13 +14,11 @@ import { weekdayOf, type Repeat } from '../schedule';
 import { Switch } from '../Switch';
 import { TimeInput } from '../TimeInput';
 import { ROW_TITLE, RowTitle, SETTINGS_HELP, SETTINGS_SELECT, SETTINGS_TRACK, settingsChipClass, settingsSegClass } from '../settingsUI';
-import { Button, EditRow, IconButton, Popover, TextField } from '../ui';
+import { Button, EditRow, IconButton, Popover, ProMark, TextField, useProGate } from '../ui';
 import { MEDICATION_FORMS, type MedicationDose, type MedicationForm, type MedicationTemplate } from '../trackerTypes';
 import { MAX_DOSES, MAIN_DOSE, dosesOf, newDoseId } from '../medicationDoses';
 import { MED_DOSAGE_MAX, MED_NAME_MAX, type MedicationPlan } from '../medicationTemplates';
 import { askForRemindersOnce } from '../notesView/useReminders';
-import { useProGate } from '../ui';
-import { ProMark } from '../UpgradeModal';
 
 /**
  * The edit form of one medication in Settings > Trackers > Medication: name
@@ -140,8 +138,9 @@ export function MedicationEditor({ initial, remind: initialRemind, supply, runsO
 
   const dayButton = (which: 'start' | 'end', day: string | undefined, ref: React.RefObject<HTMLButtonElement | null>) => (
     <>
-      <button ref={ref} type="button" onClick={() => setPicking(picking === which ? null : which)} className={`${SETTINGS_SELECT} w-full text-start`}>
-        {day ? formatDay(day, 'date') : <span className="text-pn-muted">{t('medication.noEnd')}</span>}
+      <button ref={ref} type="button" onClick={() => setPicking(picking === which ? null : which)} className={`${SETTINGS_SELECT} inline-flex items-center gap-1.5 w-full text-start`}>
+        <CalendarDots className="shrink-0 text-accent" aria-hidden="true" />
+        <span className="truncate">{day ? formatDay(day, 'date') : <span className="text-pn-muted">{t('medication.noEnd')}</span>}</span>
       </button>
       <Popover open={picking === which} anchorRef={ref} onClose={() => setPicking(null)}>
         <MonthGrid

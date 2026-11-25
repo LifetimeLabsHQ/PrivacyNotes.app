@@ -9,9 +9,10 @@ import { commandLineShown } from '../cliRelease';
 import { pluginsShown } from '../onDeviceAi';
 import { isDemoMode } from '../demo';
 import { exemptOpts } from '../i18nExempt';
-import { ArrowSquareOut } from '../icons';
+import { ArrowSquareOut, X } from '../icons';
 import { helpPath } from '../localeRoutes';
 import { SETTINGS_EYEBROW } from '../settingsUI';
+import { Button, EmptyState } from '../ui';
 import { siteHref } from '../siteLinks';
 import { isTouchOnly } from '../touchOnly';
 import { tabsFit } from '../notesView/useOpenTabs';
@@ -124,31 +125,25 @@ export function SettingsSearchResults({
 
   if (hits.length === 0) {
     return (
-      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-10 text-center text-pn-soft">
+      <div className="flex-1 min-h-0 overflow-y-auto px-6 py-10">
         <p role="status" className="sr-only">{t('resultCount', { count: 0 })}</p>
-        <p className="mt-2 text-body text-pn">
-          {t('common:state.noResults')}: <bdi>“{query}”</bdi>
-        </p>
-        <a
-          href={siteHref(`${helpPath(activeLocale())}?q=${encodeURIComponent(query)}`)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 text-body text-accent hover:underline"
+        <EmptyState
+          flush
+          title={<>{t('common:state.noResults')}: <bdi>“{query}”</bdi></>}
+          actions={<Button icon={<X aria-hidden="true" />} onClick={onClear}>{t('common:actions.clearSearch')}</Button>}
         >
-          <span>
-            <Trans t={t} i18nKey="searchHelp" values={{ query }} components={{ q: <bdi /> }} />
-          </span>
-          <ArrowSquareOut className="shrink-0" aria-hidden="true" />
-        </a>
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={onClear}
-            className="rounded-full border border-divider px-3 py-1 text-small text-pn-soft hover:text-pn hover:bg-surface-1 transition"
+          <a
+            href={siteHref(`${helpPath(activeLocale())}?q=${encodeURIComponent(query)}`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-body text-accent hover:underline"
           >
-            {t('common:actions.clearSearch')}
-          </button>
-        </div>
+            <span>
+              <Trans t={t} i18nKey="searchHelp" values={{ query }} components={{ q: <bdi /> }} />
+            </span>
+            <ArrowSquareOut className="shrink-0" aria-hidden="true" />
+          </a>
+        </EmptyState>
       </div>
     );
   }

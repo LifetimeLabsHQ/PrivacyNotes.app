@@ -9,7 +9,8 @@ import { formatInstant } from './intlFormat';
 import { prepareBurnPayload } from './burnShare';
 import { COLOR_MENU_WIDTH, ColorSwatchRow } from './ColorSwatch';
 import { NOTE_NO_COLOR, type LookColor, type NoteOwnColor } from './itemStyles';
-import { PencilSimpleSlash, Shield, LockSimple, ClockCounterClockwise, PushPin, Export, Trash, Repeat, Copy, Folder, Fire, ArrowCounterClockwise, ArticleMedium, TextAa, TextAUnderline, Swap, ListChecks, Broom, SortAscending, Palette, Shapes, MapPin, Info, CaretLeft, Calendar, Check, Translate, iconArchive } from './icons';
+import { ArrowsOut, PencilSimpleSlash, Shield, LockSimple, ClockCounterClockwise, PushPin, Export, Trash, Repeat, Copy, Folder, Fire, ArrowCounterClockwise, ArticleMedium, TextAa, TextAUnderline, Swap, ListChecks, Broom, SortAscending, Palette, Shapes, MapPin, Info, CaretLeft, Calendar, Check, Translate, iconArchive } from './icons';
+import { keyText } from './shortcutMatch';
 import { typeGlyph } from './NoteRow';
 import { PathGlyph, useNoteIconPaths } from './looks/LookGlyph';
 import { CONVERT_TARGETS, isConvertSource, traitsOf, type ConvertTarget } from './noteTypes';
@@ -107,6 +108,8 @@ type Props = NoteActionGuardDeps & {
   editorMode?: 'formatted' | 'markdown';
   /** Flip this note between the rich editor and the markdown source. */
   onToggleEditorMode?: () => void;
+  /** Enter full-screen reading/presenting mode on desktop (GitHub #911). */
+  onFullScreen?: () => void;
   /** The "Spell check" switch of this one note. Present only while the
    *  device switch is on, on an editable markdown body.
    *  Spec: docs/internal/specs/note-spell-check.md */
@@ -201,6 +204,7 @@ export function NoteOptionsMenu({
   spaceMove,
   editorMode,
   onToggleEditorMode,
+  onFullScreen,
   spellcheck,
   onFindReplace,
   onUncheckAllTasks,
@@ -429,14 +433,23 @@ export function NoteOptionsMenu({
             </Group>
           )}
 
-          {(showModeRow || showReplaceRow || showSpellRow || showTaskRows || onTranslate) && (
+          {(showModeRow || onFullScreen || showReplaceRow || showSpellRow || showTaskRows || onTranslate) && (
             <Group>
               {showModeRow && (
                 <ActionItem
                   label={editorMode === 'markdown' ? t('notes:editor.showFormatted') : t('editor:formatBar.items.markdownView')}
                   // The glyph names the DESTINATION, so it changes with the label.
                   icon={editorMode === 'markdown' ? <TextAa aria-hidden="true" /> : <ArticleMedium aria-hidden="true" />}
+                  shortcut={keyText('markdownView')}
                   onClick={() => { onToggleEditorMode?.(); onClose(); }}
+                />
+              )}
+              {onFullScreen && (
+                <ActionItem
+                  label={t('notes:drawing.fullScreen')}
+                  icon={<ArrowsOut aria-hidden="true" />}
+                  shortcut={keyText('fullScreen')}
+                  onClick={() => { onFullScreen(); onClose(); }}
                 />
               )}
               {showReplaceRow && (
@@ -444,6 +457,7 @@ export function NoteOptionsMenu({
                   label={t('common:palette.commands.findReplace')}
                   icon={<Swap aria-hidden="true" />}
                   pro={!isPro}
+                  shortcut={keyText('findReplace')}
                   onClick={() => { onFindReplace?.(); onClose(); }}
                 />
               )}
@@ -588,6 +602,7 @@ export function NoteOptionsMenu({
                 label={t('common:actions.delete')}
                 icon={<Trash aria-hidden="true" />}
                 tone="danger"
+                shortcut={keyText('moveToTrash')}
                 onClick={() => { onTrash(); onClose(); }}
               />
             </Group>

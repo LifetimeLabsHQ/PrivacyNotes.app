@@ -21,6 +21,18 @@ export const FIELD_BUTTON =
   'shrink-0 rounded-md p-2 text-accent/70 hover:text-accent hover:bg-pn/5 transition';
 
 /**
+ * Turns off OS autocorrect, auto-capitalization, and spellcheck on
+ * case-sensitive or structured inputs: credentials (usernames, passwords,
+ * URLs, TOTP keys, card details, SSH keys, hidden custom fields), search/find
+ * boxes, tags, web/email/phone fields, codes, patterns, and hex colors.
+ */
+export const NO_TEXT_ASSIST = {
+  autoCorrect: 'off',
+  autoCapitalize: 'none',
+  spellCheck: false,
+} as const;
+
+/**
  * The headline over a section, the same one the panes draw: an accent bar,
  * the title, a rule to the end. It replaced an uppercase eyebrow in the
  * contact form, which was the one place in either pane that still used one.

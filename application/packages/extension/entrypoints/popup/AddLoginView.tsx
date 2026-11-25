@@ -21,7 +21,7 @@ import { FloppyDisk, Globe, Lock, NotePencil, Shield, Tag, User } from '@web/ico
 import { Button } from '@web/ui/Button';
 import { Callout } from '@web/ui/feedback';
 import { VaultFieldAction } from '@web/ui/VaultFieldAction';
-import { FIELD_CLASS, FieldLabel } from '@web/formFields';
+import { FIELD_CLASS, FieldLabel, NO_TEXT_ASSIST } from '@web/formFields';
 import { PasswordField } from '@web/PasswordText';
 import { SETTINGS_HELP } from '@web/settingsUI';
 import { copyAndClear } from '../../src/copy';
@@ -184,7 +184,7 @@ export function AddLoginView({ url, logins, pro, organize, onDone, edit }: {
       </div>
       <div>
         <FieldLabel icon={<Globe />} htmlFor="pn-site">{t('auth:loginForm.websiteLabel')}</FieldLabel>
-        <input id="pn-site" value={site} onChange={(e) => setSite(e.target.value)} className={FIELD_CLASS} dir="ltr" inputMode="url" />
+        <input id="pn-site" value={site} onChange={(e) => setSite(e.target.value)} autoComplete="off" {...NO_TEXT_ASSIST} className={FIELD_CLASS} dir="ltr" inputMode="url" />
       </div>
       <div>
         <FieldLabel icon={<User />} htmlFor="pn-username">{t('auth:loginForm.usernameLabel')}</FieldLabel>
@@ -194,6 +194,7 @@ export function AddLoginView({ url, logins, pro, organize, onDone, edit }: {
           onChange={(e) => setUsername(e.target.value)}
           list="pn-usernames"
           autoComplete="off"
+          {...NO_TEXT_ASSIST}
           autoFocus
           className={FIELD_CLASS}
           dir="auto"
@@ -236,7 +237,7 @@ export function AddLoginView({ url, logins, pro, organize, onDone, edit }: {
           onChange={(e) => setTotp(e.target.value)}
           placeholder={t('auth:loginForm.totpPlaceholder')}
           autoComplete="off"
-          spellCheck={false}
+          {...NO_TEXT_ASSIST}
           className={`${FIELD_CLASS} font-mono`}
           dir="ltr"
         />

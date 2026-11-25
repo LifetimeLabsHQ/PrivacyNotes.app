@@ -307,6 +307,16 @@
         "Ja. De app is local-first: [je notities staan in een database op je apparaat](/nl/help/data-location), dus lezen, schrijven en [zoeken werken allemaal zonder verbinding](/nl/help/search-local). Wijzigingen synchroniseren automatisch zodra je weer online bent, en [een afbeelding of bestand dat je offline toevoegt, wacht op dit apparaat](/nl/help/upload-failed) en wordt dan ook geüpload. [Ninja](/nl/help/ninja) werkt ook offline; alleen een webpagina als notitie opslaan wacht op een verbinding."
       ]
     },
+    "local-only": {
+      "q": "Hoe gebruik ik een kluis die alleen lokaal is, zonder account?",
+      "a": [
+        "Open de desktop- of mobiele app (macOS, Windows, Linux, iOS of Android), kies \"Genereer een herstelzin\" op het aanmeldscherm en laat \"Synchroniseren tussen apparaten\" uitgevinkt, de standaardkeuze. Daarmee maak je een versleutelde kluis op je apparaat zonder serverregistratie, zodat de app vanaf het begin offline werkt.",
+        "**Zo werkt de modus Alleen lokaal:**",
+        "- **Standaard offline:** notities, taken, dagboeken, kluisitems, bestanden, afbeeldingen, PIN en biometrisch slot, zoeken en [automatische back-ups](/nl/help/automatic-backups) werken allemaal op je apparaat zonder account.\n- **Maak een back-up van je kluis:** omdat er niets op onze servers komt, verlies je je notities als je het apparaat kwijtraakt of de app verwijdert. Zet [automatische back-ups](/nl/help/automatic-backups) aan bij Instellingen > Back-up > Automatisch, of exporteer een handmatige kopie bij Instellingen > Back-up > Handmatig.\n- **Later synchronisatie aanzetten of upgraden:** open Instellingen > ID & Sync en kies op elk gewenst moment \"Synchronisatie aanzetten\". Je kunt ook upgraden naar Pro terwijl de synchronisatie uit blijft: bij het afrekenen wordt een Account-ID voor Pro geregistreerd, terwijl je notities lokaal blijven.\n- **Back-ups van een ander apparaat herstellen:** open Instellingen > Back-up > Herstellen en kies \"Versleutelde back-up (.pnbackup, .pnbackupz)\". Kwam het bestand uit een andere kluis, dan vraagt de app om de herstelzin van die back-up (getypt of via QR) en importeert alles onder de sleutel van je lokale kluis.",
+        "**Heb je al een gesynchroniseerd account?** Kies de stappen voor jouw plan:",
+        "- **Gratis account (overstappen op Alleen lokaal):** exporteer een kopie bij Instellingen > Back-up > Handmatig en kies \"Alles, versleuteld (.pnbackupz)\". Verwijder daarna [je cloudaccount](/nl/help/delete-account) bij Instellingen > Account via \"Account & gegevens verwijderen...\", start een lokale kluis in de desktop- of mobiele app met \"Genereer een herstelzin\" en [herstel de back-up](/nl/help/restore-backup) met je oude herstelzin.\n- **Pro-account (Pro behouden en stoppen met synchroniseren):** verwijder je account niet, want daarmee verdwijnt ook Pro. Open **Instellingen > ID & Sync** en zet [\"Synchronisatie pauzeren\"](/nl/help/pause-sync) aan. Pro blijft actief en er wordt niets nieuws geüpload.\n- **Pro-account (ook gesynchroniseerde notities van de server wissen):** exporteer eerst \"Alles, versleuteld (.pnbackupz)\", verwijder alle notities, leeg de Prullenbak, druk op \"Nu synchroniseren\" en wacht tot er Gesynchroniseerd staat (cloudbestanden worden na vijf dagen automatisch definitief gewist). Zet \"Synchronisatie pauzeren\" aan bij **Instellingen > ID & Sync** en herstel daarna, voordat je de app sluit, je back-up bij Instellingen > Back-up > Herstellen. Je notities komen lokaal terug met nieuwe id's terwijl Pro actief blijft."
+      ]
+    },
     "sync-conflicts": {
       "q": "Wat gebeurt er als ik dezelfde notitie op twee apparaten tegelijk bewerk?",
       "a": [
@@ -504,6 +514,13 @@
         "[De opmaakwerkbalk](/nl/help/format-bar) en het bijbehorende Invoegen-menu voegen de rest toe: [tabellen](/nl/help/table-formulas), aandachtsblokken die je kunt dichtklappen, onderstrepen, superscript en subscript, tekstuitlijning, tekst- en markeerkleuren, lettertypen, links, afbeeldingen en bijlagen. Alles gaat heen en weer als Markdown: \"Markdown tonen\" onder elke notitie laat de ruwe bron zien, en [exports zijn nette .md-bestanden](/nl/help/export), dus niets van wat je schrijft zit vast in een eigen formaat."
       ]
     },
+    "slash-commands": {
+      "q": "Kan ik / slash-opdrachten gebruiken om blokken in te voegen?",
+      "a": [
+        "Ja. Typ `/` aan het begin van een regel of na een spatie om het blokkenmenu te openen, typ daarna een woord zoals `/tabel`, `/h2`, `/kanban` of `/warn` en druk op Enter. Je recente keuzes blijven bovenaan staan, en je kunt ook een [natuurlijke datum](/nl/help/ninja-dates) typen zoals `/friday` of `/tomorrow`, `/remind` in een taak voor een [herinnering](/nl/help/reminders), of `/formula` in een tabelcel voor [tabelformules](/nl/help/table-formulas). Het slashmenu is gratis; blokken waarvoor Pro nodig is tonen een Pro-badge.",
+        "Het menu werkt naast [live Markdown](/nl/help/markdown-syntax) en blijft beschikbaar wanneer je knoppen verbergt in [de opmaakbalk](/nl/help/format-bar) of schrijft in [de zen-modus](/nl/help/zen-mode). Als niets in het menu overeenkomt met wat je typte, druk je op Enter om de zoekopdracht rechtstreeks door te geven aan [Ninja](/nl/help/ninja). Typ je `/` in een webadres, een datum, een breuk, een codeblok of geplakte tekst, dan blijft dat gewone tekst en opent het menu nooit; druk op Escape of typ direct na `/` een spatie om het te sluiten."
+      ]
+    },
     "tasks": {
       "q": "Hoe werken taken?",
       "a": [
@@ -569,8 +586,8 @@
     "browser-extension": {
       "q": "Is er een browserextensie voor PrivacyNotes?",
       "a": [
-        "Ja, voor Chrome, Edge en Firefox op een computer, en ze is gratis. Ze slaat de pagina die je leest op als notitie, met de hoofdtekst en de afbeeldingen, of als bladwijzer, ze schrijft een nieuwe notitie van jezelf, en ze kan de logins, creditcards, SSH-sleutels en bladwijzers van de site waarop je zit tonen. Kopieer een waarde met één klik, of kies Invullen (of druk op Alt+Shift+L) en de extensie typt de login voor die site in de pagina. Ze vult nooit zelf formulieren in.",
-        "Open Instellingen > Extensie, voeg de extensie toe vanuit de winkel van je browser, kies wat ze mag doen en kies dan Code maken. Kopieer de eenmalige code en plak hem in de extensie. Om ze te verwijderen, kies je Verwijderen naast de extensie onder Browserextensies op dezelfde pagina. Een extensie gebruikt geen apparaatplek. Een gratis account verbindt één browser; Pro verbindt er tot 10. [Hoe ze je notities veilig houdt](/nl/help/browser-extension-security)."
+        "Ja, voor op Chromium en Firefox gebaseerde browsers op een computer, en ze is gratis. Ze slaat de pagina die je leest op als notitie, met de hoofdtekst en de afbeeldingen, of als bladwijzer, ze schrijft een nieuwe notitie van jezelf, en ze kan de logins, kaarten, SSH-sleutels en bladwijzers van de site waarop je zit tonen. Kopieer een waarde met één klik, of kies Invullen (of druk op Alt+Shift+L) en de extensie typt de login voor die site in de pagina. Ze vult nooit zelf formulieren in.",
+        "Open Instellingen > Extensie, voeg de extensie toe vanuit de winkel van je browser, kies wat ze mag doen en kies dan Code maken. Kopieer de eenmalige code en plak hem in de extensie. Om haar te verwijderen, kies je Verwijderen naast de extensie onder Browserextensies op dezelfde pagina. Een extensie gebruikt geen apparaatplek. Een gratis account verbindt één browser; Pro verbindt er tot 10. [Hoe ze je notities veilig houdt](/nl/help/browser-extension-security)."
       ]
     },
     "cli-security": {
@@ -825,6 +842,13 @@
       "a": [
         "Ja. Beide instellingen staan standaard aan omdat we van onze gebruikers houden: we willen dat je [opslagruimte bespaart](/nl/help/storage-usage) en je privacy behoudt. Ruimtebespaarder verkleint een grote afbeelding en slaat hem op als JPEG: Standaard (de standaardkeuze) past in 2048 pixels met 85% kwaliteit, Klein past in 1280 pixels met 75% en Zeer klein past in 1024 pixels met 60% voor de kleinste bestanden. Locatiegegevens verwijderen haalt de EXIF-metadata die een camera in een foto schrijft, inclusief de GPS-locatie, weg voordat de afbeelding wordt opgeslagen. Beide gelden voor elke afbeelding die de app kan lezen: geplakt in een notitie, toegevoegd als bestand of geïmporteerd. Een afbeelding die de app niet kan lezen, zoals AVIF, SVG of een bestand dat niet opent, wordt opgeslagen zoals hij binnenkwam als je hem als bestand toevoegt of importeert, locatiegegevens inbegrepen. Twee uitzonderingen: een GIF houdt zijn formaat zodat zijn animatie blijft spelen, en een bestand dat aan een Kluis-item is toegevoegd, blijft precies zoals het was.",
         "Zet een van beide uit onder **Instellingen > Opslag > Afbeeldingen**, waar contactfoto's een derde schakelaar hebben die ze op 512 pixels houdt. De instellingen gelden alleen voor nieuwe afbeeldingen; bestanden die geen afbeelding zijn, worden precies zo opgeslagen als ze zijn. HEIC- en TIFF-afbeeldingen worden omgezet naar JPEG, omdat alleen Safari ze kan tonen. [Een back-up die je terugzet](/nl/help/restore-backup), wordt byte voor byte teruggeschreven."
+      ]
+    },
+    "paste-screenshots": {
+      "q": "Worden geplakte schermafbeeldingen ook gecomprimeerd?",
+      "a": [
+        "Ja. Schermafbeeldingen en afbeeldingen die je kopieert en rechtstreeks in een notitie plakt, doorlopen dezelfde [compressie van de ruimtebespaarder](/nl/help/image-quality) als bijgevoegde bestanden, gesleepte afbeeldingen en imports. Gewone ondoorzichtige schermafbeeldingen worden verkleind tot je gekozen instelling en opgeslagen als JPEG, waardoor een gemiddelde schermafbeelding nog maar een fractie van zijn oorspronkelijke grootte inneemt en je [opslagquotum](/nl/help/storage-usage) langer meegaat.",
+        "Kies tussen Standaard (2048 pixels met 85% kwaliteit), Klein (1280 pixels met 75%) en Zeer klein (1024 pixels met 60%) onder Instellingen > Opslag > Afbeeldingen, of zet Ruimtebespaarder uit om originelen te bewaren. Een schermafbeelding met transparante randen, zoals een vensteropname met slagschaduw, wordt wel verkleind tot je gekozen limiet, maar opgeslagen als PNG om de transparantie te behouden."
       ]
     },
     "storage-usage": {
@@ -1125,7 +1149,7 @@
       "a": [
         "Ja. Typ `=` in een tabelcel om een functie te kiezen, of schrijf de formule zelf. De cel toont het antwoord in plaats van de tekst, en elk antwoord wordt bijgewerkt zodra je een cel wijzigt die erin wordt gelezen. Cellen heten naar kolomletter en rijnummer, en de koprij telt als rij 1, dus je eerste rij met gegevens is rij 2. De antwoorden werken op elk account; kiezen uit het menu is Pro.",
         "Wil je alles in één keer uitproberen, download dan de voorbeeldnotitie, open daarna Instellingen > Overzetten > Importeren, kies **Markdown-bestanden** en selecteer het bestand.",
-        "[Voorbeeldnotitie (.md)](/marketing/table-formulas-examples.md)",
+        "[Voorbeeldnotitie (.md)](/help/table-formulas-examples.md)",
         "Dit zijn de functies, en ze zijn te combineren met `+`, `-`, `*`, `/`, `^` voor een macht en haakjes:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` en `COUNT` werken over een bereik, zoals in `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` en `LOG` werken op één waarde, zoals in `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` en `PHI` zijn constanten, en `RAND` geeft een willekeurig getal\n- `=B7-B2` trekt de ene cel van de andere af, en `=SUM(B2:B10)*0.2` neemt een percentage van een totaal",
         "Klik op een cel die een antwoord toont en de formule komt terug, klaar om te wijzigen. Je notitie bewaart de formule zelf, nooit het resultaat, dus een export en elke andere Markdown-app tonen `=SUM(B2:B10)` precies zoals je het schreef."

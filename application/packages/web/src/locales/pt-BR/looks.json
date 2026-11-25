@@ -8,8 +8,10 @@
   "applyToFolderItems": "Aplicar a todos os itens desta pasta",
   "applyToTagItems": "Aplicar a todos os itens com esta etiqueta",
   "icon": "Ícone",
+  "emoji": "Emoji",
   "searchPlaceholder": "Buscar ícones",
   "searchLogos": "Buscar logos",
+  "searchEmojis": "Buscar emojis",
   "moreLogos": "Mais logos",
   "allLogos": "Todos os logos, de A a Z",
   "recent": "Usados recentemente",
@@ -41,7 +43,14 @@
     "games": "Jogos",
     "learning": "Aprendizado e pesquisa",
     "trips": "Viagens e fitness",
-    "privacy": "Privacidade e segurança"
+    "privacy": "Privacidade e segurança",
+    "emojiSmileys": "Carinhas e emoções",
+    "emojiPeople": "Pessoas e corpo",
+    "emojiAnimals": "Animais e natureza",
+    "emojiActivities": "Atividades",
+    "emojiObjects": "Objetos",
+    "emojiSymbols": "Símbolos e sinais",
+    "emojiFlags": "Bandeiras"
   },
   "icons": {
     "folder": "Pasta",

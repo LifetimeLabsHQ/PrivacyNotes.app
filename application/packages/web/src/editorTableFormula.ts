@@ -1,10 +1,11 @@
 import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
-import type { EditorState } from '@tiptap/pm/state';
+import type { EditorState, Selection, Transaction } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { TableMap } from '@tiptap/pm/tables';
 import { activeLocale } from './i18n';
+import { blockContains, touchesTopBlock } from './editorDirection';
 import { evaluateTable, formatFormulaValue, isFormulaText } from './tableFormula';
 
 /**
@@ -28,10 +29,22 @@ import { evaluateTable, formatFormulaValue, isFormulaText } from './tableFormula
  * Spec: docs/internal/specs/table-formulas.md
  */
 
-const formulaKey = new PluginKey<DecorationSet>('tableFormula');
+type FormulaEntry = { relFrom: number; relTo: number; source: string; shown: string };
+type FormulaTarget = { from: number; to: number; source: string; shown: string };
+type FormulaState = {
+  targets: FormulaTarget[];
+  /** Indices of targets currently uncovered by the caret/selection. */
+  editing: string;
+  locale: string;
+  decorations: DecorationSet;
+};
 
-/** One cell we can both evaluate and draw over. */
-type Target = { from: number; to: number; row: number; col: number };
+const formulaKey = new PluginKey<FormulaState>('tableFormula');
+
+/** One cell we can both evaluate and draw over, in table-relative coordinates. */
+type Target = { relFrom: number; relTo: number; row: number; col: number; text: string };
+
+const hasTable = (node: ProseMirrorNode) => blockContains(node, (n) => n.type.name === 'table');
 
 /**
  * The text range of a cell, when the cell is simple enough to paint over.
@@ -42,22 +55,22 @@ type Target = { from: number; to: number; row: number; col: number };
  * shape, and a formula is plain text by definition, so nothing a user would
  * want computed is excluded by the rule.
  */
-function plainTextRange(cell: ProseMirrorNode, cellPos: number): { from: number; to: number; text: string } | null {
+function plainTextRange(cell: ProseMirrorNode, cellRelPos: number): { relFrom: number; relTo: number; text: string } | null {
   if (cell.childCount !== 1) return null;
   const paragraph = cell.firstChild;
   if (!paragraph || paragraph.type.name !== 'paragraph' || paragraph.childCount !== 1) return null;
   const text = paragraph.firstChild;
   if (!text?.isText || text.marks.length) return null;
-  // cellPos is the cell node itself: +1 enters the cell, +1 again enters the
-  // paragraph, and the text starts there.
-  const from = cellPos + 2;
-  return { from, to: from + (text.text?.length ?? 0), text: text.text ?? '' };
+  // cellRelPos is relative to the table's start: +1 enters the table, +1 enters
+  // the cell, +1 enters the paragraph, and the text starts there.
+  const relFrom = cellRelPos + 3;
+  const raw = text.text ?? '';
+  return { relFrom, relTo: relFrom + raw.length, text: raw };
 }
 
 /** Every formula cell of one table, with the grid it must be evaluated against. */
-function tableTargets(table: ProseMirrorNode, tablePos: number): { grid: string[][]; targets: Target[] } {
+function tableTargets(table: ProseMirrorNode): { grid: string[][]; targets: Target[] } {
   const map = TableMap.get(table);
-  const start = tablePos + 1;
   const grid: string[][] = [];
   const targets: Target[] = [];
   // A merged cell appears at every coordinate it covers, so the same text is
@@ -75,14 +88,43 @@ function tableTargets(table: ProseMirrorNode, tablePos: number): { grid: string[
         continue;
       }
       cells.push(cell.textContent);
-      const range = plainTextRange(cell, start + cellPos);
+      const range = plainTextRange(cell, cellPos);
       if (!range || !isFormulaText(range.text) || painted.has(cellPos)) continue;
       painted.add(cellPos);
-      targets.push({ from: range.from, to: range.to, row, col });
+      targets.push({ relFrom: range.relFrom, relTo: range.relTo, row, col, text: range.text });
     }
     grid.push(cells);
   }
   return { grid, targets };
+}
+
+/** Per immutable table node: evaluated formula entries, cached across edits
+ *  elsewhere in the document. */
+const tableFormulaCache = new WeakMap<ProseMirrorNode, { locale: string; entries: FormulaEntry[] }>();
+
+function entriesOf(table: ProseMirrorNode, locale: string): FormulaEntry[] {
+  const hit = tableFormulaCache.get(table);
+  if (hit && hit.locale === locale) return hit.entries;
+  const { grid, targets } = tableTargets(table);
+  const entries: FormulaEntry[] = [];
+  if (targets.length) {
+    const results = evaluateTable(grid);
+    for (const target of targets) {
+      const result = results[target.row]?.[target.col];
+      // A formula that cannot produce a number is drawn as the text the
+      // user typed. One failure mode, and it is the same thing a reader
+      // without the feature sees.
+      if (!result || 'error' in result) continue;
+      entries.push({
+        relFrom: target.relFrom,
+        relTo: target.relTo,
+        source: target.text,
+        shown: formatFormulaValue(result.value, locale),
+      });
+    }
+  }
+  tableFormulaCache.set(table, { locale, entries });
+  return entries;
 }
 
 /**
@@ -116,43 +158,79 @@ function valueWidget(view: EditorView, getPos: () => number | undefined, shown: 
   return span;
 }
 
-function buildDecorations(state: EditorState): DecorationSet {
-  const decorations: Decoration[] = [];
-  const { from: selFrom, to: selTo } = state.selection;
+function editingSignature(targets: readonly FormulaTarget[], selection: Selection): string {
+  if (!targets.length) return '';
+  const { from: selFrom, to: selTo } = selection;
+  let sig = '';
+  for (let i = 0; i < targets.length; i++) {
+    const t = targets[i]!;
+    if (selFrom <= t.to + 1 && selTo >= t.from - 1) sig += `${i},`;
+  }
+  return sig;
+}
 
+function decorationsFor(doc: ProseMirrorNode, targets: readonly FormulaTarget[], selection: Selection): DecorationSet {
+  if (!targets.length) return DecorationSet.empty;
+  const { from: selFrom, to: selTo } = selection;
+  const decorations: Decoration[] = [];
+  for (const target of targets) {
+    // The caret inside the cell means the user is editing: show the
+    // source. One position of slack at each end so a click landing on the
+    // cell boundary opens it rather than looking inert.
+    if (selFrom <= target.to + 1 && selTo >= target.from - 1) continue;
+    decorations.push(Decoration.inline(target.from, target.to, { class: 'pn-formula-src' }));
+    decorations.push(
+      Decoration.widget(target.from, (view, getPos) => valueWidget(view, getPos, target.shown, target.source), {
+        side: -1,
+        ignoreSelection: true,
+      }),
+    );
+  }
+  return decorations.length ? DecorationSet.create(doc, decorations) : DecorationSet.empty;
+}
+
+function buildState(state: EditorState): FormulaState {
+  const locale = activeLocale();
+  const targets: FormulaTarget[] = [];
   state.doc.descendants((node, pos) => {
     if (node.type.name !== 'table') {
       // Never walk into inline content: a table cannot live inside a
       // paragraph, and the text nodes of a long note are the bulk of the tree.
       return !node.inlineContent;
     }
-    const { grid, targets } = tableTargets(node, pos);
-    if (targets.length) {
-      const results = evaluateTable(grid);
-      for (const target of targets) {
-        const result = results[target.row]?.[target.col];
-        // A formula that cannot produce a number is drawn as the text the
-        // user typed. One failure mode, and it is the same thing a reader
-        // without the feature sees.
-        if (!result || 'error' in result) continue;
-        // The caret inside the cell means the user is editing: show the
-        // source. One position of slack at each end so a click landing on the
-        // cell boundary opens it rather than looking inert.
-        if (selFrom <= target.to + 1 && selTo >= target.from - 1) continue;
-        const source = state.doc.textBetween(target.from, target.to);
-        decorations.push(Decoration.inline(target.from, target.to, { class: 'pn-formula-src' }));
-        decorations.push(
-          Decoration.widget(target.from, (view, getPos) => valueWidget(view, getPos, formatFormulaValue(result.value, activeLocale()), source), {
-            side: -1,
-            ignoreSelection: true,
-          }),
-        );
-      }
+    for (const entry of entriesOf(node, locale)) {
+      targets.push({ from: pos + entry.relFrom, to: pos + entry.relTo, source: entry.source, shown: entry.shown });
     }
     return false;
   });
+  const editing = editingSignature(targets, state.selection);
+  return { targets, editing, locale, decorations: decorationsFor(state.doc, targets, state.selection) };
+}
 
-  return DecorationSet.create(state.doc, decorations);
+function applyState(tr: Transaction, prev: FormulaState, newState: EditorState): FormulaState {
+  if (!tr.docChanged && !tr.selectionSet) return prev;
+  const locale = activeLocale();
+  if (locale !== prev.locale) return buildState(newState);
+  if (!tr.docChanged) {
+    if (!prev.targets.length) return prev;
+    const editing = editingSignature(prev.targets, newState.selection);
+    if (editing === prev.editing) return prev;
+    return { ...prev, editing, decorations: decorationsFor(newState.doc, prev.targets, newState.selection) };
+  }
+  if (!touchesTopBlock(tr, hasTable)) {
+    if (!prev.targets.length) return prev;
+    const targets = prev.targets.map((t) => ({
+      ...t,
+      from: tr.mapping.map(t.from, 1),
+      to: tr.mapping.map(t.to, 1),
+    }));
+    const editing = editingSignature(targets, newState.selection);
+    const decorations = editing === prev.editing
+      ? prev.decorations.map(tr.mapping, newState.doc)
+      : decorationsFor(newState.doc, targets, newState.selection);
+    return { targets, editing, locale, decorations };
+  }
+  return buildState(newState);
 }
 
 /**
@@ -165,14 +243,12 @@ function buildDecorations(state: EditorState): DecorationSet {
  * account to ask. What Pro buys is the menu that writes the formula for you
  * (FormulaSuggestion.tsx and the table toolbar button), not the arithmetic.
  */
-export function tableFormulaPlugin(): Plugin<DecorationSet> {
-  return new Plugin<DecorationSet>({
+export function tableFormulaPlugin(): Plugin<FormulaState> {
+  return new Plugin<FormulaState>({
     key: formulaKey,
     state: {
-      init: (_config, state) => buildDecorations(state),
-      // The selection decides what is painted as much as the document does,
-      // so a plain caret move has to rebuild.
-      apply: (tr, value, _old, newState) => (tr.docChanged || tr.selectionSet ? buildDecorations(newState) : value),
+      init: (_config, state) => buildState(state),
+      apply: (tr, value, _old, newState) => applyState(tr, value, newState),
     },
     props: {
       /**
@@ -188,7 +264,7 @@ export function tableFormulaPlugin(): Plugin<DecorationSet> {
        * of the merge entirely unless it has something to say.
        */
       decorations(state) {
-        const set = formulaKey.getState(state);
+        const set = formulaKey.getState(state)?.decorations;
         return set && set !== DecorationSet.empty ? set : undefined;
       },
     },

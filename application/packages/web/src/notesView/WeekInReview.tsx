@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import type { LocalNote } from '../db';
 import { type MedicationTemplate } from '../trackerTypes';
 import { computeTrackerStats } from '../trackerStats';
+import { SETTINGS_EYEBROW } from '../ui';
 
 export function WeekInReview({
   notes,
@@ -23,7 +24,7 @@ export function WeekInReview({
   return (
     <div className="mx-4 sm:mx-6 mt-2 mb-1 rounded-lg border border-accent/30 bg-accent/5 p-3 space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-meta font-semibold text-accent uppercase tracking-wide">{t('weekReview.title')}</span>
+        <span className={SETTINGS_EYEBROW}>{t('weekReview.title')}</span>
         <span className="text-meta text-pn-muted">{t('weekReview.daysLogged', { count: w.daysLogged })}</span>
       </div>
       <div className="flex flex-wrap gap-3 text-small">

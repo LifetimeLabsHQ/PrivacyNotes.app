@@ -1,14 +1,13 @@
 import { VaultFieldAction } from './ui/VaultFieldAction';
-import { Button } from './ui/Button';
+import { Button, PinProtectToggle } from './ui';
 import { VaultFormActions } from './ui/VaultFormActions';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Info, Key, Lock, Shield, Tag } from './icons';
+import { Key, Lock, Shield, Tag } from './icons';
 import { hasPin } from './pin';
-import { PinInfoModal } from './PinInfoModal';
 import { useCopyToClipboard } from './clipboard';
 import { PasswordField } from './PasswordText';
-import { FIELD_CLASS, FieldLabel } from './formFields';
+import { FIELD_CLASS, FieldLabel, NO_TEXT_ASSIST } from './formFields';
 import { NotesField } from './NotesField';
 import { saveFailureText } from './saveFile';
 import { detectPlatform } from './devices';
@@ -115,7 +114,6 @@ export function SshKeyForm({
   // can appear or vanish while the toggle below is on screen, and
   // localStorage fires nothing that would refresh a frozen value.
   const pinConfigured = hasPin();
-  const [showPinInfo, setShowPinInfo] = useState(false);
   const [showPrivate, setShowPrivate] = useState(false);
   const [showPassphrase, setShowPassphrase] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -185,6 +183,7 @@ export function SshKeyForm({
             placeholder={t('sshKeyForm.labelPlaceholder')}
             disabled={locked}
             autoComplete="off"
+            {...NO_TEXT_ASSIST}
             className={fieldClass}
           />
         </div>
@@ -210,6 +209,7 @@ export function SshKeyForm({
               placeholder="ssh-ed25519 AAAA..."
               disabled={locked}
               rows={3}
+              {...NO_TEXT_ASSIST}
               className={`${fieldClass} font-mono text-small resize-y`}
             />
             <VaultFieldAction kind="copy"
@@ -234,6 +234,7 @@ export function SshKeyForm({
                   onChange={(e) => updateBody({ privateKey: e.target.value })}
                   disabled={locked}
                   rows={6}
+                  {...NO_TEXT_ASSIST}
                   className={`${fieldClass} font-mono text-small resize-y`}
                 />
               ) : (
@@ -296,35 +297,11 @@ export function SshKeyForm({
         />
 
         {/* PIN-protect toggle */}
-        <label className={`flex items-center gap-2 pt-2 border-t border-divider ${!pinConfigured && !pinProtected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-          <input
-            type="checkbox"
-            checked={pinProtected}
-            onChange={(e) => onPinProtectedChange(noteId, e.target.checked)}
-            // Read-only locks CONTENT, not protection: toggling the PIN gate
-            // changes no data, so it stays available on a locked item.
-            disabled={!pinConfigured && !pinProtected}
-            className="rounded accent-accent"
-          />
-          <span className="text-body text-pn-muted">
-            {t('common:cardForm.requirePin')}
-          </span>
-          <button
-            type="button"
-            onClick={(e) => { e.preventDefault(); setShowPinInfo(true); }}
-            className="text-accent/60 hover:text-accent transition p-1 -m-1"
-            aria-label={t('common:cardForm.whatDoesThisDo')}
-          >
-            <Info />
-          </button>
-        </label>
-
-        {showPinInfo && <PinInfoModal onClose={() => setShowPinInfo(false)} />}
-        {!pinConfigured && !pinProtected && (
-          <p className="text-meta text-pn-muted -mt-2">
-            {t('common:cardForm.setUpPinFirst')}
-          </p>
-        )}
+        <PinProtectToggle
+          checked={pinProtected}
+          pinConfigured={pinConfigured}
+          onChange={(next) => onPinProtectedChange(noteId, next)}
+        />
 
         <VaultFormActions locked={locked} isNew={isNew} saveError={saveError} onSave={onSave} onCancel={onCancel} />
       </div>

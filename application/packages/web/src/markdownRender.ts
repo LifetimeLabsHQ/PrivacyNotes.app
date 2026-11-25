@@ -22,7 +22,8 @@ import { faviconUrl } from './favicon';
 import { attachmentLinks, unescapeMarkdownText } from './fileNames';
 import { RENDER_LINK, RENDER_PICTURE, SRC_PICTURE, markdownLinks, replaceMatches } from './linkScan';
 import { getFavicons } from './theme';
-import { widthsFromTableLines } from './tableColumnWidths';
+import { effectiveWidths, widthsFromTableLines } from './tableColumnWidths';
+import { columnBorderExportColors, columnBorderGapCss, parseColumnBorder } from './columnBorders';
 import { fillAt, tableFillsFromMarker, tableWidthFromMarker } from './tableDelimiterRow';
 import { cellFillColor } from './editorColors';
 import { noteLinkDisplayText } from './noteLinks';
@@ -32,6 +33,7 @@ import { allowedImageSource } from './markdownFolder/assetSource';
 import { calloutColorOf, canonicalCalloutType, type CalloutType } from './calloutKeywords';
 import { evaluateTable, formatFormulaValue, isFormulaText } from './tableFormula';
 import { INLINE_ICON_RE, inlineIconId } from './editorIconSyntax';
+import { formatTaskReminderSpec, parseTaskReminderSpec, TASK_REMINDER_RE } from './taskReminderSyntax';
 import { firstLetter, letterDirection, listNumerals, writesPersian } from './textDirection';
 import { escapeHtml } from './escapeHtml';
 import { nextFence } from './markdownFence';
@@ -545,6 +547,13 @@ function renderInline(raw: string): string {
     if (!paths) return '';
     const d = paths.map((p) => `<path d="${escapeHtml(p)}"/>`).join('');
     return stash(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1.1em" height="1.1em" fill="currentColor" style="vertical-align:-0.18em" aria-hidden="true">${d}</svg>`);
+  });
+
+  // :remind[YYYY-MM-DD HH:MM ...] - compact inline reminder pill for exports and burn shares.
+  t = t.replace(TASK_REMINDER_RE, (run: string, inner: string) => {
+    const parsed = parseTaskReminderSpec(inner);
+    if (!parsed) return run;
+    return stash(taskReminderPillHtml(parsed));
   });
 
   // Note-links [[target]] or [[target|label]] - render as plain text
@@ -1124,6 +1133,12 @@ function taskCheckboxHtml(checked: boolean): string {
   return `<input type="checkbox" disabled${checked ? ' checked' : ''} style="${base}${checked ? `;${fill}` : ''}" />`;
 }
 
+/** Styled inline reminder pill shared by Markdown and aligned-HTML task exports. */
+function taskReminderPillHtml(parsed: Parameters<typeof formatTaskReminderSpec>[0]): string {
+  const text = escapeHtml(formatTaskReminderSpec(parsed));
+  return `<span style="display:inline-flex;align-items:center;gap:0.25em;padding:0.1em 0.45em;border-radius:999px;border:1px solid #d4d4d8;background:#f4f4f5;color:#3f3f46;font-size:0.82em;white-space:nowrap;vertical-align:0.05em">&#128276; ${text}</span>`;
+}
+
 /** Task text, struck through and dimmed when done - sub-lists stay outside. */
 function taskTextHtml(checked: boolean, body: string, subHtml: string): string {
   const text = checked ? `<span style="${TASK_DONE_TEXT}">${body}</span>` : body;
@@ -1149,7 +1164,14 @@ function renderTaskListHtml(block: string): string | null {
     const holder = li.querySelector('div');
     const para = holder?.querySelector('p');
     const align = sanitizeAlign(para?.style.textAlign ?? '');
-    const inner = sanitizeEditorHtml((para ?? holder)?.innerHTML ?? '');
+    const rawInner = sanitizeEditorHtml((para ?? holder)?.innerHTML ?? '');
+    const inner = rawInner.replace(
+      /<span\b[^>]*\bdata-pn-task-reminder="([^"]*)"[^>]*><\/span>/gi,
+      (_m, attrVal: string) => {
+        const parsed = parseTaskReminderSpec(attrVal.replace(/&quot;/g, '"').replace(/&amp;/g, '&'));
+        return parsed ? taskReminderPillHtml(parsed) : '';
+      },
+    );
     const justify =
       align === 'center' ? ';justify-content:center'
       : align === 'right' ? ';justify-content:flex-end'
@@ -1549,8 +1571,16 @@ function renderBlocks(text: string): string {
       // with the container's prefix (`  `, `> `) on every line: take it off
       // the code, as the editor shows it.
       const lines = body.split('\n');
-      const dedent = /^[ \t>]+$/.test(prefix) && lines.every((l) => l.startsWith(prefix) || l.trim() === '');
-      const code = dedent ? lines.map((l) => l.slice(prefix.length)).join('\n') : lines.join('\n');
+      const quotePrefix = prefix.includes('>');
+      const trimmedPrefix = prefix.trimEnd();
+      const isBlankQuoted = (l: string) => {
+        if (l.trim() === '') return true;
+        if (!quotePrefix) return false;
+        const t = l.trimEnd();
+        return t.length <= trimmedPrefix.length && trimmedPrefix.startsWith(t) && /^[ \t>]+$/.test(t);
+      };
+      const dedent = /^[ \t>]+$/.test(prefix) && lines.every((l) => l.startsWith(prefix) || isBlankQuoted(l));
+      const code = dedent ? lines.map((l) => (l.startsWith(prefix) ? l.slice(prefix.length) : '')).join('\n') : lines.join('\n');
       const tick = '`'.repeat(Math.max(3, ...(code.match(/`+/g) ?? []).map((r) => r.length + 1)));
       fenceSource.push(tick + lang.replace(/`/g, '') + '\n' + code + '\n' + tick);
       // A title (```bash title="x", codeFenceInfo.ts) heads the panel, set
@@ -1767,6 +1797,55 @@ function renderBlocks(text: string): string {
       }
       const callout = buf[0]?.match(/^\[!([\w-]+)(?:\|([\w-]+))?\]([+-]?)\s?(.*)$/);
       if (callout) {
+        const rawType = callout[1]!.trim().toLowerCase();
+        // Side-by-side borderless columns (#647): render as a clean CSS grid
+        // with no summary or frame, preserving column width ratios for HTML/PDF export.
+        if (rawType === 'columns') {
+          const innerLines = buf.slice(1);
+          const colWidths: (number | null)[] = [];
+          let inBlock = false;
+          for (const inner of innerLines) {
+            const isQ = /^>\s?/.test(inner);
+            if (isQ && !inBlock) {
+              const cm = inner.replace(/^>\s?/, '').match(/^\[!col(?:\|(\d{1,2}))?\][+-]?(?:\s.*)?$/i);
+              if (cm) {
+                const n = cm[1] ? Number(cm[1]) : NaN;
+                colWidths.push(n >= 1 && n <= 99 ? n : null);
+              }
+            }
+            inBlock = isQ;
+          }
+          const weights = effectiveWidths(colWidths);
+          const template = weights
+            ? weights.map((w) => `minmax(0,${w}fr)`).join(' ')
+            : `repeat(${Math.max(1, colWidths.length)},minmax(0,1fr))`;
+          const bodyMd = unplace(innerLines.join('\n'));
+          const bodyHtml = bodyMd.trim() === '' ? '' : renderMarkdown(bodyMd);
+          const border = parseColumnBorder(callout[2]);
+          if (border.style === 'none') {
+            out.push(
+              `<div class="pn-columns" style="margin:1em 0;display:grid;grid-template-columns:${template};gap:1.25rem;align-items:start">${bodyHtml}</div>`
+            );
+          } else {
+            const gap = columnBorderGapCss(border.style);
+            const { bc, bg } = columnBorderExportColors(border);
+            const frameCss = border.style === 'frame'
+              ? `;border:${border.weight}px ${border.line} ${bc};border-radius:7px;overflow:hidden${bg !== 'transparent' ? `;background:${bg}` : ''}`
+              : '';
+            out.push(
+              `<div class="pn-columns" data-border-style="${border.style}" style="margin:1em 0;display:grid;grid-template-columns:${template};gap:${gap};align-items:stretch;--pn-col-bw:${border.weight}px;--pn-col-bs:${border.line};--pn-col-bc:${bc};--pn-col-bg:${bg}${frameCss}">${bodyHtml}</div>`
+            );
+          }
+          continue;
+        }
+        if (rawType === 'col') {
+          const lead = callout[4]!.trim();
+          const bodyLines = lead ? [lead, ...buf.slice(1)] : buf.slice(1);
+          const bodyMd = unplace(bodyLines.join('\n'));
+          const bodyHtml = bodyMd.trim() === '' ? '' : renderMarkdown(bodyMd);
+          out.push(`<div class="pn-columns-col" style="min-width:0">${bodyHtml}</div>`);
+          continue;
+        }
         const canon = canonicalCalloutType(callout[1]!);
         const { color, rgb } = calloutColorOf(canon, callout[2]);
         const tint = rgb.replace(/ /g, ',');

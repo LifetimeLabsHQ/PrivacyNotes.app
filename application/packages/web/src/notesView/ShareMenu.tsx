@@ -1,12 +1,10 @@
-import { useEffect, useRef, type RefObject } from 'react';
-import { createPortal } from 'react-dom';
+import { useRef, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from '../db';
 import { BracketsSquare, Export, EXPORT_GLYPHS, LinkSimple } from '../icons';
 import { shortcutNoun } from '../noteShortcut';
 import { isUuid } from '../uuid';
-import { HoverLabel } from '../HoverLabel';
-import { usePopoverPosition } from '../usePopoverPosition';
+import { HoverLabel, Popover } from '../ui';
 
 export function ShareMenu({
   open,
@@ -48,31 +46,6 @@ export function ShareMenu({
 }) {
   const { t } = useTranslation('notes');
   const anchorRef = useRef<HTMLDivElement | null>(null);
-  const panelRef = useRef<HTMLDivElement | null>(null);
-  // Positioned by the same hook and the same alignment as the "..." menu one
-  // button along, and for the same reason it was needed there: the panel used
-  // to be pinned to the viewport at a fixed 3.5rem, which assumes the header
-  // starts at the top of the window. It does not whenever a banner sits above
-  // the shell - the demo bar, or an announcement - and the panel then opened
-  // ON TOP of the button that had just been pressed. The hook measures the
-  // trigger, opens below it, and flips above when there is no room.
-  // Spec: docs/internal/design/ui-patterns.md (section 15)
-  const pos = usePopoverPosition(open, triggerHidden ? fallbackAnchorRef : anchorRef, panelRef, { align: 'end' });
-
-  // Close on an outside pointerdown, ignoring the trigger so it can toggle
-  // without a re-open flicker. Same handler shape as NoteOptionsMenu.
-  useEffect(() => {
-    if (!open) return;
-    function handler(e: PointerEvent) {
-      const target = e.target as Node | null;
-      if (!target) return;
-      if (panelRef.current && panelRef.current.contains(target)) return;
-      if (anchorRef.current && anchorRef.current.contains(target)) return;
-      onClose();
-    }
-    window.addEventListener('pointerdown', handler, true);
-    return () => window.removeEventListener('pointerdown', handler, true);
-  }, [open, onClose]);
 
   return (
     <>
@@ -103,19 +76,14 @@ export function ShareMenu({
           </button>
         </HoverLabel>
       </div>
-      {open && createPortal(
-        (
-          <div
-            ref={panelRef}
-            role="dialog"
-            aria-label={t('share.ariaLabel')}
-            className="fixed z-50 w-72 max-h-[calc(100vh-16px)] overflow-y-auto rounded-lg border border-divider bg-surface-2 shadow-lg text-body py-1"
-            style={{
-              top: pos?.top ?? 0,
-              left: pos?.left ?? 0,
-              visibility: pos ? 'visible' : 'hidden',
-            }}
-          >
+      <Popover
+        open={open}
+        anchorRef={triggerHidden ? fallbackAnchorRef : anchorRef}
+        onClose={onClose}
+        align="end"
+        label={t('share.ariaLabel')}
+        className="w-72 !px-0 !py-1 text-body"
+      >
               {/* Icon column in accent, the grammar the "..." menu next door
                   already uses, and the same marks the Export tab of Settings
                   > Import & Export wears for these file types. Burn keeps its
@@ -287,10 +255,7 @@ export function ShareMenu({
               </button>
               </>
               )}
-          </div>
-        ),
-        document.body,
-      )}
+      </Popover>
     </>
   );
 }

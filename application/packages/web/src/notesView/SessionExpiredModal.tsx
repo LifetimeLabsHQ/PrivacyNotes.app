@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { logAuthEvent } from '../authDiag';
-import { WarningCircle } from '../icons';
-import { Modal } from '../ui';
-import { PRIMARY_BTN_SKIN } from '../settingsUI';
+import { SignIn, WarningCircle } from '../icons';
+import { Button, Modal, ModalFooter } from '../ui';
 
 /**
  * Hard-block modal shown when the Supabase session has expired or the
@@ -29,13 +28,11 @@ export function SessionExpiredModal({ onSignOut }: { onSignOut: () => void }) {
         <p className="text-body text-pn-muted leading-relaxed">
           {t('sessionExpired.body')}
         </p>
-        <button
-          type="button"
-          onClick={onSignOut}
-          className={`w-full rounded-md ${PRIMARY_BTN_SKIN} text-body font-semibold px-3 py-2.5 transition`}
-        >
-          {t('sessionExpired.signInAgain')}
-        </button>
+        <ModalFooter>
+          <Button variant="primary" icon={<SignIn aria-hidden="true" />} onClick={onSignOut}>
+            {t('sessionExpired.signInAgain')}
+          </Button>
+        </ModalFooter>
     </Modal>
   );
 }

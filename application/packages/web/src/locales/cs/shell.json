@@ -41,6 +41,7 @@
     "noDocuments": "Žádné dokumenty.",
     "noImages": "Žádné obrázky.",
     "noAudioFiles": "Žádné zvukové soubory.",
+    "noUnusedFiles": "Žádné nepoužité soubory.",
     "emptyTypesHint": "Obrázky, dokumenty, zvuk, video a soubory zip. Až {{max}} MB na soubor.",
     "uploadFiles": "Nahrát soubory",
     "menuShow": "Zobrazit",
@@ -237,7 +238,7 @@
     "tagCount_other": "{{count}} značek",
     "entryDate": "Datum záznamu",
     "noDate": "Žádné",
-    "schedule": "Termín",
+    "schedule": "Datum a připomínky",
     "ends": "Končí",
     "sameDay": "Tentýž den",
     "starts": "Začíná",
@@ -324,7 +325,6 @@
     "showOneWeek": "Zobrazit jeden týden"
   },
   "contextMenu": {
-    "newNote": "Nová poznámka",
     "newTask": "Nový úkol",
     "newKanban": "Nová kanbanová tabule",
     "newDrawing": "Nová kresba",
@@ -333,15 +333,12 @@
     "newSshKey": "Nový SSH klíč",
     "newJournal": "Nový deník",
     "newFile": "Nový soubor",
-    "exitZenMode": "Ukončit režim Zen",
-    "zenMode": "Režim Zen",
     "showSidebar": "Zobrazit boční panel",
     "hideSidebar": "Skrýt boční panel",
     "showNotesList": "Zobrazit seznam poznámek",
     "hideNotesList": "Skrýt seznam poznámek",
     "resetPaneWidths": "Obnovit šířku panelů",
     "settings": "Nastavení",
-    "signOut": "Odhlásit se",
     "deselect": "Zrušit výběr",
     "select": "Vybrat",
     "selectedCount_one": "Vybrána {{count}} položka",
@@ -373,8 +370,7 @@
     "closeOtherTabs": "Zavřít ostatní karty",
     "closeAllTabs": "Zavřít všechny karty",
     "pinTab": "Připnout kartu",
-    "unpinTab": "Odepnout kartu",
-    "newEvent": "Nová událost"
+    "unpinTab": "Odepnout kartu"
   },
   "demoBanner": {
     "title": "Vyzkoušej to bez rizika",
@@ -876,6 +872,28 @@
     "offOnPhone": "Připomínky jsou v tomto telefonu vypnuté",
     "turnOn": "Zapnout"
   },
+  "taskReminder": {
+    "set": "Nastavit připomínku",
+    "edit": "Upravit připomínku",
+    "laterToday": "Později dnes",
+    "pickDateTime": "Vyber datum a čas",
+    "dateTime": "Datum a čas",
+    "remove": "Odebrat připomínku",
+    "onSchedule": "Podle plánu",
+    "afterCompletion": "Po dokončení",
+    "afterDone": "{{count}} {{unit}} po dokončení",
+    "afterDoneHint": "Počítá se ode dne, kdy tento úkol odškrtneš.",
+    "weekdaysShort": "Pracovní dny",
+    "everyWeeks_other": "Každých {{count}} týdnů",
+    "everyMonths_other": "Každých {{count}} měsíců",
+    "everyYears_other": "Každých {{count}} let",
+    "everyYears_one": "Každý rok",
+    "everyYears_few": "Každé {{count}} roky",
+    "everyMonths_one": "Každý měsíc",
+    "everyMonths_few": "Každé {{count}} měsíce",
+    "everyWeeks_one": "Každý týden",
+    "everyWeeks_few": "Každé {{count}} týdny"
+  },
   "quickAdd": {
     "group": "Vytvořit",
     "items": "Položky",
@@ -1074,7 +1092,8 @@
   "apps": {
     "railLabel": "Rozšíření",
     "title": "Rozšíření prohlížeče",
-    "subtitle": "Ukládání stránek a správce hesel v prohlížečích Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf a Zen. Rozšíření nikdy nedrží klíč, který otevírá tvoje poznámky.",
+    "subtitle": "Ukládání stránek a správce hesel pro prohlížeče založené na Chromiu a Firefoxu. Rozšíření nikdy nedrží klíč, který otevírá tvoje poznámky.",
+    "allSupported": "Funguje v jakémkoli prohlížeči založeném na Chromiu nebo Firefoxu.",
     "loginsCopyFull": "Kopie tvých přihlašovacích údajů v rozšíření prohlížeče je plná. Nové přihlašovací údaje se do ní dostanou, až některé smažeš.",
     "stepInstall": "Nainstaluj rozšíření",
     "stepFeatures": "Vyber, co smí dělat",
@@ -1085,7 +1104,7 @@
     "thisBrowser": "Tento prohlížeč",
     "otherApps": "Aplikace pro počítač a telefon:",
     "desktopAll": "Všechny ke stažení",
-    "extensionComputersOnly": "Rozšíření je pro Chrome, Firefox a Edge na počítači.",
+    "extensionComputersOnly": "Rozšíření je pro prohlížeče založené na Chromiu a Firefoxu na počítači.",
     "demoSignUp": "Zaregistruj se a připoj prohlížeč"
   },
   "cli": {

@@ -8,8 +8,10 @@ import {
   type JournalTitleFormat,
 } from './notesViewUtils';
 import { formatPattern, PATTERN_TOKENS, type PatternResult } from './intlFormat';
-import { RowTitle, SETTINGS_HELP, SETTINGS_ROW } from './settingsUI';
+import { NO_TEXT_ASSIST } from './formFields';
+import { RowTitle, SETTINGS_HELP, SETTINGS_ROW, settingsChipClass } from './settingsUI';
 import { Notebook } from './icons';
+import { Select, TextField } from './ui';
 
 export type JournalTitlesProps = {
   /** Date shape new entries are titled with, and its setter. */
@@ -98,19 +100,20 @@ export function JournalTitles({ format, onFormatChange, suffix, onSuffixChange, 
         {/* Each option is today's date in that shape, so the shapes need no
             names; the line under the title adds the words after it. */}
         <div className="flex flex-wrap items-center gap-2">
-        <select
+        <Select
+          size="sm"
           value={customOpen ? CUSTOM : format}
           onChange={(e) => (e.target.value === CUSTOM ? setCustomOpen(true) : pickPreset(e.target.value as JournalTitleFormat))}
           aria-label={t('journals.titlesTitle')}
-          className="rounded-md bg-track border border-divider px-2.5 py-1.5 text-body text-pn focus:border-accent focus:outline-none"
         >
           {distinctJournalFormats(today, format, locale).map((f) => (
             <option key={f} value={f}>{journalTitle(today, f, '', locale)}</option>
           ))}
           <option value={CUSTOM}>{t('journals.customPattern')}</option>
-        </select>
+        </Select>
         {!patternActive && (
-          <input
+          <TextField
+            size="sm"
             data-setting="journals.suffix"
             type="text"
             value={suffix}
@@ -118,7 +121,7 @@ export function JournalTitles({ format, onFormatChange, suffix, onSuffixChange, 
             onChange={(e) => onSuffixChange(e.target.value)}
             placeholder={t('journals.suffixPlaceholder')}
             aria-label={t('journals.suffixTitle')}
-            className="w-44 rounded-md bg-track border border-divider px-3 py-1.5 text-body text-pn placeholder:text-pn-muted focus:border-accent focus:outline-none"
+            className="w-44"
           />
         )}
         </div>
@@ -126,22 +129,25 @@ export function JournalTitles({ format, onFormatChange, suffix, onSuffixChange, 
       {customOpen && (
           <div className="pb-3">
             <p className={`${SETTINGS_HELP} mb-2`}>{t('journals.customPatternHelp')}</p>
-            <input
+            <TextField
               ref={fieldRef}
+              size="sm"
               type="text"
               dir="ltr"
+              autoComplete="off"
+              {...NO_TEXT_ASSIST}
               value={pattern}
               maxLength={JOURNAL_SUFFIX_MAX}
               onChange={(e) => onPatternChange(e.target.value)}
               placeholder={t('journals.customPatternPlaceholder')}
               aria-label={t('journals.customPattern')}
-              className="w-full rounded-md bg-track border border-divider px-3 py-1.5 font-mono text-body text-pn placeholder:text-pn-muted focus:border-accent focus:outline-none"
+              className="w-full font-mono"
             />
             {result &&
               ('text' in result ? (
                 <p className="mt-1.5 text-compact text-pn-soft">{t('journals.customPatternPreview', { title: result.text })}</p>
               ) : (
-                <p role="alert" className="mt-1.5 text-compact text-red-600 dark:text-red-400">{errorText(result)}</p>
+                <p role="alert" className="mt-1.5 text-compact text-danger">{errorText(result)}</p>
               ))}
             <p className={`${SETTINGS_HELP} mt-3 mb-1.5`}>{t('journals.customPatternTokens')}</p>
             <div className="flex flex-wrap gap-1.5">
@@ -152,7 +158,7 @@ export function JournalTitles({ format, onFormatChange, suffix, onSuffixChange, 
                     key={token}
                     type="button"
                     onClick={() => insertToken(token)}
-                    className="inline-flex items-baseline gap-1.5 rounded-md border border-divider px-2 py-1 text-small hover:border-pn-muted"
+                    className={`${settingsChipClass(false)} inline-flex items-baseline gap-1.5 !px-2 !py-1 !text-small`}
                   >
                     <code dir="ltr" className="font-mono text-pn">{token}</code>
                     <span className="text-pn-muted">{'text' in value ? value.text : ''}</span>

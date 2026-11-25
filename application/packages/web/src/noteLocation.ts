@@ -44,7 +44,8 @@ export function makeLocation(lat: unknown, lng: unknown, label?: unknown): NoteL
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return undefined;
   if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return undefined;
   const name = typeof label === 'string' ? clipGraphemes(label.replace(/\s+/g, ' ').trim(), LOCATION_LABEL_MAX).trim() : '';
-  const out: NoteLocation = { lat: round5(lat), lng: lng === 180 ? -180 : round5(lng) };
+  const roundedLng = round5(lng);
+  const out: NoteLocation = { lat: round5(lat), lng: roundedLng === 180 ? -180 : roundedLng };
   if (name) out.label = name;
   return out;
 }
@@ -209,7 +210,9 @@ function fromUrl(url: URL): LocationParse | undefined {
   const p = url.searchParams;
   const mlat = p.get('mlat');
   const mlon = p.get('mlon');
-  if (mlat !== null && mlon !== null) return checked(Number(mlat), Number(mlon));
+  if (mlat !== null && mlon !== null && mlat.trim() !== '' && mlon.trim() !== '') {
+    return checked(Number(mlat), Number(mlon));
+  }
   // Google's place marker, which is where the pin is; `/@` is only the middle of the view.
   const pin = /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/.exec(url.pathname + url.search);
   if (pin) return checked(Number(pin[1]), Number(pin[2]));

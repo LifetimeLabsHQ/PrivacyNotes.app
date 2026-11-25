@@ -11,6 +11,11 @@ export type KindChip<K extends string> = {
 };
 
 /**
+ * @catalog KindChips
+ * use: the kind filter bar above a list (Vault kinds, Files types): one non-scrolling row where each cell shows its glyph and count and expands its label on hover; zero-count kinds hide unless active.
+ * never: a horizontal-scrolling kind bar; a hand-drawn row of type filter pills.
+ */
+/**
  * The kind bar above a list (the Vault's kinds, the Files types): one row of
  * cells that share the pane's width, so it never scrolls and never wraps; a
  * hovered cell grows to fit its name and the others give up their spare room.

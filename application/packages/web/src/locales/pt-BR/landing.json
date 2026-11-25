@@ -344,7 +344,7 @@
     "extensionKeyLogin": "Preencher o login deste site",
     "extensionKeyBookmark": "Salvar esta página como marcador",
     "extensionAria": "Adicionar a extensão ao {{name}}",
-    "extensionNote": "Somente em computadores."
+    "extensionNote": "Funciona em qualquer navegador baseado em Chromium ou Firefox. Somente em computadores."
   },
   "ctaRepeat": {
     "getStarted": "Comece"

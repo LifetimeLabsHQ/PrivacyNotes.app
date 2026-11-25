@@ -1,7 +1,8 @@
 import type { SettingEntry } from './settingsSearch/registry';
 import type { TrackerSetupTab } from './TrackerConfig';
 import type { View } from './views';
-import { Archive, ArrowsClockwise, ChartBar, GridFour, Heartbeat, LockSimple, Megaphone, PaintBrush, Palette, Password, Pill, Plus, Question, Repeat, Shield, Shuffle, Trash, Globe, type Icon } from './icons';
+import { noteRecentId, readRecentIds } from './recentIds';
+import { Archive, ArrowsClockwise, ChartBar, Graph, GridFour, Heartbeat, LockSimple, MapPin, Megaphone, PaintBrush, Palette, Password, Pill, Plus, Question, Repeat, Shield, Shuffle, Trash, Globe, type Icon } from './icons';
 
 /**
  * Ninja's doors to the features that sit deep in Settings or in a dialog:
@@ -18,7 +19,7 @@ import { Archive, ArrowsClockwise, ChartBar, GridFour, Heartbeat, LockSimple, Me
  * Spec: docs/internal/specs/ninja-features.md
  */
 
-export type NinjaAction = 'passwordGenerator' | 'lock' | 'lockProtected' | 'syncNow' | 'syncPause' | 'emptyTrash' | 'randomItem';
+export type NinjaAction = 'graph' | 'placesMap' | 'passwordGenerator' | 'lock' | 'lockProtected' | 'syncNow' | 'syncPause' | 'emptyTrash' | 'randomItem';
 type NinjaPage = '/' | '/changelog' | '/help' | '/themes';
 
 export type NinjaDoor = {
@@ -42,6 +43,8 @@ export type NinjaDoor = {
 
 export const NINJA_DOORS: readonly NinjaDoor[] = [
   { id: 'feature:stats', group: 'features', label: 'notes:settings.statsLabel', detail: 'common:ninja.features.stats.detail', icon: ChartBar, to: { kind: 'settings', entry: 'section.stats' } },
+  { id: 'feature:graph', group: 'features', label: 'notes:footer.graph', detail: 'common:ninja.features.graph.detail', icon: Graph, to: { kind: 'action', id: 'graph' } },
+  { id: 'feature:placesMap', group: 'features', label: 'common:ninja.features.placesMap.label', detail: 'common:ninja.features.placesMap.detail', icon: MapPin, pro: true, to: { kind: 'action', id: 'placesMap' } },
   { id: 'feature:trackers', group: 'features', label: 'notes:settings.trackersLabel', detail: 'common:ninja.features.trackers.detail', icon: Heartbeat, to: { kind: 'tracker', tab: 'trackers', entry: 'trackers.setup' } },
   { id: 'feature:medication', group: 'features', label: 'common:ninja.features.medication.label', detail: 'common:ninja.features.medication.detail', icon: Pill, to: { kind: 'tracker', tab: 'medications', entry: 'trackers.medications' } },
   { id: 'feature:yearInPixels', group: 'features', label: 'common:ninja.features.yearInPixels.label', detail: 'common:ninja.features.yearInPixels.detail', icon: GridFour, to: { kind: 'settings', entry: 'stats.yearInPixels' } },
@@ -118,20 +121,10 @@ const RECENT_COMMANDS_MAX = 5;
 
 /** The ids of the commands run last in ">", newest first; empty when storage is closed. */
 export function readRecentCommands(): string[] {
-  try {
-    const raw: unknown = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
-    return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string').slice(0, RECENT_COMMANDS_MAX) : [];
-  } catch {
-    return [];
-  }
+  return readRecentIds(RECENT_KEY, RECENT_COMMANDS_MAX);
 }
 
 /** Put a command first in the recent list. */
 export function noteRecentCommand(id: string): void {
-  try {
-    const next = [id, ...readRecentCommands().filter((x) => x !== id)].slice(0, RECENT_COMMANDS_MAX);
-    localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-  } catch {
-    // A private window or blocked storage: the list stays as it was.
-  }
+  noteRecentId(RECENT_KEY, id, RECENT_COMMANDS_MAX);
 }

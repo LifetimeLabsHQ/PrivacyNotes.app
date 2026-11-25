@@ -38,7 +38,7 @@
     "blockMath": "Block formula",
     "align": "Alignment",
     "font": "Font",
-    "pictureFromFiles": "Picture from Files",
+    "pictureFromFiles": "Gallery",
     "date": "Date",
     "dateTime": "Date and time",
     "footnote": "Footnote",
@@ -260,6 +260,15 @@
     "headingsIn": "Headings in {{title}}",
     "noHeadingMatches": "No matching headings"
   },
+  "slash": {
+    "label": "Insert block",
+    "linePlaceholder": "Press / to insert blocks",
+    "filterHint": "Type to filter…",
+    "basic": "Basic blocks",
+    "smartDate": "Smart date",
+    "askNinja": "Ask Ninja for “{{query}}”",
+    "noMatches": "No matching blocks"
+  },
   "copyBox": {
     "placeholder": "Text to copy with one click"
   },
@@ -369,6 +378,23 @@
     "addColumn": "Add column",
     "removeBoard": "Remove board",
     "moveTo": "Move to"
+  },
+  "columns": {
+    "narrowWide": "Narrow and wide",
+    "wideNarrow": "Wide and narrow",
+    "removeColumns": "Remove columns",
+    "resizeColumn": "Drag to resize columns",
+    "barLabel": "Column controls",
+    "borders": "Column borders",
+    "borderBoxes": "Boxes",
+    "borderSolid": "Solid",
+    "borderDashed": "Dashed",
+    "borderDotted": "Dotted",
+    "borderThickness": "Thickness",
+    "borderThin": "Thin",
+    "borderMedium": "Medium",
+    "borderColorDefault": "Default color",
+    "borderTint": "Soft column tint"
   },
   "doodle": {
     "title": "Doodle",

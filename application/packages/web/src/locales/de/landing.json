@@ -344,7 +344,7 @@
     "extensionKeyLogin": "Login für diese Website ausfüllen",
     "extensionKeyBookmark": "Seite als Lesezeichen speichern",
     "extensionAria": "Erweiterung zu {{name}} hinzufügen",
-    "extensionNote": "Nur auf Computern."
+    "extensionNote": "Funktioniert in jedem Chromium- oder Firefox-basierten Browser. Nur auf Computern."
   },
   "ctaRepeat": {
     "getStarted": "Loslegen"

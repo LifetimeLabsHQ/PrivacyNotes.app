@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmModal } from '../ConfirmModal';
 import { subtreeIds, type FolderDef } from '../folders';
+import { Checkbox } from '../ui';
 
 /**
  * "Delete folder?" for one folder. A folder with subfolders offers to delete
@@ -35,15 +36,12 @@ export function FolderDeleteConfirm({ folders, id, name, onDelete, onClose }: {
     >
       <p>{body}</p>
       {subfolders > 0 && (
-        <label className="mt-3 flex items-center gap-2 text-pn-soft cursor-pointer">
-          <input
-            type="checkbox"
-            checked={withSubfolders}
-            onChange={(e) => setWithSubfolders(e.target.checked)}
-            className="accent-accent"
-          />
-          {t('folders.deleteSubfolders', { count: subfolders })}
-        </label>
+        <Checkbox
+          checked={withSubfolders}
+          onChange={(e) => setWithSubfolders(e.target.checked)}
+          label={t('folders.deleteSubfolders', { count: subfolders })}
+          className="mt-3"
+        />
       )}
     </ConfirmModal>
   );

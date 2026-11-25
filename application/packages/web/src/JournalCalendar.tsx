@@ -547,6 +547,7 @@ export function JournalCalendarCard({ grid, home = false, onExpand, drop, weekNu
         drop={drop}
         weekNumbers={weekNumbers}
         moodOf={moodOf}
+        wheelStep={false}
         headerEnd={onExpand && (
           <HoverLabel label={t('calendar.open')} position="below-end">
             <button

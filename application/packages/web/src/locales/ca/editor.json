@@ -38,7 +38,7 @@
     "blockMath": "Fórmula en bloc",
     "align": "Alineació",
     "font": "Lletra",
-    "pictureFromFiles": "Imatge de Fitxers",
+    "pictureFromFiles": "Galeria",
     "date": "Data",
     "dateTime": "Data i hora",
     "footnote": "Nota a peu de pàgina",
@@ -264,6 +264,15 @@
     "headingsIn": "Encapçalaments de {{title}}",
     "noHeadingMatches": "Cap encapçalament coincident"
   },
+  "slash": {
+    "label": "Insereix un bloc",
+    "linePlaceholder": "Prem / per inserir blocs",
+    "filterHint": "Escriu per filtrar…",
+    "basic": "Blocs bàsics",
+    "smartDate": "Data intel·ligent",
+    "askNinja": "Demana a Ninja «{{query}}»",
+    "noMatches": "Cap bloc coincident"
+  },
   "copyBox": {
     "placeholder": "Text per copiar amb un clic"
   },
@@ -374,6 +383,23 @@
     "moveTo": "Mou a",
     "cardCount_one": "{{count}} targeta",
     "columnCount_one": "{{count}} columna"
+  },
+  "columns": {
+    "narrowWide": "Estreta i ampla",
+    "wideNarrow": "Ampla i estreta",
+    "removeColumns": "Elimina les columnes",
+    "resizeColumn": "Arrossega per redimensionar les columnes",
+    "barLabel": "Controls de columnes",
+    "borders": "Vores de les columnes",
+    "borderBoxes": "Quadres",
+    "borderSolid": "Contínua",
+    "borderDashed": "Discontínua",
+    "borderDotted": "Puntejada",
+    "borderThickness": "Gruix",
+    "borderThin": "Fi",
+    "borderMedium": "Mitjà",
+    "borderColorDefault": "Color predeterminat",
+    "borderTint": "Tint suau de columna"
   },
   "doodle": {
     "title": "Gargot",

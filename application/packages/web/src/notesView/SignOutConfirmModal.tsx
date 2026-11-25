@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { liveQuery } from 'dexie';
-import { useEscapeToClose } from '../useEscapeToClose';
 import { countUnopenedCopiesHere } from '../unopenedNotes';
-import { Archive, WarningCircle } from '../icons';
-import { Button, Callout, CloseButton } from '../ui';
-import { PRIMARY_BTN_SKIN } from '../settingsUI';
+import { Archive, Key, SignOut } from '../icons';
+import { Button, Callout, Checkbox, Modal, ModalFooter } from '../ui';
 
 /**
  * Phrase-reminder confirmation shown when the user clicks Sign Out
@@ -91,7 +89,6 @@ export function SignOutConfirmModal({
         })
       : t('signOutConfirm.signOutLoseFiles', { count: unsyncedFiles });
   const dismiss = localOnly || risky ? onStay : onShowPhrase;
-  useEscapeToClose(dismiss);
   const shown = neverBackedUp.slice(0, 5);
   const more = neverBackedUp.length - shown.length;
 
@@ -106,152 +103,108 @@ export function SignOutConfirmModal({
           : fileText;
     const hasItems = unsyncedCount > 0 || unsyncedFiles > 0;
     return (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70 p-4"
-        onClick={dismiss}
+      <Modal
+        onClose={dismiss}
+        title={t('signOutConfirm.localOnlyTitle')}
+        className="max-w-sm p-6 space-y-4"
       >
-        <div
-          className="w-full max-w-sm rounded-lg bg-surface-2 border border-divider text-pn p-6 space-y-4"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-start justify-between">
-            <h2 className="text-heading font-semibold">
-              {t('signOutConfirm.localOnlyTitle')}
-            </h2>
-            <CloseButton onClick={dismiss} />
-          </div>
-          <p className="text-body text-pn-muted leading-relaxed">
-            {t('signOutConfirm.localOnlyBody')}
-          </p>
-          {hasItems && (
-            <Callout tone="warning">
-              {t('signOutConfirm.localOnlyCounts', { items })}
-            </Callout>
-          )}
-          <div className="space-y-2 pt-2">
-            <div className="flex gap-2">
-              {onExportBackup && (
-                <Button icon={<Archive aria-hidden="true" />} onClick={onExportBackup} className="flex-1">
-                  {t('signOutConfirm.localOnlyExportBackup')}
-                </Button>
-              )}
-              <Button action="confirm" onClick={onStay} className="flex-1">
-                {t('signOutConfirm.stay')}
-              </Button>
-            </div>
-            <Button
-              action="delete"
-              variant="dangerSoft"
-              onClick={onConfirmSignOut}
-              className="w-full"
-            >
-              {t('signOutConfirm.localOnlyDeleteConfirm')}
+        <p className="text-body text-pn-muted leading-relaxed">
+          {t('signOutConfirm.localOnlyBody')}
+        </p>
+        {hasItems && (
+          <Callout tone="warning">
+            {t('signOutConfirm.localOnlyCounts', { items })}
+          </Callout>
+        )}
+        <ModalFooter>
+          {onExportBackup && (
+            <Button icon={<Archive aria-hidden="true" />} onClick={onExportBackup}>
+              {t('signOutConfirm.localOnlyExportBackup')}
             </Button>
-          </div>
-        </div>
-      </div>
+          )}
+          <Button action="confirm" onClick={onStay}>
+            {t('signOutConfirm.stay')}
+          </Button>
+          <Button
+            action="delete"
+            variant="danger"
+            onClick={onConfirmSignOut}
+            className={onExportBackup ? 'col-span-2' : undefined}
+          >
+            {t('signOutConfirm.localOnlyDeleteConfirm')}
+          </Button>
+        </ModalFooter>
+      </Modal>
     );
   }
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/70 p-4"
-      onClick={dismiss}
+    <Modal
+      onClose={dismiss}
+      title={t('signOutConfirm.title')}
+      className="max-w-sm p-6 space-y-4"
     >
-      <div
-        className="w-full max-w-sm rounded-lg bg-surface-2 border border-divider text-pn p-6 space-y-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between">
-          <h2 className="text-heading font-semibold">
-            {t('signOutConfirm.title')}
-          </h2>
-          <CloseButton onClick={dismiss} />
-        </div>
-        <p className="text-body text-pn-muted leading-relaxed">
-          <Trans
-            i18nKey="notesChrome:signOutConfirm.body"
-            components={{ only: <strong />, action: <strong /> }}
-          />
-        </p>
-        {(unsyncedCount > 0 || filesAtRisk || unopened > 0) && (
-          <div className="flex items-start gap-2 rounded-md border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-compact leading-snug p-3">
-            <WarningCircle className="shrink-0 mt-0.5" />
-            <div className="space-y-2">
-              {unsyncedCount > 0 && (
-                <p>
-                  {t(unsyncedKept ? 'signOutConfirm.unsyncedKept' : 'signOutConfirm.unsyncedWarn', {
-                    count: unsyncedCount,
-                  })}
-                </p>
-              )}
-              {filesAtRisk && <p>{t('signOutConfirm.unsyncedFilesWarn', { count: unsyncedFiles })}</p>}
-              {unopened > 0 && <p>{t(unsyncedKept ? 'signOutConfirm.unopenedKept' : 'signOutConfirm.unopenedWarn', { count: unopened })}</p>}
-              {risky && shown.length > 0 && (
-                <div>
-                  <p className="font-medium">{t('signOutConfirm.neverBackedUp', { count: neverBackedUp.length })}</p>
-                  <ul className="mt-1 list-disc ps-4 space-y-0.5">
-                    {shown.map((n) => (
-                      <li key={n.id} className="truncate" dir="auto">{n.title}</li>
-                    ))}
-                    {more > 0 && <li className="list-none -ms-4 opacity-80">{t('signOutConfirm.moreNotes', { count: more })}</li>}
-                  </ul>
-                </div>
-              )}
-              {risky && <p className="opacity-90">{t('signOutConfirm.appLockHint')}</p>}
-            </div>
+      <p className="text-body text-pn-muted leading-relaxed">
+        <Trans
+          i18nKey="notesChrome:signOutConfirm.body"
+          components={{ only: <strong />, action: <strong /> }}
+        />
+      </p>
+      {(unsyncedCount > 0 || filesAtRisk || unopened > 0) && (
+        <Callout tone="warning">
+          <div className="space-y-2">
+            {unsyncedCount > 0 && (
+              <p>
+                {t(unsyncedKept ? 'signOutConfirm.unsyncedKept' : 'signOutConfirm.unsyncedWarn', {
+                  count: unsyncedCount,
+                })}
+              </p>
+            )}
+            {filesAtRisk && <p>{t('signOutConfirm.unsyncedFilesWarn', { count: unsyncedFiles })}</p>}
+            {unopened > 0 && <p>{t(unsyncedKept ? 'signOutConfirm.unopenedKept' : 'signOutConfirm.unopenedWarn', { count: unopened })}</p>}
+            {risky && shown.length > 0 && (
+              <div>
+                <p className="font-medium">{t('signOutConfirm.neverBackedUp', { count: neverBackedUp.length })}</p>
+                <ul className="mt-1 list-disc ps-4 space-y-0.5">
+                  {shown.map((n) => (
+                    <li key={n.id} className="truncate" dir="auto">{n.title}</li>
+                  ))}
+                  {more > 0 && <li className="list-none -ms-4 opacity-80">{t('signOutConfirm.moreNotes', { count: more })}</li>}
+                </ul>
+              </div>
+            )}
+            {risky && <p className="opacity-90">{t('signOutConfirm.appLockHint')}</p>}
           </div>
-        )}
-        <label className="flex items-center gap-2 text-compact text-pn-muted cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={dontRemind}
-            onChange={(e) => onDontRemindChange(e.target.checked)}
-            className="accent-accent"
-          />
-          {t('signOutConfirm.dontRemind')}
-        </label>
-        {risky ? (
-          // Data at stake: the primary action keeps it, and the sign-out
-          // names its cost. Two clicks to lose data is the point.
-          <div className="space-y-2 pt-2">
-            <div className="flex gap-2">
-              <button
-                onClick={onShowPhrase}
-                className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-4 py-2 text-body transition"
-              >
-                {t('signOutConfirm.showPhrase')}
-              </button>
-              <button
-                onClick={onStay}
-                className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold transition`}
-              >
-                {t('signOutConfirm.stay')}
-              </button>
-            </div>
-            <button
-              onClick={onConfirmSignOut}
-              className="w-full rounded-md border border-red-300 dark:border-red-900 text-danger hover:bg-red-50 dark:hover:bg-red-950/30 px-4 py-2 text-body transition"
-            >
-              {loseLabel}
-            </button>
-          </div>
-        ) : (
-          <div className="flex gap-2 pt-2">
-            <button
-              onClick={onShowPhrase}
-              className="flex-1 rounded-md border border-divider hover:bg-surface-1 px-4 py-2 text-body transition"
-            >
-              {t('signOutConfirm.showPhrase')}
-            </button>
-            <button
-              onClick={onConfirmSignOut}
-              className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold transition`}
-            >
-              {t('signOutConfirm.confirm')}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+        </Callout>
+      )}
+      <Checkbox
+        checked={dontRemind}
+        onChange={(e) => onDontRemindChange(e.target.checked)}
+        label={t('signOutConfirm.dontRemind')}
+      />
+      {risky ? (
+        // Data at stake: the primary action keeps it, and the sign-out
+        // names its cost. Two clicks to lose data is the point.
+        <ModalFooter>
+          <Button icon={<Key aria-hidden="true" />} onClick={onShowPhrase}>
+            {t('signOutConfirm.showPhrase')}
+          </Button>
+          <Button action="confirm" onClick={onStay}>
+            {t('signOutConfirm.stay')}
+          </Button>
+          <Button action="delete" variant="danger" onClick={onConfirmSignOut} className="col-span-2">
+            {loseLabel}
+          </Button>
+        </ModalFooter>
+      ) : (
+        <ModalFooter>
+          <Button icon={<Key aria-hidden="true" />} onClick={onShowPhrase}>
+            {t('signOutConfirm.showPhrase')}
+          </Button>
+          <Button variant="primary" icon={<SignOut aria-hidden="true" />} onClick={onConfirmSignOut}>
+            {t('signOutConfirm.confirm')}
+          </Button>
+        </ModalFooter>
+      )}
+    </Modal>
   );
 }

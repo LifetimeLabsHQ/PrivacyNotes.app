@@ -12,11 +12,11 @@
  * location service, and only when tapped (currentPosition.ts).
  * Spec: docs/internal/plans/note-location.md (section 4)
  */
-import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Suspense, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowsInSimple, ArrowsOutSimple, Crosshair, MapPin, PencilSimple, ShieldCheck } from '../icons';
-import { Button, Callout, CopyButton, DeleteButton, FeedbackButton, IconButton, Modal, Popover, RowChip, SETTINGS_HELP, StatusLine, TextField } from '../ui';
+import { Button, Callout, CopyButton, DeleteButton, FeedbackButton, IconButton, IconUpgrade, Modal, Popover, RowChip, SETTINGS_HELP, StatusLine, TextField } from '../ui';
 import { lazyPart } from '../chunkLoad';
 import { useTheme } from '../theme';
 import { activeLocale } from '../i18n';
@@ -56,7 +56,7 @@ const FIX_ERROR: Record<FixError, string> = {
   timeout: 'location.errorTimeout',
 };
 
-export function NoteLocationChip({ trackers, readOnly, open, onOpenChange, onPatch, autoType }: {
+export function NoteLocationChip({ trackers, readOnly, open, onOpenChange, onPatch, autoType, onShowOnMap, placesPro = false }: {
   trackers: Record<string, unknown> | undefined;
   /** The item's type when it can get a place on its own: the form shows its switch. */
   autoType?: AutoLocationType;
@@ -65,6 +65,10 @@ export function NoteLocationChip({ trackers, readOnly, open, onOpenChange, onPat
   onOpenChange: (open: boolean) => void;
   /** Writes `{ location }`, or removes the key with `undefined`. Resolves false when nothing was written. */
   onPatch: (patch: Record<string, unknown>) => Promise<boolean>;
+  /** Opens the Places map focused on this item. */
+  onShowOnMap?: () => void;
+  /** Show the Pro rocket badge on the Places map door for free accounts. */
+  placesPro?: boolean;
 }) {
   const { t } = useTranslation('notes');
   const place = readLocation(trackers);
@@ -98,6 +102,8 @@ export function NoteLocationChip({ trackers, readOnly, open, onOpenChange, onPat
       onDone={() => onOpenChange(false)}
       onSave={(loc) => onPatch({ [LOCATION_KEY]: loc })}
       onRemove={() => onPatch({ [LOCATION_KEY]: undefined })}
+      onShowOnMap={onShowOnMap}
+      placesPro={placesPro}
     />
   );
   return (
@@ -150,7 +156,7 @@ function writeExpandedPref(on: boolean): void {
  * map into the body (`onSave`). One form for both, so a town, a paste and the
  * phone's position work the same way in each.
  */
-export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, startEditing = false, saveText, layout = 'popup', onExpand, onCollapse, onEdit, onSaved, onCancel, autoType }: {
+export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, startEditing = false, saveText, layout = 'popup', onExpand, onCollapse, onEdit, onSaved, onCancel, autoType, onShowOnMap, placesPro = false }: {
   place: NoteLocation | undefined;
   readOnly: boolean;
   onDone: () => void;
@@ -176,8 +182,13 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
   onCancel?: () => void;
   /** The item's type when it can get a place on its own (the chip, on a phone). */
   autoType?: AutoLocationType;
+  /** Opens the Places map focused on this item. */
+  onShowOnMap?: () => void;
+  /** Show the Pro rocket badge on the Places map door for free accounts. */
+  placesPro?: boolean;
 }) {
   const { t } = useTranslation('notes');
+  const townListId = useId();
   const [editing, setEditing] = useState((!place || startEditing) && !readOnly);
   const [input, setInput] = useState(place ? (place.label ?? formatCoordinates(place)) : '');
   const [name, setName] = useState(place?.label ?? '');
@@ -272,6 +283,18 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
         >
           OpenStreetMap
         </Button>
+        {onShowOnMap && (
+          <IconButton label={t('location.showOnMap')} onClick={() => { onDone(); onShowOnMap(); }}>
+            <span className="relative flex">
+              <MapPin aria-hidden="true" />
+              {placesPro && (
+                <span className="pointer-events-none absolute -top-1.5 -end-1.5 flex" aria-hidden="true">
+                  <IconUpgrade size={9} />
+                </span>
+              )}
+            </span>
+          </IconButton>
+        )}
         {!readOnly && (
           <IconButton label={t('common:actions.edit')} onClick={() => (onEdit ? onEdit() : setEditing(true))}>
             <PencilSimple aria-hidden="true" />
@@ -328,10 +351,21 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
     );
   }
 
+  if (!editing) return null;
+
+  const cancelEdit = () => (place && !startEditing ? setEditing(false) : (onCancel ?? onDone)());
+
   return (
     <form
       className="flex flex-col gap-2 px-1.5 pb-1"
       onSubmit={(e) => { e.preventDefault(); void save(); }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          cancelEdit();
+        }
+      }}
     >
       {canReadPosition() && (
         <>
@@ -353,7 +387,7 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
         placeholder={t('location.inputPlaceholder')}
         role="combobox"
         aria-expanded={hits.length > 0}
-        aria-controls="pn-town-list"
+        aria-controls={townListId}
         onChange={(e) => { setInput(e.target.value); setPicked(null); setHighlight(0); setShown(false); setSaveFailed(false); }}
         onKeyDown={(e) => {
           if (!hits.length) return;
@@ -368,7 +402,7 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
       {hits.length > 0 && (
         <div>
           {/* The tag field's suggestion rows (TagInput.tsx): a click keeps the field's focus. */}
-          <div id="pn-town-list" role="listbox" className="flex flex-col" onMouseDown={(e) => e.preventDefault()}>
+          <div id={townListId} role="listbox" className="flex flex-col" onMouseDown={(e) => e.preventDefault()}>
             {hits.map((hit, i) => (
               <button
                 key={`${hit.name}-${hit.lat}-${hit.lng}`}
@@ -403,7 +437,12 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
         {saveText
           ? <Button type="submit" variant="primary" icon={<MapPin aria-hidden="true" />}>{saveText}</Button>
           : <Button action="save" type="submit" />}
-        <Button action="cancel" onClick={() => (place && !startEditing ? setEditing(false) : (onCancel ?? onDone)())} />
+        <Button action="cancel" onClick={cancelEdit} />
+        {place && onRemove && !readOnly && (
+          <span className="ms-auto">
+            <DeleteButton kind="remove" label={t('location.remove')} onConfirm={() => void remove()} />
+          </span>
+        )}
       </div>
       {/* Only the switch for this item's type, under a rule (owner, 2026-11-11). */}
       {autoType && canReadPosition() && (

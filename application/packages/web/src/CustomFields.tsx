@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DetailAction, DetailCopyAction, DetailRow } from './detailPane';
-import { FIELD_BUTTON, FIELD_CLASS } from './formFields';
+import { FIELD_BUTTON, FIELD_CLASS, NO_TEXT_ASSIST } from './formFields';
 import { HoverLabel } from './HoverLabel';
 import { CheckSquare, Eye, EyeSlash, Hash, Lock, Tag, Trash, X } from './icons';
 import { isPublicField, type LoginField } from './loginExtras';
 import { PasswordField } from './PasswordText';
-import { IconButton } from './ui/Button';
-import { Checkbox } from './ui/Checkbox';
-import { VaultFieldAction } from './ui/VaultFieldAction';
+import { Checkbox, IconButton, Select, TextField, VaultFieldAction } from './ui';
 
 /**
  * The custom field, in its two states: the row a view draws and the box a
@@ -83,11 +81,13 @@ const TYPE_LABEL: Record<string, string> = {
  * shows as hidden, the type it is treated as. `copy` adds a copy button
  * (the login form has one on every field; the contact form has none).
  */
-export function CustomFieldEditor({ field, types, locked, onChange, onRemove, copy, copied, nameMax, valueMax, plain = false }: {
+export function CustomFieldEditor({ field, types, locked, onChange, onRemove, copy, copied, nameMax, valueMax, plain = false, noTextAssist = false }: {
   field: LoginField;
   /** No box of its own and an X to remove it: the field sits in a card that
    *  already frames it (a contact section), whose own remove is the trash. */
   plain?: boolean;
+  /** Disable OS autocorrect, auto-capitalization, and spellcheck on values. */
+  noTextAssist?: boolean;
   types: readonly string[];
   locked: boolean;
   onChange: (patch: Partial<LoginField>) => void;
@@ -132,7 +132,7 @@ export function CustomFieldEditor({ field, types, locked, onChange, onRemove, co
     );
   } else if (field.type === 'number') {
     valueControl = (
-      <input
+      <TextField
         value={field.value}
         onChange={(e) => onChange({ value: e.target.value })}
         placeholder={t('loginForm.fieldValuePlaceholder')}
@@ -141,8 +141,9 @@ export function CustomFieldEditor({ field, types, locked, onChange, onRemove, co
         maxLength={valueMax}
         inputMode="decimal"
         autoComplete="off"
+        {...NO_TEXT_ASSIST}
         dir="ltr"
-        className={FIELD_CLASS}
+        className="w-full"
       />
     );
   } else {
@@ -155,7 +156,7 @@ export function CustomFieldEditor({ field, types, locked, onChange, onRemove, co
         disabled={locked}
         maxLength={valueMax}
         rows={1}
-        spellCheck={!hidden}
+        {...(hidden || noTextAssist ? NO_TEXT_ASSIST : { spellCheck: true })}
         dir="auto"
         className={`${FIELD_CLASS} resize-y`}
       />
@@ -164,7 +165,7 @@ export function CustomFieldEditor({ field, types, locked, onChange, onRemove, co
   return (
     <div className={`flex flex-col gap-1.5 ${plain ? 'py-2' : 'rounded-md border border-divider p-2'}`}>
       <div className="flex gap-1.5">
-        <input
+        <TextField
           type="text"
           dir="auto"
           value={field.label}
@@ -174,17 +175,18 @@ export function CustomFieldEditor({ field, types, locked, onChange, onRemove, co
           disabled={locked}
           maxLength={nameMax}
           autoComplete="off"
-          className={`${FIELD_CLASS} min-w-0 flex-1`}
+          {...(noTextAssist ? NO_TEXT_ASSIST : {})}
+          className="flex-1"
         />
-        <select
+        <Select
           value={type}
           onChange={(e) => changeType(e.target.value)}
           disabled={locked}
           aria-label={t('loginForm.fieldTypeLabel')}
-          className={`${FIELD_CLASS.replace('w-full', 'w-auto')} shrink-0`}
+          className="!w-auto shrink-0"
         >
           {types.map((ty) => <option key={ty} value={ty}>{t(TYPE_LABEL[ty] ?? 'loginForm.fieldTypeText')}</option>)}
-        </select>
+        </Select>
         {!locked && (plain ? (
           // Muted like the section's own trash beside it, so the card's two
           // removes differ only in their glyph.

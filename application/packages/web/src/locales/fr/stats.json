@@ -328,6 +328,7 @@
       "noEntry": "aucune entrée",
       "doseLens": "Humeur en moyenne à {{before}} sur les {{nBefore}} jours avant et à {{after}} sur les {{nAfter}} jours après.",
       "doseLensHeading": "Autour de chaque changement de dose",
+      "doseLensLocked": "Passe à Pro pour voir comment les changements de dose influencent ton humeur",
       "doseLensShort_one": "Il manque {{count}} jour noté autour.",
       "doseLensShort_other": "Il manque {{count}} jours notés autour."
     },

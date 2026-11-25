@@ -16,6 +16,7 @@
 
 import type { Node as PMNode, Schema } from '@tiptap/pm/model';
 import { DEFAULT_COLORS, slotIcon } from './kanbanLayout';
+import { emojiChar } from './looks/lookIconsLoader';
 import { Plugin, PluginKey, Selection, TextSelection, type EditorState, type Transaction } from '@tiptap/pm/state';
 
 /** Event a tap on a card's grip sends to its board (kanbanDrag.ts). */
@@ -73,7 +74,7 @@ function joinTaskLists(blocks: PMNode[]): PMNode[] {
   return out;
 }
 
-function isBlank(node: PMNode): boolean {
+export function isBlank(node: PMNode): boolean {
   if (node.type.name !== 'paragraph') return false;
   let blank = true;
   node.forEach((child) => {
@@ -188,20 +189,51 @@ export function setColumnColor(tr: Transaction, boardPos: number, index: number,
   return done;
 }
 
+/** The first grapheme of a text node when it is an emoji (standard pictograph,
+ *  flag sequence or keycap), else null. Used to recognize and replace a
+ *  leading emoji on a Kanban board or column title. */
+const EMOJI_GRAPHEME = /^(?:\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]{2}|[#*0-9]\uFE0F?\u20E3)/u;
+const graphemeSegmenter = typeof Intl !== 'undefined' && 'Segmenter' in Intl ? new Intl.Segmenter('en', { granularity: 'grapheme' }) : null;
+
+function leadingEmojiText(text: string): string | null {
+  if (!text) return null;
+  const first = graphemeSegmenter ? graphemeSegmenter.segment(text)[Symbol.iterator]().next().value?.segment : [...text][0];
+  if (!first || !EMOJI_GRAPHEME.test(first)) return null;
+  const after = text.slice(first.length);
+  return after === '' || /^\s/.test(after) ? first : null;
+}
+
 /**
- * Puts an icon or logo (a look id: `heart`, `logo:github`) at the start of
- * the title of the callout at `pos`, as an inline icon and a space. An icon
- * that already leads the title is replaced, so the menu row sets one icon.
- * The stored form is the inline icon's own (`:icon[heart]`), so the export
- * and the importers need nothing new. GitHub #752.
+ * Puts an icon, logo or emoji (a look id: `heart`, `logo:github`, `emoji:...`)
+ * at the start of the title of the callout at `pos`, followed by a space. An
+ * icon or emoji that already leads the title is replaced, so the menu row sets
+ * one icon. An icon or logo uses the inline icon form (`:icon[heart]`); an
+ * emoji inserts as plain Unicode text so the Markdown stays portable. GitHub #752.
  */
 function setLeadIcon(tr: Transaction, pos: number, node: PMNode, id: string): boolean {
   const iconType = tr.doc.type.schema.nodes.inlineIcon;
   const title = node.firstChild;
   if (!iconType || title?.type.name !== 'calloutTitle') return false;
   const start = pos + 2;
+  const emoji = emojiChar(id);
+  const first = title.firstChild;
+  const existingEmoji = first?.isText ? leadingEmojiText(first.text ?? '') : null;
+
+  if (emoji) {
+    const emojiNode = tr.doc.type.schema.text(emoji);
+    if (first?.type === iconType) {
+      tr.replaceWith(start, start + 1, emojiNode);
+    } else if (existingEmoji) {
+      tr.replaceWith(start, start + existingEmoji.length, emojiNode);
+    } else {
+      tr.insert(start, tr.doc.type.schema.text(`${emoji} `));
+    }
+    return true;
+  }
+
   const icon = iconType.create({ id });
-  if (title.firstChild?.type === iconType) tr.replaceWith(start, start + 1, icon);
+  if (first?.type === iconType) tr.replaceWith(start, start + 1, icon);
+  else if (existingEmoji) tr.replaceWith(start, start + existingEmoji.length, icon);
   else tr.insert(start, [icon, tr.doc.type.schema.text(' ')]);
   return true;
 }
@@ -226,10 +258,15 @@ export function setBoardIcon(tr: Transaction, boardPos: number, id: string): boo
   return !!board && setLeadIcon(tr, boardPos, board, id);
 }
 
-/** The look id of the inline icon that leads a callout's title, if any. */
+/** The look id of the inline icon or leading emoji on a callout's title, if any. */
 export function leadIconOf(node: PMNode): string | null {
   const lead = node.firstChild?.type.name === 'calloutTitle' ? node.firstChild.firstChild : null;
-  return lead?.type.name === 'inlineIcon' ? (lead.attrs.id as string) : null;
+  if (lead?.type.name === 'inlineIcon') return lead.attrs.id as string;
+  if (lead?.isText) {
+    const emoji = leadingEmojiText(lead.text ?? '');
+    if (emoji) return `emoji:${emoji}`;
+  }
+  return null;
 }
 
 /** Removes column `index`; its content joins the column on its left, or on

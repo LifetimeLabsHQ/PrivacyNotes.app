@@ -1,13 +1,13 @@
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowCircleDown, ArrowCircleUp, ArrowsOutSimple, ChartBar, Gear, LockKey, Sun } from '../icons';
+import { ArrowCircleDown, ArrowCircleUp, ArrowsOutSimple, ChartBar, Gear, Graph, LockKey, MapTrifold, Sun } from '../icons';
 import { JournalCalendarButton, type JournalCalendarHandlers } from '../JournalCalendar';
 import type { LocalNote } from '../db';
 import { detectPlatform } from '../devices';
 import { HoverLabel } from '../HoverLabel';
 import { SyncStatus } from '../SyncStatus';
 import { QuotaRingButton } from '../QuotaRing';
-import { IconUpgrade } from '../UpgradeModal';
+import { IconUpgrade, Kbd } from '../ui';
 import { hotkeyKeys, hotkeyLabel, isMacPlatform } from '../notesViewUtils';
 import { DESKTOP_APP, keyText } from '../shortcutMatch';
 import { intlLocale } from '../languages';
@@ -87,6 +87,9 @@ export function FullFooter({
   zenMode,
   setZenMode,
   zenUnlocked,
+  onOpenGraph,
+  placesUnlocked,
+  onOpenPlaces,
   sidebarCollapsed,
   gridMode,
   selected,
@@ -107,6 +110,10 @@ export function FullFooter({
   zenMode: boolean;
   setZenMode: Dispatch<SetStateAction<boolean>>;
   zenUnlocked: boolean;
+  onOpenGraph: () => void;
+  /** Pro (or demo): show the direct Places map shortcut beside Graph. */
+  placesUnlocked: boolean;
+  onOpenPlaces: () => void;
   sidebarCollapsed: boolean;
   gridMode: boolean;
   selected: LocalNote | null;
@@ -133,7 +140,7 @@ export function FullFooter({
   const touch = useIsTouchDevice();
   return (
       // data-pn-dock-footer: the docked Settings panel ends above it (#741).
-      <footer data-pn-dock-footer className="hidden [@media(min-width:768px)_and_(min-height:501px)]:flex shrink-0 items-center border-t border-divider text-compact text-pn-muted">
+      <footer data-pn-dock-footer className="hidden [@media(min-width:768px)_and_(min-height:501px)]:flex shrink-0 select-none items-center border-t border-divider text-compact text-pn-muted">
         {/* Settings + Sync zone - matches sidebar width. It is a sidebar
             size container too (pn-sidebar in index.css), so a sidebar
             narrower than 230px drops the Settings word for a tip, the way
@@ -193,17 +200,12 @@ export function FullFooter({
               <span>{t('footer.newNote')}</span>
               <span dir="ltr" className="hidden xl:inline-flex items-center gap-1"> {/* rtl-ok: modifier-key sequence never reorders */}
                 {hotkeyKeys.map((k) => (
-                  <kbd
-                    key={k}
-                    className="font-mono text-small leading-none px-1.5 py-0.5 rounded border border-divider bg-surface-2 text-pn shadow-[0_1px_0_rgba(0,0,0,0.08)] dark:shadow-[0_1px_0_rgba(0,0,0,0.6)] min-w-[1.25rem] text-center"
-                  >
-                    {k}
-                  </kbd>
+                  <Kbd key={k}>{k}</Kbd>
                 ))}
               </span>
-              <kbd dir="ltr" className="xl:hidden font-mono text-small leading-none px-1.5 py-0.5 rounded border border-divider bg-surface-2 text-pn shadow-[0_1px_0_rgba(0,0,0,0.08)] dark:shadow-[0_1px_0_rgba(0,0,0,0.6)] text-center"> {/* rtl-ok: modifier-key sequence never reorders */}
-                {hotkeyLabel}
-              </kbd>
+              <span dir="ltr" className="xl:hidden inline-flex"> {/* rtl-ok: modifier-key sequence never reorders */}
+                <Kbd>{hotkeyLabel}</Kbd>
+              </span>
               <span className="text-compact font-normal text-pn-muted hidden min-[1400px]:inline">
                 ({DESKTOP_APP
                   ? t(isMacPlatform ? 'footer.newNoteHintMacDesktop' : 'footer.newNoteHintOtherDesktop')
@@ -240,6 +242,32 @@ export function FullFooter({
                 only there - `hiddenAtXl` drops the tip at the width the
                 label itself appears, where it would just repeat it. Zen's
                 tip stays at every width, because it carries the key. */}
+            {!zenMode && (
+              <HoverLabel label={t('footer.graphHover')} keys={keyText('graph')} position="above-end">
+                <button
+                  type="button"
+                  onClick={onOpenGraph}
+                  aria-label={t('footer.graphHover')}
+                  className="rounded-md inline-flex items-center gap-1.5 px-2 py-1 font-medium text-pn hover:bg-pn/5 transition"
+                >
+                  <Graph className="text-accent" />
+                  <span className="hidden xl:inline">{t('footer.graph')}</span>
+                </button>
+              </HoverLabel>
+            )}
+            {!zenMode && placesUnlocked && (
+              <HoverLabel hiddenAtXl label={t('common:ninja.features.placesMap.label')} position="above-end">
+                <button
+                  type="button"
+                  onClick={onOpenPlaces}
+                  aria-label={t('common:ninja.features.placesMap.label')}
+                  className="rounded-md inline-flex items-center gap-1.5 px-2 py-1 font-medium text-pn hover:bg-pn/5 transition"
+                >
+                  <MapTrifold className="text-accent" />
+                  <span className="hidden xl:inline">{t('graph.lensPlaces')}</span>
+                </button>
+              </HoverLabel>
+            )}
             <HoverLabel label={zenMode ? t('zen.exitHover') : zenUnlocked ? t('zen.enterHover') : t('zen.proHover')} keys={zenMode || zenUnlocked ? keyText('zen') : ''} position="above-end">
               <button
                 onClick={() => {
@@ -333,6 +361,7 @@ function BarButton({
 export function MiniFooter({
   setZenMode,
   zenUnlocked,
+  onOpenGraph,
   selected,
   openSyncVerify,
   localReadDone,
@@ -351,6 +380,7 @@ export function MiniFooter({
 }: {
   setZenMode: Dispatch<SetStateAction<boolean>>;
   zenUnlocked: boolean;
+  onOpenGraph: () => void;
   selected: LocalNote | null;
   openSyncVerify: () => void;
   /** The first read of this device's vault has finished (see SyncStatus's ready). */
@@ -374,7 +404,7 @@ export function MiniFooter({
   const { t } = useTranslation('notes');
   const settingsLabel = t('footer.settings');
   return (
-      <footer className={`[@media(min-width:768px)_and_(min-height:501px)]:hidden shrink-0 flex items-center justify-between gap-2 px-2 py-0.5 ${IS_DESKTOP_APP ? 'pb-0.5' : 'pb-[max(0.125rem,var(--pn-safe-bottom))]'} md:pb-0.5 border-t border-divider text-compact text-pn-muted [@media(max-height:320px)]:hidden`}>
+      <footer className={`[@media(min-width:768px)_and_(min-height:501px)]:hidden shrink-0 select-none flex items-center justify-between gap-2 px-2 py-0.5 ${IS_DESKTOP_APP ? 'pb-0.5' : 'pb-[max(0.125rem,var(--pn-safe-bottom))]'} md:pb-0.5 border-t border-divider text-compact text-pn-muted [@media(max-height:320px)]:hidden`}>
         {/* Settings, Design and Lock app hold the start of the bar on every screen, so
             they never move under the thumb. The end holds the one action of
             the screen on show: New on a list, Zen in an open item, where New
@@ -400,8 +430,18 @@ export function MiniFooter({
             </BarButton>
           </span>
         </div>
-        <span className="shrink-0">
+        <span className="shrink-0 inline-flex items-center gap-1">
           <FooterStatus ready={localReadDone} onOpenSync={openSyncVerify} storage={storage} size={22} tipPosition="above" tipHostClassName="flex h-11 items-center" />
+          <HoverLabel label={t('footer.graphHover')} keys={keyText('graph')} position="above" className="flex h-11 items-center">
+            <button
+              type="button"
+              onClick={onOpenGraph}
+              aria-label={t('footer.graphHover')}
+              className="inline-flex items-center justify-center rounded-md p-1 text-accent hover:bg-pn/5 active:bg-pn/10 transition"
+            >
+              <Graph size={22} />
+            </button>
+          </HoverLabel>
         </span>
         {/* Stats readout - md+ only. Below md the phone row is too tight;
             at md-lg the same three phone controls span a tablet-width row,

@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { DEMO_APP_URL } from './demo';
 import { withSource } from './campaignSource';
-import { Lock, X } from './icons';
+import { Lock, UserPlus } from './icons';
+import { Banner, FeedbackButton } from './ui';
 
 type Props = {
   onDismiss: () => void;
@@ -32,30 +33,23 @@ type Props = {
 export function DemoBanner({ onDismiss }: Props) {
   const { t } = useTranslation('shell');
   return (
-    <div className="shrink-0 flex items-center gap-2 sm:gap-3 border-b border-emerald-300/80 dark:border-emerald-800/70 bg-emerald-50 dark:bg-emerald-950/90 px-3 sm:px-4 py-2">
-      <Lock className="shrink-0 text-success" aria-hidden="true" />
-      <p className="min-w-0 flex-1 truncate text-compact leading-snug text-emerald-950 dark:text-emerald-100">
-        <span className="font-semibold">{t('demoBanner.title')}</span>
-        {/* Mini on phones: the description drops, leaving icon + title + CTA. */}
-        <span className="hidden sm:inline text-emerald-800 dark:text-emerald-300/90">
-          {' '}
-          {t('demoBanner.description')}
-        </span>
-      </p>
-      <a
-        href={withSource(DEMO_APP_URL)}
-        className="shrink-0 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-compact font-semibold px-3 py-1.5 transition"
-      >
-        {t('security:demoTeaser.createAccount')}
-      </a>
-      <button
-        type="button"
-        onClick={onDismiss}
-        aria-label={t('common:updateToast.dismiss')}
-        className="shrink-0 rounded-md p-1 text-success hover:bg-emerald-100 dark:hover:bg-emerald-900 transition"
-      >
-        <X />
-      </button>
-    </div>
+    <Banner
+      tone="success"
+      icon={Lock}
+      action={
+        <FeedbackButton icon={<UserPlus aria-hidden="true" />} href={withSource(DEMO_APP_URL)}>
+          {t('security:demoTeaser.createAccount')}
+        </FeedbackButton>
+      }
+      onDismiss={onDismiss}
+      dismissLabel={t('common:updateToast.dismiss')}
+    >
+      <span className="font-semibold">{t('demoBanner.title')}</span>
+      {/* Mini on phones: the description drops, leaving icon + title + CTA. */}
+      <span className="hidden sm:inline text-pn-soft">
+        {' '}
+        {t('demoBanner.description')}
+      </span>
+    </Banner>
   );
 }

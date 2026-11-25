@@ -41,6 +41,7 @@
     "noDocuments": "沒有文書檔案。",
     "noImages": "沒有圖片。",
     "noAudioFiles": "沒有音訊檔。",
+    "noUnusedFiles": "沒有未使用的檔案。",
     "emptyTypesHint": "圖片、文書、音訊、影片與 zip 檔。單檔最大 {{max}} MB。",
     "uploadFiles": "上傳檔案",
     "menuShow": "顯示",
@@ -230,7 +231,7 @@
     "tagCount_other": "{{count}} 個標籤",
     "entryDate": "日誌日期",
     "noDate": "無",
-    "schedule": "排程",
+    "schedule": "日期與提醒",
     "ends": "結束",
     "sameDay": "同一天",
     "starts": "開始",
@@ -313,7 +314,6 @@
     "showOneWeek": "顯示一週"
   },
   "contextMenu": {
-    "newNote": "新增筆記",
     "newTask": "新增任務",
     "newKanban": "新增看板",
     "newDrawing": "新增繪圖",
@@ -322,15 +322,12 @@
     "newSshKey": "新增 SSH 金鑰",
     "newJournal": "新增日誌",
     "newFile": "新增檔案",
-    "exitZenMode": "離開 Zen 模式",
-    "zenMode": "Zen 模式",
     "showSidebar": "顯示側邊欄",
     "hideSidebar": "隱藏側邊欄",
     "showNotesList": "顯示筆記清單",
     "hideNotesList": "隱藏筆記清單",
     "resetPaneWidths": "重設面板寬度",
     "settings": "設定",
-    "signOut": "登出",
     "deselect": "取消選取",
     "select": "選取",
     "selectedCount_other": "已選取 {{count}} 項",
@@ -359,8 +356,7 @@
     "closeOtherTabs": "關閉其他分頁",
     "closeAllTabs": "關閉所有分頁",
     "pinTab": "釘選分頁",
-    "unpinTab": "取消釘選分頁",
-    "newEvent": "新增活動"
+    "unpinTab": "取消釘選分頁"
   },
   "demoBanner": {
     "title": "零風險試用",
@@ -804,6 +800,22 @@
     "offOnPhone": "這支手機上的提醒已關閉",
     "turnOn": "啟用"
   },
+  "taskReminder": {
+    "set": "設定提醒",
+    "edit": "編輯提醒",
+    "laterToday": "今天稍後",
+    "pickDateTime": "選擇日期與時間",
+    "dateTime": "日期與時間",
+    "remove": "移除提醒",
+    "onSchedule": "依排程",
+    "afterCompletion": "完成後",
+    "afterDone": "完成後 {{count}} {{unit}}",
+    "afterDoneHint": "從你勾選完成這個任務的那一天起算。",
+    "weekdaysShort": "工作日",
+    "everyWeeks_other": "每 {{count}} 週",
+    "everyMonths_other": "每 {{count}} 個月",
+    "everyYears_other": "每 {{count}} 年"
+  },
   "quickAdd": {
     "group": "建立",
     "items": "項目",
@@ -990,7 +1002,8 @@
   "apps": {
     "railLabel": "擴充功能",
     "title": "瀏覽器擴充功能",
-    "subtitle": "Chrome、Firefox、Edge、Brave、Vivaldi、Opera、Arc、LibreWolf 和 Zen 上的網頁擷取工具與密碼管理器。擴充功能從不持有開啟你筆記的金鑰。",
+    "subtitle": "適用於基於 Chromium 與 Firefox 瀏覽器的網頁擷取工具與密碼管理器。擴充功能從不持有開啟你筆記的金鑰。",
+    "allSupported": "支援任何基於 Chromium 或 Firefox 的瀏覽器。",
     "loginsCopyFull": "瀏覽器擴充功能中的登入資訊副本已滿。刪除一些之後，新的登入資訊才會傳到擴充功能。",
     "stepInstall": "安裝擴充功能",
     "stepFeatures": "選擇它能做什麼",
@@ -1001,7 +1014,7 @@
     "thisBrowser": "這個瀏覽器",
     "otherApps": "桌面與手機應用程式：",
     "desktopAll": "所有下載",
-    "extensionComputersOnly": "擴充功能適用於電腦上的 Chrome、Firefox 和 Edge。",
+    "extensionComputersOnly": "擴充功能適用於電腦上基於 Chromium 與 Firefox 的瀏覽器。",
     "demoSignUp": "註冊以連結瀏覽器"
   },
   "cli": {

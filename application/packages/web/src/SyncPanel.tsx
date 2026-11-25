@@ -38,6 +38,7 @@ import { usePushFailures, usePushHalt, type PushFailure } from './pushFailures';
 import { db } from './db';
 import { readAuthLog } from './authDiag';
 import { readSyncFaults } from './syncFaults';
+import { readPanelCache } from './accountPanelCache';
 import { buildSupportReport } from './supportReport';
 import { deriveDisplayTitle } from './notesViewUtils';
 import { useVerifyStamp } from './verifyStamp';
@@ -66,6 +67,8 @@ export function SyncPanel({
   autoVerify = false,
   onOpenNote,
   onOpenAutoBackup,
+  localStorageBytes,
+  storageReport,
   onTurnOnLocalSync,
 }: {
   pubkey?: string;
@@ -80,6 +83,10 @@ export function SyncPanel({
   onOpenNote?: (id: string) => void;
   /** Opens Settings > Backup > Automatic from the local-only backup reminder. */
   onOpenAutoBackup?: () => void;
+  /** Local vault byte total (kept independent so offline reports still include it). */
+  localStorageBytes?: number;
+  /** Server and local storage totals for the Support report. */
+  storageReport?: { serverNotesBytes: number; serverFilesBytes: number; localBytes?: number };
   /** Registers (if needed) and enables sync for a local-only or never-synced vault. */
   onTurnOnLocalSync?: () => Promise<{ ok: true } | { ok: false; error: string }>;
 }) {
@@ -293,6 +300,8 @@ export function SyncPanel({
             pendingCount={0}
             log={[]}
             failed={[]}
+            localStorageBytes={localStorageBytes}
+            storageReport={storageReport}
             hint={localOnly ? t('syncPanel.localOnlyAccountIdHint') : undefined}
           />
         )}
@@ -323,12 +332,12 @@ export function SyncPanel({
     floor: { icon: <Warning />, word: t('common:updateToast.required'), cls: amber },
     paused: { icon: <Pause weight="bold" />, word: t('syncStatus.paused'), cls: amber },
     offline: { icon: <WifiSlash />, word: t('syncStatus.offline'), cls: amber },
-    syncing: { icon: <CircleNotch className="animate-spin" />, word: t('syncStatus.syncing'), cls: 'text-accent' },
+    syncing: { icon: <Spinner />, word: t('syncStatus.syncing'), cls: 'text-accent' },
     notBackedUp: { icon: <Warning />, word: t('syncStatus.notBackedUp'), cls: amber },
     notSynced: { icon: <Warning />, word: t('syncStatus.notSynced'), cls: amber },
     wifiHold: { icon: <CloudArrowUp />, word: t('syncStatus.wifiHold'), cls: amber },
     storageFull: { icon: <Warning />, word: t('syncStatus.storageFull'), cls: amber },
-    uploading: { icon: <CircleNotch className="animate-spin" />, word: t('syncStatus.uploading'), cls: 'text-accent' },
+    uploading: { icon: <Spinner />, word: t('syncStatus.uploading'), cls: 'text-accent' },
     synced: { icon: <Check weight="bold" />, word: t('syncStatus.synced'), cls: green },
   };
   const head = heads[state];
@@ -423,32 +432,25 @@ export function SyncPanel({
           reason each one was refused. Persistent by design - it clears only
           when a pass pushes them. */}
       {failedNotes.length > 0 && !demo && (
-        <div className="rounded-lg border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3">
-          <p className="text-body font-medium text-amber-800 dark:text-amber-300">
-            {t('settings:syncStatus.notBackedUpAria', { count: failedNotes.length })}
-          </p>
-          <ul className="mt-2 space-y-1.5">
+        <Callout tone="warning" title={t('settings:syncStatus.notBackedUpAria', { count: failedNotes.length })}>
+          <ul className="mt-1.5 space-y-1.5">
             {failedNotes.map(({ id, title, failure }) => (
               <li key={id} className="flex items-center gap-2 text-body">
-                <span className="min-w-0 flex-1 truncate" dir="auto">{title}</span>
+                <span className="min-w-0 flex-1 truncate text-pn" dir="auto">{title}</span>
                 <span className="shrink-0 text-small text-warning">
                   {failure.reason === 'too_large'
                     ? t('syncPanel.reasonTooLarge')
                     : t('syncPanel.reasonFailed', { message: failure.message })}
                 </span>
                 {onOpenNote && (
-                  <button
-                    type="button"
-                    onClick={() => onOpenNote(id)}
-                    className="shrink-0 rounded-md border border-amber-300 dark:border-amber-700 px-2 py-0.5 text-small font-medium hover:bg-amber-100 dark:hover:bg-amber-900/40 transition"
-                  >
+                  <FeedbackButton action="open" onClick={() => onOpenNote(id)} className="shrink-0">
                     {t('shell:contacts.open')}
-                  </button>
+                  </FeedbackButton>
                 )}
               </li>
             ))}
           </ul>
-        </div>
+        </Callout>
       )}
 
       {/* ── Notes this device can't open: the server rows the pull met and
@@ -459,24 +461,21 @@ export function SyncPanel({
       {/* ── Controls: the two actions side by side, settings rows under ── */}
       <div className="grid gap-3 sm:grid-cols-2">
         {onSyncNow && !demo && (
-          <button
-            type="button"
+          <Button
+            icon={syncing ? <Spinner size={15} /> : <ArrowsClockwise className="text-accent" aria-hidden="true" />}
             onClick={() => void onSyncNow()}
             disabled={!online || syncing || belowFloor || paused || verifyBusy}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-divider hover:bg-surface-1 px-3 py-2.5 text-body font-medium transition disabled:opacity-50"
+            className="!rounded-lg !py-2.5"
           >
-            <ArrowsClockwise className={syncing ? 'animate-spin' : 'text-accent'} />
             {t('syncPanel.syncNow')}
-          </button>
+          </Button>
         )}
         {supabase && !demo && (
-          <button
-            type="button"
+          <Button
+            icon={<CloudCheck className="text-accent" aria-hidden="true" />}
             onClick={() => void runVerify()}
             disabled={verifyBusy || !online || syncing}
-            className={`relative inline-flex items-center justify-center gap-2 rounded-lg border border-divider hover:bg-surface-1 px-3 py-2.5 text-body font-medium transition ${
-              verifyBusy ? '' : 'disabled:opacity-50'
-            }`}
+            className={`relative !rounded-lg !py-2.5 ${verifyBusy ? '!opacity-100' : ''}`}
           >
             {/* While the compare runs, a short accent dash travels the
                 border. The SVG sits on the border's centre line, so the
@@ -486,9 +485,8 @@ export function SyncPanel({
                 <rect className="pn-border-trace" width="100%" height="100%" rx="7.5" pathLength="100" />
               </svg>
             )}
-            <CloudCheck className="text-accent" />
             {verifyBusy ? t('sync.verifyRunning') : t('sync.verifyAction')}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -507,7 +505,7 @@ export function SyncPanel({
               </p>
             ) : pending.count > 0 ? (
               <p className="inline-flex items-center gap-1.5">
-                <ArrowsClockwise className="animate-spin" />
+                <Spinner size={14} />
                 {t('sync.verifyInSyncPendingBlobs', { count: pending.count })}
               </p>
             ) : (
@@ -632,6 +630,8 @@ export function SyncPanel({
           pendingCount={pending.count}
           log={log}
           failed={failedNotes}
+          localStorageBytes={localStorageBytes}
+          storageReport={storageReport}
         />
       )}
 
@@ -702,6 +702,8 @@ function AccountIdRow({
   pendingCount,
   log,
   failed,
+  localStorageBytes,
+  storageReport,
   hint,
 }: {
   pubkey: string;
@@ -712,6 +714,10 @@ function AccountIdRow({
   log: SyncPassEntry[];
   /** The notes the last pass could not push. */
   failed: ReadonlyArray<{ id: string; failure: PushFailure; chars: number }>;
+  /** Local vault byte total (kept independent for offline support reports). */
+  localStorageBytes?: number;
+  /** Server and local storage totals for the Support report. */
+  storageReport?: { serverNotesBytes: number; serverFilesBytes: number; localBytes?: number };
   /** Optional status hint under the ID row (used in local-only mode). */
   hint?: string;
 }) {
@@ -719,22 +725,33 @@ function AccountIdRow({
   const [copied, setCopied] = useState<'id' | 'report' | null>(null);
 
   async function copy(kind: 'id' | 'report') {
-    const text =
-      kind === 'id'
-        ? pubkey
-        : buildSupportReport({
-            pubkey,
-            device: buildDeviceName(),
-            version: VERSION,
-            mode,
-            unsynced,
-            pendingUploads: pendingCount,
-            lastOkAt: lastOkSyncAt(),
-            failed: failed.map((f) => ({ id: f.id, reason: f.failure.reason, chars: f.chars })),
-            passes: log,
-            faults: readSyncFaults(),
-            breadcrumbs: readAuthLog(20),
-          });
+    let text: string;
+    if (kind === 'id') {
+      text = pubkey;
+    } else {
+      const pendingGc = await db.blobGC.count().catch(() => 0);
+      const cached = storageReport ? null : readPanelCache(pubkey)?.quota ?? null;
+      const localBytes = storageReport?.localBytes ?? localStorageBytes;
+      const storage = storageReport
+        ? { ...storageReport, localBytes, pendingGc }
+        : cached
+          ? { serverNotesBytes: cached.totalBytes, serverFilesBytes: cached.imageBytes, localBytes, pendingGc }
+          : undefined;
+      text = buildSupportReport({
+        pubkey,
+        device: buildDeviceName(),
+        version: VERSION,
+        mode,
+        storage,
+        unsynced,
+        pendingUploads: pendingCount,
+        lastOkAt: lastOkSyncAt(),
+        failed: failed.map((f) => ({ id: f.id, reason: f.failure.reason, chars: f.chars })),
+        passes: log,
+        faults: readSyncFaults(),
+        breadcrumbs: readAuthLog(20),
+      });
+    }
     try {
       await navigator.clipboard.writeText(text);
       setCopied(kind);
@@ -782,16 +799,15 @@ function CopyButton({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
+    <Button
+      icon={copied ? <Check weight="bold" aria-hidden="true" /> : <Copy aria-hidden="true" />}
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-1.5 rounded border px-2.5 py-1.5 text-small whitespace-nowrap transition ${
-        copied ? 'border-accent bg-accent/10 text-accent-strong' : 'border-divider hover:bg-surface-1'
+      className={`!px-2.5 !py-1.5 !text-small whitespace-nowrap ${
+        copied ? '!border-accent !bg-accent/10 !text-accent-strong' : ''
       }`}
     >
-      {copied ? <Check weight="bold" /> : <Copy />}
       {label}
-    </button>
+    </Button>
   );
 }
 

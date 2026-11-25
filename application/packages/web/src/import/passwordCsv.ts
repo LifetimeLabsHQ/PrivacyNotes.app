@@ -2,6 +2,7 @@ import { serializeLoginBody } from '../LoginForm';
 import { domainFromUrlString } from '../favicon';
 import i18n from '../i18n';
 import { normalizeTag } from '../notesRepo';
+import { stripBom } from './importHelpers';
 import { parseKeePassXml } from './keepassXml';
 import { readArchiveEntry } from './safariArchive';
 import type { Importer, ImporterId, ImportedNote, ParsedImport } from './types';
@@ -386,12 +387,6 @@ export function isoFromStamp(raw: string): string | null {
   const d = new Date(raw.length <= 10 ? n * 1000 : n);
   if (Number.isNaN(d.getTime())) return null;
   return d.toISOString();
-}
-
-/** Chrome on Windows writes a UTF-8 BOM, which would otherwise become
- *  part of the first header name and hide the "name" column. */
-function stripBom(text: string): string {
-  return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }
 
 function firstLine(text: string): string {

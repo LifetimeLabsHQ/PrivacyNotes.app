@@ -15,7 +15,7 @@ import { NodeViewWrapper, ReactNodeViewRenderer, type ReactNodeViewProps } from 
 import { Shapes } from './icons';
 import { atomDeleteKeys } from './editorAtomKeys';
 import { PathGlyph } from './looks/LookGlyph';
-import { useLookPaths } from './looks/lookIconsLoader';
+import { emojiChar, useLookPaths } from './looks/lookIconsLoader';
 import { INLINE_ICON_ID, inlineIconId, inlineIconMarkdown } from './editorIconSyntax';
 
 /** Minimal typing for the markdown-it inline state the rule touches. */
@@ -112,10 +112,16 @@ export const InlineIcon = Node.create({
   },
 });
 
-/** Put an icon at the caret with the marks a typed letter there would take
- *  (a text color, bold), so it matches the words around it. */
+/** Put an icon, logo or emoji at the caret with the marks a typed letter there
+ *  would take (a text color, bold), so it matches the words around it. An
+ *  emoji inserts as plain Unicode text so the Markdown stays portable. */
 export function insertInlineIcon(editor: Editor, id: string): void {
   const { storedMarks, selection } = editor.state;
   const marks = (storedMarks ?? selection.$from.marks()).map((m) => m.toJSON());
+  const emoji = emojiChar(id);
+  if (emoji) {
+    editor.chain().focus().insertContent({ type: 'text', text: emoji, marks }).run();
+    return;
+  }
   editor.chain().focus().insertContent({ type: 'inlineIcon', attrs: { id }, marks }).run();
 }

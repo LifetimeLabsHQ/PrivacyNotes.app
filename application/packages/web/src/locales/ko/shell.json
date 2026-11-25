@@ -41,6 +41,7 @@
     "noDocuments": "문서가 없어요.",
     "noImages": "이미지가 없어요.",
     "noAudioFiles": "오디오 파일이 없어요.",
+    "noUnusedFiles": "미사용 파일이 없어요.",
     "emptyTypesHint": "이미지, 문서, 오디오, 비디오, zip 파일. 파일당 최대 {{max}} MB.",
     "uploadFiles": "파일 업로드",
     "menuShow": "표시",
@@ -230,7 +231,7 @@
     "tagCount_other": "태그 {{count}}개",
     "entryDate": "항목 날짜",
     "noDate": "없음",
-    "schedule": "날짜 및 시간",
+    "schedule": "날짜 및 미리 알림",
     "ends": "종료",
     "sameDay": "같은 날",
     "starts": "시작",
@@ -313,7 +314,6 @@
     "showOneWeek": "한 주 보기"
   },
   "contextMenu": {
-    "newNote": "새 노트",
     "newTask": "새 할 일",
     "newKanban": "새 칸반 보드",
     "newDrawing": "새 드로잉",
@@ -322,15 +322,12 @@
     "newSshKey": "새 SSH 키",
     "newJournal": "새 저널",
     "newFile": "새 파일",
-    "exitZenMode": "Zen 모드 종료",
-    "zenMode": "Zen 모드",
     "showSidebar": "사이드바 표시",
     "hideSidebar": "사이드바 숨기기",
     "showNotesList": "노트 목록 표시",
     "hideNotesList": "노트 목록 숨기기",
     "resetPaneWidths": "패널 너비 초기화",
     "settings": "설정",
-    "signOut": "로그아웃",
     "deselect": "선택 해제",
     "select": "선택",
     "selectedCount_other": "{{count}}개 선택됨",
@@ -359,8 +356,7 @@
     "closeOtherTabs": "다른 탭 닫기",
     "closeAllTabs": "모든 탭 닫기",
     "pinTab": "탭 고정",
-    "unpinTab": "탭 고정 해제",
-    "newEvent": "새 일정"
+    "unpinTab": "탭 고정 해제"
   },
   "demoBanner": {
     "title": "부담 없이 사용해 보세요",
@@ -804,6 +800,22 @@
     "offOnPhone": "이 휴대폰에서 미리 알림이 꺼져 있어요",
     "turnOn": "켜기"
   },
+  "taskReminder": {
+    "set": "미리 알림 설정",
+    "edit": "미리 알림 편집",
+    "laterToday": "오늘 나중에",
+    "pickDateTime": "날짜 및 시간 선택",
+    "dateTime": "날짜 및 시간",
+    "remove": "미리 알림 제거",
+    "onSchedule": "예정대로",
+    "afterCompletion": "완료 후",
+    "afterDone": "완료 후 {{count}}{{unit}} 뒤",
+    "afterDoneHint": "이 할 일을 체크한 날부터 계산해요.",
+    "weekdaysShort": "평일",
+    "everyWeeks_other": "{{count}}주마다",
+    "everyMonths_other": "{{count}}개월마다",
+    "everyYears_other": "{{count}}년마다"
+  },
   "quickAdd": {
     "group": "만들기",
     "items": "항목",
@@ -990,7 +1002,8 @@
   "apps": {
     "railLabel": "확장 프로그램",
     "title": "브라우저 확장 프로그램",
-    "subtitle": "Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf, Zen에서 쓰는 웹 클리퍼이자 비밀번호 관리자예요. 확장 프로그램은 노트를 여는 키를 절대 갖지 않아요.",
+    "subtitle": "Chromium 및 Firefox 계열 브라우저에서 쓰는 웹 클리퍼이자 비밀번호 관리자예요. 확장 프로그램은 노트를 여는 키를 절대 갖지 않아요.",
+    "allSupported": "Chromium 또는 Firefox 계열 브라우저 어디서나 작동해요.",
     "loginsCopyFull": "브라우저 확장 프로그램에 있는 로그인 항목 사본이 가득 찼어요. 일부를 삭제하면 새 로그인 항목이 들어가요.",
     "stepInstall": "확장 프로그램 설치",
     "stepFeatures": "할 수 있는 일 선택",
@@ -1001,7 +1014,7 @@
     "thisBrowser": "이 브라우저",
     "otherApps": "데스크톱 앱과 휴대폰 앱:",
     "desktopAll": "모든 다운로드",
-    "extensionComputersOnly": "확장 프로그램은 컴퓨터의 Chrome, Firefox, Edge용이에요.",
+    "extensionComputersOnly": "확장 프로그램은 컴퓨터의 Chromium 및 Firefox 계열 브라우저용이에요.",
     "demoSignUp": "브라우저를 연결하려면 가입하세요"
   },
   "cli": {

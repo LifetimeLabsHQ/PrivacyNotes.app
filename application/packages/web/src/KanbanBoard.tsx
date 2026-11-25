@@ -26,6 +26,7 @@ import { PathGlyph } from './looks/LookGlyph';
 import { useLookPaths } from './looks/lookIconsLoader';
 import { isColumnColor } from './calloutKeywords';
 import { BlockGrip } from './BlockGrip';
+import { activeColumnsAt } from './columns';
 import { writeKanbanPref } from './editorPrefs';
 import { DEFAULT_COLORS, slotName, startLayout } from './kanbanLayout';
 import {
@@ -62,6 +63,7 @@ export interface KanbanOptions {
 /** Inserts a new board where the caret is: the count and colors of the last
  *  board on this device, the default names in the reader's language. */
 export function insertKanbanBoard(editor: TipTapEditor, t: TFunction) {
+  if (activeColumnsAt(editor.state)) return;
   const { names, colors, icons } = startLayout(t);
   const count = names.length as 3 | 4;
   editor

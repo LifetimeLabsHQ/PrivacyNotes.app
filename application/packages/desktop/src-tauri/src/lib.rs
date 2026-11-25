@@ -425,6 +425,7 @@ pub fn run() {
     #[cfg(target_os = "linux")]
     if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() && nvidia_driver_loaded() {
         std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+        std::env::set_var("PN_SET_WEBKIT_DISABLE_DMABUF", "1");
     }
 
     // A build without `devtools` has no inspector, but WebKitGTK still opens
@@ -479,7 +480,14 @@ pub fn run() {
     };
 
     let builder = builder
-        .plugin(tauri_plugin_opener::init())
+        // Disable the plugin's injected window click interceptor: App.tsx and
+        // editorLinks.ts are the single owner of link clicks across every
+        // platform, preventing double-opens (#701) and app-origin leaks (#169).
+        .plugin(
+            tauri_plugin_opener::Builder::new()
+                .open_js_links_on_click(false)
+                .build(),
+        )
         .plugin(tauri_plugin_deep_link::init())
         // Save As dialog + file write. The webview has no download handler, so
         // exports/backups/QR saves go through these instead of <a download>.

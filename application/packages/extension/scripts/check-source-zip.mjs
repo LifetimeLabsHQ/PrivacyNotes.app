@@ -28,9 +28,14 @@ function filesUnder(dir) {
   return out;
 }
 
+const VERSION = /VERSION = '([0-9.]+)'/.exec(
+  readFileSync(resolve(PKG, '../web/src/version.ts'), 'utf8'),
+)?.[1];
+if (!VERSION) throw new Error('packages/web/src/version.ts: no VERSION found');
+
 run('pnpm', ['run', 'zip:firefox'], PKG);
-const sourcesZip = readdirSync(OUTPUT).find((f) => f.endsWith('-sources.zip'));
-if (!sourcesZip) throw new Error('no sources zip in .output');
+const sourcesZip = `privacynotes-${VERSION}-sources.zip`;
+if (!readdirSync(OUTPUT).includes(sourcesZip)) throw new Error(`no ${sourcesZip} in .output`);
 
 const work = mkdtempSync(join(tmpdir(), 'pn-extension-sources-'));
 try {

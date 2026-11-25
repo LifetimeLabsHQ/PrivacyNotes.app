@@ -344,7 +344,7 @@
     "extensionKeyLogin": "Vyplniť prihlasovacie údaje tejto stránky",
     "extensionKeyBookmark": "Pridať túto stránku do záložiek",
     "extensionAria": "Pridať rozšírenie do prehliadača {{name}}",
-    "extensionNote": "Iba na počítačoch."
+    "extensionNote": "Funguje v akomkoľvek prehliadači založenom na Chromiu alebo Firefoxe. Iba na počítačoch."
   },
   "ctaRepeat": {
     "getStarted": "Začať"

@@ -21,6 +21,7 @@ import { parseDiarium } from './diarium';
 import { parseGoogleJournal } from './googleJournal';
 import { parseEvernote } from './evernote';
 import { parseSamsungNotes } from './samsungNotes';
+import { parseMicrosoftToDo } from './microsoftToDo';
 import { parseTodoist } from './todoist';
 import { parsePrivacyNotesBackup } from './privacynotes';
 import { bitwardenImporter } from './bitwarden';
@@ -247,6 +248,21 @@ export const IMPORTERS: ImporterEntry[] = [
     descKey: 'sourceDesc.dayOne',
     fileTypes: '.zip, .json',
     guide: 'day-one',
+  },
+  {
+    id: 'microsoft-to-do',
+    label: 'Microsoft To Do',
+    description:
+      'Export your Microsoft To Do account with our free browser-only tool at todo.privacynotes.app, then drop the .zip or .json here. Each list becomes a task list with completed tasks, subtasks, priorities, due dates, repeats, categories, notes, and attachments.',
+    accept: '.zip,.json',
+    enabled: true,
+    sourceTag: 'microsoft-to-do',
+    parse: parseMicrosoftToDo,
+    icon: { src: '/help/icons/microsoft-to-do.svg' },
+    labelKey: null,
+    descKey: 'sourceDesc.microsoftToDo',
+    fileTypes: '.zip, .json',
+    guide: 'microsoft-to-do',
   },
   {
     id: 'todoist',

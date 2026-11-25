@@ -8,7 +8,7 @@
  */
 import { useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Banner } from '../ui/feedback';
+import { Banner } from '../ui';
 import { onPhraseMemoryOnlyChange, phraseHeldInMemoryOnly } from '../phraseAtRest';
 import { isTrustedDevice } from '../trustStorage';
 import { isDemoMode } from '../demo';

@@ -26,7 +26,6 @@
     "noResults": "لا توجد نتائج"
   },
   "deleteNote": {
-    "confirm": "حذف نهائي",
     "body": "هل تريد حذف <highlight>«{{title}}»</highlight> نهائيًا؟ لا يمكن التراجع عن هذا الإجراء."
   },
   "emptyTrash": {
@@ -77,12 +76,15 @@
       "toggleSidebar": "إظهار الشريط الجانبي أو إخفاؤه",
       "toggleTheme": "التبديل بين الوضع الفاتح والداكن",
       "openSettings": "فتح الإعدادات",
+      "graph": "مساحة المخطط الشبكي والأماكن",
       "zen": "وضع Zen",
+      "fullScreen": "وضع ملء الشاشة",
       "markdownView": "تشغيل عرض Markdown أو إيقافه",
       "invisibles": "إظهار الأحرف غير المرئية أو إخفاؤها",
       "find": "البحث في الملاحظة",
       "findReplace": "البحث والاستبدال",
       "outline": "إظهار المخطط التفصيلي أو إخفاؤه",
+      "connections": "إظهار الصلات أو إخفاؤها",
       "insertDate": "إدراج التاريخ",
       "insertDateTime": "إدراج التاريخ والوقت",
       "clearFilters": "مسح عوامل التصفية",
@@ -146,8 +148,6 @@
     "goToFolder": "الانتقال إلى مجلد",
     "createTag": "إنشاء الوسم #{{name}}",
     "createFolder": "إنشاء المجلد «{{name}}»",
-    "newTag": "وسم جديد",
-    "newFolder": "مجلد جديد",
     "goToDay": "الانتقال إلى يوم",
     "inText": "في النص",
     "actions": "الإجراءات",
@@ -192,9 +192,9 @@
   "sshKeyForm": {
     "label": "التسمية",
     "labelPlaceholder": "مثال: مفتاح نشر GitHub",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "نسخ المفتاح العام",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "نسخ المفتاح الخاص",
     "downloadPublicKey": "تنزيل المفتاح العام",
     "downloadPrivateKey": "تنزيل المفتاح الخاص",
@@ -315,6 +315,13 @@
     "features": {
       "stats": {
         "detail": "كتابتك وسلاسل أيامك ومتتبعاتك عبر الزمن"
+      },
+      "graph": {
+        "detail": "الروابط بين الملاحظات والجسور الذكية والمحاور لديك في خريطة تفاعلية"
+      },
+      "placesMap": {
+        "label": "خريطة الأماكن",
+        "detail": "الملاحظات وتدوينات اليوميات وجهات الاتصال المثبّتة على خريطة خاصة"
       },
       "trackers": {
         "detail": "المزاج والعادات والعوامل والأدوية"

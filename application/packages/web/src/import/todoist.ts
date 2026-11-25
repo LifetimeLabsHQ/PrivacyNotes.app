@@ -3,11 +3,13 @@ import i18n from '../i18n';
 import { withBareLinks } from './bareLinks';
 import { mapOutsideCode, stripHtmlComments } from './codeSegments';
 import { detailsToFold } from './detailsFold';
-import { cleanPath, escapeScriptTags, escapeTypedTags, isJunkEntry, normalizeTagList } from './importHelpers';
+import { cleanPath, escapeScriptTags, escapeTypedTags, indentLines, isJunkEntry, normalizeTagList } from './importHelpers';
 import { isoFromStamp, readCsvTable } from './passwordCsv';
 import type { ImportedNote, ParsedImport } from './types';
 import { zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
+import { isTime } from '../schedule';
+import { isValidIsoDay, taskReminderMarkdown } from '../taskReminderSyntax';
 
 const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:todoist.${key}`, options);
 
@@ -89,13 +91,6 @@ function cleanDescription(raw: string): string {
   return mapOutsideCode(folded, (prose) => escapeScriptTags(stripHtmlComments(prose)));
 }
 
-function indentLines(text: string, prefix: string): string {
-  return text
-    .split('\n')
-    .map((line) => (line === '' ? '' : `${prefix}${line}`))
-    .join('\n');
-}
-
 interface CsvSource {
   fileName: string;
   file: File;
@@ -129,19 +124,30 @@ async function readCsvSources(file: File): Promise<{ sources: CsvSource[]; fromZ
   return { sources, fromZip: true };
 }
 
+function parseTodoistReminderDate(raw: string): { day: string; time: string } | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const direct = /^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2}))?/.exec(trimmed);
+  if (!direct) return null;
+  const day = direct[1]!;
+  const time = direct[2] ?? '09:00';
+  return isValidIsoDay(day) && isTime(time) ? { day, time } : null;
+}
+
 interface ProjectParseResult {
   note: ImportedNote | null;
   tasks: number;
   sections: number;
   comments: number;
-  reminders: number;
+  remindersImported: number;
+  remindersSkipped: number;
   validHeader: boolean;
 }
 
 async function parseProjectCsv(src: CsvSource, fallbackIso: string): Promise<ProjectParseResult> {
   const { rows, col } = await readCsvTable(src.file);
   if (REQUIRED_COLS.some((c) => col(c) < 0)) {
-    return { note: null, tasks: 0, sections: 0, comments: 0, reminders: 0, validHeader: false };
+    return { note: null, tasks: 0, sections: 0, comments: 0, remindersImported: 0, remindersSkipped: 0, validHeader: false };
   }
   const cell = (row: string[], name: string): string => {
     const i = col(name);
@@ -154,7 +160,8 @@ async function parseProjectCsv(src: CsvSource, fallbackIso: string): Promise<Pro
   let tasks = 0;
   let sections = 0;
   let comments = 0;
-  let reminders = 0;
+  let remindersImported = 0;
+  let remindersSkipped = 0;
   let lastTaskIndent = 0;
   let earliestMs = Infinity;
   let latestMs = -Infinity;
@@ -221,8 +228,17 @@ async function parseProjectCsv(src: CsvSource, fallbackIso: string): Promise<Pro
       const due = cell(row, 'date').trim();
       const duration = formatDuration(cell(row, 'duration'), cell(row, 'duration_unit'));
       const deadline = cell(row, 'deadline').trim();
-      if (cell(row, 'reminder_type').trim() || cell(row, 'reminder_date').trim() || cell(row, 'reminder_offset').trim()) {
-        reminders++;
+      const isHeaderTask = /^\*\s+/.test(trimmed);
+      const rawRemType = cell(row, 'reminder_type').trim();
+      const rawRemDate = cell(row, 'reminder_date').trim();
+      const rawRemOffset = cell(row, 'reminder_offset').trim();
+      const parsedRem = !isHeaderTask ? parseTodoistReminderDate(rawRemDate) : null;
+      let reminderToken = '';
+      if (parsedRem) {
+        reminderToken = taskReminderMarkdown(parsedRem);
+        remindersImported++;
+      } else if (rawRemType || rawRemDate || rawRemOffset) {
+        remindersSkipped++;
       }
 
       const meta: string[] = [];
@@ -230,9 +246,9 @@ async function parseProjectCsv(src: CsvSource, fallbackIso: string): Promise<Pro
       if (due) meta.push(`(${msg('dueValue', { value: due })})`);
       if (duration) meta.push(`(${duration})`);
       if (deadline) meta.push(`(${msg('deadlineValue', { value: deadline })})`);
+      if (reminderToken) meta.push(reminderToken);
       const suffix = meta.length > 0 ? ` ${meta.join(' ')}` : '';
 
-      const isHeaderTask = /^\*\s+/.test(trimmed);
       const text = escapeTypedTags((isHeaderTask ? trimmed.replace(/^\*\s+/, '') : trimmed).replace(/\n+/g, ' '));
       const line = isHeaderTask ? `${indentStr}- **${text}**${suffix}` : `${indentStr}- [ ] ${text}${suffix}`;
       bodyParts.push(line);
@@ -262,7 +278,7 @@ async function parseProjectCsv(src: CsvSource, fallbackIso: string): Promise<Pro
   }
 
   if (tasks === 0 && projectNotes.length === 0 && sections === 0) {
-    return { note: null, tasks: 0, sections: 0, comments: 0, reminders: 0, validHeader: true };
+    return { note: null, tasks: 0, sections: 0, comments: 0, remindersImported: 0, remindersSkipped: 0, validHeader: true };
   }
 
   const sectionsOut: string[] = [];
@@ -285,7 +301,8 @@ async function parseProjectCsv(src: CsvSource, fallbackIso: string): Promise<Pro
     tasks,
     sections,
     comments,
-    reminders,
+    remindersImported,
+    remindersSkipped,
     validHeader: true,
   };
 }
@@ -306,7 +323,8 @@ async function readTodoist(file: File, onProgress?: (msg: string) => void): Prom
   let totalTasks = 0;
   let totalSections = 0;
   let totalComments = 0;
-  let totalReminders = 0;
+  let totalRemindersImported = 0;
+  let totalRemindersSkipped = 0;
 
   for (let i = 0; i < sources.length; i++) {
     const src = sources[i]!;
@@ -325,7 +343,8 @@ async function readTodoist(file: File, onProgress?: (msg: string) => void): Prom
     totalTasks += res.tasks;
     totalSections += res.sections;
     totalComments += res.comments;
-    totalReminders += res.reminders;
+    totalRemindersImported += res.remindersImported;
+    totalRemindersSkipped += res.remindersSkipped;
   }
 
   if (validCsvs === 0) throw new Error(msg('notTodoist'));
@@ -333,11 +352,12 @@ async function readTodoist(file: File, onProgress?: (msg: string) => void): Prom
 
   const warnings: string[] = [];
   if (emptyProjects > 0) warnings.push(msg('emptyProjects', { count: emptyProjects }));
-  if (totalReminders > 0) warnings.push(msg('reminders', { count: totalReminders }));
+  if (totalRemindersSkipped > 0) warnings.push(msg('reminders', { count: totalRemindersSkipped }));
 
   const transforms: string[] = [msg('importedProjects', { count: notes.length, tasks: totalTasks })];
   if (totalSections > 0) transforms.push(msg('sections', { count: totalSections }));
   if (totalComments > 0) transforms.push(msg('comments', { count: totalComments }));
+  if (totalRemindersImported > 0) transforms.push(msg('remindersImported', { count: totalRemindersImported }));
 
   return {
     notes,

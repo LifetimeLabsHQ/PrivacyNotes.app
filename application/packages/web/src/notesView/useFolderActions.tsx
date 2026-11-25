@@ -3,12 +3,10 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CaretDown, Folder } from '../icons';
 import { FolderGlyph } from '../looks/LookGlyph';
-import { IconUpgrade } from '../UpgradeModal';
-import { RowChip } from '../ui';
+import { IconUpgrade, RowChip } from '../ui';
 import type { LocalNote } from '../db';
 import {
   applyFolderPlacement,
-  canDeleteFolder,
   createFolder,
   deleteFolder,
   folderCounts as computeFolderCounts,
@@ -25,7 +23,7 @@ import { liveItemIds } from '../itemDrag';
 import { keepsOpenItem } from './closedPane';
 import { bulkMoveToFolder } from '../notesRepo';
 import type { UserSettings } from '../userSettings';
-import type { View } from '../views';
+import { viewForFilterPick, type View } from '../views';
 
 export function useFolderActions({
   userSettings,
@@ -193,14 +191,13 @@ export function useFolderActions({
     setSelectedFolder(id);
     // The current view and any active tag are kept: folder + tag + view
     // compose as one combined filter (the folder narrows whatever pillar
-    // and tag are active). Trash is the exception - it holds deleted
-    // notes, so it cannot narrow to a folder without contradicting the
-    // folder's own count - and picking a folder there returns to All
-    // items, the same landing handleSelectTag uses. handleSelectView
-    // clears both filters in the other direction.
-    // Home takes no filter: a folder clicked there opens it in All.
+    // and tag are active). Views that cannot take a vault folder filter
+    // (Trash, Home, Calendar and disk-backed Markdown) bounce to All items,
+    // the same landing handleSelectTag uses. handleSelectView clears both
+    // filters in the other direction.
     // Spec: docs/internal/specs/dashboard.md (section 2)
-    const nextView: View = view === 'trash' || view === 'dashboard' ? 'home' : view;
+    // Spec: docs/internal/specs/calendar-pillar-spec.md (section 6, step 3)
+    const nextView: View = viewForFilterPick(view, id !== null);
     if (nextView !== view) setView(nextView);
     setDrawerOpen(false);
     // The open item stays open on a wide screen (#823).
@@ -312,12 +309,9 @@ export function useFolderActions({
   }
 
   /** Delete a folder: its notes move up to its parent, and its subfolders
-   *  move up too, or with `withSubfolders` are deleted with it. */
+   *  move up too, or with `withSubfolders` are deleted with it. Ungated so
+   *  free accounts can always remove imported or starter folders. */
   async function handleDeleteFolder(id: string, withSubfolders = false) {
-    if (!canDeleteFolder(id, foldersUnlocked)) {
-      openFoldersUpsell();
-      return;
-    }
     // One call, against the tree the updater is handed, so the tombstones,
     // the folders whose notes move and the parent they move to describe the
     // same delete. mutateSettings runs the updater before it returns, so

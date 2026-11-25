@@ -443,7 +443,7 @@
       "app": "Notion",
       "title": "Notion 워크스페이스 내보내기",
       "metaTitle": "Notion 워크스페이스를 내보내는 방법 - PrivacyNotes",
-      "lead": "Notion 워크스페이스를 Markdown & CSV zip으로 내보내면, PrivacyNotes가 Notion의 32자 ID를 제거하고 하위 페이지를 폴더로 다시 만들며 페이지 링크를 노트 링크로 바꿔 줘요.",
+      "lead": "Notion 워크스페이스를 HTML 또는 Markdown & CSV zip으로 내보내면, PrivacyNotes가 Notion의 32자 ID를 제거하고 하위 페이지를 폴더로 다시 만들며 열과 색상을 유지하고 페이지 링크를 노트 링크로 바꿔 줘요.",
       "sections": [
         {
           "img": {
@@ -470,23 +470,23 @@
             "width": 1576,
             "height": 600
           },
-          "h": "폴더 옵션을 켜고 Markdown & CSV를 고르세요",
+          "h": "폴더 옵션을 켜고 HTML(권장) 또는 Markdown & CSV를 고르세요",
           "steps": [
-            "Export format을 \"Markdown & CSV\"로 설정하세요.",
+            "나란히 배치된 열, 열 너비, 글자 색상, 형광펜을 유지하려면 Export format을 \"HTML\"로 설정하세요. 열이나 색상을 쓰지 않는다면 \"Markdown & CSV\"도 괜찮아요.",
             "이미지, PDF, 첨부 파일이 포함되도록 Page content를 \"Everything\"으로 설정하세요.",
             "\"Include private pages\"(단일 페이지 내보내기에서는 \"Include subpages\")와 \"Create folders for subpages\"를 켜세요.",
             "Export를 클릭하고 .zip 파일을 저장하세요."
           ],
           "p": [
-            "HTML과 PDF 내보내기에는 Markdown 파일이 들어 있지 않아 Notion 가져오기 도구가 읽을 수 없어요. 구조, 링크, 서식이 깔끔하게 넘어오도록 \"Markdown & CSV\"를 고르세요."
+            "PDF 내보내기는 Notion 가져오기 도구가 읽을 수 없어요. 열, 색상, 구조, 링크, 서식이 깔끔하게 넘어오도록 \"HTML\"을 고르거나, 일반 Markdown이 필요하면 \"Markdown & CSV\"를 고르세요."
           ]
         },
         {
           "h": "함께 옮겨지는 것",
           "p": [
             "Notion은 내보내는 모든 파일 이름과 내부 링크 끝에 32자 ID를 붙여요. PrivacyNotes는 모든 제목과 폴더 이름에서 그 ID를 제거하고, 최상위 \"Private & Shared\" 폴더를 벗겨 내며, 중첩된 하위 페이지를 폴더로 다시 만들어요.",
-            "제목, 목록, 중첩된 체크리스트, 표, 언어가 표시된 코드 블록, 수식, 밑줄, 인용은 원래대로 넘어와요. Notion 콜아웃은 PrivacyNotes 콜아웃으로 변환되고, [내보낸 페이지 사이의 링크와 멘션은 노트 링크가 되며](/ko/help/note-links), 업로드한 이미지, PDF, 파일은 저장 공간으로 가져와요.",
-            "데이터베이스의 행 페이지는 데이터베이스 이름을 딴 폴더 안의 노트로 가져오고, Tags 속성이 있으면 태그로 추가돼요. 데이터베이스 CSV 표 파일은 건너뛰고 가져오기 요약에 개수가 표시돼요. Notion 자체 Markdown 내보내기에는 글자 색상, 형광펜, 휴지통에 있는 페이지가 포함되지 않아요."
+            "제목, 목록, 중첩된 체크리스트, 표, 언어가 표시된 코드 블록, 수식, 밑줄, 인용은 원래대로 넘어와요. HTML로 내보내면 나란히 배치된 열(2~5개 열, 너비 비율 포함), 글자 색상, 형광펜도 함께 넘어와요. Notion 콜아웃은 PrivacyNotes 콜아웃으로 변환되고, [내보낸 페이지 사이의 링크와 멘션은 노트 링크가 되며](/ko/help/note-links), 업로드한 이미지, PDF, 파일은 저장 공간으로 가져와요.",
+            "데이터베이스의 행 페이지는 데이터베이스 이름을 딴 폴더 안의 노트로 가져오고, Tags 속성이 있으면 태그로 추가돼요. 데이터베이스 CSV 표 파일은 건너뛰고 가져오기 요약에 개수가 표시돼요. Notion 자체 Markdown 내보내기는 열 구조를 평탄화하고, 글자 색상, 형광펜, 휴지통에 있는 페이지를 포함하지 않아요."
           ]
         }
       ]
@@ -1552,6 +1552,45 @@
           "p": [
             "[모든 항목은 저널에 도착하고](/ko/help/journal), 항목 자체 시간대의 날짜로 들어가요. 맨 앞의 제목이 항목 제목이 되며, 제목이 없는 항목은 날짜가 제목이 돼요. 별표를 단 항목과 고정된 항목은 고정된 채로 남고, 태그는 태그로 남아요.",
             "위치는 항목의 위치 칩을 채우고, 날씨, 활동, 음악은 맨 위에 한 줄로 들어가요. 사진은 이미지로, 오디오, 동영상, PDF는 첨부 파일로 가져오며, 항목 사이의 링크는 [노트 링크](/ko/help/note-links)가 돼요. .zip 하나에 여러 저널이 들어 있으면 저널마다 폴더가 돼요."
+          ]
+        }
+      ]
+    },
+    "microsoft-to-do": {
+      "app": "Microsoft To Do",
+      "title": "Microsoft To Do 내보내기 도구",
+      "metaTitle": "Microsoft To Do 내보내기 도구 - 무료 브라우저 도구 - PrivacyNotes",
+      "lead": "2027년 6월 서비스 종료 전에, 브라우저에서만 작동하는 무료 Microsoft To Do 내보내기 도구로 Microsoft To Do 목록, 하위 할 일, 메모, 첨부 파일을 내보내세요.",
+      "sections": [
+        {
+          "h": "3단계로 Microsoft To Do 할 일 내보내기",
+          "p": [
+            "Microsoft To Do에는 아직 기본 내보내기 버튼이 없어서, Windows, Mac, Linux, 모바일의 브라우저에서 바로 실행되는 무료 오픈소스 [Microsoft To Do 내보내기 도구](https://todo.privacynotes.app)를 만들었어요."
+          ],
+          "steps": [
+            "[todo.privacynotes.app](https://todo.privacynotes.app)을 열고 **Sign in with Microsoft**를 클릭하세요.",
+            "브라우저가 아무것도 바꾸거나 삭제하지 않고 목록만 읽을 수 있도록 읽기 전용 권한(`Tasks.Read`)을 허용하세요.",
+            "**Fetch my Microsoft To Do data**를 클릭한 다음, **Download ZIP (recommended)**를 클릭해 목록, 할 일, 하위 할 일, 메모, 첨부 파일을 기기에 저장하세요."
+          ]
+        },
+        {
+          "h": "2027년 6월 전에 브라우저 전용 내보내기 도구가 필요한 이유",
+          "p": [
+            "Microsoft는 2027년 6월 30일에 Microsoft To Do를 종료한다고 발표했고, 개인 Microsoft 계정에는 대체 앱이 없어요. 직장 및 학교 계정은 Microsoft Planner로 옮겨 가지만, 개인 사용자는 다른 할 일 앱으로 갈아타야 해요.",
+            "명령줄 프로그램을 설치하거나 개발자 토큰을 직접 복사할 필요 없이, 웹 내보내기 도구는 클릭 한 번으로 브라우저를 Microsoft Graph에 바로 연결하고 개인 계정(outlook.com, hotmail.com, live.com)과 Microsoft 365 계정 모두에서 작동해요."
+          ]
+        },
+        {
+          "h": "설계부터 프라이버시 우선 - 저희 서버를 거치지 않아요",
+          "p": [
+            "이 내보내기 도구는 백엔드도 추적도 없는 정적 페이지예요. 브라우저가 Microsoft에서 할 일을 직접 받아와 기기에서 ZIP을 만들기 때문에, 목록은 저희 서버를 절대 거치지 않아요. 로그인 토큰은 브라우저의 임시 세션 저장소에만 머물고 로그아웃하거나 탭을 닫으면 지워져요."
+          ]
+        },
+        {
+          "h": "ZIP 안에 들어 있는 것과 함께 옮겨지는 것",
+          "p": [
+            "ZIP에는 구조화된 `microsoft-to-do-export.json` 백업, 목록마다 읽기 쉬운 Markdown 체크리스트 파일 하나씩, 스프레드시트에서 바로 쓸 수 있는 `tasks.csv`, 그리고 다운로드한 첨부 파일이 들어 있어요. 이 내보내기 파일은 PrivacyNotes뿐 아니라 다른 Markdown 또는 CSV 앱으로도 가져올 수 있어요.",
+            "PrivacyNotes에서는 모든 목록이 [할 일 목록](/ko/help/tasks)이 되어 미완료 및 완료된 할 일, 하위 할 일, 중요 표시, 마감일, 반복 주기, 태그로 변환된 카테고리, 메모, 연결된 항목, 첨부 파일을 그대로 유지하고, 노트는 기기에서 암호화돼요. 개별 체크리스트 미리 알림은 옮겨지지 않으며 가져오기 요약에 개수가 표시돼요. 내보내기 도구나 Microsoft Graph API에서 받은 `.json` 파일만 따로 넣어도 첨부 파일 없이 가져올 수 있어요."
           ]
         }
       ]

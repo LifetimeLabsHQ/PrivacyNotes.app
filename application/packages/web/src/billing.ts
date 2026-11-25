@@ -23,6 +23,7 @@ import { isBackendNetworkAllowed, isLocalOnly, LocalOnlyNetworkBlockedError } fr
 import { PAY_ORIGIN } from './hosts';
 import { cryptoCheckoutLink, newCryptoOrderId, rememberCryptoOrder, reusableCryptoOrder } from './cryptoCheckout';
 import { cryptoCheckoutReleased } from './cryptoRelease';
+import { openExternal, openExternalAsync } from './openExternal';
 
 // The CheckoutLauncher page runs the Paddle overlay on an approved Paddle
 // domain, its own host. Desktop sends users here in their system browser.
@@ -47,8 +48,7 @@ function pubkeyToAppAccountToken(pubkey: string): string {
 }
 
 async function openWebCheckout(query: string): Promise<void> {
-  const { openUrl } = await import('@tauri-apps/plugin-opener');
-  await openUrl(`${WEB_CHECKOUT_ORIGIN}/checkout?${query}`);
+  await openExternalAsync(`${WEB_CHECKOUT_ORIGIN}/checkout?${query}`, { browser: true });
 }
 
 /**
@@ -71,7 +71,7 @@ async function openWebCheckout(query: string): Promise<void> {
  * Spec: docs/internal/plans/paddle-origin-split.md (checkout on a separate origin, can't read app's localStorage)
  */
 function openBrowserCheckout(query: string): void {
-  window.open(`${WEB_CHECKOUT_ORIGIN}/checkout?${query}`, '_blank', 'noopener,noreferrer');
+  openExternal(`${WEB_CHECKOUT_ORIGIN}/checkout?${query}`, { browser: true });
 }
 
 // Desktop checkout completes in the browser, not the app, so Paddle's success
@@ -208,11 +208,7 @@ export function startCryptoProCheckout(pubkey: string): void {
   const secret = reused ? reused.secret : newCryptoOrderId();
   if (!reused) rememberCryptoOrder(order, secret, pubkey);
   const url = cryptoCheckoutLink(order, pubkey, secret);
-  if (detectPlatform() === 'web') {
-    window.open(url, '_blank', 'noopener,noreferrer');
-    return;
-  }
-  void import('@tauri-apps/plugin-opener').then(({ openUrl }) => openUrl(url));
+  openExternal(url, { browser: true });
 }
 
 /**
@@ -624,7 +620,6 @@ export async function openNativeSubscriptionManagement(
   source: string,
   productId: string,
 ): Promise<void> {
-  const { openUrl } = await import('@tauri-apps/plugin-opener');
   if (source === 'apple') {
     // itms-apps opens the App Store app's subscription page directly, no
     // Safari hop. The scheme needs its own opener scope entry - it is not
@@ -636,13 +631,17 @@ export async function openNativeSubscriptionManagement(
     // caller now surfaces the underlying message so the next report names
     // the failing layer.
     try {
-      await openUrl('itms-apps://apps.apple.com/account/subscriptions');
+      await openExternalAsync('itms-apps://apps.apple.com/account/subscriptions', {
+        browser: true,
+        allowStoreScheme: true,
+      });
     } catch {
-      await openUrl('https://apps.apple.com/account/subscriptions');
+      await openExternalAsync('https://apps.apple.com/account/subscriptions', { browser: true });
     }
     return;
   }
-  await openUrl(
+  await openExternalAsync(
     `https://play.google.com/store/account/subscriptions?sku=${encodeURIComponent(productId)}&package=app.privacynotes`,
+    { browser: true },
   );
 }

@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { CompareResult } from '../wellnessTypes';
-import { SETTINGS_SELECT, SectionEyebrow, SettingsSegmented } from '../settingsUI';
-import { ProMark } from '../UpgradeModal';
+import { SectionEyebrow, SettingsSegmented } from '../settingsUI';
+import { EmptyState, ProMark, ProTeaserCard, Select } from '../ui';
 import { CalendarCheck, ChartLine, Sparkle } from '../icons';
 import { EffectBarRow, SureDots, WeekdayChart, changeTone, signedValue, spreadOf, weekdayAverages } from './statsParts';
 import { formatDay } from '../intlFormat';
@@ -67,7 +67,7 @@ export function ExploreSubTab({ model, trackerId, unlocked, isPro, onOpenUpgrade
     return rows.map((x) => ({ ...x, share: x.share / top }));
   }, [model, selected, outcomes, unlocked]);
 
-  if (!selected) return <p className="text-small text-pn-muted">{t('wellness.trackers.empty')}</p>;
+  if (!selected) return <EmptyState compact flush>{t('wellness.trackers.empty')}</EmptyState>;
   const series = model.seriesOf(selected);
   const { headline, sub } = cardNumbers(selected, series, t);
   const name = trackerName(selected, t);
@@ -170,9 +170,9 @@ export function ExploreSubTab({ model, trackerId, unlocked, isPro, onOpenUpgrade
             {unlocked && outcomes.length > 1 && (
               <label className="flex items-center gap-2 text-small text-pn-soft">
                 {t('wellness.effects.compareWith')}
-                <select value={outcome.id} onChange={(e) => setOutcomeId(e.target.value)} className={SETTINGS_SELECT}>
+                <Select size="sm" value={outcome.id} onChange={(e) => setOutcomeId(e.target.value)}>
                   {outcomes.map((d) => <option key={d.id} value={d.id}>{trackerName(d, t)}</option>)}
-                </select>
+                </Select>
               </label>
             )}
           </div>
@@ -208,9 +208,9 @@ export function ExploreSubTab({ model, trackerId, unlocked, isPro, onOpenUpgrade
               <p className="text-small text-pn-muted">{t('wellness.effects.footnote')}</p>
             </div>
           ) : (
-            <button type="button" onClick={onOpenUpgrade} className="w-full rounded-lg border border-dashed border-divider p-3 text-small text-pn-muted hover:text-pn hover:border-pn-muted transition-colors text-center">
+            <ProTeaserCard compact onUpgrade={onOpenUpgrade}>
               {t('wellness.patterns.tableLocked')}
-            </button>
+            </ProTeaserCard>
           )}
         </div>
       )}

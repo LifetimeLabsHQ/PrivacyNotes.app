@@ -38,7 +38,7 @@
     "blockMath": "ブロック数式",
     "align": "配置",
     "font": "フォント",
-    "pictureFromFiles": "ファイルから画像",
+    "pictureFromFiles": "ギャラリー",
     "date": "日付",
     "dateTime": "日付と時刻",
     "footnote": "脚注",
@@ -255,6 +255,15 @@
     "headingsIn": "{{title}} の見出し",
     "noHeadingMatches": "一致する見出しがありません"
   },
+  "slash": {
+    "label": "ブロックを挿入",
+    "linePlaceholder": "/ を押してブロックを挿入",
+    "filterHint": "入力して絞り込み…",
+    "basic": "基本ブロック",
+    "smartDate": "スマート日付",
+    "askNinja": "Ninjaに「{{query}}」を聞く",
+    "noMatches": "一致するブロックがありません"
+  },
   "copyBox": {
     "placeholder": "ワンクリックでコピーするテキスト"
   },
@@ -361,6 +370,23 @@
     "addColumn": "列を追加",
     "removeBoard": "ボードを削除",
     "moveTo": "移動先"
+  },
+  "columns": {
+    "narrowWide": "狭めと広め",
+    "wideNarrow": "広めと狭め",
+    "removeColumns": "カラムを削除",
+    "resizeColumn": "ドラッグしてカラムの幅を変更",
+    "barLabel": "カラム操作",
+    "borders": "カラムの枠線",
+    "borderBoxes": "ボックス",
+    "borderSolid": "実線",
+    "borderDashed": "破線",
+    "borderDotted": "点線",
+    "borderThickness": "太さ",
+    "borderThin": "細い",
+    "borderMedium": "普通",
+    "borderColorDefault": "標準の色",
+    "borderTint": "カラムの淡い背景色"
   },
   "doodle": {
     "title": "落書き",

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, Callout, FeedbackButton, IconButton, Modal, ModalFooter, ROW_TITLE, SETTINGS_BTN_PRIMARY, StatusLine, Switch, TextField } from './ui';
 import { Image as ImageIcon, Link, NEW_GLYPHS, PuzzlePiece, X } from './icons';
 import { normalizeUrl } from './linkBody';
+import { NO_TEXT_ASSIST } from './formFields';
 import { isImeComposing } from './imeComposing';
 import { renderMarkdownSafe } from './markdownRender';
 import { formatBytes } from './formatBytes';
@@ -231,6 +232,8 @@ export default function ClipPageModal({
         autoFocus
         dir="ltr"
         inputMode="url"
+        autoComplete="off"
+        {...NO_TEXT_ASSIST}
         enterKeyHint="go"
         placeholder={t('clipper.addressPlaceholder')}
         disabled={saving}

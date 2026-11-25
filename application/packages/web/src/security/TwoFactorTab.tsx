@@ -5,14 +5,14 @@ import { formatInstant } from '../intlFormat';
 import { useAuth } from '../auth';
 import { isDemoMode } from '../demo';
 import { AppWindow, Check, Copy, DeviceMobile, Download, Key, ShieldCheck, ShieldPlus, ShieldSlash } from '../icons';
-import { Button } from '../ui';
+import { Badge, Button, Callout, Checkbox, IconTile, StatusLine, TextField } from '../ui';
 import { MfaRecoveryHelp } from '../MfaPrompt';
 import { ensureLevel2, fetchMfaStatus, MfaCancelledError, notifyMfaChanged, verifyMfaCodeForSession, type MfaStatus } from '../mfaStep';
 import { mfaSessionIdentity } from '../sessionWriteGuard';
 import { saveBlob } from '../saveFile';
 import { PinInput } from '../PinInput';
 import { HelpChip } from '../HelpChip';
-import { SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, SettingsCallout } from '../settingsUI';
+import { SectionEyebrow, SETTINGS_HELP } from '../settingsUI';
 import { AccountSignInSetup } from '../AccountSignInSetup';
 import { useAccountLogins } from '../accountLogins';
 
@@ -28,10 +28,6 @@ export function labelTotpUri(uri: URL, account: string): string {
   params.set('issuer', TOTP_ISSUER);
   return `otpauth://totp/${encodeURIComponent(TOTP_ISSUER)}:${encodeURIComponent(account)}?${params.toString()}`;
 }
-// Button tiers: docs/internal/design/ui-patterns.md section 16, in theme tokens.
-const primary = SETTINGS_BTN_PRIMARY;
-const secondary = 'inline-flex items-center justify-center gap-1.5 rounded-md border border-divider text-pn hover:bg-surface-1 px-4 py-2 text-body transition disabled:opacity-40 disabled:cursor-not-allowed';
-const field = 'w-full rounded-md bg-surface-1 border border-divider text-pn px-3 py-2.5 text-body focus:border-accent focus:outline-none';
 
 function normalizeKey(value: string): string { return value.toUpperCase().replace(/[\s-]/g, ''); }
 
@@ -276,10 +272,10 @@ export function TwoFactorTab() {
   return (
     <div className="space-y-4">
       <SectionEyebrow icon={ShieldCheck}>{t('twoFactor.title')}</SectionEyebrow>
-      {error && <p role="alert" className="text-body text-danger">{t(error)}</p>}
-      {notice && <p role="status" className="text-body text-accent">{t(notice)}</p>}
+      {error && <Callout tone="danger">{t(error)}</Callout>}
+      {notice && <StatusLine tone="success">{t(notice)}</StatusLine>}
       {!status ? (
-        <button type="button" className={secondary} onClick={() => void run(async () => { await readState(); })} disabled={busy}>{t(error ? 'twoFactor.retry' : 'twoFactor.loading')}</button>
+        <Button action="retry" onClick={() => void run(async () => { await readState(); })} disabled={busy}>{t(error ? 'twoFactor.retry' : 'twoFactor.loading')}</Button>
       ) : status.available && status.wrong_login ? (
         <AccountSignInSetup onReady={() => { void run(async () => { await readState(); }); }} />
       ) : !status.available || (!status.setup_enabled && !status.enrolled) ? (
@@ -306,65 +302,92 @@ export function TwoFactorTab() {
               </div>
               <a href={setup.uri} className="block text-center text-body text-accent hover:underline">{t('twoFactor.openAuthenticator')}</a>
               <div className="flex gap-2">
-                <button type="button" onClick={cancelSetup} disabled={busy} className={`${secondary} flex-1`}>{t('twoFactor.cancelSetup')}</button>
-                <button type="button" onClick={() => setStep('key')} disabled={busy} className={`${primary} flex-1`}>{t('common:actions.next')}</button>
+                <Button action="cancel" onClick={cancelSetup} disabled={busy} className="flex-1">{t('twoFactor.cancelSetup')}</Button>
+                <Button action="next" variant="primary" onClick={() => setStep('key')} disabled={busy} className="flex-1" />
               </div>
             </>
           ) : step === 'key' ? (
             <>
-              <label className="block text-body font-medium" htmlFor={`${ids}-secret`}>{t('twoFactor.backupKey')}</label>
-              <input id={`${ids}-secret`} readOnly value={setup.secret.match(/.{1,4}/g)?.join(' ') ?? setup.secret} dir="ltr" className={`${field} font-mono text-center`} autoComplete="off" spellCheck={false} />
+              <TextField
+                id={`${ids}-secret`}
+                label={t('twoFactor.backupKey')}
+                readOnly
+                value={setup.secret.match(/.{1,4}/g)?.join(' ') ?? setup.secret}
+                dir="ltr"
+                className="font-mono text-center"
+                autoComplete="off"
+                spellCheck={false}
+              />
               <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => void copyKey()} disabled={busy} className={secondary}>
-                  {exported === 'copied' ? <Check className="text-accent" aria-hidden="true" /> : <Copy aria-hidden="true" />}
+                <Button
+                  variant={exported === 'copied' ? 'primary' : 'secondary'}
+                  icon={exported === 'copied' ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+                  onClick={() => void copyKey()}
+                  disabled={busy}
+                >
                   {t(exported === 'copied' ? 'twoFactor.copied' : 'twoFactor.copy')}
-                </button>
-                <button type="button" onClick={() => void downloadKey()} disabled={busy} className={secondary}>
-                  {exported === 'saved' ? <Check className="text-accent" aria-hidden="true" /> : <Download aria-hidden="true" />}
+                </Button>
+                <Button
+                  variant={exported === 'saved' ? 'primary' : 'secondary'}
+                  icon={exported === 'saved' ? <Check aria-hidden="true" /> : <Download aria-hidden="true" />}
+                  onClick={() => void downloadKey()}
+                  disabled={busy}
+                >
                   {t(exported === 'saved' ? 'twoFactor.saved' : 'twoFactor.download')}
-                </button>
+                </Button>
               </div>
-              <SettingsCallout>{t('twoFactor.backupWarning')}</SettingsCallout>
-              <label className="flex items-start gap-2.5 text-body leading-relaxed cursor-pointer">
-                <input type="checkbox" checked={backupSaved} onChange={(event) => setBackupSaved(event.target.checked)} disabled={busy} className="mt-1 accent-accent" />
-                <span>{t('twoFactor.savedAcknowledgment')}</span>
-              </label>
+              <Callout>{t('twoFactor.backupWarning')}</Callout>
+              <Checkbox
+                checked={backupSaved}
+                onChange={(event) => setBackupSaved(event.target.checked)}
+                disabled={busy}
+                label={t('twoFactor.savedAcknowledgment')}
+              />
               <div className="flex gap-2">
-                <button type="button" onClick={() => setStep('scan')} disabled={busy} className={`${secondary} flex-1`}>{t('common:actions.back')}</button>
-                <button type="button" onClick={() => setStep('confirm')} disabled={busy || !backupSaved} className={`${primary} flex-1`}>{t('common:actions.next')}</button>
+                <Button action="back" onClick={() => setStep('scan')} disabled={busy} className="flex-1" />
+                <Button action="next" variant="primary" onClick={() => setStep('confirm')} disabled={busy || !backupSaved} className="flex-1" />
               </div>
             </>
           ) : (
             <form className="space-y-3" onSubmit={(event) => { event.preventDefault(); activate(); }}>
               <p className={SETTINGS_HELP}>{t('twoFactor.confirmBackup')}</p>
-              <label className="block text-body font-medium" htmlFor={`${ids}-backup`}>{t('security:twoFactor.backupKey')}</label>
-              <input id={`${ids}-backup`} autoFocus type="password" autoComplete="off" spellCheck={false} autoCapitalize="characters" value={backupAnswer} onChange={(event) => setBackupAnswer(event.target.value)} disabled={busy} dir="ltr" className={`${field} font-mono`} />
+              <TextField
+                id={`${ids}-backup`}
+                label={t('security:twoFactor.backupKey')}
+                autoFocus
+                type="password"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                autoCapitalize="characters"
+                value={backupAnswer}
+                onChange={(event) => setBackupAnswer(event.target.value)}
+                disabled={busy}
+                dir="ltr"
+                className="font-mono"
+              />
               <p className="text-body font-medium">{t('twoFactor.codeLabel')}</p>
               <PinInput value={code} onChange={setCode} length={6} reveal compact ariaLabel={t('twoFactor.codeLabel')} disabled={busy} />
-              <div className="flex items-start gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
-                <ShieldCheck size={28} weight="fill" className="shrink-0 text-success" aria-hidden="true" />
-                <p className="text-body text-pn leading-relaxed">{t('twoFactor.warning')}</p>
-              </div>
+              <Callout tone="success">{t('twoFactor.warning')}</Callout>
               {/* The first factor disconnects every extension and command line (migration 0152, beta #213 item 1). */}
               <p className={SETTINGS_HELP}>{t('twoFactor.disconnectsConnections')}</p>
               <div className="flex gap-2">
-                <button type="button" onClick={() => { setBackupAnswer(''); setCode(''); setStep('key'); }} disabled={busy} className={`${secondary} flex-1`}>{t('common:actions.back')}</button>
-                <button type="submit" className={`${primary} flex-1`} disabled={busy || !backupSaved || normalizeKey(backupAnswer) !== setup.secret || code.length !== 6}>{t(busy ? 'mfaPrompt.verifying' : 'security:twoFactor.start')}</button>
+                <Button action="back" onClick={() => { setBackupAnswer(''); setCode(''); setStep('key'); }} disabled={busy} className="flex-1" />
+                <Button action="confirm" variant="primary" type="submit" className="flex-1" disabled={busy || !backupSaved || normalizeKey(backupAnswer) !== setup.secret || code.length !== 6}>{t(busy ? 'mfaPrompt.verifying' : 'security:twoFactor.start')}</Button>
               </div>
             </form>
           )}
         </div>
       ) : status.enrolled || removable ? (
         <div className="space-y-3">
-          {/* Emerald is the enrolled state, one of the semantic exceptions in ui-patterns.md section 36. */}
-          <div className="flex items-center gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white"><ShieldCheck size={22} weight="fill" aria-hidden="true" /></span>
+          <div className="flex items-center gap-3 rounded-lg border border-success/30 bg-success/10 p-4">
+            <IconTile tone="success"><ShieldCheck weight="fill" aria-hidden="true" /></IconTile>
             <div className="min-w-0">
               <p className="text-body font-semibold text-success">{t('twoFactor.enabled')}</p>
-              <p className="text-small text-emerald-700/80 dark:text-emerald-400/80">{t('twoFactor.enabledHelp')}</p>
+              <p className="text-small text-pn-soft">{t('twoFactor.enabledHelp')}</p>
             </div>
           </div>
-          {!status.satisfied && <button type="button" className={`${primary} w-full`} disabled={busy} onClick={() => void run(async () => { await ensureLevel2(supabase, { allowLocalUse: true }); await readState(); })}>{t('mfaPrompt.verify')}</button>}
+          {!status.satisfied && <Button variant="primary" icon={<ShieldCheck aria-hidden="true" />} className="w-full" disabled={busy} onClick={() => void run(async () => { await ensureLevel2(supabase, { allowLocalUse: true }); await readState(); })}>{t('mfaPrompt.verify')}</Button>}
           <div className="divide-y divide-divider rounded-md border border-divider">
             {verified.map((factor) => <div key={factor.id} className="flex items-center justify-between gap-3 p-3">
               <span className="flex items-center gap-2 text-body text-pn"><DeviceMobile className="text-accent" aria-hidden="true" />{t('twoFactor.authenticatorRow')}</span>
@@ -379,22 +402,22 @@ export function TwoFactorTab() {
       ) : !status.can_enroll && status.reason === 'mfa_managed_account_required' ? (
         <AccountSignInSetup onReady={() => { void readState().catch(() => { if (alive.current) setError('twoFactor.unavailable'); }); }} />
       ) : !status.can_enroll ? (
-        <SettingsCallout>{t('twoFactor.cannotEnroll')}</SettingsCallout>
+        <Callout>{t('twoFactor.cannotEnroll')}</Callout>
       ) : (
         <div className="space-y-4 rounded-lg border border-divider p-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-success"><ShieldPlus size={22} aria-hidden="true" /></span>
+            <IconTile tone="success"><ShieldPlus aria-hidden="true" /></IconTile>
             <div className="min-w-0 flex-1">
               <p className="text-body font-semibold text-pn">{t('twoFactor.offTitle')}</p>
               <p className={SETTINGS_HELP}>{t('twoFactor.offTime')}</p>
             </div>
-            <span className="shrink-0 rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 text-small font-medium text-warning">{t('twoFactor.offBadge')}</span>
+            <Badge tone="warning">{t('twoFactor.offBadge')}</Badge>
           </div>
           <ul className="space-y-2">
             {([[DeviceMobile, 'benefitCode'], [Key, 'benefitPhrase'], [AppWindow, 'benefitApps']] as const).map(([Icon, key]) =>
               <li key={key} className="flex items-start gap-2.5 text-body text-pn-soft"><Icon className="mt-0.5 shrink-0 text-success" aria-hidden="true" />{t(`twoFactor.${key}`)}</li>)}
           </ul>
-          <button type="button" className={`${primary} w-full`} disabled={busy} onClick={startSetup}>{t(busy ? 'security:connectedAccounts.working' : 'twoFactor.start')}</button>
+          <Button variant="primary" icon={<ShieldPlus aria-hidden="true" />} className="w-full" disabled={busy} onClick={startSetup}>{t(busy ? 'security:connectedAccounts.working' : 'twoFactor.start')}</Button>
         </div>
       )}
     </div>

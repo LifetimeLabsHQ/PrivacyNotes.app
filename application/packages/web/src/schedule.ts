@@ -257,7 +257,7 @@ function ymd(day: string): [number, number, number] {
   return [Number(day.slice(0, 4)), Number(day.slice(5, 7)), Number(day.slice(8, 10))];
 }
 
-function daysInMonth(year: number, month: number): number {
+export function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
@@ -538,6 +538,8 @@ export function splitSeries(
  * occurrence's own end, alerts, a repeat. `null` removes a field.
  */
 export type ScheduleEdit = {
+  /** Absolute day to set directly (used when scheduling an undated item in one write). */
+  day?: string;
   shiftDays?: number;
   time?: string | null;
   timeEnd?: string | null;
@@ -572,6 +574,9 @@ export function applyScheduleEdit(
       if (r.weekdays) r.weekdays = [...new Set(r.weekdays.map((w) => (((w + shift) % 7) + 7) % 7))].sort((a, b) => a - b);
       t.repeat = r;
     }
+  } else if (edit.day && isDay(edit.day)) {
+    t.journalDate = edit.day;
+    if (oldLen > 0) t.dateEnd = shiftDay(edit.day, oldLen);
   }
   if (edit.end !== undefined) {
     const len = edit.end === null ? 0 : dayNumber(edit.end) - dayNumber(shiftDay(anchor, shift));

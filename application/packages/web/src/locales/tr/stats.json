@@ -327,6 +327,7 @@
       "noEntry": "kayıt yok",
       "doseLens": "Ruh hali önceki {{nBefore}} günde ortalama {{before}}, sonraki {{nAfter}} günde ortalama {{after}} oldu.",
       "doseLensHeading": "Her doz değişikliğinin çevresinde",
+      "doseLensLocked": "Doz değişikliklerinin ruh halinizi nasıl etkilediğini görmek için Pro'ya yükseltin",
       "doseLensShort_one": "Çevresinde {{count}} kayıtlı gün daha gerekiyor.",
       "doseLensShort_other": "Çevresinde {{count}} kayıtlı gün daha gerekiyor."
     },

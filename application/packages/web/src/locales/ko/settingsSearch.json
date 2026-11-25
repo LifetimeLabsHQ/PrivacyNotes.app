@@ -47,6 +47,7 @@
     "plan_dangerZone": "계정 삭제, 탈퇴, 지우기, 데이터 삭제, 계정 해지",
     "storage_quota": "사용 공간, 용량, 사용량",
     "storage_addon": "공간 추가, 저장 공간 구매, 추가 용량",
+    "storage_usage": "사용 내역, 큰 항목, 용량, 정리, 히스토리, 파일 크기",
     "images_spaceSaver": "압축, 크기 조정, 이미지 줄이기, 화질",
     "images_compression": "고압축, 최대 압축, 작게, 아주 작게, 최소, 표준, 품질, 화질, 크기, 용량, 저장 공간",
     "images_removeLocation": "GPS, 위치 정보, EXIF, 메타데이터, 지오태그",

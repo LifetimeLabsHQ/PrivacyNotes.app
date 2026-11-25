@@ -328,6 +328,7 @@
       "noEntry": "nessuna voce",
       "doseLens": "L'umore è stato in media a {{before}} nei {{nBefore}} giorni prima e a {{after}} nei {{nAfter}} giorni dopo.",
       "doseLensHeading": "Intorno a ogni cambio di dose",
+      "doseLensLocked": "Passa a Pro per vedere come i cambi di dose influenzano il tuo umore",
       "doseLensShort_one": "Serve ancora {{count}} giorno registrato intorno al cambio.",
       "doseLensShort_other": "Servono ancora {{count}} giorni registrati intorno al cambio."
     },

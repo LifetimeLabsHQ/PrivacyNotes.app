@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { ArrowsClockwise, CaretRight } from './icons';
+import { ArrowsClockwise, ClockCounterClockwise } from './icons';
 import { formatInstant } from './intlFormat';
 import { deriveTitleFromContent } from './notesViewUtils';
-import { Modal } from './ui';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
+import { Badge, Button, Disclosure, Modal, ModalFooter } from './ui';
 import type { NoteConflict } from './sync';
 
 type Props = {
@@ -46,51 +45,50 @@ export function ConflictModal({ conflict, onResolve }: Props) {
         </p>
 
         {/* Newer version card (will be kept) */}
-        <div className="rounded-md border border-indigo-300 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 p-3 space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-small font-medium text-indigo-600 dark:text-indigo-400">{t('conflict.willBeKept')}</span>
+        <div className="rounded-md border border-accent/30 bg-accent/10 p-3 space-y-1">
+          <div className="flex items-center justify-between gap-2">
+            <Badge tone="info">{t('conflict.willBeKept')}</Badge>
             <span className="text-small text-pn-muted">{serverDate}</span>
           </div>
           <p className="text-pn truncate text-body">{serverPreview}</p>
         </div>
 
         {/* Expandable local version */}
-        <button
-          onClick={() => setShowLocal(!showLocal)}
-          className="text-body text-pn-muted hover:text-pn transition flex items-center gap-1"
+        <Disclosure
+          label={t('conflict.showLocal', { date: localDate })}
+          open={showLocal}
+          onOpenChange={setShowLocal}
         >
-          <CaretRight className={`transition-transform ${showLocal ? 'rotate-90' : ''}`} />
-          {t('conflict.showLocal', { date: localDate })}
-        </button>
-        {showLocal && (
           <div className="rounded-md border border-divider p-3 space-y-1">
             <p className="text-pn truncate text-body">{localPreview}</p>
           </div>
-        )}
+        </Disclosure>
 
         {/* Actions */}
-        <div className="space-y-2 pt-2">
-          <div className="flex gap-2">
-            <button
-              onClick={() => onResolve('server')}
-              className={`flex-[2] rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold transition`}
-            >
-              {t('conflict.useNewer')}
-            </button>
-            <button
-              onClick={() => onResolve('local')}
-              className="flex-1 rounded-md border border-divider hover:bg-pn/5 px-4 py-2 text-body transition"
-            >
-              {t('conflict.useMine')}
-            </button>
-          </div>
-          <button
+        <ModalFooter>
+          <Button
+            variant="secondary"
+            icon={<ClockCounterClockwise aria-hidden="true" />}
+            onClick={() => onResolve('local')}
+          >
+            {t('conflict.useMine')}
+          </Button>
+          <Button
+            variant="primary"
+            action="confirm"
+            onClick={() => onResolve('server')}
+          >
+            {t('conflict.useNewer')}
+          </Button>
+          <Button
+            variant="secondary"
+            action="copy"
             onClick={() => onResolve('both')}
-            className="w-full text-body text-pn-muted hover:text-pn transition py-1"
+            className="col-span-2 w-full"
           >
             {t('conflict.keepBoth')}
-          </button>
-        </div>
+          </Button>
+        </ModalFooter>
     </Modal>
   );
 }

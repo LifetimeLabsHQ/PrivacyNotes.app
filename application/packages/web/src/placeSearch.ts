@@ -59,11 +59,20 @@ export function parsePlaces(text: string): PlaceRow[] {
  * New York). Two letters at least, at most `limit` towns.
  */
 export function searchPlaces(rows: readonly PlaceRow[], query: string, limit = 6): PlaceHit[] {
-  const needle = foldForMatch(query).trim();
+  const parts = query.split(',').map((p) => foldForMatch(p).trim()).filter(Boolean);
+  const needle = parts[0] ?? '';
+  const qualifiers = parts.slice(1);
   if ([...needle].length < 2) return [];
+  const matchesQualifiers = (row: PlaceRow): boolean => {
+    if (qualifiers.length === 0) return true;
+    const region = foldForMatch(row.region).trim();
+    const country = foldForMatch(row.country).trim();
+    return qualifiers.every((q) => (region && region.includes(q)) || (country && country === q));
+  };
   const first: PlaceRow[] = [];
   const later: PlaceRow[] = [];
   for (const row of rows) {
+    if (!matchesQualifiers(row)) continue;
     if (row.keys.some((k) => k.startsWith(needle))) {
       first.push(row);
       if (first.length >= limit) break;

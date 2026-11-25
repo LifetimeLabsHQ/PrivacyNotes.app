@@ -170,6 +170,10 @@ type Props = {
   moodOf?: (day: string) => number | 'written' | undefined;
   /** Large: the day counter (#815). */
   counter?: DayCounter;
+  /** Whether vertical wheel events step the month or week (#810). Inline
+   *  mini-calendars inside scrolling lists pass `false` so column scrolling
+   *  never changes the month (#899). */
+  wheelStep?: boolean;
 };
 
 /** The day counter on the large month (#815). While `active`, a click on a
@@ -219,14 +223,17 @@ const WHEEL_REPEAT_MS = 450;
 
 /**
  * The wheel over a calendar steps it (#810): down or away is the next month,
- * week or day, up is the previous one. `canStep` lets a host keep the
- * wheel for its own scroll (a large month taller than its pane). Pinch zoom
- * (ctrlKey) and a horizontal swipe pass through.
+ * week or day, up is the previous one. `canStep` lets a host keep the wheel
+ * for its own scroll (a large month taller than its pane, or an overflowing
+ * popover). Passing `enabled = false` omits the non-passive listener so an
+ * inline mini-calendar never blocks or hijacks column scrolling (#899). Pinch
+ * zoom (ctrlKey) and a horizontal swipe pass through.
  */
-function useWheelStep(ref: React.RefObject<HTMLElement | null>, onStep: (n: 1 | -1) => void, canStep?: (el: HTMLElement) => boolean) {
+function useWheelStep(ref: React.RefObject<HTMLElement | null>, onStep: (n: 1 | -1) => void, canStep?: (el: HTMLElement) => boolean, enabled = true) {
   const latest = useRef({ onStep, canStep });
   latest.current = { onStep, canStep };
   useEffect(() => {
+    if (!enabled) return;
     const el = ref.current;
     if (!el) return;
     let sum = 0;
@@ -255,11 +262,23 @@ function useWheelStep(ref: React.RefObject<HTMLElement | null>, onStep: (n: 1 | 
     // Not passive: the page under the calendar must not scroll as well.
     el.addEventListener('wheel', wheel, { passive: false });
     return () => el.removeEventListener('wheel', wheel);
-  }, [ref]);
+  }, [ref, enabled]);
 }
 
-/** The large month scrolls when its pane is short; then the wheel is the scroll's. */
-const fitsWithoutScroll = (el: HTMLElement) => el.scrollHeight <= el.clientHeight + 1;
+/** A calendar steps on the wheel only when neither it nor a scrollable
+ *  container around it (up to a fixed popover boundary) needs to scroll. */
+function fitsWithoutScroll(el: HTMLElement, selfScrolls = false): boolean {
+  for (let node: HTMLElement | null = el; node; node = node.parentElement) {
+    const cs = getComputedStyle(node);
+    const scrollable = (selfScrolls && node === el) || cs.overflowY === 'auto' || cs.overflowY === 'scroll';
+    if (scrollable && node.scrollHeight > node.clientHeight + 1) return false;
+    if (cs.position === 'fixed') break;
+  }
+  return true;
+}
+
+const fitsLargeMonth = (el: HTMLElement) => fitsWithoutScroll(el, true);
+const fitsSmallGrid = (el: HTMLElement) => fitsWithoutScroll(el, false);
 
 /**
  * The month and year picker the title caret opens (#750): a year with its
@@ -268,7 +287,7 @@ const fitsWithoutScroll = (el: HTMLElement) => el.scrollHeight <= el.clientHeigh
  * month. The month shown is filled, the current month has a ring.
  * Spec: docs/internal/specs/calendar-pillar-spec.md (step 3), docs/internal/design/patterns/181-190.md (182)
  */
-function MonthYearPanel({ focus, onPick, onMove, onClose }: { focus: string; onPick: (day: string) => void; onMove: (day: string) => void; onClose: () => void }) {
+function MonthYearPanel({ focus, onPick, onMove, onClose, wheelStep = true }: { focus: string; onPick: (day: string) => void; onMove: (day: string) => void; onClose: () => void; wheelStep?: boolean }) {
   const { t } = useTranslation('shell');
   const locale = intlLocale();
   const shown = dayAtNoon(focus);
@@ -282,7 +301,7 @@ function MonthYearPanel({ focus, onPick, onMove, onClose }: { focus: string; onP
     const next = addMonths(focus, n);
     setYear(dayAtNoon(next).getFullYear());
     onMove(next);
-  });
+  }, fitsSmallGrid, wheelStep);
   useEffect(() => {
     const box = months.current;
     (box?.querySelector<HTMLButtonElement>('[aria-current="true"]') ?? box?.querySelector<HTMLButtonElement>('[data-month]'))?.focus();
@@ -337,7 +356,7 @@ function MonthYearPanel({ focus, onPick, onMove, onClose }: { focus: string; onP
 
 export function MonthGrid({
   marked, selected, initialMonth, onPick, weeks = 6, onToggleWeeks, onToday,
-  size = 'small', wide = false, focus: heldFocus, onFocusChange, renderDay, renderWeek, renderDayBadge, onAdd, onDayMenu, headerEnd, headerBelow, headerStart, weekNumbers = false, drop, moodOf, counter,
+  size = 'small', wide = false, focus: heldFocus, onFocusChange, renderDay, renderWeek, renderDayBadge, onAdd, onDayMenu, headerEnd, headerBelow, headerStart, weekNumbers = false, drop, moodOf, counter, wheelStep = true,
 }: Props) {
   const { t } = useTranslation('shell');
   const today = toLocalIso(new Date());
@@ -361,7 +380,7 @@ export function MonthGrid({
   const cells = weeks === 1 ? weekCells(focus, weekStart) : monthCells(focus, weekStart);
   const showToday = weeks === 1 ? !cells.includes(today) : !sameMonth(focus, today);
   const step = (n: number) => (weeks === 1 ? addDays(focus, 7 * n) : addMonths(focus, n));
-  useWheelStep(gridRef, (n) => setFocus(step(n)), size === 'large' ? fitsWithoutScroll : undefined);
+  useWheelStep(gridRef, (n) => setFocus(step(n)), size === 'large' ? fitsLargeMonth : fitsSmallGrid, wheelStep);
   const title = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(dayAtNoon(focus)); // date-ok: a month heading carries no day, so no date-order setting applies
   const shortTitle = new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(dayAtNoon(focus)); // date-ok: the same heading, short
   // A narrow host (a tight list pane, a grid tile) shows the short month, so
@@ -476,7 +495,10 @@ export function MonthGrid({
           onClick={onToday}
           className="mb-2 w-full flex items-baseline justify-between gap-3 px-3 py-2 rounded-lg text-start ring-[1.5px] ring-inset ring-accent hover:bg-accent/10 transition"
         >
-          <span className="text-body font-medium text-pn">{t('backfillPopover.today')}</span>
+          <span className="inline-flex items-center gap-1.5 text-body font-medium text-pn">
+            <CalendarDot aria-hidden="true" className="text-accent shrink-0" />
+            {t('backfillPopover.today')}
+          </span>
           <span className="text-small tabular-nums font-semibold text-accent">{formatInstant(dayAtNoon(today), 'dayMonth')}</span>
         </button>
       )}
@@ -549,7 +571,7 @@ export function MonthGrid({
           )}
         </span>
       </div>
-      {picking && <MonthYearPanel focus={focus} onPick={(day) => { setFocus(day); closePicker(); }} onMove={setFocus} onClose={closePicker} />}
+      {picking && <MonthYearPanel focus={focus} onPick={(day) => { setFocus(day); closePicker(); }} onMove={setFocus} onClose={closePicker} wheelStep={wheelStep} />}
       <div ref={gridRef} role="group" aria-label={title} onKeyDown={onKeyDown} className={`${picking ? 'hidden' : 'grid'} ${weekNumbers ? 'grid-cols-[1.5rem_repeat(7,minmax(0,1fr))]' : 'grid-cols-7'} gap-0.5 text-center`}>
         {weekNumbers && <div aria-hidden="true" />}
         {/* A grid with room (a phone-wide strip, a list band) names the
@@ -853,7 +875,8 @@ export function CalendarHeader({ title, shortTitle, onPrev, onNext, prevLabel, n
             shorter month, week or day name never moves them between two
             clicks (#748). */}
         {onToday && (
-          <button type="button" onClick={onToday} className="shrink-0 h-7 px-2.5 rounded-md border border-divider text-compact font-medium text-pn hover:border-accent hover:text-accent transition">
+          <button type="button" onClick={onToday} className="shrink-0 h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md border border-divider text-compact font-medium text-pn hover:border-accent hover:text-accent transition">
+            <CalendarDot aria-hidden="true" className="text-accent shrink-0" />
             {t('backfillPopover.today')}
           </button>
         )}

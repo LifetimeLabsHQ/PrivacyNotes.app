@@ -26,7 +26,6 @@
     "noResults": "Sem resultados"
   },
   "deleteNote": {
-    "confirm": "Eliminar Para Sempre",
     "body": "Eliminar permanentemente <highlight>“{{title}}”</highlight>? Isto não pode ser anulado."
   },
   "emptyTrash": {
@@ -52,7 +51,7 @@
     "copyCommand": "Copiar comando"
   },
   "hotkeys": {
-    "heading": "Ajuda de Atalhos",
+    "heading": "Ajuda de atalhos",
     "typingNote": "A maioria dos atalhos é ignorada enquanto escreves num campo de texto, por isso teclas normais como J e K continuam a escrever J e K.",
     "cheatSheet": "Guia de referência para imprimir"
   },
@@ -73,12 +72,15 @@
       "toggleSidebar": "Mostrar ou ocultar a barra lateral",
       "toggleTheme": "Alternar entre claro e escuro",
       "openSettings": "Abrir as definições",
+      "graph": "Espaço de trabalho Grafo e Locais",
       "zen": "Modo Zen",
+      "fullScreen": "Modo de ecrã inteiro",
       "markdownView": "Ligar ou desligar a vista Markdown",
       "invisibles": "Ligar ou desligar caracteres invisíveis",
       "find": "Procurar na nota",
       "findReplace": "Procurar e substituir",
       "outline": "Mostrar ou ocultar a estrutura",
+      "connections": "Mostrar ou ocultar as conexões",
       "insertDate": "Inserir a data",
       "insertDateTime": "Inserir a data e a hora",
       "clearFilters": "Remover os filtros",
@@ -134,8 +136,6 @@
     "goToFolder": "Ir para uma pasta",
     "createTag": "Criar a etiqueta #{{name}}",
     "createFolder": "Criar a pasta “{{name}}”",
-    "newTag": "Nova etiqueta",
-    "newFolder": "Nova pasta",
     "goToDay": "Ir para o dia",
     "inText": "No texto",
     "actions": "ações",
@@ -146,9 +146,9 @@
     "ninjaLockedBody": "Abre o PrivacyNotes e desbloqueia-o. Depois o Ninja encontra as tuas notas a partir de qualquer app."
   },
   "cardForm": {
-    "cardholderName": "Nome do Titular",
+    "cardholderName": "Nome do titular",
     "cardholderPlaceholder": "João Silva",
-    "cardNumber": "Número do Cartão",
+    "cardNumber": "Número do cartão",
     "cardNumberPlaceholder": "4242 4242 4242 4242",
     "showNumber": "Mostrar número",
     "hideNumber": "Ocultar número",
@@ -165,7 +165,7 @@
     "showCvv": "Mostrar CVV",
     "hideCvv": "Ocultar CVV",
     "expiredHint": "Este cartão parece estar expirado.",
-    "billingZip": "Código Postal de Faturação",
+    "billingZip": "Código postal de faturação",
     "billingZipPlaceholder": "1000-001",
     "notes": "Notas",
     "notesPlaceholder": "Notas adicionais (opcional)",
@@ -176,9 +176,9 @@
   "sshKeyForm": {
     "label": "Etiqueta",
     "labelPlaceholder": "p. ex. chave de deploy do GitHub",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "Copiar chave pública",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "Copiar chave privada",
     "downloadPublicKey": "Descarregar chave pública",
     "downloadPrivateKey": "Descarregar chave privada",
@@ -291,6 +291,13 @@
     "features": {
       "stats": {
         "detail": "A tua escrita, as sequências e os registos ao longo do tempo"
+      },
+      "graph": {
+        "detail": "As tuas ligações entre notas, pontes inteligentes e núcleos num mapa interativo"
+      },
+      "placesMap": {
+        "label": "Mapa de locais",
+        "detail": "Notas, entradas de diário e contactos marcados num mapa privado"
       },
       "trackers": {
         "detail": "Humor, hábitos, fatores e medicação"

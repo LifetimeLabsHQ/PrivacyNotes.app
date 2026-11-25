@@ -41,6 +41,7 @@
     "noDocuments": "Документов нет.",
     "noImages": "Изображений нет.",
     "noAudioFiles": "Аудиофайлов нет.",
+    "noUnusedFiles": "Неиспользуемых файлов нет.",
     "emptyTypesHint": "Изображения, документы, аудио, видео и zip-файлы. До {{max}} МБ на файл.",
     "uploadFiles": "Загрузить файлы",
     "menuShow": "Показать",
@@ -238,7 +239,7 @@
     "tagCount_other": "{{count}} тега",
     "entryDate": "Дата записи",
     "noDate": "Не указана",
-    "schedule": "Расписание",
+    "schedule": "Дата и напоминания",
     "ends": "Конец",
     "sameDay": "Тот же день",
     "starts": "Начало",
@@ -323,7 +324,6 @@
     "showOneWeek": "Показать одну неделю"
   },
   "contextMenu": {
-    "newNote": "Новая заметка",
     "newTask": "Новая задача",
     "newKanban": "Новая канбан-доска",
     "newDrawing": "Новый рисунок",
@@ -332,15 +332,12 @@
     "newSshKey": "Новый SSH-ключ",
     "newJournal": "Новая запись в дневнике",
     "newFile": "Новый файл",
-    "exitZenMode": "Выйти из режима дзен",
-    "zenMode": "Режим дзен",
     "showSidebar": "Показать боковую панель",
     "hideSidebar": "Скрыть боковую панель",
     "showNotesList": "Показать список заметок",
     "hideNotesList": "Скрыть список заметок",
     "resetPaneWidths": "Сбросить ширину панелей",
     "settings": "Настройки",
-    "signOut": "Выйти",
     "deselect": "Снять выделение",
     "select": "Выбрать",
     "selectedCount_one": "Выбран {{count}} элемент",
@@ -372,8 +369,7 @@
     "closeOtherTabs": "Закрыть другие вкладки",
     "closeAllTabs": "Закрыть все вкладки",
     "pinTab": "Закрепить вкладку",
-    "unpinTab": "Открепить вкладку",
-    "newEvent": "Новое событие"
+    "unpinTab": "Открепить вкладку"
   },
   "demoBanner": {
     "title": "Попробуйте без всякого риска",
@@ -879,6 +875,28 @@
     "minutesBefore_few": "За {{count}} минуты",
     "minutesBefore_many": "За {{count}} минут"
   },
+  "taskReminder": {
+    "set": "Задать напоминание",
+    "edit": "Изменить напоминание",
+    "laterToday": "Позже сегодня",
+    "pickDateTime": "Выбрать дату и время",
+    "dateTime": "Дата и время",
+    "remove": "Убрать напоминание",
+    "onSchedule": "По расписанию",
+    "afterCompletion": "После выполнения",
+    "afterDone": "Через {{count}} {{unit}} после выполнения",
+    "afterDoneHint": "Отсчитывается со дня, когда вы отмечаете эту задачу выполненной.",
+    "weekdaysShort": "Будни",
+    "everyWeeks_many": "Раз в {{count}} недель",
+    "everyWeeks_one": "Раз в {{count}} неделю",
+    "everyMonths_many": "Раз в {{count}} месяцев",
+    "everyMonths_one": "Раз в {{count}} месяц",
+    "everyYears_many": "Раз в {{count}} лет",
+    "everyYears_one": "Раз в {{count}} год",
+    "everyYears_few": "Раз в {{count}} года",
+    "everyMonths_few": "Раз в {{count}} месяца",
+    "everyWeeks_few": "Раз в {{count}} недели"
+  },
   "quickAdd": {
     "group": "Создать",
     "items": "Элементы",
@@ -1078,7 +1096,8 @@
   "apps": {
     "railLabel": "Расширение",
     "title": "Расширение браузера",
-    "subtitle": "Сохранение страниц и менеджер паролей в Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf и Zen. Расширение никогда не хранит ключ, который открывает ваши заметки.",
+    "subtitle": "Сохранение страниц и менеджер паролей для браузеров на базе Chromium и Firefox. Расширение никогда не хранит ключ, который открывает ваши заметки.",
+    "allSupported": "Работает в любом браузере на базе Chromium или Firefox.",
     "loginsCopyFull": "Копия ваших логинов в расширении браузера заполнена. Новые логины попадут в неё, когда вы удалите часть старых.",
     "stepInstall": "Установка расширения",
     "stepFeatures": "Выбор возможностей",
@@ -1089,7 +1108,7 @@
     "thisBrowser": "Этот браузер",
     "otherApps": "Приложения для компьютера и телефона:",
     "desktopAll": "Все загрузки",
-    "extensionComputersOnly": "Расширение работает в Chrome, Firefox и Edge на компьютере.",
+    "extensionComputersOnly": "Расширение работает в браузерах на базе Chromium и Firefox на компьютере.",
     "demoSignUp": "Зарегистрируйтесь, чтобы подключить браузер"
   },
   "cli": {

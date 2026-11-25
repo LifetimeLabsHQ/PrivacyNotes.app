@@ -38,7 +38,7 @@
     "blockMath": "Blokový vzorec",
     "align": "Zarovnanie",
     "font": "Písmo",
-    "pictureFromFiles": "Obrázok zo Súborov",
+    "pictureFromFiles": "Galéria",
     "date": "Dátum",
     "dateTime": "Dátum a čas",
     "footnote": "Poznámka pod čiarou",
@@ -270,6 +270,15 @@
     "headingsIn": "Nadpisy v poznámke {{title}}",
     "noHeadingMatches": "Žiadne zodpovedajúce nadpisy"
   },
+  "slash": {
+    "label": "Vložiť blok",
+    "linePlaceholder": "Stlač / na vloženie blokov",
+    "filterHint": "Píš a filtruj…",
+    "basic": "Základné bloky",
+    "smartDate": "Inteligentný dátum",
+    "askNinja": "Opýtať sa Ninja na „{{query}}“",
+    "noMatches": "Žiadne zodpovedajúce bloky"
+  },
   "copyBox": {
     "placeholder": "Text na skopírovanie jedným kliknutím"
   },
@@ -383,6 +392,23 @@
     "addColumn": "Pridať stĺpec",
     "removeBoard": "Odstrániť tabuľu",
     "moveTo": "Presunúť do"
+  },
+  "columns": {
+    "narrowWide": "Úzky a široký",
+    "wideNarrow": "Široký a úzky",
+    "removeColumns": "Odstrániť stĺpce",
+    "resizeColumn": "Potiahnutím zmeníš šírku stĺpcov",
+    "barLabel": "Ovládanie stĺpcov",
+    "borders": "Orámovanie stĺpcov",
+    "borderBoxes": "Rámčeky",
+    "borderSolid": "Plné",
+    "borderDashed": "Čiarkované",
+    "borderDotted": "Bodkované",
+    "borderThickness": "Hrúbka",
+    "borderThin": "Tenké",
+    "borderMedium": "Stredné",
+    "borderColorDefault": "Predvolená farba",
+    "borderTint": "Jemné tónovanie stĺpcov"
   },
   "doodle": {
     "title": "Náčrt",

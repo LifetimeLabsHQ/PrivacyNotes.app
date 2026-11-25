@@ -25,6 +25,7 @@ import { FunnelSimple, Gear, Plus } from './icons';
 import { TrackerFocusLinkContext } from './trackerFocusStore';
 import type { TrackerSetupTab } from './TrackerConfig';
 import { HoverLabel } from './HoverLabel';
+import { IconUpgrade } from './ui';
 import {
   BUILTIN_TRACKER_COLORS,
   EMOTION_TAGS,
@@ -747,11 +748,7 @@ export function TrackerPills({
         >
           <Plus />
           {t('labels.custom')}
-          {!isPro && (
-            <span className="inline-flex items-center px-1 py-0 rounded text-meta font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 ms-0.5">
-              PRO
-            </span>
-          )}
+          {!isPro && <IconUpgrade size={12} />}
         </button>
       )}
     </div>

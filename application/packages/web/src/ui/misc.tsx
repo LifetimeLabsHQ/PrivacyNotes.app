@@ -12,11 +12,13 @@ import type { Tone } from './feedback';
  * use: a small panel anchored to the control that opened it (view options, a picker, a short form): it stays in the window, flips above when there is no room below, closes on Escape and a click outside. `title` adds a header with the close X.
  * never: a floating panel of your own (its own corners, shadow or layer); a popover without Escape and outside click.
  */
-export function Popover({ open, anchorRef, onClose, title, align = 'start', className = 'w-72', children }: {
+export function Popover({ open, anchorRef, onClose, title, label, align = 'start', className = 'w-72', children }: {
   open: boolean;
   anchorRef: RefObject<HTMLElement | null>;
   onClose: () => void;
   title?: ReactNode;
+  /** Accessible dialog label when `title` is omitted. */
+  label?: string;
   align?: 'start' | 'end';
   /** The panel's width. */
   className?: string;
@@ -40,7 +42,7 @@ export function Popover({ open, anchorRef, onClose, title, align = 'start', clas
     <div
       ref={ref}
       role="dialog"
-      aria-label={typeof title === 'string' ? title : undefined}
+      aria-label={label ?? (typeof title === 'string' ? title : undefined)}
       className={`fixed z-50 overflow-y-auto rounded-lg border border-divider bg-surface-2 p-2 text-pn shadow-lg ${className}`}
       style={{ top: pos?.top ?? -9999, left: pos?.left ?? -9999, maxHeight: pos?.maxHeight }}
     >

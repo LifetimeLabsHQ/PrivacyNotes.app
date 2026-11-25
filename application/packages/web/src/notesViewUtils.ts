@@ -28,6 +28,7 @@ import { hasLoggedTrackers } from './trackerTypes';
 import { attachmentLinks } from './fileNames';
 import { ANY_PICTURE, FILE_LINK, MEDIA_PICTURE, markdownLinks } from './linkScan';
 import { INLINE_ICON_RE } from './editorIconSyntax';
+import { parseTaskReminderSpec, TASK_REMINDER_RE } from './taskReminderSyntax';
 import { withoutDoodleData } from './doodle/doodleFence';
 
 // ── Server-cost estimation ────────────────────────────────────────
@@ -318,8 +319,9 @@ function stripInlineMarkdown(line: string): string {
     // editorInlineSyntax.ts, so "a == b" stays as typed.
     .replace(/==(?![\s=])([^\n]*?)==/g, (run, inner: string) => (inner && !/\s$/.test(inner) ? inner : run))
     // :icon[name] and :logo[name] -> nothing: an icon in the text is a
-    // picture, not words.
+    // picture, not words. Same for :remind[...] task reminder directives.
     .replace(INLINE_ICON_RE, '')
+    .replace(TASK_REMINDER_RE, (run, inner: string) => (parseTaskReminderSpec(inner) ? '' : run))
     // [text](url) -> text; an empty one ("[](url)", left when its text was a
     // picture, as a clipped page writes a linked image) -> "". The hover text
     // of [text](url "hover text") goes whole: a `"` inside it is escaped on
@@ -365,7 +367,7 @@ function stripBlockMarkers(line: string): string {
   // can hold a quote - so peel one marker per pass until a pass is a no-op.
   for (;;) {
     const next = out
-      .replace(/^>\s+/, '')
+      .replace(/^>(?:\s+|$)/, '')
       .replace(/^[-*+]\s+/, '')
       .replace(/^\d+\.\s+/, '');
     if (next === out) break;

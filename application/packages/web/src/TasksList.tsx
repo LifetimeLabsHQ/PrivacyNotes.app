@@ -1,11 +1,14 @@
-import { TaskCheckbox } from './ui';
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { EmptyState, SETTINGS_EYEBROW, TaskCheckbox } from './ui';
+import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { itemGridClass, useContextTarget, useItemList } from './itemList';
 import type { LocalNote } from './db';
 import { setPillarPrefs, type ListPrefs, type ListPrefsStore } from './listPrefs';
 import type { UserSettings } from './userSettings';
 import { selectTaskNotes, type TaskItem } from './tasks';
+import type { TaskReminder } from './taskReminderSyntax';
+import { formatTaskReminderLabel, formatTaskRepeatLabel, isTaskReminderOverdue } from './taskReminderText';
+const TaskReminderPopover = lazy(() => import('./TaskReminderPopover'));
 import { itemDragSelection } from './NoteRow';
 import { WindowedNoteRow as NoteRow, WindowedNoteCard as NoteCard } from './WindowedNoteItem';
 import { compareNotes, stripToPlainText, type DayIndex } from './notesViewUtils';
@@ -19,7 +22,7 @@ import type { Space } from './spaces';
 import { toLocalIso } from './intlFormat';
 import { ActiveFilterEntry, ActiveSearchEntry, FilteredEmpty, ListFilterChips } from './ListFilterChips';
 import { ListPrefsPopover } from './ListPrefsPopover';
-import { CheckSquare, CheckFat, NotePencil, Eye, EyeSlash, Plus, PushPin, FunnelSimple, PILLAR_GLYPHS, NEW_GLYPHS } from './icons';
+import { BellSimple, CheckSquare, CheckFat, NotePencil, Eye, EyeSlash, Plus, PushPin, FunnelSimple, Repeat as RepeatGlyph, PILLAR_GLYPHS, NEW_GLYPHS } from './icons';
 import { NewDropdown } from './NewButton';
 import { keyText } from './shortcutMatch';
 import type { View } from './views';
@@ -73,6 +76,10 @@ export interface TasksListProps {
   onSetShowDoneTasks: (updater: boolean | ((v: boolean) => boolean)) => void;
   onSetTaskDraft: (v: string) => void;
   onToggleTask: (task: TaskItem, checked: boolean) => void;
+  onSetTaskReminder?: (task: TaskItem, reminder: TaskReminder | null) => void;
+  alertsUnlocked?: boolean;
+  showPro?: boolean;
+  onUpgradeAlerts?: () => void;
   onOpenTaskSource: (task: TaskItem) => void;
   onAddQuickTask: (text: string) => void;
   onNew: () => void;
@@ -136,6 +143,10 @@ export default function TasksList({
   onSetShowDoneTasks,
   onSetTaskDraft,
   onToggleTask,
+  onSetTaskReminder,
+  alertsUnlocked = true,
+  showPro = false,
+  onUpgradeAlerts,
   onOpenTaskSource,
   onAddQuickTask,
   onNew,
@@ -166,8 +177,16 @@ export default function TasksList({
   selectionMore,
   calendar,
 }: TasksListProps) {
-  const taskActions = useRef({ onToggleTask, onOpenTaskSource });
-  useLayoutEffect(() => { taskActions.current = { onToggleTask, onOpenTaskSource }; }, [onToggleTask, onOpenTaskSource]);
+  const [reminderPicker, setReminderPicker] = useState<{ task: TaskItem } | null>(null);
+  const reminderAnchorRef = useRef<HTMLElement | null>(null);
+  const openTaskReminder = useCallback((task: TaskItem, anchor: HTMLElement) => {
+    reminderAnchorRef.current = anchor;
+    setReminderPicker({ task });
+  }, []);
+  const taskActions = useRef<TaskActions>({ onToggleTask, onOpenTaskSource, onOpenReminder: openTaskReminder });
+  useLayoutEffect(() => {
+    taskActions.current = { onToggleTask, onOpenTaskSource, onOpenReminder: openTaskReminder };
+  }, [onToggleTask, onOpenTaskSource, openTaskReminder]);
   const { t: tr } = useTranslation('shell');
   const { t } = useTranslation('notes');
   const [showListPrefs, setShowListPrefs] = useState(false);
@@ -431,10 +450,10 @@ export default function TasksList({
                 editedAt: g.editedAt,
               })
             }
-            className={`w-full flex items-center gap-1.5 text-start px-4 pt-3 pb-1 text-meta uppercase tracking-wide font-semibold transition ${
+            className={`${SETTINGS_EYEBROW} w-full flex items-center gap-1.5 text-start px-4 pt-3 pb-1 transition ${
               groupActive
-                ? 'text-accent dark:text-accent'
-                : 'text-pn-muted hover:text-accent dark:hover:text-accent'
+                ? '!text-accent dark:!text-accent'
+                : '!text-pn-muted hover:!text-accent dark:hover:!text-accent'
             }`}
             aria-label={tr('tasksList.openNote', { title: g.noteTitle })}
           >
@@ -446,7 +465,12 @@ export default function TasksList({
           </HoverLabel>
           <ul className="pb-2">
             {g.tasks.slice(0, shown).map((t) => (
-              <TaskLine key={`${t.noteId}:${t.lineIdx}`} task={t} actions={taskActions} />
+              <TaskLine
+                key={`${t.noteId}:${t.lineIdx}`}
+                task={t}
+                editable={!!onSetTaskReminder && notesById.get(t.noteId)?.locked !== 1}
+                actions={taskActions}
+              />
             ))}
           </ul>
         </div>
@@ -456,7 +480,7 @@ export default function TasksList({
   /* The label between the two bands. Drawn by the list and the aggregate, so
      the hybrid shape inherits it through the aggregate it already renders. */
   const bandHeader = (
-    <div className="px-4 pt-3 pb-1 text-meta uppercase tracking-wide font-semibold text-pn-muted border-t border-divider">
+    <div className={`${SETTINGS_EYEBROW} px-4 pt-3 pb-1 !text-pn-muted border-t border-divider`}>
       {tr('tasksList.tasksFromOtherItems')}
     </div>
   );
@@ -464,7 +488,7 @@ export default function TasksList({
   const aggregatedTasksSection = (
     <>
       {taskGroups.length === 0 && (filteredEmpty ?? (
-        <div className="p-6 text-compact text-pn-muted text-center">
+        <EmptyState compact>
           {search.trim()
             ? tr('notes:empty.noMatches')
             : !listPrefs.showNoteTasks
@@ -472,7 +496,7 @@ export default function TasksList({
               : showDoneTasks
                 ? tr('tasksList.noTasksYet')
                 : tr('tasksList.noOpenTasks')}
-        </div>
+        </EmptyState>
       ))}
       {ownGroups.map((g) => {
         const shown = takeLines(g);
@@ -637,13 +661,13 @@ export default function TasksList({
         {viewMode === 'grid' ? (
           <>
             {taskContainingNotes.length === 0 && (filteredEmpty ?? (
-              <div className="p-6 text-compact text-pn-muted text-center">
+              <EmptyState compact>
                 {search.trim()
                   ? tr('notes:empty.noMatches')
                   : !listPrefs.showNoteTasks
                     ? tr('tasksList.noTaskListsYet')
                     : tr('tasksList.noItemsWithTasks')}
-              </div>
+              </EmptyState>
             ))}
             {(taskContainingNotes.length > 0 || importEntry || searchEntry || filterEntry) && (
               <ul className={itemGridClass(true)}>
@@ -659,7 +683,7 @@ export default function TasksList({
           <>
             {taskContainingNotes.length > 0 && (
               <div className="border-b border-divider">
-                <div className="px-4 pt-3 pb-1 text-meta uppercase tracking-wide font-semibold text-pn-muted">
+                <div className={`${SETTINGS_EYEBROW} px-4 pt-3 pb-1 !text-pn-muted`}>
                   {tr('tasksList.itemsWithTasks')}
                 </div>
                 <ul>{taskNoteItems(false)}</ul>
@@ -668,7 +692,7 @@ export default function TasksList({
             {/* The heading names the groups under it, so it stays away when
                 there are none and the pane's own empty line stands alone. */}
             {taskGroups.length > 0 && (
-              <div className="px-4 pt-3 pb-1 text-meta uppercase tracking-wide font-semibold text-pn-muted">
+              <div className={`${SETTINGS_EYEBROW} px-4 pt-3 pb-1 !text-pn-muted`}>
                 {tr('tasksList.allTasks')}
               </div>
             )}
@@ -684,17 +708,39 @@ export default function TasksList({
           </>
         )}
       </div>
+      {reminderPicker && onSetTaskReminder && (
+        <Suspense fallback={null}>
+          <TaskReminderPopover
+            open
+            anchorRef={reminderAnchorRef}
+            current={reminderPicker.task.reminder ?? null}
+            alertsUnlocked={alertsUnlocked}
+            showPro={showPro}
+            onUpgrade={() => onUpgradeAlerts?.()}
+            onSave={(next) => void onSetTaskReminder(reminderPicker.task, next)}
+            onClose={() => setReminderPicker(null)}
+          />
+        </Suspense>
+      )}
     </>
   );
 }
 
-type TaskActions = Pick<TasksListProps, 'onToggleTask' | 'onOpenTaskSource'>;
+type TaskActions = Pick<TasksListProps, 'onToggleTask' | 'onOpenTaskSource'> & {
+  onOpenReminder: (task: TaskItem, anchor: HTMLElement) => void;
+};
 
-const TaskLine = memo(function TaskLine({ task: t, actions }: {
+const TaskLine = memo(function TaskLine({ task: t, editable, actions }: {
   task: TaskItem;
+  editable: boolean;
   actions: React.RefObject<TaskActions>;
 }) {
   const { t: tr } = useTranslation('shell');
+  const reminder = t.reminder;
+  const todayIso = reminder ? toLocalIso(new Date()) : '';
+  const remLabel = reminder ? formatTaskReminderLabel(reminder, todayIso) : '';
+  const repeatText = reminder?.repeat ? formatTaskRepeatLabel(reminder.repeat, tr) : '';
+  const overdue = reminder && !t.checked ? isTaskReminderOverdue(reminder) : false;
   return (
     <li
       className="pn-lazy-row group flex items-start gap-2.5 px-4 py-1.5 hover:bg-surface-1/60 transition"
@@ -705,11 +751,58 @@ const TaskLine = memo(function TaskLine({ task: t, actions }: {
         aria-label={t.checked ? tr('tasksList.markIncomplete') : tr('tasksList.markComplete')}
         className="mt-0.5"
       />
-      <ClampedTaskText
-        text={t.text}
-        checked={t.checked}
-        onClick={() => void actions.current.onOpenTaskSource(t)}
-      />
+      <div className="flex-1 min-w-0">
+        <ClampedTaskText
+          text={t.text}
+          checked={t.checked}
+          onClick={() => void actions.current.onOpenTaskSource(t)}
+        />
+        {reminder && (
+          <div className="mt-1">
+            <button
+              type="button"
+              disabled={!editable}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (editable) actions.current.onOpenReminder(t, e.currentTarget);
+              }}
+              aria-label={`${tr('taskReminder.edit')}: ${remLabel}${repeatText ? `, ${repeatText}` : ''}`}
+              className={`pn-task-reminder-chip max-w-full text-meta${
+                t.checked
+                  ? ' pn-task-reminder-done'
+                  : overdue
+                    ? ' pn-task-reminder-overdue'
+                    : ''
+              }`}
+            >
+              <BellSimple className="shrink-0" aria-hidden="true" />
+              <span className="truncate">{remLabel}</span>
+              {repeatText && (
+                <>
+                  <span className="opacity-60" aria-hidden="true">·</span>
+                  <RepeatGlyph className="shrink-0" aria-hidden="true" />
+                  <span className="truncate">{repeatText}</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
+      </div>
+      {!reminder && editable && (
+        <HoverLabel label={tr('taskReminder.set')} position="below-end" className="shrink-0 mt-0.5">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              actions.current.onOpenReminder(t, e.currentTarget);
+            }}
+            aria-label={tr('taskReminder.set')}
+            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-pn-muted opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-50 hover:bg-accent/10 hover:text-accent transition"
+          >
+            <BellSimple aria-hidden="true" />
+          </button>
+        </HoverLabel>
+      )}
     </li>
   );
 });

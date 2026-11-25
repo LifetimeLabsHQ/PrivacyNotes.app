@@ -41,6 +41,7 @@
     "noDocuments": "Keine Dokumente.",
     "noImages": "Keine Bilder.",
     "noAudioFiles": "Keine Audiodateien.",
+    "noUnusedFiles": "Keine ungenutzten Dateien.",
     "emptyTypesHint": "Bilder, Dokumente, Audio, Video und ZIP-Dateien. Bis zu {{max}} MB pro Datei.",
     "uploadFiles": "Dateien hochladen",
     "menuShow": "Anzeigen",
@@ -233,7 +234,7 @@
     "tagCount_other": "{{count}} Tags",
     "entryDate": "Eintragsdatum",
     "noDate": "Kein Datum",
-    "schedule": "Zeitplan",
+    "schedule": "Datum & Erinnerungen",
     "ends": "Endet",
     "sameDay": "Am selben Tag",
     "starts": "Beginnt",
@@ -317,7 +318,6 @@
     "showOneWeek": "Eine Woche anzeigen"
   },
   "contextMenu": {
-    "newNote": "Neue Notiz",
     "newTask": "Neue Aufgabe",
     "newKanban": "Neues Kanban-Board",
     "newDrawing": "Neue Zeichnung",
@@ -326,15 +326,12 @@
     "newSshKey": "Neuer SSH-Schlüssel",
     "newJournal": "Neuer Tagebucheintrag",
     "newFile": "Neue Datei",
-    "exitZenMode": "Zen-Modus verlassen",
-    "zenMode": "Zen-Modus",
     "showSidebar": "Seitenleiste anzeigen",
     "hideSidebar": "Seitenleiste ausblenden",
     "showNotesList": "Notizliste anzeigen",
     "hideNotesList": "Notizliste ausblenden",
     "resetPaneWidths": "Spaltenbreiten zurücksetzen",
     "settings": "Einstellungen",
-    "signOut": "Abmelden",
     "deselect": "Abwählen",
     "select": "Auswählen",
     "selectedCount_one": "{{count}} Eintrag ausgewählt",
@@ -364,8 +361,7 @@
     "closeOtherTabs": "Andere Tabs schließen",
     "closeAllTabs": "Alle Tabs schließen",
     "pinTab": "Tab anpinnen",
-    "unpinTab": "Tab lösen",
-    "newEvent": "Neuer Termin"
+    "unpinTab": "Tab lösen"
   },
   "demoBanner": {
     "title": "Ohne Risiko ausprobieren",
@@ -836,6 +832,25 @@
     "hoursBefore_one": "{{count}} Stunde vorher",
     "minutesBefore_one": "{{count}} Minute vorher"
   },
+  "taskReminder": {
+    "set": "Erinnerung festlegen",
+    "edit": "Erinnerung bearbeiten",
+    "laterToday": "Später heute",
+    "pickDateTime": "Datum & Uhrzeit wählen",
+    "dateTime": "Datum & Uhrzeit",
+    "remove": "Erinnerung entfernen",
+    "onSchedule": "Nach Zeitplan",
+    "afterCompletion": "Nach Erledigung",
+    "afterDone": "{{count}} {{unit}} nach Erledigung",
+    "afterDoneHint": "Zählt ab dem Tag, an dem du diese Aufgabe abhakst.",
+    "weekdaysShort": "Werktags",
+    "everyWeeks_other": "Alle {{count}} Wochen",
+    "everyMonths_other": "Alle {{count}} Monate",
+    "everyYears_other": "Alle {{count}} Jahre",
+    "everyYears_one": "Jedes Jahr",
+    "everyMonths_one": "Jeden Monat",
+    "everyWeeks_one": "Jede Woche"
+  },
   "quickAdd": {
     "group": "Erstellen",
     "items": "Einträge",
@@ -1028,7 +1043,8 @@
   "apps": {
     "railLabel": "Erweiterung",
     "title": "Browser-Erweiterung",
-    "subtitle": "Web-Clipper und Passwort-Manager in Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf und Zen. Die Erweiterung hat nie den Schlüssel, der deine Notizen öffnet.",
+    "subtitle": "Web-Clipper und Passwort-Manager für Chromium- und Firefox-basierte Browser. Die Erweiterung hat nie den Schlüssel, der deine Notizen öffnet.",
+    "allSupported": "Funktioniert in jedem Chromium- oder Firefox-basierten Browser.",
     "loginsCopyFull": "Die Kopie deiner Logins in der Browser-Erweiterung ist voll. Neue Logins kommen dort an, sobald du einige löschst.",
     "stepInstall": "Erweiterung installieren",
     "stepFeatures": "Wähle, was sie können soll",
@@ -1039,7 +1055,7 @@
     "thisBrowser": "Dieser Browser",
     "otherApps": "Desktop- und Handy-Apps:",
     "desktopAll": "Alle Downloads",
-    "extensionComputersOnly": "Die Erweiterung gibt es für Chrome, Firefox und Edge auf dem Computer.",
+    "extensionComputersOnly": "Die Erweiterung gibt es für Chromium- und Firefox-basierte Browser auf dem Computer.",
     "demoSignUp": "Registriere dich, um einen Browser zu verbinden"
   },
   "cli": {

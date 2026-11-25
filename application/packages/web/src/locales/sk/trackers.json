@@ -123,9 +123,6 @@
       "great": "Výborný"
     }
   },
-  "sleepScore": {
-    "prompt": "Skóre spánku"
-  },
   "heartRate": {
     "prompt": "Priemerný tep srdca"
   },

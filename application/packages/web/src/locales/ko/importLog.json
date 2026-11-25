@@ -519,6 +519,33 @@
     "skipped_other": "읽을 수 있는 날짜나 내용이 없는 항목 {{count}}개를 건너뛰었어요.",
     "brokenLinks_other": "Day One 항목 링크 {{count}}개가 이 내보내기 밖을 가리켜서 텍스트만 유지했어요."
   },
+  "microsoftToDo": {
+    "reading": "Microsoft To Do 내보내기 읽는 중...",
+    "readingList": "Microsoft To Do 목록 읽는 중... {{total}}개 중 {{current}}개",
+    "readingAttachments": "Microsoft To Do 첨부 파일 읽는 중... {{total}}개 중 {{done}}개",
+    "notMicrosoftToDo": "Microsoft To Do 내보내기가 아닌 것 같아요. todo.privacynotes.app에서 할 일을 내보내고 .zip이나 .json 파일을 여기에 놓으세요.",
+    "noJson": "이 zip 안에서 Microsoft To Do JSON 파일을 찾지 못했어요. todo.privacynotes.app에서 다운로드한 .zip이나 Microsoft To Do .json 내보내기를 선택하세요.",
+    "tooLarge": "이 Microsoft To Do JSON 파일은 너무 커서 읽을 수 없어요.",
+    "noTasks": "이 Microsoft To Do 내보내기에서 할 일을 찾지 못했어요.",
+    "untitledList": "Microsoft To Do 목록",
+    "untitledTask": "제목 없는 할 일",
+    "dueValue": "마감일 {{value}}",
+    "repeatsValue": "반복 {{value}}",
+    "statusWaiting": "다른 사람 대기 중",
+    "statusDeferred": "연기됨",
+    "linkLabel": "연결된 항목",
+    "cloudAttachmentLabel": "클라우드 첨부 파일",
+    "missingAttachmentLine": "포함되지 않은 첨부 파일: {{name}}",
+    "emptyLists_other": "할 일이 없는 빈 Microsoft To Do 목록 {{count}}개를 건너뛰었어요.",
+    "reminders_other": "할 일 {{count}}개에 Microsoft To Do 미리 알림이 있었어요. 개별 체크리스트 항목의 미리 알림은 넘어오지 않아요.",
+    "noAttachmentsInJson_other": "Microsoft To Do 첨부 파일 {{count}}개가 표시되어 있지만, .json 파일만으로는 파일이 담기지 않아요. 함께 가져오려면 .zip 내보내기를 놓으세요.",
+    "missingAttachments_other": "Microsoft To Do 첨부 파일 {{count}}개가 zip에 포함되어 있지 않아 파일 이름만 유지했어요.",
+    "importedLists_other": "Microsoft To Do 목록 {{count}}개를 할 일 목록으로 가져왔어요(할 일 {{tasks}}개).",
+    "completedTasks_other": "완료된 할 일 {{count}}개를 체크된 상태로 유지했어요.",
+    "subtasks_other": "하위 할 일 단계 {{count}}개를 유지했어요.",
+    "attachmentsImported_other": "할 일 첨부 파일 {{count}}개를 가져왔어요.",
+    "remindersImported_other": "할 일 미리 알림 {{count}}개를 유지했어요."
+  },
   "todoist": {
     "reading": "Todoist 내보내기 읽는 중...",
     "readingProject": "프로젝트 읽는 중... {{total}}개 중 {{current}}개",
@@ -533,12 +560,15 @@
     "sections_other": "섹션 {{count}}개를 제목으로 유지했어요.",
     "comments_other": "댓글 {{count}}개를 유지했어요.",
     "emptyProjects_other": "할 일이 없는 빈 프로젝트 {{count}}개를 건너뛰었어요.",
-    "reminders_other": "할 일 {{count}}개에 Todoist 미리 알림이 있었어요. 개별 체크리스트 항목의 미리 알림은 넘어오지 않아요."
+    "reminders_other": "할 일 {{count}}개에 Todoist 미리 알림이 있었어요. 개별 체크리스트 항목의 미리 알림은 넘어오지 않아요.",
+    "remindersImported_other": "Todoist 미리 알림 {{count}}개를 유지했어요."
   },
   "notion": {
-    "notNotion": "이 zip에서 Markdown 페이지를 찾지 못했어요. Notion에서 Settings > General > Export > Workspace content(또는 페이지 메뉴 > More > Export)를 선택하고 \"Markdown & CSV\"를 고른 다음 .zip을 여기에 놓으세요.",
+    "notNotion": "이 zip에서 Notion 페이지를 찾지 못했어요. Notion에서 Settings > General > Export > Workspace content(또는 페이지 메뉴 > More > Export)를 선택하고 \"HTML\"(열과 색상 유지) 또는 \"Markdown & CSV\"를 고른 다음 .zip을 여기에 놓으세요.",
     "subpageFolders_other": "하위 페이지 그룹 {{count}}개를 폴더로 다시 만들었어요.",
     "callouts_other": "Notion 콜아웃 {{count}}개를 콜아웃 블록으로 바꿨어요.",
+    "columns_other": "열 레이아웃 {{count}}개를 유지했어요.",
+    "colors": "Notion 텍스트 색상과 형광펜을 유지했어요.",
     "databases_other": "데이터베이스 CSV 표 {{count}}개를 건너뛰었어요. 각 행 페이지는 해당 폴더 안의 노트로 들어왔어요.",
     "deadLinks_other": "링크 {{count}}개가 내보내기에 없는 페이지를 가리켜서 텍스트만 유지했어요."
   },

@@ -6,8 +6,8 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { DecorationSet } from '@tiptap/pm/view';
 import type { NoteType, SupabaseClient } from '@notes/shared';
 import type { LocalNote } from './db';
-import { Modal } from './ui';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
+import { Columns } from './icons';
+import { Button, Modal, ModalFooter, SettingsSegmented } from './ui';
 import { formatInstant } from './intlFormat';
 import { listNoteVersions, type NoteVersion } from './noteVersions';
 import { Editor } from './Editor';
@@ -328,19 +328,18 @@ export function NoteHistoryModal({
                       {isReplacedCopyVersion(selected) && <> &middot; {t('history.replacedBySync')}</>}
                     </div>
                     {canCompare && (
-                      <button
-                        type="button"
+                      <Button
+                        icon={<Columns aria-hidden="true" />}
+                        variant={compare ? 'primary' : 'secondary'}
                         aria-pressed={compare}
                         onClick={() => {
                           setCompare(!compare);
                           setDiff(undefined);
                         }}
-                        className={`shrink-0 rounded-md border px-2.5 py-1 text-small transition ${
-                          compare ? 'border-accent bg-accent/10 text-pn' : 'border-divider hover:bg-pn/5 text-pn-soft'
-                        }`}
+                        className="shrink-0 !px-2.5 !py-1 !text-small"
                       >
                         {t('history.compare')}
-                      </button>
+                      </Button>
                     )}
                   </div>
                   <h3 className="text-title sm:text-heading font-semibold truncate mt-0.5">
@@ -369,19 +368,16 @@ export function NoteHistoryModal({
                 {comparing ? (
                   <>
                     <div className="px-4 sm:px-6 py-2 border-b border-divider shrink-0 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-small">
-                      <div role="group" className="lg:hidden inline-flex rounded-md border border-divider overflow-hidden">
-                        {(['older', 'current'] as const).map((s) => (
-                          <button
-                            key={s}
-                            type="button"
-                            aria-pressed={side === s}
-                            onClick={() => setSide(s)}
-                            className={`px-2.5 py-1 transition ${side === s ? 'bg-accent/10 text-pn' : 'text-pn-soft hover:bg-pn/5'}`}
-                          >
-                            {s === 'older' ? t('history.thisVersion') : t('history.currentNote')}
-                          </button>
-                        ))}
-                      </div>
+                      <SettingsSegmented
+                        label={t('history.compare')}
+                        value={side}
+                        onChange={setSide}
+                        className="lg:hidden"
+                        options={[
+                          { value: 'older', label: t('history.thisVersion') },
+                          { value: 'current', label: t('history.currentNote') },
+                        ]}
+                      />
                       <span role="status" className="text-pn-muted">
                         {diff === null
                           ? t('history.tooLong')
@@ -442,21 +438,17 @@ export function NoteHistoryModal({
                   )}
                 </div>
                 )}
-                <div className="px-4 sm:px-6 py-3 border-t border-divider flex items-center justify-end gap-2 shrink-0">
-                  <button
-                    onClick={onClose}
-                    className="rounded-md border border-divider hover:bg-pn/5 px-3 py-2 text-body transition"
-                  >
-                    {t('common:actions.cancel')}
-                  </button>
-                  <button
+                <ModalFooter bar>
+                  <Button action="cancel" onClick={onClose} />
+                  <Button
+                    action="restore"
                     onClick={() => void handleRestore()}
                     disabled={busy}
-                    className={`rounded-md ${PRIMARY_BTN_SKIN} disabled:opacity-50 px-3 py-2 text-body font-semibold transition whitespace-nowrap`}
+                    className="whitespace-nowrap"
                   >
                     {busy ? t('history.restoring') : t('shell:contextMenu.restore')}
-                  </button>
-                </div>
+                  </Button>
+                </ModalFooter>
               </>
             ) : (
               <div className="flex-1 flex items-center justify-center text-compact text-pn-muted">

@@ -519,6 +519,33 @@
     "skipped_other": "已略過 {{count}} 則沒有可讀取的日期或內容的項目。",
     "brokenLinks_other": "有 {{count}} 個 Day One 項目連結指向這個匯出檔以外的位置，因此只保留了文字。"
   },
+  "microsoftToDo": {
+    "reading": "正在讀取 Microsoft To Do 匯出檔...",
+    "readingList": "正在讀取 Microsoft To Do 清單... 第 {{current}} 個，共 {{total}} 個",
+    "readingAttachments": "正在讀取 Microsoft To Do 附件... 第 {{done}} 個，共 {{total}} 個",
+    "notMicrosoftToDo": "這看起來不像 Microsoft To Do 匯出檔。請在 todo.privacynotes.app 匯出你的任務，再把 .zip 或 .json 檔案拖到這裡。",
+    "noJson": "這個 zip 裡找不到 Microsoft To Do 的 JSON 檔案。請選取從 todo.privacynotes.app 下載的 .zip，或 Microsoft To Do 的 .json 匯出檔。",
+    "tooLarge": "這個 Microsoft To Do JSON 檔案太大，無法讀取。",
+    "noTasks": "這個 Microsoft To Do 匯出檔裡找不到任務。",
+    "untitledList": "Microsoft To Do 清單",
+    "untitledTask": "未命名任務",
+    "dueValue": "到期：{{value}}",
+    "repeatsValue": "重複：{{value}}",
+    "statusWaiting": "等待他人",
+    "statusDeferred": "已延後",
+    "linkLabel": "連結的項目",
+    "cloudAttachmentLabel": "雲端附件",
+    "missingAttachmentLine": "未包含附件：{{name}}",
+    "emptyLists_other": "已略過 {{count}} 個沒有任務的空白 Microsoft To Do 清單。",
+    "reminders_other": "有 {{count}} 個任務設有 Microsoft To Do 提醒。個別核取清單項目的提醒不會帶過來。",
+    "noAttachmentsInJson_other": "列出了 {{count}} 個 Microsoft To Do 附件，但單獨的 .json 不含檔案。請拖入 .zip 匯出檔，才能把它們一起帶過來。",
+    "missingAttachments_other": "有 {{count}} 個 Microsoft To Do 附件未包含在 zip 中，僅保留檔名。",
+    "importedLists_other": "已將 {{count}} 個 Microsoft To Do 清單匯入為任務清單（共 {{tasks}} 個任務）。",
+    "completedTasks_other": "已保留 {{count}} 個已完成任務的勾選狀態。",
+    "subtasks_other": "已保留 {{count}} 個子任務步驟。",
+    "attachmentsImported_other": "已匯入 {{count}} 個任務附件。",
+    "remindersImported_other": "已保留 {{count}} 個任務提醒。"
+  },
   "todoist": {
     "reading": "正在讀取 Todoist 匯出檔...",
     "readingProject": "正在讀取專案... 第 {{current}} 個，共 {{total}} 個",
@@ -533,12 +560,15 @@
     "sections_other": "已將 {{count}} 個區段保留為標題。",
     "comments_other": "已保留 {{count}} 則留言。",
     "emptyProjects_other": "已略過 {{count}} 個沒有任務的空白專案。",
-    "reminders_other": "有 {{count}} 個任務設有 Todoist 提醒。個別核取清單項目的提醒不會帶過來。"
+    "reminders_other": "有 {{count}} 個任務設有 Todoist 提醒。個別核取清單項目的提醒不會帶過來。",
+    "remindersImported_other": "已保留 {{count}} 個 Todoist 提醒。"
   },
   "notion": {
-    "notNotion": "這個 zip 裡找不到 Markdown 頁面。請在 Notion 中選擇 Settings > General > Export > Workspace content（或開啟頁面選單 > More > Export），選取「Markdown & CSV」，再把 .zip 拖到這裡。",
+    "notNotion": "這個 zip 裡找不到 Notion 頁面。請在 Notion 中選擇 Settings > General > Export > Workspace content（或開啟頁面選單 > More > Export），選取「HTML」（保留多欄與顏色）或「Markdown & CSV」，再把 .zip 拖到這裡。",
     "subpageFolders_other": "已將 {{count}} 個子頁面群組重建為資料夾。",
     "callouts_other": "已將 {{count}} 個 Notion 標註轉換為標註區塊。",
+    "columns_other": "已保留 {{count}} 個多欄版面配置。",
+    "colors": "已保留 Notion 的文字顏色與螢光標記。",
     "databases_other": "已略過 {{count}} 個資料庫 CSV 表格。它們的列頁面已匯入為各自資料夾中的筆記。",
     "deadLinks_other": "有 {{count}} 個連結指向不在這個匯出檔中的頁面，因此只保留了文字。"
   },

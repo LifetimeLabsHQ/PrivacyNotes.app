@@ -132,6 +132,8 @@ export function PasswordField({
         placeholder={placeholder}
         disabled={disabled}
         autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="none"
         spellCheck={false}
         style={revealed ? PAINTED_OVER : undefined}
         className={`${box} ${revealed ? 'selection:text-transparent' : ''}`}

@@ -38,7 +38,7 @@
     "blockMath": "區塊公式",
     "align": "對齊",
     "font": "字型",
-    "pictureFromFiles": "檔案中的圖片",
+    "pictureFromFiles": "圖庫",
     "date": "日期",
     "dateTime": "日期與時間",
     "footnote": "註腳",
@@ -255,6 +255,15 @@
     "headingsIn": "{{title}} 的標題",
     "noHeadingMatches": "沒有相符的標題"
   },
+  "slash": {
+    "label": "插入區塊",
+    "linePlaceholder": "按 / 插入區塊",
+    "filterHint": "輸入以篩選…",
+    "basic": "基本區塊",
+    "smartDate": "智慧日期",
+    "askNinja": "讓 Ninja 搜尋「{{query}}」",
+    "noMatches": "沒有符合的區塊"
+  },
   "copyBox": {
     "placeholder": "一鍵複製的文字"
   },
@@ -361,6 +370,23 @@
     "addColumn": "新增欄",
     "removeBoard": "移除看板",
     "moveTo": "移至"
+  },
+  "columns": {
+    "narrowWide": "窄與寬",
+    "wideNarrow": "寬與窄",
+    "removeColumns": "移除多欄",
+    "resizeColumn": "拖曳以調整欄寬",
+    "barLabel": "多欄控制項",
+    "borders": "欄邊框",
+    "borderBoxes": "方框",
+    "borderSolid": "實線",
+    "borderDashed": "虛線",
+    "borderDotted": "點線",
+    "borderThickness": "粗細",
+    "borderThin": "細",
+    "borderMedium": "中",
+    "borderColorDefault": "預設顏色",
+    "borderTint": "柔和欄底色"
   },
   "doodle": {
     "title": "塗鴉",

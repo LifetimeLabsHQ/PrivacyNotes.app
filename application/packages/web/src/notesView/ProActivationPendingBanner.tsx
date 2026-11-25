@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Banner } from '../ui';
 
 export function ProActivationPendingBanner({
   onDismiss,
@@ -7,18 +8,8 @@ export function ProActivationPendingBanner({
 }) {
   const { t } = useTranslation('notes');
   return (
-    <div className="flex items-center justify-between gap-2 border-b text-body px-4 py-2 bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300">
-      <span>
-        {t('banner.proActivationPending')}
-      </span>
-      <button
-        type="button"
-        onClick={onDismiss}
-        className="text-warning hover:text-amber-900 dark:hover:text-amber-200 shrink-0"
-        aria-label={t('common:updateToast.dismiss')}
-      >
-        ×
-      </button>
-    </div>
+    <Banner tone="warning" onDismiss={onDismiss} dismissLabel={t('common:updateToast.dismiss')}>
+      {t('banner.proActivationPending')}
+    </Banner>
   );
 }

@@ -41,6 +41,7 @@
     "noDocuments": "Aucun document.",
     "noImages": "Aucune image.",
     "noAudioFiles": "Aucun fichier audio.",
+    "noUnusedFiles": "Aucun fichier inutilisé.",
     "emptyTypesHint": "Images, documents, audio, vidéo et fichiers zip. Jusqu'à {{max}} Mo par fichier.",
     "uploadFiles": "Importer des fichiers",
     "menuShow": "Afficher",
@@ -233,7 +234,7 @@
     "tagCount_other": "{{count}} étiquettes",
     "entryDate": "Date de l'entrée",
     "noDate": "Aucune",
-    "schedule": "Planification",
+    "schedule": "Date et rappels",
     "ends": "Fin",
     "sameDay": "Le même jour",
     "starts": "Début",
@@ -317,7 +318,6 @@
     "showOneWeek": "Afficher une semaine"
   },
   "contextMenu": {
-    "newNote": "Nouvelle note",
     "newTask": "Nouvelle tâche",
     "newKanban": "Nouveau tableau Kanban",
     "newDrawing": "Nouveau dessin",
@@ -326,15 +326,12 @@
     "newSshKey": "Nouvelle clé SSH",
     "newJournal": "Nouveau journal",
     "newFile": "Nouveau fichier",
-    "exitZenMode": "Quitter le mode Zen",
-    "zenMode": "Mode Zen",
     "showSidebar": "Afficher la barre latérale",
     "hideSidebar": "Masquer la barre latérale",
     "showNotesList": "Afficher la liste des notes",
     "hideNotesList": "Masquer la liste des notes",
     "resetPaneWidths": "Réinitialiser la largeur des panneaux",
     "settings": "Paramètres",
-    "signOut": "Se déconnecter",
     "deselect": "Désélectionner",
     "select": "Sélectionner",
     "selectedCount_one": "{{count}} élément sélectionné",
@@ -364,8 +361,7 @@
     "closeOtherTabs": "Fermer les autres onglets",
     "closeAllTabs": "Fermer tous les onglets",
     "pinTab": "Épingler l'onglet",
-    "unpinTab": "Désépingler l'onglet",
-    "newEvent": "Nouvel événement"
+    "unpinTab": "Désépingler l'onglet"
   },
   "demoBanner": {
     "title": "Essaie sans aucun risque",
@@ -836,6 +832,25 @@
     "offOnPhone": "Les rappels sont désactivés sur ce téléphone",
     "turnOn": "Activer"
   },
+  "taskReminder": {
+    "set": "Définir un rappel",
+    "edit": "Modifier le rappel",
+    "laterToday": "Plus tard aujourd'hui",
+    "pickDateTime": "Choisir une date et une heure",
+    "dateTime": "Date et heure",
+    "remove": "Retirer le rappel",
+    "onSchedule": "À date fixe",
+    "afterCompletion": "Une fois terminée",
+    "afterDone": "{{count}} {{unit}} une fois terminée",
+    "afterDoneHint": "Compte à partir du jour où tu coches cette tâche.",
+    "weekdaysShort": "Jours de semaine",
+    "everyWeeks_one": "Chaque semaine",
+    "everyWeeks_other": "Toutes les {{count}} semaines",
+    "everyMonths_one": "Chaque mois",
+    "everyMonths_other": "Tous les {{count}} mois",
+    "everyYears_one": "Chaque année",
+    "everyYears_other": "Tous les {{count}} ans"
+  },
   "quickAdd": {
     "group": "Créer",
     "items": "Éléments",
@@ -1031,7 +1046,8 @@
   "apps": {
     "railLabel": "Extension",
     "title": "Extension de navigateur",
-    "subtitle": "Capture web et gestionnaire de mots de passe dans Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf et Zen. L'extension ne détient jamais la clé qui ouvre tes notes.",
+    "subtitle": "Capture web et gestionnaire de mots de passe pour les navigateurs basés sur Chromium et Firefox. L'extension ne détient jamais la clé qui ouvre tes notes.",
+    "allSupported": "Fonctionne dans tout navigateur basé sur Chromium ou Firefox.",
     "loginsCopyFull": "La copie de tes identifiants dans l'extension de navigateur est pleine. Les nouveaux identifiants y arrivent dès que tu en supprimes quelques-uns.",
     "stepInstall": "Installer l'extension",
     "stepFeatures": "Choisir ce qu'elle peut faire",
@@ -1042,7 +1058,7 @@
     "thisBrowser": "Ce navigateur",
     "otherApps": "Apps de bureau et mobiles :",
     "desktopAll": "Tous les téléchargements",
-    "extensionComputersOnly": "L'extension est pour Chrome, Firefox et Edge sur ordinateur.",
+    "extensionComputersOnly": "L'extension est destinée aux navigateurs basés sur Chromium et Firefox sur ordinateur.",
     "demoSignUp": "Inscris-toi pour connecter un navigateur"
   },
   "cli": {

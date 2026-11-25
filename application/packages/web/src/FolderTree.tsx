@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePointMenuPosition } from './usePopoverPosition';
+import { ContextMenu, closedMenuJustNow, type ContextMenuItem } from './ContextMenu';
 import { SIDEBAR_ACTIVE, SIDEBAR_DROP_INSIDE, SIDEBAR_ROW_MENU_BUTTON } from './sidebarUI';
 import { FolderTreeView, type FolderTreeViewProps } from './FolderTreeView';
 import { INDENT_PX, MAX_INDENT_LEVEL, useFolderExpansion } from './folderTreeState';
 import { FolderNameInput } from './FolderNameInput';
-import { ProMark } from './UpgradeModal';
+import { DashedAddButton } from './ui';
 import {
   canCreateChild,
-  canDeleteFolder,
   folderSiblingSorter,
   folderTotals,
   type FolderSortDir,
@@ -75,11 +74,10 @@ export interface FolderTreeProps {
   /** Land a dragged folder: its new parent, and that parent's children in
    *  the sequence the drop leaves them in. */
   onReorderFolders: (id: string, parentId: string | null, orderedIds: string[]) => void;
-  /** Free account: the tree is browsable but every folder action is
-   *  Pro - affordances fire onLockedAction (the upgrade modal)
-   *  instead of their real handler. Deleting a starter folder is the one
-   *  action that still works, so the tree it was given is not a tree it
-   *  is stuck with (canDeleteFolder in folders.ts carries the reason). */
+  /** Free account: the tree is browsable and any folder can be deleted (notes
+   *  are kept and moved up to the parent/unfiled), so a free account is never
+   *  trapped with an imported or starter folder it cannot remove. Every other
+   *  folder action is Pro and fires onLockedAction (the upgrade modal). */
   locked?: boolean;
   onLockedAction?: () => void;
   /** Opens the look picker (icon and color) at the point the menu stood. */
@@ -141,28 +139,12 @@ export function FolderTree({
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameBuffer, setRenameBuffer] = useState('');
   const [menu, setMenu] = useState<OpenFolderMenu | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const menuPos = usePointMenuPosition(menu ? { x: menu.x, y: menu.y } : null, menuRef);
 
   // The active folder's ancestor path auto-expands (other branches keep
   // their manual state).
   useEffect(() => {
     if (selectedFolder) expandAncestors(folders, selectedFolder);
   }, [selectedFolder, folders, expandAncestors]);
-
-  // Dismiss the row menu on scroll/resize - it's fixed-positioned, so
-  // staying open would leave it floating detached (same rule as the
-  // tag menu in NotesView).
-  useEffect(() => {
-    if (!menu) return;
-    const close = () => setMenu(null);
-    window.addEventListener('resize', close);
-    window.addEventListener('scroll', close, true);
-    return () => {
-      window.removeEventListener('resize', close);
-      window.removeEventListener('scroll', close, true);
-    };
-  }, [menu]);
 
   // A closed row counts its whole subtree, an open row its own items. The
   // Entries sort reads the totals, so opening a folder never reorders it.
@@ -190,14 +172,8 @@ export function FolderTree({
   const menuCanNest = menu ? canCreateChild(folders, menu.id) : false;
 
   function openMenuAt(id: string, x: number, y: number) {
-    // Locked accounts browse the tree but every action upsells - the
-    // menu's items are all actions, so the menu itself is the gate. A
-    // starter folder is the exception: its menu opens carrying Delete
-    // alone, which is the only item that would work.
-    if (!canDeleteFolder(id, !locked)) {
-      onLockedAction?.();
-      return;
-    }
+    // Locked accounts browse the tree and can delete any folder (its menu
+    // carries Delete alone; every other folder action stays Pro).
     // Store the raw anchor point; usePointMenuPosition measures the rendered
     // menu and clamps it on-screen (both axes) so it can't clip near an edge.
     setMenu({ id, x, y });
@@ -281,6 +257,7 @@ export function FolderTree({
                 tabIndex={mobileTabIndex}
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (closedMenuJustNow(e.currentTarget)) return;
                   if (menu?.id === f.id) {
                     setMenu(null);
                   } else {
@@ -377,9 +354,15 @@ export function FolderTree({
           </div>
         </div>
       ) : (
-        <button
-          type="button"
+        /* A dashed button, not another tree row: the rows above are
+           places you go, this is a thing you make, and the old plain row
+           read as one more folder. Same FolderPlus mark and amber tint as
+           the folder picker's own "New folder" button, so the two say the
+           same thing in the two places they appear.
+           Spec: docs/internal/design/ui-patterns.md (section 76) */
+        <DashedAddButton
           tabIndex={mobileTabIndex}
+          icon={<FolderPlus className="shrink-0 text-label" aria-hidden="true" />}
           onClick={() => {
             if (locked) {
               onLockedAction?.();
@@ -388,150 +371,108 @@ export function FolderTree({
             setCreateDraft('');
             setCreatingUnder(null);
           }}
-          /* A dashed button, not another tree row: the rows above are
-             places you go, this is a thing you make, and the old plain row
-             read as one more folder. Same FolderPlus mark and amber tint as
-             the folder picker's own "New folder" button, so the two say the
-             same thing in the two places they appear.
-             Spec: docs/internal/design/ui-patterns.md (section 76) */
-          className="w-full mt-2 rounded-md border border-dashed border-divider hover:border-accent/50 text-row font-medium transition flex items-center justify-start gap-2 ps-[7px] pe-2 py-2 text-pn-muted hover:text-accent"
+          className="mt-2"
         >
-          <FolderPlus className="shrink-0 text-label" />
-          <span className="truncate">{t('folders.new')}</span>
-        </button>
+          {t('folders.new')}
+        </DashedAddButton>
       )}
 
-      {/* Folder actions menu - fixed-position, same z tiers as the tag menu. */}
-      {menu && menuFolder && (
-        <>
-          <div className="fixed inset-0 z-[55]" onClick={() => setMenu(null)} />
-          <div
-            ref={menuRef}
-            style={{
-              top: menuPos?.top ?? menu.y,
-              left: menuPos?.left ?? menu.x,
-              visibility: menuPos ? 'visible' : 'hidden',
-            }}
-            className="fixed z-[60] min-w-[200px] rounded-md border border-divider bg-surface-2 shadow-lg py-1"
-          >
-            {/* When locked, this menu opens only on a starter folder and
-                carries Delete alone. The other three are Pro, and a menu
-                whose every item opens the paywall is worse than one that
-                does the single thing it offers. */}
-            {!locked && (
-              <>
-                {menuCanNest && (
-                  <button
-                    onClick={() => {
-                      setMenu(null);
-                      setCreateDraft('');
-                      setCreatingUnder(menuFolder.id);
-                      expand(folders, menuFolder.id);
-                    }}
-                    className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
-                  >
-                    <FolderPlus className="text-accent" />
-                    {t('folders.newSubfolder')}
-                  </button>
-                )}
-                <button
-                  onClick={() => {
-                    setMenu(null);
-                    onRequestMove(menuFolder.id);
-                  }}
-                  className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
-                >
-                  <ArrowElbowDownRight className="text-accent" />
-                  {t('folders.move')}
-                </button>
-                {spaceMove && menuFolder.parentId === null && (() => {
-                  const move = spaceMove(menuFolder.id);
-                  return (
-                    <button
-                      onClick={() => {
-                        setMenu(null);
-                        move.run();
-                      }}
-                      className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
-                    >
-                      <move.icon className="text-accent" />
-                      {move.label}
-                    </button>
-                  );
-                })()}
-                <button
-                  onClick={() => {
-                    setMenu(null);
-                    setRenameBuffer(menuFolder.name);
-                    setRenamingId(menuFolder.id);
-                  }}
-                  className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
-                >
-                  <PencilSimple className="text-accent" />
-                  {t('folders.rename')}
-                </button>
-                {onEditLook && (
-                  <button
-                    onClick={() => {
-                      setMenu(null);
-                      onEditLook(menuFolder.id);
-                    }}
-                    className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
-                  >
-                    <Palette className="text-accent" />
-                    <span className="flex-1">{t('looks.menu')}</span>
-                    {looksProMark && <ProMark />}
-                  </button>
-                )}
-                {home && (
-                  <button
-                    onClick={() => {
-                      setMenu(null);
-                      home.toggle(menuFolder.id);
-                    }}
-                    className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
-                  >
-                    <PILLAR_GLYPHS.dashboard className="text-accent" />
-                    {t(home.has(menuFolder.id) ? 'dashboard.removeFromHome' : 'dashboard.showOnHome')}
-                  </button>
-                )}
-                <div className="my-1 border-t border-divider" />
-                <button
-                  onClick={() => {
-                    setMenu(null);
-                    expandAll(folders);
-                  }}
-                  className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
-                >
-                  <ArrowsOutLineVertical className="text-accent" />
-                  {t('folders.expandAll')}
-                </button>
-                <button
-                  onClick={() => {
-                    setMenu(null);
-                    collapseAll(folders);
-                  }}
-                  className="w-full text-start px-3 py-1.5 text-compact text-pn-soft hover:bg-surface-1 flex items-center gap-2"
-                >
-                  <ArrowsInLineVertical className="text-accent" />
-                  {t('folders.collapseAll')}
-                </button>
-                <div className="my-1 border-t border-divider" />
-              </>
-            )}
-            <button
-              onClick={() => {
-                setMenu(null);
-                onRequestDelete(menuFolder.id);
-              }}
-              className="w-full text-start px-3 py-1.5 text-compact text-danger hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2"
-            >
-              <Trash />
-              {t('folders.delete')}
-            </button>
-          </div>
-        </>
-      )}
+      {/* Folder actions menu - shared ContextMenu primitive.
+          When locked, this menu carries Delete alone: the other actions are
+          Pro, and a menu whose every item opens the paywall is worse than one
+          that does the single thing it offers. */}
+      <ContextMenu
+        state={
+          menu && menuFolder
+            ? {
+                x: menu.x,
+                y: menu.y,
+                items: [
+                  ...(!locked
+                    ? [
+                        ...(menuCanNest
+                          ? [
+                              {
+                                label: t('folders.newSubfolder'),
+                                icon: <FolderPlus />,
+                                onSelect: () => {
+                                  setCreateDraft('');
+                                  setCreatingUnder(menuFolder.id);
+                                  expand(folders, menuFolder.id);
+                                },
+                              } satisfies ContextMenuItem,
+                            ]
+                          : []),
+                        {
+                          label: t('folders.move'),
+                          icon: <ArrowElbowDownRight />,
+                          onSelect: () => onRequestMove(menuFolder.id),
+                        } satisfies ContextMenuItem,
+                        ...(spaceMove && menuFolder.parentId === null
+                          ? (() => {
+                              const move = spaceMove(menuFolder.id);
+                              return [
+                                {
+                                  label: move.label,
+                                  icon: <move.icon />,
+                                  onSelect: () => move.run(),
+                                } satisfies ContextMenuItem,
+                              ];
+                            })()
+                          : []),
+                        {
+                          label: t('folders.rename'),
+                          icon: <PencilSimple />,
+                          onSelect: () => {
+                            setRenameBuffer(menuFolder.name);
+                            setRenamingId(menuFolder.id);
+                          },
+                        } satisfies ContextMenuItem,
+                        ...(onEditLook
+                          ? [
+                              {
+                                label: t('looks.menu'),
+                                icon: <Palette />,
+                                pro: looksProMark,
+                                onSelect: () => onEditLook(menuFolder.id),
+                              } satisfies ContextMenuItem,
+                            ]
+                          : []),
+                        ...(home
+                          ? [
+                              {
+                                label: t(home.has(menuFolder.id) ? 'dashboard.removeFromHome' : 'dashboard.showOnHome'),
+                                icon: <PILLAR_GLYPHS.dashboard />,
+                                onSelect: () => home.toggle(menuFolder.id),
+                              } satisfies ContextMenuItem,
+                            ]
+                          : []),
+                        { type: 'separator' } satisfies ContextMenuItem,
+                        {
+                          label: t('folders.expandAll'),
+                          icon: <ArrowsOutLineVertical />,
+                          onSelect: () => expandAll(folders),
+                        } satisfies ContextMenuItem,
+                        {
+                          label: t('folders.collapseAll'),
+                          icon: <ArrowsInLineVertical />,
+                          onSelect: () => collapseAll(folders),
+                        } satisfies ContextMenuItem,
+                        { type: 'separator' } satisfies ContextMenuItem,
+                      ]
+                    : []),
+                  {
+                    label: t('folders.delete'),
+                    icon: <Trash />,
+                    destructive: true,
+                    onSelect: () => onRequestDelete(menuFolder.id),
+                  } satisfies ContextMenuItem,
+                ],
+              }
+            : null
+        }
+        onClose={() => setMenu(null)}
+      />
     </>
   );
 }

@@ -4,15 +4,15 @@ import { paintedSlot, peekThemeMode, previewCustomTheme, useTheme, type Theme } 
 import { BUILTIN_THEME_CODES } from './builtinThemeCodes';
 import { CUSTOM_THEME_MAX, newCustomThemeId } from './customThemes';
 import { snapshotOf } from './customThemeUI';
+import { NO_TEXT_ASSIST } from './formFields';
 import type { ThemeBuilderTarget } from './notesView/useThemeBuilder';
 import * as tc from './themeCode';
-import { SETTINGS_BTN, SETTINGS_BTN_PRIMARY, SettingsCallout } from './settingsUI';
+import { SETTINGS_BTN, SETTINGS_BTN_PRIMARY, SETTINGS_TRACK, settingsSegClass } from './settingsUI';
 import type { CheckId, CustomTheme, MoreKey, SeedKey, ThemeCheck } from './themeCode';
 import { useEscapeToClose } from './useEscapeToClose';
-import { IconUpgrade } from './UpgradeModal';
 import { HoverLabel } from './HoverLabel';
-import { ArrowCounterClockwise, CaretDown, CaretRight, Check, Copy, Eye, FloppyDisk, MagicWand, Warning } from './icons';
-import { CloseButton } from './ui';
+import { ArrowCounterClockwise, CaretDown, CaretRight, Check, Copy, Eye, FloppyDisk, MagicWand, Moon, Sun, Warning } from './icons';
+import { Callout, CloseButton, FIELD_CLASS, IconUpgrade, TextField } from './ui';
 
 /**
  * The theme builder: a small panel that floats over the app while the app
@@ -325,8 +325,9 @@ export function ThemeBuilder({
               key={m}
               type="button"
               onClick={() => setDraft((d) => (d ? tc.suggestFromAccent(d, m) : d))}
-              className="shrink-0 rounded border border-divider px-2 py-0.5 font-medium text-pn hover:border-accent hover:text-accent"
+              className={`${SETTINGS_BTN} shrink-0 !px-2 !py-0.5 !text-meta`}
             >
+              {m === 'light' ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
               {m === 'light' ? t('appearance.custom.suggestLight') : t('appearance.custom.suggestDark')}
             </button>
           ))}
@@ -357,14 +358,14 @@ export function ThemeBuilder({
         <div className="mt-3 border-t border-divider pt-2">
           <div className="flex items-center gap-2">
             <span className="min-w-0 flex-1 text-small font-medium text-pn-soft">{t('appearance.custom.logoTitle')}</span>
-            <div role="group" aria-label={t('appearance.custom.logoTitle')} className="flex flex-wrap gap-0.5 rounded-md p-0.5 bg-track">
+            <div role="group" aria-label={t('appearance.custom.logoTitle')} className={SETTINGS_TRACK}>
               {([undefined, 'original'] as const).map((v) => (
                 <button
                   key={v ?? 'tint'}
                   type="button"
                   aria-pressed={draft.logo === v}
                   onClick={() => setDraft((d) => (d ? tc.withLogo(d, v) : d))}
-                  className={`px-2 py-0.5 rounded text-meta transition ${draft.logo === v ? 'bg-surface-2 shadow-sm text-pn font-semibold' : 'text-pn-soft hover:text-pn font-medium'}`}
+                  className={`${settingsSegClass(draft.logo === v)} !px-2 !py-0.5 !text-meta`}
                 >
                   {t(v === 'original' ? 'appearance.custom.logoOriginal' : 'settings:appearance.custom.seed.accent')}
                 </button>
@@ -400,7 +401,7 @@ export function ThemeBuilder({
           </div>
           {allChecks && (
             <>
-              <SettingsCallout className="mt-1.5 mb-1">{t('appearance.custom.contrastHelp')}</SettingsCallout>
+              <Callout className="mt-1.5 mb-1">{t('appearance.custom.contrastHelp')}</Callout>
               <ul className="mt-1 space-y-1">
                 {checks.map((c) => (
                   <li key={c.id} className="text-small">
@@ -437,14 +438,14 @@ export function ThemeBuilder({
           <label htmlFor="pn-theme-name" className="px-1 text-small font-medium text-pn-muted">
             {t('shell:filesList.sortName')}
           </label>
-          <input
+          <TextField
             id="pn-theme-name"
+            size="sm"
             value={nameText}
             onChange={(e) => setNameText(e.target.value)}
             maxLength={tc.THEME_NAME_INPUT_MAX}
             dir="auto"
             placeholder={t('appearance.custom.namePlaceholder')}
-            className="min-w-0 rounded-md border border-divider bg-track px-2 py-1.5 text-body text-pn"
           />
           {/* Optional credit, written into the code as `by=`, so a code shared
               with friends names its maker and tells us how to credit it on
@@ -460,7 +461,7 @@ export function ThemeBuilder({
               onChange={(e) => setAuthorText(e.target.value)}
               maxLength={40}
               autoComplete="off"
-              spellCheck={false}
+              {...NO_TEXT_ASSIST}
               placeholder={t('appearance.custom.creditPlaceholder')}
               aria-invalid={!authorOk}
               className="min-w-0 flex-1 bg-transparent px-1 py-1.5 outline-none"
@@ -468,9 +469,12 @@ export function ThemeBuilder({
           </div>
         </div>
         <div className="mt-2.5 flex items-center justify-end gap-2">
-          <button type="button" onClick={onClose} className={SETTINGS_BTN}>
-            {code === savedCode ? t('common:actions.close') : t('common:actions.cancel')}
-          </button>
+          {code !== savedCode && (
+            <button type="button" onClick={onClose} className={SETTINGS_BTN}>
+              <ArrowCounterClockwise aria-hidden="true" />
+              {t('common:actions.cancel')}
+            </button>
+          )}
           {canSave ? (
             <button type="button" onClick={save} disabled={!ready} className={SETTINGS_BTN_PRIMARY}>
               {justSaved ? (
@@ -515,11 +519,12 @@ function HexField({ value, label, onChange, wide = false }: { value: string; lab
       onFocus={() => { setFocused(true); setText(value); }}
       onBlur={() => setFocused(false)}
       maxLength={7}
-      spellCheck={false}
+      autoComplete="off"
+      {...NO_TEXT_ASSIST}
       dir="ltr"
       aria-label={t('appearance.custom.hexField', { label })}
-      className={`${wide ? 'mt-0.5 w-full' : 'w-[76px]'} shrink-0 rounded border bg-track px-1.5 py-0.5 font-mono text-meta text-pn ${
-        focused && !readHex(text) ? 'border-red-500/60' : 'border-divider'
+      className={`${FIELD_CLASS} ${wide ? 'mt-0.5 w-full' : '!w-[76px]'} shrink-0 !bg-track !px-1.5 !py-0.5 font-mono !text-meta ${
+        focused && !readHex(text) ? '!border-danger' : ''
       }`}
     />
   );

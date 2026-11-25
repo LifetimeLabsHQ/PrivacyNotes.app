@@ -8,7 +8,7 @@ import { HoverLabel } from './HoverLabel';
 import { ArrowCounterClockwise, CalendarPlus, CheckCircle, EyeSlash, Gear, LockSimple, SkipForward, SlidersHorizontal, X } from './icons';
 import { MonthGrid } from './MonthGrid';
 import { MoodScale } from './MoodScale';
-import { Button } from './ui';
+import { Button, Snackbar } from './ui';
 import { TrackerPills } from './TrackerPills';
 import type { TrackerSetupTab } from './TrackerConfig';
 import { useToday } from './ListGroupHeader';
@@ -204,27 +204,22 @@ export function CheckInCard(p: Props) {
     <Shell grid={p.grid} line={line && !p.home} rootRef={rootRef} onRoot={setRoot} style={p.style} className={p.className} center={p.home} reorderId={p.reorderId}>{children}{p.controls}</Shell>
   );
 
-  const noticeLine = notice && (
-      <div className="flex items-center gap-2 min-h-8 text-compact text-pn-muted">
-        <span className="min-w-0 flex-1 truncate">{notice === 'skipped' ? t('checkIn.skipped') : notice === 'cleared' ? t('checkIn.cleared') : t('checkIn.hidden')}</span>
-        <button
-          type="button"
-          onClick={() => {
-            if (notice === 'skipped') setCheckInSkipped(false);
-            if (notice === 'cleared' && cleared.current) void p.onSave(cleared.current.day, cleared.current.data);
-            pendingHide.current = false;
-            setNotice(null);
-          }}
-          className="shrink-0 rounded-md px-2 py-1 text-compact font-medium text-accent hover:bg-accent/10"
-        >
-          {t('notes:editor.undo')}
-        </button>
-      </div>
+  const noticeSnackbar = notice && (
+    <Snackbar
+      actionLabel={t('notes:editor.undo')}
+      onAction={() => {
+        if (notice === 'skipped') setCheckInSkipped(false);
+        if (notice === 'cleared' && cleared.current) void p.onSave(cleared.current.day, cleared.current.data);
+        pendingHide.current = false;
+        setNotice(null);
+      }}
+    >
+      {notice === 'skipped' ? t('checkIn.skipped') : notice === 'cleared' ? t('checkIn.cleared') : t('checkIn.hidden')}
+    </Snackbar>
   );
-  // Skip and hide take the card away, so the line stands alone until its Undo
-  // runs out. Start over keeps the card: the line sits on top of the fresh
-  // scale, so the next tap can log again at once.
-  if (notice && notice !== 'cleared') return shell(noticeLine, true);
+  // Skip and hide take the card away, so the snackbar stands alone until Undo
+  // runs out. Start over keeps the card so the next tap can log again at once.
+  if (notice && notice !== 'cleared') return <li className="contents">{noticeSnackbar}</li>;
   if (skipped) return null;
 
   const entry = p.entryOn ? p.entryOn(day) : checkInEntry(p.notes, day);
@@ -336,6 +331,7 @@ export function CheckInCard(p: Props) {
         selected={day}
         initialMonth={day}
         weeks={6}
+        wheelStep={false}
         onPick={(d) => { setDay(d); setCalOpen(false); setFlowOpen(false); }}
       />
     </div>
@@ -490,7 +486,7 @@ export function CheckInCard(p: Props) {
 
   return shell(
     <>
-      {notice === 'cleared' && <div className="-mt-1 mb-1">{noticeLine}</div>}
+      {notice === 'cleared' && noticeSnackbar}
       {inPass ? (
         <>
           {summary}

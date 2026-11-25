@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Banner, FeedbackButton } from '../ui';
 
 export function StoragePastDueBanner({
   onDismiss,
@@ -7,28 +8,22 @@ export function StoragePastDueBanner({
 }) {
   const { t } = useTranslation('notes');
   return (
-    <div className="flex items-center justify-between gap-2 border-b text-body px-4 py-2 bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-800 dark:text-amber-300">
-      <span>
-        {t('banner.storagePastDue')}
-      </span>
-      <div className="flex items-center gap-2 shrink-0">
-        <a
+    <Banner
+      tone="warning"
+      action={
+        <FeedbackButton
+          action="open"
           href="https://customer.paddle.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-small font-medium underline hover:no-underline"
         >
           {t('banner.updateCard')}
-        </a>
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="text-warning hover:text-amber-900 dark:hover:text-amber-200"
-          aria-label={t('common:updateToast.dismiss')}
-        >
-          ×
-        </button>
-      </div>
-    </div>
+        </FeedbackButton>
+      }
+      onDismiss={onDismiss}
+      dismissLabel={t('common:updateToast.dismiss')}
+    >
+      {t('banner.storagePastDue')}
+    </Banner>
   );
 }

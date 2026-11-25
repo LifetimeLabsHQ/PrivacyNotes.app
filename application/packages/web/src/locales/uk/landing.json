@@ -344,7 +344,7 @@
     "extensionKeyLogin": "Заповнити логін цього сайту",
     "extensionKeyBookmark": "Додати цю сторінку в закладки",
     "extensionAria": "Додати розширення до {{name}}",
-    "extensionNote": "Лише на комп’ютерах."
+    "extensionNote": "Працює в будь-якому браузері на базі Chromium або Firefox. Лише на комп’ютерах."
   },
   "ctaRepeat": {
     "getStarted": "Почати"

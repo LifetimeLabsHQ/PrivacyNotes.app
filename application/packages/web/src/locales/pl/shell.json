@@ -41,6 +41,7 @@
     "noDocuments": "Brak dokumentów.",
     "noImages": "Brak obrazów.",
     "noAudioFiles": "Brak plików dźwiękowych.",
+    "noUnusedFiles": "Brak nieużywanych plików.",
     "emptyTypesHint": "Obrazy, dokumenty, dźwięk, wideo i pliki zip. Do {{max}} MB na plik.",
     "uploadFiles": "Prześlij pliki",
     "menuShow": "Pokaż",
@@ -236,7 +237,7 @@
     "tagCount_other": "{{count}} tagu",
     "entryDate": "Data wpisu",
     "noDate": "Brak",
-    "schedule": "Termin",
+    "schedule": "Data i przypomnienia",
     "ends": "Koniec",
     "sameDay": "Tego samego dnia",
     "starts": "Początek",
@@ -323,7 +324,6 @@
     "showOneWeek": "Pokaż jeden tydzień"
   },
   "contextMenu": {
-    "newNote": "Nowa notatka",
     "newTask": "Nowe zadanie",
     "newKanban": "Nowa tablica kanban",
     "newDrawing": "Nowy rysunek",
@@ -332,15 +332,12 @@
     "newSshKey": "Nowy klucz SSH",
     "newJournal": "Nowy dziennik",
     "newFile": "Nowy plik",
-    "exitZenMode": "Wyjdź z trybu Zen",
-    "zenMode": "Tryb Zen",
     "showSidebar": "Pokaż panel boczny",
     "hideSidebar": "Ukryj panel boczny",
     "showNotesList": "Pokaż listę notatek",
     "hideNotesList": "Ukryj listę notatek",
     "resetPaneWidths": "Zresetuj szerokości paneli",
     "settings": "Ustawienia",
-    "signOut": "Wyloguj się",
     "deselect": "Odznacz",
     "select": "Zaznacz",
     "selectedCount_one": "zaznaczono {{count}} element",
@@ -372,8 +369,7 @@
     "closeOtherTabs": "Zamknij pozostałe karty",
     "closeAllTabs": "Zamknij wszystkie karty",
     "pinTab": "Przypnij kartę",
-    "unpinTab": "Odepnij kartę",
-    "newEvent": "Nowe wydarzenie"
+    "unpinTab": "Odepnij kartę"
   },
   "demoBanner": {
     "title": "Wypróbuj bez ryzyka",
@@ -877,6 +873,28 @@
     "minutesBefore_few": "{{count}} minuty wcześniej",
     "minutesBefore_many": "{{count}} minut wcześniej"
   },
+  "taskReminder": {
+    "set": "Ustaw przypomnienie",
+    "edit": "Edytuj przypomnienie",
+    "laterToday": "Później dzisiaj",
+    "pickDateTime": "Wybierz datę i godzinę",
+    "dateTime": "Data i godzina",
+    "remove": "Usuń przypomnienie",
+    "onSchedule": "Według harmonogramu",
+    "afterCompletion": "Po ukończeniu",
+    "afterDone": "{{count}} {{unit}} po ukończeniu",
+    "afterDoneHint": "Liczy od dnia, w którym odhaczysz to zadanie.",
+    "weekdaysShort": "Dni robocze",
+    "everyWeeks_many": "Co {{count}} tygodni",
+    "everyWeeks_one": "Co tydzień",
+    "everyMonths_many": "Co {{count}} miesięcy",
+    "everyMonths_one": "Co miesiąc",
+    "everyYears_many": "Co {{count}} lat",
+    "everyYears_one": "Co roku",
+    "everyYears_few": "Co {{count}} lata",
+    "everyMonths_few": "Co {{count}} miesiące",
+    "everyWeeks_few": "Co {{count}} tygodnie"
+  },
   "quickAdd": {
     "group": "Utwórz",
     "items": "Elementy",
@@ -1075,7 +1093,8 @@
   "apps": {
     "railLabel": "Rozszerzenie",
     "title": "Rozszerzenie przeglądarki",
-    "subtitle": "Web clipper i menedżer haseł w przeglądarkach Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf i Zen. Rozszerzenie nigdy nie ma klucza, który otwiera twoje notatki.",
+    "subtitle": "Web clipper i menedżer haseł dla przeglądarek opartych na Chromium i Firefoksie. Rozszerzenie nigdy nie ma klucza, który otwiera Twoje notatki.",
+    "allSupported": "Działa w każdej przeglądarce opartej na Chromium lub Firefoksie.",
     "loginsCopyFull": "Kopia Twoich loginów w rozszerzeniu przeglądarki jest pełna. Nowe loginy trafią do niej, gdy usuniesz część z nich.",
     "stepInstall": "Zainstaluj rozszerzenie",
     "stepFeatures": "Wybierz, co może robić",
@@ -1086,7 +1105,7 @@
     "thisBrowser": "Ta przeglądarka",
     "otherApps": "Aplikacje na komputer i telefon:",
     "desktopAll": "Wszystkie pobrania",
-    "extensionComputersOnly": "Rozszerzenie jest dla Chrome, Firefoksa i Edge na komputerze.",
+    "extensionComputersOnly": "Rozszerzenie jest dla przeglądarek opartych na Chromium i Firefoksie na komputerze.",
     "demoSignUp": "Zarejestruj się, aby połączyć przeglądarkę"
   },
   "cli": {

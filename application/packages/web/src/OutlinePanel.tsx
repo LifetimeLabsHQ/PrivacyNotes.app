@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Editor as TipTapEditor } from '@tiptap/react';
+import type { Node as PMNode } from '@tiptap/pm/model';
 import type { Transaction } from '@tiptap/pm/state';
-import { openFoldsAt } from './editorFolds';
+import { blockContains, touchesTopBlock } from './editorDirection';
+import { foldedPositions, openFoldsAt, toggleFold as toggleEditorFold } from './editorFolds';
 import { BracketsSquare, CaretDown, Check, LinkSimple, ListBullets } from './icons';
 import { ContextMenu, useContextMenu } from './ContextMenu';
 import { shortcutUrl } from './noteShortcut';
@@ -37,10 +39,28 @@ function readHeadings(editor: TipTapEditor): OutlineItem[] {
       out.push({ pos, level: 1, text: title, callout: (node.attrs.type ?? 'info') as CalloutType });
       return false;
     }
-    return true;
+    return !node.isTextblock;
   });
   return out;
 }
+
+/** Early-exit check when the panel is collapsed and only cares whether the
+ *  outline pill should show at all. */
+function hasOutlineItem(editor: TipTapEditor): boolean {
+  let found = false;
+  editor.state.doc.descendants((node) => {
+    if (found) return false;
+    if (node.type.name === 'heading' || node.type.name === 'callout') {
+      found = true;
+      return false;
+    }
+    return !node.isTextblock;
+  });
+  return found;
+}
+
+const hasOutlineTarget = (node: PMNode) =>
+  blockContains(node, (n) => n.type.name === 'heading' || n.type.name === 'callout');
 
 /**
  * The rows the panel shows once some branches are folded. A heading folds the
@@ -74,6 +94,13 @@ export function foldOutline(items: OutlineItem[], folded: ReadonlySet<number>) {
 /** Cheap structural signature so we only re-render when the outline changes. */
 function sig(hs: OutlineItem[]): string {
   return hs.map((h) => `${h.pos}:${h.level}:${h.callout ?? ''}:${h.text}`).join('|');
+}
+
+function sameNumbers(a: readonly number[] | null, b: readonly number[] | null): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
 }
 
 /**
@@ -116,43 +143,108 @@ export function OutlinePanel({ editor, open, onOpenChange, reveal }: Props) {
   const { t } = useTranslation('editor');
   const [headings, setHeadings] = useState<OutlineItem[]>(() => readHeadings(editor));
   const [activePos, setActivePos] = useState<number>(-1);
-  // Positions of the folded headings. A view state of this panel only: the
-  // editor remounts per note, so a fold never outlives its note.
-  const [folded, setFolded] = useState<ReadonlySet<number>>(() => new Set());
+  // Positions folded in the editor's Folds plugin (shared switch between the
+  // outline and the note text), plus local-only fallback folds for views that
+  // do not mount Folds (such as the Markdown split preview) or headings the
+  // editor cannot fold on its own.
+  const [editorFolded, setEditorFolded] = useState<readonly number[] | null>(() => foldedPositions(editor.state));
+  const [localFolded, setLocalFolded] = useState<ReadonlySet<number>>(() => new Set());
   const rootRef = useRef<HTMLElement>(null);
   const { copy, copied } = useCopyToClipboard();
   const linkMenu = useContextMenu();
 
-  // Keep the list in sync with the document, but skip the re-render when the
-  // set of headings is unchanged (the common case while typing body text).
+  // Keep the list in sync with the document. When the panel is closed, only
+  // whether any heading/callout exists matters (so typing in body paragraphs
+  // does zero work and skips React renders); when it opens, refresh before paint.
+  const openRef = useRef(open);
+  openRef.current = open;
+
+  useLayoutEffect(() => {
+    if (!open || editor.isDestroyed) return;
+    setHeadings((prev) => {
+      const next = readHeadings(editor);
+      return sig(prev) === sig(next) ? prev : next;
+    });
+    setEditorFolded((prev) => {
+      const next = foldedPositions(editor.state);
+      return sameNumbers(prev, next) ? prev : next;
+    });
+  }, [editor, open]);
+
   useEffect(() => {
-    const refresh = () =>
+    const refresh = ({ transaction }: { transaction: Transaction }) => {
+      if (!transaction.docChanged) return;
+      const touchedOutline = touchesTopBlock(transaction, hasOutlineTarget);
+      if (!openRef.current) {
+        if (!touchedOutline) return;
+        setHeadings((prev) => {
+          const exists = hasOutlineItem(editor);
+          if (!exists) return prev.length === 0 ? prev : [];
+          return prev.length > 0 ? prev : readHeadings(editor);
+        });
+        return;
+      }
+      if (!touchedOutline) {
+        setHeadings((prev) => {
+          if (prev.length === 0) return prev;
+          let moved = false;
+          const next = prev.map((h) => {
+            const pos = transaction.mapping.map(h.pos);
+            if (pos !== h.pos) moved = true;
+            return pos === h.pos ? h : { ...h, pos };
+          });
+          return moved ? next : prev;
+        });
+        return;
+      }
       setHeadings((prev) => {
         const next = readHeadings(editor);
         return sig(prev) === sig(next) ? prev : next;
       });
-    refresh();
+    };
     editor.on('update', refresh);
     return () => { editor.off('update', refresh); };
   }, [editor]);
 
-  // An edit above a folded heading moves it; map the fold along with it.
+  // Keep outline folds in step with the editor's Folds plugin, and remap any
+  // local fallback folds when an edit above them shifts positions.
   useEffect(() => {
-    const remap = ({ transaction }: { transaction: Transaction }) => {
+    const syncFolds = ({ transaction }: { transaction: Transaction }) => {
+      if (openRef.current && !editor.isDestroyed) {
+        const next = foldedPositions(editor.state);
+        setEditorFolded((prev) => (sameNumbers(prev, next) ? prev : next));
+      }
       if (!transaction.docChanged) return;
-      setFolded((prev) => (prev.size === 0 ? prev : new Set([...prev].map((p) => transaction.mapping.map(p)))));
+      setLocalFolded((prev) => {
+        if (prev.size === 0) return prev;
+        const next = new Set<number>();
+        for (const p of prev) {
+          const r = transaction.mapping.mapResult(p, 1);
+          if (!r.deleted) next.add(r.pos);
+        }
+        return next;
+      });
     };
-    editor.on('transaction', remap);
-    return () => { editor.off('transaction', remap); };
+    editor.on('transaction', syncFolds);
+    return () => { editor.off('transaction', syncFolds); };
   }, [editor]);
 
   const toggleFold = useCallback((pos: number) => {
-    setFolded((prev) => {
+    if (!editor.isDestroyed && toggleEditorFold(editor.view, pos)) {
+      setLocalFolded((prev) => {
+        if (!prev.has(pos)) return prev;
+        const next = new Set(prev);
+        next.delete(pos);
+        return next;
+      });
+      return;
+    }
+    setLocalFolded((prev) => {
       const next = new Set(prev);
       if (!next.delete(pos)) next.add(pos);
       return next;
     });
-  }, []);
+  }, [editor]);
 
   // Scroll-spy: the active heading is the last one whose top has passed the
   // activation line (the top of this slot, which sits just under the sticky
@@ -199,14 +291,6 @@ export function OutlinePanel({ editor, open, onOpenChange, reveal }: Props) {
   }, [editor, reveal]);
 
   if (headings.length === 0) return null;
-  const outline = foldOutline(headings, folded);
-  const currentPos = outline.shownAs(activePos);
-  // Only a row a link can find gets the icon: not a heading or callout
-  // inside a quote, a list or another callout, and not one with no text.
-  // Outside the notes app (a Markdown folder file) the editor names no
-  // note, so no row does.
-  const linkNote = getWikiLinkCurrentNote(editor);
-  const linkable = new Set(linkNote ? headingsFromDoc(editor.state.doc).map((h) => h.pos) : []);
 
   if (!open) {
     // The pill this slot is built around. Its shape now lives in
@@ -218,6 +302,18 @@ export function OutlinePanel({ editor, open, onOpenChange, reveal }: Props) {
       </EditorSlotPill>
     );
   }
+
+  const folded: ReadonlySet<number> = editorFolded && editorFolded.length > 0
+    ? (localFolded.size > 0 ? new Set([...editorFolded, ...localFolded]) : new Set(editorFolded))
+    : localFolded;
+  const outline = foldOutline(headings, folded);
+  const currentPos = outline.shownAs(activePos);
+  // Only a row a link can find gets the icon: not a heading or callout
+  // inside a quote, a list or another callout, and not one with no text.
+  // Outside the notes app (a Markdown folder file) the editor names no
+  // note, so no row does.
+  const linkNote = getWikiLinkCurrentNote(editor);
+  const linkable = new Set(linkNote ? headingsFromDoc(editor.state.doc).map((h) => h.pos) : []);
 
   return (
     <EditorSlotPanel
@@ -231,7 +327,7 @@ export function OutlinePanel({ editor, open, onOpenChange, reveal }: Props) {
       onClose={() => onOpenChange(false)}
     >
       <ul>
-        {outline.rows.map(({ item: h, hasKids, depth }) => {
+        {outline.rows.map(({ item: h, hasKids, depth }, rowIndex) => {
           const isActive = h.pos === currentPos;
           const isFolded = hasKids && folded.has(h.pos);
           const label = h.text || (h.callout ? t(`callout.types.${h.callout}`) : t('common:state.untitled'));
@@ -240,7 +336,7 @@ export function OutlinePanel({ editor, open, onOpenChange, reveal }: Props) {
           const canLink = linkNote !== null && linkable.has(h.pos);
           const isCopied = copied === String(h.pos);
           return (
-            <li key={h.pos} className="group relative">
+            <li key={`${h.callout ?? h.level}:${rowIndex}`} className="group relative">
               <button
                 type="button"
                 onClick={() => jumpTo(h.pos)}

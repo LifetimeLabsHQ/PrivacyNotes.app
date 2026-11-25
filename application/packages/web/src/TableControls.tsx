@@ -145,27 +145,27 @@ export function TableControls({ editor, formulasUnlocked, onUpgrade }: { editor:
     >
       {/* + Row above */}
       <HoverLabel label={t('table.addRowAbove')} position="below">
-        <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().addRowBefore().run(); }}>
-          <ArrowUpIcon />
+        <button type="button" aria-label={t('table.addRowAbove')} className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().addRowBefore().run(); }}>
+          <ArrowUpIcon aria-hidden="true" />
         </button>
       </HoverLabel>
       {/* + Row below */}
       <HoverLabel label={t('table.addRowBelow')} position="below">
-        <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().addRowAfter().run(); }}>
-          <ArrowDownIcon />
+        <button type="button" aria-label={t('table.addRowBelow')} className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().addRowAfter().run(); }}>
+          <ArrowDownIcon aria-hidden="true" />
         </button>
       </HoverLabel>
       <div className="pn-table-toolbar-divider" />
       {/* + Col left */}
       <HoverLabel label={t('table.addColumnLeft')} position="below">
-        <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().addColumnBefore().run(); }}>
-          <ArrowLeftIcon />
+        <button type="button" aria-label={t('table.addColumnLeft')} className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().addColumnBefore().run(); }}>
+          <ArrowLeftIcon aria-hidden="true" />
         </button>
       </HoverLabel>
       {/* + Col right */}
       <HoverLabel label={t('table.addColumnRight')} position="below">
-        <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().addColumnAfter().run(); }}>
-          <ArrowRightIcon />
+        <button type="button" aria-label={t('table.addColumnRight')} className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().addColumnAfter().run(); }}>
+          <ArrowRightIcon aria-hidden="true" />
         </button>
       </HoverLabel>
       <div className="pn-table-toolbar-divider" />
@@ -174,8 +174,8 @@ export function TableControls({ editor, formulasUnlocked, onUpgrade }: { editor:
           arithmetic itself is free, so a free account can still type
           `=SUM(B2:B4)` by hand and see the total. */}
       <HoverLabel label={t('table.insertFormula')} position="below">
-        <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); insertFormula(); }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 5H7l6 7-6 7h11"/></svg>
+        <button type="button" aria-label={t('table.insertFormula')} className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); insertFormula(); }}>
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 5H7l6 7-6 7h11"/></svg>
         </button>
       </HoverLabel>
       <div className="pn-table-toolbar-divider" />
@@ -184,7 +184,7 @@ export function TableControls({ editor, formulasUnlocked, onUpgrade }: { editor:
       <div ref={fill.wrapRef} className="flex">
         <HoverLabel label={t('table.cellColor')} position="below">
           <button type="button" aria-label={t('table.cellColor')} aria-expanded={fill.open} className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); fill.setOpen(!fill.open); }}>
-            <PaintBucketIcon />
+            <PaintBucketIcon aria-hidden="true" />
           </button>
         </HoverLabel>
       </div>
@@ -195,36 +195,36 @@ export function TableControls({ editor, formulasUnlocked, onUpgrade }: { editor:
           be written as a pipe table rather than as raw HTML, so turning it off
           is a choice worth being able to reverse. */}
       <HoverLabel label={t('table.toggleHeaderRow')} position="below">
-        <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().toggleHeaderRow().run(); }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16v4H4z" fill="currentColor" stroke="none"/><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="12" y1="9" x2="12" y2="20"/></svg>
+        <button type="button" aria-label={t('table.toggleHeaderRow')} className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().toggleHeaderRow().run(); }}>
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16v4H4z" fill="currentColor" stroke="none"/><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="12" y1="9" x2="12" y2="20"/></svg>
         </button>
       </HoverLabel>
       {/* Column widths back to equal shares; hidden while they already are. */}
       <span ref={equalRef} style={{ display: 'none' }}>
         <HoverLabel label={t('table.equalColumnWidths')} position="below">
-          <button type="button" className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); const pos = activeTablePos(editor); if (pos >= 0) clearTableWidths(editor.view, pos); editor.commands.focus(); }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
+          <button type="button" aria-label={t('table.equalColumnWidths')} className="pn-table-toolbar-btn" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); const pos = activeTablePos(editor); if (pos >= 0) clearTableWidths(editor.view, pos); editor.commands.focus(); }}>
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="1"/><line x1="9" y1="4" x2="9" y2="20"/><line x1="15" y1="4" x2="15" y2="20"/></svg>
           </button>
         </HoverLabel>
       </span>
       <div className="pn-table-toolbar-divider" />
       {/* Delete row */}
       <HoverLabel label={t('table.deleteRow')} position="below">
-        <button type="button" className="pn-table-toolbar-btn pn-table-toolbar-danger" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().deleteRow().run(); }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="8" rx="1"/><line x1="9" y1="11" x2="9" y2="13"/><line x1="15" y1="11" x2="15" y2="13"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+        <button type="button" aria-label={t('table.deleteRow')} className="pn-table-toolbar-btn pn-table-toolbar-danger" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().deleteRow().run(); }}>
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="8" rx="1"/><line x1="9" y1="11" x2="9" y2="13"/><line x1="15" y1="11" x2="15" y2="13"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
         </button>
       </HoverLabel>
       {/* Delete column */}
       <HoverLabel label={t('table.deleteColumn')} position="below">
-        <button type="button" className="pn-table-toolbar-btn pn-table-toolbar-danger" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().deleteColumn().run(); }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="8" y="3" width="8" height="18" rx="1"/><line x1="11" y1="9" x2="11" y2="15"/><line x1="13" y1="9" x2="13" y2="15"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+        <button type="button" aria-label={t('table.deleteColumn')} className="pn-table-toolbar-btn pn-table-toolbar-danger" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().deleteColumn().run(); }}>
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="8" y="3" width="8" height="18" rx="1"/><line x1="11" y1="9" x2="11" y2="15"/><line x1="13" y1="9" x2="13" y2="15"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
         </button>
       </HoverLabel>
       <div className="pn-table-toolbar-divider" />
       {/* Delete table */}
       <HoverLabel label={t('table.deleteTable')} position="below">
-        <button type="button" className="pn-table-toolbar-btn pn-table-toolbar-danger" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().deleteTable().run(); }}>
-          <TrashIcon />
+        <button type="button" aria-label={t('table.deleteTable')} className="pn-table-toolbar-btn pn-table-toolbar-danger" onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); editor.chain().focus().deleteTable().run(); }}>
+          <TrashIcon aria-hidden="true" />
         </button>
       </HoverLabel>
     </div>

@@ -8,8 +8,10 @@
   "applyToFolderItems": "このフォルダ内のすべての項目に適用",
   "applyToTagItems": "このタグが付いたすべての項目に適用",
   "icon": "アイコン",
+  "emoji": "絵文字",
   "searchPlaceholder": "アイコンを検索",
   "searchLogos": "ロゴを検索",
+  "searchEmojis": "絵文字を検索",
   "moreLogos": "その他のロゴ",
   "allLogos": "すべてのロゴ (A～Z)",
   "recent": "最近使ったもの",
@@ -41,7 +43,14 @@
     "games": "ゲーム",
     "learning": "学習とリサーチ",
     "trips": "旅行とフィットネス",
-    "privacy": "プライバシーとセキュリティ"
+    "privacy": "プライバシーとセキュリティ",
+    "emojiSmileys": "スマイリーと感情",
+    "emojiPeople": "人と体",
+    "emojiAnimals": "動物と自然",
+    "emojiActivities": "アクティビティ",
+    "emojiObjects": "オブジェクト",
+    "emojiSymbols": "記号と標識",
+    "emojiFlags": "旗"
   },
   "icons": {
     "folder": "フォルダ",

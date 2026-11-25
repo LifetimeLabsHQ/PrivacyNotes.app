@@ -38,7 +38,7 @@
     "blockMath": "Formule en bloc",
     "align": "Alignement",
     "font": "Police",
-    "pictureFromFiles": "Image depuis Fichiers",
+    "pictureFromFiles": "Galerie",
     "date": "Date",
     "dateTime": "Date et heure",
     "footnote": "Note de bas de page",
@@ -260,6 +260,15 @@
     "headingsIn": "Titres dans {{title}}",
     "noHeadingMatches": "Aucun titre correspondant"
   },
+  "slash": {
+    "label": "Insérer un bloc",
+    "linePlaceholder": "Tape / pour insérer des blocs",
+    "filterHint": "Tape pour filtrer…",
+    "basic": "Blocs de base",
+    "smartDate": "Date intelligente",
+    "askNinja": "Demander « {{query}} » à Ninja",
+    "noMatches": "Aucun bloc correspondant"
+  },
   "copyBox": {
     "placeholder": "Texte à copier en un clic"
   },
@@ -372,6 +381,23 @@
     "addColumn": "Ajouter une colonne",
     "removeBoard": "Retirer le tableau",
     "moveTo": "Déplacer vers"
+  },
+  "columns": {
+    "narrowWide": "Étroite et large",
+    "wideNarrow": "Large et étroite",
+    "removeColumns": "Retirer les colonnes",
+    "resizeColumn": "Fais glisser pour redimensionner les colonnes",
+    "barLabel": "Contrôles des colonnes",
+    "borders": "Bordures des colonnes",
+    "borderBoxes": "Cadres",
+    "borderSolid": "Trait plein",
+    "borderDashed": "Tirets",
+    "borderDotted": "Pointillés",
+    "borderThickness": "Épaisseur",
+    "borderThin": "Fine",
+    "borderMedium": "Moyenne",
+    "borderColorDefault": "Couleur par défaut",
+    "borderTint": "Légère teinte des colonnes"
   },
   "doodle": {
     "title": "Griffonnage",

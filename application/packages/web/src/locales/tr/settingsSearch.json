@@ -48,6 +48,7 @@
     "plan_dangerZone": "hesabı sil, sil, verileri kaldır, hesabı kapat",
     "storage_quota": "kullanılan alan, kota, kullanım",
     "storage_addon": "daha fazla alan, depolama satın al, ek depolama",
+    "storage_usage": "dağılım, en büyük, yer kaplayan, temizlik, geçmiş, dosya boyutu, kullanım",
     "images_spaceSaver": "sıkıştır, yeniden boyutlandır, küçük görseller, görsel kalitesi",
     "images_compression": "yüksek sıkıştırma, sıkıştır, küçük, çok küçük, minik, standart, kalite, boyut, depolama",
     "images_removeLocation": "gps, exif, meta veri, konum, coğrafi etiket",

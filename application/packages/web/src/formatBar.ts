@@ -43,16 +43,62 @@ export type FormatBarItem = {
   menuAllowed: boolean;
   /** True for the items the attach menu can hold. */
   attachAllowed: boolean;
+  /** True when the mounted editor publishes this action into Ninja automatically. */
+  ninja?: true;
+  /** True when the mounted editor offers this action in the '/' slash menu automatically. */
+  slash?: true;
 };
 
-const row = (key: string, menuAllowed = true): FormatBarItem => ({ key, home: 'bar', group: 'format', menuAllowed, attachAllowed: false });
-const menu = (key: string, group: FormatBarGroup, attachAllowed = false): FormatBarItem => ({ key, home: 'menu', group, menuAllowed: true, attachAllowed });
-const end = (key: string, menuAllowed = true): FormatBarItem => ({ key, home: 'end', group: 'insert', menuAllowed, attachAllowed: false });
-const attached = (key: string, menuAllowed = true): FormatBarItem => ({ key, home: 'attachMenu', group: 'insert', menuAllowed, attachAllowed: true });
+const row = (key: string, menuAllowed = true, ninja = false, slash = false): FormatBarItem => ({
+  key,
+  home: 'bar',
+  group: 'format',
+  menuAllowed,
+  attachAllowed: false,
+  ...(ninja ? { ninja: true as const } : {}),
+  ...(slash ? { slash: true as const } : {}),
+});
+// Every '+' menu and attach-menu item joins Ninja and '/' by default so new editor
+// blocks and inserts are automatically reachable from both without a second list.
+const menu = (key: string, group: FormatBarGroup, attachAllowed = false, ninja = true, slash = true): FormatBarItem => ({
+  key,
+  home: 'menu',
+  group,
+  menuAllowed: true,
+  attachAllowed,
+  ...(ninja ? { ninja: true as const } : {}),
+  ...(slash ? { slash: true as const } : {}),
+});
+const end = (key: string, menuAllowed = true, ninja = false, slash = false): FormatBarItem => ({
+  key,
+  home: 'end',
+  group: 'insert',
+  menuAllowed,
+  attachAllowed: false,
+  ...(ninja ? { ninja: true as const } : {}),
+  ...(slash ? { slash: true as const } : {}),
+});
+const attached = (key: string, menuAllowed = true, ninja = true, slash = true): FormatBarItem => ({
+  key,
+  home: 'attachMenu',
+  group: 'insert',
+  menuAllowed,
+  attachAllowed: true,
+  ...(ninja ? { ninja: true as const } : {}),
+  ...(slash ? { slash: true as const } : {}),
+});
 // A divider (a thin line on the bar) is not in this list: a person places as
 // many as they like from the board's tile (isSeparatorKey).
 // Hidden until a person places it, on the bar or in the menu.
-const offered = (key: string, group: FormatBarGroup): FormatBarItem => ({ key, home: 'hidden', group, menuAllowed: true, attachAllowed: false });
+const offered = (key: string, group: FormatBarGroup, ninja = true, slash = false): FormatBarItem => ({
+  key,
+  home: 'hidden',
+  group,
+  menuAllowed: true,
+  attachAllowed: false,
+  ...(ninja ? { ninja: true as const } : {}),
+  ...(slash ? { slash: true as const } : {}),
+});
 
 /** Stock order: the row, the menu, the attach menu, the end of the bar, hidden. */
 export const FORMAT_BAR_ITEMS: readonly FormatBarItem[] = [
@@ -60,30 +106,36 @@ export const FORMAT_BAR_ITEMS: readonly FormatBarItem[] = [
   // screen has no key for them, and a person who has the keys can hide or
   // move them (owner, 2026-11-20).
   row('undo'), row('redo'),
-  row('bold'), row('italic'), row('underline'), row('heading', false), row('tasks'),
-  row('link', false), row('notelink'),
+  row('bold'), row('italic'), row('underline'), row('heading', false), row('tasks', true, false, true),
+  row('link', false, false, true), row('notelink', true, false, true),
   row('color', false), row('align', false), row('font', false),
-  row('highlight', false), row('callout', false),
+  row('highlight', false), row('callout', false, true, true),
   // Collapse all / Expand all (#779): on the bar by stock, with the blocks it folds when moved to the menu.
-  { ...row('foldAll'), group: 'blocks' }, row('strike'),
+  { ...row('foldAll', true, true), group: 'blocks' }, row('strike'),
   menu('table', 'insert'), menu('hr', 'insert'), menu('bullets', 'insert'), menu('numbered', 'insert'),
-  menu('indent', 'insert'), menu('outdent', 'insert'),
-  menu('fromFiles', 'insert', true), menu('date', 'insert'), menu('dateTime', 'insert'), menu('icon', 'insert'), menu('location', 'insert'), menu('doodle', 'insert'),
-  menu('quote', 'blocks'), menu('codeblock', 'blocks'), menu('copybox', 'blocks'), menu('kanban', 'blocks'),
+  menu('indent', 'insert', false, false, false), menu('outdent', 'insert', false, false, false),
+  menu('date', 'insert', false, false, true), menu('dateTime', 'insert', false, false, true), menu('icon', 'insert'), menu('location', 'insert'), menu('doodle', 'insert'),
+  menu('quote', 'blocks'), menu('codeblock', 'blocks'), menu('copybox', 'blocks'), menu('kanban', 'blocks'), menu('columns', 'blocks'),
   menu('inlinecode', 'notation'), menu('math', 'notation'), menu('blockmath', 'notation'),
   menu('superscript', 'notation'), menu('subscript', 'notation'), menu('spoiler', 'notation'),
   menu('footnote', 'notation'),
   // The attach menu's items come before the paperclip in stock order, so an
   // arrangement saved before the paperclip existed gets it after them.
-  attached('image'), attached('attach'),
+  attached('image'), attached('fromFiles'), attached('attach'),
   // Scan a page waits for the Plugins release switch (plugins.md D19).
   ...(pluginsShown() ? [attached('scan')] : []),
   attached('audio', false),
   // Split view (the Markdown view with its preview, #727) stands right before
   // the way between the views, where both bars draw it.
-  end('attachMenu', false), end('customize'), end('splitView'), end('markdownView'),
+  end('attachMenu', false), end('customize'), end('splitView', true, true), end('markdownView'),
   offered('copyAsPlain', 'notation'), offered('copyAsMarkdown', 'notation'),
 ];
+
+/** Format bar items automatically published into Ninja while an editor is open. */
+export const NINJA_FORMAT_BAR_KEYS: readonly string[] = FORMAT_BAR_ITEMS.filter((i) => i.ninja).map((i) => i.key);
+
+/** Format bar items automatically published into the '/' slash menu while an editor is open. */
+export const SLASH_FORMAT_BAR_KEYS: readonly string[] = FORMAT_BAR_ITEMS.filter((i) => i.slash).map((i) => i.key);
 
 const FORMAT_BAR_GROUPS: readonly FormatBarGroup[] = ['format', 'insert', 'blocks', 'notation'];
 

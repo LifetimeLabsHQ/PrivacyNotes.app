@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowRight, ClipboardText, Fingerprint } from '@web/icons';
 import { Button } from '@web/ui/Button';
 import { Callout } from '@web/ui/feedback';
-import { FIELD_CLASS } from '@web/formFields';
+import { FIELD_CLASS, NO_TEXT_ASSIST } from '@web/formFields';
 import { ROW_TITLE, SectionEyebrow, SettingsSegmented, SETTINGS_HELP } from '@web/settingsUI';
 import { SecretInput } from '@web/PasscodeInput';
 import type { PinInputHandle } from '@web/PinInput';
@@ -158,7 +158,8 @@ export function ConnectView({ onConnected }: { onConnected: (c: Connection, note
             onChange={(e) => setCode(e.target.value)}
             rows={3}
             dir="ltr"
-            spellCheck={false}
+            autoComplete="off"
+            {...NO_TEXT_ASSIST}
             autoFocus
             className={`${FIELD_CLASS} min-w-0 flex-1 font-mono resize-none`}
             placeholder="pnx1-..."

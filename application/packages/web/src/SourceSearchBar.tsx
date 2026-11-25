@@ -4,6 +4,7 @@ import { MagnifyingGlass, ArrowsLeftRight, TextAa, X } from './icons';
 import { HoverLabel } from './HoverLabel';
 import { isImeComposing } from './imeComposing';
 import { BAR_BTN, BAR_INPUT, MatchNav, ReplaceToggle, TEXT_BTN } from './MatchNav';
+import { NO_TEXT_ASSIST } from './formFields';
 import { bindingKeyText, keyText } from './shortcutMatch';
 import { findTextMatches, type TextMatch } from './markdownSourceSearch';
 
@@ -145,7 +146,7 @@ export function SourceSearchBar({ mode, text, focusTick, initialQuery, onHits, o
           onKeyDown={onSearchKeyDown}
           placeholder={t('common:palette.commands.find')}
           aria-label={t('common:palette.commands.find')}
-          spellCheck={false}
+          {...NO_TEXT_ASSIST}
           autoComplete="off"
           className={mode === 'replace' ? BAR_INPUT : 'w-36 sm:w-44 bg-transparent text-body text-pn placeholder:text-pn-muted outline-none px-1'}
         />
@@ -189,7 +190,7 @@ export function SourceSearchBar({ mode, text, focusTick, initialQuery, onHits, o
             onKeyDown={onReplaceKeyDown}
             placeholder={t('find.replacePlaceholder')}
             aria-label={t('find.replaceLabel')}
-            spellCheck={false}
+            {...NO_TEXT_ASSIST}
             autoComplete="off"
             className={BAR_INPUT}
           />

@@ -3,10 +3,10 @@ import { useEffect, useRef, type ComponentProps, type ComponentType, type ReactN
 import type { IconProps } from '@phosphor-icons/react';
 import { isImeComposing } from './imeComposing';
 import { Info, Trash, Warning } from './icons';
-import { Modal } from './ui/Modal';
+import { Modal, ModalFooter } from './ui/Modal';
 import { ACTIONS } from './ui/actions';
 import { Button } from './ui/Button';
-import { PRIMARY_BTN_SKIN, SETTINGS_HELP } from './settingsUI';
+import { DANGER_BTN_SKIN, PRIMARY_BTN_SKIN, SETTINGS_HELP, WARNING_BTN_SKIN } from './settingsUI';
 import { Kbd } from './ui/misc';
 
 type ConfirmVariant = 'danger' | 'warning' | 'info';
@@ -84,17 +84,16 @@ const confirmGlyph: Record<ConfirmVariant, ComponentType<IconProps>> = {
   info: ACTIONS.confirm.icon,
 };
 const CancelGlyph = ACTIONS.cancel.icon;
-const BTN_ROW = 'inline-flex items-center justify-center gap-2 whitespace-nowrap';
+const BTN_ROW = 'inline-flex items-center justify-center gap-2 min-w-0';
 
 /* ── Confirm button class per variant ──────────────────── */
 
-// amber-950 on amber-500, not white: amber is a light hue, and white on
-// it measures 2.15:1. Dark text takes the same swatch to 6.97:1. Danger
-// keeps white; info takes the soft accent primary skin.
-// Spec: docs/internal/design/ui-patterns.md (section 89, ask before you show it).
+// Danger, warning, and info share the same calm tinted-border grammar as
+// PRIMARY_BTN_SKIN, so destructive and cautionary confirms match the rest of
+// the app without shouting as solid color bricks.
 const confirmBtnClass: Record<ConfirmVariant, string> = {
-  danger: 'bg-red-600 text-white hover:bg-red-700',
-  warning: 'bg-amber-500 text-amber-950 hover:bg-amber-600',
+  danger: DANGER_BTN_SKIN,
+  warning: WARNING_BTN_SKIN,
   info: PRIMARY_BTN_SKIN,
 };
 
@@ -144,19 +143,19 @@ export function ConfirmModal({
     cancelLabel === null ? null : cancelLabel ?? t('actions.cancel');
   // Drawn once, placed by the layout below: a row, or one column with `extra`.
   const cancelButton = (
-    <button
+    <Button
       ref={cancelRef}
+      icon={<CancelGlyph aria-hidden="true" className="shrink-0" />}
       onClick={onCancel ?? onClose}
-      className={`${BTN_ROW} ${extra ? '' : 'flex-1'} rounded-md border border-divider hover:bg-pn/5 px-4 py-2 text-body transition`}
+      className={`${extra ? 'whitespace-nowrap' : ''} !px-4 !py-2 !text-body`}
     >
-      <CancelGlyph aria-hidden="true" className="shrink-0" />
       {resolvedCancelLabel}
-    </button>
+    </Button>
   );
   const confirmButton = (
     <button
       onClick={() => { onConfirm(); onClose(); }}
-      className={`${BTN_ROW} ${extra ? '' : 'flex-1'} rounded-md px-4 py-2 text-body font-medium transition ${confirmBtnClass[variant]}`}
+      className={`${BTN_ROW} ${extra ? 'whitespace-nowrap' : ''} rounded-md px-4 py-2 text-body font-medium transition ${confirmBtnClass[variant]}`}
     >
       <ConfirmGlyph aria-hidden="true" className="shrink-0" />
       {confirmLabel}
@@ -182,14 +181,14 @@ export function ConfirmModal({
               <button
                 key={c.label}
                 onClick={() => { c.onSelect(); onClose(); }}
-                className={`${BTN_ROW} rounded-md px-4 py-2 text-body font-medium transition ${i === 0 ? confirmBtnClass[variant] : 'border border-divider hover:bg-pn/5'}`}
+                className={`${BTN_ROW} whitespace-nowrap rounded-md px-4 py-2 text-body font-medium transition ${i === 0 ? confirmBtnClass[variant] : 'border border-divider hover:bg-pn/5'}`}
               >
                 <ConfirmGlyph aria-hidden="true" className="shrink-0" />
                 {c.label}
               </button>
             ))}
             {resolvedCancelLabel !== null && (
-              <button ref={cancelRef} onClick={onCancel ?? onClose} className={`${BTN_ROW} rounded-md px-4 py-2 text-body text-pn-muted hover:bg-pn/5 transition`}>
+              <button ref={cancelRef} onClick={onCancel ?? onClose} className={`${BTN_ROW} whitespace-nowrap rounded-md px-4 py-2 text-body text-pn-muted hover:bg-pn/5 transition`}>
                 <CancelGlyph aria-hidden="true" className="shrink-0" />
                 {resolvedCancelLabel}
               </button>
@@ -203,7 +202,7 @@ export function ConfirmModal({
         <div className="flex flex-col gap-2 pt-2">
           {confirmButton}
           {resolvedCancelLabel !== null && cancelButton}
-          <Button action="delete" variant="dangerSoft" className="w-full justify-center" onClick={() => { extra.onSelect(); onClose(); }}>
+          <Button action="delete" variant="danger" className="w-full justify-center" onClick={() => { extra.onSelect(); onClose(); }}>
             {extra.label}
             {enterConfirms && (
               <span aria-hidden="true" className="[@media(hover:none)]:hidden">
@@ -213,12 +212,10 @@ export function ConfirmModal({
           </Button>
         </div>
         ) : (
-        // A label never breaks inside its button; a long one (a longer
-        // language, the Enter key cap) puts the confirm under the cancel.
-        <div className="flex flex-wrap gap-2 pt-2">
+        <ModalFooter>
           {resolvedCancelLabel !== null && cancelButton}
           {confirmButton}
-        </div>
+        </ModalFooter>
         )}
         {footnote && <p className={`${SETTINGS_HELP} [@media(hover:none)]:hidden`}>{footnote}</p>}
     </Modal>

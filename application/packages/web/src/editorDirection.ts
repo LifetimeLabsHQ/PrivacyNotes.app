@@ -66,20 +66,32 @@ function notePersian(doc: PMNode): boolean {
  */
 type DirectionState = { decorations: DecorationSet; persian: boolean | null };
 
+type DirSpec = { dir: string; numerals?: string };
+
+/** Compute the direction attributes for a single DIRECTED node, or null when
+ *  it has no letter yet. */
+function nodeDirectionAttrs(node: PMNode, isPersian: () => boolean): Record<string, string> | null {
+  const letter = firstLetterIn(node);
+  if (!letter) return null;
+  const dir = letterDirection(letter);
+  const attrs: Record<string, string> = { dir };
+  if (node.type.name === 'orderedList' && dir === 'rtl' && listNumerals(letter, () => node.textContent, isPersian)) {
+    attrs['data-numerals'] = 'persian';
+  }
+  return attrs;
+}
+
 /** The decorations for one node and everything inside it, at `base`. */
 function decorate(node: PMNode, base: number, out: Decoration[], isPersian: () => boolean): void {
   const visit = (child: PMNode, pos: number): boolean => {
     // No block that takes a direction lives inside a paragraph or an atom.
     if (child.isTextblock || child.isAtom) return false;
     if (!DIRECTED.has(child.type.name)) return true;
-    const letter = firstLetterIn(child);
-    if (!letter) return true;
-    const dir = letterDirection(letter);
-    const attrs: Record<string, string> = { dir };
-    if (child.type.name === 'orderedList' && dir === 'rtl' && listNumerals(letter, () => child.textContent, isPersian)) {
-      attrs['data-numerals'] = 'persian';
+    const attrs = nodeDirectionAttrs(child, isPersian);
+    if (attrs) {
+      const spec: DirSpec = { dir: attrs.dir!, numerals: attrs['data-numerals'] };
+      out.push(Decoration.node(pos, pos + child.nodeSize, attrs, spec));
     }
-    out.push(Decoration.node(pos, pos + child.nodeSize, attrs));
     return true;
   };
   if (visit(node, base)) node.descendants((child, pos) => visit(child, base + 1 + pos));
@@ -93,10 +105,11 @@ function build(doc: PMNode): DirectionState {
   return { decorations: DecorationSet.create(doc, out), persian };
 }
 
-/** The top-level blocks an edit touched, by their start in the new document. */
-function touchedBlocks(tr: Transaction): Map<number, PMNode> {
-  const doc = tr.doc;
-  const touched = new Map<number, PMNode>();
+/** The ranges an edit touched in `tr.doc`, widened by 1 on each side so joins
+ *  and splits include the neighbouring boundary node. */
+export function touchedRanges(tr: Transaction): [number, number][] {
+  const max = tr.doc.content.size;
+  const out: [number, number][] = [];
   tr.steps.forEach((step, index) => {
     const rest = tr.mapping.slice(index + 1);
     const ranges: [number, number][] = [];
@@ -109,17 +122,83 @@ function touchedBlocks(tr: Transaction): Map<number, PMNode> {
       else if (typeof pos === 'number') ranges.push([pos, pos]);
     }
     for (const [start, end] of ranges) {
-      // One position wider on each side: a join or a split changes the
-      // block on the other side of the boundary too.
-      const from = Math.max(0, rest.map(start, -1) - 1);
-      const to = Math.min(doc.content.size, rest.map(end, 1) + 1);
-      doc.nodesBetween(from, to, (node, pos) => {
-        touched.set(pos, node);
-        return false;
-      });
+      out.push([Math.max(0, rest.map(start, -1) - 1), Math.min(max, rest.map(end, 1) + 1)]);
     }
   });
+  return out;
+}
+
+/** Every DIRECTED container whose span intersects a touched range, without
+ *  descending into untouched sibling items of a large list. */
+function touchedDirectedNodes(tr: Transaction): Map<number, PMNode> {
+  const doc = tr.doc;
+  const touched = new Map<number, PMNode>();
+  for (const [from, to] of touchedRanges(tr)) {
+    doc.nodesBetween(from, to, (node, pos) => {
+      if (node.isTextblock || node.isAtom) return false;
+      if (DIRECTED.has(node.type.name)) touched.set(pos, node);
+      return true;
+    });
+  }
   return touched;
+}
+
+/** True when `node` or any non-inline descendant matches `pred`. */
+export function blockContains(node: PMNode, pred: (n: PMNode) => boolean): boolean {
+  if (pred(node)) return true;
+  if (node.isTextblock || node.isAtom) return false;
+  let found = false;
+  node.descendants((child) => {
+    if (found) return false;
+    if (pred(child)) {
+      found = true;
+      return false;
+    }
+    return !child.isTextblock && !child.isAtom;
+  });
+  return found;
+}
+
+/** True when any step of `tr` touched a top-level block matching `pred`,
+ *  either before or after the step (so deletions and replacements count too). */
+export function touchesTopBlock(tr: Transaction, pred: (node: PMNode) => boolean): boolean {
+  for (let i = 0; i < tr.steps.length; i++) {
+    const step = tr.steps[i]!;
+    const before = tr.docs[i]!;
+    const after = tr.docs[i + 1] ?? tr.doc;
+    const oldRanges: [number, number][] = [];
+    const newRanges: [number, number][] = [];
+    tr.mapping.maps[i]?.forEach((oldStart, oldEnd, newStart, newEnd) => {
+      oldRanges.push([oldStart, oldEnd]);
+      newRanges.push([newStart, newEnd]);
+    });
+    if (!oldRanges.length) {
+      const { from, to, pos } = step as { from?: number; to?: number; pos?: number };
+      const range: [number, number] | null = typeof from === 'number'
+        ? [from, to ?? from]
+        : typeof pos === 'number'
+          ? [pos, pos]
+          : null;
+      if (!range) return true;
+      oldRanges.push(range);
+      newRanges.push(range);
+    }
+    const hit = (doc: PMNode, ranges: [number, number][]) => {
+      let found = false;
+      for (const [start, end] of ranges) {
+        const from = Math.max(0, start - 1);
+        const to = Math.min(doc.content.size, end + 1);
+        doc.nodesBetween(from, to, (node) => {
+          if (pred(node)) found = true;
+          return false;
+        });
+        if (found) return true;
+      }
+      return false;
+    };
+    if (hit(before, oldRanges) || hit(after, newRanges)) return true;
+  }
+  return false;
 }
 
 function update(tr: Transaction, state: DirectionState): DirectionState {
@@ -129,13 +208,26 @@ function update(tr: Transaction, state: DirectionState): DirectionState {
   const isPersian = () => (persian ??= notePersian(tr.doc));
   let decorations = state.decorations.map(tr.mapping, tr.doc);
   const added: Decoration[] = [];
-  for (const [pos, node] of touchedBlocks(tr)) {
+  for (const [pos, node] of touchedDirectedNodes(tr)) {
     const end = pos + node.nodeSize;
-    // find() also returns a neighbour's decoration that only touches this
-    // block's edge; that one stays.
-    decorations = decorations.remove(decorations.find(pos, end).filter((d) => d.from >= pos && d.to <= end));
-    decorate(node, pos, added, isPersian);
+    // Match only this container's own decoration (and any split-stretched
+    // artifact sharing its exact start or end), leaving untouched nested list
+    // and taskItem decorations intact (their boundaries lie strictly inside).
+    const existing = decorations.find(pos, end).filter((d) => d.from === pos || d.to === end);
+    const attrs = nodeDirectionAttrs(node, isPersian);
+    if (!attrs) {
+      if (existing.length) decorations = decorations.remove(existing);
+      continue;
+    }
+    if (existing.length === 1 && existing[0]!.from === pos && existing[0]!.to === end) {
+      const spec = existing[0]!.spec as DirSpec | undefined;
+      if (spec?.dir === attrs.dir && spec?.numerals === attrs['data-numerals']) continue;
+    }
+    if (existing.length) decorations = decorations.remove(existing);
+    const spec: DirSpec = { dir: attrs.dir!, numerals: attrs['data-numerals'] };
+    added.push(Decoration.node(pos, end, attrs, spec));
   }
+  if (!added.length) return { decorations, persian };
   // In document order: add() given an unsorted list dropped a decoration
   // from a set that already held others (prosemirror-view 1.42).
   added.sort((a, b) => a.from - b.from);

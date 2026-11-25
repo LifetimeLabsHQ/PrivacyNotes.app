@@ -51,3 +51,13 @@ export function ProMark() {
     </span>
   );
 }
+
+/** The quiet Pro marker for menus (OptionsMenu, NoteOptionsMenu, ConnectionsPanel):
+ *  grey pill, no icon, never louder than the row label. */
+export function ProBadge() {
+  return (
+    <span className="shrink-0 rounded-md px-1.5 py-0.5 text-meta font-medium leading-none bg-pn/10 text-pn-soft">
+      Pro
+    </span>
+  );
+}

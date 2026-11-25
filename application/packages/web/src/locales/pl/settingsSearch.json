@@ -50,6 +50,7 @@
     "plan_dangerZone": "usuń konto, skasuj, usuń dane, zamknij konto",
     "storage_quota": "zajęte miejsce, limit, wykorzystanie",
     "storage_addon": "więcej miejsca, kup miejsce, dodatkowa przestrzeń",
+    "storage_usage": "podział, największe, co zajmuje miejsce, czyszczenie, historia, rozmiar plików, zużycie",
     "images_spaceSaver": "kompresja, zmniejsz, mniejsze obrazy, jakość zdjęć",
     "images_compression": "silna kompresja, kompresja, mały, bardzo mały, minimalny, standardowy, jakość, rozmiar, pamięć, miejsce",
     "images_removeLocation": "gps, exif, metadane, lokalizacja, geotag",

@@ -344,7 +344,7 @@
     "extensionKeyLogin": "Fyll i den här webbplatsens inloggning",
     "extensionKeyBookmark": "Bokmärk den här sidan",
     "extensionAria": "Lägg till tillägget i {{name}}",
-    "extensionNote": "Endast på datorer."
+    "extensionNote": "Fungerar i alla Chromium- eller Firefox-baserade webbläsare. Endast på datorer."
   },
   "ctaRepeat": {
     "getStarted": "Kom igång"

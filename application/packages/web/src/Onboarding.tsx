@@ -1,9 +1,8 @@
 import { withMfaAwareTimeout } from './mfaStep';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
 import { lazy, Suspense, useState, useEffect, useRef, type ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { generatePhrase, isValidPhrase } from '@notes/shared';
-import { ArrowLeft, ArrowRight, CaretDown, Check, Copy, FileText, Fingerprint, Key, KeyReturn, Lock, Password, QrCode, Scales, Scan, Upload, Warning } from './icons';
+import { CaretDown, Check, Copy, FileText, Fingerprint, Key, KeyReturn, Lock, Password, QrCode, Scales, Scan, Upload } from './icons';
 import { QRCodeCanvas } from 'qrcode.react';
 import { buildPhraseFile, PHRASE_FILE_NAME } from './phraseFile';
 import { buildSignInCode, extractPhraseFromScan } from './qrSignIn';
@@ -29,7 +28,7 @@ import { PrivacyLadder } from './PrivacyLadder';
 import { PHRASE_CHANGE_PREVIEW } from './phraseLaunch';
 import { isSyncPaused, setSyncPaused } from './syncPause';
 import { isLocalOnly } from './localOnly';
-import { Badge, Button, IconTile } from './ui';
+import { Badge, Button, Callout, Checkbox, IconTile, StatusLine, TextField } from './ui';
 import { PhraseInput } from './PhraseInput';
 import { isImeComposing } from './imeComposing';
 import { AppleIcon, GithubIcon, GoogleIcon, PROVIDER_CONTINUE_KEY, PROVIDER_ORDER } from './providerIcons';
@@ -286,8 +285,10 @@ function OAuthHandoffStep({ onEnterPhrase, onBack }: { onEnterPhrase: () => void
     <div className="space-y-5">
       {/* Success confirmation */}
       <div className="text-center space-y-1">
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500 mx-auto">
-          <Check className="text-white" aria-hidden="true" />
+        <div className="flex justify-center">
+          <IconTile tone="success">
+            <Check aria-hidden="true" />
+          </IconTile>
         </div>
         <h3 className="text-heading font-bold text-[var(--wl-ink)] mt-3">
           {provider
@@ -299,13 +300,14 @@ function OAuthHandoffStep({ onEnterPhrase, onBack }: { onEnterPhrase: () => void
         </p>
       </div>
 
-      <button
-        type="button"
+      <Button
+        variant="primary"
+        icon={<Key aria-hidden="true" />}
         onClick={onEnterPhrase}
-        className={`w-full rounded-lg ${PRIMARY_BTN_SKIN} px-4 py-3 font-semibold transition shadow-sm`}
+        className="w-full py-3"
       >
         {t('oauthHandoff.enterPhrase')}
-      </button>
+      </Button>
 
       <p className="text-body text-[var(--wl-sub)] text-center leading-relaxed">
         <Trans i18nKey="auth:oauthHandoff.noPhraseHint" components={{ strong: <strong /> }} />
@@ -479,14 +481,15 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
               {t('chooseMode.resumeSubtitle')}
             </div>
           </div>
-          <button
-            type="button"
+          <Button
+            action="next"
+            variant="primary"
             disabled={resumeBusy}
             onClick={() => void handleResume()}
-            className={`w-full rounded-lg ${PRIMARY_BTN_SKIN} px-4 py-3 font-semibold transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed`}
+            className="w-full py-3"
           >
             {resumeBusy ? t('chooseMode.resumeWorking') : t('chooseMode.resumeAction')}
-          </button>
+          </Button>
         </div>
       )}
 
@@ -505,7 +508,7 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
           </div>
           <div className="flex-1 min-w-0 space-y-2">
             <div className="flex flex-wrap gap-2 sm:flex-nowrap">
-              <input
+              <TextField
                 type="text"
                 autoFocus
                 spellCheck={false}
@@ -515,24 +518,22 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
                 onChange={(e) => setPastedCode(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !isImeComposing(e)) void handlePastedCode(); }}
                 placeholder={t('chooseMode.desktopCodePlaceholder')}
-                className="basis-full sm:basis-0 flex-1 min-w-0 rounded-lg border border-[var(--wl-line)] bg-[var(--wl-card)] px-3 py-2.5 text-body text-[var(--wl-ink)] font-mono"
+                className="basis-full sm:basis-0 flex-1 font-mono"
               />
-              <button
-                type="button"
+              <Button
+                action="next"
+                variant="primary"
                 disabled={pasteBusy || !pastedCode.trim()}
                 onClick={() => void handlePastedCode()}
-                className={`flex-1 sm:flex-none rounded-lg ${PRIMARY_BTN_SKIN} px-4 py-2.5 text-body font-semibold transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed`}
+                className="flex-1 sm:flex-none"
               >
                 {pasteBusy ? t('auth:chooseMode.resumeWorking') : t('auth:chooseMode.resumeAction')}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                action="cancel"
                 disabled={pasteBusy}
                 onClick={() => { setPastedCode(null); setOauthError(null); }}
-                className="rounded-lg border border-[var(--wl-line)] bg-[var(--wl-card)] hover:bg-[var(--wl-tint)] px-3 py-2.5 text-body text-[var(--wl-ink)] transition disabled:opacity-60"
-              >
-                {t('common:actions.cancel')}
-              </button>
+              />
             </div>
             {oauthError && (
               <p className="text-body text-danger">{oauthError}</p>
@@ -592,20 +593,22 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
             </div>
           </div>
           <div className="space-y-2">
-            <button
+            <Button
+              variant="primary"
+              icon={<Password aria-hidden="true" />}
               onClick={() => onPick('create')}
-              className={`w-full rounded-lg ${PRIMARY_BTN_SKIN} px-4 py-3 font-semibold transition shadow-sm flex items-center justify-center gap-2.5`}
+              className="w-full py-3"
             >
-              <Password aria-hidden="true" />
               {t('chooseMode.generatePhrase')}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
+              icon={<KeyReturn aria-hidden="true" />}
               onClick={() => onPick('import')}
-              className="w-full rounded-lg border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-3 font-medium transition flex items-center justify-center gap-2.5"
+              className="w-full py-3"
             >
-              <KeyReturn aria-hidden="true" />
               {t('chooseMode.signInExisting')}
-            </button>
+            </Button>
             {/* Third row on this side, so the two cards stay the same height
                 once GitHub makes three buttons of the other one. Deliberately
                 quieter than its neighbours - it is not a way to sign in, and
@@ -645,7 +648,7 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
           {t('chooseMode.trustEncrypted')}
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <Check className="text-emerald-500" />
+          <Check className="text-success" />
           {t('chooseMode.trustAuditable')}
         </span>
       </div>
@@ -765,8 +768,10 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
     <div className="space-y-5">
       {/* Welcome header */}
       <div className="text-center space-y-1">
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-500 mx-auto">
-          <Check className="text-white" aria-hidden="true" />
+        <div className="flex justify-center">
+          <IconTile tone="success">
+            <Check aria-hidden="true" />
+          </IconTile>
         </div>
         <h3 className="text-heading font-bold text-[var(--wl-ink)] mt-3">
           {provider
@@ -779,15 +784,20 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
       </div>
 
       {/* Custodial option */}
-      <button
-        type="button"
-        onClick={() => setChoice('custodial')}
-        className={`w-full text-start rounded-xl p-4 transition ${
+      <label
+        className={`block w-full text-start rounded-xl p-4 cursor-pointer transition ${
           choice === 'custodial'
             ? 'border-2 border-accent bg-[var(--wl-bg)]'
             : 'border border-[var(--wl-line)] bg-[var(--wl-bg)]'
         }`}
       >
+        <input
+          type="radio"
+          name="custody-choice"
+          checked={choice === 'custodial'}
+          onChange={() => setChoice('custodial')}
+          className="sr-only"
+        />
         <div className="flex items-start gap-3">
           <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center shrink-0 ${
             choice === 'custodial' ? 'border-accent' : 'border-[var(--wl-muted)]/60'
@@ -811,18 +821,23 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
             </div>
           </div>
         </div>
-      </button>
+      </label>
 
       {/* Self-custody option */}
-      <button
-        type="button"
-        onClick={() => setChoice('self-custody')}
-        className={`w-full text-start rounded-xl p-4 transition ${
+      <label
+        className={`block w-full text-start rounded-xl p-4 cursor-pointer transition ${
           choice === 'self-custody'
             ? 'border-2 border-accent bg-[var(--wl-bg)]'
             : 'border border-[var(--wl-line)] bg-[var(--wl-bg)]'
         }`}
       >
+        <input
+          type="radio"
+          name="custody-choice"
+          checked={choice === 'self-custody'}
+          onChange={() => setChoice('self-custody')}
+          className="sr-only"
+        />
         <div className="flex items-start gap-3">
           <div className={`w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center shrink-0 ${
             choice === 'self-custody' ? 'border-accent' : 'border-[var(--wl-muted)]/60'
@@ -843,7 +858,7 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
             </div>
           </div>
         </div>
-      </button>
+      </label>
       {choice === 'self-custody' && PHRASE_CHANGE_PREVIEW && (
         <Suspense fallback={null}><PhraseLengthChoice words={words} onChange={setWords} /></Suspense>
       )}
@@ -854,13 +869,14 @@ function KeyCustodyChoice({ onBack }: { onBack: () => void }) {
         <p className="text-body text-danger">{error}</p>
       )}
 
-      <button
-        type="button"
+      <Button
+        action="next"
+        variant="primary"
         onClick={handleContinue}
-        className={`w-full rounded-lg ${PRIMARY_BTN_SKIN} px-4 py-3 font-semibold transition shadow-sm`}
+        className="w-full py-3"
       >
         {t('continue')}
-      </button>
+      </Button>
 
       <p className="text-small text-[var(--wl-muted)] text-center leading-relaxed">
         {tradeoffText}
@@ -895,21 +911,18 @@ function OptionCheckbox({ checked, onChange, label, description, tone, disabled 
   disabled?: boolean;
 }) {
   return (
-    <label className={`flex items-start gap-2 text-body text-[var(--wl-ink)] rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3 ${disabled ? 'cursor-default opacity-80' : 'cursor-pointer'}`}>
-      <input
-        type="checkbox"
-        checked={checked}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 shrink-0 accent-accent disabled:cursor-not-allowed"
-      />
-      <span>
-        <span className="font-medium">{label}</span>
-        <span className={`block text-small mt-0.5 leading-relaxed text-pretty ${tone === 'warning' ? 'text-warning' : tone === 'success' ? 'text-success' : 'text-[var(--wl-sub)]'}`}>
+    <Checkbox
+      card
+      checked={checked}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.checked)}
+      label={<span className="font-medium">{label}</span>}
+      description={
+        <span className={`leading-relaxed text-pretty ${tone === 'warning' ? 'text-warning' : tone === 'success' ? 'text-success' : ''}`}>
           {description}
         </span>
-      </span>
-    </label>
+      }
+    />
   );
 }
 
@@ -1057,12 +1070,9 @@ function CreatePhrase({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3 text-body leading-relaxed text-[var(--wl-ink)] flex items-start gap-2.5">
-        <Warning aria-hidden="true" className="shrink-0 mt-0.5 text-warning" />
-        <span>
-          <Trans i18nKey="auth:createPhrase.warning" components={{ strong: <strong /> }} />
-        </span>
-      </div>
+      <Callout tone="warning">
+        <Trans i18nKey="auth:createPhrase.warning" components={{ strong: <strong /> }} />
+      </Callout>
 
       {PHRASE_CHANGE_PREVIEW && <Suspense fallback={null}><PhraseLengthChoice words={words.length} onChange={switchLength} /></Suspense>}
 
@@ -1085,40 +1095,25 @@ function CreatePhrase({
 
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <button
+        <Button
+          variant={copied ? 'primary' : 'secondary'}
+          icon={copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
           onClick={copyPhrase}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-body transition ${
-            copied
-              ? 'border-accent bg-accent/10 text-accent-strong'
-              : 'border-[var(--wl-line)] hover:bg-[var(--wl-tint)]'
-          }`}
         >
-          {copied ? (
-            <>
-              <Check aria-hidden="true" />
-              {t('createPhrase.copied')}
-            </>
-          ) : (
-            <>
-              <Copy aria-hidden="true" />
-              {t('common:actions.copy')}
-            </>
-          )}
-        </button>
-        <button
+          {copied ? t('createPhrase.copied') : t('common:actions.copy')}
+        </Button>
+        <Button
+          icon={<FileText aria-hidden="true" />}
           onClick={() => { void handleDownloadTxt(); }}
-          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body transition"
         >
-          <FileText aria-hidden="true" />
           {t('createPhrase.downloadTxt')}
-        </button>
-        <button
+        </Button>
+        <Button
+          icon={<QrCode aria-hidden="true" />}
           onClick={() => { void handleDownloadQR(); }}
-          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body transition"
         >
-          <QrCode aria-hidden="true" />
           {t('createPhrase.downloadQr')}
-        </button>
+        </Button>
       </div>
 
       {failedFiles.size > 0 && (
@@ -1132,17 +1127,12 @@ function CreatePhrase({
         <QRCodeCanvas value={buildSignInCode(phrase)} size={320} level="M" marginSize={4} />
       </div>
 
-      <label className="flex items-start gap-2 text-body text-[var(--wl-ink)] cursor-pointer rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] p-3">
-        <input
-          type="checkbox"
-          checked={confirmed}
-          onChange={(e) => setConfirmed(e.target.checked)}
-          className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
-        />
-        <span className="font-medium">
-          {t('createPhrase.stored')}
-        </span>
-      </label>
+      <Checkbox
+        card
+        checked={confirmed}
+        onChange={(e) => setConfirmed(e.target.checked)}
+        label={<span className="font-medium">{t('createPhrase.stored')}</span>}
+      />
 
       {(() => {
         const installed = isInstalledApp();
@@ -1161,21 +1151,17 @@ function CreatePhrase({
       })()}
 
       <div className="grid grid-cols-2 gap-2">
-        <button
-          onClick={onBack}
-          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-2 text-body transition"
-        >
-          <ArrowLeft aria-hidden="true" />
+        <Button action="back" onClick={onBack}>
           {t('createPhrase.oneClickInstead')}
-        </button>
-        <button
+        </Button>
+        <Button
+          action="next"
+          variant="primary"
           onClick={() => onReady(phrase)}
           disabled={!confirmed}
-          className={`inline-flex items-center justify-center gap-1.5 rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition`}
         >
           {t('continue')}
-          <ArrowRight aria-hidden="true" />
-        </button>
+        </Button>
       </div>
 
     </div>
@@ -1297,6 +1283,7 @@ function ImportPhrase({
         </div>
       </div>
       <PhraseInput
+        tone="washi"
         value={input}
         onChange={(next) => {
           setInput(next);
@@ -1313,7 +1300,7 @@ function ImportPhrase({
       {passkeyOffered && (
         <div className="space-y-1.5">
           <Button
-            variant="accent"
+            variant="primary"
             icon={<Fingerprint aria-hidden="true" />}
             onClick={() => void handlePasskey()}
             disabled={passkeyBusy}
@@ -1325,23 +1312,21 @@ function ImportPhrase({
         </div>
       )}
       <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
-        <button
-          type="button"
+        <Button
+          icon={<Upload aria-hidden="true" className="text-accent" />}
           onClick={() => fileInputRef.current?.click()}
           disabled={scanning}
-          className="w-full rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body font-medium text-[var(--wl-ink)] transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full"
         >
-          <Upload aria-hidden="true" className="text-accent" />
           {scanning ? t('qrScanner.readingImage') : t('importPhrase.uploadQr')}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          icon={<Scan aria-hidden="true" className="text-accent" />}
           onClick={() => setShowScanner(true)}
-          className="w-full rounded-md border border-[var(--wl-line)] bg-[var(--wl-bg)] hover:bg-[var(--wl-tint)] px-3 py-2 text-body font-medium text-[var(--wl-ink)] transition flex items-center justify-center gap-2"
+          className="w-full"
         >
-          <Scan aria-hidden="true" className="text-accent" />
           {t('importPhrase.scanQr')}
-        </button>
+        </Button>
       </div>
       <input
         ref={fileInputRef}
@@ -1362,9 +1347,10 @@ function ImportPhrase({
         <Button action="back" onClick={onBack} />
         <Button
           action="next"
+          variant="primary"
           onClick={handleSubmit}
           disabled={!input.trim()}
-          className="flex-1 !bg-accent-fill hover:!bg-accent-fill-hover !border-accent-fill !text-white shadow-sm"
+          className="flex-1"
         >
           {t('continue')}
         </Button>
@@ -1609,40 +1595,41 @@ function SignInStep({
     const retryable = error !== t('signIn.publicPhrase');
     return (
       <div className="space-y-4">
-        <div className="rounded-md border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/20 p-3 text-body text-red-700 dark:text-red-300 leading-relaxed">
+        <Callout tone="danger">
           {error}
-        </div>
+        </Callout>
         <div className="flex gap-2">
-          <button
-            type="button"
+          <Button
+            action="back"
             onClick={onBack}
-            className={`${retryable ? '' : 'flex-1 '}rounded-md border border-[var(--wl-line)] hover:bg-[var(--wl-tint)] px-4 py-2 text-body transition`}
-          >
-            {t('common:actions.back')}
-          </button>
-          {retryable && <button
-            type="button"
-            onClick={() => {
-              setError(null);
-              autoFired.current = false;
-              if (needsChallenge) {
-                // A spent token cannot be resubmitted: re-key Turnstile
-                // so a fresh challenge issues a fresh one, which
-                // triggers finish() via the effect.
-                setTurnstileOk(false);
-                setTurnstileKey((k) => k + 1);
-              } else {
-                // No challenge on screen (ordinary failure - offline,
-                // timeout): nothing will flip turnstileOk, so fire the
-                // retry directly.
-                autoFired.current = true;
-                void finish();
-              }
-            }}
-            className={`flex-1 rounded-md ${PRIMARY_BTN_SKIN} px-4 py-2 text-body font-semibold transition`}
-          >
-            {t('signIn.tryAgain')}
-          </button>}
+            className={retryable ? '' : 'flex-1'}
+          />
+          {retryable && (
+            <Button
+              action="retry"
+              variant="primary"
+              onClick={() => {
+                setError(null);
+                autoFired.current = false;
+                if (needsChallenge) {
+                  // A spent token cannot be resubmitted: re-key Turnstile
+                  // so a fresh challenge issues a fresh one, which
+                  // triggers finish() via the effect.
+                  setTurnstileOk(false);
+                  setTurnstileKey((k) => k + 1);
+                } else {
+                  // No challenge on screen (ordinary failure - offline,
+                  // timeout): nothing will flip turnstileOk, so fire the
+                  // retry directly.
+                  autoFired.current = true;
+                  void finish();
+                }
+              }}
+              className="flex-1"
+            >
+              {t('signIn.tryAgain')}
+            </Button>
+          )}
         </div>
         {needsChallenge && (
           <TurnstileWidget
@@ -1661,9 +1648,9 @@ function SignInStep({
 
   return (
     <div className="space-y-4">
-      <p className="text-body text-[var(--wl-sub)] text-center py-4">
-        {t('signIn.signingIn')}
-      </p>
+      <div className="flex justify-center py-4">
+        <StatusLine busy>{t('signIn.signingIn')}</StatusLine>
+      </div>
       {/* Until the server actually refuses a tokenless sign-in there is
           nothing for the user to do, so show them nothing to do. */}
       {needsChallenge && (

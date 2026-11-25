@@ -58,6 +58,7 @@ export function NinjaShotsButton() {
       onClick={(e) => {
         e.preventDefault();
         const back = e.currentTarget;
+        // link-ok: web-only fallback if the lightbox chunk fails to load
         viewer().then((open) => open(shots, 0, back), () => window.open(first.src, '_blank', 'noopener'));
       }}
       className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--wl-ink)] bg-[var(--wl-card)] px-4 py-2 text-body font-bold text-[var(--wl-ink)] transition-colors hover:bg-[var(--wl-bg)] cursor-zoom-in"

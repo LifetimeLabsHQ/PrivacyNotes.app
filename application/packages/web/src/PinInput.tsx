@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isSoftKeyboardUp } from './softKeyboard';
+import { NO_TEXT_ASSIST } from './formFields';
 
 export type PinInputHandle = {
   focus: () => void;
@@ -241,6 +242,7 @@ export const PinInput = forwardRef<PinInputHandle, Props>(function PinInput(
             // Only a real one-time code says so: a PIN is not one, and the
             // hint invites a password manager to offer its codes (#754).
             autoComplete={i === 0 && reveal ? 'one-time-code' : 'off'}
+            {...NO_TEXT_ASSIST}
             // The first box takes a whole code, so a clipboard suggestion or
             // autofill that types instead of pasting is not cut to one digit.
             maxLength={i === 0 ? LENGTH : 1}

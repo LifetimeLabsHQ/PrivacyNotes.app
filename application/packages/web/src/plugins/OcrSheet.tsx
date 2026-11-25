@@ -4,7 +4,7 @@ import { Scan } from '../icons';
 import { proUnlocked } from '../demo';
 import { useCopyToClipboard } from '../clipboard';
 import { FIELD_CLASS } from '../formFields';
-import { Button, Modal, StatusLine } from '../ui';
+import { Button, PluginSheet, StatusLine } from '../ui';
 import { cancelJob, dropJob, memoryLooksLow, onJobGone, startJob, useJobs, watchJob } from './jobs';
 import { checkKeptPlugin } from './pluginManager';
 import { pluginFlagOn, pluginState } from './pluginState';
@@ -180,43 +180,47 @@ export function OcrSheet({ request, noteId, resumeJob, isPro, onUpgrade, onOpenC
   const done = job?.status === 'done' ? (job.result as OcrResult | undefined) : undefined;
   // A long PDF: the pages this run read (beta #240 item 12).
   const partLine = done?.read ? <p className="text-small text-pn-muted">{t('pdfPartRead', { read: done.read, total: done.pages })}</p> : null;
+  const footer = !go ? (
+    <>
+      <Button action="cancel" onClick={onClose} />
+      <Button action="next" onClick={() => setGo(true)} />
+    </>
+  ) : job?.status === 'error' ? (
+    <Button action="done" onClick={close} />
+  ) : busy ? (
+    <Button action="cancel" onClick={cancel} />
+  ) : !text ? (
+    <Button action="done" onClick={close} />
+  ) : (
+    <>
+      <Button action="copy" variant={primary === 'copy' || !canAdd ? 'primary' : 'secondary'} onClick={() => copy(text ?? '', 'ocr')}>
+        {copied ? t('auth:createPhrase.copied') : undefined}
+      </Button>
+      {canAdd && (
+        <Button action="add" variant={primary === 'copy' ? 'secondary' : 'primary'} onClick={add}>
+          {t('addText')}
+        </Button>
+      )}
+    </>
+  );
   return (
-    <Modal title={t('settings:plugins.ocr.title')} icon={<Scan />} onClose={close} layer="z-[60]" className="max-w-lg w-full p-6 space-y-4">
+    <PluginSheet title={t('settings:plugins.ocr.title')} icon={<Scan />} onClose={close} footer={footer}>
       {!go ? (
-        <>
-          <p className="text-body text-pn-soft">{t('lowMemoryWarn')}</p>
-          <div className="flex justify-end gap-2">
-            <Button action="cancel" onClick={onClose} />
-            <Button action="next" onClick={() => setGo(true)} />
-          </div>
-        </>
+        <p className="text-body text-pn-soft">{t('lowMemoryWarn')}</p>
       ) : job?.status === 'error' ? (
-        <>
-          <StatusLine tone="danger">{t(job.error === 'worker-died' ? 'lowMemory' : 'readFailed')}</StatusLine>
-          <div className="flex justify-end">
-            <Button action="done" onClick={close} />
-          </div>
-        </>
+        <StatusLine tone="danger">{t(job.error === 'worker-died' ? 'lowMemory' : 'readFailed')}</StatusLine>
       ) : busy ? (
-        <>
-          <StatusLine busy>
-            {job?.status === 'waiting'
-              ? t('importExport:upload.statusWaiting')
-              : firstRun.current
-                ? t('firstRun')
-                : t('readingPage', { page: Math.min((page?.done ?? 0) + 1, page?.total ?? 1), total: page?.total ?? 1 })}
-          </StatusLine>
-          <div className="flex justify-end">
-            <Button action="cancel" onClick={cancel} />
-          </div>
-        </>
+        <StatusLine busy>
+          {job?.status === 'waiting'
+            ? t('importExport:upload.statusWaiting')
+            : firstRun.current
+              ? t('firstRun')
+              : t('readingPage', { page: Math.min((page?.done ?? 0) + 1, page?.total ?? 1), total: page?.total ?? 1 })}
+        </StatusLine>
       ) : !text ? (
         <>
           <p className="text-body text-pn-soft">{t('noText')}</p>
           {partLine}
-          <div className="flex justify-end">
-            <Button action="done" onClick={close} />
-          </div>
         </>
       ) : (
         <>
@@ -229,18 +233,8 @@ export function OcrSheet({ request, noteId, resumeJob, isPro, onUpgrade, onOpenC
           />
           {partLine}
           {insert && !canAdd && <p className="text-small text-pn-muted">{t('addTextGone')}</p>}
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button action="copy" variant={primary === 'copy' || !canAdd ? 'primary' : 'secondary'} onClick={() => copy(text ?? '', 'ocr')}>
-              {copied ? t('auth:createPhrase.copied') : undefined}
-            </Button>
-            {canAdd && (
-              <Button action="add" variant={primary === 'copy' ? 'secondary' : 'primary'} onClick={add}>
-                {t('addText')}
-              </Button>
-            )}
-          </div>
         </>
       )}
-    </Modal>
+    </PluginSheet>
   );
 }

@@ -1,5 +1,5 @@
 import { toggleQuickTheme } from './quickThemes';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
+import { NO_TEXT_ASSIST } from './formFields';
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { parseThemeCode, resolveTheme, serializeThemeCode, themePasses, withoutAuthor, type CustomTheme } from './themeCode';
@@ -13,10 +13,9 @@ import { BUILTIN_THEME_CODES } from './builtinThemeCodes';
 import type { ContextMenuItem } from './ContextMenu';
 import type { ThemeBuilderTarget } from './notesView/useThemeBuilder';
 import { ConfirmModal } from './ConfirmModal';
-import { CardMenuButton, CommunityCorner, ProCorner, QuickCorner, QuickStarButton } from './ThemeCardMenuButton';
-import { IconUpgrade } from './UpgradeModal';
+import { CardMenuButton, QuickStarButton } from './ThemeCardMenuButton';
 import { ArrowSquareOut, CaretDown, CaretUp, Copy, PencilSimple, Trash } from './icons';
-import { Button } from './ui';
+import { Button, IconUpgrade, TextField, ThemeSwatchCard } from './ui';
 
 /**
  * The team and custom theme UI of Settings > Design and of
@@ -272,30 +271,27 @@ function CustomThemeCard({
   const c = entry.snapshot.colors;
   const author = entry.theme.author;
   return (
-    <div className="group/card relative min-w-0">
-      <button
-        type="button"
-        onClick={onPick}
-        aria-pressed={active}
-        className={`w-full min-w-0 rounded-lg border transition flex flex-col items-center ${compact ? 'p-1.5 gap-1' : 'p-2 gap-1.5'} ${
-          active ? 'border-accent ring-1 ring-accent/30' : 'border-divider hover:border-pn-muted'
-        }`}
-      >
-        <span className={`relative w-full ${compact ? 'h-6' : 'h-9'} rounded overflow-hidden flex`}>
-          <span className="flex-1" style={{ backgroundColor: c['surface-0'] }} />
-          <span className="flex-1" style={{ backgroundColor: c.accent }} />
-          <span className="flex-1" style={{ backgroundColor: c.text }} />
-          {locked && <ProCorner />}
-          {author && <CommunityCorner />}
-          {marked && !onStar && <QuickCorner />}
-        </span>
-        <span className={`${compact ? 'text-meta' : 'text-meta'} font-medium text-pn-muted flex items-center gap-1 max-w-full`}>
-          <span className="line-clamp-2 text-center break-words" dir="auto">{entry.theme.name}</span>
-        </span>
-      </button>
-      {onStar && <QuickStarButton name={entry.theme.name} marked={marked} onToggle={onStar} />}
-      {onMenu && <CardMenuButton name={entry.theme.name} onClick={onMenu} />}
-    </div>
+    <ThemeSwatchCard
+      name={entry.theme.name}
+      colors={[c['surface-0'] ?? '', c.accent ?? '', c.text ?? '']}
+      active={active}
+      compact={compact}
+      pro={locked}
+      proLabel={t('appearance.custom.proTheme')}
+      community={!!author}
+      communityLabel={t('appearance.custom.communityTheme')}
+      quick={marked && !onStar}
+      quickLabel={t('appearance.quickMenuMarked')}
+      onClick={onPick}
+      actions={
+        onStar || onMenu ? (
+          <>
+            {onStar && <QuickStarButton name={entry.theme.name} marked={marked} onToggle={onStar} />}
+            {onMenu && <CardMenuButton name={entry.theme.name} onClick={onMenu} />}
+          </>
+        ) : undefined
+      }
+    />
   );
 }
 
@@ -381,25 +377,22 @@ export function ThemePasteField({ ctx, onClose }: { ctx: ThemeGalleryCtx; onClos
     onClose();
   }
 
-  const button = 'rounded-md px-3 py-1.5 text-small font-medium transition';
   return (
     <div className="mt-3 rounded-lg border border-divider bg-track p-3">
-      <label className="block text-small font-medium text-pn-soft" htmlFor="pn-theme-code">
-        {t('appearance.custom.pasteLabel')}
-      </label>
-      <input
+      <TextField
         id="pn-theme-code"
+        label={t('appearance.custom.pasteLabel')}
         type="text"
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={t('appearance.custom.pastePlaceholder')}
-        spellCheck={false}
+        error={text.trim() && !theme ? t('appearance.custom.pasteInvalid') : undefined}
+        {...NO_TEXT_ASSIST}
         autoComplete="off"
         autoFocus
         dir="ltr"
-        className="mt-1 w-full rounded-md border border-divider bg-surface-2 px-2 py-1.5 font-mono text-small text-pn placeholder:text-pn-muted"
+        className="font-mono"
       />
-      {text.trim() && !theme && <p className="mt-2 text-small text-danger">{t('appearance.custom.pasteInvalid')}</p>}
       {full && <p className="mt-2 text-small text-danger" role="alert">{t('appearance.custom.themeLimit', { max: CUSTOM_THEME_MAX })}</p>}
       {entry && passes && (
         <p className="mt-2 text-small text-pn-soft">
@@ -411,31 +404,19 @@ export function ThemePasteField({ ctx, onClose }: { ctx: ThemeGalleryCtx; onClos
       {entry && !passes && <p className="mt-1 text-small text-warning">{t('appearance.custom.pasteHard')}</p>}
       <div className="mt-2 flex flex-wrap gap-2">
         {entry && passes && savable && (
-          <button type="button" onClick={save} className={`${button} ${PRIMARY_BTN_SKIN}`}>
-            {t('common:actions.save')}
-          </button>
+          <Button action="save" variant="primary" onClick={save} />
         )}
         {entry && passes && !savable && (
-          <button
-            type="button"
-            onClick={ctx.openUpgrade}
-            className={`${button} inline-flex items-center gap-1.5 ${PRIMARY_BTN_SKIN}`}
-          >
-            <IconUpgrade size={12} /> {t('appearance.custom.saveWithPro')}
-          </button>
+          <Button variant="upgrade" icon={<IconUpgrade size={12} />} onClick={ctx.openUpgrade}>
+            {t('appearance.custom.saveWithPro')}
+          </Button>
         )}
         {entry && !passes && (
-          <button
-            type="button"
-            onClick={() => ctx.openBuilder?.({ code: entry.snapshot.code })}
-            className={`${button} ${PRIMARY_BTN_SKIN}`}
-          >
+          <Button variant="primary" icon={<PencilSimple aria-hidden="true" />} onClick={() => ctx.openBuilder?.({ code: entry.snapshot.code })}>
             {t('appearance.custom.openInBuilder')}
-          </button>
+          </Button>
         )}
-        <button type="button" onClick={onClose} className={`${button} border border-divider text-pn-soft hover:text-pn`}>
-          {t('common:actions.cancel')}
-        </button>
+        <Button action="cancel" onClick={onClose} />
       </div>
     </div>
   );

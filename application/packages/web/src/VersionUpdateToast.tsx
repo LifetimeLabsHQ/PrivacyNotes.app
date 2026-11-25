@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { UpdateToast } from './UpdateToast';
 import { startVersionPolling } from './versionCheck';
 import { detectPlatform } from './devices';
+import { openExternal } from './openExternal';
 
 const IS_DESKTOP = detectPlatform() !== 'web';
 
@@ -36,7 +37,7 @@ export function VersionUpdateToast() {
       version={serverVersion}
       actionLabel={t('updateToast.refresh')}
       onAction={() => window.location.reload()}
-      onChangelog={() => window.open('/changelog', '_blank', 'noopener,noreferrer')}
+      onChangelog={() => openExternal('/changelog')}
       onDismiss={() => setHidden(true)}
     />
   );

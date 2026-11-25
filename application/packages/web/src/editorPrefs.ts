@@ -242,13 +242,39 @@ export function writeConnectionsPref(open: boolean) {
  */
 const FOLDS_KEY = 'privacynotes.editor.folds';
 const FOLDS_MAX_NOTES = 500;
+const HASHED_FOLD_KEY = /^[0-9a-f]{8}$/;
 
 type FoldRecord = { k: string[]; t: number };
+
+function writeFoldMap(map: Record<string, FoldRecord>) {
+  try {
+    if (Object.keys(map).length === 0) localStorage.removeItem(FOLDS_KEY);
+    else localStorage.setItem(FOLDS_KEY, JSON.stringify(map));
+  } catch {
+    /* ignore */
+  }
+}
 
 function readFoldMap(): Record<string, FoldRecord> {
   try {
     const raw = JSON.parse(localStorage.getItem(FOLDS_KEY) ?? 'null') as unknown;
-    return raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, FoldRecord>) : {};
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+    const map = raw as Record<string, FoldRecord>;
+    // Scrub any legacy plaintext fold keys (heading/task words) left from
+    // before fold keys were hashed, so no note words stay on disk.
+    let scrubbed = false;
+    for (const id of Object.keys(map)) {
+      const rec = map[id];
+      const rawKeys = rec && Array.isArray(rec.k) ? rec.k : [];
+      const hashed = rawKeys.filter((k): k is string => typeof k === 'string' && HASHED_FOLD_KEY.test(k));
+      if (hashed.length !== rawKeys.length) {
+        scrubbed = true;
+        if (hashed.length === 0) delete map[id];
+        else map[id] = { k: hashed, t: rec?.t ?? 0 };
+      }
+    }
+    if (scrubbed) writeFoldMap(map);
+    return map;
   } catch {
     return {};
   }
@@ -256,27 +282,23 @@ function readFoldMap(): Record<string, FoldRecord> {
 
 export function readNoteFolds(noteId: string): string[] {
   const rec = readFoldMap()[noteId];
-  return rec && Array.isArray(rec.k) ? rec.k.filter((k): k is string => typeof k === 'string') : [];
+  return rec && Array.isArray(rec.k) ? rec.k.filter((k): k is string => typeof k === 'string' && HASHED_FOLD_KEY.test(k)) : [];
 }
 
 /** An empty list forgets the note. */
 export function writeNoteFolds(noteId: string, keys: readonly string[]) {
   const map = readFoldMap();
-  if (keys.length === 0) {
+  const hashed = keys.filter((k) => HASHED_FOLD_KEY.test(k));
+  if (hashed.length === 0) {
     if (!(noteId in map)) return;
     delete map[noteId];
   } else {
-    map[noteId] = { k: [...keys], t: Date.now() };
+    map[noteId] = { k: hashed, t: Date.now() };
     const ids = Object.keys(map);
     if (ids.length > FOLDS_MAX_NOTES) {
       ids.sort((a, b) => (map[b]!.t || 0) - (map[a]!.t || 0));
       for (const id of ids.slice(FOLDS_MAX_NOTES)) delete map[id];
     }
   }
-  try {
-    if (Object.keys(map).length === 0) localStorage.removeItem(FOLDS_KEY);
-    else localStorage.setItem(FOLDS_KEY, JSON.stringify(map));
-  } catch {
-    /* ignore */
-  }
+  writeFoldMap(map);
 }

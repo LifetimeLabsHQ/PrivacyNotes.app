@@ -1,8 +1,8 @@
 /**
  * The "N of M selected" strip that sits under a list's search row while
- * multi-select is active. ONE component, because Notes and Bookmarks drew it
- * from two copies of the same JSX (Bookmarks reaching into the notes namespace
- * for the keys) - the same drift trap `ListFilterChips` exists to close.
+ * multi-select is active. ONE component, because Notes, Bookmarks and Files
+ * share the same selection strip and clear affordance - the same drift trap
+ * `ListFilterChips` exists to close.
  *
  * It carries TWO ways out, not one. The trailing link only offers "Select all"
  * until everything is selected, so a partial selection had no visible way back
@@ -20,14 +20,22 @@ import { useTranslation } from 'react-i18next';
 import { HoverLabel } from './HoverLabel';
 import { X } from './icons';
 
+/**
+ * @catalog SelectionCountStrip
+ * use: the "N of M selected" bar under a list's search row during multi-select (Notes, Bookmarks, Files): shows the tabular count, an immediate clear X button that empties the selection without leaving selection mode, and the trailing Select all / Deselect all toggle.
+ * never: a bespoke selection count bar missing the clear X button when partially selected.
+ */
 export function SelectionCountStrip({
   selectedCount,
   totalCount,
+  label,
   onSelectAll,
   onDeselectAll,
 }: {
   selectedCount: number;
   totalCount: number;
+  /** Optional custom count phrase (e.g. Files' "N of M files selected"). */
+  label?: string;
   onSelectAll: () => void;
   onDeselectAll: () => void;
 }) {
@@ -38,7 +46,7 @@ export function SelectionCountStrip({
     <div className="shrink-0 px-4 py-2 border-b border-divider bg-accent/5 dark:bg-accent/10 flex items-center justify-between gap-2 text-compact">
       <span className="flex items-center gap-2 min-w-0">
         <span className="font-medium text-pn-soft tabular-nums truncate">
-          {t('selection.countOf', { selected: selectedCount, total: totalCount })}
+          {label ?? t('selection.countOf', { selected: selectedCount, total: totalCount })}
         </span>
         <HoverLabel label={t('selection.deselectAll')} position="below">
           <button

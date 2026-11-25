@@ -8,8 +8,10 @@
   "applyToFolderItems": "Aplica a tots els elements d'aquesta carpeta",
   "applyToTagItems": "Aplica a tots els elements amb aquesta etiqueta",
   "icon": "Icona",
+  "emoji": "Emoji",
   "searchPlaceholder": "Cerca icones",
   "searchLogos": "Cerca logotips",
+  "searchEmojis": "Cerca emojis",
   "moreLogos": "Més logotips",
   "allLogos": "Tots els logotips, de la A a la Z",
   "recent": "Usades recentment",
@@ -41,7 +43,14 @@
     "games": "Jocs",
     "learning": "Aprenentatge i recerca",
     "trips": "Viatges i fitness",
-    "privacy": "Privadesa i seguretat"
+    "privacy": "Privadesa i seguretat",
+    "emojiSmileys": "Cares i emocions",
+    "emojiPeople": "Persones i cos",
+    "emojiAnimals": "Animals i natura",
+    "emojiActivities": "Activitats",
+    "emojiObjects": "Objectes",
+    "emojiSymbols": "Símbols i signes",
+    "emojiFlags": "Banderes"
   },
   "icons": {
     "folder": "Carpeta",

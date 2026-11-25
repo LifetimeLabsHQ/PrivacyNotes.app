@@ -28,6 +28,7 @@
  * Spec: docs/internal/specs/markdown-folder.md (section 11)
  */
 import { useEffect, useRef, useState } from 'react';
+import { SETTINGS_EYEBROW } from '../ui';
 import { useTranslation } from 'react-i18next';
 import { ArrowSquareOut, CheckCircle, FileMd, FileText } from '../icons';
 import { useEscapeToClose } from '../useEscapeToClose';
@@ -349,7 +350,7 @@ export function MarkdownDefaultAppPopover({
     >
       <div className="flex items-center gap-2 mb-2.5">
         <FileMd className="shrink-0 text-pn-muted" />
-        <p className="text-meta font-semibold uppercase tracking-wide text-pn-muted">
+        <p className={`${SETTINGS_EYEBROW} !text-pn-muted`}>
           {t('markdown.assocTitle')}
         </p>
       </div>

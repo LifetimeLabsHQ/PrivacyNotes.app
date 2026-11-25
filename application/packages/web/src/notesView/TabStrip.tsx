@@ -239,7 +239,7 @@ export default function TabStrip({
   );
 
   return (
-    <div className={`flex items-end shrink-0 border-b border-divider ps-2 ${zen ? '' : 'bg-surface-1'}`}>
+    <div className={`flex items-end shrink-0 select-none border-b border-divider ps-2 ${zen ? '' : 'bg-surface-1'}`}>
     <div className="relative flex-1 min-w-0 flex">
     {cut.start && fade('start')}
     {cut.end && fade('end')}

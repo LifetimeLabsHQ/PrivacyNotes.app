@@ -26,7 +26,6 @@
     "noResults": "Cap resultat"
   },
   "deleteNote": {
-    "confirm": "Suprimeix per sempre",
     "body": "Vols suprimir permanentment <highlight>“{{title}}”</highlight>? Aquesta acció no es pot desfer."
   },
   "emptyTrash": {
@@ -74,12 +73,15 @@
       "toggleSidebar": "Mostra o amaga la barra lateral",
       "toggleTheme": "Canvia entre mode clar i fosc",
       "openSettings": "Obre la configuració",
+      "graph": "Espai de treball de Graf i Llocs",
       "zen": "Mode Zen",
+      "fullScreen": "Mode de pantalla completa",
       "markdownView": "Activa / desactiva la vista Markdown",
       "invisibles": "Mostra o amaga els caràcters invisibles",
       "find": "Cerca dins la nota",
       "findReplace": "Cerca i substitueix",
       "outline": "Mostra o amaga l'esquema",
+      "connections": "Mostra o amaga les connexions",
       "insertDate": "Insereix la data",
       "insertDateTime": "Insereix la data i l'hora",
       "clearFilters": "Neteja els filtres",
@@ -135,8 +137,6 @@
     "goToFolder": "Vés a una carpeta",
     "createTag": "Crea l'etiqueta #{{name}}",
     "createFolder": "Crea la carpeta «{{name}}»",
-    "newTag": "Etiqueta nova",
-    "newFolder": "Carpeta nova",
     "goToDay": "Vés al dia",
     "inText": "Al text",
     "actions": "accions",
@@ -178,9 +178,9 @@
   "sshKeyForm": {
     "label": "Etiqueta",
     "labelPlaceholder": "p. ex. clau de desplegament de GitHub",
-    "publicKey": "Public Key",
+    "publicKey": "Public key",
     "copyPublicKey": "Copia la clau pública",
-    "privateKey": "Private Key",
+    "privateKey": "Private key",
     "copyPrivateKey": "Copia la clau privada",
     "downloadPublicKey": "Baixa la clau pública",
     "downloadPrivateKey": "Baixa la clau privada",
@@ -293,6 +293,13 @@
     "features": {
       "stats": {
         "detail": "La teva escriptura, les ratxes i els seguiments al llarg del temps"
+      },
+      "graph": {
+        "detail": "Els teus enllaços entre notes, ponts intel·ligents i nuclis en un mapa interactiu"
+      },
+      "placesMap": {
+        "label": "Mapa de llocs",
+        "detail": "Notes, entrades de diari i contactes fixats en un mapa privat"
       },
       "trackers": {
         "detail": "Estat d'ànim, hàbits, factors i medicació"

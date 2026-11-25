@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { BookOpenText, Cpu, DownloadSimple, HardDrives, MagicWand, Scan, Sparkle, Translate, Waveform } from '../icons';
+import { BookOpenText, Cpu, DownloadSimple, HardDrives, MagicWand, Scan, Sparkle, Translate, Waveform, type Icon } from '../icons';
 import { formatBytes } from '../formatBytes';
 import { activeLocale } from '../i18n';
 import { helpPath } from '../localeRoutes';
@@ -13,9 +13,9 @@ import type { FolderDef } from '../folders';
 import { DuplicatesSheet } from './DuplicatesSheet';
 import { cancelMeaningDownload, checkKeptModel, removeMeaning, turnMeaningOff, turnMeaningOn } from '../onDeviceAiModel';
 import { ConfirmModal } from '../ConfirmModal';
-import { ROW_TITLE, SectionEyebrow, SETTINGS_HELP, SettingsCardIcon } from '../settingsUI';
+import { ROW_TITLE, RowTitle, SectionEyebrow, SETTINGS_HELP, SettingsCardIcon } from '../settingsUI';
 import { Switch } from '../Switch';
-import { Button, DeleteButton, ProMark, Select, StatusLine, useProGate } from '../ui';
+import { Button, DeleteButton, Divider, ProMark, Select, StatusLine, useProGate } from '../ui';
 import { PluginStateLine as StateLine } from './PluginStateLine';
 import { pluginBusy, stopJobsForPlugin } from './jobs';
 import { cleanupShown } from './pluginDoors';
@@ -93,7 +93,6 @@ type CardProps = {
   onDownload: () => void;
   onCancel: () => void;
   onToggle: (on: boolean) => void;
-  onRemove: () => void;
   onUpgrade: () => void;
   children?: ReactNode;
 };
@@ -101,10 +100,10 @@ type CardProps = {
 /**
  * One plugin. Not on the device: the description and Download (the Pro door
  * on a free account), or the progress with Cancel. On it: a switch (off keeps
- * the files) and Remove. A free account with the files kept sees the Pro door,
- * not the switch (D23).
+ * the files); individual removal lives in the storage header chips above. A
+ * free account with the files kept sees the Pro door, not the switch (D23).
  */
-function PluginCard({ setting, icon, title, desc, meta, bytes, state, isPro, builtIn = false, pro = true, shownOn, onDownload, onCancel, onToggle, onRemove, onUpgrade, children }: CardProps) {
+function PluginCard({ setting, icon, title, desc, meta, bytes, state, isPro, builtIn = false, pro = true, shownOn, onDownload, onCancel, onToggle, onUpgrade, children }: CardProps) {
   const { t } = useTranslation('settings');
   const unlocked = !pro || proUnlocked(isPro);
   const gate = useProGate(unlocked, onUpgrade);
@@ -143,19 +142,13 @@ function PluginCard({ setting, icon, title, desc, meta, bytes, state, isPro, bui
           </div>
         </div>
         {children}
-        {!builtIn && status !== 'loading' && (
-          <div className="ps-11">
-            {/* Neutral, not red: the files are public data that download again. */}
-            <Button action="remove" variant="secondary" onClick={onRemove}>{t('onDeviceAi.remove', { size: formatBytes(bytes) })}</Button>
-          </div>
-        )}
       </div>
     );
   }
 
   return (
     <div data-setting={setting} className="rounded-lg border border-divider p-3 flex flex-col gap-2 text-pretty">
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between lg:gap-x-5">
+      <div className="flex flex-col gap-2.5 @lg:flex-row @lg:items-start @lg:justify-between @lg:gap-x-5">
         <div className="flex min-w-0 flex-1 items-start gap-3">
           {glyph}
           <div className="min-w-0 flex-1 flex flex-col">
@@ -165,15 +158,17 @@ function PluginCard({ setting, icon, title, desc, meta, bytes, state, isPro, bui
             <StateLine state={state} name={title} />
           </div>
         </div>
-        {status === 'downloading' ? (
-          <Button action="cancel" onClick={onCancel} />
-        ) : (
-          // A free account gets the Pro door every other Pro button uses:
-          // secondary, so the rocket keeps its Pro color.
-          <Button action="download" variant={unlocked ? 'primary' : 'secondary'} pro={!unlocked} onClick={gate(onDownload)}>
-            {t('onDeviceAi.downloadSize', { size: sizeText(bytes) })}
-          </Button>
-        )}
+        <div className="@sm:ps-11 shrink-0 @lg:ps-0">
+          {status === 'downloading' ? (
+            <Button action="cancel" className="whitespace-nowrap" onClick={onCancel} />
+          ) : (
+            // A free account gets the Pro door every other Pro button uses:
+            // secondary, so the rocket keeps its Pro color.
+            <Button action="download" variant={unlocked ? 'primary' : 'secondary'} pro={!unlocked} className="whitespace-nowrap" onClick={gate(onDownload)}>
+              {t('onDeviceAi.downloadSize', { size: sizeText(bytes) })}
+            </Button>
+          )}
+        </div>
       </div>
       {children}
     </div>
@@ -265,18 +260,40 @@ export function PluginsPane({ isPro, onUpgrade, linkSuggestions, onLinkSuggestio
   }, [statusKey]);
 
   const meaningHere = meaning.status === 'on' || meaning.status === 'kept' || meaning.status === 'loading' || meaning.status === 'needsPro';
-  const lines = useMemo(() => {
-    const out: { label: string; bytes: number }[] = [];
-    if (meaningHere) out.push({ label: t('onDeviceAi.title'), bytes: MEANING_BYTES });
-    for (const { key, bytes } of storage) {
-      const label = key.startsWith('translate.')
-        ? t('notes:translate.newTitle', { title: t('plugins.translate.title'), language: modelLanguageName(key.slice('translate.'.length), ui) })
-        : t(SIMPLE[key as SimpleId].title);
-      out.push({ label, bytes });
+  const lines: { key: string; Icon: Icon; label: string; bytes: number; onRemove?: () => void }[] = [];
+  if (meaningHere) {
+    lines.push({
+      key: 'meaning',
+      Icon: Sparkle,
+      label: t('onDeviceAi.title'),
+      bytes: MEANING_BYTES,
+      onRemove: meaning.status === 'loading' ? undefined : () => void removeMeaning(),
+    });
+  }
+  for (const { key, bytes } of storage) {
+    if (key.startsWith('translate.')) {
+      const m = key.slice('translate.'.length);
+      lines.push({
+        key,
+        Icon: Translate,
+        label: t('notes:translate.newTitle', { title: t('plugins.translate.title'), language: modelLanguageName(m, ui) }),
+        bytes,
+        onRemove: () => jobConfirm.ask('translate', t('plugins.translate.title'), () => void removePlugin(key)),
+      });
+    } else {
+      const id = key as SimpleId;
+      const card = SIMPLE[id];
+      const name = t(card.title);
+      lines.push({
+        key,
+        Icon: card.Icon,
+        label: name,
+        bytes,
+        onRemove: () => jobConfirm.ask(id, name, () => void removePlugin(id)),
+      });
     }
-    if (engineBytes) out.push({ label: t('plugins.engine'), bytes: engineBytes });
-    return out;
-  }, [meaningHere, storage, engineBytes, t, ui]);
+  }
+  if (engineBytes) lines.push({ key: 'engine', Icon: Cpu, label: t('plugins.engine'), bytes: engineBytes });
   const total = lines.reduce((s, l) => s + l.bytes, 0);
   const anyBusy = (['ocr', 'translate', 'voice', 'cleanup'] as PluginId[]).some(pluginBusy);
 
@@ -305,11 +322,10 @@ export function PluginsPane({ isPro, onUpgrade, linkSuggestions, onLinkSuggestio
       }}
       onCancel={() => void cancelMeaningDownload()}
       onToggle={(on) => (on ? void turnMeaningOn() : turnMeaningOff())}
-      onRemove={() => void removeMeaning()}
       onUpgrade={upgrade('smartConnections')}
     >
       {meaning.status === 'on' && unlocked && (
-        <div className="ps-11 flex flex-col divide-y divide-divider">
+        <div className="@sm:ps-11 flex flex-col divide-y divide-divider">
           <Switch
             setting="plugins.suggestions"
             labelClassName={ROW_TITLE}
@@ -319,13 +335,13 @@ export function PluginsPane({ isPro, onUpgrade, linkSuggestions, onLinkSuggestio
             onChange={setSuggestionsOn}
             className="gap-x-5 py-2"
           />
-          <div data-setting="plugins.duplicates" className="flex flex-col gap-2 py-2 lg:flex-row lg:items-center lg:justify-between lg:gap-x-5">
-            <div className="min-w-0">
+          <div data-setting="plugins.duplicates" className="flex flex-col gap-2 py-2 @lg:flex-row @lg:items-center @lg:justify-between @lg:gap-x-5">
+            <div className="min-w-0 flex-1">
               <p className={ROW_TITLE}>{t('plugins.smart.duplicates')}</p>
               <p className={`${SETTINGS_HELP} mt-0.5`}>{t('plugins.smart.duplicatesDesc')}</p>
             </div>
             {indexReady ? (
-              <Button action="search" variant="secondary" onClick={() => setDuplicates(true)}>{t('plugins.smart.findDuplicates')}</Button>
+              <Button action="search" variant="primary" className="shrink-0 self-start @lg:self-auto whitespace-nowrap" onClick={() => setDuplicates(true)}>{t('plugins.smart.findDuplicates')}</Button>
             ) : (
               <StatusLine busy>{t('plugins.smart.reading')}</StatusLine>
             )}
@@ -371,7 +387,6 @@ export function PluginsPane({ isPro, onUpgrade, linkSuggestions, onLinkSuggestio
             void checkKeptPlugin(id, unlocked);
           })
         }
-        onRemove={() => jobConfirm.ask(id, name, () => void removePlugin(id))}
         onUpgrade={upgrade(card.trigger)}
       />
     );
@@ -404,26 +419,60 @@ export function PluginsPane({ isPro, onUpgrade, linkSuggestions, onLinkSuggestio
   const add = cards.filter(([h]) => !h).map(([, c]) => c);
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-6 pt-4 flex flex-col gap-6">
-      <p className={SETTINGS_HELP}>{t('plugins.intro')}</p>
+    <div className="@container flex-1 min-h-0 overflow-y-auto px-6 pb-6 pt-4 flex flex-col gap-6">
+      <div className="flex flex-col gap-3">
+        <p className={SETTINGS_HELP}>{t('plugins.intro')}</p>
 
-      {total > 0 && (
-        <section className="flex flex-col gap-2 rounded-lg border border-divider p-3 lg:flex-row lg:items-center lg:justify-between lg:gap-x-5">
-          <div className="min-w-0">
-            <p className={`${ROW_TITLE}`}>
-              <HardDrives className="text-accent" aria-hidden="true" />
-              {t('plugins.storage', { size: formatBytes(total) })}
-            </p>
-            <p className={`${SETTINGS_HELP} mt-0.5`}>{lines.map((l) => `${l.label} ${formatBytes(l.bytes)}`).join(' · ')}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {detectPlatform() === 'desktop' && (
-              <Button action="open" variant="secondary" onClick={() => void revealPluginFolder()}>{t('importExport:exportProgress.showInFolder')}</Button>
-            )}
-            <Button action="remove" variant="secondary" onClick={() => setConfirmAll(true)}>{t('devices.removeAll')}</Button>
-          </div>
-        </section>
-      )}
+        {total > 0 && (
+          <section className="rounded-lg border border-divider bg-surface-1 px-3.5 py-3 flex flex-col gap-1.5">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <RowTitle icon={HardDrives}>
+                <span className="tabular-nums">{t('plugins.storage', { size: sizeText(total) })}</span>
+              </RowTitle>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                {detectPlatform() === 'desktop' && (
+                  <Button action="open" variant="secondary" className="whitespace-nowrap" onClick={() => void revealPluginFolder()}>
+                    {t('importExport:exportProgress.showInFolder')}
+                  </Button>
+                )}
+                <Button action="remove" variant="secondary" className="whitespace-nowrap" onClick={() => setConfirmAll(true)}>
+                  {t('devices.removeAll')}
+                </Button>
+              </div>
+            </div>
+            <Divider />
+            <ul className="flex flex-wrap items-center gap-1.5">
+              {lines.map((l) => (
+                <li
+                  key={l.key}
+                  className="inline-flex min-h-8 max-w-full items-stretch rounded-md border border-divider bg-surface-2 text-small"
+                >
+                  <span className="inline-flex min-w-0 items-center gap-1.5 px-2.5 py-1 font-medium text-pn">
+                    <l.Icon className="shrink-0 text-accent" aria-hidden="true" />
+                    <span className="min-w-0">{l.label}</span>
+                  </span>
+                  <span
+                    className={`inline-flex shrink-0 items-center border-s border-divider bg-surface-1 px-2 py-1 tabular-nums text-pn-muted whitespace-nowrap${
+                      l.onRemove ? '' : ' rounded-e-[5px]'
+                    }`}
+                  >
+                    {sizeText(l.bytes)}
+                  </span>
+                  {l.onRemove && (
+                    <span className="inline-flex shrink-0 items-stretch border-s border-divider [&_button]:h-full [&_button]:rounded-s-none [&_button]:rounded-e-[5px]">
+                      <DeleteButton
+                        kind="remove"
+                        label={t('onDeviceAi.remove', { size: sizeText(l.bytes) })}
+                        onConfirm={l.onRemove}
+                      />
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
 
       {here.length > 0 && (
         <section className="flex flex-col gap-3">
@@ -525,12 +574,12 @@ function TranslateCard({ isPro, langs, onUpgrade, onRemove }: {
         </div>
       </div>
       {here.length > 0 && (
-        <ul className="ps-11 flex flex-col gap-1.5">
+        <ul className="@sm:ps-11 flex flex-col gap-1.5">
           {here.map(([m, s]) => (
             <li key={m} className="flex flex-col gap-1">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-body">
-                  {name(m)} · {formatBytes(bytesOf(m))}
+                  {name(m)} · <span className="tabular-nums text-pn-soft">{sizeText(bytesOf(m))}</span>
                 </span>
                 {s.status === 'downloading' ? (
                   <Button action="cancel" onClick={() => void cancelPluginDownload(`translate.${m}`)} />
@@ -544,12 +593,12 @@ function TranslateCard({ isPro, langs, onUpgrade, onRemove }: {
         </ul>
       )}
       {failed.map(([m, s]) => (
-        <div key={m} className="ps-11">
+        <div key={m} className="@sm:ps-11">
           <StateLine state={s} name={name(m)} />
         </div>
       ))}
       {free.length > 0 && (
-        <div className="ps-11">
+        <div className="@sm:ps-11">
           <Select
             aria-label={t('plugins.translate.addLanguage')}
             value=""

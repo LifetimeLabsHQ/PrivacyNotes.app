@@ -569,6 +569,12 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
   const offsite = OFFSITE[url.pathname];
   if (offsite) return Response.redirect(withEmptyFragment(offsite), 301);
 
+  // Example note moved from /marketing to /help so the download URL matches
+  // the help center that links it.
+  if (url.pathname === '/marketing/table-formulas-examples.md') {
+    return Response.redirect(`${url.origin}/help/table-formulas-examples.md`, 301);
+  }
+
   // iOS asks for this name when a page is saved to the home screen, before
   // it reads the page's own apple-touch-icon link.
   if (url.pathname === '/apple-touch-icon-precomposed.png') {

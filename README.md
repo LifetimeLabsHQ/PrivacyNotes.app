@@ -181,7 +181,7 @@ If you cannot use GitHub, email **sec@lifetimelabs.dev** as a backup. That addre
 <!-- credits:start -->
 ## Credits
 
-PrivacyNotes is shaped by the people who report bugs and ask for features in our issues. 116 people have opened an issue, and 545 reports are now fixed or built.
+PrivacyNotes is shaped by the people who report bugs and ask for features in our issues. 117 people have opened an issue, and 547 reports are now fixed or built.
 
 <p align="center">
 <a href="https://github.com/tech2-user" title="tech2-user, 87 shipped"><img src="https://github.com/tech2-user.png?size=112" width="56" height="56" alt="tech2-user"></a>
@@ -190,9 +190,9 @@ PrivacyNotes is shaped by the people who report bugs and ask for features in our
 <a href="https://github.com/Real-Fruit-Snacks" title="Real-Fruit-Snacks, 29 shipped"><img src="https://github.com/Real-Fruit-Snacks.png?size=112" width="56" height="56" alt="Real-Fruit-Snacks"></a>
 <a href="https://github.com/AndreFeliciano" title="AndreFeliciano, 27 shipped"><img src="https://github.com/AndreFeliciano.png?size=112" width="56" height="56" alt="AndreFeliciano"></a>
 <a href="https://github.com/MrJarvisHere" title="MrJarvisHere, 20 shipped"><img src="https://github.com/MrJarvisHere.png?size=112" width="56" height="56" alt="MrJarvisHere"></a>
-<a href="https://github.com/snogglefromp" title="snogglefromp, 16 shipped"><img src="https://github.com/snogglefromp.png?size=112" width="56" height="56" alt="snogglefromp"></a>
+<a href="https://github.com/snogglefromp" title="snogglefromp, 19 shipped"><img src="https://github.com/snogglefromp.png?size=112" width="56" height="56" alt="snogglefromp"></a>
 <a href="https://github.com/shriganesh" title="shriganesh, 15 shipped"><img src="https://github.com/shriganesh.png?size=112" width="56" height="56" alt="shriganesh"></a>
-<a href="https://github.com/mburr" title="mburr, 12 shipped"><img src="https://github.com/mburr.png?size=112" width="56" height="56" alt="mburr"></a>
+<a href="https://github.com/mburr" title="mburr, 13 shipped"><img src="https://github.com/mburr.png?size=112" width="56" height="56" alt="mburr"></a>
 <a href="https://github.com/laulaugaby" title="laulaugaby, 12 shipped"><img src="https://github.com/laulaugaby.png?size=112" width="56" height="56" alt="laulaugaby"></a>
 <a href="https://github.com/les-incompetent" title="les-incompetent, 11 shipped"><img src="https://github.com/les-incompetent.png?size=112" width="56" height="56" alt="les-incompetent"></a>
 <a href="https://github.com/Tobias1000" title="Tobias1000, 11 shipped"><img src="https://github.com/Tobias1000.png?size=112" width="56" height="56" alt="Tobias1000"></a>
@@ -206,10 +206,10 @@ PrivacyNotes is shaped by the people who report bugs and ask for features in our
 <a href="https://github.com/pdmcgeejr" title="pdmcgeejr, 8 shipped"><img src="https://github.com/pdmcgeejr.png?size=112" width="56" height="56" alt="pdmcgeejr"></a>
 <a href="https://github.com/TheArtForm" title="TheArtForm, 8 shipped"><img src="https://github.com/TheArtForm.png?size=112" width="56" height="56" alt="TheArtForm"></a>
 <a href="https://github.com/RuinTD" title="RuinTD, 7 shipped"><img src="https://github.com/RuinTD.png?size=112" width="56" height="56" alt="RuinTD"></a>
-<a href="https://github.com/Infergnome" title="Infergnome, 7 shipped"><img src="https://github.com/Infergnome.png?size=112" width="56" height="56" alt="Infergnome"></a>
 <a href="https://github.com/thecoffeebin" title="thecoffeebin, 7 shipped"><img src="https://github.com/thecoffeebin.png?size=112" width="56" height="56" alt="thecoffeebin"></a>
 <a href="https://github.com/AstroByteOne" title="AstroByteOne, 6 shipped"><img src="https://github.com/AstroByteOne.png?size=112" width="56" height="56" alt="AstroByteOne"></a>
 <a href="https://github.com/gijs-epping" title="gijs-epping, 5 shipped"><img src="https://github.com/gijs-epping.png?size=112" width="56" height="56" alt="gijs-epping"></a>
+<a href="https://github.com/825i" title="825i, 4 shipped"><img src="https://github.com/825i.png?size=112" width="56" height="56" alt="825i"></a>
 <a href="https://github.com/BackupSFG" title="BackupSFG, 4 shipped"><img src="https://github.com/BackupSFG.png?size=112" width="56" height="56" alt="BackupSFG"></a>
 <a href="https://github.com/michaeldurland" title="michaeldurland, 4 shipped"><img src="https://github.com/michaeldurland.png?size=112" width="56" height="56" alt="michaeldurland"></a>
 <a href="https://github.com/ajgraves" title="ajgraves, 4 shipped"><img src="https://github.com/ajgraves.png?size=112" width="56" height="56" alt="ajgraves"></a>
@@ -219,11 +219,11 @@ PrivacyNotes is shaped by the people who report bugs and ask for features in our
 <a href="https://github.com/ylnztrkk" title="ylnztrkk, 4 shipped"><img src="https://github.com/ylnztrkk.png?size=112" width="56" height="56" alt="ylnztrkk"></a>
 <a href="https://github.com/Xarcell" title="Xarcell, 3 shipped"><img src="https://github.com/Xarcell.png?size=112" width="56" height="56" alt="Xarcell"></a>
 <a href="https://github.com/tactfuljeer" title="tactfuljeer, 3 shipped"><img src="https://github.com/tactfuljeer.png?size=112" width="56" height="56" alt="tactfuljeer"></a>
-<a href="https://github.com/825i" title="825i, 3 shipped"><img src="https://github.com/825i.png?size=112" width="56" height="56" alt="825i"></a>
 <a href="https://github.com/adrcotfas" title="adrcotfas, 3 shipped"><img src="https://github.com/adrcotfas.png?size=112" width="56" height="56" alt="adrcotfas"></a>
 <a href="https://github.com/Alexander182182" title="Alexander182182, 3 shipped"><img src="https://github.com/Alexander182182.png?size=112" width="56" height="56" alt="Alexander182182"></a>
 <a href="https://github.com/ameetjeeva" title="ameetjeeva, 3 shipped"><img src="https://github.com/ameetjeeva.png?size=112" width="56" height="56" alt="ameetjeeva"></a>
 <a href="https://github.com/iplayball" title="iplayball, 3 shipped"><img src="https://github.com/iplayball.png?size=112" width="56" height="56" alt="iplayball"></a>
+<a href="https://github.com/simonthexylem" title="simonthexylem, 3 shipped"><img src="https://github.com/simonthexylem.png?size=112" width="56" height="56" alt="simonthexylem"></a>
 </p>
 
 Everyone, with their counts, is in [CREDITS.md](CREDITS.md).

@@ -328,6 +328,7 @@
       "noEntry": "sem entrada",
       "doseLens": "O humor ficou em média em {{before}} nos {{nBefore}} dias antes e em {{after}} nos {{nAfter}} dias depois.",
       "doseLensHeading": "Em torno de cada mudança de dose",
+      "doseLensLocked": "Passa para Pro para veres como as mudanças de dose mexem com o teu humor",
       "doseLensShort_one": "Falta {{count}} dia registado em torno da mudança.",
       "doseLensShort_other": "Faltam {{count}} dias registados em torno da mudança."
     },

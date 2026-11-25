@@ -8,6 +8,7 @@ import { marketingHomeHref, siteHref } from './siteLinks';
 import { activeLocale } from './languages';
 import { helpPath } from './localeRoutes';
 import { matchesKey } from './shortcutMatch';
+import { openExternalAsync } from './openExternal';
 
 /**
  * Custom About window content (desktop only). The macOS "About PrivacyNotes"
@@ -15,8 +16,8 @@ import { matchesKey } from './shortcutMatch';
  * main.tsx routes here instead of mounting the app. Replaces the unstylable
  * system About panel. See desktop/src-tauri/src/lib.rs (open_about_window).
  *
- * Links must call the opener plugin directly: this window renders outside
- * App.tsx, so its target="_blank" interceptor is not active here.
+ * Links call openExternalAsync: this window renders outside App.tsx, so its
+ * capture-phase anchor interceptor is not active here.
  */
 
 async function closeWindow() {
@@ -24,10 +25,7 @@ async function closeWindow() {
   await getCurrentWindow().close();
 }
 
-async function openExternal(url: string) {
-  const { openUrl } = await import('@tauri-apps/plugin-opener');
-  await openUrl(url);
-}
+const openExternal = (url: string) => openExternalAsync(url, { browser: true });
 
 const buttonClass =
   'w-full rounded-lg border border-divider py-1.5 text-compact text-pn-soft transition hover:bg-pn/10';

@@ -1557,6 +1557,41 @@ ${nestedNumbersCss()}  .content blockquote {
   details.pn-callout:not([open]) > summary .pn-caret-down { display: none }
   details.pn-callout:not([open]) > summary .pn-caret-right { display: inline !important }
   details.pn-callout:dir(rtl) > summary .pn-caret-right { transform: scaleX(-1) }
+  .content .pn-columns-col > :first-child { margin-top: 0 }
+  .content .pn-columns-col > :last-child { margin-bottom: 0 }
+  .content .pn-columns[data-border-style="divider"] > .pn-columns-col { position: relative }
+  .content .pn-columns[data-border-style="divider"] > .pn-columns-col + .pn-columns-col::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    inset-inline-start: calc(-0.625rem - var(--pn-col-bw, 1px) / 2);
+    border-inline-start: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgba(128,128,128,0.45));
+  }
+  .content .pn-columns[data-border-style="boxes"] > .pn-columns-col {
+    padding: 0.65rem 0.85rem;
+    border-radius: 7px;
+    border: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgba(128,128,128,0.45));
+    background: var(--pn-col-bg, transparent);
+  }
+  .content .pn-columns[data-border-style="frame"] > .pn-columns-col { padding: 0.65rem 0.85rem }
+  .content .pn-columns[data-border-style="frame"] > .pn-columns-col + .pn-columns-col {
+    border-inline-start: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgba(128,128,128,0.45));
+  }
+  @media (max-width: 560px) {
+    .content .pn-columns { grid-template-columns: minmax(0, 1fr) !important; }
+    .content .pn-columns[data-border-style="divider"] > .pn-columns-col + .pn-columns-col::before {
+      top: calc(-0.625rem - var(--pn-col-bw, 1px) / 2);
+      bottom: auto;
+      inset-inline: 2px;
+      border-inline-start: 0;
+      border-top: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgba(128,128,128,0.45));
+    }
+    .content .pn-columns[data-border-style="frame"] > .pn-columns-col + .pn-columns-col {
+      border-inline-start: 0;
+      border-top: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgba(128,128,128,0.45));
+    }
+  }
   @media print {
     .content .pn-spoiler { background: none; }
     .content .pn-spoiler-text { filter: none; opacity: 1; }

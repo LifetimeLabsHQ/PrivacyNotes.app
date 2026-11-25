@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CaretLeft, CaretRight, GridFour } from '../icons';
 import { SectionEyebrow } from '../settingsUI';
+import { Button } from '../ui';
 import { saveBlob } from '../saveFile';
 import { formatDay, monthInitial } from '../intlFormat';
 import { toLocalIso } from '../notesViewUtils';
@@ -152,9 +153,9 @@ export function YearInPixels({ model, onOpenDay }: { model: WellnessModel; onOpe
       </div>
       <div className="flex flex-wrap items-center justify-between gap-2 mt-2">
         <span className="text-small text-pn-muted">{onOpenDay ? t('wellness.pixels.hintTap') : t('wellness.pixels.hint')}</span>
-        <button type="button" onClick={saveImage} className="px-3 py-1.5 rounded-md text-small font-medium border border-divider hover:bg-surface-1 transition-colors">
+        <Button action="download" onClick={saveImage} className="!px-3 !py-1.5 !text-small">
           {t('wellness.pixels.saveImage')}
-        </button>
+        </Button>
       </div>
       {saveFailed && <p className="mt-2 text-small text-danger">{t('wellness.export.saveFailed')}</p>}
       <span ref={surfaceProbe} className="hidden bg-surface-2" aria-hidden="true" />

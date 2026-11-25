@@ -313,6 +313,7 @@
       "noEntry": "無記錄",
       "doseLens": "心情在前 {{nBefore}} 天平均 {{before}}，後 {{nAfter}} 天平均 {{after}}。",
       "doseLensHeading": "每次劑量變更的前後",
+      "doseLensLocked": "升級至 Pro，查看劑量變更如何影響你的心情",
       "doseLensShort_other": "前後還需要 {{count}} 個記錄日。"
     },
     "sourceLine": "這裡的一切都來自你日誌紀錄上的追蹤項目。",

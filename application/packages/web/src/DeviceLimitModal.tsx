@@ -8,8 +8,9 @@ import { isPaddleConfigured, isBetaPricing } from './paddle';
 import { startProCheckout } from './billing';
 import { PRO_PRICE, EARLY_PRICE } from './pricing';
 import { PhraseView } from './security/PhraseView';
-import { Modal } from './ui';
-import { PRIMARY_BTN_SKIN } from './settingsUI';
+import { Devices, SignOut } from './icons';
+import { DeviceIcon } from './DeviceIcon';
+import { Badge, Button, Callout, IconUpgrade, Modal, ModalFooter, SectionEyebrow } from './ui';
 
 /**
  * Blocking modal shown immediately after sign-in when the free-tier
@@ -96,9 +97,9 @@ export function DeviceLimitModal() {
         {/* Active devices */}
         {activeDevices.length > 0 && (
           <div className="space-y-2">
-            <div className="text-meta uppercase tracking-wide text-pn-muted">
+            <SectionEyebrow icon={Devices}>
               {t('deviceLimit.activeDevices')}
-            </div>
+            </SectionEyebrow>
             {activeDevices.map((d) => (
               <DeviceRowView
                 key={d.device_id}
@@ -115,9 +116,9 @@ export function DeviceLimitModal() {
         {/* Recently removed devices - informational, do not occupy a slot. */}
         {cooldownDevices.length > 0 && (
           <div className="space-y-2">
-            <div className="text-meta uppercase tracking-wide text-pn-muted">
+            <SectionEyebrow>
               {t('settings:devices.recentlyRemoved')}
-            </div>
+            </SectionEyebrow>
             {cooldownDevices.map((d) => (
               <div
                 key={d.device_id}
@@ -136,18 +137,12 @@ export function DeviceLimitModal() {
           </div>
         )}
 
-        {error && (
-          <div className="rounded-md border border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/30 text-red-700 dark:text-red-300 text-body p-3">
-            {error}
-          </div>
-        )}
+        {error && <Callout tone="danger">{error}</Callout>}
 
         {/* Same copy as NotesView's pending banner (notes namespace) so no
             new locale strings are needed; the poll above retries for us. */}
         {activationPending && (
-          <div className="rounded-md border border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 text-body p-3">
-            {t('notes:banner.proActivationPending')}
-          </div>
+          <Callout tone="warning">{t('notes:banner.proActivationPending')}</Callout>
         )}
 
         {/* No Paddle (a self-hosted or dev build): no upgrade box; Remove and
@@ -158,12 +153,10 @@ export function DeviceLimitModal() {
             <p className="text-small text-pn-muted leading-relaxed">
               {t('deviceLimit.upgradeBody')}
             </p>
-            <button
-              type="button"
-              className={`w-full rounded-md ${PRIMARY_BTN_SKIN} text-body font-semibold px-3 py-2 transition disabled:opacity-50`}
-              // Also locked while a paid checkout awaits its webhook: the
-              // one-time Pro product has no server-side dedupe, so a live
-              // button here invites a second charge.
+            <Button
+              variant="upgrade"
+              icon={<IconUpgrade size={16} />}
+              className="w-full"
               disabled={checkoutLoading || activationPending}
               onClick={async () => {
                 setCheckoutLoading(true);
@@ -189,7 +182,7 @@ export function DeviceLimitModal() {
               }}
             >
               {checkoutLoading ? t('billing:upgrade.ctaOpening') : t('deviceLimit.upgradeCta', { price: isBetaPricing() ? EARLY_PRICE : PRO_PRICE })}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -198,40 +191,37 @@ export function DeviceLimitModal() {
           // recovery phrase. If they hit the device cap and their other
           // devices are unreachable, the phrase is their only way to
           // recover. Reveal on demand. See gap #22.
-          <div className="rounded-md border border-amber-400/40 bg-amber-50 dark:border-amber-600/30 dark:bg-amber-950/20 p-4 space-y-2">
-            <div className="text-body font-medium text-amber-800 dark:text-amber-300">
-              {t('deviceLimit.saveRecoveryHeading')}
-            </div>
-            <p className="text-small text-amber-700/90 dark:text-amber-400/90 leading-relaxed">
-              {t('deviceLimit.saveRecoveryBody')}
-            </p>
+          <Callout tone="warning" title={t('deviceLimit.saveRecoveryHeading')}>
+            <p>{t('deviceLimit.saveRecoveryBody')}</p>
             {showPhrase ? (
-              <PhraseView
-                phrase={auth.phrase}
-                onCancel={() => setShowPhrase(false)}
-                showCallout={false}
-                cancelLabel={t('deviceLimit.hide')}
-              />
+              <div className="pt-2">
+                <PhraseView
+                  phrase={auth.phrase}
+                  onCancel={() => setShowPhrase(false)}
+                  showCallout={false}
+                  cancelLabel={t('deviceLimit.hide')}
+                />
+              </div>
             ) : (
-              <button
-                type="button"
-                onClick={() => setShowPhrase(true)}
-                className="w-full rounded-md border border-amber-400/60 dark:border-amber-600/40 bg-surface-2 hover:bg-amber-50 dark:hover:bg-amber-950/40 text-body font-medium text-amber-800 dark:text-amber-300 px-3 py-2 transition"
-              >
-                {t('deviceLimit.viewRecoveryPhrase')}
-              </button>
+              <div className="pt-2">
+                <Button action="view" onClick={() => setShowPhrase(true)} className="w-full">
+                  {t('deviceLimit.viewRecoveryPhrase')}
+                </Button>
+              </div>
             )}
-          </div>
+          </Callout>
         )}
 
-        <button
-          type="button"
-          onClick={() => void signOut({ keepUnsyncedNotes: true })}
-          className="w-full rounded-md border border-divider hover:bg-pn/5 text-body px-3 py-2 transition"
-          disabled={busy !== null}
-        >
-          {t('settings:account.signOut')}
-        </button>
+        <ModalFooter>
+          <Button
+            icon={<SignOut aria-hidden="true" />}
+            onClick={() => void signOut({ keepUnsyncedNotes: true })}
+            className="w-full sm:w-auto"
+            disabled={busy !== null}
+          >
+            {t('settings:account.signOut')}
+          </Button>
+        </ModalFooter>
     </Modal>
   );
 }
@@ -252,28 +242,30 @@ function DeviceRowView({
   const { t } = useTranslation('security');
   return (
     <div className="flex items-center justify-between gap-3 rounded-md border border-divider px-3 py-2">
-      <div className="min-w-0">
-        <div className="text-body font-medium truncate">
-          {device.device_name}
-          <span className="ms-2 font-mono text-meta font-normal text-pn-muted">{shortDeviceId(device.device_id)}</span>
-          {isCurrent && (
-            <span className="ms-2 text-meta uppercase tracking-wide text-accent">
-              {t('settings:devices.thisDevice')}
-            </span>
-          )}
-        </div>
-        <div className="text-meta text-pn-muted">
-          {t('deviceLimit.lastActive', { platform: device.platform, when: formatRelative(device.last_seen_at) })}
+      <div className="flex items-center gap-2.5 min-w-0">
+        <DeviceIcon row={device} />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-body font-medium truncate">
+            <span className="truncate">{device.device_name}</span>
+            <span className="font-mono text-meta font-normal text-pn-muted shrink-0">{shortDeviceId(device.device_id)}</span>
+            {isCurrent && (
+              <Badge tone="info">{t('settings:devices.thisDevice')}</Badge>
+            )}
+          </div>
+          <div className="text-meta text-pn-muted">
+            {t('deviceLimit.lastActive', { platform: device.platform, when: formatRelative(device.last_seen_at) })}
+          </div>
         </div>
       </div>
-      <button
-        type="button"
+      <Button
+        action="remove"
+        variant="danger"
         onClick={onRevoke}
         disabled={disabled}
-        className="text-small rounded-md border border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900/60 dark:text-red-300 dark:hover:bg-red-950/30 px-2.5 py-1.5 transition disabled:opacity-50"
+        className="shrink-0"
       >
         {busy ? t('deviceLimit.removing') : t('common:actions.remove')}
-      </button>
+      </Button>
     </div>
   );
 }

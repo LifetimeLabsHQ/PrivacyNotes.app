@@ -25,8 +25,13 @@ export function onPreloadError(event: Event): void {
     window.dispatchEvent(new Event('pn:chunk-offline'));
     return;
   }
-  if (sessionStorage.getItem(RELOADED_KEY) === '1') return;
-  sessionStorage.setItem(RELOADED_KEY, '1');
+  try {
+    if (sessionStorage.getItem(RELOADED_KEY) === '1') return;
+    sessionStorage.setItem(RELOADED_KEY, '1');
+  } catch {
+    // Storage unavailable (strict privacy mode): skip reload so we cannot loop.
+    return;
+  }
   event.preventDefault();
   window.location.reload();
 }

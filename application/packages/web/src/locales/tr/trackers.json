@@ -115,9 +115,6 @@
       "great": "Harika"
     }
   },
-  "sleepScore": {
-    "prompt": "Uyku puanı"
-  },
   "heartRate": {
     "prompt": "Ortalama kalp atış hızı"
   },

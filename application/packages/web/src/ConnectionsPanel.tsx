@@ -1,8 +1,11 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowCounterClockwise, At, ArrowsIn, ArrowsOut, Asterisk, CaretDown, CaretRight, CursorText, EyeSlash, FileDashed, Graph, Hash, Intersect, LinkSimple, LockSimple, Sparkle, TextAa, X } from './icons';
 import { IconButton, Snackbar } from './ui';
 import type { LocalNote } from './db';
+import type { LinkIndex } from './connectionsIndex';
+import type { FolderDef } from './folders';
+import type { ItemStyles } from './itemStyles';
 import { EditorSlotPanel, SLOT_BADGE, SLOT_PANEL_ROW } from './EditorSlotPill';
 import { OverflowTip } from './OverflowTip';
 import { keyText } from './shortcutMatch';
@@ -11,7 +14,11 @@ import { deriveDisplayTitle } from './notesViewUtils';
 import { PathGlyph, useItemLook } from './looks/LookGlyph';
 import { ProBadge } from './OptionsMenu';
 import { isDemoMode } from './demo';
+import { useTheme } from './theme';
+import { buildLocalGraph } from './graph/graphModel';
 import { closeMeaningDoor, laterMeaningDoor, meaningDoorClosed, onDeviceAiShown, reopenMeaningDoor, useMeaningState } from './onDeviceAi';
+
+const LocalGraphCardLazy = lazy(() => import('./graph/LocalGraphCard').then((m) => ({ default: m.LocalGraphCard })));
 
 /** What the panel lists for the open item (ConnectionsPill works it out). */
 export type ConnectionLists = {
@@ -222,6 +229,17 @@ function ConnectionRow({ note, title, why, suggested, actions, onOpen }: { note:
  */
 export function ConnectionsPanel({
   lists,
+  centerNote,
+  notes,
+  linkIndex,
+  itemStyles,
+  folders,
+  centerRelated,
+  pinned,
+  pinnedTitle,
+  onTogglePin,
+  isPro,
+  onOpenFullGraph,
   onHideSuggestions,
   linkActions,
   onDismissSuggestion,
@@ -232,6 +250,17 @@ export function ConnectionsPanel({
   onClose,
 }: {
   lists: ConnectionLists;
+  centerNote: LocalNote;
+  notes: readonly LocalNote[];
+  linkIndex: LinkIndex;
+  itemStyles: ItemStyles;
+  folders: readonly FolderDef[];
+  centerRelated: readonly { note: LocalNote; why: RelatedWhy }[];
+  pinned: boolean;
+  pinnedTitle: string | null;
+  onTogglePin: () => void;
+  isPro: boolean;
+  onOpenFullGraph: (focusNoteId: string) => void;
   /** Turns the Link suggestions setting off (Settings > Editor turns it back on). */
   onHideSuggestions: () => void;
   /** How a suggestion becomes a link; absent when the open note is read-only. */
@@ -246,6 +275,21 @@ export function ConnectionsPanel({
   onClose: () => void;
 }) {
   const { t } = useTranslation('notes');
+  const { theme } = useTheme();
+  const [depth, setDepth] = useState<1 | 2>(1);
+  const byId = useMemo(() => new Map(notes.map((n) => [n.id, n])), [notes]);
+  const isVaultCredential = centerNote.type === 'login' || centerNote.type === 'card' || centerNote.type === 'ssh-key';
+  const canShowGraph = !isVaultCredential && centerNote.pinProtected !== 1 && !isNoteLocked(centerNote);
+  const lockedKey = notes.filter(isNoteLocked).map((n) => n.id).join(' ');
+  const localGraph = useMemo(
+    () => (canShowGraph
+      ? buildLocalGraph(centerNote.id, depth, notes, linkIndex, isNoteLocked, itemStyles, folders, centerRelated)
+      : { nodes: [], edges: [] }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- isNoteLocked changes identity every render; lockedKey carries what it reads.
+    [canShowGraph, centerNote.id, depth, notes, linkIndex, lockedKey, itemStyles, folders, centerRelated],
+  );
+  const showLocalGraph = canShowGraph && localGraph.nodes.length > 0;
+  const centerTitle = deriveDisplayTitle(centerNote, isNoteLocked(centerNote));
   const row = (n: LocalNote, suggested = false) => (
     <ConnectionRow key={n.id} note={n} title={deriveDisplayTitle(n, isNoteLocked(n))} suggested={suggested} onOpen={() => onOpen(n)} />
   );
@@ -302,6 +346,42 @@ export function ConnectionsPanel({
       closeKeys={keyText('connections')}
       onClose={onClose}
     >
+      {showLocalGraph && (
+        <>
+          <Suspense fallback={null}>
+            <LocalGraphCardLazy
+              centerId={centerNote.id}
+              centerTitle={centerTitle}
+              nodes={localGraph.nodes}
+              edges={localGraph.edges}
+              depth={depth}
+              onDepthChange={setDepth}
+              pinned={pinned}
+              pinnedTitle={pinnedTitle}
+              onTogglePin={onTogglePin}
+              onOpenFullGraph={() => onOpenFullGraph(centerNote.id)}
+              onSelectNeighbor={(id) => {
+                if (id.startsWith('missing:')) return;
+                const target = byId.get(id);
+                if (target) onOpen(target);
+              }}
+              dark={theme !== 'light'}
+              labels={{
+                hop1: t('graph.hop1'),
+                hop2: t('graph.hop2'),
+                depthLabel: t('graph.depthLabel'),
+                pin: t('shell:contextMenu.pin'),
+                unpin: t('shell:contextMenu.unpin'),
+                pinnedTo: (title) => t('graph.pinnedCenter', { title }),
+                fullGraph: t('graph.fullGraph'),
+                empty: t('graph.localEmpty'),
+                ariaLabel: t('graph.localAria', { title: centerTitle }),
+              }}
+            />
+          </Suspense>
+          {(hasIn || hasOut || hasRelated) && separator}
+        </>
+      )}
       {group(lists.usedIn ? t('connections.usedIn') : t('connections.linkedFrom'), ArrowsIn, inTone, lists.from.length, hasIn && (
         <>
           <ul>{lists.from.map((n) => row(n))}</ul>

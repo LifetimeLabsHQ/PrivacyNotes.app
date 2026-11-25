@@ -25,6 +25,7 @@ import { ChipFilterContext } from './chipFilter';
 import { sortTags } from './notesRepo';
 import { usePushFailure } from './pushFailures';
 import { FolderGlyph, PathGlyph, TagMark, itemLookDraw, useNoteIconPaths, useNoteLook } from './looks/LookGlyph';
+import type { LookArt } from './looks/lookIconsLoader';
 import { ItemRow, ValueBadge, applyCompactRows, type ItemFlag, type ItemMark, type ItemRootProps, type ItemState, type ListItem } from './listItem';
 import type { PillTone } from './trackerTone';
 import { isSameOriginPath } from './sameOriginPath';
@@ -446,7 +447,7 @@ function typeBox(type: LocalNote['type']): { bg: string; text: string } {
 }
 
 /** The boxed row icon of a note that carries an icon of its own. */
-function NoteIconBox({ type, paths }: { type: LocalNote['type']; paths: readonly string[] }) {
+function NoteIconBox({ type, paths }: { type: LocalNote['type']; paths: LookArt }) {
   const { bg, text } = typeBox(type);
   return (
     <span className={`shrink-0 w-7 h-7 rounded-md ${bg} flex items-center justify-center ${text} mt-px`}>
@@ -741,7 +742,7 @@ export function TagChips({ tags, folderId, passkey = false }: {
  * bookmark glyphs names none of them. Omit it (or pass '') anywhere the box
  * shows no favicon either, and the type glyph is drawn as before.
  */
-export function CardGlyph({ type, override, domain, paths }: { type: LocalNote['type']; override?: Icon; domain?: string; paths?: readonly string[] }) {
+export function CardGlyph({ type, override, domain, paths }: { type: LocalNote['type']; override?: Icon; domain?: string; paths?: LookArt }) {
   // A row adapted from something that is not a note (a Markdown file) carries
   // type 'note' and would draw the note glyph. The caller names the glyph; the
   // size and class contract stays here, where the mini CSS can find it. Returns

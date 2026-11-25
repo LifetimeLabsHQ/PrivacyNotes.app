@@ -38,7 +38,7 @@
     "blockMath": "معادلة كتلة",
     "align": "محاذاة",
     "font": "الخط",
-    "pictureFromFiles": "صورة من «الملفات»",
+    "pictureFromFiles": "المعرض",
     "date": "التاريخ",
     "dateTime": "التاريخ والوقت",
     "footnote": "حاشية سفلية",
@@ -280,6 +280,15 @@
     "headingsIn": "العناوين في {{title}}",
     "noHeadingMatches": "لا توجد عناوين مطابقة"
   },
+  "slash": {
+    "label": "إدراج كتلة",
+    "linePlaceholder": "اضغط / لإدراج الكتل",
+    "filterHint": "اكتب للتصفية…",
+    "basic": "كتل أساسية",
+    "smartDate": "تاريخ ذكي",
+    "askNinja": "اسأل Ninja عن «{{query}}»",
+    "noMatches": "لا توجد كتل مطابقة"
+  },
   "copyBox": {
     "placeholder": "نص يُنسخ بنقرة واحدة"
   },
@@ -401,6 +410,23 @@
     "addColumn": "إضافة عمود",
     "removeBoard": "إزالة اللوحة",
     "moveTo": "نقل إلى"
+  },
+  "columns": {
+    "narrowWide": "ضيق وواسع",
+    "wideNarrow": "واسع وضيق",
+    "removeColumns": "إزالة الأعمدة",
+    "resizeColumn": "اسحب لتغيير حجم الأعمدة",
+    "barLabel": "أدوات التحكم في الأعمدة",
+    "borders": "حدود الأعمدة",
+    "borderBoxes": "صناديق",
+    "borderSolid": "متصل",
+    "borderDashed": "متقطع",
+    "borderDotted": "منقّط",
+    "borderThickness": "السماكة",
+    "borderThin": "رفيع",
+    "borderMedium": "متوسط",
+    "borderColorDefault": "اللون الافتراضي",
+    "borderTint": "تلوين خفيف للأعمدة"
   },
   "doodle": {
     "title": "خربشة",

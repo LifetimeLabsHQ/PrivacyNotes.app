@@ -15,7 +15,7 @@ import { isDemoMode } from '../demo';
 import { formatInstant } from '../intlFormat';
 import { Devices } from '../icons';
 import { markReleaseSeen, nextRelease, releaseSeen, releaseSeenKey } from '../releaseNotice';
-import { Banner, FeedbackButton } from '../ui/feedback';
+import { Banner, FeedbackButton } from '../ui';
 
 // Spec: docs/internal/plans/custodial-release-hardening.md (13.1: every 15 minutes)
 const LOOK_EVERY_MS = 15 * 60_000;

@@ -123,9 +123,6 @@
       "great": "Отлично"
     }
   },
-  "sleepScore": {
-    "prompt": "Оценка сна"
-  },
   "heartRate": {
     "prompt": "Средний пульс"
   },

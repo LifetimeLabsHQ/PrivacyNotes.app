@@ -41,6 +41,7 @@
     "noDocuments": "Não há documentos.",
     "noImages": "Não há imagens.",
     "noAudioFiles": "Não há ficheiros de áudio.",
+    "noUnusedFiles": "Não há ficheiros não utilizados.",
     "emptyTypesHint": "Imagens, documentos, áudio, vídeo e ficheiros zip. Até {{max}} MB por ficheiro.",
     "uploadFiles": "Carregar ficheiros",
     "menuShow": "Mostrar",
@@ -233,7 +234,7 @@
     "tagCount_other": "{{count}} etiquetas",
     "entryDate": "Data da entrada",
     "noDate": "Nenhuma",
-    "schedule": "Agendamento",
+    "schedule": "Data e lembretes",
     "ends": "Termina",
     "sameDay": "No mesmo dia",
     "starts": "Começa",
@@ -317,7 +318,6 @@
     "showOneWeek": "Mostrar uma semana"
   },
   "contextMenu": {
-    "newNote": "Nova Nota",
     "newTask": "Nova Tarefa",
     "newKanban": "Novo quadro Kanban",
     "newDrawing": "Novo desenho",
@@ -326,15 +326,12 @@
     "newSshKey": "Nova Chave SSH",
     "newJournal": "Novo Diário",
     "newFile": "Novo ficheiro",
-    "exitZenMode": "Sair do Modo Zen",
-    "zenMode": "Modo Zen",
     "showSidebar": "Mostrar a Barra Lateral",
     "hideSidebar": "Ocultar a Barra Lateral",
     "showNotesList": "Mostrar a Lista de Notas",
     "hideNotesList": "Ocultar a Lista de Notas",
     "resetPaneWidths": "Repor a Largura dos Painéis",
     "settings": "Definições",
-    "signOut": "Terminar Sessão",
     "deselect": "Desmarcar",
     "select": "Selecionar",
     "selectedCount_one": "{{count}} item selecionado",
@@ -364,8 +361,7 @@
     "closeOtherTabs": "Fechar os outros separadores",
     "closeAllTabs": "Fechar todos os separadores",
     "pinTab": "Fixar separador",
-    "unpinTab": "Desafixar separador",
-    "newEvent": "Novo Evento"
+    "unpinTab": "Desafixar separador"
   },
   "demoBanner": {
     "title": "Experimenta sem qualquer risco",
@@ -836,6 +832,25 @@
     "hoursBefore_one": "{{count}} hora antes",
     "minutesBefore_one": "{{count}} minuto antes"
   },
+  "taskReminder": {
+    "set": "Definir lembrete",
+    "edit": "Editar lembrete",
+    "laterToday": "Mais tarde hoje",
+    "pickDateTime": "Escolher data e hora",
+    "dateTime": "Data e hora",
+    "remove": "Remover lembrete",
+    "onSchedule": "Conforme agendado",
+    "afterCompletion": "Após conclusão",
+    "afterDone": "{{count}} {{unit}} após concluir",
+    "afterDoneHint": "Conta a partir do dia em que marcares esta tarefa como concluída.",
+    "weekdaysShort": "Dias úteis",
+    "everyWeeks_other": "A cada {{count}} semanas",
+    "everyMonths_other": "A cada {{count}} meses",
+    "everyYears_other": "A cada {{count}} anos",
+    "everyYears_one": "Todos os anos",
+    "everyMonths_one": "Todos os meses",
+    "everyWeeks_one": "Todas as semanas"
+  },
   "quickAdd": {
     "group": "Criar",
     "items": "Itens",
@@ -1028,7 +1043,8 @@
   "apps": {
     "railLabel": "Extensão",
     "title": "Extensão do navegador",
-    "subtitle": "Recortador web e gestor de palavras-passe no Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf e Zen. A extensão nunca guarda a chave que abre as tuas notas.",
+    "subtitle": "Recortador web e gestor de palavras-passe para navegadores baseados em Chromium e Firefox. A extensão nunca guarda a chave que abre as tuas notas.",
+    "allSupported": "Funciona em qualquer navegador baseado em Chromium ou Firefox.",
     "loginsCopyFull": "A cópia dos teus logins na extensão do navegador está cheia. Os novos logins chegam lá quando eliminares alguns.",
     "stepInstall": "Instala a extensão",
     "stepFeatures": "Escolhe o que pode fazer",
@@ -1039,7 +1055,7 @@
     "thisBrowser": "Este navegador",
     "otherApps": "Apps para computador e telemóvel:",
     "desktopAll": "Todas as transferências",
-    "extensionComputersOnly": "A extensão é para o Chrome, Firefox e Edge num computador.",
+    "extensionComputersOnly": "A extensão é para navegadores baseados em Chromium e Firefox num computador.",
     "demoSignUp": "Regista-te para ligar um navegador"
   },
   "cli": {

@@ -4,7 +4,7 @@ import { Upload } from './icons';
 import { extractPhraseFromScan } from './qrSignIn';
 import { isLinuxNative } from './devices';
 import { Brand } from './Brand';
-import { Modal } from './ui';
+import { Button, Modal } from './ui';
 
 /** Camera QR scanner for sign-in. Dynamically imports `qr-scanner`. */
 export function QrScannerModal({
@@ -221,7 +221,7 @@ export function QrScannerModal({
         </div>
 
         {hint && (
-          <div className="px-5 py-2 text-small text-warning bg-amber-50 dark:bg-amber-950/30 border-t border-amber-200/50 dark:border-amber-900/40">
+          <div className="px-5 py-2 text-small text-warning bg-warning/10 border-t border-warning/30">
             {hint}
           </div>
         )}
@@ -230,15 +230,14 @@ export function QrScannerModal({
           <div className="text-small text-pn-muted leading-relaxed">
             {t('qrScanner.uploadHint')}
           </div>
-          <button
-            type="button"
+          <Button
+            icon={<Upload aria-hidden="true" />}
             onClick={() => fileInputRef.current?.click()}
             disabled={scanningImage}
-            className="shrink-0 inline-flex items-center gap-1.5 text-small font-medium px-3 py-1.5 rounded border border-divider hover:bg-surface-1 disabled:opacity-50 transition"
+            className="shrink-0"
           >
-            <Upload />
             {t('qrScanner.uploadImage')}
-          </button>
+          </Button>
           <input
             ref={fileInputRef}
             type="file"

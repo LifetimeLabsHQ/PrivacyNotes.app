@@ -514,13 +514,13 @@ function DownloadTile({
   /** The tile's name for a screen reader, in place of "Download for X",
    *  which is wrong for a store listing (the browser extension row). */
   ariaLabel?: string;
-  /** Tighter tile for a longer row (the nine browser extension links). */
+  /** Tighter tile for a longer row (the browser extension links). */
   compact?: boolean;
 }) {
   const { t } = useTranslation('landing');
   const outer = compact ? 'w-16 gap-1.5' : 'w-20 gap-2.5';
   const box = compact ? 'h-14 w-14 rounded-xl' : 'h-[72px] w-[72px] rounded-2xl';
-  const labelCls = compact ? 'text-compact' : 'text-body';
+  const labelCls = compact ? 'text-compact whitespace-nowrap' : 'text-body';
   if (!href && !onClick) {
     return (
       <div className={`flex ${outer} flex-col items-center`}>
@@ -2234,8 +2234,8 @@ export function LandingPage({
                 </div>
               ))}
             </dl>
-            <div className="mx-auto mt-8 flex flex-wrap justify-center gap-4 sm:gap-5">
-              {installLinks().map(({ browser, url }) => (
+            <div className="mx-auto mt-8 flex max-w-3xl flex-wrap justify-center gap-4 sm:gap-5">
+              {installLinks().map(({ browser, icon, url }) => (
                 <DownloadTile
                   key={browser}
                   compact
@@ -2244,7 +2244,7 @@ export function LandingPage({
                   note={url ? undefined : t('shell:noteOptionsMenu.comingSoon')}
                   ariaLabel={t('downloads.extensionAria', { name: browser })}
                   tileBg="#EDE8D8"
-                  icon={<img src={`/help/icons/${browser.toLowerCase()}.svg`} alt="" width={30} height={30} loading="lazy" />}
+                  icon={<img src={`/help/icons/${icon}.svg`} alt="" width={36} height={36} className="h-9 w-9 object-contain" loading="lazy" />}
                 />
               ))}
             </div>

@@ -30,6 +30,105 @@ export type ChangelogRelease = {
 
 export const PUBLIC_CHANGELOG: ChangelogRelease[] = [
   {
+    version: '0.847',
+    date: '2026-11-25',
+    title: 'Graph and Places: explore your notes as a graph or on a map',
+    items: [
+      { type: 'new', text: 'Explore your notes, journals, tasks and contacts as an interactive graph (free) with folder collapse, Option/Alt+drag linking, a node context menu and chronological Replay.', issues: [177], shot: 'graph-canvas' },
+      { type: 'new', text: 'Pin notes, journal entries and contacts onto one self-hosted Places map (in Pro) with clustering and an "In this area" list, matching contact addresses offline on your device.', issues: [177], shot: 'places-map' },
+      { type: 'new', text: 'Browse suggested connections, missing note-links, unconnected items and hubs in the Explore view, and see a 1-hop or 2-hop local mini-graph inside each note\'s Connections panel.', issues: [177], shot: 'local-graph' },
+      { type: 'new', text: 'Open Graph and Places from the app footer, Connections, Ninja or keyboard shortcut, and resize or dock the window to either side of your notes just like Settings.', issues: [177] },
+    ],
+  },
+  {
+    version: '0.846',
+    date: '2026-11-25',
+    title: 'Side-by-side columns with optional borders and soft tints',
+    items: [
+      { type: 'new', text: 'Add 2 to 5 side-by-side columns inside any note (2, 1:2, 2:1 and 3 free; 4 and 5 in Pro) with draggable resize handles and automatic stacking on narrow screens and exports.', issues: [647], shot: 'columns-layout' },
+      { type: 'new', text: 'Style any columns block from the Column borders menu with None, Divider, Boxes or Frame borders, solid, dashed or dotted lines, palette colors and a Soft column tint toggle.', issues: [647], shot: 'columns-borders' },
+    ],
+  },
+  {
+    version: '0.845',
+    date: '2026-11-25',
+    title: 'Slash commands (/) to insert blocks and dates as you type',
+    items: [
+      { type: 'new', text: 'Type / on an empty line or after a space to insert headings, lists, tables, columns, callouts, formulas, task reminders or smart dates like /tomorrow and /friday.', shot: 'slash-menu' },
+      { type: 'new', text: 'The slash menu remembers your recent picks, filters by name or callout shortcut (like /warn), works with the toolbar hidden or in Zen mode, and hands off other queries to Ninja.' },
+      { type: 'new', text: 'A new Slash commands guide in the Help Center covers every shortcut and smart date.', link: { phrase: 'Slash commands guide', href: '/help/slash-commands' } },
+    ],
+  },
+  {
+    version: '0.844',
+    date: '2026-11-25',
+    title: 'Per-checkbox reminders, repeating tasks, and quick picks',
+    items: [
+      { type: 'new', text: 'Set a reminder and repeat schedule on any individual checkbox (in Pro) from its bell button, with clickable inline reminder pills and alerts that open straight to the note.', issues: [934], shot: ['task-reminders', 'task-reminder-popover'] },
+      { type: 'new', text: 'Repeat tasks on a fixed schedule (daily, weekdays, chosen days, monthly, yearly or custom) or after completion; checking off a repeating task keeps a completed copy and creates the next one with subtasks reset.', issues: [934] },
+      { type: 'improved', text: 'Date & reminders in the note menu (renamed from Schedule) adds one-click quick picks for Later today, Tomorrow and Next week.', issues: [934] },
+    ],
+  },
+  {
+    version: '0.843',
+    date: '2026-11-25',
+    title: 'Emoji tab and country flags in the icon picker',
+    items: [
+      { type: 'new', text: 'Pick native emojis and country flags from a new Emoji tab beside Icon, Logo and Color for folders, tags, notes, trackers, subscribed calendars and Kanban columns, or insert them into note text.', shot: 'emoji-picker' },
+      { type: 'new', text: 'Jump by category, reuse recent picks, and search emoji names in your own language, with full-color country flags on Windows too.' },
+    ],
+  },
+  {
+    version: '0.842',
+    date: '2026-11-25',
+    title: 'Free Full screen mode for reading and presenting notes',
+    items: [
+      { type: 'new', text: 'Read or present any note distraction-free in Full screen mode (free on desktop via the header button, Note options menu, shortcut or Ninja), with hidden controls and 75% to 300% text scaling.', issues: [911], shot: 'full-screen' },
+      { type: 'improved', text: 'The Note options menu shows keyboard shortcuts beside Show markdown, Full screen, Find and replace and Delete on desktop.', issues: [911], shot: 'note-menu-shortcuts' },
+    ],
+  },
+  {
+    version: '0.841',
+    date: '2026-11-25',
+    title: 'Storage Usage breakdown and 7-day Note History file cleanup',
+    items: [
+      { type: 'new', text: 'A new Usage tab in Settings > Storage shows how much space your Files, Notes and Trash take across your vault, with a clickable Largest items list that jumps straight to any note or file.', issues: [903], shot: 'storage-usage' },
+      { type: 'improved', text: 'Files removed from a note are automatically freed from Note History after 7 days while keeping text history intact, with a button in Usage to clear removed history files right away.', issues: [903] },
+      { type: 'improved', text: 'A new Help Center guide explains how Space saver compresses pasted screenshots as well as attached images.', issues: [886], link: { phrase: 'Help Center guide', href: '/help/paste-screenshots' } },
+    ],
+  },
+  {
+    version: '0.840',
+    date: '2026-11-25',
+    title: 'Import from Microsoft To Do, plus Notion HTML columns',
+    items: [
+      { type: 'new', text: 'Import Microsoft To Do lists from our browser-only exporter or Graph JSON exports into Tasks with subtasks, due dates, reminders, repeating schedules, tags, notes and attachments, with a step-by-step guide.', issues: [889], shot: 'importers-tasks' },
+      { type: 'improved', text: 'Notion imports now read Notion HTML exports alongside Markdown & CSV, preserving side-by-side column layouts and widths, text colors and highlights, toggles, callouts, tables, equations and note-links.' },
+      { type: 'improved', text: 'Todoist imports also turn dated task reminders into inline checkbox reminders.' },
+    ],
+  },
+  {
+    version: '0.839',
+    date: '2026-11-25',
+    title: 'Faster typing, 18 supported browsers, UI polish, and fixes',
+    items: [
+      { type: 'new', text: 'Free accounts can delete folders (such as folders added by an import) while keeping every note inside intact.', issues: [938] },
+      { type: 'new', text: 'Settings > Extension and the downloads page list 18 browsers, adding Opera GX, Dia, Helium, Ecosia, Chromium, Waterfox, Floorp, Mullvad and Tor.', shot: 'browsers-18' },
+      { type: 'improved', text: 'Typing in long structured notes and large bullet lists, and hovering the sidebar on Linux, is much faster, and sticky bars on Linux no longer cause software blur lag.', issues: [806, 933] },
+      { type: 'improved', text: 'Recovery phrase boxes on the lock screen and PIN recovery use masked word chips with live spelling hints, the footer sync indicator uses cleaner round icons, and Danger and Upgrade buttons use a calmer tinted style.' },
+      { type: 'improved', text: 'Every editor block (including Columns, Kanban, Doodle, Gallery and Split) is available in Ninja, "Picture from Files" is now Gallery in the paperclip menu, and heading folds stay in sync with the Outline panel.' },
+      { type: 'improved', text: 'Settings > Plugins displays downloaded models as compact split chips with inline remove confirmation, and labels across menus, forms and trackers use consistent sentence case.', issues: [937] },
+      { type: 'fixed', text: 'Wide multi-column tables scroll horizontally on phones instead of squishing headers letter by letter, with a scrollable toolbar that stays inside narrow screens.' },
+      { type: 'fixed', text: 'External links and the changelog link open reliably in the Linux AppImage.', issues: [806] },
+      { type: 'fixed', text: 'Select All in a read-only note selects only the note content rather than surrounding folders, tags or sidebar chrome.', issues: [901] },
+      { type: 'fixed', text: 'Search boxes, tag inputs, URL fields and Vault credential fields no longer trigger OS autocorrect or auto-capitalization.', issues: [900, 936] },
+      { type: 'fixed', text: 'Clicking a folder or tag while in the Calendar switches to All with that filter active, and opening the Calendar clears active filters.', issues: [912] },
+      { type: 'fixed', text: 'Scrolling over an inline mini-calendar in your note list or Home scrolls the list instead of stepping months.', issues: [899] },
+      { type: 'fixed', text: 'Long-pressing a sidebar section on iPhone or iPad opens its section menu so you can lock or unlock sections on iOS.' },
+      { type: 'fixed', text: 'Opening a Markdown file from Finder or Explorer reveals it right away even when another note tab is already open.' },
+    ],
+  },
+  {
     version: '0.836',
     date: '2026-11-24',
     title: 'Local-only mode: use the apps offline with no account',

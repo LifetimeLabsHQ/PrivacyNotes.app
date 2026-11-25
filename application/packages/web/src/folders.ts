@@ -93,8 +93,7 @@ function stamp(): string {
  * the boot path to do that.
  *
  * The ids are fixed and permanent. They are what an already-seeded vault
- * matches on, what a seed file's `folder:` frontmatter resolves through,
- * and what the delete rule below tests against.
+ * matches on, and what a seed file's `folder:` frontmatter resolves through.
  * Spec: docs/internal/specs/folders.md (starter tree)
  */
 export const SEED_FOLDER_IDS = {
@@ -103,23 +102,6 @@ export const SEED_FOLDER_IDS = {
   Security: 'f01de001-0000-4000-8000-000000000006',
   Travel: 'f01de001-0000-4000-8000-000000000001',
 } as const;
-
-/**
- * May this account delete this folder?
- *
- * Deleting is Pro like every other folder action, with one exception: a
- * locked account may take apart the starter tree. It was given that tree
- * rather than asked for it, and it cannot create a folder to replace one,
- * so a tree it cannot delete is a tree it is stuck with. A folder made
- * while subscribed stays put after a downgrade, because that one is the
- * user's own work.
- *
- * Both gates read this: the row menu decides whether to open at all, and
- * the handler that does the work checks again.
- */
-export function canDeleteFolder(id: string, foldersUnlocked: boolean): boolean {
-  return foldersUnlocked || (Object.values(SEED_FOLDER_IDS) as string[]).includes(id);
-}
 
 /**
  * How the sidebar orders sibling folders. 'custom' is the order the user

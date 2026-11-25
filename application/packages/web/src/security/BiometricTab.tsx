@@ -1,8 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppWindow, Check, FileLock, Fingerprint, LockKey, ShieldSlash, Timer } from '../icons';
+import { AppWindow, FileLock, Fingerprint, LockKey, ShieldSlash, Timer } from '../icons';
 import { ConfirmModal } from '../ConfirmModal';
-import { Button, Callout, FeedbackButton, Select } from '../ui';
+import { Button, Callout, FeedbackButton, Select, StatusLine } from '../ui';
 import {
   answerBindingOffer,
   biometricKeyInSoftware,
@@ -41,7 +41,7 @@ import { signInStamp } from '../liveSignIn';
 import type { PinInputHandle } from '../PinInput';
 import { SecretInput } from '../PasscodeInput';
 import { secretReady } from '../secretKind';
-import { ROW_TITLE, RowTitle, SectionEyebrow, SETTINGS_BTN_PRIMARY, SETTINGS_HELP, SettingsCallout } from '../settingsUI';
+import { ROW_TITLE, RowTitle, SectionEyebrow, SETTINGS_HELP } from '../settingsUI';
 import { Switch } from '../Switch';
 import { isTrustedDevice } from '../trustStorage';
 import { isDemoMode } from '../demo';
@@ -475,9 +475,9 @@ export function BiometricTab({
         <SectionEyebrow icon={LockKey}>{t('biometricTab.appLockHeading')}</SectionEyebrow>
 
         {!trusted && (
-          <div className="rounded-md border border-amber-200 dark:border-amber-800/50 bg-amber-50 dark:bg-amber-900/20 p-3 text-body text-amber-800 dark:text-amber-200">
+          <Callout tone="warning">
             {t('biometricTab.trustFirst')}
-          </div>
+          </Callout>
         )}
 
         {/* Not offered on a device the user marked untrusted: the wrap it
@@ -523,7 +523,7 @@ export function BiometricTab({
                 copy cannot search (pinWrapSeal.ts). */}
             {(appLockOn || inNativeShell()) && hasPinWrappedPhrase() && !pinWrapIsPasscode() && !(enrolled && !bound) && !localPinWrapSealed() && (
               <div className="mt-3">
-                <SettingsCallout>{t('biometricTab.pinWeakCopy')}</SettingsCallout>
+                <Callout>{t('biometricTab.pinWeakCopy')}</Callout>
               </div>
             )}
             {appLockOn && (
@@ -547,17 +547,16 @@ export function BiometricTab({
 
         {fingerprintOnlyLock && (
           <div className="mt-3">
-            <SettingsCallout>
+            <Callout>
               <p>{pinConfirmKind === 'passcode' ? t('biometricTab.fingerprintOnlyLockPasscode') : t('biometricTab.fingerprintOnlyLock')}</p>
               {!pinConfirm && (
                 <div className="mt-2">
-                  <button type="button" onClick={() => setPinConfirm(true)} className={SETTINGS_BTN_PRIMARY}>
-                    <LockKey />
+                  <Button variant="primary" icon={<LockKey aria-hidden="true" />} onClick={() => setPinConfirm(true)}>
                     {pinConfirmKind === 'passcode' ? t('biometricTab.fingerprintOnlyLockActionPasscode') : t('biometricTab.fingerprintOnlyLockAction')}
-                  </button>
+                  </Button>
                 </div>
               )}
-            </SettingsCallout>
+            </Callout>
           </div>
         )}
 
@@ -596,25 +595,24 @@ export function BiometricTab({
               </p>
             )}
             <div className="flex gap-2">
-              <button
-                type="button"
+              <Button
+                action="confirm"
+                variant="primary"
                 onClick={() => void confirmPinForAppLock(pinConfirmValue)}
                 disabled={!secretReady(pinConfirmKind, pinConfirmValue) || pinConfirmBusy}
-                className={`flex-1 ${SETTINGS_BTN_PRIMARY}`}
+                className="flex-1"
               >
                 {pinConfirmBusy ? t('security:lockScreen.checking') : t('pinTab.verify')}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                action="cancel"
                 onClick={() => {
                   setPinConfirm(false);
                   setPinConfirmValue('');
                   setPinConfirmError(null);
                 }}
-                className="flex-1 rounded-md border border-divider hover:bg-surface-2 px-3 py-2 text-body transition"
-              >
-                {t('common:actions.cancel')}
-              </button>
+                className="flex-1"
+              />
             </div>
           </div>
         )}
@@ -647,10 +645,10 @@ export function BiometricTab({
       {/* Between the switch and the fingerprint buttons, the two controls
           whose failures land here. */}
       {error && (
-        <p className="text-body text-danger">{error}</p>
+        <Callout tone="danger">{error}</Callout>
       )}
       {successFlash && (
-        <p className="text-body text-accent text-center">{t('biometricTab.enabledFlash')}</p>
+        <StatusLine tone="success">{t('biometricTab.enabledFlash')}</StatusLine>
       )}
 
       {!(offerBiometric && !pinSet) && (
@@ -664,20 +662,17 @@ export function BiometricTab({
       )}
 
       {!deviceSupported && (
-        <div className="rounded-md border border-divider bg-track p-3 text-body text-pn-soft">
+        <Callout tone="info">
           {t('biometricTab.notAvailable')}
-        </div>
+        </Callout>
       )}
 
       {deviceSupported && trusted && !(offerBiometric && !pinSet) && (
         enrolled ? (
           <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-md border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/20 p-3">
-              <div className="flex items-center gap-2">
-                <Check className="text-success" />
-                <span className="text-body font-medium text-emerald-800 dark:text-emerald-200">{t('biometricTab.enrolledOnDevice')}</span>
-              </div>
-            </div>
+            <Callout tone="success">
+              <span className="font-medium">{t('biometricTab.enrolledOnDevice')}</span>
+            </Callout>
 
             {bound && (
               <p className={`${SETTINGS_HELP} leading-relaxed`}>
@@ -691,42 +686,42 @@ export function BiometricTab({
                 the weakness and the fix; otherwise the weakness alone, with
                 the set-up-again offer below it. */}
             {cannotBind && !bound ? (
-              <SettingsCallout>{t('biometricTab.cannotBind')}</SettingsCallout>
+              <Callout>{t('biometricTab.cannotBind')}</Callout>
             ) : !bound && (
-              <SettingsCallout>{t('biometricTab.unboundWeaker')}</SettingsCallout>
+              <Callout>{t('biometricTab.unboundWeaker')}</Callout>
             )}
             {canAgain && (
               <div data-setting="security.biometricSetUpAgain">
                 {offerBind ? (
-                  <SettingsCallout>
+                  <Callout>
                     <p>{t('biometricTab.bindOffer')}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      <button
+                      <Button
+                        variant="primary"
+                        icon={<Fingerprint aria-hidden="true" />}
                         onClick={() => void handleSetUpAgain()}
                         disabled={againBusy}
-                        className={SETTINGS_BTN_PRIMARY}
                       >
-                        <Fingerprint />
                         {againBusy ? t('biometricTab.settingUp') : t('biometricTab.setUpAgain')}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        action="cancel"
                         onClick={answerOffer}
                         disabled={againBusy}
-                        className="rounded-md border border-divider text-pn-soft hover:bg-surface-1 hover:text-pn px-3 py-1.5 text-small transition disabled:opacity-50"
                       >
                         {t('biometricTab.bindOfferLater')}
-                      </button>
+                      </Button>
                     </div>
-                  </SettingsCallout>
+                  </Callout>
                 ) : (
-                  <button
+                  <Button
+                    icon={<Fingerprint aria-hidden="true" />}
                     onClick={() => void handleSetUpAgain()}
                     disabled={againBusy}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-divider text-pn hover:bg-surface-1 px-3 py-2 text-body transition disabled:opacity-50"
+                    className="w-full"
                   >
-                    <Fingerprint />
                     {againBusy ? t('biometricTab.settingUp') : t('biometricTab.setUpAgain')}
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
@@ -738,15 +733,16 @@ export function BiometricTab({
           </div>
         ) : (
           <div className="space-y-2">
-            <button
+            <Button
               data-setting="security.enableBiometric"
+              variant="primary"
+              icon={<Fingerprint aria-hidden="true" />}
               onClick={() => void handleEnroll()}
               disabled={busy}
-              className={`w-full ${SETTINGS_BTN_PRIMARY}`}
+              className="w-full"
             >
-              <Fingerprint />
               {busy ? t('biometricTab.settingUp') : t('biometricTab.enable')}
-            </button>
+            </Button>
           </div>
         )
       )}

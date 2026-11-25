@@ -307,6 +307,16 @@
         "Ano. Aplikace je local-first: [tvoje poznámky žijí v databázi na tvém zařízení](/cs/help/data-location), takže čtení, psaní i [hledání fungují bez připojení](/cs/help/search-local). Změny se synchronizují automaticky, až budeš zpátky online, a [obrázek nebo soubor přidaný offline počká na tomto zařízení](/cs/help/upload-failed) a nahraje se taky až potom. [Ninja](/cs/help/ninja) funguje offline také; na připojení čeká jen uložení webové stránky jako poznámky."
       ]
     },
+    "local-only": {
+      "q": "Jak můžu používat lokální trezor bez účtu?",
+      "a": [
+        "Otevři desktopovou nebo mobilní aplikaci (macOS, Windows, Linux, iOS nebo Android), na přihlašovací obrazovce zvol „Vygenerovat frázi“ a nech nezaškrtnutou volbu „Synchronizace mezi zařízeními“, což je výchozí nastavení. Tím na tvém zařízení vznikne šifrovaný trezor bez registrace na serveru, takže funguje offline hned od začátku.",
+        "**Jak funguje režim Jen lokálně:**",
+        "- **Offline ve výchozím nastavení:** poznámky, úkoly, deníky, položky trezoru, soubory, obrázky, PIN a biometrický zámek, vyhledávání i [automatické zálohy](/cs/help/automatic-backups) fungují přímo na tvém zařízení bez účtu.\n- **Zálohuj si trezor:** protože se nic neposílá na naše servery, ztráta zařízení nebo odinstalace aplikace tvoje poznámky odstraní. Zapni si [automatické zálohy](/cs/help/automatic-backups) v Nastavení > Záloha > Automaticky, nebo vyexportuj ruční kopii v Nastavení > Záloha > Ručně.\n- **Zapni synchronizaci nebo přejdi na Pro později:** kdykoli otevři Nastavení > ID & Sync a zvol „Zapnout synchronizaci“. Na Pro můžeš přejít i s vypnutou synchronizací: platba zaregistruje ID účtu pro Pro, zatímco tvoje poznámky zůstanou lokální.\n- **Obnov zálohy z jiného zařízení:** otevři Nastavení > Záloha > Obnovit a zvol „Šifrovaná záloha (.pnbackup, .pnbackupz)“. Pokud soubor pochází z jiného trezoru, aplikace si vyžádá obnovovací frázi té zálohy (zadanou ručně nebo přes QR) a všechno naimportuje pod klíčem tvého lokálního trezoru.",
+        "**Už máš synchronizovaný účet?** Zvol postup podle svého tarifu:",
+        "- **Bezplatný účet (přechod do režimu Jen lokálně):** vyexportuj kopii v Nastavení > Záloha > Ručně a zvol „Všechno, šifrovaně (.pnbackupz)“. Pak [smaž svůj cloudový účet](/cs/help/delete-account) v Nastavení > Účet přes „Smazat účet a data...“, založ lokální trezor v desktopové nebo mobilní aplikaci pomocí „Vygenerovat frázi“ a [obnov zálohu](/cs/help/restore-backup) pomocí své staré obnovovací fráze.\n- **Účet Pro (ponechat Pro a zastavit synchronizaci):** účet nemaž, protože smazáním účtu přijdeš o Pro. Otevři **Nastavení > ID & Sync** a zapni [„Pozastavit synchronizaci“](/cs/help/pause-sync). Pro zůstane aktivní a nic nového se neodešle.\n- **Účet Pro (a zároveň smazat synchronizované poznámky ze serveru):** nejdřív vyexportuj „Všechno, šifrovaně (.pnbackupz)“, smaž všechny poznámky, vysyp koš, stiskni „Synchronizovat teď“ a počkej, až se zobrazí Synchronizováno (cloudové soubory se samy vyčistí po pěti dnech). V **Nastavení > ID & Sync** zapni „Pozastavit synchronizaci“ a pak ještě před zavřením aplikace obnov zálohu v Nastavení > Záloha > Obnovit. Tvoje poznámky se vrátí lokálně pod novými ID, zatímco Pro zůstane aktivní."
+      ]
+    },
     "sync-conflicts": {
       "q": "Co se stane, když upravím stejnou poznámku na dvou zařízeních současně?",
       "a": [
@@ -504,6 +514,13 @@
         "[Panel formátování](/cs/help/format-bar) a jeho nabídka Vložit doplní zbytek: [tabulky](/cs/help/table-formulas), callouty, které jdou sbalit, podtržení, horní a dolní index, zarovnání textu, barvy textu a zvýraznění, písma, odkazy, obrázky a přílohy. Všechno se dá vrátit do Markdownu: odkaz „Zobrazit markdown“ pod každou poznámkou odhalí zdrojový text a [exporty jsou čisté soubory .md](/cs/help/export), takže nic z toho, co napíšeš, není uzamčené v proprietárním formátu."
       ]
     },
+    "slash-commands": {
+      "q": "Můžu pro vkládání bloků používat příkazy s lomítkem /?",
+      "a": [
+        "Ano. Napiš `/` na začátku řádku nebo po mezeře a otevře se nabídka bloků, pak napiš slovo jako `/tabulka`, `/h2`, `/kanban` nebo `/warn` a stiskni Enter. Nedávné volby zůstávají nahoře a můžeš napsat i [přirozené datum](/cs/help/ninja-dates), například `/friday` nebo `/tomorrow`, `/remind` uvnitř úkolu pro [připomínku](/cs/help/reminders), nebo `/formula` v buňce tabulky pro [vzorce v tabulkách](/cs/help/table-formulas). Nabídka s lomítkem je zdarma; bloky vyžadující Pro mají odznak Pro.",
+        "Nabídka funguje společně se [živým Markdownem](/cs/help/markdown-syntax) a zůstává dostupná i tehdy, když skryješ tlačítka v [panelu formátování](/cs/help/format-bar) nebo píšeš v [režimu Zen](/cs/help/zen-mode). Pokud v nabídce nic neodpovídá zadanému textu, stiskni Enter a hledání se předá rovnou do [Ninja](/cs/help/ninja). Napsání `/` uvnitř webové adresy, data, zlomku, bloku kódu nebo vloženého textu zůstane prostým textem a nabídku nikdy neotevře; zavřeš ji klávesou Esc nebo mezerou hned za `/`."
+      ]
+    },
     "tasks": {
       "q": "Jak fungují úkoly?",
       "a": [
@@ -569,7 +586,7 @@
     "browser-extension": {
       "q": "Existuje rozšíření PrivacyNotes pro prohlížeč?",
       "a": [
-        "Ano, pro Chrome, Edge a Firefox na počítači, a je zdarma. Uloží stránku, kterou čteš, jako poznámku (její hlavní text a obrázky) nebo jako záložku, napíše novou poznámku podle tebe a umí zobrazit přihlašovací údaje, karty, klíče SSH a záložky pro web, na kterém jsi. Hodnotu zkopíruješ jedním kliknutím, nebo zvol Vyplnit (či stiskni Alt+Shift+L) a rozšíření vepíše přihlašovací údaje pro daný web do stránky. Formuláře nikdy nevyplňuje samo.",
+        "Ano, pro prohlížeče postavené na Chromiu a Firefoxu na počítači, a je zdarma. Uloží stránku, kterou čteš, jako poznámku (její hlavní text a obrázky) nebo jako záložku, umožní napsat vlastní novou poznámku a umí zobrazit přihlašovací údaje, karty, klíče SSH a záložky pro web, na kterém jsi. Hodnotu zkopíruješ jedním kliknutím, nebo zvol Vyplnit (či stiskni Alt+Shift+L) a rozšíření vepíše přihlašovací údaje pro daný web do stránky. Formuláře nikdy nevyplňuje samo.",
         "Otevři Nastavení > Rozšíření, přidej rozšíření z obchodu svého prohlížeče, vyber, co smí dělat, a pak zvol Vytvořit kód. Zkopíruj jednorázový kód a vlož ho do rozšíření. Chceš-li ho odebrat, zvol vedle něj Odebrat v části Rozšíření prohlížeče na stejné stránce. Rozšíření nezabírá jedno z míst pro tvá zařízení. Bezplatný účet připojí jeden prohlížeč, Pro až 10. [Jak chrání tvé poznámky](/cs/help/browser-extension-security)."
       ]
     },
@@ -825,6 +842,13 @@
       "a": [
         "Ano. Obě nastavení jsou ve výchozím stavu zapnutá, protože máme své uživatele rádi: chceme ti pomoct [šetřit místo](/cs/help/storage-usage) a chránit soukromí. Úspora místa zmenší velký obrázek a uloží ho jako JPEG: Standardní (výchozí) se vejde do 2048 pixelů v 85% kvalitě, Malý do 1280 pixelů v 75% kvalitě a Miniaturní do 1024 pixelů v 60% kvalitě pro nejmenší soubory. Odebrat údaje o poloze odstraní metadata EXIF, která fotoaparát do fotky zapisuje, včetně polohy GPS, ještě před uložením obrázku. Obojí platí pro každý obrázek, který aplikace umí přečíst: vložený do poznámky, přidaný jako soubor nebo importovaný. Obrázek, který přečíst neumí, například AVIF, SVG nebo takový, který se neotevře, se při přidání jako soubor nebo při importu uloží tak, jak dorazil, i s údaji o poloze. Dvě výjimky: GIF si zachová velikost, aby se jeho animace dál přehrávala, a soubor připojený k položce v Trezoru zůstane přesně takový, jaký byl.",
         "Kterékoli z nich vypni v **Nastavení > Úložiště > Obrázky**, kde mají fotky kontaktů třetí přepínač, který je drží na 512 pixelech. Nastavení platí jen pro nové obrázky; soubory, které nejsou obrázky, se ukládají přesně tak, jak jsou. Obrázky HEIC a TIFF se převádějí na JPEG, protože je umí zobrazit jen Safari. [Záloha, kterou obnovíš](/cs/help/restore-backup), se zapíše zpět bajt po bajtu."
+      ]
+    },
+    "paste-screenshots": {
+      "q": "Komprimují se i vložené snímky obrazovky?",
+      "a": [
+        "Ano. Snímky obrazovky a obrázky, které zkopíruješ a vložíš přímo do poznámky, projdou stejnou [kompresí Úspory místa](/cs/help/image-quality) jako přiložené soubory, přetažené obrázky i importy. Běžné neprůhledné snímky obrazovky se zmenší podle zvoleného nastavení a uloží se jako JPEG, což typický snímek zmenší na zlomek původní velikosti a šetří tvoji [kvótu úložiště](/cs/help/storage-usage).",
+        "V Nastavení > Úložiště > Obrázky můžeš vybrat Standardní (2048 pixelů v 85% kvalitě), Malý (1280 pixelů v 75% kvalitě) nebo Miniaturní (1024 pixelů v 60% kvalitě), případně Úsporu místa vypnout a ponechat originály. Snímek obrazovky s průhlednými okraji, například zachycené okno se stínem, se i tak zmenší na zvolený limit a uloží se jako PNG, aby si průhlednost zachoval."
       ]
     },
     "storage-usage": {
@@ -1125,7 +1149,7 @@
       "a": [
         "Ano. Napiš do buňky tabulky `=`, vyber funkci, nebo vzorec napiš sám. Buňka pak místo textu ukazuje výsledek a každý výsledek se přepočítá hned, jak změníš buňku, ze které čte. Buňky se jmenují podle písmene sloupce a čísla řádku, přičemž záhlaví je řádek 1, takže první řádek dat je řádek 2. Výsledky fungují na každém účtu; výběr z nabídky je v Pro.",
         "Chceš-li vyzkoušet všechno najednou, stáhni si ukázkovou poznámku, pak otevři Nastavení > Přenos > Import, zvol **Soubory Markdown** a vyber soubor.",
-        "[Ukázková poznámka (.md)](/marketing/table-formulas-examples.md)",
+        "[Ukázková poznámka (.md)](/help/table-formulas-examples.md)",
         "Tohle jsou funkce a dají se kombinovat pomocí `+`, `-`, `*`, `/`, `^` pro mocninu a závorek:",
         "- `SUM`, `PRODUCT`, `AVG`, `MEDIAN`, `MIN`, `MAX` a `COUNT` pracují s celým rozsahem, například `=SUM(B2:B10)`\n- `ABS`, `SQRT`, `SIGN`, `CEIL`, `FLOOR`, `ROUND` a `LOG` pracují s jednou hodnotou, například `=ROUND(B7, 2)`\n- `PI`, `E`, `TAU` a `PHI` jsou konstanty a `RAND` vrátí náhodné číslo\n- `=B7-B2` odečte jednu buňku od druhé a `=SUM(B2:B10)*0.2` spočítá procento z celkového součtu",
         "Klikni na buňku s výsledkem a vrátí se vzorec, připravený k úpravě. Poznámka ukládá samotný vzorec, nikdy výsledek, takže export i jakákoli jiná aplikace s Markdownem ukážou `=SUM(B2:B10)` přesně v podobě, v jaké je vzorec zapsaný."

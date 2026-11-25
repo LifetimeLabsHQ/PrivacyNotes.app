@@ -41,6 +41,7 @@
     "noDocuments": "Žiadne dokumenty.",
     "noImages": "Žiadne obrázky.",
     "noAudioFiles": "Žiadne zvukové súbory.",
+    "noUnusedFiles": "Žiadne nepoužité súbory.",
     "emptyTypesHint": "Obrázky, dokumenty, zvuk, video a súbory zip. Do {{max}} MB na súbor.",
     "uploadFiles": "Nahrať súbory",
     "menuShow": "Zobraziť",
@@ -239,7 +240,7 @@
     "tagCount_other": "{{count}} značiek",
     "entryDate": "Dátum záznamu",
     "noDate": "Žiadny",
-    "schedule": "Termín",
+    "schedule": "Dátum a pripomienky",
     "ends": "Koniec",
     "sameDay": "V ten istý deň",
     "starts": "Začiatok",
@@ -325,7 +326,6 @@
     "dayWithMood": "{{date}}, nálada {{mood}}"
   },
   "contextMenu": {
-    "newNote": "Nová poznámka",
     "newTask": "Nová úloha",
     "newKanban": "Nová kanbanová tabuľa",
     "newDrawing": "Nová kresba",
@@ -334,15 +334,12 @@
     "newSshKey": "Nový kľúč SSH",
     "newJournal": "Nový záznam v denníku",
     "newFile": "Nový súbor",
-    "exitZenMode": "Ukončiť režim Zen",
-    "zenMode": "Režim Zen",
     "showSidebar": "Zobraziť bočný panel",
     "hideSidebar": "Skryť bočný panel",
     "showNotesList": "Zobraziť zoznam poznámok",
     "hideNotesList": "Skryť zoznam poznámok",
     "resetPaneWidths": "Obnoviť šírky panelov",
     "settings": "Nastavenia",
-    "signOut": "Odhlásiť sa",
     "deselect": "Zrušiť výber",
     "select": "Vybrať",
     "selectedCount_one": "Vybraná {{count}} položka",
@@ -374,8 +371,7 @@
     "closeOtherTabs": "Zavrieť ostatné karty",
     "closeAllTabs": "Zavrieť všetky karty",
     "pinTab": "Pripnúť kartu",
-    "unpinTab": "Odopnúť kartu",
-    "newEvent": "Nová udalosť"
+    "unpinTab": "Odopnúť kartu"
   },
   "demoBanner": {
     "title": "Vyskúšaj to bez rizika",
@@ -897,6 +893,28 @@
     "offOnPhone": "Pripomienky sú na tomto telefóne vypnuté",
     "turnOn": "Zapnúť"
   },
+  "taskReminder": {
+    "set": "Nastaviť pripomienku",
+    "edit": "Upraviť pripomienku",
+    "laterToday": "Neskôr dnes",
+    "pickDateTime": "Vybrať dátum a čas",
+    "dateTime": "Dátum a čas",
+    "remove": "Odobrať pripomienku",
+    "onSchedule": "Podľa plánu",
+    "afterCompletion": "Po dokončení",
+    "afterDone": "{{count}} {{unit}} po dokončení",
+    "afterDoneHint": "Počíta sa odo dňa, keď túto úlohu zaškrtneš.",
+    "weekdaysShort": "Pracovné dni",
+    "everyWeeks_other": "Každých {{count}} týždňov",
+    "everyMonths_other": "Každých {{count}} mesiacov",
+    "everyYears_other": "Každých {{count}} rokov",
+    "everyYears_one": "Každý rok",
+    "everyYears_few": "Každé {{count}} roky",
+    "everyMonths_one": "Každý mesiac",
+    "everyMonths_few": "Každé {{count}} mesiace",
+    "everyWeeks_one": "Každý týždeň",
+    "everyWeeks_few": "Každé {{count}} týždne"
+  },
   "quickAdd": {
     "group": "Vytvoriť",
     "items": "Položky",
@@ -1095,7 +1113,8 @@
   "apps": {
     "railLabel": "Rozšírenie",
     "title": "Rozšírenie prehliadača",
-    "subtitle": "Ukladanie stránok a správca hesiel v prehliadačoch Chrome, Firefox, Edge, Brave, Vivaldi, Opera, Arc, LibreWolf a Zen. Rozšírenie nikdy nedrží kľúč, ktorý otvára tvoje poznámky.",
+    "subtitle": "Ukladanie stránok a správca hesiel pre prehliadače založené na Chromiu a Firefoxe. Rozšírenie nikdy nedrží kľúč, ktorý otvára tvoje poznámky.",
+    "allSupported": "Funguje v akomkoľvek prehliadači založenom na Chromiu alebo Firefoxe.",
     "loginsCopyFull": "Kópia tvojich prihlasovacích údajov v rozšírení prehliadača je plná. Nové prihlasovacie údaje sa do nej dostanú, keď niektoré odstrániš.",
     "stepInstall": "Nainštaluj rozšírenie",
     "stepFeatures": "Vyber, čo môže robiť",
@@ -1106,7 +1125,7 @@
     "thisBrowser": "Tento prehliadač",
     "otherApps": "Aplikácie pre počítač a telefón:",
     "desktopAll": "Všetky na stiahnutie",
-    "extensionComputersOnly": "Rozšírenie je pre Chrome, Firefox a Edge na počítači.",
+    "extensionComputersOnly": "Rozšírenie je pre prehliadače založené na Chromiu a Firefoxe na počítači.",
     "demoSignUp": "Zaregistruj sa a pripoj prehliadač"
   },
   "cli": {

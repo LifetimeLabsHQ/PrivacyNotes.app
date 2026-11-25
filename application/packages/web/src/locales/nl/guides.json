@@ -443,7 +443,7 @@
       "app": "Notion",
       "title": "Je Notion-workspace exporteren",
       "metaTitle": "Je Notion-workspace exporteren - PrivacyNotes",
-      "lead": "Exporteer je Notion-workspace als een Markdown & CSV-zip, en PrivacyNotes verwijdert de ID's van 32 tekens van Notion, bouwt subpagina's opnieuw op als mappen en maakt notitielinks van paginalinks.",
+      "lead": "Exporteer je Notion-workspace als een HTML- of Markdown & CSV-zip, en PrivacyNotes verwijdert de ID's van 32 tekens van Notion, bouwt subpagina's opnieuw op als mappen, behoudt kolommen en kleuren en maakt notitielinks van paginalinks.",
       "sections": [
         {
           "img": {
@@ -470,23 +470,23 @@
             "width": 1576,
             "height": 600
           },
-          "h": "Kies Markdown & CSV, met mappen aan",
+          "h": "Kies HTML (aanbevolen) of Markdown & CSV, met mappen aan",
           "steps": [
-            "Zet Export format op \"Markdown & CSV\".",
+            "Zet Export format op \"HTML\" om kolommen naast elkaar, kolombreedtes, tekstkleuren en markeringen te behouden. \"Markdown & CSV\" werkt ook als je geen kolommen of kleuren gebruikt.",
             "Zet Page content op \"Everything\", zodat je afbeeldingen, pdf's en bijgevoegde bestanden meekomen.",
             "Zet \"Include private pages\" (of \"Include subpages\" bij de export van één pagina) en \"Create folders for subpages\" aan.",
             "Klik op Export en sla het .zip-bestand op."
           ],
           "p": [
-            "HTML- en pdf-exports bevatten geen Markdown-bestanden en kunnen niet worden gelezen door de Notion-importer. Kies \"Markdown & CSV\" zodat je structuur, links en opmaak netjes meekomen."
+            "PDF-exports kunnen niet worden gelezen door de Notion-importer. Kies \"HTML\" zodat je kolommen, kleuren, structuur, links en opmaak netjes meekomen, of \"Markdown & CSV\" voor gewone Markdown."
           ]
         },
         {
           "h": "Wat er meekomt",
           "p": [
             "Notion zet een ID van 32 tekens achter elke geëxporteerde bestandsnaam en interne link. PrivacyNotes haalt die ID's weg uit elke titel en mapnaam, verwijdert de bovenste map \"Private & Shared\" en bouwt geneste subpagina's opnieuw op als mappen.",
-            "Koppen, lijsten, geneste takenlijsten, tabellen, codeblokken met de taal erbij, wiskunde, onderstreping en citaten komen mee zoals ze waren. Notion-callouts worden aandachtsblokken in PrivacyNotes, [links en vermeldingen tussen geëxporteerde pagina's worden notitielinks](/nl/help/note-links), en geüploade afbeeldingen, pdf's en bestanden worden in je opslag geïmporteerd.",
-            "Rijpagina's uit een database worden geïmporteerd als notities in een map met de naam van de database, waarbij een eventuele eigenschap Tags als tags wordt toegevoegd. CSV-tabelbestanden van databases worden overgeslagen en geteld in de importsamenvatting. Notions eigen Markdown-export laat tekstkleuren, markeringen en pagina's in de prullenbak weg."
+            "Koppen, lijsten, geneste takenlijsten, tabellen, codeblokken met de taal erbij, wiskunde, onderstreping en citaten komen mee zoals ze waren. Met een HTML-export komen kolommen naast elkaar (2 tot 5 kolommen, met hun verhoudingen), tekstkleuren en markeringen ook mee. Notion-callouts worden aandachtsblokken in PrivacyNotes, [links en vermeldingen tussen geëxporteerde pagina's worden notitielinks](/nl/help/note-links), en geüploade afbeeldingen, pdf's en bestanden worden in je opslag geïmporteerd.",
+            "Rijpagina's uit een database worden geïmporteerd als notities in een map met de naam van de database, waarbij een eventuele eigenschap Tags als tags wordt toegevoegd. CSV-tabelbestanden van databases worden overgeslagen en geteld in de importsamenvatting. Notions eigen Markdown-export slaat kolommen plat en laat tekstkleuren, markeringen en pagina's in de prullenbak weg."
           ]
         }
       ]
@@ -1552,6 +1552,45 @@
           "p": [
             "[Elk item belandt in Dagboeken](/nl/help/journal) op de kalenderdag in de eigen tijdzone van het item. Een kop aan het begin wordt de titel, en een item zonder kop krijgt zijn datum als titel. Items met een ster en vastgezette items blijven vastgezet, en tags blijven tags.",
             "Je locatie vult de locatiechip van het item, en het weer, de activiteit en de muziek staan op één regel bovenaan. Foto's worden geïmporteerd als afbeeldingen, audio, video en pdf's als bijlagen, en links tussen items worden [notitielinks](/nl/help/note-links). Als één .zip meerdere dagboeken bevat, wordt elk dagboek een map."
+          ]
+        }
+      ]
+    },
+    "microsoft-to-do": {
+      "app": "Microsoft To Do",
+      "title": "Microsoft To Do-exporter",
+      "metaTitle": "Microsoft To Do-exporter - Gratis browsertool - PrivacyNotes",
+      "lead": "Exporteer je Microsoft To Do-lijsten, subtaken, notities en bijlagen met onze gratis Microsoft To Do-exporter die volledig in je browser werkt, vóór de stopzetting in juni 2027.",
+      "sections": [
+        {
+          "h": "Je Microsoft To Do-taken in drie stappen exporteren",
+          "p": [
+            "Microsoft To Do heeft nog geen ingebouwde exportknop, dus hebben we een gratis, open source [Microsoft To Do-exporter](https://todo.privacynotes.app) gebouwd die rechtstreeks in je browser draait op Windows, Mac, Linux en mobiel."
+          ],
+          "steps": [
+            "Open [todo.privacynotes.app](https://todo.privacynotes.app) en klik op **Sign in with Microsoft**.",
+            "Geef alleen-lezentoegang (`Tasks.Read`) zodat je browser je lijsten kan lezen zonder iets te wijzigen of te verwijderen.",
+            "Klik op **Fetch my Microsoft To Do data** en daarna op **Download ZIP (recommended)** om je lijsten, taken, subtaken, notities en bijlagen lokaal op te slaan."
+          ]
+        },
+        {
+          "h": "Waarom een exporter in de browser belangrijk is vóór juni 2027",
+          "p": [
+            "Microsoft heeft aangekondigd dat Microsoft To Do op 30 juni 2027 stopt, zonder vervanger voor persoonlijke Microsoft-accounts. Werk- en schoolaccounts verhuizen naar Microsoft Planner, terwijl persoonlijke gebruikers het advies krijgen om over te stappen op een andere taken-app.",
+            "In plaats van opdrachtregelprogramma's te installeren of handmatig ontwikkelaarstokens te kopiëren, verbindt onze webexporter je browser met één klik rechtstreeks met Microsoft Graph en werkt hij met zowel persoonlijke accounts (outlook.com, hotmail.com, live.com) als Microsoft 365-accounts."
+          ]
+        },
+        {
+          "h": "Privé ontworpen - niets raakt onze servers",
+          "p": [
+            "De exporter is een statische pagina zonder backend en zonder tracking. Je browser haalt je taken rechtstreeks op bij Microsoft en maakt de ZIP op je apparaat, zodat je lijsten nooit via onze servers gaan. Aanmeldtokens blijven in tijdelijke sessieopslag van je browser en worden gewist zodra je je afmeldt of het tabblad sluit."
+          ]
+        },
+        {
+          "h": "Wat er in de ZIP zit en wat er meekomt",
+          "p": [
+            "De ZIP bevat een gestructureerde `microsoft-to-do-export.json`-back-up, één leesbare Markdown-takenlijst per lijst, een `tasks.csv` voor spreadsheets en je gedownloade bijlagen. Je kunt die export importeren in PrivacyNotes of in elke andere Markdown- of CSV-app.",
+            "In PrivacyNotes wordt elke lijst een [takenlijst](/nl/help/tasks) waarin openstaande en afgeronde taken, subtaken, markeringen als Important, vervaldatums, herhaalschema's, categorieën als tags, notities, gekoppelde items en bijgevoegde bestanden behouden blijven - en je notities zijn versleuteld op je apparaat. Herinneringen op losse taakregels komen niet mee en worden geteld in de importsamenvatting. Een los `.json`-bestand uit de exporter of uit de Microsoft Graph API wordt ook geïmporteerd, zonder bijlagen."
           ]
         }
       ]

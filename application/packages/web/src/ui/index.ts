@@ -17,9 +17,38 @@ export { TaskCheckbox } from './TaskCheckbox';
 export { Popover, Kbd, Divider, CopyButton, IconTile } from './misc';
 export { RowChip } from './RowChip';
 export { KindChips, type KindChip } from './KindChips';
+export { ExpandLabel } from './ExpandLabel';
 export { GridCard } from './GridCard';
 export { FeaturePitch, PitchBadge } from './FeaturePitch';
 export { TerminalBlock } from './TerminalBlock';
+export { Step } from './Step';
+export { PickerModal } from './PickerModal';
+export { ProgressModal } from './ProgressModal';
+export { PluginSheet } from './PluginSheet';
+export { GateCard } from './GateCard';
+export { PinProtectToggle } from './PinProtectToggle';
+export { ProTeaserCard } from './ProTeaserCard';
+export { Disclosure } from './Disclosure';
+export { DashedAddButton } from './DashedAddButton';
+export { CanvasControlBar, CanvasControlDivider } from './CanvasControlBar';
+export { ListPaneHeader, ListSearchRow } from './ListPaneHeader';
+export { ThemeSwatchCard } from './ThemeSwatchCard';
+export { SuggestionPopup, SuggestionItem } from './SuggestionPopup';
+export { RangeSlider } from './RangeSlider';
+
+/**
+ * @catalog PhraseInput
+ * use: every multi-word recovery-phrase entry (LockScreen, PinRecoveryForm, PhraseReplacedScreen, Onboarding with `tone="washi"`): starts masked with a 1:1 bullet mirror, shows numbered word chips with live BIP-39 spelling feedback, reveals with a 60-second draining bar, blocks screenshots while revealed, and clears idle input after 2 minutes.
+ * never: a plain unmasked `<textarea>` or `<TextField>` for a full recovery phrase; checking against the account's secret phrase per word (dictionary check uses the public BIP-39 list only).
+ */
+export { PhraseInput } from '../PhraseInput';
+
+/**
+ * @catalog SelectionCountStrip
+ * use: the "N of M selected" bar under a list's search row during multi-select (Notes, Bookmarks, Files): shows the tabular count, an immediate clear X button that empties the selection without leaving selection mode, and the trailing Select all / Deselect all toggle.
+ * never: a bespoke selection count bar missing the clear X button when partially selected.
+ */
+export { SelectionCountStrip } from '../SelectionCountStrip';
 
 /**
  * @catalog Switch
@@ -47,7 +76,14 @@ export { SectionEyebrow, SETTINGS_EYEBROW, EYEBROW_ICON_ROW, EyebrowGlyph } from
  * use: a setting row: `RowTitle` with its glyph and a `SETTINGS_HELP` line on the left, the control on the right; `SETTINGS_ROW` lays it out.
  * never: a row title without a glyph; a helper line in another size or tone.
  */
-export { RowTitle, ROW_TITLE, SETTINGS_ROW, SETTINGS_HELP } from '../settingsUI';
+export { RowTitle, ROW_TITLE, SETTINGS_ROW, SETTINGS_HELP, HelpTip, DeviceOnlyTip, AccentBar, HeadlineRule } from '../settingsUI';
+
+/**
+ * @catalog SETTINGS_CARD, SETTINGS_CARD_GRID, SETTINGS_CARD_ON, SETTINGS_CARD_REST, SETTINGS_GROUP, SettingsCardIcon, settingsChipClass
+ * use: framed settings cards, card grids, icon plates, grouped divided panels, and settings choice chips.
+ * never: a near copy of these card or chip classes.
+ */
+export { SETTINGS_CARD, SETTINGS_CARD_GRID, SETTINGS_CARD_ON, SETTINGS_CARD_REST, SETTINGS_GROUP, SettingsCardIcon, settingsChipClass } from '../settingsUI';
 
 /**
  * @catalog SETTINGS_BTN, SETTINGS_BTN_PRIMARY, SETTINGS_BTN_DANGER, SETTINGS_BTN_UPGRADE, SETTINGS_SELECT
@@ -64,13 +100,6 @@ export { SETTINGS_BTN, SETTINGS_BTN_PRIMARY, SETTINGS_BTN_DANGER, SETTINGS_BTN_U
 export { StatTile } from '../settingsUI';
 
 /**
- * @catalog SettingsCallout
- * use: `Callout` in its info tone, under the name the settings panes use.
- * never: a warning as a grey helper line; an amber box of your own.
- */
-export { SettingsCallout } from '../settingsUI';
-
-/**
  * @catalog ResetDefaultsButton
  * use: the foot of every preference pane or tab that has defaults. It resets what the pane shows, never a person's own lists.
  * never: a reset without the armed confirm; a reset that clears custom data.
@@ -85,11 +114,11 @@ export { ResetDefaultsButton } from '../settingsUI';
 export { SettingsTabStrip, settingsTabClass } from '../settingsUI';
 
 /**
- * @catalog ProMark, IconUpgrade
- * use: `ProMark` (rocket and "Pro") after a heading or a row title; `IconUpgrade` (the rocket alone) on a button or a tab.
+ * @catalog ProMark, IconUpgrade, ProGlyph, ProBadge
+ * use: `ProMark` (rocket and "Pro") after a heading or a row title; `IconUpgrade` (the rocket alone) on a button or a tab; `ProGlyph` for a corner rocket badge on an icon button; `ProBadge` (quiet grey "Pro" pill, no icon) on rows inside menus (`OptionsMenu`, `NoteOptionsMenu`, `ConnectionsPanel`).
  * never: an amber "PRO" pill; a gold color of your own.
  */
-export { ProMark, IconUpgrade } from '../proMark';
+export { ProMark, IconUpgrade, ProGlyph, ProBadge } from '../proMark';
 
 /**
  * @catalog HelpChip
@@ -111,6 +140,17 @@ export { ScaleTiles, MoodScale } from '../MoodScale';
  * never: a `title` attribute as the only tooltip; a tooltip of your own.
  */
 export { HoverLabel } from '../HoverLabel';
+export { OverflowTip } from '../OverflowTip';
+export { QuotaRing, QuotaRingButton } from '../QuotaRing';
+export { TotpRing } from '../TotpRing';
+export { DeviceIcon } from '../DeviceIcon';
+export { MoodMark } from '../moodMark';
+export { Brand } from '../Brand';
+export { LogoIcon } from '../LogoIcon';
+export { NinjaIcon } from '../NinjaIcon';
+export { SwissFlag } from '../SwissFlag';
+export { RatingStar } from '../RatingStar';
+export { UpdateDot } from '../UpdateDot';
 
 /**
  * @catalog Tracker panel parts (PanelQuestion, ChoiceGrid, Segmented, NumberStepper, chipClass, choiceTileClass, CHIP_ADD)

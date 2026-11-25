@@ -48,6 +48,7 @@
     "plan_dangerZone": "radera konto, ta bort konto, radera, ta bort data, avsluta konto",
     "storage_quota": "använt utrymme, kvot, användning",
     "storage_addon": "mer utrymme, köp lagring, extra lagring",
+    "storage_usage": "fördelning, störst, vad som tar plats, rensa, städning, historik, filstorlek, användning",
     "images_spaceSaver": "komprimera, ändra storlek, mindre bilder, bildkvalitet",
     "images_compression": "hård komprimering, komprimera, liten, mycket liten, pytteliten, minst, standard, kvalitet, storlek, lagring",
     "images_removeLocation": "gps, exif, metadata, plats, geotagg",

@@ -3,6 +3,7 @@ import type { Icon } from './icons';
 import type { UserSettings } from './userSettings';
 import type { View } from './views';
 import { ListNav } from './notesView/ListNav';
+import { ListPaneHeader } from './ui';
 
 /**
  * A shut section's one pane. There is nothing to list, so the list column
@@ -46,16 +47,19 @@ export function SectionGate({
   return (
     <div className="flex flex-col flex-1 min-h-0">
       {/* The title row `NotesList` uses, so the header is the same control. */}
-      <div className="shrink-0 h-11 md:h-14 px-4 border-b border-divider flex items-center gap-3">
-        <ListNav
-          view={view}
-          hiddenViews={hiddenViews}
-          onSelectView={onSelectView}
-          onOpenDrawer={onOpenDrawer}
-          icon={<Glyph size={26} className="text-accent shrink-0" aria-hidden="true" />}
-          title={label}
-        />
-      </div>
+      <ListPaneHeader
+        className="px-4"
+        leading={
+          <ListNav
+            view={view}
+            hiddenViews={hiddenViews}
+            onSelectView={onSelectView}
+            onOpenDrawer={onOpenDrawer}
+            icon={<Glyph size={26} className="text-accent shrink-0" aria-hidden="true" />}
+            title={label}
+          />
+        }
+      />
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-8">
         <ProtectedNoteGate
           section

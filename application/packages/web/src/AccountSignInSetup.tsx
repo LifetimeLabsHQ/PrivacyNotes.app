@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAccountLogins } from './accountLogins';
 import { useAuth } from './auth';
-import { SETTINGS_BTN_PRIMARY, SETTINGS_HELP, SettingsCallout } from './settingsUI';
+import { SETTINGS_BTN_PRIMARY, SETTINGS_HELP } from './settingsUI';
+import { Callout } from './ui';
 
 /** Only known server refusals get specific copy; transport text is never
  * rendered as if it were a user-facing explanation. */
@@ -53,10 +54,10 @@ export function AccountSignInSetup({ onReady, purpose = 'twoFactor' }: { onReady
   }
   const closed = Boolean(account.status && !allowed) || account.error === 'account_setup_unavailable';
   return <div className="space-y-3">
-    {!(forAccounts && closed) && <SettingsCallout>
+    {!(forAccounts && closed) && <Callout>
       <p className="font-medium">{t(repairing ? 'connectedAccounts.repairTitle' : reclaiming ? 'connectedAccounts.reclaimTitle' : forAccounts ? 'connectedAccounts.setupTitle' : 'connectedAccounts.updateTitle')}</p>
       <p className="mt-1">{t(repairing ? 'connectedAccounts.repairDescription' : reclaiming ? 'connectedAccounts.reclaimDescription' : forAccounts ? 'connectedAccounts.setupDescription' : 'connectedAccounts.updateDescription')}</p>
-    </SettingsCallout>}
+    </Callout>}
     {account.loading && <p role="status" className={SETTINGS_HELP}>{t('connectedAccounts.loading')}</p>}
     {closed && <p className={SETTINGS_HELP}>{t('connectedAccounts.unavailable')}</p>}
     {((account.error && account.error !== 'account_setup_unavailable') || failed) && <p role="alert" className="text-small text-danger">{t(failed ? accountErrorKey(account.error) : 'custody.connectionsUnavailable')}</p>}

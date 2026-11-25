@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { CaretUp, CaretDown, Swap } from './icons';
 import { HoverLabel } from './HoverLabel';
 import { bindingKeyText, keyText } from './shortcutMatch';
-import { ProGlyph } from './UpgradeModal';
+import { ProGlyph } from './ui';
 
 /**
  * Button style shared by every icon control in the find and replace bars.

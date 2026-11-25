@@ -93,7 +93,7 @@ export function parseShortcut(raw: string): ShortcutTarget | null {
 
 /** 32-bit FNV-1a as 8 hex digits. Synchronous, so a copy stays inside its
  *  click: Safari drops the clipboard permission across an await. */
-function fnv1a(text: string): string {
+export function fnv1a(text: string): string {
   let h = 0x811c9dc5;
   for (const byte of new TextEncoder().encode(text)) {
     h ^= byte;
