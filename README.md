@@ -181,14 +181,14 @@ If you cannot use GitHub, email **sec@lifetimelabs.dev** as a backup. That addre
 <!-- credits:start -->
 ## Credits
 
-PrivacyNotes is shaped by the people who report bugs and ask for features in our issues. 120 people have opened an issue, and 572 reports are now fixed or built.
+PrivacyNotes is shaped by the people who report bugs and ask for features in our issues. 120 people have opened an issue, and 574 reports are now fixed or built.
 
 <p align="center">
-<a href="https://github.com/tech2-user" title="tech2-user, 91 shipped"><img src="https://github.com/tech2-user.png?size=112" width="56" height="56" alt="tech2-user"></a>
+<a href="https://github.com/tech2-user" title="tech2-user, 93 shipped"><img src="https://github.com/tech2-user.png?size=112" width="56" height="56" alt="tech2-user"></a>
 <a href="https://github.com/harishbewe" title="harishbewe, 40 shipped"><img src="https://github.com/harishbewe.png?size=112" width="56" height="56" alt="harishbewe"></a>
 <a href="https://github.com/scamidge" title="scamidge, 33 shipped"><img src="https://github.com/scamidge.png?size=112" width="56" height="56" alt="scamidge"></a>
-<a href="https://github.com/AndreFeliciano" title="AndreFeliciano, 29 shipped"><img src="https://github.com/AndreFeliciano.png?size=112" width="56" height="56" alt="AndreFeliciano"></a>
 <a href="https://github.com/Real-Fruit-Snacks" title="Real-Fruit-Snacks, 29 shipped"><img src="https://github.com/Real-Fruit-Snacks.png?size=112" width="56" height="56" alt="Real-Fruit-Snacks"></a>
+<a href="https://github.com/AndreFeliciano" title="AndreFeliciano, 28 shipped"><img src="https://github.com/AndreFeliciano.png?size=112" width="56" height="56" alt="AndreFeliciano"></a>
 <a href="https://github.com/snogglefromp" title="snogglefromp, 22 shipped"><img src="https://github.com/snogglefromp.png?size=112" width="56" height="56" alt="snogglefromp"></a>
 <a href="https://github.com/MrJarvisHere" title="MrJarvisHere, 20 shipped"><img src="https://github.com/MrJarvisHere.png?size=112" width="56" height="56" alt="MrJarvisHere"></a>
 <a href="https://github.com/shriganesh" title="shriganesh, 16 shipped"><img src="https://github.com/shriganesh.png?size=112" width="56" height="56" alt="shriganesh"></a>
@@ -208,9 +208,9 @@ PrivacyNotes is shaped by the people who report bugs and ask for features in our
 <a href="https://github.com/RuinTD" title="RuinTD, 7 shipped"><img src="https://github.com/RuinTD.png?size=112" width="56" height="56" alt="RuinTD"></a>
 <a href="https://github.com/AstroByteOne" title="AstroByteOne, 7 shipped"><img src="https://github.com/AstroByteOne.png?size=112" width="56" height="56" alt="AstroByteOne"></a>
 <a href="https://github.com/thecoffeebin" title="thecoffeebin, 7 shipped"><img src="https://github.com/thecoffeebin.png?size=112" width="56" height="56" alt="thecoffeebin"></a>
+<a href="https://github.com/hall9989" title="hall9989, 5 shipped"><img src="https://github.com/hall9989.png?size=112" width="56" height="56" alt="hall9989"></a>
 <a href="https://github.com/gijs-epping" title="gijs-epping, 5 shipped"><img src="https://github.com/gijs-epping.png?size=112" width="56" height="56" alt="gijs-epping"></a>
 <a href="https://github.com/825i" title="825i, 5 shipped"><img src="https://github.com/825i.png?size=112" width="56" height="56" alt="825i"></a>
-<a href="https://github.com/hall9989" title="hall9989, 4 shipped"><img src="https://github.com/hall9989.png?size=112" width="56" height="56" alt="hall9989"></a>
 <a href="https://github.com/BackupSFG" title="BackupSFG, 4 shipped"><img src="https://github.com/BackupSFG.png?size=112" width="56" height="56" alt="BackupSFG"></a>
 <a href="https://github.com/michaeldurland" title="michaeldurland, 4 shipped"><img src="https://github.com/michaeldurland.png?size=112" width="56" height="56" alt="michaeldurland"></a>
 <a href="https://github.com/ajgraves" title="ajgraves, 4 shipped"><img src="https://github.com/ajgraves.png?size=112" width="56" height="56" alt="ajgraves"></a>
