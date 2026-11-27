@@ -72,6 +72,9 @@ export interface BackupPayload {
   /** The custom color themes, the `customThemes` settings map. Optional in
    *  the same way; the restore validates it with validateCustomThemes(). */
   customThemes?: unknown;
+  /** User-uploaded custom icons, the `customIcons` settings map. Optional in
+   *  the same way; the restore validates it with validateCustomIcons(). */
+  customIcons?: unknown;
   /** The person's own factor names, the `factors` settings list. Optional in
    *  the same way; the restore reads it with readFactors(). */
   factors?: unknown;
@@ -98,6 +101,7 @@ export function buildBackupPayload(
   customThemes: Record<string, unknown> = {},
   factors: unknown[] = [],
   customHabits: unknown[] = [],
+  customIcons: Record<string, unknown> = {},
 ): BackupPayload {
   return {
     version: BACKUP_VERSION,
@@ -122,6 +126,7 @@ export function buildBackupPayload(
     ...(folders.length > 0 ? { folders } : {}),
     ...(Object.keys(itemStyles).length > 0 ? { itemStyles } : {}),
     ...(Object.keys(customThemes).length > 0 ? { customThemes } : {}),
+    ...(Object.keys(customIcons).length > 0 ? { customIcons } : {}),
     ...(factors.length > 0 ? { factors } : {}),
     ...(customHabits.length > 0 ? { customHabits } : {}),
   };

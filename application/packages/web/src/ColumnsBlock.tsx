@@ -16,20 +16,22 @@ import { TextSelection, type EditorState } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { useTranslation } from 'react-i18next';
 import { isBlank } from './kanban';
+import { dragWidths, mirrorEdge } from './tableColumnWidths';
 import {
-  columnBorderOf,
-  columnWeightsOf,
-  columnsGridTemplate,
+  columnLayoutSummary,
   columnsPlugin,
-  commitColumnWeights,
-  dispatchColumnEdit,
-  dragColumnWeights,
   isColumnsBlock,
   isColumnsCol,
-  parseColumnWidth,
-  setColumnWidths,
+  runColumnCommand,
 } from './columns';
-import { columnBorderGapCss, columnBorderHasTint, formatColumnBorder, parseColumnBorder } from './columnBorders';
+import {
+  columnBorderGapCss,
+  columnContainerStyle,
+  columnsGridTemplate,
+  formatColumnBorder,
+  parseColumnBorder,
+  parseColumnWidth,
+} from './columnBorders';
 
 /** CSS `inset-inline-start` of gap `border` (between col `border` and `border + 1`). */
 function gapCenterCss(weights: readonly number[], border: number, gapCss: string): string {
@@ -131,8 +133,7 @@ function ColumnsBlockView({ node, editor, getPos }: NodeViewProps) {
   const { t } = useTranslation('editor');
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const dragCleanupRef = useRef<(() => void) | null>(null);
-  const weights = columnWeightsOf(node);
-  const borderCfg = columnBorderOf(node);
+  const { weights, border: borderCfg } = columnLayoutSummary(node);
   const borderAttr = formatColumnBorder(borderCfg);
   const gapCss = columnBorderGapCss(borderCfg.style);
   const count = weights.length;
@@ -149,8 +150,10 @@ function ColumnsBlockView({ node, editor, getPos }: NodeViewProps) {
     e.preventDefault();
     e.stopPropagation();
 
-    const startWeights = columnWeightsOf(node);
-    const activeGap = columnBorderGapCss(columnBorderOf(node).style);
+    const { weights: startWeights, border: startBorder } = columnLayoutSummary(node);
+    if (border < 0 || border >= startWeights.length - 1) return;
+    const activeGap = columnBorderGapCss(startBorder.style);
+    const magnet = mirrorEdge(startWeights, border);
     const startX = e.clientX;
     const rtl = getComputedStyle(wrap).direction === 'rtl';
     const rect = wrap.getBoundingClientRect();
@@ -182,7 +185,7 @@ function ColumnsBlockView({ node, editor, getPos }: NodeViewProps) {
       fine = ev.altKey;
       const rawDelta = ((ev.clientX - startX) / totalPx) * 100;
       const delta = rtl ? -rawDelta : rawDelta;
-      applyLive(dragColumnWeights(startWeights, border, delta, fine));
+      applyLive(dragWidths(startWeights, border, delta, magnet, fine));
     };
 
     const cleanup = (commit: boolean) => {
@@ -195,18 +198,26 @@ function ColumnsBlockView({ node, editor, getPos }: NodeViewProps) {
       pill.remove();
       dragCleanupRef.current = null;
 
-      if (!commit) {
-        wrap.style.setProperty('--pn-cols-template', columnsGridTemplate(startWeights));
-        handle.style.insetInlineStart = gapCenterCss(startWeights, border, activeGap);
-        return;
+      if (commit && !editor.isDestroyed && editor.isEditable) {
+        const pos = getPos();
+        if (typeof pos === 'number') {
+          runColumnCommand(editor, { type: 'commitResize', weights: live, fine }, { pos });
+        }
       }
-      const pos = getPos();
-      if (typeof pos !== 'number' || !editor.isEditable) return;
-      const committed = commitColumnWeights(live, fine);
-      if (!dispatchColumnEdit(editor.view, (tr) => setColumnWidths(tr, pos, committed))) {
-        // Restore visual styles to the exact committed template if drag ended unchanged.
-        wrap.style.setProperty('--pn-cols-template', columnsGridTemplate(startWeights));
-        handle.style.insetInlineStart = gapCenterCss(startWeights, border, activeGap);
+      const pos = !editor.isDestroyed ? getPos() : undefined;
+      const cur =
+        typeof pos === 'number' &&
+        Number.isInteger(pos) &&
+        pos >= 0 &&
+        pos <= editor.state.doc.content.size
+          ? editor.state.doc.nodeAt(pos)
+          : null;
+      const liveSummary = cur && isColumnsBlock(cur) ? columnLayoutSummary(cur) : null;
+      const restoreWeights = liveSummary?.weights ?? startWeights;
+      const restoreGap = columnBorderGapCss(liveSummary?.border.style ?? startBorder.style);
+      wrap.style.setProperty('--pn-cols-template', columnsGridTemplate(restoreWeights));
+      if (border < restoreWeights.length - 1) {
+        handle.style.insetInlineStart = gapCenterCss(restoreWeights, border, restoreGap);
       }
     };
 
@@ -220,7 +231,7 @@ function ColumnsBlockView({ node, editor, getPos }: NodeViewProps) {
       } else if (ev.key === 'Alt') {
         fine = true;
         const rawDelta = ((lastClientX - startX) / totalPx) * 100;
-        applyLive(dragColumnWeights(startWeights, border, rtl ? -rawDelta : rawDelta, true));
+        applyLive(dragWidths(startWeights, border, rtl ? -rawDelta : rawDelta, magnet, true));
       }
     };
 
@@ -231,22 +242,7 @@ function ColumnsBlockView({ node, editor, getPos }: NodeViewProps) {
     window.addEventListener('keydown', onKeyDown);
   }, [editor, getPos, node]);
 
-  const wrapperStyle: Record<string, string> = {
-    '--pn-cols-template': columnsGridTemplate(weights),
-    '--pn-cols-gap': gapCss,
-  };
-  if (borderCfg.style !== 'none') {
-    wrapperStyle['--pn-col-bw'] = `${borderCfg.weight}px`;
-    wrapperStyle['--pn-col-bs'] = borderCfg.line;
-    wrapperStyle['--pn-col-bc'] = borderCfg.color
-      ? `color-mix(in srgb, var(--pn-label-${borderCfg.color}-ink) 62%, transparent)`
-      : 'rgb(var(--pn-text) / 0.24)';
-    if (columnBorderHasTint(borderCfg)) {
-      wrapperStyle['--pn-col-bg'] = borderCfg.color
-        ? `var(--pn-label-${borderCfg.color}-tint)`
-        : 'rgb(var(--pn-text) / 0.045)';
-    }
-  }
+  const wrapperStyle = columnContainerStyle(weights, borderCfg);
 
   return (
     <NodeViewWrapper

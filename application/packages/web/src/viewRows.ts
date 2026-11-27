@@ -1,7 +1,7 @@
 import type { TFunction } from 'i18next';
 import { PILLAR_GLYPHS, type Icon } from './icons';
 import { markdownSupport } from './markdownFolder/capability';
-import type { View } from './views';
+import { VIEW_NOTE_TYPES, type View } from './views';
 
 /** One row in a list of views: the view it opens, its label, its glyph. */
 export type ViewRow = { key: View; label: string; icon: Icon };
@@ -118,6 +118,13 @@ export function sidebarViewRows(t: TFunction): ViewRow[] {
  */
 export function allViewRows(t: TFunction): ViewRow[] {
   return sidebarViewRows(t).filter((r) => r.key !== 'starred' && r.key !== 'markdown' && r.key !== 'dashboard');
+}
+
+/** The item-type views (every pillar in `VIEW_NOTE_TYPES`), in sidebar order.
+ *  Archive is excluded because it is a state rather than a type.
+ *  Spec: docs/internal/specs/dashboard.md (section 5, the Item list widget) */
+export function itemTypeViewRows(t: TFunction): ViewRow[] {
+  return allViewRows(t).filter((r) => Object.prototype.hasOwnProperty.call(VIEW_NOTE_TYPES, r.key));
 }
 
 /** Views that list a state of an item (pinned, archived) rather than a type. */

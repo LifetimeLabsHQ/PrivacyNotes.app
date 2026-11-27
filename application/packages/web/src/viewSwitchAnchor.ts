@@ -309,7 +309,7 @@ export type PreviewFollow = {
  * the last screen of the pane the preview closes on its own end, so the two
  * ends meet. One way: a scroll in the preview moves nothing. With no pair,
  * the scroll percent.
- * Spec: docs/internal/plans/heading-folds-and-source-preview.md (Part 2, decision 5)
+ * Spec: docs/internal/specs/heading-folds-and-source-preview.md (Part 2, decision 5)
  */
 export function createPreviewFollow(pane: HTMLElement, preview: HTMLElement): PreviewFollow {
   let version = 0;

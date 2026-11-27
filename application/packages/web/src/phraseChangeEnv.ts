@@ -31,6 +31,7 @@ import {
   storeBuiltPinWrap,
 } from './biometric';
 import { isDemoMode } from './demo';
+import { isUnsyncedLocalVault } from './localOnly';
 import { readFnErrorBody } from './devices';
 import { forgetResolveAnswers, resolveRegistered, resolveSigningKey } from './identity';
 import { ringKeyCopies } from './keyRing';
@@ -59,6 +60,7 @@ export const phraseChangeEnv = {
   removePinWrappedPhrase,
   storeBuiltPinWrap,
   isDemoMode,
+  isUnsyncedLocalVault,
   readFnErrorBody,
   forgetResolveAnswers,
   resolveRegistered,

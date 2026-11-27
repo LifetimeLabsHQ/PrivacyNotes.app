@@ -21,6 +21,8 @@ import { FloppyDisk, Globe, Lock, NotePencil, Shield, Tag, User } from '@web/ico
 import { Button } from '@web/ui/Button';
 import { Callout } from '@web/ui/feedback';
 import { VaultFieldAction } from '@web/ui/VaultFieldAction';
+import { HoverLabel } from '@web/HoverLabel';
+import { bindingKeyText } from '@web/shortcutMatch';
 import { FIELD_CLASS, FieldLabel, NO_TEXT_ASSIST } from '@web/formFields';
 import { PasswordField } from '@web/PasswordText';
 import { SETTINGS_HELP } from '@web/settingsUI';
@@ -176,15 +178,21 @@ export function AddLoginView({ url, logins, pro, organize, onDone, edit }: {
         e.preventDefault();
         if (!busy && !done && (username || password) && !totpBad && !unchanged) void save();
       }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && !e.nativeEvent.isComposing) {
+          e.preventDefault();
+          if (!busy && !done && (username || password) && !totpBad && !unchanged) void save();
+        }
+      }}
     >
       <SheetHeader title={edit ? t('logins.editTitle') : t('menu.addLogin')} onBack={() => onDone(null)} />
       <div>
         <FieldLabel icon={<Tag />} htmlFor="pn-name">{t('shell:vaultItem.fieldName')}</FieldLabel>
-        <input id="pn-name" value={name} onChange={(e) => setName(e.target.value)} className={FIELD_CLASS} dir="auto" />
+        <input id="pn-name" value={name} onChange={(e) => setName(e.target.value)} className={`${FIELD_CLASS} !bg-surface-2 shadow-xs`} dir="auto" />
       </div>
       <div>
         <FieldLabel icon={<Globe />} htmlFor="pn-site">{t('auth:loginForm.websiteLabel')}</FieldLabel>
-        <input id="pn-site" value={site} onChange={(e) => setSite(e.target.value)} autoComplete="off" {...NO_TEXT_ASSIST} className={FIELD_CLASS} dir="ltr" inputMode="url" />
+        <input id="pn-site" value={site} onChange={(e) => setSite(e.target.value)} autoComplete="off" {...NO_TEXT_ASSIST} className={`${FIELD_CLASS} !bg-surface-2 shadow-xs`} dir="ltr" inputMode="url" />
       </div>
       <div>
         <FieldLabel icon={<User />} htmlFor="pn-username">{t('auth:loginForm.usernameLabel')}</FieldLabel>
@@ -196,7 +204,7 @@ export function AddLoginView({ url, logins, pro, organize, onDone, edit }: {
           autoComplete="off"
           {...NO_TEXT_ASSIST}
           autoFocus
-          className={FIELD_CLASS}
+          className={`${FIELD_CLASS} !bg-surface-2 shadow-xs`}
           dir="auto"
         />
         <datalist id="pn-usernames">
@@ -213,7 +221,7 @@ export function AddLoginView({ url, logins, pro, organize, onDone, edit }: {
             onChange={(e) => setPassword(e.target.value)}
             revealed={reveal}
             placeholder={t('auth:loginForm.passwordPlaceholder')}
-            fieldClass={FIELD_CLASS}
+            fieldClass={`${FIELD_CLASS} !bg-surface-2 shadow-xs`}
           />
           <VaultFieldAction kind="reveal" active={reveal} title={reveal ? t('auth:loginForm.hidePassword') : t('auth:loginForm.showPassword')} onClick={() => setReveal(!reveal)} />
           <VaultFieldAction
@@ -225,7 +233,7 @@ export function AddLoginView({ url, logins, pro, organize, onDone, edit }: {
             }}
           />
         </div>
-        <Button action="generate" onClick={() => setGenerating(true)} className="mt-2">
+        <Button action="generate" onClick={() => setGenerating(true)} className="mt-2 bg-surface-2 shadow-xs">
           {t('auth:loginForm.generatePassword')}
         </Button>
       </div>
@@ -238,7 +246,7 @@ export function AddLoginView({ url, logins, pro, organize, onDone, edit }: {
           placeholder={t('auth:loginForm.totpPlaceholder')}
           autoComplete="off"
           {...NO_TEXT_ASSIST}
-          className={`${FIELD_CLASS} font-mono`}
+          className={`${FIELD_CLASS} !bg-surface-2 shadow-xs font-mono`}
           dir="ltr"
         />
         {totpBad ? (
@@ -252,7 +260,7 @@ export function AddLoginView({ url, logins, pro, organize, onDone, edit }: {
         <>
           <div>
             <FieldLabel icon={<NotePencil />} htmlFor="pn-notes">{t('common:cardForm.notes')}</FieldLabel>
-            <textarea id="pn-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={`${FIELD_CLASS} resize-y`} dir="auto" />
+            <textarea id="pn-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={`${FIELD_CLASS} !bg-surface-2 shadow-xs resize-y`} dir="auto" />
           </div>
           {organize && (
             <OrganizeFields
@@ -269,17 +277,20 @@ export function AddLoginView({ url, logins, pro, organize, onDone, edit }: {
       )}
       {error && <Callout look="card" tone="danger">{error}</Callout>}
       <div className="grid grid-cols-2 gap-2">
-        <Button action="cancel" onClick={() => onDone(null)} disabled={busy || done} />
-        <SaveButton
-          type="submit"
-          variant="primary"
-          state={done ? 'done' : busy ? 'busy' : 'idle'}
-          disabled={(!username && !password) || totpBad || unchanged}
-          icon={<FloppyDisk aria-hidden="true" />}
-          label={t('common:actions.save')}
-          busyLabel={t('common:state.saving')}
-          doneLabel={t('shell:checkIn.saved')}
-        />
+        <Button action="cancel" onClick={() => onDone(null)} disabled={busy || done} className="bg-surface-2 shadow-xs" />
+        <HoverLabel label={t('common:actions.save')} keys={bindingKeyText({ mod: true, key: 'Enter' })} position="above">
+          <SaveButton
+            type="submit"
+            variant="primary"
+            state={done ? 'done' : busy ? 'busy' : 'idle'}
+            disabled={(!username && !password) || totpBad || unchanged}
+            icon={<FloppyDisk aria-hidden="true" />}
+            label={t('common:actions.save')}
+            busyLabel={t('common:state.saving')}
+            doneLabel={t('shell:checkIn.saved')}
+            className="w-full"
+          />
+        </HoverLabel>
       </div>
     </form>
   );

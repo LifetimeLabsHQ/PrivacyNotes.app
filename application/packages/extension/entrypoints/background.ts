@@ -17,13 +17,14 @@ import type { CopyEntry, LoginCopyEntry } from '@notes/shared/extension';
 import { capturePage, type CapturedPage } from '../src/capture';
 import { buildClip, clippable, escapeMarkup, type Built, type ClipMode } from '../src/clipping';
 import { CLEAR_ALARM, clearIfStill, clearLater, copySecret, offscreen, writeClipboard } from '../src/clipboard';
+import { PENDING_KEY } from '../src/pending';
 import { FLUSH_ALARM, flashBadge, flush } from '../src/queue';
 import { saveClip, saveLogin, saveLoginEdit, saveNote, type SaveResult } from '../src/save';
 import { fetchLinkedPage } from '../src/publicFetch';
 import { readPrefs } from '../src/prefs';
 import { startI18n, t } from '../src/i18n';
 import { readConnection } from '../src/connection';
-import { allEntries, applyLockTime, copyLoginShortcut, isUnlocked, proHint, KEEP_ALARM, lockLogins, locksOn, pull, ROWS_KEY, SESSION_KEY, shortcutUrl } from '../src/logins';
+import { allEntries, applyLockTime, copyLoginShortcut, isUnlocked, proHint, KEEP_ALARM, lastPullAt, lockLogins, locksOn, pull, ROWS_KEY, SESSION_KEY, shortcutUrl } from '../src/logins';
 import { byLastFill, readLastFill } from '../src/lastFill';
 import { loginsOf, matchLogins, searchEntries } from '../src/match';
 import { fillLoginShortcut, onFillProbe, runFill } from '../src/fillRun';
@@ -34,8 +35,8 @@ import { clearSiteCounts, onMarkEnd, showLocked, showSiteCount } from '../src/ba
 import { activeTab } from '../src/tabs';
 import { passkeysReleased } from '../src/passkeyRelease';
 import { closeStorageToPageScripts } from '../src/storageAccess';
-import { dropTabRequests, onPasskeyAbort, onPasskeyRequest, onPromptGone, onUvpaQuery, passkeyScriptsWanted, PASSKEY_COUNT_KEY, PROMPT_PORT, restorePopup, savePasskeyFor, syncPasskeyScripts, type DoorDeps, type StoredRequest } from '../src/passkeyDoor';
-import { fromOwnPage, PASSKEY_EXCLUDES, PASSKEY_MATCHES, type PasskeyAbortMessage, type PasskeyRequestMessage } from '../src/passkeyWire';
+import { dropTabRequests, markWindowFallback, onPasskeyAbort, onPasskeyRequest, onPromptGone, onUvpaQuery, passkeyScriptsWanted, PASSKEY_COUNT_KEY, PROMPT_PORT, readRequest, restorePopup, savePasskeyFor, syncPasskeyScripts, type DoorDeps, type StoredRequest } from '../src/passkeyDoor';
+import { fromOwnPage, PASSKEY_EXCLUDES, PASSKEY_MATCHES, REQUEST_MAX_MS, type PasskeyAbortMessage, type PasskeyRequestMessage } from '../src/passkeyWire';
 
 const MENU_ROOT = 'pn';
 const COPY_MENU = 'login-copy';
@@ -211,25 +212,110 @@ function openPopupOn(view: PopupRoute['view'], url: string, query?: string): voi
 async function openPopupWindow(extra: string): Promise<void> {
   const width = 400;
   const height = 640;
+  const url = browser.runtime.getURL(`/popup.html?window=1${extra}` as '/');
   const win = await browser.windows.getLastFocused().catch(() => null);
-  const left = win?.left != null && win.width != null ? Math.max(0, win.left + win.width - width - 16) : undefined;
-  const top = win?.top != null ? win.top + 72 : undefined;
-  await browser.windows.create({ url: browser.runtime.getURL(`/popup.html?window=1${extra}` as '/'), type: 'popup', width, height, left, top, focused: true });
+  const left = win?.left != null && win.width != null ? Math.round(win.left + win.width - width - 16) : undefined;
+  const top = win?.top != null ? Math.round(win.top + 72) : undefined;
+  try {
+    await browser.windows.create({ url, type: 'popup', width, height, left, top, focused: true });
+  } catch {
+    // Chrome refuses `left`/`top` outside visible screen bounds (multi-monitor
+    // or small screens): let the browser place the window itself.
+    await browser.windows.create({ url, type: 'popup', width, height, focused: true });
+  }
+}
+
+/** Prompts whose popup has already connected its port, prompts that have
+ *  fallen back from the toolbar popup to a standalone window (id -> timestamp,
+ *  kept until the window disconnects so even a toolbar popup arriving after
+ *  the window connected is still recognized as superseded), and any watchdog
+ *  waiting for one to mount before falling back to a popup window or browser. */
+const connectedPrompts = new Set<string>();
+const windowFallbackPrompts = new Map<string, number>();
+const promptWaiters = new Map<string, () => void>();
+const PROMPT_OPEN_WAIT_MS = 1_200;
+const WINDOW_OPEN_WAIT_MS = 2_500;
+
+function pruneWindowFallbackPrompts(now = Date.now()): void {
+  for (const [id, at] of windowFallbackPrompts) {
+    if (now - at >= REQUEST_MAX_MS) windowFallbackPrompts.delete(id);
+  }
+}
+
+function waitForPromptPort(id: string, ms: number): Promise<boolean> {
+  if (connectedPrompts.has(id)) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const done = (connected: boolean) => {
+      clearTimeout(timer);
+      if (promptWaiters.get(id) === onConnect) promptWaiters.delete(id);
+      resolve(connected);
+    };
+    const onConnect = () => done(true);
+    const timer = setTimeout(() => done(false), ms);
+    promptWaiters.set(id, onConnect);
+  });
 }
 
 /** A passkey prompt: the toolbar popup of the asking tab opens on the
  *  request, by its id in the address (never the one-slot route, review 7),
- *  or the same page in a small window. No click is needed for either. */
+ *  or the same page in a small window. A watchdog checks that the popup
+ *  actually mounted and connected its port, so a browser that swallows
+ *  `action.openPopup` never leaves the site hung for 3 minutes. */
 function openPasskeyPrompt(req: StoredRequest, tab: Browser.tabs.Tab): void {
   void (async () => {
+    let mounted = false;
     try {
       await browser.action.setPopup({ tabId: req.tabId, popup: `popup.html?passkey=${req.id}` });
       await browser.action.openPopup({ windowId: tab.windowId });
+      mounted = await waitForPromptPort(req.id, PROMPT_OPEN_WAIT_MS);
     } catch {
-      await restorePopup(req.tabId);
-      await openPopupWindow(`&passkey=${req.id}`).catch(() => onPromptGone(req.id));
+      mounted = false;
+    }
+    if (mounted || connectedPrompts.has(req.id)) return;
+    // Mark fallback before opening the standalone window so a late toolbar
+    // popup closing when focus shifts never cancels the fallback or triggers
+    // a 60s site cooldown.
+    pruneWindowFallbackPrompts();
+    windowFallbackPrompts.set(req.id, Date.now());
+    if (!(await markWindowFallback(req.id))) {
+      windowFallbackPrompts.delete(req.id);
+      return;
+    }
+    if (connectedPrompts.has(req.id)) {
+      windowFallbackPrompts.delete(req.id);
+      return;
+    }
+    await restorePopup(req.tabId);
+    try {
+      await openPopupWindow(`&passkey=${req.id}`);
+      mounted = await waitForPromptPort(req.id, WINDOW_OPEN_WAIT_MS);
+    } catch {
+      mounted = false;
+    }
+    if (!mounted) {
+      windowFallbackPrompts.delete(req.id);
+      if (await readRequest(req.id)) await onPromptGone(req.id, false);
     }
   })();
+}
+
+/** A bounded delta pull when an unlocked sign-in finds no cached passkey yet
+ *  (e.g. one saved in another browser or device), throttled so rapid retries
+ *  never hammer the server and capped so browser fallback keeps user activation. */
+const PASSKEY_REFRESH_MIN_MS = 10_000;
+const PASSKEY_REFRESH_WAIT_MS = 1_200;
+let lastPasskeyRefresh = 0;
+
+async function refreshPasskeys(): Promise<void> {
+  const now = Date.now();
+  if (now - lastPasskeyRefresh < PASSKEY_REFRESH_MIN_MS) return;
+  const synced = await lastPullAt();
+  if (synced && now - synced < PASSKEY_REFRESH_MIN_MS) return;
+  lastPasskeyRefresh = now;
+  await Promise.race([
+    pull().catch(() => undefined),
+    new Promise<void>((resolve) => setTimeout(resolve, PASSKEY_REFRESH_WAIT_MS)),
+  ]);
 }
 
 const doorDeps: DoorDeps = {
@@ -242,6 +328,7 @@ const doorDeps: DoorDeps = {
     const found = await allEntries();
     return found ? loginsOf(found.entries).flatMap((l) => l.passkeys ?? []) : null;
   },
+  refresh: refreshPasskeys,
   count: async () => Number((await browser.storage.local.get(PASSKEY_COUNT_KEY))[PASSKEY_COUNT_KEY]) || 0,
   openPrompt: openPasskeyPrompt,
   now: () => Date.now(),
@@ -444,8 +531,8 @@ export default defineBackground(() => {
   browser.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && 'prefs' in changes) void applyLockTime();
     if (area === 'local' && ('prefs' in changes || 'connection' in changes)) syncScripts();
-    // The vault opened, closed, pulled or disconnected: the Copy login rows follow.
-    if ((area === 'session' && SESSION_KEY in changes) || (area === 'local' && (ROWS_KEY in changes || 'connection' in changes))) refreshMenus();
+    // The vault opened, closed, pulled, edited or disconnected: the Copy login rows follow.
+    if ((area === 'session' && SESSION_KEY in changes) || (area === 'local' && (ROWS_KEY in changes || PENDING_KEY in changes || 'connection' in changes))) refreshMenus();
   });
   browser.runtime.onInstalled.addListener(() => refreshMenus());
   onMarkEnd(refreshMenus);
@@ -470,7 +557,27 @@ export default defineBackground(() => {
       const own = fromOwnPage(port.sender, browser.runtime.id, browser.runtime.getURL('/'));
       if (!own || !port.name.startsWith(PROMPT_PORT)) return;
       const id = port.name.slice(PROMPT_PORT.length);
-      port.onDisconnect.addListener(() => void onPromptGone(id));
+      const isWindow = (() => {
+        try { return !!port.sender?.url && new URL(port.sender.url).searchParams.get('window') === '1'; }
+        catch { return false; }
+      })();
+      // A toolbar popup that finished booting after we already fell back to a
+      // standalone window is superseded (even if the window already connected):
+      // tell it to close quietly and ignore its disconnect so it cannot cancel
+      // the live window or start cooldown.
+      if (windowFallbackPrompts.has(id) && !isWindow) {
+        try { port.postMessage({ superseded: true }); } catch { /* ignore */ }
+        return;
+      }
+      connectedPrompts.add(id);
+      promptWaiters.get(id)?.();
+      promptWaiters.delete(id);
+      port.onDisconnect.addListener(() => {
+        connectedPrompts.delete(id);
+        if (windowFallbackPrompts.has(id) && !isWindow) return;
+        windowFallbackPrompts.delete(id);
+        void onPromptGone(id);
+      });
     });
   }
   browser.windows.onFocusChanged.addListener((id) => {

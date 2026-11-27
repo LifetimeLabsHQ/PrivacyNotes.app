@@ -4,37 +4,45 @@ import { Trans, useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { isOversizeImport } from '../noteSplit';
 import { NO_TEXT_ASSIST } from '../formFields';
-import i18n, { ensureImportLogLoaded } from '../i18n';
-import { IMPORTERS } from './registry';
+import i18n from '../i18n';
+import {
+  IMPORTERS,
+  buildPickerGroups,
+  filterPickerCards,
+  importerIdToSource,
+  sourceLabel,
+  type PickerCard,
+  type PickerCardKey,
+  type PickerSectionKey,
+} from './registry';
+import {
+  createSupabaseQuotaPort,
+  prepareImportPreview,
+  type PhotoEstimate,
+  type QuotaCheck,
+} from './importPreflight';
 import { runImport } from './importRun';
 import { withFolderPathTags } from './folderImport';
 import { withBrowserTags } from './browserBookmarks';
 import type { ImporterEntry, ParsedImport, ImportedNote, RestoreCounts } from './types';
 import { useAuth } from '../auth';
-import { recordAdminEvent, type ImportSource } from '../adminEvents';
+import { recordAdminEvent } from '../adminEvents';
 import type { LocalNote } from '../db';
 import { BackupWrongKeyError, missingItemsLabel } from '../export';
-import { isLocalOnly } from '../localOnly';
 import { extractPhraseFromScan } from '../qrSignIn';
 import { QrScannerModal } from '../QrScannerModal';
-import { useSecretOnScreen } from '../privacyScreen';
 import type { FolderDef } from '../folders';
 import { destinationGroups, existingImportFolder, type ImportDestination, type ImportTarget } from './destination';
-import { Archive, ArrowCounterClockwise, ClockCounterClockwise, Heartbeat, BookmarkSimple, BookOpenText, BracketsCurly, CalendarDots, CalendarPlus, Check, CircleNotch, Download, FileHtml, FileText, FileZip, Globe, Key, Lock, LockOpen, Note, Scan, Upload, AddressBook, NEW_GLYPHS, EXPORT_GLYPHS, PILLAR_GLYPHS } from '../icons';
+import { Archive, ArrowCounterClockwise, ClockCounterClockwise, Heartbeat, BookmarkSimple, BookOpenText, BracketsCurly, CalendarDots, CalendarPlus, FileArrowDown, FileArrowUp, FileHtml, FileText, FileZip, Globe, Key, Lock, LockOpen, Note, Scan, Upload, AddressBook, NEW_GLYPHS, EXPORT_GLYPHS, PILLAR_GLYPHS } from '../icons';
 import { goesToCalendarFile } from '../schedule';
-import { fetchQuotaUsage, recalculateQuota } from '../devices';
-import { estimateNoteStoredBytes, estimateBlobBytes } from '../notesViewUtils';
 import { proUnlocked } from '../demo';
 import { backupSettingsNames } from '../backupRestore';
 import { listOf } from '../scheduleText';
 import { RESTORE_WAIT_LINE, restoreGateNow, useRestoreGate, type RestoreGate } from '../pullState';
 import { formatBytes } from '../formatBytes';
-import { textMatcher } from '../textMatch';
 import { useEscapeToClose } from '../useEscapeToClose';
-import { perFileLimit } from '../attachmentValidation';
-import { contactPhotoOptions, processImage } from '../imageProcessing';
 import { SETTINGS_BTN, SETTINGS_HELP, SectionEyebrow, SettingsTabStrip, StatTile, settingsTabClass, ROW_TITLE, SETTINGS_CARD as CARD, SETTINGS_CARD_GRID as CARD_GRID, SETTINGS_CARD_REST as CARD_REST, SettingsCardIcon as RowIcon } from '../settingsUI';
-import { Button, Callout, Checkbox, FIELD_CLASS, IconUpgrade, ListSearchInput, Modal, ModalFooter, Select, Spinner, TextField } from '../ui';
+import { Button, Callout, Checkbox, IconUpgrade, ListSearchInput, Modal, ModalFooter, PhraseInput, Select, Spinner, TextField } from '../ui';
 import { calendarFeedUrl, downloadCalendarFeed } from './calendarFeed';
 import { ClipError } from '../clipDownload';
 import { sessionTokenOf } from '../sessionToken';
@@ -72,86 +80,6 @@ import { AutomaticCallout, AutomaticPane } from '../autoBackup/AutomaticPane';
 // Spec: docs/contrib/gotchas.md (Android file picker drops accept extensions it cannot map to a MIME type)
 function pickerAccept(accept: string): string {
   return /android/i.test(navigator.userAgent) ? '*/*' : accept;
-}
-
-/** Per-note stored-bytes estimate via the shared server-cost estimator
- *  (UTF-8 measured, base64-expanded: estimating from UTF-16 length x1.4
- *  undercounts CJK imports by ~3x, so the "will not fit" gate would never
- *  fire for exactly the imports most likely to blow the quota). */
-function estimateImportBytes(notes: ImportedNote[]): number {
-  let total = 0;
-  for (const n of notes) {
-    total += estimateNoteStoredBytes(n.title ?? '', n.body ?? '', n.tags ?? []);
-  }
-  return total;
-}
-
-type QuotaCheck = {
-  estimatedBytes: number;
-  availableBytes: number;
-  exceeds: boolean;
-};
-
-/**
- * What an address book's photos will cost once the app sizes them down.
- * `bytes` is measured from a sample of the actual file, never taken from a
- * table: contact photo sizes vary by two orders of magnitude between an
- * OEM contacts app and an iPhone. `fits` is decided BEFORE anything is
- * written, so the contacts land and the photos are declined as one whole,
- * never half of them followed by a quota error.
- * Spec: docs/internal/specs/contacts-pillar.md (section 7.4)
- */
-type PhotoEstimate = {
-  count: number;
-  bytes: number;
-  /** null when the quota could not be read (offline, demo). */
-  available: number | null;
-  fits: boolean;
-};
-
-/** How many photos the estimate compresses to find the median. */
-const PHOTO_SAMPLE = 20;
-
-async function sampleContactPhotos(parsed: ParsedImport): Promise<{ count: number; bytes: number } | null> {
-  const photos = [...(parsed.blobs?.values() ?? [])].filter((b) => b.ceiling === 'contact');
-  if (photos.length === 0) return null;
-  const step = Math.max(1, Math.floor(photos.length / PHOTO_SAMPLE));
-  const sizes: number[] = [];
-  for (let i = 0; i < photos.length && sizes.length < PHOTO_SAMPLE; i += step) {
-    const b = photos[i]!;
-    const result = await processImage(new File([b.data as BlobPart], b.name, { type: b.mime }), contactPhotoOptions());
-    sizes.push(result.ok ? result.image.sizeBytes : b.data.length);
-  }
-  sizes.sort((a, b) => a - b);
-  const median = sizes[Math.floor(sizes.length / 2)] ?? 0;
-  return { count: photos.length, bytes: estimateBlobBytes(median) * photos.length };
-}
-
-/**
- * The importer ids whose import records an anonymous event in admin_events.
- * The registry ids match the source keys one to one. Keyed by the
- * `ImportSource` union, so a source added there must be listed here too;
- * `encrypted` is the encrypted backup, which records its own (useExports.ts).
- */
-const COUNTED_SOURCES: Record<Exclude<ImportSource, 'encrypted'>, true> = {
-  'google-keep': true,
-  'standard-notes': true,
-  obsidian: true,
-  notesnook: true,
-  'apple-notes': true,
-  'apple-journal': true,
-  'samsung-notes': true,
-  simplenote: true,
-  'markdown-folder': true,
-  privacynotes: true,
-  'browser-bookmarks': true,
-  'browser-passwords': true,
-  vcard: true,
-};
-
-/** The source key an import from this importer records, or null for one not counted. */
-export function importerIdToSource(id: string): ImportSource | null {
-  return Object.hasOwn(COUNTED_SOURCES, id) ? (id as ImportSource) : null;
 }
 
 /** Every tab of the window; each Settings page shows its own subset. */
@@ -265,10 +193,10 @@ export function ImportModal({
   /** Give imported tags their colors (Google Keep's note colors): tag ->
    *  color key. The parent colors only a tag that has no color yet. */
   onImportTagColors?: (colors: Map<string, string>) => void;
-  /** Our own full backup: merge the looks and custom themes it carries,
-   *  with each folder look moved from its saved folder id to the final one. */
+  /** Our own full backup: merge the settings it carries, with each folder look
+   *  and folder reference remapped from its saved folder id to the final one. */
   onImportSettings?: (
-    settings: { itemStyles?: unknown; customThemes?: unknown },
+    settings: NonNullable<ParsedImport['settings']>,
     savedToFinal: ReadonlyMap<string, string>,
   ) => void;
   /** The subscribed calendars and their one writer, for the Webcal panel (#619). */
@@ -375,6 +303,7 @@ export function ImportModal({
     }
     const imp = encryptedBackupImporter();
     setPhase({ kind: 'parsing', importer: imp, status: t('status.decryptingBackup') });
+    const releaseLockReload = holdLockReload();
     try {
       const counts = await onImportEncrypted(file);
       onImported(counts.imported, undefined, { updated: counts.updated, unchanged: counts.unchanged });
@@ -389,6 +318,8 @@ export function ImportModal({
         importer: imp,
         message: err instanceof Error ? err.message : t('errors.decryptionFailed'),
       });
+    } finally {
+      releaseLockReload();
     }
   }
 
@@ -424,100 +355,24 @@ export function ImportModal({
     });
 
     try {
-      // The importers' messages load with the first import (i18n.ts).
-      await ensureImportLogLoaded();
-      const parsed = await importer.parse(file, (msg) =>
-        setPhase((prev) =>
-          prev.kind === 'parsing' ? { ...prev, status: msg } : prev
-        )
-      );
-      // Quota preflight - best-effort. If the RPC fails, leave
-      // quotaCheck null and let the server enforce on push.
-      // The same pass counts blobs over the PER-FILE cap, which the total
-      // quota says nothing about: an oversized file imports to this device
-      // fine and is then refused by the server on upload, so without this
-      // it would sit here looking imported and silently never reach any
-      // other device. Journal exports carry video, which is where this
-      // bites first, but it is true of every importer that ships blobs.
-      let oversize = 0;
-      let capLabel = '';
-      // Measured before the quota is read, so the row can still show the
-      // count and the size when the quota read fails.
-      const photos = await sampleContactPhotos(parsed);
-      setPhotoEstimate(photos ? { ...photos, available: null, fits: true } : null);
-      setImportPhotos(true);
-      if (isLocalOnly()) {
-        // Local-only vaults hold no server quota and never contact the backend.
-        setQuotaCheck(null);
-      } else try {
-        // Recalculate before reading: the counter can trail a delete the
-        // user just made, promising space the next recalc takes back.
-        // Best-effort - a failed recalc still leaves a usable read.
-        await recalculateQuota(supabase).catch(() => {});
-        const usage = await fetchQuotaUsage(supabase, isPro);
-        const available = Math.max(
-          0,
-          usage.maxTotalBytes - usage.totalBytes - usage.imageBytes,
-        );
-        // Blob costs: per-blob encryption overhead when the parsed blob set
-        // is available, else the raw byte total.
-        // A contact photo is shrunk before it is stored, so it costs what the
-        // sample measured, not its raw bytes, and it costs nothing when it is
-        // declined for not fitting.
-        const photosFit = photos ? photos.bytes <= available : true;
-        if (photos) {
-          setPhotoEstimate({ ...photos, available, fits: photosFit });
-          setImportPhotos(photosFit);
-        }
-        let blobBytes = photos && photosFit ? photos.bytes : 0;
-        if (parsed.blobs && parsed.blobs.size > 0) {
-          for (const blob of parsed.blobs.values()) {
-            if (blob.ceiling === 'contact') continue;
-            blobBytes += estimateBlobBytes(blob.data.length);
-          }
-        } else {
-          blobBytes = parsed.blobBytes ?? 0;
-        }
-        let countedNotes = parsed.notes;
-        // Our own backup adds only what the vault lacks.
-        if (parsed.source === 'privacynotes' && parsed.blobSizes) {
-          const { restoreAdds } = await import('./privacynotes');
-          const adds = await restoreAdds(parsed);
-          countedNotes = adds.notes;
-          blobBytes = adds.blobBytes;
-        }
-        const estimatedBytes = estimateImportBytes(countedNotes) + blobBytes;
-        setQuotaCheck({
-          estimatedBytes,
-          availableBytes: available,
-          exceeds: estimatedBytes > available,
-        });
-        const cap = perFileLimit(
-          proUnlocked(isPro),
-          usage.maxTotalBytes > 500 * 1000 * 1000,
-        );
-        for (const blob of parsed.blobs?.values() ?? []) {
-          if (blob.ceiling === 'contact') continue;
-          if (blob.data.length > cap) oversize++;
-        }
-        capLabel = formatBytes(cap);
-      } catch {
-        setQuotaCheck(null);
-      }
+      const prepared = await prepareImportPreview({
+        importer,
+        file,
+        quota: createSupabaseQuotaPort(supabase, isPro),
+        isPro,
+        onProgress: (msg) =>
+          setPhase((prev) =>
+            prev.kind === 'parsing' ? { ...prev, status: msg } : prev,
+          ),
+      });
+      setPhotoEstimate(prepared.photoEstimate);
+      setImportPhotos(prepared.importPhotos);
+      setQuotaCheck(prepared.quotaCheck);
       setPhase({
         kind: 'preview',
         importer,
         file: { name: file.name, size: file.size },
-        parsed:
-          oversize > 0
-            ? {
-                ...parsed,
-                warnings: [
-                  ...parsed.warnings,
-                  t('preview.oversizeAttachments', { count: oversize, limit: capLabel }),
-                ],
-              }
-            : parsed,
+        parsed: prepared.parsed,
       });
     } catch (err) {
       setPhase({ kind: 'error', importer, ...importFailure(err, importer, file.size, t) });
@@ -542,7 +397,7 @@ export function ImportModal({
     return {
       id: 'privacynotes', label: t('encryptedBackupLabel'), description: '', accept: '.pnbackup', enabled: true, sourceTag: '',
       parse: async () => { throw new Error(); },
-      icon: null, labelKey: 'sourceLabel.privacynotes', descKey: null, fileTypes: '', guide: null, restore: true,
+      group: null, icon: null, labelKey: 'sourceLabel.privacynotes', descKey: null, fileTypes: '', guide: null, restore: true,
     };
   }
 
@@ -719,8 +574,8 @@ export function ImportModal({
           className="shrink-0 px-4 sm:px-6"
         >
           {([
-            { id: 'import' as const, setting: 'import.import', label: t('shell.tabImport'), icon: <Download aria-hidden="true" /> },
-            { id: 'export' as const, setting: 'import.export', label: t('shell.tabExport'), icon: <Upload aria-hidden="true" /> },
+            { id: 'import' as const, setting: 'import.import', label: t('shell.tabImport'), icon: <FileArrowDown aria-hidden="true" /> },
+            { id: 'export' as const, setting: 'import.export', label: t('shell.tabExport'), icon: <FileArrowUp aria-hidden="true" /> },
             { id: 'manual' as const, setting: 'backup.manual', label: t('shell.tabManual'), icon: <Archive aria-hidden="true" /> },
             { id: 'automatic' as const, setting: 'import.automatic', label: t('shell.tabAutomatic'), icon: <ClockCounterClockwise aria-hidden="true" /> },
             { id: 'restore' as const, setting: 'import.restore', label: t('shell.tabRestore'), icon: <ArrowCounterClockwise aria-hidden="true" /> },
@@ -837,6 +692,7 @@ export function ImportModal({
                         return null;
                       }
                     }
+                    const releaseLockReload = holdLockReload();
                     try {
                       const counts = await onImportEncrypted(phase.file, phrase);
                       onImported(counts.imported, undefined, { updated: counts.updated, unchanged: counts.unchanged });
@@ -850,6 +706,8 @@ export function ImportModal({
                         message: err instanceof Error ? err.message : t('errors.decryptionFailed'),
                       });
                       return null;
+                    } finally {
+                      releaseLockReload();
                     }
                   }}
                 />
@@ -950,7 +808,6 @@ function ForeignPhrasePhase({
   onUnlock: (phrase: string) => Promise<string | null>;
 }) {
   const { t } = useTranslation('importExport');
-  useSecretOnScreen(true);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1002,22 +859,15 @@ function ForeignPhrasePhase({
         </p>
       </div>
 
-      <textarea
+      <PhraseInput
         value={input}
-        onChange={(e) => {
-          setInput(e.target.value);
+        onChange={(next) => {
+          setInput(next);
           setError(null);
         }}
         placeholder={t('auth:importPhrase.placeholder')}
-        rows={3}
-        dir="ltr"
-        spellCheck={false}
-        autoCapitalize="none"
-        autoCorrect="off"
-        autoComplete="off"
         disabled={busy}
         autoFocus
-        className={`${FIELD_CLASS} font-mono`}
       />
 
       <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
@@ -1079,19 +929,16 @@ function ForeignPhrasePhase({
 }
 
 /** The glyphs a card can carry instead of a brand's mark (`ImporterIcon`). */
-const CARD_GLYPH: Record<'address-book' | 'drawing', ReactNode> = {
+const CARD_GLYPH: ReadonlyMap<'address-book' | 'drawing', ReactNode> = new Map<
+  'address-book' | 'drawing',
+  ReactNode
+>([
   // The address book, matching the Contacts pillar: every phone writes the
   // same .vcf, so no vendor's logo fits.
-  'address-book': <AddressBook size={20} aria-hidden="true" />,
+  ['address-book', <AddressBook key="address-book" size={20} aria-hidden="true" />],
   // The drawing glyph the app draws everywhere, for a format two apps write.
-  'drawing': <NEW_GLYPHS.drawing size={20} aria-hidden="true" />,
-};
-
-
-/** An importer's name in the reader's language, or its brand name unchanged. */
-function sourceLabel(imp: ImporterEntry, t: TFunction): string {
-  return imp.labelKey ? t(imp.labelKey) : imp.label;
-}
+  ['drawing', <NEW_GLYPHS.drawing key="drawing" size={20} aria-hidden="true" />],
+]);
 
 /**
  * The words an import failure shows (#758). An importer's own Error carries a
@@ -1165,12 +1012,12 @@ function SourceGroup({ icon, title, children }: { icon?: ComponentProps<typeof S
   );
 }
 
-/** The panel of the open tile: what the old row showed (the name, the
- *  description) and its actions. It spans the whole grid row; the grid's
- *  dense flow moves the rest of the tile's row up above it. */
+/** Expanded detail panel of the active source tile: full title, description,
+ *  and primary actions across the full grid row (`grid-flow-dense` moves
+ *  remaining tiles on that row above the panel). */
 function SourcePanel({ id, label, desc, children }: { id: string; label: string; desc: ReactNode; children: ReactNode }) {
   return (
-    <div id={id} role="region" aria-label={label} className="col-span-full rounded-lg border border-divider bg-surface-1 px-3 py-2.5">
+    <div id={id} role="region" aria-label={label} className="col-span-full rounded-lg border border-divider bg-surface-2 px-3 py-2.5">
       <span className={`block ${ROW_TITLE}`}>{label}</span>
       <span className="block text-small text-pn-soft mt-0.5">{desc}</span>
       <div className="mt-2.5 flex flex-wrap items-start gap-2">{children}</div>
@@ -1180,19 +1027,16 @@ function SourcePanel({ id, label, desc, children }: { id: string; label: string;
 
 /** The panel actions of one importer: Import opens the file picker, Guide
  *  opens its /help/import/<slug> page when one exists. */
-function ImporterActions({ imp, onPick, guide }: { imp: ImporterEntry; onPick: (imp: ImporterEntry) => void; guide?: string | null }) {
+function ImporterActions({ imp, onPick, guide }: { imp: ImporterEntry; onPick: (imp: ImporterEntry) => void; guide: string | null }) {
   const { t } = useTranslation('importExport');
-  // `guide` overrides the importer's own guide: an alias card names its app's
-  // guide, or null when its family's guide is about another app.
-  const guideSlug = guide === undefined ? imp.guide ?? undefined : guide ?? undefined;
   return (
     <>
-      <Button variant="primary" icon={<Download aria-hidden="true" />} onClick={() => onPick(imp)}>
+      <Button variant="primary" icon={<FileArrowDown aria-hidden="true" />} onClick={() => onPick(imp)}>
         {t('webcal.import')}
       </Button>
-      {guideSlug && (
+      {guide && (
         <a
-          href={siteHref(`${helpPath(activeLocale())}/import/${guideSlug}`)}
+          href={siteHref(`${helpPath(activeLocale())}/import/${guide}`)}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={t('importPick.guideAria', { app: sourceLabel(imp, t) })}
@@ -1259,7 +1103,7 @@ function CalendarFeedForm({ onFile, feeds }: { onFile: (file: File) => void; fee
             className="w-full"
           />
         </div>
-        <Button type="submit" variant="primary" icon={importing ? <Spinner size={15} className="text-current" /> : <Download aria-hidden="true" />} disabled={busy || !address.trim()}>
+        <Button type="submit" variant="primary" icon={importing ? <Spinner size={15} className="text-current" /> : <FileArrowDown aria-hidden="true" />} disabled={busy || !address.trim()}>
           {importing ? t('webcal.downloading') : t('webcal.import')}
         </Button>
         {feeds && (
@@ -1278,184 +1122,128 @@ function CalendarFeedForm({ onFile, feeds }: { onFile: (file: File) => void; fee
   );
 }
 
-/** The Webcal card's line under its name (`ImporterCard.fileTypes` for the
- *  importers). */
-const WEBCAL_TYPES = 'webcal://';
+const GROUP_ICON: ReadonlyMap<PickerSectionKey, ComponentProps<typeof SectionEyebrow>['icon']> = new Map<
+  PickerSectionKey,
+  ComponentProps<typeof SectionEyebrow>['icon']
+>([
+  ['notes', Note],
+  ['tasks', PILLAR_GLYPHS.tasks],
+  ['drawings', NEW_GLYPHS.drawing],
+  ['calendar', CalendarDots],
+  ['bookmarks', BookmarkSimple],
+  ['passwords', Key],
+]);
 
-/** Alias cards: an app whose export another importer already reads gets a
- *  card of its own, so a person finds the name of their app. One card per
- *  browser in the Bookmarks and Vault groups (every browser writes the same
- *  bookmarks file and passwords .csv), Apple Passwords (Safari's .csv) and
- *  Apple Calendar (one .ics, read by the calendar importer). Brand names,
- *  not translated. Tile id: `<importer id>:<alias>`. */
-const ALIAS_NAME: Record<string, string> = {
-  'apple-calendar': 'Apple Calendar',
-  'apple-passwords': 'Apple Passwords',
-  brave: 'Brave',
-  chrome: 'Chrome',
-  edge: 'Edge',
-  firefox: 'Firefox',
-  safari: 'Safari',
-  vivaldi: 'Vivaldi',
-};
-const ALIAS_ICON: Record<string, string> = {
-  'apple-calendar': '/help/icons/apple-calendar.webp',
-  'apple-passwords': '/help/icons/apple-passwords.webp',
-  brave: '/help/icons/brave.svg',
-  chrome: '/help/icons/chrome.svg',
-  edge: '/help/icons/edge.svg',
-  firefox: '/help/icons/firefox.svg',
-  safari: '/help/icons/safari.webp',
-  vivaldi: '/help/icons/vivaldi.svg',
-};
-/** The browser cards of one family, alphabetical, as tile ids. */
-const browserTiles = (family: 'browser-bookmarks' | 'browser-passwords', browsers: string[]) =>
-  browsers.map((b) => `${family}:${b}`);
-/** A tile id as its importer id and its browser ('' for a plain source). */
-const splitTile = (id: string): [string, string] => {
-  const at = id.indexOf(':');
-  return at < 0 ? [id, ''] : [id.slice(0, at), id.slice(at + 1)];
-};
-/** An alias whose family's description names another app has its own. */
-const ALIAS_DESC_KEY: Record<string, string> = {
-  'apple-calendar': 'sourceDesc.appleCalendar',
-};
-/** An alias with a guide page of its own (`/help/import/<slug>`). */
-const ALIAS_GUIDE: Record<string, string> = {
-  'apple-calendar': 'apple-calendar',
-};
-/** Safari writes a .zip around both files; every other browser the bare file. */
-const aliasFileTypes = (family: ImporterEntry, alias: string): string => {
-  if (alias === 'apple-calendar') return '.ics';
-  if (alias === 'safari') return family.fileTypes;
-  return family.id === 'browser-bookmarks' ? '.html' : '.csv';
-};
-
-/** Import tab: a search field over a card per source in five groups, the
- *  note apps, drawings, calendar and contacts, bookmarks, then passwords.
- *  The search reads the name and the file types, so ".enex" finds Evernote.
- *  The descriptions live in the panel a card opens.
+/** Import tab: a search field over source cards grouped by destination pillar.
+ *  Search matches card labels, file extensions, and section titles, so ".enex"
+ *  finds Evernote and "bookmarks" retains every browser card in Bookmarks.
  *  Spec: docs/internal/design/patterns/151-160.md (section 157) */
 function ImportPickPhase({ onPick, onCalendarFeed, calendarFeeds }: { onPick: (imp: ImporterEntry) => void; onCalendarFeed: (file: File) => void; calendarFeeds?: FeedsControl }) {
   const { t } = useTranslation('importExport');
-  const importerMap = Object.fromEntries(IMPORTERS.map((i) => [i.id, i]));
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openCard, setOpenCard] = useState<PickerCardKey | null>(null);
   const [query, setQuery] = useState('');
   // Escape empties a typed search before it closes Settings.
   useEscapeToClose(() => setQuery(''), query !== '');
-  const toggle = (id: string) => setOpenId((cur) => (cur === id ? null : id));
-  // The password importers had a tab of their own that people did not find,
-  // and then sat among the general sources (#608); they get a group of their
-  // own. Drawings too: Excalidraw is no note app. Obsidian sits in both:
-  // its vault with the notes, its canvases alone as Obsidian Canvas. Each
-  // group is alphabetical.
-  const groups = [
-    { key: 'notes', icon: Note, title: t('shell:tagsRail.notes'), ids: ['anytype', 'apple-journal', 'apple-notes', 'bear', 'capacities', 'day-one', 'daylio', 'diaro', 'diarium', 'evernote', 'google-journal', 'google-keep', 'ia-writer', 'joplin', 'markdown-folder', 'nextcloud-notes', 'notesnook', 'notion', 'obsidian', 'onenote', 'samsung-notes', 'simplenote', 'siyuan', 'standard-notes', 'typora', 'upnote', 'zettlr'] },
-    { key: 'tasks', icon: PILLAR_GLYPHS.tasks, title: t('shell:tagsRail.tasks'), ids: ['microsoft-to-do', 'todoist'] },
-    { key: 'drawings', icon: NEW_GLYPHS.drawing, title: t('shell:tagsRail.drawings'), ids: ['excalidraw', 'obsidian-canvas'] },
-    { key: 'calendar', icon: CalendarDots, title: t('importPick.groupCalendar'), ids: ['google-calendar:apple-calendar', 'vcard', 'google-calendar', WEBCAL_ID] },
-    { key: 'bookmarks', icon: BookmarkSimple, title: t('shell:tagsRail.bookmarks'), ids: [...browserTiles('browser-bookmarks', ['brave', 'chrome', 'edge', 'firefox']), 'raindrop', ...browserTiles('browser-bookmarks', ['safari', 'vivaldi'])] },
-    { key: 'passwords', icon: Key, title: t('shell.tabVault'), ids: [...browserTiles('browser-passwords', ['apple-passwords']), '1password', 'bitwarden', ...browserTiles('browser-passwords', ['brave', 'chrome']), 'dashlane', ...browserTiles('browser-passwords', ['edge']), 'enpass', ...browserTiles('browser-passwords', ['firefox']), 'keepass', 'keepassxc', 'lastpass', 'msecure', 'nordpass', 'proton-pass', ...browserTiles('browser-passwords', ['safari', 'vivaldi'])] },
-  ];
-  const panelId = (id: string) => `import-panel-${id.replace(':', '-')}`;
-  const labelOf = (id: string) => {
-    if (id === WEBCAL_ID) return t('webcal.title');
-    const [impId, browser] = splitTile(id);
-    if (browser) return ALIAS_NAME[browser] ?? '';
-    const imp = importerMap[impId];
-    return imp ? sourceLabel(imp, t) : '';
-  };
-  const typesOf = (id: string) => {
-    if (id === WEBCAL_ID) return WEBCAL_TYPES;
-    const [impId, browser] = splitTile(id);
-    const imp = importerMap[impId];
-    if (!imp) return '';
-    return browser ? aliasFileTypes(imp, browser) : imp.fileTypes;
-  };
-  const match = query.trim() ? textMatcher(query) : null;
-  // A search for the group's name ("bookmarks") keeps the whole group: its
-  // browser cards carry only the browser's name.
-  const matches = (id: string, groupTitle: string) => !match || !!match(labelOf(id)) || !!match(typesOf(id)) || !!match(groupTitle);
+
+  const groups = useMemo(() => buildPickerGroups((key) => t(key)), [t]);
+  const shown = useMemo(() => filterPickerCards(groups, query), [groups, query]);
+  const fallbackCard = useMemo(
+    () =>
+      groups
+        .flatMap((g) => g.cards)
+        .find((c) => c.importerId === 'markdown-folder' && c.aliasKey === null) ?? null,
+    [groups],
+  );
+
+  const isOpen = (card: PickerCard) =>
+    openCard !== null &&
+    openCard.importerId === card.importerId &&
+    openCard.aliasKey === card.aliasKey;
+  const toggle = (card: PickerCard) =>
+    setOpenCard((cur) =>
+      cur !== null && cur.importerId === card.importerId && cur.aliasKey === card.aliasKey
+        ? null
+        : { importerId: card.importerId, aliasKey: card.aliasKey },
+    );
+  const panelIdOf = (card: PickerCard) =>
+    card.aliasKey
+      ? `import-panel-${card.importerId}-${card.aliasKey}`
+      : `import-panel-${card.importerId}`;
 
   // A card, then its panel right after it when open: the panel spans the
   // row, and `grid-flow-dense` fills the rest of the card's row from the
   // cards that follow, so the panel opens under the row and comes next in
   // the Tab order.
-  const cells = (id: string) => {
-    const open = openId === id;
-    if (id === WEBCAL_ID) {
+  const renderCard = (card: PickerCard) => {
+    const open = isOpen(card);
+    const panelId = panelIdOf(card);
+    const reactKey = card.aliasKey ? `${card.importerId}:${card.aliasKey}` : card.importerId;
+    if (card.kind === 'webcal') {
       return (
-        <Fragment key={id}>
+        <Fragment key={reactKey}>
           <SourceTile
             data-setting="import.webcal"
             icon={<RowIcon glyph={<Globe size={20} aria-hidden="true" />} />}
-            label={t('webcal.title')}
-            detail={WEBCAL_TYPES}
+            label={card.label}
+            detail={card.fileTypes}
             open={open}
-            panelId={panelId(id)}
-            onToggle={() => toggle(id)}
+            panelId={panelId}
+            onToggle={() => toggle(card)}
           />
           {open && (
-            <SourcePanel id={panelId(id)} label={t('webcal.title')} desc={t('webcal.desc')}>
+            <SourcePanel id={panelId} label={card.label} desc={card.desc}>
               <CalendarFeedForm onFile={onCalendarFeed} feeds={calendarFeeds} />
             </SourcePanel>
           )}
         </Fragment>
       );
     }
-    const [impId, browser] = splitTile(id);
-    const imp = importerMap[impId];
-    if (!imp) return null;
-    const descKey = imp.descKey;
-    const ownDescKey = browser ? ALIAS_DESC_KEY[browser] : undefined;
+    const imp = card.importer;
     return (
-      <Fragment key={id}>
+      <Fragment key={reactKey}>
         <SourceTile
           // Every browser card of a family carries the family's marker; the
           // settings search scrolls to the first one. An alias of another
           // app (Apple Calendar) takes its own, or a search for Google
           // Calendar would land on it.
           data-setting={`import.source.${imp.id}`}
-          {...(ownDescKey ? { 'data-setting': `import.alias.${browser}` } : {})}
-          icon={<RowIcon src={browser ? ALIAS_ICON[browser] : imp.icon && 'src' in imp.icon ? imp.icon.src : undefined} glyph={!browser && imp.icon && 'glyph' in imp.icon ? CARD_GLYPH[imp.icon.glyph] : undefined} />}
-          label={labelOf(id)}
-          detail={typesOf(id)}
+          {...(card.aliasSetting ? { 'data-setting': card.aliasSetting } : {})}
+          icon={
+            <RowIcon
+              src={'src' in card.icon ? card.icon.src : undefined}
+              glyph={'glyph' in card.icon ? CARD_GLYPH.get(card.icon.glyph) : undefined}
+            />
+          }
+          label={card.label}
+          detail={card.fileTypes}
           open={open}
-          panelId={panelId(id)}
+          panelId={panelId}
           disabled={!imp.enabled}
-          onToggle={() => toggle(id)}
+          onToggle={() => toggle(card)}
         />
         {open && (
-          <SourcePanel id={panelId(id)} label={labelOf(id)} desc={ownDescKey ? t(ownDescKey) : descKey ? t(descKey) : imp.description}>
-            {/* An alias picks its family's importer under its own name, so the
-                check step says "Apple Calendar"; it shows its own guide, and an
-                alias described as another app never shows its family's guide. */}
-            <ImporterActions imp={browser ? { ...imp, label: labelOf(id) } : imp} onPick={onPick} guide={browser ? ALIAS_GUIDE[browser] ?? (ownDescKey ? null : undefined) : undefined} />
+          <SourcePanel id={panelId} label={card.label} desc={card.desc}>
+            <ImporterActions imp={card.pickImporter} onPick={onPick} guide={card.guide} />
           </SourcePanel>
         )}
       </Fragment>
     );
   };
-  const shown = groups.map((g) => ({ ...g, ids: g.ids.filter((id) => matches(id, g.title)) })).filter((g) => g.ids.length > 0);
 
   return (
     <div className="space-y-3">
       <ListSearchInput value={query} onChange={setQuery} placeholder={t('importPick.searchPlaceholder')} ariaLabel={t('importPick.searchPlaceholder')} />
       {shown.map((g) => (
-        <SourceGroup key={g.key} icon={g.icon} title={g.title}>{g.ids.map(cells)}</SourceGroup>
+        <SourceGroup key={g.key} icon={GROUP_ICON.get(g.key)} title={g.title}>{g.cards.map(renderCard)}</SourceGroup>
       ))}
-      {shown.length === 0 && (
+      {shown.length === 0 && fallbackCard && (
         // Most note apps can write plain Markdown, which the Markdown
         // importer reads, so a search with no match ends on that card.
-        <SourceGroup title={t('importPick.noMatch')}>{cells('markdown-folder')}</SourceGroup>
+        <SourceGroup title={t('importPick.noMatch')}>{renderCard(fallbackCard)}</SourceGroup>
       )}
     </div>
   );
 }
-
-/** The Webcal tile's id: not an importer, it downloads a calendar address
- *  and hands the file to the Google Calendar importer. */
-const WEBCAL_ID = 'webcal';
 
 /** Restore tab pick phase - PrivacyNotes backup restore, 1-col with full descriptions. */
 function RestorePickPhase({ gate, onPickRestore, onImportEncrypted }: {
@@ -1535,16 +1323,13 @@ function ParsingPhase({
 }
 
 /** Derive type-aware counts from notes at render time. */
-function computeTypeCounts(notes: ImportedNote[]): { label: string; count: number }[] {
-  let noteCount = 0;
-  let journalCount = 0;
-  let loginCount = 0;
-  let cardCount = 0;
-  let sshKeyCount = 0;
-  let contactCount = 0;
-  let drawingCount = 0;
+export function computeTypeCounts(notes: ImportedNote[]): { label: string; count: number }[] {
+  let noteCount = 0, taskCount = 0, eventCount = 0, linkCount = 0, journalCount = 0, loginCount = 0, cardCount = 0, sshKeyCount = 0, contactCount = 0, drawingCount = 0;
   for (const n of notes) {
     switch (n.type) {
+      case 'task': taskCount++; break;
+      case 'event': eventCount++; break;
+      case 'link': linkCount++; break;
       case 'journal': journalCount++; break;
       case 'login': loginCount++; break;
       case 'card': cardCount++; break;
@@ -1554,21 +1339,24 @@ function computeTypeCounts(notes: ImportedNote[]): { label: string; count: numbe
       default: noteCount++; break;
     }
   }
-  const parts: { label: string; count: number }[] = [];
-  if (noteCount > 0) parts.push({ label: i18n.t('importExport:counts.note', { count: noteCount }), count: noteCount });
-  if (contactCount > 0) parts.push({ label: i18n.t('importExport:counts.contact', { count: contactCount }), count: contactCount });
-  if (drawingCount > 0) parts.push({ label: i18n.t('importExport:counts.drawing', { count: drawingCount }), count: drawingCount });
-  if (journalCount > 0) parts.push({ label: i18n.t('importExport:counts.journal', { count: journalCount }), count: journalCount });
-  if (loginCount > 0) parts.push({ label: i18n.t('importExport:counts.login', { count: loginCount }), count: loginCount });
-  if (cardCount > 0) parts.push({ label: i18n.t('importExport:counts.card', { count: cardCount }), count: cardCount });
-  if (sshKeyCount > 0) parts.push({ label: i18n.t('importExport:counts.sshKey', { count: sshKeyCount }), count: sshKeyCount });
+  const lower = (s: string) => (activeLocale() === 'de' ? s : s.toLowerCase()), parts: { label: string; count: number }[] = [], push = (count: number, label: () => string) => { if (count > 0) parts.push({ label: label(), count }); };
+  push(noteCount, () => i18n.t('importExport:counts.note', { count: noteCount }));
+  push(taskCount, () => lower(i18n.t('notes:footerStats.tasks', { count: taskCount })));
+  push(eventCount, () => lower(eventCount === 1 ? i18n.t('notes:newMenu.event') : i18n.t('shell:calendar.kinds.event')));
+  push(linkCount, () => lower(i18n.t('notes:footerStats.bookmarks', { count: linkCount })));
+  push(contactCount, () => i18n.t('importExport:counts.contact', { count: contactCount }));
+  push(drawingCount, () => i18n.t('importExport:counts.drawing', { count: drawingCount }));
+  push(journalCount, () => i18n.t('importExport:counts.journal', { count: journalCount }));
+  push(loginCount, () => i18n.t('importExport:counts.login', { count: loginCount }));
+  push(cardCount, () => i18n.t('importExport:counts.card', { count: cardCount }));
+  push(sshKeyCount, () => i18n.t('importExport:counts.sshKey', { count: sshKeyCount }));
   return parts;
 }
 
 /** Format type counts for the confirm button label. Several types read as
  *  one total: the stat tiles above the button already show each type, and a
  *  list of seven types made a button of two lines. */
-function formatTypeCountsShort(notes: ImportedNote[]): string {
+export function formatTypeCountsShort(notes: ImportedNote[]): string {
   const parts = computeTypeCounts(notes);
   if (parts.length === 0) return i18n.t('importExport:counts.zeroItems');
   if (parts.length === 1) return `${parts[0]!.count} ${parts[0]!.label}`;
@@ -1767,17 +1555,9 @@ function PreviewPhase({
       )}
 
       {transforms.length > 0 && (
-        <div className="rounded-lg border border-accent/40 bg-accent/5 p-3 text-small space-y-1">
-          {transforms.map((t, i) => (
-            <div
-              key={i}
-              className="text-accent flex items-start gap-1.5"
-            >
-              <Check className="mt-0.5 shrink-0" />
-              <span>{t}</span>
-            </div>
-          ))}
-        </div>
+        <Callout>
+          <div className="space-y-1">{transforms.map((item, i) => <div key={i}>{item}</div>)}</div>
+        </Callout>
       )}
 
       {oversizeCount > 0 && onSplitOversizeChange && (
@@ -2001,9 +1781,9 @@ function ExportPanel({
     (n) => n.type === 'link' && n.deleted !== 1 && n.trashed !== 1,
   );
   const [openId, setOpenId] = useState<string | null>(null);
-  // The one-kind files (bookmarks, contacts, calendar, drawings, vault) sit with the
-  // portable formats: each had a section of one row. Each appears once there
-  // is something for it to write.
+  // Single-pillar files (bookmarks, contacts, calendar, drawings, vault) share
+  // the Portable export grid alongside whole-vault archives, appearing once
+  // the vault holds matching items.
   const portable: ExportEntry[] = [
     ...(hasNotes ? [{ setting: 'export.notesMarkdown', title: t('export.notesMarkdownTitle'), desc: t('export.notesMarkdownDesc'), icon: <RowIcon glyph={<EXPORT_GLYPHS.markdown size={20} aria-hidden="true" />} />, run: () => onExportNotesMdZip(notes) }] : []),
     { setting: 'export.htmlArchive', title: t('export.htmlArchiveTitle'), desc: t('export.htmlArchiveDesc'), icon: <RowIcon glyph={<FileHtml size={20} aria-hidden="true" />} />, run: () => onExportAllHtmlZip(notes) },
@@ -2032,7 +1812,7 @@ function ExportPanel({
         />
         {open && (
           <SourcePanel id={panelId} label={e.title} desc={e.desc}>
-            <Button variant="primary" icon={<Upload aria-hidden="true" />} onClick={e.run}>
+            <Button variant="primary" icon={<FileArrowUp aria-hidden="true" />} onClick={e.run}>
               {t('shell.tabExport')}
             </Button>
           </SourcePanel>

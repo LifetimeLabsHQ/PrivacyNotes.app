@@ -18,13 +18,14 @@ import {
   validateRegisterMap,
   type RegisterMap,
 } from '../registers';
+import { VIEW_NOTE_TYPES, type View } from '../views';
 
 /** The old size letter: one column, two, or the row. Still written beside
  *  `w`, so an app from before free sizes draws the widget near its width. */
 type WidgetSize = 's' | 'm' | 'l';
-export type WidgetGroup = 'today' | 'notes' | 'stats' | 'keep';
+export type WidgetGroup = 'today' | 'notes' | 'graph' | 'stats' | 'keep';
 /** What a widget points at, chosen by the person. */
-export type WidgetTarget = 'note' | 'tag' | 'folder' | 'tracker';
+export type WidgetTarget = 'note' | 'tag' | 'folder' | 'tracker' | 'types' | 'counter';
 /** Smallest, default, largest. */
 type Range = readonly [number, number, number];
 
@@ -58,9 +59,11 @@ export const HOME_MIN_COL_PX = 244;
  *  streak tile needs 150px, or its last line is cut. */
 const PAIR_MIN_PX = 312;
 
-// Spec: docs/internal/specs/dashboard.md (section 5, the version 1 list)
+// Spec: docs/internal/specs/dashboard.md (section 5, the widget list)
 const WIDGET_DEFS = {
   checkIn: { group: 'today', w: [2, 2, 4], h: [2, 2, 4] },
+  medication: { group: 'today', w: [2, 2, 4], h: [2, 3, 6] },
+  quickCapture: { group: 'today', w: [2, 2, 4], h: [2, 2, 4], heightAt: (px) => (px < 360 ? 204 : 132) },
   // Measured: the month is 345px tall at every width the card takes on a
   // phone (288px to 382px of card; the days have one size), plus the card's
   // 16px of padding. An older 331px below 335px gave a five-row tile that
@@ -74,23 +77,31 @@ const WIDGET_DEFS = {
   note: { group: 'notes', w: [1, 2, 4], h: [2, 5, 12], target: 'note' },
   tag: { group: 'notes', w: [1, 1, 4], h: [2, 4, 12], target: 'tag' },
   folder: { group: 'notes', w: [1, 1, 4], h: [2, 4, 12], target: 'folder', pro: true },
+  types: { group: 'notes', w: [1, 2, 4], h: [2, 4, 12], target: 'types' },
   onThisDay: { group: 'notes', w: [1, 1, 4], h: [2, 3, 12] },
+  graph: { group: 'graph', w: [1, 2, 4], h: [3, 4, 8] },
+  places: { group: 'graph', w: [1, 2, 4], h: [3, 4, 8], pro: true },
   // Four tiles in a row from 512px of content (the card's @lg), else two by
   // two: measured 110px and 235px of tiles, plus the head and the padding.
   // The content box is the card less its 24px of padding and its 1px border
   // each side; a card 536 to 537px wide lays its tiles out two by two.
-  week: { group: 'stats', w: [2, 2, 4], h: [2, 3, 6], heightAt: (px) => (px - 26 >= 512 ? 110 : 235) + 36 + 24 },
+  week: { group: 'stats', w: [2, 2, 4], h: [2, 3, 4], heightAt: (px) => (px - 26 >= 512 ? 110 : 235) + 36 + 24 },
   streak: { group: 'stats', w: [1, 1, 2], h: [2, 2, 3] },
   checkInStreak: { group: 'stats', w: [1, 1, 2], h: [2, 2, 3] },
-  // The heatmap is 406 by 112 and fills the card's width (24px of padding);
-  // above it the head and the layer switch, under it the legend line.
-  rhythm: { group: 'stats', w: [2, 2, 4], h: [3, 4, 8], heightAt: (px) => ((px - 24) * 112) / 406 + 24 + 36 + 44 + 24 },
+  // The heatmap is 406 by 112 and fits the card's width (24px of padding);
+  // the layer switch sits in the card header, leaving only the head and the
+  // legend line, and wide cards cap their auto height so 4-col tiles stay sleek.
+  rhythm: { group: 'stats', w: [2, 2, 4], h: [3, 4, 8], heightAt: (px) => Math.min(200, ((px - 24) * 112) / 406) + 24 + 32 + 22 },
+  yearPixels: { group: 'stats', w: [2, 2, 4], h: [3, 4, 8] },
+  patterns: { group: 'stats', w: [2, 2, 4], h: [3, 4, 8], pro: true },
   milestone: { group: 'stats', w: [1, 1, 2], h: [2, 2, 3] },
   tracker: { group: 'stats', w: [1, 1, 4], h: [2, 2, 6], target: 'tracker' },
-  weekRecap: { group: 'stats', w: [2, 2, 4], h: [4, 4, 10], pro: true },
+  counter: { group: 'stats', w: [1, 1, 2], h: [2, 2, 4], target: 'counter', pro: true },
+  weekRecap: { group: 'stats', w: [2, 2, 4], h: [3, 3, 6], pro: true },
   files: { group: 'keep', w: [1, 1, 4], h: [2, 4, 12] },
   bookmarks: { group: 'keep', w: [1, 1, 4], h: [2, 4, 12] },
-  birthdays: { group: 'keep', w: [1, 1, 2], h: [2, 3, 8] },
+  birthdays: { group: 'keep', w: [1, 1, 2], h: [2, 2, 6] },
+  storage: { group: 'keep', w: [1, 1, 2], h: [2, 2, 3] },
 } as const satisfies Record<string, WidgetDef>;
 
 export type WidgetKind = keyof typeof WIDGET_DEFS;
@@ -99,6 +110,38 @@ export const WIDGET_KINDS = Object.keys(WIDGETS) as WidgetKind[];
 
 export function isWidgetKind(k: string): k is WidgetKind {
   return Object.prototype.hasOwnProperty.call(WIDGETS, k);
+}
+
+function isItemTypeView(k: string): k is View {
+  return Object.prototype.hasOwnProperty.call(VIEW_NOTE_TYPES, k);
+}
+
+/** Parse a `types` widget's comma-separated view keys. Unknown keys (for
+ *  example a pillar from a newer build) are skipped rather than rejecting the
+ *  whole widget. */
+export function parseItemTypes(r: string | undefined): View[] {
+  if (!r) return [];
+  const seen = new Set<View>();
+  const out: View[] = [];
+  for (const part of r.split(',')) {
+    const k = part.trim();
+    if (!isItemTypeView(k) || seen.has(k)) continue;
+    seen.add(k);
+    out.push(k);
+  }
+  return out;
+}
+
+/** Serialize chosen item-type view keys into a `types` widget's `r` target. */
+export function formatItemTypes(views: readonly View[]): string {
+  const seen = new Set<View>();
+  const out: View[] = [];
+  for (const v of views) {
+    if (!isItemTypeView(v) || seen.has(v)) continue;
+    seen.add(v);
+    out.push(v);
+  }
+  return out.join(',');
 }
 
 /** One widget on Home. `k` is a string: a kind from a newer app is kept. */
@@ -186,8 +229,8 @@ function toStored(w: Widget): Record<string, unknown> {
 // The stock layout and the layouts a person can start from
 // ------------------------------------------------------------------
 
-export type LayoutId = 'everyday' | 'journal' | 'planner' | 'writer';
-export const LAYOUT_IDS: readonly LayoutId[] = ['everyday', 'journal', 'planner', 'writer'];
+export type LayoutId = 'everyday' | 'journal' | 'planner' | 'writer' | 'wellness';
+export const LAYOUT_IDS: readonly LayoutId[] = ['everyday', 'journal', 'planner', 'writer', 'wellness'];
 
 /** [id, kind, width, height] */
 type Spec = readonly (readonly [string, WidgetKind, number, number])[];
@@ -217,7 +260,35 @@ const LAYOUTS: Record<LayoutId, Spec> = {
     ['w1', 'week', 2, 3], ['w2', 'streak', 1, 3], ['w3', 'milestone', 1, 3],
     ['w4', 'recent', 2, 4], ['w5', 'rhythm', 2, 4],
   ],
+  wellness: [
+    ['h1', 'checkIn', 2, 2], ['h2', 'medication', 2, 2],
+    ['h3', 'calendar', 1, 5], ['h4', 'yearPixels', 2, 5], ['h5', 'checkInStreak', 1, 2],
+    ['h6', 'today', 1, 3],
+    ['h7', 'patterns', 2, 4], ['h8', 'rhythm', 2, 4],
+  ],
 };
+
+/** Curated showcase Home seeded only for the public demo (?demo=1), filling
+ *  four columns with zero holes so every signature widget shines on first sight. */
+export function demoShowcaseDashboard(counterId: string): Widget[] {
+  return [
+    { i: 'd1', k: 'checkIn', w: 2, h: 2 },
+    { i: 'd2', k: 'quickCapture', w: 2, h: 2 },
+    { i: 'd3', k: 'medication', w: 2, h: 3 },
+    { i: 'd4', k: 'tasks', w: 1, h: 5 },
+    { i: 'd5', k: 'counter', w: 1, h: 2, r: counterId },
+    { i: 'd6', k: 'storage', w: 1, h: 3 },
+    { i: 'd7', k: 'streak', w: 1, h: 2 },
+    { i: 'd8', k: 'checkInStreak', w: 1, h: 2 },
+    { i: 'd9', k: 'graph', w: 2, h: 4 },
+    { i: 'd10', k: 'places', w: 2, h: 4 },
+    { i: 'd11', k: 'yearPixels', w: 2, h: 6 },
+    { i: 'd12', k: 'calendar', w: 1, h: 6 },
+    { i: 'd13', k: 'upcoming', w: 1, h: 6 },
+    { i: 'd14', k: 'patterns', w: 2, h: 4 },
+    { i: 'd15', k: 'types', w: 2, h: 4, r: 'all,journal' },
+  ];
+}
 
 export function layoutWidgets(id: LayoutId): Widget[] {
   return fromSpec(LAYOUTS[id]);
@@ -288,6 +359,50 @@ export function widgetFor(list: readonly Widget[], k: WidgetKind, r: string): Wi
   return list.find((w) => w.k === k && w.r === r);
 }
 
+/** Sync a repeatable target widget kind (`note`, `tag`, `folder`, `tracker`, or
+ *  `counter`) to a chosen set of targets: existing widgets for kept targets
+ *  stay in place with their ids and sizes, unchecked ones leave, and new ones
+ *  append in order. Refused (same list back) when the result would not fit the
+ *  register or nothing changed. */
+export function syncTargetWidgets(
+  list: readonly Widget[],
+  k: Exclude<WidgetTarget, 'types'>,
+  selectedTargets: readonly string[],
+): Widget[] {
+  const ordered: string[] = [];
+  const wanted = new Set<string>();
+  for (const raw of selectedTargets) {
+    const r = raw.slice(0, TARGET_MAX);
+    if (!r || wanted.has(r)) continue;
+    wanted.add(r);
+    ordered.push(r);
+  }
+  const keptTargets = new Set<string>();
+  let removed = false;
+  const kept: Widget[] = [];
+  for (const w of list) {
+    if (w.k !== k) {
+      kept.push(w);
+      continue;
+    }
+    if (w.r && wanted.has(w.r)) {
+      keptTargets.add(w.r);
+      kept.push(w);
+    } else {
+      removed = true;
+    }
+  }
+  const toAdd = ordered.filter((r) => !keptTargets.has(r));
+  if (!removed && toAdd.length === 0) return list as Widget[];
+  let next: Widget[] = kept;
+  for (const r of toAdd) {
+    const added = addWidget(next, k, { r });
+    if (added === next) return list as Widget[];
+    next = added;
+  }
+  return fitsDashboard(next) ? next : (list as Widget[]);
+}
+
 // ------------------------------------------------------------------
 // Placement: where each widget sits for a number of columns
 // ------------------------------------------------------------------
@@ -354,11 +469,17 @@ export function packBoxes(items: readonly { id: string; w: number; h: number }[]
  * Close the holes packing leaves: each box grows down, a row at a time, while
  * the row under it is free across its whole width and inside the grid's
  * height; then sideways, a column at a time, toward the end and then the
- * start, while that column is free along its whole height. Then the page
- * ends on one straight edge and no card sits beside a gap. Only how Home
- * draws: the saved size does not change.
+ * start, while that column is free along its whole height. When `limits` is
+ * given, no box grows past its own `maxW` or `maxH`, so a compact card (such
+ * as a 1x2 counter) never stretches into a tall empty pillar and instead frees
+ * the column below it for wider cards to expand sideways. Only how Home draws:
+ * the saved size does not change.
  */
-export function fillHoles(boxes: readonly Box[], cols: number): Box[] {
+export function fillHoles(
+  boxes: readonly Box[],
+  cols: number,
+  limits?: ReadonlyMap<string, { maxW: number; maxH: number; exactOnly?: boolean }>,
+): Box[] {
   const rows = boxes.reduce((n, b) => Math.max(n, b.y + b.h), 0);
   const taken = new Set<string>();
   const mark = (b: Box) => {
@@ -375,17 +496,31 @@ export function fillHoles(boxes: readonly Box[], cols: number): Box[] {
   boxes.forEach(mark);
   const out = boxes.map((b) => ({ ...b }));
   for (const b of out) {
-    while (freeRow(b.y + b.h, b.x, b.w)) {
+    const lim = limits?.get(b.id);
+    const maxH = lim?.maxH ?? Infinity;
+    if (lim?.exactOnly) {
+      // Only close an exact gap (up to maxH) that lands flush against another
+      // card or the bottom of the grid; never stretch into an open-ended void.
+      let gap = 0;
+      while (b.h + gap < maxH && freeRow(b.y + b.h + gap, b.x, b.w)) gap++;
+      if (gap > 0 && !freeRow(b.y + b.h + gap, b.x, b.w)) {
+        b.h += gap;
+        mark(b);
+      }
+      continue;
+    }
+    while (b.h < maxH && freeRow(b.y + b.h, b.x, b.w)) {
       b.h++;
       mark(b);
     }
   }
   for (const b of out) {
-    while (freeCol(b.x + b.w, b.y, b.h)) {
+    const maxW = limits?.get(b.id)?.maxW ?? Infinity;
+    while (b.w < maxW && freeCol(b.x + b.w, b.y, b.h)) {
       b.w++;
       mark(b);
     }
-    while (freeCol(b.x - 1, b.y, b.h)) {
+    while (b.w < maxW && freeCol(b.x - 1, b.y, b.h)) {
       b.x--;
       b.w++;
       mark(b);
@@ -480,4 +615,31 @@ export function clearOwnHome(setting: DashboardSetting, space: HomeSpace): Dashb
   const prev = setting[space];
   if (!prev || prev.v === null) return setting;
   return { ...setting, [space]: { v: null, at: stampAfter(prev.at) } };
+}
+
+/** Local millisecond timestamp for a floating `YYYY-MM-DD` + `HH:MM` reminder. */
+function reminderEpoch(day: string, time: string): number {
+  const [y, m, d] = day.split('-').map(Number);
+  const [hh, mm] = time.split(':').map(Number);
+  return new Date(y || 0, (m || 1) - 1, d || 1, hh || 0, mm || 0, 0, 0).getTime();
+}
+
+/** Due-first comparator for open tasks: overdue earliest first, then scheduled
+ *  soonest first, then undated newest-edited note first. Pure and DOM-free. */
+export function sortTasksDueFirst<T extends { editedAt: string; reminder?: { day: string; time: string } }>(
+  tasks: readonly T[],
+  nowMs = Date.now(),
+): T[] {
+  const rank = (t: T): [number, number] => {
+    if (!t.reminder) return [2, 0];
+    const at = reminderEpoch(t.reminder.day, t.reminder.time);
+    return [at < nowMs ? 0 : 1, at];
+  };
+  return [...tasks].sort((a, b) => {
+    const [ra, ta] = rank(a);
+    const [rb, tb] = rank(b);
+    if (ra !== rb) return ra - rb;
+    if (ra < 2 && ta !== tb) return ta - tb;
+    return b.editedAt.localeCompare(a.editedAt);
+  });
 }

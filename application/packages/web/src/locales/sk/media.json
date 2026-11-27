@@ -18,7 +18,13 @@
     "viewAria": "Zobraziť obrázok",
     "copyAria": "Kopírovať obrázok",
     "copyFailed": "Obrázok sa nepodarilo skopírovať.",
-    "picturesLeftOut": "Niektoré obrázky sa nepridali. Ak chceš obrázok vložiť, skopíruj ho samostatne."
+    "picturesLeftOut": "Niektoré obrázky sa nepridali. Ak chceš obrázok vložiť, skopíruj ho samostatne.",
+    "captionLabel": "Popisok",
+    "captionAddAria": "Pridať popisok",
+    "captionEditAria": "Upraviť popisok",
+    "captionPlaceholder": "Pridaj popisok…",
+    "captionClearAria": "Vymazať popisok",
+    "captionHint": "Enter uloží · Esc zruší"
   },
   "attachment": {
     "fallbackName": "Príloha",

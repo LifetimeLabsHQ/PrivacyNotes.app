@@ -15,7 +15,7 @@ title: Усе, що тут уміє markdown
 
 Спойлер ховає слова, доки хтось не клацне їх: подарунок ||програвач платівок||. Виділіть слова й виберіть **Спойлер** у меню **Вставити** або введіть дві вертикальні риски з кожного боку.
 
-Значок або логотип може стояти в рядку тексту, як-от :icon[gift] :icon[coffee] :icon[rocket-launch] або :logo[github]. Виберіть його в **Вставити** > **Значки й логотипи**.
+Значок або логотип може стояти в рядку тексту, як-от :icon[gift] :icon[coffee] :icon[rocket-launch] або :logo[github]. Виберіть його в **Вставити** > **Значки, логотипи й емодзі**.
 
 Кнопка **Aa** змінює розмір і шрифт. Текст може бути <span style="font-size: 0.85em">дрібним</span>, звичайним або <span style="font-size: 1.6em">великим</span>. Він може бути <span style="font-family: ui-sans-serif, system-ui, sans-serif">простим</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">із засічками</span> або <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">моноширинним</span>.
 

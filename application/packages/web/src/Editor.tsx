@@ -27,7 +27,6 @@ import { findHeadingPos, headingCaretPos, headingPosByCode } from './noteHeading
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
-import Underline from '@tiptap/extension-underline';
 import Superscript from '@tiptap/extension-superscript';
 import Subscript from '@tiptap/extension-subscript';
 import 'katex/dist/katex.min.css';
@@ -74,10 +73,13 @@ import { useIsMobile } from './useIsMobile';
 import { ContextMenu, useContextMenu, isTouchContextMenu, isLongPressEcho, type ContextMenuItem } from './ContextMenu';
 import {
   iconCopy, iconEditPencil, iconExternal, iconTrash,
-  ClipboardText, Code, FileMd, Highlighter, Link as LinkGlyph, Plus, Scissors, SortAscending, SortDescending, TextB, TextItalic, TextStrikethrough,
+  ClipboardText, Code, FileMd, Highlighter, Link as LinkGlyph, Plus, Scissors, SortAscending, SortDescending, TextB, TextItalic, TextStrikethrough, TextTSlash,
 } from './icons';
 import { Spoiler } from './editorSpoiler';
 import { InlineCodeCopy, inlineCodeHint } from './editorCodeCopy';
+import { InlineTags, syncInlineTagState } from './editorInlineTags';
+import { InlineTagSuggestion, setInlineTagSuggestions } from './InlineTagSuggestion';
+import { LooksContext } from './looks/LookGlyph';
 import { AddLineBetweenBlocks } from './editorAddLine';
 import { Folds, openFoldsAt } from './editorFolds';
 import { LINK_ATTRIBUTE_FROM_SETTINGS, LINK_MARKDOWN, LINK_TITLE_ATTRIBUTE, LinkModifierOpen, MarkdownLinkTyping, SelfLinkTyping, linkHrefAt, linkSelectionIfUrl, openLinkHref } from './editorLinks';
@@ -129,6 +131,7 @@ import {
   HardBreakWithMarkdown,
   TextWithMarkdown,
   StrikeWithMarkdown,
+  UnderlineWithMarkdown,
   OrderedListWithMarkdown,
   TableWithMarkdown,
   stepTableCell,
@@ -247,6 +250,10 @@ type Props = {
   typedSymbols?: boolean;
   /** The empty body's hint, when the item type has its own ("Add an agenda..." on an event). */
   placeholder?: string;
+  /** All existing tags with note counts, for the in-editor `#` autocomplete. */
+  allTags?: [string, number][];
+  /** Called when the user Cmd/Ctrl-clicks (or plain-clicks read-only) an inline `#tag`. */
+  onSelectTag?: (tag: string) => void;
   /** Called once with the editor after it is created. The history
    *  comparison adds its decorations through it. */
   onReady?: (editor: TipTapEditor) => void;
@@ -289,7 +296,7 @@ export type EditorHandle = {
    *  marked: the list search following into the open note (GitHub #288). A
    *  no-op in the history preview, which has no bar, and when the text as
    *  written holds none of them. */
-  highlightSearch: (candidates: string[]) => void;
+  highlightSearch: (candidates: string[], opts?: { exactTag?: boolean }) => void;
   /** Close the find bar if the search opened it; a bar the reader opened
    *  stays. Runs when the list search is emptied. */
   clearSearchHighlight: () => void;
@@ -313,10 +320,11 @@ export type EditorHandle = {
 const TOUCH_HANDLE_HEIGHT = 32;
 
 const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }>(function EditorInner(
-  { value, onChange, readOnly = false, noSpellcheck = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, noteTitle, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, notice, connections, toolbarSlot, onShowMarkdown, sourcePreview, lineNumbers, place, onRenameFile, fileNote = false, hideChrome = false, preview = false, idle = false, sinkCheckedTasks = true, typedSymbols = false, placeholder, onReady },
+  { value, onChange, readOnly = false, noSpellcheck = false, onFocusChange, toolbarVisible = true, isPro = false, onOpenUpgrade, noteId, noteTitle, cachedDoc, hideEncryptedMedia, onInsertFiles, bodyControls, notice, connections, toolbarSlot, onShowMarkdown, sourcePreview, lineNumbers, place, onRenameFile, fileNote = false, hideChrome = false, preview = false, idle = false, sinkCheckedTasks = true, typedSymbols = false, placeholder, allTags, onSelectTag, onReady },
   ref
 ) {
   const { t } = useTranslation('editor');
+  const { styles: tagLookStyles } = useContext(LooksContext);
   // Each saved Markdown also goes to the line numbers, which count it.
   const savedTap = useRef<((markdown: string) => void) | null>(null);
   const saveChange = (md: string) => {
@@ -479,6 +487,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       { label: t('toolbar.highlight'), icon: <Highlighter />, checked: ed.isActive('highlight'), onSelect: toggleHighlight },
       { label: t('toolbar.inlineCode'), icon: <Code />, checked: ed.isActive('code'), onSelect: () => ed.chain().focus().toggleCode().run() },
       { label: t('editor:toolbar.addLink'), icon: <LinkGlyph />, onSelect: askForLink },
+      { label: t('bodyMenu.clearFormatting'), icon: <TextTSlash />, onSelect: () => { void import('./editorClearFormatting').then((m) => m.clearFormatting(ed)); } },
     ];
     const sort = planLineSort(ed.state, activeLocale(), sinkCheckedRef.current);
     if (sort) {
@@ -682,7 +691,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       TextWithMarkdown,
       StrikeWithMarkdown,
       OrderedListWithMarkdown,
-      Underline,
+      UnderlineWithMarkdown,
       // TextStyleMarkdown must come before Color: Color sets the `color`
       // attribute on the textStyle mark, so that mark has to exist first.
       TextStyleMarkdown,
@@ -783,7 +792,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       // Spec: docs/internal/specs/markdown-folder.md (section 5, isolation)
       // The paste guard on the upload itself rides on the same flag:
       // docs/internal/specs/paste-pictures.md (section 3.3)
-      EncryptedImage.configure({ plaintextOnly: !!hideEncryptedMedia, getNoteTitle: () => noteTitleRef.current }),
+      EncryptedImage.configure({ plaintextOnly: !!hideEncryptedMedia, getNoteTitle: () => noteTitleRef.current, onEditLink: askForLink }),
       EncryptedAttachment.configure({
         onRename: (name: string) => {
           // A note whose name lives in its title as well holds exactly one
@@ -845,6 +854,8 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
       // ||spoiler|| mark, blurred until the caret or a click shows it.
       Spoiler,
       InlineCodeCopy,
+      InlineTags,
+      ...(preview ? [] : [InlineTagSuggestion]),
       AddLineBetweenBlocks,
       // Heading and list folds: decorations only, never in the history
       // preview, which draws a saved version as it is - see editorFolds.
@@ -1147,6 +1158,15 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
     refreshFavicons(editor && !editor.isDestroyed ? editor : null);
   }, [editor, favicons]);
 
+  // Keep inline `#tag` autocomplete suggestions, tag look colors, click handler
+  // and read-only tooltip text in sync with host state.
+  useEffect(() => {
+    setInlineTagSuggestions(editor, allTags ?? []);
+  }, [editor, allTags]);
+  useEffect(() => {
+    syncInlineTagState(editor, { styles: tagLookStyles, onSelect: onSelectTag });
+  }, [editor, tagLookStyles, onSelectTag, readOnly]);
+
   useFlushOnExit(editor);
 
   // Force tabindex=-1 on the ProseMirror contenteditable on mobile.
@@ -1338,16 +1358,17 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         revealFileNode(uuid);
         requestAttachmentRename(uuid);
       },
-      highlightSearch: (candidates: string[]) => {
+      highlightSearch: (candidates: string[], opts?: { exactTag?: boolean }) => {
         if (!editor || preview || editor.isDestroyed) return;
         // Synchronous, unlike scrollToFile: the match list is computed from
         // the ProseMirror document, which is complete once the editor exists,
         // and the bar scrolls to the current hit itself. A deferred frame
         // would also never fire in a hidden tab.
+        const exactTag = Boolean(opts?.exactTag);
         for (const candidate of candidates) {
-          setSearchQuery(editor.view, candidate);
+          setSearchQuery(editor.view, candidate, false, exactTag);
           if (getSearchInfo(editor.view).total > 0) {
-            openFindWith(candidate);
+            openFindWith(candidate, exactTag);
             return;
           }
         }
@@ -1355,6 +1376,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
         // one), so a word it matched can be absent from the text as written.
         // No bar beats a bar that opens on a red 0/0.
         clearSearch(editor.view);
+        closeSeededFind();
       },
       clearSearchHighlight: closeSeededFind,
       getEditor: () => editor,
@@ -1479,6 +1501,7 @@ const EditorInner = forwardRef<EditorHandle, Props & { cachedDoc?: JSONContent }
               editor={editor}
               focusTick={barFocusTick}
               initialQuery={findSeed?.term}
+              initialExactTag={findSeed?.exactTag}
               startQuery={swapTerm}
               onSwap={readOnly ? undefined : swapBar}
               swapPro={!isPro}

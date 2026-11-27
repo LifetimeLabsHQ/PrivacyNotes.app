@@ -101,7 +101,7 @@ export function noteToMarkdown(
   }
   // The place goes on its own line, in the form Obsidian Map View reads, and
   // never inside the trackers line, so it is written once.
-  // Spec: docs/internal/plans/note-location.md (section 6)
+  // Spec: docs/internal/specs/note-location.md (section 6)
   if (place) {
     fm.push(`${FRONT_MATTER_LOCATION}: ${place.lat},${place.lng}`);
     if (place.label) fm.push(`${FRONT_MATTER_LOCATION_NAME}: ${quoteTitle(oneLineTitle(place.label))}`);

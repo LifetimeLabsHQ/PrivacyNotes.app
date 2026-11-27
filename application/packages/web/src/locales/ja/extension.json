@@ -49,7 +49,9 @@
     "biometricHelp": "このブラウザ用のパスキーを通じて、Touch ID または Windows Hello を使えます。PIN またはパスコードもいつでも使えます。",
     "repeat": "もう一度入力",
     "mismatch": "2つが一致しません。もう一度お試しください。",
-    "commonPin": "このPINは推測されやすすぎます。別のPINを選んでください。"
+    "commonPin": "このPINは推測されやすすぎます。別のPINを選んでください。",
+    "pinHint": "最も速くロック解除できます。10回間違えると接続が解除されます。",
+    "passcodeHint": "8文字以上で、推測されにくくなります。"
   },
   "clip": {
     "selection": "選択範囲",

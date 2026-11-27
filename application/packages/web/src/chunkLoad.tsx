@@ -107,6 +107,9 @@ export function lazyModal<P extends object>(
     const Inner = lazyLoad.Inner();
     const failed = () => {
       lazyLoad.remake();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event(navigator.onLine ? 'pn:chunk-failed' : 'pn:chunk-offline'));
+      }
       (props as { onClose?: () => void }).onClose?.();
     };
     return (

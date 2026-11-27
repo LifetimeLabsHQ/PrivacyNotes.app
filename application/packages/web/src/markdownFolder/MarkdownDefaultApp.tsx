@@ -1,39 +1,30 @@
 /**
  * The "open .md files with PrivacyNotes" control, in its four homes.
  *
- * One status, four frames, because the same handful of facts has to fit four
- * very different amounts of room:
+ * One status, four frames sized for each surface:
  *
- *   - `MarkdownDefaultAppPopover` - behind the folder toolbar's Markdown button.
- *     The only home that exists in grid mode, where the file pane is hidden
- *     outright and the resting card below never renders.
- *   - `MarkdownDefaultAppCard` - the resting file pane, under "Open a Markdown
- *     file to read it here". Replaced the pitch that used to sit there: a reader
- *     with a folder already open has read the pitch, and this is the one thing
- *     left to tell them.
- *   - `MarkdownDefaultAppRow` - the last row of `MarkdownPitch`, so the explainer
- *     modal and the no-folder empty state both carry it for free.
- *   - `DefaultAppSettingsRow` - a row in Settings > Editor, so the control can
- *     be found without opening a Markdown folder. It also serves `.txt`.
+ *   - `MarkdownDefaultAppPopover` - anchored to the folder toolbar's Markdown
+ *     button, including in grid mode where the resting file pane is hidden.
+ *   - `MarkdownDefaultAppCard` - centered in the resting file pane when a
+ *     folder is open and no file is selected.
+ *   - `MarkdownDefaultAppRow` - footer row of `MarkdownPitch` in both the
+ *     explainer modal and the no-folder empty state.
+ *   - `DefaultAppSettingsRow` - row in Settings > Editor (also serving `.txt`).
  *
- * Every frame renders NOTHING off the desktop app. The first three also render
- * nothing until the first status has come back - a control that flickers from
- * "make this the default" to "already the default" on mount is worse than one
- * that appears a beat late. The settings row is the exception: a search result
- * must have a row to scroll to, so it says it is checking instead.
+ * Every frame renders nothing outside the desktop app. The first three also
+ * wait for the initial status read so the control never flashes an offer when
+ * PrivacyNotes already owns the association; the settings row renders a
+ * checking state immediately so settings search has a stable scroll target.
  *
- * It is a button, not a toggle, and `defaultApp.ts` explains why: no
- * platform has an API to stop being the default handler.
+ * Rendered as a button rather than a toggle because desktop OSes provide no API
+ * to relinquish default-handler ownership (`defaultApp.ts`).
  *
  * Spec: docs/internal/specs/markdown-folder.md (section 11)
  */
-import { useEffect, useRef, useState } from 'react';
-import { SETTINGS_EYEBROW } from '../ui';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowSquareOut, CheckCircle, FileMd, FileText } from '../icons';
-import { useEscapeToClose } from '../useEscapeToClose';
-import { Button, RowTitle, SETTINGS_HELP, SETTINGS_ROW, StatusLine } from '../ui';
-import { PRIMARY_BTN_SKIN } from '../settingsUI';
+import { Button, Popover, RowTitle, SETTINGS_HELP, SETTINGS_ROW, StatusLine } from '../ui';
 import {
   claimDefaultApp,
   markDefaultAppOurs,
@@ -44,11 +35,9 @@ import {
   type MarkdownAssoc,
 } from './defaultApp';
 
-/** Which file manager the hint names. Driven by the platform the Rust side
- *  reports, never by the user agent. Linux has no one file manager to name, so
- *  it gets the generic phrase - which is also why these are three strings
- *  rather than one with a `{{app}}`: "Finder" must not be translated and "your
- *  file manager" must be. */
+/** File manager named in the hint, keyed off the native platform rather than
+ *  user agent. Separate keys keep "Finder" untranslated while translating the
+ *  generic Linux phrase. */
 const HINT_KEY: Record<MarkdownAssoc['platform'], string> = {
   macos: 'markdown.assocHintFinder',
   windows: 'markdown.assocHintExplorer',
@@ -56,23 +45,18 @@ const HINT_KEY: Record<MarkdownAssoc['platform'], string> = {
 };
 
 /**
- * The shared behaviour: current status, the one action, and whether it failed.
+ * Shared state and action for claiming or opening OS default-app settings.
  *
- * The action is "claim" on macOS and Linux and "open Settings" on Windows,
- * decided by `settable` rather than by the platform string, so the day a
- * platform changes its mind only the native side moves.
+ * Keyed on `settable` rather than the platform name so native capability
+ * changes stay encapsulated in `defaultApp.ts`.
  */
 function useDefaultAppAction(kind: AssocKind = 'markdown') {
   const assoc = useDefaultApp(kind);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  // A failure describes one attempt against one OS state, so it has to expire
-  // when that state changes. Without this, a user whose claim failed and who then
-  // set the default in System Settings comes back to the green success statement
-  // with the red "Could not change the default app" still sitting under it -
-  // nothing else ever clears the flag except another click on the same button,
-  // and in the success state there is no button left to click.
+  // Clear any prior error when ownership changes externally (e.g. via System Settings)
+  // so a stale failure line cannot linger under a confirmed ownership state.
   useEffect(() => { setFailed(false); }, [assoc?.owner]);
 
   async function run() {
@@ -82,14 +66,12 @@ function useDefaultAppAction(kind: AssocKind = 'markdown') {
     try {
       if (assoc.settable) {
         await claimDefaultApp(kind);
-        // macOS asks the person in a system dialog and the call returns before
-        // they answer, so the status waits for a read that sees the change.
-        // Linux has written the association by now.
+        // Linux writes the association synchronously; macOS shows a system
+        // confirmation dialog and updates asynchronously via `watchClaim`.
         if (assoc.platform === 'linux') markDefaultAppOurs(kind);
         else void watchClaim(kind);
       } else {
-        // Windows. Nothing to re-read yet - the user has not chosen anything
-        // yet, and the window's own focus listener picks up whatever they do.
+        // Windows opens system settings; the window focus listener refreshes status on return.
         await openOsDefaultAppSettings();
       }
     } catch {
@@ -102,8 +84,8 @@ function useDefaultAppAction(kind: AssocKind = 'markdown') {
   return { assoc, busy, failed, run };
 }
 
-/** The sentence naming who owns Markdown now, or null when there is nothing
- *  honest to say. Windows adds why we cannot change it ourselves. */
+/** Current handler description for Markdown files, or null when unknown.
+ *  Windows adds the manual-settings note. */
 function useOwnerLine(assoc: MarkdownAssoc): string | null {
   const { t } = useTranslation('shell');
   const parts: string[] = [];
@@ -116,16 +98,14 @@ function useOwnerLine(assoc: MarkdownAssoc): string | null {
   } else if (assoc.owner === 'none') {
     parts.push(t('markdown.assocOwnerNone'));
   }
-  // 'unknown' says nothing: the OS would not answer, so asserting anything about
-  // the current handler would be invention.
+  // 'unknown' omits ownership claims when the OS reports no handler state.
   if (!assoc.settable) parts.push(t('markdown.assocWindowsManual'));
   return parts.length ? parts.join(' ') : null;
 }
 
 /**
- * The action button. Two labels for two verbs - one changes the default, the
- * other opens a settings page - and the arrow marks the second as leaving the
- * app, which is the whole difference the user needs to see before clicking.
+ * Action button for claiming the file association or opening OS settings.
+ * External settings navigation carries a trailing `ArrowSquareOut` glyph.
  */
 function ActionButton({
   assoc,
@@ -136,48 +116,39 @@ function ActionButton({
   assoc: MarkdownAssoc;
   busy: boolean;
   onClick: () => void;
-  /** `solid` for the resting card, where this is the only action on a wide
-   *  empty pane; `quiet` inside the popover and the pitch, where an accent fill
-   *  would outrank the surrounding content. */
+  /** `solid` for the resting card where this is the primary action on an empty
+   *  pane; `quiet` inside the popover and pitch footer. */
   emphasis: 'solid' | 'quiet';
 }) {
   const { t } = useTranslation('shell');
   return (
-    <button
-      type="button"
+    <Button
+      variant={emphasis === 'solid' ? 'primary' : 'secondary'}
+      icon={
+        assoc.settable
+          ? <CheckCircle aria-hidden="true" className="shrink-0" />
+          : <ArrowSquareOut aria-hidden="true" className="shrink-0" />
+      }
+      iconEnd={!assoc.settable}
       onClick={onClick}
       disabled={busy}
-      className={`inline-flex items-center gap-1.5 text-compact font-semibold px-3 py-1.5 rounded-md transition disabled:opacity-50 cursor-pointer ${
-        emphasis === 'solid'
-          ? PRIMARY_BTN_SKIN
-          : 'border border-divider bg-surface-2 font-medium text-pn hover:border-accent'
-      }`}
     >
-      {/* A distinct label while the OS is working, not just a disabled button.
-          Setting the handler is a synchronous LaunchServices call that is
-          normally instant but can run into tens of seconds where the system
-          carries a lot of stale registrations of the same bundle id, and an
-          unexplained dead button for that long reads as a broken feature. */}
-      {busy ? (
-        t('markdown.assocWorking')
-      ) : assoc.settable ? (
-        t('markdown.assocMakeDefault')
-      ) : (
-        <>
-          {t('markdown.assocWindowsOpen')}
-          <ArrowSquareOut className="shrink-0" />
-        </>
-      )}
-    </button>
+      {/* Show an explicit working label while LaunchServices processes the claim,
+          which can take several seconds when stale bundle registrations exist. */}
+      {busy
+        ? t('markdown.assocWorking')
+        : assoc.settable
+          ? t('markdown.assocMakeDefault')
+          : t('markdown.assocWindowsOpen')}
+    </Button>
   );
 }
 
 /**
- * Hint, status, action - the content every frame shares.
+ * Shared body across the card, pitch row, and toolbar popover.
  *
- * When we already own the association this inverts: the fact leads and the hint
- * becomes its explanation, so the finished state reads as a statement rather
- * than as an offer with the offer removed.
+ * When PrivacyNotes owns the association, the ownership confirmation leads and
+ * the double-click hint follows beneath it.
  */
 function DefaultAppBody({
   assoc,
@@ -228,12 +199,8 @@ function DefaultAppBody({
 }
 
 /**
- * The resting file pane's card, under the "pick a file" prompt.
- *
- * Deliberately the loudest of the three frames: it has a pane to itself, it is
- * what a reader sees for as long as no file is selected, and it is the only
- * surface that tells someone double-click works without their having gone
- * looking. `null` off the desktop app, where the caller falls back to the pitch.
+ * Resting file-pane card shown under the file-selection prompt on desktop.
+ * Returns `null` outside the desktop app so the caller falls back to `MarkdownPitch`.
  */
 export function MarkdownDefaultAppCard() {
   const { assoc, busy, failed, run } = useDefaultAppAction();
@@ -241,18 +208,12 @@ export function MarkdownDefaultAppCard() {
   const isOurs = assoc.owner === 'ours';
 
   return (
-    // Centred as a column, icon above the text, rather than the icon-beside-text
-    // row this started as. It sits alone in the middle of the widest pane in the
-    // app, where everything around it - the "Open a Markdown file" prompt above,
-    // and the pitch this replaced - is centred too, and a left-aligned block was
-    // the only thing in that pane with an edge to align to.
-    // `text-center` also carries the button: it is `inline-flex`, so text
-    // alignment centres it and no flex wrapper is needed. The other two frames
-    // stay start-aligned, which is why this lives here and not in the body.
+    // Centered column with the icon above the copy to match the centered
+    // resting prompt in the wide file pane; the other frames stay start-aligned.
     <div
       className={`rounded-lg border p-4 text-center ${
         isOurs
-          ? 'border-divider bg-surface-1'
+          ? 'border-divider bg-surface-2'
           : 'border-accent/40 bg-accent/[0.04] dark:bg-accent/[0.07]'
       }`}
     >
@@ -275,11 +236,8 @@ export function MarkdownDefaultAppCard() {
 }
 
 /**
- * The last row of `MarkdownPitch`, so the explainer modal and the no-folder
- * empty state carry this without either knowing it exists.
- *
- * Quietest of the three: the pitch above it is already six stacked blocks, so
- * this is a hairline and two lines rather than a card inside a card.
+ * Footer row of `MarkdownPitch`, shared by the explainer modal and the
+ * no-folder empty state, separated by a top hairline rather than a nested card.
  */
 export function MarkdownDefaultAppRow() {
   const { assoc, busy, failed, run } = useDefaultAppAction();
@@ -299,82 +257,54 @@ export function MarkdownDefaultAppRow() {
 }
 
 /**
- * Behind the folder toolbar's Markdown button.
- *
- * The toolbar is the only place this control exists in grid mode, and the row is
- * too tight for a sentence - hence a button that opens this rather than any
- * amount of inline text. Same dismissal contract as `ListPrefsPopover`:
- * pointerdown outside or Escape, with the anchor excluded so clicking the
- * trigger closes rather than flickers.
+ * Popover anchored to the folder toolbar's Markdown button, providing default-app
+ * setup in compact list columns and full-width grid mode.
  */
 export function MarkdownDefaultAppPopover({
+  open = true,
   onClose,
   anchorRef,
-  className = '',
+  className = 'w-[19rem] max-w-[calc(100vw-16px)]',
 }: {
+  open?: boolean;
   onClose: () => void;
-  /** The trigger. Clicks inside it are the trigger's own toggle, not "outside". */
-  anchorRef?: React.RefObject<HTMLElement | null>;
-  /** Positioning only. */
+  /** Trigger button to anchor under and exclude from outside-click dismissal. */
+  anchorRef: React.RefObject<HTMLElement | null>;
+  /** Panel width override. */
   className?: string;
 }) {
   const { t } = useTranslation('shell');
   const { assoc, busy, failed, run } = useDefaultAppAction();
-  const popoverRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    function handler(e: PointerEvent) {
-      const target = e.target as Node | null;
-      if (!target) return;
-      if (popoverRef.current?.contains(target)) return;
-      if (anchorRef?.current?.contains(target)) return;
-      onClose();
-    }
-    window.addEventListener('pointerdown', handler, true);
-    return () => window.removeEventListener('pointerdown', handler, true);
-  }, [onClose, anchorRef]);
-
-  useEscapeToClose(onClose);
 
   return (
-    <div
-      ref={popoverRef}
-      role="dialog"
-      aria-label={t('markdown.assocTitle')}
-      // `max-w-full` is load-bearing, not belt-and-braces: this list column is
-      // resizable down to a rail, and 19rem overflows its end edge from about
-      // 300px down. Absolute positioning resolves the cap against the row that
-      // carries `relative`, so the popover ends up exactly as wide as the column
-      // when the column is the smaller of the two.
-      className={`z-50 w-[19rem] max-w-full rounded-lg border border-divider bg-surface-2 shadow-lg p-3.5 text-start ${className}`}
+    <Popover
+      open={open}
+      anchorRef={anchorRef}
+      onClose={onClose}
+      align="end"
+      title={t('markdown.assocTitle')}
+      className={className}
     >
-      <div className="flex items-center gap-2 mb-2.5">
-        <FileMd className="shrink-0 text-pn-muted" />
-        <p className={`${SETTINGS_EYEBROW} !text-pn-muted`}>
-          {t('markdown.assocTitle')}
-        </p>
+      <div className="px-1.5 pb-1 text-start">
+        {assoc ? (
+          <DefaultAppBody
+            assoc={assoc}
+            busy={busy}
+            failed={failed}
+            onAction={() => void run()}
+            emphasis="quiet"
+          />
+        ) : (
+          // Desktop-only trigger; null indicates the initial status read is still pending.
+          <p className="text-small text-pn-muted">{t('markdown.assocReading')}</p>
+        )}
       </div>
-      {assoc ? (
-        <DefaultAppBody
-          assoc={assoc}
-          busy={busy}
-          failed={failed}
-          onAction={() => void run()}
-          emphasis="quiet"
-        />
-      ) : (
-        // Only reachable for the beat before the first status returns: the
-        // trigger is desktop-only, so `null` here means "not read yet" rather
-        // than "not supported".
-        <p className="text-small text-pn-muted">{t('markdown.assocReading')}</p>
-      )}
-    </div>
+    </Popover>
   );
 }
 
-/** What differs between the two settings rows. The Text row names the
- *  extensionless files the plain-text claim also takes, on macOS only: on
- *  Windows a default belongs to one extension. */
+/** Per-kind metadata for the Settings > Editor rows. On macOS the plain-text
+ *  claim also covers extensionless text files; on Windows defaults bind per extension. */
 const ROW: Record<AssocKind, {
   icon: typeof FileMd;
   title: string;
@@ -396,16 +326,10 @@ const ROW: Record<AssocKind, {
 };
 
 /**
- * A row in Settings > Editor, under "Open with PrivacyNotes": Markdown files,
- * or Text files (`.txt`).
+ * Row in Settings > Editor under "Open with PrivacyNotes" for Markdown or Text
+ * (`.txt`) files. Omitted for `text` on Linux where no plain-text claim is offered.
  *
- * Same status and action as the other frames, in the settings row layout: the
- * status sits in the helper line and stays visible at every width, because it
- * is a fact the control cannot show. The finished state is a badge, not a
- * button, for the reason the module header gives. The Text row is not drawn
- * on Linux, where the native side offers no plain-text claim.
- *
- * Spec: docs/internal/plans/default-app-settings.md (sections 4 and 6)
+ * Spec: docs/internal/specs/default-app-settings.md (sections 4 and 6)
  */
 export function DefaultAppSettingsRow({ kind }: { kind: AssocKind }) {
   const { t } = useTranslation('settings');
@@ -437,9 +361,8 @@ export function DefaultAppSettingsRow({ kind }: { kind: AssocKind }) {
 
   return (
     <div className={SETTINGS_ROW}>
-      {/* `lg:flex-1` lets the status line wrap beside the button: it is longer
-          than any other helper in the pane, and without it the row wraps the
-          button onto a line of its own. */}
+      {/* `lg:flex-1` lets the helper line wrap within its column rather than
+          pushing the action button onto its own row. */}
       <div className="min-w-0 lg:flex-1">
         <RowTitle icon={row.icon}>{t(row.title)}</RowTitle>
         <p className={`${SETTINGS_HELP} mt-0.5`}>{status}</p>
@@ -449,8 +372,8 @@ export function DefaultAppSettingsRow({ kind }: { kind: AssocKind }) {
           </div>
         )}
       </div>
-      {/* "Default" is the button's place and size, inactive, so the two rows
-          weigh the same whether the app is the default or not. */}
+      {/* Disabled confirmation matches the action button's footprint so both
+          states align in the settings group. */}
       {assoc && !(!isOurs && assoc.finderOnly) && (isOurs ? (
         <Button icon={<CheckCircle weight="fill" aria-hidden="true" className="shrink-0 text-success" />} disabled>
           {t('appearance.defaultAppsIsDefault')}

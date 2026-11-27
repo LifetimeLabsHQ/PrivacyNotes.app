@@ -60,7 +60,8 @@ export interface AutoBackupState {
 // Spec: docs/internal/plans/auto-backup.md (section 9, the run history)
 const LOG_MAX = 20;
 
-const CONFIG_KEY = () => credentialKey('privacynotes.autoBackup');
+export const AUTO_BACKUP_CONFIG_KEY = () => credentialKey('privacynotes.autoBackup');
+const CONFIG_KEY = AUTO_BACKUP_CONFIG_KEY;
 const FILES_KEY = () => credentialKey('privacynotes.autoBackup.files');
 const LOG_KEY = () => credentialKey('privacynotes.autoBackup.log');
 

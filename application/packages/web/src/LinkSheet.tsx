@@ -25,6 +25,7 @@ import { Button, CloseButton, Popover, TextField } from './ui';
 import { CaretDown, CaretRight } from './icons';
 import { getMarkRange } from '@tiptap/core';
 import { looksLikeUrl, normalizeUrl } from './editorLinks';
+import { isPictureSelection } from './EncryptedImage';
 import type { Editor } from '@tiptap/react';
 
 type Props = {
@@ -44,11 +45,14 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
   const urlRef = useRef<HTMLInputElement | null>(null);
   const keyboard = useKeyboardRect(isMobile);
 
-  // Existing link attributes (if cursor is inside a link).
-  const existingHref: string =
-    (editor.getAttributes('link').href as string | undefined) ?? '';
-  const existingTitle: string =
-    (editor.getAttributes('link').title as string | undefined) ?? '';
+  // Existing link attributes (either on a selected image #970 or inside a link mark).
+  const isImage = isPictureSelection(editor.state.selection);
+  const existingHref: string = isImage
+    ? ((editor.getAttributes('image').linkHref as string | undefined) ?? '')
+    : ((editor.getAttributes('link').href as string | undefined) ?? '');
+  const existingTitle: string = isImage
+    ? ((editor.getAttributes('image').linkTitle as string | undefined) ?? '')
+    : ((editor.getAttributes('link').title as string | undefined) ?? '');
 
   // Selected text for pre-filling the link text field.
   const { from, to } = editor.state.selection;
@@ -108,6 +112,16 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
     // `from`/`to` can go stale if ProseMirror processes transactions
     // while the sheet is open (e.g. after a previous link insertion).
     // Fix: GitHub #77
+    if (isPictureSelection(editor.state.selection)) {
+      editor
+        .chain()
+        .focus()
+        .updateAttributes('image', { linkHref: href, linkTitle: attrs.title })
+        .run();
+      onClose();
+      return;
+    }
+
     const { from: curFrom, to: curTo } = editor.state.selection;
     const curHasSelection = curFrom !== curTo;
     const inLink = editor.isActive('link');
@@ -162,7 +176,11 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
   }
 
   function remove() {
-    editor.chain().focus().extendMarkRange('link').unsetLink().run();
+    if (isPictureSelection(editor.state.selection)) {
+      editor.chain().focus().updateAttributes('image', { linkHref: null, linkTitle: null }).run();
+    } else {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+    }
     onClose();
   }
 
@@ -192,23 +210,25 @@ export function LinkSheet({ editor, isMobile, anchorRef, onClose }: Props) {
         }}
       />
 
-      <div className="mt-3">
-        <TextField
-          type="text"
-          autoComplete="off"
-          label={t('link.textLabel')}
-          placeholder={hasSelection ? '' : t('link.textPlaceholder')}
-          hint={hasSelection && !isEditing ? t('link.selectedTextHint') : undefined}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (isImeComposing(e)) return;
-            if (e.key === 'Enter') { e.preventDefault(); apply(); }
-            if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); onClose(); }
-          }}
-          disabled={hasSelection && !isEditing}
-        />
-      </div>
+      {!isImage && (
+        <div className="mt-3">
+          <TextField
+            type="text"
+            autoComplete="off"
+            label={t('link.textLabel')}
+            placeholder={hasSelection ? '' : t('link.textPlaceholder')}
+            hint={hasSelection && !isEditing ? t('link.selectedTextHint') : undefined}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (isImeComposing(e)) return;
+              if (e.key === 'Enter') { e.preventDefault(); apply(); }
+              if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); onClose(); }
+            }}
+            disabled={hasSelection && !isEditing}
+          />
+        </div>
+      )}
 
       <button
         type="button"

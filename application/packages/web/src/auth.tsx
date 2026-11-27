@@ -115,13 +115,20 @@ import {
   unwrapStoredEnvelope,
 } from './phraseAtRest';
 import { removeMatchingCopies, storedAccessToken } from './credentialCopies';
-import { finishInterruptedSignOut } from './signOutFinish';
+import {
+  clearPhoneShareInbox,
+  finishInterruptedSignOut,
+  flushPendingShareInbox,
+  markPhoneShareInboxPending,
+  signOutFinishSettled,
+} from './signOutFinish';
 import {
   adoptLiveSignIn,
   announceSignOut,
   beginSignOutMark,
   endSignOutMark,
   holdsSignOutMark,
+  signOutMarkLeft,
   endLiveSignIn,
   hasLiveSignIn,
   isLivePhrase,
@@ -178,6 +185,7 @@ import {
   isLocalOnly,
   isLocalOnlyFor,
   isNeverSyncedFor,
+  isUnsyncedLocalVault,
   markLocalOnlyVault,
   setLocalOnlyFlags,
   withBackendNetworkAllowed,
@@ -384,6 +392,8 @@ export type AuthState =
       deviceId: string;
       limit: number;
       devices: DeviceRow[];
+      /** True when a local-only vault reached the device cap during graduation. */
+      localOnly?: boolean;
     }
   | {
       /**
@@ -603,6 +613,9 @@ type AuthContextValue = {
   resolveDeviceLimit: (
     targetDeviceId: string,
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
+  /** Exit `device_limit_reached` reached during `graduateLocalVault`, dropping
+   *  the temporary backend session and returning to the open local-only vault. */
+  cancelLocalOnlyGraduation: () => void;
   /** Force a fresh local sign-out + wipe. Public so sync can trigger it on soft-revoke. */
   forceSignOut: (reason?: string) => Promise<void>;
   /** Re-check pro_pubkeys and update isPro in-place. Called after Paddle
@@ -729,6 +742,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // with the owner marker the switch found. The retry from the limit runs it
   // once a freed slot or a purchase registers this device.
   const pendingSwitchWipe = useRef<{ pubkey: string; priorOwner: string | null; wipe: () => Promise<void> } | null>(null);
+  // Graduation options and session token for a local-only vault parked at the
+  // device limit; consumed on retry registration or discarded on cancel.
+  // Spec: docs/internal/specs/local-only-862.md (section 7)
+  const pendingGraduation = useRef<{ pubkey: string; enableSync: boolean; createdToken: string | null } | null>(null);
 
   // Bumped whenever the user starts a phrase sign-in themselves (typed,
   // QR, lock-screen unlock). hydrateFromOAuthSession snapshots it on
@@ -895,6 +912,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // start wipe of another tab never runs under it, and this waits for one
     // that runs (untrustedLeftover.ts). Before the mutex: a wipe that holds
     // the lock long fails this attempt, and a retry is not "in progress".
+    await signOutFinishSettled();
     if (!(await waitForLocalDataLock(LOCAL_DATA_LOCK_WAIT_MS))) {
       logAuthEvent('auth:local-data-lock-waiting');
       throw new Error(i18n.t('auth:signIn.failedUnexpectedly'));
@@ -1058,7 +1076,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // present wipes, because adopting a prior account's settings
         // blob is the worse failure. The mirror written below shrinks
         // this window to one boot per legacy install.
-        wipePrior = await hasLocalAccountState();
+        wipePrior = (await hasLocalAccountState()) || signOutMarkLeft() !== null;
       }
     }
     /**
@@ -1083,6 +1101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // The prior account's reminders on a phone, while the map that names
       // them exists: clearAccountScopedUiState below removes it.
       await cancelPhoneReminders();
+      if (!(await clearPhoneShareInbox())) throw new Error('share_inbox_not_cleared');
       await clearLocalDatabase();
       clearLocalSettings();
       clearCachedAccountFlags();
@@ -1116,11 +1135,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Automatic backups go with them: one account never writes into
       // another account's folder. Loaded on demand, off the boot path.
       // Spec: docs/internal/plans/auto-backup.md (section 9, Whose backups)
-      void import('./autoBackup/runner').then((m) => m.forgetAutoBackup()).catch(() => {});
       // The Markdown folder too: the restore runs for whoever is signed in,
       // and would lead the arriving account to the prior one's files
       // (beta.privacynotes.app #214 item 2).
-      void import('./markdownFolder/folderMemory').then((m) => m.forgetFolder()).catch(() => {});
+      await Promise.all([
+        import('./autoBackup/runner').then((m) => m.forgetAutoBackup()).catch(() => {}),
+        import('./markdownFolder/folderMemory').then((m) => m.forgetFolder()).catch(() => {}),
+      ]);
       // Switches the arriving account never chose: the place on new notes,
       // and Smart connections and the other plugins, whose model would load
       // or download for it (beta #214 items 5 and 6). The Smart connections
@@ -1984,6 +2005,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // The prior account's data stays until this device registers, which
         // from here happens only in doRetryRegistrationFromLimit.
         pendingSwitchWipe.current = wipePrior ? { pubkey, priorOwner, wipe: wipePriorLocalData } : null;
+        pendingGraduation.current = localOnlyOpts?.commitGraduation
+          ? { pubkey, enableSync: localOnlyOpts.commitGraduation.enableSync, createdToken }
+          : null;
         setAuth({
           status: 'device_limit_reached',
           method,
@@ -1996,6 +2020,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           deviceId,
           limit: registerResult.limit,
           devices: registerResult.devices,
+          ...(localOnlyOpts?.commitGraduation ? { localOnly: true } : {}),
         });
         return;
       }
@@ -2015,6 +2040,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (registerResult.status === 'revoked') {
+        if (localOnlyOpts?.commitGraduation) {
+          return failHandshake(new Error('Device registration failed: device_revoked'));
+        }
         // The owner removed this device, and this start was not a sign-in made
         // on it by hand. It goes live only so the removed-device sign-out can
         // run as a false heartbeat runs it, with the unsynced notes kept
@@ -2037,6 +2065,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // data goes. It runs before the fresh-vault seed below, which the
     // wipe would otherwise take with it.
     if (wipePrior) await wipePriorLocalData();
+    else if (!(await flushPendingShareInbox())) {
+      return failHandshake(new Error('share_inbox_not_cleared'));
+    }
     // The device keeps what the server said about this phrase, sealed under
     // the phrase's own local key, so its next boot knows the account without
     // asking. bind-session above verified this phrase's signature under the
@@ -2078,6 +2109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // sync on) before publishing the registered AuthState, while still inside
     // withBackendNetworkAllowed so React effects firing on the state change
     // see the settled flags. Spec: docs/internal/specs/local-only-862.md (7)
+    pendingGraduation.current = null;
     if (localOnlyOpts?.commitGraduation) {
       await commitLocalOnlyGraduation(localOnlyOpts.commitGraduation.enableSync);
       if (localOnlyOpts.commitGraduation.enableSync) setSyncPaused(false);
@@ -2136,6 +2168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // The boot passes the stamp it took before opening the envelope.
     const since = startedAt ?? signInStamp();
     try {
+      await signOutFinishSettled();
       // As authenticateWithPhrase: the vault opens under the local data lock,
       // and a wipe that holds it long sends the boot to the full sign-in.
       if (!(await waitForLocalDataLock(LOCAL_DATA_LOCK_WAIT_MS))) return false;
@@ -2202,12 +2235,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const neverSynced = localOnly || (await isNeverSyncedFor(pubkey));
 
       const localCount = await db.notes.count();
-      if (localCount === 0 && !localOnly) {
+      if (localCount === 0 && !neverSynced) {
         // The one exit that genuinely has nothing to show. The boot
         // path's demote reads this as the only reason fast boot ever
         // declines, so say it in the log rather than leaving the next
         // reader to infer it.
         logAuthEvent('auth:fast-boot-no-local-notes');
+        return false;
+      }
+
+      if (!(await flushPendingShareInbox())) {
         return false;
       }
 
@@ -2219,16 +2256,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       releaseChangeHold();
       // Repair localStorage flags from Dexie mirrors before setAuth so a
       // localStorage eviction cannot open the transport gate or unpause sync.
-      if (localOnly) {
+      if (neverSynced) {
+        if (localOnly) clearSupabaseAuthKeys();
         try { localStorage.setItem(PUBKEY_OWNER_KEY, pubkey); } catch { /* ignore */ }
-        setLocalOnlyFlags({ localOnly: true, neverSynced: true });
+        setLocalOnlyFlags(localOnly ? { localOnly: true, neverSynced: true } : { neverSynced: true });
         setSyncPaused(true);
         try {
           if (localStorage.getItem('privacynotes.favicons') === null) setFavicons(false);
         } catch { /* ignore */ }
-      } else if (neverSynced) {
-        setLocalOnlyFlags({ neverSynced: true });
-        setSyncPaused(true);
       }
       setAuth({
         status: 'authenticated',
@@ -2279,7 +2314,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function resolveDeviceLimit(
     targetDeviceId: string,
   ): Promise<{ ok: true } | { ok: false; error: string }> {
-    if (auth.status !== 'device_limit_reached') {
+    const target = authStateRef?.current ?? auth;
+    if (target.status !== 'device_limit_reached') {
       return { ok: false, error: 'No pending device-limit state.' };
     }
     const session = sessionRef.current;
@@ -2287,20 +2323,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { ok: false, error: 'Session token unavailable; sign in again.' };
     }
 
-    try {
-      const session = await verifiedDeviceSession(auth.pubkey);
-      await revokeDevice({
-        supabase,
-        accessToken: session.accessToken,
-        authUid: session.authUid,
-        account: auth.pubkey,
-        signingPrivateKey: auth.signingPrivateKey,
-        targetDeviceId,
-      });
-    } catch (err) {
-      return { ok: false, error: (err as Error).message };
-    }
-    return retryRegistrationFromLimit();
+    const run = async (): Promise<{ ok: true } | { ok: false; error: string }> => {
+      try {
+        const verified = await verifiedDeviceSession(target.pubkey);
+        await revokeDevice({
+          supabase,
+          accessToken: verified.accessToken,
+          authUid: verified.authUid,
+          account: target.pubkey,
+          signingPrivateKey: target.signingPrivateKey,
+          targetDeviceId,
+        });
+      } catch (err) {
+        return { ok: false, error: (err as Error).message };
+      }
+      return retryRegistrationFromLimit();
+    };
+    return target.localOnly || isLocalOnly() ? withBackendNetworkAllowed(run) : run();
   }
 
   /**
@@ -2334,115 +2373,173 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function doRetryRegistrationFromLimit(): Promise<
     { ok: true } | { ok: false; error: string }
   > {
-    if (auth.status !== 'device_limit_reached') {
+    const target = authStateRef?.current ?? auth;
+    if (target.status !== 'device_limit_reached') {
       return { ok: false, error: 'No pending device-limit state.' };
     }
     const session = sessionRef.current;
     if (!session) {
       return { ok: false, error: 'Session token unavailable; sign in again.' };
     }
+    const stillAtLimit = () => {
+      const cur = authStateRef?.current ?? auth;
+      return cur.status === 'device_limit_reached' && cur.pubkey === target.pubkey;
+    };
 
-    try {
-      const session = await verifiedDeviceSession(auth.pubkey);
-      const retry = await registerDevice({
-        supabase,
-        accessToken: session.accessToken,
-        authUid: session.authUid,
-        pubkey: auth.pubkey,
-        signingPrivateKey: auth.signingPrivateKey,
-        fpPepper: auth.fpPepper,
-        reactivate: parkedByHand.current,
-      });
+    const run = async (): Promise<{ ok: true } | { ok: false; error: string }> => {
+      try {
+        const verified = await verifiedDeviceSession(target.pubkey);
+        if (!stillAtLimit() || !isLivePhrase(target.phrase)) {
+          return { ok: false, error: 'No pending device-limit state.' };
+        }
+        const retry = await registerDevice({
+          supabase,
+          accessToken: verified.accessToken,
+          authUid: verified.authUid,
+          pubkey: target.pubkey,
+          signingPrivateKey: target.signingPrivateKey,
+          fpPepper: target.fpPepper,
+          reactivate: parkedByHand.current,
+        });
+        if (!stillAtLimit()) {
+          return { ok: false, error: 'No pending device-limit state.' };
+        }
 
-      // The owner removed this device meanwhile, and the sign-in that parked
-      // here was not made by hand: the removed-device sign-out, from here.
-      if (retry.status === 'revoked') {
-        await forceSignOut('device_revoked');
-        return { ok: false, error: '' };
-      }
+        // The owner removed this device meanwhile, and the sign-in that parked
+        // here was not made by hand: the removed-device sign-out, from here.
+        if (retry.status === 'revoked') {
+          if (target.localOnly || pendingGraduation.current?.pubkey === target.pubkey) {
+            cancelLocalOnlyGraduation();
+            return { ok: false, error: 'Device registration failed: device_revoked' };
+          }
+          await forceSignOut('device_revoked');
+          return { ok: false, error: '' };
+        }
 
-      // Both setAuth calls below are functional updates guarded on the
-      // device-limit state still standing for this pubkey: the register
-      // call above awaited, and the user may have signed out (or a
-      // concurrent caller may have resolved the limit) meanwhile - an
-      // unguarded write would resurrect the dismissed state.
-      if (retry.status === 'limit_reached') {
-        // Shouldn't happen (a slot was just freed or the cap was just
-        // lifted), but if it does - re-surface the new list so the UI
-        // stays consistent.
+        // Both setAuth calls below are functional updates guarded on the
+        // device-limit state still standing for this pubkey: the register
+        // call above awaited, and the user may have signed out (or a
+        // concurrent caller may have resolved the limit) meanwhile - an
+        // unguarded write would resurrect the dismissed state.
+        if (retry.status === 'limit_reached') {
+          // Shouldn't happen (a slot was just freed or the cap was just
+          // lifted), but if it does - re-surface the new list so the UI
+          // stays consistent.
+          setAuth((prev) =>
+            prev.status === 'device_limit_reached' && prev.pubkey === target.pubkey
+              ? {
+                  status: 'device_limit_reached',
+                  method: target.method,
+                  phrase: target.phrase,
+                  pubkey: target.pubkey,
+                  signingPubkey: target.signingPubkey,
+                  encryptionKey: target.encryptionKey,
+                  signingPrivateKey: target.signingPrivateKey,
+                  fpPepper: target.fpPepper,
+                  deviceId: target.deviceId,
+                  limit: retry.limit,
+                  devices: retry.devices,
+                  ...(target.localOnly ? { localOnly: true } : {}),
+                }
+              : prev,
+          );
+          return { ok: false, error: 'Limit still reached. Try again.' };
+        }
+
+        // A sign-out, here or in another tab, or another account taking the
+        // storage ended this sign-in during the requests above: the screen this
+        // would open is gone, and the storage is not this account's.
+        if (!stillAtLimit() || !isLivePhrase(target.phrase)) {
+          return { ok: false, error: 'No pending device-limit state.' };
+        }
+        // The switch into this account met the limit and kept the prior
+        // account's data. The device is registered now, so that data goes
+        // before the vault opens over rows its key cannot read, with sync off.
+        // A switch another tab finished meanwhile left only sync to turn on.
+        const pending = pendingSwitchWipe.current;
+        if (pending?.pubkey === target.pubkey) {
+          let owner: string | null = null;
+          try { owner = localStorage.getItem(PUBKEY_OWNER_KEY); } catch { /* unreadable: the unknown owner a switch can find */ }
+          if (owner === pending.priorOwner) await pending.wipe();
+          else {
+            if (!(await flushPendingShareInbox())) {
+              return { ok: false, error: 'share_inbox_not_cleared' };
+            }
+            resumeSync();
+          }
+          pendingSwitchWipe.current = null;
+          if (!stillAtLimit() || !isLivePhrase(target.phrase)) {
+            return { ok: false, error: 'No pending device-limit state.' };
+          }
+        } else {
+          if (!(await flushPendingShareInbox())) {
+            return { ok: false, error: 'share_inbox_not_cleared' };
+          }
+          if (!stillAtLimit() || !isLivePhrase(target.phrase)) {
+            return { ok: false, error: 'No pending device-limit state.' };
+          }
+        }
+
+        const earlySup2 = retry.isPro ? await checkEarlySupporter(supabase) : false;
+        if (!stillAtLimit() || !isLivePhrase(target.phrase)) {
+          return { ok: false, error: 'No pending device-limit state.' };
+        }
+        const grad = pendingGraduation.current;
+        if (target.localOnly) {
+          if (grad?.pubkey !== target.pubkey) {
+            return { ok: false, error: 'No pending device-limit state.' };
+          }
+          pendingGraduation.current = null;
+          await commitLocalOnlyGraduation(grad.enableSync);
+          if (!stillAtLimit() || !isLivePhrase(target.phrase)) {
+            const cur = authStateRef?.current ?? auth;
+            if (cur.status === 'authenticated' && cur.localOnly && cur.pubkey === target.pubkey) {
+              await markLocalOnlyVault(target.pubkey);
+            }
+            return { ok: false, error: 'No pending device-limit state.' };
+          }
+          if (grad.enableSync) setSyncPaused(false);
+        } else if (isLocalOnly()) {
+          await commitLocalOnlyGraduation(true);
+          if (!stillAtLimit() || !isLivePhrase(target.phrase)) {
+            return { ok: false, error: 'No pending device-limit state.' };
+          }
+        }
+        markRegistered(target.pubkey, target.deviceId);
+        // A custodial OAuth user can hit the device limit like anyone
+        // else, so carry the cached answer rather than assuming.
+        const custodial2 = readCachedAccountFlags(target.pubkey)?.isCustodial === true;
+        writeCachedAccountFlags({
+          pubkey: target.pubkey,
+          isPro: retry.isPro,
+          isEarlySupporter: earlySup2,
+          isCustodial: custodial2,
+        });
         setAuth((prev) =>
-          prev.status === 'device_limit_reached' && prev.pubkey === auth.pubkey
+          prev.status === 'device_limit_reached' && prev.pubkey === target.pubkey
             ? {
-                status: 'device_limit_reached',
-                method: auth.method,
-                phrase: auth.phrase,
-                pubkey: auth.pubkey,
-                signingPubkey: auth.signingPubkey,
-                encryptionKey: auth.encryptionKey,
-                signingPrivateKey: auth.signingPrivateKey,
-                fpPepper: auth.fpPepper,
-                deviceId: auth.deviceId,
-                limit: retry.limit,
-                devices: retry.devices,
+                status: 'authenticated',
+                method: target.method,
+                phrase: target.phrase,
+                pubkey: target.pubkey,
+                signingPubkey: target.signingPubkey,
+                encryptionKey: target.encryptionKey,
+                signingPrivateKey: target.signingPrivateKey,
+                fpPepper: target.fpPepper,
+                deviceId: target.deviceId,
+                isPro: retry.isPro,
+                isEarlySupporter: earlySup2,
+                isCustodial: custodial2,
+                localOnly: false,
               }
             : prev,
         );
-        return { ok: false, error: 'Limit still reached. Try again.' };
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, error: (err as Error).message };
       }
-
-      // A sign-out, here or in another tab, or another account taking the
-      // storage ended this sign-in during the requests above: the screen this
-      // would open is gone, and the storage is not this account's.
-      if (!isLivePhrase(auth.phrase)) {
-        return { ok: false, error: 'No pending device-limit state.' };
-      }
-      // The switch into this account met the limit and kept the prior
-      // account's data. The device is registered now, so that data goes
-      // before the vault opens over rows its key cannot read, with sync off.
-      // A switch another tab finished meanwhile left only sync to turn on.
-      const pending = pendingSwitchWipe.current;
-      if (pending?.pubkey === auth.pubkey) {
-        let owner: string | null = null;
-        try { owner = localStorage.getItem(PUBKEY_OWNER_KEY); } catch { /* unreadable: the unknown owner a switch can find */ }
-        if (owner === pending.priorOwner) await pending.wipe();
-        else resumeSync();
-        pendingSwitchWipe.current = null;
-      }
-
-      const earlySup2 = retry.isPro ? await checkEarlySupporter(supabase) : false;
-      markRegistered(auth.pubkey, auth.deviceId);
-      // A custodial OAuth user can hit the device limit like anyone
-      // else, so carry the cached answer rather than assuming.
-      const custodial2 = readCachedAccountFlags(auth.pubkey)?.isCustodial === true;
-      writeCachedAccountFlags({
-        pubkey: auth.pubkey,
-        isPro: retry.isPro,
-        isEarlySupporter: earlySup2,
-        isCustodial: custodial2,
-      });
-      setAuth((prev) =>
-        prev.status === 'device_limit_reached' && prev.pubkey === auth.pubkey
-          ? {
-              status: 'authenticated',
-              method: auth.method,
-              phrase: auth.phrase,
-              pubkey: auth.pubkey,
-              signingPubkey: auth.signingPubkey,
-              encryptionKey: auth.encryptionKey,
-              signingPrivateKey: auth.signingPrivateKey,
-              fpPepper: auth.fpPepper,
-              deviceId: auth.deviceId,
-              isPro: retry.isPro,
-              isEarlySupporter: earlySup2,
-              isCustodial: custodial2,
-              localOnly: false,
-            }
-          : prev,
-      );
-      return { ok: true };
-    } catch (err) {
-      return { ok: false, error: (err as Error).message };
-    }
+    };
+    return target.localOnly || isLocalOnly() ? withBackendNetworkAllowed(run) : run();
   }
 
   // On mount:
@@ -2559,9 +2656,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // refreshes the session, registers the device and updates Pro
         // flags (or transitions to device_limit_reached) when it lands.
         if (fastBooted) {
-          // Local-only vaults stay 100% offline: never revalidate against the
-          // server on boot. Spec: docs/internal/specs/local-only-862.md (5.2)
-          if (isLocalOnly()) return;
+          // Unsynced local vaults stay 100% offline on boot: never revalidate
+          // against the server while Sync stays off. Spec: docs/internal/specs/local-only-862.md (5.2)
+          if (isUnsyncedLocalVault()) return;
           authenticateWithPhrase(phrase, method, undefined, undefined, false, undefined, bootStamp, false).catch((err) => {
             // The account replaced this phrase: the vault fast boot opened
             // gives way to the screen that asks for the new one.
@@ -2685,6 +2782,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (await isRefusedPhrase(trimmed)) {
       return { ok: false as const, error: i18n.t('auth:signIn.publicPhrase') };
     }
+    await signOutFinishSettled();
     // Before the session lookup below: the phrase opens the session the app
     // lock sealed (sessionSeal.ts). It seals only once this sign-in is live.
     holdSessionSeal(trimmed);
@@ -2861,6 +2959,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (await isRefusedPhrase(trimmed)) {
       return { ok: false, error: i18n.t('auth:signIn.publicPhrase') };
     }
+    await signOutFinishSettled();
     if (!(await waitForLocalDataLock(LOCAL_DATA_LOCK_WAIT_MS))) {
       logAuthEvent('auth:local-data-lock-waiting');
       return { ok: false, error: i18n.t('auth:signIn.failedUnexpectedly') };
@@ -2895,7 +2994,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mirror !== null && mirror !== pubkey) {
           wipePrior = true;
         } else if (mirror === null) {
-          wipePrior = await hasLocalAccountState();
+          wipePrior = (await hasLocalAccountState()) || signOutMarkLeft() !== null;
         }
       }
       if (wipePrior) {
@@ -2903,6 +3002,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearRegistrationMarker();
         clearSupabaseAuthKeys();
         await cancelPhoneReminders();
+        if (!(await clearPhoneShareInbox())) throw new Error('share_inbox_not_cleared');
         await clearLocalDatabase();
         clearLocalSettings();
         clearCachedAccountFlags();
@@ -2915,14 +3015,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearAccountScopedUiState();
         clearMassDeleteState();
         resetAppearance();
-        void import('./autoBackup/runner').then((m) => m.forgetAutoBackup()).catch(() => {});
-        void import('./markdownFolder/folderMemory').then((m) => m.forgetFolder()).catch(() => {});
+        await Promise.all([
+          import('./autoBackup/runner').then((m) => m.forgetAutoBackup()).catch(() => {}),
+          import('./markdownFolder/folderMemory').then((m) => m.forgetFolder()).catch(() => {}),
+        ]);
         clearPriorAccountChoices();
         dropMeaningIndex();
         try { localStorage.removeItem('privacynotes.lastSync'); } catch { /* ignore */ }
         try { sessionStorage.removeItem('privacynotes.lastSync'); } catch { /* ignore */ }
         resumeSync();
       } else {
+        if (!(await flushPendingShareInbox())) throw new Error('share_inbox_not_cleared');
         clearSupabaseAuthKeys();
       }
 
@@ -3003,6 +3106,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
       return { ok: false, error: i18n.t('settings:sync.localOnlyOfflineError') };
     }
+    if (authInFlight.current) {
+      return { ok: false, error: 'Sign-in is already in progress. Please try again.' };
+    }
     if (opts.enableSync) {
       // Flush any recently deleted blobs still inside the 24h local grace
       // window BEFORE unpausing sync so deleted files never upload to R2.
@@ -3033,12 +3139,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           true,
           { skipPasswordRemint: true, commitGraduation: { enableSync: opts.enableSync } },
         );
-        if (!ran || isLocalOnly()) {
+        if (!ran) {
+          return { ok: false as const, error: 'Sign-in is already in progress. Please try again.' };
+        }
+        if (pendingGraduation.current?.pubkey === current.pubkey) {
+          return { ok: false as const, error: i18n.t('security:deviceLimit.title') };
+        }
+        if (isLocalOnly()) {
           clearSupabaseAuthKeys();
           return { ok: false as const, error: i18n.t('auth:signIn.failedUnexpectedly') };
         }
         return { ok: true as const };
       } catch (err) {
+        pendingGraduation.current = null;
         clearSupabaseAuthKeys();
         return {
           ok: false as const,
@@ -3046,6 +3159,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
       }
     });
+  }
+
+  function cancelLocalOnlyGraduation(): void {
+    const current = authStateRef.current;
+    if (current.status !== 'device_limit_reached' || !current.localOnly) return;
+    const grad = pendingGraduation.current;
+    pendingGraduation.current = null;
+    const token = grad?.pubkey === current.pubkey ? grad.createdToken : null;
+    dismissMfaPrompt();
+    sessionRef.current = null;
+    clearSupabaseAuthKeys();
+    if (token && (typeof navigator === 'undefined' || navigator.onLine !== false)) {
+      void withBackendNetworkAllowed(() =>
+        supabase.auth.admin.signOut(token, 'local').catch(() => {}),
+      );
+    }
+    const cached = readCachedAccountFlags(current.pubkey);
+    const nextAuth: AuthState = {
+      status: 'authenticated',
+      method: current.method,
+      phrase: current.phrase,
+      pubkey: current.pubkey,
+      signingPubkey: current.signingPubkey,
+      encryptionKey: current.encryptionKey,
+      signingPrivateKey: current.signingPrivateKey,
+      fpPepper: current.fpPepper,
+      deviceId: current.deviceId,
+      isPro: cached?.isPro ?? false,
+      isEarlySupporter: cached?.isEarlySupporter ?? false,
+      isCustodial: cached?.isCustodial === true,
+      localOnly: true,
+    };
+    authStateRef.current = nextAuth;
+    setAuth((prev) =>
+      prev.status === 'device_limit_reached' && prev.pubkey === current.pubkey
+        ? nextAuth
+        : prev,
+    );
   }
 
   // ── A phrase the account replaced (phrase change, section 7) ──────
@@ -3661,6 +3812,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signOut(opts?: { keepUnsyncedNotes?: boolean }) {
+    const curAuth = authStateRef?.current ?? auth;
+    if (curAuth.status === 'device_limit_reached' && curAuth.localOnly) {
+      cancelLocalOnlyGraduation();
+      return;
+    }
     dismissMfaPrompt();
     setRevalidationExpired(false);
     // Before anything else: a pending re-mint would authenticate this
@@ -3784,6 +3940,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // the job (signOutFinish.ts, beta.privacynotes.app #211). A sign-in that
     // goes live meanwhile removes it, which the checks below read.
     const signOutMark = beginSignOutMark('signout');
+    markPhoneShareInboxPending();
     // The credentials go now, not after the flush, which can run for ten
     // seconds: a tab that loads in that span must find no phrase to boot
     // from. The flush below reads the keys in memory, never these. Leaving
@@ -3821,7 +3978,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Also runs from the device-cap state - a blocked device can
     // carry dirty rows from an earlier authenticated life on this
     // browser, and link-pubkey has already stamped its session.
-    const localOnlySession = (auth.status === 'authenticated' && auth.localOnly) || isLocalOnly();
+    const localOnlySession =
+      (curAuth.status === 'authenticated' && curAuth.localOnly) || isLocalOnly() || isUnsyncedLocalVault();
     let flushSettled = true;
     if (!localOnlySession && (auth.status === 'authenticated' || auth.status === 'device_limit_reached')) {
       // Time-boxed so a cold or slow server can't stall the sign-out UI
@@ -3864,7 +4022,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Dead session or offline - nothing more this side can do;
           // the wipe below decides what survives.
         }
-        if (auth.status === 'authenticated') {
+        if (curAuth.status === 'authenticated') {
           try {
             const session = await supabase.auth.getSession();
             const token = session.data.session?.access_token;
@@ -3993,6 +4151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await clearLocalDatabase({ keepUnsyncedNotes: opts?.keepUnsyncedNotes }).catch((err: unknown) => {
         logAuthEvent('auth:signout-wipe-failed', { name: (err as Error | null)?.name });
       });
+      await clearPhoneShareInbox();
       // The Smart connections index is memory of this tab, one vector per
       // note of the account that leaves; the next account's notes view
       // builds its own (beta.privacynotes.app #214 item 4).
@@ -4128,6 +4287,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         completeDesktopOAuth,
         signOut,
         resolveDeviceLimit,
+        cancelLocalOnlyGraduation,
         forceSignOut,
         refreshProStatus,
         completeCustodyChoice,

@@ -20,6 +20,14 @@ import { POLICY_PUBLIC_KEY } from './policyKey';
  */
 export type PolicyChannel = 'linux' | 'android' | 'ios' | 'play';
 
+const POLICY_TIMEOUT_MS = 30_000;
+
+function policyAbortSignal(): AbortSignal | undefined {
+  return typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+    ? AbortSignal.timeout(POLICY_TIMEOUT_MS)
+    : undefined;
+}
+
 export type FetchedPolicy =
   | { policy: Record<string, unknown>; signed: false }
   | { policy: Record<string, unknown>; signed: true; issued: number };
@@ -27,7 +35,7 @@ export type FetchedPolicy =
 /** The policy at `url`, or null when it is missing or not a JSON object.
  *  Throws when the host cannot be reached, as `fetch` does. */
 export async function fetchPolicy(url: string, channel: PolicyChannel): Promise<FetchedPolicy | null> {
-  const res = await fetch(`${url}?t=${Date.now()}`, { cache: 'no-store' });
+  const res = await fetch(`${url}?t=${Date.now()}`, { cache: 'no-store', signal: policyAbortSignal() });
   if (!res.ok) return null;
   const bytes = new Uint8Array(await res.arrayBuffer());
   let policy: unknown;
@@ -47,7 +55,7 @@ export async function fetchPolicy(url: string, channel: PolicyChannel): Promise<
 
 async function hasSignature(url: string, bytes: Uint8Array): Promise<boolean> {
   try {
-    const res = await fetch(`${url}.minisig?t=${Date.now()}`, { cache: 'no-store' });
+    const res = await fetch(`${url}.minisig?t=${Date.now()}`, { cache: 'no-store', signal: policyAbortSignal() });
     if (!res.ok) return false;
     const signature = await res.text();
     // Loaded here, not at the top: the check and its hash stay off the boot path.

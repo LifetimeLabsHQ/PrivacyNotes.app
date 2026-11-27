@@ -15,7 +15,7 @@ title: Markdownでここまでできます
 
 ネタバレは、クリックされるまで言葉を隠します。プレゼントは||レコードプレーヤー||です。言葉を選択して**挿入**メニューの**ネタバレ**を選ぶか、両側に縦線を2本ずつ入力します。
 
-アイコンやロゴは、:icon[gift] :icon[coffee] :icon[rocket-launch] :logo[github] のように文中に置けます。**挿入** > **アイコンとロゴ**から選んでください。
+アイコンやロゴは、:icon[gift] :icon[coffee] :icon[rocket-launch] :logo[github] のように文中に置けます。**挿入** > **アイコン / ロゴ / 絵文字**から選んでください。
 
 **Aa**ボタンで大きさとフォントが変わります。文字は<span style="font-size: 0.85em">小さく</span>も、標準にも、<span style="font-size: 1.6em">大きく</span>もできます。<span style="font-family: ui-sans-serif, system-ui, sans-serif">ゴシック</span>、<span style="font-family: ui-serif, Georgia, Cambria, serif">明朝</span>、<span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">等幅</span>から選べます。
 

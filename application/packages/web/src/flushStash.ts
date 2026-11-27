@@ -210,6 +210,12 @@ export function stashPendingEdit(noteId: string, body: string): void {
   }
 }
 
+let flushingForExit = false;
+
+export function isFlushingEditorsForExit(): boolean {
+  return flushingForExit;
+}
+
 /**
  * Make every open editor write what it holds now, the way a closing tab
  * does: `useDebouncedMarkdownSave` answers `beforeunload` and a drawing
@@ -219,8 +225,14 @@ export function stashPendingEdit(noteId: string, body: string): void {
  * lock's reload, lockReload.ts).
  */
 export function flushEditorsForExit(): void {
-  window.dispatchEvent(new Event('beforeunload'));
-  window.dispatchEvent(new Event('pagehide'));
+  const prev = flushingForExit;
+  flushingForExit = true;
+  try {
+    window.dispatchEvent(new Event('beforeunload'));
+    window.dispatchEvent(new Event('pagehide'));
+  } finally {
+    flushingForExit = prev;
+  }
 }
 
 /** Writes with no flush stash that a page ending on purpose waits for (a

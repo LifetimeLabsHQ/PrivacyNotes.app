@@ -21,6 +21,7 @@ import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey, type EditorState } from '@tiptap/pm/state';
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view';
 import type { Node as PMNode } from '@tiptap/pm/model';
+import { forEachInlineTagInDoc } from './editorInlineTags';
 import { scrollParentOf } from './scrollParent';
 
 type SearchMatch = {
@@ -34,6 +35,9 @@ type SearchMatch = {
 type PluginState = {
   query: string;
   caseSensitive: boolean;
+  /** When true (seeded by a tag filter), match only exact inline `#tag` spans
+   *  outside code, links and headings, so `#privacy` never hits `#privacy-policy`. */
+  exactTag: boolean;
   matches: SearchMatch[];
   /** Index into `matches`, or -1 when there are none. */
   active: number;
@@ -65,8 +69,19 @@ function escapeRegExp(s: string): string {
  * photo's name must have something the bar can show (GitHub #288). A hit
  * marks the whole node as one node match.
  */
-function findMatches(doc: PMNode, query: string, caseSensitive: boolean): SearchMatch[] {
+function findInlineTagMatches(doc: PMNode, query: string): SearchMatch[] {
+  const target = (query.startsWith('#') ? query.slice(1) : query).toLowerCase();
+  if (!target) return [];
+  const matches: SearchMatch[] = [];
+  forEachInlineTagInDoc(doc, ({ tag, from, to }) => {
+    if (tag.toLowerCase() === target) matches.push({ from, to });
+  });
+  return matches;
+}
+
+function findMatches(doc: PMNode, query: string, caseSensitive: boolean, exactTag = false): SearchMatch[] {
   if (!query) return [];
+  if (exactTag) return findInlineTagMatches(doc, query);
   let re: RegExp;
   try {
     re = new RegExp(escapeRegExp(query), caseSensitive ? 'g' : 'gi');
@@ -127,17 +142,17 @@ function buildDecorations(doc: PMNode, matches: SearchMatch[], active: number): 
   return DecorationSet.create(doc, decos);
 }
 
-function recompute(doc: PMNode, query: string, caseSensitive: boolean, preferActive: number): PluginState {
-  const matches = findMatches(doc, query, caseSensitive);
+function recompute(doc: PMNode, query: string, caseSensitive: boolean, preferActive: number, exactTag = false): PluginState {
+  const matches = findMatches(doc, query, caseSensitive, exactTag);
   let active = -1;
   if (matches.length > 0) {
     active = preferActive < 0 ? 0 : Math.min(preferActive, matches.length - 1);
   }
-  return { query, caseSensitive, matches, active, decorations: buildDecorations(doc, matches, active) };
+  return { query, caseSensitive, exactTag, matches, active, decorations: buildDecorations(doc, matches, active) };
 }
 
 type Meta =
-  | { kind: 'query'; query: string; caseSensitive: boolean }
+  | { kind: 'query'; query: string; caseSensitive: boolean; exactTag: boolean }
   | { kind: 'active'; active: number }
   /** A single match was rewritten; `pos` is the end of the replacement. */
   | { kind: 'afterReplace'; pos: number }
@@ -149,6 +164,7 @@ type Meta =
 const EMPTY: PluginState = {
   query: '',
   caseSensitive: false,
+  exactTag: false,
   matches: [],
   active: -1,
   decorations: DecorationSet.empty,
@@ -162,7 +178,7 @@ const searchPlugin = new Plugin<PluginState>({
       const meta = tr.getMeta(searchPluginKey) as Meta | undefined;
       if (meta) {
         if (meta.kind === 'clear') return EMPTY;
-        if (meta.kind === 'query') return recompute(newState.doc, meta.query, meta.caseSensitive, 0);
+        if (meta.kind === 'query') return recompute(newState.doc, meta.query, meta.caseSensitive, 0, meta.exactTag);
         if (meta.kind === 'active') {
           const n = value.matches.length;
           if (n === 0) return value;
@@ -185,7 +201,7 @@ const searchPlugin = new Plugin<PluginState>({
           // slid into the old index; when it still matches ("cat" to
           // "cats"), the position rule steps past it instead of targeting
           // the text that was just written.
-          const matches = findMatches(newState.doc, value.query, value.caseSensitive);
+          const matches = findMatches(newState.doc, value.query, value.caseSensitive, value.exactTag);
           let active = matches.findIndex((m) => m.from >= meta.pos);
           if (active < 0) active = matches.length > 0 ? 0 : -1;
           return { ...value, matches, active, decorations: buildDecorations(newState.doc, matches, active) };
@@ -193,7 +209,7 @@ const searchPlugin = new Plugin<PluginState>({
       }
       // Keep highlights live as the note is edited under an open bar.
       if (tr.docChanged && value.query) {
-        return recompute(newState.doc, value.query, value.caseSensitive, value.active);
+        return recompute(newState.doc, value.query, value.caseSensitive, value.active, value.exactTag);
       }
       return value;
     },
@@ -215,8 +231,8 @@ export const SearchHighlight = Extension.create({
 
 // --- Drivers used by the React bars -------------------------------------
 
-export function setSearchQuery(view: EditorView, query: string, caseSensitive = false): void {
-  view.dispatch(view.state.tr.setMeta(searchPluginKey, { kind: 'query', query, caseSensitive }));
+export function setSearchQuery(view: EditorView, query: string, caseSensitive = false, exactTag = false): void {
+  view.dispatch(view.state.tr.setMeta(searchPluginKey, { kind: 'query', query, caseSensitive, exactTag }));
 }
 
 /** Move the active match by absolute index; wraps past either end. */

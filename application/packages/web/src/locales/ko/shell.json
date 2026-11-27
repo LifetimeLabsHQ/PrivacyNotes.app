@@ -205,7 +205,7 @@
     "color": "색상",
     "colorNone": "색상 없음",
     "colorUseDefault": "기본값 사용",
-    "icon": "아이콘과 로고",
+    "icon": "아이콘 / 로고 / 이모지",
     "colorFromFolder": "폴더에서: {{name}}",
     "colorFromTag": "태그에서: #{{name}}",
     "colorOwnHint": "여기서 고른 색은 이 노트의 배경을 채워요. <setting>폴더와 태그 색상</setting>으로는 바뀌지 않아요.",
@@ -360,6 +360,7 @@
   },
   "demoBanner": {
     "title": "부담 없이 사용해 보세요",
+    "shortTitle": "데모",
     "description": "여기서는 아무것도 저장되지 않아요. 나만의 암호화된 노트를 무료로 만들어 보세요."
   },
   "markdown": {
@@ -616,6 +617,10 @@
     "tooLarge": "너무 커요. 파일당 최대 {{limit}} MB까지 가능해요.",
     "titlePlaceholder": "제목(선택)",
     "notePlaceholder": "노트 추가...",
+    "taskPlaceholder": "할 일 항목...",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "오늘의 저널 항목에 덧붙여요.",
+    "clipFallbackToast": "페이지를 스크랩하지 못했어요. 대신 북마크로 저장했어요.",
     "photoCount": "사진 {{count}}장"
   },
   "shortcut": {
@@ -921,7 +926,8 @@
     "label": "빠른 추가"
   },
   "offline": {
-    "notLoaded": "지금 오프라인이라 앱의 이 부분을 아직 불러오지 못했어요. 다시 온라인이 되면 시도해 주세요."
+    "notLoaded": "지금 오프라인이라 앱의 이 부분을 아직 불러오지 못했어요. 다시 온라인이 되면 시도해 주세요.",
+    "chunkBlocked": "이 화면을 불러오지 못했어요. 페이지를 새로 고치거나 콘텐츠 차단기를 확인하세요."
   },
   "checkIn": {
     "prompt": "오늘 기분은 어때요?",
@@ -1094,6 +1100,7 @@
     "removed": "홈에서 제거했어요",
     "showOnHome": "홈에 표시",
     "removeFromHome": "홈에서 제거",
+    "openTarget": "{{target}} 열기",
     "resize": "{{name}} 크기 조절",
     "narrower": "더 좁게",
     "taller": "더 높게",
@@ -1101,29 +1108,72 @@
     "moveEarlier": "앞으로 이동",
     "moveLater": "뒤로 이동",
     "chooseNote": "노트 선택",
+    "chooseNotes": "노트 선택",
     "chooseTag": "태그 선택",
+    "chooseTags": "태그 선택",
     "chooseFolder": "폴더 선택",
+    "chooseFolders": "폴더 선택",
     "chooseTracker": "트래커 선택",
+    "chooseCounter": "카운터 선택",
+    "chooseCounters": "카운터 선택",
+    "chooseTypes": "항목 유형 선택",
     "choose": "선택",
     "gone": "더 이상 없어요",
     "otherSpace": "다른 공간에 있어요",
     "proLocked": "Pro 기능",
     "noneToChoose": "아직 선택할 항목이 없어요",
+    "catalogSearch": "위젯 검색",
+    "catalogFilter": "위젯 필터",
+    "allWidgets": "모든 위젯",
+    "onHomeLabel": "홈에 있음",
+    "onHomeCount": "홈에 있음 ({{count}})",
     "headerEvents_other": "오늘 일정 {{formatted}}개",
+    "headerOverdue_other": "기한 지남 {{formatted}}개",
     "headerTasks_other": "남은 할 일 {{formatted}}개",
+    "headerDosesLeft_other": "남은 복용 {{formatted}}회",
     "startToday": "오늘 항목 시작",
+    "setupMedication": "약 설정",
+    "setupCounter": "카운터 만들기",
+    "counterIncrease": "{{name}}에 1 더하기",
+    "counterDecrease": "{{name}}에서 1 빼기",
+    "storageSummary": "노트 {{notes}}개 · 파일 {{files}}개",
+    "graphSummary": "연결됨 {{linked}} · 연결 안 됨 {{orphans}}",
+    "placesSummary_other": "위치가 있는 항목 {{count}}개",
+    "quickCapture": {
+      "placeholderJournal": "오늘 저널에 추가...",
+      "placeholderTask": "할 일 추가...",
+      "placeholderNote": "빠른 노트 쓰기...",
+      "destination": "저장 위치",
+      "voice": "음성 노트 녹음",
+      "voiceNoteTitle": "음성 노트",
+      "recording": "녹음 중 {{duration}}",
+      "savingVoice": "음성 노트를 암호화하는 중...",
+      "savedTo": "{{title}}에 저장했어요",
+      "failed": "지금은 저장할 수 없어요.",
+      "micUnavailable": "여기서는 마이크 녹음을 사용할 수 없어요.",
+      "micDenied": "마이크 접근이 거부되었어요."
+    },
     "groups": {
-      "keep": "보관하는 것들"
+      "graph": "그래프 및 지도",
+      "keep": "기타"
     },
     "layout": {
       "everyday": "일상",
       "planner": "플래너",
-      "writer": "작가"
+      "writer": "작가",
+      "wellness": "웰니스"
     },
     "w": {
       "checkIn": {
         "name": "체크인",
         "help": "오늘의 기분과 트래커"
+      },
+      "medication": {
+        "help": "오늘 복용할 약, 복용 또는 건너뛰기, 재처방 알림"
+      },
+      "quickCapture": {
+        "name": "빠른 기록",
+        "help": "홈에서 바로 텍스트나 음성 노트 추가"
       },
       "calendar": {
         "help": "항목과 일정이 점으로 표시된 이번 달"
@@ -1138,7 +1188,7 @@
       },
       "tasks": {
         "name": "남은 할 일",
-        "help": "노트에서 체크하지 않은 할 일"
+        "help": "기한이 지났거나 다가온 할 일을 먼저, 빠른 추가와 함께"
       },
       "recent": {
         "name": "최근 편집",
@@ -1159,9 +1209,19 @@
         "name": "폴더 하나",
         "help": "한 폴더의 최신 항목"
       },
+      "types": {
+        "name": "항목 목록",
+        "help": "선택한 유형의 최신 항목"
+      },
       "onThisDay": {
         "name": "이날의 기록",
         "help": "지난 몇 년간 같은 날의 저널 항목"
+      },
+      "graph": {
+        "help": "보관함에서 연결된 노트의 실시간 미니 지도"
+      },
+      "places": {
+        "help": "위치가 있는 노트, 항목, 연락처를 지도에"
       },
       "week": {
         "help": "단어 수, 활동한 날, 항목, 체크인"
@@ -1176,6 +1236,12 @@
         "name": "나의 리듬",
         "help": "26주간의 글쓰기와 기분"
       },
+      "yearPixels": {
+        "help": "한 해의 기분 색을 한눈에"
+      },
+      "patterns": {
+        "help": "기분을 가장 크게 올리거나 내리는 것"
+      },
       "milestone": {
         "name": "다음 마일스톤",
         "help": "다음 마일스톤까지 얼마나 남았는지"
@@ -1183,6 +1249,9 @@
       "tracker": {
         "name": "트래커 하나",
         "help": "트래커 하나의 수치와 기록한 날"
+      },
+      "counter": {
+        "help": "홈에서 바로 +1을 탭하는 사용자 지정 카운터"
       },
       "weekRecap": {
         "help": "카드 한 장에 담은 한 주"
@@ -1196,9 +1265,13 @@
       },
       "birthdays": {
         "help": "앞으로 30일 안의 생일"
+      },
+      "storage": {
+        "help": "암호화된 저장 공간 링과 다시 계산"
       }
     },
     "empty": {
+      "medication": "오늘 복용할 약이 없어요",
       "upcoming": "앞으로 7일 동안 일정이 없어요",
       "tasks": "남은 할 일이 없어요",
       "recent": "아직 아무것도 없어요",
@@ -1206,6 +1279,11 @@
       "tag": "이 태그가 붙은 항목이 없어요",
       "folder": "이 폴더가 비어 있어요",
       "onThisDay": "지난 몇 년간 이날의 항목이 없어요",
+      "graph": "노트 두 개를 링크하면 여기에 그래프가 보여요",
+      "places": "노트나 연락처에 위치를 추가하면 여기에 핀이 보여요",
+      "yearPixels": "기분을 기록해서 한 해를 색칠하세요",
+      "patterns": "며칠 더 기록하면 패턴이 보여요",
+      "counter": "아직 카운터 트래커가 없어요",
       "files": "아직 파일이 없어요",
       "bookmarks": "아직 북마크가 없어요",
       "birthdays": "앞으로 30일 안에 생일이 없어요",

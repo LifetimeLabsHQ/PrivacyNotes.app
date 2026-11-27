@@ -40,6 +40,39 @@ export function skipDelimiterTrim(state: unknown): void {
   if (top && typeof top.delimiter === 'function' && top.end === undefined) top.delimiter = '';
 }
 
+/**
+ * Counterpart to `skipDelimiterTrim`, called from `close`.
+ *
+ * tiptap-markdown's `MarkdownSerializerState` only pops one finished entry per
+ * `render()` call, so when two `expelEnclosingWhitespace` marks close
+ * back-to-back inside an outer mark (for example `***both***` inside a
+ * colored highlight or colored text span), the second close pops the already
+ * finished inner entry and leaves the outer `**` entry orphaned on
+ * `state.inlines`. When our `<mark>` or `<span>` later closes, `markString`
+ * pops that orphaned `**` and attaches `end` to `</mark>`, causing
+ * `trimInline` to shift `**` across `</mark>` (`You can** mark>`).
+ *
+ * ProseMirror closes marks in strict LIFO order, so anything sitting above our
+ * own `delimiter === ''` entry when we close is guaranteed to be a leaked
+ * orphan from inside this mark. Dropping down to and including our own entry
+ * keeps any genuinely enclosing mark (such as `**<mark>x</mark> y**`) intact
+ * while preventing `trimInline` from ever touching our closing tag.
+ */
+export function finishSkipDelimiterTrim(state: unknown): void {
+  const inlines = (state as { inlines?: { delimiter?: unknown; end?: number }[] }).inlines;
+  if (!Array.isArray(inlines) || inlines.length === 0) return;
+  for (let i = inlines.length - 1; i >= 0; i--) {
+    if (inlines[i]?.delimiter === '') {
+      inlines.splice(i);
+      return;
+    }
+  }
+  // Fallback if an entry was cleared externally: neutralize the just-closed top
+  // entry so `trimInline` is a no-op on our closing tag.
+  const top = inlines.at(-1);
+  if (top && top.end !== undefined) top.delimiter = '';
+}
+
 /** Attributes FontSize, FontFamily and Color all hang off the one textStyle mark. */
 type TextStyleAttrs = {
   color?: string | null;
@@ -79,7 +112,8 @@ export const TextStyleMarkdown = TextStyle.extend({
             const css = textStyleCss(mark.attrs);
             return css ? `<span style="${css}">` : '';
           },
-          close(_state: unknown, mark: { attrs: TextStyleAttrs }) {
+          close(state: unknown, mark: { attrs: TextStyleAttrs }) {
+            finishSkipDelimiterTrim(state);
             // Must mirror open() exactly: emitting a closing tag for a span
             // that was never opened corrupts the document.
             return textStyleCss(mark.attrs) ? '</span>' : '';

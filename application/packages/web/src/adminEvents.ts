@@ -6,7 +6,7 @@
 
 import type { SupabaseClient } from '@notes/shared';
 import { isDemoMode } from './demo';
-import { isLocalOnly } from './localOnly';
+import { isUnsyncedLocalVault } from './localOnly';
 
 export type AdminEventType = 'import' | 'export';
 
@@ -56,7 +56,7 @@ export function recordAdminEvent(
   // Demo mode makes zero server calls - the sandbox has no account to
   // attribute an event to, and try.privacynotes.app would otherwise
   // write a real admin_events row on every export/import.
-  if (isDemoMode() || isLocalOnly()) return;
+  if (isDemoMode() || isUnsyncedLocalVault()) return;
   // Not awaited. The insert runs in the background while the user's
   // import/export code path finishes. If the network is down or RLS
   // rejects the row for any reason, we do not want that to surface

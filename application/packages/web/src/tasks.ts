@@ -697,6 +697,72 @@ export async function setTaskReminderInNote(
 }
 
 /**
+ * Format a shared URL, title, and/or text into one safe Markdown task-line
+ * body (without the leading `- [ ] `). Valid http(s) links become clickable
+ * Markdown links with their label escaped; plain text is escaped like
+ * `appendLinesToBody` so characters such as `*`, `[`, or `#` stay literal.
+ */
+export function formatSharedTaskLine(input: {
+  url?: string;
+  title?: string;
+  text?: string;
+}): string {
+  const url = input.url?.trim() ?? '';
+  const title = (input.title ?? '').replace(/\s+/g, ' ').trim();
+  const text = (input.text ?? '').replace(/\s+/g, ' ').trim();
+  if (url && /^https?:\/\/\S+$/i.test(url)) {
+    const safeUrl = url.replace(/[()]/g, (ch) => (ch === '(' ? '%28' : '%29'));
+    const link = title && title !== url
+      ? `[${title.replace(/[\\[\]]/g, '\\$&')}](${safeUrl})`
+      : safeUrl;
+    if (text && text !== title && text !== url) {
+      return `${link} - ${escapeMarkdownText(text)}`;
+    }
+    return link;
+  }
+  const combined = title && text && text !== title ? `${title} - ${text}` : (text || title);
+  if (!combined) return '';
+  return guardMarkdownLineStart(escapeMarkdownText(combined));
+}
+
+/**
+ * Append a task line (already formatted via `formatSharedTaskLine`, or plain
+ * text when `preformatted` is false) into a chosen task list note if it still
+ * exists, is active (`type === 'task'`), and accepts edits (`takesTaskEdit`).
+ * Falls back to the dedicated Quick Tasks list otherwise. Returns the id of
+ * the task list note written, or null when empty.
+ */
+export async function appendTaskToListOrQuickTasks(
+  line: string,
+  taskListId: string | undefined,
+  activeNotes: LocalNote[],
+  isGated: (n: LocalNote) => boolean,
+  folderForNew: () => string | null = () => null,
+): Promise<string | null> {
+  const clean = line.trim();
+  if (!clean) return null;
+  if (taskListId) {
+    const target = await getNote(taskListId);
+    if (
+      target &&
+      target.trashed !== 1 &&
+      target.archived !== 1 &&
+      target.deleted !== 1 &&
+      target.type === 'task' &&
+      takesTaskEdit(target, isGated)
+    ) {
+      const written = await updateNoteFrom(target.id, (current) =>
+        current.trashed !== 1 && current.archived !== 1 && current.deleted !== 1 && takesTaskEdit(current, isGated)
+          ? { body: appendTaskToBody(current.body, clean) }
+          : null,
+      );
+      if (written) return target.id;
+    }
+  }
+  return appendQuickTask(clean, activeNotes, isGated, folderForNew);
+}
+
+/**
  * Append a quick task to the Quick Tasks note. A Quick Tasks note that takes
  * no edits is passed over the way a renamed or trashed one is, and a new one
  * is made, so the line is written somewhere it may go and never into a note

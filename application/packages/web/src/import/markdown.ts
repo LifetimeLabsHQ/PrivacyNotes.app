@@ -171,7 +171,7 @@ function parseOneMd(
   const isJournal = meta['type'] === 'journal' || (trackers !== undefined && !meta['type']);
   // The place joins the trackers only after the journal test above: a note
   // that has a place and nothing else is still a note.
-  // Spec: docs/internal/plans/note-location.md (section 6)
+  // Spec: docs/internal/specs/note-location.md (section 6)
   const place = parseFrontMatterLocation(meta[FRONT_MATTER_LOCATION], unquote(meta[FRONT_MATTER_LOCATION_NAME]));
   const carried = place ? { ...trackers, [LOCATION_KEY]: place } : trackers;
   // A task list and an event name themselves; a note is the default.

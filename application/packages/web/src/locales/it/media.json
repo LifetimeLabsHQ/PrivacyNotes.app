@@ -18,7 +18,13 @@
     "viewAria": "Visualizza immagine",
     "copyAria": "Copia immagine",
     "copyFailed": "Impossibile copiare l'immagine.",
-    "picturesLeftOut": "Alcune immagini non sono state aggiunte. Copia un'immagine da sola per incollarla."
+    "picturesLeftOut": "Alcune immagini non sono state aggiunte. Copia un'immagine da sola per incollarla.",
+    "captionLabel": "Didascalia",
+    "captionAddAria": "Aggiungi didascalia",
+    "captionEditAria": "Modifica didascalia",
+    "captionPlaceholder": "Aggiungi una didascalia...",
+    "captionClearAria": "Cancella didascalia",
+    "captionHint": "Invio per salvare · Esc per annullare"
   },
   "attachment": {
     "fallbackName": "Allegato",

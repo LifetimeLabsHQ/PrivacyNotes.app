@@ -143,23 +143,37 @@ function folderCause(err: unknown): FailureCause {
   return 'unknown';
 }
 
-async function placeInFolder(name: string, bytes: Uint8Array, hash: string): Promise<Placed> {
+async function placeInFolder(name: string, bytes: Uint8Array, hash: string, signal?: AbortSignal): Promise<Placed> {
+  signal?.throwIfAborted();
   const handle = await storedHandle();
   if (!handle) throw new DestinationError('gone');
   try {
+    signal?.throwIfAborted();
     const file = await handle.getFileHandle(name, { create: true });
+    signal?.throwIfAborted();
     // The browser stages the bytes and swaps them in on close, so a tab
     // that goes away mid-write leaves no half file under this name.
     const out = await file.createWritable();
-    await out.write(bytes as BufferSource);
-    await out.close();
+    try {
+      signal?.throwIfAborted();
+      await out.write(bytes as BufferSource);
+      signal?.throwIfAborted();
+      await out.close();
+    } catch (writeErr) {
+      await out.abort?.().catch(() => {});
+      throw writeErr;
+    }
+    signal?.throwIfAborted();
     const back = new Uint8Array(await (await file.getFile()).arrayBuffer());
+    signal?.throwIfAborted();
     if (back.length !== bytes.length || (await sha256Hex(back)) !== hash) {
-      await handle.removeEntry(name).catch(() => {});
+      if (!signal?.aborted) await handle.removeEntry(name).catch(() => {});
       throw new DestinationError('mismatch');
     }
+    signal?.throwIfAborted();
     return { ref: name, name, bytes: bytes.length, checked: true };
   } catch (err) {
+    if ((err as { name?: string } | null)?.name === 'AbortError') throw err;
     if (err instanceof DestinationError) throw err;
     throw new DestinationError(folderCause(err));
   }
@@ -204,7 +218,7 @@ export async function placeBackup(name: string, bytes: Uint8Array, signal?: Abor
   const hash = await sha256Hex(bytes);
   signal?.throwIfAborted();
   if (kind === 'native') return placeNative(name, bytes, hash, signal);
-  if (kind === 'folder') return placeInFolder(name, bytes, hash);
+  if (kind === 'folder') return placeInFolder(name, bytes, hash, signal);
   const saved = await saveBlob(new Blob([bytes as BlobPart], { type: 'application/octet-stream' }), name);
   if (!saved.ok) throw new DestinationError('unknown');
   return { ref: name, name, bytes: bytes.length, checked: false };
@@ -237,13 +251,14 @@ async function placedAnswer(ref: string, unsure: boolean): Promise<boolean> {
 
 /** Delete one file this device placed. Never throws: an old copy that will
  *  not go is not a failed backup. */
-export async function removeBackup(ref: string): Promise<boolean> {
+export async function removeBackup(ref: string, signal?: AbortSignal): Promise<boolean> {
+  if (signal?.aborted) return false;
   const kind = destinationKind();
   try {
     if (kind === 'native') return await native<boolean>('backup_dest_delete', { ref });
     if (kind === 'folder') {
       const handle = await storedHandle();
-      if (!handle) return false;
+      if (!handle || signal?.aborted) return false;
       await handle.removeEntry(ref);
       return true;
     }

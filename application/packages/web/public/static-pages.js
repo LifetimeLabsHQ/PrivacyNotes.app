@@ -520,7 +520,7 @@
       // The dock under the picture: the name, one meta line and the whole
       // description, then Upvote. It wraps by its own width
       // (a container query), and the picture gives up the height it needs.
-      '<div class="lb-fig"><img alt=""><div class="lb-dock"><div class="lb-in"><div class="lb-info"><div class="lb-head"><p class="lb-t"></p><p class="lb-m"></p><p class="lb-m lb-tap">Tap the picture to zoom</p></div><p class="lb-d"></p></div>' +
+      '<div class="lb-fig"><img alt=""><div class="lb-dock"><div class="lb-in"><div class="lb-main"><span class="lb-icon" hidden aria-hidden="true"><img alt="" draggable="false"></span><div class="lb-info"><div class="lb-head"><p class="lb-t"></p><p class="lb-m"></p><p class="lb-m lb-tap">Tap the picture to zoom</p></div><p class="lb-d"></p></div></div>' +
       '<div class="lb-acts">' +
       '<a class="lb-btn lb-vote" target="_blank" rel="noopener noreferrer nofollow" hidden>' +
       // The card's P_ARROW_UP in themes-page.ts.
@@ -531,6 +531,8 @@
       '<button type="button" class="lb-n" aria-label="Next screenshot">' + shotIcon('<polyline points="9 18 15 12 9 6"/>') + '</button>';
     document.body.appendChild(lb);
     var lbImg = lb.querySelector('img');
+    var lbIcon = lb.querySelector('.lb-icon');
+    var lbIconImg = lbIcon.querySelector('img');
     var lbCap = lb.querySelector('.lb-t');
     var lbBy = lb.querySelector('.lb-m');
     var lbDesc = lb.querySelector('.lb-d');
@@ -560,6 +562,14 @@
       var shot = cur.shots[cur.i];
       lbImg.src = srcOf(shot);
       lbImg.alt = shot.alt;
+      lbIcon.hidden = !shot.icon;
+      if (shot.icon) {
+        lbIconImg.src = shot.icon.src;
+        lbIcon.style.background = shot.icon.bg;
+        lbIcon.style.borderColor = shot.icon.border;
+      } else {
+        lbIconImg.removeAttribute('src');
+      }
       lbCap.textContent = shot.alt;
       // The meta line: the place, the mode and the credit.
       var meta = [];
@@ -690,11 +700,14 @@
       var credit = card.querySelector('.by a');
       var vote = card.querySelector('.acts .vote');
       var desc = card.querySelector('.desc');
+      var icon = card.querySelector('.tc-icon');
+      var iconImg = icon && icon.querySelector('img');
       return {
         src: l.getAttribute('href'),
         dark: null,
         alt: l.getAttribute('data-alt') || '',
         code: code ? code.textContent : '',
+        icon: icon && iconImg ? { src: iconImg.getAttribute('src'), bg: icon.style.background, border: icon.style.borderColor } : null,
         mode: card.getAttribute('data-mode') === 'dark' ? 'Dark' : 'Light',
         // Read from the card at open, because the Worker writes the live
         // vote counts into it.

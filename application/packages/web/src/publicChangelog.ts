@@ -30,6 +30,139 @@ export type ChangelogRelease = {
 
 export const PUBLIC_CHANGELOG: ChangelogRelease[] = [
   {
+    version: '0.864',
+    date: '2026-11-27',
+    title: 'Passkeys for every manager (Bitwarden, KeePassXC) & extension',
+    items: [
+      { type: 'new', text: 'Sign in with passkeys from Bitwarden, KeePassXC, Windows 10, older Apple devices, and any passkey manager without WebAuthn PRF using a passkey password derived on your device, alongside existing 1-click passkeys, with an upgraded Settings > Security > 2FA / Passkeys tab and updated passkey guide.', link: { phrase: 'passkey guide', href: '/help/passkey-sign-in' } },
+      { type: 'new', text: 'The browser extension gets a compact single-bar popup header with inline Clip and Vault tabs, separate Add Login and New Note buttons, a crisp light mode with raised cards, a brand-blue locked toolbar icon, and PIN vs Passcode comparison cards with live rules.', shot: 'extension-popup' },
+      { type: 'improved', text: 'Browser extension site passkeys work reliably across Chrome and Firefox alongside other password managers, and editing a login refreshes the popup and context menus right away.' },
+      { type: 'fixed', text: 'Passphrase generator checkboxes toggle cleanly in both the app and browser extension.' },
+    ],
+  },
+  {
+    version: '0.863',
+    date: '2026-11-27',
+    title: 'Desktop app icons, theme sidebar icons, and new themes',
+    items: [
+      { type: 'new', text: 'Pick from 10 desktop app icons in Settings > System on macOS, Windows and Linux - five PrivacyNotes styles (including Note Boy) and five discreet icons (Plain Page, Calculator, Journal, Archive, Minimal Fold).', issues: [977] },
+      { type: 'new', text: 'Every community and team theme now carries its own 40px sidebar icon (with a Theme app icons toggle in Settings > Design), Theme Builder lets you upload one custom icon per theme, and two new community themes join the theme gallery: Grand Theft Notes (dark) and Have a Vice Day (light).', link: { phrase: 'theme gallery', href: '/themes' }, shot: ['themes-gallery', 'theme-icons', 'theme-builder-icon'] },
+      { type: 'improved', text: 'Clicking the sidebar app logo opens your configured "Show when app opens" view (or Home when "Reopen where I left off" is enabled).' },
+    ],
+  },
+  {
+    version: '0.862',
+    date: '2026-11-27',
+    title: 'Home widgets: 9 new cards, visual gallery, and multi-select',
+    items: [
+      { type: 'new', text: 'Add nine new cards to Home: Medication, Quick capture (for Today\'s journal, Quick Tasks, New note, or one-tap voice notes), Graph, Year in pixels, Storage, repeatable Item list, plus Counter, Places map and Patterns (in Pro).', issues: [957], shot: 'home-showcase' },
+      { type: 'new', text: 'Pick multiple notes, tags, folders, trackers, counters or item types in one step from multi-select choosers with active cards pre-checked, or start from a new Wellness layout preset.', issues: [957], shot: 'item-list-widget' },
+      { type: 'new', text: 'Browse widgets in a searchable visual gallery with live previews, categories and an All / On Home filter, and right-click Home, cards or note rows for a dedicated Home context menu.', shot: 'widget-gallery' },
+      { type: 'improved', text: 'Open tasks on Home sort due and overdue reminders first with inline quick-add, the Home header summarizes overdue items and remaining doses, dragging cards shows a smooth floating preview with live grid reflow, and Year in pixels, Calendar and compact cards fit cleanly at every size.' },
+    ],
+  },
+  {
+    version: '0.861',
+    date: '2026-11-27',
+    title: 'Inline #tags inside any paragraph',
+    items: [
+      { type: 'new', text: 'Add #tags directly inside any paragraph with live # autocomplete, colored tag pills, Cmd/Ctrl-click filtering, live sidebar counts, and bulk rename or delete while leaving Markdown headings and PIN-locked notes untouched.', issues: [971], shot: 'inline-tags' },
+      { type: 'new', text: 'Clicking a tag in the sidebar opens matching notes and jumps straight to the tagged paragraph with Next and Previous highlights.', issues: [971] },
+    ],
+  },
+  {
+    version: '0.860',
+    date: '2026-11-27',
+    title: 'Image captions, clickable image links, and Back/Forward',
+    items: [
+      { type: 'new', text: 'Add native captions beneath any image from its floating bar or right-click menu with inline Left, Center and Right alignment toggles, full-screen viewer captions, web-clipper caption support, and standard Markdown export.', issues: [969], shot: 'image-captions' },
+      { type: 'new', text: 'Attach clickable web links to any image from the image bar, toolbar or right-click menu, with a hover URL pill, top-corner open button and Cmd/Ctrl-click.', issues: [970] },
+      { type: 'improved', text: 'Note header arrows work like browser Back and Forward history buttons, matching Alt+Left/Alt+Right and mouse side buttons.', issues: [968] },
+    ],
+  },
+  {
+    version: '0.859',
+    date: '2026-11-27',
+    title: 'Unified mobile share sheet for links, text, photos, and files',
+    items: [
+      { type: 'new', text: 'Share web links, text snippets, photos or files into PrivacyNotes on iOS and Android through one compose sheet to save as a Bookmark, Web clip, Note, Task (into any task list or Quick Tasks), Journal entry or File, with optional Pro Folder and Tags.', issues: [967] },
+    ],
+  },
+  {
+    version: '0.858',
+    date: '2026-11-27',
+    title: 'Custom icons: upload your own square icons (Pro)',
+    items: [
+      { type: 'new', text: 'Upload up to 48 custom icons (in Pro) from a new Custom tab in the icon picker for folders, tags, notes, calendars and trackers; images are squared and compressed on your device and sync across devices and backups.', issues: [962], shot: 'custom-icons' },
+      { type: 'improved', text: 'Icon sizes are unified across the sidebar, note lists, footer status indicators, tabs and tag chips, and the note menu label now reads "Icons / logos / emojis".', issues: [962] },
+    ],
+  },
+  {
+    version: '0.857',
+    date: '2026-11-27',
+    title: 'Graph saved views, Space filter, Lock layout, and Places',
+    items: [
+      { type: 'new', text: 'Save up to 30 named Graph views (synced across your devices) with one-click save, inline rename, update and reset from the Views menu.', issues: [902], shot: 'graph-views-lock' },
+      { type: 'new', text: 'Graph, Places and Explore automatically follow your open Space (All, Personal or Work) with a Space switch in the window header, and Graph Controls adds a Color by: Kind legend.' },
+      { type: 'new', text: 'Turn on Lock layout in Graph (on by default on touchscreens) to pan freely with one finger without accidentally dragging or pinning nodes.', issues: [902] },
+      { type: 'improved', text: 'Places maps all five location-capable item types (notes, journals, tasks, files and contacts), adds a collapsible "In this area" side panel and Google Maps links beside OpenStreetMap, and pinning the Connections mini-graph keeps your anchor note while browsing.', issues: [902], shot: 'places-panel' },
+      { type: 'improved', text: 'Graph and Places use a cleaner full-width tab bar, simpler Play/Pause Replay controls, crisper two-way links, non-overlapping labels, local-script map labels, and a clear notice if a strict browser content blocker prevents Graph from loading.', issues: [902] },
+      { type: 'fixed', text: 'Opening Graph from the footer or shortcut always opens the Graph tab, Show on map keeps the selected contact focused, and creating notes from missing links respects locked sections and bookmarks.' },
+    ],
+  },
+  {
+    version: '0.856',
+    date: '2026-11-27',
+    title: 'Page numbers for the editor, Full screen, and PDF export',
+    items: [
+      { type: 'new', text: 'Show live page numbers (on by default at bottom center) in the editor footer, Full screen mode, and printed or PDF exports across Chrome, Firefox, Safari, Linux, macOS and iOS on both A4 and US Letter paper, including repeating table headers and numbered-list continuation.', issues: [944], shot: 'page-numbers-editor' },
+      { type: 'new', text: 'Choose placement (off, left, center or right), format ("1 / 4" or "1") and where they appear in Settings > Editor > Display, or toggle them directly from the editor footer, Full screen bar or Share menu.', issues: [944], shot: 'page-numbers-settings' },
+    ],
+  },
+  {
+    version: '0.855',
+    date: '2026-11-27',
+    title: 'Per-space color themes for Personal and Work',
+    items: [
+      { type: 'new', text: 'Pick separate light and dark color themes (built-in or custom) for Personal and Work on each device in Settings > Design, with All as the fallback and a one-click Follow All reset.', issues: [948], shot: 'space-themes' },
+    ],
+  },
+  {
+    version: '0.854',
+    date: '2026-11-27',
+    title: 'Editor-matched PDF, HTML export, and Burn notes',
+    items: [
+      { type: 'improved', text: 'Printed PDFs, exported HTML and Burn-After-Reading notes match the live editor with your chosen Note font, preserved highlight, table and column tints on paper, callout icons, expanded folded callouts in print, framed Kanban boards, copy boxes, wrapped code blocks with language labels, locale-formatted formulas, solid nested bullets, flush-left checklists, formatted Vault and Contact notes, right-aligned RTL titles and visible footnote back-arrows.', issues: [953], shot: 'export-fidelity' },
+      { type: 'fixed', text: 'Nested highlights, underlines and bold-italic marks serialize cleanly without split text, unresolved favicons never print as broken boxes, figure captions stay with their images across page breaks, and Burn notes render cleanly in dark mode.', issues: [953] },
+    ],
+  },
+  {
+    version: '0.853',
+    date: '2026-11-27',
+    title: 'Clear formatting, note-link states, checklists, quick add',
+    items: [
+      { type: 'new', text: 'Strip inline and block formatting back to plain text in one undoable step with Clear formatting in the right-click selection menu, customizable toolbar and Ninja, while leaving images, files and embeds intact.', issues: [973] },
+      { type: 'new', text: 'Archived note-links appear in muted gray with an Archived tooltip and missing targets appear struck through with a "Note not found" tooltip, updating live across editors, side-by-side panes, Home previews and Markdown folders while keeping locked sections neutral.', issues: [964], shot: 'note-link-states' },
+      { type: 'new', text: 'Choose how completed checklist items look in Settings > Editor > Behavior (Fade & strike, Fade only, Strike only, or Plain) across notes, Tasks, Markdown preview and HTML or PDF exports.', issues: [963], shot: 'checked-task-style' },
+      { type: 'new', text: 'Press and hold the bottom + button on phones from any section to open the full New menu and create any item type without switching back to All.', issues: [956] },
+    ],
+  },
+  {
+    version: '0.852',
+    date: '2026-11-27',
+    title: 'PIN-gated exports, Windows updater fix, iOS fixes, and polish',
+    items: [
+      { type: 'new', text: 'Long-press any icon button on phones and tablets (including the editor toolbar) to reveal its label, and reach Settings directly from the mobile sidebar drawer.' },
+      { type: 'improved', text: 'Unencrypted bulk exports require fresh PIN, passcode or biometric confirmation whenever your vault contains PIN-protected notes or protected sections, even during an active unlock window.', issues: [978] },
+      { type: 'improved', text: 'Desktop editor title bars and footer icon sizes are balanced and aligned, Import and Export use dedicated file icons, long toast notices wrap cleanly above the bottom bar, adding a medication or factor turns that tracker back on if disabled, device-only settings use a Devices icon, and the mobile Demo banner fits on a single row.' },
+      { type: 'fixed', text: 'Fixed the Windows in-app update restart loop, saved window state across update restarts, and hardened update checks across Windows, macOS, Linux, Android and web.', issues: [941] },
+      { type: 'fixed', text: 'Onboarding and lock screens scroll cleanly on iPhone so tapping "Generate a phrase" no longer freezes or cuts off, and Graph view and Settings respect iPhone and iPad status-bar safe areas.', issues: [958, 954] },
+      { type: 'fixed', text: 'Tapping an Android reminder notification opens the exact note even from a cold start or locked screen.', issues: [949] },
+      { type: 'fixed', text: 'Reopening an empty bulleted or numbered list item no longer leaves a stray space before the cursor, blockquotes render without extra quotation marks on desktop, the slash hint shows only on the first empty line, and stepping back to today in the macOS mini-calendar no longer shifts header icons.', issues: [950, 943, 947] },
+      { type: 'fixed', text: 'Hardened browser bookmark folder import and export, tightened escaping and archive bounds across importers, kept read-only callout fold toggles out of the saved note, preserved typed text on refused mobile photo shares, and strengthened guards on PIN-locked notes, locked sections, sign-out cleanup, local-only vaults and iOS backup exclusions.', issues: [976] },
+    ],
+  },
+  {
     version: '0.847',
     date: '2026-11-25',
     title: 'Graph and Places: explore your notes as a graph or on a map',

@@ -15,7 +15,7 @@ title: markdown으로 여기서 할 수 있는 모든 것
 
 스포일러는 누군가 클릭할 때까지 글자를 숨겨요. 선물은 ||레코드 플레이어||예요. 글자를 선택하고 **삽입** 메뉴에서 **스포일러**를 고르거나, 양쪽에 세로 막대를 두 개씩 입력하세요.
 
-아이콘이나 로고를 :icon[gift] :icon[coffee] :icon[rocket-launch] :logo[github] 처럼 글 줄 안에 넣을 수 있어요. **삽입** > **아이콘과 로고**에서 고르세요.
+아이콘이나 로고를 :icon[gift] :icon[coffee] :icon[rocket-launch] :logo[github] 처럼 글 줄 안에 넣을 수 있어요. **삽입** > **아이콘 / 로고 / 이모지**에서 고르세요.
 
 **Aa** 버튼이 크기와 글꼴을 바꿔요. 글자는 <span style="font-size: 0.85em">작게</span>, 보통으로, <span style="font-size: 1.6em">크게</span> 할 수 있어요. <span style="font-family: ui-sans-serif, system-ui, sans-serif">고딕</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">명조</span>, <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">고정폭</span> 중에서 고를 수 있어요.
 

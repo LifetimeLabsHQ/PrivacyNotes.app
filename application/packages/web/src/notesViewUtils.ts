@@ -294,7 +294,7 @@ function stripInlineMarkdown(line: string): string {
     // way, and without the skip a long run of `[` was rescanned from every
     // bracket (external report, 2026-10-24, bug report 23.1). Output is
     // unchanged.
-    .replace(/!\[[^\]]*\]\([^)]*\)(?:\{[^}\n]*\})?|(!\[[^\]]*)/g, '$1')
+    .replace(/!\[[^\]]*\]\((?:[^)\s]+(?:[ \t](?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*'))?|[^)]*)\)(?:\{[^}\n]*\})?|(!\[[^\]]*)/g, '$1')
     // [name|size|mime](pn:file/...) -> friendly label based on mimetype. The
     // mime is what follows the last pipe; the two inner groups take no pipe,
     // so a run of pipes is not tried at every split.
@@ -600,7 +600,7 @@ type RequestPinGate = (action: () => Promise<void>, purpose: PinGatePurpose) => 
 
 /**
  * Run `action` at once when `gated` is false. When it is true the action is
- * refused until the PIN: `requestPinGate` asks, with the unlock wording, and
+ * refused until the PIN: `requestPinGate` asks, with `purpose` wording, and
  * runs it once the PIN is verified. Every single-note export, print, burn
  * link, history and bookmark address goes through here.
  */
@@ -608,21 +608,23 @@ export async function runBehindGate(
   gated: boolean,
   requestPinGate: RequestPinGate,
   action: () => Promise<void> | void,
+  purpose: PinGatePurpose = 'unlock',
 ): Promise<void> {
-  if (gated) requestPinGate(async () => { await action(); }, 'unlock');
+  if (gated) requestPinGate(async () => { await action(); }, purpose);
   else await action();
 }
 
 /**
- * A Settings export that writes notes out readable, asking for the PIN once
- * when any note it carries is behind a closed gate.
+ * A Settings export that writes notes out readable, always asking for a fresh
+ * PIN or biometric check when any item it carries is PIN-protected or belongs
+ * to a protected section (#978).
  */
 export function gateExportAll(
   run: (ns: LocalNote[]) => Promise<void>,
-  isNoteLocked: (n: LocalNote) => boolean,
+  isProtected: (n: LocalNote) => boolean,
   requestPinGate: RequestPinGate,
 ): (ns: LocalNote[]) => Promise<void> {
-  return (ns) => runBehindGate(ns.some(isNoteLocked), requestPinGate, () => run(ns));
+  return (ns) => runBehindGate(ns.some(isProtected), requestPinGate, () => run(ns), 'export');
 }
 
 /**

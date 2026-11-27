@@ -14,7 +14,7 @@ import type { InsertMenuItem } from './ToolbarInsertMenu';
  *  window with the list open (a 625 px pane at 1440 px). Measured on the pane,
  *  not the window: the notes list takes part of the window. Here, not in
  *  SourcePreviewPane.tsx, so the pane loads on demand.
- *  Spec: docs/internal/plans/heading-folds-and-source-preview.md (Part 2),
+ *  Spec: docs/internal/specs/heading-folds-and-source-preview.md (Part 2),
  *  docs/internal/specs/side-by-side-notes.md (section 4) */
 const SOURCE_PREVIEW_MIN_WIDTH = 600;
 

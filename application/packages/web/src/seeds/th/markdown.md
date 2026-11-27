@@ -15,7 +15,7 @@ title: ทุกอย่างที่ markdown ทำได้ที่นี
 
 สปอยล์ซ่อนคำไว้จนกว่าจะมีคนคลิก ของขวัญคือ ||เครื่องเล่นแผ่นเสียง|| เลือกคำแล้วเลือก **สปอยล์** ในเมนู **แทรก** หรือพิมพ์ขีดตั้งสองขีดไว้แต่ละข้าง
 
-ไอคอนหรือโลโก้วางอยู่ในบรรทัดข้อความได้ เช่น :icon[gift] :icon[coffee] :icon[rocket-launch] หรือ :logo[github] เลือกได้จาก **แทรก** > **ไอคอนและโลโก้**
+ไอคอนหรือโลโก้วางอยู่ในบรรทัดข้อความได้ เช่น :icon[gift] :icon[coffee] :icon[rocket-launch] หรือ :logo[github] เลือกได้จาก **แทรก** > **ไอคอน / โลโก้ / อีโมจิ**
 
 ปุ่ม **Aa** เปลี่ยนขนาดและแบบอักษร ข้อความเป็น<span style="font-size: 0.85em">ตัวเล็ก</span> ปกติ หรือ<span style="font-size: 1.6em">ตัวใหญ่</span>ได้ เป็นแบบ<span style="font-family: ui-sans-serif, system-ui, sans-serif">เรียบ</span> <span style="font-family: ui-serif, Georgia, Cambria, serif">มีเชิง</span> หรือ<span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">ความกว้างเท่ากัน</span>ก็ได้
 

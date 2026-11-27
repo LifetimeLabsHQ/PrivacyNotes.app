@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LocalNote } from './db';
 import { closedMenuJustNow, type ContextMenuItem } from './ContextMenu';
@@ -8,8 +8,9 @@ import { setMedicationCardShown } from './checkInCardSwitch';
 import { checkInEntry } from './checkIn';
 import { useToday } from './ListGroupHeader';
 import { activeLocale } from './i18n';
-import { MedicationRows, medicationRowsOn, takenOfRows } from './trackers/MedicationPill';
-import { Badge, ProgressBar, Snackbar } from './ui';
+import { MedicationRows } from './trackers/MedicationPill';
+import { medicationRowsOn, takenOfRows } from './medicationDoses';
+import { Badge, Button, EmptyState, ProgressBar, Snackbar } from './ui';
 import type { JournalTrackerData, MedicationLogEntry, MedicationTemplate } from './trackerTypes';
 import type { TrackerSetupTab } from './TrackerConfig';
 
@@ -17,16 +18,26 @@ import type { TrackerSetupTab } from './TrackerConfig';
  * The medication card under the check-in card (GitHub #649): today's doses
  * with Taken and Skip, without the mood step first. It shows only while
  * the medication tracker is on and today asks about a medication, so a
- * person with none never sees it. The check-in's frame and options button,
- * so it sits in the list and the grid the way that card does. Every write
- * goes through the check-in's save (`onSave`), as the pill in the entry
- * would. A guarded entry shows a lock, and a tap opens the entry and its
- * gate. With every scheduled dose taken it folds to one line, and a tap
- * opens it again, for an as-needed dose too.
+ * person with none never sees it. On Home (`home`) it stays in its tile even
+ * when folded or empty, and carries Home's arranging tools (`controls`).
+ * Every write goes through the check-in's save (`onSave`), as the pill in
+ * the entry would. A guarded entry shows a lock, and a tap opens the entry
+ * and its gate. With every scheduled dose taken it folds to one line, and a
+ * tap opens it again, for an as-needed dose too.
  * Spec: docs/internal/mood-wellness-tracker.md section 6.7, docs/internal/issues/0439.md (Spec)
  */
 type Props = {
   grid: boolean;
+  /** On Home: every state keeps the tile, and empty shows a setup link. */
+  home?: boolean;
+  /** Home's placement of the tile in its grid. */
+  style?: CSSProperties;
+  /** Home's state of the tile: the fade while dragged, the ring while resized. */
+  className?: string;
+  /** Home's arranging tools (grip tab, resize corner), drawn in the tile. */
+  controls?: ReactNode;
+  /** Home's id for the tile, which its reorder finds by. */
+  reorderId?: string;
   /** The live items of the open space; the card finds today's entry here. */
   notes: readonly LocalNote[];
   isGated: (n: LocalNote) => boolean;
@@ -70,8 +81,20 @@ export function MedicationCard(p: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- unmount only
     []);
 
-  const shell = (children: React.ReactNode, line = false) => (
-    <Shell grid={p.grid} line={line} rootRef={rootRef} onRoot={() => {}}>{children}</Shell>
+  const shell = (children: ReactNode, line = false, center = false) => (
+    <Shell
+      grid={p.grid}
+      line={p.home ? false : line}
+      rootRef={rootRef}
+      onRoot={() => {}}
+      style={p.style}
+      className={p.className}
+      center={Boolean(p.home && center)}
+      reorderId={p.reorderId}
+    >
+      {children}
+      {p.controls}
+    </Shell>
   );
 
   // The card leaves the list at once; the Undo stays at the bottom of the
@@ -90,15 +113,29 @@ export function MedicationCard(p: Props) {
   const guarded = !!entry && (p.isGated(entry) || entry.locked === 1);
   const logs = entry && !guarded ? (entry.trackers as JournalTrackerData | undefined)?.medications : undefined;
   const rows = medicationRowsOn(p.medications, logs, today);
-  if (rows.length === 0) return null;
+  if (rows.length === 0) {
+    if (!p.home) return null;
+    return shell(
+      <div className="flex h-full flex-col items-center justify-center gap-2 py-2 text-center">
+        <EmptyState compact flush>{t('dashboard.empty.medication')}</EmptyState>
+        <Button action="open" onClick={() => p.onOpenTrackers('medications')}>
+          {t('dashboard.setupMedication')}
+        </Button>
+      </div>,
+      false,
+      true,
+    );
+  }
 
   function openGear(e: React.MouseEvent<HTMLButtonElement>) {
     if (closedMenuJustNow(e.currentTarget)) return;
     const r = e.currentTarget.getBoundingClientRect();
     const rtl = document.documentElement.dir === 'rtl';
     const items: ContextMenuItem[] = [
-      { label: t('checkIn.hide'), icon: <EyeSlash />, onSelect: () => { pendingHide.current = true; setHidden(true); } },
-      { type: 'separator' },
+      ...(p.home ? [] : [
+        { label: t('checkIn.hide'), icon: <EyeSlash />, onSelect: () => { pendingHide.current = true; setHidden(true); } },
+        { type: 'separator' as const },
+      ]),
       { label: t('contextMenu.settings'), icon: <Gear />, onSelect: () => p.onOpenTrackers('medications') },
     ];
     p.openMenu?.(
@@ -124,6 +161,7 @@ export function MedicationCard(p: Props) {
         </button>
         {gear}
       </div>,
+      true,
       true,
     );
   }
@@ -151,6 +189,7 @@ export function MedicationCard(p: Props) {
         </button>
         {gear}
       </div>,
+      true,
       true,
     );
   }
@@ -191,5 +230,7 @@ export function MedicationCard(p: Props) {
         />
       </div>
     </div>,
+    false,
+    false,
   );
 }

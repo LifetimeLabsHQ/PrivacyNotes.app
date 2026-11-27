@@ -353,13 +353,12 @@ function Tab({
           // behind it instead.
           style={!plainGlyph && look?.style === 'accent' ? { padding: 2, margin: -2, background: `var(--pn-label-${look.color}-tint)` } : undefined}
         >
-          <Favicon domain={domain} size={14} onMissing={onMissing} />
+          <Favicon domain={domain} size={16} onMissing={onMissing} />
         </span>
       )}
       {iconPaths ? (
         <PathGlyph
           paths={iconPaths}
-          size={14}
           className={`shrink-0 ${plainGlyph ? '' : color ? '' : active ? glyphColor : 'opacity-80'}`}
           style={!plainGlyph && color ? { color: ink } : undefined}
         />

@@ -10,6 +10,7 @@ import { gcOnBodyChange, holdBlobsForVersion, markVersionActivity } from './imag
 import { noteLinkKey, retargetNoteLinks } from './noteLinks';
 import { attachmentLinks, fileNameForTitle, requestAttachmentName, unescapeMarkdownText } from './fileNames';
 import { fileCount, hasStructuredBody, noteLinkName, pictureCount } from './notesViewUtils';
+import { sameInlineTags } from './inlineTags';
 import { changesContent, trackerContent } from './editStamp';
 import { dropPendingEdit, setEditorBaseLookup, settlePendingEdit, stashGeneration } from './flushStash';
 import { isBigLoss, LOSS_GAP_MS, planVersion, type VersionSession } from './versionSchedule';
@@ -27,6 +28,7 @@ interface UseNoteEditingArgs {
   runSync: () => Promise<void>;
   imageStoreRef: React.RefObject<ImageStore | null>;
   attachmentStoreRef: React.RefObject<AttachmentStore | null>;
+  isNoteLocked?: (n: LocalNote) => boolean;
   /** Called when a snapshot insert is rejected by RLS (Pro lapsed
    *  mid-edit). Caller decides how to surface - typically a one-time
    *  banner explaining that history is paused. See gap #6. */
@@ -110,6 +112,7 @@ export function useNoteEditing({
   runSync,
   imageStoreRef,
   attachmentStoreRef,
+  isNoteLocked,
   onSnapshotForbidden,
   onStaleEditorWrite,
 }: UseNoteEditingArgs): UseNoteEditingReturn {
@@ -144,6 +147,9 @@ export function useNoteEditing({
    *  can predate a pull that has landed since. */
   const latestNotesRef = useRef(notes);
   latestNotesRef.current = notes;
+  const isNoteLockedRef = useRef(isNoteLocked);
+  isNoteLockedRef.current = isNoteLocked;
+  const locked = (n: LocalNote) => Boolean(isNoteLockedRef.current?.(n));
   /** The body each editor instance last loaded or wrote, by editor key. */
   const editorBodyRef = useRef<Map<string, string>>(new Map());
   /** Editor instances found stale: where their later saves go (the copy's id,
@@ -388,9 +394,23 @@ export function useNoteEditing({
   async function handleTitleChange(id: string, title: string) {
     const clamped = title.slice(0, TITLE_MAX_LENGTH);
     const before = currentNote(id);
+    if (before && locked(before)) return;
     const now = new Date().toISOString();
     patchLocal(id, { title: clamped }, now);
-    if (await updateNote(id, { title: clamped })) recordEdit(id, before);
+    let gatedRow = null as LocalNote | null;
+    const written = await updateNoteFrom(id, (current) => {
+      if (locked(current)) {
+        gatedRow = current;
+        return null;
+      }
+      return { title: clamped };
+    });
+    if (gatedRow) {
+      const restored = gatedRow;
+      setNotes((prev) => prev.map((n) => (n.id === id ? restored : n)));
+      return;
+    }
+    if (written) recordEdit(id, before);
     scheduleSync();
   }
 
@@ -411,12 +431,12 @@ export function useNoteEditing({
   const titleAtFocusRef = useRef<Map<string, string>>(new Map());
 
   function handleTitleFocus(id: string) {
-    const current = notes.find((n) => n.id === id);
+    const current = latestNotesRef.current.find((n) => n.id === id);
     // The NAME a link could have used, not the stored title. For an unnamed
     // bookmark those differ: it stores '' and is called by its domain, so
     // giving it a name has to move the `[[github.com]]` links, and clearing
     // that name again has to move them back.
-    titleAtFocusRef.current.set(id, current ? noteLinkName(current) : '');
+    titleAtFocusRef.current.set(id, current ? noteLinkName(current, locked(current)) : '');
   }
 
   /**
@@ -426,7 +446,7 @@ export function useNoteEditing({
    */
   function nameSoleFile(id: string, title: string) {
     const note = currentNote(id);
-    if (!note || note.type !== 'file' || note.body.includes('pn:img/')) return;
+    if (!note || locked(note) || note.type !== 'file' || note.body.includes('pn:img/')) return;
     const links = attachmentLinks(note.body);
     if (links.length !== 1) return;
     const next = fileNameForTitle(title, unescapeMarkdownText(links[0]!.name));
@@ -443,9 +463,15 @@ export function useNoteEditing({
     const from = titleAtFocusRef.current.get(id);
     titleAtFocusRef.current.delete(id);
     if (from === undefined) return 0;
-    const renamed = notes.find((n) => n.id === id);
-    const to = renamed ? noteLinkName(renamed) : '';
-    if (to && from !== to) nameSoleFile(id, to);
+    const stored = await getNote(id);
+    const latest = latestNotesRef.current;
+    const renamed = latest.find((n) => n.id === id);
+    const storedLocked = Boolean(stored && locked(stored));
+    if (storedLocked && stored!.title !== renamed?.title) return 0;
+    const renamedLocked = Boolean((renamed && locked(renamed)) || storedLocked);
+    const target = storedLocked ? stored : renamed;
+    const to = target ? noteLinkName(target, renamedLocked) : '';
+    if (to && from !== to && !renamedLocked) nameSoleFile(id, to);
     if (!from || !to || from === to) return 0;
 
     // Ambiguous rename: another live note still carries the old title, so a
@@ -453,7 +479,7 @@ export function useNoteEditing({
     // Leaving those links alone is the only answer that cannot retarget a
     // link at the wrong note.
     const key = noteLinkKey(from);
-    if (notes.some((n) => n.id !== id && n.trashed === 0 && noteLinkKey(noteLinkName(n)) === key)) {
+    if (latest.some((n) => n.id !== id && n.trashed === 0 && noteLinkKey(noteLinkName(n, locked(n))) === key)) {
       return 0;
     }
 
@@ -466,7 +492,7 @@ export function useNoteEditing({
     // The other live notes by name, so `[[C# tips]]` is not read as a link
     // to "C" at the heading "tips" when "C# tips" is a note of its own.
     const others = new Set(
-      notes.filter((n) => n.id !== id && n.trashed === 0).map((n) => noteLinkKey(noteLinkName(n))),
+      latest.filter((n) => n.id !== id && n.trashed === 0).map((n) => noteLinkKey(noteLinkName(n, locked(n)))),
     );
     const hasOtherNote = (name: string) => others.has(noteLinkKey(name));
     // Skipped on purpose, each for its own reason:
@@ -483,7 +509,7 @@ export function useNoteEditing({
     // The notes this view shows linking the old title are the ones read
     // again; the rewrite is made from each row inside the write, so a body a
     // pull stored since this view last drew it is rewritten, not replaced.
-    const candidates = notes.filter((n) => !skipped(n) && retargetNoteLinks(n.body, from, to, hasOtherNote) !== null);
+    const candidates = latest.filter((n) => !skipped(n) && retargetNoteLinks(n.body, from, to, hasOtherNote) !== null);
     if (candidates.length === 0) return 0;
     let count = 0;
     const written = await bulkRewriteBody(candidates.map((n) => n.id), (current) => {
@@ -696,11 +722,17 @@ export function useNoteEditing({
     // only caught up after switching pillars. Same type list, and the same
     // reasoning, as the note-link retarget skip above.
     const type = notes.find((n) => n.id === id)?.type;
-    // The row's file and picture icons read the notes array too, so a save
-    // that adds or removes one flushes as well. Typing leaves both counts
-    // alone and keeps the list still. Spec: issue #759.
+    // The row's file and picture icons and the sidebar's inline `#tags` read
+    // the notes array too, so a save that adds or removes any of them flushes
+    // as well. Ordinary typing leaves all three unchanged and keeps the list still.
+    // Spec: issue #759.
     const listBody = latestNotesRef.current.find((n) => n.id === id)?.body ?? '';
-    if (hasStructuredBody(type) || fileCount(listBody) !== fileCount(body) || pictureCount(listBody) !== pictureCount(body)) {
+    if (
+      hasStructuredBody(type)
+      || fileCount(listBody) !== fileCount(body)
+      || pictureCount(listBody) !== pictureCount(body)
+      || !sameInlineTags(listBody, body)
+    ) {
       flushEditingBody();
     }
     scheduleSync();

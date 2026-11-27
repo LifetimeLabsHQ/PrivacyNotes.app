@@ -2,7 +2,7 @@ import type JSZip from 'jszip';
 import i18n from '../i18n';
 import { escapeMarkdownText, guardMarkdownLineStart } from '../markdownEscape';
 import { withBareLinks } from './bareLinks';
-import { mimeFromExt, mimeFromExtOrBytes } from './blobImport';
+import { mimeFromExt, mimeFromExtOrBytes, upgradePlainImageLinks } from './blobImport';
 import { FileKeys, readKeyedFiles } from './fileRefs';
 import { cleanPath, escapeTypedTags, indentLines, isJunkEntry, normalizeTagList, str, stripBom } from './importHelpers';
 import { linkifyLiteralText } from './linkify';
@@ -12,11 +12,8 @@ import type { ImportedNote, ParsedImport } from './types';
 import { ImportTooLargeError, mediaTooLargeWarning, zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
 import { isTime } from '../schedule';
-import {
-  isValidIsoDay,
-  taskReminderMarkdown,
-  type TaskRepeat,
-} from '../taskReminderSyntax';
+import { isValidIsoDay, taskReminderMarkdown, type TaskRepeat } from '../taskReminderSyntax';
+import { cleanMimeType } from '../fileNames';
 
 const msg = (key: string, options: Record<string, unknown> = {}): string =>
   i18n.t(`importLog:microsoftToDo.${key}`, options);
@@ -365,7 +362,7 @@ function formatTaskBody(bodyVal: unknown, onLink?: () => void): string {
     const folds = extractHtmlFolds(doc);
     let md = htmlNoteToMarkdown(doc.body.innerHTML).trim();
     for (const [token, block] of folds) {
-      md = md.replace(token, block);
+      md = md.replace(token, () => block);
     }
     return md;
   }
@@ -717,7 +714,7 @@ async function readMicrosoftToDo(file: File, onProgress?: (msg: string) => void)
         const attZipPath = fieldStr(att, 'zipPath').trim();
         const attSourceUrl = fieldStr(att, 'sourceUrl', 'SourceUrl').trim();
         const attError = fieldStr(att, 'error').trim();
-        const rawMime = fieldStr(att, 'contentType', 'ContentType').trim();
+        const rawMime = cleanMimeType(fieldStr(att, 'contentType', 'ContentType'));
         const attMime = rawMime || mimeFromExt(attName);
 
         if (attSourceUrl && isSafeHttpUrl(attSourceUrl) && !attZipPath) {
@@ -785,11 +782,19 @@ async function readMicrosoftToDo(file: File, onProgress?: (msg: string) => void)
       for (const [path, key] of fileKeys.entries()) {
         const blob = blobs.get(key);
         if (!blob) continue;
-        const declared = mimeByPath.get(path);
+        const declared = cleanMimeType(mimeByPath.get(path));
         if (declared && declared !== 'application/octet-stream') {
           blob.mime = declared;
-        } else if (!blob.mime || blob.mime === 'application/octet-stream') {
+        } else if (!cleanMimeType(blob.mime) || blob.mime === 'application/octet-stream') {
           blob.mime = mimeFromExtOrBytes(blob.name, blob.data);
+        }
+        if (IMAGE_MIME_RE.test(blob.mime)) {
+          const plainTarget = `](${key})`;
+          for (const note of notes) {
+            if (note.body.includes(plainTarget)) {
+              note.body = upgradePlainImageLinks(note.body, key);
+            }
+          }
         }
       }
     }

@@ -11,12 +11,12 @@
  * coordinates out of the text it is given, and a short link it cannot read
  * without following it is refused rather than followed.
  *
- * Spec: docs/internal/plans/note-location.md
+ * Spec: docs/internal/specs/note-location.md
  */
 import { clipGraphemes } from './clipText';
 import { MAP_ORIGIN } from './hosts';
 
-/** The tracker key that holds the place. Spec: docs/internal/plans/note-location.md (section 2) */
+/** The tracker key that holds the place. Spec: docs/internal/specs/note-location.md (section 2) */
 export const LOCATION_KEY = 'location';
 
 /** The longest name a place keeps, in UTF-16 units (the tag and folder caps use the same unit). */
@@ -55,7 +55,7 @@ export function makeLocation(lat: unknown, lng: unknown, label?: unknown): NoteL
  * export writes), or undefined. 0, 0 counts as no place: Joplin writes
  * 0.00000000 for a note it has no position for, and nobody keeps notes in
  * the Gulf of Guinea at that exact point.
- * Spec: docs/internal/plans/note-location.md (section 6)
+ * Spec: docs/internal/specs/note-location.md (section 6)
  */
 export function importedLocation(lat: unknown, lng: unknown, label?: unknown): NoteLocation | undefined {
   const num = (v: unknown) => (typeof v === 'string' && v.trim() !== '' ? Number(v) : v);
@@ -85,13 +85,18 @@ export function osmUrl(lat: number, lng: number): string {
   return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=17/${lat}/${lng}`;
 }
 
+/** The Google Maps page with a pin at the place, offered beside OpenStreetMap so the user can choose. */
+export function googleMapsUrl(lat: number, lng: number): string {
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+}
+
 // ------------------------------------------------------------------
 // The map on a click
 // ------------------------------------------------------------------
 
 /** The world map file in the privacynotes-maps bucket. An upload is a new
  *  name, so a released app keeps reading the file it was built with.
- *  Spec: docs/internal/plans/note-location.md (section 5) */
+ *  Spec: docs/internal/specs/note-location.md (section 5) */
 const MAP_FILE = 'planet-20261110.pmtiles';
 
 export interface MapSource {
@@ -265,10 +270,10 @@ export function parseLocationInput(input: string): LocationParse {
 // A map in a note's body (PlaceMapNode.tsx, markdownRender.ts)
 // ------------------------------------------------------------------
 
-/** The fence language of a map in a note. Spec: docs/internal/plans/note-location.md (section 4b) */
+/** The fence language of a map in a note. Spec: docs/internal/specs/note-location.md (section 4b) */
 export const MAP_FENCE = 'map';
 
-/** A map's height in the note, in CSS pixels: the place window's height by default. Spec: docs/internal/plans/note-location.md (section 4b) */
+/** A map's height in the note, in CSS pixels: the place window's height by default. Spec: docs/internal/specs/note-location.md (section 4b) */
 export const MAP_HEIGHT_DEFAULT = 240;
 const MAP_HEIGHT_MIN = 120;
 const MAP_HEIGHT_MAX = 720;
@@ -297,7 +302,7 @@ export function parseMapFence(text: string): NoteLocation | undefined {
 // Front matter
 // ------------------------------------------------------------------
 
-/** The front-matter key Obsidian Map View reads, and ours for the name. Spec: docs/internal/plans/note-location.md (section 6) */
+/** The front-matter key Obsidian Map View reads, and ours for the name. Spec: docs/internal/specs/note-location.md (section 6) */
 export const FRONT_MATTER_LOCATION = 'location';
 export const FRONT_MATTER_LOCATION_NAME = 'location_name';
 

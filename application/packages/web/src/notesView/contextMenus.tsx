@@ -178,7 +178,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
   // The letter that picks each entry above the first separator when the
   // menu opens from the keyboard (NEW_MENU_PICKS, same order).
   // Order MUST match the sidebar pillar nav (TagsRail.tsx) and the "New" dropdown
-  // (NotesList.tsx allNewOptions): Note, Task, Kanban board, Login, File, Journal, Event, Contact, Bookmark.
+  // (NotesView.tsx allNewOptions): Note, Task, Kanban board, Login, File, Journal, Event, Contact, Bookmark.
   // Spec: docs/internal/design/ui-patterns.md section 45 (New-menu order invariant)
   // The "New" entry of each section, for the global menu below and for a
   // sidebar row's own menu (newForView). Spec: docs/internal/specs/section-lock.md (section 4)
@@ -303,7 +303,7 @@ export function createContextMenuBuilders(deps: ContextMenuDeps): {
       onSelect: () => deps.setShowSettings(true),
     },
     {
-      label: i18n.t('settings:signOut'),
+      label: i18n.t('settings:account.signOut'),
       icon: iconSignOut(),
       destructive: true,
       onSelect: () => deps.handleSignOutClick(),

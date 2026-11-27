@@ -16,10 +16,11 @@ import { getTrayMode } from './trayMode';
 const KEY = 'privacynotes.startMinimized';
 // One-shot flag written right before an updater restart so a Windows launch
 // that originally started with `--autostart` reopens visibly instead of hiding
-// back into the tray when Start minimized is on. Expires after 5 minutes so a
-// cancelled or blocked installer does not affect a later Windows sign-in.
+// back into the tray when Start minimized is on. Expires after 30 minutes so
+// slow SmartScreen/AV/NSIS runs still reopen visibly, while a cancelled or
+// blocked installer does not affect a later Windows sign-in.
 const RELAUNCH_SHOW_KEY = 'privacynotes.relaunchShowWindow';
-const RELAUNCH_SHOW_TTL_MS = 5 * 60 * 1000;
+const RELAUNCH_SHOW_TTL_MS = 30 * 60 * 1000;
 
 let on: boolean | null = null;
 let loginStartSent = false;

@@ -1,5 +1,6 @@
 import type JSZip from 'jszip';
 import i18n from '../i18n';
+import { escapeMarkdownText, guardMarkdownLineStart } from '../markdownEscape';
 import { normalizeTag } from '../notesRepo';
 import { noteLinkTarget } from '../noteLinks';
 import { LOCATION_KEY, importedLocation } from '../noteLocation';
@@ -10,7 +11,7 @@ import { mimeFromExtOrBytes } from './blobImport';
 import { htmlNoteToMarkdown } from './notesnook';
 import { ImportedFactors, blobKey, isoDay, untitledEntryTitle } from './journalImport';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
-import { cleanPath } from './importHelpers';
+import { cleanPath, escapePipeCell, needsInlineBoundarySpace, noteLink } from './importHelpers';
 
 const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:diarium.${key}`, options);
 
@@ -165,21 +166,35 @@ async function readDiarium(file: File, onProgress?: (msg: string) => void): Prom
       return `zzdiariumlink${links.length - 1}zz`;
     });
     let body = html.trim() ? htmlNoteToMarkdown(html) : '';
-    body = body.replace(/zzdiariumlink(\d+)zz/g, (_m, n: string) => {
+    body = body.replace(/zzdiariumlink(\d+)zz/g, (_m, n: string, offset: number, src: string) => {
       const [ticks = '', label = ''] = (links[Number(n)] ?? '').split('\u0000');
       const target = byTicks.get(ticks);
-      if (!target) {
+      const t = target ? noteLinkTarget(target) : '';
+      const lineStart = src.lastIndexOf('\n', offset - 1) + 1;
+      const lineBefore = src.slice(lineStart, offset);
+      let rep: string;
+      if (!t) {
         c.brokenLinks++;
-        return label;
+        rep = escapeMarkdownText(label);
+        if (/^(?:[ \t>]|[-+*] |\d+[.)] )*$/.test(lineBefore)) {
+          rep = guardMarkdownLineStart(rep);
+        }
+      } else {
+        c.links++;
+        rep = noteLink(target!, label.replace(/\|/g, ' '));
       }
-      c.links++;
-      const t = noteLinkTarget(target);
-      const l = label.replace(/[[\]|]/g, ' ').trim();
-      return !l || l === t ? `[[${t}]]` : `[[${t}|${l}]]`;
+      if (/^[ \t>]*\|/.test(lineBefore)) {
+        rep = !t ? rep.replace(/\\\|/g, '\\\\|') : escapePipeCell(rep);
+      }
+      if (rep && needsInlineBoundarySpace(lineBefore, rep)) {
+        rep = ` ${rep}`;
+      }
+      return rep;
     });
 
-    const info = [str(e.weather), str(e.sun), str(e.lunar)].map((s) => s.trim()).filter(Boolean);
-    const trackerLines = strings(e.tracker).map((s) => s.trim());
+    const cleanMeta = (s: string): string => escapeMarkdownText(s.replace(/[\r\n]+/g, ' ').trim());
+    const info = [str(e.weather), str(e.sun), str(e.lunar)].map(cleanMeta).filter(Boolean);
+    const trackerLines = strings(e.tracker).map(cleanMeta).filter(Boolean);
     if (trackerLines.length > 0) c.trackers++;
 
     const mediaLines: string[] = [];
@@ -210,7 +225,7 @@ async function readDiarium(file: File, onProgress?: (msg: string) => void): Prom
     }
 
     const blocks: string[] = [];
-    if (info.length > 0) blocks.push(info.join(' · '));
+    if (info.length > 0) blocks.push(guardMarkdownLineStart(info.join(' · ')));
     if (body.trim()) blocks.push(body.trim());
     if (trackerLines.length > 0) blocks.push(trackerLines.map((t) => `- ${t}`).join('\n'));
     if (mediaLines.length > 0) blocks.push(mediaLines.join('\n\n'));

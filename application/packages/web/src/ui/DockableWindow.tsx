@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { detectPlatform } from '../devices';
+import { isAndroidViewport } from '../useKeyboardOpen';
 import { ArrowsIn, ArrowsLeftRight, ArrowsOut, SidebarSimple } from '../icons';
 import { isImeComposing } from '../imeComposing';
 import { useEscapeToClose } from '../useEscapeToClose';
@@ -24,8 +25,7 @@ const DOCK_WIDTH = 480;
 export const NATIVE_PHONE = detectPlatform() === 'ios' || detectPlatform() === 'android';
 
 /** Android resizes the page for the keyboard (the app, and Chrome with `interactive-widget=resizes-content`). */
-export const ANDROID_LIKE =
-  detectPlatform() === 'android' || (typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent));
+export const ANDROID_LIKE = isAndroidViewport();
 
 export function readWindowSize(
   storage: Pick<Storage, 'getItem'>,
@@ -294,12 +294,16 @@ export function dockBackdropClass({
   }
   const tint = backdropTone === 'subtle' ? 'bg-black/20 dark:bg-black/20' : 'bg-black/50 dark:bg-black/70';
   const align = isMobile
-    ? 'items-stretch sm:items-center sm:p-4'
+    ? 'items-stretch sm:items-center sm:pt-[max(1rem,var(--pn-safe-top))] sm:pb-[max(1rem,var(--pn-safe-bottom))] sm:pl-[max(1rem,var(--pn-safe-left))] sm:pr-[max(1rem,var(--pn-safe-right))]' /* rtl-ok: physical hardware safe-area insets */
     : wide
       ? 'items-stretch'
-      : 'items-center p-4 sm:p-6';
+      : 'items-center pt-[max(1rem,var(--pn-safe-top))] sm:pt-[max(1.5rem,var(--pn-safe-top))] pb-[max(1rem,var(--pn-safe-bottom))] sm:pb-[max(1.5rem,var(--pn-safe-bottom))] pl-[max(1rem,var(--pn-safe-left))] sm:pl-[max(1.5rem,var(--pn-safe-left))] pr-[max(1rem,var(--pn-safe-right))] sm:pr-[max(1.5rem,var(--pn-safe-right))]'; /* rtl-ok: physical hardware safe-area insets */
   return `fixed inset-0 flex z-50 justify-center ${tint} ${align}`;
 }
+
+/** Physical hardware safe-area padding for full-bleed overlays (iPhone notch / Dynamic Island, home indicator, landscape edges; #954). */
+export const SAFE_INSET_PAD =
+  'pt-[var(--pn-safe-top)] pb-[var(--pn-safe-bottom)] pl-[var(--pn-safe-left)] pr-[var(--pn-safe-right)]'; /* rtl-ok: physical hardware safe-area insets */
 
 export function dockPanelClass(edge: DockEdge): string {
   return `pointer-events-auto w-[480px] max-w-full h-full flex flex-col text-pn bg-surface-2 ${edge === 'end' ? 'border-s' : 'border-e'} border-divider shadow-lg outline-none`;
@@ -322,6 +326,7 @@ export function DockableWindow({
   storagePrefix,
   title,
   icon,
+  headerExtra,
   onClose,
   onEscape,
   normalClassName = 'max-w-5xl h-[min(90vh,56rem)]',
@@ -333,6 +338,8 @@ export function DockableWindow({
   storagePrefix: string;
   title: ReactNode;
   icon?: ReactNode;
+  /** Optional control placed in the header before the size and close buttons. */
+  headerExtra?: ReactNode;
   onClose: () => void;
   /** Optional Escape handler (defaults to `onClose`) so a window can step through local states first. */
   onEscape?: () => void;
@@ -349,12 +356,13 @@ export function DockableWindow({
   const dock = useWindowDock({ storagePrefix, onEscape: onEscape ?? onClose });
   useWindowFocus(panelRef, !dock.docked);
 
-  const phoneHeight = ANDROID_LIKE ? 'h-full' : 'h-[var(--pn-app-h,100%)]';
+  const phoneHeight = ANDROID_LIKE ? 'max-sm:h-full' : 'max-sm:h-[var(--pn-app-h,100%)]';
+  const phoneSafeInsetPad = 'max-sm:pt-[var(--pn-safe-top)] max-sm:pb-[var(--pn-safe-bottom)] max-sm:pl-[var(--pn-safe-left)] max-sm:pr-[var(--pn-safe-right)]'; /* rtl-ok: physical hardware safe-area insets */
   const panelClass = dock.docked
     ? dockPanelClass(dock.edge)
     : dock.wide
-      ? 'bg-surface-2 w-full h-full max-h-full flex flex-col overflow-hidden text-pn outline-none'
-      : `bg-surface-2 border border-divider text-pn rounded-lg w-full flex flex-col overflow-hidden outline-none max-sm:fixed max-sm:inset-0 max-sm:h-auto max-sm:max-w-none max-sm:rounded-none max-sm:border-0 ${dock.isMobile ? `${phoneHeight} sm:h-[min(90vh,56rem)]` : ''} ${normalClassName}`;
+      ? `bg-surface-2 w-full h-full max-h-full flex flex-col overflow-hidden text-pn outline-none ${SAFE_INSET_PAD}`
+      : `bg-surface-2 border border-divider text-pn rounded-lg w-full max-h-full flex flex-col overflow-hidden outline-none ${normalClassName} ${phoneHeight} ${phoneSafeInsetPad} max-sm:max-w-none max-sm:rounded-none max-sm:border-0`;
 
   const body =
     typeof children === 'function'
@@ -400,7 +408,8 @@ export function DockableWindow({
             {icon && <span className="shrink-0 text-accent" aria-hidden="true">{icon}</span>}
             <span className="min-w-0 truncate">{title}</span>
           </h2>
-          <div className="ms-auto flex shrink-0 items-center gap-1">
+          <div className="ms-auto flex shrink-0 items-center gap-1.5">
+            {headerExtra}
             <WindowSizeButtons
               docked={dock.docked}
               wide={dock.wide}

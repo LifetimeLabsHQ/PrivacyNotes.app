@@ -15,7 +15,7 @@ Hij kan ==geel gemarkeerd== zijn of <mark style="background-color: rgba(64, 192,
 
 Een spoiler verbergt woorden tot iemand erop klikt: het cadeau is ||een platenspeler||. Selecteer de woorden en kies **Spoiler** in het menu **Invoegen**, of typ aan elke kant twee verticale strepen.
 
-Een icoon of een logo kan in een regel tekst staan, zoals :icon[gift] :icon[coffee] :icon[rocket-launch] of :logo[github]. Kies er een via **Invoegen** > **Iconen en logo’s**.
+Een icoon of een logo kan in een regel tekst staan, zoals :icon[gift] :icon[coffee] :icon[rocket-launch] of :logo[github]. Kies er een via **Invoegen** > **Iconen / logo’s / emoji’s**.
 
 De knop **Aa** verandert grootte en lettertype. Tekst kan <span style="font-size: 0.85em">klein</span>, normaal of <span style="font-size: 1.6em">groot</span> zijn. Hij kan <span style="font-family: ui-sans-serif, system-ui, sans-serif">gewoon</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">met schreef</span> of <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">monospace</span> zijn.
 

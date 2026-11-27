@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowsClockwise, ArrowsLeftRight, Key, Ruler } from '../icons';
 import { useAuth } from '../auth';
 import { isDemoMode } from '../demo';
+import { useUnsyncedLocalVault } from '../localOnly';
 import { LocalOnlyNotice } from '../LocalOnlyNotice';
 import { PHRASE_CHANGE_PREVIEW } from '../phraseLaunch';
 import { SectionEyebrow, SETTINGS_HELP } from '../settingsUI';
@@ -34,7 +35,8 @@ export function PhraseLength({
   const { t } = useTranslation('security');
   const { auth, supabase, loadPhraseChange } = useAuth();
   const demo = isDemoMode();
-  const localOnly = auth?.status === 'authenticated' && auth.localOnly;
+  const unsyncedLocal = useUnsyncedLocalVault();
+  const localOnly = (auth?.status === 'authenticated' && auth.localOnly) || unsyncedLocal;
   // The demo asks no server: it shows the tiles once launched, and before
   // that only in a dev build (phraseLaunch.ts).
   const [allowed, setAllowed] = useState(demo && PHRASE_CHANGE_PREVIEW);

@@ -18,7 +18,13 @@
     "viewAria": "Visa bild",
     "copyAria": "Kopiera bild",
     "copyFailed": "Det gick inte att kopiera bilden.",
-    "picturesLeftOut": "Vissa bilder lades inte till. Kopiera en bild för sig för att klistra in den."
+    "picturesLeftOut": "Vissa bilder lades inte till. Kopiera en bild för sig för att klistra in den.",
+    "captionLabel": "Bildtext",
+    "captionAddAria": "Lägg till bildtext",
+    "captionEditAria": "Redigera bildtext",
+    "captionPlaceholder": "Lägg till en bildtext...",
+    "captionClearAria": "Rensa bildtext",
+    "captionHint": "Enter för att spara · Esc för att avbryta"
   },
   "attachment": {
     "fallbackName": "Bilaga",

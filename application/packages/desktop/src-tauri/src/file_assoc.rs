@@ -114,7 +114,7 @@ pub fn claim(app: &tauri::AppHandle) -> Result<(), String> {
 /// offered: `text/plain` is the type of every README, log and config file, and
 /// the plain-text claim on macOS takes extensionless text files too, which the
 /// UI says in so many words.
-// Spec: docs/internal/plans/default-app-settings.md (section 6)
+// Spec: docs/internal/specs/default-app-settings.md (section 6)
 pub fn text_status(app: &tauri::AppHandle) -> Option<AssocStatus> {
     #[cfg(target_os = "macos")]
     return Some(apple::status(app, apple::PLAIN_TEXT_UTI));
@@ -252,7 +252,7 @@ mod apple {
     /// handler of this role, and Get Info > Change All writes it. A claim of
     /// the Editor role alone leaves the double-click with whichever app holds
     /// All, while Finder's "Open With" menu labels us "(default)".
-    // Spec: docs/internal/plans/default-app-settings.md (section 5.1)
+    // Spec: docs/internal/specs/default-app-settings.md (section 5.1)
     const LS_ROLES_ALL: u32 = 0xFFFF_FFFF;
     /// `kLSRolesEditor` (0x4). Read only, to find a Mac where an Editor-role
     /// claim already names us: there a claim of All is skipped without a

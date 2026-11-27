@@ -207,7 +207,7 @@
     "color": "Färg",
     "colorNone": "Ingen färg",
     "colorUseDefault": "Använd standard",
-    "icon": "Ikoner och logotyper",
+    "icon": "Ikoner / logotyper / emojis",
     "colorFromFolder": "Från mappen: {{name}}",
     "colorFromTag": "Från taggen: #{{name}}",
     "colorOwnHint": "En färg som väljs här fyller anteckningens bakgrund. <setting>Mapp- och taggfärger</setting> ändrar den inte.",
@@ -365,6 +365,7 @@
   },
   "demoBanner": {
     "title": "Testa helt utan risk",
+    "shortTitle": "Demo",
     "description": "Ingenting sparas här. Skaffa din egen krypterade anteckningsbok, gratis."
   },
   "markdown": {
@@ -627,6 +628,10 @@
     "tooLarge": "För stor. Max {{limit}} MB per fil.",
     "titlePlaceholder": "Titel (valfritt)",
     "notePlaceholder": "Lägg till en anteckning...",
+    "taskPlaceholder": "Uppgift...",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "Läggs till i dagens dagboksinlägg.",
+    "clipFallbackToast": "Webbsidan kunde inte klippas. Sparades som ett bokmärke i stället.",
     "photoCount": "{{count}} foton"
   },
   "shortcut": {
@@ -958,7 +963,8 @@
     "label": "Snabbtillägg"
   },
   "offline": {
-    "notLoaded": "Du är offline och den här delen av appen har inte laddats än. Försök igen när du är uppkopplad igen."
+    "notLoaded": "Du är offline och den här delen av appen har inte laddats än. Försök igen när du är uppkopplad igen.",
+    "chunkBlocked": "Kunde inte läsa in den här vyn. Läs in sidan igen, eller kontrollera din innehållsblockerare."
   },
   "checkIn": {
     "prompt": "Hur mår du i dag?",
@@ -1136,6 +1142,7 @@
     "removed": "Borttagen från Hem",
     "showOnHome": "Visa på Hem",
     "removeFromHome": "Ta bort från Hem",
+    "openTarget": "Öppna {{target}}",
     "resize": "Ändra storlek på {{name}}",
     "narrower": "Smalare",
     "taller": "Högre",
@@ -1143,31 +1150,77 @@
     "moveEarlier": "Flytta tidigare",
     "moveLater": "Flytta senare",
     "chooseNote": "Välj en anteckning",
+    "chooseNotes": "Välj anteckningar",
     "chooseTag": "Välj en tagg",
+    "chooseTags": "Välj taggar",
     "chooseFolder": "Välj en mapp",
+    "chooseFolders": "Välj mappar",
     "chooseTracker": "Välj ett mätvärde",
+    "chooseCounter": "Välj en räknare",
+    "chooseCounters": "Välj räknare",
+    "chooseTypes": "Välj objekttyper",
     "choose": "Välj",
     "gone": "Finns inte längre",
     "otherSpace": "I det andra utrymmet",
     "proLocked": "Ingår i Pro",
     "noneToChoose": "Inget att välja än",
+    "catalogSearch": "Sök widgetar",
+    "catalogFilter": "Filtrera widgetar",
+    "allWidgets": "Alla widgetar",
+    "onHomeLabel": "På Hem",
+    "onHomeCount": "På Hem ({{count}})",
     "headerEvents_one": "{{formatted}} händelse i dag",
     "headerEvents_other": "{{formatted}} händelser i dag",
+    "headerOverdue_other": "{{formatted}} försenade",
+    "headerOverdue_one": "{{formatted}} försenad",
     "headerTasks_one": "{{formatted}} öppen uppgift",
     "headerTasks_other": "{{formatted}} öppna uppgifter",
+    "headerDosesLeft_other": "{{formatted}} doser kvar",
+    "headerDosesLeft_one": "{{formatted}} dos kvar",
     "startToday": "Börja dagens inlägg",
+    "setupMedication": "Ställ in medicin",
+    "setupCounter": "Skapa en räknare",
+    "counterIncrease": "Lägg till en på {{name}}",
+    "counterDecrease": "Ta bort en från {{name}}",
+    "storageSummary": "{{notes}} anteckningar · {{files}} filer",
+    "graphSummary": "{{linked}} länkade · {{orphans}} olänkade",
+    "placesSummary_other": "{{count}} objekt med plats",
+    "quickCapture": {
+      "placeholderJournal": "Lägg till i dagens dagbok...",
+      "placeholderTask": "Lägg till en uppgift...",
+      "placeholderNote": "Skriv en snabbanteckning...",
+      "destination": "Spara till",
+      "voice": "Spela in röstanteckning",
+      "voiceNoteTitle": "Röstanteckning",
+      "recording": "Spelar in {{duration}}",
+      "savingVoice": "Krypterar röstanteckningen...",
+      "savedTo": "Sparad i {{title}}",
+      "failed": "Kunde inte spara just nu.",
+      "micUnavailable": "Mikrofoninspelning är inte tillgänglig här.",
+      "micDenied": "Åtkomst till mikrofonen nekades."
+    },
+    "placesSummary_one": "{{count}} objekt med plats",
     "groups": {
-      "keep": "Saker du sparar"
+      "graph": "Graf och kartor",
+      "keep": "Extra"
     },
     "layout": {
       "everyday": "Vardag",
       "planner": "Planerare",
-      "writer": "Skribent"
+      "writer": "Skribent",
+      "wellness": "Välmående"
     },
     "w": {
       "checkIn": {
         "name": "Incheckning",
         "help": "Hur du mår i dag, och dina mätvärden"
+      },
+      "medication": {
+        "help": "Dagens doser, Tagen eller Hoppa över, och aviseringar om påfyllning"
+      },
+      "quickCapture": {
+        "name": "Snabbinmatning",
+        "help": "Lägg till text eller en röstanteckning direkt från Hem"
       },
       "calendar": {
         "help": "Månaden, med prickar för inlägg och händelser"
@@ -1182,7 +1235,7 @@
       },
       "tasks": {
         "name": "Öppna uppgifter",
-        "help": "Uppgifter som inte är avbockade i dina anteckningar"
+        "help": "Försenade uppgifter och uppgifter som ska göras först, med snabbtillägg"
       },
       "recent": {
         "name": "Nyligen redigerade",
@@ -1203,9 +1256,19 @@
         "name": "En mapp",
         "help": "De nyaste objekten i en viss mapp"
       },
+      "types": {
+        "name": "Objektlista",
+        "help": "De nyaste objekten av de typer du väljer"
+      },
       "onThisDay": {
         "name": "Den här dagen",
         "help": "Dagboksinlägg från tidigare år"
+      },
+      "graph": {
+        "help": "Levande minikarta över länkade anteckningar i ditt valv"
+      },
+      "places": {
+        "help": "Dina anteckningar, inlägg och kontakter med plats på en karta"
       },
       "week": {
         "help": "Ord, aktiva dagar, objekt och incheckningar"
@@ -1220,6 +1283,12 @@
         "name": "Din rytm",
         "help": "26 veckor av skrivande och humör"
       },
+      "yearPixels": {
+        "help": "Hela årets humörfärger i en överblick"
+      },
+      "patterns": {
+        "help": "Det som påverkar ditt humör mest, uppåt eller nedåt"
+      },
       "milestone": {
         "name": "Nästa milstolpe",
         "help": "Hur nära nästa är"
@@ -1227,6 +1296,9 @@
       "tracker": {
         "name": "Ett mätvärde",
         "help": "Ett mätvärde: dess siffra och dess dagar"
+      },
+      "counter": {
+        "help": "Tryck +1 direkt på Hem för en egen räknare"
       },
       "weekRecap": {
         "help": "Din vecka, på ett kort"
@@ -1240,9 +1312,13 @@
       },
       "birthdays": {
         "help": "Födelsedagar de kommande 30 dagarna"
+      },
+      "storage": {
+        "help": "Din krypterade lagringsring, med omräkning"
       }
     },
     "empty": {
+      "medication": "Inga mediciner att ta i dag",
       "upcoming": "Inget de kommande 7 dagarna",
       "tasks": "Inga öppna uppgifter",
       "recent": "Inget här än",
@@ -1250,6 +1326,11 @@
       "tag": "Inga objekt med den här taggen",
       "folder": "Inget i den här mappen",
       "onThisDay": "Inga inlägg den här dagen tidigare år",
+      "graph": "Länka två anteckningar för att se din graf här",
+      "places": "Lägg till en plats i en anteckning eller kontakt för att se nålar här",
+      "yearPixels": "Logga ditt humör för att färglägga året",
+      "patterns": "Logga några dagar till för att se mönster",
+      "counter": "Inga räknare än",
       "files": "Inga filer än",
       "bookmarks": "Inga bokmärken än",
       "birthdays": "Inga födelsedagar de kommande 30 dagarna",

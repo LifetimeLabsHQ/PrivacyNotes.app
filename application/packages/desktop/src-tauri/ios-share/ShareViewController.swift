@@ -5,20 +5,21 @@ import UniformTypeIdentifiers
 /// The iOS share extension: PrivacyNotes in the system share sheet.
 ///
 /// It runs in its own process and cannot reach the app, and it never holds the
-/// keys. It writes what it was given into the app group's inbox, and the app
-/// takes it from there once the user has signed in and cleared the app lock,
-/// which is where the item is encrypted like any other. Until then each file
-/// carries complete data protection, so iOS keeps it encrypted while the phone
-/// is locked, and the app deletes it as soon as it has taken it.
+/// vault keys. It presents one unified compact share sheet for web links, text,
+/// photos, and files so the user can pick the destination (Bookmark, Clip page,
+/// Note, Task, Journal, or Files), edit the title/note, and organize with a
+/// Task list, Folder (Pro), or Tags before saving into the app group's inbox.
+/// The app drains the inbox once the user has signed in and cleared the app
+/// lock, encrypting every item like any other.
 ///
-/// Links, text and non-image files save at once: a card shows a spinner, then
-/// "Saved to PrivacyNotes", the size limit, or the failure text, and closes
-/// itself. Photo-only shares show a compact compose sheet (Note | Files,
-/// defaulting to Note, with an optional title and note text and a downsampled
-/// thumbnail) so a user can create a titled photo note on the fly (#870).
-/// Tapping Save still transitions into the confirmation card before closing.
-/// All UI strings come from the web catalogs: the version script writes them
-/// into the .lproj folders beside this file.
+/// While App Lock is off, the main app mirrors non-PIN-protected task list
+/// titles, Pro folder names, and tags into `ShareMeta/ShareCatalog.json` under
+/// complete file protection and excluded from backups. When App Lock is on (or
+/// after sign-out), that file is removed and the sheet falls back to Quick Tasks
+/// and Unfiled without disclosing any vault names.
+///
+/// All UI strings come from the web catalogs: `packages/desktop/scripts/sync-version.mjs`
+/// writes them into the `.lproj` folders beside this file.
 /// Spec: docs/internal/specs/share-into-app.md
 final class ShareViewController: UIViewController, UITextFieldDelegate, UITextViewDelegate {
     private static let appGroup = "group.app.privacynotes"
@@ -26,9 +27,11 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
     /// own check names the lower limits to the user. src/share_inbox.rs holds the
     /// same cap.
     private static let maxFileBytes = 100 * 1000 * 1000
-    /// The app's own caps on shared text and titles; past them, text is cut here.
+    /// The app's own caps on shared text, titles, and tags; past them, text is cut here.
     private static let maxTextChars = 500_000
     private static let maxShortChars = 1_000
+    private static let maxTags = 20
+    private static let maxTagChars = 100
     /// Each folder is created with complete protection, so the files written into
     /// it inherit the class from their first byte.
     private static let protectedFolder: [FileAttributeKey: Any] = [.protectionKey: FileProtectionType.complete]
@@ -49,6 +52,26 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         case failed
     }
 
+    private enum ShareTarget: String {
+        case bookmark
+        case clip
+        case note
+        case task
+        case journal
+        case files
+
+        var label: String {
+            switch self {
+            case .bookmark: return ShareViewController.localized("bookmark", fallback: "Bookmark")
+            case .clip: return ShareViewController.localized("clipPage", fallback: "Clip page")
+            case .note: return ShareViewController.localized("note", fallback: "Note")
+            case .task: return ShareViewController.localized("task", fallback: "Task")
+            case .journal: return ShareViewController.localized("journal", fallback: "Journal")
+            case .files: return ShareViewController.localized("files", fallback: "Files")
+            }
+        }
+    }
+
     private struct StagedFile {
         let id: String
         let tmp: URL
@@ -62,34 +85,88 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         case failed
     }
 
+    private enum SheetPayload {
+        case url(url: URL, title: String, note: String)
+        case text(body: String)
+        case photos(files: [StagedFile], initialNote: String, thumbnail: UIImage?)
+        case files(files: [StagedFile], initialNote: String)
+
+        var targets: [ShareTarget] {
+            switch self {
+            case .url: return [.bookmark, .clip, .task]
+            case .text: return [.note, .task, .journal]
+            case .photos: return [.note, .files, .journal]
+            case .files: return [.files, .note]
+            }
+        }
+    }
+
+    private struct CatalogTaskList: Decodable {
+        let id: String
+        let title: String
+    }
+
+    private struct CatalogFolder: Decodable {
+        let id: String
+        let name: String
+    }
+
+    private struct ShareCatalog: Decodable {
+        let v: Int?
+        let foldersUnlocked: Bool?
+        let taskLists: [CatalogTaskList]?
+        let folders: [CatalogFolder]?
+        let tags: [String]?
+
+        static let empty = ShareCatalog(v: 1, foldersUnlocked: false, taskLists: [], folders: [], tags: [])
+    }
+
     private let card = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
     private let stack = UIStackView()
     private var started = false
 
-    // Compose sheet state for photo-only shares (#870).
+    // Unified sheet state
     private var composeSheet: UIView?
     private var segmented: UISegmentedControl?
+    private var urlPreviewLabel: UILabel?
     private var titleField: UITextField?
+    private var titleDivider: UIView?
     private var noteTextView: UITextView?
     private var notePlaceholderLabel: UILabel?
     private var fieldsContainer: UIStackView?
     private var filesSummaryLabel: UILabel?
+    private var journalHintLabel: UILabel?
+    private var taskListButton: UIButton?
+    private var folderButton: UIButton?
+    private var tagsRow: UIView?
+    private var tagsChipsStack: UIStackView?
+    private var tagInputField: UITextField?
+    private var tagSuggestionsButton: UIButton?
     private var saveButton: UIButton?
-    private var stagedPhotos: [StagedFile] = []
+
+    private var activePayload: SheetPayload?
+    private var availableTargets: [ShareTarget] = []
+    private var selectedTarget: ShareTarget = .note
+    private var catalog: ShareCatalog = .empty
+    private var selectedTaskListId: String?
+    private var selectedFolderId: String?
+    private var selectedTags: [String] = []
+    private var stagedGroup: URL?
     private var stagedInbox: URL?
+    private var stagedFiles: [StagedFile] = []
     private var stagedTooLarge = 0
     private var stagedLimit = maxFileBytes
     private var saving = false
 
     deinit {
-        for file in stagedPhotos {
+        for file in stagedFiles {
             try? FileManager.default.removeItem(at: file.tmp)
         }
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.25)
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.28)
         let spinner = UIActivityIndicatorView(style: .large)
         spinner.startAnimating()
         stack.addArrangedSubview(spinner)
@@ -135,97 +212,170 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .first { !$0.isEmpty }
 
-        // Check whether this share is photo-only (1..maxFiles images, no web
-        // links, no non-image files). Links, text and other files stay instant.
+        // Classify incoming attachments up to the activation limit.
+        var urls: [URL] = []
+        var texts: [String] = []
         var imageProviders: [(NSItemProvider, UTType)] = []
-        var hasOtherContent = false
-        var textProviders: [NSItemProvider] = []
+        var otherFileProviders: [(NSItemProvider, UTType)] = []
         for provider in providers.prefix(Self.maxFiles + 1) {
-            if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier),
-               !provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier)
-            {
-                hasOtherContent = true
-                break
-            }
-            if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier),
-               !provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier)
-            {
-                textProviders.append(provider)
+            if let url = await Self.webURL(provider) {
+                urls.append(url)
+            } else if let text = await Self.plainText(provider) {
+                let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmed.isEmpty {
+                    texts.append(trimmed)
+                }
             } else if let type = Self.fileType(provider) {
-                if type.conforms(to: .image), imageProviders.count < Self.maxFiles {
-                    imageProviders.append((provider, type))
-                } else {
-                    hasOtherContent = true
-                    break
+                if type.conforms(to: .image) {
+                    if imageProviders.count + otherFileProviders.count < Self.maxFiles {
+                        imageProviders.append((provider, type))
+                    }
+                } else if imageProviders.count + otherFileProviders.count < Self.maxFiles {
+                    otherFileProviders.append((provider, type))
                 }
             }
         }
 
-        if !hasOtherContent && !imageProviders.isEmpty {
-            await preparePhotoCompose(
-                imageProviders: imageProviders,
-                textProviders: textProviders,
-                itemText: itemText,
-                inbox: inboxInfo.inbox,
-                limit: inboxInfo.limit
+        // Plain text containing only one valid http(s) URL is treated as a web link.
+        if urls.isEmpty && imageProviders.isEmpty && otherFileProviders.isEmpty {
+            let combined = texts.joined(separator: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
+            let candidate = combined.isEmpty ? (itemText ?? "") : combined
+            if let lone = Self.loneWebURL(candidate) {
+                urls.append(lone)
+                texts.removeAll()
+            }
+        }
+
+        let sharedNote = texts.joined(separator: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        let loadedCatalog = Self.readCatalog(inboxInfo.group)
+        let lastPick = Self.readLastPick(inboxInfo.group)
+
+        // 1. Single web link (no files).
+        if urls.count == 1 && imageProviders.isEmpty && otherFileProviders.isEmpty {
+            let url = urls[0]
+            let rawTitle = itemText ?? (sharedNote == url.absoluteString ? "" : sharedNote)
+            let title = rawTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+            let extraNote = (itemText != nil && !sharedNote.isEmpty && sharedNote != url.absoluteString && sharedNote != title) ? sharedNote : ""
+            configureSheetState(
+                payload: .url(url: url, title: String(title.prefix(Self.maxShortChars)), note: String(extraNote.prefix(Self.maxTextChars))),
+                staged: [],
+                tooLarge: 0,
+                inboxInfo: inboxInfo,
+                catalog: loadedCatalog,
+                lastPick: lastPick
             )
+            presentUnifiedSheet()
             return
         }
 
-        let outcome = await Self.saveAllImmediate(
-            providers: providers,
-            itemText: itemText,
-            inbox: inboxInfo.inbox,
-            limit: inboxInfo.limit
-        )
+        // 2. Text / mail snippet (no URLs, no files).
+        if urls.isEmpty && imageProviders.isEmpty && otherFileProviders.isEmpty {
+            let body = sharedNote.isEmpty ? (itemText ?? "") : sharedNote
+            if !body.isEmpty {
+                configureSheetState(
+                    payload: .text(body: String(body.prefix(Self.maxTextChars))),
+                    staged: [],
+                    tooLarge: 0,
+                    inboxInfo: inboxInfo,
+                    catalog: loadedCatalog,
+                    lastPick: lastPick
+                )
+                presentUnifiedSheet()
+                return
+            }
+        }
+
+        // 3. Photo-only share (1..maxFiles images, no URLs or non-image files).
+        if urls.isEmpty && !imageProviders.isEmpty && otherFileProviders.isEmpty {
+            var staged: [StagedFile] = []
+            var tooLarge = 0
+            for (index, (provider, type)) in imageProviders.enumerated() {
+                switch await Self.stageFile(provider, type: type, index: index, limit: inboxInfo.limit, inbox: inboxInfo.inbox) {
+                case .staged(let file): staged.append(file)
+                case .tooLarge: tooLarge += 1
+                case .failed: break
+                }
+            }
+            guard !staged.isEmpty else {
+                await confirm(tooLarge > 0 ? .tooLarge(limit: inboxInfo.limit) : .failed)
+                extensionContext?.completeRequest(returningItems: nil)
+                return
+            }
+            let thumb = Self.makeThumbnail(from: staged[0].tmp.appendingPathComponent("payload"), maxPixelSize: 240)
+            let initialNote = sharedNote.isEmpty ? (itemText ?? "") : sharedNote
+            configureSheetState(
+                payload: .photos(files: staged, initialNote: String(initialNote.prefix(Self.maxTextChars)), thumbnail: thumb),
+                staged: staged,
+                tooLarge: tooLarge,
+                inboxInfo: inboxInfo,
+                catalog: loadedCatalog,
+                lastPick: lastPick
+            )
+            presentUnifiedSheet()
+            return
+        }
+
+        // 4. Other files (or mixed photos + documents), no URLs.
+        if urls.isEmpty && !otherFileProviders.isEmpty {
+            let allFileProviders = imageProviders + otherFileProviders
+            var staged: [StagedFile] = []
+            var tooLarge = 0
+            for (index, (provider, type)) in allFileProviders.enumerated() {
+                switch await Self.stageFile(provider, type: type, index: index, limit: inboxInfo.limit, inbox: inboxInfo.inbox) {
+                case .staged(let file): staged.append(file)
+                case .tooLarge: tooLarge += 1
+                case .failed: break
+                }
+            }
+            guard !staged.isEmpty else {
+                await confirm(tooLarge > 0 ? .tooLarge(limit: inboxInfo.limit) : .failed)
+                extensionContext?.completeRequest(returningItems: nil)
+                return
+            }
+            let initialNote = sharedNote.isEmpty ? (itemText ?? "") : sharedNote
+            configureSheetState(
+                payload: .files(files: staged, initialNote: String(initialNote.prefix(Self.maxTextChars))),
+                staged: staged,
+                tooLarge: tooLarge,
+                inboxInfo: inboxInfo,
+                catalog: loadedCatalog,
+                lastPick: lastPick
+            )
+            presentUnifiedSheet()
+            return
+        }
+
+        // Fallback for rare mixed multi-kind batches (e.g. URL + files together).
+        let outcome = await Self.saveAllImmediate(providers: providers, itemText: itemText, inbox: inboxInfo.inbox, limit: inboxInfo.limit)
         await confirm(outcome)
         extensionContext?.completeRequest(returningItems: nil)
     }
 
-    /// Stages shared photos once (so the host app is only asked once and size
-    /// limits are caught before the user types), builds a small downsampled
-    /// thumbnail, and presents the Note | Files compose sheet.
-    private func preparePhotoCompose(
-        imageProviders: [(NSItemProvider, UTType)],
-        textProviders: [NSItemProvider],
-        itemText: String?,
-        inbox: URL,
-        limit: Int
-    ) async {
-        var staged: [StagedFile] = []
-        var tooLarge = 0
-        for (index, entry) in imageProviders.enumerated() {
-            switch await Self.stageFile(entry.0, type: entry.1, index: index, limit: limit, inbox: inbox) {
-            case .staged(let file): staged.append(file)
-            case .tooLarge: tooLarge += 1
-            case .failed: break
-            }
-        }
-        guard let first = staged.first else {
-            let outcome: Outcome = tooLarge > 0 ? .tooLarge(limit: limit) : .failed
-            await confirm(outcome)
-            extensionContext?.completeRequest(returningItems: nil)
-            return
-        }
-
-        var initialTexts: [String] = []
-        for provider in textProviders {
-            if let text = await Self.plainText(provider) {
-                initialTexts.append(text)
-            }
-        }
-        let prefill = initialTexts.joined(separator: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
-        let initialNote = prefill.isEmpty ? (itemText ?? "") : prefill
-        let thumb = Self.makeThumbnail(from: first.tmp.appendingPathComponent("payload"), maxPixelSize: 240)
-
-        stagedPhotos = staged
-        stagedInbox = inbox
-        stagedTooLarge = tooLarge
-        stagedLimit = limit
-        showPhotoSheet(thumbnail: thumb, initialNote: initialNote)
+    private func configureSheetState(
+        payload: SheetPayload,
+        staged: [StagedFile],
+        tooLarge: Int,
+        inboxInfo: (group: URL, inbox: URL, limit: Int),
+        catalog: ShareCatalog,
+        lastPick: String?
+    ) {
+        self.activePayload = payload
+        self.availableTargets = payload.targets
+        self.selectedTarget = payload.targets[0]
+        self.stagedGroup = inboxInfo.group
+        self.stagedInbox = inboxInfo.inbox
+        self.stagedFiles = staged
+        self.stagedTooLarge = tooLarge
+        self.stagedLimit = inboxInfo.limit
+        self.catalog = catalog
+        let knownTaskIds = Set((catalog.taskLists ?? []).map { $0.id })
+        self.selectedTaskListId = (lastPick != nil && knownTaskIds.contains(lastPick!)) ? lastPick : nil
+        self.selectedFolderId = nil
+        self.selectedTags = []
     }
 
-    private func showPhotoSheet(thumbnail: UIImage?, initialNote: String) {
+    private func presentUnifiedSheet() {
+        guard let payload = activePayload else { return }
         card.isHidden = true
 
         let sheet = UIView()
@@ -237,7 +387,6 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         view.addSubview(sheet)
         composeSheet = sheet
 
-        // Tap outside the text fields dismisses the keyboard without discarding.
         let dismissTap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         dismissTap.cancelsTouchesInView = false
         view.addGestureRecognizer(dismissTap)
@@ -288,17 +437,14 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         headerDivider.backgroundColor = .separator
         headerDivider.translatesAutoresizingMaskIntoConstraints = false
 
-        // Segmented toggle: Note (default) | Files
-        let seg = UISegmentedControl(items: [
-            Self.localized("note", fallback: "Note"),
-            Self.localized("files", fallback: "Files"),
-        ])
+        // Segmented target picker
+        let seg = UISegmentedControl(items: availableTargets.map { $0.label })
         seg.selectedSegmentIndex = 0
-        seg.addTarget(self, action: #selector(modeChanged), for: .valueChanged)
+        seg.addTarget(self, action: #selector(targetChanged), for: .valueChanged)
         seg.translatesAutoresizingMaskIntoConstraints = false
         segmented = seg
 
-        // Note fields (Title + Note body)
+        // Editable title + body fields
         let titleInput = UITextField()
         titleInput.placeholder = Self.localized("titlePlaceholder", fallback: "Title (optional)")
         titleInput.font = .preferredFont(forTextStyle: .headline)
@@ -315,6 +461,7 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         fieldDivider.backgroundColor = .separator
         fieldDivider.translatesAutoresizingMaskIntoConstraints = false
         fieldDivider.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale).isActive = true
+        titleDivider = fieldDivider
 
         let noteView = UITextView()
         noteView.font = .preferredFont(forTextStyle: .body)
@@ -323,10 +470,9 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         noteView.backgroundColor = .clear
         noteView.textContainerInset = UIEdgeInsets(top: 6, left: 0, bottom: 6, right: 0)
         noteView.textContainer.lineFragmentPadding = 0
-        noteView.text = initialNote
         noteView.delegate = self
         noteView.translatesAutoresizingMaskIntoConstraints = false
-        noteView.heightAnchor.constraint(equalToConstant: 80).isActive = true
+        noteView.heightAnchor.constraint(equalToConstant: 82).isActive = true
         noteTextView = noteView
 
         let placeholder = UILabel()
@@ -334,7 +480,6 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         placeholder.font = .preferredFont(forTextStyle: .body)
         placeholder.adjustsFontForContentSizeCategory = true
         placeholder.textColor = .placeholderText
-        placeholder.isHidden = !initialNote.isEmpty
         placeholder.translatesAutoresizingMaskIntoConstraints = false
         noteView.addSubview(placeholder)
         notePlaceholderLabel = placeholder
@@ -344,63 +489,49 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
             placeholder.trailingAnchor.constraint(lessThanOrEqualTo: noteView.trailingAnchor),
         ])
 
-        let fieldsStack = UIStackView(arrangedSubviews: [titleInput, fieldDivider, noteView])
+        // Populate initial content based on payload kind.
+        let urlLabel = UILabel()
+        urlLabel.font = .preferredFont(forTextStyle: .footnote)
+        urlLabel.adjustsFontForContentSizeCategory = true
+        urlLabel.textColor = .secondaryLabel
+        urlLabel.lineBreakMode = .byTruncatingMiddle
+        urlLabel.isHidden = true
+        urlLabel.translatesAutoresizingMaskIntoConstraints = false
+        urlPreviewLabel = urlLabel
+
+        var summaryText = ""
+        var previewAccessory: UIView?
+
+        switch payload {
+        case .url(let url, let title, let note):
+            urlLabel.text = url.absoluteString
+            urlLabel.isHidden = false
+            titleInput.text = title.isEmpty ? (url.host ?? url.absoluteString) : title
+            noteView.text = note
+        case .text(let body):
+            titleInput.text = ""
+            noteView.text = body
+        case .photos(let files, let initialNote, let thumbnail):
+            noteView.text = initialNote
+            summaryText = files.count == 1
+                ? files[0].name
+                : Self.localized("photoCount", fallback: "{{count}} photos").replacingOccurrences(of: "{{count}}", with: String(files.count))
+            previewAccessory = Self.makePreviewBox(image: thumbnail, fallbackSymbol: "photo", extraCount: files.count - 1)
+        case .files(let files, let initialNote):
+            titleInput.text = files.count == 1 ? files[0].name : ""
+            noteView.text = initialNote
+            summaryText = files.count == 1
+                ? files[0].name
+                : Self.localized("fileCount", fallback: "{{count}} files").replacingOccurrences(of: "{{count}}", with: String(files.count))
+            previewAccessory = Self.makePreviewBox(image: nil, fallbackSymbol: "doc.fill", extraCount: files.count - 1)
+        }
+        placeholder.isHidden = !noteView.text.isEmpty
+
+        let fieldsStack = UIStackView(arrangedSubviews: [urlLabel, titleInput, fieldDivider, noteView])
         fieldsStack.axis = .vertical
-        fieldsStack.spacing = 8
+        fieldsStack.spacing = 6
         fieldsStack.translatesAutoresizingMaskIntoConstraints = false
         fieldsContainer = fieldsStack
-
-        // Thumbnail preview (76x76) with "+N" count badge when sharing multiple photos.
-        let thumbBox = UIView()
-        thumbBox.backgroundColor = .secondarySystemBackground
-        thumbBox.layer.cornerRadius = 12
-        thumbBox.layer.cornerCurve = .continuous
-        thumbBox.layer.borderWidth = 1 / UIScreen.main.scale
-        thumbBox.layer.borderColor = UIColor.separator.cgColor
-        thumbBox.clipsToBounds = true
-        thumbBox.translatesAutoresizingMaskIntoConstraints = false
-
-        let thumbImg = UIImageView(image: thumbnail ?? UIImage(systemName: "photo"))
-        thumbImg.contentMode = thumbnail != nil ? .scaleAspectFill : .scaleAspectFit
-        thumbImg.tintColor = .secondaryLabel
-        thumbImg.translatesAutoresizingMaskIntoConstraints = false
-        thumbBox.addSubview(thumbImg)
-        NSLayoutConstraint.activate([
-            thumbBox.widthAnchor.constraint(equalToConstant: 76),
-            thumbBox.heightAnchor.constraint(equalToConstant: 76),
-            thumbImg.topAnchor.constraint(equalTo: thumbBox.topAnchor),
-            thumbImg.bottomAnchor.constraint(equalTo: thumbBox.bottomAnchor),
-            thumbImg.leadingAnchor.constraint(equalTo: thumbBox.leadingAnchor),
-            thumbImg.trailingAnchor.constraint(equalTo: thumbBox.trailingAnchor),
-        ])
-
-        if stagedPhotos.count > 1 {
-            let badge = UILabel()
-            badge.text = "+\(stagedPhotos.count - 1)"
-            badge.font = .systemFont(ofSize: 12, weight: .semibold)
-            badge.textColor = .white
-            badge.backgroundColor = UIColor.black.withAlphaComponent(0.68)
-            badge.textAlignment = .center
-            badge.layer.cornerRadius = 9
-            badge.clipsToBounds = true
-            badge.translatesAutoresizingMaskIntoConstraints = false
-            thumbBox.addSubview(badge)
-            NSLayoutConstraint.activate([
-                badge.trailingAnchor.constraint(equalTo: thumbBox.trailingAnchor, constant: -5),
-                badge.bottomAnchor.constraint(equalTo: thumbBox.bottomAnchor, constant: -5),
-                badge.widthAnchor.constraint(greaterThanOrEqualToConstant: 24),
-                badge.heightAnchor.constraint(equalToConstant: 18),
-            ])
-        }
-
-        // Caption shown in Files mode beside the thumbnail, and at the foot in Note mode.
-        let summaryText: String
-        if stagedPhotos.count == 1 {
-            summaryText = stagedPhotos[0].name
-        } else {
-            summaryText = Self.localized("photoCount", fallback: "{{count}} photos")
-                .replacingOccurrences(of: "{{count}}", with: String(stagedPhotos.count))
-        }
 
         let filesLabel = UILabel()
         filesLabel.text = summaryText
@@ -417,36 +548,75 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         leftStack.spacing = 6
         leftStack.translatesAutoresizingMaskIntoConstraints = false
 
-        let bodyRow = UIStackView(arrangedSubviews: [leftStack, thumbBox])
+        let bodyRow = UIStackView(arrangedSubviews: previewAccessory != nil ? [leftStack, previewAccessory!] : [leftStack])
         bodyRow.axis = .horizontal
         bodyRow.alignment = .top
         bodyRow.spacing = 12
         bodyRow.translatesAutoresizingMaskIntoConstraints = false
 
-        let footDivider = UIView()
-        footDivider.backgroundColor = .separator
-        footDivider.translatesAutoresizingMaskIntoConstraints = false
-        footDivider.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale).isActive = true
+        let journalHint = UILabel()
+        journalHint.text = Self.localized("journalHint", fallback: "Appends to today's journal entry.")
+        journalHint.font = .preferredFont(forTextStyle: .footnote)
+        journalHint.adjustsFontForContentSizeCategory = true
+        journalHint.textColor = .secondaryLabel
+        journalHint.numberOfLines = 0
+        journalHint.isHidden = true
+        journalHint.translatesAutoresizingMaskIntoConstraints = false
+        journalHintLabel = journalHint
 
-        let footLabel = UILabel()
-        footLabel.text = summaryText
-        footLabel.font = .preferredFont(forTextStyle: .footnote)
-        footLabel.adjustsFontForContentSizeCategory = true
-        footLabel.textColor = .secondaryLabel
-        footLabel.lineBreakMode = .byTruncatingMiddle
-        footLabel.translatesAutoresizingMaskIntoConstraints = false
+        let orgDivider = UIView()
+        orgDivider.backgroundColor = .separator
+        orgDivider.translatesAutoresizingMaskIntoConstraints = false
+        orgDivider.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale).isActive = true
 
-        let contentStack = UIStackView(arrangedSubviews: [seg, bodyRow, footDivider, footLabel])
+        // Task list pull-down menu button (Task mode)
+        let taskBtn = Self.makeMenuButton()
+        taskListButton = taskBtn
+
+        // Folder pull-down menu button (Pro accounts when folders are available)
+        let fldBtn = Self.makeMenuButton()
+        folderButton = fldBtn
+
+        // Tags row: chips scroll view + inline input + optional existing tags menu
+        let tagsContainer = buildTagsRow()
+        tagsRow = tagsContainer
+
+        let orgStack = UIStackView(arrangedSubviews: [taskBtn, fldBtn, tagsContainer])
+        orgStack.axis = .vertical
+        orgStack.spacing = 8
+        orgStack.translatesAutoresizingMaskIntoConstraints = false
+
+        var arranged: [UIView] = [seg, bodyRow, journalHint, orgDivider, orgStack]
+        if !summaryText.isEmpty {
+            let footLabel = UILabel()
+            footLabel.text = summaryText
+            footLabel.font = .preferredFont(forTextStyle: .footnote)
+            footLabel.adjustsFontForContentSizeCategory = true
+            footLabel.textColor = .secondaryLabel
+            footLabel.lineBreakMode = .byTruncatingMiddle
+            arranged.append(footLabel)
+        }
+
+        let contentStack = UIStackView(arrangedSubviews: arranged)
         contentStack.axis = .vertical
         contentStack.spacing = 12
         contentStack.translatesAutoresizingMaskIntoConstraints = false
 
+        let scroll = UIScrollView()
+        scroll.alwaysBounceVertical = false
+        scroll.showsVerticalScrollIndicator = true
+        scroll.translatesAutoresizingMaskIntoConstraints = false
+        scroll.addSubview(contentStack)
+
         sheet.addSubview(header)
         sheet.addSubview(headerDivider)
-        sheet.addSubview(contentStack)
+        sheet.addSubview(scroll)
 
         let centerY = sheet.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         centerY.priority = .defaultLow
+
+        let scrollHeight = scroll.heightAnchor.constraint(equalTo: contentStack.heightAnchor, constant: 28)
+        scrollHeight.priority = .defaultHigh
 
         NSLayoutConstraint.activate([
             sheet.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -458,8 +628,8 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
                 fill.priority = .defaultHigh
                 return fill
             }(),
-            sheet.topAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
-            sheet.bottomAnchor.constraint(lessThanOrEqualTo: view.keyboardLayoutGuide.topAnchor, constant: -12),
+            sheet.topAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.topAnchor, constant: 14),
+            sheet.bottomAnchor.constraint(lessThanOrEqualTo: view.keyboardLayoutGuide.topAnchor, constant: -10),
             centerY,
 
             header.topAnchor.constraint(equalTo: sheet.topAnchor, constant: 12),
@@ -487,33 +657,362 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
             headerDivider.trailingAnchor.constraint(equalTo: sheet.trailingAnchor),
             headerDivider.heightAnchor.constraint(equalToConstant: 1 / UIScreen.main.scale),
 
-            contentStack.topAnchor.constraint(equalTo: headerDivider.bottomAnchor, constant: 14),
-            contentStack.leadingAnchor.constraint(equalTo: sheet.leadingAnchor, constant: 16),
-            contentStack.trailingAnchor.constraint(equalTo: sheet.trailingAnchor, constant: -16),
-            contentStack.bottomAnchor.constraint(equalTo: sheet.bottomAnchor, constant: -14),
+            scroll.topAnchor.constraint(equalTo: headerDivider.bottomAnchor),
+            scroll.leadingAnchor.constraint(equalTo: sheet.leadingAnchor),
+            scroll.trailingAnchor.constraint(equalTo: sheet.trailingAnchor),
+            scroll.bottomAnchor.constraint(equalTo: sheet.bottomAnchor),
+            scrollHeight,
+
+            contentStack.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor, constant: 14),
+            contentStack.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor, constant: 16),
+            contentStack.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor, constant: -16),
+            contentStack.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor, constant: -14),
+            contentStack.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor, constant: -32),
         ])
 
-        titleInput.becomeFirstResponder()
+        refreshTaskListMenu()
+        refreshFolderMenu()
+        refreshTagSuggestionsMenu()
+        applyTargetUI()
+    }
+
+    private static func makePreviewBox(image: UIImage?, fallbackSymbol: String, extraCount: Int) -> UIView {
+        let thumbBox = UIView()
+        thumbBox.backgroundColor = .secondarySystemBackground
+        thumbBox.layer.cornerRadius = 12
+        thumbBox.layer.cornerCurve = .continuous
+        thumbBox.layer.borderWidth = 1 / UIScreen.main.scale
+        thumbBox.layer.borderColor = UIColor.separator.cgColor
+        thumbBox.clipsToBounds = true
+        thumbBox.translatesAutoresizingMaskIntoConstraints = false
+
+        let thumbImg = UIImageView(image: image ?? UIImage(systemName: fallbackSymbol))
+        thumbImg.contentMode = image != nil ? .scaleAspectFill : .scaleAspectFit
+        thumbImg.tintColor = .secondaryLabel
+        thumbImg.translatesAutoresizingMaskIntoConstraints = false
+        thumbBox.addSubview(thumbImg)
+        let pad: CGFloat = image != nil ? 0 : 18
+        NSLayoutConstraint.activate([
+            thumbBox.widthAnchor.constraint(equalToConstant: 72),
+            thumbBox.heightAnchor.constraint(equalToConstant: 72),
+            thumbImg.topAnchor.constraint(equalTo: thumbBox.topAnchor, constant: pad),
+            thumbImg.bottomAnchor.constraint(equalTo: thumbBox.bottomAnchor, constant: -pad),
+            thumbImg.leadingAnchor.constraint(equalTo: thumbBox.leadingAnchor, constant: pad),
+            thumbImg.trailingAnchor.constraint(equalTo: thumbBox.trailingAnchor, constant: -pad),
+        ])
+
+        if extraCount > 0 {
+            let badge = UILabel()
+            badge.text = "+\(extraCount)"
+            badge.font = .systemFont(ofSize: 12, weight: .semibold)
+            badge.textColor = .white
+            badge.backgroundColor = UIColor.black.withAlphaComponent(0.68)
+            badge.textAlignment = .center
+            badge.layer.cornerRadius = 9
+            badge.clipsToBounds = true
+            badge.translatesAutoresizingMaskIntoConstraints = false
+            thumbBox.addSubview(badge)
+            NSLayoutConstraint.activate([
+                badge.trailingAnchor.constraint(equalTo: thumbBox.trailingAnchor, constant: -5),
+                badge.bottomAnchor.constraint(equalTo: thumbBox.bottomAnchor, constant: -5),
+                badge.widthAnchor.constraint(greaterThanOrEqualToConstant: 24),
+                badge.heightAnchor.constraint(equalToConstant: 18),
+            ])
+        }
+        return thumbBox
+    }
+
+    private static func makeMenuButton() -> UIButton {
+        let btn = UIButton(type: .system)
+        var config = UIButton.Configuration.filled()
+        config.baseBackgroundColor = .secondarySystemBackground
+        config.baseForegroundColor = .label
+        config.cornerStyle = .medium
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10)
+        config.imagePlacement = .trailing
+        config.imagePadding = 6
+        config.image = UIImage(systemName: "chevron.up.chevron.down", withConfiguration: UIImage.SymbolConfiguration(pointSize: 11, weight: .medium))
+        btn.configuration = config
+        btn.contentHorizontalAlignment = .fill
+        btn.showsMenuAsPrimaryAction = true
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
+    }
+
+    private func buildTagsRow() -> UIView {
+        let wrapper = UIStackView()
+        wrapper.axis = .vertical
+        wrapper.spacing = 6
+        wrapper.translatesAutoresizingMaskIntoConstraints = false
+
+        let chipsScroll = UIScrollView()
+        chipsScroll.showsHorizontalScrollIndicator = false
+        chipsScroll.isHidden = true
+        chipsScroll.translatesAutoresizingMaskIntoConstraints = false
+
+        let chipsStack = UIStackView()
+        chipsStack.axis = .horizontal
+        chipsStack.spacing = 6
+        chipsStack.alignment = .center
+        chipsStack.translatesAutoresizingMaskIntoConstraints = false
+        chipsScroll.addSubview(chipsStack)
+        NSLayoutConstraint.activate([
+            chipsStack.topAnchor.constraint(equalTo: chipsScroll.contentLayoutGuide.topAnchor),
+            chipsStack.bottomAnchor.constraint(equalTo: chipsScroll.contentLayoutGuide.bottomAnchor),
+            chipsStack.leadingAnchor.constraint(equalTo: chipsScroll.contentLayoutGuide.leadingAnchor),
+            chipsStack.trailingAnchor.constraint(equalTo: chipsScroll.contentLayoutGuide.trailingAnchor),
+            chipsStack.heightAnchor.constraint(equalTo: chipsScroll.frameLayoutGuide.heightAnchor),
+            chipsScroll.heightAnchor.constraint(equalToConstant: 28),
+        ])
+        tagsChipsStack = chipsStack
+
+        let inputRow = UIStackView()
+        inputRow.axis = .horizontal
+        inputRow.spacing = 8
+        inputRow.alignment = .center
+        inputRow.translatesAutoresizingMaskIntoConstraints = false
+
+        let field = UITextField()
+        field.placeholder = Self.localized("addTagPlaceholder", fallback: "Add tag...")
+        field.font = .preferredFont(forTextStyle: .subheadline)
+        field.adjustsFontForContentSizeCategory = true
+        field.textColor = .label
+        field.backgroundColor = .secondarySystemBackground
+        field.layer.cornerRadius = 8
+        field.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: 1))
+        field.leftViewMode = .always
+        field.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 8, height: 1))
+        field.rightViewMode = .always
+        field.autocapitalizationType = .none
+        field.autocorrectionType = .no
+        field.returnKeyType = .done
+        field.delegate = self
+        field.addTarget(self, action: #selector(tagFieldChanged), for: .editingChanged)
+        field.translatesAutoresizingMaskIntoConstraints = false
+        field.heightAnchor.constraint(equalToConstant: 34).isActive = true
+        tagInputField = field
+
+        let pickBtn = UIButton(type: .system)
+        var pickConfig = UIButton.Configuration.filled()
+        pickConfig.baseBackgroundColor = .secondarySystemBackground
+        pickConfig.baseForegroundColor = .label
+        pickConfig.cornerStyle = .medium
+        pickConfig.image = UIImage(systemName: "number", withConfiguration: UIImage.SymbolConfiguration(pointSize: 13, weight: .semibold))
+        pickConfig.contentInsets = NSDirectionalEdgeInsets(top: 7, leading: 10, bottom: 7, trailing: 10)
+        pickBtn.configuration = pickConfig
+        pickBtn.accessibilityLabel = Self.localized("tags", fallback: "Tags")
+        pickBtn.showsMenuAsPrimaryAction = true
+        pickBtn.translatesAutoresizingMaskIntoConstraints = false
+        pickBtn.heightAnchor.constraint(equalToConstant: 34).isActive = true
+        tagSuggestionsButton = pickBtn
+
+        inputRow.addArrangedSubview(field)
+        inputRow.addArrangedSubview(pickBtn)
+
+        wrapper.addArrangedSubview(chipsScroll)
+        wrapper.addArrangedSubview(inputRow)
+        return wrapper
+    }
+
+    private func refreshTaskListMenu() {
+        guard let btn = taskListButton else { return }
+        let quickTitle = Self.localized("quickTasks", fallback: "Quick Tasks")
+        let labelPrefix = Self.localized("taskList", fallback: "Task list")
+        let lists = catalog.taskLists ?? []
+        let currentName = lists.first(where: { $0.id == selectedTaskListId })?.title ?? quickTitle
+
+        var config = btn.configuration ?? UIButton.Configuration.filled()
+        config.title = "\(labelPrefix): \(currentName)"
+        btn.configuration = config
+
+        var actions: [UIAction] = [
+            UIAction(title: quickTitle, state: selectedTaskListId == nil ? .on : .off) { [weak self] _ in
+                self?.selectedTaskListId = nil
+                self?.refreshTaskListMenu()
+            }
+        ]
+        for list in lists {
+            actions.append(UIAction(title: list.title, state: selectedTaskListId == list.id ? .on : .off) { [weak self] _ in
+                self?.selectedTaskListId = list.id
+                self?.refreshTaskListMenu()
+            })
+        }
+        btn.menu = UIMenu(children: actions)
+    }
+
+    private func refreshFolderMenu() {
+        guard let btn = folderButton else { return }
+        let folders = (catalog.foldersUnlocked == true) ? (catalog.folders ?? []) : []
+        let unfiled = Self.localized("unfiled", fallback: "Unfiled")
+        let labelPrefix = Self.localized("folder", fallback: "Folder")
+        let currentName = folders.first(where: { $0.id == selectedFolderId })?.name ?? unfiled
+
+        var config = btn.configuration ?? UIButton.Configuration.filled()
+        config.title = "\(labelPrefix): \(currentName)"
+        btn.configuration = config
+
+        var actions: [UIAction] = [
+            UIAction(title: unfiled, state: selectedFolderId == nil ? .on : .off) { [weak self] _ in
+                self?.selectedFolderId = nil
+                self?.refreshFolderMenu()
+            }
+        ]
+        for folder in folders {
+            actions.append(UIAction(title: folder.name, state: selectedFolderId == folder.id ? .on : .off) { [weak self] _ in
+                self?.selectedFolderId = folder.id
+                self?.refreshFolderMenu()
+            })
+        }
+        btn.menu = UIMenu(children: actions)
+    }
+
+    private func refreshTagSuggestionsMenu() {
+        guard let btn = tagSuggestionsButton else { return }
+        let existing = (catalog.tags ?? []).filter { !selectedTags.contains($0) }
+        btn.isHidden = existing.isEmpty
+        if existing.isEmpty { return }
+        let actions = existing.prefix(30).map { tag in
+            UIAction(title: "#\(tag)") { [weak self] _ in
+                self?.addTag(tag)
+            }
+        }
+        btn.menu = UIMenu(title: Self.localized("tags", fallback: "Tags"), children: actions)
+    }
+
+    private func refreshTagChips() {
+        guard let stack = tagsChipsStack, let scroll = stack.superview as? UIScrollView else { return }
+        stack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        scroll.isHidden = selectedTags.isEmpty
+        for (idx, tag) in selectedTags.enumerated() {
+            let chip = UIButton(type: .system)
+            var config = UIButton.Configuration.filled()
+            config.baseBackgroundColor = .tertiarySystemFill
+            config.baseForegroundColor = .label
+            config.cornerStyle = .capsule
+            config.title = "#\(tag)"
+            config.image = UIImage(systemName: "xmark", withConfiguration: UIImage.SymbolConfiguration(pointSize: 9, weight: .bold))
+            config.imagePlacement = .trailing
+            config.imagePadding = 4
+            config.contentInsets = NSDirectionalEdgeInsets(top: 3, leading: 9, bottom: 3, trailing: 8)
+            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var out = incoming
+                out.font = .preferredFont(forTextStyle: .footnote)
+                return out
+            }
+            chip.configuration = config
+            chip.tag = idx
+            chip.addTarget(self, action: #selector(removeTagTapped(_:)), for: .touchUpInside)
+            stack.addArrangedSubview(chip)
+        }
+        refreshTagSuggestionsMenu()
+    }
+
+    private func addTag(_ raw: String) {
+        guard selectedTags.count < Self.maxTags else { return }
+        let cleaned = raw
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "#"))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty else { return }
+        let clipped = String(cleaned.prefix(Self.maxTagChars))
+        guard !selectedTags.contains(where: { $0.caseInsensitiveCompare(clipped) == .orderedSame }) else { return }
+        selectedTags.append(clipped)
+        refreshTagChips()
+    }
+
+    private func commitTagInput() {
+        guard let text = tagInputField?.text, !text.isEmpty else { return }
+        let separators = CharacterSet(charactersIn: ",\u{060C}\u{3001}\u{FF0C}\n")
+        for part in text.components(separatedBy: separators) {
+            addTag(part)
+        }
+        tagInputField?.text = ""
+    }
+
+    @objc private func tagFieldChanged() {
+        guard let text = tagInputField?.text else { return }
+        if text.contains(",") || text.contains("\u{060C}") || text.contains("\u{3001}") || text.contains("\u{FF0C}") {
+            commitTagInput()
+        }
+    }
+
+    @objc private func removeTagTapped(_ sender: UIButton) {
+        let idx = sender.tag
+        guard idx >= 0 && idx < selectedTags.count else { return }
+        selectedTags.remove(at: idx)
+        refreshTagChips()
+    }
+
+    private func applyTargetUI() {
+        guard let payload = activePayload else { return }
+        let target = selectedTarget
+        let isFiles = target == .files
+        let isTask = target == .task
+        let isJournal = target == .journal
+
+        fieldsContainer?.isHidden = isFiles
+        filesSummaryLabel?.isHidden = !isFiles
+        journalHintLabel?.isHidden = !isJournal
+
+        switch payload {
+        case .url:
+            urlPreviewLabel?.isHidden = false
+            titleField?.isHidden = false
+            titleField?.placeholder = isTask
+                ? Self.localized("taskPlaceholder", fallback: "Task item...")
+                : Self.localized("titlePlaceholder", fallback: "Title (optional)")
+            titleDivider?.isHidden = isTask
+            noteTextView?.isHidden = isTask
+        case .text:
+            urlPreviewLabel?.isHidden = true
+            let showTitle = target == .note
+            titleField?.isHidden = !showTitle
+            titleDivider?.isHidden = !showTitle
+            noteTextView?.isHidden = false
+            notePlaceholderLabel?.text = isTask
+                ? Self.localized("taskPlaceholder", fallback: "Task item...")
+                : Self.localized("notePlaceholder", fallback: "Add a note...")
+        case .photos:
+            urlPreviewLabel?.isHidden = true
+            let showTitle = target == .note
+            titleField?.isHidden = !showTitle
+            titleDivider?.isHidden = !showTitle
+            noteTextView?.isHidden = isFiles
+            notePlaceholderLabel?.text = Self.localized("notePlaceholder", fallback: "Add a note...")
+        case .files:
+            urlPreviewLabel?.isHidden = true
+            titleField?.isHidden = isFiles
+            titleDivider?.isHidden = isFiles
+            noteTextView?.isHidden = isFiles
+            notePlaceholderLabel?.text = Self.localized("notePlaceholder", fallback: "Add a note...")
+        }
+
+        taskListButton?.isHidden = !isTask
+        let showFolder = !isTask && !isJournal && (catalog.foldersUnlocked == true) && !(catalog.folders ?? []).isEmpty
+        folderButton?.isHidden = !showFolder
+        tagsRow?.isHidden = isTask
+
+        if isFiles {
+            view.endEditing(true)
+        }
     }
 
     @objc private func dismissKeyboard() {
         view.endEditing(true)
     }
 
-    @objc private func modeChanged() {
-        let isNote = (segmented?.selectedSegmentIndex ?? 0) == 0
-        if !isNote {
-            view.endEditing(true)
-        }
-        fieldsContainer?.isHidden = !isNote
-        filesSummaryLabel?.isHidden = isNote
+    @objc private func targetChanged() {
+        let idx = segmented?.selectedSegmentIndex ?? 0
+        guard idx >= 0 && idx < availableTargets.count else { return }
+        selectedTarget = availableTargets[idx]
+        applyTargetUI()
     }
 
     @objc private func cancelTapped() {
         guard !saving else { return }
         view.endEditing(true)
-        let toDelete = stagedPhotos
-        stagedPhotos = []
+        let toDelete = stagedFiles
+        stagedFiles = []
         for file in toDelete {
             try? FileManager.default.removeItem(at: file.tmp)
         }
@@ -521,43 +1020,83 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
     }
 
     @objc private func saveTapped() {
-        guard !saving, let inbox = stagedInbox else { return }
+        guard !saving, let inbox = stagedInbox, let payload = activePayload else { return }
         saving = true
         saveButton?.isEnabled = false
+        commitTagInput()
         view.endEditing(true)
 
-        let isNote = (segmented?.selectedSegmentIndex ?? 0) == 0
+        let target = selectedTarget
         let rawTitle = (titleField?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let rawText = (noteTextView?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let title = String(rawTitle.prefix(Self.maxShortChars))
         let text = String(rawText.prefix(Self.maxTextChars))
-        let photos = stagedPhotos
-        stagedPhotos = []
+        let taskListId = target == .task ? selectedTaskListId : nil
+        let folderId = (target != .task && target != .journal) ? selectedFolderId : nil
+        let tags = target == .task ? [] : selectedTags
+        let files = stagedFiles
+        stagedFiles = []
         let tooLarge = stagedTooLarge
         let limit = stagedLimit
+        let groupDir = stagedGroup
 
         composeSheet?.isHidden = true
         card.isHidden = false
 
         Task {
-            let group = UUID().uuidString
+            if target == .task, let groupDir {
+                Self.writeLastPick(taskListId, in: groupDir)
+            }
             var written = 0
-            for photo in photos {
+            switch payload {
+            case .url(let url, _, _):
                 var fields: [String: Any] = [
-                    "kind": "file",
-                    "name": photo.name,
-                    "mime": photo.mime,
+                    "kind": "url",
+                    "url": url.absoluteString,
+                    "target": target.rawValue,
                 ]
-                if isNote {
-                    fields["target"] = "note"
-                    fields["group"] = group
-                    if !title.isEmpty { fields["title"] = title }
-                    if !text.isEmpty { fields["text"] = text }
-                }
-                if Self.finish(fields, tmp: photo.tmp, id: photo.id, inbox: inbox) {
-                    written += 1
+                if !title.isEmpty { fields["title"] = title }
+                if target != .task && !text.isEmpty { fields["text"] = text }
+                if let taskListId { fields["taskListId"] = taskListId }
+                if let folderId { fields["folderId"] = folderId }
+                if !tags.isEmpty { fields["tags"] = tags }
+                if Self.write(fields, inbox: inbox) { written += 1 }
+
+            case .text(let originalBody):
+                let finalBody = text.isEmpty ? originalBody : text
+                var fields: [String: Any] = [
+                    "kind": "text",
+                    "text": finalBody,
+                    "target": target.rawValue,
+                ]
+                if target == .note && !title.isEmpty { fields["title"] = title }
+                if let taskListId { fields["taskListId"] = taskListId }
+                if let folderId { fields["folderId"] = folderId }
+                if !tags.isEmpty { fields["tags"] = tags }
+                if Self.write(fields, inbox: inbox) { written += 1 }
+
+            case .photos, .files:
+                let group = UUID().uuidString
+                for file in files {
+                    var fields: [String: Any] = [
+                        "kind": "file",
+                        "name": file.name,
+                        "mime": file.mime,
+                        "target": target.rawValue,
+                    ]
+                    if target == .note || target == .journal {
+                        fields["group"] = group
+                        if target == .note && !title.isEmpty { fields["title"] = title }
+                        if !text.isEmpty { fields["text"] = text }
+                    }
+                    if let folderId { fields["folderId"] = folderId }
+                    if !tags.isEmpty { fields["tags"] = tags }
+                    if Self.finish(fields, tmp: file.tmp, id: file.id, inbox: inbox) {
+                        written += 1
+                    }
                 }
             }
+
             let outcome: Outcome
             if tooLarge > 0 {
                 outcome = .tooLarge(limit: limit)
@@ -571,7 +1110,16 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
 
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         if textField === titleField {
-            noteTextView?.becomeFirstResponder()
+            if let noteView = noteTextView, !noteView.isHidden {
+                noteView.becomeFirstResponder()
+            } else {
+                textField.resignFirstResponder()
+            }
+            return false
+        }
+        if textField === tagInputField {
+            commitTagInput()
+            textField.resignFirstResponder()
             return false
         }
         return true
@@ -618,6 +1166,19 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         NSLocalizedString(key, value: fallback, comment: "")
     }
 
+    private static func loneWebURL(_ raw: String) -> URL? {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              trimmed.rangeOfCharacter(from: .whitespacesAndNewlines) == nil,
+              let url = URL(string: trimmed),
+              let scheme = url.scheme?.lowercased(),
+              (scheme == "http" || scheme == "https"),
+              let host = url.host,
+              host.contains(".")
+        else { return nil }
+        return url
+    }
+
     /// Downsampled EXIF-oriented thumbnail so a 48 MP photo never blows the
     /// share extension's ~120 MB memory ceiling.
     private static func makeThumbnail(from url: URL, maxPixelSize: Int) -> UIImage? {
@@ -633,9 +1194,7 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
     }
 
     /// The signed-in account's per-file limit, which the app writes beside the
-    /// inbox after each quota read (src/share_inbox.rs, "ShareLimit"). Before the
-    /// app has run, the largest limit it grants, and the app's own upload check
-    /// names the lower ones.
+    /// inbox after each quota read (src/share_inbox.rs, "ShareLimit").
     private static func accountLimit(_ group: URL) -> Int {
         guard let text = try? String(contentsOf: group.appendingPathComponent("ShareLimit"), encoding: .utf8),
               let limit = Int(text.trimmingCharacters(in: .whitespacesAndNewlines)), limit > 0
@@ -643,20 +1202,51 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         return min(limit, maxFileBytes)
     }
 
-    private static func prepareInbox() -> (inbox: URL, limit: Int)? {
+    /// Non-PIN organizer metadata written by the app while App Lock is off.
+    private static func readCatalog(_ group: URL) -> ShareCatalog {
+        let url = group.appendingPathComponent("ShareMeta", isDirectory: true).appendingPathComponent("ShareCatalog.json")
+        guard let data = try? Data(contentsOf: url),
+              let parsed = try? JSONDecoder().decode(ShareCatalog.self, from: data),
+              parsed.v == 1
+        else { return .empty }
+        return parsed
+    }
+
+    private static func readLastPick(_ group: URL) -> String? {
+        let url = group.appendingPathComponent("ShareMeta", isDirectory: true).appendingPathComponent("ShareLastPick")
+        guard let text = try? String(contentsOf: url, encoding: .utf8) else { return nil }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return UUID(uuidString: trimmed) != nil ? trimmed : nil
+    }
+
+    private static func writeLastPick(_ id: String?, in group: URL) {
+        let meta = group.appendingPathComponent("ShareMeta", isDirectory: true)
+        let target = meta.appendingPathComponent("ShareLastPick")
+        guard let id else {
+            try? FileManager.default.removeItem(at: target)
+            return
+        }
+        try? FileManager.default.createDirectory(at: meta, withIntermediateDirectories: true, attributes: protectedFolder)
+        var excluded = URLResourceValues()
+        excluded.isExcludedFromBackup = true
+        var metaURL = meta
+        try? metaURL.setResourceValues(excluded)
+        if let data = id.data(using: .utf8) {
+            try? data.write(to: target, options: [.atomic, .completeFileProtection])
+        }
+    }
+
+    private static func prepareInbox() -> (group: URL, inbox: URL, limit: Int)? {
         guard let group = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)
         else { return nil }
         let inbox = group.appendingPathComponent("ShareInbox", isDirectory: true)
         let limit = accountLimit(group)
         try? FileManager.default.createDirectory(at: inbox, withIntermediateDirectories: true, attributes: protectedFolder)
-        // Kept out of iCloud and computer backups of the phone, as Android keeps
-        // the app's data out of its backups. The app sets the same mark at each
-        // start (gen/apple/privacynotes_iOS/BackupExclusion.m).
         var excluded = URLResourceValues()
         excluded.isExcludedFromBackup = true
         var inboxURL = inbox
         try? inboxURL.setResourceValues(excluded)
-        return (inbox, limit)
+        return (group, inbox, limit)
     }
 
     private static func saveAllImmediate(providers: [NSItemProvider], itemText: String?, inbox: URL, limit: Int) async -> Outcome {
@@ -665,8 +1255,6 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         var files = 0
         var tooLarge = 0
 
-        // The activation rule admits at most a link and ten files, so anything past
-        // that is a sender ignoring it; it is not read at all.
         for provider in providers.prefix(maxFiles + 1) {
             if let url = await webURL(provider) {
                 urls.append(url)
@@ -683,8 +1271,6 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
             }
         }
 
-        // A link keeps the page title; text becomes a note, or, with no text
-        // attachment, the item's own text does.
         let shared = texts.joined(separator: "\n\n").trimmingCharacters(in: .whitespacesAndNewlines)
         var written = files
         for url in urls {
@@ -719,8 +1305,6 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         return url
     }
 
-    /// The type to read a file as: the first registered type that is data and
-    /// not text, which the compose text already carries.
     private static func fileType(_ provider: NSItemProvider) -> UTType? {
         provider.registeredContentTypes.first {
             $0.conforms(to: .data) && !$0.conforms(to: .plainText) && !$0.conforms(to: .url)
@@ -733,11 +1317,7 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         let id = UUID().uuidString
         let tmp = inbox.appendingPathComponent(".tmp-\(id)", isDirectory: true)
         var overLimit = false
-        // The copy's own name, when the sender gives no suggested one: Files and
-        // Mail hand over a copy that keeps the original file name.
         let copiedName: String?? = await withCheckedContinuation { done in
-            // The system deletes `source` when this handler returns, so the copy
-            // happens inside it.
             _ = provider.loadFileRepresentation(forTypeIdentifier: type.identifier) { source, _ in
                 guard let source,
                       let size = try? source.resourceValues(forKeys: [.fileSizeKey]).fileSize,
@@ -752,7 +1332,6 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
                     try FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true, attributes: protectedFolder)
                     let payload = tmp.appendingPathComponent("payload")
                     try FileManager.default.copyItem(at: source, to: payload)
-                    // A copy can carry the source's own class; set ours explicitly.
                     try protect(payload)
                     let own = source.lastPathComponent
                     done.resume(returning: .some(own.isEmpty ? nil : own))
@@ -770,9 +1349,6 @@ final class ShareViewController: UIViewController, UITextFieldDelegate, UITextVi
         if let given = provider.suggestedName ?? copiedName {
             name = (given as NSString).pathExtension.isEmpty ? given + ext : given
         } else {
-            // Photos gives no name. The time of the share reads the same in every
-            // language, where a word such as "photo" would need translating; its
-            // dots are not an extension, so the type's own is always added.
             let number = index == 0 ? "" : " \(index + 1)"
             name = Self.stamp.string(from: Date()) + number + ext
         }

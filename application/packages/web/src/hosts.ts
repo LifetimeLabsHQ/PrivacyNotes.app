@@ -40,13 +40,13 @@ export const PAY_ORIGIN = 'https://pay.privacynotes.app';
 export const RELEASES_ORIGIN = 'https://releases.privacynotes.app';
 
 /** The world map and the town lists for a note's place: the privacynotes-maps R2 bucket.
- *  Read only after that click. Spec: docs/internal/plans/note-location.md (section 5) */
+ *  Read only after that click. Spec: docs/internal/specs/note-location.md (section 5) */
 export const MAP_ORIGIN = 'https://maps.privacynotes.app';
 
 /** The plugin files, such as the Smart connections model in `models/`: the
  *  privacynotes-plugins R2 bucket, with its own upload token, so a leaked map
  *  token cannot change them. Read only after a person turns a plugin on.
- *  Spec: docs/internal/plans/related-notes.md (section 4d) */
+ *  Spec: docs/internal/specs/related-notes.md (section 4d) */
 export const PLUGINS_ORIGIN = 'https://plugins.privacynotes.app';
 
 /** The files Worker: every encrypted picture and file of an official build

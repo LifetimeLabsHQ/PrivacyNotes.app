@@ -22,7 +22,7 @@
  * punctuation, then greedy longest-match WordPiece with "##" pieces. Unknown
  * words are dropped, as Model2Vec drops them.
  *
- * Spec: docs/internal/plans/related-notes.md (section 4a)
+ * Spec: docs/internal/specs/related-notes.md (section 4a)
  */
 
 export type StaticModel = {

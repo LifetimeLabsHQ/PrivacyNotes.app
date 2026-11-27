@@ -64,11 +64,18 @@ fn build_tray<R: Runtime>(app: &AppHandle<R>, open: String, settings: String, qu
         .show_menu_on_left_click(false)
         .on_menu_event(on_menu)
         .on_tray_icon_event(on_click);
-    if let Some(icon) = app.default_window_icon() {
-        tray = tray.icon(icon.clone());
+    if let Some(icon) = crate::app_icon::current_tray_icon(app) {
+        tray = tray.icon(icon);
     }
     tray.build(app).map_err(|e| e.to_string())?;
     Ok(())
+}
+
+/// Swap the mounted tray icon when the user picks a different app icon preset.
+pub fn update_icon<R: Runtime>(app: &AppHandle<R>) {
+    if let Some(tray) = app.tray_by_id(TRAY_ID) {
+        let _ = tray.set_icon(crate::app_icon::current_tray_icon(app));
+    }
 }
 
 fn on_menu<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {

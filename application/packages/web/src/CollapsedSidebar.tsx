@@ -10,7 +10,7 @@ import { isProtectableView, type SectionLockControls } from './sectionLock';
 import { useLongPressContextMenu } from './ContextMenu';
 import { hiddenAtZero, viewRows } from './viewRows';
 import { exemptOpts } from './i18nExempt';
-import { SIDEBAR_ACTIVE } from './sidebarUI';
+import { SIDEBAR_ACTIVE, SIDEBAR_ICON_PX } from './sidebarUI';
 import { useUpdateAvailable } from './updateAvailable';
 import { UpdateDot } from './UpdateDot';
 import { marketingHomeHref, siteHref } from './siteLinks';
@@ -22,6 +22,8 @@ import type { SpaceView } from './spaces';
 
 interface CollapsedSidebarProps {
   view: View;
+  /** View the sidebar logo opens: follows "Show when app opens", falling back to Home when "Reopen where I left off" is on. */
+  logoTargetView?: View;
   selectedTag: string | null;
   selectedFolder: string | null;
   handleSelectView: (next: View) => void;
@@ -116,6 +118,7 @@ const dimIconBtn = (active: boolean) =>
 
 export function CollapsedSidebar({
   view,
+  logoTargetView = 'home',
   selectedTag,
   selectedFolder,
   handleSelectView,
@@ -141,18 +144,21 @@ export function CollapsedSidebar({
   const railRef = useRef<HTMLDivElement>(null);
   useRailFit(railRef);
   const sectionMenuProps = useLongPressContextMenu(sectionLock.openMenu, isProtectableView);
+  const logoLabel = logoTargetView === 'home'
+    ? t('tagsRail.showAllItems')
+    : (viewRows(t).find((r) => r.key === logoTargetView)?.label ?? t('tagsRail.showAllItems'));
   return (
     <div ref={railRef} className="pn-rail h-full flex flex-col items-center gap-1 w-[52px]">
       {/* Logo - h-14 + border-b matches expanded sidebar brand row */}
       <div className="shrink-0 h-14 w-full flex items-center justify-center border-b border-divider">
-        <HoverLabel label="PrivacyNotes">
+        <HoverLabel label={logoLabel}>
           <button
             type="button"
-            onClick={() => handleSelectView('home')}
-            aria-label={t('tagsRail.showAllItems')}
+            onClick={() => handleSelectView(logoTargetView)}
+            aria-label={logoLabel}
             className="pn-logo-host hover:opacity-80 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded"
           >
-            <LogoIcon size={24} tint />
+            <LogoIcon size={40} tint />
           </button>
         </HoverLabel>
       </div>
@@ -211,7 +217,7 @@ export function CollapsedSidebar({
                 className={`relative select-none ${iconBtn(view === r.key)}`}
                 aria-label={r.label}
               >
-                <r.icon size={18} />
+                <r.icon size={SIDEBAR_ICON_PX} />
                 {lock !== 'none' && <LockBadge open={lock === 'open'} />}
               </button>
             </HoverLabel>
@@ -223,7 +229,7 @@ export function CollapsedSidebar({
       {/* Tags - click expands sidebar scrolled to tags */}
       <HoverLabel label={t('tagsRail.tags')}>
         <button type="button" onClick={onExpandToTags} className={iconBtn(selectedTag !== null && selectedTag !== '__untagged__')} aria-label={t('tagsRail.tags')}>
-          <Hash />
+          <Hash size={SIDEBAR_ICON_PX} />
         </button>
       </HoverLabel>
 
@@ -236,7 +242,7 @@ export function CollapsedSidebar({
           className={iconBtn(selectedFolder !== null)}
           aria-label={t('browseToggle.folders')}
         >
-          <ProGlyph pro={!isPro}><Folder /></ProGlyph>
+          <ProGlyph pro={!isPro}><Folder size={SIDEBAR_ICON_PX} /></ProGlyph>
         </button>
       </HoverLabel>
 
@@ -252,7 +258,7 @@ export function CollapsedSidebar({
           className={`relative select-none ${dimIconBtn(view === 'trash')}`}
           aria-label={t('pillars.trash')}
         >
-          <Trash />
+          <Trash size={SIDEBAR_ICON_PX} />
           {sectionLock.stateOf('trash') !== 'none' && <LockBadge open={sectionLock.stateOf('trash') === 'open'} />}
         </button>
       </HoverLabel>

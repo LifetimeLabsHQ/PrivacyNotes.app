@@ -207,7 +207,7 @@
     "color": "Couleur",
     "colorNone": "Aucune couleur",
     "colorUseDefault": "Par défaut",
-    "icon": "Icônes et logos",
+    "icon": "Icônes / logos / émojis",
     "colorFromFolder": "Du dossier : {{name}}",
     "colorFromTag": "De l'étiquette : #{{name}}",
     "colorOwnHint": "Une couleur choisie ici remplit le fond de cette note. Les <setting>Couleurs des dossiers et étiquettes</setting> ne la modifient pas.",
@@ -365,6 +365,7 @@
   },
   "demoBanner": {
     "title": "Essaie sans aucun risque",
+    "shortTitle": "Démo",
     "description": "Rien n'est enregistré ici. Crée ton propre carnet chiffré, gratuitement."
   },
   "markdown": {
@@ -627,6 +628,10 @@
     "tooLarge": "Trop volumineux. Maximum {{limit}} Mo par fichier.",
     "titlePlaceholder": "Titre (facultatif)",
     "notePlaceholder": "Ajouter une note...",
+    "taskPlaceholder": "Tâche...",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "S'ajoute à l'entrée de journal du jour.",
+    "clipFallbackToast": "Impossible de capturer la page. Enregistrée comme signet à la place.",
     "photoCount": "{{count}} photos"
   },
   "shortcut": {
@@ -958,7 +963,8 @@
     "label": "Ajout rapide"
   },
   "offline": {
-    "notLoaded": "Tu es hors ligne, et cette partie de l'app n'est pas encore chargée. Réessaie quand tu seras de nouveau en ligne."
+    "notLoaded": "Tu es hors ligne, et cette partie de l'app n'est pas encore chargée. Réessaie quand tu seras de nouveau en ligne.",
+    "chunkBlocked": "Impossible de charger cette vue. Recharge la page ou vérifie ton bloqueur de contenu."
   },
   "checkIn": {
     "prompt": "Comment vas-tu aujourd'hui ?",
@@ -1139,6 +1145,7 @@
     "removed": "Retiré de l'Accueil",
     "showOnHome": "Afficher sur l'Accueil",
     "removeFromHome": "Retirer de l'Accueil",
+    "openTarget": "Ouvrir {{target}}",
     "resize": "Redimensionner {{name}}",
     "narrower": "Plus étroit",
     "taller": "Plus haut",
@@ -1146,33 +1153,79 @@
     "moveEarlier": "Déplacer plus tôt",
     "moveLater": "Déplacer plus loin",
     "chooseNote": "Choisir une note",
+    "chooseNotes": "Choisir des notes",
     "chooseTag": "Choisir une étiquette",
+    "chooseTags": "Choisir des étiquettes",
     "chooseFolder": "Choisir un dossier",
+    "chooseFolders": "Choisir des dossiers",
     "chooseTracker": "Choisir un suivi",
+    "chooseCounter": "Choisir un compteur",
+    "chooseCounters": "Choisir des compteurs",
+    "chooseTypes": "Choisir les types d'éléments",
     "choose": "Choisir",
     "gone": "N'existe plus",
     "otherSpace": "Dans l'autre espace",
     "proLocked": "Inclus dans Pro",
     "noneToChoose": "Rien à choisir pour l'instant",
+    "catalogSearch": "Rechercher des widgets",
+    "catalogFilter": "Filtrer les widgets",
+    "allWidgets": "Tous les widgets",
+    "onHomeLabel": "Sur l'Accueil",
+    "onHomeCount": "Sur l'Accueil ({{count}})",
     "headerEvents_one": "{{formatted}} événement aujourd'hui",
     "headerEvents_many": "{{formatted}} événements aujourd'hui",
     "headerEvents_other": "{{formatted}} événements aujourd'hui",
+    "headerOverdue_one": "{{formatted}} en retard",
+    "headerOverdue_other": "{{formatted}} en retard",
     "headerTasks_one": "{{formatted}} tâche ouverte",
     "headerTasks_many": "{{formatted}} tâches ouvertes",
     "headerTasks_other": "{{formatted}} tâches ouvertes",
+    "headerDosesLeft_one": "{{formatted}} dose restante",
+    "headerDosesLeft_other": "{{formatted}} doses restantes",
     "startToday": "Commencer l'entrée du jour",
+    "setupMedication": "Configurer les médicaments",
+    "setupCounter": "Créer un compteur",
+    "counterIncrease": "Ajouter un à {{name}}",
+    "counterDecrease": "Retirer un de {{name}}",
+    "storageSummary": "{{notes}} notes · {{files}} fichiers",
+    "graphSummary": "{{linked}} liées · {{orphans}} non liées",
+    "placesSummary_one": "{{count}} élément placé",
+    "placesSummary_other": "{{count}} éléments placés",
+    "quickCapture": {
+      "placeholderJournal": "Ajouter au journal du jour...",
+      "placeholderTask": "Ajouter une tâche...",
+      "placeholderNote": "Écrire une note rapide...",
+      "destination": "Destination d'enregistrement",
+      "voice": "Enregistrer une note vocale",
+      "voiceNoteTitle": "Note vocale",
+      "recording": "Enregistrement {{duration}}",
+      "savingVoice": "Chiffrement de la note vocale...",
+      "savedTo": "Enregistré dans {{title}}",
+      "failed": "Impossible d'enregistrer pour le moment.",
+      "micUnavailable": "L'enregistrement au micro n'est pas disponible ici.",
+      "micDenied": "L'accès au micro a été refusé."
+    },
     "groups": {
-      "keep": "Ce que tu conserves"
+      "graph": "Graphe et cartes",
+      "keep": "Extras"
     },
     "layout": {
       "everyday": "Quotidien",
       "planner": "Planificateur",
-      "writer": "Écriture"
+      "writer": "Écriture",
+      "wellness": "Bien-être"
     },
     "w": {
       "checkIn": {
         "name": "Bilan du jour",
         "help": "Comment tu vas aujourd'hui, et tes suivis"
+      },
+      "medication": {
+        "help": "Les doses du jour, Pris ou Ignorer, et les alertes de renouvellement"
+      },
+      "quickCapture": {
+        "name": "Capture rapide",
+        "help": "Ajoute du texte ou une note vocale directement depuis l'Accueil"
       },
       "calendar": {
         "help": "Le mois, avec des points pour les entrées et les événements"
@@ -1187,7 +1240,7 @@
       },
       "tasks": {
         "name": "Tâches ouvertes",
-        "help": "Les tâches non cochées de tes notes"
+        "help": "Les tâches en retard et à échéance d'abord, avec ajout rapide"
       },
       "recent": {
         "name": "Modifiés récemment",
@@ -1208,9 +1261,19 @@
         "name": "Un dossier",
         "help": "Les éléments les plus récents d'un dossier"
       },
+      "types": {
+        "name": "Liste d'éléments",
+        "help": "Les éléments les plus récents des types que tu choisis"
+      },
       "onThisDay": {
         "name": "Ce jour-là",
         "help": "Les entrées de journal des années précédentes"
+      },
+      "graph": {
+        "help": "Mini-carte en direct des notes liées de ton coffre"
+      },
+      "places": {
+        "help": "Tes notes, entrées et contacts placés sur une carte"
       },
       "week": {
         "help": "Mots, jours actifs, éléments et bilans du jour"
@@ -1225,6 +1288,12 @@
         "name": "Ton rythme",
         "help": "26 semaines d'écriture et d'humeur"
       },
+      "yearPixels": {
+        "help": "Toute ton année en couleurs d'humeur, d'un coup d'œil"
+      },
+      "patterns": {
+        "help": "Ce qui fait le plus monter ou baisser ton humeur"
+      },
       "milestone": {
         "name": "Prochain jalon",
         "help": "À quelle distance se trouve le prochain"
@@ -1232,6 +1301,9 @@
       "tracker": {
         "name": "Un suivi",
         "help": "Un suivi : son chiffre et ses jours"
+      },
+      "counter": {
+        "help": "Touche +1 directement sur l'Accueil pour un compteur personnalisé"
       },
       "weekRecap": {
         "help": "Ta semaine, en une carte"
@@ -1245,9 +1317,13 @@
       },
       "birthdays": {
         "help": "Les anniversaires des 30 prochains jours"
+      },
+      "storage": {
+        "help": "Ton anneau de stockage chiffré, avec recomptage"
       }
     },
     "empty": {
+      "medication": "Aucun médicament prévu aujourd'hui",
       "upcoming": "Rien dans les 7 prochains jours",
       "tasks": "Aucune tâche ouverte",
       "recent": "Rien ici pour l'instant",
@@ -1255,6 +1331,11 @@
       "tag": "Aucun élément avec cette étiquette",
       "folder": "Rien dans ce dossier",
       "onThisDay": "Aucune entrée ce jour-là les années précédentes",
+      "graph": "Lie deux notes pour voir ton graphe ici",
+      "places": "Ajoute un lieu à une note ou à un contact pour voir des repères ici",
+      "yearPixels": "Note ton humeur pour colorer l'année",
+      "patterns": "Note encore quelques jours pour repérer des tendances",
+      "counter": "Aucun suivi de type compteur pour l'instant",
       "files": "Aucun fichier pour l'instant",
       "bookmarks": "Aucun signet pour l'instant",
       "birthdays": "Aucun anniversaire dans les 30 prochains jours",

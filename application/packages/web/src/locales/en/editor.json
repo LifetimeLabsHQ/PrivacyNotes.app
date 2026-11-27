@@ -203,6 +203,7 @@
     "cut": "Cut",
     "copyAsPlain": "Copy as plain text",
     "copyAsMarkdown": "Copy as Markdown",
+    "clearFormatting": "Clear formatting",
     "sortAsc": "Sort lines A to Z",
     "sortDesc": "Sort lines Z to A"
   },
@@ -275,6 +276,9 @@
   "inlineCode": {
     "copyHint": "{{key}}-click to copy"
   },
+  "inlineTag": {
+    "filter": "Filter by tag"
+  },
   "codeBlock": {
     "copyFailed": "Failed",
     "wrap": "Wrap long lines",
@@ -303,7 +307,8 @@
     "linkHeading": "Link to a heading...",
     "headingNotFound": "Heading not found",
     "headingsLocked": "Unlock this note to see its headings",
-    "noHeadings": "This note has no headings"
+    "noHeadings": "This note has no headings",
+    "notFound": "Note not found"
   },
   "footnote": {
     "placeholder": "Footnote text",

@@ -138,6 +138,9 @@ type Props = {
   /** A `small` grid as wide as its host: the band at the top of a list (the
    *  full width of the list since 2026-10-22) and the Home card (#798). */
   wide?: boolean;
+  /** Stretch the 6 week rows to fill a fixed-height Home card instead of
+   *  leaving empty vertical bands above and below the month. */
+  fill?: boolean;
   /** The focused day, when the host keeps it (the Calendar pillar keeps the
    *  month across an open item and Back). The grid keeps its own otherwise. */
   focus?: string;
@@ -287,7 +290,7 @@ const fitsSmallGrid = (el: HTMLElement) => fitsWithoutScroll(el, false);
  * month. The month shown is filled, the current month has a ring.
  * Spec: docs/internal/specs/calendar-pillar-spec.md (step 3), docs/internal/design/patterns/181-190.md (182)
  */
-function MonthYearPanel({ focus, onPick, onMove, onClose, wheelStep = true }: { focus: string; onPick: (day: string) => void; onMove: (day: string) => void; onClose: () => void; wheelStep?: boolean }) {
+function MonthYearPanel({ focus, onPick, onMove, onClose, wheelStep = true, fill = false }: { focus: string; onPick: (day: string) => void; onMove: (day: string) => void; onClose: () => void; wheelStep?: boolean; fill?: boolean }) {
   const { t } = useTranslation('shell');
   const locale = intlLocale();
   const shown = dayAtNoon(focus);
@@ -311,6 +314,7 @@ function MonthYearPanel({ focus, onPick, onMove, onClose, wheelStep = true }: { 
   return (
     <div
       ref={panel}
+      className={fill ? 'flex flex-1 min-h-0 flex-col' : undefined}
       onKeyDown={(e) => {
         if (e.key !== 'Escape') return;
         // Only the picker closes, not the menu or window the grid sits in.
@@ -319,20 +323,26 @@ function MonthYearPanel({ focus, onPick, onMove, onClose, wheelStep = true }: { 
         onClose();
       }}
     >
-      <div className="flex items-center justify-between">
+      <div className={`flex shrink-0 items-center justify-between${fill ? ' border-b border-divider pb-1.5' : ''}`}>
         <IconButton label={t('stats:wellness.pixels.prevYear')} onClick={() => setYear((y) => y - 1)}>
           <CaretLeft aria-hidden="true" />
         </IconButton>
-        <span aria-live="polite" className="text-compact font-medium text-pn tabular-nums">{year}</span>
+        <span aria-live="polite" className="text-compact font-semibold text-pn tabular-nums">{year}</span>
         <IconButton label={t('stats:wellness.pixels.nextYear')} onClick={() => setYear((y) => y + 1)}>
           <CaretRight aria-hidden="true" />
         </IconButton>
       </div>
-      <div ref={months} className="mt-1 grid grid-cols-3 gap-1">
+      <div ref={months} className={fill ? 'mt-2.5 flex-1 min-h-0 grid grid-cols-3 grid-rows-4 gap-2' : 'mt-1.5 grid grid-cols-3 gap-1.5'}>
         {Array.from({ length: 12 }, (_, m) => {
           const date = new Date(year, m, 1, 12);
           const isShown = year === shown.getFullYear() && m === shown.getMonth();
           const isNow = year === now.getFullYear() && m === now.getMonth();
+          // Calm tinted-border grammar from the UI catalog (choiceTileClass soft / PRIMARY_BTN_SKIN).
+          const tone = isShown
+            ? 'border-accent bg-accent/12 text-accent-strong font-semibold'
+            : isNow
+              ? 'border-accent/45 bg-surface-2 text-accent font-medium hover:border-accent hover:bg-accent/5'
+              : 'border-divider bg-track/40 text-pn hover:border-accent/45 hover:bg-accent/5';
           return (
             <button
               key={m}
@@ -341,9 +351,7 @@ function MonthYearPanel({ focus, onPick, onMove, onClose, wheelStep = true }: { 
               aria-current={isShown ? 'true' : undefined}
               aria-label={long.format(date)}
               onClick={() => onPick(addMonths(focus, (year - shown.getFullYear()) * 12 + m - shown.getMonth()))}
-              className={`h-9 [@media(hover:none)]:h-11 rounded-md text-compact transition ${
-                isShown ? 'bg-accent-fill text-white font-semibold' : isNow ? 'ring-[1.5px] ring-inset ring-accent text-accent font-semibold hover:bg-accent/10' : 'text-pn hover:bg-pn/5'
-              }`}
+              className={`${fill ? 'h-full min-h-9 [@media(hover:none)]:min-h-11 rounded-lg' : 'h-9 [@media(hover:none)]:h-11 rounded-md'} border text-compact transition outline-none focus-visible:ring-2 focus-visible:ring-accent ${tone}`}
             >
               {name.format(date)}
             </button>
@@ -356,7 +364,7 @@ function MonthYearPanel({ focus, onPick, onMove, onClose, wheelStep = true }: { 
 
 export function MonthGrid({
   marked, selected, initialMonth, onPick, weeks = 6, onToggleWeeks, onToday,
-  size = 'small', wide = false, focus: heldFocus, onFocusChange, renderDay, renderWeek, renderDayBadge, onAdd, onDayMenu, headerEnd, headerBelow, headerStart, weekNumbers = false, drop, moodOf, counter, wheelStep = true,
+  size = 'small', wide = false, fill = false, focus: heldFocus, onFocusChange, renderDay, renderWeek, renderDayBadge, onAdd, onDayMenu, headerEnd, headerBelow, headerStart, weekNumbers = false, drop, moodOf, counter, wheelStep = true,
 }: Props) {
   const { t } = useTranslation('shell');
   const today = toLocalIso(new Date());
@@ -404,9 +412,9 @@ export function MonthGrid({
     '@max-[207.98px]/month:px-1 [@media(hover:hover)]:@max-[287.98px]/month:px-1',
   ][extra - 1];
   const tightBtns = [
-    '[@media(hover:hover)]:@max-[207.98px]/month:[&_button.w-8]:w-7',
-    '[@media(hover:hover)]:@max-[247.98px]/month:[&_button.w-8]:w-7',
-    '[@media(hover:hover)]:@max-[287.98px]/month:[&_button.w-8]:w-7',
+    '[@media(hover:hover)]:@max-[207.98px]/month:[&_.w-8]:w-7',
+    '[@media(hover:hover)]:@max-[247.98px]/month:[&_.w-8]:w-7',
+    '[@media(hover:hover)]:@max-[287.98px]/month:[&_.w-8]:w-7',
   ][extra - 1];
   const heading = (
     <span aria-live="polite" className="min-w-0 truncate">
@@ -486,9 +494,14 @@ export function MonthGrid({
   // the room left; it truncates instead of pushing the arrows out.
   const shortDays = Array.from({ length: 7 }, (_, i) => weekdayLabel(weekdayDate((weekStart + i) % 7), 'short'));
   const shortFits = shortDays.every((name) => [...name].length <= 6);
-  const titleClass = `inline-flex min-w-0 items-center gap-1 rounded-md px-2 ${tightTitle} py-1 text-compact font-medium text-pn`;
+  const titleClass = `inline-flex min-w-0 max-w-full items-center gap-1 rounded-md px-2 ${tightTitle} py-1 text-compact font-medium text-pn`;
+  const fillBox = fill && weeks === 6;
+  const fillMonth = fillBox && !picking;
   return (
-    <div className={`@container/month w-full ${wide ? '' : 'max-w-[240px]'} mx-auto select-none`}>
+    <div
+      data-fill-box={fillBox ? '' : undefined}
+      className={`@container/month w-full ${wide ? '' : 'max-w-[240px]'} ${fillBox ? 'flex flex-1 min-h-0 flex-col' : ''} mx-auto select-none`}
+    >
       {onToday && (
         <button
           type="button"
@@ -504,7 +517,7 @@ export function MonthGrid({
       )}
       {/* The month arrows sit together at the end, so they never read as the
           back arrow a menu puts at the start of the same row. */}
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between min-w-0 mb-1">
         {/* The title opens the month and year picker (#750); the week and
             month switch is its own button beside the arrows. */}
         <HoverLabel label={t('monthGrid.pickMonthTip')} position="below-start" disabled={picking} className="flex min-w-0">
@@ -520,39 +533,43 @@ export function MonthGrid({
             <CaretDown aria-hidden="true" className={`shrink-0 text-accent transition-transform ${picking ? 'rotate-180' : ''}`} />
           </button>
         </HoverLabel>
-        <span className={`flex shrink-0 items-center ${tightBtns} ${picking ? 'invisible' : ''}`}>
-          {/* The extra buttons step aside before the month name truncates, at
-              static container breakpoints that always budget for Show today:
-              stepping off today adds Show today on the start edge of this
-              end-aligned group without hiding headerEnd or shifting any button
-              under the pointer (#891). Host control hides first, then the week
-              switch, then Show today. */}
-          {showToday && (
-            <span className="contents @max-[191.98px]/month:hidden [@media(hover:none)]:@max-[219.98px]/month:hidden">
-            <HoverLabel label={t('monthGrid.showToday')} position="below" disabled={picking}>
-              <button
-                type="button"
-                onClick={(e) => {
-                  // Keyboard activation keeps focus inside the grid after this button unmounts.
-                  if (e.detail === 0) moved.current = true;
-                  setFocus(today);
-                }}
-                aria-label={t('monthGrid.showToday')}
-                className={navBtn}
-              >
-                <CalendarDot aria-hidden="true" />
-              </button>
-            </HoverLabel>
-            </span>
-          )}
+        <div className={`flex shrink-0 items-center ${tightBtns} ${picking ? 'invisible' : ''}`}>
+          {/* Each optional control owns a real flex-item slot (never
+              display:contents, which macOS WKWebView fails to resize cleanly on
+              dynamic unmount inside flex containers, #947). The Show today slot
+              stays mounted at its button width even on today, so stepping away
+              or back never adds/removes a flex child, changes the group width,
+              or shifts any icon under the pointer (#891, #947). Host control
+              hides first, then the week switch, then Show today. */}
+          <div
+            data-cal-slot="today"
+            className="shrink-0 flex items-center justify-center w-8 h-8 [@media(hover:none)]:w-10 [@media(hover:none)]:h-10 @max-[191.98px]/month:hidden [@media(hover:none)]:@max-[219.98px]/month:hidden"
+          >
+            {showToday && (
+              <HoverLabel label={t('monthGrid.showToday')} position="below" disabled={picking}>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    // Keyboard activation keeps focus inside the grid after this button unmounts.
+                    if (e.detail === 0) moved.current = true;
+                    setFocus(today);
+                  }}
+                  aria-label={t('monthGrid.showToday')}
+                  className={navBtn}
+                >
+                  <CalendarDot aria-hidden="true" />
+                </button>
+              </HoverLabel>
+            )}
+          </div>
           {onToggleWeeks && (
-            <span className="contents @max-[219.98px]/month:hidden [@media(hover:none)]:@max-[259.98px]/month:hidden">
-            <HoverLabel label={t(weeks === 6 ? 'monthGrid.showOneWeek' : 'monthGrid.showWholeMonth')} position="below" disabled={picking}>
-              <button type="button" onClick={onToggleWeeks} aria-expanded={weeks === 6} aria-label={t(weeks === 6 ? 'monthGrid.showOneWeek' : 'monthGrid.showWholeMonth')} className={navBtn}>
-                {weeks === 6 ? <CalendarMinus aria-hidden="true" /> : <CalendarDots aria-hidden="true" />}
-              </button>
-            </HoverLabel>
-            </span>
+            <div data-cal-slot="weeks" className="shrink-0 flex items-center @max-[219.98px]/month:hidden [@media(hover:none)]:@max-[259.98px]/month:hidden">
+              <HoverLabel label={t(weeks === 6 ? 'monthGrid.showOneWeek' : 'monthGrid.showWholeMonth')} position="below" disabled={picking}>
+                <button type="button" onClick={onToggleWeeks} aria-expanded={weeks === 6} aria-label={t(weeks === 6 ? 'monthGrid.showOneWeek' : 'monthGrid.showWholeMonth')} className={navBtn}>
+                  {weeks === 6 ? <CalendarMinus aria-hidden="true" /> : <CalendarDots aria-hidden="true" />}
+                </button>
+              </HoverLabel>
+            </div>
           )}
           <HoverLabel label={t(weeks === 1 ? 'monthGrid.previousWeek' : 'monthGrid.previousMonth')} position="below" disabled={picking}>
             <button type="button" onClick={() => setFocus(step(-1))} aria-label={t(weeks === 1 ? 'monthGrid.previousWeek' : 'monthGrid.previousMonth')} className={navBtn}>
@@ -565,14 +582,20 @@ export function MonthGrid({
             </button>
           </HoverLabel>
           {headerEnd && (
-            <span className={`contents ${onToggleWeeks ? '@max-[247.98px]/month:hidden [@media(hover:none)]:@max-[299.98px]/month:hidden' : '@max-[219.98px]/month:hidden [@media(hover:none)]:@max-[259.98px]/month:hidden'}`}>
+            <div data-cal-slot="end" className={`shrink-0 flex items-center ${onToggleWeeks ? '@max-[247.98px]/month:hidden [@media(hover:none)]:@max-[299.98px]/month:hidden' : '@max-[219.98px]/month:hidden [@media(hover:none)]:@max-[259.98px]/month:hidden'}`}>
               {headerEnd}
-            </span>
+            </div>
           )}
-        </span>
+        </div>
       </div>
-      {picking && <MonthYearPanel focus={focus} onPick={(day) => { setFocus(day); closePicker(); }} onMove={setFocus} onClose={closePicker} wheelStep={wheelStep} />}
-      <div ref={gridRef} role="group" aria-label={title} onKeyDown={onKeyDown} className={`${picking ? 'hidden' : 'grid'} ${weekNumbers ? 'grid-cols-[1.5rem_repeat(7,minmax(0,1fr))]' : 'grid-cols-7'} gap-0.5 text-center`}>
+      {picking && <MonthYearPanel focus={focus} onPick={(day) => { setFocus(day); closePicker(); }} onMove={setFocus} onClose={closePicker} wheelStep={wheelStep} fill={fillBox} />}
+      <div
+        ref={gridRef}
+        role="group"
+        aria-label={title}
+        onKeyDown={onKeyDown}
+        className={`${picking ? 'hidden' : 'grid'} ${weekNumbers ? 'grid-cols-[1.5rem_repeat(7,minmax(0,1fr))]' : 'grid-cols-7'} ${fillMonth ? 'flex-1 min-h-0 grid-rows-[auto_repeat(6,minmax(2.5rem,1fr))] [@media(hover:none)]:grid-rows-[auto_repeat(6,minmax(2.75rem,1fr))]' : ''} gap-0.5 text-center`}
+      >
         {weekNumbers && <div aria-hidden="true" />}
         {/* A grid with room (a phone-wide strip, a list band) names the
             weekdays as the large month does; a narrow one keeps one letter.
@@ -636,10 +659,10 @@ export function MonthGrid({
               onDragOver={drop ? (e) => { if (drop.accepts(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; if (dropDay !== day) setDropDay(day); } } : undefined}
               onDragLeave={drop ? () => setDropDay((d) => (d === day ? null : d)) : undefined}
               onDrop={drop ? (e) => { if (drop.accepts(e)) { e.preventDefault(); setDropDay(null); drop.onDrop(day, e); } } : undefined}
-              className={`group min-w-0 flex items-center justify-center h-10 [@media(hover:none)]:h-11 outline-none rounded-lg ${dropDay === day ? 'ring-2 ring-inset ring-accent bg-accent/10' : ''}`}
+              className={`group min-w-0 flex items-center justify-center ${fillMonth ? 'h-full min-h-10 [@media(hover:none)]:min-h-11' : 'h-10 [@media(hover:none)]:h-11'} outline-none rounded-lg ${dropDay === day ? 'ring-2 ring-inset ring-accent bg-accent/10' : ''}`}
             >
               <span
-                className={`relative flex items-center justify-center w-full max-w-8 ${moodOf ? 'aspect-square rounded-full' : 'h-9 pb-2 rounded-lg'} text-compact tabular-nums transition group-focus-visible:outline group-focus-visible:outline-2 group-focus-visible:outline-offset-1 group-focus-visible:outline-accent ${circle}`}
+                className={`relative flex items-center justify-center w-full ${fillMonth ? 'max-w-10' : 'max-w-8'} ${moodOf ? 'aspect-square rounded-full' : fillMonth ? 'h-full max-h-11 pb-2 rounded-lg' : 'h-9 pb-2 rounded-lg'} text-compact tabular-nums transition group-focus-visible:outline group-focus-visible:outline-2 group-focus-visible:outline-offset-1 group-focus-visible:outline-accent ${circle}`}
                 // A tint of the mood's color, not the color itself: the day's
                 // number stays in the text color and the month stays calm.
                 style={moodDisc ? { background: `color-mix(in srgb, ${moodColor(mood)} 32%, transparent)` } : undefined}

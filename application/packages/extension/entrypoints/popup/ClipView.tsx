@@ -189,32 +189,34 @@ export function ClipView({ connection, bookmark, bookmarkKeys, noteKeys, organiz
 
   return (
     <div className="space-y-3">
-      <div className="flex items-start gap-2.5 min-w-0">
-        {/* A letter, not the site's icon: opening the popup must tell no
-            server the host of the page in front (beta #217 item 1). */}
-        <Tile letter={p.title || displayHost(p.url)} />
-        <div className="min-w-0">
-          <div className="text-body font-semibold text-pn line-clamp-2" dir="auto">{p.title || displayHost(p.url)}</div>
-          <div className="text-meta text-pn-muted truncate" dir="ltr">{displayHost(p.url)}</div>
-          {shown && (
-            <div className="pn-fade-in mt-0.5 flex flex-wrap gap-x-3 text-meta text-pn-muted">
-              <span className="inline-flex items-center gap-1"><TextAlignLeft aria-hidden="true" />{t('editor:wordCount.words', { count: shown.words, formatted: shown.words.toLocaleString() })}</span>
-              {shown.pictures > 0 && <span className="inline-flex items-center gap-1"><Image aria-hidden="true" />{t('importExport:missing.pictures', { count: shown.pictures })}</span>}
-            </div>
-          )}
+      <div className="rounded-lg border border-divider bg-surface-2 p-3 shadow-xs space-y-2">
+        <div className="flex items-start gap-2.5 min-w-0">
+          {/* A letter, not the site's icon: opening the popup must tell no
+              server the host of the page in front (beta #217 item 1). */}
+          <Tile letter={p.title || displayHost(p.url)} />
+          <div className="min-w-0">
+            <div className="text-body font-semibold text-pn line-clamp-2" dir="auto">{p.title || displayHost(p.url)}</div>
+            <div className="text-meta text-pn-muted truncate" dir="ltr">{displayHost(p.url)}</div>
+            {shown && (
+              <div className="pn-fade-in mt-0.5 flex flex-wrap gap-x-3 text-meta text-pn-muted">
+                <span className="inline-flex items-center gap-1"><TextAlignLeft aria-hidden="true" />{t('editor:wordCount.words', { count: shown.words, formatted: shown.words.toLocaleString() })}</span>
+                {shown.pictures > 0 && <span className="inline-flex items-center gap-1"><Image aria-hidden="true" />{t('importExport:missing.pictures', { count: shown.pictures })}</span>}
+              </div>
+            )}
+          </div>
         </div>
+        {bookmark ? (
+          <p className={SETTINGS_HELP}>
+            {bookmark.note
+              ? t('vault.savedAsNote', { date: new Date(bookmark.savedAt).toLocaleDateString() })
+              : t('vault.bookmarkedOn', { date: new Date(bookmark.savedAt).toLocaleDateString() })}
+          </p>
+        ) : savedAt && !saved ? (
+          <p className={SETTINGS_HELP}>{t('clip.alreadySaved', { date: new Date(savedAt).toLocaleDateString() })}</p>
+        ) : null}
       </div>
-      {bookmark ? (
-        <p className={SETTINGS_HELP}>
-          {bookmark.note
-            ? t('vault.savedAsNote', { date: new Date(bookmark.savedAt).toLocaleDateString() })
-            : t('vault.bookmarkedOn', { date: new Date(bookmark.savedAt).toLocaleDateString() })}
-        </p>
-      ) : savedAt && !saved ? (
-        <p className={SETTINGS_HELP}>{t('clip.alreadySaved', { date: new Date(savedAt).toLocaleDateString() })}</p>
-      ) : null}
       {p.selectionHtml && !saved && (
-        <div role="group" aria-label={t('clip.whatToSave')} className={SETTINGS_TRACK}>
+        <div role="group" aria-label={t('clip.whatToSave')} className={`${SETTINGS_TRACK} border border-divider/70`}>
           {(['note', 'selection'] as const).map((m) => (
             <button key={m} type="button" aria-pressed={mode === m} onClick={() => { setMode(m); setShort(false); }} className={settingsSegClass(mode === m, true)}>
               {m === 'note' ? t('clip.wholePage') : t('clip.selection')}
@@ -249,29 +251,31 @@ export function ClipView({ connection, bookmark, bookmarkKeys, noteKeys, organiz
               busyLabel={t('common:state.saving')}
               doneLabel={t('vault.bookmarked')}
               onClick={() => void saveBookmark(p)}
-              className="w-full"
+              className="w-full bg-surface-2 shadow-xs"
             />
           </HoverLabel>
         )}
       </div>
       {bookmark?.note && (
-        <Button icon={<NotePencil aria-hidden="true" />} onClick={() => void browser.tabs.create({ url: shortcutUrl(bookmark.note!) })} className="w-full">
+        <Button icon={<NotePencil aria-hidden="true" />} onClick={() => void browser.tabs.create({ url: shortcutUrl(bookmark.note!) })} className="w-full bg-surface-2 shadow-xs">
           {t('editor:noteLink.open')}
         </Button>
       )}
       {saved ? (
         <Saved result={saved.result} pictureCount={pictureCount} />
       ) : (
-        <div className="space-y-3">
-          <Switch
-            label={t('clip.includePictures')}
-            description={t('clip.includePicturesHelp')}
-            checked={pictures}
-            onChange={(on) => {
-              setPictures(on);
-              void writePrefs({ pictures: on });
-            }}
-          />
+        <div className="space-y-2.5">
+          <div className="rounded-lg border border-divider bg-surface-2 px-3 py-2 shadow-xs">
+            <Switch
+              label={t('clip.includePictures')}
+              description={t('clip.includePicturesHelp')}
+              checked={pictures}
+              onChange={(on) => {
+                setPictures(on);
+                void writePrefs({ pictures: on });
+              }}
+            />
+          </div>
           {organize && (
             <OrganizeFields
               {...organize}

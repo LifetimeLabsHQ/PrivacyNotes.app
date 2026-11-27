@@ -22,7 +22,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Folder, Hash } from '../icons';
 import { OverflowTip } from '../OverflowTip';
-import { SIDEBAR_ACTIVE } from '../sidebarUI';
+import { SIDEBAR_ACTIVE, SIDEBAR_ICON_PX } from '../sidebarUI';
 import { SETTINGS_EYEBROW } from '../ui';
 import type { DirectoryEntry } from './fileAccess';
 
@@ -140,7 +140,7 @@ export function MarkdownRail({
       <button type="button" onClick={() => onSelectDir(null)} className={folderRowClass(selectedDir === null)}>
         <span className={folderInnerClass}>
           <span className={`inline-flex shrink-0 ${selectedDir === null ? 'text-accent' : 'text-label'}`}>
-            <Folder className="lg:w-3.5 lg:h-3.5" />
+            <Folder size={SIDEBAR_ICON_PX} />
           </span>
           <span className="truncate">{t('shell:filesList.menuAllFiles')}</span>
         </span>
@@ -165,7 +165,7 @@ export function MarkdownRail({
               style={{ paddingInlineStart: `${8 + Math.min(node.depth - 1, MAX_INDENT_LEVEL) * 14}px` }}
             >
               <span className={`inline-flex shrink-0 ${selectedDir === node.path ? 'text-accent' : 'text-label'}`}>
-                <Folder className="lg:w-3.5 lg:h-3.5" />
+                <Folder size={SIDEBAR_ICON_PX} />
               </span>
               <span className="truncate">{node.name}</span>
             </span>
@@ -192,7 +192,7 @@ export function MarkdownRail({
             >
               <span className={tagInnerClass}>
                 <span className="inline-flex shrink-0 text-accent">
-                  <Hash />
+                  <Hash size={SIDEBAR_ICON_PX} />
                 </span>
                 <span className="truncate">{tag}</span>
               </span>

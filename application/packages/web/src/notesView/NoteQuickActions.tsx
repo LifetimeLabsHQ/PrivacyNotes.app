@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { ReactNode } from 'react';
-import { PencilSimpleSlash, Shield, ClockCounterClockwise, Copy, Folder, Repeat } from '../icons';
+import { PencilSimpleSlash, Shield, ClockCounterClockwise, Copy, Repeat } from '../icons';
 import type { LocalNote } from '../db';
 import { HoverLabel, ProGlyph } from '../ui';
 import { noteActionGuards, type NoteActionGuardDeps } from '../noteActionGuards';
@@ -8,32 +8,58 @@ import { proUnlocked } from '../demo';
 import { isConvertSource } from '../noteTypes';
 
 /**
+ * Editor header width thresholds, measured on the header row itself rather
+ * than the viewport, because the sidebar and the notes list are drag-resizable
+ * and the row wears `.pn-content-col` (896px at Default, 1344px at Wide, full
+ * pane at Full).
+ *
+ * Five steps:
+ * - < 560px (Compact): prev/next, Share and Calendar leave the bar; Share
+ *   moves into the "..." menu strip and Calendar stays in "..." under Date &
+ *   reminders / Entry date.
+ * - 560-679px (Narrow): prev/next and Share appear; Calendar stays in "...".
+ * - 680-959px (Default): Calendar joins the bar (date pill or Add to calendar).
+ * - 960-1279px (Wide): Tier 1 Pro shortcuts appear (Read-only, Protect, History).
+ * - >= 1280px (Full): Tier 2 shortcuts join (Duplicate, Convert to).
+ *
+ * Move to folder stays off the header because the Folder chip sits directly
+ * below it in the tag row, and Full screen stays in "..." (with its shortcut).
+ * Spec: docs/internal/design/ui-patterns.md (section 80)
+ */
+export const HEADER_COMPACT_PX = 560;
+export const HEADER_CALENDAR_PX = 680;
+export const QUICK_ACTIONS_CORE_PX = 960;
+export const QUICK_ACTIONS_ALL_PX = 1280;
+
+export type QuickActionsTier = 0 | 1 | 2;
+
+export function headerLayoutForWidth(width: number): {
+  compact: boolean;
+  showCalendar: boolean;
+  quickActionsTier: QuickActionsTier;
+} {
+  return {
+    compact: width < HEADER_COMPACT_PX,
+    showCalendar: width >= HEADER_CALENDAR_PX,
+    quickActionsTier: width >= QUICK_ACTIONS_ALL_PX ? 2 : width >= QUICK_ACTIONS_CORE_PX ? 1 : 0,
+  };
+}
+
+/**
  * The per-note actions the editor header shows as bare icons once the
  * header row is wide enough to hold them.
  *
  * These same actions live in the "..." menu at every width, and they stay
  * there. That is the one deliberate difference from the menu's icon strip,
- * which appears only while the header hides burn, pin, share and trash: the
- * strip stands IN FOR a hidden row, so showing both would repeat it, while
- * this row is a shortcut to a menu the user may keep using exactly as
- * before. Nobody's habit breaks when the window gets wider.
+ * which appears only while the header hides share: the strip stands IN FOR a
+ * hidden row, while this row is a shortcut to a menu the user may keep using
+ * exactly as before. Nobody's habit breaks when the window gets wider.
  * Spec: docs/internal/design/ui-patterns.md (section 80)
  *
- * The markdown/formatted switch is deliberately NOT here. Its glyph is the
- * markdown logo, and the tag row one line below wears the same logo for the
- * formatting-bar toggle; two of them a row apart read as one control drawn
- * twice. It keeps its two existing homes, the word-count link and the first
- * row of the "..." menu.
- *
- * Order is by gate, not by menu order: the four Pro actions sit together,
- * then a hairline, then the two anyone can use. A reader who cannot use Pro
- * learns the whole left half in one look instead of hunting dots.
- *
- * Two tiers, because six icons do not fit every pane that fits four.
- * `NotesView.tsx` measures the header row and picks the tier.
+ * Order is by gate, not by menu order: the three Pro actions sit together,
+ * then a hairline, then the two anyone can use, then a hairline before the
+ * trailing Share / Calendar / "..." cluster.
  */
-export type QuickActionsTier = 0 | 1 | 2;
-
 type Props = {
   note: LocalNote;
   isPro: boolean;
@@ -60,7 +86,6 @@ export function NoteQuickActions({
 
   return (
     <>
-      <HeaderDivider />
       <div className="shrink-0 flex items-center gap-0.5">
         <QuickButton
           label={t('notes:noteRow.readOnly')}
@@ -78,15 +103,6 @@ export function NoteQuickActions({
         >
           <Shield weight={note.pinProtected === 1 ? 'fill' : undefined} aria-hidden="true" />
         </QuickButton>
-        {guards.onMoveToFolder && (
-          <QuickButton
-            label={t('shell:contextMenu.moveToFolder')}
-            onClick={act.moveToFolder}
-            pro={!isPro}
-          >
-            <Folder aria-hidden="true" />
-          </QuickButton>
-        )}
         <QuickButton
           label={t('shell:noteOptionsMenu.noteHistory')}
           onClick={act.openHistory}
@@ -115,6 +131,8 @@ export function NoteQuickActions({
           </div>
         </>
       )}
+
+      <HeaderDivider />
     </>
   );
 }
@@ -126,8 +144,8 @@ export function NoteQuickActions({
  * Decorative, so it is hidden from the accessibility tree - every button
  * already names itself, and a rule announced between them is noise.
  */
-export function HeaderDivider() {
-  return <span aria-hidden="true" className="shrink-0 mx-1 h-4 w-px bg-pn-muted/35" />;
+export function HeaderDivider({ className = 'mx-0.5' }: { className?: string }) {
+  return <span aria-hidden="true" className={`shrink-0 h-4 w-px bg-pn-muted/35 ${className}`} />;
 }
 
 /** One 32px square. Every button in the editor header wears this box. */

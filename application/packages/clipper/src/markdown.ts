@@ -17,6 +17,7 @@ import { httpAddress, pictureAddress } from './clean';
 export interface ClipImage {
   src: string;
   alt: string;
+  caption?: string;
 }
 
 /** The address a picture token carries: `pn-clip:<index>`. */
@@ -135,23 +136,65 @@ export function toMarkdown(root: Node, base: string, page = base): { markdown: s
     },
   });
 
+  const registerImage = (img: Element): { index: number; alt: string } | null => {
+    const alt = altText(img.getAttribute('alt') ?? '');
+    if (isTiny(img)) return null;
+    const src = pictureAddress(img, base);
+    if (!src) return null;
+    let index = indexBySrc.get(src);
+    if (index === undefined) {
+      index = images.length;
+      images.push({ src, alt });
+      indexBySrc.set(src, index);
+    }
+    return { index, alt };
+  };
+
+  // A <figure> holding one photo and a <figcaption> turns directly into a
+  // captioned image (`![alt](pn-clip:N "caption")`) so the editor shows the
+  // caption attached to the image instead of as a stray paragraph (#969).
+  // Figures holding tables, code blocks, multiple images, or extra body text
+  // fall through to Turndown's default rules so nothing is lost.
+  service.addRule('figureWithCaption', {
+    filter: (node) => {
+      if (node.nodeName !== 'FIGURE') return false;
+      const fig = node as Element;
+      const figcaption = fig.querySelector('figcaption');
+      if (!figcaption || !captionText(figcaption.textContent ?? '')) return false;
+      if (fig.querySelector('table, pre, blockquote, ul, ol')) return false;
+      const imgs = Array.from(fig.querySelectorAll('img')).filter((img) => !isTiny(img) && pictureAddress(img, base));
+      if (imgs.length !== 1) return false;
+      // Only claim the figure when its visible text outside <figcaption> is empty.
+      const clone = fig.cloneNode(true) as Element;
+      for (const cap of Array.from(clone.querySelectorAll('figcaption'))) cap.remove();
+      return (clone.textContent ?? '').trim() === '';
+    },
+    replacement: (_content, node) => {
+      const fig = node as Element;
+      const figcaption = fig.querySelector('figcaption')!;
+      const img = Array.from(fig.querySelectorAll('img')).find((el) => !isTiny(el) && pictureAddress(el, base));
+      if (!img) return '';
+      const placed = registerImage(img);
+      if (!placed) return '';
+      const caption = captionText(figcaption.textContent ?? '');
+      if (!caption) return `\n\n![${escapeAlt(placed.alt)}](${IMAGE_TOKEN_SCHEME}${placed.index})\n\n`;
+      if (!images[placed.index]!.caption) images[placed.index]!.caption = caption;
+      return `\n\n![${escapeAlt(placed.alt)}](${IMAGE_TOKEN_SCHEME}${placed.index} "${escapeCaption(caption)}")\n\n`;
+    },
+  });
+
   service.addRule('image', {
     filter: 'img',
     replacement: (_content, node) => {
-      const alt = altText((node as Element).getAttribute('alt') ?? '');
+      const el = node as Element;
+      const alt = altText(el.getAttribute('alt') ?? '');
       // An icon, a flag, an emoji or a tracking pixel is not a picture worth
       // storing: its alt text stands in for it, and it spends none of the
       // clip's pictures.
-      if (isTiny(node as Element)) return service.escape(alt);
-      const src = pictureAddress(node as Element, base);
-      if (!src) return '';
-      let index = indexBySrc.get(src);
-      if (index === undefined) {
-        index = images.length;
-        images.push({ src, alt });
-        indexBySrc.set(src, index);
-      }
-      return `![${escapeAlt(alt)}](${IMAGE_TOKEN_SCHEME}${index})`;
+      if (isTiny(el)) return service.escape(alt);
+      const placed = registerImage(el);
+      if (!placed) return '';
+      return `![${escapeAlt(placed.alt)}](${IMAGE_TOKEN_SCHEME}${placed.index})`;
     },
   });
 
@@ -169,10 +212,10 @@ export function toMarkdown(root: Node, base: string, page = base): { markdown: s
  *  a button or a code block), and number the rest again, so no picture is
  *  downloaded or stored that the note never shows. */
 function keepPlacedPictures(markdown: string, images: ClipImage[]): { markdown: string; images: ClipImage[] } {
-  const token = new RegExp(`(!\\[(?:\\\\.|[^\\]\\\\])*\\]\\()${IMAGE_TOKEN_SCHEME}(\\d+)\\)`, 'g');
+  const token = new RegExp(`(!\\[(?:\\\\.|[^\\]\\\\])*\\]\\()${IMAGE_TOKEN_SCHEME}(\\d+)((?:[ \\t]+"(?:\\\\.|[^"\\\\\\r\\n])*")?\\))`, 'g');
   const renumber = new Map<number, number>();
   const kept: ClipImage[] = [];
-  const out = markdown.replace(token, (_whole, head: string, index: string) => {
+  const out = markdown.replace(token, (_whole, head: string, index: string, tail: string) => {
     const old = Number(index);
     let next = renumber.get(old);
     if (next === undefined) {
@@ -180,7 +223,7 @@ function keepPlacedPictures(markdown: string, images: ClipImage[]): { markdown: 
       kept.push(images[old]!);
       renumber.set(old, next);
     }
-    return `${head}${IMAGE_TOKEN_SCHEME}${next})`;
+    return `${head}${IMAGE_TOKEN_SCHEME}${next}${tail}`;
   });
   return { markdown: out, images: kept };
 }
@@ -329,6 +372,16 @@ function isTiny(img: Element): boolean {
 
 function altText(raw: string): string {
   return raw.replace(/\s+/g, ' ').trim().slice(0, 200);
+}
+
+function captionText(raw: string): string {
+  return raw.replace(/\s+/g, ' ').trim().slice(0, 500);
+}
+
+/** Caption text inside CommonMark `![...](src "...")`: backslashes and double
+ *  quotes escaped so the quoted title always round-trips safely. */
+function escapeCaption(caption: string): string {
+  return caption.replace(/[\\"]/g, '\\$&');
 }
 
 /** Alt text inside `![...]`: brackets, backslashes, `<` and the editor's

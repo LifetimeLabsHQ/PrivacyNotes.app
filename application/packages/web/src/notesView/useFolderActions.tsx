@@ -391,7 +391,7 @@ export function useFolderActions({
     // One folder looks like a folder everywhere, and the chip is not the place
     // to fork that.
     const glyph = noteFolder ? (
-      <FolderGlyph folderId={noteFolder.id} size={12} className="shrink-0 text-label" />
+      <FolderGlyph folderId={noteFolder.id} className="shrink-0 text-label" />
     ) : (
       <Folder className="shrink-0 text-label" />
     );

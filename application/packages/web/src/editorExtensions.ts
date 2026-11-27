@@ -7,7 +7,7 @@ export { collapseMediaGaps, replaceBodyUndoably, PlainEscape, TrailingParagraph,
 export { CodeBlockPlainCopy, lowlight, COPY_BOX_LANGUAGE, CodeBlockWithCopy, toggleCodeBlockSmart } from './editorCodeBlock';
 export { InlineMathWithMarkdown, BlockMathWithMarkdown, HighlightWithMarkdown } from './editorInlineSyntax';
 export { ALIGNMENT_VALUES, TextAlignOurLeft } from './editorAlignment';
-export { ParagraphWithMarkdown, HardBreakWithMarkdown, TextWithMarkdown, HeadingWithMarkdown, StrikeWithMarkdown, OrderedListWithMarkdown } from './editorTextNodes';
+export { ParagraphWithMarkdown, HardBreakWithMarkdown, TextWithMarkdown, HeadingWithMarkdown, StrikeWithMarkdown, UnderlineWithMarkdown, OrderedListWithMarkdown } from './editorTextNodes';
 export { TableWithMarkdown, stepTableCell } from './editorTables';
 export { indentListItem, indentText, EmptyListItemEnter } from './editorIndent';
 export { clipboardRenderer, markdownForClipboard } from './editorClipboard';

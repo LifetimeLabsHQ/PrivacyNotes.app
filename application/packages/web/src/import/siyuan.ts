@@ -3,6 +3,7 @@ import i18n from '../i18n';
 import { mediaTooLargeWarning, zipEntryBytes, zipEntryMedia, zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
 import { extractInlineTags, normalizeTag } from '../notesRepo';
+import { INLINE_TAG_RE } from '../inlineTags';
 import { createFolder, type FolderDef } from '../folders';
 import { IMPORT_FOLDER_LIMIT, commonRootPrefix } from './folderImport';
 import { linkifyLiteralText } from './linkify';
@@ -172,9 +173,6 @@ function assetDisplayName(path: string): string {
   const base = path.split('/').pop() ?? path;
   return base.replace(/-\d{14}-[0-9a-z]{7}(?=\.[^.]+$|$)/, '');
 }
-
-/** A tag our inline grammar reads back as a tag (`notesRepo.extractInlineTags`). */
-const INLINE_TAG_RE = /^[\p{L}_][\p{L}\p{N}_/-]*$/u;
 
 /* ------------------------------------------------------------------ */
 /* Workspace model                                                     */

@@ -43,6 +43,20 @@ export function cleanFileName(raw: string, fallback: string): string {
   return cleaned || fallback;
 }
 
+const MIME_TOKEN_RE = /^[a-z0-9][a-z0-9.+-]{0,126}\/[a-z0-9][a-z0-9.+-]{0,126}$/;
+
+/**
+ * Normalize a `type/subtype` MIME token (stripping optional `; ...` parameters),
+ * returning `fallback` when absent or malformed so untrusted metadata cannot
+ * break Markdown link or math syntax or corrupt `data:` URIs.
+ */
+export function cleanMimeType(raw: unknown, fallback = ''): string {
+  if (typeof raw !== 'string') return fallback;
+  const semi = raw.indexOf(';');
+  const token = (semi < 0 ? raw : raw.slice(0, semi)).trim().toLowerCase();
+  return MIME_TOKEN_RE.test(token) ? token : fallback;
+}
+
 /**
  * Undo the escaping the markdown serializer applies to link text. The
  * character class mirrors prosemirror-markdown's own `esc`, and

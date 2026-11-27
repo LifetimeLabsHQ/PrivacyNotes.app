@@ -1,4 +1,5 @@
 import type { LocalNote } from './db';
+import { effectiveNoteTags } from './inlineTags';
 import { editedAtOf } from './notesViewUtils';
 import type { View } from './views';
 
@@ -43,16 +44,23 @@ export type TagSortField = 'name' | 'modified' | 'entries';
 export type TagSortDir = 'asc' | 'desc';
 export interface TagCounts { tags: [string, number][]; untagged: number }
 
-/** Tag counts in the user's sort order, plus the Untagged bucket. */
-export function countTags(notes: LocalNote[], field: TagSortField, dir: TagSortDir): TagCounts {
+/** Tag counts in the user's sort order, plus the Untagged bucket.
+ *  Includes inline `#tags` on unlocked markdown notes via `effectiveNoteTags`. */
+export function countTags(
+  notes: LocalNote[],
+  field: TagSortField,
+  dir: TagSortDir,
+  isLocked?: (note: LocalNote) => boolean,
+): TagCounts {
   const counts = new Map<string, number>();
   // Numeric ms timestamps: local notes use "...Z" and server-synced notes may
   // use "...+00:00", so comparing the strings orders them wrongly.
   const lastModified = new Map<string, number>();
   let untagged = 0;
   for (const n of notes) {
-    if (n.tags.length === 0) untagged++;
-    for (const t of n.tags) {
+    const tags = effectiveNoteTags(n, isLocked ? isLocked(n) : false);
+    if (tags.length === 0) untagged++;
+    for (const t of tags) {
       counts.set(t, (counts.get(t) ?? 0) + 1);
       const modTs = Date.parse(editedAtOf(n)) || 0;
       if (modTs > (lastModified.get(t) ?? 0)) lastModified.set(t, modTs);

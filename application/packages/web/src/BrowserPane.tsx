@@ -20,6 +20,7 @@ import { useAuth } from './auth';
 import { marketingHomeHref } from './siteLinks';
 import { isTouchOnly } from './touchOnly';
 import { isDemoMode, DEMO_APP_URL, proUnlocked } from './demo';
+import { useUnsyncedLocalVault } from './localOnly';
 import { LocalOnlyNotice } from './LocalOnlyNotice';
 import { ExtensionCallError, loadExtensionState, removeExtension, type ExtensionRow } from './extensionApi';
 import { installLinks, type InstallBrowser } from './extensionStores';
@@ -355,7 +356,8 @@ export function BrowserPane({ extensionKeys, isPro, onUpgrade, onOpenSync }: {
 }) {
   const { t } = useTranslation('shell');
   const { auth, supabase } = useAuth();
-  const localOnly = auth.status === 'authenticated' && auth.localOnly;
+  const unsyncedLocal = useUnsyncedLocalVault();
+  const localOnly = (auth.status === 'authenticated' && auth.localOnly) || unsyncedLocal;
   const access: ExtensionAccess | null = isDemoMode() || auth.status !== 'authenticated' || localOnly
     ? null
     : { supabase, pubkey: auth.pubkey, phrase: auth.phrase, contentKey: auth.encryptionKey, ...extensionKeys };

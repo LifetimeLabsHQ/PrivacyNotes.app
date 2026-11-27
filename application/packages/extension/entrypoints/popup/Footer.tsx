@@ -100,7 +100,7 @@ export function Footer({ notice, onGone, children }: { notice: Shown | null; onG
 
   return (
     <footer
-      className="pn-foot sticky bottom-0 z-[60] h-12 shrink-0 overflow-hidden border-t border-divider bg-surface-1"
+      className="pn-foot sticky bottom-0 z-[60] h-12 shrink-0 overflow-hidden border-t border-divider bg-surface-0 shadow-[0_-2px_8px_rgb(15_23_42/0.06)]"
       onMouseEnter={() => setHeld(true)}
       onMouseLeave={() => setHeld(false)}
     >

@@ -793,7 +793,7 @@ function assemble(grid: GridResult, body: string): string {
   if (grid.places.length > 0) {
     // A place with coordinates is a map in the entry, as Journal shows it; a
     // bare name has nothing to pin, so it stays a search link.
-    // Spec: docs/internal/plans/note-location.md (section 6)
+    // Spec: docs/internal/specs/note-location.md (section 6)
     const maps = grid.places.map(placeOnMap).filter((loc) => loc !== undefined);
     const links = grid.places.filter((p) => !placeOnMap(p)).map((p) => `- [${p.label}](${placeUrl(p)})`);
     const parts = [

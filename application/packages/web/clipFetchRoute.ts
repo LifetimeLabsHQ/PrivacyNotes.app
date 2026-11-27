@@ -402,7 +402,7 @@ function accepts(kind: Kind, contentType: string): boolean {
   return kind === 'page' ? essence === 'text/html' || essence === 'application/xhtml+xml' : essence.startsWith('image/');
 }
 
-async function readCapped(res: Response, limit: number): Promise<Uint8Array<ArrayBuffer>> {
+export async function readCapped(res: Response, limit: number): Promise<Uint8Array<ArrayBuffer>> {
   const declared = Number(res.headers.get('Content-Length'));
   if (Number.isFinite(declared) && declared > limit) {
     await res.body?.cancel();

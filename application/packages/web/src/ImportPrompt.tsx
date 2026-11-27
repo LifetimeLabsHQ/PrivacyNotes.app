@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { ListEntryCard } from './ListEntryCard';
-import { Download } from './icons';
+import { FileArrowDown } from './icons';
 
 /**
  * The standing import offer: a row in a list pane, a tile in the grid,
@@ -96,7 +96,7 @@ export function ImportPromptEntry({
   return (
     <ListEntryCard
       variant={variant}
-      icon={Download}
+      icon={FileArrowDown}
       label={t(`importPrompt.${kind}`)}
       onClick={onOpen}
       onDismiss={onDismiss}

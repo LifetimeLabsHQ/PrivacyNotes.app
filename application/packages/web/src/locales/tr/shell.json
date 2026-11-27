@@ -207,7 +207,7 @@
     "color": "Renk",
     "colorNone": "Renksiz",
     "colorUseDefault": "Varsayılanı kullan",
-    "icon": "Simgeler ve logolar",
+    "icon": "Simgeler / logolar / emojiler",
     "colorFromFolder": "Klasörden: {{name}}",
     "colorFromTag": "Etiketten: #{{name}}",
     "colorOwnHint": "Burada seçilen renk bu notun arka planını doldurur. <setting>Klasör ve etiket renkleri</setting> bunu değiştirmez.",
@@ -365,6 +365,7 @@
   },
   "demoBanner": {
     "title": "Risksiz deneyin",
+    "shortTitle": "Demo",
     "description": "Burada hiçbir şey kaydedilmez. Kendi şifreli defterinizi ücretsiz edinin."
   },
   "markdown": {
@@ -627,6 +628,10 @@
     "tooLarge": "Çok büyük. Dosya başına en fazla {{limit}} MB.",
     "titlePlaceholder": "Başlık (isteğe bağlı)",
     "notePlaceholder": "Not ekle...",
+    "taskPlaceholder": "Görev öğesi...",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "Bugünkü günlük kaydına eklenir.",
+    "clipFallbackToast": "Sayfa kırpılamadı. Bunun yerine yer imi olarak kaydedildi.",
     "photoCount": "{{count}} fotoğraf"
   },
   "shortcut": {
@@ -958,7 +963,8 @@
     "label": "Hızlı ekle"
   },
   "offline": {
-    "notLoaded": "Çevrimdışısınız ve uygulamanın bu bölümü henüz yüklenmedi. Tekrar çevrimiçi olduğunuzda yeniden deneyin."
+    "notLoaded": "Çevrimdışısınız ve uygulamanın bu bölümü henüz yüklenmedi. Tekrar çevrimiçi olduğunuzda yeniden deneyin.",
+    "chunkBlocked": "Bu görünüm yüklenemedi. Sayfayı yeniden yükleyin veya içerik engelleyicinizi kontrol edin."
   },
   "checkIn": {
     "prompt": "Bugün nasılsınız?",
@@ -1136,6 +1142,7 @@
     "removed": "Ana sayfadan kaldırıldı",
     "showOnHome": "Ana sayfada göster",
     "removeFromHome": "Ana sayfadan kaldır",
+    "openTarget": "{{target}} öğesini aç",
     "resize": "{{name}} widget'ını yeniden boyutlandır",
     "narrower": "Daha dar",
     "taller": "Daha uzun",
@@ -1143,29 +1150,75 @@
     "moveEarlier": "Öne taşı",
     "moveLater": "Geriye taşı",
     "chooseNote": "Bir not seçin",
+    "chooseNotes": "Notları seçin",
     "chooseTag": "Bir etiket seçin",
+    "chooseTags": "Etiketleri seçin",
     "chooseFolder": "Bir klasör seçin",
+    "chooseFolders": "Klasörleri seçin",
     "chooseTracker": "Bir takip seçin",
+    "chooseCounter": "Bir sayaç seçin",
+    "chooseCounters": "Sayaçları seçin",
+    "chooseTypes": "Öğe türlerini seçin",
     "choose": "Seç",
     "gone": "Artık burada değil",
     "otherSpace": "Diğer alanda",
     "proLocked": "Pro'ya dahil",
     "noneToChoose": "Henüz seçilecek bir şey yok",
+    "catalogSearch": "Widget'larda ara",
+    "catalogFilter": "Widget'ları filtrele",
+    "allWidgets": "Tüm widget'lar",
+    "onHomeLabel": "Ana sayfada",
+    "onHomeCount": "Ana sayfada ({{count}})",
     "headerEvents_other": "Bugün {{formatted}} etkinlik",
+    "headerOverdue_other": "{{formatted}} gecikmiş",
+    "headerOverdue_one": "{{formatted}} gecikmiş",
     "headerTasks_other": "{{formatted}} açık görev",
+    "headerDosesLeft_other": "{{formatted}} doz kaldı",
+    "headerDosesLeft_one": "{{formatted}} doz kaldı",
     "startToday": "Bugünün kaydını başlat",
+    "setupMedication": "İlaç ayarla",
+    "setupCounter": "Sayaç oluştur",
+    "counterIncrease": "{{name}} sayacına bir ekle",
+    "counterDecrease": "{{name}} sayacından bir çıkar",
+    "storageSummary": "{{notes}} not · {{files}} dosya",
+    "graphSummary": "{{linked}} bağlantılı · {{orphans}} bağlantısız",
+    "placesSummary_other": "{{count}} konumlu öğe",
+    "quickCapture": {
+      "placeholderJournal": "Bugünün günlüğüne ekleyin...",
+      "placeholderTask": "Bir görev ekleyin...",
+      "placeholderNote": "Hızlı bir not yazın...",
+      "destination": "Kayıt yeri",
+      "voice": "Sesli not kaydet",
+      "voiceNoteTitle": "Sesli not",
+      "recording": "Kaydediliyor {{duration}}",
+      "savingVoice": "Sesli not şifreleniyor...",
+      "savedTo": "{{title}} içine kaydedildi",
+      "failed": "Şu anda kaydedilemedi.",
+      "micUnavailable": "Mikrofonla kayıt burada kullanılamıyor.",
+      "micDenied": "Mikrofon erişimi reddedildi."
+    },
+    "placesSummary_one": "{{count}} konumlu öğe",
     "groups": {
-      "keep": "Sakladıklarınız"
+      "graph": "Graf ve haritalar",
+      "keep": "Ekstralar"
     },
     "layout": {
       "everyday": "Her gün",
       "planner": "Planlayıcı",
-      "writer": "Yazar"
+      "writer": "Yazar",
+      "wellness": "Sağlık"
     },
     "w": {
       "checkIn": {
         "name": "Durum kaydı",
         "help": "Bugün nasılsınız ve takipleriniz"
+      },
+      "medication": {
+        "help": "Bugünün dozları, Alındı veya Atla, ve stok uyarıları"
+      },
+      "quickCapture": {
+        "name": "Hızlı kayıt",
+        "help": "Doğrudan Ana sayfadan metin veya sesli not ekleyin"
       },
       "calendar": {
         "help": "Kayıt ve etkinlik noktalarıyla ay"
@@ -1180,7 +1233,7 @@
       },
       "tasks": {
         "name": "Açık görevler",
-        "help": "Notlarınızdaki işaretlenmemiş görevler"
+        "help": "Önce gecikmiş ve vadesi gelen görevler, hızlı ekleme ile"
       },
       "recent": {
         "name": "Son düzenlenenler",
@@ -1201,9 +1254,19 @@
         "name": "Bir klasör",
         "help": "Bir klasördeki en yeni öğeler"
       },
+      "types": {
+        "name": "Öğe listesi",
+        "help": "Seçtiğiniz türlerin en yeni öğeleri"
+      },
       "onThisDay": {
         "name": "Bugün geçmişte",
         "help": "Önceki yıllardan günlük kayıtları"
+      },
+      "graph": {
+        "help": "Kasanızdaki bağlantılı notların canlı mini haritası"
+      },
+      "places": {
+        "help": "Konumlu notlarınız, kayıtlarınız ve kişileriniz bir haritada"
       },
       "week": {
         "help": "Kelimeler, etkin günler, öğeler ve durum kayıtları"
@@ -1218,6 +1281,12 @@
         "name": "Ritminiz",
         "help": "26 haftalık yazma ve ruh hali"
       },
+      "yearPixels": {
+        "help": "Tüm yılınızın ruh hali renkleri bir bakışta"
+      },
+      "patterns": {
+        "help": "Ruh halinizi en çok ne yükseltiyor veya düşürüyor"
+      },
       "milestone": {
         "name": "Sonraki kilometre taşı",
         "help": "Bir sonrakine ne kadar yakınsınız"
@@ -1225,6 +1294,9 @@
       "tracker": {
         "name": "Bir takip",
         "help": "Tek bir takip: sayısı ve günleri"
+      },
+      "counter": {
+        "help": "Özel bir sayaç için doğrudan Ana sayfada +1'e dokunun"
       },
       "weekRecap": {
         "help": "Haftanız, tek bir kartta"
@@ -1238,9 +1310,13 @@
       },
       "birthdays": {
         "help": "Sonraki 30 gündeki doğum günleri"
+      },
+      "storage": {
+        "help": "Şifreli depolama halkanız, yeniden sayma ile"
       }
     },
     "empty": {
+      "medication": "Bugün alınması gereken ilaç yok",
       "upcoming": "Sonraki 7 günde bir şey yok",
       "tasks": "Açık görev yok",
       "recent": "Burada henüz bir şey yok",
@@ -1248,6 +1324,11 @@
       "tag": "Bu etikete sahip öğe yok",
       "folder": "Bu klasörde bir şey yok",
       "onThisDay": "Önceki yıllarda bu güne ait kayıt yok",
+      "graph": "Grafınızı burada görmek için iki notu bağlayın",
+      "places": "Burada işaretçi görmek için bir nota veya kişiye konum ekleyin",
+      "yearPixels": "Yılı renklendirmek için ruh halinizi kaydedin",
+      "patterns": "Örüntüleri görmek için birkaç gün daha kayıt yapın",
+      "counter": "Henüz sayaç takibi yok",
       "files": "Henüz dosya yok",
       "bookmarks": "Henüz yer imi yok",
       "birthdays": "Sonraki 30 günde doğum günü yok",

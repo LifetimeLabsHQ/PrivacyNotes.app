@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Fingerprint, Key, Lock, Shield } from './icons';
 import { useAuth } from './auth';
 import { isDemoMode } from './demo';
+import { useUnsyncedLocalVault } from './localOnly';
 import { DemoAccountTeaser } from './DemoAccountTeaser';
 import { LocalOnlyNotice } from './LocalOnlyNotice';
 import { SettingsTabStrip, settingsTabClass } from './settingsUI';
@@ -76,7 +77,8 @@ export function SecurityModal({
 }: Props) {
   const { t } = useTranslation('security');
   const { auth } = useAuth();
-  const localOnly = auth.status === 'authenticated' && auth.localOnly;
+  const unsyncedLocal = useUnsyncedLocalVault();
+  const localOnly = (auth.status === 'authenticated' && auth.localOnly) || unsyncedLocal;
   const [paneTab, setTab] = usePaneTab<Tab>('security', defaultTab);
   // Passkeys share the 2FA tab, under it, while their release switch is on:
   // both are what a new device needs to get in.

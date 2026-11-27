@@ -1,3 +1,4 @@
+import { detectPlatform } from './devices';
 import { parseShortcut } from './noteShortcut';
 
 /**
@@ -71,6 +72,22 @@ function deliver(urls: readonly string[] | null | undefined, way: DeepLinkWay, o
   }
 }
 
+let suppressedLaunchPromise: Promise<boolean> | null = null;
+
+/** True on a desktop updater restart whose replayed startup argv was suppressed
+ *  in Rust (`lib.rs`). Blocks both `'launch'` and `'resume'` `getCurrent()`
+ *  replays while leaving live `onOpenUrl` (`'open'`) arrivals untouched. */
+function launchArgsSuppressed(): Promise<boolean> {
+  if (detectPlatform() !== 'desktop') return Promise.resolve(false);
+  if (!suppressedLaunchPromise) {
+    suppressedLaunchPromise = import('@tauri-apps/api/core')
+      .then(({ invoke }) => invoke<{ relaunchSuppressedArgs?: unknown }>('updater_target_info'))
+      .then((info) => info?.relaunchSuppressedArgs === true)
+      .catch(() => false);
+  }
+  return suppressedLaunchPromise;
+}
+
 function wire(): Promise<Plugin> {
   if (wiring) return wiring;
   const mine = ++generation;
@@ -83,7 +100,10 @@ function wire(): Promise<Plugin> {
     }
     const onResume = () => {
       if (document.hidden) return;
-      plugin.getCurrent().then((urls) => deliver(urls, 'resume'), () => {
+      void launchArgsSuppressed().then((suppressed) => {
+        if (suppressed || mine !== generation) return;
+        return plugin.getCurrent().then((urls) => deliver(urls, 'resume'));
+      }).catch(() => {
         /* transient plugin failure: the next resume asks again */
       });
     };
@@ -107,6 +127,7 @@ function stopWhenEmpty(): void {
   if (entries.size > 0) return;
   generation++;
   wiring = null;
+  suppressedLaunchPromise = null;
   unwire?.();
   unwire = null;
 }
@@ -132,6 +153,8 @@ export function takeDeepLinks(
   ready.catch(() => {});
   if (options.launch) {
     void plugin.then(async (p) => {
+      if (!entries.has(entry)) return;
+      if (await launchArgsSuppressed()) return;
       if (!entries.has(entry)) return;
       deliver(await p.getCurrent(), 'launch', entry);
     }).catch(() => {

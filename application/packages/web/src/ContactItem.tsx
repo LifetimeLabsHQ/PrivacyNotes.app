@@ -8,6 +8,7 @@ import {
   contactInitialsFor,
   formatAddressLines,
   formatContactDate,
+  isAddressEmpty,
   parseContactBody,
   smsHref,
   telHref,
@@ -26,6 +27,7 @@ import { ArrowSquareOut, At, Cake, Calendar, ChatCircle, EnvelopeSimple, Globe, 
 import { DETAIL_COLUMN, DETAIL_TILE_PX, DetailAction, DetailCopyAction, DetailGroup, DetailHero, DetailLink, DetailNotes, DetailRow } from './detailPane';
 import { Disclosure, IconUpgrade } from './ui';
 import { openMediaViewer } from './mediaRefs';
+import { readLocation } from './noteLocation';
 import { CustomFieldRow } from './CustomFields';
 
 
@@ -314,6 +316,9 @@ function ContactView({ note, contact, locked, onEdit, onShowOnMap, placesPro = f
 
       {contact.addresses.length > 0 && group(t('contacts.groupAddress'), contact.addresses.map((a, i) => {
         const lines = formatAddressLines(a);
+        const canShowOnMap = Boolean(
+          onShowOnMap && (!isAddressEmpty(a) || readLocation(note.trackers)),
+        );
         return (
           <DetailRow
             key={`ad${i}`}
@@ -322,7 +327,7 @@ function ContactView({ note, contact, locked, onEdit, onShowOnMap, placesPro = f
             multiline
             actions={
               <>
-                {onShowOnMap && (
+                {canShowOnMap && (
                   <DetailAction label={t('notes:location.showOnMap')} onClick={onShowOnMap}>
                     <span className="relative flex">
                       <MapPin />

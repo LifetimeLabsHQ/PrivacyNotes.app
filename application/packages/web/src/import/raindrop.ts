@@ -22,9 +22,9 @@
 
 import { buildLinkBody, linkDomain, updateLinkBody } from '../linkBody';
 import { escapeMarkdownText, guardMarkdownLineStart } from '../markdownEscape';
-import { normalizeTag } from '../notesRepo';
 import i18n from '../i18n';
 import { buildFolderTree } from './folderImport';
+import { cleanPath, isJunkEntry, normalizeTagList } from './importHelpers';
 import { linkifyLiteralText, linkifyMarkdown } from './linkify';
 import { readCsvTable } from './passwordCsv';
 import { openZip } from './zipOpen';
@@ -86,7 +86,11 @@ function isoOrNull(raw: string): string | null {
 async function csvFile(file: File): Promise<File> {
   if (!/\.zip$/i.test(file.name)) return file;
   const zip = await openZip(file);
-  const entry = Object.values(zip.files).find((e) => !e.dir && /(^|\/)[^/]*\.csv$/i.test(e.name));
+  const entry = Object.values(zip.files).find((e) => {
+    if (e.dir || isJunkEntry(e.name)) return false;
+    const path = cleanPath(e.name);
+    return path !== null && !isJunkEntry(path) && /(^|\/)[^/]*\.csv$/i.test(path);
+  });
   if (!entry) throw new Error(msg('noCsv'));
   return new File([await zipEntryText(entry)], 'export.csv', { type: 'text/csv' });
 }
@@ -120,7 +124,7 @@ export async function parseRaindrop(file: File): Promise<ParsedImport> {
     const title = rawTitle === url || rawTitle === linkDomain(url) ? '' : rawTitle;
     const text = raindropNotes(cell(row, 'note'), cell(row, 'excerpt'), parseHighlights(cell(row, 'highlights')));
     const body = text ? updateLinkBody(buildLinkBody(url), { notes: text }) : buildLinkBody(url);
-    const tags = [...new Set(cell(row, 'tags').split(',').map((t) => normalizeTag(t)).filter(Boolean))];
+    const tags = normalizeTagList(cell(row, 'tags').split(','));
     const created = isoOrNull(cell(row, 'created')) ?? now;
     const folder = cell(row, 'folder').trim();
     const segments = folder && folder !== UNSORTED ? folder.split(' / ').map((s) => s.trim().replace(/\//g, '-')).filter(Boolean) : [];

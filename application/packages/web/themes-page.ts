@@ -2,8 +2,15 @@ import { transformWithOxc, type Plugin } from 'vite';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createElement, type ComponentType } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { THEME_SCRIPT_TAG, THEME_TOGGLE_CSS, themeVarsCss, WASHI_DARK, WASHI_LIGHT } from './static-page-theme.ts';
 import { CHROME_CSS, LIGHTBOX_CSS, OG_IMAGE_TAGS, ogLocaleTag, SITE_FOOTER, siteNav } from './static-page-chrome.ts';
+import { NoteBoyMark } from './src/noteBoyMark.tsx';
+import { THEME_LOGOS, type ThemeLogoProps } from './src/themeLogos.tsx';
+import { POP_THEME_LOGOS } from './src/themeLogosPop.tsx';
+import { CRAFT_THEME_LOGOS } from './src/themeLogosCraft.tsx';
+import { STUDIO_THEME_LOGOS } from './src/themeLogosStudio.tsx';
 // Type-only, so they erase at build time and leave the import-free modules
 // that loadThemes() transpiles and imports as data URLs.
 import type * as ThemeCode from './src/themeCode.ts';
@@ -47,6 +54,9 @@ const SUBMIT_URL = 'https://github.com/LifetimeLabsHQ/PrivacyNotes.app/discussio
 const PAGE_SIZE = 40;
 
 interface ThemeCard {
+  /** Twelve-character id for community and team themes; absent on the eight
+   *  hand-tuned built-in palettes, which keep the PrivacyNotes mark. */
+  id?: string;
   name: string;
   mode: 'light' | 'dark';
   code: string;
@@ -156,7 +166,7 @@ async function loadThemes(): Promise<ThemeLists> {
   const listed = ({ id, code }: { id: string; code: string }, where: string, credited: boolean): ThemeCard => {
     if (!/^[a-z0-9]{12}$/.test(id) || ids.has(id)) throw new Error(`themes-page: ${where} needs its own twelve-character id`);
     ids.add(id);
-    return read(code, where, credited);
+    return { ...read(code, where, credited), id };
   };
   const palettes = (['light', 'dark'] as const).flatMap((mode) =>
     Object.entries(builtin.BUILTIN_THEME_CODES[mode]).map(([id, code]) => ({ code, description: BUILTIN_DESCRIPTIONS[mode][id], where: `the ${mode} palette ${id}` })),
@@ -230,6 +240,34 @@ const SWATCHES: [string, string][] = [
   ['divider', 'Border'], ['text', 'Text'], ['text-muted', 'Muted text'],
 ];
 
+/** Under dist/ and served live in dev by themesPagePlugin(). */
+const THEME_ICON_DIR = `${THEME_SHOT_DIR}/icons`;
+
+/** Every shipped bespoke sidebar mark, keyed by its twelve-character theme id. */
+const ALL_THEME_LOGOS: Record<string, ComponentType<ThemeLogoProps>> = {
+  noteboy00000: NoteBoyMark,
+  ...THEME_LOGOS,
+  ...POP_THEME_LOGOS,
+  ...CRAFT_THEME_LOGOS,
+  ...STUDIO_THEME_LOGOS,
+};
+
+const iconSvgCache = new Map<string, string>();
+function renderThemeIconSvg(id: string): string | null {
+  const cached = iconSvgCache.get(id);
+  if (cached) return cached;
+  const Mark = ALL_THEME_LOGOS[id];
+  if (!Mark) return null;
+  const raw = renderToStaticMarkup(createElement(Mark, { className: '' }));
+  // Standalone .svg files loaded via <img> require the SVG XML namespace.
+  const svg = raw
+    .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ')
+    .replace(/ class=""/g, '')
+    .replace(/ aria-hidden="true"/g, '');
+  iconSvgCache.set(id, svg);
+  return svg;
+}
+
 /** The screenshot of a theme, or a build error that says how to make it. */
 function shotPath(t: ThemeCard): string {
   const file = themeShotFile(t.code);
@@ -237,6 +275,15 @@ function shotPath(t: ThemeCard): string {
     throw new Error(`themes-page: "${t.name}" has no screenshot for its code; run pnpm theme:shots with the dev server up`);
   }
   return `/${THEME_SHOT_DIR}/${file}`;
+}
+
+/** The inline title icon chip for a community or team theme; built-in palettes omit it. */
+function iconChip(t: ThemeCard, eager: boolean): string {
+  if (!t.id) return '';
+  if (!ALL_THEME_LOGOS[t.id]) {
+    throw new Error(`themes-page: "${t.name}" (${t.id}) has no sidebar icon; add one in themeLogos*.tsx and themeLogoResolver.ts`);
+  }
+  return `<span class="tc-icon" style="background:${t.colors['surface-0']};border-color:${t.colors['divider']}" aria-hidden="true"><img src="/${THEME_ICON_DIR}/${t.id}.svg" width="32" height="32" alt="" loading="${eager ? 'eager' : 'lazy'}" decoding="async" draggable="false"></span>`;
 }
 
 function card(t: ThemeCard, i: number, discussionsUrl: string): string {
@@ -265,7 +312,7 @@ function card(t: ThemeCard, i: number, discussionsUrl: string): string {
   return `<article class="tc" id="${t.slug}" data-mode="${t.mode}"${rank}>
 <figure class="shot"><a href="${shotPath(t)}" data-shot data-alt="${esc(t.name)}" aria-label="Show the ${esc(t.name)} screenshot full size"><img src="${shotPath(t)}" width="2560" height="1600" alt="The app in the ${esc(t.name)} theme" loading="${i < 4 ? 'eager' : 'lazy'}" decoding="async" draggable="false"><span class="zoom" aria-hidden="true">${glyph(P_EXPAND, 18)}View full size</span></a><span class="mode">${t.mode === 'dark' ? 'Dark' : 'Light'}</span></figure>
 <div class="tc-body">
-<div class="tc-head"><h2 dir="auto">${esc(t.name)}</h2><ul class="sw" aria-label="Colors">${dots}</ul></div>
+<div class="tc-head"><div class="tc-title">${iconChip(t, i < 4)}<h2 dir="auto">${esc(t.name)}</h2></div><ul class="sw" aria-label="Colors">${dots}</ul></div>
 ${t.description ? `<p class="desc" dir="auto">${esc(t.description)}</p>\n` : ''}<p class="by">${by}</p>
 ${vote ? `<div class="acts">${vote}</div>\n` : ''}<details class="cd"><summary>Show code</summary><code id="${id}" class="code" dir="ltr">${esc(t.code)}</code></details>
 </div>
@@ -324,7 +371,10 @@ const PAGE_CSS = `.hero{display:flex;align-items:flex-end;justify-content:space-
 .shot img{display:block;width:100%;height:100%;object-fit:cover}
 .shot .mode{position:absolute;top:10px;right:10px;font-size:var(--fs-meta);font-weight:600;padding:2px 9px;border-radius:999px;background:rgb(0 0 0/.62);color:#fff;pointer-events:none}
 .tc-body{display:flex;flex-direction:column;gap:10px;padding:14px 16px 16px}
-.tc-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tc-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:40px}
+.tc-title{display:flex;align-items:center;gap:10px;min-width:0}
+.tc-icon{width:40px;height:40px;flex-shrink:0;padding:3px;border-radius:10px;border:1px solid;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgb(0 0 0/.12)}
+.tc-icon img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 1px 2px rgb(0 0 0/.24))}
 .tc-head h2{font-size:var(--fs-heading);font-weight:650;margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sw{display:flex;gap:4px;list-style:none;margin:0;padding:0;flex-shrink:0}
 .sw li{width:16px;height:16px;border-radius:50%;box-shadow:inset 0 0 0 1px rgb(127 127 127/.35)}
@@ -453,9 +503,29 @@ export function themesPagePlugin(): Plugin {
   return {
     name: 'emit-themes-page',
     async generateBundle() {
-      this.emitFile({ type: 'asset', fileName: 'themes/index.html', source: renderHtml(await loadThemes()) });
+      const lists = await loadThemes();
+      this.emitFile({ type: 'asset', fileName: 'themes/index.html', source: renderHtml(lists) });
+      for (const t of [...lists.community, ...lists.team]) {
+        if (!t.id) continue;
+        const svg = renderThemeIconSvg(t.id);
+        if (!svg) {
+          throw new Error(`themes-page: "${t.name}" (${t.id}) has no sidebar icon; add one in themeLogos*.tsx and themeLogoResolver.ts`);
+        }
+        this.emitFile({ type: 'asset', fileName: `${THEME_ICON_DIR}/${t.id}.svg`, source: svg });
+      }
     },
     configureServer(server) {
+      const iconPrefix = `/${THEME_ICON_DIR}/`;
+      server.middlewares.use((req, res, next) => {
+        const pathname = (req.url ?? '').split('?')[0] ?? '';
+        if (!pathname.startsWith(iconPrefix) || !pathname.endsWith('.svg')) return next();
+        const id = pathname.slice(iconPrefix.length, -4);
+        const svg = /^[a-z0-9]{12}$/.test(id) ? renderThemeIconSvg(id) : null;
+        if (!svg) return next();
+        res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-store');
+        res.end(svg);
+      });
       // Serve /themes in dev so the page can be verified locally without a
       // production build.
       server.middlewares.use('/themes', async (_req, res, next) => {

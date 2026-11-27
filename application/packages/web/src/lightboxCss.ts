@@ -9,6 +9,10 @@ export const LIGHTBOX_CSS = `.cl-lb{position:fixed;inset:0;z-index:100;backgroun
 .cl-lb img{display:block;max-width:min(100%,1600px);max-height:max(200px,calc(100dvh - 40px - var(--lb-dock,70px)));width:auto;height:auto;border-radius:10px 10px 0 0;background:var(--bg)}
 .cl-lb .lb-dock{width:0;min-width:100%;container-type:inline-size;padding:12px 12px 12px 16px;border-radius:0 0 10px 10px;background:#161a20;border-top:1px solid rgba(255,255,255,.08);color:#e7e9ec;text-align:left}
 .cl-lb .lb-in{display:flex;align-items:center;gap:10px 20px}
+.cl-lb .lb-main{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.cl-lb .lb-icon{width:40px;height:40px;flex-shrink:0;padding:3px;border-radius:10px;border:1px solid;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.cl-lb .lb-icon[hidden]{display:none}
+.cl-lb .lb-icon img{display:block;width:100%;height:100%;max-width:none;max-height:none;border-radius:0;background:none;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.28))}
 @container (max-width:620px){.cl-lb .lb-in{flex-direction:column;align-items:stretch}.cl-lb .lb-acts{width:100%;flex-wrap:wrap}.cl-lb .lb-btn{flex:1 1 auto}}
 .cl-lb .lb-info{flex:1;min-width:0}
 .cl-lb .lb-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 12px}

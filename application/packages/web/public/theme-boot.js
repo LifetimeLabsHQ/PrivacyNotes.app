@@ -50,11 +50,12 @@
     return parseInt(hex.slice(1, 3), 16) + ' ' + parseInt(hex.slice(3, 5), 16) + ' ' + parseInt(hex.slice(5, 7), 16);
   };
 
-  var readSnap = function (slot) {
+  var readSnap = function (keySuffix) {
     try {
-      var r = JSON.parse(read('privacynotes.customTheme.' + slot) || 'null');
+      var modeName = keySuffix.slice(keySuffix.lastIndexOf('.') + 1);
+      var r = JSON.parse(read('privacynotes.customTheme.' + keySuffix) || 'null');
       if (!r || typeof r !== 'object' || typeof r.id !== 'string' || !ID.test(r.id)) return null;
-      if (typeof r.code !== 'string' || r.code.length > 512 || r.mode !== slot) return null;
+      if (typeof r.code !== 'string' || r.code.length > 512 || r.mode !== modeName) return null;
       var c = r.colors;
       if (!c || typeof c !== 'object') return null;
       for (var k = 0; k < TOKENS.length; k++) {
@@ -71,15 +72,14 @@
 
   var legacy = read('privacynotes.colorTheme');
   if (legacy === 'cool-white') legacy = 'slate';
+  var rawSpace = read('privacynotes.theme.space');
+  var space = rawSpace === 'personal' || rawSpace === 'work' ? rawSpace : null;
   var rules = [];
   var bg = DEFAULT_BG[theme];
 
-  var slots = ['light', 'dark'];
-  for (var s = 0; s < slots.length; s++) {
-    var slot = slots[s];
-    var stored = read('privacynotes.colorTheme.' + slot);
+  var paintSlot = function (slot, stored, snapSuffix) {
     if (stored && stored.indexOf('custom:') === 0) {
-      var snap = readSnap(slot);
+      var snap = readSnap(snapSuffix);
       if (snap && stored === 'custom:' + snap.id) {
         root.classList.add('theme-custom-' + slot);
         if (snap.logo) root.classList.add('logo-' + slot + '-' + snap.logo);
@@ -92,13 +92,29 @@
         var sel = slot === 'dark' ? ':root.dark.theme-custom-dark' : ':root:not(.dark).theme-custom-light';
         rules.push(sel + '{' + decls.join(';') + '}');
         if (slot === theme) bg = snap.colors['surface-0'];
+        return true;
       }
-    } else if (stored === 'default') {
-      /* explicit default beats legacy */
-    } else if (stored && BUILTIN[slot][stored]) {
+      return false;
+    }
+    if (stored === 'default') return true;
+    if (stored && BUILTIN[slot][stored]) {
       root.classList.add('theme-' + stored);
       if (slot === theme) bg = BUILTIN[slot][stored];
-    } else if (legacy && BUILTIN[slot][legacy]) {
+      return true;
+    }
+    return false;
+  };
+
+  var slots = ['light', 'dark'];
+  for (var s = 0; s < slots.length; s++) {
+    var slot = slots[s];
+    if (space) {
+      var spaceStored = read('privacynotes.colorTheme.' + space + '.' + slot);
+      if (spaceStored && paintSlot(slot, spaceStored, space + '.' + slot)) continue;
+    }
+    var stored = read('privacynotes.colorTheme.' + slot);
+    if (paintSlot(slot, stored, slot)) continue;
+    if (legacy && BUILTIN[slot][legacy]) {
       root.classList.add('theme-' + legacy);
       if (slot === theme) bg = BUILTIN[slot][legacy];
     }

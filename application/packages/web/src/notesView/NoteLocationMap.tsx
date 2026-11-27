@@ -4,9 +4,9 @@
  * on the boot path or before the click.
  *
  * The tiles come in byte ranges from one world file on our own host
- * (`mapSource()` in noteLocation.ts, which returns nothing in the demo), so no
- * third party sees the request; our host sees the area. Nothing about the
- * map is stored: closing the popover removes it.
+ * (`mapSource()` in noteLocation.ts, which returns `MAP_ORIGIN` in the demo
+ * too), so no third party sees the request; our host sees the area. Nothing
+ * about the map is stored: closing the popover removes it.
  *
  * No MapLibre control is drawn, because each one brings English text of its
  * own: the zoom buttons are ours (the media viewer's strings), and the credit
@@ -16,50 +16,19 @@
  * the map. In a note's text MapLibre's cooperative gestures keep the note's
  * scroll: two fingers, or Ctrl/Cmd with the wheel, move the map, and its hint
  * speaks our strings.
- * Spec: docs/internal/plans/note-location.md (section 5)
+ * Spec: docs/internal/specs/note-location.md (section 5)
  */
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Map as MapLibreMap, Marker, addProtocol, setWorkerUrl } from 'maplibre-gl';
+import { Map as MapLibreMap, Marker } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-// MapLibre looks for its worker next to its own module, which bundling moves and
-// which is no http address inside the native apps; the copied file is named here.
-import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
-import { Protocol } from 'pmtiles';
-import { language_script_pairs, layers, namedFlavor } from '@protomaps/basemaps';
 import type { MapSource } from '../noteLocation';
+import { createProtomapsStyle, ensureMapLibreReady, isMapAbortEvent } from '../mapLibreSetup';
 import { MagnifyingGlassMinus, MagnifyingGlassPlus } from '../icons';
 import { CanvasControlBar, IconButton } from '../ui';
 
 /** How long the first draw may take before the map counts as failed. */
 const LOAD_TIMEOUT_MS = 15_000;
-
-const PMTILES_GUARD_KEY = '__pnMapLibrePmtilesReady';
-function ensureSetUp(): void {
-  const host = globalThis as Record<string, unknown>;
-  if (host[PMTILES_GUARD_KEY]) return;
-  setWorkerUrl(workerUrl);
-  const reader = new Protocol();
-  // The reader keeps one archive for each address and, in it, the answer of
-  // every read of the file's header and directories, a failed one too. So a
-  // read that fails takes the archives out, and the next read (Try again, a
-  // place on another note, a map that is still open) asks the host again
-  // instead of getting the same failure until the app reloads. A removed
-  // map aborts its reads, which is no failure of the host.
-  try {
-    addProtocol('pmtiles', async (request, abort) => {
-      try {
-        return await reader.tile(request, abort);
-      } catch (error) {
-        if ((error as { name?: string } | undefined)?.name !== 'AbortError') reader.tiles.clear();
-        throw error;
-      }
-    });
-  } catch {
-    // Another map chunk already registered the pmtiles protocol in this session.
-  }
-  host[PMTILES_GUARD_KEY] = true;
-}
 
 export default function NoteLocationMap({ lat, lng, dark, lang, source, label, pin, scrollZoom, bleed, height, onFail }: {
   lat: number;
@@ -99,24 +68,15 @@ export default function NoteLocationMap({ lat, lng, dark, lang, source, label, p
     let gone = false;
     const fail = (event?: object) => {
       if (failed || loaded || gone) return;
-      if (event && 'error' in event && (event.error as { name?: string } | undefined)?.name === 'AbortError') return;
+      if (isMapAbortEvent(event)) return;
       failed = true;
       failRef.current();
     };
     try {
-      ensureSetUp();
-      const flavor = dark ? 'dark' : 'light';
-      const base = lang.split('-')[0] ?? 'en';
-      const labelLang = language_script_pairs.some((p) => p.lang === base) ? base : 'en';
+      ensureMapLibreReady();
       map = new MapLibreMap({
         container: el,
-        style: {
-          version: 8,
-          glyphs: source.glyphs,
-          sprite: `${source.sprite}/${flavor}`,
-          sources: { protomaps: { type: 'vector', url: source.tiles } },
-          layers: layers('protomaps', namedFlavor(flavor), { lang: labelLang }),
-        },
+        style: createProtomapsStyle(dark, lang, source),
         center: [lng, lat],
         zoom: 14,
         attributionControl: false,

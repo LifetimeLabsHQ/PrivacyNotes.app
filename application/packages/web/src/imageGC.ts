@@ -67,7 +67,7 @@ import { decryptNote, base64ToBytes, type SupabaseClient } from '@notes/shared';
 import { db } from './db';
 import { epochOf, openWithRing } from './keyRing';
 import { isDemoMode } from './demo';
-import { isLocalOnly, isLocalTruthOnly } from './localOnly';
+import { isLocalTruthOnly, isUnsyncedLocalVault } from './localOnly';
 import { readFlushStashBodies } from './flushStash';
 import { isServerWriteBlocked } from './syncPause';
 import { fetchQuotaUsage, recalculateQuota } from './devices';
@@ -485,7 +485,7 @@ async function listBucket(supabase: SupabaseClient, pubkey: string): Promise<Blo
  * leaves it to that reconcile.
  */
 export async function uploadAgainAfterRestore(supabase: SupabaseClient, pubkey: string): Promise<void> {
-  if (isDemoMode() || isLocalOnly() || navigator.onLine === false) return;
+  if (isDemoMode() || isUnsyncedLocalVault() || navigator.onLine === false) return;
   const objects = await listBucket(supabase, pubkey);
   if (objects) await uploadAgainWhatIsMissing(new Set(objects.map((o) => o.uuid)));
 }
@@ -578,7 +578,7 @@ export async function sweepBlobGC(
   // Below the release floor server writes pause (see sync.ts) - and GC
   // deletes are the most dangerous write of all here, because an old client
   // is deleting blobs based on reference rules that may have changed.
-  if (isDemoMode() || isLocalOnly() || isServerWriteBlocked() || navigator.onLine === false) return;
+  if (isDemoMode() || isUnsyncedLocalVault() || isServerWriteBlocked() || navigator.onLine === false) return;
   if (sweepInFlight) return;
   sweepInFlight = true;
 
@@ -790,7 +790,7 @@ export async function reconcileOrphanBlobs(
   imageStore: ImageStore,
 ): Promise<void> {
   // Same release-floor pause as sweepBlobGC above.
-  if (isDemoMode() || isLocalOnly() || isServerWriteBlocked() || navigator.onLine === false) return;
+  if (isDemoMode() || isUnsyncedLocalVault() || isServerWriteBlocked() || navigator.onLine === false) return;
   if (reconcileInFlight) return;
 
   const last = Number(localStorage.getItem(RECONCILE_AT_KEY) ?? 0);
@@ -965,6 +965,23 @@ export async function reconcileOrphanBlobs(
 }
 
 /**
+ * Parse a Postgres ISO-8601 `timestamptz` string into UTC microseconds without
+ * millisecond truncation (so microsecond cursor-advance comparisons never
+ * lose precision or miscompare `Z` vs `+00:00`). Returns null when malformed.
+ */
+function parseIsoMicros(ts: string): bigint | null {
+  const m = ts.match(/^(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2})(?:\.(\d+))?(Z|[+-]\d{2}(?::?\d{2})?)$/);
+  if (!m) return null;
+  const rawTz = m[3]!;
+  // Normalize `+HH` and `+HHMM` offsets to `+HH:MM` so Date.parse succeeds in V8 and JSC.
+  const tz = rawTz.length === 3 ? `${rawTz}:00` : rawTz.length === 5 ? `${rawTz.slice(0, 3)}:${rawTz.slice(3)}` : rawTz;
+  const baseMs = Date.parse(`${m[1]!.replace(' ', 'T')}${tz}`);
+  if (!Number.isFinite(baseMs)) return null;
+  const micros = (m[2] ?? '').padEnd(6, '0').slice(0, 6);
+  return BigInt(baseMs) * 1000n + BigInt(micros);
+}
+
+/**
  * Every blob uuid referenced by any note_version snapshot on the account.
  * Returns null when the set cannot be established - unreadable, oversized, or
  * short-read version data must abort the reconcile rather than let it delete
@@ -1004,21 +1021,33 @@ async function collectVersionBlobRefs(
   const nowMs = opts?.nowMs ?? Date.now();
   const refs = new Set<string>();
   let seen = 0;
-  for (let from = 0; from < count; from += LIST_PAGE) {
-    const { data, error } = await supabase
+  let cursor: { at: string; id: string } | null = null;
+  for (;;) {
+    let query = supabase
       .from('note_versions')
-      .select('ciphertext, nonce, created_at, key_epoch')
-      .eq('user_pubkey', pubkey)
+      .select('id, ciphertext, nonce, created_at, key_epoch')
+      .eq('user_pubkey', pubkey);
+    if (cursor !== null) {
+      // Keyset pagination on (created_at, id) ascending: pruning an older
+      // version on a capped note during the scan never shifts surviving rows
+      // backwards across a page boundary, unlike offset `.range()`.
+      query = query.or(`created_at.gt.${cursor.at},and(created_at.eq.${cursor.at},id.gt.${cursor.id})`);
+    }
+    const { data, error } = await query
       .order('created_at', { ascending: true })
       .order('id', { ascending: true })
-      .range(from, from + LIST_PAGE - 1);
+      .limit(LIST_PAGE);
     if (error) {
       console.warn('[imageGC] reconcile version scan failed:', error.message);
       return null;
     }
-    const rows = (data ?? []) as { ciphertext: string; nonce: string; created_at?: string; key_epoch?: number }[];
+    const rows = (data ?? []) as { id?: string; ciphertext: string; nonce: string; created_at?: string; key_epoch?: number }[];
     if (rows.length === 0) break;
     seen += rows.length;
+    if (seen > VERSION_SCAN_MAX) {
+      console.warn('[imageGC] reconcile skipped - version scan exceeded cap');
+      return null;
+    }
     for (const row of rows) {
       if (maxAgeMs != null && !versionWithinRetention(row.created_at, nowMs, maxAgeMs)) {
         continue;
@@ -1035,6 +1064,29 @@ async function collectVersionBlobRefs(
       for (const id of extractImageIds(body)) refs.add(id);
       for (const id of extractAttachmentIds(body)) refs.add(id);
     }
+    const last = rows[rows.length - 1]!;
+    if (!last.created_at || !last.id) {
+      console.warn('[imageGC] reconcile version scan missing cursor fields');
+      return null;
+    }
+    const lastMicros = parseIsoMicros(last.created_at);
+    if (lastMicros === null) {
+      console.warn('[imageGC] reconcile version scan invalid cursor timestamp');
+      return null;
+    }
+    if (cursor !== null) {
+      const cursorMicros = parseIsoMicros(cursor.at);
+      if (
+        cursorMicros === null ||
+        lastMicros < cursorMicros ||
+        (lastMicros === cursorMicros && last.id <= cursor.id)
+      ) {
+        console.warn('[imageGC] reconcile version scan cursor did not advance');
+        return null;
+      }
+    }
+    cursor = { at: last.created_at, id: last.id };
+    if (rows.length < LIST_PAGE) break;
   }
   if (seen < count) {
     console.warn('[imageGC] reconcile version scan short:', seen, 'of', count);

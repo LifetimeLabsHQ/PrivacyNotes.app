@@ -7,6 +7,7 @@ import type { ExportSource } from '../adminEvents';
 import i18n, { ensureImportLogLoaded } from '../i18n';
 import type { BulkExportResult, ExportStep, ExportStepName, MissingBlob } from '../export';
 import { setExportStep } from '../ExportProgressModal';
+import { holdLockReload } from '../lockReload';
 import { RESTORE_WAIT_LINE, restoreGateNow } from '../pullState';
 import { carriedSettings, remapFolderLooks, settingsAfterRestore } from '../backupRestore';
 import type { ImageStore } from '../imageStore';
@@ -195,10 +196,10 @@ export function useExports({
     runBulkExport('html-zip', (ex) => ex.HTML_ARCHIVE_STEPS, async (signal, onProgress) =>
       (await loadExport()).exportAllHtmlZip(ns, imageStoreRef.current, userSettings.folders, onProgress, attachmentStoreRef.current, signal, fileStem));
   const exportAllJson = (ns: LocalNote[]) =>
-    runExport('json', async () => (await loadExport()).exportAllJson(ns, userSettings.folders, userSettings.itemStyles, userSettings.customThemes, userSettings.factors, userSettings.customHabits));
+    runExport('json', async () => (await loadExport()).exportAllJson(ns, userSettings.folders, userSettings.itemStyles, userSettings.customThemes, userSettings.factors, userSettings.customHabits, userSettings.customIcons));
   const exportEncryptedBackup = (ns: LocalNote[]) =>
     runExport('encrypted', async () =>
-      (await loadExport()).exportEncryptedBackup(ns, auth.encryptionKey, userSettings.folders, userSettings.itemStyles, userSettings.customThemes, userSettings.factors, userSettings.customHabits));
+      (await loadExport()).exportEncryptedBackup(ns, auth.encryptionKey, userSettings.folders, userSettings.itemStyles, userSettings.customThemes, userSettings.factors, userSettings.customHabits, userSettings.customIcons));
   const exportVault = (ns: LocalNote[]) =>
     runExport('vault', async () => (await loadExport()).exportVaultBitwarden(ns, userSettings.folders));
   const exportBookmarks = (ns: LocalNote[]) =>
@@ -224,63 +225,69 @@ export function useExports({
     // copy, so it waits for this device's first clean pull (pullState.ts).
     const gate = restoreGateNow();
     if (gate !== 'open') throw new Error(i18n.t(RESTORE_WAIT_LINE[gate]));
-    const buf = new Uint8Array(await file.arrayBuffer());
-    const ex = await loadExport();
-    const backup = foreignPhrase !== undefined
-      ? ex.decryptBackupWithForeignPhrase(buf, foreignPhrase)
-      : ex.decryptBackup(buf, auth.encryptionKey);
-    recordAdminEvent(supabase, 'import', 'encrypted');
-    // v3 backups carry the folder definitions, their looks and the custom
-    // themes; merged before the notes so the restored notes' folderId
-    // pointers resolve to a real tree (backupRestore.ts).
-    mutateSettings((prev) => settingsAfterRestore(prev, backup));
-    const { applyImport } = await import('../import/apply');
-    const parsed = {
-      notes: backup.notes.map((n) => ({
-        // The note's own id, which is what turns this from a second copy of
-        // the vault into a repair of it. Backups written before ids were
-        // carried have none, and those still come in as new notes.
-        ...(typeof n.id === 'string' && n.id ? { id: n.id } : {}),
-        title: n.title,
-        body: n.body,
-        tags: n.tags,
-        createdAt: n.createdAt,
-        updatedAt: n.updatedAt,
-        ...(typeof n.editedAt === 'string' ? { editedAt: n.editedAt } : {}),
-        starred: n.starred === 1,
-        trashed: n.trashed === 1,
-        type: n.type,
-        locked: n.locked === 1,
-        pinProtected: n.pinProtected === 1,
-        trackers: n.trackers,
-        folderId: n.folderId ?? null,
-        archived: n.archived === 1,
-      })),
-      warnings: [],
-      transforms: [],
-      source: 'markdown-folder' as const,
-    };
-    await ensureImportLogLoaded();
-    const result = await applyImport(parsed);
-    if (result.errors.length > 0) throw new Error(result.errors.join('\n'));
-    return {
-      imported: result.imported,
-      updated: result.updated ?? 0,
-      unchanged: result.unchanged ?? 0,
-    };
+    const releaseLockReload = holdLockReload();
+    try {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      const ex = await loadExport();
+      const backup = foreignPhrase !== undefined
+        ? ex.decryptBackupWithForeignPhrase(buf, foreignPhrase)
+        : ex.decryptBackup(buf, auth.encryptionKey);
+      const { applyImport } = await import('../import/apply');
+      const parsed = {
+        notes: backup.notes.map((n) => ({
+          // The note's own id, which is what turns this from a second copy of
+          // the vault into a repair of it. Backups written before ids were
+          // carried have none, and those still come in as new notes.
+          ...(typeof n.id === 'string' && n.id ? { id: n.id } : {}),
+          title: n.title,
+          body: n.body,
+          tags: n.tags,
+          createdAt: n.createdAt,
+          updatedAt: n.updatedAt,
+          ...(typeof n.editedAt === 'string' ? { editedAt: n.editedAt } : {}),
+          starred: n.starred === 1,
+          trashed: n.trashed === 1,
+          type: n.type,
+          locked: n.locked === 1,
+          pinProtected: n.pinProtected === 1,
+          trackers: n.trackers,
+          folderId: n.folderId ?? null,
+          archived: n.archived === 1,
+        })),
+        warnings: [],
+        transforms: [],
+        source: 'privacynotes' as const,
+      };
+      await ensureImportLogLoaded();
+      const result = await applyImport(parsed);
+      if (result.errors.length > 0) throw new Error(result.errors.join('\n'));
+      // Settings have no undo, so v3 backup folders, looks, custom themes, and
+      // trackers merge only after the note transaction succeeds (backupRestore.ts).
+      mutateSettings((prev) => settingsAfterRestore(prev, backup));
+      recordAdminEvent(supabase, 'import', 'encrypted');
+      return {
+        imported: result.imported,
+        updated: result.updated ?? 0,
+        unchanged: result.unchanged ?? 0,
+      };
+    } finally {
+      releaseLockReload();
+    }
   };
 
   /** The looks and custom themes a full backup zip carries, merged as the
    *  .pnbackup restore merges them, with each folder look moved to the id its
    *  folder came back under. */
   const mergeRestoredSettings = (
-    settings: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown },
+    settings: { itemStyles?: unknown; customThemes?: unknown; customIcons?: unknown; themeIcons?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown },
     savedToFinal: ReadonlyMap<string, string>,
   ) =>
     mutateSettings((prev) =>
       settingsAfterRestore(prev, {
         itemStyles: remapFolderLooks(settings.itemStyles, savedToFinal),
         customThemes: settings.customThemes,
+        customIcons: settings.customIcons,
+        themeIcons: settings.themeIcons,
         factors: settings.factors,
         customHabits: settings.customHabits,
         medications: settings.medications,

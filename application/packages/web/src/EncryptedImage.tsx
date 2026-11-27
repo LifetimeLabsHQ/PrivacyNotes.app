@@ -15,7 +15,7 @@
  * core rule recovering the width suffix.
  */
 
-import { useState, useEffect, useRef, useCallback, memo, type PointerEvent as ReactPointerEvent } from 'react';
+import { useState, useEffect, useRef, useCallback, memo, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import { estimateBlobBytes } from './notesViewUtils';
 import { useTranslation } from 'react-i18next';
 import { Node, mergeAttributes } from '@tiptap/core';
@@ -24,14 +24,19 @@ import { NodeSelection, Plugin, PluginKey, type Selection, type Transaction } fr
 import type { EditorView } from '@tiptap/pm/view';
 import type { Node as ProseMirrorNode, Slice } from '@tiptap/pm/model';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import { ArrowsOutSimple, Check, Copy, Download, Notches, TextAlignLeft, TextT, iconCopy, iconDownload } from './icons';
+import { ArrowsOutSimple, Check, Copy, Download, LinkSimple, Notches, Subtitles, TextAlignCenter, TextAlignLeft, TextAlignRight, TextT, X, iconCopy, iconDownload, iconExternal } from './icons';
+import { isImeComposing } from './imeComposing';
+import { isMac, isOpenLinkModifier } from './devices';
+import { openLinkHref } from './editorLinks';
+import { keyText } from './shortcutMatch';
+import { readLinkModifier } from './theme';
 import { pluginsShown } from './onDeviceAi';
 import { canAddText, editorNote, openPluginSheet } from './plugins/pluginDoors';
 import { planIsPro } from './plugins/pluginState';
 import { insertTextAfter, type TextTarget } from './plugins/insertText';
 import { ContextMenu, isTouchContextMenu, useContextMenu } from './ContextMenu';
 import { detectPlatform } from './devices';
-import { Button, DeleteButton, IconButton } from './ui';
+import { DeleteButton, IconButton } from './ui';
 import { IMAGE_WIDTH_MAX, IMAGE_WIDTH_MIN, clampImageWidth } from './imageWidth';
 import { TextField } from './ui/fields';
 import { HoverLabel } from './HoverLabel';
@@ -152,13 +157,44 @@ const IMAGE_WIDTH_LABEL_KEYS: Record<ImageWidth, string> = {
   100: 'image.widthL',
 };
 
+/**
+ * Allowlist a link target attached to an image (#970): http(s), mailto, tel,
+ * fragment, or relative path (for Markdown folder notes). Rejects javascript:,
+ * data:, vbscript:, file:, and any other scheme.
+ */
+function safeImageLinkHref(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const trimmed = raw.replace(/[\u0000-\u001f\u007f]+/g, '').trim();
+  if (!trimmed) return null;
+  const probe = trimmed.replace(/\s/g, '');
+  if (/^(?:https?|mailto|tel):/i.test(probe) || probe.startsWith('#')) return trimmed;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(probe)) return null;
+  return trimmed;
+}
+
+type CaptionAlign = 'left' | 'center' | 'right';
+
+function normalizeCaptionAlign(raw: unknown): CaptionAlign {
+  return raw === 'center' || raw === 'right' ? raw : 'left';
+}
+
 type ImageNodeViewProps = {
   node: {
-    attrs: { src: string; alt: string; title: string; width: number; textAlign?: string | null };
+    attrs: {
+      src: string;
+      alt: string;
+      title: string;
+      captionAlign?: string | null;
+      width: number;
+      textAlign?: string | null;
+      linkHref?: string | null;
+      linkTitle?: string | null;
+    };
   };
   selected: boolean;
   editor: {
     isEditable: boolean;
+    storage: unknown;
     commands: { setNodeSelection: (pos: number) => boolean } & TextTarget['commands'];
     view: { focus: () => void; dom: HTMLElement };
     state: { doc: ProseMirrorNode };
@@ -166,6 +202,7 @@ type ImageNodeViewProps = {
   };
   /** Document position of this image, or undefined once the node is gone. */
   getPos: () => number | undefined;
+  extension?: { options?: { onEditLink?: () => void } };
   updateAttributes: (attrs: Record<string, unknown>) => void;
   deleteNode: () => void;
 };
@@ -241,8 +278,218 @@ function WidthField({ width, onResize }: { width: number; onResize: (w: number) 
 const keepEditorFocus = (e: ReactPointerEvent) => { e.preventDefault(); e.stopPropagation(); };
 
 /**
- * Floating toolbar shown above a selected image.
- * Provides size presets (25/50/75/100%), a percent field, copy, view,
+ * Normalize a caption for single-line CommonMark storage: collapse newlines
+ * into spaces and trim surrounding whitespace. Empty returns null.
+ */
+function normalizeCaption(raw: string): string | null {
+  const clean = raw.replace(/[\r\n]+/g, ' ').trim();
+  return clean.length > 0 ? clean : null;
+}
+
+/**
+ * Inline caption display and editor below the image frame (GitHub #969).
+ *
+ * Takes zero space when no caption is set and the editor is closed. Defaults to
+ * left-aligned text; while editing, shows an auto-growing textarea with a
+ * right-side X clear button and a slim footer bar with Left / Center / Right
+ * alignment toggles. Enter saves; Escape cancels (restoring both text and
+ * alignment); blur commits.
+ */
+function ImageCaption({
+  caption,
+  captionAlign,
+  alignStyle,
+  editing,
+  editable,
+  widthPercent,
+  onStartEdit,
+  onSave,
+  onCancel,
+}: {
+  caption: string;
+  captionAlign: CaptionAlign;
+  alignStyle: CSSProperties | null;
+  editing: boolean;
+  editable: boolean;
+  widthPercent: number;
+  onStartEdit: () => void;
+  onSave: (next: string | null, nextAlign: CaptionAlign, close: boolean) => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation('media');
+  const [draft, setDraft] = useState(caption);
+  const [draftAlign, setDraftAlign] = useState<CaptionAlign>(captionAlign);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const cancelled = useRef(false);
+  const dragHost = useRef<HTMLElement | null>(null);
+
+  const releaseDrag = useCallback(() => {
+    if (dragHost.current) dragHost.current.draggable = true;
+    dragHost.current = null;
+  }, []);
+
+  useEffect(() => releaseDrag, [releaseDrag]);
+
+  // Sync draft when opening editor or when external undo/redo changes caption.
+  useEffect(() => {
+    setDraft(caption);
+    setDraftAlign(captionAlign);
+  }, [caption, captionAlign, editing]);
+
+  const autoSize = useCallback(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    const border = el.offsetHeight - el.clientHeight;
+    el.style.height = '0px';
+    el.style.height = `${el.scrollHeight + border}px`;
+  }, []);
+
+  useEffect(() => {
+    if (!editing) return;
+    cancelled.current = false;
+    const el = inputRef.current;
+    if (!el) return;
+    // Disable draggable on the ProseMirror node host while editing so Firefox
+    // allows text selection inside the textarea (same guard as WidthField).
+    const host = el.closest<HTMLElement>('[draggable="true"]');
+    if (host) {
+      host.draggable = false;
+      dragHost.current = host;
+    }
+    autoSize();
+    el.focus();
+    el.setSelectionRange(el.value.length, el.value.length);
+    return () => releaseDrag();
+  }, [editing, autoSize, releaseDrag]);
+
+  useEffect(() => {
+    if (editing) autoSize();
+  }, [draft, draftAlign, widthPercent, editing, autoSize]);
+
+  if (!editing && !caption) return null;
+
+  if (!editing) {
+    return (
+      <figcaption
+        dir="auto"
+        data-caption-shell=""
+        contentEditable={false}
+        suppressContentEditableWarning
+        className={`pn-image-caption${editable ? ' pn-image-caption-editable' : ''}`}
+        style={{ ...alignStyle, ...(captionAlign !== 'left' ? { textAlign: captionAlign } : null) }}
+        onClick={editable ? (e) => { e.preventDefault(); e.stopPropagation(); onStartEdit(); } : undefined}
+        onPointerDown={editable ? (e) => { e.stopPropagation(); } : undefined}
+      >
+        {caption}
+      </figcaption>
+    );
+  }
+
+  const alignOptions: Array<{ value: CaptionAlign; label: string; Icon: typeof TextAlignLeft }> = [
+    { value: 'left', label: t('editor:align.left'), Icon: TextAlignLeft },
+    { value: 'center', label: t('editor:align.center'), Icon: TextAlignCenter },
+    { value: 'right', label: t('editor:align.right'), Icon: TextAlignRight },
+  ];
+
+  return (
+    <div
+      data-caption-editor=""
+      data-caption-shell=""
+      contentEditable={false}
+      suppressContentEditableWarning
+      className="pn-image-caption-editor"
+      style={alignStyle ?? undefined}
+      onPointerDown={(e) => { e.stopPropagation(); }}
+      onClick={(e) => { e.stopPropagation(); }}
+    >
+      <div className="pn-image-caption-field">
+        <textarea
+          ref={inputRef}
+          dir="auto"
+          rows={1}
+          value={draft}
+          placeholder={t('image.captionPlaceholder')}
+          aria-label={t('image.captionLabel')}
+          className={`pn-image-caption-input${draft ? ' has-clear' : ''}${draft && draftAlign === 'center' ? ' is-centered' : ''}`}
+          style={draftAlign !== 'left' ? { textAlign: draftAlign } : undefined}
+          onChange={(e) => {
+            setDraft(e.target.value.replace(/[\r\n]+/g, ' '));
+          }}
+          onBlur={() => {
+            releaseDrag();
+            if (cancelled.current) {
+              cancelled.current = false;
+              return;
+            }
+            onSave(normalizeCaption(draft), draftAlign, true);
+          }}
+          onKeyDown={(e) => {
+            if (isImeComposing(e)) return;
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              e.stopPropagation();
+              onSave(normalizeCaption(draft), draftAlign, true);
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              e.stopPropagation();
+              cancelled.current = true;
+              setDraft(caption);
+              setDraftAlign(captionAlign);
+              onCancel();
+            }
+          }}
+        />
+        {draft && (
+          <button
+            type="button"
+            aria-label={t('image.captionClearAria')}
+            className="pn-image-caption-clear"
+            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDraft('');
+              onSave(null, draftAlign, false);
+              inputRef.current?.focus();
+            }}
+          >
+            <X />
+          </button>
+        )}
+      </div>
+      <div className="pn-image-caption-bar">
+        <div className="pn-image-caption-align" role="group" aria-label={t('editor:toolbar.align')}>
+          {alignOptions.map(({ value, label, Icon }) => (
+            <HoverLabel key={value} label={label} position="below-start">
+              <button
+                type="button"
+                aria-label={label}
+                aria-pressed={draftAlign === value}
+                className={`pn-image-caption-align-btn${draftAlign === value ? ' active' : ''}`}
+                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDraftAlign(value);
+                  inputRef.current?.focus();
+                }}
+              >
+                <Icon size={14} aria-hidden="true" />
+              </button>
+            </HoverLabel>
+          ))}
+        </div>
+        <span className="pn-image-caption-hint">{t('image.captionHint')}</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Floating toolbar shown on a selected image.
+ * Provides size presets (25/50/75/100%), a percent field, copy, caption, view,
  * download, and delete. `onDownload` is null for a picture the app cannot
  * save, and the bar then has no Download.
  */
@@ -251,6 +498,11 @@ function ImageToolbar({
   onResize,
   onCopy,
   copied,
+  hasLink,
+  onLink,
+  hasCaption,
+  editingCaption,
+  onCaption,
   onView,
   onDownload,
   onDelete,
@@ -260,6 +512,11 @@ function ImageToolbar({
   onResize: (w: number) => void;
   onCopy: () => void;
   copied: boolean;
+  hasLink: boolean;
+  onLink: (() => void) | null;
+  hasCaption: boolean;
+  editingCaption: boolean;
+  onCaption: () => void;
   onView: () => void;
   onDownload: (() => void) | null;
   onDelete: () => void;
@@ -298,16 +555,41 @@ function ImageToolbar({
       >
         {copied ? <Check /> : <Copy />}
       </IconButton>
+      {onLink && (
+        <IconButton
+          label={hasLink ? t('editor:link.menuEdit') : t('editor:toolbar.addLink')}
+          keys={keyText('insertLink')}
+          active={hasLink}
+          onPointerDown={keepEditorFocus}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onLink(); }}
+        >
+          <LinkSimple />
+        </IconButton>
+      )}
+      <HoverLabel label={hasCaption ? t('image.captionEditAria') : t('image.captionAddAria')} position="above">
+        <button
+          type="button"
+          aria-label={hasCaption ? t('image.captionEditAria') : t('image.captionAddAria')}
+          aria-pressed={hasCaption || editingCaption}
+          className={`pn-image-toolbar-btn${hasCaption || editingCaption ? ' active' : ''}`}
+          onPointerDown={keepEditorFocus}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onCaption(); }}
+        >
+          <Subtitles aria-hidden="true" />
+          <span className="pn-image-toolbar-btn-text">{t('image.captionLabel')}</span>
+        </button>
+      </HoverLabel>
       {/* One labelled button, not two bare icons: nobody found those (owner, 2026-11-18). */}
       {onText && (
-        <Button
-          variant="primary"
-          icon={<TextT />}
+        <button
+          type="button"
+          className="pn-image-toolbar-btn"
           onPointerDown={keepEditorFocus}
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onText(e.currentTarget); }}
         >
-          {t('text')}
-        </Button>
+          <TextT aria-hidden="true" />
+          <span className="pn-image-toolbar-btn-text">{t('text')}</span>
+        </button>
       )}
       <div className="pn-image-toolbar-divider" />
       <IconButton
@@ -349,11 +631,16 @@ const EncryptedImageView = memo(function EncryptedImageView({
   selected,
   editor,
   getPos,
+  extension,
   updateAttributes,
   deleteNode,
 }: ImageNodeViewProps) {
   const { t } = useTranslation('media');
-  const { src, alt, width, textAlign } = node.attrs;
+  const { src, alt, title, captionAlign: rawCaptionAlign, width, textAlign, linkHref, linkTitle } = node.attrs;
+  const caption = typeof title === 'string' ? title : '';
+  const captionAlign = normalizeCaptionAlign(rawCaptionAlign);
+  const safeHref = safeImageLinkHref(linkHref);
+  const hoverTitle = typeof linkTitle === 'string' && linkTitle ? linkTitle : undefined;
   const source = blobSource(src);
   // What Download can save: a stored picture, or one the app ships, which a
   // starter note names by its path. Any other address is never fetched, so
@@ -374,6 +661,7 @@ const EncryptedImageView = memo(function EncryptedImageView({
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
   const [loading, setLoading] = useState(!cachedUrl);
+  const [editingCaption, setEditingCaption] = useState(false);
   // True once a person taps this image, and what the size/download/delete bar
   // hangs on. It separates an image someone chose from the one ProseMirror
   // seeds a note with when that note opens on an image.
@@ -385,7 +673,8 @@ const EncryptedImageView = memo(function EncryptedImageView({
   // reports a hover-capable pointer and still has an on-screen keyboard, so it
   // took the desktop branch below and lost its selection to the keyboard.
   const softPress = useRef(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // ProseMirror can hand this view another picture (an undo that brings a
@@ -537,8 +826,8 @@ const EncryptedImageView = memo(function EncryptedImageView({
     if (e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
-    const box = wrapperRef.current;
-    const column = box?.parentElement?.getBoundingClientRect().width;
+    const box = frameRef.current ?? wrapperRef.current;
+    const column = wrapperRef.current?.getBoundingClientRect().width;
     if (!box || !column) return;
     const boxRect = box.getBoundingClientRect();
     const handleRect = e.currentTarget.getBoundingClientRect();
@@ -591,13 +880,42 @@ const EncryptedImageView = memo(function EncryptedImageView({
   // The clipboard write starts inside the click, which WebKit requires.
   const handleCopy = useCallback(() => {
     if (!objectUrl) return;
-    void copyPictureToClipboard(src, objectUrl, alt).then((ok) => {
+    void copyPictureToClipboard(src, objectUrl, alt, caption, safeHref ?? undefined, hoverTitle, captionAlign).then((ok) => {
       setCopyFailed(!ok);
       if (!ok) return;
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
-  }, [src, objectUrl, alt]);
+  }, [src, objectUrl, alt, caption, safeHref, hoverTitle, captionAlign]);
+
+  const onEditLink = extension?.options?.onEditLink;
+  const handleEditLink = useCallback(() => {
+    if (!editor.isEditable || !onEditLink) return;
+    const pos = getPos();
+    if (typeof pos === 'number') editor.commands.setNodeSelection(pos);
+    onEditLink();
+  }, [editor, getPos, onEditLink]);
+
+  const handleStartCaption = useCallback(() => {
+    if (!editor.isEditable) return;
+    const pos = getPos();
+    if (typeof pos === 'number') editor.commands.setNodeSelection(pos);
+    setEditingCaption(true);
+  }, [editor, getPos]);
+
+  const handleSaveCaption = useCallback((next: string | null, nextAlign: CaptionAlign, close: boolean) => {
+    const cur = caption || null;
+    const nextStoredAlign = next && nextAlign !== 'left' ? nextAlign : null;
+    const curStoredAlign = rawCaptionAlign === 'center' || rawCaptionAlign === 'right' ? rawCaptionAlign : null;
+    if (next !== cur || nextStoredAlign !== curStoredAlign) {
+      updateAttributes({ title: next, captionAlign: nextStoredAlign });
+    }
+    if (close) setEditingCaption(false);
+  }, [caption, rawCaptionAlign, updateAttributes]);
+
+  const handleCancelCaption = useCallback(() => {
+    setEditingCaption(false);
+  }, []);
 
   const handleView = useCallback(() => {
     const pos = getPos();
@@ -655,7 +973,10 @@ const EncryptedImageView = memo(function EncryptedImageView({
     // Selected, so the bar shows and a failed copy or save can say so.
     if (editor.isEditable && typeof pos === 'number') editor.commands.setNodeSelection(pos);
     menu.open(e, [
+      ...(safeHref ? [{ label: i18n.t('editor:link.menuOpen'), icon: iconExternal(), onSelect: () => openLinkHref(editor, safeHref) }] : []),
+      ...(editor.isEditable && onEditLink ? [{ label: safeHref ? i18n.t('editor:link.menuEdit') : i18n.t('editor:toolbar.addLink'), icon: <LinkSimple size={14} />, onSelect: handleEditLink }] : []),
       { label: t('image.copyAria'), icon: iconCopy(), onSelect: handleCopy },
+      ...(editor.isEditable ? [{ label: caption ? t('image.captionEditAria') : t('image.captionAddAria'), icon: <Subtitles size={14} />, onSelect: handleStartCaption }] : []),
       { label: t('image.viewAria'), icon: <ArrowsOutSimple size={14} />, onSelect: handleView },
       ...(pluginsShown() ? textRows() : []),
       ...(canSave ? [{ label: t('image.downloadAria'), icon: iconDownload(), onSelect: () => { void handleDownload(); } }] : []),
@@ -684,7 +1005,17 @@ const EncryptedImageView = memo(function EncryptedImageView({
   // the selection behind us. Setting the same NodeSelection twice is a no-op,
   // so mouse behavior is unchanged.
   // Fix: GitHub #240 (image options do not appear on Android)
-  const handleSelect = useCallback(() => {
+  const handleSelect = useCallback((e: React.MouseEvent) => {
+    // A linked image opens its URL on Cmd/Ctrl+click while editing so plain
+    // click still selects the photo and reveals the toolbar (#970). In a
+    // read-only note, plain click follows the link unless "Open links with
+    // Cmd/Ctrl-click" is on, matching text links.
+    if (safeHref && (isOpenLinkModifier(e.nativeEvent) || (!editor.isEditable && !readLinkModifier()))) {
+      e.preventDefault();
+      e.stopPropagation();
+      openLinkHref(editor, safeHref);
+      return;
+    }
     // A note nobody can edit has no caret for a click to place and no bar to
     // show, so the click is free to open the picture.
     if (!editor.isEditable) {
@@ -702,7 +1033,7 @@ const EncryptedImageView = memo(function EncryptedImageView({
     // tell an image a person chose from the one the initial selection landed
     // on.
     if (!softPress.current) editor.view.focus();
-  }, [editor, getPos, handleView]);
+  }, [editor, getPos, handleView, safeHref]);
 
   // Arm the keyboard suppression as the press starts, while there is still
   // time for it to count. Skipping focus below is not enough once the editor
@@ -742,7 +1073,9 @@ const EncryptedImageView = memo(function EncryptedImageView({
     const close = (e: Event) => {
       // `globalThis` qualified because `Node` in this file is TipTap's.
       const target = e.target instanceof globalThis.Node ? e.target : null;
-      if (!target || !wrapperRef.current?.contains(target)) {
+      const inFrame = frameRef.current?.contains(target);
+      const inCaption = wrapperRef.current?.querySelector('[data-caption-shell]')?.contains(target);
+      if (!target || (!inFrame && !inCaption)) {
         setTapped(false);
         // An Escape that closes the bar is the bar's, as a menu's is: it must
         // not also close the note through the app's Escape cascade.
@@ -762,22 +1095,45 @@ const EncryptedImageView = memo(function EncryptedImageView({
 
   // Width style - percentage of container; the handle's width while it drags.
   const widthPercent = dragWidth ?? clampImageWidth(width) ?? IMAGE_WIDTH_MAX;
-  // Alignment moves the whole box, the same way an aligned list item does
-  // (ui-patterns.md section 65): the container is already capped by the
-  // width preset, so auto margins are all it takes. At 100% there is no
-  // slack to move into, which is why alignment reads as a no-op on L.
+  const hasCaptionBox = Boolean(objectUrl && !error && (caption || (editingCaption && editor.isEditable)));
+
+  // Mirror the rendered photo frame's actual width into `--pn-frame-w` only
+  // when a caption (or its editor) is visible, so wide/tall-clamped photos
+  // keep captions edge-matched while small photos can breathe up to 360px
+  // without trapping text in a narrow column (#969).
+  useEffect(() => {
+    const container = wrapperRef.current;
+    const frame = frameRef.current;
+    if (!container || !frame || !hasCaptionBox) {
+      container?.style.removeProperty('--pn-frame-w');
+      return;
+    }
+    const sync = () => {
+      const w = frame.getBoundingClientRect().width;
+      if (w > 0) container.style.setProperty('--pn-frame-w', `${Math.round(w)}px`);
+    };
+    sync();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(sync);
+    ro.observe(frame);
+    return () => { ro.disconnect(); };
+  }, [hasCaptionBox, objectUrl, widthPercent]);
+
+  // Alignment moves the photo frame (and caption shell) via auto margins, the
+  // same way an aligned list item does (ui-patterns.md section 65). At 100%
+  // there is no slack to move into, which is why alignment reads as a no-op on L.
   // rtl-ok: textAlign is the persisted physical value from ALIGNMENT_VALUES
   // (editorAlignment.ts) - swapping these to logical margins is exactly the
   // open decision rtl-handoff.md section 3d flags as unresolved (does
   // textAlign:'left' mean "left" or "start"?), not a mechanical rename.
-  const alignStyle =
+  const alignStyle: CSSProperties | null =
     textAlign === 'center' ? { marginLeft: 'auto', marginRight: 'auto' } // rtl-ok: see above
     : textAlign === 'right' ? { marginLeft: 'auto', marginRight: '0' } // rtl-ok: see above
     : null;
 
   return (
     <NodeViewWrapper
-      className={`pn-image-node ${selected || tapped ? 'ProseMirror-selectednode' : ''}${tapped ? ' pn-image-tapped' : ''}`}
+      className={`pn-image-node ${selected || tapped ? 'ProseMirror-selectednode' : ''}${tapped ? ' pn-image-tapped' : ''}${caption || editingCaption ? ' pn-image-has-caption' : ''}`}
       // `draggable: true` on the node spec is necessary but NOT sufficient for
       // a React node view: TipTap only starts a drag from an element carrying
       // data-drag-handle, and without one the spec flag does nothing at all.
@@ -787,10 +1143,10 @@ const EncryptedImageView = memo(function EncryptedImageView({
       // not pre-empt this one.
       data-drag-handle
     >
-      <div
+      <figure
         ref={wrapperRef}
-        className={`pn-image-container${dragWidth !== null ? ' pn-image-resizing' : ''}`}
-        style={{ maxWidth: `${widthPercent}%`, ...alignStyle }}
+        className="pn-image-container"
+        style={{ '--pn-img-w': `${widthPercent}%` } as CSSProperties}
       >
         {loading && (
           <div className="flex items-center justify-center bg-track rounded-md p-8 text-pn-muted text-body">
@@ -818,69 +1174,121 @@ const EncryptedImageView = memo(function EncryptedImageView({
           <Callout tone="danger">{error}</Callout>
         )}
         {objectUrl && !error && (
-          <img
-            src={objectUrl}
-            alt={alt || ''}
-            // Rounded in both states: the bar rests on the image rather than
-            // under it, so there is no seam that would need the bottom corners
-            // squared. See .pn-image-toolbar in index.css.
-            className="rounded-md"
-            draggable={false}
-            // Click, not pointerdown: a drag of the image never produces one,
-            // so grabbing the node to move it does not also select it.
-            onClick={handleSelect}
-            onPointerDown={handlePointerDown}
-            onMouseDown={handleMouseDown}
-            onContextMenu={handleContextMenu}
-          />
+          <div
+            ref={frameRef}
+            className={`pn-image-frame${dragWidth !== null ? ' pn-image-resizing' : ''}`}
+            style={{ maxWidth: `${widthPercent}%`, ...alignStyle }}
+            data-link-href={safeHref ?? undefined}
+            data-title={safeHref ? hoverTitle : undefined}
+          >
+            <img
+              src={objectUrl}
+              alt={alt || ''}
+              // Matches .pn-image-frame's 8px radius so the selection outline
+              // follows every corner cleanly without peeking past the image.
+              className="rounded-lg"
+              draggable={false}
+              // Click, not pointerdown: a drag of the image never produces one,
+              // so grabbing the node to move it does not also select it.
+              onClick={handleSelect}
+              onPointerDown={handlePointerDown}
+              onMouseDown={handleMouseDown}
+              onContextMenu={handleContextMenu}
+            />
+            {safeHref && (
+              <div
+                className={`pn-image-link-badge-wrap${textAlign === 'right' ? ' pn-image-link-badge-right' : ''}`}
+                contentEditable={false}
+                suppressContentEditableWarning
+              >
+                <HoverLabel
+                  label={t('editor:link.menuOpen')}
+                  keys={isMac() ? '⌘-click' : 'Ctrl-click'}
+                  position={(textAlign === 'right') !== (document.documentElement.dir === 'rtl') ? 'start' : 'end'}
+                >
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    aria-label={t('editor:link.menuOpen')}
+                    className="pn-image-link-badge"
+                    onPointerDown={keepEditorFocus}
+                    onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      openLinkHref(editor, safeHref);
+                    }}
+                  >
+                    <LinkSimple size={13} aria-hidden="true" />
+                  </button>
+                </HoverLabel>
+              </div>
+            )}
+            {(selected || tapped) && editor.isEditable && (
+              <>
+                {/* A button so ProseMirror leaves its events alone (TipTap's
+                    NodeView.stopEvent); out of the Tab order, since the percent
+                    field does the same job from the keyboard. */}
+                <div className={`pn-image-resize${textAlign === 'right' ? ' pn-image-resize-left' : ''}`}>
+                  {/* The tip sits beside the handle on the picture's side, so it
+                      stays inside the picture's box; hidden while it drags. */}
+                  <HoverLabel
+                    label={t('image.resizeHint')}
+                    position={(textAlign === 'right') !== (document.documentElement.dir === 'rtl') ? 'end' : 'start'}
+                    disabled={dragWidth !== null}
+                  >
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      aria-label={t('image.resizeHint')}
+                      className="pn-resize-plate pn-image-resize-button"
+                      onPointerDown={handleResizeStart}
+                      onPointerMove={handleResizeMove}
+                      onPointerUp={handleResizeEnd}
+                      onPointerCancel={handleResizeEnd}
+                      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                      onDragStart={(e) => e.preventDefault()}
+                    >
+                      <Notches />
+                    </button>
+                  </HoverLabel>
+                </div>
+                {dragWidth !== null && (
+                  <span className={`pn-image-resize-value${textAlign === 'right' ? ' pn-image-resize-left' : ''}`}>
+                    {(dragWidth / 100).toLocaleString(intlLocale(), { style: 'percent' })}
+                  </span>
+                )}
+                <ImageToolbar
+                  width={widthPercent}
+                  onResize={handleResize}
+                  onCopy={handleCopy}
+                  copied={copied}
+                  hasLink={Boolean(safeHref)}
+                  onLink={onEditLink ? handleEditLink : null}
+                  hasCaption={Boolean(caption)}
+                  editingCaption={editingCaption}
+                  onCaption={handleStartCaption}
+                  onView={handleView}
+                  onDownload={canSave ? handleDownload : null}
+                  onDelete={handleDelete}
+                  onText={pluginsShown() ? openTextMenu : null}
+                />
+              </>
+            )}
+          </div>
         )}
         <ContextMenu state={menu.state} onClose={menu.close} />
-        {(selected || tapped) && objectUrl && !error && editor.isEditable && (
-          <>
-            {/* A button so ProseMirror leaves its events alone (TipTap's
-                NodeView.stopEvent); out of the Tab order, since the percent
-                field does the same job from the keyboard. */}
-            <div className={`pn-image-resize${textAlign === 'right' ? ' pn-image-resize-left' : ''}`}>
-              {/* The tip sits beside the handle on the picture's side, so it
-                  stays inside the picture's box; hidden while it drags. */}
-              <HoverLabel
-                label={t('image.resizeHint')}
-                position={(textAlign === 'right') !== (document.documentElement.dir === 'rtl') ? 'end' : 'start'}
-                disabled={dragWidth !== null}
-              >
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  aria-label={t('image.resizeHint')}
-                  className="pn-resize-plate pn-image-resize-button"
-                  onPointerDown={handleResizeStart}
-                  onPointerMove={handleResizeMove}
-                  onPointerUp={handleResizeEnd}
-                  onPointerCancel={handleResizeEnd}
-                  onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                  onDragStart={(e) => e.preventDefault()}
-                >
-                  <Notches />
-                </button>
-              </HoverLabel>
-            </div>
-            {dragWidth !== null && (
-              <span className={`pn-image-resize-value${textAlign === 'right' ? ' pn-image-resize-left' : ''}`}>
-                {(dragWidth / 100).toLocaleString(intlLocale(), { style: 'percent' })}
-              </span>
-            )}
-          </>
-        )}
-        {(selected || tapped) && objectUrl && !error && editor.isEditable && (
-          <ImageToolbar
-            width={widthPercent}
-            onResize={handleResize}
-            onCopy={handleCopy}
-            copied={copied}
-            onView={handleView}
-            onDownload={canSave ? handleDownload : null}
-            onDelete={handleDelete}
-            onText={pluginsShown() ? openTextMenu : null}
+        {objectUrl && !error && (
+          <ImageCaption
+            caption={caption}
+            captionAlign={captionAlign}
+            alignStyle={alignStyle}
+            editing={editingCaption && editor.isEditable}
+            editable={editor.isEditable}
+            widthPercent={widthPercent}
+            onStartEdit={handleStartCaption}
+            onSave={handleSaveCaption}
+            onCancel={handleCancelCaption}
           />
         )}
         {(selected || tapped) && saveFailed && (
@@ -889,14 +1297,18 @@ const EncryptedImageView = memo(function EncryptedImageView({
         {(selected || tapped) && copyFailed && (
           <p className="mt-1 text-small text-danger">{t('image.copyFailed')}</p>
         )}
-      </div>
+      </figure>
     </NodeViewWrapper>
   );
 }, (prev, next) =>
   prev.node.attrs.src === next.node.attrs.src &&
   prev.node.attrs.alt === next.node.attrs.alt &&
+  prev.node.attrs.title === next.node.attrs.title &&
+  prev.node.attrs.captionAlign === next.node.attrs.captionAlign &&
   prev.node.attrs.width === next.node.attrs.width &&
   prev.node.attrs.textAlign === next.node.attrs.textAlign &&
+  prev.node.attrs.linkHref === next.node.attrs.linkHref &&
+  prev.node.attrs.linkTitle === next.node.attrs.linkTitle &&
   prev.selected === next.selected,
 );
 
@@ -1317,11 +1729,25 @@ export function isPictureSelection(sel: Selection): boolean {
  *  the paste reuses the stored picture. `src` is the PNG itself as a `data:`
  *  URL: Word and other office apps paste the HTML before the PNG, and an
  *  object URL only this page can read pasted there as a blank box (#719). */
-export function pictureClipboardHtml(ref: string, src: string, alt: string): string {
+export function pictureClipboardHtml(
+  ref: string,
+  src: string,
+  alt: string,
+  caption?: string,
+  linkHref?: string,
+  linkTitle?: string,
+  captionAlign?: CaptionAlign,
+): string {
   const img = document.createElement('img');
   img.setAttribute('src', src);
   img.setAttribute(IMAGE_REF_ATTR, ref);
   if (alt) img.setAttribute('alt', alt);
+  if (caption) img.setAttribute('data-caption', caption);
+  if (caption && (captionAlign === 'center' || captionAlign === 'right')) {
+    img.setAttribute('data-caption-align', captionAlign);
+  }
+  if (linkHref) img.setAttribute('data-link-href', linkHref);
+  if (linkHref && linkTitle) img.setAttribute('data-link-title', linkTitle);
   return img.outerHTML;
 }
 
@@ -1345,12 +1771,20 @@ async function pictureAsPng(url: string): Promise<Blob> {
  * write starts inside the click while the picture is still being encoded.
  * Resolves false when the platform has no picture clipboard or refuses it.
  */
-export async function copyPictureToClipboard(ref: string, url: string, alt: string): Promise<boolean> {
+export async function copyPictureToClipboard(
+  ref: string,
+  url: string,
+  alt: string,
+  caption?: string,
+  linkHref?: string,
+  linkTitle?: string,
+  captionAlign?: CaptionAlign,
+): Promise<boolean> {
   if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) return false;
   const png = pictureAsPng(url);
   const html = png.then((blob) => new Promise<Blob>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(new Blob([pictureClipboardHtml(ref, String(reader.result), alt)], { type: 'text/html' }));
+    reader.onload = () => resolve(new Blob([pictureClipboardHtml(ref, String(reader.result), alt, caption, linkHref, linkTitle, captionAlign)], { type: 'text/html' }));
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(blob);
   }));
@@ -1954,7 +2388,7 @@ function createImageUploadPlugin(plaintextOnly: boolean, getNoteTitle?: () => st
 // TipTap Extension
 // ------------------------------------------------------------------
 
-export const EncryptedImage = Node.create<{ plaintextOnly: boolean; getNoteTitle?: () => string }>({
+export const EncryptedImage = Node.create<{ plaintextOnly: boolean; getNoteTitle?: () => string; onEditLink?: () => void }>({
   name: 'image',
   group: 'block',
   atom: true,
@@ -1971,7 +2405,47 @@ export const EncryptedImage = Node.create<{ plaintextOnly: boolean; getNoteTitle
           el.getAttribute(IMAGE_REF_ATTR) || el.getAttribute('src'),
       },
       alt: { default: null },
-      title: { default: null },
+      title: {
+        default: null,
+        parseHTML: (el: HTMLElement) => el.getAttribute('data-caption') || el.getAttribute('title') || null,
+        renderHTML: (attrs: Record<string, unknown>) =>
+          attrs['title'] ? { 'data-caption': String(attrs['title']) } : {},
+      },
+      captionAlign: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const v = el.getAttribute('data-caption-align');
+          return v === 'center' || v === 'right' ? v : null;
+        },
+        renderHTML: (attrs: Record<string, unknown>) => {
+          const v = attrs['captionAlign'];
+          return attrs['title'] && (v === 'center' || v === 'right') ? { 'data-caption-align': v } : {};
+        },
+      },
+      linkHref: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const direct = el.getAttribute('data-link-href');
+          if (direct) return safeImageLinkHref(direct);
+          const parentLink = el.parentElement?.tagName === 'A' ? el.parentElement.getAttribute('href') : null;
+          return safeImageLinkHref(parentLink);
+        },
+        renderHTML: (attrs: Record<string, unknown>) => {
+          const href = safeImageLinkHref(typeof attrs['linkHref'] === 'string' ? attrs['linkHref'] : null);
+          return href ? { 'data-link-href': href } : {};
+        },
+      },
+      linkTitle: {
+        default: null,
+        parseHTML: (el: HTMLElement) => {
+          const direct = el.getAttribute('data-link-title');
+          if (direct) return direct;
+          const parentLink = el.parentElement?.tagName === 'A' ? el.parentElement : null;
+          return parentLink?.getAttribute('data-title') || parentLink?.getAttribute('title') || null;
+        },
+        renderHTML: (attrs: Record<string, unknown>) =>
+          attrs['linkHref'] && attrs['linkTitle'] ? { 'data-link-title': String(attrs['linkTitle']) } : {},
+      },
       width: {
         default: 100,
         parseHTML: (el: HTMLElement) => {
@@ -2022,13 +2496,21 @@ export const EncryptedImage = Node.create<{ plaintextOnly: boolean; getNoteTitle
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(EncryptedImageView as never);
+    return ReactNodeViewRenderer(EncryptedImageView as never, {
+      stopEvent: ({ event }) => {
+        const target = event.target as Element | null;
+        if (target?.closest?.('[data-caption-editor]')) {
+          return !/^(dragover|dragenter|dragleave|drop)$/.test(event.type);
+        }
+        return false;
+      },
+    });
   },
 
   addOptions() {
     // True in a Markdown folder note: no picture from a paste, a drop or the
     // toolbar may go to the encrypted store there.
-    return { plaintextOnly: false, getNoteTitle: undefined };
+    return { plaintextOnly: false, getNoteTitle: undefined, onEditLink: undefined };
   },
 
   addProseMirrorPlugins() {
@@ -2045,7 +2527,16 @@ export const EncryptedImage = Node.create<{ plaintextOnly: boolean; getNoteTitle
             closeBlock: (n: unknown) => void;
           },
           node: {
-            attrs: { src: string; alt: string; title: string; width: number; textAlign?: string };
+            attrs: {
+              src: string;
+              alt: string;
+              title: string;
+              captionAlign?: string | null;
+              width: number;
+              textAlign?: string;
+              linkHref?: string | null;
+              linkTitle?: string | null;
+            };
           },
         ) {
           // A pending picture is a paste on its way to the store, never part
@@ -2054,8 +2545,11 @@ export const EncryptedImage = Node.create<{ plaintextOnly: boolean; getNoteTitle
           if ((node.attrs.src || '').startsWith(PENDING_PREFIX)) return;
           const alt = state.esc(node.attrs.alt || '');
           const src = state.esc(node.attrs.src || '');
-          const title = node.attrs.title
-            ? ` "${state.esc(node.attrs.title)}"`
+          const cleanTitle = typeof node.attrs.title === 'string'
+            ? node.attrs.title.replace(/[\r\n]+/g, ' ').trim()
+            : '';
+          const title = cleanTitle
+            ? ` "${cleanTitle.replace(/[\\"]/g, '\\$&')}"`
             : '';
           // Append a `{width=N align=X}` suffix for anything that is not the
           // default, so size and alignment survive the markdown roundtrip.
@@ -2069,8 +2563,20 @@ export const EncryptedImage = Node.create<{ plaintextOnly: boolean; getNoteTitle
           if (node.attrs.width && node.attrs.width !== 100) attrs.push(`width=${node.attrs.width}`);
           const align = node.attrs.textAlign;
           if (align && align !== 'left') attrs.push(`align=${align}`);
+          const capAlign = node.attrs.captionAlign;
+          if (cleanTitle && (capAlign === 'center' || capAlign === 'right')) attrs.push(`caption-align=${capAlign}`);
           const suffix = attrs.length > 0 ? `{${attrs.join(' ')}}` : '';
-          state.write(`![${alt}](${src}${title})${suffix}`);
+          const imgMd = `![${alt}](${src}${title})`;
+          const href = safeImageLinkHref(node.attrs.linkHref);
+          if (href) {
+            const cleanLinkTitle = typeof node.attrs.linkTitle === 'string'
+              ? node.attrs.linkTitle.replace(/[\r\n]+/g, ' ').trim()
+              : '';
+            const lTitle = cleanLinkTitle ? ` "${cleanLinkTitle.replace(/[\\"]/g, '\\$&')}"` : '';
+            state.write(`[${imgMd}](${href.replace(/[\\()"]/g, '\\$&')}${lTitle})${suffix}`);
+          } else {
+            state.write(`${imgMd}${suffix}`);
+          }
           // closeBlock, NOT a trailing "\n" - see the same call in
           // EncryptedAttachment.tsx for what the bare newline cost. Two images
           // in a row hit it identically: consecutive lines became one paragraph
@@ -2079,31 +2585,73 @@ export const EncryptedImage = Node.create<{ plaintextOnly: boolean; getNoteTitle
           state.closeBlock(node);
         },
         parse: {
-          // Register a markdown-it core rule that extracts the `{...}`
-          // attribute block from the text token immediately following an
-          // image token. `width=N` moves into data-width, which this node's
-          // own parseHTML reads; `align=X` becomes an inline text-align
-          // style, which is what the TextAlign extension's global attribute
-          // parses. Both are dropped from the text so the braces never show.
+          // Register a markdown-it core rule that unwraps linked images
+          // `[![alt](src "caption")](href "title")` into `data-link-href` /
+          // `data-link-title` on the image token (#970) and extracts the `{...}`
+          // attribute block (`width=N`, `align=X`) from the text token
+          // immediately following an image token. Both are dropped from text
+          // so the braces never show.
           setup(md: {
-            core: { ruler: { push: (name: string, fn: (state: { tokens: Array<{ type: string; children: Array<{ type: string; content: string; attrSet: (k: string, v: string) => void }> | null }> }) => void) => void } };
+            core: {
+              ruler: {
+                push: (
+                  name: string,
+                  fn: (state: {
+                    tokens: Array<{
+                      type: string;
+                      children: Array<{
+                        type: string;
+                        content: string;
+                        attrGet: (k: string) => string | null;
+                        attrSet: (k: string, v: string) => void;
+                      }> | null;
+                    }>;
+                  }) => void,
+                ) => void;
+              };
+            };
           }) {
+            const applySuffix = (
+              img: { attrSet: (k: string, v: string) => void },
+              next: { type: string; content: string } | undefined,
+            ) => {
+              if (!next || next.type !== 'text') return;
+              const block = next.content.match(/^\{([^}]*)\}/);
+              if (!block) return;
+              const width = block[1]!.match(/\bwidth=(\d+)\b/);
+              const align = block[1]!.match(/(?:^|\s)align=(left|center|right|justify)\b/);
+              const capAlign = block[1]!.match(/(?:^|\s)caption-align=(left|center|right)\b/);
+              if (!width && !align && !capAlign) return;
+              if (width) img.attrSet('data-width', width[1]!);
+              if (align) img.attrSet('style', `text-align: ${align[1]!}`);
+              if (capAlign && (capAlign[1] === 'center' || capAlign[1] === 'right')) {
+                img.attrSet('data-caption-align', capAlign[1]);
+              }
+              next.content = next.content.slice(block[0]!.length);
+            };
             md.core.ruler.push('image_attrs', (state) => {
               for (const blockToken of state.tokens) {
                 const children = blockToken.children;
                 if (!children) continue;
+                // Unwrap `[![alt](src)](href "title")` into image attributes.
+                for (let i = 0; i < children.length - 2; i++) {
+                  const open = children[i]!;
+                  const img = children[i + 1]!;
+                  const close = children[i + 2]!;
+                  if (open.type !== 'link_open' || img.type !== 'image' || close.type !== 'link_close') continue;
+                  const href = safeImageLinkHref(open.attrGet('href'));
+                  const title = open.attrGet('title');
+                  if (href) {
+                    img.attrSet('data-link-href', href);
+                    if (title) img.attrSet('data-link-title', title);
+                  }
+                  children.splice(i + 2, 1);
+                  children.splice(i, 1);
+                }
                 for (let i = 0; i < children.length - 1; i++) {
                   const cur = children[i]!;
-                  const next = children[i + 1]!;
-                  if (cur.type !== 'image' || next.type !== 'text') continue;
-                  const block = next.content.match(/^\{([^}]*)\}/);
-                  if (!block) continue;
-                  const width = block[1]!.match(/\bwidth=(\d+)\b/);
-                  const align = block[1]!.match(/\balign=(left|center|right|justify)\b/);
-                  if (!width && !align) continue;
-                  if (width) cur.attrSet('data-width', width[1]!);
-                  if (align) cur.attrSet('style', `text-align: ${align[1]!}`);
-                  next.content = next.content.slice(block[0]!.length);
+                  if (cur.type !== 'image') continue;
+                  applySuffix(cur, children[i + 1]);
                 }
               }
             });

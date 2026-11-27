@@ -72,22 +72,30 @@ export function StoreUpdateToast() {
 
     if (!IS_STORE_BUILD) return;
     let cancelled = false;
+    let checking = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     /** True when the policy was read, signed, and carried a floor. */
     async function check(): Promise<boolean> {
-      if (cancelled) return false;
-      lastCheckRef.current = Date.now();
+      if (cancelled || checking) return false;
+      checking = true;
+      let reported = false;
       try {
         const fetched = await fetchPolicy(POLICY_URL, IS_IOS ? 'ios' : 'play');
         if (cancelled || !fetched?.signed) return false;
         const { minVersion } = fetched.policy;
         if (typeof minVersion !== 'string') return false;
         reportVersionFloor(minVersion, fetched.issued);
+        reported = true;
         return true;
       } catch {
         // Offline or blocked: keep whatever versionFloor.ts already holds.
         return false;
+      } finally {
+        if (reported || knownVersionFloor() !== null) {
+          lastCheckRef.current = Date.now();
+        }
+        checking = false;
       }
     }
 

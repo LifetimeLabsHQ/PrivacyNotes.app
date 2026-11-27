@@ -4,7 +4,7 @@ import { formatFileSize } from '../attachmentValidation';
 import { contactPhotoOptions, currentImageOptions, processImage } from '../imageProcessing';
 import { withContactPhotoBytes } from '../contactBody';
 import { sniffImageFormat } from '../imageMetadata';
-import { cleanFileName } from '../fileNames';
+import { cleanFileName, cleanMimeType } from '../fileNames';
 import { hasVaultFiles, storedVaultKeys } from '../vaultBody';
 import i18n from '../i18n';
 import type { ImportBlob, ImportedNote, StagedBlob } from './types';
@@ -25,7 +25,7 @@ export function mimeFromExt(path: string): string {
     webp: 'image/webp', svg: 'image/svg+xml', bmp: 'image/bmp', avif: 'image/avif',
     heic: 'image/heic', tiff: 'image/tiff', ico: 'image/x-icon',
     pdf: 'application/pdf', zip: 'application/zip', json: 'application/json',
-    txt: 'text/plain', csv: 'text/csv', md: 'text/markdown',
+    txt: 'text/plain', csv: 'text/csv', md: 'text/markdown', eml: 'message/rfc822',
     doc: 'application/msword',
     docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     xls: 'application/vnd.ms-excel',
@@ -185,7 +185,8 @@ export async function importBlobs(
 
   for (let i = 0; i < entries.length; i++) {
     const [key, blob] = entries[i]!;
-    const { mime, name } = blob;
+    const { name } = blob;
+    const mime = cleanMimeType(blob.mime) || mimeFromExt(name);
     let data = blob.data;
     const isImage = !blob.file && mime.startsWith('image/');
     // Every importer's pictures obey the image switches here, in one place.
@@ -286,13 +287,97 @@ function rewriteVaultFiles(
     const blob = key ? blobs.get(key) : undefined;
     if (!uri?.startsWith('pn:file/') || !blob) return entry;
     changed = true;
-    return `[${cleanFileName(blob.name, 'Attachment')}|${formatFileSize(blob.data.length)}|${blob.mime}](${uri})`;
+    const mime = cleanMimeType(blob.mime) || mimeFromExt(blob.name);
+    return `[${cleanFileName(blob.name, 'Attachment')}|${formatFileSize(blob.data.length)}|${mime}](${uri})`;
   });
   return changed ? JSON.stringify({ ...keys, files }) : null;
 }
 
 /** A placeholder key (`keepimg:a.png`, `mdfile:000001`), never a bare path. */
 const KEY_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
+
+/**
+ * Upgrade plain Markdown links `[label](key)` and `[label](<key>)` to image
+ * syntax `![label](key)` in O(|text|) time without matching escaped `\[` or `\]`
+ * brackets or links already preceded by an unescaped `!`.
+ */
+export function upgradePlainImageLinks(text: string, key: string): string {
+  if (!key || !text.includes(key)) return text;
+  const bareTarget = `](${key})`;
+  const angledTarget = `](<${key}>)`;
+  let nextBare = text.indexOf(bareTarget);
+  let nextAngled = text.indexOf(angledTarget);
+  if (nextBare < 0 && nextAngled < 0) return text;
+
+  let out = '';
+  let last = 0;
+  let scanFloor = 0;
+  let searchFrom = 0;
+
+  while (true) {
+    if (nextBare >= 0 && nextBare < searchFrom) nextBare = text.indexOf(bareTarget, searchFrom);
+    if (nextAngled >= 0 && nextAngled < searchFrom) nextAngled = text.indexOf(angledTarget, searchFrom);
+    if (nextBare < 0 && nextAngled < 0) break;
+
+    const useBare = nextBare >= 0 && (nextAngled < 0 || nextBare <= nextAngled);
+    const closeIdx = useBare ? nextBare : nextAngled;
+    const targetEnd = closeIdx + (useBare ? bareTarget.length : angledTarget.length);
+
+    let slashStart = closeIdx;
+    while (slashStart > scanFloor && text.charCodeAt(slashStart - 1) === 0x5c) {
+      slashStart--;
+    }
+    if (((closeIdx - slashStart) & 1) === 1) {
+      // Escaped `\]` inside a link label; keep `scanFloor` so an enclosing `[...` still resolves.
+      searchFrom = closeIdx + 1;
+      continue;
+    }
+
+    let openIdx = -1;
+    let i = slashStart - 1;
+    while (i >= scanFloor) {
+      const ch = text.charCodeAt(i);
+      if (ch === 0x0a || ch === 0x0d) break;
+      if (ch === 0x5b || ch === 0x5d) {
+        let b = i;
+        while (b > scanFloor && text.charCodeAt(b - 1) === 0x5c) {
+          b--;
+        }
+        if (((i - b) & 1) === 1) {
+          i = b - 1;
+          continue;
+        }
+        if (ch === 0x5b) openIdx = i;
+        break;
+      }
+      i--;
+    }
+
+    if (openIdx < 0) {
+      scanFloor = closeIdx + 1;
+      searchFrom = closeIdx + 2;
+      continue;
+    }
+
+    let alreadyImage = false;
+    if (openIdx > 0 && text.charCodeAt(openIdx - 1) === 0x21) {
+      let b = openIdx - 1;
+      while (b > scanFloor && text.charCodeAt(b - 1) === 0x5c) {
+        b--;
+      }
+      alreadyImage = ((openIdx - 1 - b) & 1) === 0;
+    }
+
+    if (!alreadyImage) {
+      out += `${text.slice(last, openIdx)}![${text.slice(openIdx + 1, closeIdx)}](${key})`;
+      last = targetEnd;
+    }
+    scanFloor = targetEnd;
+    searchFrom = targetEnd;
+  }
+
+  return last === 0 ? text : out + text.slice(last);
+}
 
 /**
  * Swap every stored blob key inside `body` for the `pn:` URI it landed
@@ -319,12 +404,13 @@ function rewriteBlobRefs(
       // another (`favicon.png`) and inside plain text, so it is swapped in
       // link targets alone (beta #152).
       if (KEY_SCHEME.test(key) && out.includes(key)) {
+        out = upgradePlainImageLinks(out, key);
         out = out.split(key).join(uri);
         changed = true;
         continue;
       }
       for (const search of candidates) {
-        const replaced = out.replace(blobRefPattern(search, true), `![$1](${uri})`);
+        const replaced = out.replace(blobRefPattern(search, true), (_m, alt: string) => `![${alt}](${uri})`);
         if (replaced !== out) { out = replaced; changed = true; }
       }
       continue;
@@ -339,15 +425,16 @@ function rewriteBlobRefs(
     const blob = blobs.get(key);
     // The name goes through `cleanFileName`, as a vault item's does: a pipe
     // in it would split the label (beta #199 item 6).
+    const safeMime = blob ? (cleanMimeType(blob.mime) || mimeFromExt(blob.name)) : '';
     const linkText = blob
-      ? `${cleanFileName(blob.name, 'Attachment')}|${formatFileSize(blob.data.length)}|${blob.mime}`
+      ? `${cleanFileName(blob.name, 'Attachment')}|${formatFileSize(blob.data.length)}|${safeMime}`
       : 'Attachment||';
     const replacement = `[${linkText}](${uri})`;
     for (const search of candidates) {
       // `keepAlt: false` tolerates a leading `!` so a mislabelled
       // ![text](path) audio ref still becomes a clean attachment link, not
       // a broken image.
-      const replaced = out.replace(blobRefPattern(search, false), replacement);
+      const replaced = out.replace(blobRefPattern(search, false), () => replacement);
       if (replaced !== out) { out = replaced; changed = true; }
     }
   }

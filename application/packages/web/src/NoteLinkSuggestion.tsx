@@ -28,7 +28,7 @@ import i18n from './i18n';
 import type { Editor, Range } from '@tiptap/core';
 import { PluginKey, type EditorState } from '@tiptap/pm/state';
 import { textMatcher } from './textMatch';
-import { noteLinkKey, noteLinkTarget, resolveNoteLinkMatches } from './noteLinks';
+import { noteLinkKey, noteLinkTarget, parseNoteLinkTarget, resolveNoteLinkMatches } from './noteLinks';
 import { headingsFromDoc, uniqueHeadings, type NoteHeadingsAnswer } from './noteHeadings';
 import { placeAtCaret } from './usePopoverPosition';
 import { OverflowTip } from './OverflowTip';
@@ -39,8 +39,43 @@ import { Divider, SuggestionItem, SuggestionPopup } from './ui';
 /* ------------------------------------------------------------------ */
 
 const TITLES_KEY = '__wikiLinkNoteTitles';
+const STATUS_RESOLVER_KEY = '__wikiLinkStatusResolver';
+const LISTENERS_KEY = '__wikiLinkListeners';
 
-export type NoteTitleEntry = { id: string; title: string };
+export type NoteTitleEntry = {
+  id: string;
+  title: string;
+  /** Target note is archived (muted styling on note-links). */
+  archived?: boolean;
+};
+
+export type WikiLinkStatus = 'active' | 'archived' | 'missing';
+
+export type WikiLinkStatusResolver = (target: string) => WikiLinkStatus;
+
+function notifyWikiLinkListeners(store: Record<string, unknown>) {
+  const listeners = store[LISTENERS_KEY] as Set<() => void> | undefined;
+  if (!listeners) return;
+  for (const fn of listeners) fn();
+}
+
+/** Subscribe a node view to note-title / status-resolver updates on this editor. */
+export function subscribeWikiLinkMeta(
+  editor: { storage: unknown },
+  listener: () => void,
+): () => void {
+  const store = wikiLinkStore(editor);
+  if (!store) return () => {};
+  let listeners = store[LISTENERS_KEY] as Set<() => void> | undefined;
+  if (!listeners) {
+    listeners = new Set();
+    store[LISTENERS_KEY] = listeners;
+  }
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
 
 /** Call from NotesView to pass the current note titles into the extension. */
 export function setWikiLinkNoteTitles(
@@ -50,8 +85,50 @@ export function setWikiLinkNoteTitles(
   titles: NoteTitleEntry[],
 ) {
   if (!editor) return;
-  const store = (editor.storage as Record<string, Record<string, unknown>>).wikiLink;
-  if (store) store[TITLES_KEY] = titles;
+  const store = wikiLinkStore(editor);
+  if (!store || store[TITLES_KEY] === titles) return;
+  store[TITLES_KEY] = titles;
+  notifyWikiLinkListeners(store);
+}
+
+/** Optional host override for resolving note-link status (e.g. shut sections
+ *  or Markdown-folder relative path rules). Pass `undefined` to fall back to
+ *  the default title-list lookup. */
+export function setWikiLinkStatusResolver(
+  editor: { storage: unknown } | null,
+  resolver: WikiLinkStatusResolver | undefined,
+) {
+  if (!editor) return;
+  const store = wikiLinkStore(editor);
+  if (!store || store[STATUS_RESOLVER_KEY] === resolver) return;
+  store[STATUS_RESOLVER_KEY] = resolver;
+  notifyWikiLinkListeners(store);
+}
+
+/** Resolve whether `target` points to an active, archived, or missing note. */
+export function resolveWikiLinkStatus(
+  titles: readonly NoteTitleEntry[] | undefined,
+  target: string,
+  hasNote?: (name: string) => boolean,
+): WikiLinkStatus {
+  if (!titles) return 'active';
+  const { note } = parseNoteLinkTarget(target, hasNote);
+  // Same-note heading link (`[[#Heading]]`) always targets the open note.
+  if (note === '') return 'active';
+  const matches = resolveNoteLinkMatches(titles, note);
+  if (matches.length === 0) return 'missing';
+  return matches.every((m) => m.archived) ? 'archived' : 'active';
+}
+
+/** Current status of a note-link target in this editor. Returns `'active'`
+ *  when the host has not installed a note list (e.g. Note History preview). */
+export function wikiLinkStatus(editor: { storage: unknown }, target: string): WikiLinkStatus {
+  const store = wikiLinkStore(editor);
+  const custom = store?.[STATUS_RESOLVER_KEY] as WikiLinkStatusResolver | undefined;
+  if (custom) return custom(target);
+  const titles = store?.[TITLES_KEY] as NoteTitleEntry[] | undefined;
+  if (!titles) return 'active';
+  return resolveWikiLinkStatus(titles, target, wikiLinkHasNote(editor));
 }
 
 /** Read note titles from extension storage. */

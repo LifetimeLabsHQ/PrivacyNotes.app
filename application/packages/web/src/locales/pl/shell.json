@@ -210,7 +210,7 @@
     "color": "Kolor",
     "colorNone": "Bez koloru",
     "colorUseDefault": "Przywróć domyślne",
-    "icon": "Ikony i loga",
+    "icon": "Ikony / loga / emoji",
     "colorFromFolder": "Z folderu: {{name}}",
     "colorFromTag": "Z tagu: #{{name}}",
     "colorOwnHint": "Kolor wybrany tutaj wypełnia tło tej notatki. <setting>Kolory folderów i tagów</setting> go nie zmieniają.",
@@ -373,6 +373,7 @@
   },
   "demoBanner": {
     "title": "Wypróbuj bez ryzyka",
+    "shortTitle": "Demo",
     "description": "Nic tu nie jest zapisywane. Załóż własny zaszyfrowany notatnik, za darmo."
   },
   "markdown": {
@@ -647,6 +648,10 @@
     "tooLarge": "Za duży. Maksimum to {{limit}} MB na plik.",
     "titlePlaceholder": "Tytuł (opcjonalnie)",
     "notePlaceholder": "Dodaj notatkę...",
+    "taskPlaceholder": "Zadanie...",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "Dopisuje do dzisiejszego wpisu w dzienniku.",
+    "clipFallbackToast": "Nie udało się przechwycić strony. Zapisano ją jako zakładkę.",
     "photoCount": "Zdjęcia: {{count}}"
   },
   "shortcut": {
@@ -1004,7 +1009,8 @@
     "label": "Szybkie dodawanie"
   },
   "offline": {
-    "notLoaded": "Jesteś offline, a ta część aplikacji nie została jeszcze wczytana. Spróbuj ponownie, gdy wrócisz online."
+    "notLoaded": "Jesteś offline, a ta część aplikacji nie została jeszcze wczytana. Spróbuj ponownie, gdy wrócisz online.",
+    "chunkBlocked": "Nie udało się wczytać tego widoku. Odśwież stronę albo sprawdź bloker treści."
   },
   "checkIn": {
     "prompt": "Jak się dziś czujesz?",
@@ -1187,6 +1193,7 @@
     "removed": "Usunięto z pulpitu",
     "showOnHome": "Pokaż na pulpicie",
     "removeFromHome": "Usuń z pulpitu",
+    "openTarget": "Otwórz: {{target}}",
     "resize": "Zmień rozmiar: {{name}}",
     "narrower": "Węziej",
     "taller": "Zwiększ wysokość",
@@ -1194,29 +1201,78 @@
     "moveEarlier": "Przesuń wyżej",
     "moveLater": "Przesuń niżej",
     "chooseNote": "Wybierz notatkę",
+    "chooseNotes": "Wybierz notatki",
     "chooseTag": "Wybierz tag",
+    "chooseTags": "Wybierz tagi",
     "chooseFolder": "Wybierz folder",
+    "chooseFolders": "Wybierz foldery",
     "chooseTracker": "Wybierz tracker",
+    "chooseCounter": "Wybierz licznik",
+    "chooseCounters": "Wybierz liczniki",
+    "chooseTypes": "Wybierz typy elementów",
     "choose": "Wybierz",
     "gone": "Już tego nie ma",
     "otherSpace": "W drugiej przestrzeni",
     "proLocked": "Część Pro",
     "noneToChoose": "Nie ma jeszcze nic do wyboru",
+    "catalogSearch": "Szukaj widżetów",
+    "catalogFilter": "Filtruj widżety",
+    "allWidgets": "Wszystkie widżety",
+    "onHomeLabel": "Na pulpicie",
+    "onHomeCount": "Na pulpicie ({{count}})",
     "headerEvents_one": "{{formatted}} wydarzenie dzisiaj",
+    "headerOverdue_one": "{{formatted}} zaległe",
+    "headerOverdue_few": "{{formatted}} zaległe",
+    "headerOverdue_many": "{{formatted}} zaległych",
     "headerTasks_one": "{{formatted}} otwarte zadanie",
+    "headerDosesLeft_one": "{{formatted}} pozostała dawka",
+    "headerDosesLeft_few": "{{formatted}} pozostałe dawki",
+    "headerDosesLeft_many": "{{formatted}} pozostałych dawek",
     "startToday": "Zacznij dzisiejszy wpis",
+    "setupMedication": "Skonfiguruj leki",
+    "setupCounter": "Utwórz licznik",
+    "counterIncrease": "Dodaj jeden do: {{name}}",
+    "counterDecrease": "Odejmij jeden od: {{name}}",
+    "storageSummary": "Notatki: {{notes}} · pliki: {{files}}",
+    "graphSummary": "Z linkami: {{linked}} · bez linków: {{orphans}}",
+    "placesSummary_one": "{{count}} element z lokalizacją",
+    "quickCapture": {
+      "placeholderJournal": "Dodaj do dzisiejszego dziennika...",
+      "placeholderTask": "Dodaj zadanie...",
+      "placeholderNote": "Napisz szybką notatkę...",
+      "destination": "Gdzie zapisać",
+      "voice": "Nagraj notatkę głosową",
+      "voiceNoteTitle": "Notatka głosowa",
+      "recording": "Nagrywanie {{duration}}",
+      "savingVoice": "Szyfrowanie notatki głosowej...",
+      "savedTo": "Zapisano w: {{title}}",
+      "failed": "Nie udało się teraz zapisać.",
+      "micUnavailable": "Nagrywanie z mikrofonu jest tu niedostępne.",
+      "micDenied": "Odmówiono dostępu do mikrofonu."
+    },
+    "placesSummary_few": "{{count}} elementy z lokalizacją",
+    "placesSummary_many": "{{count}} elementów z lokalizacją",
     "groups": {
-      "keep": "Rzeczy, które przechowujesz"
+      "graph": "Graf i mapy",
+      "keep": "Dodatki"
     },
     "layout": {
       "everyday": "Na co dzień",
       "planner": "Planowanie",
-      "writer": "Pisanie"
+      "writer": "Pisanie",
+      "wellness": "Samopoczucie"
     },
     "w": {
       "checkIn": {
         "name": "Check-in",
         "help": "Jak się dziś czujesz i twoje trackery"
+      },
+      "medication": {
+        "help": "Dzisiejsze dawki, Przyjęty lub Pominięty oraz alerty o uzupełnieniu"
+      },
+      "quickCapture": {
+        "name": "Szybkie dodawanie",
+        "help": "Dodaj tekst lub notatkę głosową prosto z pulpitu"
       },
       "calendar": {
         "help": "Miesiąc z kropkami wpisów i wydarzeń"
@@ -1231,7 +1287,7 @@
       },
       "tasks": {
         "name": "Otwarte zadania",
-        "help": "Nieodhaczone zadania z twoich notatek"
+        "help": "Najpierw zaległe i bieżące zadania, z szybkim dodawaniem"
       },
       "recent": {
         "name": "Ostatnio edytowane",
@@ -1252,9 +1308,19 @@
         "name": "Folder",
         "help": "Najnowsze elementy w jednym folderze"
       },
+      "types": {
+        "name": "Lista elementów",
+        "help": "Najnowsze elementy wybranych typów"
+      },
       "onThisDay": {
         "name": "Tego dnia",
         "help": "Wpisy w dzienniku z wcześniejszych lat"
+      },
+      "graph": {
+        "help": "Mini-mapa na żywo z połączonymi notatkami w Twoim Sejfie"
+      },
+      "places": {
+        "help": "Twoje notatki, wpisy i kontakty z lokalizacją na mapie"
       },
       "week": {
         "help": "Słowa, aktywne dni, elementy i check-iny"
@@ -1269,6 +1335,12 @@
         "name": "Twój rytm",
         "help": "26 tygodni pisania i nastroju"
       },
+      "yearPixels": {
+        "help": "Kolory nastroju z całego roku w jednym spojrzeniu"
+      },
+      "patterns": {
+        "help": "Co najbardziej poprawia lub pogarsza Twój nastrój"
+      },
       "milestone": {
         "name": "Następny kamień milowy",
         "help": "Jak blisko jest następny"
@@ -1276,6 +1348,9 @@
       "tracker": {
         "name": "Tracker",
         "help": "Jeden tracker: jego wartość i jego dni"
+      },
+      "counter": {
+        "help": "Dotknij +1 prosto na pulpicie, aby zwiększyć własny licznik"
       },
       "weekRecap": {
         "help": "Twój tydzień na jednej karcie"
@@ -1289,9 +1364,13 @@
       },
       "birthdays": {
         "help": "Urodziny w najbliższych 30 dniach"
+      },
+      "storage": {
+        "help": "Pierścień Twojej zaszyfrowanej pamięci, z ponownym przeliczeniem"
       }
     },
     "empty": {
+      "medication": "Brak leków do przyjęcia dzisiaj",
       "upcoming": "Nic w najbliższych 7 dniach",
       "tasks": "Brak otwartych zadań",
       "recent": "Nic tu jeszcze nie ma",
@@ -1299,6 +1378,11 @@
       "tag": "Brak elementów z tym tagiem",
       "folder": "W tym folderze nic nie ma",
       "onThisDay": "Brak wpisów z tego dnia we wcześniejszych latach",
+      "graph": "Połącz dwie notatki linkiem, aby zobaczyć tu swój graf",
+      "places": "Dodaj lokalizację do notatki lub kontaktu, aby zobaczyć tu pinezki",
+      "yearPixels": "Zapisuj nastrój, aby pokolorować rok",
+      "patterns": "Zapisuj jeszcze przez kilka dni, aby zauważyć wzorce",
+      "counter": "Nie ma jeszcze trackerów z licznikiem",
       "files": "Nie ma jeszcze plików",
       "bookmarks": "Nie ma jeszcze zakładek",
       "birthdays": "Brak urodzin w najbliższych 30 dniach",

@@ -204,6 +204,7 @@
     "cut": "Retalla",
     "copyAsPlain": "Copia com a text pla",
     "copyAsMarkdown": "Copia com a Markdown",
+    "clearFormatting": "Esborra el format",
     "sortAsc": "Ordena les línies de la A a la Z",
     "sortDesc": "Ordena les línies de la Z a la A"
   },
@@ -279,6 +280,9 @@
   "inlineCode": {
     "copyHint": "{{key}}+clic per copiar"
   },
+  "inlineTag": {
+    "filter": "Filtra per etiqueta"
+  },
   "codeBlock": {
     "copyFailed": "Ha fallat",
     "wrap": "Ajusta les línies llargues",
@@ -308,7 +312,8 @@
     "linkHeading": "Enllaça amb un encapçalament...",
     "headingNotFound": "No s'ha trobat l'encapçalament",
     "headingsLocked": "Desbloqueja aquesta nota per veure'n els encapçalaments",
-    "noHeadings": "Aquesta nota no té encapçalaments"
+    "noHeadings": "Aquesta nota no té encapçalaments",
+    "notFound": "No s'ha trobat la nota"
   },
   "footnote": {
     "placeholder": "Text de la nota",

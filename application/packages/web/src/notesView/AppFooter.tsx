@@ -140,7 +140,10 @@ export function FullFooter({
   const touch = useIsTouchDevice();
   return (
       // data-pn-dock-footer: the docked Settings panel ends above it (#741).
-      <footer data-pn-dock-footer className="hidden [@media(min-width:768px)_and_(min-height:501px)]:flex shrink-0 select-none items-center border-t border-divider text-compact text-pn-muted">
+      // Desktop footer actions keep text-compact labels with --ic-row (18px)
+      // icons so the 20px left anchors (Gear, Storage, Sync) stay subtly
+      // larger without a harsh size jump across the bar.
+      <footer data-pn-dock-footer className="hidden [@media(min-width:768px)_and_(min-height:501px)]:flex shrink-0 select-none items-center border-t border-divider text-compact [--icon-size:var(--ic-row)] text-pn-muted">
         {/* Settings + Sync zone - matches sidebar width. It is a sidebar
             size container too (pn-sidebar in index.css), so a sidebar
             narrower than 230px drops the Settings word for a tip, the way
@@ -150,14 +153,17 @@ export function FullFooter({
             word at 240px too. */}
         {!zenMode && (
           <div className={`pn-sidebar shrink-0 self-stretch hidden lg:flex ${sidebarCollapsed ? 'w-[52px]' : `w-[var(--pn-sidebar-render)] ${gridMode && selected ? 'min-[1400px]:w-[var(--pn-sidebar-render-dock)]' : ''}`}`}>
-            <div className={`flex flex-1 min-w-0 items-center gap-2 px-5 py-1 ${sidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
+            {/* px-4 (16px) plus the p-1 (4px) button padding puts the Gear and
+                Sync glyphs 20px from the sidebar edges - dead-aligned with the
+                sidebar rows and the Help/Rate footer row directly above. */}
+            <div className={`flex flex-1 min-w-0 items-center gap-2 py-1 ${sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-4'}`}>
               <HoverLabel label={t('footer.settings')} keys={keyText('openSettings')} position="above-start" className="flex">
                 <button
                   onClick={() => setShowSettings(true)}
                   aria-label={t('footer.settings')}
                   className="inline-flex items-center justify-center rounded-md p-1 text-accent hover:bg-pn/5 transition"
                 >
-                  <Gear size={22} />
+                  <Gear size={20} />
                 </button>
               </HoverLabel>
               {!sidebarCollapsed && <FooterStatus ready={localReadDone} onOpenSync={openSyncVerify} storage={storage} />}
@@ -179,7 +185,7 @@ export function FullFooter({
                     aria-label={t('footer.settings')}
                     className="inline-flex items-center justify-center rounded-md p-1 text-accent hover:bg-pn/5 transition"
                   >
-                    <Gear size={22} />
+                    <Gear size={20} />
                   </button>
                 </HoverLabel>
                 <FooterStatus ready={localReadDone} onOpenSync={openSyncVerify} storage={storage} />
@@ -225,7 +231,7 @@ export function FullFooter({
             <button
               onClick={() => setShowStats(true)}
               aria-label={t('footer.openStats')}
-              className="inline-flex items-center gap-2 text-compact text-pn-muted hover:text-accent transition whitespace-nowrap"
+              className="inline-flex items-center gap-2 text-pn-muted hover:text-accent transition whitespace-nowrap"
             >
               <ChartBar />
               <StatsReadout stats={footerStats} labels="wide" />
@@ -446,11 +452,11 @@ export function MiniFooter({
         {/* Stats readout - md+ only. Below md the phone row is too tight;
             at md-lg the same three phone controls span a tablet-width row,
             so fill the middle like the desktop footer does. */}
-        <span className="hidden md:flex items-center gap-1.5">
+        <span className="hidden md:flex items-center gap-1.5 [--icon-size:var(--ic-row)]">
         <button
           onClick={() => setShowStats(true)}
           aria-label={t('footer.openStats')}
-          className="inline-flex items-center gap-2 text-compact text-pn-muted hover:text-accent transition whitespace-nowrap"
+          className="inline-flex items-center gap-2 text-pn-muted hover:text-accent transition whitespace-nowrap"
         >
           <ChartBar />
           <StatsReadout stats={footerStats} labels="always" />

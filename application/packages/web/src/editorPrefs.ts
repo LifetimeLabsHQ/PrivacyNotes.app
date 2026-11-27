@@ -1,6 +1,9 @@
 import { useSyncExternalStore } from 'react';
+import { isDemoMode } from './demo';
 import { createListeners } from './listeners';
+import { hasLiveSignIn, signOutMarkLeft } from './liveSignIn';
 import { readFlag } from './localStore';
+import { isTrustedDevice } from './trustStorage';
 
 const TOOLBAR_PREF_KEY = 'privacynotes.editor.toolbarVisible';
 
@@ -97,7 +100,7 @@ export function useLineNumbersPref(): boolean {
  * this screen lays the view out. Never a value of the synced `editorMode`,
  * which an older client would read as its default and sync back. It names
  * no note, so a sign-out keeps it.
- * Spec: docs/internal/plans/heading-folds-and-source-preview.md (Part 2, decision 1)
+ * Spec: docs/internal/specs/heading-folds-and-source-preview.md (Part 2, decision 1)
  */
 const SOURCE_PREVIEW_KEY = 'privacynotes.editor.sourcePreview';
 
@@ -237,8 +240,10 @@ export function writeConnectionsPref(open: boolean) {
  * as fold keys. Device-local and never synced: a fold is how this screen
  * shows the note, not a change to it. Bounded by itself to the notes folded
  * most recently, so nothing grows without end. It names note ids, so a
- * sign-out removes it (clearAccountScopedUiState in authStorage.ts).
- * Spec: docs/internal/plans/heading-folds-and-source-preview.md (Where the fold state lives)
+ * sign-out removes it (clearAccountScopedUiState in authStorage.ts), and only
+ * a live sign-in on a trusted device outside the demo reads or writes it on
+ * disk.
+ * Spec: docs/internal/specs/heading-folds-and-source-preview.md (Where the fold state lives)
  */
 const FOLDS_KEY = 'privacynotes.editor.folds';
 const FOLDS_MAX_NOTES = 500;
@@ -246,16 +251,26 @@ const HASHED_FOLD_KEY = /^[0-9a-f]{8}$/;
 
 type FoldRecord = { k: string[]; t: number };
 
+export function canPersistNoteFolds(): boolean {
+  return !isDemoMode() && hasLiveSignIn() && signOutMarkLeft() === null && isTrustedDevice();
+}
+
 function writeFoldMap(map: Record<string, FoldRecord>) {
+  if (!canPersistNoteFolds()) return;
   try {
-    if (Object.keys(map).length === 0) localStorage.removeItem(FOLDS_KEY);
-    else localStorage.setItem(FOLDS_KEY, JSON.stringify(map));
+    if (Object.keys(map).length === 0) {
+      localStorage.removeItem(FOLDS_KEY);
+    } else {
+      localStorage.setItem(FOLDS_KEY, JSON.stringify(map));
+      if (!canPersistNoteFolds()) localStorage.removeItem(FOLDS_KEY);
+    }
   } catch {
     /* ignore */
   }
 }
 
 function readFoldMap(): Record<string, FoldRecord> {
+  if (!canPersistNoteFolds()) return {};
   try {
     const raw = JSON.parse(localStorage.getItem(FOLDS_KEY) ?? 'null') as unknown;
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
@@ -281,16 +296,19 @@ function readFoldMap(): Record<string, FoldRecord> {
 }
 
 export function readNoteFolds(noteId: string): string[] {
-  const rec = readFoldMap()[noteId];
+  if (!canPersistNoteFolds()) return [];
+  const map = readFoldMap();
+  const rec = Object.hasOwn(map, noteId) ? map[noteId] : undefined;
   return rec && Array.isArray(rec.k) ? rec.k.filter((k): k is string => typeof k === 'string' && HASHED_FOLD_KEY.test(k)) : [];
 }
 
 /** An empty list forgets the note. */
 export function writeNoteFolds(noteId: string, keys: readonly string[]) {
+  if (!canPersistNoteFolds()) return;
   const map = readFoldMap();
   const hashed = keys.filter((k) => HASHED_FOLD_KEY.test(k));
   if (hashed.length === 0) {
-    if (!(noteId in map)) return;
+    if (!Object.hasOwn(map, noteId)) return;
     delete map[noteId];
   } else {
     map[noteId] = { k: hashed, t: Date.now() };

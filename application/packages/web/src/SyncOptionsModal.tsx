@@ -42,6 +42,7 @@ import { AccountLoginsPanel } from './AccountLoginsPanel';
 import { KeyCustodyTab } from './security/KeyCustodyTab';
 import type { UserSettings } from './userSettings';
 import { isDemoMode } from './demo';
+import { useUnsyncedLocalVault } from './localOnly';
 import { DemoAccountTeaser } from './DemoAccountTeaser';
 import { LocalOnlyNotice } from './LocalOnlyNotice';
 import { usePaneTab } from './settingsPaneTab';
@@ -134,7 +135,9 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
   const { t } = useTranslation('settings');
   const { auth, supabase, refreshProStatus, graduateLocalVault } = useAuth();
   const authed = auth.status === 'authenticated' ? auth : null;
-  const localOnly = authed?.localOnly === true;
+  const unregisteredLocalOnly = authed?.localOnly === true;
+  const unsyncedLocalStore = useUnsyncedLocalVault();
+  const localOnly = unregisteredLocalOnly || unsyncedLocalStore;
   // Real App Store / Play prices, already in the user's storefront currency.
   // Null everywhere else, and every use below falls back to the Paddle USD
   // figures. Spec: docs/internal/design-decisions.md (fair global pricing)
@@ -317,14 +320,16 @@ export function SyncOptionsModal({ onClose, onOpenUpgrade, onSignOut, onSyncNow,
     setRestoreBusy(true);
     setRestoreOutcome(null);
     const outcome = await restoreNativePurchases(authed.pubkey);
-    if (!localOnly && (outcome === 'restored' || outcome === 'none')) {
+    if (!unregisteredLocalOnly && (outcome === 'restored' || outcome === 'none')) {
       await refreshProStatus({ silent: true, attempts: 1 });
-      const [q, subs] = await Promise.all([
-        fetchQuotaUsage(supabase, true).catch(() => null),
-        fetchMyStorageSubs(supabase).catch(() => null),
-      ]);
-      if (q) setQuota(q);
-      if (subs) setStorageSubs(subs);
+      if (!localOnly) {
+        const [q, subs] = await Promise.all([
+          fetchQuotaUsage(supabase, true).catch(() => null),
+          fetchMyStorageSubs(supabase).catch(() => null),
+        ]);
+        if (q) setQuota(q);
+        if (subs) setStorageSubs(subs);
+      }
     }
     setRestoreOutcome(outcome);
     setRestoreBusy(false);

@@ -49,7 +49,9 @@
     "biometricHelp": "Touch ID nebo Windows Hello, přes přístupový klíč pro tento prohlížeč. PIN nebo přístupový kód funguje vždy taky.",
     "repeat": "Zadej ho znovu",
     "mismatch": "Neshodují se. Zkus to znovu.",
-    "commonPin": "Tento PIN se dá příliš snadno uhodnout. Zvol jiný."
+    "commonPin": "Tento PIN se dá příliš snadno uhodnout. Zvol jiný.",
+    "pinHint": "Nejrychlejší odemknutí. 10 chybných pokusů odpojí rozšíření.",
+    "passcodeHint": "8+ znaků, hůř se uhodne."
   },
   "clip": {
     "selection": "Výběr",

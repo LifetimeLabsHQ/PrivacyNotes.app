@@ -24,7 +24,7 @@ import { readPrefs } from './prefs';
 import { deriveProof } from './proof';
 import { activeTab } from './tabs';
 import { notSavedEdits, overlayPending, readPending, rekeyPending, writePending, type NotSavedEdit } from './pending';
-import { PASSKEY_COUNT_KEY } from './passkeyDoor';
+import { clearNoMatchHolds, PASSKEY_COUNT_KEY } from './passkeyDoor';
 import { passkeysReleased } from './passkeyRelease';
 import { enqueue, flush, queuedIds } from './queue';
 
@@ -168,6 +168,7 @@ export async function unlock(input: { secret: string } | { proof: Uint8Array }):
   const kext = await halfFor((await readConnection()) ?? connection, answer.body.half_id);
   const p = joinLoginsKey(kext, base64ToBytes(answer.body.ksrv));
   await browser.storage.session.set({ [SESSION_KEY]: { p: bytesToBase64(p), tag: answer.body.key_tag, ticket, pro: answer.body.pro === true } });
+  if (passkeysReleased()) void clearNoMatchHolds().catch(() => undefined);
   if (needsFreshHalf(answer.body)) await sendFreshHalf().catch(() => undefined);
   // Not a secret: only whether the generator offers the passphrase while locked.
   await browser.storage.local.set({ [PRO_HINT_KEY]: answer.body.pro === true });

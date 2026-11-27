@@ -108,30 +108,45 @@ export function Callout({ tone = 'info', title, action, look = 'tint', className
  * use: a strip across the top of a pane for a state of the whole app or account (storage full, sync paused, a pending Pro activation, a move): the tone's icon, one sentence, an optional `action` (a `Button`) and an optional dismiss (`onDismiss`).
  * never: a strip of your own with an underlined text link; a banner inside a window (use Callout).
  */
-export function Banner({ tone = 'warning', icon, action, onDismiss, dismissLabel, children }: {
+export function Banner({ tone = 'warning', icon, action, onDismiss, dismissLabel, compactMobile = false, children }: {
   tone?: Tone;
   icon?: Icon;
   action?: ReactNode;
   onDismiss?: () => void;
   dismissLabel?: string;
+  /** Keep icon, short message and actions on one row on phones, hiding the
+   *  dismiss word behind its icon so the bar stays compact. */
+  compactMobile?: boolean;
   children: ReactNode;
 }) {
   const { t } = useTranslation('common');
   const Glyph = icon ?? GLYPH[tone];
+  const dismissText = dismissLabel ?? t('updateToast.dismiss');
   return (
     <div
       role={tone === 'danger' ? 'alert' : 'status'}
-      className={`shrink-0 select-none flex flex-wrap items-center gap-3 border-b px-4 py-2 text-compact text-pn ${BOX[tone]}`}
+      className={`shrink-0 select-none flex items-center border-b py-2 text-compact text-pn ${
+        compactMobile ? 'flex-nowrap sm:flex-wrap gap-2 sm:gap-3 px-3 sm:px-4' : 'flex-wrap gap-3 px-4'
+      } ${BOX[tone]}`}
     >
       {/* As in Callout: on a phone the buttons wrap below the message and
-          line up with its text. */}
-      <div className="flex min-w-0 flex-[1_1_20rem] items-start gap-3">
-        <Glyph className={`mt-0.5 shrink-0 ${INK[tone]}`} aria-hidden="true" />
+          line up with its text (except compactMobile banners, which carry a
+          short mobile label and stay on one row). */}
+      <div className={`flex min-w-0 ${
+        compactMobile ? 'flex-1 sm:flex-[1_1_20rem] items-center sm:items-start gap-2 sm:gap-3' : 'flex-[1_1_20rem] items-start gap-3'
+      }`}>
+        <Glyph className={`${compactMobile ? 'sm:mt-0.5' : 'mt-0.5'} shrink-0 ${INK[tone]}`} aria-hidden="true" />
         <div className="min-w-0 flex-1">{children}</div>
       </div>
-      {(action || onDismiss) && <div className="ms-7 flex max-w-full flex-wrap items-center gap-2 sm:ms-auto">
+      {(action || onDismiss) && <div className={
+        compactMobile
+          ? 'ms-auto flex shrink-0 items-stretch gap-1.5 sm:gap-2'
+          : 'ms-7 flex max-w-full flex-wrap items-center gap-2 sm:ms-auto'
+      }>
         {onDismiss && (
-          <FeedbackButton action="cancel" onClick={onDismiss}>{dismissLabel ?? t('updateToast.dismiss')}</FeedbackButton>
+          compactMobile
+            ? <FeedbackButton action="cancel" onClick={onDismiss} aria-label={dismissText} className="max-sm:!px-2"><span className="hidden sm:inline">{dismissText}</span></FeedbackButton>
+            : <FeedbackButton action="cancel" onClick={onDismiss}>{dismissText}</FeedbackButton>
         )}
         {action}
       </div>}
@@ -160,11 +175,10 @@ export function Snackbar({
   return (
     <div
       role={tone === 'danger' ? 'alert' : 'status'}
-      style={{ bottom: 'calc(var(--pn-safe-bottom, 0px) + 1.5rem)' }}
-      className={`fixed start-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-full ${tone === 'danger' ? 'bg-danger' : 'bg-accent-fill'} py-1.5 ps-4 text-body font-medium text-white shadow-lg ${actionLabel ? 'pe-1.5' : 'pe-4'}`}
+      className={`fixed start-1/2 -translate-x-1/2 rtl:translate-x-1/2 bottom-[calc(var(--pn-safe-bottom,0px)+4rem)] [@media(min-width:768px)_and_(min-height:501px)]:bottom-[3.25rem] z-50 flex w-max max-w-[min(32rem,calc(100vw-2rem))] items-center gap-3 rounded-2xl ${tone === 'danger' ? 'bg-danger' : 'bg-accent-fill'} py-2 ps-4 text-body font-medium text-white shadow-lg ${actionLabel ? 'pe-2' : 'pe-4'}`}
     >
       {icon && <span className="shrink-0 flex items-center" aria-hidden="true">{icon}</span>}
-      <span className="min-w-0 truncate">{children}</span>
+      <span className="min-w-0 flex-1 leading-snug">{children}</span>
       {actionLabel && (
         <button type="button" onClick={onAction} className="shrink-0 rounded-full bg-white/20 px-3 py-1 hover:bg-white/30 transition">
           {actionLabel}

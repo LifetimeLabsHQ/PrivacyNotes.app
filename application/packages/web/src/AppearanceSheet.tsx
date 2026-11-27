@@ -30,6 +30,7 @@ import {
   CONTENT_WIDTHS,
   LINE_SPACINGS,
   NESTED_NUMBERS,
+  CHECKED_TASK_STYLES,
   resetStyleAxes,
   resetThemeAxes,
   noteFontStack,
@@ -38,6 +39,10 @@ import {
   customIdOf,
   paintedSlot,
   themeSwatch,
+  previewThemeSpace,
+  hasSpaceThemeOverride,
+  clearSpaceTheme,
+  spaceThemeInfo,
   type LineSpacing,
   type NestedNumbers,
   type NoteFont,
@@ -46,10 +51,13 @@ import { allLocalFonts, canListAllFonts, fontInstalled, installedCandidates } fr
 import { intlLocale } from './languages';
 import type { UpgradeTrigger } from './UpgradeModal';
 import { proUnlocked } from './demo';
-import { PencilSimpleSlash, ArrowCounterClockwise, Folder, Intersect, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, ClockCounterClockwise, Layout, Tabs, Paragraph, Hash, LinkSimple, Eye, Brain, TextAa, ListNumbers, ListChecks, Check, ListMagnifyingGlass, CheckSquare, Confetti, CircleHalf, PaintBucket, Sun, Moon, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, BoxArrowDown, MapPin, PILLAR_GLYPHS, type Icon } from './icons';
+import { PencilSimpleSlash, ArrowCounterClockwise, BookOpen, Folder, Intersect, X, List, ListBullets, Palette, Star, Toolbox, SquaresFour, Sparkle, DotsThreeOutlineVertical, CaretDown, CaretRight, Globe, Plus, ClipboardText, ArrowSquareOut, PencilSimple, Copy, UserSwitch, TextT, Scribble, TextAlignJustify, FrameCorners, PencilLine, HouseLine, ClockCounterClockwise, Layout, Tabs, Paragraph, Hash, LinkSimple, Eye, Brain, TextAa, ListNumbers, ListChecks, Check, ListMagnifyingGlass, CheckSquare, Confetti, CircleHalf, PaintBucket, Sun, Moon, DotsSixVertical, ArrowUp, ArrowDown, ArrowRight, BoxArrowDown, MapPin, Stack, PILLAR_GLYPHS, type Icon } from './icons';
+import { SPACE_ICONS } from './SpaceSwitch';
+import type { SpaceView } from './spaces';
 import { setLineNumbersPref, useLineNumbersPref } from './editorPrefs';
 import type { BUILTIN_THEME_CODES } from './builtinThemeCodes';
 import type { CustomThemes } from './customThemes';
+import type { CustomIcons } from './customIcons';
 import type { ThemeGalleryCtx } from './customThemeUI';
 import type { ThemeBuilderTarget } from './notesView/useThemeBuilder';
 import { CardMenuButton, QuickStarButton } from './ThemeCardMenuButton';
@@ -67,7 +75,8 @@ const ThemePasteField = lazyPart(() => import('./customThemeUI').then((m) => m.T
 const FormatBarBoard = lazyPart(() => import('./FormatBarBoard').then((m) => m.FormatBarBoard));
 // Loads the model code only when the Behavior tab opens: off the boot path.
 import { exemptOpts } from './i18nExempt';
-import { AccentBar, DeviceOnlyTip, EYEBROW_ICON_ROW, EyebrowGlyph, HeadlineRule, ROW_TITLE, ResetDefaultsButton, RowTitle, SectionEyebrow, SETTINGS_BTN, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_SELECT, SettingsTabStrip, settingsSegClass, settingsTabClass, SETTINGS_TRACK } from './settingsUI';
+import { AccentBar, DeviceOnlyTip, EYEBROW_ICON_ROW, EyebrowGlyph, HeadlineRule, ROW_TITLE, ResetDefaultsButton, RowTitle, SectionEyebrow, SETTINGS_BTN, SETTINGS_CARD, SETTINGS_CARD_ON, SETTINGS_CARD_REST, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_SELECT, SettingsTabStrip, settingsChipClass, settingsSegClass, settingsTabClass, SETTINGS_TRACK } from './settingsUI';
+import { PAGE_NUMBERS_FORMATS, PAGE_NUMBERS_PLACEMENTS, formatPageNumber } from './pageNumbers';
 import { Switch } from './Switch';
 import { pluginsShown, useMeaningState } from './onDeviceAi';
 import { canReadPosition } from './currentPosition';
@@ -139,8 +148,12 @@ type Props = {
   /** The color themes a person made, from the settings blob.
    *  Spec: docs/contrib/color-themes.md (section 6) */
   customThemes: CustomThemes;
+  /** User-uploaded custom sidebar icons keyed by theme id. */
+  themeIcons?: CustomIcons;
   /** Embedded pane only: save or delete a custom theme. */
   onCustomThemesChange?: (update: (prev: CustomThemes) => CustomThemes) => void;
+  /** Embedded pane only: delete a custom theme's icon when the theme is deleted. */
+  onThemeIconsChange?: (update: (prev: CustomIcons) => CustomIcons) => void;
   /** Embedded pane only: open the theme builder, empty, on a theme, or on a
    *  copy of one. */
   onOpenThemeBuilder?: (target: ThemeBuilderTarget) => void;
@@ -459,12 +472,14 @@ function SmartConnectionsLink({ isPro, onOpen }: { isPro: boolean; onOpen?: () =
   );
 }
 
-export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = false, viewMode, onViewModeChange, editorMode, onEditorModeChange, formatBar, bind, hiddenViews, hiddenInAll, archivedInAll, onToggleHidden, onViewOrderChange, noteColors, onNoteColorsChange, initialTab, pane = 'design', onOpenAll, onOpenPlugins, customThemes, onCustomThemesChange, onOpenThemeBuilder }: Props) {
+export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = false, viewMode, onViewModeChange, editorMode, onEditorModeChange, formatBar, bind, hiddenViews, hiddenInAll, archivedInAll, onToggleHidden, onViewOrderChange, noteColors, onNoteColorsChange, initialTab, pane = 'design', onOpenAll, onOpenPlugins, customThemes, themeIcons, onCustomThemesChange, onThemeIconsChange, onOpenThemeBuilder }: Props) {
   const { value: lineSpacing, onChange: onLineSpacingChange } = bind('lineSpacing');
   const { value: nestedNumbers, onChange: onNestedNumbersChange } = bind('nestedNumbers');
+  const { value: pageNumbers, onChange: onPageNumbersChange } = bind('pageNumbers');
   const { value: startView, onChange: onStartViewChange } = bind('startView');
   const { value: sinkCheckedTasks, onChange: onSinkCheckedTasksChange } = bind('sinkCheckedTasks');
   const { value: taskConfetti, onChange: onTaskConfettiChange } = bind('taskConfetti');
+  const { value: checkedTaskStyle, onChange: onCheckedTaskStyleChange } = bind('checkedTaskStyle');
   const { value: typedSymbols, onChange: onTypedSymbolsChange } = bind('typedSymbols');
   const { value: linkSuggestions, onChange: onLinkSuggestionsChange } = bind('linkSuggestions');
   const { value: confirmTrash, onChange: onConfirmTrashChange } = bind('confirmTrash');
@@ -525,7 +540,26 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   const triggerRect = trigger?.getBoundingClientRect();
   const centred = !!triggerRect && triggerRect.left + triggerRect.width / 2 < window.innerWidth / 2;
   const popPos = usePopoverPosition(!!trigger, triggerRef, panelRef, { gap: 8, align: 'end', shrink: true });
-  const { theme, themeMode, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, favicons, setFavicons, invisibles, setInvisibles, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, openReadOnly, setOpenReadOnly, noteFont, setNoteFont, customFonts, setCustomFont } = useTheme();
+  const { theme, themeMode, setThemeMode, colorTheme, lightTheme, darkTheme, themeSpace, revision, setColorTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, favicons, setFavicons, themeIconsEnabled, setThemeIconsEnabled, invisibles, setInvisibles, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, openReadOnly, setOpenReadOnly, noteFont, setNoteFont, customFonts, setCustomFont } = useTheme();
+  const spacesOn = spaces && proUnlocked(isPro);
+  // Which space card is selected in Settings > Design (#948). Starts on the
+  // open space when it already has its own theme, else All so single-theme
+  // users change the whole app without touching the cards.
+  const [editingSpace, setEditingSpace] = useState<SpaceView>(() => (hasSpaceThemeOverride(themeSpace) ? themeSpace : 'all'));
+  const prevThemeSpaceRef = useRef(themeSpace);
+  useEffect(() => {
+    if (prevThemeSpaceRef.current === themeSpace) return;
+    prevThemeSpaceRef.current = themeSpace;
+    setEditingSpace(hasSpaceThemeOverride(themeSpace) ? themeSpace : 'all');
+  }, [themeSpace]);
+  useEffect(() => {
+    if (!embedded || pane !== 'design' || !spacesOn) {
+      previewThemeSpace(null);
+      return;
+    }
+    previewThemeSpace(editingSpace);
+    return () => previewThemeSpace(null);
+  }, [embedded, pane, spacesOn, editingSpace]);
   const lineNumbers = useLineNumbersPref();
   // Its own store rather than an axis of useTheme(): a level is handed to the
   // webview under the page, not to a CSS variable on <html>, and keeping it
@@ -654,7 +688,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     // a Pro theme only peeks, so a preview never changes the stored mode.
     const keeps = themesUnlocked || isFreeTheme(t);
     if (keeps) {
-      pickTheme(mode, snapshot ?? t);
+      pickTheme(mode, snapshot ?? t, embedded && spacesOn ? editingSpace : undefined);
       savedThemesRef.current = { ...savedThemesRef.current, [mode]: t };
       return;
     }
@@ -681,6 +715,10 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     window.setTimeout(() => setCopiedName(null), 2500);
   }
 
+  const openBuilderForSpace = onOpenThemeBuilder
+    ? (target: ThemeBuilderTarget) => onOpenThemeBuilder(embedded && spacesOn ? { ...target, space: editingSpace } : target)
+    : undefined;
+
   /** A built-in palette's menu, read from its exact code. */
   function openBuiltinMenu(e: MouseEvent<HTMLButtonElement>, mode: Theme, ct: ColorTheme) {
     const code = builtinCodes?.[mode][ct];
@@ -690,7 +728,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
       {
         label: t('shell:contextMenu.duplicate'),
         icon: <PencilSimple />,
-        onSelect: () => onOpenThemeBuilder?.({ code, name: copyName(name) }),
+        onSelect: () => openBuilderForSpace?.({ code, name: copyName(name) }),
       },
       {
         label: t('appearance.custom.copyCode'),
@@ -711,6 +749,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
 
   const galleryCtx: ThemeGalleryCtx = {
     customThemes,
+    themeIcons,
     isPro,
     canSave: themesUnlocked,
     lightTheme,
@@ -725,7 +764,8 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     quickMarks,
     star: starTheme,
     onChange: onCustomThemesChange,
-    openBuilder: onOpenThemeBuilder,
+    onThemeIconsChange,
+    openBuilder: openBuilderForSpace,
   };
 
   // One theme card: a three-stripe swatch (sidebar, accent, text) over the
@@ -784,6 +824,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     resetStyleAxes();
     onLineSpacingChange(d.lineSpacing);
     onNestedNumbersChange(d.nestedNumbers);
+    onPageNumbersChange(d.pageNumbers);
     onEditorModeChange(d.editorMode);
   }
 
@@ -795,6 +836,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
     setOpenReadOnly(false);
     onSinkCheckedTasksChange(d.sinkCheckedTasks);
     onTaskConfettiChange(d.taskConfetti);
+    onCheckedTaskStyleChange(d.checkedTaskStyle);
     onTypedSymbolsChange(d.typedSymbols);
     onLinkSuggestionsChange(d.linkSuggestions);
     onConfirmTrashChange(d.confirmTrash);
@@ -806,6 +848,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
   function resetThemes() {
     const d = defaultSettings();
     resetThemeAxes();
+    setEditingSpace('all');
     if (appSizeSupported()) applyAppZoom(DEFAULT_APP_ZOOM);
     onNoteColorsChange(noteColorChoice(d.tintNotes, d.noteColorStyle));
     savedThemesRef.current = { light: 'default', dark: 'default' };
@@ -946,7 +989,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
             switches between the two slots below. */}
         <div data-setting="appearance.mode" className={row}>
           <div className="min-w-0">
-            <RowTitle icon={CircleHalf}>{t('appearance.modeTitle')}</RowTitle>
+            <RowTitle icon={CircleHalf} hint={<DeviceOnlyTip />}>{t('appearance.modeTitle')}</RowTitle>
             <p className={helpExplain}>{t('appearance.modeDesc')}</p>
             {themeMode === 'auto' && theme !== getSystemTheme() && (
               <p className={`${SETTINGS_HELP} mt-1 text-accent-strong`}>
@@ -969,12 +1012,12 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
               theme made or pasted here can land in either mode. */}
           <div data-setting="appearance.customThemes">
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-              <RowTitle icon={Palette}>{t('common:palette.groups.themes')}</RowTitle>
-              {onOpenThemeBuilder && (
+              <RowTitle icon={Palette} hint={<DeviceOnlyTip />}>{t('common:palette.groups.themes')}</RowTitle>
+              {openBuilderForSpace && (
                 <div className="flex flex-wrap items-center gap-2 text-body">
                   <Button
                     icon={<Plus aria-hidden="true" />}
-                    onClick={() => onOpenThemeBuilder({})}
+                    onClick={() => openBuilderForSpace({})}
                   >
                     {t('settings:appearance.custom.builderNew')}
                     {!isPro && <IconUpgrade size={12} />}
@@ -991,7 +1034,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
                 </div>
               )}
             </div>
-            {onOpenThemeBuilder && (
+            {openBuilderForSpace && (
               <>
                 {copiedName && (
                   <p className={`${SETTINGS_HELP} mt-2`} role="status">
@@ -1007,6 +1050,69 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
               </>
             )}
           </div>
+          {/* Per-space theme cards (#948): All is the shared default; Personal
+              and Work can each hold their own device-local light/dark pair. */}
+          {spacesOn && (
+            <div className="space-y-1.5" data-theme-rev={revision}>
+              <div role="group" aria-label={t('appearance.spaceThemeGroup')} className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {([
+                  ['all', Stack, tShell('spaces.all')],
+                  ['personal', SPACE_ICONS.personal, tShell('spaces.personal')],
+                  ['work', SPACE_ICONS.work, tShell('spaces.work')],
+                ] as const).map(([spaceKey, SpaceIcon, spaceLabel]) => {
+                  const lightInfo = spaceThemeInfo(spaceKey, 'light');
+                  const darkInfo = spaceThemeInfo(spaceKey, 'dark');
+                  const on = editingSpace === spaceKey;
+                  const sub = lightInfo.inherited
+                    ? t('appearance.spaceThemeFollowsAll')
+                    : `${lightInfo.name} / ${darkInfo.name}`;
+                  return (
+                    <button
+                      key={spaceKey}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => setEditingSpace(spaceKey)}
+                      className={`${SETTINGS_CARD} ${on ? SETTINGS_CARD_ON : SETTINGS_CARD_REST}`}
+                    >
+                      <span className="shrink-0 w-8 h-8 rounded-md border border-divider overflow-hidden grid grid-cols-2" aria-hidden="true">
+                        <span className="relative" style={{ backgroundColor: lightInfo.swatch[0] }}>
+                          <span className="absolute bottom-0.5 start-0.5 w-1.5 h-1.5 rounded-[2px]" style={{ backgroundColor: lightInfo.swatch[1] }} />
+                        </span>
+                        <span className="relative border-s border-divider" style={{ backgroundColor: darkInfo.swatch[0] }}>
+                          <span className="absolute bottom-0.5 end-0.5 w-1.5 h-1.5 rounded-[2px]" style={{ backgroundColor: darkInfo.swatch[1] }} />
+                        </span>
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-1.5 text-small font-semibold text-pn truncate">
+                          <SpaceIcon className="shrink-0 text-accent" aria-hidden="true" />
+                          <span className="truncate">{spaceLabel}</span>
+                        </span>
+                        <span className="block text-meta text-pn-muted truncate" dir="auto">{sub}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className={`${SETTINGS_HELP} flex flex-wrap items-center gap-x-2`}>
+                {editingSpace === 'all' ? (
+                  t('appearance.spaceThemeAllHint')
+                ) : hasSpaceThemeOverride(editingSpace) ? (
+                  <>
+                    <span>{t('appearance.spaceThemeCustomHint', { space: tShell(`spaces.${editingSpace}`) })}</span>
+                    <button
+                      type="button"
+                      onClick={() => clearSpaceTheme(editingSpace)}
+                      className="font-medium text-accent hover:underline"
+                    >
+                      {t('appearance.spaceThemeFollowAll')}
+                    </button>
+                  </>
+                ) : (
+                  t('appearance.spaceThemeFollowsHint', { space: tShell(`spaces.${editingSpace}`) })
+                )}
+              </p>
+            </div>
+          )}
           {/* One row: find a theme by name, or go to the website for more. */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <div className="flex min-w-0 grow basis-48 sm:max-w-xs">
@@ -1082,6 +1188,21 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           </div>
           {unlockNudge}
         </div>
+
+        {/* Theme app icons - whether built-in bespoke theme icons and user-
+            uploaded theme icons replace the sidebar PrivacyNotes logo. On by
+            default, device-local like Mode and Themes. */}
+        <Switch
+          setting="appearance.themeIcons"
+          icon={<Sparkle className="text-accent" />}
+          hint={<DeviceOnlyTip />}
+          labelClassName={ROW_TITLE}
+          label={t('appearance.themeIconsTitle')}
+          description={t('appearance.themeIconsDesc')}
+          checked={themeIconsEnabled}
+          onChange={setThemeIconsEnabled}
+          className="gap-x-5 py-3"
+        />
 
         {/* Note colors - how strongly notes and sidebar rows show their
             color. Last in the pane, just above Reset to defaults; the look
@@ -1338,6 +1459,106 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
           onChange={setLineNumbersPref}
           className="gap-x-5 py-3"
         />
+
+        {/* Page numbers (#944) - placement, style, and surfaces for Full
+            screen, the editor footer, and print/HTML export. Synced like
+            lineSpacing and nestedNumbers. */}
+        <div>
+          <div data-setting="appearance.pageNumbers" className={row}>
+            <div className="min-w-0">
+              <RowTitle icon={BookOpen}>{t('appearance.pageNumbersTitle')}</RowTitle>
+              <p className={`${SETTINGS_HELP} mt-0.5`}>{t('appearance.pageNumbersDesc')}</p>
+            </div>
+            <div role="group" aria-label={t('appearance.pageNumbersTitle')} className={track}>
+              {PAGE_NUMBERS_PLACEMENTS.map((pos) => (
+                <button
+                  key={pos}
+                  type="button"
+                  onClick={() => onPageNumbersChange({ ...pageNumbers, placement: pos })}
+                  aria-pressed={pageNumbers.placement === pos}
+                  className={settingsSegClass(pageNumbers.placement === pos)}
+                >
+                  {t(
+                    pos === 'off'
+                      ? 'appearance.noteColorsOff'
+                      : pos === 'left'
+                        ? 'appearance.pageNumbersLeft'
+                        : pos === 'center'
+                          ? 'appearance.pageNumbersCenter'
+                          : 'appearance.pageNumbersRight',
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {pageNumbers.placement !== 'off' && (
+            <div className="pb-3 space-y-3">
+              <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
+                <div className="flex flex-col items-start gap-1.5">
+                  <span className={SETTINGS_EYEBROW}>{t('appearance.pageNumbersStyle')}</span>
+                  <div role="group" aria-label={t('appearance.pageNumbersStyle')} className={track}>
+                    {PAGE_NUMBERS_FORMATS.map((fmt) => (
+                      <button
+                        key={fmt}
+                        type="button"
+                        onClick={() => onPageNumbersChange({ ...pageNumbers, format: fmt })}
+                        aria-pressed={pageNumbers.format === fmt}
+                        className={`${settingsSegClass(pageNumbers.format === fmt)} tabular-nums whitespace-nowrap`}
+                      >
+                        {t(fmt === 'of' ? 'appearance.pageNumbersStyleOf' : 'appearance.pageNumbersStyleNumber')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-start gap-1.5">
+                  <span className={SETTINGS_EYEBROW}>{t('appearance.pageNumbersShowIn')}</span>
+                  <div className="flex flex-wrap items-center gap-1.5 min-h-9" role="group" aria-label={t('appearance.pageNumbersShowIn')}>
+                    {([
+                      { key: 'print', label: t('appearance.pageNumbersPrint') },
+                      { key: 'fullScreen', label: t('notes:drawing.fullScreen') },
+                      { key: 'editor', label: t('appearance.pageNumbersEditor') },
+                    ] as const).map(({ key, label }) => {
+                      const on = pageNumbers[key];
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          aria-pressed={on}
+                          onClick={() => onPageNumbersChange({ ...pageNumbers, [key]: !on })}
+                          className={`${settingsChipClass(on)} gap-1.5`}
+                        >
+                          {on && <Check size={12} aria-hidden="true" />}
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-md bg-track px-3 py-2.5" aria-hidden="true">
+                <div className="space-y-1.5 mb-2.5">
+                  <div className="h-1.5 w-2/5 rounded-full bg-divider" />
+                  <div className="h-1.5 w-full rounded-full bg-divider" />
+                  <div className="h-1.5 w-4/5 rounded-full bg-divider" />
+                </div>
+                <div
+                  className={`flex border-t border-divider pt-1.5 text-small text-pn-muted tabular-nums ${
+                    pageNumbers.placement === 'left'
+                      ? 'justify-start'
+                      : pageNumbers.placement === 'right'
+                        ? 'justify-end'
+                        : 'justify-center'
+                  }`}
+                >
+                  {formatPageNumber(1, 4, pageNumbers.format)}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </>
     );
 
@@ -1440,7 +1661,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
         <div>
           {/* Link suggestions in the Connections panel: notes on the same topic
               that no link joins. On by default. Synced.
-              Spec: docs/internal/plans/related-notes.md */}
+              Spec: docs/internal/specs/related-notes.md */}
           <Switch
             setting="appearance.linkSuggestions"
             icon={<Intersect className="text-accent" />}
@@ -1485,7 +1706,7 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
 
         {/* Automatically add my location: one switch per type, on this phone
             only, off by default. Phones only: a desktop cannot read a
-            position. Spec: docs/internal/plans/note-location.md (section 3c) */}
+            position. Spec: docs/internal/specs/note-location.md (section 3c) */}
         {canReadPosition() && (
           <div className="pt-4">
             <SectionEyebrow icon={MapPin}>{t('appearance.autoLocationTitle')}<DeviceOnlyTip phone /></SectionEyebrow>
@@ -1533,6 +1754,54 @@ export function AppearanceSheet({ isPro, onOpenUpgrade, onClose, embedded = fals
               onChange={onSinkCheckedTasksChange}
               className="gap-x-5 py-3"
             />
+            <div data-setting="appearance.checkedTaskStyle" className="py-3 space-y-2.5">
+              <div className="min-w-0">
+                <RowTitle icon={CheckSquare}>{t('appearance.checkedTaskStyleTitle')}</RowTitle>
+                <p className={`${SETTINGS_HELP} mt-0.5`}>{t('appearance.checkedTaskStyleDesc')}</p>
+              </div>
+              <div
+                role="group"
+                aria-label={t('appearance.checkedTaskStyleTitle')}
+                className="grid grid-cols-2 sm:grid-cols-4 gap-2"
+              >
+                {CHECKED_TASK_STYLES.map((style) => {
+                  const on = checkedTaskStyle === style;
+                  const fade = style === 'fade-strike' || style === 'fade';
+                  const strike = style === 'fade-strike' || style === 'strike';
+                  const labelKey =
+                    style === 'fade-strike'
+                      ? 'appearance.checkedTaskStyleFadeStrike'
+                      : style === 'fade'
+                        ? 'appearance.checkedTaskStyleFade'
+                        : style === 'strike'
+                          ? 'appearance.checkedTaskStyleStrike'
+                          : 'appearance.checkedTaskStyleNone';
+                  return (
+                    <button
+                      key={style}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => onCheckedTaskStyleChange(style)}
+                      className={`${SETTINGS_CARD} ${on ? SETTINGS_CARD_ON : SETTINGS_CARD_REST}`}
+                    >
+                      <span className="min-w-0 w-full flex flex-col gap-1.5">
+                        <span className="flex items-center gap-1.5 text-small text-pn min-w-0" aria-hidden="true">
+                          <span className="inline-flex items-center justify-center w-4 h-4 rounded bg-accent-fill text-white shrink-0">
+                            <Check size={11} weight="bold" aria-hidden="true" />
+                          </span>
+                          <span className={`truncate ${strike ? 'line-through' : ''} ${fade ? 'opacity-60' : ''}`}>
+                            {t('appearance.checkedTaskStyleSample')}
+                          </span>
+                        </span>
+                        <span className={`text-meta truncate ${on ? 'font-semibold text-accent-strong' : 'text-pn-soft'}`}>
+                          {t(labelKey)}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
 

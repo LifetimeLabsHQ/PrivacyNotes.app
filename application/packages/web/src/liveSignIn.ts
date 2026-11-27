@@ -40,6 +40,17 @@ export type SignInStamp = { readonly count: number; readonly announced: string |
 
 let signOutsBegun = 0;
 let live: { phrase: string; stamp: SignInStamp } | null = null;
+let finishSettled: Promise<void> = Promise.resolve();
+
+/** Records the in-flight database promise of `finishInterruptedSignOut`. */
+export function trackSignOutFinish(work: Promise<void>): void {
+  finishSettled = work;
+}
+
+/** Resolves once the database part of `finishInterruptedSignOut` ended. */
+export function signOutFinishSettled(): Promise<void> {
+  return finishSettled;
+}
 // The newest notice this tab has seen, read or delivered. A notice value
 // starts with the time it was written, so the newer of two is the later.
 // Remembered because the key can go: a fresh demo tab clears the demo
@@ -229,6 +240,41 @@ export function dropSignOutMark(): void {
     localStorage.removeItem(markKey());
   } catch {
     /* storage unavailable: nothing to remove */
+  }
+}
+
+export function shareInboxPendingKey(): string {
+  return credentialKey('privacynotes.shareInboxClearPending');
+}
+
+/** Records that the phone share inbox must be cleared before any vault drains
+ *  it. Kept across `adoptLiveSignIn` and `device_limit_reached` until the
+ *  native inbox clear succeeds. */
+export function markShareInboxClearPending(): void {
+  if (isDemoMode()) return;
+  try {
+    localStorage.setItem(shareInboxPendingKey(), '1');
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** Clears the pending phone share inbox wipe mark once the native inbox clear succeeded. */
+export function clearShareInboxPendingMark(): void {
+  try {
+    localStorage.removeItem(shareInboxPendingKey());
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** True when a prior sign-out, switch, or wipe has not yet confirmed the native inbox clear. */
+export function hasShareInboxClearPending(): boolean {
+  if (isDemoMode()) return false;
+  try {
+    return localStorage.getItem(shareInboxPendingKey()) === '1';
+  } catch {
+    return false;
   }
 }
 

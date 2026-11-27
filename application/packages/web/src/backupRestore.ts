@@ -2,6 +2,7 @@ import { readCustomHabits } from './habitList';
 import { applyRestoredFolders, validateFolders } from './folders';
 import { deletedFolderIds, itemStylesEqual, mergeItemStyles, validateItemStyles } from './itemStyles';
 import { customThemesEqual, mergeCustomThemes, validateCustomThemes } from './customThemes';
+import { customIconsEqual, mergeCustomIcons, validateCustomIcons, type CustomIcons } from './customIcons';
 import type { UserSettings } from './userSettings';
 import {
   CAFFEINE_UNITS, defaultTrackerSettings, readCustomTrackerTemplates, readFactors, readHabits, readMedicationTemplates,
@@ -23,6 +24,8 @@ type TrackerSetup = Pick<TrackerSettings, 'activeBuiltins' | 'habits' | 'archive
 export interface CarriedSettings {
   itemStyles?: ItemStyles;
   customThemes?: CustomThemes;
+  customIcons?: CustomIcons;
+  themeIcons?: CustomIcons;
   factors?: FactorDef[];
   customHabits?: CustomHabitDef[];
   medications?: MedicationTemplate[];
@@ -45,6 +48,8 @@ export function carriedSettings(s: UserSettings): CarriedSettings {
   return {
     itemStyles: s.itemStyles,
     customThemes: s.customThemes,
+    customIcons: s.customIcons,
+    themeIcons: s.themeIcons,
     factors: s.factors,
     customHabits: s.customHabits,
     medications: s.medications,
@@ -83,7 +88,7 @@ export type BackupSettingName = 'calendarFeeds' | 'dashboard' | 'itemStyles' | '
  * or a stock Home layout is not named, and the tracker setup only when it is
  * not the setup of a new account.
  */
-export function backupSettingsNames(raw: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown }): BackupSettingName[] {
+export function backupSettingsNames(raw: { itemStyles?: unknown; customThemes?: unknown; customIcons?: unknown; themeIcons?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown }): BackupSettingName[] {
   const filled = (v: unknown) => Array.isArray(v) && v.length > 0;
   const fresh = defaultTrackerSettings();
   const setup = raw.trackerSetup && typeof raw.trackerSetup === 'object' ? (raw.trackerSetup as Record<string, unknown>) : null;
@@ -91,8 +96,8 @@ export function backupSettingsNames(raw: { itemStyles?: unknown; customThemes?: 
   const has: Record<BackupSettingName, boolean> = {
     calendarFeeds: liveCalendarFeeds(validateCalendarFeeds(raw.calendarFeeds)).length > 0,
     dashboard: ((d) => readDashboardSetting(d) !== null || hasAnyOwnHome(d))(validateDashboardSetting(raw.dashboard)),
-    itemStyles: Object.keys(validateItemStyles(raw.itemStyles)).length > 0,
-    customThemes: Object.keys(validateCustomThemes(raw.customThemes)).length > 0,
+    itemStyles: Object.keys(validateItemStyles(raw.itemStyles)).length > 0 || Object.keys(validateCustomIcons(raw.customIcons)).length > 0,
+    customThemes: Object.keys(validateCustomThemes(raw.customThemes)).length > 0 || Object.keys(validateCustomIcons(raw.themeIcons)).length > 0,
     favoriteTags: filled(raw.favoriteTags),
     medications: filled(raw.medications),
     trackers: filled(raw.factors) || filled(raw.customHabits) || filled(raw.customTrackers) || setupChanged,
@@ -174,7 +179,7 @@ function restoredSetup(
  */
 export function settingsAfterRestore(
   prev: UserSettings,
-  raw: { folders?: unknown; itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown },
+  raw: { folders?: unknown; itemStyles?: unknown; customThemes?: unknown; customIcons?: unknown; themeIcons?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown },
 ): UserSettings {
   // A file's stamps are never later than now, or its entries would win
   // every later merge and the person could no longer change them.
@@ -182,6 +187,8 @@ export function settingsAfterRestore(
   const folders = validateFolders(backup.folders);
   const looks = validateItemStyles(backup.itemStyles);
   const themes = validateCustomThemes(backup.customThemes);
+  const icons = validateCustomIcons(backup.customIcons);
+  const restoredThemeIcons = validateCustomIcons(backup.themeIcons);
   // A factor the account lacks comes back; one it holds keeps this device's
   // copy, its name and its tombstone included.
   const known = new Set(prev.factors.map((f) => f.id));
@@ -198,12 +205,16 @@ export function settingsAfterRestore(
   const result = applyRestoredFolders({ folders: prev.folders, deleted: prev.foldersDeleted }, folders);
   const setup = restoredSetup(prev, backup, result.tree.folders);
   const nothingNew = newFactors.length === 0 && newHabits.length === 0 && newMeds.length === 0 && newTrackers.length === 0 && Object.keys(setup).length === 0;
-  if (folders.length === 0 && Object.keys(looks).length === 0 && Object.keys(themes).length === 0 && nothingNew) return prev;
+  if (folders.length === 0 && Object.keys(looks).length === 0 && Object.keys(themes).length === 0 && Object.keys(icons).length === 0 && Object.keys(restoredThemeIcons).length === 0 && nothingNew) return prev;
   const itemStyles = mergeItemStyles(prev.itemStyles, looks, deletedFolderIds(result.tree.deleted));
   const customThemes = mergeCustomThemes(prev.customThemes, themes);
+  const customIcons = mergeCustomIcons(prev.customIcons, icons);
+  const themeIcons = mergeCustomIcons(prev.themeIcons, restoredThemeIcons);
   const looksChanged = !itemStylesEqual(itemStyles, prev.itemStyles);
   const themesChanged = !customThemesEqual(customThemes, prev.customThemes);
-  if (result.added === 0 && !looksChanged && !themesChanged && nothingNew) return prev;
+  const iconsChanged = !customIconsEqual(customIcons, prev.customIcons);
+  const themeIconsChanged = !customIconsEqual(themeIcons, prev.themeIcons);
+  if (result.added === 0 && !looksChanged && !themesChanged && !iconsChanged && !themeIconsChanged && nothingNew) return prev;
   // The tracker setup and the new tracker definitions land in one object.
   const trackerBase = setup.trackerSettings ?? prev.trackerSettings;
   return {
@@ -213,6 +224,8 @@ export function settingsAfterRestore(
     foldersDeleted: result.tree.deleted,
     ...(looksChanged ? { itemStyles } : {}),
     ...(themesChanged ? { customThemes } : {}),
+    ...(iconsChanged ? { customIcons } : {}),
+    ...(themeIconsChanged ? { themeIcons } : {}),
     ...(newFactors.length > 0 ? { factors: [...prev.factors, ...newFactors] } : {}),
     ...(newHabits.length > 0 ? { customHabits: [...prev.customHabits, ...newHabits] } : {}),
     ...(newMeds.length > 0 ? { medications: [...prev.medications, ...newMeds] } : {}),

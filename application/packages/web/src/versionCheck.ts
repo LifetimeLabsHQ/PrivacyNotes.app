@@ -15,6 +15,7 @@ import { isDemoMode } from './demo';
 const VERSION_URL = '/version.json';
 const POLL_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 const INITIAL_DELAY_MS = 30 * 1000; // 30s grace after mount
+const FETCH_TIMEOUT_MS = 30_000;
 
 type VersionInfo = { version: string };
 
@@ -40,9 +41,13 @@ async function fetchServerVersion(): Promise<string | null> {
   try {
     // Cache-bust both the browser cache and Cloudflare's edge cache -
     // /version.json is a tiny JSON blob, refetching it is fine.
+    const signal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+      ? AbortSignal.timeout(FETCH_TIMEOUT_MS)
+      : undefined;
     const res = await fetch(`${VERSION_URL}?t=${Date.now()}`, {
       cache: 'no-store',
       headers: { 'cache-control': 'no-cache' },
+      signal,
     });
     if (!res.ok) return null;
     const data = (await res.json()) as VersionInfo;
@@ -63,14 +68,22 @@ async function fetchServerVersion(): Promise<string | null> {
 export function startVersionPolling(onNewer: (serverVersion: string) => void): () => void {
   if (isDemoMode()) return () => {};
   let cancelled = false;
+  let inFlight = false;
+  let lastCheckAt = 0;
   let pollTimer: ReturnType<typeof setTimeout> | null = null;
 
   async function check(): Promise<void> {
-    if (cancelled) return;
-    const server = await fetchServerVersion();
-    if (cancelled || !server) return;
-    if (compareSemver(server, VERSION) > 0) {
-      onNewer(server);
+    if (cancelled || inFlight) return;
+    inFlight = true;
+    try {
+      const server = await fetchServerVersion();
+      if (cancelled || !server) return;
+      lastCheckAt = Date.now();
+      if (compareSemver(server, VERSION) > 0) {
+        onNewer(server);
+      }
+    } finally {
+      inFlight = false;
     }
   }
 
@@ -88,9 +101,9 @@ export function startVersionPolling(onNewer: (serverVersion: string) => void): (
   }, INITIAL_DELAY_MS);
 
   function onVisibility(): void {
-    if (document.visibilityState === 'visible') {
-      void check();
-    }
+    if (document.visibilityState !== 'visible') return;
+    if (Date.now() - lastCheckAt < POLL_INTERVAL_MS) return;
+    void check();
   }
   document.addEventListener('visibilitychange', onVisibility);
 

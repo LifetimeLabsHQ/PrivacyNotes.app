@@ -300,7 +300,7 @@ export function PasswordGenerator({ isPro, onOpenUpgrade, onGenerate, initial, o
             <Checkbox
               key={key}
               checked={gen[key]}
-              onChange={(checked) => update({ [key]: checked })}
+              onChange={(e) => update({ [key]: e.target.checked })}
               label={label}
             />
           ))}

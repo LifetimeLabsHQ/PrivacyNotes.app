@@ -51,6 +51,7 @@ import {
   ArrowUUpLeft,
   ArrowUUpRight,
   SquareSplitHorizontal,
+  TextTSlash,
 } from './icons';
 
 /**
@@ -122,6 +123,7 @@ export const FORMAT_BAR_LOOK: Record<string, { Icon: Icon; label: string }> = {
   markdownView: { Icon: ArticleMedium, label: 'formatBar.items.markdownView' },
   copyAsPlain: { Icon: ClipboardText, label: 'bodyMenu.copyAsPlain' },
   copyAsMarkdown: { Icon: FileMd, label: 'bodyMenu.copyAsMarkdown' },
+  clearFormatting: { Icon: TextTSlash, label: 'bodyMenu.clearFormatting' },
 };
 
 /**

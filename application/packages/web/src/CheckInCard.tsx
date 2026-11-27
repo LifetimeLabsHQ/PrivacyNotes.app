@@ -400,13 +400,23 @@ export function CheckInCard(p: Props) {
                 <span className="block truncate font-semibold text-pn">{streakLabel}</span>
                 <span className="mt-1 block">{streakDots}</span>
               </span>
+            ) : p.home && parts.length > 0 ? (
+              <span className="min-w-0 leading-snug">
+                <span className="flex items-center gap-1.5">
+                  {mood !== null && <span className="font-semibold text-pn">{moodWord(mood)}</span>}
+                  <CheckCircle size={16} weight="fill" aria-hidden="true" key={popKey} className={`shrink-0 text-success ${popKey ? 'pn-pop' : ''}`} />
+                </span>
+                <span className="mt-0.5 block line-clamp-2 text-small text-pn-muted">{parts.join(' · ')}</span>
+              </span>
             ) : (
               <>
                 {mood !== null && <span className="shrink-0 font-semibold text-pn">{moodWord(mood)}</span>}
                 {parts.length > 0 && <span className="min-w-0 truncate text-pn-muted">{(mood !== null ? '· ' : '') + parts.join(' · ')}</span>}
               </>
             )}
-            <CheckCircle size={streak ? 22 : 16} weight="fill" aria-hidden="true" key={popKey} className={`shrink-0 text-success ${popKey ? 'pn-pop' : ''}`} />
+            {!(p.home && !streak && parts.length > 0) && (
+              <CheckCircle size={streak ? 22 : 16} weight="fill" aria-hidden="true" key={popKey} className={`shrink-0 text-success ${popKey ? 'pn-pop' : ''}`} />
+            )}
           </button>
           {dayChip}
           {gear}
@@ -577,7 +587,7 @@ export function Shell({ grid, line, rootRef, onRoot, style, className, center = 
       data-checkin-card=""
       className={
         grid
-          ? `${line ? 'col-span-full' : 'pn-grid-checkin flex flex-col'}${center ? ' relative justify-center' : ''} min-w-0 rounded-xl border border-divider bg-surface-2 px-3 py-2.5 ${className ?? ''}`
+          ? `${line ? 'col-span-full' : 'pn-grid-checkin flex flex-col'} relative${center ? ' justify-center' : ''} min-w-0 rounded-xl border border-divider bg-surface-2 px-3 py-2.5 ${className ?? ''}`
           : 'min-w-0 px-4 py-2.5 bg-surface-2 border-b border-divider'
       }
     >

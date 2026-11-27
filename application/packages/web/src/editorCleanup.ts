@@ -29,8 +29,10 @@ export function collapseMediaGaps(md: string): string {
   // first. Without both, a long run of `[` or `|` was rescanned from every
   // bracket and at every split (external report, 2026-10-24, bug report
   // 23.3). Output is unchanged.
+  const imgToken =
+    '!\\[(?<!!\\[.*?!\\[).*?\\]\\(pn:(?:img|file)\\/[^)\\s]+(?:[ \\t](?:"(?:\\\\.|[^"\\\\\\r\\n])*"|\'(?:\\\\.|[^\'\\\\\\r\\n])*\'))?\\)';
   const mediaLine =
-    '(?:!\\[(?<!!\\[.*?!\\[).*?\\]\\(pn:(?:img|file)\\/[^)]+\\)(?:\\{[^}\\n]*\\})?' +
+    `(?:(?:${imgToken}|\\[${imgToken}\\]\\([^)\\n]+\\))(?:\\{[^}\\n]*\\})?` +
     '|\\[(?<!\\[.*?\\[)[^|\\n\\r\\u2028\\u2029]*\\|[^|\\n\\r\\u2028\\u2029]*\\|.*?\\]\\(pn:file\\/[^)]+\\))';
   return md.replace(
     new RegExp(`(${mediaLine})\\n{3,}(?=${mediaLine})`, 'g'),
@@ -247,17 +249,31 @@ export const MediaGapCleaner = Extension.create({
 });
 
 /**
- * Strip non-breaking spaces from paragraphs that contain only NBSP: the
- * top-level ones, the blank lines of a callout or a quote, and the empty line
- * of an empty checkbox.
- * These markers are added by EmptyParagraphSerializer on save to
- * survive the markdown round-trip. On load, we clean them so the
- * user gets truly empty paragraphs (no invisible characters that
- * interfere with typing).
+ * Whether a paragraph holds only non-breaking spaces (the `&nbsp;` marker
+ * ParagraphWithMarkdown writes so empty paragraphs survive markdown
+ * round-trip). Checks every child node rather than `textContent`, so an
+ * inline atom (note-link, icon, formula, reminder) with empty textContent is
+ * never mistaken for blank.
+ */
+export function isNbspOnlyParagraph(node: ProseMirrorNode): boolean {
+  if (node.type.name !== 'paragraph' || node.content.size === 0) return false;
+  let only = true;
+  node.content.forEach((child) => {
+    if (!child.isText || child.text!.replace(/\u00a0/g, '').length !== 0) only = false;
+  });
+  return only;
+}
+
+/**
+ * Strip non-breaking spaces from every paragraph in the document that contains
+ * only NBSP (top-level lines, list items, checklists, callouts, quotes,
+ * columns, footnotes). ParagraphWithMarkdown writes `&nbsp;` on save so empty
+ * paragraphs survive the markdown round-trip; on load we clean them so the
+ * user gets truly empty paragraphs with no hidden space before typed text.
  *
- * Fires once per editor instance on initial content parse. The
- * mountedRef guard in onUpdate suppresses the resulting onChange,
- * so this cleanup doesn't trigger a re-save.
+ * Fires once per editor instance on the first transaction after initial
+ * content parse. The mountedRef guard in onUpdate suppresses the resulting
+ * onChange, and `addToHistory: false` keeps Undo from restoring the markers.
  *
  * Fix: GitHub #101 (empty line spacing removed after reopening notes)
  */
@@ -274,65 +290,21 @@ export const NbspParagraphCleaner = Extension.create({
 
           const { doc, tr } = newState;
           const toClean: { from: number; to: number }[] = [];
-          let offset = 0;
-          for (let i = 0; i < doc.childCount; i++) {
-            const node = doc.child(i);
-            // Only strip paragraphs whose entire content is NBSP text.
-            // An inline atom (e.g. a wiki-link) has content.size > 0 but
-            // empty textContent, so the old textContent-only check matched
-            // a link-only paragraph and deleted the link. Require every
-            // child to be a text node made up solely of NBSP.
-            if (node.type.name === 'paragraph' && node.content.size > 0) {
-              let onlyNbsp = true;
-              node.content.forEach((child) => {
-                if (!child.isText || child.text!.replace(/\u00a0/g, '').length !== 0) {
-                  onlyNbsp = false;
-                }
-              });
-              if (onlyNbsp) {
-                toClean.push({ from: offset + 1, to: offset + 1 + node.content.size });
-              }
+          doc.descendants((node, pos) => {
+            if (node.type.name !== 'paragraph') return true;
+            if (isNbspOnlyParagraph(node)) {
+              toClean.push({ from: pos + 1, to: pos + 1 + node.content.size });
             }
-            offset += node.nodeSize;
-          }
-
-          // The same marker holds the empty line of an empty checkbox, which
-          // sits inside its task item rather than at the top level. Left in,
-          // it is a hidden character next to whatever the person types there.
-          // A blank line inside a callout or a quote carries it too.
-          doc.descendants((node, pos, parent) => {
-            if (
-              node.type.name === 'paragraph' &&
-              (parent?.type.name === 'callout' || parent?.type.name === 'blockquote' || parent?.type.name === 'columnsCol') &&
-              node.content.size > 0
-            ) {
-              let onlyNbsp = true;
-              node.content.forEach((child) => {
-                if (!child.isText || child.text!.replace(/ /g, '').length !== 0) onlyNbsp = false;
-              });
-              if (onlyNbsp) toClean.push({ from: pos + 1, to: pos + 1 + node.content.size });
-              return false;
-            }
-            if (node.type.name !== 'taskItem') return true;
-            const first = node.firstChild;
-            if (first?.type.name === 'paragraph' && first.content.size > 0) {
-              let onlyNbsp = true;
-              first.content.forEach((child) => {
-                if (!child.isText || child.text!.replace(/\u00a0/g, '').length !== 0) onlyNbsp = false;
-              });
-              if (onlyNbsp) toClean.push({ from: pos + 2, to: pos + 2 + first.content.size });
-            }
-            return true;
+            return false;
           });
 
           if (toClean.length === 0) return null;
-          toClean.sort((a, b) => a.from - b.from);
 
           // Delete in reverse order to keep earlier positions valid.
           for (let i = toClean.length - 1; i >= 0; i--) {
             tr.delete(toClean[i]!.from, toClean[i]!.to);
           }
-          return tr;
+          return tr.setMeta('addToHistory', false);
         },
       }),
     ];

@@ -83,14 +83,14 @@ export function placePictures(markdown: string, images: ClipImage[], outcomes: P
 }
 
 function placeEach(markdown: string, images: ClipImage[], outcomes: PictureOutcome[], label: string): string {
-  const token = new RegExp(`!\\[((?:\\\\.|[^\\]\\\\])*)\\]\\(${escapeRegExp(IMAGE_TOKEN_SCHEME)}(\\d+)\\)`, 'g');
-  return markdown.replace(token, (_whole, alt: string, index: string) => {
+  const token = new RegExp(`!\\[((?:\\\\.|[^\\]\\\\])*)\\]\\(${escapeRegExp(IMAGE_TOKEN_SCHEME)}(\\d+)([ \\t]+"(?:\\\\.|[^"\\\\\\r\\n])*")?\\)`, 'g');
+  return markdown.replace(token, (_whole, alt: string, index: string, rawTitle: string | undefined) => {
     const i = Number(index);
     const outcome = outcomes[i];
-    if (outcome && 'uuid' in outcome) return `![${alt}](pn:img/${outcome.uuid})`;
+    if (outcome && 'uuid' in outcome) return `![${alt}](pn:img/${outcome.uuid}${rawTitle ?? ''})`;
     if (outcome?.failure === 'skipped') return '';
     const image = images[i];
-    const plainAlt = image?.alt ?? '';
+    const plainAlt = image?.alt || image?.caption || '';
     const text = escapeAlt(plainAlt ? `${label}: ${plainAlt}` : label);
     if (!image) return `\\[${text}\\]`;
     return `[${text}](${image.src.replace(/[()]/g, (c) => `\\${c}`)})`;

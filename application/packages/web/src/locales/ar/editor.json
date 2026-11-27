@@ -207,6 +207,7 @@
     "cut": "قص",
     "copyAsPlain": "نسخ كنص عادي",
     "copyAsMarkdown": "نسخ بتنسيق Markdown",
+    "clearFormatting": "مسح التنسيق",
     "sortAsc": "فرز الأسطر من أ إلى ي",
     "sortDesc": "فرز الأسطر من ي إلى أ"
   },
@@ -295,6 +296,9 @@
   "inlineCode": {
     "copyHint": "انقر مع {{key}} للنسخ"
   },
+  "inlineTag": {
+    "filter": "تصفية حسب الوسم"
+  },
   "codeBlock": {
     "copyFailed": "فشل",
     "wrap": "التفاف الأسطر الطويلة",
@@ -327,7 +331,8 @@
     "linkHeading": "الربط بعنوان...",
     "headingNotFound": "لم يُعثر على العنوان",
     "headingsLocked": "افتح قفل هذه الملاحظة لترى عناوينها",
-    "noHeadings": "لا توجد عناوين في هذه الملاحظة"
+    "noHeadings": "لا توجد عناوين في هذه الملاحظة",
+    "notFound": "لم يُعثر على الملاحظة"
   },
   "footnote": {
     "placeholder": "نص الحاشية",

@@ -29,19 +29,23 @@ export function GeneratorView({ onGenerate }: { onGenerate?: (value: string) => 
 
   if (!ready) return null;
   return (
-    <PasswordGenerator
-      isPro={ready.pro}
-      onOpenUpgrade={() => void browser.tabs.create({ url: APP_URL })}
-      onGenerate={onGenerate}
-      initial={ready.pwGen}
-      onSave={(pwGen) => void writePrefs({ pwGen })}
-      onCopy={async (value) => {
-        const ok = await copyAndClear(value);
-        notify(ok
-          ? { title: t('logins.passwordCopied'), clearsAt: Date.now() + CLEAR_AFTER_MS }
-          : { tone: 'danger', title: t('notice.copyFailed'), detail: t('auth:signIn.tryAgain') });
-        return ok;
-      }}
-    />
+    <div className="p-3">
+      <div className="rounded-lg border border-divider bg-surface-2 shadow-xs">
+        <PasswordGenerator
+          isPro={ready.pro}
+          onOpenUpgrade={() => void browser.tabs.create({ url: APP_URL })}
+          onGenerate={onGenerate}
+          initial={ready.pwGen}
+          onSave={(pwGen) => void writePrefs({ pwGen })}
+          onCopy={async (value) => {
+            const ok = await copyAndClear(value);
+            notify(ok
+              ? { title: t('logins.passwordCopied'), clearsAt: Date.now() + CLEAR_AFTER_MS }
+              : { tone: 'danger', title: t('notice.copyFailed'), detail: t('auth:signIn.tryAgain') });
+            return ok;
+          }}
+        />
+      </div>
+    </div>
   );
 }

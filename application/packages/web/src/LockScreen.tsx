@@ -61,6 +61,7 @@ import {
 import { isValidPhrase } from '@notes/shared';
 import { hasPendingPhraseChange } from './authStorage';
 import { Brand } from './Brand';
+import { keyboardViewportHeightClass, useKeyboardOpen } from './useKeyboardOpen';
 
 type Props = {
   /** Answers false when the phrase does not belong to the account behind the
@@ -196,7 +197,7 @@ export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWr
   // do here until the sign-in lands or the user retries.
   if (signInState !== 'idle') {
     return (
-      <LockShell>
+      <LockShell scrollResetKey={`signin:${signInState}`}>
         <div className="space-y-4 text-center">
           {signInState === 'busy' ? (
             <div className="flex justify-center">
@@ -219,7 +220,7 @@ export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWr
 
   if (view === 'phrase' || view === 'recover') {
     return (
-      <LockShell>
+      <LockShell scrollResetKey={view}>
         <PhraseUnlock
           kind={kind}
           recover={view === 'recover'}
@@ -231,7 +232,7 @@ export function LockScreen({ onUnlock, signInState = 'idle', onRetrySignIn, onWr
   }
 
   return (
-    <LockShell>
+    <LockShell scrollResetKey="main">
       <div className="space-y-6 text-center">
         <LockLines />
 
@@ -361,10 +362,27 @@ function LockLines() {
 
 // ── Lock screen shell ───────────────────────────────────────────
 
-function LockShell({ children }: { children: React.ReactNode }) {
+function LockShell({
+  scrollResetKey,
+  children,
+}: {
+  scrollResetKey?: string;
+  children: React.ReactNode;
+}) {
+  useKeyboardOpen();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [scrollResetKey]);
+  const heightClass = keyboardViewportHeightClass();
   return (
-    <div className="fixed inset-0 z-[90] bg-surface-2 flex items-center justify-center p-6">
-      <div className="w-full max-w-sm">{children}</div>
+    <div className="fixed inset-0 z-[90] bg-surface-2">
+      <div
+        ref={scrollRef}
+        className={`${heightClass} overflow-y-auto overflow-x-hidden flex flex-col pt-[calc(var(--pn-safe-top)+1.5rem)] pb-[calc(var(--pn-safe-bottom)+1.5rem)] pl-[calc(var(--pn-safe-left,0px)+1.5rem)] pr-[calc(var(--pn-safe-right,0px)+1.5rem)]`} /* rtl-ok: physical hardware safe-area insets */
+      >
+        <div className="m-auto shrink-0 w-full max-w-sm">{children}</div>
+      </div>
     </div>
   );
 }

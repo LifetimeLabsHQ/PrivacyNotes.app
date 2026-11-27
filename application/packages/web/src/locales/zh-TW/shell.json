@@ -205,7 +205,7 @@
     "color": "顏色",
     "colorNone": "無顏色",
     "colorUseDefault": "恢復預設",
-    "icon": "圖示與標誌",
+    "icon": "圖示 / 標誌 / 表情符號",
     "colorFromFolder": "來自資料夾：{{name}}",
     "colorFromTag": "來自標籤：#{{name}}",
     "colorOwnHint": "在這裡選的顏色會填滿這則筆記的背景。<setting>資料夾與標籤顏色</setting>不會改變它。",
@@ -360,6 +360,7 @@
   },
   "demoBanner": {
     "title": "零風險試用",
+    "shortTitle": "示範",
     "description": "這裡不會儲存任何內容。免費擁有你自己的加密筆記本。"
   },
   "markdown": {
@@ -616,6 +617,10 @@
     "tooLarge": "檔案太大。單檔上限為 {{limit}} MB。",
     "titlePlaceholder": "標題（選填）",
     "notePlaceholder": "新增筆記...",
+    "taskPlaceholder": "任務項目…",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "附加到今天的日誌紀錄。",
+    "clipFallbackToast": "無法擷取網頁，已改存成書籤。",
     "photoCount": "{{count}} 張照片"
   },
   "shortcut": {
@@ -921,7 +926,8 @@
     "label": "快速新增"
   },
   "offline": {
-    "notLoaded": "你目前離線，App 的這個部分還沒載入。恢復連線後再試一次。"
+    "notLoaded": "你目前離線，App 的這個部分還沒載入。恢復連線後再試一次。",
+    "chunkBlocked": "無法載入這個檢視。請重新載入頁面，或檢查你的內容封鎖程式。"
   },
   "checkIn": {
     "prompt": "你今天好嗎？",
@@ -1094,6 +1100,7 @@
     "removed": "已從首頁移除",
     "showOnHome": "顯示在首頁",
     "removeFromHome": "從首頁移除",
+    "openTarget": "開啟 {{target}}",
     "resize": "調整 {{name}} 的大小",
     "narrower": "更窄",
     "taller": "更高",
@@ -1101,29 +1108,72 @@
     "moveEarlier": "往前移",
     "moveLater": "往後移",
     "chooseNote": "選擇筆記",
+    "chooseNotes": "選擇筆記",
     "chooseTag": "選擇標籤",
+    "chooseTags": "選擇標籤",
     "chooseFolder": "選擇資料夾",
+    "chooseFolders": "選擇資料夾",
     "chooseTracker": "選擇追蹤項目",
+    "chooseCounter": "選擇計數器",
+    "chooseCounters": "選擇計數器",
+    "chooseTypes": "選擇項目類型",
     "choose": "選擇",
     "gone": "已不在這裡",
     "otherSpace": "在另一個空間中",
     "proLocked": "Pro 的一部分",
     "noneToChoose": "目前還沒有可選擇的項目",
+    "catalogSearch": "搜尋小工具",
+    "catalogFilter": "篩選小工具",
+    "allWidgets": "所有小工具",
+    "onHomeLabel": "在首頁上",
+    "onHomeCount": "在首頁上（{{count}}）",
     "headerEvents_other": "今天有 {{formatted}} 個活動",
+    "headerOverdue_other": "{{formatted}} 個已逾期",
     "headerTasks_other": "{{formatted}} 個未完成任務",
+    "headerDosesLeft_other": "還剩 {{formatted}} 劑",
     "startToday": "開始今天的日誌",
+    "setupMedication": "設定用藥",
+    "setupCounter": "建立計數器",
+    "counterIncrease": "{{name}} 加一",
+    "counterDecrease": "{{name}} 減一",
+    "storageSummary": "{{notes}} 則筆記 · {{files}} 個檔案",
+    "graphSummary": "{{linked}} 個已連結 · {{orphans}} 個未連結",
+    "placesSummary_other": "{{count}} 個有地點的項目",
+    "quickCapture": {
+      "placeholderJournal": "加到今天的日誌...",
+      "placeholderTask": "新增任務...",
+      "placeholderNote": "寫一則快速筆記...",
+      "destination": "儲存位置",
+      "voice": "錄製語音筆記",
+      "voiceNoteTitle": "語音筆記",
+      "recording": "錄音中 {{duration}}",
+      "savingVoice": "正在加密語音筆記...",
+      "savedTo": "已儲存到 {{title}}",
+      "failed": "目前無法儲存。",
+      "micUnavailable": "這裡無法使用麥克風錄音。",
+      "micDenied": "麥克風存取遭到拒絕。"
+    },
     "groups": {
-      "keep": "你保存的東西"
+      "graph": "關聯圖與地圖",
+      "keep": "其他"
     },
     "layout": {
       "everyday": "日常",
       "planner": "規劃",
-      "writer": "寫作"
+      "writer": "寫作",
+      "wellness": "身心"
     },
     "w": {
       "checkIn": {
         "name": "打卡",
         "help": "你今天的狀態，以及你的追蹤項目"
+      },
+      "medication": {
+        "help": "今天的劑量、已服或略過，以及補藥提醒"
+      },
+      "quickCapture": {
+        "name": "快速記下",
+        "help": "直接在首頁新增文字或語音筆記"
       },
       "calendar": {
         "help": "整個月份，標出有日誌與活動的日期"
@@ -1138,7 +1188,7 @@
       },
       "tasks": {
         "name": "未完成任務",
-        "help": "筆記中尚未勾選的任務"
+        "help": "先列出已逾期和到期的任務，並可快速新增"
       },
       "recent": {
         "name": "最近編輯",
@@ -1159,9 +1209,19 @@
         "name": "一個資料夾",
         "help": "某個資料夾中最新的項目"
       },
+      "types": {
+        "name": "項目清單",
+        "help": "你選擇的類型中最新的項目"
+      },
       "onThisDay": {
         "name": "歷史上的今天",
         "help": "往年同一天的日誌紀錄"
+      },
+      "graph": {
+        "help": "保險庫中已連結筆記的即時迷你地圖"
+      },
+      "places": {
+        "help": "地圖上有地點的筆記、日誌紀錄和聯絡人"
       },
       "week": {
         "help": "字數、活躍天數、項目與打卡"
@@ -1176,6 +1236,12 @@
         "name": "你的節奏",
         "help": "26 週的寫作與心情"
       },
+      "yearPixels": {
+        "help": "一眼看完你一整年的心情顏色"
+      },
+      "patterns": {
+        "help": "最能讓你心情變好或變差的事"
+      },
       "milestone": {
         "name": "下一個里程碑",
         "help": "離下一個里程碑還有多遠"
@@ -1183,6 +1249,9 @@
       "tracker": {
         "name": "一個追蹤項目",
         "help": "一個追蹤項目：它的數字和記錄的日子"
+      },
+      "counter": {
+        "help": "直接在首頁為自訂計數器點一下 +1"
       },
       "weekRecap": {
         "help": "你的一週，濃縮在一張卡片裡"
@@ -1196,9 +1265,13 @@
       },
       "birthdays": {
         "help": "接下來 30 天內的生日"
+      },
+      "storage": {
+        "help": "你的加密儲存空間圓環，可重新計算"
       }
     },
     "empty": {
+      "medication": "今天沒有需要服用的藥物",
       "upcoming": "接下來 7 天沒有任何安排",
       "tasks": "沒有未完成任務",
       "recent": "這裡還沒有任何項目",
@@ -1206,6 +1279,11 @@
       "tag": "沒有帶這個標籤的項目",
       "folder": "這個資料夾是空的",
       "onThisDay": "往年的這一天沒有日誌紀錄",
+      "graph": "連結兩則筆記，就能在這裡看到你的關聯圖",
+      "places": "為筆記或聯絡人新增位置，就能在這裡看到標記",
+      "yearPixels": "記錄心情，為這一年塗上顏色",
+      "patterns": "再多記錄幾天，就能發現規律",
+      "counter": "還沒有計數器追蹤項目",
       "files": "還沒有檔案",
       "bookmarks": "還沒有書籤",
       "birthdays": "接下來 30 天內沒有生日",

@@ -13,6 +13,13 @@ import { UNOPENED_ROWS_KEY, unopenedRowIds } from './unopenedRows';
 import { clipGraphemes } from './clipText';
 import { isDemoMode } from './demo';
 import { isLocalTruthOnly, LOCAL_ONLY_OWNER_KEY, NEVER_SYNCED_OWNER_KEY } from './localOnly';
+import {
+  extractInlineTags,
+  noteHasInlineTag,
+  noteHasTag,
+  renameInlineTagInBody,
+  stripInlineTagInBody,
+} from './inlineTags';
 
 /**
  * Pure Dexie CRUD. No network, and no crypto of its own: wire
@@ -107,66 +114,7 @@ export function parseYamlTags(block: string): string[] {
   return tags;
 }
 
-/**
- * Inline `#tags` in a body, ignoring every place a `#` is not a tag.
- *
- * The ONE implementation, shared by the Markdown folder adapter (which reads
- * a file it does not own) and by the Obsidian and Markdown importers: one
- * grammar, one parser, so the callers cannot disagree about which `#` is a
- * tag - `[see](#custodial-mode)` and `#f46d24` are not tags anywhere.
- *
- * Skips fenced blocks and code spans, where a `#` is content. Skips link
- * DESTINATIONS, where it is an anchor or a fragment. Skips headings, where it
- * starts the line. Requires a leading letter or underscore, so `#1` and
- * `#1E40AF` stay numbers, and rejects anything shaped exactly like a CSS hex
- * colour, which costs us a six-letter tag made only of a-f and is worth it.
- *
- * `stripComments` is for the Obsidian importer alone: it removes the comment
- * TEXT later in the same pass, so a tag written inside `%%...%%` would
- * otherwise outlive the sentence that explained it (#146). The adapter must
- * NOT pass it - it reports what the file currently says, and the comment is
- * still in the file.
- */
-export function extractInlineTags(
-  body: string,
-  opts?: { stripComments?: boolean },
-): string[] {
-  let cleaned = body
-    .replace(/```[\s\S]*?```/g, '')
-    .replace(/~~~[\s\S]*?~~~/g, '')
-    .replace(/`[^`\n]*`/g, '')
-    // Link DESTINATIONS, not link text. `[see](#custodial-mode)` is an anchor
-    // and `[x](https://e.com/a#b)` is a fragment; both look exactly like a tag
-    // and neither is one. Found on a real docs folder, where anchors alone
-    // invented a dozen tags nobody had written.
-    // With no `)` after a `](`, no later destination can close either, so the
-    // rest is kept in one step instead of being read again from every `](`
-    // (external report, 2026-10-24).
-    .replace(/\]\([^)]*(\))?/g, (run, close?: string) => (close ? ']()' : run))
-    // Note-link targets. `[[#Setup]]` and `[[Note#Setup]]` point at a
-    // heading; the `#` there is an anchor, not a tag.
-    // The second branch keeps a `[[` that opens none, up to where one opening
-    // inside it would fail the same way.
-    .replace(/\[\[[^\]\n]*\]\]|(\[\[[^\]\n]*)/g, (run, open?: string) => (open === undefined ? '[[]]' : run))
-    .replace(/^\s{0,3}#{1,6}\s.*$/gm, '');
-  // Last, so a code span holding `%%` is already gone and cannot pair up with
-  // a later one across ordinary text.
-  if (opts?.stripComments) cleaned = cleaned.replace(/%%[\s\S]*?%%/g, '');
-
-  const found = new Set<string>();
-  for (const match of cleaned.matchAll(/(^|[\s[])#([\p{L}\p{N}_/-]+)/gu)) {
-    const raw = match[2];
-    // Must START with a letter or underscore, which rejects `#1E40AF`.
-    if (!raw || !/^[\p{L}_]/u.test(raw)) continue;
-    // ...but that alone still admits LOWERCASE hex, and `#f46d24` starts with a
-    // letter. Reject anything shaped exactly like a CSS colour instead: the
-    // three real lengths, hex digits only.
-    if (/^([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(raw)) continue;
-    const tag = normalizeTag(raw);
-    if (tag) found.add(tag);
-  }
-  return [...found];
-}
+export { extractInlineTags };
 
 /**
  * Stamp for an edit to an EXISTING row: the wall clock, unless that would not
@@ -896,7 +844,8 @@ export async function bulkAddTag(ids: string[], tag: string): Promise<number> {
 export async function renameTagEverywhere(
   oldTag: string,
   newTag: string,
-  inScope?: (note: LocalNote) => boolean
+  inScope?: (note: LocalNote) => boolean,
+  isLocked: (note: LocalNote) => boolean = (n) => n.pinProtected === 1,
 ): Promise<number> {
   let modifiedCount = 0;
   // Full table scan + filter in JS: `tags` isn't a multi-entry index
@@ -905,8 +854,25 @@ export async function renameTagEverywhere(
   await db.transaction('rw', db.notes, async () => {
     const all = await db.notes.toArray();
     for (const note of all) {
-      if (!note.tags.includes(oldTag)) continue;
       if (inScope && !inScope(note)) continue;
+      const hasHeader = note.tags.includes(oldTag);
+      const lockedPin = isLocked(note);
+      const hasInline = noteHasInlineTag(note, oldTag, lockedPin);
+      if (!hasHeader && !hasInline) continue;
+
+      let nextBody = note.body;
+      let bodyChanged = false;
+      let demotedToHeader = false;
+      // Read-only notes keep their body untouched.
+      if (hasInline && note.locked !== 1) {
+        const res = renameInlineTagInBody(note.body, oldTag, newTag);
+        nextBody = res.body;
+        bodyChanged = res.changed;
+        demotedToHeader = res.demotedToHeader;
+      }
+
+      if (!hasHeader && !bodyChanged) continue;
+
       const nextTags: string[] = [];
       for (const t of note.tags) {
         if (t === oldTag) {
@@ -916,12 +882,19 @@ export async function renameTagEverywhere(
           nextTags.push(t);
         }
       }
-      await db.notes.update(note.id, {
-        tags: nextTags,
+      if (demotedToHeader && !nextTags.includes(newTag)) {
+        nextTags.push(newTag);
+      }
+
+      const patch: Partial<LocalNote> = {
         updatedAt: nextStamp(note.updatedAt),
         editedAt: note.editedAt ?? note.updatedAt,
         dirty: 1,
-      });
+      };
+      if (hasHeader || demotedToHeader) patch.tags = nextTags;
+      if (bodyChanged) patch.body = nextBody;
+
+      await db.notes.update(note.id, patch);
       modifiedCount++;
     }
   });
@@ -930,19 +903,24 @@ export async function renameTagEverywhere(
 
 /**
  * Trash every active (non-trashed, non-deleted) note that carries the
- * given tag. Used by the "Delete tag and notes" action in the tag menu.
+ * given tag (note-level or inline on unlocked notes). Used by the "Delete
+ * tag and notes" action in the tag menu.
  * A read-only note keeps the tag and stays where it is.
  * Returns the number of notes sent to trash.
  */
-export async function trashNotesWithTag(tag: string, inScope?: (note: LocalNote) => boolean): Promise<number> {
+export async function trashNotesWithTag(
+  tag: string,
+  inScope?: (note: LocalNote) => boolean,
+  isLocked: (note: LocalNote) => boolean = (n) => n.pinProtected === 1,
+): Promise<number> {
   let trashedCount = 0;
   await db.transaction('rw', db.notes, async () => {
     const all = await db.notes.toArray();
     for (const note of all) {
       if (note.deleted === 1 || note.trashed === 1) continue;
       if (note.locked === 1) continue;
-      if (!note.tags.includes(tag)) continue;
       if (inScope && !inScope(note)) continue;
+      if (!noteHasTag(note, tag, isLocked(note))) continue;
       await db.notes.update(note.id, {
         trashed: 1,
         updatedAt: nextStamp(note.updatedAt),
@@ -956,24 +934,45 @@ export async function trashNotesWithTag(tag: string, inScope?: (note: LocalNote)
 }
 
 /**
- * Strip a tag from every note that carries it. Does NOT trash or
- * delete the notes themselves - they remain, just with one fewer
- * tag. Returns the number of notes modified.
+ * Strip a tag from every note that carries it (header tags and inline `#tag`
+ * markers on unlocked, editable notes - stripping only `#` so prose keeps the
+ * word). Does NOT trash or delete the notes themselves.
+ * Returns the number of notes modified.
  */
-export async function deleteTagEverywhere(tag: string, inScope?: (note: LocalNote) => boolean): Promise<number> {
+export async function deleteTagEverywhere(
+  tag: string,
+  inScope?: (note: LocalNote) => boolean,
+  isLocked: (note: LocalNote) => boolean = (n) => n.pinProtected === 1,
+): Promise<number> {
   let modifiedCount = 0;
   await db.transaction('rw', db.notes, async () => {
     const all = await db.notes.toArray();
     for (const note of all) {
-      if (!note.tags.includes(tag)) continue;
       if (inScope && !inScope(note)) continue;
-      const nextTags = note.tags.filter((t) => t !== tag);
-      await db.notes.update(note.id, {
-        tags: nextTags,
+      const hasHeader = note.tags.includes(tag);
+      const lockedPin = isLocked(note);
+      const hasInline = noteHasInlineTag(note, tag, lockedPin);
+      if (!hasHeader && !hasInline) continue;
+
+      let nextBody = note.body;
+      let bodyChanged = false;
+      if (hasInline && note.locked !== 1) {
+        const res = stripInlineTagInBody(note.body, tag);
+        nextBody = res.body;
+        bodyChanged = res.changed;
+      }
+
+      if (!hasHeader && !bodyChanged) continue;
+
+      const patch: Partial<LocalNote> = {
         updatedAt: nextStamp(note.updatedAt),
         editedAt: note.editedAt ?? note.updatedAt,
         dirty: 1,
-      });
+      };
+      if (hasHeader) patch.tags = note.tags.filter((t) => t !== tag);
+      if (bodyChanged) patch.body = nextBody;
+
+      await db.notes.update(note.id, patch);
       modifiedCount++;
     }
   });
@@ -1025,10 +1024,6 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
   // The key ring this device kept goes with it: the next sign-in takes it
   // from the server again. Spec: docs/internal/plans/phrase-change.md (6.1)
   await db.kv.delete(KEY_RING_CACHE_KEY);
-  // The other records of this account, on every wipe: the sign-out removes
-  // the pull cursor, so the retry list and its epoch go with it, and the
-  // rest names this account's notes, files or key epochs.
-  await db.kv.bulkDelete(ACCOUNT_KV_KEYS);
   if (opts?.keepUnsyncedNotes) {
     // Forced sign-outs (device revoked, session expired) preserve rows
     // the server has not confirmed (either dirty value, pending
@@ -1092,6 +1087,7 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
     // Favicons are derived, never unsynced user data, so a forced sign-out
     // clears them like any other sign-out.
     await clearFaviconCache();
+    await db.kv.bulkDelete(ACCOUNT_KV_KEYS);
     return;
   }
   await db.notes.clear();
@@ -1121,6 +1117,9 @@ export async function clearLocalDatabase(opts?: { keepUnsyncedNotes?: boolean })
   // The rows name their account, but nothing of a signed-out account stays.
   // Spec: docs/contrib/passkeys.md (section 6, Adoption)
   await db.appliedInbox.clear();
+  // Account kv mirrors (including localOnlyOwner) go after the data tables so
+  // an interrupted local-only sign-out still sees the mirror on the next boot.
+  await db.kv.bulkDelete(ACCOUNT_KV_KEYS);
   // The favicon cache is a separate IndexedDB, so it is not covered by any
   // db.*.clear() above. It holds a per-domain record derived from the user's
   // links, so it must go on sign-out too. See clearFaviconCache.
@@ -1179,10 +1178,10 @@ export async function countUnsyncedNotes(): Promise<number> {
  * Used for account deletion. After this, the Dexie instance is dead
  * and the page must reload.
  */
-export async function deleteEntireLocalDatabase(): Promise<void> {
+export async function deleteEntireLocalDatabase(opts?: { keepAutoOpen?: boolean }): Promise<void> {
   resetPulledClean();
   // db.delete() drops the Dexie database only; the favicon cache is its own
   // IndexedDB and would outlive account deletion by up to 90 days without this.
   await clearFaviconCache();
-  await db.delete();
+  await db.delete({ disableAutoOpen: !opts?.keepAutoOpen });
 }

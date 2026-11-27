@@ -25,6 +25,9 @@ type Props = {
    *  #288): the input starts filled, its hits marked, and the caret stays
    *  where it was. */
   initialQuery?: string;
+  /** True when opened from a tag filter so `#tag` matches only exact inline
+   *  tags (never prefixes like `#tag-extra` or code); clears once edited. */
+  initialExactTag?: boolean;
   /** The term to start on when the reader swapped here from the replace bar. */
   startQuery?: string;
   /** Grows the bar into the replace bar with the current term. Absent on a
@@ -49,10 +52,11 @@ type Props = {
  * the control surface. ReplaceBar.tsx is its Pro twin on the same plugin,
  * and MatchNav.tsx holds the count and arrows both bars draw.
  */
-export function FindBar({ editor, focusTick, initialQuery, startQuery, onSwap, swapPro = false, onClose }: Props) {
+export function FindBar({ editor, focusTick, initialQuery, initialExactTag = false, startQuery, onSwap, swapPro = false, onClose }: Props) {
   const { t } = useTranslation('editor');
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState(initialQuery || startQuery || '');
+  const [exactTag, setExactTag] = useState(initialExactTag);
   const [info, setInfo] = useState<SearchInfo>({ active: -1, total: 0, activeIsNode: false });
 
   const refresh = useCallback(() => {
@@ -76,10 +80,10 @@ export function FindBar({ editor, focusTick, initialQuery, startQuery, onSwap, s
   // a note that has just mounted, whose images grow as they decode. The
   // arrows below scroll once, because by then the note is laid out.
   useEffect(() => {
-    setSearchQuery(editor.view, query);
+    setSearchQuery(editor.view, query, false, exactTag);
     refresh();
     if (query) scrollToCurrentMatchUntilSettled(editor.view);
-  }, [query, editor, refresh]);
+  }, [query, exactTag, editor, refresh]);
 
   // Keep the count fresh while the note is edited under an open bar.
   useEffect(() => {
@@ -144,7 +148,7 @@ export function FindBar({ editor, focusTick, initialQuery, startQuery, onSwap, s
         ref={inputRef}
         type="text"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) => { setExactTag(false); setQuery(e.target.value); }}
         onKeyDown={onKeyDown}
         placeholder={t('common:palette.commands.find')}
         aria-label={t('common:palette.commands.find')}

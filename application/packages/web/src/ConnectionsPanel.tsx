@@ -15,7 +15,7 @@ import { PathGlyph, useItemLook } from './looks/LookGlyph';
 import { ProBadge } from './OptionsMenu';
 import { isDemoMode } from './demo';
 import { useTheme } from './theme';
-import { buildLocalGraph } from './graph/graphModel';
+import { buildLocalGraph, isSyntheticGraphId } from './graph/graphModel';
 import { closeMeaningDoor, laterMeaningDoor, meaningDoorClosed, onDeviceAiShown, reopenMeaningDoor, useMeaningState } from './onDeviceAi';
 
 const LocalGraphCardLazy = lazy(() => import('./graph/LocalGraphCard').then((m) => ({ default: m.LocalGraphCard })));
@@ -69,7 +69,7 @@ export type MeaningDoor = { pro: boolean; onOpen: () => void };
  * again" hides it on this device for good, with an Undo bar that says where
  * the feature stays. It shows only while the model is off, and never in the
  * demo, which cannot download the model. The shape is ui-patterns.md section 184.
- * Spec: docs/internal/plans/related-notes.md (section 5, "Where it lives")
+ * Spec: docs/internal/specs/related-notes.md (section 5, "Where it lives")
  */
 function MeaningDoorLine({ door }: { door: MeaningDoor }) {
   const { t } = useTranslation('notes');
@@ -118,7 +118,7 @@ const UNDO_MS = 6000;
  * marked "Not related", folded until opened, each with Restore. Restore
  * suggests the pair again on every device (dismissedSuggestions.ts).
  * The shape is ui-patterns.md section 186.
- * Spec: docs/internal/plans/related-notes.md (section 9, "Not related")
+ * Spec: docs/internal/specs/related-notes.md (section 9, "Not related")
  */
 function NotRelatedLine({ notes, title, onRestore }: { notes: LocalNote[]; title: (n: LocalNote) => string; onRestore: (n: LocalNote) => void }) {
   const { t } = useTranslation('notes');
@@ -229,11 +229,11 @@ function ConnectionRow({ note, title, why, suggested, actions, onOpen }: { note:
  */
 export function ConnectionsPanel({
   lists,
+  openNoteId,
   centerNote,
   notes,
   linkIndex,
   itemStyles,
-  folders,
   centerRelated,
   pinned,
   pinnedTitle,
@@ -250,11 +250,12 @@ export function ConnectionsPanel({
   onClose,
 }: {
   lists: ConnectionLists;
+  openNoteId?: string;
   centerNote: LocalNote;
   notes: readonly LocalNote[];
   linkIndex: LinkIndex;
   itemStyles: ItemStyles;
-  folders: readonly FolderDef[];
+  folders?: readonly FolderDef[];
   centerRelated: readonly { note: LocalNote; why: RelatedWhy }[];
   pinned: boolean;
   pinnedTitle: string | null;
@@ -283,10 +284,10 @@ export function ConnectionsPanel({
   const lockedKey = notes.filter(isNoteLocked).map((n) => n.id).join(' ');
   const localGraph = useMemo(
     () => (canShowGraph
-      ? buildLocalGraph(centerNote.id, depth, notes, linkIndex, isNoteLocked, itemStyles, folders, centerRelated)
+      ? buildLocalGraph(centerNote.id, depth, notes, linkIndex, isNoteLocked, itemStyles, centerRelated)
       : { nodes: [], edges: [] }),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- isNoteLocked changes identity every render; lockedKey carries what it reads.
-    [canShowGraph, centerNote.id, depth, notes, linkIndex, lockedKey, itemStyles, folders, centerRelated],
+    [canShowGraph, centerNote.id, depth, notes, linkIndex, lockedKey, itemStyles, centerRelated],
   );
   const showLocalGraph = canShowGraph && localGraph.nodes.length > 0;
   const centerTitle = deriveDisplayTitle(centerNote, isNoteLocked(centerNote));
@@ -352,6 +353,7 @@ export function ConnectionsPanel({
             <LocalGraphCardLazy
               centerId={centerNote.id}
               centerTitle={centerTitle}
+              activeNoteId={openNoteId}
               nodes={localGraph.nodes}
               edges={localGraph.edges}
               depth={depth}
@@ -361,7 +363,7 @@ export function ConnectionsPanel({
               onTogglePin={onTogglePin}
               onOpenFullGraph={() => onOpenFullGraph(centerNote.id)}
               onSelectNeighbor={(id) => {
-                if (id.startsWith('missing:')) return;
+                if (isSyntheticGraphId(id)) return;
                 const target = byId.get(id);
                 if (target) onOpen(target);
               }}
@@ -370,8 +372,8 @@ export function ConnectionsPanel({
                 hop1: t('graph.hop1'),
                 hop2: t('graph.hop2'),
                 depthLabel: t('graph.depthLabel'),
-                pin: t('shell:contextMenu.pin'),
-                unpin: t('shell:contextMenu.unpin'),
+                pin: t('graph.pinLocalGraph'),
+                unpin: t('graph.unpinLocalGraph'),
                 pinnedTo: (title) => t('graph.pinnedCenter', { title }),
                 fullGraph: t('graph.fullGraph'),
                 empty: t('graph.localEmpty'),

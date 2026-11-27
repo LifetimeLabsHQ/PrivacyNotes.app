@@ -21,8 +21,9 @@ import { Microphone as MicIcon } from './icons';
 import { Spinner } from './ui';
 import type { EditorView } from '@tiptap/pm/view';
 import { triggerAttachmentUpload } from './EncryptedAttachment';
-import { formatDuration } from './formatDuration';
-import { toLocalIso } from './notesViewUtils';
+import { formatDuration, recordingStamp } from './formatDuration';
+
+export { recordingStamp };
 
 export type AudioRecordingState = 'idle' | 'recording' | 'uploading';
 
@@ -30,13 +31,6 @@ export type AudioRecordingState = 'idle' | 'recording' | 'uploading';
 const MAX_RECORDING_SECONDS = 15 * 60; // 15 minutes
 /** Seconds remaining when the UI shifts to warning colors. */
 const WARNING_THRESHOLD = 60;
-
-/** The recording's name stamp in the person's local time, as
- *  `2026-10-06T19-43-15`: a name to read, so never the UTC clock. */
-export function recordingStamp(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${toLocalIso(d)}T${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
-}
 
 type Props = {
   editorView: EditorView | null;

@@ -1,26 +1,23 @@
 /**
- * The list column: the open folder's files, or the entry state.
+ * List column for the Markdown folder pillar: scanned files or the entry state.
  *
- * Owns its chrome rather than reusing the encrypted sidebar, which is the
- * load-bearing decision from the design session - isolation by construction,
- * not scoping by discipline. Nothing reachable from here can read or write the
- * encrypted store, so no later change can leak content across the boundary by
- * forgetting a filter.
+ * Owns its chrome rather than reusing the encrypted sidebar so isolation holds
+ * by construction: nothing reachable here reads or writes the encrypted store.
  *
  * Spec: docs/internal/specs/markdown-folder.md (note-links never cross the boundary; a title must not leak)
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListNav } from '../notesView/ListNav';
-import { ListSearchInput } from '../ListSearchInput';
 import { ListPrefsPopover } from '../ListPrefsPopover';
 import MarkdownItem from './MarkdownItem';
 import { formatBytes } from '../formatBytes';
 import { useProgressiveReveal } from '../useProgressiveReveal';
 import { itemGridClass, routeItemClick, useScrollRestore } from '../itemList';
 import { compareNotes } from '../notesViewUtils';
-import { HoverLabel } from '../HoverLabel';
-import { X, CheckSquare, FileMd, FileTxt, Folder, NotePencil, Question, Trash, FunnelSimple, Lock, Copy, ArrowsClockwise, PILLAR_GLYPHS } from '../icons';
+import { keyText } from '../shortcutMatch';
+import { HoverLabel, IconButton, ListSearchInput, SelectionCountStrip } from '../ui';
+import { X, CheckSquare, FileMd, FileTxt, Folder, Question, Trash, FunnelSimple, Lock, Copy, ArrowsClockwise, PILLAR_GLYPHS } from '../icons';
 import { NewButton } from '../NewButton';
 import type { ListPrefs, ListPrefsStore } from '../listPrefs';
 import type { View } from '../views';
@@ -46,7 +43,7 @@ import { textMatcher } from '../textMatch';
 import { isImeComposing } from '../imeComposing';
 import type { OpenedMarkdownDir, OpenedMarkdownFile } from './types';
 
-/** A file on disk carries no PIN flag, so no row in this pane is ever behind the gate. */
+/** Files on disk carry no PIN flag, so rows in this pane are never PIN-gated. */
 const DISK_FILE_LOCKED = false;
 
 export function MarkdownListPane({
@@ -81,46 +78,35 @@ export function MarkdownListPane({
   onOpenDrawer: () => void;
   dir: OpenedMarkdownDir | null;
   onDir: (next: OpenedMarkdownDir | null) => void;
-  /** Rail selections. Both narrow the list; the rail owns the state because it
-   *  renders in a different part of the shell. */
+  /** Subfolder and tag selections from the sidebar rail. */
   dirFilter: string | null;
   tagFilter: string | null;
-  /** The filter the pane opens with: the All search's text, when the list's
-   *  Markdown entry brought the reader here. */
+  /** Initial search query carried over when navigating from All search. */
   initialFilter?: string;
   tagsByPath: Map<string, FileMeta>;
-  /** False while the background tag pass is still reading files, which is the
-   *  difference between "no files have this tag" and "not read yet". */
+  /** False while the background tag pass is still reading files, distinguishing
+   *  "no files match this tag" from "still scanning". */
   tagsScanned: boolean;
-  /** The shell's resolved list preferences, so this list honours the same
-   *  preview/date/tags toggles as every other one. */
+  /** Resolved list preferences so preview, date, tags, and size toggles match other lists. */
   listPrefs: ListPrefs;
-  /** The prefs store behind the sort popover - the same one every other list
-   *  writes to, so sorting is a single app-wide setting rather than a
-   *  per-pillar one the user has to discover twice. */
+  /** Shared list preferences store backing the sort popover. */
   listPrefsStore: ListPrefsStore;
   onListPrefsChange: (next: ListPrefsStore) => void;
   opened: OpenedMarkdownFile | null;
   onOpened: (file: OpenedMarkdownFile | null) => void;
-  /** List or grid, from the shell's one setting - the pillar does not get its
-   *  own toggle. `MarkdownItem` draws the row or the tile from one item, the
-   *  same pair `NotesList` uses. */
+  /** List or grid layout from the shell setting. */
   viewMode: 'list' | 'grid';
-  /** Open the reference card behind the `?`. Owned by the shell because the
-   *  modal is the shell's to render. Spec: docs/internal/specs/markdown-folder.md (12) */
+  /** Opens the explainer modal rendered by the shell. Spec: docs/internal/specs/markdown-folder.md (12) */
   onExplain: () => void;
-  /** A remembered folder awaiting the click that re-grants its permission. */
+  /** Remembered folder awaiting a click to re-grant permission or desktop scope. */
   reopenName: string | null;
   onReopen: () => void;
-  /** Opens the app's context menu at the pointer. */
+  /** Opens the app context menu at the pointer. */
   onContextMenu: (e: React.MouseEvent, items: ContextMenuItem[]) => void;
-  /** The file's NAME and its RAW text. Deliberately not a title and a body:
-   *  the conversion belongs to the importer, so a file saved from here becomes
-   *  the same note as the same file dropped on the app. */
+  /** Filename and raw text so the importer produces the same note as drag-and-drop. */
   onImportToNotes: (filename: string, raw: string) => void;
   onRequestDelete: (file: OpenedMarkdownFile) => void;
-  /** Bulk verbs, taking relative paths. Both resolve their contents here rather
-   *  than in the shell, which never learns what a folder entry is. */
+  /** Bulk actions over relative paths, resolved locally without exposing folder entries to the shell. */
   onImportManyToNotes: (paths: string[]) => Promise<void>;
   onRequestDeleteMany: (paths: string[]) => void;
 }) {
@@ -130,27 +116,22 @@ export function MarkdownListPane({
   const [busy, setBusy] = useState(false);
   const [filter, setFilter] = useState(initialFilter ?? '');
   const reveal = useProgressiveReveal();
-  // The scroll position across a hide and show of the pane (#186); a new
-  // folder or filter starts at the top.
+  // Preserves scroll position across pane hide/show (#186); resets when folder or filters change.
   const scroll = useScrollRestore([dir, filter, dirFilter, tagFilter]);
   const gridMode = viewMode === 'grid';
   const [showListPrefs, setShowListPrefs] = useState(false);
   const [showDefaultApp, setShowDefaultApp] = useState(false);
   /**
-   * Read here as well as inside the popover, because the toolbar button's own
-   * presence IS the state: it is green while the association is not ours and
-   * absent once it is, which in grid mode with nothing open is the only thing on
-   * screen that says so. One shared fetch backs both - see `defaultApp.ts`.
+   * Read here as well as inside the popover because the toolbar button is shown
+   * only while PrivacyNotes is not yet the default `.md` handler; one shared
+   * module state backs both (`defaultApp.ts`).
    */
   const defaultApp = useDefaultApp('markdown');
   /**
-   * Multi-select, mirrored rather than reused.
-   *
-   * `useMultiSelect` is wired to the encrypted store - notesRepo writes, sync,
-   * the blob stores and the PIN gate - so calling it here would hand this pillar
-   * a route into exactly the data it must not reach. The gestures are copied
-   * (click to toggle, shift for a range, long-press to enter) so the list feels
-   * identical; only the state is local and only paths go in it.
+   * Local multi-select over relative paths. Kept separate from `useMultiSelect`
+   * because that hook wires into `notesRepo`, sync, blob stores, and PIN gates
+   * on the encrypted store, while gestures (click toggle, shift-range, touch
+   * long-press) stay identical.
    */
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectionMode, setSelectionMode] = useState(false);
@@ -167,9 +148,8 @@ export function MarkdownListPane({
     setError(null);
     try {
       const ref = await pickFile();
-      if (!ref) return; // cancelled - not an error
-      // The picker's filter is a hint, not a gate: every OS picker offers an
-      // "all files" escape, so check what actually came back before reading it.
+      if (!ref) return; // canceled - not an error
+      // Validate extension explicitly because OS file pickers allow switching to "All files".
       if (!isSupportedFile(ref.name)) {
         setError(t('markdown.unsupportedFile'));
         return;
@@ -181,13 +161,9 @@ export function MarkdownListPane({
   }
 
   /**
-   * Straight to the OS picker, with no explainer modal in front of it: the
-   * only caller is the button UNDER `MarkdownPitch`, which the empty state
-   * renders, so a modal here would answer a question by showing the reader
-   * the screen they are already looking at. The plaintext facts land before
-   * the picker anyway - "Outside our vault / No sync, encryption or backup"
-   * sits two inches above the button - and the full card is one click away
-   * on the `?`.
+   * Opens the OS directory picker directly; `MarkdownEmptyState` displays
+   * `MarkdownPitch` inline above the picker, and the `?` toolbar button opens
+   * the full reference card once a folder is loaded.
    * Spec: docs/internal/specs/markdown-folder.md (section 12)
    */
   async function handleOpenFolder() {
@@ -208,14 +184,12 @@ export function MarkdownListPane({
     }
   }
 
-  /** Create a new note in the folder, in whichever subfolder is selected. */
+  /** Creates a new untitled Markdown file in the active subfolder. */
   async function handleNew() {
     if (!dir) return;
     setError(null);
     setBusy(true);
     const base = dirFilter ?? '';
-    // `Untitled.md`, then `Untitled 2.md`, matching how the rest of the app and
-    // every file manager number a duplicate.
     const freeName = (entries: DirectoryEntry[]) => {
       const taken = new Set(entries.map((e) => e.relPath));
       let name = 'Untitled.md';
@@ -231,9 +205,7 @@ export function MarkdownListPane({
         return;
       } catch (err) {
         if (!(err instanceof FileExistsError)) throw err;
-        // `dir.entries` is a snapshot from the last scan, so a file created in
-        // Finder since then is invisible to `freeName` and `createFile` refuses
-        // rather than truncating it. Rescan and take the next free name once.
+        // Rescan once when an external file was created after the last scan snapshot.
         entries = await dir.ref.scan();
         onDir({ ref: dir.ref, entries });
       }
@@ -248,15 +220,9 @@ export function MarkdownListPane({
   }
 
   /**
-   * Rescan, held open for one full turn of the spinner.
-   *
-   * A 94-file folder scans in single-digit milliseconds, so `busy` flipped back
-   * before React painted a single frame of the spin and the button read as
-   * broken - nothing moved, and a scan that found no changes leaves the list
-   * looking identical, so there was no second signal either. The floor is the
-   * feedback: 600ms is one rotation, long enough to register as "it ran" and
-   * short enough not to feel like waiting. It runs CONCURRENTLY with the scan,
-   * so a genuinely slow folder is not delayed by it.
+   * Rescans the folder while holding `busy` for at least one 600ms rotation
+   * concurrently with `scan()` so fast local scans still show visible feedback
+   * without delaying slower folders.
    */
   async function handleRescan() {
     if (!dir) return;
@@ -276,32 +242,16 @@ export function MarkdownListPane({
   }
 
   /**
-   * Right-click menu for a file row.
-   *
-   * Without this the event bubbles to the shell's fallback menu, which offers
-   * New Login, Zen Mode and Sign Out over a Markdown file - every entry wrong
-   * for the thing under the cursor. Select leads, exactly as it does in the
-   * encrypted row menu, and is the discoverable route into multi-select for
-   * anyone who never guesses the Cmd/Ctrl-click. The rest is deliberately only
-   * the verbs that exist and work on both platforms: path-based actions
-   * (reveal in folder, copy path) cannot exist on the web at all, because the
-   * File System Access API withholds the path by design, so they belong with
-   * the desktop build rather than as rows that vanish depending on where you
-   * are.
+   * Context menu for a file row so right-clicking never bubbles to the shell's
+   * encrypted-item fallback menu. Includes `Copy path` only when the platform
+   * exposes real filesystem paths (`hasRealPath()`).
    */
   function rowMenu(entry: DirectoryEntry): ContextMenuItem[] {
     const path = entry.ref.location;
     const isSelected = selected.has(entry.relPath);
-    // Path-based rows exist only where a path does. On the web the File System
-    // Access API withholds it by design, so these are absent rather than
-    // present-and-broken.
-    // Copy path is the only row here, and the other two are absent by design.
-    // The desktop capability file carries no opener path grant (`opener:default`
-    // covers `openUrl` and nothing else), so "Reveal in folder" would be
-    // ACL-denied, and "Open in default app" is self-referential once this app
-    // can BE the default `.md` handler - it asks the OS to open the file, the
-    // OS hands it straight back, and the user sees nothing happen. Do not add
-    // either without a grant and a reason.
+    // Only `Copy path` is offered on desktop: `opener:default` grants `openUrl`
+    // without path reveal, and opening in the OS default `.md` app would loop
+    // back into PrivacyNotes when PrivacyNotes owns the association.
     const pathItems: ContextMenuItem[] = hasRealPath() ? [
       {
         label: t('markdown.copyPath'),
@@ -356,31 +306,23 @@ export function MarkdownListPane({
     lastPickedRef.current = null;
   }
 
-  /** Drop selected paths that no longer exist after a rescan.
-   *
-   *  A bulk delete finishes as a new `entries` array with those rows gone. Left
-   *  alone, the selection keeps naming files that are not there, so the chip
-   *  reads "3 of 82 selected" with nothing highlighted and the verbs act on
-   *  paths that would fail. Emptying the set also exits selection mode, which
-   *  is the same rule `toggleSelected` follows when the last row is dropped. */
+  /** Prune selected paths and range anchor that no longer exist after a rescan,
+   *  exiting selection mode if every selected file was removed. */
   useEffect(() => {
-    if (!dir) return;
-    const live = new Set(dir.entries.map((e) => e.relPath));
+    const live = new Set((dir?.entries ?? []).map((e) => e.relPath));
+    if (lastPickedRef.current !== null && !live.has(lastPickedRef.current)) {
+      lastPickedRef.current = null;
+    }
     setSelected((prev) => {
+      if (prev.size === 0) return prev;
       const next = new Set([...prev].filter((p) => live.has(p)));
       if (next.size === prev.size) return prev;
-      if (next.size === 0) {
-        setSelectionMode(false);
-        lastPickedRef.current = null;
-      }
+      if (next.size === 0) setSelectionMode(false);
       return next;
     });
   }, [dir]);
 
-  /** Toggle one path. Selection mode follows the set - on the moment anything
-   *  is picked, off again when the last one is dropped - so deselecting the
-   *  final row leaves the list rather than stranding it in checkbox mode with
-   *  nothing selected. Same rule as `useMultiSelect`. */
+  /** Toggle one path, syncing `selectionMode` when picking the first or dropping the last row. */
   function toggleSelected(relPath: string) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -391,9 +333,7 @@ export function MarkdownListPane({
     lastPickedRef.current = relPath;
   }
 
-  /** Shift-click selects everything between the last pick and this one, over
-   *  the CURRENT order - which is what the user can see, and changes with the
-   *  sort and the filter. */
+  /** Shift-click selects the span between the last pick and `relPath` in visible list order. */
   function rangeSelect(relPath: string) {
     const anchor = lastPickedRef.current;
     if (!anchor) { toggleSelected(relPath); return; }
@@ -415,12 +355,8 @@ export function MarkdownListPane({
   }
 
   /**
-   * Escape leaves selection mode, the same way it does in the encrypted list -
-   * whose Escape lives in `useKeyboardShortcuts`, alongside a cascade this
-   * pillar has no entry in, so it carries its own listener instead. Bubble
-   * phase on purpose: `useEscapeToClose` runs in the capture phase and stops
-   * the event, so an open modal or popover keeps Escape for itself and this
-   * never fires underneath one.
+   * Escape exits selection mode in bubble phase so capture-phase modals and
+   * popovers (`useEscapeToClose`) consume Escape first when open.
    */
   useEffect(() => {
     if (!selectionMode) return;
@@ -432,70 +368,38 @@ export function MarkdownListPane({
   }, [selectionMode]);
 
   /**
-   * A different folder, or a different rail filter, drops the selection - the
-   * reset `useMultiSelect` runs on a view or tag change, for its reason: bulk
-   * verbs aimed at files you can no longer see are a trap. Switching pillars
-   * needs no handling here, because the shell renders this pane only for the
-   * markdown view and unmounts it with the state inside. Keyed on the folder's
-   * location rather than the `dir` object, since a rescan hands back a new
-   * object for the same folder and must not wipe a selection mid-assembly.
+   * Changing the open folder location or rail filters clears selection so bulk
+   * actions never target hidden files; keyed on `dir?.ref.location` so rescans
+   * of the same folder preserve active selections.
    */
   useEffect(() => {
     if (selectionMode) exitSelection();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dir?.ref.location, dirFilter, tagFilter]);
 
-  /**
-   * Drop paths whose file is gone. The usual case is the bulk delete that just
-   * ran: the shell trashes the files, rescans, and hands back a folder without
-   * them, but the set here would keep every dead path - so the strip goes on
-   * counting files that no longer exist and never empties. Same guard the
-   * encrypted list grew for #184. Keyed on the entries and not on the filters,
-   * because a file hidden by a filter has not left the folder.
-   */
-  useEffect(() => {
-    if (selected.size === 0) return;
-    const alive = new Set((dir?.entries ?? []).map((e) => e.relPath));
-    const kept = [...selected].filter((p) => alive.has(p));
-    if (kept.length === selected.size) return;
-    setSelected(new Set(kept));
-    setSelectionMode(kept.length > 0);
-    if (lastPickedRef.current !== null && !alive.has(lastPickedRef.current)) lastPickedRef.current = null;
-  }, [dir, selected]);
-
-  /** Bytes on disk, formatted, once the background pass has read the file. */
+  /** Formatted byte size once the background pass has stat'd the file. */
   const sizeOf = (entry: DirectoryEntry) => {
     if (!listPrefs.showSize) return null;
     const bytes = tagsByPath.get(entry.relPath)?.size;
     return bytes != null ? formatBytes(bytes) : null;
   };
 
-  // Filters on path, not contents. Reading every file to search inside them is
-  // a whole index and belongs with one, not with a keystroke handler.
+  // Filters by relative path rather than full-text file reads.
   const matches = useMemo(() => {
     if (!dir) return [];
     const q = filter.trim();
     const match = q ? textMatcher(q) : null;
     const filtered = dir.entries.filter((e) => {
-      // A folder selection includes everything beneath it, which is what
-      // clicking a folder means to anyone who has used a file manager.
       if (dirFilter !== null && !e.dir.startsWith(dirFilter)) return false;
       if (tagFilter !== null && !(tagsByPath.get(e.relPath)?.tags ?? []).includes(tagFilter)) return false;
       if (match && !match(e.relPath)) return false;
       return true;
     });
 
-    /* Sorted through `compareNotes`, the app's single comparator, rather than a
-     * hand-rolled one. Its own doc says every list goes through it and that
-     * per-pillar sorting is how the Tasks pillar silently stopped honouring
-     * pins (#194) - this list was repeating that mistake.
-     *
-     * One override: `compareNotes` measures size as `body.length`, and our body
-     * is a 300-char excerpt, so bytes come from the background read instead.
-     * A file the pass has not reached yet has no size at all - not a size of
-     * zero - so it sorts last in BOTH directions, outside the direction flip.
-     * Folding it into the comparison as a number would park every unread file
-     * at one end and then march it across the list as the index fills. */
+    /* Sort through `compareNotes` so sort rules stay consistent across pillars,
+     * overriding `size` with byte counts from the background scan (since `note.body`
+     * holds a short excerpt). Unscanned files sort last in both directions rather
+     * than jumping from 0 as the index fills. */
     const rows = filtered.map((entry) => ({
       entry,
       note: entryToNote(entry.relPath, tagsByPath.get(entry.relPath)),
@@ -518,74 +422,82 @@ export function MarkdownListPane({
   }, [dir, filter, dirFilter, tagFilter, tagsByPath, listPrefs.sortField, listPrefs.sortDir]);
 
   /**
-   * Open the first file when a folder is opened, matching every other pillar.
-   *
-   * This lives here rather than beside the shell's auto-select effect because
-   * only this component knows what "first" means: the row order is the filter,
-   * the rail's folder and tag scopes, and `compareNotes` applied to `matches`.
-   *
-   * Two of the shell effect's three guards are copied deliberately - below the
-   * md breakpoint the list and pane are mutually exclusive, so punching straight
-   * into an editor would hide the list the user just asked for, and in grid mode
-   * the grid IS the surface (its pane is `hidden` anyway, so opening a file there
-   * would change nothing on screen and everything about the state).
-   *
-   * The third guard is NOT copied, on purpose. The shell effect re-selects
-   * whenever the selection leaves the visible list, which for this pillar would
-   * mean the open file switching under the cursor as someone types in the filter
-   * box - in a pane that writes to disk. So this fires once per folder, tracked
-   * by path: close a file and it stays closed, switch folders and the new one
-   * opens its first file.
+   * Auto-opens the first file once per opened folder on desktop/tablet widths
+   * (`>= 768px`) in list mode, without re-selecting when filter typing hides
+   * the open file.
    */
   const autoOpenedFolderRef = useRef<string | null>(null);
   useEffect(() => {
     if (!dir) {
-      // Closing the folder re-arms it, so reopening the same one auto-opens again.
       autoOpenedFolderRef.current = null;
       return;
     }
     if (gridMode || opened) return;
     if (autoOpenedFolderRef.current === dir.ref.location) return;
-    // `matches` is empty for one render while a background tag pass populates a
-    // sort key, so an empty list is "not yet", never "nothing to open".
     const first = matches[0];
     if (!first) return;
     if (typeof window !== 'undefined' && !window.matchMedia('(min-width: 768px)').matches) return;
     autoOpenedFolderRef.current = dir.ref.location;
     void openRef(first.entry.ref).catch((err) => setError(openFailedText(t, err)));
-    // `openRef` and `t` are recreated every render; the guard above is what makes
-    // this run once, not the dependency list.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dir, gridMode, opened, matches]);
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-surface-1">
-      {/* Byte-for-byte the title row `NotesList` uses, so this pillar's header
-          is the same control rather than a lookalike. */}
-      <div className="shrink-0 h-11 md:h-14 px-4 border-b border-divider flex items-center justify-between gap-3">
-        <ListNav
-          hiddenViews={hiddenViews}
-          view="markdown"
-          onSelectView={onSelectView}
-          onOpenDrawer={onOpenDrawer}
-          icon={<PILLAR_GLYPHS.markdown size={26} className="text-accent shrink-0" aria-hidden="true" />}
-          title={t('markdown.title')}
-        />
-        {dir && <NewButton onClick={() => void handleNew()} label={t('markdown.new')} />}
-      </div>
+      {selectionMode ? (
+        <div className="shrink-0 h-11 md:h-14 px-3 border-b border-divider flex items-center justify-between gap-1 bg-accent/5 dark:bg-accent/10">
+          <IconButton
+            label={t('markdown.exitSelection')}
+            keys={keyText('escape')}
+            position="below-start"
+            onClick={exitSelection}
+          >
+            <X aria-hidden="true" />
+          </IconButton>
+          <div className="shrink-0 flex items-center gap-1">
+            <IconButton
+              label={t('markdown.saveToNotes')}
+              tone="accent"
+              position="below"
+              disabled={selected.size === 0}
+              onClick={() => {
+                const paths = [...selected];
+                exitSelection();
+                void onImportManyToNotes(paths);
+              }}
+            >
+              <Lock aria-hidden="true" />
+            </IconButton>
+            {/* Opens a confirm modal; selection stays intact until the delete completes and rescans. */}
+            <IconButton
+              label={t('common:actions.delete')}
+              tone="danger"
+              position="below-end"
+              disabled={selected.size === 0}
+              onClick={() => onRequestDeleteMany([...selected])}
+            >
+              <Trash aria-hidden="true" />
+            </IconButton>
+          </div>
+        </div>
+      ) : (
+        <div className="shrink-0 h-11 md:h-14 px-4 border-b border-divider flex items-center justify-between gap-3">
+          <ListNav
+            hiddenViews={hiddenViews}
+            view="markdown"
+            onSelectView={onSelectView}
+            onOpenDrawer={onOpenDrawer}
+            icon={<PILLAR_GLYPHS.markdown size={26} className="text-accent shrink-0" aria-hidden="true" />}
+            title={t('markdown.title')}
+          />
+          {dir && <NewButton onClick={() => void handleNew()} label={t('markdown.new')} />}
+        </div>
+      )}
 
       {dir && (
         <div className="shrink-0 border-b border-divider px-3 py-2">
-          {/* The folder is a BUTTON, not a caption: clicking it opens the
-              picker again, which is the verb people reach for right after
-              reading which folder this is. Rescan and Close sit beside it
-              because they act on the same object, and all three are chrome
-              rather than text - the old row of accent-blue links was the only
-              text-link affordance in this column and read as a footnote under
-              the search box.
-              `flex-wrap` is what makes it safe on a deep desktop path: the
-              Unencrypted chip drops to its own line rather than squeezing the
-              path down to nothing. */}
+          {/* Folder path button reopens the directory picker, paired with Rescan
+              and Close; `flex-wrap` lets trailing buttons wrap on deep paths. */}
           <div className="relative flex items-center flex-wrap gap-2 mb-2">
             <HoverLabel label={t('markdown.selectFolder')} position="below" className="min-w-0">
               <button
@@ -593,172 +505,96 @@ export function MarkdownListPane({
                 onClick={() => void handleOpenFolder()}
                 className="inline-flex items-center gap-2 h-8 min-w-0 max-w-full rounded-md border border-divider bg-surface-2 px-2 hover:border-accent transition cursor-pointer"
               >
-                {/* Amber, the same `text-label` the
-                    rail gives its folder glyphs - the app's "this is on your own
-                    disk" colour. Accent blue here made it read as a control. */}
+                {/* Amber `text-label` matches the rail's folder glyphs. */}
                 <Folder className="text-label shrink-0" />
-                {/* Full-strength text at 13px: which folder is open is the
-                    load-bearing fact of this whole pillar - it is what every
-                    edit writes into - and at 12px it was the smallest thing in
-                    the header. A deep path still truncates from the end. */}
                 <span className="font-mono text-compact font-medium text-pn truncate">
                   {dir.ref.location}
                 </span>
-                {/* Bare number: "files" is already the word above it, and the
-                    count has to survive beside a path in a 320px column. The
-                    spelled-out version stays for screen readers, which cannot
-                    infer the noun from the layout. */}
                 <span aria-hidden="true" className="shrink-0 text-small text-pn-muted tabular-nums">
                   {matches.length}
                 </span>
                 <span className="sr-only">{t('markdown.fileCount', { count: matches.length })}</span>
               </button>
             </HoverLabel>
-            <HoverLabel label={t('markdown.rescanFolder')} position="below">
-              <button
-                type="button"
-                onClick={() => void handleRescan()}
-                disabled={busy}
-                aria-label={t('markdown.rescanFolder')}
-                className="group inline-flex items-center justify-center w-8 h-8 rounded-md border border-divider bg-surface-2 text-pn-muted hover:border-accent hover:text-accent disabled:opacity-50 transition cursor-pointer"
-              >
-                {/* Two animations, two jobs. Half a turn on hover says the icon
-                    is a live control before anything is clicked, which an inert
-                    glyph in a bordered box does not. The continuous spin is the
-                    progress report while the scan runs, replacing the old label
-                    that swapped to "Scanning…" - see `handleRescan` for why it
-                    is held to one full rotation.
-                    They are exclusive on purpose: `animate-spin` drives
-                    `transform` and `rotate-180` drives the `rotate` property, so
-                    both at once compose into a stutter. */}
-                <ArrowsClockwise
-                  className={busy ? 'animate-spin' : 'transition-transform duration-300 group-hover:rotate-180'}
-                />
-              </button>
-            </HoverLabel>
-            {/* Close is not just a way back to the empty state: it is the only
-                thing that calls `forgetFolder`, so without it there is no way
-                to stop the app reopening this folder on the next launch. */}
-            <HoverLabel label={t('markdown.closeFolder')} position="below">
-              <button
-                type="button"
-                onClick={() => { void forgetFolder(); onDir(null); onOpened(null); }}
-                aria-label={t('markdown.closeFolder')}
-                className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-divider bg-surface-2 text-pn-muted hover:border-accent hover:text-accent transition cursor-pointer"
-              >
-                <X />
-              </button>
-            </HoverLabel>
-            {/* Grows on a line that fits, so the chip sits at the end; on a
-                wrapped line it is simply the last thing before the break. */}
+            <IconButton
+              label={t('markdown.rescanFolder')}
+              position="below"
+              disabled={busy}
+              onClick={() => void handleRescan()}
+              className="group border border-divider bg-surface-2 hover:border-accent hover:!text-accent"
+            >
+              {/* Hover rotates half a turn; `busy` runs `animate-spin` exclusively
+                  so `transform` and `rotate` never compose. */}
+              <ArrowsClockwise
+                aria-hidden="true"
+                className={busy ? 'animate-spin' : 'transition-transform duration-300 group-hover:rotate-180'}
+              />
+            </IconButton>
+            {/* Calls `forgetFolder` so the folder is not reopened on next launch. */}
+            <IconButton
+              label={t('markdown.closeFolder')}
+              position="below"
+              onClick={() => { void forgetFolder(); onDir(null); onOpened(null); }}
+              className="border border-divider bg-surface-2 hover:border-accent hover:!text-accent"
+            >
+              <X aria-hidden="true" />
+            </IconButton>
             <span className="flex-1" />
-            {/* Which app the OS opens .md files with. Present only in the desktop
-                app (`defaultApp` is null everywhere else, where there is no OS
-                association to read), and the ONLY home this control has in grid
-                mode: the file pane that carries the big card is hidden outright
-                there, so without this button grid users could never reach it.
-                AFTER the spacer, beside the `?`, rather than beside Close. Two
-                reasons, and they agree. Rescan and Close act on the open folder;
-                this and the `?` are both about the feature, so grouping them
-                matches what they do. And it is the arrangement that survives a
-                narrow column: this button is what tips the row past its wrap
-                threshold at around 360px, and grouped at the end the two of them
-                wrap together as a pair instead of stranding this one at the start
-                of the second line with the `?` alone at its end.
-                Icon square rather than a labelled button, even though grid mode
-                has room for a label: a control that grows a word at one width and
-                loses it at another is exactly what made the old Unencrypted chip
-                wrap.
-                GONE once we own the association, and green until then. That is the
-                inverse of the first build, and the inverse is right: green here
-                means "there is something to do", so it draws the eye to an offer
-                rather than decorating a finished state. Once the association is
-                ours there is nothing left to do in this popover, and the fact is
-                still stated in the resting pane's card and in the `?` explainer -
-                so the button retires instead of sitting there permanently green.
-                `below-end` and not `below`: a centred tip on the second-to-last
-                control in the row collided with the `?`'s own tip beside it. Same
-                position as that one, for the same reason it has it.
+            {/* Desktop-only default-app trigger, grouped with `?` after the spacer
+                so both feature controls wrap together on narrow columns. Shown only
+                while PrivacyNotes does not own the `.md` association, styled with
+                theme `success` tokens while actionable.
                 Spec: docs/internal/specs/markdown-folder.md (section 11) */}
             {defaultApp && defaultApp.owner !== 'ours' && (
-              <HoverLabel label={t('markdown.assocTitle')} position="below-end" className="shrink-0">
-                <button
-                  ref={defaultAppButtonRef}
-                  type="button"
-                  onClick={() => setShowDefaultApp((v) => !v)}
-                  aria-label={t('markdown.assocTitle')}
-                  aria-expanded={showDefaultApp}
-                  className={`inline-flex items-center justify-center w-8 h-8 rounded-md border transition cursor-pointer ${
-                    showDefaultApp
-                      ? 'bg-accent/10 border-accent text-accent-strong'
-                      : 'bg-surface-2 border-green-600/50 dark:border-green-500/50 text-success hover:border-green-600 dark:hover:border-green-500 hover:bg-green-600/5'
-                  }`}
-                >
-                  <FileMd />
-                </button>
-              </HoverLabel>
-            )}
-            {showDefaultApp && (
-              // End-aligned to the row, which is the one choice that is right in
-              // both view modes, and the reason is worth keeping: the trigger sits
-              // at the END of this row. In grid mode the row is the full window
-              // width, so `start-0` (what `ListPrefsPopover` uses one row below,
-              // where its trigger is at the start) opened the panel hundreds of
-              // pixels away from the button that opened it. In list mode the
-              // popover's own `max-w-full` clamps it to the column, at which point
-              // start and end alignment are the same box - so end-aligned costs
-              // nothing there and fixes grid.
-              <MarkdownDefaultAppPopover
-                onClose={() => setShowDefaultApp(false)}
-                anchorRef={defaultAppButtonRef}
-                className="absolute end-0 top-full mt-1"
-              />
-            )}
-            {/* This button is the explainer's ONLY entry point, so it cannot be
-                dropped without leaving the explainer unreachable.
-                Icon-only, and the same 32px square as Rescan and Close beside
-                it: the amber "Unencrypted" chip it replaces was the one thing
-                in this row whose width grew with the translation, so on a long
-                path in a narrow column it was the piece that wrapped. A `?`
-                cannot outgrow its box in any locale. The word itself is not
-                lost - it is the sidebar rail's own tip (`nav.markdownTip`), and
-                the explainer one click away spells it out in full.
-                `below-end` and not `below`: this is the last thing on the row,
-                so a centred tip would hang off the end of the column. The tip's
-                end edge pins to the button's and it opens back across the row,
-                which also mirrors correctly under RTL. */}
-            <HoverLabel label={t('markdown.localFolder')} position="below-end" className="shrink-0">
-              <button
-                type="button"
-                onClick={() => onExplain()}
-                aria-label={t('markdown.localFolder')}
-                className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-divider bg-surface-2 text-accent hover:border-accent transition cursor-pointer"
-              >
-                <Question weight="fill" />
-              </button>
-            </HoverLabel>
-          </div>
-          {/* Same search row as `NotesList`: the sort / list-prefs button sits
-              beside the input at the same height so the two read as one row.
-              Copied rather than re-styled, so this list keeps the app's
-              controls instead of growing its own. */}
-          <div className="flex items-stretch gap-2 relative">
-            <HoverLabel label={t('notes:search.sortOptions')} position="above-start">
-              <button
-                ref={listPrefsButtonRef}
-                type="button"
-                onClick={() => setShowListPrefs((v) => !v)}
-                aria-label={t('notes:search.sortOptions')}
-                aria-expanded={showListPrefs}
-                className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-md border transition ${
-                  showListPrefs
-                    ? 'bg-accent/10 border-accent text-accent-strong'
-                    : 'bg-surface-2 border-divider text-pn-muted hover:border-accent hover:text-accent'
+              <IconButton
+                ref={defaultAppButtonRef}
+                label={t('markdown.assocTitle')}
+                position="below-end"
+                aria-expanded={showDefaultApp}
+                aria-haspopup="dialog"
+                onClick={() => setShowDefaultApp((v) => !v)}
+                className={`border ${
+                  showDefaultApp
+                    ? 'bg-accent/10 border-accent !text-accent-strong'
+                    : 'bg-surface-2 border-success/50 !text-success hover:border-success hover:!bg-success/10'
                 }`}
               >
-                <FunnelSimple />
-              </button>
-            </HoverLabel>
+                <FileMd aria-hidden="true" />
+              </IconButton>
+            )}
+            <MarkdownDefaultAppPopover
+              open={showDefaultApp}
+              onClose={() => setShowDefaultApp(false)}
+              anchorRef={defaultAppButtonRef}
+            />
+            {/* Sole entry point for the explainer modal; fixed-width icon square
+                keeps translated labels from wrapping the path row. */}
+            <IconButton
+              label={t('markdown.localFolder')}
+              tone="accent"
+              position="below-end"
+              onClick={() => onExplain()}
+              className="border border-divider bg-surface-2 hover:border-accent"
+            >
+              <Question weight="fill" aria-hidden="true" />
+            </IconButton>
+          </div>
+          {/* Search and sort row matching `NotesList`. */}
+          <div className="flex items-stretch gap-2 relative">
+            <IconButton
+              ref={listPrefsButtonRef}
+              label={t('notes:search.sortOptions')}
+              position="above-start"
+              aria-expanded={showListPrefs}
+              onClick={() => setShowListPrefs((v) => !v)}
+              className={`!w-10 !h-10 border ${
+                showListPrefs
+                  ? 'bg-accent/10 border-accent !text-accent-strong'
+                  : 'bg-surface-2 border-divider hover:border-accent hover:!text-accent'
+              }`}
+            >
+              <FunnelSimple aria-hidden="true" />
+            </IconButton>
             <ListSearchInput
               value={filter}
               onChange={(v) => { setFilter(v); reveal.reset(); }}
@@ -775,66 +611,19 @@ export function MarkdownListPane({
               />
             )}
           </div>
-          {/* Where a failed New or Rescan surfaces. The empty state carries the
-              same red line, but it is off screen once a folder is open, so
-              until this existed those two actions failed in silence. Both
-              clear it before they try again, so it never outlives the attempt
-              it describes. */}
+          {/* Surfaces New and Rescan errors while a folder is open; cleared before each retry. */}
           {error && <p className="mt-1.5 text-small text-danger">{error}</p>}
         </div>
       )}
 
-      {/* Selection strip - same placement and treatment as `NotesList`'s, below
-          the search row so the h-14 title row stays narrow-sidebar friendly.
-          It does NOT match what `NotesList` puts in it, though: there the strip
-          holds only the count and select-all, because the title row above it is
-          swapped out for `SelectionToolbar` and the verbs live there. This list
-          keeps its title row and carries the verbs in the strip instead, for
-          two reasons. There are only two of them - the encrypted list's
-          favourite, tag, folder and export have no meaning for a file on disk -
-          so a whole replacement toolbar would be a large control for a small
-          job. And the title row is where New and the pillar switcher are, which
-          stay worth reaching mid-selection. The X is the toolbar's Clear. */}
       {selectionMode && selected.size > 0 && (
-        <div className="shrink-0 px-4 py-2 border-b border-divider bg-accent/5 dark:bg-accent/10 flex items-center justify-between gap-2 text-compact">
-          <span className="font-medium text-pn-soft tabular-nums">
-            {t('markdown.selectedCount', { selected: selected.size, total: matches.length })}
-          </span>
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              type="button"
-              onClick={() => setSelected(new Set(matches.map((m) => m.entry.relPath)))}
-              className="font-semibold text-accent hover:underline"
-            >
-              {t('notes:selection.selectAll')}
-            </button>
-            <button
-              type="button"
-              onClick={() => { const paths = [...selected]; exitSelection(); void onImportManyToNotes(paths); }}
-              className="font-semibold text-accent hover:underline"
-            >
-              {t('markdown.saveToNotes')}
-            </button>
-            <button
-              type="button"
-              // No `exitSelection()` here: this only OPENS a confirm modal, and
-              // clearing the selection now would throw it away on cancel. The
-              // prune effect drops the rows once the delete actually lands.
-              onClick={() => onRequestDeleteMany([...selected])}
-              className="font-semibold text-danger hover:underline"
-            >
-              {t('common:actions.delete')}
-            </button>
-            <button
-              type="button"
-              onClick={exitSelection}
-              aria-label={t('markdown.exitSelection')}
-              className="text-pn-muted hover:text-accent"
-            >
-              <X />
-            </button>
-          </div>
-        </div>
+        <SelectionCountStrip
+          selectedCount={selected.size}
+          totalCount={matches.length}
+          label={t('markdown.selectedCount', { selected: selected.size, total: matches.length })}
+          onSelectAll={() => setSelected(new Set(matches.map((m) => m.entry.relPath)))}
+          onDeselectAll={() => setSelected(new Set())}
+        />
       )}
       <div
         ref={scroll.ref as React.RefObject<HTMLDivElement>}
@@ -847,9 +636,7 @@ export function MarkdownListPane({
         {dir ? (
           matches.length === 0 ? (
             <p className="p-4 text-compact text-pn-muted text-center">
-              {/* A tag filter with the index still running is "not read yet",
-                  not "nothing matches" - saying the latter would be wrong for
-                  as long as the pass takes on a large vault. */}
+              {/* Show scanning state when a tag filter is active before the background pass completes. */}
               {tagFilter !== null && !tagsScanned
                 ? t('markdown.scanning')
                 : filter.trim() || dirFilter !== null || tagFilter !== null
@@ -857,7 +644,7 @@ export function MarkdownListPane({
                   : t('markdown.folderEmpty')}
             </p>
           ) : (
-            // A file's tags are its own, so no vault tag lends it a look.
+            // Plaintext files do not inherit vault tag colors or icons.
             <LooksContext.Provider value={NO_LOOKS}>
             <ul className={itemGridClass(gridMode)}>
               {matches.slice(0, reveal.visible).map(({ entry, note }) => (
@@ -865,14 +652,10 @@ export function MarkdownListPane({
                   key={entry.relPath}
                   note={note}
                   isOpen={opened?.ref.location === entry.ref.location}
-                  // Preview and date come from the background read, so they are
-                  // suppressed until it finishes rather than rendering a blank
-                  // line and an empty date for every unread file.
+                  // Suppress preview and date until the background scan populates them.
                   listPrefs={{ ...listPrefs, showPreview: listPrefs.showPreview && tagsScanned, showDate: listPrefs.showDate && tagsScanned }}
                   isNoteLocked={DISK_FILE_LOCKED}
-                  // The list's one routing. Cmd/Ctrl is the mouse's way INTO
-                  // selection mode: the long-press below is touch-only, so
-                  // without it the bulk verbs were unreachable on a desktop.
+                  // Cmd/Ctrl-click enters selection mode on pointer devices alongside touch long-press.
                   onClick={(e) =>
                     routeItemClick(e, selectionMode, {
                       range: () => rangeSelect(entry.relPath),
@@ -931,8 +714,6 @@ function SingleFileCard({
     <div className="p-3">
       <div className="rounded-lg border border-divider bg-surface-2 p-3">
         <div className="flex items-center gap-2 mb-1">
-          {/* Same extension rule as the folder rows above - a lone file is
-              still a file, and this card is the only place its type is shown. */}
           {isTextFile(opened.ref.name)
             ? <FileTxt className="text-accent shrink-0" />
             : <FileMd className="text-accent shrink-0" />}
@@ -962,5 +743,3 @@ function SingleFileCard({
     </div>
   );
 }
-
-/** The wide pane: the opened file's text, editable, saved straight to disk. */

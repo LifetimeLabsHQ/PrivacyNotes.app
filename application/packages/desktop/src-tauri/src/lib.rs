@@ -52,6 +52,9 @@ mod scroll_pin;
 mod title_bar;
 #[cfg(desktop)]
 mod tray;
+/// Alternative desktop app icons (Settings > System, GitHub #977).
+#[cfg(desktop)]
+mod app_icon;
 /// Ninja from any app: the global key and the small window it opens.
 /// Spec: docs/internal/plans/ninja-anywhere-694.md
 #[cfg(desktop)]
@@ -74,7 +77,10 @@ mod pasteboard;
 use pasteboard::pasteboard_pictures;
 mod share_inbox;
 #[cfg(mobile)]
-use share_inbox::{share_inbox_list, share_inbox_read, share_inbox_remove, share_limit_set};
+use share_inbox::{
+    share_catalog_set, share_inbox_clear, share_inbox_list, share_inbox_read, share_inbox_remove,
+    share_limit_set,
+};
 /// AVIF pictures decoded for the Linux webview, which cannot (GitHub #687).
 /// Spec: docs/contrib/gotchas.md (AppImage AVIF)
 #[cfg(desktop)]
@@ -535,7 +541,7 @@ pub fn run() {
 
     // One position reading for a note's place. Loading it asks nothing: the
     // permission question comes from the first "Use my current location" tap.
-    // Spec: docs/internal/plans/note-location.md (section 3)
+    // Spec: docs/internal/specs/note-location.md (section 3)
     #[cfg(mobile)]
     let builder = builder.plugin(tauri_plugin_geolocation::init());
 
@@ -581,6 +587,8 @@ pub fn run() {
     let builder = builder.invoke_handler(tauri::generate_handler![
         can_self_update,
         is_scoop_install,
+        updater_target_info,
+        prepare_update_restart,
         biometric_available,
         biometric_authenticate,
         biometric_key_create,
@@ -608,6 +616,7 @@ pub fn run() {
         cli_status,
         install_cli,
         tray::set_tray_mode,
+        app_icon::set_app_icon,
         ninja::set_ninja_shortcut,
         ninja::ninja_dismiss,
         autostart::autostart_enabled,
@@ -653,7 +662,9 @@ pub fn run() {
         share_inbox_list,
         share_inbox_read,
         share_inbox_remove,
+        share_inbox_clear,
         share_limit_set,
+        share_catalog_set,
         pasteboard_pictures,
         clip_fetch,
         backup_dest::backup_dest_pick,
@@ -818,8 +829,14 @@ pub fn run() {
                 // place that does not name the cause.
                 //
                 // A relative path is read from the folder the start was typed
-                // in, as a second launch's is (beta #200, item 1).
-                opened_file::queue_args(std::env::args_os(), std::env::current_dir().ok());
+                // in, as a second launch's is (beta #200, item 1). Skip replayed
+                // launch arguments after an explicit updater restart (NSIS /ARGS
+                // and relaunch() forward the original process argv).
+                if consume_update_restart_marker(app.handle()) {
+                    RELAUNCH_SUPPRESSED_ARGS.store(true, std::sync::atomic::Ordering::SeqCst);
+                } else {
+                    opened_file::queue_args(std::env::args_os(), std::env::current_dir().ok());
+                }
                 // A start at sign-in must not raise the window (autostart.rs).
                 if let Some(window) = app.get_webview_window("main").filter(|_| !autostart::started_at_login()) {
                     let _ = window.set_focus();
@@ -1048,6 +1065,169 @@ fn is_scoop_install() -> bool {
     }
 }
 
+#[cfg(desktop)]
+static RELAUNCH_SUPPRESSED_ARGS: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+/// Compiled target slug and whether background updates should only download and
+/// defer `install()` until the user clicks Restart (always on Windows, and on
+/// macOS when the `.app` bundle or its parent directory is not writable by the
+/// current user so background checks never pop an unsolicited `osascript`
+/// administrator password prompt).
+#[cfg(desktop)]
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct UpdaterTargetInfo {
+    target: &'static str,
+    install_on_restart: bool,
+    relaunch_suppressed_args: bool,
+}
+
+#[cfg(all(desktop, target_os = "macos"))]
+fn path_is_writable(path: &std::path::Path) -> bool {
+    use std::os::unix::ffi::OsStrExt;
+    let Ok(c_path) = std::ffi::CString::new(path.as_os_str().as_bytes()) else {
+        return false;
+    };
+    unsafe { libc::access(c_path.as_ptr(), libc::W_OK) == 0 }
+}
+
+#[cfg(all(desktop, target_os = "macos"))]
+fn macos_bundle_writable() -> bool {
+    let Ok(exe) = std::env::current_exe() else {
+        return true;
+    };
+    let Some(bundle) = exe
+        .ancestors()
+        .find(|p| p.extension().is_some_and(|ext| ext == "app"))
+    else {
+        return true;
+    };
+    let Some(parent) = bundle.parent() else {
+        return false;
+    };
+    path_is_writable(bundle) && path_is_writable(parent)
+}
+
+#[cfg(desktop)]
+#[tauri::command]
+fn updater_target_info() -> UpdaterTargetInfo {
+    let target = match (std::env::consts::OS, std::env::consts::ARCH) {
+        ("windows", "aarch64") => "windows-aarch64",
+        ("windows", _) => "windows-x86_64",
+        ("macos", "x86_64") => "darwin-x86_64",
+        ("macos", _) => "darwin-aarch64",
+        ("linux", "aarch64") => "linux-aarch64",
+        ("linux", _) => "linux-x86_64",
+        _ => "linux-x86_64",
+    };
+    let install_on_restart = {
+        #[cfg(target_os = "windows")]
+        {
+            true
+        }
+        #[cfg(target_os = "macos")]
+        {
+            !macos_bundle_writable()
+        }
+        #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+        {
+            false
+        }
+    };
+    UpdaterTargetInfo {
+        target,
+        install_on_restart,
+        relaunch_suppressed_args: RELAUNCH_SUPPRESSED_ARGS
+            .load(std::sync::atomic::Ordering::SeqCst),
+    }
+}
+
+#[cfg(desktop)]
+const UPDATE_RESTART_MARKER: &str = "update-relaunch";
+#[cfg(desktop)]
+const UPDATE_RESTART_MARKER_TTL_SECS: u64 = 30 * 60;
+
+#[cfg(desktop)]
+#[derive(serde::Serialize, serde::Deserialize)]
+struct UpdateRestartMarker {
+    ts: u64,
+    args: Vec<String>,
+}
+
+#[cfg(desktop)]
+fn current_cli_args() -> Vec<String> {
+    std::env::args_os()
+        .skip(1)
+        .map(|a| a.to_string_lossy().into_owned())
+        .collect()
+}
+
+#[cfg(desktop)]
+fn update_restart_marker_path<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Option<std::path::PathBuf> {
+    use tauri::Manager;
+    app.path()
+        .app_local_data_dir()
+        .ok()
+        .map(|dir| dir.join(UPDATE_RESTART_MARKER))
+}
+
+/// Suppress replayed CLI arguments only when a fresh marker exists AND the
+/// incoming argv matches the previous launch's argv. A user double-clicking a
+/// new `.md` file after a failed installer still opens that file normally.
+#[cfg(desktop)]
+fn consume_update_restart_marker<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> bool {
+    let Some(path) = update_restart_marker_path(app) else {
+        return false;
+    };
+    let Ok(raw) = std::fs::read_to_string(&path) else {
+        return false;
+    };
+    let _ = std::fs::remove_file(&path);
+    let Ok(marker) = serde_json::from_str::<UpdateRestartMarker>(&raw) else {
+        return false;
+    };
+    let Ok(now) = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) else {
+        return false;
+    };
+    let now = now.as_secs();
+    let fresh = marker.ts <= now.saturating_add(60)
+        && now.saturating_sub(marker.ts) <= UPDATE_RESTART_MARKER_TTL_SECS;
+    fresh && !marker.args.is_empty() && marker.args == current_cli_args()
+}
+
+/// Persist desktop window geometry before an updater exit (Windows `install()`
+/// calls `std::process::exit(0)` and skips `RunEvent::Exit`) and arm/clear a
+/// short-lived marker carrying the current argv so replayed CLI file/deep-link
+/// arguments are ignored on restart.
+#[cfg(desktop)]
+#[tauri::command]
+fn prepare_update_restart<R: tauri::Runtime>(app: tauri::AppHandle<R>, active: bool) {
+    if active {
+        use tauri_plugin_window_state::{AppHandleExt, StateFlags};
+        let _ = app.save_window_state(StateFlags::all() & !StateFlags::VISIBLE);
+    }
+    let Some(path) = update_restart_marker_path(&app) else {
+        return;
+    };
+    if !active {
+        let _ = std::fs::remove_file(&path);
+        return;
+    }
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    if let Ok(now) = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) {
+        let marker = UpdateRestartMarker {
+            ts: now.as_secs(),
+            args: current_cli_args(),
+        };
+        if let Ok(json) = serde_json::to_string(&marker) {
+            let _ = std::fs::write(&path, json);
+        }
+    }
+}
+
 /// Whether this device can gate on the OS biometric (Touch ID, Face ID, Hello,
 /// or an Android fingerprint or face).
 ///
@@ -1271,15 +1451,26 @@ async fn biometric_key_delete(app: tauri::AppHandle, handle: String) {
 /// answers with an error, which the frontend reads as "print it yourself".
 /// Async so a multi-megabyte document deserializes off the main thread; the
 /// print UI itself is put up on the main thread by `print.rs`.
+#[derive(Clone, Debug, serde::Deserialize)]
+pub struct PrintPageNumbers {
+    pub placement: String,
+    pub format: String,
+}
+
 #[tauri::command]
-async fn print_html(app: tauri::AppHandle, html: String, job_name: String) -> Result<(), String> {
+async fn print_html(
+    app: tauri::AppHandle,
+    html: String,
+    job_name: String,
+    page_numbers: Option<PrintPageNumbers>,
+) -> Result<(), String> {
     #[cfg(any(target_os = "macos", target_os = "ios"))]
     {
-        print::print(&app, html, job_name)
+        print::print(&app, html, job_name, page_numbers)
     }
     #[cfg(not(any(target_os = "macos", target_os = "ios")))]
     {
-        let _ = (app, html, job_name);
+        let _ = (app, html, job_name, page_numbers);
         Err("Native printing is only needed on macOS and iOS.".to_owned())
     }
 }

@@ -25,7 +25,7 @@ function upperFirst(text: string): string {
 }
 
 /** The Monday of the week `day` falls in. */
-function mondayOf(day: string): string {
+export function weekRecapMonday(day: string): string {
   const wd = (new Date(`${day}T12:00:00`).getDay() + 6) % 7;
   return addDays(day, -wd);
 }
@@ -38,22 +38,26 @@ function mondayOf(day: string): string {
  * week, read back for an earlier one.
  * Spec: docs/internal/specs/wellness-statistics.md (section 22)
  */
-export function WeekRecap({ model, notes, reflection, onReflectionChange, bare = false }: {
+export function WeekRecap({ model, notes, reflection, onReflectionChange, bare = false, back: controlledBack, hideHeader = false }: {
   model: WellnessModel;
   notes: LocalNote[];
   reflection?: string;
   onReflectionChange?: (text: string) => void;
   /** No card of its own, inside a tile that is one already (a Home widget). */
   bare?: boolean;
+  /** Controlled week offset when the caller draws the week pager in its header. */
+  back?: number;
+  hideHeader?: boolean;
 }) {
   const { t } = useTranslation('stats');
   const today = toLocalIso(new Date());
-  const [back, setBack] = useState(0);
+  const [localBack, setLocalBack] = useState(0);
+  const back = controlledBack ?? localBack;
   const first = model.firstDay;
-  const monday = addDays(mondayOf(today), -7 * back);
+  const monday = addDays(weekRecapMonday(today), -7 * back);
   const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
   const prevMonday = addDays(monday, -7);
-  const canGoBack = first !== null && prevMonday >= mondayOf(first);
+  const canGoBack = first !== null && prevMonday >= weekRecapMonday(first);
 
   const byDate = useMemo(() => new Map(model.entries.map((e) => [e.date, e.data])), [model.entries]);
   const mood = model.byId('mood');
@@ -97,20 +101,22 @@ export function WeekRecap({ model, notes, reflection, onReflectionChange, bare =
   const pastReflection = back > 0 ? (byDate.get(monday) as { weekReflection?: unknown } | undefined)?.weekReflection : undefined;
 
   return (
-    <div className={bare ? 'space-y-3' : 'rounded-lg border border-divider bg-surface-2 p-3 space-y-3'}>
-      <div className="flex items-center justify-between gap-2">
-        <IconButton label={t('recap.previous')} onClick={() => setBack((b) => b + 1)} disabled={!canGoBack}>
-          <CaretLeft aria-hidden="true" />
-        </IconButton>
-        <span className="text-body font-semibold text-pn">
-          {back === 0 ? t('stats:overview.thisWeek') : t('wellness.week.range', { start: formatDay(days[0]!, 'dayMonth'), end: formatDay(days[6]!, 'dayMonth') })}
-        </span>
-        <IconButton label={t('recap.next')} onClick={() => setBack((b) => Math.max(0, b - 1))} disabled={back === 0}>
-          <CaretRight aria-hidden="true" />
-        </IconButton>
-      </div>
+    <div className={bare ? 'space-y-2.5' : 'rounded-lg border border-divider bg-surface-2 p-3 space-y-3'}>
+      {!hideHeader && (
+        <div className="flex items-center justify-between gap-2">
+          <IconButton label={t('recap.previous')} onClick={() => setLocalBack((b) => b + 1)} disabled={!canGoBack}>
+            <CaretLeft aria-hidden="true" />
+          </IconButton>
+          <span className="text-body font-semibold text-pn">
+            {back === 0 ? t('stats:overview.thisWeek') : t('wellness.week.range', { start: formatDay(days[0]!, 'dayMonth'), end: formatDay(days[6]!, 'dayMonth') })}
+          </span>
+          <IconButton label={t('recap.next')} onClick={() => setLocalBack((b) => Math.max(0, b - 1))} disabled={back === 0}>
+            <CaretRight aria-hidden="true" />
+          </IconButton>
+        </div>
+      )}
 
-      <div className="grid grid-cols-7 gap-1.5 text-center">
+      <div className={`grid grid-cols-7 gap-1.5 text-center ${bare ? 'max-w-lg' : ''}`}>
         {moods.map(({ day, v }) => (
           <div key={day} className="flex flex-col items-center gap-1">
             {v !== null ? <MoodMark mood={v} size={30} /> : <span className={`w-[30px] h-[30px] rounded-md ${day > today ? '' : 'border border-dashed border-divider'}`} />}

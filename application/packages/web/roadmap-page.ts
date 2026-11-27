@@ -127,6 +127,19 @@ const ICONS: Record<RoadmapIcon, string> = {
   sidebar: `${S}<rect x="3" y="4.5" width="18" height="15" rx="2"/><line x1="9.5" y1="4.5" x2="9.5" y2="19.5"/><line x1="5.7" y1="9" x2="7.3" y2="9"/><line x1="5.7" y1="12" x2="7.3" y2="12"/><line x1="5.7" y1="15" x2="7.3" y2="15"/></svg>`,
   robot: `${S}<rect x="4" y="8" width="16" height="11" rx="3"/><line x1="12" y1="4.3" x2="12" y2="8"/><circle cx="12" cy="3" r="1.3"/><circle cx="9.2" cy="13" r="1.1" fill="currentColor" stroke="none"/><circle cx="14.8" cy="13" r="1.1" fill="currentColor" stroke="none"/><line x1="2.4" y1="12.2" x2="4" y2="12.2"/><line x1="20" y1="12.2" x2="21.6" y2="12.2"/></svg>`,
   coin: `${S}<circle cx="9.2" cy="9.2" r="6"/><path d="M15.4 9.6a6 6 0 1 1-5.8 5.8"/></svg>`,
+  tabs: `${S}<rect x="3" y="5" width="18" height="14" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="9" y1="5" x2="9" y2="9.5"/><line x1="15" y1="5" x2="15" y2="9.5"/></svg>`,
+  palette: `${S}<path d="M12 3a9 9 0 1 0 0 18h1.5a2.5 2.5 0 0 0 0-5h-.8a1.7 1.7 0 0 1 0-3.4H16a5 5 0 0 0 5-5c0-2.6-4-4.6-9-4.6z"/><circle cx="7.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="10.5" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="7.5" r="1" fill="currentColor" stroke="none"/></svg>`,
+  layers: `${S}<polygon points="12 3 3 8 12 13 21 8 12 3"/><polyline points="3 12.5 12 17.5 21 12.5"/><polyline points="3 17 12 22 21 17"/></svg>`,
+  calendar: `${S}<rect x="3.5" y="4.5" width="17" height="16" rx="2"/><line x1="3.5" y1="9.5" x2="20.5" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6"/><line x1="16" y1="2.5" x2="16" y2="6"/></svg>`,
+  heart: `${S}<path d="M12 20.2s-7.5-4.7-7.5-10.3a4.3 4.3 0 0 1 7.5-2.8 4.3 4.3 0 0 1 7.5 2.8c0 5.6-7.5 10.3-7.5 10.3z"/></svg>`,
+  kanban: `${S}<rect x="3.5" y="4" width="4.5" height="15" rx="1.2"/><rect x="9.75" y="4" width="4.5" height="10" rx="1.2"/><rect x="16" y="4" width="4.5" height="13" rx="1.2"/></svg>`,
+  command: `${S}<path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>`,
+  home: `${S}<path d="M3.5 10.5L12 3.5l8.5 7"/><path d="M5.5 9.5V19a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5V9.5"/><path d="M9.5 20.5v-6h5v6"/></svg>`,
+  browser: `${S}<rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><circle cx="6.5" cy="6.5" r=".7" fill="currentColor" stroke="none"/><circle cx="9.2" cy="6.5" r=".7" fill="currentColor" stroke="none"/></svg>`,
+  terminal: `${S}<rect x="3" y="4.5" width="18" height="15" rx="2"/><polyline points="7.5 9.5 10.5 12.2 7.5 15"/><line x1="12.5" y1="15" x2="16.5" y2="15"/></svg>`,
+  puzzle: `${S}<path d="M14.5 4a2 2 0 0 1 2 2v2h2a2 2 0 1 1 0 4h-2v6a1.5 1.5 0 0 1-1.5 1.5h-4v-2a2 2 0 1 0-4 0v2H5.5A1.5 1.5 0 0 1 4 18v-4h2a2 2 0 1 0 0-4H4V6.5A1.5 1.5 0 0 1 5.5 5H10V4a2 2 0 0 1 4.5 0z"/></svg>`,
+  columns: `${S}<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><line x1="12" y1="4.5" x2="12" y2="19.5"/></svg>`,
+  'wifi-off': `${S}<line x1="3" y1="3" x2="21" y2="21"/><path d="M16.7 11.1a8 8 0 0 1 2.2 1.5"/><path d="M5.1 12.6a8 8 0 0 1 5.4-2.1"/><path d="M8.5 16.1a4.5 4.5 0 0 1 6.1-.4"/><circle cx="12" cy="19.2" r="1" fill="currentColor" stroke="none"/></svg>`,
 };
 
 /** Everything not yet shipped and not deferred past 1.0 is the live edge. */

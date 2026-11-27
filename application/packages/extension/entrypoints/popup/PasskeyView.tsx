@@ -41,10 +41,19 @@ import { Tile, Unlock, useVault } from './VaultView';
  *  (beta #140, item 3). Spec: docs/contrib/passkeys.md (section 5.4, Prompts) */
 export const PROMPT_CLICK_GUARD_MS = 500;
 
-/** Whether the prompt has been on screen long enough to take a click. */
-function useClickGuard(): () => boolean {
-  const [shownAt] = useState(() => Date.now());
-  return () => Date.now() - shownAt >= PROMPT_CLICK_GUARD_MS;
+/** Whether the prompt has been on screen long enough to take a click.
+ *  When `active` starts false (for example while a sign-in pull spinner shows),
+ *  the 500 ms window starts only when the actionable buttons first render. */
+function useClickGuard(active = true): () => boolean {
+  const shownAt = useRef<number | null>(active ? Date.now() : null);
+  useEffect(() => {
+    if (active && shownAt.current === null) shownAt.current = Date.now();
+  }, [active]);
+  return () => {
+    if (!active) return false;
+    if (shownAt.current === null) shownAt.current = Date.now();
+    return Date.now() - shownAt.current >= PROMPT_CLICK_GUARD_MS;
+  };
 }
 
 const bytes = (text: string): Uint8Array => fromB64url(text) ?? new Uint8Array(0);
@@ -63,22 +72,48 @@ function usePasskeyRequest(id: string) {
   const [req, setReq] = useState<StoredRequest | null | undefined>(undefined);
   const answered = useRef(false);
   useEffect(() => {
+    const isWindow = new URLSearchParams(window.location.search).get('window') === '1';
+    // Connect the port immediately so the background watchdog sees this popup
+    // without waiting on storage reads, and keep a strong reference so GC
+    // cannot drop it and trigger a false disconnect/dismissal.
+    const port = browser.runtime.connect({ name: `${PROMPT_PORT}${id}` });
+    const onPortMsg = (msg: { superseded?: boolean } | null) => {
+      if (msg?.superseded) {
+        answered.current = true;
+        window.close();
+      }
+    };
+    port.onMessage?.addListener(onPortMsg);
+    let alive = true;
     void readRequest(id).then((got) => {
-      if (!got) return window.close();
+      if (!alive) return;
+      if (!got || (!isWindow && got.windowFallback)) {
+        answered.current = true;
+        window.close();
+        return;
+      }
       // The toolbar popup goes back to the plain one at once.
       void restorePopup(got.tabId);
-      // The background answers for a window closed with no answer.
-      browser.runtime.connect({ name: `${PROMPT_PORT}${id}` });
       setReq(got);
     });
-    // The page aborted, or the request ran out: nothing to answer.
+    // The page aborted, the request ran out, or a fallback window superseded
+    // this late toolbar popup: nothing to answer.
     const onChange = (changes: Record<string, { newValue?: unknown }>, area: string) => {
       if (area !== 'session' || !(REQUESTS_KEY in changes) || answered.current) return;
-      const left = changes[REQUESTS_KEY]?.newValue as Record<string, unknown> | undefined;
-      if (!left?.[id]) window.close();
+      const left = changes[REQUESTS_KEY]?.newValue as Record<string, StoredRequest | undefined> | undefined;
+      const cur = left?.[id];
+      if (!cur || (!isWindow && cur.windowFallback)) {
+        answered.current = true;
+        window.close();
+      }
     };
     browser.storage.onChanged.addListener(onChange);
-    return () => browser.storage.onChanged.removeListener(onChange);
+    return () => {
+      alive = false;
+      browser.storage.onChanged.removeListener(onChange);
+      port.onMessage?.removeListener(onPortMsg);
+      port.disconnect?.();
+    };
   }, [id]);
   // A window that closes with no answer answers the browser's prompt itself
   // (review 6); the port stays as the background's backup.
@@ -96,8 +131,11 @@ function usePasskeyRequest(id: string) {
   const answer = async (result: PasskeyResult, dismissed = false, closeAfter = 0) => {
     if (!req || answered.current) return;
     answered.current = true;
+    // Finish the request (and clear site holds on an approved sign-in) BEFORE
+    // handing the answer to the page, so an immediate site redirect or retry
+    // never races with `dropTabRequests` or sees stale holds.
+    await finishRequest(req.id, dismissed, Date.now(), result.kind === 'credential').catch(() => undefined);
     await answerTab(req, result);
-    await finishRequest(req.id, dismissed);
     window.setTimeout(() => window.close(), closeAfter);
   };
   /** The background answers from here on (a save). */
@@ -124,12 +162,12 @@ export function PasskeyPrompt({ id, connection }: { id: string; connection: Conn
   const url = new URL(req.origin);
   const site = url.host;
   const other = (
-    <Button icon={<Key aria-hidden="true" />} onClick={() => void answer({ kind: 'fallback' }, true)} className="w-full">
+    <Button icon={<Key aria-hidden="true" />} onClick={() => void answer({ kind: 'fallback' }, true)} className="w-full bg-surface-2 shadow-xs">
       {t('passkey.other')}
     </Button>
   );
   const head = (
-    <header className="flex items-center gap-2 px-3 py-2 border-b border-divider">
+    <header className="flex items-center gap-2 px-3 py-2 border-b border-divider bg-surface-0">
       {/* A letter, not the asking site's icon: the prompt tells no server the site (beta #217 item 1). */}
       <Tile letter={displayHost(req.origin)} />
       <div className="min-w-0">
@@ -161,7 +199,7 @@ export function PasskeyPrompt({ id, connection }: { id: string; connection: Conn
       <div className="p-3 space-y-3">
         {req.kind === 'create'
           ? <PasskeySaveView req={req} logins={loginsOf(vault.entries)} answer={answer} handOff={handOff} other={other} />
-          : <PasskeyUseView req={req} logins={loginsOf(vault.entries)} answer={answer} other={other} />}
+          : <PasskeyUseView req={req} logins={loginsOf(vault.entries)} pulling={vault.pulling} answer={answer} other={other} />}
       </div>
     </div>
   );
@@ -240,16 +278,18 @@ export function PasskeySaveView({ req, logins, answer, handOff, other }: { req: 
 
   return (
     <>
-      <div>
-        <FieldLabel icon={<User />}>{t('auth:loginForm.usernameLabel')}</FieldLabel>
-        <div className="text-body text-pn truncate" dir="auto">{opts.user.name || opts.user.displayName}</div>
-      </div>
-      <div>
-        <FieldLabel htmlFor="pn-save-to">{t('passkey.saveTo')}</FieldLabel>
-        <Select id="pn-save-to" value={target} onChange={(e) => setTarget(e.target.value)} disabled={state !== 'idle'} className="w-full">
-          {targets.map((l) => <option key={l.item} value={l.item}>{l.username ? `${l.name} · ${l.username}` : l.name}</option>)}
-          <option value="new">{t('shell:quickAdd.types.login')}</option>
-        </Select>
+      <div className="rounded-lg border border-divider bg-surface-2 p-3 shadow-xs space-y-3">
+        <div>
+          <FieldLabel icon={<User />}>{t('auth:loginForm.usernameLabel')}</FieldLabel>
+          <div className="text-body text-pn truncate" dir="auto">{opts.user.name || opts.user.displayName}</div>
+        </div>
+        <div>
+          <FieldLabel htmlFor="pn-save-to">{t('passkey.saveTo')}</FieldLabel>
+          <Select id="pn-save-to" value={target} onChange={(e) => setTarget(e.target.value)} disabled={state !== 'idle'} className="w-full">
+            {targets.map((l) => <option key={l.item} value={l.item}>{l.username ? `${l.name} · ${l.username}` : l.name}</option>)}
+            <option value="new">{t('shell:quickAdd.types.login')}</option>
+          </Select>
+        </div>
       </div>
       {state === 'failed' && <Callout look="card" tone="danger">{t('passkey.notSaved')}</Callout>}
       {state === 'unknown' && <Callout look="card" tone="warning">{t('passkey.maybeSaved')}</Callout>}
@@ -271,7 +311,7 @@ export function PasskeySaveView({ req, logins, answer, handOff, other }: { req: 
   );
 }
 
-export function PasskeyUseView({ req, logins, answer, other }: { req: StoredRequest; logins: LoginCopyEntry[]; answer: Answer; other: ReactNode }) {
+export function PasskeyUseView({ req, logins, pulling = false, answer, other }: { req: StoredRequest; logins: LoginCopyEntry[]; pulling?: boolean; answer: Answer; other: ReactNode }) {
   const { t } = useTranslation('extension');
   const opts = req.options as WireGetOptions;
   const rows = useMemo(() => {
@@ -279,11 +319,22 @@ export function PasskeyUseView({ req, logins, answer, other }: { req: StoredRequ
     for (const login of logins) for (const passkey of candidates(login.passkeys ?? [], req.rpId, opts.allowCredentials)) out.push({ passkey, login });
     return out;
   }, [logins, req.rpId, opts.allowCredentials]);
-  const ready = useClickGuard();
-  // Unlocked with nothing for this site: the browser's prompt, at once.
+  const ready = useClickGuard(rows.length > 0);
+  const [pullTimedOut, setPullTimedOut] = useState(false);
   useEffect(() => {
-    if (!rows.length) void answer({ kind: 'fallback' });
-  }, [rows.length]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (rows.length || !pulling) {
+      setPullTimedOut(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setPullTimedOut(true), 3000);
+    return () => window.clearTimeout(timer);
+  }, [rows.length, pulling]);
+  // Unlocked with nothing cached for this site: wait briefly for an in-flight
+  // pull (a passkey saved in another browser or device), then hand off to the
+  // browser's prompt if still empty or the pull stalls.
+  useEffect(() => {
+    if (!rows.length && (!pulling || pullTimedOut)) void answer({ kind: 'fallback' });
+  }, [rows.length, pulling, pullTimedOut]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const use = async (passkey: SitePasskey) => {
     let credential: WireCredential;
@@ -310,14 +361,23 @@ export function PasskeyUseView({ req, logins, answer, other }: { req: StoredRequ
     await answer({ kind: 'credential', credential });
   };
 
+  if (!rows.length) {
+    return (
+      <>
+        <div className="flex justify-center py-4"><Spinner /></div>
+        {other}
+      </>
+    );
+  }
+
   return (
     <>
-      <ul className="divide-y divide-divider">
+      <ul className="space-y-2">
         {rows.map(({ passkey, login }) => (
           <li key={passkey.credentialId}>
             <button type="button" onClick={() => {
               if (ready()) void use(passkey);
-            }} className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-3 py-2 text-start rounded-md hover:bg-pn/5">
+            }} className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-divider bg-surface-2 px-3 py-2.5 text-start shadow-xs transition-colors hover:border-accent/40">
               <Tile url={login.urls[0]} letter={login.name || passkey.userName} />
               <span className="min-w-0">
                 <span className="block text-body font-medium text-pn truncate" dir="auto">{passkey.userName || passkey.displayName}</span>

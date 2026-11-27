@@ -19,6 +19,8 @@ import { createCodeLowlight } from './codeGrammars';
 import { EXTRA_GRAMMARS } from './codeGrammarsExtra';
 import { escapeHtml } from './escapeHtml';
 
+export { codeLanguageLabel } from './codeLanguageLabels';
+
 // This module is already a lazy chunk, so the extra grammars register here
 // at once rather than through loadExtraGrammars.
 const lowlight = createCodeLowlight();

@@ -9,7 +9,7 @@ import { Brand } from './Brand';
 import { HoverLabel } from './HoverLabel';
 import { SortRow } from './ListPrefsPopover';
 import { SidebarOptionsPopover } from './SidebarOptionsPopover';
-import { allViewRows, hiddenAtZero, sidebarViewRows } from './viewRows';
+import { allViewRows, hiddenAtZero, sidebarViewRows, viewRows } from './viewRows';
 import { onRowListKeyDown, onSwitchKeyDown } from './sidebarKeys';
 import { TAG_MAX_LENGTH } from './notesRepo';
 import { isShownInAll, type UserSettings } from './userSettings';
@@ -19,7 +19,7 @@ import { useFolderExpansion } from './folderTreeState';
 import { useRailItemDrop } from './useRailItemDrop';
 import type { FolderSortDir, FolderSortField } from './folders';
 import { DashedAddButton, Kbd, Popover, ProGlyph } from './ui';
-import { Star, Hash, DotsThree, PencilSimple, Palette, Trash, X, CaretDown, PushPin, File, NotePencil, CheckFat, Shield, Key, Folder, Book, Notebook, FunnelSimple, ArrowsInLineVertical, ArrowsOutLineVertical, Eye, Download, Plus, Prohibit, Chat, Devices, Question, FileMd, Bookmarks, BellSimple, LockSimple, LockSimpleOpen, type Icon, PILLAR_GLYPHS } from './icons';
+import { Star, Hash, DotsThree, PencilSimple, Palette, Trash, X, CaretDown, PushPin, File, NotePencil, CheckFat, Shield, Key, Folder, Book, Notebook, FunnelSimple, ArrowsInLineVertical, ArrowsOutLineVertical, Eye, FileArrowDown, Gear, Plus, Prohibit, Chat, Devices, Question, FileMd, Bookmarks, BellSimple, LockSimple, LockSimpleOpen, type Icon, PILLAR_GLYPHS } from './icons';
 import { KATANA_LINE, NinjaIcon } from './NinjaIcon';
 import { useUnseenAlerts } from './reminders';
 import { SPACE_ICONS, SpaceMoveLabel, SpaceSwitch } from './SpaceSwitch';
@@ -29,7 +29,7 @@ import { isViewShown, type View } from './views';
 import { isProtectableView, type SectionLockControls } from './sectionLock';
 import { ContextMenu, closedMenuJustNow, useLongPressContextMenu, type ContextMenuItem } from './ContextMenu';
 import { exemptOpts } from './i18nExempt';
-import { SIDEBAR_ACTIVE, SIDEBAR_DROP_INSIDE, SIDEBAR_ROW_MENU_BUTTON } from './sidebarUI';
+import { SIDEBAR_ACTIVE, SIDEBAR_DROP_INSIDE, SIDEBAR_ICON_PX, SIDEBAR_ROW_MENU_BUTTON } from './sidebarUI';
 import { marketingHomeHref, siteHref } from './siteLinks';
 import { useUpdateAvailable } from './updateAvailable';
 import { UpdateDot } from './UpdateDot';
@@ -81,6 +81,8 @@ export interface TagsRailProps {
   home?: { has: (kind: 'tag' | 'folder', target: string) => boolean; toggle: (kind: 'tag' | 'folder', target: string) => void };
   // View state
   view: View;
+  /** View the sidebar logo opens: follows "Show when app opens", falling back to Home when "Reopen where I left off" is on. */
+  logoTargetView?: View;
   selectedTag: string | null;
   handleSelectView: (next: View) => void;
   handleSelectTag: (tag: string | null) => void;
@@ -113,6 +115,10 @@ export interface TagsRailProps {
 
   // Rate modal
   onRate: () => void;
+
+  /** Opens Settings from the mobile drawer (matches Android swipe-right habit
+   *  while keeping the bottom-bar Settings gear in place). */
+  onOpenSettings: () => void;
 
   // Views collapse
   viewsCollapsed: boolean;
@@ -284,8 +290,8 @@ function FooterAction({
   const inner = (
     <>
       <span className="relative inline-flex shrink-0">
-        <ActionIcon className="group-hover:hidden" />
-        <ActionIcon weight="fill" className="hidden group-hover:inline-flex" />
+        <ActionIcon size={18} className="group-hover:hidden" />
+        <ActionIcon size={18} weight="fill" className="hidden group-hover:inline-flex" />
         {badge && <UpdateDot />}
       </span>
       {/* Pointer devices only: the label expands inline while hovered.
@@ -333,6 +339,7 @@ export function TagsRail(props: TagsRailProps) {
   const updateTipLabel = `${downloadsLabel} - ${t('updateToast.available', { ns: 'common' })}`;
   const {
     view,
+    logoTargetView = 'home',
     selectedTag,
     handleSelectView,
     handleSelectTag,
@@ -342,6 +349,7 @@ export function TagsRail(props: TagsRailProps) {
     spaces,
     onFeedback,
     onRate,
+    onOpenSettings,
     viewsCollapsed,
     setViewsCollapsed,
     viewCounts,
@@ -564,7 +572,7 @@ export function TagsRail(props: TagsRailProps) {
         >
           <span className="flex items-center gap-2">
             <span className="text-accent inline-flex">
-              <Trash />
+              <Trash size={SIDEBAR_ICON_PX} />
             </span>
             {t('shell:pillars.trash')}
           </span>
@@ -697,7 +705,7 @@ export function TagsRail(props: TagsRailProps) {
                 data-tag-glyph
                 className={`inline-flex shrink-0 ${active ? 'text-accent' : isFavorite ? 'text-amber-400' : 'text-label'}`}
               >
-                <TagGlyph tag={tag} favorite={isFavorite} size={16} />
+                <TagGlyph tag={tag} favorite={isFavorite} size={SIDEBAR_ICON_PX} />
               </span>
               <input
                 autoFocus
@@ -750,7 +758,7 @@ export function TagsRail(props: TagsRailProps) {
                 data-tag-glyph
                 className={`inline-flex shrink-0 ${active ? 'text-accent' : isFavorite ? 'text-amber-400' : 'text-label'}${glyphOpensLook ? ' pn-look-glyph' : ''}`}
               >
-                <TagGlyph tag={tag} favorite={isFavorite} size={16} />
+                <TagGlyph tag={tag} favorite={isFavorite} size={SIDEBAR_ICON_PX} />
               </span>
               <span className="truncate">{tag}</span>
             </button>
@@ -792,22 +800,27 @@ export function TagsRail(props: TagsRailProps) {
   const sectionRows = sidebarViewRows(t)
     .filter((r) => showRow(r.key) && !hiddenAtZero(r.key, viewCounts[r.key], view))
     .map((r) => r.key);
+  const logoLabel = logoTargetView === 'home'
+    ? t('tagsRail.showAllItems')
+    : (viewRows(t).find((r) => r.key === logoTargetView)?.label ?? t('tagsRail.showAllItems'));
+  const logoKeyIndex = logoTargetView === 'home' ? 1 : sectionRows.indexOf(logoTargetView) + 2;
+  const logoKeys = logoKeyIndex >= 1 && logoKeyIndex <= 9 ? sectionKeyText(logoKeyIndex) : undefined;
 
   return (
     <div className="h-full flex flex-col min-h-0">
       {renderTagMenu()}
       {/* Brand row */}
-      <div className="group shrink-0 min-h-[3.5rem] lg:min-h-0 lg:h-14 px-4 pt-[max(0.75rem,var(--pn-safe-top))] lg:pt-0 border-b border-divider flex items-center gap-2">
-        <h1 className="text-heading tracking-tight truncate m-0">
-          <HoverLabel label={t('tagsRail.showAllItems')} keys={sectionKeyText(1)} position="end">
+      <div className="group shrink-0 min-h-[3.5rem] lg:min-h-0 lg:h-14 px-3 pt-[max(0.75rem,var(--pn-safe-top))] lg:pt-0 border-b border-divider flex items-center gap-2">
+        <h1 className="text-heading tracking-tight min-w-0 m-0">
+          <HoverLabel label={logoLabel} keys={logoKeys} position="end">
           <button
             type="button"
-            onClick={() => handleSelectView('home')}
-            aria-label={t('tagsRail.showAllItems')}
-            className="pn-logo-host hover:opacity-80 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded flex items-center gap-1.5"
+            onClick={() => handleSelectView(logoTargetView)}
+            aria-label={logoLabel}
+            className="pn-logo-host hover:opacity-80 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded flex items-center gap-2 max-w-full"
           >
-            <LogoIcon size={24} tint />
-            <Brand />
+            <LogoIcon size={40} tint />
+            <span className="truncate"><Brand /></span>
           </button>
           </HoverLabel>
         </h1>
@@ -818,7 +831,7 @@ export function TagsRail(props: TagsRailProps) {
           rel="noopener noreferrer"
           aria-label={t('common:updateToast.changelog')}
           data-type-exempt=""
-          className={`pn-sb-wide hidden lg:flex text-[9px] font-mono px-1 py-px rounded shrink-0 transition focus:outline-none focus:ring-2 ${isBetaHost() ? 'group font-bold tracking-wider bg-amber-400 text-black hover:bg-amber-300 focus:ring-amber-400/40' : 'bg-accent/10 border border-accent/30 text-accent-strong hover:bg-accent/20 focus:ring-accent/40'}`} // type-scale: exempt - a stamp; at the meta size it pushes the brand out of the rail
+          className={`pn-sb-wide pn-sb-ver hidden lg:flex text-[9px] font-mono px-1 py-px rounded shrink-0 transition focus:outline-none focus:ring-2 ${isBetaHost() ? 'group font-bold tracking-wider bg-amber-400 text-black hover:bg-amber-300 focus:ring-amber-400/40' : 'bg-accent/10 border border-accent/30 text-accent-strong hover:bg-accent/20 focus:ring-accent/40'}`} // type-scale: exempt - a stamp; at the meta size it pushes the brand out of the rail
         >
           {isBetaHost() ? (
             <>
@@ -957,7 +970,7 @@ export function TagsRail(props: TagsRailProps) {
         {!viewsCollapsed && (
         <div ref={viewsListRef} className="min-h-0 overflow-y-auto px-3">
         {/* Source of truth for creatable-pillar ORDER. The two "New" menus
-            (NotesList.tsx allNewOptions + contextMenus.tsx buildGlobalMenu) MUST
+            (NotesView.tsx allNewOptions + contextMenus.tsx buildGlobalMenu) MUST
             list types in this same order. Reorder all three together, never one.
             Spec: docs/internal/design/ui-patterns.md section 45 (New-menu order invariant) */}
         {/* All is the one row with no count, which is what makes room for the
@@ -974,7 +987,7 @@ export function TagsRail(props: TagsRailProps) {
           >
             <span className="flex items-center gap-2">
               <span className="text-accent inline-flex">
-                <PILLAR_GLYPHS.all />
+                <PILLAR_GLYPHS.all size={SIDEBAR_ICON_PX} />
               </span>
               {t('shell:tagsRail.allItems')}
             </span>
@@ -1037,7 +1050,7 @@ export function TagsRail(props: TagsRailProps) {
             >
               <span className="flex items-center gap-2">
                 <span className="text-accent inline-flex">
-                  <r.icon size={16} />
+                  <r.icon size={SIDEBAR_ICON_PX} />
                 </span>
                 {r.label}
               </span>
@@ -1277,8 +1290,8 @@ export function TagsRail(props: TagsRailProps) {
                     }`}
                   >
                     <ProGlyph pro={pro}>
-                      <ModeIcon weight={on ? filled : 'regular'} className={on ? '' : 'group-hover:hidden'} aria-hidden="true" />
-                      {!on && <ModeIcon weight={filled} className="hidden group-hover:inline-flex" aria-hidden="true" />}
+                      <ModeIcon size={18} weight={on ? filled : 'regular'} className={on ? '' : 'group-hover:hidden'} aria-hidden="true" />
+                      {!on && <ModeIcon size={18} weight={filled} className="hidden group-hover:inline-flex" aria-hidden="true" />}
                     </ProGlyph>
                     <span aria-hidden="true" className="pn-sb-wide pn-browse-name">
                       <span className="text-compact font-semibold">{label}</span>
@@ -1347,7 +1360,7 @@ export function TagsRail(props: TagsRailProps) {
           >
             <span className="flex items-center gap-2 min-w-0">
               <span className="inline-flex shrink-0">
-                <Prohibit />
+                <Prohibit size={SIDEBAR_ICON_PX} />
               </span>
               <span className="truncate">{t('tagsRail.untagged')}</span>
             </span>
@@ -1360,7 +1373,7 @@ export function TagsRail(props: TagsRailProps) {
           <div className="w-full rounded text-row font-medium transition flex items-center text-pn">
             <div className="flex-1 min-w-0 flex items-center gap-2 px-2 py-2">
               <span className="inline-flex shrink-0 text-accent">
-                <Hash />
+                <Hash size={SIDEBAR_ICON_PX} />
               </span>
               <input
                 ref={newTagInputRef}
@@ -1420,6 +1433,24 @@ export function TagsRail(props: TagsRailProps) {
       )}
       </>)}
 
+      {/* Mobile drawer Settings door - matches Android swipe-right muscle
+          memory without removing the bottom-bar Settings gear or any of the
+          five footer actions below. Hidden at lg+, where the desktop footer
+          already holds the Settings gear directly under this rail. */}
+      <div className="lg:hidden shrink-0 border-t border-divider px-3 py-1.5">
+        <button
+          type="button"
+          tabIndex={mobileTabIndex}
+          onClick={onOpenSettings}
+          className="w-full text-start px-2 py-2 rounded text-row font-medium transition flex items-center gap-2 text-pn hover:bg-pn/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+        >
+          <span className="text-accent inline-flex shrink-0">
+            <Gear size={SIDEBAR_ICON_PX} aria-hidden="true" />
+          </span>
+          <span className="truncate">{t('notes:footer.settings')}</span>
+        </button>
+      </div>
+
       {/* Footer actions - five icon buttons: Help, Downloads | Import,
           Feedback, Rate. The two external links sit left of a hairline
           divider; the in-app actions sit right of it. Labels reveal as an
@@ -1465,7 +1496,7 @@ export function TagsRail(props: TagsRailProps) {
         </HoverLabel>
         <span aria-hidden="true" className="w-px h-4 self-center bg-divider shrink-0" />
         <FooterAction
-          icon={Download}
+          icon={FileArrowDown}
           label={t('tagsRail.import', exemptOpts('shell:tagsRail.import'))}
           onClick={() => {
             setDrawerOpen(false);

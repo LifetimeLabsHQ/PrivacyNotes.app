@@ -301,13 +301,12 @@ export default React.memo(function NoteRow(props: NoteRowProps) {
 /* ── Unified 28px row icon ────────────────────────────────────────── */
 
 /** Glyph size for the 28px row-icon boxes - favicon and type icons alike, so
- *  they all read the same size (an 18px glyph in the 28px box). */
-const ROW_ICON_PX = 18;
+ *  they all read the same size (a 20px glyph in the 28px box). */
+const ROW_ICON_PX = 20;
 
 /** Favicon size for the mini card glyph - the small-tile stand-in for the
- *  28px chip. Two pixels over the 13px type glyphs it replaces, because a
- *  site logo needs the extra room to stay recognizable. */
-const MINI_FAVICON_PX = 15;
+ *  28px chip, matching the 16px type and look glyphs beside it. */
+const MINI_FAVICON_PX = 16;
 
 /**
  * Domain whose favicon stands in for this note's type icon, '' when it has
@@ -511,7 +510,7 @@ export function SiteChip({ domain, tall, trashTint, fallback }: {
         <span className={missing ? 'hidden' : 'contents'}>
           <Favicon domain={domain} size={icon} onMissing={onMissing} />
         </span>
-        {missing && <FallbackIcon size={tall ? 20 : ROW_ICON_PX} />}
+        {missing && <FallbackIcon size={tall ? 22 : ROW_ICON_PX} />}
       </span>
     );
   }
@@ -520,7 +519,7 @@ export function SiteChip({ domain, tall, trashTint, fallback }: {
   const text = trashTint ? 'text-warning' : 'text-accent';
   return (
     <span className={`shrink-0 ${box} ${bg} flex items-center justify-center ${text} mt-px`}>
-      <FallbackIcon size={tall ? 20 : ROW_ICON_PX} />
+      <FallbackIcon size={tall ? 22 : ROW_ICON_PX} />
     </span>
   );
 }
@@ -683,7 +682,7 @@ export function TagChips({ tags, folderId, passkey = false }: {
         // The list row crops what spills out of it, so a CSS tip is cut; this tip is fixed.
         <OverflowTip always text={t('vaultPasskey.hasPasskey')}>
           <span data-slot="passkey" role="img" aria-label={t('vaultPasskey.hasPasskey')} className="inline-flex items-center text-meta px-1.5 py-0.5 rounded pn-chip text-accent-strong">
-            <Fingerprint size={11} aria-hidden="true" />
+            <Fingerprint size={14} aria-hidden="true" />
           </span>
         </OverflowTip>
       )}
@@ -693,7 +692,7 @@ export function TagChips({ tags, folderId, passkey = false }: {
           onClick={onPick((f) => f.folder(folderId))}
           className={`inline-flex items-center gap-1 max-w-[12rem] text-meta px-1.5 py-0.5 rounded pn-chip text-accent-strong${pickable}`}
         >
-          <FolderGlyph folderId={folderId} size={11} className="shrink-0 text-label" />
+          <FolderGlyph folderId={folderId} size={14} className="shrink-0 text-label" />
           <span className="truncate" dir="auto">{folderName}</span>
         </span>
       )}
@@ -704,7 +703,7 @@ export function TagChips({ tags, folderId, passkey = false }: {
           onClick={onPick((f) => f.tag(tag))}
           className={`inline-flex items-center text-meta px-1.5 py-0.5 rounded pn-chip text-accent-strong${pickable}`}
         >
-          <TagMark tag={tag} size={11} />
+          <TagMark tag={tag} size={14} />
           {tag}
         </span>
       ))}
@@ -750,16 +749,16 @@ export function CardGlyph({ type, override, domain, paths }: { type: LocalNote['
   // cannot be overwritten by a type the caller does not control.
   if (override) {
     const Override = override;
-    return <Override size={13} className="pn-card-glyph shrink-0 text-accent" aria-hidden="true" />;
+    return <Override size={16} className="pn-card-glyph shrink-0 text-accent" aria-hidden="true" />;
   }
   // Same slot, same class contract - only the artwork differs, so the mini CSS
   // positions the favicon exactly where it positions a type glyph. The chip's
   // own favicon sits in a `display: none` box while this one shows (and the
   // reverse on a wide tile), so a card still fetches exactly one icon.
-  if (paths) return <PathGlyph paths={paths} size={13} className={`pn-card-glyph shrink-0 ${typeGlyph(type).color}`} />;
+  if (paths) return <PathGlyph paths={paths} size={16} className={`pn-card-glyph shrink-0 ${typeGlyph(type).color}`} />;
   if (domain) return <CardFavGlyph type={type} domain={domain} />;
   const { Icon, color } = typeGlyph(type);
-  return <Icon className={`pn-card-glyph shrink-0 ${color}`} aria-hidden="true" />;
+  return <Icon size={16} className={`pn-card-glyph shrink-0 ${color}`} aria-hidden="true" />;
 }
 
 /** The mini tile's site icon, or the type glyph while there is none (the
@@ -773,7 +772,7 @@ function CardFavGlyph({ type, domain }: { type: LocalNote['type']; domain: strin
       <span className="pn-card-glyph pn-card-glyph-fav shrink-0" style={missing ? { display: 'none' } : undefined} aria-hidden="true">
         <Favicon domain={domain} size={MINI_FAVICON_PX} onMissing={onMissing} />
       </span>
-      {missing && <Icon className={`pn-card-glyph shrink-0 ${color}`} aria-hidden="true" />}
+      {missing && <Icon size={16} className={`pn-card-glyph shrink-0 ${color}`} aria-hidden="true" />}
     </>
   );
 }

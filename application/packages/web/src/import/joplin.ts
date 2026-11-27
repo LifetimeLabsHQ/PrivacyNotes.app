@@ -418,7 +418,7 @@ async function readJoplin(file: File, onProgress?: (msg: string) => void): Promi
     const createdAt = isoOr(p.user_created_time, isoOr(p.created_time, now));
     const parent = p.parent_id ?? '';
     // Joplin's phone apps record where a note was made (0 when they could not).
-    // Spec: docs/internal/plans/note-location.md (section 6)
+    // Spec: docs/internal/specs/note-location.md (section 6)
     const place = importedLocation(p.latitude, p.longitude);
     if (place) placeCount++;
     notes.push({

@@ -10,10 +10,9 @@
  * the front (how a user returns from the iOS share sheet), and on the
  * `pn-share-inbox` event Android's activity fires once a share is copied.
  *
- * A link becomes a bookmark (an address already saved is opened, not doubled),
- * text becomes a note (a text that is only a link becomes a bookmark), and the
- * files go through the Files upload together, in one window, each read only
- * when its turn comes, so only one file is ever held in memory. An item leaves
+ * Each shared item carries a validated target chosen in the unified share
+ * sheet (Bookmark, Clip page, Note, Task, Today's journal, or Files) plus
+ * optional organization metadata (Task list, Folder, Tags). An item leaves
  * the inbox only once it is saved; one that fails stays for the next drain and
  * does not hold up the items after it.
  * Spec: docs/internal/specs/share-into-app.md
@@ -23,8 +22,18 @@ import { detectPlatform } from './devices';
 import { normalizeUrl } from './linkBody';
 import { perFileLimit } from './attachmentValidation';
 import { isSupportedImage } from './imageProcessing';
-import { proUnlocked } from './demo';
+import { isDemoMode, proUnlocked } from './demo';
+import {
+  clearShareInboxPendingMark,
+  hasLiveSignIn,
+  hasShareInboxClearPending,
+  markShareInboxClearPending,
+  signInStamp,
+  signedOutSince,
+} from './liveSignIn';
 import type { LaterFile } from './notesView/useFilesUpload';
+
+export type ShareTarget = 'bookmark' | 'clip' | 'note' | 'task' | 'journal' | 'files';
 
 export interface SharedItem {
   id: string;
@@ -36,238 +45,726 @@ export interface SharedItem {
   name?: string;
   mime?: string;
   size?: number;
-  /** 'note' when shared photos should become a note with inline images (#870). */
-  target?: 'note';
-  /** Shared batch id grouping multiple photos from one share into one note. */
+  /** Destination chosen in the share sheet (Bookmark, Clip, Note, Task, Journal, Files). */
+  target?: ShareTarget;
+  /** Shared batch id grouping multiple files from one share into one note or journal entry. */
   group?: string;
+  /** Chosen task list note id when target is 'task' (absent or gone -> Quick Tasks). */
+  taskListId?: string;
+  /** Chosen folder id (Pro-gated; ignored on free accounts or unknown folders). */
+  folderId?: string;
+  /** Chosen tags to apply on save. */
+  tags?: string[];
+}
+
+interface ShareChoice {
+  target: ShareTarget;
+  title?: string;
+  text?: string;
+  taskListId?: string | null;
+  folderId?: string | null;
+  tags?: string[];
 }
 
 export type ShareApproval =
   | 'save'
   | 'discard'
   | 'later'
-  | { action: 'save'; asNote: { title: string; text: string } };
+  | { action: 'save'; asNote: { title: string; text: string } }
+  | { action: 'save'; choice: ShareChoice };
+
+export interface ShareOrg {
+  folderId?: string;
+  tags?: string[];
+}
+
+export interface ShareCatalogPayload {
+  foldersUnlocked: boolean;
+  taskLists: { id: string; title: string }[];
+  folders: { id: string; name: string }[];
+  tags: string[];
+}
 
 type ShareFile = { id: string; name: string; mime: string; size: number };
 
 export type ShareStep =
-  | { kind: 'bookmark'; id: string; url: string; title: string }
-  | { kind: 'note'; id: string; text: string }
-  | { kind: 'photoNote'; title: string; text: string; files: ShareFile[] }
-  | { kind: 'files'; files: ShareFile[] };
+  | { kind: 'bookmark'; id: string; url: string; title: string; text?: string; folderId?: string; tags?: string[] }
+  | { kind: 'clip'; id: string; url: string; title: string; text?: string; folderId?: string; tags?: string[] }
+  | { kind: 'note'; id: string; title?: string; text: string; url?: string; folderId?: string; tags?: string[] }
+  | { kind: 'task'; id: string; url?: string; title?: string; text?: string; taskListId?: string }
+  | { kind: 'journal'; id: string; url?: string; title?: string; text?: string; tags?: string[] }
+  | { kind: 'photoNote'; title: string; text: string; files: ShareFile[]; folderId?: string; tags?: string[] }
+  | { kind: 'photoJournal'; text: string; files: ShareFile[]; tags?: string[] }
+  | { kind: 'fileNote'; title: string; text: string; files: ShareFile[]; folderId?: string; tags?: string[] }
+  | { kind: 'files'; files: ShareFile[]; folderId?: string; tags?: string[] };
 
 /** Whether a waiting share item is an image the note image pipeline can embed. */
 export function isSharedImage(item: SharedItem): boolean {
   return item.kind === 'file' && isSupportedImage({ type: item.mime ?? '', name: item.name ?? '' });
 }
 
+/** Whether a shared file was classified as an image by the OS share sheet
+ *  (including formats such as AVIF/HEIC that the image pipeline may refuse). */
+function isImageFileItem(item: SharedItem): boolean {
+  return isSharedImage(item) || (item.kind === 'file' && /^image\//i.test(item.mime ?? ''));
+}
+
 /** A text that is nothing but one valid web address, which people share as text. */
-function loneWebUrl(text: string): string | null {
+export function loneWebUrl(text: string): string | null {
   const t = text.trim();
   return /^https?:\/\/\S+$/i.test(t) ? normalizeUrl(t) : null;
 }
 
-/** What to create, in the order the items were shared, with every file in one
- *  upload at the place of the first, and photos marked for a note grouped by
- *  their share batch. Pure, for the tests. */
+const LAST_TASK_LIST_KEY = 'privacynotes.share.lastTaskList';
+
+export function readLastShareTaskList(): string | null {
+  try {
+    const raw = localStorage.getItem(LAST_TASK_LIST_KEY)?.trim() ?? '';
+    return raw || null;
+  } catch {
+    return null;
+  }
+}
+
+export function writeLastShareTaskList(id: string | null): void {
+  try {
+    if (id && id.trim()) localStorage.setItem(LAST_TASK_LIST_KEY, id.trim());
+    else localStorage.removeItem(LAST_TASK_LIST_KEY);
+  } catch {
+    // Storage disabled.
+  }
+}
+
+/** What to create, in the order the items were shared, with grouped photo/file
+ *  notes and file uploads combined cleanly. Pure, for the tests. */
 export function planShares(items: SharedItem[]): ShareStep[] {
   const steps: ShareStep[] = [];
-  let files: ShareFile[] | null = null;
+  let filesStep: Extract<ShareStep, { kind: 'files' }> | null = null;
   const photoNotes = new Map<string, Extract<ShareStep, { kind: 'photoNote' }>>();
+  const photoJournals = new Map<string, Extract<ShareStep, { kind: 'photoJournal' }>>();
+  const fileNotes = new Map<string, Extract<ShareStep, { kind: 'fileNote' }>>();
+
   for (const item of items) {
+    const org: ShareOrg = {
+      ...(item.folderId ? { folderId: item.folderId } : {}),
+      ...(item.tags?.length ? { tags: item.tags } : {}),
+    };
+
     if (item.kind === 'url' && item.url) {
-      steps.push({ kind: 'bookmark', id: item.id, url: item.url, title: item.title ?? '' });
+      if (item.target === 'clip') {
+        steps.push({
+          kind: 'clip',
+          id: item.id,
+          url: item.url,
+          title: item.title ?? '',
+          ...(item.text ? { text: item.text } : {}),
+          ...org,
+        });
+      } else if (item.target === 'task') {
+        steps.push({
+          kind: 'task',
+          id: item.id,
+          url: item.url,
+          ...(item.title ? { title: item.title } : {}),
+          ...(item.text ? { text: item.text } : {}),
+          ...(item.taskListId ? { taskListId: item.taskListId } : {}),
+        });
+      } else if (item.target === 'journal') {
+        steps.push({
+          kind: 'journal',
+          id: item.id,
+          url: item.url,
+          ...(item.title ? { title: item.title } : {}),
+          ...(item.text ? { text: item.text } : {}),
+          ...(item.tags?.length ? { tags: item.tags } : {}),
+        });
+      } else if (item.target === 'note') {
+        steps.push({
+          kind: 'note',
+          id: item.id,
+          ...(item.title ? { title: item.title } : {}),
+          text: item.text ?? '',
+          url: item.url,
+          ...org,
+        });
+      } else {
+        steps.push({
+          kind: 'bookmark',
+          id: item.id,
+          url: item.url,
+          title: item.title ?? '',
+          ...(item.text ? { text: item.text } : {}),
+          ...org,
+        });
+      }
     } else if (item.kind === 'text' && item.text) {
       const url = loneWebUrl(item.text);
-      steps.push(url
-        ? { kind: 'bookmark', id: item.id, url, title: '' }
-        : { kind: 'note', id: item.id, text: item.text });
+      if (item.target === 'task') {
+        steps.push({
+          kind: 'task',
+          id: item.id,
+          ...(url ? { url } : { text: item.text }),
+          ...(item.title ? { title: item.title } : {}),
+          ...(item.taskListId ? { taskListId: item.taskListId } : {}),
+        });
+      } else if (item.target === 'journal') {
+        steps.push({
+          kind: 'journal',
+          id: item.id,
+          ...(url ? { url } : { text: item.text }),
+          ...(item.title ? { title: item.title } : {}),
+          ...(item.tags?.length ? { tags: item.tags } : {}),
+        });
+      } else if (item.target === 'note') {
+        steps.push({
+          kind: 'note',
+          id: item.id,
+          ...(item.title ? { title: item.title } : {}),
+          text: item.text,
+          ...org,
+        });
+      } else if (url) {
+        steps.push({
+          kind: 'bookmark',
+          id: item.id,
+          url,
+          title: item.title ?? '',
+          ...org,
+        });
+      } else {
+        steps.push({
+          kind: 'note',
+          id: item.id,
+          ...(item.title ? { title: item.title } : {}),
+          text: item.text,
+          ...org,
+        });
+      }
     } else if (item.kind === 'file' && item.target === 'note') {
       const key = item.group ?? item.id;
-      let step = photoNotes.get(key);
+      const entry: ShareFile = { id: item.id, name: item.name ?? 'file', mime: item.mime ?? '', size: item.size ?? 0 };
+      if (isImageFileItem(item) && !fileNotes.has(key)) {
+        let step = photoNotes.get(key);
+        if (!step) {
+          step = { kind: 'photoNote', title: item.title ?? '', text: item.text ?? '', files: [], ...org };
+          photoNotes.set(key, step);
+          steps.push(step);
+        } else {
+          if (!step.title && item.title) step.title = item.title;
+          if (!step.text && item.text) step.text = item.text;
+          if (!step.folderId && item.folderId) step.folderId = item.folderId;
+          if (!step.tags?.length && item.tags?.length) step.tags = item.tags;
+        }
+        step.files.push(entry);
+      } else {
+        // Non-image file (or mixed batch with a non-image) saved as a Note with attachment link(s).
+        let step = fileNotes.get(key);
+        const existingPhotos = photoNotes.get(key);
+        if (!step && existingPhotos) {
+          // Promote a mixed batch (image + non-image sharing a group) to fileNote so all files attach cleanly.
+          const idx = steps.indexOf(existingPhotos);
+          step = {
+            kind: 'fileNote',
+            title: existingPhotos.title,
+            text: existingPhotos.text,
+            files: [...existingPhotos.files],
+            ...(existingPhotos.folderId ? { folderId: existingPhotos.folderId } : {}),
+            ...(existingPhotos.tags?.length ? { tags: existingPhotos.tags } : {}),
+          };
+          photoNotes.delete(key);
+          fileNotes.set(key, step);
+          if (idx >= 0) steps[idx] = step;
+          else steps.push(step);
+        } else if (!step) {
+          step = { kind: 'fileNote', title: item.title ?? '', text: item.text ?? '', files: [], ...org };
+          fileNotes.set(key, step);
+          steps.push(step);
+        } else {
+          if (!step.title && item.title) step.title = item.title;
+          if (!step.text && item.text) step.text = item.text;
+          if (!step.folderId && item.folderId) step.folderId = item.folderId;
+          if (!step.tags?.length && item.tags?.length) step.tags = item.tags;
+        }
+        step.files.push(entry);
+      }
+    } else if (item.kind === 'file' && item.target === 'journal' && isImageFileItem(item)) {
+      const key = item.group ?? item.id;
+      let step = photoJournals.get(key);
       if (!step) {
-        step = { kind: 'photoNote', title: item.title ?? '', text: item.text ?? '', files: [] };
-        photoNotes.set(key, step);
+        step = {
+          kind: 'photoJournal',
+          text: item.text ?? '',
+          files: [],
+          ...(item.tags?.length ? { tags: item.tags } : {}),
+        };
+        photoJournals.set(key, step);
         steps.push(step);
       } else {
-        if (!step.title && item.title) step.title = item.title;
         if (!step.text && item.text) step.text = item.text;
+        if (!step.tags?.length && item.tags?.length) step.tags = item.tags;
       }
       step.files.push({ id: item.id, name: item.name ?? 'file', mime: item.mime ?? '', size: item.size ?? 0 });
     } else if (item.kind === 'file') {
-      if (!files) {
-        files = [];
-        steps.push({ kind: 'files', files });
+      if (!filesStep) {
+        filesStep = { kind: 'files', files: [], ...org };
+        steps.push(filesStep);
+      } else {
+        if (!filesStep.folderId && item.folderId) filesStep.folderId = item.folderId;
+        if (!filesStep.tags?.length && item.tags?.length) filesStep.tags = item.tags;
       }
-      files.push({ id: item.id, name: item.name ?? 'file', mime: item.mime ?? '', size: item.size ?? 0 });
+      filesStep.files.push({ id: item.id, name: item.name ?? 'file', mime: item.mime ?? '', size: item.size ?? 0 });
     }
   }
   return steps;
 }
 
 export interface ShareHandlers {
-  /** Saves a bookmark, or finds the one already saved. Returns its id. */
-  addBookmark: (url: string, title: string) => Promise<string>;
-  /** Saves a note and returns its id. */
-  addNote: (text: string) => Promise<string>;
-  /** Saves shared photo(s) as an encrypted note with inline images (#870).
-   *  Returns the new note id (or null if none stored) and the files the inbox
-   *  may remove (stored or permanently refused; storage-full files stay). */
-  addPhotoNote: (title: string, text: string, files: LaterFile[]) => Promise<{ noteId: string | null; handled: LaterFile[] }>;
-  /** Stores files through the Files upload path, which shows its own progress.
-   *  Answers the files the inbox may let go: each one stored on this device,
-   *  and each one refused for good, whose reason the upload window names. A
-   *  file that failed for a reason that can pass (no room yet, a failed read
-   *  or store) is left out and stays in the inbox for the next drain. Must
-   *  reject when it cannot store at all, so every file stays. */
-  addFiles: (files: LaterFile[]) => Promise<LaterFile[]>;
+  /** Saves a bookmark, or finds the one already saved. Returns its id, or null if aborted. */
+  addBookmark: (url: string, title: string, opts?: ShareOrg & { text?: string }) => Promise<string | null>;
+  /** Clips a web page into a full note, falling back to a bookmark when clipping fails. */
+  addClip?: (url: string, title: string, opts?: ShareOrg & { text?: string }) => Promise<string | null>;
+  /** Saves a note and returns its id, or null if aborted. */
+  addNote: (text: string, opts?: ShareOrg & { title?: string; url?: string }) => Promise<string | null>;
+  /** Appends a task item to the chosen task list (or Quick Tasks fallback). */
+  addTask?: (input: { url?: string; title?: string; text?: string; taskListId?: string }) => Promise<string | null>;
+  /** Appends text/link to today's journal entry (creating it when missing). */
+  addJournal?: (input: { url?: string; title?: string; text?: string; tags?: string[] }) => Promise<string | null>;
+  /** Saves shared photo(s) as an encrypted note with inline images (#870). */
+  addPhotoNote: (
+    title: string,
+    text: string,
+    files: LaterFile[],
+    opts?: ShareOrg,
+  ) => Promise<{ noteId: string | null; handled: LaterFile[] }>;
+  /** Appends shared photo(s) + optional caption to today's journal entry. */
+  addPhotoJournal?: (
+    text: string,
+    files: LaterFile[],
+    opts?: { tags?: string[] },
+  ) => Promise<{ noteId: string | null; handled: LaterFile[] }>;
+  /** Uploads non-image (or mixed) files and embeds their attachment links inside a new note. */
+  addFileNote?: (
+    title: string,
+    text: string,
+    files: LaterFile[],
+    opts?: ShareOrg,
+  ) => Promise<{ noteId: string | null; handled: LaterFile[] }>;
+  /** Stores files through the Files upload path, which shows its own progress. */
+  addFiles: (files: LaterFile[], opts?: ShareOrg) => Promise<LaterFile[]>;
   /** Shows the item made last, once the whole inbox is in. */
   reveal: (id: string) => void;
-  /** False until the shell's first sync has run, so a fresh sign-in has the
-   *  account's bookmarks before a shared link is checked against them. */
+  /** False until the shell's first sync has run. */
   ready: boolean;
-  /** Asks the person about the waiting items before anything is saved.
-   *  Passed on Android only, where any installed app can send a share with
-   *  no step by the person. 'later' leaves every item for the next drain. */
+  /** Identity and phrase scope (`${pubkey}:${phrase}`). */
+  scopeKey?: string;
+  /** Asks the person about the waiting items before anything is saved (Android). */
   approve?: (items: SharedItem[]) => Promise<ShareApproval>;
 }
 
 let publishedLimit: number | null = null;
+let limitGen = 0;
+let publishedCatalogJson: string | null = null;
+let catalogGen = 0;
 
 /**
  * Tells the iOS share extension this account's per-file limit, so a file the
  * upload would refuse is refused in the share sheet, with the reason, instead
- * of after a "Saved". The same rule the Files upload applies; called with the
- * figures of each quota read, so it follows an upgrade or a lapsed add-on.
+ * of after a "Saved".
  */
 export function publishShareLimit(isPro: boolean, maxTotalBytes: number) {
-  if (detectPlatform() !== 'ios') return;
+  if (detectPlatform() !== 'ios' || isDemoMode() || !hasLiveSignIn()) return;
   const limit = perFileLimit(proUnlocked(isPro), maxTotalBytes > 500 * 1000 * 1000);
   if (limit === publishedLimit) return;
+  const gen = ++limitGen;
+  const stamp = signInStamp();
   publishedLimit = limit;
   void import('@tauri-apps/api/core')
-    .then(({ invoke }) => invoke('share_limit_set', { bytes: limit }))
+    .then(({ invoke }) => {
+      if (gen !== limitGen || !hasLiveSignIn() || signedOutSince(stamp)) {
+        if (gen === limitGen) publishedLimit = null;
+        return;
+      }
+      return invoke('share_limit_set', { bytes: limit });
+    })
     .catch((err) => {
-      publishedLimit = null;
+      if (gen === limitGen) publishedLimit = null;
       console.warn('[shareInbox] limit not written:', err);
+    });
+}
+
+/**
+ * Mirrors non-PIN-protected task list names, Pro folder names, and tags to the
+ * iOS share extension while App Lock is off. Passing `null` (when App Lock is
+ * enabled) clears the catalog file and last-picked task list immediately so no
+ * vault metadata sits readable while the app is locked.
+ */
+export function publishShareCatalog(catalog: ShareCatalogPayload | null) {
+  if (detectPlatform() !== 'ios' || isDemoMode() || !hasLiveSignIn()) return;
+  const signature = catalog ? JSON.stringify(catalog) : 'null';
+  if (signature === publishedCatalogJson) return;
+  const gen = ++catalogGen;
+  const stamp = signInStamp();
+  publishedCatalogJson = signature;
+  void import('@tauri-apps/api/core')
+    .then(({ invoke }) => {
+      if (gen !== catalogGen || !hasLiveSignIn() || signedOutSince(stamp)) {
+        if (gen === catalogGen) publishedCatalogJson = null;
+        return;
+      }
+      return invoke('share_catalog_set', { catalog });
+    })
+    .catch((err) => {
+      if (gen === catalogGen) publishedCatalogJson = null;
+      console.warn('[shareInbox] catalog not written:', err);
     });
 }
 
 /** Module scope, so the drain of a remount (after the app lock, say) waits
  *  for one still running from before; two would save the same item twice. */
 let queue: Promise<void> = Promise.resolve();
-/** True while a drain waits in the queue behind the running one; a second
- *  trigger in that time adds nothing, so a closed sheet does not reopen once
- *  for every visibility change it saw. */
-let drainWaiting = false;
-/** The items the person answered "later" for, in this run of the app. They
- *  are not asked about again until a new item arrives or the app restarts. */
+/** The items the person answered "later" for, in this run of the app. */
 const deferred = new Set<string>();
+let inboxGen = 0;
+const activeDrains = new Set<() => void>();
 
-export async function drainOnce(live: () => boolean, handlers: () => ShareHandlers, gone?: Promise<void>) {
+/**
+ * Empties the phone share inbox, removes ShareLimit, ShareCatalog, and
+ * ShareLastPick beside it, and resets in-memory state so items or metadata
+ * from a departing account cannot stay on disk or drain into the next vault.
+ */
+export async function clearShareInbox(): Promise<boolean> {
+  if (isDemoMode()) return true;
+  ++limitGen;
+  publishedLimit = null;
+  ++catalogGen;
+  publishedCatalogJson = null;
+  writeLastShareTaskList(null);
+  deferred.clear();
+  ++inboxGen;
+  for (const abort of activeDrains) abort();
+  activeDrains.clear();
+  const platform = detectPlatform();
+  if (platform !== 'ios' && platform !== 'android') {
+    clearShareInboxPendingMark();
+    return true;
+  }
+  markShareInboxClearPending();
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('share_inbox_clear');
+    clearShareInboxPendingMark();
+    return true;
+  } catch (err) {
+    console.warn('[shareInbox] clear failed:', err);
+    markShareInboxClearPending();
+    return false;
+  }
+}
+
+function applyApprovalChoice(items: SharedItem[], choice: ShareChoice): SharedItem[] {
+  const group = items[0]?.id ?? 'group';
+  const tags = choice.tags?.length ? choice.tags : undefined;
+  const folderId = choice.target !== 'task' && choice.target !== 'journal' && choice.folderId ? choice.folderId : undefined;
+  const taskListId = choice.target === 'task' && choice.taskListId ? choice.taskListId : undefined;
+  const title = choice.title?.trim() || undefined;
+  const text = choice.text?.trim() || undefined;
+
+  return items.map((it) => {
+    if (it.kind === 'file') {
+      return {
+        ...it,
+        target: choice.target,
+        ...(choice.target === 'note' || choice.target === 'journal' ? { group } : {}),
+        ...(choice.target === 'note' && title ? { title } : {}),
+        ...((choice.target === 'note' || choice.target === 'journal') && text ? { text } : {}),
+        ...(folderId ? { folderId } : {}),
+        ...(tags ? { tags } : {}),
+      };
+    }
+    if (it.kind === 'url') {
+      return {
+        ...it,
+        target: choice.target,
+        ...(title !== undefined ? { title } : {}),
+        ...(text !== undefined ? { text } : {}),
+        ...(taskListId ? { taskListId } : {}),
+        ...(folderId ? { folderId } : {}),
+        ...(choice.target !== 'task' && tags ? { tags } : {}),
+      };
+    }
+    // Text item (possibly a lone URL).
+    const lone = it.text ? loneWebUrl(it.text) : null;
+    if (lone && (choice.target === 'clip' || choice.target === 'bookmark' || choice.target === 'task')) {
+      return {
+        ...it,
+        kind: 'url',
+        url: lone,
+        target: choice.target,
+        title: title ?? it.title,
+        text: text ?? undefined,
+        ...(taskListId ? { taskListId } : {}),
+        ...(folderId ? { folderId } : {}),
+        ...(choice.target !== 'task' && tags ? { tags } : {}),
+      };
+    }
+    return {
+      ...it,
+      target: choice.target,
+      ...(title !== undefined ? { title } : {}),
+      text: text ?? it.text,
+      ...(taskListId ? { taskListId } : {}),
+      ...(folderId ? { folderId } : {}),
+      ...(choice.target !== 'task' && tags ? { tags } : {}),
+    };
+  });
+}
+
+export async function drainOnce(
+  live: () => boolean,
+  handlers: (stillLive: () => boolean) => ShareHandlers,
+  gone?: Promise<void>,
+) {
+  if (hasShareInboxClearPending()) {
+    await clearShareInbox();
+    return;
+  }
+  const gen = inboxGen;
+  const drainStamp = signInStamp();
+  const stillLive = () => live() && gen === inboxGen && !signedOutSince(drainStamp);
+  if (!stillLive()) return;
   const { invoke } = await import('@tauri-apps/api/core');
   const items = await invoke<SharedItem[]>('share_inbox_list');
-  if (items.length === 0) return;
+  if (items.length === 0 || !stillLive()) return;
   let plannedItems = items;
-  // The choice covers exactly the items listed: one that arrives while the
-  // sheet is open waits for the next drain and its own question.
-  const approve = handlers().approve;
+  const approve = handlers(stillLive).approve;
   if (approve) {
     if (items.every((it) => deferred.has(it.id))) return;
-    // A shell that goes (the app lock, a sign-out) takes the sheet with it,
-    // and its question never gets an answer: stop waiting, so the next drain
-    // is not stuck behind it.
-    const choice = await Promise.race([approve(items), ...(gone ? [gone.then(() => 'gone' as const)] : [])]);
-    if (choice === 'gone' || !live()) return;
+    let cancelDrain!: () => void;
+    const cleared = new Promise<'gone'>((resolve) => {
+      cancelDrain = () => resolve('gone');
+    });
+    activeDrains.add(cancelDrain);
+    let choice: ShareApproval | 'gone';
+    try {
+      choice = await Promise.race([
+        approve(items),
+        cleared,
+        ...(gone ? [gone.then(() => 'gone' as const)] : []),
+      ]);
+    } finally {
+      activeDrains.delete(cancelDrain);
+    }
+    if (choice === 'gone' || !stillLive()) return;
     if (choice === 'later') {
       for (const it of items) deferred.add(it.id);
       return;
     }
     for (const it of items) deferred.delete(it.id);
     if (choice === 'discard') {
-      for (const it of items) await invoke('share_inbox_remove', { id: it.id }).catch(() => {});
+      for (const it of items) {
+        if (gen !== inboxGen) return;
+        await invoke('share_inbox_remove', { id: it.id }).catch(() => {});
+      }
       return;
     }
     if (typeof choice === 'object' && choice.action === 'save') {
-      const group = items[0]?.id ?? 'note';
-      plannedItems = items.map((it) =>
-        isSharedImage(it)
-          ? {
-              ...it,
-              target: 'note' as const,
-              group,
-              title: choice.asNote.title || undefined,
-              text: choice.asNote.text || undefined,
-            }
-          : it,
-      );
+      if ('choice' in choice) {
+        if (choice.choice.target === 'task') {
+          writeLastShareTaskList(choice.choice.taskListId ?? null);
+        }
+        plannedItems = applyApprovalChoice(items, choice.choice);
+      } else {
+        const group = items[0]?.id ?? 'note';
+        plannedItems = items.map((it) =>
+          isSharedImage(it)
+            ? {
+                ...it,
+                target: 'note' as const,
+                group,
+                title: choice.asNote.title || undefined,
+                text: choice.asNote.text || undefined,
+              }
+            : it,
+        );
+      }
     }
   }
+
   const makeLater = (list: ShareFile[]): LaterFile[] =>
     list.map((f) => ({
       name: f.name,
       size: f.size,
-      read: async () =>
-        new File([await invoke<ArrayBuffer>('share_inbox_read', { id: f.id })], f.name, { type: f.mime }),
-      // A file the upload keeps for a reason that can pass stays in the
-      // inbox; this lets the person drop it from the upload window.
+      read: async () => {
+        if (!stillLive()) throw new Error('share drain ended');
+        const bytes = await invoke<ArrayBuffer>('share_inbox_read', { id: f.id });
+        if (!stillLive()) throw new Error('share drain ended');
+        return new File([bytes], f.name, { type: f.mime });
+      },
       discard: async () => {
+        if (gen !== inboxGen) return;
         await invoke('share_inbox_remove', { id: f.id });
       },
     }));
+
+  const orgOf = (s: { folderId?: string; tags?: string[] }): ShareOrg | undefined =>
+    s.folderId || s.tags?.length
+      ? { ...(s.folderId ? { folderId: s.folderId } : {}), ...(s.tags?.length ? { tags: s.tags } : {}) }
+      : undefined;
+
   let last: string | null = null;
   for (const step of planShares(plannedItems)) {
-    // Checked before each save, never between a save and its removal: an item
-    // saved and left in the inbox would be saved again by the next drain.
-    if (!live()) return;
+    if (!stillLive()) return;
     try {
-      const h = handlers();
-      if (step.kind === 'bookmark') last = await h.addBookmark(step.url, step.title);
-      else if (step.kind === 'note') last = await h.addNote(step.text);
+      const h = handlers(stillLive);
       let ids: string[];
-      if (step.kind === 'photoNote') {
+      if (step.kind === 'bookmark') {
+        const opts = orgOf(step) || step.text ? { ...orgOf(step), ...(step.text ? { text: step.text } : {}) } : undefined;
+        const saved = opts ? await h.addBookmark(step.url, step.title, opts) : await h.addBookmark(step.url, step.title);
+        if (saved === null) {
+          if (!stillLive()) return;
+          ids = [];
+        } else {
+          last = saved;
+          ids = [step.id];
+        }
+      } else if (step.kind === 'clip') {
+        const opts = orgOf(step) || step.text ? { ...orgOf(step), ...(step.text ? { text: step.text } : {}) } : undefined;
+        const saved = h.addClip
+          ? await h.addClip(step.url, step.title, opts)
+          : await h.addBookmark(step.url, step.title, opts);
+        if (saved === null) {
+          if (!stillLive()) return;
+          ids = [];
+        } else {
+          last = saved;
+          ids = [step.id];
+        }
+      } else if (step.kind === 'note') {
+        const opts = orgOf(step) || step.title || step.url
+          ? { ...orgOf(step), ...(step.title ? { title: step.title } : {}), ...(step.url ? { url: step.url } : {}) }
+          : undefined;
+        const saved = opts ? await h.addNote(step.text, opts) : await h.addNote(step.text);
+        if (saved === null) {
+          if (!stillLive()) return;
+          ids = [];
+        } else {
+          last = saved;
+          ids = [step.id];
+        }
+      } else if (step.kind === 'task') {
+        const saved = h.addTask
+          ? await h.addTask({
+              ...(step.url ? { url: step.url } : {}),
+              ...(step.title ? { title: step.title } : {}),
+              ...(step.text ? { text: step.text } : {}),
+              ...(step.taskListId ? { taskListId: step.taskListId } : {}),
+            })
+          : await h.addNote(step.text ?? step.title ?? step.url ?? '');
+        if (saved === null) {
+          if (!stillLive()) return;
+          ids = [];
+        } else {
+          last = saved;
+          ids = [step.id];
+        }
+      } else if (step.kind === 'journal') {
+        const saved = h.addJournal
+          ? await h.addJournal({
+              ...(step.url ? { url: step.url } : {}),
+              ...(step.title ? { title: step.title } : {}),
+              ...(step.text ? { text: step.text } : {}),
+              ...(step.tags?.length ? { tags: step.tags } : {}),
+            })
+          : await h.addNote(step.text ?? step.title ?? step.url ?? '');
+        if (saved === null) {
+          if (!stillLive()) return;
+          ids = [];
+        } else {
+          last = saved;
+          ids = [step.id];
+        }
+      } else if (step.kind === 'photoNote') {
         const later = makeLater(step.files);
-        const res = await h.addPhotoNote(step.title, step.text, later);
+        const opts = orgOf(step);
+        const res = opts
+          ? await h.addPhotoNote(step.title, step.text, later, opts)
+          : await h.addPhotoNote(step.title, step.text, later);
         if (res.noteId) last = res.noteId;
         const done = new Set(res.handled);
         ids = step.files.filter((_, i) => done.has(later[i]!)).map((f) => f.id);
-      } else if (step.kind === 'files') {
+        if (ids.length === 0 && !stillLive()) return;
+      } else if (step.kind === 'photoJournal') {
         const later = makeLater(step.files);
-        const done = new Set(await h.addFiles(later));
+        const res = h.addPhotoJournal
+          ? await h.addPhotoJournal(step.text, later, step.tags?.length ? { tags: step.tags } : undefined)
+          : await h.addPhotoNote('', step.text, later);
+        if (res.noteId) last = res.noteId;
+        const done = new Set(res.handled);
         ids = step.files.filter((_, i) => done.has(later[i]!)).map((f) => f.id);
+        if (ids.length === 0 && !stillLive()) return;
+      } else if (step.kind === 'fileNote') {
+        const later = makeLater(step.files);
+        const opts = orgOf(step);
+        if (h.addFileNote) {
+          const res = await h.addFileNote(step.title, step.text, later, opts);
+          if (res.noteId) last = res.noteId;
+          const done = new Set(res.handled);
+          ids = step.files.filter((_, i) => done.has(later[i]!)).map((f) => f.id);
+          if (ids.length === 0 && !stillLive()) return;
+        } else {
+          const done = new Set(opts ? await h.addFiles(later, opts) : await h.addFiles(later));
+          ids = step.files.filter((_, i) => done.has(later[i]!)).map((f) => f.id);
+          if (ids.length === 0 && !stillLive()) return;
+        }
       } else {
-        ids = [step.id];
+        const later = makeLater(step.files);
+        const opts = orgOf(step);
+        const done = new Set(opts ? await h.addFiles(later, opts) : await h.addFiles(later));
+        ids = step.files.filter((_, i) => done.has(later[i]!)).map((f) => f.id);
+        if (ids.length === 0 && !stillLive()) return;
       }
-      for (const id of ids) await invoke('share_inbox_remove', { id });
+      if (gen === inboxGen) {
+        for (const id of ids) await invoke('share_inbox_remove', { id });
+      }
     } catch (err) {
       console.warn('[shareInbox] item kept for the next drain:', err);
     }
   }
-  if (last && live()) handlers().reveal(last);
+  if (last && stillLive()) handlers(stillLive).reveal(last);
 }
 
-export function useShareInbox(handlers: ShareHandlers) {
-  // The shell passes fresh closures on every render; the effect runs once ready.
+export function useShareInbox(handlers: ShareHandlers | ((stillLive: () => boolean) => ShareHandlers)) {
   const ref = useRef(handlers);
   ref.current = handlers;
 
-  const { ready } = handlers;
+  const current = typeof handlers === 'function' ? handlers(() => false) : handlers;
+  const { ready, scopeKey } = current;
   useEffect(() => {
     const platform = detectPlatform();
-    if (!ready || (platform !== 'ios' && platform !== 'android')) return;
+    if (!ready || isDemoMode() || (platform !== 'ios' && platform !== 'android')) return;
     let live = true;
+    let drainWaiting = false;
+    const mountStamp = signInStamp();
     let leave!: () => void;
     const gone = new Promise<void>((resolve) => { leave = resolve; });
 
     function drain() {
-      if (drainWaiting) return;
+      if (!live || drainWaiting) return;
       drainWaiting = true;
       queue = queue
         .then(() => {
           drainWaiting = false;
-          return drainOnce(() => live, () => ref.current, gone);
+          if (!live) return;
+          return drainOnce(
+            () => live && hasLiveSignIn() && !signedOutSince(mountStamp),
+            (stillLive) => (typeof ref.current === 'function' ? ref.current(stillLive) : ref.current),
+            gone,
+          );
         })
-        .catch((err) => console.warn('[shareInbox] drain failed:', err));
+        .catch((err) => {
+          drainWaiting = false;
+          console.warn('[shareInbox] drain failed:', err);
+        });
     }
 
     function onVisible() {
@@ -283,5 +780,5 @@ export function useShareInbox(handlers: ShareHandlers) {
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('pn-share-inbox', drain);
     };
-  }, [ready]);
+  }, [ready, scopeKey]);
 }

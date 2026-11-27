@@ -18,7 +18,13 @@
     "viewAria": "Ver imagem",
     "copyAria": "Copiar imagem",
     "copyFailed": "Não foi possível copiar a imagem.",
-    "picturesLeftOut": "Algumas imagens não foram adicionadas. Copie uma imagem sozinha para colá-la."
+    "picturesLeftOut": "Algumas imagens não foram adicionadas. Copie uma imagem sozinha para colá-la.",
+    "captionLabel": "Legenda",
+    "captionAddAria": "Adicionar legenda",
+    "captionEditAria": "Editar legenda",
+    "captionPlaceholder": "Adicione uma legenda...",
+    "captionClearAria": "Limpar legenda",
+    "captionHint": "Enter para salvar · Esc para cancelar"
   },
   "attachment": {
     "fallbackName": "Anexo",

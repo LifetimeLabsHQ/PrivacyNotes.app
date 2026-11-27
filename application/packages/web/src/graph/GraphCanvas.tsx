@@ -1,9 +1,15 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CornersOut, MagnifyingGlassMinus, MagnifyingGlassPlus } from '../icons';
+import { CornersOut, Graph, MagnifyingGlassMinus, MagnifyingGlassPlus } from '../icons';
 import { isLookColor, LOOK_COLORS, type LookColor } from '../itemStyles';
-import { Badge, CanvasControlBar, IconButton } from '../ui';
-import type { SavedGraphLayout, SavedNodePosition } from './graphModel';
+import { isItemMark, TypeMark } from '../typeMark';
+import { Badge, CanvasControlBar, EmptyState, IconButton } from '../ui';
+import {
+  parseGraphSelectionId,
+  type GraphNodeKind,
+  type SavedGraphLayout,
+  type SavedNodePosition,
+} from './graphModel';
 import { createForceSimulation, type ForceSimulation } from './graphPhysics';
 
 // Spec: docs/internal/specs/graph-view.md (section 4.3)
@@ -14,17 +20,7 @@ export interface GraphCanvasHandle {
   exportPositions: () => SavedGraphLayout;
 }
 
-export type CanvasNodeKind =
-  | 'note'
-  | 'journal'
-  | 'task'
-  | 'contact'
-  | 'link'
-  | 'file'
-  | 'drawing'
-  | 'event'
-  | 'missing'
-  | 'folderHub';
+export type CanvasNodeKind = GraphNodeKind;
 
 export interface CanvasNode {
   id: string;
@@ -52,15 +48,6 @@ export interface CanvasEdge {
 
 export type { SavedNodePosition };
 
-interface GraphCanvasControlLabels {
-  zoomIn?: string;
-  zoomOut?: string;
-  fitGraph?: string;
-  connectionsCount?: (count: number) => string;
-  missingHint?: string;
-  folderHubHint?: string;
-}
-
 export interface GraphCanvasProps {
   nodes: readonly CanvasNode[];
   edges: readonly CanvasEdge[];
@@ -79,9 +66,11 @@ export interface GraphCanvasProps {
   savedPositions?: ReadonlyMap<string, SavedNodePosition> | SavedGraphLayout | null;
   onPositionsSettled?: (positions: Map<string, SavedNodePosition>) => void;
   layoutEpoch?: number;
+  /** When true, dragging anywhere (even starting on a node) pans the canvas safely without moving or pinning nodes. */
+  layoutLocked?: boolean;
+  canvasUnavailableLabel?: string;
   dark: boolean;
   ariaLabel: string;
-  controlsLabels?: GraphCanvasControlLabels;
 }
 
 const DRAG_THRESHOLD_MOUSE_PX = 5;
@@ -94,7 +83,7 @@ const PREWARM_MAX_TICKS = 96;
 const PREWARM_BUDGET_MS = 45;
 const SEARCH_FORCE_LABEL_LIMIT = 25;
 const SEARCH_HALO_LIMIT = 40;
-const LABEL_FONT_STACK = '-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif';
+const DEFAULT_FONT_SANS = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif';
 
 function toPhysicsRepel(strength: number): number {
   if (!Number.isFinite(strength) || strength <= 0) return 4200;
@@ -161,6 +150,83 @@ export interface GraphThemePalette {
   labels: Record<LookColor, string>;
 }
 
+export interface GraphCanvasFonts {
+  sans: string;
+  metaPx: number;
+  smallPx: number;
+  compactPx: number;
+}
+
+function parseCssFontSizePx(
+  raw: string,
+  rootFontPx: number,
+  systemTextScale: number,
+  fallbackPx: number,
+): number {
+  const trimmed = raw.trim();
+  if (!trimmed) return Math.round(fallbackPx * systemTextScale * 100) / 100;
+  const pxMatch = /^(\d+(?:\.\d+)?)px$/i.exec(trimmed);
+  if (pxMatch) return Number(pxMatch[1]);
+  const remMatch = /^(\d+(?:\.\d+)?)rem$/i.exec(trimmed);
+  if (remMatch) return Math.round(Number(remMatch[1]) * rootFontPx * 100) / 100;
+  const calcNumMatch = /^calc\(\s*(\d+(?:\.\d+)?)(rem|px)\s*\*\s*(\d+(?:\.\d+)?)\s*\)$/i.exec(trimmed);
+  if (calcNumMatch) {
+    const base =
+      calcNumMatch[2]!.toLowerCase() === 'rem'
+        ? Number(calcNumMatch[1]) * rootFontPx
+        : Number(calcNumMatch[1]);
+    return Math.round(base * Number(calcNumMatch[3]) * 100) / 100;
+  }
+  const calcVarMatch = /^calc\(\s*(\d+(?:\.\d+)?)(rem|px)\s*\*\s*var\(--pn-system-text[^)]*\)\s*\)$/i.exec(trimmed);
+  if (calcVarMatch) {
+    const base =
+      calcVarMatch[2]!.toLowerCase() === 'rem'
+        ? Number(calcVarMatch[1]) * rootFontPx
+        : Number(calcVarMatch[1]);
+    return Math.round(base * systemTextScale * 100) / 100;
+  }
+  return Math.round(fallbackPx * systemTextScale * 100) / 100;
+}
+
+/** Resolve `--font-sans` and `--fs-*` design tokens on the canvas host element. */
+export function resolveGraphCanvasFonts(el: HTMLElement | null): GraphCanvasFonts {
+  const target = el ?? document.documentElement;
+  const cs = getComputedStyle(target);
+  const rootCs = target === document.documentElement ? cs : getComputedStyle(document.documentElement);
+  const rootFontPx = Number.parseFloat(rootCs.fontSize) || 16;
+  const rawSystemScale = Number.parseFloat(
+    cs.getPropertyValue('--pn-system-text').trim() || rootCs.getPropertyValue('--pn-system-text').trim(),
+  );
+  const systemTextScale = Number.isFinite(rawSystemScale) && rawSystemScale > 0 ? rawSystemScale : 1;
+  const sans =
+    cs.getPropertyValue('--font-sans').trim() ||
+    rootCs.getPropertyValue('--font-sans').trim() ||
+    cs.fontFamily.trim() ||
+    DEFAULT_FONT_SANS;
+
+  return {
+    sans,
+    metaPx: parseCssFontSizePx(
+      cs.getPropertyValue('--fs-meta') || rootCs.getPropertyValue('--fs-meta'),
+      rootFontPx,
+      systemTextScale,
+      11,
+    ),
+    smallPx: parseCssFontSizePx(
+      cs.getPropertyValue('--fs-small') || rootCs.getPropertyValue('--fs-small'),
+      rootFontPx,
+      systemTextScale,
+      12,
+    ),
+    compactPx: parseCssFontSizePx(
+      cs.getPropertyValue('--fs-compact') || rootCs.getPropertyValue('--fs-compact'),
+      rootFontPx,
+      systemTextScale,
+      13,
+    ),
+  };
+}
+
 function readTokenColor(cs: CSSStyleDeclaration, names: readonly string[], fallback: string): string {
   for (const name of names) {
     const raw = cs.getPropertyValue(name).trim();
@@ -179,7 +245,7 @@ export function resolveGraphThemePalette(el: HTMLElement | null, dark: boolean):
     labels[key] = readTokenColor(cs, [`--pn-label-${key}-ink`], accent);
   }
   return {
-    surface: readTokenColor(cs, ['--pn-surface-1', '--pn-bg'], dark ? '#1D1B19' : '#FAFAF9'),
+    surface: readTokenColor(cs, ['--pn-surface-2', '--pn-bg'], dark ? '#23211E' : '#FFFFFF'),
     text: readTokenColor(cs, ['--pn-text'], dark ? '#D9D4CC' : '#0A0A0A'),
     soft: readTokenColor(cs, ['--pn-text-soft'], dark ? '#BDB6AC' : '#404040'),
     muted: readTokenColor(cs, ['--pn-text-muted', '--pn-muted'], dark ? '#8E887E' : '#6A6A6A'),
@@ -201,29 +267,38 @@ function nodeRadius(node: CanvasNode): number {
   return Math.min(14, 6 + Math.min(node.degree, 12) * 1.05);
 }
 
-function resolveNodeColor(node: CanvasNode, palette: GraphThemePalette): string {
+/** Canonical LookColor per non-note item kind, shared by Graph and Places. */
+export function kindLookColor(kind: CanvasNodeKind): LookColor | null {
+  switch (kind) {
+    case 'journal': return 'purple';
+    case 'task': return 'green';
+    case 'contact': return 'teal';
+    case 'event': return 'orange';
+    case 'drawing': return 'pink';
+    case 'link': return 'indigo';
+    case 'file': return 'gray';
+    default: return null;
+  }
+}
+
+export function resolveNodeColor(node: CanvasNode, palette: GraphThemePalette): string {
   if (node.kind === 'missing') return palette.muted;
   if (node.colorKey && isLookColor(node.colorKey)) return palette.labels[node.colorKey];
-  switch (node.kind) {
-    case 'journal': return palette.labels.purple;
-    case 'task': return palette.success;
-    case 'contact': return palette.labels.teal;
-    case 'event': return palette.labels.orange;
-    case 'drawing': return palette.labels.pink;
-    case 'link': return palette.labels.indigo;
-    case 'file': return palette.labels.gray;
-    case 'folderHub': return palette.warning;
-    default: return palette.accent;
-  }
+  if (node.kind === 'folderHub') return palette.warning;
+  const fallback = kindLookColor(node.kind);
+  return fallback ? palette.labels[fallback] : palette.accent;
 }
 
 function isLinkableNode(node: CanvasNode): boolean {
   return node.kind !== 'missing' && node.kind !== 'folderHub';
 }
 
-function truncateLabel(title: string, max = 28): string {
-  if (title.length <= max) return title;
-  return `${title.slice(0, max - 1)}…`;
+/** Truncate a canvas label by Unicode code points so surrogate-pair emoji never split. */
+export function truncateGraphLabel(title: string, max = 28): string {
+  if (max <= 0) return '';
+  const chars = [...title];
+  if (chars.length <= max) return title;
+  return `${chars.slice(0, max - 1).join('')}…`;
 }
 
 function easeOutQuad(t: number): number {
@@ -258,9 +333,10 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
   savedPositions,
   onPositionsSettled,
   layoutEpoch = 0,
+  layoutLocked = false,
+  canvasUnavailableLabel,
   dark,
   ariaLabel,
-  controlsLabels,
 }, ref) {
   const { t } = useTranslation(['notes', 'shell', 'media']);
   const kindLabel = useCallback((kind: CanvasNodeKind): string => {
@@ -283,6 +359,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
   if (!simRef.current) simRef.current = createForceSimulation({ repelStrength: toPhysicsRepel(repelStrength) });
 
   const paletteRef = useRef<GraphThemePalette | null>(null);
+  const fontsRef = useRef<GraphCanvasFonts | null>(null);
   const darkRef = useRef(dark);
   darkRef.current = dark;
   const textWidthCacheRef = useRef<Map<string, number>>(new Map());
@@ -312,6 +389,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
   const [hoverTip, setHoverTip] = useState<HoverTipState | null>(null);
   const hoverTipNodeIdRef = useRef<string | null>(null);
   const [cursorStyle, setCursorStyle] = useState<'grab' | 'grabbing' | 'pointer' | 'crosshair'>('grab');
+  const [canvasUnavailable, setCanvasUnavailable] = useState(false);
 
   // Interaction state refs
   const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
@@ -332,6 +410,9 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     origPanX: number;
     origPanY: number;
     moved: boolean;
+    threshold: number;
+    hitNodeId: string | null;
+    altKey: boolean;
   } | null>(null);
   const linkDragRef = useRef<{
     sourceId: string;
@@ -370,6 +451,14 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     cancelLongPress();
     abortNodeDrag();
   }, [cancelLongPress, abortNodeDrag]);
+  useEffect(() => {
+    if (!layoutLocked) return;
+    abortNodeDrag();
+    if (linkDragRef.current) {
+      linkDragRef.current = null;
+      setCursorStyle('grab');
+    }
+  }, [layoutLocked, abortNodeDrag]);
   const wasMovingRef = useRef(false);
   const rafRef = useRef<number | null>(null);
   const sizeRef = useRef({ width: 0, height: 0 });
@@ -385,6 +474,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     folderLabels,
     searchMatchIds,
     onPositionsSettled,
+    layoutLocked,
   });
   propsRef.current = {
     nodes,
@@ -396,15 +486,18 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     folderLabels,
     searchMatchIds,
     onPositionsSettled,
+    layoutLocked,
   };
 
-  // Precomputed node & neighbor maps for O(1) lookup per frame
+  // Precomputed node, neighbor, and bidirectional-link maps for O(1) lookup per frame
   const graphLookup = useMemo(() => {
     const byId = new Map<string, CanvasNode>();
     for (const n of nodes) byId.set(n.id, n);
     const adj = new Map<string, Set<string>>();
+    const directedLinks = new Set<string>();
     for (const e of edges) {
       if (!byId.has(e.source) || !byId.has(e.target)) continue;
+      if (e.kind === 'link') directedLinks.add(`${e.source}->${e.target}`);
       let sa = adj.get(e.source);
       if (!sa) { sa = new Set(); adj.set(e.source, sa); }
       sa.add(e.target);
@@ -412,7 +505,13 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
       if (!sb) { sb = new Set(); adj.set(e.target, sb); }
       sb.add(e.source);
     }
-    return { byId, adj };
+    const biLinks = new Set<string>();
+    for (const e of edges) {
+      if (e.kind === 'link' && directedLinks.has(`${e.target}->${e.source}`)) {
+        biLinks.add(e.key);
+      }
+    }
+    return { byId, adj, biLinks };
   }, [nodes, edges]);
   const lookupRef = useRef(graphLookup);
   lookupRef.current = graphLookup;
@@ -475,13 +574,13 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     }
     if (!Number.isFinite(minX)) return;
 
-    const spanX = Math.max(140, maxX - minX + 120);
-    const spanY = Math.max(120, maxY - minY + 120);
-    const padX = Math.max(48, width * 0.1);
-    const padY = Math.max(48, height * 0.12);
+    const spanX = Math.max(120, maxX - minX + 96);
+    const spanY = Math.max(100, maxY - minY + 96);
+    const padX = Math.max(36, width * 0.08);
+    const padY = Math.max(36, height * 0.09);
     const availW = Math.max(80, width - padX * 2);
     const availH = Math.max(80, height - padY * 2);
-    const targetZoom = Math.max(MIN_ZOOM, Math.min(1.5, Math.min(availW / spanX, availH / spanY)));
+    const targetZoom = Math.max(MIN_ZOOM, Math.min(1.65, Math.min(availW / spanX, availH / spanY)));
     const midX = (minX + maxX) / 2;
     const midY = (minY + maxY) / 2;
     const targetPanX = -midX * targetZoom;
@@ -576,6 +675,8 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
   // Re-resolve CSS tokens whenever theme switches
   useEffect(() => {
     paletteRef.current = resolveGraphThemePalette(containerRef.current, dark);
+    fontsRef.current = resolveGraphCanvasFonts(containerRef.current);
+    textWidthCacheRef.current.clear();
     scheduleDrawRef.current();
   }, [dark]);
 
@@ -626,9 +727,14 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     const container = containerRef.current;
     if (!canvas || !container) return;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      setCanvasUnavailable(true);
+      return;
+    }
+    setCanvasUnavailable(false);
 
     paletteRef.current = resolveGraphThemePalette(container, darkRef.current);
+    fontsRef.current = resolveGraphCanvasFonts(container);
 
     const measureCached = (font: string, text: string): number => {
       const key = `${font}|${text}`;
@@ -706,8 +812,10 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
         folderLabels: curFolders,
         searchMatchIds: curSearch,
       } = propsRef.current;
-      const { byId, adj } = lookupRef.current;
+      const { byId, adj, biLinks } = lookupRef.current;
       const palette = paletteRef.current ?? resolveGraphThemePalette(container, darkRef.current);
+      const fonts = fontsRef.current ?? resolveGraphCanvasFonts(container);
+      fontsRef.current = fonts;
       const { panX, panY, zoom } = cameraRef.current;
       const positions = sim.getPositions();
 
@@ -741,7 +849,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
           arr.push({ sx: toScreenX(b.x), sy: toScreenY(b.y) });
         }
 
-        const maxAllowedHaloR = Math.min(width, height) * 0.38;
+        const maxAllowedHaloR = Math.min(width, height) * 0.32;
         groups.forEach((pts, folderId) => {
           if (pts.length < 2) return;
           let cx = 0;
@@ -766,11 +874,12 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
           ctx.beginPath();
           ctx.arc(cx, cy, maxR, 0, Math.PI * 2);
           ctx.fillStyle = col;
-          ctx.globalAlpha = lerp(0.045, 0.018, hoverP);
+          ctx.globalAlpha = lerp(0.032, 0.012, hoverP);
           ctx.fill();
+          ctx.setLineDash([4, 4]);
           ctx.strokeStyle = col;
           ctx.lineWidth = 1;
-          ctx.globalAlpha = lerp(0.14, 0.05, hoverP);
+          ctx.globalAlpha = lerp(0.14, 0.04, hoverP);
           ctx.stroke();
           ctx.restore();
 
@@ -782,12 +891,24 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
 
       // 2. Edges: batch background link/smart edges into two strokes; draw highlighted edges on top.
       const pad = 40;
+      const idleLinkAlpha = darkRef.current ? 0.44 : 0.38;
       const bgLinkAlpha = hoverId
-        ? lerp(validSelected ? 0.45 : 0.55, 0.12, hoverP)
-        : (validSelected ? 0.45 : 0.55);
+        ? lerp(validSelected ? 0.32 : idleLinkAlpha, 0.1, hoverP)
+        : (validSelected ? 0.32 : idleLinkAlpha);
       const bgSmartAlpha = hoverId
-        ? lerp(validSelected ? 0.5 : 0.62, 0.14, hoverP)
-        : (validSelected ? 0.5 : 0.62);
+        ? lerp(validSelected ? 0.34 : 0.44, 0.1, hoverP)
+        : (validSelected ? 0.34 : 0.44);
+
+      const curveControlPoint = (ax: number, ay: number, bx: number, by: number) => {
+        const dx = bx - ax;
+        const dy = by - ay;
+        const len = Math.hypot(dx, dy) || 1;
+        const offset = Math.min(14, Math.max(6, len * 0.12));
+        return {
+          mx: (ax + bx) / 2 - (dy / len) * offset,
+          my: (ay + by) / 2 + (dx / len) * offset,
+        };
+      };
 
       const highlightedEdges: Array<{
         e: CanvasEdge;
@@ -795,11 +916,12 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
         ay: number;
         bx: number;
         by: number;
+        bi: boolean;
         alpha: number;
         strokeColor: string;
         spotActive: boolean;
       }> = [];
-      const bgArrowTips: Array<{ ax: number; ay: number; bx: number; by: number; targetId: string }> = [];
+      const bgArrowTips: Array<{ ax: number; ay: number; bx: number; by: number; fromX: number; fromY: number; targetId: string }> = [];
 
       let hasBgLink = false;
       let hasBgSmart = false;
@@ -829,6 +951,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
         const selActive = validSelected !== null && (e.source === validSelected || e.target === validSelected);
         const spotActive = activeSpotId !== null && (e.source === activeSpotId || e.target === activeSpotId);
         const searchDim = searchActive && !(curSearch.has(e.source) && curSearch.has(e.target));
+        const bi = e.kind === 'link' && biLinks.has(e.key);
 
         if (!spotActive && !hoverActive && !selActive && !searchDim) {
           if (e.kind === 'smart') {
@@ -837,53 +960,63 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
             hasBgSmart = true;
           } else {
             bgLinkPath.moveTo(ax, ay);
-            bgLinkPath.lineTo(bx, by);
+            let fromX = ax;
+            let fromY = ay;
+            if (bi) {
+              const cp = curveControlPoint(ax, ay, bx, by);
+              bgLinkPath.quadraticCurveTo(cp.mx, cp.my, bx, by);
+              fromX = cp.mx;
+              fromY = cp.my;
+            } else {
+              bgLinkPath.lineTo(bx, by);
+            }
             hasBgLink = true;
-            if (curArrows && bgLinkAlpha > 0.2) {
-              bgArrowTips.push({ ax, ay, bx, by, targetId: e.target });
+            if (curArrows && bgLinkAlpha > 0.18) {
+              bgArrowTips.push({ ax, ay, bx, by, fromX, fromY, targetId: e.target });
             }
           }
           continue;
         }
 
         const baseAlpha = e.kind === 'smart'
-          ? (selActive ? 0.94 : validSelected ? 0.5 : 0.62)
-          : (selActive ? 0.94 : validSelected ? 0.45 : 0.55);
+          ? (selActive ? 0.94 : validSelected ? 0.34 : 0.44)
+          : (selActive ? 0.95 : validSelected ? 0.32 : idleLinkAlpha);
         const hoverAlpha = e.kind === 'smart'
-          ? (hoverActive ? 0.96 : 0.14)
-          : (hoverActive ? 0.96 : 0.12);
+          ? (hoverActive ? 0.96 : 0.1)
+          : (hoverActive ? 0.96 : 0.1);
         let alpha = hoverId ? lerp(baseAlpha, hoverAlpha, hoverP) : baseAlpha;
-        if (searchDim) alpha = Math.min(alpha, 0.14);
+        if (searchDim) alpha = Math.min(alpha, 0.12);
 
         const isIncoming = activeSpotId !== null && e.target === activeSpotId;
         const strokeColor = e.kind === 'smart'
           ? palette.success
           : spotActive
             ? (isIncoming ? palette.warning : palette.accent)
-            : palette.divider;
+            : palette.muted;
 
-        highlightedEdges.push({ e, ax, ay, bx, by, alpha, strokeColor, spotActive });
+        highlightedEdges.push({ e, ax, ay, bx, by, bi, alpha, strokeColor, spotActive });
       }
 
       if (hasBgLink) {
         ctx.save();
-        ctx.strokeStyle = palette.divider;
+        ctx.strokeStyle = palette.muted;
         ctx.globalAlpha = bgLinkAlpha;
-        ctx.lineWidth = 1.25;
+        ctx.lineWidth = 1.3;
         ctx.stroke(bgLinkPath);
         if (bgArrowTips.length > 0) {
           const headLen = Math.min(7, Math.max(4.5, 5.5 * Math.sqrt(zoom)));
-          ctx.fillStyle = palette.divider;
+          ctx.fillStyle = palette.muted;
+          ctx.globalAlpha = Math.min(0.68, bgLinkAlpha + 0.14);
           ctx.beginPath();
           for (let i = 0; i < bgArrowTips.length; i++) {
             const tip = bgArrowTips[i]!;
             const targetNode = byId.get(tip.targetId);
             if (!targetNode) continue;
-            const targetOffset = nodeRadius(targetNode) * zoom + 4;
-            const dx = tip.bx - tip.ax;
-            const dy = tip.by - tip.ay;
+            const targetOffset = nodeRadius(targetNode) * zoom + 4.5;
+            const dx = tip.bx - tip.fromX;
+            const dy = tip.by - tip.fromY;
             const len = Math.hypot(dx, dy);
-            if (len <= targetOffset + 8) continue;
+            if (len <= targetOffset + 6) continue;
             const ang = Math.atan2(dy, dx);
             const tipX = tip.bx - Math.cos(ang) * targetOffset;
             const tipY = tip.by - Math.sin(ang) * targetOffset;
@@ -899,38 +1032,47 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
 
       if (hasBgSmart) {
         ctx.save();
-        ctx.setLineDash([5, 4]);
+        ctx.setLineDash([4, 4]);
         ctx.strokeStyle = palette.success;
         ctx.globalAlpha = bgSmartAlpha;
-        ctx.lineWidth = 1.45;
+        ctx.lineWidth = 1.35;
         ctx.stroke(bgSmartPath);
         ctx.restore();
       }
 
       for (let i = 0; i < highlightedEdges.length; i++) {
-        const { e, ax, ay, bx, by, alpha, strokeColor, spotActive } = highlightedEdges[i]!;
+        const { e, ax, ay, bx, by, bi, alpha, strokeColor, spotActive } = highlightedEdges[i]!;
         ctx.save();
         ctx.beginPath();
-        if (e.kind === 'smart') ctx.setLineDash([5, 4]);
+        if (e.kind === 'smart') ctx.setLineDash([4, 4]);
         ctx.strokeStyle = strokeColor;
         ctx.globalAlpha = alpha;
-        ctx.lineWidth = spotActive ? (e.kind === 'smart' ? 2.2 : 2.1) : (e.kind === 'smart' ? 1.45 : 1.25);
+        ctx.lineWidth = spotActive ? (e.kind === 'smart' ? 2.1 : 2.15) : (e.kind === 'smart' ? 1.35 : 1.3);
         ctx.moveTo(ax, ay);
-        ctx.lineTo(bx, by);
+        let fromX = ax;
+        let fromY = ay;
+        if (bi) {
+          const cp = curveControlPoint(ax, ay, bx, by);
+          ctx.quadraticCurveTo(cp.mx, cp.my, bx, by);
+          fromX = cp.mx;
+          fromY = cp.my;
+        } else {
+          ctx.lineTo(bx, by);
+        }
         ctx.stroke();
 
-        if (curArrows && e.kind === 'link' && alpha > 0.2) {
+        if (curArrows && e.kind === 'link' && alpha > 0.18) {
           const targetNode = byId.get(e.target);
           if (targetNode) {
-            const dx = bx - ax;
-            const dy = by - ay;
+            const dx = bx - fromX;
+            const dy = by - fromY;
             const len = Math.hypot(dx, dy);
-            const targetOffset = nodeRadius(targetNode) * zoom + 4;
-            if (len > targetOffset + 8) {
+            const targetOffset = nodeRadius(targetNode) * zoom + 4.5;
+            if (len > targetOffset + 6) {
               const ang = Math.atan2(dy, dx);
               const tipX = bx - Math.cos(ang) * targetOffset;
               const tipY = by - Math.sin(ang) * targetOffset;
-              const headLen = Math.min(7, Math.max(4.5, 5.5 * Math.sqrt(zoom)));
+              const headLen = Math.min(7.5, Math.max(4.5, 5.8 * Math.sqrt(zoom)));
               ctx.setLineDash([]);
               ctx.fillStyle = strokeColor;
               ctx.beginPath();
@@ -982,6 +1124,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
       }
 
       // 4. Nodes + tiered, collision-free Smart Labels
+      const visibleNodeBoxes: Array<{ id: string; x0: number; y0: number; x1: number; y1: number }> = [];
       const labelCandidates: Array<{
         node: CanvasNode;
         sx: number;
@@ -1005,6 +1148,11 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
         // Viewport cull (keep generous margin for labels)
         if (sx < -120 || sx > width + 120 || sy < -60 || sy > height + 60) continue;
 
+        if (r >= 3) {
+          const padNode = r + 1.5;
+          visibleNodeBoxes.push({ id: node.id, x0: sx - padNode, y0: sy - padNode, x1: sx + padNode, y1: sy + padNode });
+        }
+
         const col = resolveNodeColor(node, palette);
         const isSel = node.id === validSelected;
         const isHov = node.id === hoverId;
@@ -1020,12 +1168,17 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
         ctx.save();
         ctx.globalAlpha = nodeAlpha;
 
-        // Halo for selected, hovered, or focused search match
+        // Soft layered halo for selected, hovered, or focused search match
         if (isSel || (isHov && hoverP > 0.1) || (matchesSearch && showSearchHalos)) {
+          const haloCol = matchesSearch && showSearchHalos ? palette.success : col;
           ctx.beginPath();
-          ctx.arc(sx, sy, r + 6, 0, Math.PI * 2);
-          ctx.fillStyle = matchesSearch && showSearchHalos ? palette.success : col;
-          ctx.globalAlpha = nodeAlpha * 0.24;
+          ctx.arc(sx, sy, r + 7, 0, Math.PI * 2);
+          ctx.fillStyle = haloCol;
+          ctx.globalAlpha = nodeAlpha * 0.16;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(sx, sy, r + 3.5, 0, Math.PI * 2);
+          ctx.globalAlpha = nodeAlpha * 0.14;
           ctx.fill();
           ctx.globalAlpha = nodeAlpha;
         }
@@ -1048,7 +1201,8 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
           ctx.strokeStyle = palette.ringWhite;
           ctx.stroke();
           if (node.memberCount != null && r >= 10) {
-            ctx.font = `700 ${Math.max(9, Math.min(12, Math.round(r * 0.68)))}px ${LABEL_FONT_STACK}`;
+            const countPx = Math.max(Math.round(fonts.metaPx * 0.82), Math.min(Math.round(fonts.smallPx), Math.round(r * 0.68)));
+            ctx.font = `700 ${countPx}px ${fonts.sans}`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = palette.ringWhite;
@@ -1060,6 +1214,10 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
           if (isSel || isHov) {
             ctx.lineWidth = 2;
             ctx.strokeStyle = palette.ringWhite;
+            ctx.stroke();
+          } else if (r >= 4) {
+            ctx.lineWidth = 1.25;
+            ctx.strokeStyle = palette.surface;
             ctx.stroke();
           }
         }
@@ -1135,10 +1293,23 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
         return false;
       };
 
+      const collidesNode = (
+        box: { x0: number; y0: number; x1: number; y1: number },
+        ignoreId?: string,
+      ): boolean => {
+        if (visibleNodeBoxes.length > 400) return false;
+        for (let j = 0; j < visibleNodeBoxes.length; j++) {
+          const p = visibleNodeBoxes[j]!;
+          if (p.id === ignoreId) continue;
+          if (box.x0 < p.x1 && box.x1 > p.x0 && box.y0 < p.y1 && box.y1 > p.y0) return true;
+        }
+        return false;
+      };
+
       const drawCandidateLabel = (c: (typeof labelCandidates)[number]) => {
         const weight = c.isSel || c.isHov || c.node.kind === 'folderHub' ? 600 : 500;
-        const font = `${weight} 11.5px ${LABEL_FONT_STACK}`;
-        const text = truncateLabel(c.node.title, c.isHov || c.isSel ? 34 : maxLabelChars);
+        const font = `${weight} ${fonts.smallPx}px ${fonts.sans}`;
+        const text = truncateGraphLabel(c.node.title, c.isHov || c.isSel ? 34 : maxLabelChars);
         const textW = measureCached(font, text);
         const halfW = textW / 2 + (c.tier === 2 && !curAllLabels ? padX / 2 : 6);
         const ly = c.sy + c.r + 13.5;
@@ -1148,6 +1319,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
         if (!c.isHov && !c.isSel && !curAllLabels) {
           if (c.tier === 2 && ambientPlaced >= maxAmbientLabels) return;
           if (collidesAny(box)) return;
+          if (c.tier === 2 && collidesNode({ x0: c.sx - textW / 2 - 2, y0: ly - 10, x1: c.sx + textW / 2 + 2, y1: ly + 2 }, c.node.id)) return;
         }
         placedBoxes.push(box);
         if (c.tier === 2) ambientPlaced += 1;
@@ -1157,7 +1329,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
         ctx.textAlign = 'center';
         ctx.textBaseline = 'alphabetic';
         ctx.lineJoin = 'round';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 3.5;
         ctx.globalAlpha = c.labelAlpha;
         ctx.strokeStyle = palette.surface;
         ctx.strokeText(text, c.sx, ly);
@@ -1172,15 +1344,15 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
         if (c.tier <= 1) drawCandidateLabel(c);
       }
 
-      // Pass B: Deferred folder halo labels above the rim (never cover Tier 0/1 node labels)
+      // Pass B: Deferred folder halo labels above the rim (never cover Tier 0/1 node labels or node dots)
       if (deferredHaloLabels.length > 0) {
-        const haloFont = `700 9.5px ${LABEL_FONT_STACK}`;
+        const haloFont = `700 ${Math.max(9, Math.round(fonts.metaPx * 0.88 * 10) / 10)}px ${fonts.sans}`;
         for (let i = 0; i < deferredHaloLabels.length; i++) {
           const h = deferredHaloLabels[i]!;
           const halfW = measureCached(haloFont, h.text) / 2 + 6;
           const ly = Math.max(14, h.cy - h.maxR - 4);
           const box = { x0: h.cx - halfW, y0: ly - 10, x1: h.cx + halfW, y1: ly + 3 };
-          if (collidesAny(box)) continue;
+          if (collidesAny(box) || collidesNode(box)) continue;
           placedBoxes.push(box);
           ctx.save();
           ctx.font = haloFont;
@@ -1230,10 +1402,10 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     // Re-render crisply when moving between displays with different devicePixelRatio.
     let dprMql: MediaQueryList | null = null;
     const watchDpr = () => {
-      dprMql?.removeEventListener('change', onDprChange);
+      dprMql?.removeEventListener?.('change', onDprChange);
       if (typeof window.matchMedia === 'function') {
         dprMql = window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`);
-        dprMql.addEventListener('change', onDprChange);
+        dprMql?.addEventListener?.('change', onDprChange);
       }
     };
     const onDprChange = () => {
@@ -1260,7 +1432,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
 
     return () => {
       ro.disconnect();
-      dprMql?.removeEventListener('change', onDprChange);
+      dprMql?.removeEventListener?.('change', onDprChange);
       canvas.removeEventListener('wheel', onWheel);
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
@@ -1298,8 +1470,10 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     }
 
     const hit = hitNodeAt(sx, sy);
+    const locked = propsRef.current.layoutLocked;
+    const pointerThreshold = e.pointerType === 'touch' ? DRAG_THRESHOLD_TOUCH_PX : DRAG_THRESHOLD_MOUSE_PX;
     if (hit) {
-      if (e.altKey && isLinkableNode(hit) && onCreateLink) {
+      if (!locked && e.altKey && isLinkableNode(hit) && onCreateLink) {
         linkDragRef.current = {
           sourceId: hit.id,
           pointerId: e.pointerId,
@@ -1326,20 +1500,36 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
           longPressRef.current = null;
           longPressFiredRef.current = true;
           abortNodeDrag();
+          panDragRef.current = null;
           onSelectNode(hitId);
           onNodeContextMenu(hitId, cx, cy);
         }, 500);
         longPressRef.current = { timer, pointerId: pid, startX: sx, startY: sy };
       }
-      nodeDragRef.current = {
-        id: hit.id,
-        pointerId: e.pointerId,
-        startX: sx,
-        startY: sy,
-        moved: false,
-        altKey: e.altKey,
-        threshold: e.pointerType === 'touch' ? DRAG_THRESHOLD_TOUCH_PX : DRAG_THRESHOLD_MOUSE_PX,
-      };
+      if (locked) {
+        // Layout locked: dragging anywhere (even starting on a node) pans safely, while a tap still selects/opens.
+        panDragRef.current = {
+          pointerId: e.pointerId,
+          startX: sx,
+          startY: sy,
+          origPanX: cameraRef.current.panX,
+          origPanY: cameraRef.current.panY,
+          moved: false,
+          threshold: pointerThreshold,
+          hitNodeId: hit.id,
+          altKey: e.altKey,
+        };
+      } else {
+        nodeDragRef.current = {
+          id: hit.id,
+          pointerId: e.pointerId,
+          startX: sx,
+          startY: sy,
+          moved: false,
+          altKey: e.altKey,
+          threshold: pointerThreshold,
+        };
+      }
       setCursorStyle('grabbing');
       scheduleDrawRef.current();
     } else {
@@ -1350,6 +1540,9 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
         origPanX: cameraRef.current.panX,
         origPanY: cameraRef.current.panY,
         moved: false,
+        threshold: pointerThreshold,
+        hitNodeId: null,
+        altKey: false,
       };
       setCursorStyle('grabbing');
       scheduleDrawRef.current();
@@ -1429,8 +1622,9 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     const panDrag = panDragRef.current;
     if (panDrag && panDrag.pointerId === e.pointerId) {
       const dist = Math.hypot(sx - panDrag.startX, sy - panDrag.startY);
-      if (!panDrag.moved && dist > DRAG_THRESHOLD_MOUSE_PX) {
+      if (!panDrag.moved && dist > panDrag.threshold) {
         panDrag.moved = true;
+        cancelLongPress();
         clearHoverTip();
       }
       if (panDrag.moved) {
@@ -1500,6 +1694,29 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
       return;
     }
 
+    const activateClickedNode = (nodeId: string, altKey: boolean) => {
+      const clicked = lookupRef.current.byId.get(nodeId);
+      if (!clicked) return;
+      if (clicked.kind === 'folderHub') {
+        const parsed = parseGraphSelectionId(clicked.id);
+        const fId = clicked.folderId ?? (parsed.kind === 'folder' ? parsed.folderId : clicked.id);
+        onExpandFolderHub?.(fId);
+      } else if (altKey && isLinkableNode(clicked)) {
+        onOpenNode(clicked.id, { newTab: true });
+      } else {
+        const now = performance.now();
+        const prev = lastClickRef.current;
+        if (prev && prev.id === clicked.id && now - prev.time <= DOUBLE_CLICK_MS) {
+          lastClickRef.current = null;
+          if (isLinkableNode(clicked)) onOpenNode(clicked.id);
+          else onSelectNode(clicked.id);
+        } else {
+          lastClickRef.current = { id: clicked.id, time: now };
+          onSelectNode(clicked.id);
+        }
+      }
+    };
+
     // Node click or drag end
     const nodeDrag = nodeDragRef.current;
     if (nodeDrag && nodeDrag.pointerId === e.pointerId) {
@@ -1510,26 +1727,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
         if (!cancelled && simRef.current) onPositionsSettled?.(toPositionsMap(simRef.current.exportPositions()));
       } else if (!cancelled) {
         simRef.current?.release(nodeDrag.id, false);
-        const clicked = lookupRef.current.byId.get(nodeDrag.id);
-        if (clicked) {
-          if (clicked.kind === 'folderHub') {
-            const fId = clicked.folderId ?? clicked.id.replace(/^folder:/, '');
-            onExpandFolderHub?.(fId);
-          } else if (nodeDrag.altKey && isLinkableNode(clicked)) {
-            onOpenNode(clicked.id, { newTab: true });
-          } else {
-            const now = performance.now();
-            const prev = lastClickRef.current;
-            if (prev && prev.id === clicked.id && now - prev.time <= DOUBLE_CLICK_MS) {
-              lastClickRef.current = null;
-              if (isLinkableNode(clicked)) onOpenNode(clicked.id);
-              else onSelectNode(clicked.id);
-            } else {
-              lastClickRef.current = { id: clicked.id, time: now };
-              onSelectNode(clicked.id);
-            }
-          }
-        }
+        activateClickedNode(nodeDrag.id, nodeDrag.altKey);
       } else {
         simRef.current?.release(nodeDrag.id, false);
       }
@@ -1537,14 +1735,18 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
       return;
     }
 
-    // Pan end
+    // Pan end (or tap on a node while layout is locked)
     const panDrag = panDragRef.current;
     if (panDrag && panDrag.pointerId === e.pointerId) {
       panDragRef.current = null;
-      setCursorStyle('grab');
+      setCursorStyle(panDrag.hitNodeId && !panDrag.moved ? 'pointer' : 'grab');
       if (!panDrag.moved && !cancelled) {
-        lastClickRef.current = null;
-        onSelectNode(null);
+        if (panDrag.hitNodeId) {
+          activateClickedNode(panDrag.hitNodeId, panDrag.altKey);
+        } else {
+          lastClickRef.current = null;
+          onSelectNode(null);
+        }
       }
       scheduleDrawRef.current();
     }
@@ -1595,7 +1797,8 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
       if (!sel) return;
       e.preventDefault();
       if (sel.kind === 'folderHub') {
-        onExpandFolderHub?.(sel.folderId ?? sel.id.replace(/^folder:/, ''));
+        const parsed = parseGraphSelectionId(sel.id);
+        onExpandFolderHub?.(sel.folderId ?? (parsed.kind === 'folder' ? parsed.folderId : sel.id));
       } else if (isLinkableNode(sel)) {
         onOpenNode(sel.id, { newTab: e.altKey });
       }
@@ -1685,12 +1888,15 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
     return { left, top };
   }, [hoverTip]);
 
-  const zoomInLabel = controlsLabels?.zoomIn ?? t('media:viewer.zoomIn');
-  const zoomOutLabel = controlsLabels?.zoomOut ?? t('media:viewer.zoomOut');
-  const fitLabel = controlsLabels?.fitGraph ?? t('notes:graph.fitGraph');
-  const formatConn = controlsLabels?.connectionsCount ?? ((c: number) => t('notes:graph.connectionsCount', { count: c }));
+  const zoomInLabel = t('media:viewer.zoomIn');
+  const zoomOutLabel = t('media:viewer.zoomOut');
+  const fitLabel = t('notes:graph.fitGraph');
+  const formatConn = (c: number) => t('notes:graph.connectionsCount', { count: c });
 
-  const tipFolderLabel = hoverTip?.node.folderId ? folderLabels?.get(hoverTip.node.folderId)?.label : undefined;
+  const tipFolderLabel =
+    hoverTip && hoverTip.node.kind !== 'folderHub' && hoverTip.node.folderId
+      ? folderLabels?.get(hoverTip.node.folderId)?.label
+      : undefined;
 
   const handleContextMenu = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!onNodeContextMenu) return;
@@ -1709,7 +1915,7 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full overflow-hidden bg-surface-1 select-none"
+      className="relative h-full w-full overflow-hidden bg-surface-2 select-none"
       style={{
         backgroundImage: dark
           ? 'radial-gradient(rgb(var(--pn-text) / 0.06) 1px, transparent 1px)'
@@ -1737,10 +1943,11 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
       {hoverTip && tipPos && (
         <div
           role="tooltip"
-          className="pointer-events-none absolute z-20 w-[220px] rounded-lg border border-divider bg-surface-2/95 px-2.5 py-2 shadow-md backdrop-blur-sm"
+          className="pointer-events-none absolute z-20 isolate w-[220px] rounded-lg border border-divider bg-surface-2/95 px-2.5 py-2 shadow-md backdrop-blur-sm"
           /* rtl-ok: canvas pointer coordinates */
           style={{ left: tipPos.left, top: tipPos.top }}
         >
+          {isItemMark(hoverTip.node.kind) && <TypeMark mark={hoverTip.node.kind} />}
           <p className="truncate text-compact font-semibold text-pn" dir="auto">
             {hoverTip.node.title}
           </p>
@@ -1749,10 +1956,12 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
               {tipFolderLabel ?? kindLabel(hoverTip.node.kind)}
             </Badge>
             <span className="text-meta tabular-nums text-pn-muted">
-              {hoverTip.node.kind === 'folderHub' && controlsLabels?.folderHubHint
-                ? controlsLabels.folderHubHint
-                : hoverTip.node.kind === 'missing' && controlsLabels?.missingHint
-                  ? controlsLabels.missingHint
+              {hoverTip.node.kind === 'folderHub'
+                ? hoverTip.node.memberCount != null
+                  ? t('notes:graph.folderHubHint', { count: hoverTip.node.memberCount })
+                  : t('notes:graph.expandFolder')
+                : hoverTip.node.kind === 'missing'
+                  ? t('notes:graph.missingHint')
                   : formatConn(hoverTip.node.degree)}
             </span>
           </div>
@@ -1765,6 +1974,16 @@ export const GraphCanvas = forwardRef<GraphCanvasHandle, GraphCanvasProps>(funct
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Fallback when 2D canvas context is blocked or unavailable */}
+      {canvasUnavailable && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-surface-0/95 p-4">
+          <EmptyState
+            icon={<Graph weight="duotone" aria-hidden="true" />}
+            title={canvasUnavailableLabel ?? ariaLabel}
+          />
         </div>
       )}
 

@@ -205,6 +205,7 @@
     "cut": "Wytnij",
     "copyAsPlain": "Kopiuj jako zwykły tekst",
     "copyAsMarkdown": "Kopiuj jako Markdown",
+    "clearFormatting": "Wyczyść formatowanie",
     "sortAsc": "Sortuj wiersze od A do Z",
     "sortDesc": "Sortuj wiersze od Z do A"
   },
@@ -284,6 +285,9 @@
   "inlineCode": {
     "copyHint": "{{key}}+klik, aby skopiować"
   },
+  "inlineTag": {
+    "filter": "Filtruj według tagu"
+  },
   "codeBlock": {
     "copyFailed": "Błąd",
     "wrap": "Zawijaj długie wiersze",
@@ -314,7 +318,8 @@
     "linkHeading": "Połącz z nagłówkiem...",
     "headingNotFound": "Nie znaleziono nagłówka",
     "headingsLocked": "Odblokuj tę notatkę, aby zobaczyć jej nagłówki",
-    "noHeadings": "Ta notatka nie ma nagłówków"
+    "noHeadings": "Ta notatka nie ma nagłówków",
+    "notFound": "Nie znaleziono notatki"
   },
   "footnote": {
     "placeholder": "Treść przypisu",

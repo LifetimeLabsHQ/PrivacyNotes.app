@@ -22,7 +22,7 @@ import { hasMedia, stripMediaReferences } from './imageProcessing';
 import i18n from './i18n';
 import { detectPlatform, readFnErrorBody, type FnError } from './devices';
 import { isDemoMode } from './demo';
-import { isLocalOnly, LocalOnlyNetworkBlockedError } from './localOnly';
+import { isUnsyncedLocalVault, LocalOnlyNetworkBlockedError } from './localOnly';
 import { APEX_ORIGIN } from './hosts';
 import { readLineSpacing } from './theme';
 
@@ -30,7 +30,7 @@ import { readLineSpacing } from './theme';
 // persistSession: false avoids creating a duplicate GoTrueClient
 // instance that shares the same storage key as the main auth client.
 const burnFetch: typeof fetch = (input, init) => {
-  if (isLocalOnly()) return Promise.reject(new LocalOnlyNetworkBlockedError());
+  if (isUnsyncedLocalVault()) return Promise.reject(new LocalOnlyNetworkBlockedError());
   return fetch(input, init);
 };
 const supabase = createSupabaseClient(
@@ -71,7 +71,7 @@ export async function createBurnLink(
       error: i18n.t('notesChrome:burnShare.demo'),
     };
   }
-  if (isLocalOnly()) {
+  if (isUnsyncedLocalVault()) {
     return {
       ok: false,
       error: i18n.t('notesChrome:burnShare.localOnly'),

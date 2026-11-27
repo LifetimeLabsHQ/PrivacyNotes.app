@@ -188,7 +188,7 @@ function refreshDefaultApp(kind: AssocKind): Promise<void> {
  * minute at most. The system dialog does not take focus from the window, so
  * no focus event follows the person's answer. A declined dialog leaves the
  * owner as it was, and the reads stop at the minute.
- * Spec: docs/internal/plans/default-app-settings.md (section 5.1)
+ * Spec: docs/internal/specs/default-app-settings.md (section 5.1)
  */
 export async function watchClaim(kind: AssocKind): Promise<void> {
   const before = stores[kind].cached?.owner;
@@ -205,7 +205,7 @@ export async function watchClaim(kind: AssocKind): Promise<void> {
  * Linux only: `xdg-mime` has written the association when it exits 0. On macOS
  * the call returns 0 before the person answers the system dialog, and also when
  * they decline it, so nothing may be published there until a read confirms it.
- * Spec: docs/internal/plans/default-app-settings.md (section 5.1)
+ * Spec: docs/internal/specs/default-app-settings.md (section 5.1)
  */
 export function markDefaultAppOurs(kind: AssocKind): void {
   const store = stores[kind];

@@ -18,7 +18,13 @@
     "viewAria": "عرض الصورة",
     "copyAria": "نسخ الصورة",
     "copyFailed": "تعذّر نسخ الصورة.",
-    "picturesLeftOut": "لم تُضَف بعض الصور. انسخ الصورة وحدها لتلصقها."
+    "picturesLeftOut": "لم تُضَف بعض الصور. انسخ الصورة وحدها لتلصقها.",
+    "captionLabel": "التعليق",
+    "captionAddAria": "إضافة تعليق",
+    "captionEditAria": "تعديل التعليق",
+    "captionPlaceholder": "أضف تعليقًا...",
+    "captionClearAria": "مسح التعليق",
+    "captionHint": "Enter للحفظ · Esc للإلغاء"
   },
   "attachment": {
     "fallbackName": "مرفق",

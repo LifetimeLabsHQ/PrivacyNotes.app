@@ -1141,3 +1141,10 @@ export function defaultTrackerSettings(): TrackerSettings {
     caffeineUnit: 'cups',
   };
 }
+
+/** Return `settings` with `id` enabled in `activeBuiltins`, or the same
+ *  object when it is already on. */
+export function enableBuiltinTracker(settings: TrackerSettings, id: BuiltinTrackerId): TrackerSettings {
+  if (settings.activeBuiltins.includes(id)) return settings;
+  return { ...settings, activeBuiltins: [...settings.activeBuiltins, id] };
+}

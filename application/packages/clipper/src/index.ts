@@ -105,10 +105,10 @@ const STORED_GROWTH = 64;
  *  language uses for that link is far under the 32 bytes allowed for it. */
 export function clipFits(markdown: string, images: readonly ClipImage[]): boolean {
   let size = utf8(markdown);
-  const token = new RegExp(`${IMAGE_TOKEN_SCHEME}(\\d+)\\)`, 'g');
+  const token = new RegExp(`${IMAGE_TOKEN_SCHEME}(\\d+)(?=[ \\t)])`, 'g');
   for (const m of markdown.matchAll(token)) {
     const image = images[Number(m[1])];
-    const link = image ? utf8(escapeAlt(image.alt)) + utf8(image.src.replace(/[()]/g, '\\$&')) + 32 : 0;
+    const link = image ? utf8(escapeAlt(image.alt || image.caption || '')) + utf8(image.src.replace(/[()]/g, '\\$&')) + 32 : 0;
     size += Math.max(STORED_GROWTH, link);
   }
   return size <= CLIP_MAX_BODY_BYTES;
@@ -131,7 +131,7 @@ export const CLIP_SHORT_TEXT = 300;
  *  them (`escapeAlt`, `linkTarget`). */
 export function isShortText(markdown: string): boolean {
   const text = markdown
-    .replace(/!\[(?:\\.|[^[\]\\])*\]\((?:\\.|[^()\\])*\)/g, '')
+    .replace(/!\[(?:\\.|[^[\]\\])*\]\((?:(?:\\.|[^()\s\\])+[ \t]+"(?:\\.|[^"\\\r\n])*"|(?:\\.|[^()\\])*)\)/g, '')
     .replace(/\]\((?:\\.|[^()\\])*\)/g, ']')
     .replace(/[\\#*_`[\]|>~=-]/g, '')
     .replace(/\s+/g, '');
@@ -262,7 +262,7 @@ function samePicture(a: string, b: string): boolean {
 function withLeadPicture(markdown: string, images: ClipImage[], lead: string, base: string): { markdown: string; images: ClipImage[] } {
   const src = lead ? httpAddress(lead, base) : null;
   if (!src || images.some((i) => samePicture(i.src, src))) return { markdown, images };
-  const shifted = markdown.replace(new RegExp(`${IMAGE_TOKEN_SCHEME}(\\d+)\\)`, 'g'), (_m, n: string) => `${IMAGE_TOKEN_SCHEME}${Number(n) + 1})`);
+  const shifted = markdown.replace(new RegExp(`${IMAGE_TOKEN_SCHEME}(\\d+)(?=[ \\t)])`, 'g'), (_m, n: string) => `${IMAGE_TOKEN_SCHEME}${Number(n) + 1}`);
   return { markdown: `![](${IMAGE_TOKEN_SCHEME}0)\n\n${shifted}`, images: [{ src, alt: '' }, ...images] };
 }
 

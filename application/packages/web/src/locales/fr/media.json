@@ -18,7 +18,13 @@
     "viewAria": "Afficher l'image",
     "copyAria": "Copier l'image",
     "copyFailed": "Impossible de copier l'image.",
-    "picturesLeftOut": "Certaines images n'ont pas été ajoutées. Copie une image seule pour la coller."
+    "picturesLeftOut": "Certaines images n'ont pas été ajoutées. Copie une image seule pour la coller.",
+    "captionLabel": "Légende",
+    "captionAddAria": "Ajouter une légende",
+    "captionEditAria": "Modifier la légende",
+    "captionPlaceholder": "Ajoute une légende...",
+    "captionClearAria": "Effacer la légende",
+    "captionHint": "Entrée pour enregistrer · Échap pour annuler"
   },
   "attachment": {
     "fallbackName": "Pièce jointe",

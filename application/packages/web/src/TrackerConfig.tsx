@@ -28,7 +28,7 @@ import { toLocalIso } from './notesViewUtils';
 import { formatDay } from './intlFormat';
 import { Switch } from './Switch';
 import { EYEBROW_ICON_ROW, EyebrowGlyph, ROW_TITLE, RowTitle, SETTINGS_BTN, SETTINGS_BTN_PRIMARY, SETTINGS_EYEBROW, SETTINGS_HELP, SETTINGS_ROW, SETTINGS_SELECT, SectionEyebrow, SettingsSegmented, SettingsTabStrip, settingsTabClass, settingsChipClass, ResetDefaultsButton } from './settingsUI';
-import { Badge, Button, DeleteButton, EditRow, GlyphTile, IconButton, IconUpgrade, ItemSwitcher, SubViewHeader, TextField, type SwitcherItem } from './ui';
+import { Badge, Button, Callout, DeleteButton, EditRow, FeedbackButton, GlyphTile, IconButton, IconUpgrade, ItemSwitcher, SubViewHeader, TextField, type SwitcherItem } from './ui';
 import { TimeInput } from './CalendarSettings';
 import { setCheckInCardShown, setMedicationCardShown, useMedicationCardShown } from './checkInCardSwitch';
 import { DEFAULT_CHECK_IN_TIME, setCheckInReminder, useCheckInReminder } from './checkIn';
@@ -64,6 +64,7 @@ import {
   activeMedications,
   customTrackerColor,
   defaultTrackerSettings,
+  enableBuiltinTracker,
 } from './trackerTypes';
 import { usePaneTab } from './settingsPaneTab';
 
@@ -146,6 +147,10 @@ export function TrackerSettingsPane(p: TrackerSettingsPaneProps) {
     { id: 'medications', label: t('labels.medication'), icon: <Pill aria-hidden="true" /> },
     { id: 'custom', label: t('config.tabCustom'), icon: <Plus aria-hidden="true" />, pro: true },
   ];
+  const enableBuiltin = (id: BuiltinTrackerId) => {
+    const next = enableBuiltinTracker(p.settings, id);
+    if (next !== p.settings) p.onChange(next);
+  };
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       <SettingsTabStrip role="tablist" aria-label={t('notes:settings.trackersLabel')} className="shrink-0 px-4 sm:px-6">
@@ -181,8 +186,24 @@ export function TrackerSettingsPane(p: TrackerSettingsPaneProps) {
             />
           </>
         )}
-        {tab === 'factors' && <FactorsTab factors={p.factors} onChange={p.onFactorsChange} />}
-        {tab === 'medications' && <MedicationsTab medications={p.medications} onChange={p.onMedicationsChange} isPro={p.isPro} onOpenUpgrade={p.onOpenUpgrade} />}
+        {tab === 'factors' && (
+          <FactorsTab
+            factors={p.factors}
+            onChange={p.onFactorsChange}
+            factorsOn={p.settings.activeBuiltins.includes('factors')}
+            onEnableFactors={() => enableBuiltin('factors')}
+          />
+        )}
+        {tab === 'medications' && (
+          <MedicationsTab
+            medications={p.medications}
+            onChange={p.onMedicationsChange}
+            medicationOn={p.settings.activeBuiltins.includes('medication')}
+            onEnableMedication={() => enableBuiltin('medication')}
+            isPro={p.isPro}
+            onOpenUpgrade={p.onOpenUpgrade}
+          />
+        )}
         {tab === 'custom' && <CustomTab {...p} />}
       </div>
     </div>
@@ -520,7 +541,17 @@ function CustomTab({ settings, onChange, isPro, onOpenUpgrade }: TrackerSettings
 // Factors: the person's own list
 // ------------------------------------------------------------------
 
-function FactorsTab({ factors, onChange }: { factors: FactorDef[]; onChange: (next: FactorDef[]) => void }) {
+function FactorsTab({
+  factors,
+  onChange,
+  factorsOn,
+  onEnableFactors,
+}: {
+  factors: FactorDef[];
+  onChange: (next: FactorDef[]) => void;
+  factorsOn: boolean;
+  onEnableFactors: () => void;
+}) {
   const { t } = useTranslation('trackers');
   const live = activeFactors(factors);
   const suggestions = starterSuggestions(live, t);
@@ -530,7 +561,10 @@ function FactorsTab({ factors, onChange }: { factors: FactorDef[]; onChange: (ne
   const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
   const adopt = (raw: string) => {
     const r = adoptFactor(factors, raw);
-    if (r && r.list.length !== factors.length) onChange(r.list);
+    if (r && r.list.length !== factors.length) {
+      onChange(r.list);
+      onEnableFactors();
+    }
   };
   const saveEdit = () => {
     if (editing) onChange(renameFactor(factors, editing.id, editing.name));
@@ -538,11 +572,26 @@ function FactorsTab({ factors, onChange }: { factors: FactorDef[]; onChange: (ne
   };
   const addDraft = () => {
     const r = adoptFactors(factors, draft);
-    if (r.list.length !== factors.length) onChange(r.list);
+    if (r.list.length !== factors.length) {
+      onChange(r.list);
+      onEnableFactors();
+    }
     setDraft('');
   };
   return (
     <div data-setting="trackers.factors" className="flex flex-col gap-3 pt-4">
+      {!factorsOn && live.length > 0 && (
+        <Callout
+          tone="info"
+          action={(
+            <FeedbackButton icon={<Check aria-hidden="true" />} onClick={onEnableFactors}>
+              {t('shell:alerts.turnOn')}
+            </FeedbackButton>
+          )}
+        >
+          {t('config.factorsOff')}
+        </Callout>
+      )}
       <div className={`${SETTINGS_EYEBROW} ${EYEBROW_ICON_ROW}`}>
         <EyebrowGlyph icon={PuzzlePiece} />
         {t('labels.factors')}
@@ -612,7 +661,21 @@ function FactorsTab({ factors, onChange }: { factors: FactorDef[]; onChange: (ne
 // Medications: the list the Meds pill asks about
 // ------------------------------------------------------------------
 
-function MedicationsTab({ medications, onChange, isPro, onOpenUpgrade }: { medications: MedicationTemplate[]; onChange: (next: MedicationTemplate[]) => void; isPro: boolean; onOpenUpgrade: () => void }) {
+function MedicationsTab({
+  medications,
+  onChange,
+  medicationOn,
+  onEnableMedication,
+  isPro,
+  onOpenUpgrade,
+}: {
+  medications: MedicationTemplate[];
+  onChange: (next: MedicationTemplate[]) => void;
+  medicationOn: boolean;
+  onEnableMedication: () => void;
+  isPro: boolean;
+  onOpenUpgrade: () => void;
+}) {
   const { t } = useTranslation('trackers');
   // Reminders and the supply are Pro; the demo unlocks them and still shows the rocket.
   const unlocked = proUnlocked(isPro);
@@ -632,6 +695,7 @@ function MedicationsTab({ medications, onChange, isPro, onOpenUpgrade }: { medic
     const id = created[created.length - 1]!.id;
     onChange(saveMedication(created, id, edit.name, edit.dosage, edit.plan, edit.refill, true));
     setMedicationReminder(id, edit.remind && !edit.plan.asNeeded);
+    onEnableMedication();
     setFormKey((k) => k + 1);
   };
   const save = (id: string, edit: MedicationEdit) => {
@@ -641,6 +705,9 @@ function MedicationsTab({ medications, onChange, isPro, onOpenUpgrade }: { medic
   };
   const editing = live.find((m) => m.id === editingId);
   const cardShown = useMedicationCardShown();
+  // The card only renders while the medication tracker itself is on, so the
+  // switch reflects that truth and flipping it on enables the tracker too.
+  const cardActive = medicationOn && cardShown;
 
   return (
     <TrackerListTab
@@ -648,16 +715,34 @@ function MedicationsTab({ medications, onChange, isPro, onOpenUpgrade }: { medic
       // The medication card's switch, this device's (checkInCardSwitch.ts):
       // the way back after its "Hide this card". GitHub #649
       lead={live.length > 0 && (
-        <Switch
-          setting="trackers.medicationCard"
-          icon={<Pill className="text-accent" />}
-          labelClassName={ROW_TITLE}
-          label={t('config.medicationCard')}
-          description={t('config.medicationCardHelp')}
-          checked={cardShown}
-          onChange={setMedicationCardShown}
-          className="py-3 mb-4 border-b border-divider"
-        />
+        <>
+          {!medicationOn && (
+            <Callout
+              tone="info"
+              className="mb-4"
+              action={(
+                <FeedbackButton icon={<Check aria-hidden="true" />} onClick={onEnableMedication}>
+                  {t('shell:alerts.turnOn')}
+                </FeedbackButton>
+              )}
+            >
+              {t('config.medicationOff')}
+            </Callout>
+          )}
+          <Switch
+            setting="trackers.medicationCard"
+            icon={<Pill className="text-accent" />}
+            labelClassName={ROW_TITLE}
+            label={t('config.medicationCard')}
+            description={t('config.medicationCardHelp')}
+            checked={cardActive}
+            onChange={(on) => {
+              setMedicationCardShown(on);
+              if (on) onEnableMedication();
+            }}
+            className="py-3 mb-4 border-b border-divider"
+          />
+        </>
       )}
       newTitle={t('common:ninja.new.medication')}
       newHelp={live.length > 0 ? t('config.newMedicationHelp') : t('config.medicationsHelp')}

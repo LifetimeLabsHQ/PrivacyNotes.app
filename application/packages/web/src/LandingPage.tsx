@@ -32,6 +32,7 @@ import { applyStoredTheme, previewColorTheme, getStoredColorTheme, useTheme } fr
 import { isBetaPricing } from './paddle';
 import { PRO_PRICE, EARLY_PRICE, STORAGE_ADDON_PRICE } from './pricing';
 import { detectPlatform } from './devices';
+import { keyboardViewportHeightClass, useKeyboardOpen } from './useKeyboardOpen';
 import { useAuth } from './auth';
 import { isDemoMode } from './demo';
 import { APP_ORIGIN, APP_STORE_URL, PLAY_STORE_URL, isAppHost, isApexHost } from './hosts';
@@ -1030,12 +1031,103 @@ export const FX_CSS = `
 @media (prefers-reduced-motion:reduce){.pn-sticky,.pn-fx-conic-btn,.pn-fx-conic-tile,.pn-fx-popmix>span,.pn-fx-shake:hover,.pn-fx-slab,.pn-fx-stamp::after,.pn-fx-peek,.pn-fx-peek::after,.pn-fx-rank-bar,.pn-fx-next-arrow,.pn-fx-dose-dot,.pn-fx-hand-chip,.pn-fx-type:hover .pn-fx-icons svg,.pn-fx-ants:hover,.pn-fx-seal-chip,.pn-fx-fill,.pn-fx-cal-pill,.pn-fx-cal-bell,.pn-fx-meds-cap,.pn-fx-meds-fill,.pn-fx-meds-due,.pn-fx-meds-done,.pn-fx-meds-next,.pn-fx-meds-row,.pn-fx-meds-ring,.pn-fx-meds-ring svg,.pn-fx-meds-seg,.pn-fx-ninja-caret,.pn-seen,.pn-receipt-wrap,.pn-receipt-line,.pn-receipt-line::after,.pn-receipt-total,.pn-receipt-total-sum,.pn-receipt-stamp>span,.pn-hero-in,.pn-hero-totp,.pn-hero-mood-line,.pn-hero-mood-area,.pn-hero-mood-dot,.pn-hero-mood-pulse{animation:none!important;transition:none!important}}
 `;
 
+/**
+ * Viewport-bounded scrollable shell for the auth card (ChooseMode, CreatePhrase,
+ * ImportPhrase, SignInStep). On iOS `scroll_pin.rs` pins the root WKWebView
+ * scroll view so keyboard focus never jumps the page, which means top-level
+ * screens must scroll inside their own overflow container (GitHub #958).
+ * Mounted only while `authIntent` is active so `useKeyboardOpen` never touches
+ * the public marketing page.
+ */
+function AuthCardShell({
+  headerBack,
+  scrollResetKey,
+  children,
+}: {
+  headerBack: (() => void) | undefined;
+  scrollResetKey?: string;
+  children: ReactNode;
+}) {
+  const { t } = useTranslation('landing');
+  useKeyboardOpen();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [scrollResetKey]);
+  const heightClass = keyboardViewportHeightClass();
+  const logoInner = (
+    <>
+      <LogoIcon size={44} className="shrink-0 text-accent" />
+      <span className="truncate text-display-2 tracking-tight"><Brand /></span>
+    </>
+  );
+  return (
+    <div
+      ref={scrollRef}
+      className={`pn-washi ${heightClass} overflow-y-auto overflow-x-hidden bg-[var(--wl-bg)] text-[var(--wl-ink)]`}
+    >
+      {/* The auth view wears the same washi shell as the marketing page
+          (this style tag carries the --wl-* variables), so the handoff
+          between the two is seamless in both modes. The onboarding steps
+          inside the card keep the app's own surfaces. */}
+      <style>{FX_CSS}</style>
+      <div
+        className="mx-auto max-w-3xl pl-[calc(var(--pn-safe-left,0px)+1.25rem)] pr-[calc(var(--pn-safe-right,0px)+1.25rem)] sm:pl-[calc(var(--pn-safe-left,0px)+2rem)] sm:pr-[calc(var(--pn-safe-right,0px)+2rem)] pt-[calc(var(--pn-safe-top)+1rem)] sm:pt-[calc(var(--pn-safe-top)+3.5rem)] pb-[calc(var(--pn-safe-bottom)+4rem)]" /* rtl-ok: physical hardware safe-area insets */
+      >
+        {/* Brand on the left, exactly one control on the right: the Back
+            exit on the web, the language icon on native. The website link,
+            the language selector and the theme toggle all rode this row
+            until those four controls at 375px pushed the wordmark
+            underneath them. min-w-0 + truncate + shrink-0 are the backstop
+            for the narrowest phones, same as the landing header. */}
+        <div className="flex items-center justify-between gap-3 mb-8">
+          {headerBack ? (
+            <button type="button" onClick={headerBack} className="flex min-w-0 cursor-pointer items-center gap-3">
+              {logoInner}
+            </button>
+          ) : (
+            <div className="flex min-w-0 items-center gap-3">{logoInner}</div>
+          )}
+          {headerBack ? (
+            <button
+              type="button"
+              onClick={headerBack}
+              className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-body text-[var(--wl-sub)] hover:text-[var(--wl-ink)] transition"
+            >
+              {/* The icon, not a bare &larr;: it is the one arrow in this
+                  file that has to mirror for Arabic, and icons.tsx does
+                  that for every ArrowLeft call site. */}
+              <ArrowLeft aria-hidden="true" /> {t('common:actions.back')}
+            </button>
+          ) : (
+            /* Native opens straight on this card, so it is the only
+               screen before sign-in and the only place to correct a
+               wrong language guess. In-place switch, no `navigate`: a
+               slug navigation would drop the visitor out of the auth
+               flow. Detection already picked the browser language; this
+               is the override. */
+            <span className="shrink-0">
+              <LanguageMenu iconOnly compact />
+            </span>
+          )}
+        </div>
+        <div className="rounded-2xl border border-[var(--wl-line)] bg-[var(--wl-card)] shadow-sm p-5 sm:p-6">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function LandingPage({
   children,
   onAuthedEnterApp,
+  scrollResetKey,
 }: {
   children: ReactNode;
   onAuthedEnterApp?: () => void;
+  /** Resets the auth shell's scroll position to top when the onboarding step changes. */
+  scrollResetKey?: string;
 }) {
   const { t } = useTranslation('landing');
   // The hero heading's shrink factor, from HeroRotator (1 when it fits).
@@ -1148,7 +1240,9 @@ export function LandingPage({
     const vp = document.querySelector('meta[name="viewport"]');
     if (!vp || IS_DESKTOP) return;
     const restrictive = vp.getAttribute('content');
-    vp.setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover');
+    // Keep interactive-widget=resizes-content so Android Chrome still resizes
+    // 100dvh when the soft keyboard opens inside AuthCardShell (GitHub #958).
+    vp.setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content');
     return () => {
       if (restrictive) vp.setAttribute('content', restrictive);
     };
@@ -1281,63 +1375,13 @@ export function LandingPage({
     // never renders the marketing page in-app, so there is nothing to exit
     // to; every onboarding step past the first carries its own back
     // control inside the card, which is the one a thumb reaches anyway.
-    const headerBack = IS_DESKTOP ? undefined : closeAuth;
-    const logoInner = (
-      <>
-        <LogoIcon size={44} className="shrink-0 text-accent" />
-        <span className="truncate text-display-2 tracking-tight"><Brand /></span>
-      </>
-    );
     return (
-      <div className="pn-washi min-h-screen bg-[var(--wl-bg)] text-[var(--wl-ink)]">
-        {/* The auth view wears the same washi shell as the marketing page
-            (this style tag carries the --wl-* variables), so the handoff
-            between the two is seamless in both modes. The onboarding steps
-            inside the card keep the app's own surfaces. */}
-        <style>{FX_CSS}</style>
-        <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-[calc(var(--pn-safe-top)+1rem)] sm:pt-14 pb-16">
-          {/* Brand on the left, exactly one control on the right: the Back
-              exit on the web, the language icon on native. The website link,
-              the language selector and the theme toggle all rode this row
-              until those four controls at 375px pushed the wordmark
-              underneath them. min-w-0 + truncate + shrink-0 are the backstop
-              for the narrowest phones, same as the landing header. */}
-          <div className="flex items-center justify-between gap-3 mb-8">
-            {headerBack ? (
-              <button type="button" onClick={headerBack} className="flex min-w-0 cursor-pointer items-center gap-3">
-                {logoInner}
-              </button>
-            ) : (
-              <div className="flex min-w-0 items-center gap-3">{logoInner}</div>
-            )}
-            {headerBack ? (
-              <button
-                type="button"
-                onClick={headerBack}
-                className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-body text-[var(--wl-sub)] hover:text-[var(--wl-ink)] transition"
-              >
-                {/* The icon, not a bare &larr;: it is the one arrow in this
-                    file that has to mirror for Arabic, and icons.tsx does
-                    that for every ArrowLeft call site. */}
-                <ArrowLeft aria-hidden="true" /> {t('common:actions.back')}
-              </button>
-            ) : (
-              /* Native opens straight on this card, so it is the only
-                 screen before sign-in and the only place to correct a
-                 wrong language guess. In-place switch, no `navigate`: a
-                 slug navigation would drop the visitor out of the auth
-                 flow. Detection already picked the browser language; this
-                 is the override. */
-              <span className="shrink-0">
-                <LanguageMenu iconOnly compact />
-              </span>
-            )}
-          </div>
-          <div className="rounded-2xl border border-[var(--wl-line)] bg-[var(--wl-card)] shadow-sm p-5 sm:p-6">
-            {children}
-          </div>
-        </div>
-      </div>
+      <AuthCardShell
+        headerBack={IS_DESKTOP ? undefined : closeAuth}
+        scrollResetKey={scrollResetKey}
+      >
+        {children}
+      </AuthCardShell>
     );
   }
 

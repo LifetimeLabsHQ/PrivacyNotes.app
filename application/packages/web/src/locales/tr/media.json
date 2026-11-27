@@ -18,7 +18,13 @@
     "viewAria": "Görseli görüntüle",
     "copyAria": "Görseli kopyala",
     "copyFailed": "Görsel kopyalanamadı.",
-    "picturesLeftOut": "Bazı görseller eklenmedi. Yapıştırmak için bir görseli tek başına kopyalayın."
+    "picturesLeftOut": "Bazı görseller eklenmedi. Yapıştırmak için bir görseli tek başına kopyalayın.",
+    "captionLabel": "Altyazı",
+    "captionAddAria": "Altyazı ekle",
+    "captionEditAria": "Altyazıyı düzenle",
+    "captionPlaceholder": "Altyazı ekleyin...",
+    "captionClearAria": "Altyazıyı temizle",
+    "captionHint": "Kaydetmek için Enter · İptal için Esc"
   },
   "attachment": {
     "fallbackName": "Ek",

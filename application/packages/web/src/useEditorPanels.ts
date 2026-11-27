@@ -160,7 +160,7 @@ export function useEditorPanels({
   // The word a search result opened the find bar on, or null for a bar the
   // reader opened. The tick changes on every seeded open and keys the bar in
   // Editor.tsx, so a repeat takes the new word even while the bar is up.
-  const [findSeed, setFindSeed] = useState<{ term: string; tick: number } | null>(null);
+  const [findSeed, setFindSeed] = useState<{ term: string; exactTag?: boolean; tick: number } | null>(null);
   // The term a bar starts on when the reader swaps find for replace or back
   // with the button in the bar, so the swap keeps what they typed.
   const [swapTerm, setSwapTerm] = useState('');
@@ -235,8 +235,8 @@ export function useEditorPanels({
    * the bar, and the caret stays put. On a phone that is the difference
    * between a highlight and a keyboard.
    */
-  const openFindWith = useCallback((term: string) => {
-    setFindSeed((s) => ({ term, tick: (s?.tick ?? 0) + 1 }));
+  const openFindWith = useCallback((term: string, exactTag = false) => {
+    setFindSeed((s) => ({ term, exactTag, tick: (s?.tick ?? 0) + 1 }));
     setBar('find');
     closePanels();
   }, [closePanels]);

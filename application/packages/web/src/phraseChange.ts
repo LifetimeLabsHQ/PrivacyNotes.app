@@ -161,6 +161,7 @@ export class PhraseChangeError extends Error {
  */
 export async function phraseChangeAllowed(supabase: SupabaseClient): Promise<boolean> {
   if (E().isDemoMode()) return true;
+  if (E().isUnsyncedLocalVault?.()) return false;
   try {
     const { data, error } = await supabase.functions.invoke('rotate-phrase', { body: { action: 'allowed' } });
     return !error && (data as { allowed?: unknown } | null)?.allowed === true;
@@ -181,6 +182,7 @@ export function changeNeedsPin(state: ChangeState): boolean {
  *  `account_management_required` for an account that is not managed yet. */
 export async function readChangeState(actor: ChangeActor): Promise<ChangeState> {
   if (E().isDemoMode()) throw new PhraseChangeError('demo');
+  if (E().isUnsyncedLocalVault?.()) throw new PhraseChangeError('account_management_required');
   const { supabase } = actor;
   let status = await supabase.rpc('account_status');
   if (E().isMfaRefusal(status.error)) {

@@ -8,6 +8,7 @@ import {
   renameTagEverywhere,
   trashNotesWithTag,
 } from '../notesRepo';
+import { effectiveNoteTags, noteHasTag } from '../inlineTags';
 import type { UserSettings } from '../userSettings';
 import { tagAfterScopedChange } from '../spaces';
 import type { View } from '../views';
@@ -16,6 +17,8 @@ export function useTagActions({
   activeNotes,
   liveNotes,
   inScope,
+  isNoteLocked,
+  onBodyBulkChange,
   folderForNewItem,
   selectedId,
   setSelectedId,
@@ -39,6 +42,11 @@ export function useTagActions({
   /** The open space while Spaces is on: every tag write stays inside it.
    *  Spec: docs/internal/specs/spaces.md (section 8) */
   inScope: ((note: LocalNote) => boolean) | undefined;
+  /** Whether a note is behind a closed PIN gate; locked bodies are never read. */
+  isNoteLocked: (note: LocalNote) => boolean;
+  /** Called after a bulk rename/delete that may have rewritten inline `#tags`
+   *  in the currently open note's body so the editor remounts with the update. */
+  onBodyBulkChange?: () => void;
   /** The folder a new item files into, so a note made in Work stays in Work. */
   folderForNewItem: () => string | null;
   selectedId: string | null;
@@ -117,8 +125,8 @@ export function useTagActions({
 
   /** Whether an item outside the open space carries the tag. */
   const usedOutside = useCallback(
-    (tag: string) => !!inScope && liveNotes.some((n) => n.tags.includes(tag) && !inScope(n)),
-    [inScope, liveNotes],
+    (tag: string) => !!inScope && liveNotes.some((n) => noteHasTag(n, tag, isNoteLocked(n)) && !inScope(n)),
+    [inScope, liveNotes, isNoteLocked],
   );
 
   const commitRenameTag = useCallback(
@@ -132,18 +140,19 @@ export function useTagActions({
       // we are MERGING the tag, not renaming. Use case-insensitive
       // comparison but allow pure case-change renames (e.g. "work" → "Work").
       const existingTags = new Set<string>();
-      for (const n of activeNotes) for (const t of n.tags) existingTags.add(t);
+      for (const n of activeNotes) for (const t of effectiveNoteTags(n, isNoteLocked(n))) existingTags.add(t);
       const isCaseChangeOnly = oldTag.toLowerCase() === normalized.toLowerCase();
       const conflictsWithExisting = !isCaseChangeOnly
         && [...existingTags].some((t) => t.toLowerCase() === normalized.toLowerCase());
       const doRename = async () => {
         const usedElsewhere = usedOutside(oldTag);
-        await renameTagEverywhere(oldTag, normalized, inScope);
+        await renameTagEverywhere(oldTag, normalized, inScope, isNoteLocked);
         // The star and the look follow the new name; a merge target keeps a
         // look of its own, and the old name keeps both while the other
         // space still carries it.
         mutateSettings((prev) => tagAfterScopedChange(prev, oldTag, normalized, usedElsewhere));
         await refresh();
+        onBodyBulkChange?.();
         // If the currently selected tag filter was the old slug, point
         // it at the new one so the user keeps seeing the same notes. After
         // the refresh: the sidebar clears a filter on a tag no item carries.
@@ -152,7 +161,7 @@ export function useTagActions({
       };
 
       if (conflictsWithExisting) {
-        const count = activeNotes.filter((n) => n.tags.includes(oldTag)).length;
+        const count = activeNotes.filter((n) => noteHasTag(n, oldTag, isNoteLocked(n))).length;
         setTagConfirm({
           type: 'merge',
           tag: oldTag,
@@ -165,12 +174,12 @@ export function useTagActions({
 
       await doRename();
     },
-    [activeNotes, inScope, usedOutside, mutateSettings, refresh, runSync, selectedTag]
+    [activeNotes, inScope, isNoteLocked, onBodyBulkChange, usedOutside, mutateSettings, refresh, runSync, selectedTag]
   );
 
   const handleDeleteTag = useCallback(
     (tag: string) => {
-      const count = activeNotes.filter((n) => n.tags.includes(tag)).length;
+      const count = activeNotes.filter((n) => noteHasTag(n, tag, isNoteLocked(n))).length;
       setTagConfirm({
         type: 'delete',
         tag,
@@ -178,19 +187,20 @@ export function useTagActions({
         onConfirm: () => {
           void (async () => {
             const usedElsewhere = usedOutside(tag);
-            await deleteTagEverywhere(tag, inScope);
+            await deleteTagEverywhere(tag, inScope, isNoteLocked);
             mutateSettings((prev) => tagAfterScopedChange(prev, tag, null, usedElsewhere));
             if (selectedTag === tag) {
               setSelectedTag(null);
               setView('all');
             }
             await refresh();
+            onBodyBulkChange?.();
             void runSync();
           })();
         },
       });
     },
-    [activeNotes, inScope, usedOutside, mutateSettings, refresh, runSync, selectedTag]
+    [activeNotes, inScope, isNoteLocked, onBodyBulkChange, usedOutside, mutateSettings, refresh, runSync, selectedTag]
   );
 
   /** Trash every note that carries a given tag, plus drop the tag from
@@ -200,7 +210,7 @@ export function useTagActions({
     (tag: string) => {
       // Read-only notes keep their tag and stay put, so they are counted
       // apart: the modal asks about the rest and names how many stayed.
-      const tagged = activeNotes.filter((n) => n.tags.includes(tag));
+      const tagged = activeNotes.filter((n) => noteHasTag(n, tag, isNoteLocked(n)));
       const movable = tagged.filter((n) => n.locked !== 1);
       setTagConfirm({
         type: 'delete-with-notes',
@@ -210,7 +220,7 @@ export function useTagActions({
         onConfirm: () => {
           void (async () => {
             const usedElsewhere = usedOutside(tag);
-            await trashNotesWithTag(tag, inScope);
+            await trashNotesWithTag(tag, inScope, isNoteLocked);
             mutateSettings((prev) => tagAfterScopedChange(prev, tag, null, usedElsewhere));
             if (selectedTag === tag) {
               setSelectedTag(null);
@@ -222,7 +232,7 @@ export function useTagActions({
         },
       });
     },
-    [activeNotes, inScope, usedOutside, mutateSettings, refresh, runSync, selectedTag]
+    [activeNotes, inScope, isNoteLocked, usedOutside, mutateSettings, refresh, runSync, selectedTag]
   );
 
   /**

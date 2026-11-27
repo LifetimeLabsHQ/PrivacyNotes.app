@@ -24,6 +24,8 @@ export type MediaRef = {
   name: string;
   /** The recorded MIME type, or '' for a picture node, which carries none. */
   mime: string;
+  /** Optional image caption shown below the picture in the viewer (#969). */
+  caption?: string;
 };
 
 export const IMAGE_REF_PREFIX = 'pn:img/';
@@ -104,7 +106,13 @@ export function mediaInDoc(doc: PMNode): { refs: MediaRef[]; positions: number[]
       const src = typeof node.attrs.src === 'string' ? node.attrs.src : '';
       // The image node shows no asset address that note text spelled, so the viewer does not either.
       if (src && allowedImageSource(src)) {
-        refs.push({ src, name: typeof node.attrs.alt === 'string' ? node.attrs.alt : '', mime: '' });
+        const caption = typeof node.attrs.title === 'string' && node.attrs.title.trim() ? node.attrs.title.trim() : undefined;
+        refs.push({
+          src,
+          name: typeof node.attrs.alt === 'string' ? node.attrs.alt : '',
+          mime: '',
+          ...(caption ? { caption } : {}),
+        });
         positions.push(pos);
       }
       return false;

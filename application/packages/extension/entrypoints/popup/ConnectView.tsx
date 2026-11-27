@@ -11,15 +11,16 @@ import { ArrowRight, ClipboardText, Fingerprint } from '@web/icons';
 import { Button } from '@web/ui/Button';
 import { Callout } from '@web/ui/feedback';
 import { FIELD_CLASS, NO_TEXT_ASSIST } from '@web/formFields';
-import { ROW_TITLE, SectionEyebrow, SettingsSegmented, SETTINGS_HELP } from '@web/settingsUI';
+import { ROW_TITLE, SectionEyebrow, SETTINGS_HELP } from '@web/settingsUI';
 import { SecretInput } from '@web/PasscodeInput';
 import type { PinInputHandle } from '@web/PinInput';
 import { Switch } from '@web/Switch';
-import { isCommonPin, PASSCODE_MIN_CHARS } from '@web/secretKind';
+import { isCommonPin, isValidPasscode } from '@web/secretKind';
 import { readCode, redeem, type Connection, type SecretKind } from '../../src/connection';
 import { biometricPossible, startEnrollment } from '../../src/biometric';
 import { unlock } from '../../src/logins';
 import { SaveButton } from './SaveButton';
+import { PasscodeRequirements, SecretKindCards } from './SecretSetup';
 
 type Step = 'paste' | 'protect';
 
@@ -78,7 +79,7 @@ export function ConnectView({ onConnected }: { onConnected: (c: Connection, note
     else void finish();
   };
 
-  const ready = kind === 'pin' ? /^\d{4}$/.test(first) : first.length >= PASSCODE_MIN_CHARS;
+  const ready = kind === 'pin' ? /^\d{4}$/.test(first) : isValidPasscode(first);
   // The repeat field hands over its value as the last digit lands, before
   // the state holds it.
   const protect = (repeat: string = second) => {
@@ -99,38 +100,40 @@ export function ConnectView({ onConnected }: { onConnected: (c: Connection, note
 
   if (step === 'protect') {
     return (
-      <div className="flex flex-col gap-3 px-3 py-4">
-        <h1 className="text-title font-semibold text-pn m-0">{t('protect.title')}</h1>
-        <p className={SETTINGS_HELP}>{t('protect.body')}</p>
-        <SettingsSegmented<SecretKind>
-          label={t('protect.title')}
-          className="w-full [&>button]:flex-1"
-          value={kind}
-          onChange={(k) => {
-            setKind(k);
-            setFirst('');
-            setSecond('');
-          }}
-          options={[
-            { value: 'pin', label: t('security:pinTab.kindPin') },
-            { value: 'passcode', label: t('security:pinTab.kindPasscode') },
-          ]}
-        />
-        <SecretInput kind={kind} value={first} onChange={setFirst} onComplete={() => repeatRef.current?.focus()} autoFocus fill />
-        {ready && (
+      <div className="p-3">
+        <div className="flex flex-col gap-3 rounded-lg border border-divider bg-surface-2 p-3.5 shadow-xs">
+          <h1 className="text-title font-semibold text-pn m-0">{t('protect.title')}</h1>
+          <p className={SETTINGS_HELP}>{t('protect.body')}</p>
+          <SecretKindCards
+            value={kind}
+            disabled={busy}
+            onChange={(k) => {
+              setKind(k);
+              setFirst('');
+              setSecond('');
+              setError(null);
+            }}
+          />
           <div className="space-y-1.5">
-            <SectionEyebrow className="text-center">{t('protect.repeat')}</SectionEyebrow>
-            <SecretInput ref={repeatRef} kind={kind} value={second} onChange={setSecond} onComplete={(v) => protect(v)} autoFocus={kind === 'pin'} fill />
+            {kind === 'passcode' && <SectionEyebrow>{t('security:pinTab.newPasscode')}</SectionEyebrow>}
+            <SecretInput kind={kind} value={first} onChange={setFirst} onComplete={() => repeatRef.current?.focus()} autoFocus compact={kind === 'passcode'} fill />
+            {kind === 'passcode' && <PasscodeRequirements value={first} />}
           </div>
-        )}
-        {/* Biometric unlock, a settings row of its own below a rule. */}
-        {canFingerprint && (
-          <div className="border-t border-divider pt-3">
-            <Switch icon={<Fingerprint className="text-accent" />} labelClassName={ROW_TITLE} label={t('protect.biometric')} description={t('protect.biometricHelp')} checked={fingerprint} onChange={setFingerprint} />
-          </div>
-        )}
-        {error && <Callout look="card" tone="danger">{error}</Callout>}
-        <SaveButton variant="primary" state={busy ? 'busy' : 'idle'} disabled={!ready || second.length === 0} icon={<ArrowRight aria-hidden="true" />} label={t('connect.connect')} busyLabel={t('connect.connect')} doneLabel={t('connect.connected')} onClick={() => protect()} className="w-full" />
+          {(kind === 'passcode' || ready) && (
+            <div className="space-y-1.5">
+              <SectionEyebrow className={kind === 'pin' ? 'text-center' : ''}>{t(kind === 'pin' ? 'security:pinTab.confirmPin' : 'security:pinTab.confirmPasscode')}</SectionEyebrow>
+              <SecretInput ref={repeatRef} kind={kind} value={second} onChange={setSecond} onComplete={(v) => protect(v)} autoFocus={kind === 'pin'} compact={kind === 'passcode'} fill />
+            </div>
+          )}
+          {/* Biometric unlock, a settings row of its own below a rule. */}
+          {canFingerprint && (
+            <div className="border-t border-divider pt-3">
+              <Switch icon={<Fingerprint className="text-accent" />} labelClassName={ROW_TITLE} label={t('protect.biometric')} description={t('protect.biometricHelp')} checked={fingerprint} onChange={setFingerprint} />
+            </div>
+          )}
+          {error && <Callout look="card" tone="danger">{error}</Callout>}
+          <SaveButton variant="primary" state={busy ? 'busy' : 'idle'} disabled={!ready || second.length === 0} icon={<ArrowRight aria-hidden="true" />} label={t('connect.connect')} busyLabel={t('connect.connect')} doneLabel={t('connect.connected')} onClick={() => protect()} className="w-full" />
+        </div>
       </div>
     );
   }
@@ -138,17 +141,19 @@ export function ConnectView({ onConnected }: { onConnected: (c: Connection, note
   // Room between the parts: the title, the steps, the field and Connect
   // each stand apart (owner, 2026-11-11).
   return (
-    <div className="flex flex-col gap-5 px-3 py-4">
-      <h1 className="text-title font-semibold text-pn m-0">{t('connect.title')}</h1>
-      {/* Three numbered steps; the help is the header's question mark (owner, 2026-11-11). */}
-      <ol className="m-0 p-0 list-none space-y-3">
-        {(['connect.step1', 'connect.step2', 'connect.step3'] as const).map((key, i) => (
-          <li key={key} className="flex items-center gap-2.5">
-            <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/15 text-meta font-semibold text-accent-strong">{i + 1}</span>
-            <span className="text-small text-pn">{t(key)}</span>
-          </li>
-        ))}
-      </ol>
+    <div className="flex flex-col gap-4 p-3">
+      <div className="rounded-lg border border-divider bg-surface-2 p-4 shadow-xs space-y-4">
+        <h1 className="text-title font-semibold text-pn m-0">{t('connect.title')}</h1>
+        {/* Three numbered steps; the help is the header's question mark (owner, 2026-11-11). */}
+        <ol className="m-0 p-0 list-none space-y-3">
+          {(['connect.step1', 'connect.step2', 'connect.step3'] as const).map((key, i) => (
+            <li key={key} className="flex items-center gap-2.5">
+              <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/15 text-meta font-semibold text-accent-strong">{i + 1}</span>
+              <span className="text-small text-pn">{t(key)}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
       <div>
         <div className="flex items-stretch gap-2">
           <textarea
@@ -161,13 +166,13 @@ export function ConnectView({ onConnected }: { onConnected: (c: Connection, note
             autoComplete="off"
             {...NO_TEXT_ASSIST}
             autoFocus
-            className={`${FIELD_CLASS} min-w-0 flex-1 font-mono resize-none`}
+            className={`${FIELD_CLASS} !bg-surface-2 shadow-xs min-w-0 flex-1 font-mono resize-none`}
             placeholder="pnx1-..."
           />
           <Button
             icon={<ClipboardText aria-hidden="true" />}
             onClick={() => void navigator.clipboard.readText().then((text) => setCode(text.trim()), () => undefined)}
-            className="shrink-0 flex-col !h-auto"
+            className="shrink-0 flex-col !h-auto bg-surface-2 shadow-xs"
           >
             {t('connect.paste')}
           </Button>

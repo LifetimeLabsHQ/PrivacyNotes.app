@@ -6,7 +6,7 @@ import i18n from './i18n';
 import { CARET_ICON } from './editorCodeBlock';
 import { TIP_PILL, observeTip, positionClasses, visibleBox } from './HoverLabel';
 import { activeMatchRange } from './editorSearch';
-import { readNoteFolds, writeNoteFolds } from './editorPrefs';
+import { canPersistNoteFolds, readNoteFolds, writeNoteFolds } from './editorPrefs';
 import { fnv1a } from './noteShortcut';
 import { textDirection } from './textDirection';
 
@@ -31,7 +31,7 @@ import { textDirection } from './textDirection';
  * the hidden part would belong to the section and be hidden too); at the end
  * of a folded list item it starts the next item after the hidden part.
  *
- * Spec: docs/internal/plans/heading-folds-and-source-preview.md (Part 1)
+ * Spec: docs/internal/specs/heading-folds-and-source-preview.md (Part 1)
  */
 
 /** A place that can fold: a heading, or a list item with a nested list. */
@@ -642,7 +642,8 @@ export function foldCounts(state: EditorState): { foldable: number; folded: numb
  *  (one step with its own changes). A caret left inside a section stays; the
  *  caret rule opens that one section on the next move. */
 export function setAllFolded(tr: Transaction, folded: boolean): Transaction {
-  return tr.setMeta(foldsKey, { all: folded } satisfies FoldMeta).setMeta('addToHistory', false);
+  tr.setMeta(foldsKey, { all: folded } satisfies FoldMeta);
+  return tr.docChanged ? tr : tr.setMeta('addToHistory', false);
 }
 
 /** Opens every fold that hides `pos`, so a jump to it lands on something
@@ -695,7 +696,7 @@ function diskFoldKey(noteId: string, key: string): string {
 }
 
 function save(noteId: string | undefined, st: FoldState | undefined) {
-  if (!noteId || !st) return;
+  if (!noteId || !st || !canPersistNoteFolds()) return;
   writeNoteFolds(
     noteId,
     st.foldables.filter((f) => st.folded.includes(f.pos)).map((f) => diskFoldKey(noteId, f.key)),

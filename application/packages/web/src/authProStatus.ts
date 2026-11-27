@@ -7,6 +7,7 @@ import {
 import { type SupabaseClient } from '@notes/shared';
 import { isNativeStoreBuild, restoreNativePurchases } from './billing';
 import { isDemoMode } from './demo';
+import { isLocalOnly, withBackendNetworkAllowed } from './localOnly';
 import { PRO_PRICE_CENTS } from './pricing';
 import { writeCachedAccountFlags } from './authStorage';
 import type { AuthState } from './auth';
@@ -52,56 +53,63 @@ export function useProStatus({
     if (auth.status === 'authenticated' && auth.localOnly) return;
     const limitBlocked = auth.status === 'device_limit_reached';
     if (auth.status !== 'authenticated' && !limitBlocked) return;
-    const stillCurrent = () => {
-      const current = authRef.current;
-      return current.status === auth.status && current.pubkey === auth.pubkey;
-    };
-    // A successful checkout may precede its webhook. Background checks do one read.
-    const attempts = opts?.attempts ?? 6;
-    for (let attempt = 0; attempt < attempts; attempt++) {
-      if (attempt > 0) await new Promise((r) => setTimeout(r, 3000));
-      if (!stillCurrent()) return;
-      try {
-        const { data, error } = await supabase.rpc('is_pro');
+    const run = async () => {
+      const stillCurrent = () => {
+        const current = authRef.current;
+        return current.status === auth.status && current.pubkey === auth.pubkey;
+      };
+      // A successful checkout may precede its webhook. Background checks do one read.
+      const attempts = opts?.attempts ?? 6;
+      for (let attempt = 0; attempt < attempts; attempt++) {
+        if (attempt > 0) await new Promise((r) => setTimeout(r, 3000));
         if (!stillCurrent()) return;
-        // An unavailable or malformed response cannot revoke a paid entitlement.
-        if (error || typeof data !== 'boolean') return;
-        if (data && limitBlocked) {
-          const retried = await retryRegistrationFromLimit();
-          if (retried.ok) return;
-          continue;
-        }
-        if (auth.status !== 'authenticated') continue;
-        if (data || auth.isPro) {
-          const early = data ? await checkEarlySupporter(supabase) : false;
+        try {
+          const { data, error } = await supabase.rpc('is_pro');
           if (!stillCurrent()) return;
-          const current = authRef.current;
-          if (current.status !== 'authenticated') return;
-          writeCachedAccountFlags({
-            pubkey: current.pubkey,
-            isPro: data,
-            isEarlySupporter: early,
-            isCustodial: current.isCustodial,
-          });
-          if (!data && current.isPro) dropProThemes();
-          // The same answer keeps the same state: this check runs every
-          // minute, and a new auth object each time rendered the whole app
-          // again and re-read the vault (issue #643).
-          setAuth((prev) =>
-            prev.status === 'authenticated' && prev.pubkey === auth.pubkey &&
-            (prev.isPro !== data || prev.isEarlySupporter !== early)
-              ? { ...prev, isPro: data, isEarlySupporter: early }
-              : prev,
-          );
+          // An unavailable or malformed response cannot revoke a paid entitlement.
+          if (error || typeof data !== 'boolean') return;
+          if (data && limitBlocked) {
+            const retried = await retryRegistrationFromLimit();
+            if (retried.ok) return;
+            continue;
+          }
+          if (auth.status !== 'authenticated') continue;
+          if (data || auth.isPro) {
+            const early = data ? await checkEarlySupporter(supabase) : false;
+            if (!stillCurrent()) return;
+            const current = authRef.current;
+            if (current.status !== 'authenticated') return;
+            writeCachedAccountFlags({
+              pubkey: current.pubkey,
+              isPro: data,
+              isEarlySupporter: early,
+              isCustodial: current.isCustodial,
+            });
+            if (!data && current.isPro) dropProThemes();
+            // The same answer keeps the same state: this check runs every
+            // minute, and a new auth object each time rendered the whole app
+            // again and re-read the vault (issue #643).
+            setAuth((prev) =>
+              prev.status === 'authenticated' && prev.pubkey === auth.pubkey &&
+              (prev.isPro !== data || prev.isEarlySupporter !== early)
+                ? { ...prev, isPro: data, isEarlySupporter: early }
+                : prev,
+            );
+            return;
+          }
+        } catch (err) {
+          console.error('[auth] refreshProStatus error:', err);
           return;
         }
-      } catch (err) {
-        console.error('[auth] refreshProStatus error:', err);
-        return;
       }
+      if (opts?.silent || !stillCurrent()) return;
+      window.dispatchEvent(new CustomEvent('privacynotes:pro-activation-pending'));
+    };
+    if (limitBlocked && (auth.localOnly || isLocalOnly())) {
+      await withBackendNetworkAllowed(run);
+      return;
     }
-    if (opts?.silent || !stillCurrent()) return;
-    window.dispatchEvent(new CustomEvent('privacynotes:pro-activation-pending'));
+    await run();
   }
 
   const refreshRef = useRef(refreshProStatus);
@@ -123,7 +131,10 @@ export function useProStatus({
           // Spec: docs/internal/specs/iap-restore-handoff.md (background restore)
           if ((current.status === 'device_limit_reached' ||
             (current.status === 'authenticated' && !current.isPro)) && isNativeStoreBuild()) {
-            await restoreNativePurchases(account);
+            const restore = () => restoreNativePurchases(account);
+            await (current.status === 'device_limit_reached' && (current.localOnly || isLocalOnly())
+              ? withBackendNetworkAllowed(restore)
+              : restore());
           }
           if (!stale) await refreshRef.current({ silent: true, attempts: 1 });
         } finally {

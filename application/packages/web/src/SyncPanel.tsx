@@ -21,7 +21,7 @@ import {
 } from './icons';
 import { type SupabaseClient } from '@notes/shared';
 import { isDemoMode } from './demo';
-import { clearNeverSynced, useLocalOnly, useLocalTruthOnly } from './localOnly';
+import { clearNeverSynced, useLocalOnly, useLocalTruthOnly, useUnsyncedLocalVault } from './localOnly';
 import { formatInstant, formatRelative } from './intlFormat';
 import { verifySync, resetSyncCursor, type SyncReport } from './syncVerify';
 import { recordCleanVerify } from './verifyStamp';
@@ -106,7 +106,7 @@ export function SyncPanel({
   const [turningOnSync, setTurningOnSync] = useState(false);
   const [turnOnError, setTurnOnError] = useState<{ message: string; offline: boolean } | null>(null);
   const [localCounts, setLocalCounts] = useState<{ notes: number; files: number } | null>(null);
-  const showLocalOnlyView = localOnly || (localTruth && paused);
+  const showLocalOnlyView = useUnsyncedLocalVault();
 
   useEffect(() => {
     if (!showLocalOnlyView) {
@@ -183,8 +183,8 @@ export function SyncPanel({
   // or the pause flips - the two moments the number can move.
   const [unsynced, setUnsynced] = useState(0);
   useEffect(() => {
-    if (!syncing && !localOnly) void countUnsyncedNotes().then(setUnsynced);
-  }, [syncing, paused, localOnly]);
+    if (!syncing && !showLocalOnlyView) void countUnsyncedNotes().then(setUnsynced);
+  }, [syncing, paused, showLocalOnlyView]);
 
   // ── Verify (moved in from the deleted SyncVerifyBlock) ──────────
   // Exists because the pill and hero only know whether a pass RAN, not
@@ -217,7 +217,7 @@ export function SyncPanel({
   }
 
   useEffect(() => {
-    if (localOnly || (localTruth && paused)) return;
+    if (showLocalOnlyView) return;
     if (autoVerify && supabase && navigator.onLine) void runVerify();
     // Mount-only: re-running on every online flip would fire the check
     // again each time the network blips.

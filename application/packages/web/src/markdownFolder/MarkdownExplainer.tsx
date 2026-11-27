@@ -1,23 +1,17 @@
 /**
- * The one place the plaintext nature is spelled out at length.
+ * Reference modal spelling out how the plaintext Markdown folder works.
  *
- * One entry point: the `?` on the folder row, ending in a single [Got it].
- * It had a second mode until 2026-08-14 - the first-run gate of spec section
- * 12, shown once ahead of the OS picker - removed because the empty state
- * renders `MarkdownPitch` directly, so the gate put a modal in front of the
- * button and filled it with the screen already behind it. Everything else in
- * the feature stays quiet - the open padlock and the folder path do the
- * reminding - because a warning repeated on every surface is a warning people
- * learn to skip.
+ * Reached from the `?` button on the folder toolbar and dismissed with a
+ * single [Got it] action; the no-folder empty state renders `MarkdownPitch`
+ * directly ahead of the picker. Other surfaces stay quiet - the folder path
+ * and local-folder icon carry the reminder without repeating a warning on
+ * every screen.
  *
- * Leads with the sell (an advanced Markdown editor, free, on the user's own
- * files), then the use cases, and states the local/plaintext nature as one
- * visual pair of facts rather than a warning list: these files stay on the
- * device, and they sit outside our encrypted vault. The claim "not even we can
- * read your notes" stays true here and is in a sense more true: nothing about
- * these files ever involves us. What changes is that local threats are the
- * user's to handle, and the honest way to say that is to state where the files
- * are and what we do not do with them.
+ * Leads with the editor capabilities and use cases, then states the storage
+ * boundary as a visual pair of facts: files stay on this device, and they sit
+ * outside the encrypted vault with no sync, encryption, or backup. Local disk
+ * security belongs to the user's device, so the copy states where the files
+ * live and what the app does not do with them.
  *
  * Spec: docs/internal/specs/markdown-folder.md (section 12)
  */
@@ -27,16 +21,12 @@ import { MarkdownDefaultAppRow } from './MarkdownDefaultApp';
 import { Button, FeaturePitch, Modal, PitchBadge } from '../ui';
 
 /**
- * The pitch itself, without any modal chrome.
+ * The pitch itself, without modal chrome.
  *
- * Exported because the empty state shows exactly this - the same banner, chips,
- * use cases and local/plaintext strip - and a second copy of that content is a
- * second copy to keep in step. There is one set of strings and one layout; only
- * the frame around them differs.
- *
- * `actions` rides the last row beside the second-brain line. The modal puts its
- * dismiss/confirm pair there; the empty state passes nothing and lays its two
- * pickers out underneath, where they get a column each.
+ * Shared by `MarkdownExplainer` and `MarkdownEmptyState` so both frames render
+ * one set of strings and one layout. `actions` sits beside the tagline in the
+ * modal; the empty state omits `actions` and places its folder and file pickers
+ * underneath in a two-column grid.
  */
 export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
   const { t } = useTranslation('shell');
@@ -61,20 +51,17 @@ export function MarkdownPitch({ actions }: { actions?: React.ReactNode }) {
         { icon: <Book />, label: t('markdown.useObsidian') },
         { icon: <GitBranch />, label: t('markdown.useGit') },
       ]}
-      // The local/plaintext facts as one strip: a positive (your disk, your
-      // eyes only) beside a negative (outside the vault), replacing the old
-      // tick/cross warning list.
+      // Storage boundary as a paired strip: local disk ownership beside
+      // separation from the encrypted vault.
       facts={[
         { icon: <Laptop className="text-success" />, title: t('markdown.localTitle'), sub: t('markdown.localSub') },
         { icon: <CloudSlash className="text-danger" />, title: t('markdown.cloudTitle'), sub: t('markdown.cloudSub') },
       ]}
       tagline={{ icon: <Brain />, label: t('markdown.secondBrain') }}
       actions={actions}
-      // Which app the OS opens .md files with. Renders nothing outside the
-      // desktop app, and lands in BOTH of this component's homes for free -
-      // the explainer modal and the no-folder empty state. Below the tagline:
-      // everything above is the pitch, and this is the one row that changes
-      // the machine rather than describing the feature.
+      // OS default-app control for .md files. Renders nothing outside the
+      // desktop app, appearing in both the explainer modal and the empty state
+      // below the tagline.
       // Spec: docs/internal/specs/markdown-folder.md (section 11)
       footer={<MarkdownDefaultAppRow />}
     />
@@ -90,10 +77,8 @@ export function MarkdownExplainer({ onClose }: { onClose: () => void }) {
       icon={<FileMd />}
       className="max-w-md p-5 space-y-3 max-h-[calc(100dvh-2rem)] overflow-y-auto"
     >
-      {/* One dismiss, no confirm. This was also the first-folder-pick gate
-          until 2026-08-14, when that mode was removed as redundant - the
-          empty state renders this same pitch, so the gate showed the reader
-          what was already on screen. Now it is only the reference card. */}
+      {/* Reference card with a single dismiss action; the empty state renders
+          the same pitch inline before a folder is picked. */}
       <MarkdownPitch
         actions={
           <Button action="done" variant="secondary" onClick={onClose} className="shrink-0">

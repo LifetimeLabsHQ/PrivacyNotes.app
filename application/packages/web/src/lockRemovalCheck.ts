@@ -19,7 +19,7 @@
  */
 import type { SupabaseClient } from '@notes/shared';
 import { isDemoMode } from './demo';
-import { isLocalOnly } from './localOnly';
+import { isUnsyncedLocalVault } from './localOnly';
 import { deviceRegistered, getDeviceId } from './devices';
 import { jwtPayloadPubkey, ownsLocalData } from './authStorage';
 import { logAuthEvent } from './authDiag';
@@ -29,7 +29,7 @@ import { finishInterruptedSignOut, signOutFinishSettled } from './signOutFinish'
 /** Whether the owner removed this device: the server's explicit no, for the
  *  session this device stores and the account that owns its data. */
 export async function removedWhileLocked(supabase: SupabaseClient): Promise<boolean> {
-  if (isDemoMode() || isLocalOnly()) return false;
+  if (isDemoMode() || isUnsyncedLocalVault()) return false;
   try {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;

@@ -79,7 +79,7 @@ export function SpaceSwitch({
             : 'text-accent-strong/60 hover:text-accent-strong hover:bg-surface-2/60'
         }`;
         // Outline while closed, solid while open: the state reads without color.
-        const glyph = <SpaceIcon weight={on ? 'fill' : 'regular'} aria-hidden="true" />;
+        const glyph = <SpaceIcon size={18} weight={on ? 'fill' : 'regular'} aria-hidden="true" />;
         const pro = locked && key !== 'all';
         return (
           // Stretched (beside Jump, and full width in the drawer) the switch

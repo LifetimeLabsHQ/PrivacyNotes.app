@@ -21,7 +21,7 @@ import type { BookmarkCopyEntry, CardCopyEntry, CopyEntry, CopyKind, LoginCopyEn
 import { ArrowSquareOut, BookmarkSimple, Check, Copy, CreditCard, DotsThreeOutlineVertical, Fingerprint, GlobeSimple, Key, LinkSimple, ListBullets, NotePencil, PencilSimple, PushPin, Textbox, User, X } from '@web/icons';
 import { HoverLabel } from '@web/HoverLabel';
 import { passkeysReleased } from '../../src/passkeyRelease';
-import { DROPPED_KEY, isPendingItem, type NotSavedEdit } from '../../src/pending';
+import { DROPPED_KEY, isPendingItem, PENDING_KEY, type NotSavedEdit } from '../../src/pending';
 import { Button, IconButton } from '@web/ui/Button';
 import { Badge, Callout, StatusLine } from '@web/ui/feedback';
 import { Kbd } from '@web/ui/misc';
@@ -91,14 +91,18 @@ export function useVault(enabled: boolean): Vault {
   const refresh = useCallback(() => {
     setPulling(true);
     void pull()
-      .then((r) => {
+      .then(async (r) => {
         if (r === 'locked' || r === 'disconnected') {
           setUnlocked(false);
           setData(null);
+        } else if (r === 'ok') {
+          // Reload decrypted rows before clearing `pulling` so PasskeyUseView
+          // never observes `rows.length === 0 && !pulling` ahead of storage.onChanged.
+          await load();
         }
       })
       .finally(() => setPulling(false));
-  }, []);
+  }, [load]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -114,7 +118,7 @@ export function useVault(enabled: boolean): Vault {
         setUnlocked(false);
         setData(null);
       }
-      if (area === 'local' && (ROWS_KEY in changes || DROPPED_KEY in changes)) void load();
+      if (area === 'local' && (ROWS_KEY in changes || PENDING_KEY in changes || DROPPED_KEY in changes)) void load();
     };
     browser.storage.onChanged.addListener(onChange);
     return () => browser.storage.onChanged.removeListener(onChange);
@@ -208,7 +212,7 @@ export function Unlock({ connection, onUnlocked, focusNonce, pageOpened = false 
   // every PIN screen; fingerprint or face is a button with words, and the cost
   // of wrong tries shows before the first one.
   return (
-    <div className="space-y-3 py-2" ref={box}>
+    <div className="rounded-lg border border-divider bg-surface-2 p-4 shadow-xs space-y-3" ref={box}>
       <div className="text-center text-body font-semibold text-pn">{kind === 'pin' ? t('logins.unlockPin') : t('logins.unlockPasscode')}</div>
       <div className={busy ? 'opacity-50' : undefined}>
         <SecretInput kind={kind} value={value} onChange={setValue} onComplete={(v) => {
@@ -327,11 +331,28 @@ function fillNotice(outcome: FillOutcome, t: (k: string) => string): Notice {
 export function Tile({ url, letter, glyph }: { url?: string; letter: string; glyph?: ReactNode }) {
   const { favicons } = useViewPrefs();
   const icon = url && favicons ? faviconOf(url) : null;
-  const [broken, setBroken] = useState(false);
-  if (icon && !broken) return <img src={icon} alt="" className="w-7 h-7 shrink-0 rounded-md" onError={() => setBroken(true)} />;
+  const [state, setState] = useState<{ src: string; status: 'ok' | 'err' } | null>(null);
+  const status = icon && state?.src === icon ? state.status : 'loading';
+  const showImg = !!icon && status !== 'err';
   return (
-    <span aria-hidden="true" className="w-7 h-7 shrink-0 rounded-md bg-surface-0 text-pn-muted inline-flex items-center justify-center text-small font-semibold">
-      {glyph ?? (letter || '?').slice(0, 1).toUpperCase()}
+    <span className="relative inline-flex w-7 h-7 shrink-0 items-center justify-center rounded-md border border-divider/80 bg-surface-0 text-pn-soft text-small font-semibold overflow-hidden">
+      {(!showImg || status !== 'ok') && (
+        <span aria-hidden="true">{glyph ?? (letter || '?').slice(0, 1).toUpperCase()}</span>
+      )}
+      {showImg && (
+        <img
+          src={icon}
+          alt=""
+          className={`absolute inset-0 w-7 h-7 rounded-md object-cover ${status === 'ok' ? '' : 'opacity-0'}`}
+          ref={(img) => {
+            if (img && img.complete && img.naturalWidth > 0 && status === 'loading') {
+              setState({ src: icon, status: 'ok' });
+            }
+          }}
+          onLoad={() => setState({ src: icon, status: 'ok' })}
+          onError={() => setState({ src: icon, status: 'err' })}
+        />
+      )}
     </span>
   );
 }
@@ -361,7 +382,7 @@ function Row({ entry, tile, title, titleEnd, meta, tools, sub, side, copy, menu,
   const site = siteOf(entry);
   const items = () => rowMenu(entry, t, copy, code);
   return (
-    <li className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-0.5 py-2" onContextMenu={ROW_MENU ? (e) => { e.preventDefault(); menu(e, items()); } : undefined}>
+    <li className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2.5 gap-y-0.5 rounded-lg border border-divider bg-surface-2 px-3 py-2.5 shadow-xs transition-colors hover:border-accent/40" onContextMenu={ROW_MENU ? (e) => { e.preventDefault(); menu(e, items()); } : undefined}>
       {/* The icon opens the site too, as the open button does (owner,
           2026-11-12). Out of the tab order: the open button is the stop. */}
       {site ? (
@@ -580,19 +601,19 @@ function byKindThenName(a: CopyEntry, b: CopyEntry): number {
   return byKind(a, b) || byName(a, b);
 }
 
-// Each heading sticks under the header while its group scrolls, on a band
-// with a line under it, so the kind in view is always named and the change
-// to the next kind is plain (owner, 2026-11-11). z-[55]: over the rows,
-// under their tooltips (56, style.css) and the header (z-[60]).
+// Each heading sticks under the header while its group scrolls, on the cool
+// canvas so the kind in view is always named and raised cards scroll cleanly
+// under it. z-[55]: over the rows, under their tooltips (56, style.css) and
+// the header (z-[60]).
 function Section({ icon, title, count, tools, children }: { icon: typeof GlobeSimple; title: string; count?: number; tools?: ReactNode; children: ReactNode }) {
   return (
     <section>
-      <div className="sticky top-[var(--pn-head,0px)] z-[55] -mx-3 flex items-center gap-2 border-b border-divider bg-surface-1 px-3 py-2">
+      <div className="sticky top-[var(--pn-head,0px)] z-[55] -mx-3 flex items-center gap-2 bg-surface-0 px-3 pt-2.5 pb-1.5">
         <SectionEyebrow icon={icon} className="flex-1 min-w-0">{title}</SectionEyebrow>
-        {count !== undefined && <span className="text-meta text-pn-muted tabular-nums">{count.toLocaleString()}</span>}
+        {count !== undefined && <span className="text-meta font-medium text-pn-muted tabular-nums">{count.toLocaleString()}</span>}
         {tools}
       </div>
-      <div className="space-y-1 pt-1">{children}</div>
+      <div className="space-y-2">{children}</div>
     </section>
   );
 }
@@ -661,7 +682,7 @@ export function VaultSections({ vault, url, tabId, query, typeFilter, menu, logi
 
   const entries = filterByType(vault.entries, typeFilter);
   const rows = (list: CopyEntry[], canFill = false) => (
-    <ul className="divide-y divide-divider">
+    <ul className="space-y-2">
       {list.map((e) => <EntryRow key={e.item} entry={e} pro={vault.pro} copy={copy} menu={menu} fill={canFill ? fill : undefined} fillKeys={loginKeys} edit={passkeysReleased() ? onEdit : undefined} />)}
     </ul>
   );
@@ -677,7 +698,7 @@ export function VaultSections({ vault, url, tabId, query, typeFilter, menu, logi
   if (query.trim()) {
     const found = searchEntries(entries, query);
     return (
-      <div className="px-3 pb-3 space-y-3">
+      <div className="px-3 pb-3 space-y-2">
         {notSaved}
         <Section icon={ListBullets} title={t('settingsSearch:resultCount', { count: found.length })}>
           {found.length ? rows(found) : <p className={SETTINGS_HELP}>{t('logins.noMatch')}</p>}
@@ -701,10 +722,10 @@ export function VaultSections({ vault, url, tabId, query, typeFilter, menu, logi
     budget -= shown.length;
     return { kind, count: list.length, shown };
   }).filter((g) => g.shown.length > 0);
-  const site = displayHost(url);
+  const site = /^https?:\/\//i.test(url) ? displayHost(url) : '';
   const showHere = !!site && typeFilter !== 'card' && typeFilter !== 'ssh';
   return (
-    <div className="px-3 pb-3 space-y-3">
+    <div className="px-3 pb-3 space-y-2">
       {notSaved}
       {showHere && (
         <Section icon={GlobeSimple} title={t('logins.forSite', { site })}>

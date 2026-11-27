@@ -9,10 +9,12 @@
  * here: the open note is where those questions are asked.
  * Spec: docs/internal/specs/dashboard.md (section 5, the note widget)
  */
-import { useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Editor as TipTapEditor } from '@tiptap/react';
 import type { LocalNote } from '../db';
 import { Editor } from '../Editor';
 import { setWikiLinkNavigator } from '../NoteLink';
+import { setWikiLinkNoteTitles } from '../NoteLinkSuggestion';
 import { noteLinkKey, parseNoteLinkTarget, resolveNoteLinkMatches } from '../noteLinks';
 import { noteLinkName } from '../notesViewUtils';
 
@@ -28,22 +30,34 @@ export default function NotePreview({ note, everywhere, isNoteLocked, onOpen }: 
   // latest render's values through this ref at click time.
   const latest = useRef({ note, everywhere, isNoteLocked, onOpen });
   latest.current = { note, everywhere, isNoteLocked, onOpen };
+  const [editor, setEditor] = useState<TipTapEditor | null>(null);
+  const noteTitles = useMemo(
+    () => everywhere
+      .map((n) => ({ id: n.id, title: noteLinkName(n, isNoteLocked(n)), archived: n.archived === 1 }))
+      .filter((e) => e.title),
+    [everywhere, isNoteLocked],
+  );
+  useEffect(() => {
+    if (editor) setWikiLinkNoteTitles(editor, noteTitles);
+  }, [editor, noteTitles]);
   return (
     <Editor
       value={note.body}
       onChange={noop}
       readOnly
       preview
-      onReady={(editor) =>
-        setWikiLinkNavigator(editor, (target) => {
+      onReady={(ed) => {
+        setEditor(ed);
+        setWikiLinkNoteTitles(ed, noteTitles);
+        setWikiLinkNavigator(ed, (target) => {
           const { note: self, everywhere: all, isNoteLocked: gated, onOpen: open } = latest.current;
           const keys = new Set(all.map((n) => noteLinkKey(noteLinkName(n, gated(n)))));
           const { note: name } = parseNoteLinkTarget(target, (k) => keys.has(noteLinkKey(k)));
           if (name === '') return open(self.id);
           const matches = resolveNoteLinkMatches(all, name, noteLinkName);
           if (matches.length === 1) open(matches[0]!.id);
-        })
-      }
+        });
+      }}
     />
   );
 }

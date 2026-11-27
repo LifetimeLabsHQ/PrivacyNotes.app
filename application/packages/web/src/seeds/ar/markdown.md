@@ -15,7 +15,7 @@ title: كل ما يمكن أن يفعله markdown هنا
 
 النص المخفي يحجب الكلمات حتى ينقر عليها أحد: الهدية ||مشغّل أسطوانات||. حدِّد الكلمات واختر **نص مخفي** من قائمة **إدراج**، أو اكتب شرطتين عموديتين على كل جانب.
 
-يمكن أن تجلس أيقونة أو شعار داخل سطر من النص، مثل :icon[gift] :icon[coffee] :icon[rocket-launch] أو :logo[github]. اختر واحدًا من **إدراج** > **الأيقونات والشعارات**.
+يمكن أن تجلس أيقونة أو شعار داخل سطر من النص، مثل :icon[gift] :icon[coffee] :icon[rocket-launch] أو :logo[github]. اختر واحدًا من **إدراج** > **الأيقونات / الشعارات / الرموز التعبيرية**.
 
 زر **Aa** يغيّر الحجم والخط. يمكن أن يكون النص <span style="font-size: 0.85em">صغيرًا</span> أو عاديًّا أو <span style="font-size: 1.6em">كبيرًا</span>. ويمكن أن يكون <span style="font-family: ui-sans-serif, system-ui, sans-serif">بسيطًا</span> أو <span style="font-family: ui-serif, Georgia, Cambria, serif">بذيول</span> أو <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">ثابت العرض</span>.
 

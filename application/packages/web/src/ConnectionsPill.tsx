@@ -106,9 +106,6 @@ export function ConnectionsPill({
   const [localPinnedId, setLocalPinnedId] = useState<string | null>(null);
   const pinnedId = onPinnedCenterChange ? (pinnedCenterId ?? null) : localPinnedId;
   const setPinnedId = onPinnedCenterChange ?? setLocalPinnedId;
-  useEffect(() => {
-    if (!open && pinnedId !== null) setPinnedId(null);
-  }, [open, pinnedId, setPinnedId]);
 
   const byId = useMemo(() => new Map(notes.map((n) => [n.id, n])), [notes]);
   const gatedKey = notes.filter(isNoteLocked).map((n) => n.id).join(' ');
@@ -206,12 +203,12 @@ export function ConnectionsPill({
   }, [index, fileUse, byId, resolver, mentionIndex, note, liveBody, relatedIndexVersion, linkSuggestions, dismissedSuggestions, gatedKey, t]);
 
   const pinnedNote = useMemo(() => {
-    if (!open || !pinnedId) return null;
+    if (!pinnedId) return null;
     const found = byId.get(pinnedId);
     if (!found || found.trashed !== 0 || found.pinProtected === 1 || isNoteLocked(found)) return null;
     return found;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- isNoteLocked changes identity every render; gatedKey carries what it reads.
-  }, [open, pinnedId, byId, gatedKey]);
+  }, [pinnedId, byId, gatedKey]);
   const activeCenterNote = pinnedNote ?? note;
   const effectiveIndex = useMemo((): LinkIndex => {
     if (!open) return index;
@@ -247,7 +244,7 @@ export function ConnectionsPill({
   }, [open, activeCenterNote, note.id, lists.related, linkSuggestions, dismissedSuggestions, byId, effectiveIndex, relatedIndexVersion, gatedKey]);
 
   const shown = lists.from.length + lists.to.length + lists.missing.length + lists.related.length + lists.notRelated.length;
-  const visible = shown + lists.hidden > 0 || (open && pinnedNote !== null);
+  const visible = shown + lists.hidden > 0 || pinnedNote !== null;
 
   // The key (Mod+Shift+X) runs this toggle, and only while the pill is on screen.
   useEffect(() => {
@@ -269,6 +266,7 @@ export function ConnectionsPill({
     <Suspense fallback={null}>
       <ConnectionsPanel
         lists={lists}
+        openNoteId={note.id}
         centerNote={activeCenterNote}
         notes={notes}
         linkIndex={effectiveIndex}
@@ -287,7 +285,7 @@ export function ConnectionsPill({
         meaningDoor={meaningDoor}
         isNoteLocked={isNoteLocked}
         onOpen={onOpen}
-        onClose={() => { setPinnedId(null); onOpenChange(false); }}
+        onClose={() => onOpenChange(false)}
       />
     </Suspense>
   );

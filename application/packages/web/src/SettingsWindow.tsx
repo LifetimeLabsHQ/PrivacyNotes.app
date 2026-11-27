@@ -14,6 +14,7 @@ import { NO_TEXT_ASSIST } from './formFields';
 import {
   ANDROID_LIKE,
   NATIVE_PHONE,
+  SAFE_INSET_PAD,
   WindowSizeButtons,
   dockBackdropClass,
   dockPanelClass,
@@ -387,7 +388,7 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
   const phoneHeight = ANDROID_LIKE ? 'h-full' : 'h-[var(--pn-app-h,100%)]';
   const phoneFill = docked
     ? dockPanelClass(edge)
-    : `w-full flex flex-col text-pn bg-surface-2 ${phoneHeight} pt-[var(--pn-safe-top)] pb-[var(--pn-safe-bottom)] sm:pt-0 sm:pb-0 sm:max-w-2xl sm:h-[92vh] sm:max-h-[960px] sm:rounded-lg sm:border sm:border-divider`;
+    : `w-full flex flex-col text-pn bg-surface-2 ${phoneHeight} ${SAFE_INSET_PAD} sm:p-0 sm:max-w-2xl sm:h-[92vh] sm:max-h-[min(960px,100%)] sm:rounded-lg sm:border sm:border-divider`;
   // The docked panel takes the focus and its own Escape (see `onDockedKey`).
   const dockProps = docked ? { ref: dockRef, tabIndex: -1, onKeyDown: onDockedKey } : {};
   if (stacked) {
@@ -485,9 +486,9 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
   // bar board, the theme galleries) get 1024px of width from a 1280px window.
   return backdrop(
     <div className={`bg-surface-2 w-full flex flex-col text-pn ${
-      // "Use the full window" fills the app edge to edge: no margin, no frame.
+      // "Use the full window" fills the app edge to edge, keeping iOS/iPadOS safe areas clear (#954).
       wide && !NATIVE_PHONE
-        ? 'h-full max-h-full'
+        ? `h-full max-h-full ${SAFE_INSET_PAD}`
       // Alone, the window fits its one pane: as tall as the pane and narrower,
       // except the format bar board, which needs the width and keeps the full
       // window's height: its Typing and Drawing sides differ in height, and a
@@ -495,8 +496,8 @@ export function SettingsWindow({ categories, initialCategory, initialSetting, de
       // label shows. A pane taller than the screen scrolls inside the cap, so
       // the header stays on screen.
       : alone && activeId !== 'formatBar'
-        ? 'border border-divider rounded-lg max-w-2xl max-h-[85vh]'
-        : 'border border-divider rounded-lg max-w-4xl xl:max-w-5xl h-[92vh] max-h-[960px]'
+        ? 'border border-divider rounded-lg max-w-2xl max-h-[min(85vh,100%)]'
+        : 'border border-divider rounded-lg max-w-4xl xl:max-w-5xl h-[92vh] max-h-[min(960px,100%)]'
     }`}>
       <div className="flex items-center gap-4 px-5 py-3 border-b border-divider">
         {alone ? (

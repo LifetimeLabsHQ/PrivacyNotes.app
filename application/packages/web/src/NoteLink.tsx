@@ -19,6 +19,7 @@
  * (markdown-it doesn't know wiki-link syntax natively).
  */
 
+import { useSyncExternalStore } from 'react';
 import { InputRule, mergeAttributes, Node } from '@tiptap/core';
 import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { Fragment, Slice, type Node as PMNode } from '@tiptap/pm/model';
@@ -26,9 +27,12 @@ import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { useTranslation } from 'react-i18next';
 import {
   resolveWikiLinkNote,
+  subscribeWikiLinkMeta,
   wikiLinkHasNote,
   wikiLinkHeadings,
+  wikiLinkStatus,
   wikiLinkSuggestion,
+  type WikiLinkStatus,
 } from './NoteLinkSuggestion';
 import { HoverLabel } from './HoverLabel';
 import { ContextMenu, useContextMenu, type ContextMenuItem } from './ContextMenu';
@@ -62,6 +66,12 @@ export function setWikiLinkNavigator(
 /* Inline node view                                                   */
 /* ------------------------------------------------------------------ */
 
+const LINK_CLASSES: Record<WikiLinkStatus, string> = {
+  active: 'text-accent hover:text-accent-hover underline underline-offset-2 hover:bg-accent/10',
+  archived: 'text-pn-muted hover:text-pn underline underline-offset-2 hover:bg-track/70',
+  missing: 'text-warning line-through hover:bg-warning/10',
+};
+
 function WikiLinkView({
   node,
   editor,
@@ -74,10 +84,23 @@ function WikiLinkView({
   updateAttributes: (attrs: { target: string }) => void;
 }) {
   const { target, label, suggested } = node.attrs;
+  // Subscribe to host title/status updates so archived and deleted targets
+  // update live without re-rendering links whose own status did not change.
+  const snapshot = useSyncExternalStore(
+    (onChange) => subscribeWikiLinkMeta(editor, onChange),
+    () => {
+      const s = wikiLinkStatus(editor, target);
+      return target.includes('#')
+        ? `${s}\0${noteLinkDisplayText(target, wikiLinkHasNote(editor))}`
+        : s;
+    },
+  );
+  const sep = snapshot.indexOf('\0');
+  const status = (sep >= 0 ? snapshot.slice(0, sep) : snapshot) as WikiLinkStatus;
   const hasNote = wikiLinkHasNote(editor);
-  const readable = noteLinkDisplayText(target, hasNote);
+  const readable = sep >= 0 ? snapshot.slice(sep + 1) : noteLinkDisplayText(target, hasNote);
   const display = label || readable;
-  const { t } = useTranslation('editor');
+  const { t } = useTranslation(['editor', 'notes']);
   const menu = useContextMenu();
   const wlStore = editor.storage.wikiLink as Record<string, unknown> | undefined;
   // Read the navigator out of the storage box AT CLICK TIME, never at render
@@ -157,10 +180,26 @@ function WikiLinkView({
     ];
   };
 
+  const statusLabel =
+    status === 'archived'
+      ? t('notes:noteRow.archived')
+      : status === 'missing'
+        ? t('noteLink.notFound')
+        : null;
+  const tipLabel =
+    readable !== display
+      ? (statusLabel ? `${readable} · ${statusLabel}` : readable)
+      : statusLabel;
+  const ariaLabel =
+    readable !== display
+      ? (statusLabel ? `${readable} · ${statusLabel}` : readable)
+      : (statusLabel ? `${display} · ${statusLabel}` : undefined);
+
   const span = (
     <span
       role="link"
       tabIndex={0}
+      data-link-status={status !== 'active' ? status : undefined}
       onContextMenu={openMenu}
       onClick={(e) => {
         e.preventDefault();
@@ -173,8 +212,8 @@ function WikiLinkView({
           go();
         }
       }}
-      className="text-accent hover:text-accent-hover underline underline-offset-2 cursor-pointer rounded px-0.5 -mx-0.5 hover:bg-accent/10 transition"
-      aria-label={readable !== display ? readable : undefined}
+      className={`${LINK_CLASSES[status]} cursor-pointer rounded px-0.5 -mx-0.5 transition`}
+      aria-label={ariaLabel}
     >
       {suggested && (
         <Sparkle
@@ -190,8 +229,8 @@ function WikiLinkView({
 
   return (
     <NodeViewWrapper as="span" className="inline">
-      {readable !== display
-        ? <HoverLabel label={readable} position="above" inline>{span}</HoverLabel>
+      {tipLabel
+        ? <HoverLabel label={tipLabel} position="above" inline>{span}</HoverLabel>
         : span}
       <ContextMenu state={menu.state} onClose={menu.close} />
     </NodeViewWrapper>

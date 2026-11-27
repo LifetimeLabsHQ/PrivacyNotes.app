@@ -15,7 +15,7 @@ Den kan vara ==överstruken i gult== eller <mark style="background-color: rgba(6
 
 En spoiler döljer ord tills någon klickar på dem: presenten är ||en skivspelare||. Markera orden och välj **Spoiler** i menyn **Infoga**, eller skriv två lodräta streck på var sida.
 
-En ikon eller en logotyp kan sitta i en textrad, som :icon[gift] :icon[coffee] :icon[rocket-launch] eller :logo[github]. Välj en under **Infoga** > **Ikoner och logotyper**.
+En ikon eller en logotyp kan sitta i en textrad, som :icon[gift] :icon[coffee] :icon[rocket-launch] eller :logo[github]. Välj en under **Infoga** > **Ikoner / logotyper / emojis**.
 
 Knappen **Aa** ändrar storlek och typsnitt. Text kan vara <span style="font-size: 0.85em">liten</span>, normal eller <span style="font-size: 1.6em">stor</span>. Den kan vara <span style="font-family: ui-sans-serif, system-ui, sans-serif">enkel</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">med seriffer</span> eller <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">med fast bredd</span>.
 

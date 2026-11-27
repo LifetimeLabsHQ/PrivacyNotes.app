@@ -18,7 +18,13 @@
     "viewAria": "檢視圖片",
     "copyAria": "複製圖片",
     "copyFailed": "無法複製圖片。",
-    "picturesLeftOut": "部分圖片未加入。請單獨複製圖片後再貼上。"
+    "picturesLeftOut": "部分圖片未加入。請單獨複製圖片後再貼上。",
+    "captionLabel": "說明文字",
+    "captionAddAria": "新增說明文字",
+    "captionEditAria": "編輯說明文字",
+    "captionPlaceholder": "新增說明文字…",
+    "captionClearAria": "清除說明文字",
+    "captionHint": "按 Enter 儲存 · 按 Esc 取消"
   },
   "attachment": {
     "fallbackName": "附件",

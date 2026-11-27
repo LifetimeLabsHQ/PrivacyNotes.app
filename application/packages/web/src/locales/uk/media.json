@@ -18,7 +18,13 @@
     "viewAria": "Переглянути зображення",
     "copyAria": "Копіювати зображення",
     "copyFailed": "Не вдалося скопіювати зображення.",
-    "picturesLeftOut": "Деякі зображення не додано. Скопіюйте зображення окремо, щоб вставити його."
+    "picturesLeftOut": "Деякі зображення не додано. Скопіюйте зображення окремо, щоб вставити його.",
+    "captionLabel": "Підпис",
+    "captionAddAria": "Додати підпис",
+    "captionEditAria": "Редагувати підпис",
+    "captionPlaceholder": "Додайте підпис...",
+    "captionClearAria": "Очистити підпис",
+    "captionHint": "Enter - зберегти · Esc - скасувати"
   },
   "attachment": {
     "fallbackName": "Вкладення",

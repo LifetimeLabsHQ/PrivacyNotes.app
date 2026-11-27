@@ -49,6 +49,8 @@ const MANIFEST_URL = `${RELEASES_ORIGIN}/android/latest.json`;
 const POLICY_URL = `${RELEASES_ORIGIN}/android/update-policy.json`;
 const POLL_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6h; direct APK releases are infrequent
 const INITIAL_DELAY_MS = 20 * 1000;
+const FIRST_REPORT_RETRY_MS = 60 * 1000;
+const FETCH_TIMEOUT_MS = 30_000;
 
 type AndroidManifest = {
   version: string;
@@ -102,31 +104,43 @@ export function AndroidUpdateToast() {
 
     if (!IS_DIRECT_APK) return;
     let cancelled = false;
+    let checking = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     /** The floor, whether or not a newer APK exists, so the sync pause
      *  (versionFloor.ts) always tracks the latest published floor. Only a
      *  signed policy of this channel that names a floor changes it. */
-    async function checkFloor(): Promise<void> {
+    async function checkFloor(): Promise<boolean> {
       try {
         const fetched = await fetchPolicy(POLICY_URL, 'android');
-        if (cancelled || !fetched?.signed) return;
+        if (cancelled || !fetched?.signed) return false;
         const { minVersion } = fetched.policy;
-        if (typeof minVersion === 'string') reportVersionFloor(minVersion, fetched.issued);
+        if (typeof minVersion !== 'string') return false;
+        reportVersionFloor(minVersion, fetched.issued);
+        return true;
       } catch {
         // Offline or blocked: keep whatever versionFloor.ts already holds.
+        return false;
       }
     }
 
-    async function check(): Promise<void> {
-      if (cancelled) return;
-      lastCheckRef.current = Date.now();
-      await checkFloor();
+    async function check(): Promise<{ floorReported: boolean; manifestOk: boolean }> {
+      if (cancelled || checking) return { floorReported: false, manifestOk: false };
+      checking = true;
+      let floorReported = false;
+      let manifestOk = false;
       try {
-        const res = await fetch(`${MANIFEST_URL}?t=${Date.now()}`, { cache: 'no-store' });
-        if (cancelled || !res.ok) return;
+        floorReported = await checkFloor();
+        const signal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+          ? AbortSignal.timeout(FETCH_TIMEOUT_MS)
+          : undefined;
+        const res = await fetch(`${MANIFEST_URL}?t=${Date.now()}`, { cache: 'no-store', signal });
+        if (cancelled || !res.ok) return { floorReported, manifestOk };
         const read = (await res.json()) as Partial<AndroidManifest>;
-        if (cancelled || typeof read?.version !== 'string' || typeof read.url !== 'string' || !onReleasesHost(read.url)) return;
+        if (cancelled || typeof read?.version !== 'string' || typeof read.url !== 'string' || !onReleasesHost(read.url)) {
+          return { floorReported, manifestOk };
+        }
+        manifestOk = true;
         // Required or not goes by the floor the app holds, not the manifest.
         const m: AndroidManifest = { ...read, version: read.version, url: read.url, minVersion: knownVersionFloor() ?? undefined };
         // A store that carries this APK owns the update from here on: it
@@ -138,25 +152,43 @@ export function AndroidUpdateToast() {
         // is right either way and SyncStatus carries its explanation
         // permanently; only this toast and the rail's Downloads dot are
         // wrong, and both are skipped by returning here.
-        if (installedByStore()) return;
-        if (compareSemver(m.version, VERSION) <= 0) return;
+        if (installedByStore()) return { floorReported, manifestOk };
+        if (compareSemver(m.version, VERSION) <= 0) {
+          setUpdateAvailable(null);
+          setUpdate(null);
+          return { floorReported, manifestOk };
+        }
         // Badge the rail's Downloads button first, so the dot stays put even
         // when the toast below is snoozed away.
         setUpdateAvailable(m.version);
-        // Dismissed within the last 48h: stay quiet. Polling never stops
-        // once a toast is up either: a floor raised later in the session
-        // must still reach versionFloor.ts and turn the toast required.
-        if (!isRequired(m) && isUpdateSnoozed(m.version)) return;
+        // Dismissed within the last 48h: stay quiet, and clear any previously
+        // forced toast when a lowered floor returns a snoozed version to optional.
+        // Polling never stops once a toast is up either: a floor raised later
+        // in the session must still reach versionFloor.ts and turn the toast required.
+        if (!isRequired(m) && isUpdateSnoozed(m.version)) {
+          setUpdate(null);
+          return { floorReported, manifestOk };
+        }
         setUpdate(m);
+        return { floorReported, manifestOk };
       } catch {
         // Offline or manifest missing - ignore and try again next poll.
+        return { floorReported, manifestOk };
+      } finally {
+        if ((floorReported || knownVersionFloor() !== null) && manifestOk) {
+          lastCheckRef.current = Date.now();
+        }
+        checking = false;
       }
     }
 
-    const initial = setTimeout(function run(): void {
-      void check();
-      timer = setTimeout(run, POLL_INTERVAL_MS);
-    }, INITIAL_DELAY_MS);
+    const run = async (): Promise<void> => {
+      const { floorReported } = await check();
+      if (cancelled) return;
+      const unguarded = !floorReported && knownVersionFloor() === null;
+      timer = setTimeout(() => void run(), unguarded ? FIRST_REPORT_RETRY_MS : POLL_INTERVAL_MS);
+    };
+    const initial = setTimeout(() => void run(), INITIAL_DELAY_MS);
 
     // Android freezes the WebView's timers while the app is backgrounded, so the 6h poll
     // above drifts arbitrarily far on an app that is opened daily but never closed - the

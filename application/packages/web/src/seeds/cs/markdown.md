@@ -15,7 +15,7 @@ Může být ==zvýrazněný žlutě== nebo <mark style="background-color: rgba(6
 
 Spoiler skryje slova, dokud na ně někdo neklikne: dárek je ||gramofon||. Označ slova a v nabídce **Vložit** vyber **Spoiler**, nebo napiš dvě svislé čáry na každou stranu.
 
-Ikona nebo logo můžou stát v řádku textu, třeba :icon[gift] :icon[coffee] :icon[rocket-launch] nebo :logo[github]. Vyber si v **Vložit** > **Ikony a loga**.
+Ikona nebo logo můžou stát v řádku textu, třeba :icon[gift] :icon[coffee] :icon[rocket-launch] nebo :logo[github]. Vyber si v **Vložit** > **Ikony / loga / emoji**.
 
 Tlačítko **Aa** mění velikost a písmo. Text může být <span style="font-size: 0.85em">malý</span>, normální nebo <span style="font-size: 1.6em">velký</span>. Může být <span style="font-family: ui-sans-serif, system-ui, sans-serif">bezpatkový</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">patkový</span> nebo <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">neproporcionální</span>.
 

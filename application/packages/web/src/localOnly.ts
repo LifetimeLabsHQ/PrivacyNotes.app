@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { isDemoMode } from './demo';
 import { createListeners } from './listeners';
 import { readFlag } from './localStore';
+import { isSyncPaused, setSyncPaused, useSyncPaused } from './syncPause';
 
 /**
  * Local-only mode for offline installs (GitHub #862).
@@ -17,7 +18,8 @@ import { readFlag } from './localStore';
  *
  * Both flags have Dexie `db.kv` mirrors written alongside `PUBKEY_OWNER_KEY`,
  * so a `localStorage` eviction never misclassifies a local-only vault on cold
- * start. Kept as a tiny boot-path leaf module (imports only `db` and `demo`).
+ * start. Kept as a tiny boot-path leaf module (imports only `demo`,
+ * `listeners`, `localStore` and `syncPause`; lazy-imports `db`).
  * Spec: docs/internal/specs/local-only-862.md (sections 3, 4)
  */
 
@@ -73,6 +75,19 @@ export function isLocalOnly(): boolean {
  *  `localOnly`, and stays true after buying Pro with Sync off). */
 export function isLocalTruthOnly(): boolean {
   return !isDemoMode() && (readFlag(LOCAL_ONLY_KEY) || readFlag(NEVER_SYNCED_KEY));
+}
+
+/** True when this vault operates strictly as a local-only vault in UI and
+ *  network policy: either unregistered (`localOnly`), or locally created,
+ *  never synced, and still paused (`neverSynced && isSyncPaused()`, such as
+ *  after registering for Pro checkout with Sync kept off).
+ *  Spec: docs/internal/specs/local-only-862.md (D2, D3, D5) */
+export function isUnsyncedLocalVault(): boolean {
+  return (
+    !isDemoMode() &&
+    (readFlag(LOCAL_ONLY_KEY) ||
+      (readFlag(NEVER_SYNCED_KEY) && (isSyncPaused() || readFlag('privacynotes.syncPaused'))))
+  );
 }
 
 function writeFlag(key: string, on: boolean): void {
@@ -174,6 +189,25 @@ export async function hasLocalOnlyVault(): Promise<boolean> {
   return false;
 }
 
+/** True if this device holds an unsynced local vault for any owner (`localOnly`,
+ *  or `neverSynced` with sync paused), repairing localStorage flags from the
+ *  Dexie mirrors after eviction so cold-start LockScreen stays offline. */
+export async function hasUnsyncedLocalVault(): Promise<boolean> {
+  if (await hasLocalOnlyVault()) {
+    setSyncPaused(true);
+    return true;
+  }
+  if (isDemoMode()) return false;
+  if (readFlag(NEVER_SYNCED_KEY)) return isSyncPaused();
+  const mirror = await readMirror(NEVER_SYNCED_OWNER_KEY);
+  if (mirror !== null) {
+    setLocalOnlyFlags({ neverSynced: true });
+    setSyncPaused(true);
+    return true;
+  }
+  return false;
+}
+
 /** True if this device holds a locally-born never-synced vault for `pubkey`. */
 export async function isNeverSyncedFor(pubkey: string): Promise<boolean> {
   if (isDemoMode()) return false;
@@ -190,4 +224,12 @@ export function useLocalOnly(): boolean {
 /** Reactive `isLocalTruthOnly()` for restore, status and backup surfaces. */
 export function useLocalTruthOnly(): boolean {
   return useSyncExternalStore(subscribe, isLocalTruthOnly, () => false);
+}
+
+/** Reactive `isUnsyncedLocalVault()` for status indicators, effects and sign-out. */
+export function useUnsyncedLocalVault(): boolean {
+  const localOnly = useLocalOnly();
+  const localTruth = useLocalTruthOnly();
+  const paused = useSyncPaused();
+  return localOnly || (localTruth && paused);
 }

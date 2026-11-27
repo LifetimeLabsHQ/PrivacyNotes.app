@@ -49,7 +49,9 @@
     "biometricHelp": "透過這個瀏覽器的密碼金鑰使用 Touch ID 或 Windows Hello。PIN 碼或通行碼也一律可以使用。",
     "repeat": "再輸入一次",
     "mismatch": "兩次輸入不一致。請再試一次。",
-    "commonPin": "這個 PIN 碼太容易被猜到。請換一個。"
+    "commonPin": "這個 PIN 碼太容易被猜到。請換一個。",
+    "pinHint": "解鎖最快。輸入錯誤 10 次就會中斷連結。",
+    "passcodeHint": "8 個以上字元，更難猜到。"
   },
   "clip": {
     "selection": "選取內容",

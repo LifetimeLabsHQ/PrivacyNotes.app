@@ -1,6 +1,7 @@
 import type { LocalNote } from './db';
 import { hasCJK } from './cjkSegment';
 import { perfSpan } from './perf';
+import { effectiveNoteTags } from './inlineTags';
 import { cosine, fuseRankings, sharedTerms, termCounts, termVector, type TermVector } from './relatedCore';
 import { termsWithWords } from './search';
 import { stripToPlainText } from './notesViewUtils';
@@ -24,10 +25,10 @@ import type { NotesIndexOps } from './searchIndexSync';
  * note, never a vault entry or a contact (`isEligible` in the caller). The
  * index lives in memory only, like the search index, and is never persisted.
  *
- * Spec: docs/internal/plans/related-notes.md (section 5)
+ * Spec: docs/internal/specs/related-notes.md (section 5)
  */
 
-// Spec: docs/internal/plans/related-notes.md (section 5)
+// Spec: docs/internal/specs/related-notes.md (section 5)
 const TOP_TERMS = 25;
 const MIN_DF = 2;
 const MAX_DF_SHARE = 0.2;
@@ -57,7 +58,7 @@ function scoredText(n: Pick<LocalNote, 'title' | 'body'>): string {
  * A note as plain text, read as the list row reads it: markup, image syntax
  * and link targets add no words. The meaning index reads the same text
  * (onDeviceAiModel.ts), so a file note does not match another on its markup.
- * Spec: docs/internal/plans/related-notes.md (section 4e)
+ * Spec: docs/internal/specs/related-notes.md (section 4e)
  */
 export function plainNoteText(n: Pick<LocalNote, 'title' | 'body'>): string {
   return `${n.title}\n${n.body.split('\n').map(stripToPlainText).join('\n')}`;
@@ -68,7 +69,7 @@ export function plainNoteText(n: Pick<LocalNote, 'title' | 'body'>): string {
  * (MAX_DF_SHARE) drops them in a large library, but in a small one "for" or
  * "with" can pass it and end up in the reason line ("Buy and for"). Three
  * letters and up only: shorter terms never count (keepTerm).
- * Spec: docs/internal/plans/related-notes.md (section 9, "Not related")
+ * Spec: docs/internal/specs/related-notes.md (section 9, "Not related")
  */
 const STOP_WORDS = new Set([
   'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'any', 'can', 'had', 'her', 'was', 'one', 'our', 'out', 'has', 'him', 'his',
@@ -117,7 +118,7 @@ function dropPostings(id: string, vec: TermVector | undefined) {
 }
 
 function addTags(n: LocalNote) {
-  for (const tag of n.tags) {
+  for (const tag of effectiveNoteTags(n)) {
     const set = tagNotes.get(tag);
     if (set) set.add(n.id);
     else tagNotes.set(tag, new Set([n.id]));
@@ -171,7 +172,7 @@ export async function buildRelatedIndexSliced(notes: LocalNote[]): Promise<void>
   };
   for (const n of notes) {
     nextTfs.set(n.id, termCounts(noteTerms(n).map(([term]) => term)));
-    for (const tag of n.tags) {
+    for (const tag of effectiveNoteTags(n)) {
       const set = nextTags.get(tag);
       if (set) set.add(n.id);
       else nextTags.set(tag, new Set([n.id]));
@@ -307,11 +308,11 @@ function linkHits(
     .slice(0, PER_SIGNAL);
 }
 
-function tagHits(note: Pick<LocalNote, 'tags'>, skip: (id: string) => boolean): Ranked<RelatedReason> {
+function tagHits(note: Pick<LocalNote, 'tags' | 'body'> & Partial<Pick<LocalNote, 'type'>>, skip: (id: string) => boolean): Ranked<RelatedReason> {
   const n = tfs.size;
   if (n < MIN_NOTES) return [];
   const score = new Map<string, { score: number; best: number; tag: string }>();
-  for (const tag of note.tags) {
+  for (const tag of effectiveNoteTags(note)) {
     const holders = tagNotes.get(tag);
     if (!holders || holders.size < 2 || holders.size > Math.max(2, MAX_TAG_SHARE * n)) continue;
     const weight = Math.log(n / holders.size);

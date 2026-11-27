@@ -42,7 +42,7 @@
  */
 
 import type { ImageFormat } from './imageMetadata';
-import { MEDIA_FILE, MEDIA_PICTURE, markdownLinks, replaceMatches, type LinkMatch } from './linkScan';
+import { LINE_LINK, MEDIA_FILE, MEDIA_PICTURE, markdownLinks, replaceMatches, type LinkMatch } from './linkScan';
 import type { SpaceSaverLevel } from './userSettingsShape';
 
 // The container walkers load on the first image operation, not at boot:
@@ -496,8 +496,16 @@ export function hasMedia(body: string): boolean {
  * go first: the link pattern would otherwise take the `[...](...)` inside
  * one and leave its `!` and size suffix behind.
  */
+/** Remove empty `[](url){...}` wrappers left when a linked picture was stripped (#970).
+ *  Uses the O(n) `LINE_LINK` scanner so runs of `[](` never backtrack. */
+function stripEmptyLinkWrappers(body: string): string {
+  const empty = markdownLinks(body, { ...LINE_LINK, suffix: true, newline: true }).filter((m) => m.text === '');
+  return empty.length > 0 ? replaceMatches(body, empty, () => '') : body;
+}
+
 export function stripMediaReferences(body: string): string {
-  const pictures = replaceMatches(body, markdownLinks(body, MEDIA_PICTURE), () => '');
+  const rawPictures = replaceMatches(body, markdownLinks(body, MEDIA_PICTURE), () => '');
+  const pictures = rawPictures === body ? body : stripEmptyLinkWrappers(rawPictures);
   return replaceMatches(pictures, markdownLinks(pictures, MEDIA_FILE), () => '')
     // Clean up orphaned hard-break markers (\ on a line by itself)
     // left behind when the stripped media was preceded by a hard break.
@@ -510,7 +518,8 @@ export function stripMediaReferences(body: string): string {
  *  reference stays. Returns the body unchanged when none of them occurs. */
 export function stripMediaReferencesTo(body: string, ids: ReadonlySet<string>): string {
   const drop = (link: LinkMatch) => (ids.has(link.target.slice(link.target.indexOf('/') + 1)) ? '' : null);
-  const pictures = replaceMatches(body, markdownLinks(body, MEDIA_PICTURE), drop);
+  const rawPictures = replaceMatches(body, markdownLinks(body, MEDIA_PICTURE), drop);
+  const pictures = rawPictures === body ? body : stripEmptyLinkWrappers(rawPictures);
   const next = replaceMatches(pictures, markdownLinks(pictures, MEDIA_FILE), drop);
   if (next === body) return body;
   return next.replace(/^\\\s*$/gm, '').replace(/\n{3,}/g, '\n\n').trim();

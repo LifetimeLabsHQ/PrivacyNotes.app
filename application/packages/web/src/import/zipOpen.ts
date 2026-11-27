@@ -17,8 +17,8 @@
  * sentence and keeps jszip's text as its detail.
  *
  * Every zip it opens carries one `ImportBudget` (zipEntry.ts) across all its
- * entries, and a zip whose end record lists more than `IMPORT_ENTRY_LIMIT`
- * entries is refused before jszip builds an object for each (beta #155
+ * entries, validates a contiguous EOCD and ZIP64 footer, and counts central
+ * directory records before jszip builds an object for each (beta #155
  * part 2).
  *
  * Limits of the split read: entries go in offset order, which is the central
@@ -28,7 +28,7 @@
  */
 
 import JSZip from 'jszip';
-import { budgetZip, ImportBudget, ImportFileError, ImportTooLargeError, refuseEntryCount } from './zipEntry';
+import { budgetZip, IMPORT_ENTRY_LIMIT, ImportBudget, ImportFileError, ImportTooLargeError } from './zipEntry';
 
 /** jszip reads an offset as a signed 32-bit number, so this is the first offset it gets wrong. */
 const SIGNED_LIMIT = 2 ** 31;
@@ -52,10 +52,23 @@ type CentralRecord = { bytes: Uint8Array; offset: number };
 export async function openZip(input: Source, budget = new ImportBudget()): Promise<JSZip> {
   try {
     const size = input instanceof Blob ? input.size : input.byteLength;
-    // An end record this read cannot find is left to jszip, whose own error
-    // the person then sees; the count is checked again once it has loaded.
-    refuseEntryCount(await readEndRecord(reader(input), size).then((end) => end.count, () => 0));
-    return budgetZip(size < SIGNED_LIMIT ? await JSZip.loadAsync(input) : await openZipInParts(input, PART_BYTES), budget);
+    const read = reader(input);
+    // Validate the footer and count central-directory records before jszip allocates an entry per header.
+    const end = await readEndRecord(read, size);
+    let endCount = end.count;
+    budget.spendEntries(endCount);
+    if (end.centralSize > 0) {
+      const records = await countCentralRecords(read, end.scanStart, end.scanEnd);
+      if (records > endCount) {
+        budget.spendEntries(records - endCount);
+        endCount = records;
+      }
+    }
+    return budgetZip(
+      size < SIGNED_LIMIT ? await JSZip.loadAsync(input) : await openZipInParts(input, PART_BYTES),
+      budget,
+      endCount,
+    );
   } catch (err) {
     if (err instanceof ImportTooLargeError || err instanceof ImportFileError) throw err;
     throw new ImportFileError(err);
@@ -108,39 +121,88 @@ function u64(v: DataView, at: number): number {
   return Number(n);
 }
 
-/** The end record's entry count and central directory, ZIP64 included. */
-async function readEndRecord(read: Read, size: number): Promise<{ count: number; centralSize: number; centralStart: number }> {
+type EndRecord = {
+  count: number;
+  centralSize: number;
+  centralStart: number;
+  scanStart: number;
+  scanEnd: number;
+};
+
+/** The end record's entry count and validated central-directory range, ZIP64 included. */
+async function readEndRecord(read: Read, size: number): Promise<EndRecord> {
   const tailStart = Math.max(0, size - 22 - MAX16 - 20);
   const tail = await read(tailStart, size);
   const tv = view(tail);
   let at = -1;
-  for (let i = tail.length - 22; i >= 0; i--) {
+  for (let i = tail.length - 4; i >= 0; i--) {
     if (tv.getUint32(i, true) === EOCD) {
       at = i;
       break;
     }
   }
-  if (at < 0) throw broken('no end of central directory');
+  if (at < 0 || at + 22 > tail.length) throw broken('no end of central directory');
+  if (at + 22 + tv.getUint16(at + 20, true) > tail.length) throw broken('end of central directory out of range');
+  const eocdOffset = tailStart + at;
+  const disk = tv.getUint16(at + 4, true);
+  const centralDisk = tv.getUint16(at + 6, true);
+  const diskCount = tv.getUint16(at + 8, true);
   let count = tv.getUint16(at + 10, true);
   let centralSize = tv.getUint32(at + 12, true);
   let centralStart = tv.getUint32(at + 16, true);
-  if (count === MAX16 || centralSize === MAX32 || centralStart === MAX32) {
+  let scanEnd = eocdOffset;
+  if (
+    disk === MAX16 ||
+    centralDisk === MAX16 ||
+    diskCount === MAX16 ||
+    count === MAX16 ||
+    centralSize === MAX32 ||
+    centralStart === MAX32
+  ) {
     const loc = at - 20;
     if (loc < 0 || tv.getUint32(loc, true) !== ZIP64_LOCATOR) throw broken('no ZIP64 locator');
+    for (let i = tail.length - 4; i > loc; i--) {
+      if (tv.getUint32(i, true) === ZIP64_LOCATOR) throw broken('unexpected ZIP64 locator');
+    }
+    if (tv.getUint32(loc + 16, true) > 1) throw broken('multi-volume zip is not supported');
     const recordAt = u64(tv, loc + 8);
     if (recordAt + 56 > size) throw broken('ZIP64 end record out of range');
     const rv = view(await read(recordAt, recordAt + 56));
     if (rv.getUint32(0, true) !== ZIP64_EOCD) throw broken('no ZIP64 end record');
+    const zip64Size = u64(rv, 4);
+    if (zip64Size !== 44 || recordAt + 12 + zip64Size !== tailStart + loc) {
+      throw broken('ZIP64 end record out of range');
+    }
     count = u64(rv, 32);
     centralSize = u64(rv, 40);
     centralStart = u64(rv, 48);
+    scanEnd = recordAt;
   }
-  return { count, centralSize, centralStart };
+  if (centralSize > CENTRAL_DIRECTORY_LIMIT || centralSize > scanEnd || centralStart > scanEnd - centralSize) {
+    throw broken('central directory out of range');
+  }
+  return { count, centralSize, centralStart, scanStart: scanEnd - centralSize, scanEnd };
+}
+
+/** Count central-directory records in `[start, end)` so a forged low EOCD count cannot hide extra records from the budget. */
+async function countCentralRecords(read: Read, start: number, end: number): Promise<number> {
+  const central = await read(start, end);
+  const cv = view(central);
+  let records = 0;
+  let p = 0;
+  while (p + 4 <= central.length && cv.getUint32(p, true) === CENTRAL_RECORD) {
+    if (p + 46 > central.length) throw broken('central directory record out of range');
+    const step = 46 + cv.getUint16(p + 28, true) + cv.getUint16(p + 30, true) + cv.getUint16(p + 32, true);
+    if (p + step > central.length) throw broken('central directory record out of range');
+    records++;
+    if (records > IMPORT_ENTRY_LIMIT) return records;
+    p += step;
+  }
+  return records;
 }
 
 async function readCentralDirectory(read: Read, size: number): Promise<{ records: CentralRecord[]; centralStart: number }> {
   const { count, centralSize, centralStart } = await readEndRecord(read, size);
-  if (centralSize > CENTRAL_DIRECTORY_LIMIT || centralStart + centralSize > size) throw broken('central directory out of range');
 
   const central = await read(centralStart, centralStart + centralSize);
   const cv = view(central);

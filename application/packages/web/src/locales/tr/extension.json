@@ -49,7 +49,9 @@
     "biometricHelp": "Bu tarayıcı için bir geçiş anahtarı aracılığıyla Touch ID veya Windows Hello. PIN veya geçiş kodu da her zaman çalışır.",
     "repeat": "Tekrar girin",
     "mismatch": "İkisi eşleşmiyor. Tekrar deneyin.",
-    "commonPin": "Bu PIN'in tahmin edilmesi çok kolay. Başka bir tane seçin."
+    "commonPin": "Bu PIN'in tahmin edilmesi çok kolay. Başka bir tane seçin.",
+    "pinHint": "Kilidi en hızlı açılan. 10 yanlış deneme bağlantıyı keser.",
+    "passcodeHint": "8+ karakter, tahmin edilmesi daha zor."
   },
   "clip": {
     "selection": "Seçim",

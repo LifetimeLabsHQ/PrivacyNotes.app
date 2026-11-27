@@ -162,7 +162,7 @@ export function useItemList(resetKey: readonly unknown[], total: number, place: 
  * The list element: a `ul` of `li` items, or a `div` for the Files pane,
  * whose items are buttons. It scrolls, and in grid mode it is the grid.
  */
-export function ItemList({ list, grid, pullToSync = false, as: Root = 'ul', className = '', style, onMouseDown, children }: {
+export function ItemList({ list, grid, pullToSync = false, as: Root = 'ul', className = '', style, onMouseDown, onContextMenu, children }: {
   list: ItemListState;
   grid: boolean;
   /** Enable pull-down-to-sync on touch devices above this list. */
@@ -172,6 +172,7 @@ export function ItemList({ list, grid, pullToSync = false, as: Root = 'ul', clas
   /** A pane that lays out its own grid (Home) sets it here. */
   style?: React.CSSProperties;
   onMouseDown?: (e: React.MouseEvent) => void;
+  onContextMenu?: (e: React.MouseEvent) => void;
   children: ReactNode;
 }) {
   const pull = usePullToSync(list.ref, pullToSync);
@@ -180,6 +181,7 @@ export function ItemList({ list, grid, pullToSync = false, as: Root = 'ul', clas
       ref={list.ref as React.RefObject<HTMLUListElement & HTMLDivElement>}
       onScroll={(e) => list.onScroll(e.currentTarget)}
       onMouseDown={onMouseDown}
+      onContextMenu={onContextMenu}
       style={style}
       className={`flex-1 overflow-y-auto ${pullToSync ? 'overscroll-y-contain ' : ''}list-none m-0 ${grid ? GRID_CLASS : 'p-0'} ${className}`.trim()}
     >

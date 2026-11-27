@@ -11,17 +11,18 @@ import { useTranslation } from 'react-i18next';
 import { Fingerprint, FloppyDisk } from '@web/icons';
 import { Button } from '@web/ui/Button';
 import { Callout } from '@web/ui/feedback';
-import { SectionEyebrow, SettingsSegmented, SETTINGS_HELP } from '@web/settingsUI';
+import { SectionEyebrow, SETTINGS_HELP } from '@web/settingsUI';
 import { SecretInput } from '@web/PasscodeInput';
 import type { PinInputHandle } from '@web/PinInput';
-import { isCommonPin, PASSCODE_MIN_CHARS } from '@web/secretKind';
+import { isCommonPin, isValidPasscode } from '@web/secretKind';
 import type { Connection, SecretKind } from '../../src/connection';
 import { biometricPossible, biometricReady, startEnrollment } from '../../src/biometric';
 import { changeSecret } from '../../src/changeSecret';
 import { SaveButton } from './SaveButton';
+import { PasscodeRequirements, SecretKindCards } from './SecretSetup';
 import { SheetHeader } from './Sheet';
 
-const full = (kind: SecretKind, value: string) => (kind === 'pin' ? /^\d{4}$/.test(value) : value.length >= PASSCODE_MIN_CHARS);
+const full = (kind: SecretKind, value: string) => (kind === 'pin' ? /^\d{4}$/.test(value) : isValidPasscode(value));
 
 export function ChangeSecretView({ connection, onBack, onChanged }: {
   connection: Connection;
@@ -106,12 +107,12 @@ export function ChangeSecretView({ connection, onBack, onChanged }: {
           ) : proof.current ? (
             <>
               <p className={SETTINGS_HELP}>{t('changeSecret.biometricAgain')}</p>
-              <Button icon={<Fingerprint aria-hidden="true" />} onClick={() => void enroll()} disabled={enrolled === 'busy'} className="w-full">
+              <Button icon={<Fingerprint aria-hidden="true" />} onClick={() => void enroll()} disabled={enrolled === 'busy'} className="w-full bg-surface-2 shadow-xs">
                 {t('logins.useBiometric')}
               </Button>
             </>
           ) : null}
-          <Button action="done" onClick={() => onChanged(done)} className="w-full" />
+          <Button action="done" onClick={() => onChanged(done)} className="w-full bg-surface-2 shadow-xs" />
         </div>
       </>
     );
@@ -120,48 +121,47 @@ export function ChangeSecretView({ connection, onBack, onChanged }: {
   return (
     <>
       <SheetHeader title={title} onBack={onBack} />
-      <div className="p-3 space-y-3">
-        <div className="space-y-1.5">
-          <SectionEyebrow className="text-center">{pinWords(was, 'security:pinTab.currentPin', 'security:pinTab.currentPasscode')}</SectionEyebrow>
-          <SecretInput kind={was} value={current} onChange={setCurrent} onComplete={() => newRef.current?.focus()} ariaLabel={pinWords(was, 'security:pinTab.currentPin', 'security:pinTab.currentPasscode')} autoFocus disabled={busy} fill />
-        </div>
-        <SettingsSegmented<SecretKind>
-          label={t('security:pinTab.kindGroup')}
-          className="w-full [&>button]:flex-1"
-          value={kind}
-          onChange={(k) => {
-            setKind(k);
-            setFirst('');
-            setSecond('');
-            requestAnimationFrame(() => newRef.current?.focus());
-          }}
-          options={[
-            { value: 'pin', label: t('security:pinTab.kindPin') },
-            { value: 'passcode', label: t('security:pinTab.kindPasscode') },
-          ]}
-        />
-        <div className="space-y-1.5">
-          <SectionEyebrow className="text-center">{pinWords(kind, 'security:pinTab.newPin', 'security:pinTab.newPasscode')}</SectionEyebrow>
-          <SecretInput ref={newRef} kind={kind} value={first} onChange={setFirst} onComplete={() => repeatRef.current?.focus()} ariaLabel={pinWords(kind, 'security:pinTab.newPin', 'security:pinTab.newPasscode')} disabled={busy} fill />
-        </div>
-        {full(kind, first) && (
+      <div className="p-3">
+        <div className="rounded-lg border border-divider bg-surface-2 p-3.5 shadow-xs space-y-3">
           <div className="space-y-1.5">
-            <SectionEyebrow className="text-center">{t('protect.repeat')}</SectionEyebrow>
-            <SecretInput ref={repeatRef} kind={kind} value={second} onChange={setSecond} onComplete={(v) => void save(v)} ariaLabel={t('protect.repeat')} autoFocus={kind === 'pin'} disabled={busy} fill />
+            <SectionEyebrow className="text-center">{pinWords(was, 'security:pinTab.currentPin', 'security:pinTab.currentPasscode')}</SectionEyebrow>
+            <SecretInput kind={was} value={current} onChange={setCurrent} onComplete={() => newRef.current?.focus()} ariaLabel={pinWords(was, 'security:pinTab.currentPin', 'security:pinTab.currentPasscode')} autoFocus disabled={busy} fill />
           </div>
-        )}
-        {error && <Callout look="card" tone={error.tone}>{error.text}</Callout>}
-        <SaveButton
-          variant="primary"
-          state={busy ? 'busy' : 'idle'}
-          disabled={!ready || second.length === 0}
-          icon={<FloppyDisk aria-hidden="true" />}
-          label={t('common:actions.save')}
-          busyLabel={t('common:state.saving')}
-          doneLabel={t('shell:checkIn.saved')}
-          onClick={() => void save()}
-          className="w-full"
-        />
+          <SecretKindCards
+            value={kind}
+            disabled={busy}
+            onChange={(k) => {
+              setKind(k);
+              setFirst('');
+              setSecond('');
+              setError(null);
+              requestAnimationFrame(() => newRef.current?.focus());
+            }}
+          />
+          <div className="space-y-1.5">
+            <SectionEyebrow className={kind === 'pin' ? 'text-center' : ''}>{pinWords(kind, 'security:pinTab.newPin', 'security:pinTab.newPasscode')}</SectionEyebrow>
+            <SecretInput ref={newRef} kind={kind} value={first} onChange={setFirst} onComplete={() => repeatRef.current?.focus()} ariaLabel={pinWords(kind, 'security:pinTab.newPin', 'security:pinTab.newPasscode')} disabled={busy} compact={kind === 'passcode'} fill />
+            {kind === 'passcode' && <PasscodeRequirements value={first} />}
+          </div>
+          {(kind === 'passcode' || full(kind, first)) && (
+            <div className="space-y-1.5">
+              <SectionEyebrow className={kind === 'pin' ? 'text-center' : ''}>{pinWords(kind, 'security:pinTab.confirmPin', 'security:pinTab.confirmPasscode')}</SectionEyebrow>
+              <SecretInput ref={repeatRef} kind={kind} value={second} onChange={setSecond} onComplete={(v) => void save(v)} ariaLabel={pinWords(kind, 'security:pinTab.confirmPin', 'security:pinTab.confirmPasscode')} autoFocus={kind === 'pin'} disabled={busy} compact={kind === 'passcode'} fill />
+            </div>
+          )}
+          {error && <Callout look="card" tone={error.tone}>{error.text}</Callout>}
+          <SaveButton
+            variant="primary"
+            state={busy ? 'busy' : 'idle'}
+            disabled={!ready || second.length === 0}
+            icon={<FloppyDisk aria-hidden="true" />}
+            label={t('common:actions.save')}
+            busyLabel={t('common:state.saving')}
+            doneLabel={t('shell:checkIn.saved')}
+            onClick={() => void save()}
+            className="w-full"
+          />
+        </div>
       </div>
     </>
   );

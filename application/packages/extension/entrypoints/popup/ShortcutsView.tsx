@@ -46,7 +46,7 @@ export function ShortcutsView() {
   const keys = useShortcuts();
   return (
     <div className="p-3 space-y-3">
-      <div>
+      <div className="rounded-lg border border-divider bg-surface-2 px-3 shadow-xs">
         {SHORTCUT_COMMANDS.map((c) => (
           <Row key={c} label={t(LABELS[c])}>
             {keys[c] ? <Kbd>{keys[c]}</Kbd> : <span className="text-meta text-pn-muted">{t('shortcuts.notSet')}</span>}

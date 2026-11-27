@@ -39,8 +39,10 @@ export function OAuthRetryScreen({ trust }: { trust: boolean }) {
   };
 
   return (
-    <div className="min-h-dvh flex items-center justify-center p-4">
-      <div className="bg-surface-2 border border-divider text-pn rounded-lg max-w-md w-full p-6 space-y-5 text-center">
+    <div
+      className="h-dvh overflow-y-auto overflow-x-hidden flex flex-col pt-[calc(var(--pn-safe-top)+1rem)] pb-[calc(var(--pn-safe-bottom)+1rem)] pl-[calc(var(--pn-safe-left,0px)+1rem)] pr-[calc(var(--pn-safe-right,0px)+1rem)]" /* rtl-ok: physical hardware safe-area insets */
+    >
+      <div className="m-auto shrink-0 bg-surface-2 border border-divider text-pn rounded-lg max-w-md w-full p-6 space-y-5 text-center">
         <div className="flex justify-center">
           <LogoIcon size={40} />
         </div>

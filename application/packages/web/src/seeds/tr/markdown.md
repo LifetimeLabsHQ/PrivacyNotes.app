@@ -15,7 +15,7 @@ Metin <span style="color: #e03131">kırmızı</span>, <span style="color: #1971c
 
 Sürprizbozan, biri tıklayana kadar kelimeleri gizler: hediye ||bir pikap||. Kelimeleri seçin ve **Ekle** menüsünde **Sürprizbozan** öğesini seçin ya da her iki yana iki dikey çizgi yazın.
 
-Bir simge ya da logo metin satırının içinde durabilir, örneğin :icon[gift] :icon[coffee] :icon[rocket-launch] veya :logo[github]. **Ekle** > **Simgeler ve logolar** altından birini seçin.
+Bir simge ya da logo metin satırının içinde durabilir, örneğin :icon[gift] :icon[coffee] :icon[rocket-launch] veya :logo[github]. **Ekle** > **Simgeler / logolar / emojiler** altından birini seçin.
 
 **Aa** düğmesi boyutu ve yazı tipini değiştirir. Metin <span style="font-size: 0.85em">küçük</span>, normal ya da <span style="font-size: 1.6em">büyük</span> olabilir. <span style="font-family: ui-sans-serif, system-ui, sans-serif">Düz</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">tırnaklı</span> ya da <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">eş aralıklı</span> olabilir.
 

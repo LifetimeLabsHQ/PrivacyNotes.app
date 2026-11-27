@@ -9,7 +9,7 @@
  * rare it is across all texts: (1 + ln tf) * ln(N / df). Rare shared words such
  * as "Cappadocia" carry the score; words every text uses carry almost none.
  *
- * Spec: docs/internal/plans/related-notes.md (section 5)
+ * Spec: docs/internal/specs/related-notes.md (section 5)
  */
 
 /** A term to its weight, scaled to unit length. */

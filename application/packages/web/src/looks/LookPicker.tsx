@@ -24,10 +24,10 @@
  * query, the icons the folders and tags already wear lead as one row.
  * Spec: docs/internal/specs/folder-tag-icons.md (section 6)
  */
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type UIEvent } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent, type UIEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import { AppWindow, ArrowCounterClockwise, File, Folder, Globe, Hash, Heartbeat, Palette, Shapes, Star } from '../icons';
+import { AppWindow, ArrowCounterClockwise, Check, File, Folder, Globe, Hash, Heartbeat, Image, Palette, Shapes, Star, Trash, Upload, X } from '../icons';
 import { keepTabInside, useWindowFocus } from '../ui/Modal';
 import { ColorSwatchRow } from '../ColorSwatch';
 import { useEscapeToClose } from '../useEscapeToClose';
@@ -44,8 +44,18 @@ import {
   type LookColor,
   type NoteColorChoice,
 } from '../itemStyles';
-import { inkStyle, PathGlyph } from './LookGlyph';
+import { inkStyle, LooksContext, PathGlyph } from './LookGlyph';
 import { NoteColorExample } from './NoteColorExample';
+import {
+  CUSTOM_ICON_MAX,
+  customIconDataUrl,
+  customIconLookId,
+  deleteCustomIcon,
+  isCustomIconId,
+  liveCustomIcons,
+  newCustomIconId,
+  saveCustomIcon,
+} from '../customIcons';
 import { emojiChar, isEmojiId, isLogoId, preloadLookEmojis, preloadLookLogos, useLogoIndex, useLogoPaths, useLookEmojis, useLookIcons, useLookLogos, useLookPaths } from './lookIconsLoader';
 import { recentLookIcons, searchLookIcons } from './lookIconSearch';
 import i18n, { activeLocale, ensureLooksLoaded } from '../i18n';
@@ -160,11 +170,21 @@ export function LookPicker({
   const bodyRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { customIcons = {}, onCustomIconsChange } = useContext(LooksContext);
   const iconOnly = target.kind === 'note' || target.kind === 'tracker' || target.kind === 'insert';
-  const [tab, setTab] = useState<'icon' | 'logo' | 'emoji' | 'color'>(() => {
+  const showCustomTab = target.kind !== 'insert' && !!onCustomIconsChange;
+  const [tab, setTab] = useState<'icon' | 'logo' | 'emoji' | 'custom' | 'color'>(() => {
     const current = lookOf(styles, target.lookKey).icon;
+    if (showCustomTab && isCustomIconId(current)) return 'custom';
     return isEmojiId(current) ? 'emoji' : isLogoId(current) ? 'logo' : 'icon';
   });
+  const [customBusy, setCustomBusy] = useState(false);
+  const [customError, setCustomError] = useState<string | null>(null);
+  const [customRemoveMode, setCustomRemoveMode] = useState(false);
+  const [customDragOver, setCustomDragOver] = useState(false);
+  const customList = useMemo(() => liveCustomIcons(customIcons), [customIcons]);
+  const atCustomCap = customList.length >= CUSTOM_ICON_MAX;
   const logoCatalog = useLookLogos(tab === 'logo');
   const emojiCatalog = useLookEmojis(tab === 'emoji');
   // The A to Z list of every other logo starts once the curated groups are
@@ -247,10 +267,70 @@ export function LookPicker({
   // Straight into the search field where a keyboard is already out; a phone
   // would otherwise raise its keyboard over the icons on open.
   useEffect(() => {
-    if (tab !== 'color' && !isSoftKeyboardDevice()) searchRef.current?.focus({ preventScroll: true });
+    if (tab !== 'color' && tab !== 'custom' && !isSoftKeyboardDevice()) searchRef.current?.focus({ preventScroll: true });
+    if (tab !== 'custom') setCustomRemoveMode(false);
   }, [tab]);
 
+  async function handleCustomFiles(files: FileList | File[] | null) {
+    if (!files || files.length === 0 || !onCustomIconsChange) return;
+    const remaining = CUSTOM_ICON_MAX - customList.length;
+    if (remaining <= 0) {
+      setCustomError(t('customLimit', { max: CUSTOM_ICON_MAX }));
+      return;
+    }
+    setCustomBusy(true);
+    setCustomError(null);
+    try {
+      const { processCustomIcon, CustomIconError } = await import('./customIconProcess');
+      const batch = [...files].slice(0, remaining);
+      const added: { id: string; dataUrl: string }[] = [];
+      let lastError: string | null = null;
+      for (const file of batch) {
+        try {
+          const dataUrl = await processCustomIcon(file);
+          added.push({ id: newCustomIconId(), dataUrl });
+        } catch (err) {
+          const code = err instanceof CustomIconError ? err.code : 'decodeFailed';
+          lastError =
+            code === 'unsupported'
+              ? t('customErrorUnsupported')
+              : code === 'tooLarge'
+                ? t('customErrorTooLarge')
+                : t('customErrorDecode');
+        }
+      }
+      if (added.length > 0) {
+        onCustomIconsChange((prev) => {
+          let next = prev;
+          for (const item of added) next = saveCustomIcon(next, item.id, item.dataUrl);
+          return next;
+        });
+        onPick({ icon: customIconLookId(added[0]!.id) });
+      }
+      if (lastError) setCustomError(lastError);
+    } finally {
+      setCustomBusy(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
+
+  function handleRemoveCustom(id: string) {
+    if (!onCustomIconsChange) return;
+    onCustomIconsChange((prev) => deleteCustomIcon(prev, id));
+    const removedLookId = customIconLookId(id);
+    if (look.icon === removedLookId) onPick({ icon: null });
+    if (hoverIcon === removedLookId) setHoverIcon(null);
+    if (customList.length <= 1) setCustomRemoveMode(false);
+  }
+
+  function onCustomDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setCustomDragOver(false);
+    if (!atCustomCap && !customBusy) void handleCustomFiles(e.dataTransfer.files);
+  }
+
   function iconName(id: string): string {
+    if (isCustomIconId(id)) return t('customIcon');
     if (isEmojiId(id)) {
       const idx = emojiCatalog?.LOOK_EMOJI_INDEX.get(id);
       if (idx !== undefined) {
@@ -345,10 +425,14 @@ export function LookPicker({
       targetEl?.scrollIntoView({ block: 'start' });
     });
   }
-  const pathsOf = (id: string) => emojiChar(id) ?? (isLogoId(id) ? logoPaths(id) : catalog?.LOOK_ICONS[id]);
+  const pathsOf = (id: string) => {
+    const customUrl = customIconDataUrl(customIcons, id);
+    if (customUrl) return { img: customUrl };
+    return emojiChar(id) ?? (isLogoId(id) ? logoPaths(id) : catalog?.LOOK_ICONS[id]);
+  };
 
   const previewIcon = hoverIcon ?? look.icon;
-  const previewPaths = useLookPaths(previewIcon);
+  const previewPaths = useLookPaths(previewIcon, customIcons);
   const DefaultGlyph = target.kind === 'folder' ? Folder : target.kind === 'note' ? File : target.kind === 'tracker' ? Heartbeat : target.kind === 'insert' ? Shapes : target.kind === 'calendar' ? Globe : target.favorite ? Star : Hash;
   const caption = hoverIcon
     ? iconName(hoverIcon)
@@ -442,19 +526,19 @@ export function LookPicker({
   const header = (
     <div className="flex items-center gap-3">
       <span
-        className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border border-divider bg-surface-2"
+        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-divider bg-surface-2"
         style={ownColor ? { background: `var(--pn-label-${ownColor}-tint)` } : undefined}
       >
         {previewPaths ? (
           <PathGlyph
             paths={previewPaths}
-            size={20}
+            size={24}
             className={ownColor ? undefined : 'text-label'}
             style={inkStyle(ownColor)}
           />
         ) : (
           <DefaultGlyph
-            size={20}
+            size={24}
             weight={target.kind === 'tag' && target.favorite ? 'fill' : undefined}
             className={ownColor ? undefined : 'text-label'}
             style={inkStyle(ownColor)}
@@ -474,7 +558,7 @@ export function LookPicker({
         disabled={!resettable}
         className="shrink-0 inline-flex items-center gap-1 text-small font-medium px-2 py-1 rounded-md text-accent hover:bg-accent/10 disabled:opacity-40 disabled:hover:bg-transparent transition"
       >
-        <ArrowCounterClockwise size={13} aria-hidden="true" />
+        <ArrowCounterClockwise aria-hidden="true" />
         {t('useDefault')}
       </button>}
       <CloseButton onClick={onClose} className="shrink-0" />
@@ -510,11 +594,32 @@ export function LookPicker({
     </div>
   );
 
+  const tabIds: readonly ('icon' | 'logo' | 'emoji' | 'custom' | 'color')[] = iconOnly
+    ? showCustomTab
+      ? ['icon', 'logo', 'emoji', 'custom']
+      : ['icon', 'logo', 'emoji']
+    : showCustomTab
+      ? ['icon', 'logo', 'emoji', 'custom', 'color']
+      : ['icon', 'logo', 'emoji', 'color'];
+
   const tabs = (
     <SettingsTabStrip role="tablist" aria-label={tShell('looks.menu')} className="mt-3">
-      {(iconOnly ? (['icon', 'logo', 'emoji'] as const) : (['icon', 'logo', 'emoji', 'color'] as const)).map((id) => {
-        const TabGlyph = id === 'icon' ? Shapes : id === 'logo' ? AppWindow : id === 'color' ? Palette : null;
+      {tabIds.map((id) => {
+        const TabGlyph =
+          id === 'icon'
+            ? Shapes
+            : id === 'logo'
+              ? AppWindow
+              : id === 'custom'
+                ? Image
+                : id === 'color'
+                  ? Palette
+                  : null;
         const preload = id === 'logo' ? preloadLookLogos : id === 'emoji' ? preloadLookEmojis : undefined;
+        const label =
+          id === 'logo'
+            ? tSettings('appearance.custom.logoTitle')
+            : t(id);
         return (
           <button
             key={id}
@@ -528,7 +633,7 @@ export function LookPicker({
             className={settingsTabClass(tab === id)}
           >
             {TabGlyph ? <TabGlyph size={16} aria-hidden="true" /> : <PathGlyph paths={EMOJI_TAB_PATHS} size={16} />}
-            <span>{id === 'logo' ? tSettings('appearance.custom.logoTitle') : t(id)}</span>
+            <span>{label}</span>
           </button>
         );
       })}
@@ -620,13 +725,13 @@ export function LookPicker({
         onPointerLeave={() => setHoverIcon(null)}
         onFocus={() => setHoverIcon(id)}
         onBlur={() => setHoverIcon(null)}
-        className={`h-9 [@media(hover:none)]:h-11 rounded-md flex items-center justify-center transition ${
+        className={`h-10 [@media(hover:none)]:h-11 rounded-md flex items-center justify-center transition ${
           pressed
             ? 'bg-accent/15 text-accent-strong ring-1 ring-inset ring-accent'
             : 'text-pn-soft hover:bg-pn/5'
         }`}
       >
-        <PathGlyph paths={pathsOf(id) ?? []} size={20} />
+        <PathGlyph paths={pathsOf(id) ?? []} size={24} />
       </button>
     );
   }
@@ -699,16 +804,129 @@ export function LookPicker({
     </div>
   );
 
+  const customGrid = `grid gap-2.5 ${isSheet ? 'grid-cols-[repeat(auto-fill,minmax(48px,1fr))]' : 'grid-cols-8'}`;
+  const customSection = (
+    <div
+      className="mt-3"
+      onDragOver={(e) => {
+        e.preventDefault();
+        if (!atCustomCap && !customBusy) setCustomDragOver(true);
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget === e.target) setCustomDragOver(false);
+      }}
+      onDrop={onCustomDrop}
+    >
+      <label
+        className={`flex items-center gap-3 rounded-lg border border-dashed px-3.5 py-3 transition ${
+          customBusy || atCustomCap
+            ? 'border-divider/60 bg-surface-2/40 opacity-60 cursor-not-allowed'
+            : customDragOver
+              ? 'border-accent bg-accent/10 cursor-pointer'
+              : 'border-divider bg-surface-2/60 hover:border-accent/60 hover:bg-surface-2 cursor-pointer focus-within:ring-2 focus-within:ring-accent/40'
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif,image/bmp,image/svg+xml,image/x-icon,image/vnd.microsoft.icon,.png,.jpg,.jpeg,.webp,.gif,.bmp,.svg,.ico"
+          multiple
+          disabled={customBusy || atCustomCap}
+          className="sr-only"
+          onChange={(e) => void handleCustomFiles(e.target.files)}
+        />
+        <span className="w-9 h-9 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0" aria-hidden="true">
+          <Upload size={18} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-body font-semibold text-pn truncate">{t('uploadDropTitle')}</span>
+          <span className="block text-meta text-pn-muted">{t('customHint')}</span>
+        </span>
+        <span className="shrink-0 text-small text-pn-muted tabular-nums">
+          {customList.length} / {CUSTOM_ICON_MAX}
+        </span>
+      </label>
+      {customError && (
+        <p role="alert" className="mt-2 text-small text-danger">
+          {customError}
+        </p>
+      )}
+      {atCustomCap && (
+        <p className="mt-2 text-small text-pn-muted">
+          {t('customLimit', { max: CUSTOM_ICON_MAX })}
+        </p>
+      )}
+      {customList.length > 0 && (
+        <section className="mt-3.5">
+          <div className="mb-2.5 flex items-center gap-2">
+            <h3 className={`shrink-0 ${SETTINGS_HELP}`}>{t('customYourIcons')}</h3>
+            <HeadlineRule />
+            <Button
+              icon={customRemoveMode ? <Check aria-hidden="true" /> : <Trash aria-hidden="true" />}
+              onClick={() => setCustomRemoveMode((v) => !v)}
+            >
+              {customRemoveMode ? tCommon('actions.done') : tCommon('actions.remove')}
+            </Button>
+          </div>
+          <div
+            ref={gridRef}
+            role="group"
+            aria-label={t('custom')}
+            onKeyDown={onGridKeyDown}
+            className={customGrid}
+          >
+            {customList.map((item) => {
+              const pressed = look.icon === item.lookId;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  data-look-icon
+                  aria-label={customRemoveMode ? t('customRemoveAria') : t('customIcon')}
+                  aria-pressed={!customRemoveMode && pressed}
+                  onClick={() => (customRemoveMode ? handleRemoveCustom(item.id) : onPick({ icon: item.lookId }))}
+                  onPointerEnter={(e) => e.pointerType === 'mouse' && setHoverIcon(item.lookId)}
+                  onPointerLeave={() => setHoverIcon(null)}
+                  onFocus={() => setHoverIcon(item.lookId)}
+                  onBlur={() => setHoverIcon(null)}
+                  className={`group relative w-full h-11 rounded-lg border flex items-center justify-center cursor-pointer transition ${
+                    customRemoveMode
+                      ? 'border-danger/50 bg-danger/5 hover:border-danger hover:bg-danger/15 active:scale-95'
+                      : pressed
+                        ? 'bg-accent/15 border-accent text-accent-strong ring-1 ring-inset ring-accent'
+                        : 'border-divider/80 bg-surface-2 hover:border-accent/50 hover:bg-pn/5'
+                  }`}
+                >
+                  <span className={customRemoveMode ? 'transition-opacity group-hover:opacity-70' : undefined}>
+                    <PathGlyph paths={{ img: item.dataUrl }} size={24} />
+                  </span>
+                  {customRemoveMode && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full bg-danger text-white flex items-center justify-center shadow-sm transition-transform group-hover:scale-110"
+                    >
+                      <X size={11} weight="bold" />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+
   const dialogLabel = iconOnly ? t('icon') : tShell('looks.menu');
   const top = (
     <>
       {header}
       {tabs}
-      {tab !== 'color' && searchField}
+      {tab !== 'color' && tab !== 'custom' && searchField}
       {emojiGroupBar}
     </>
   );
-  const body = tab === 'color' ? colorSection : grid;
+  const body = tab === 'color' ? colorSection : tab === 'custom' ? customSection : grid;
 
   if (isSheet) {
     return createPortal(
@@ -755,7 +973,7 @@ export function LookPicker({
         aria-label={dialogLabel}
         tabIndex={-1}
         onKeyDown={(e) => keepTabInside(e, panelRef.current)}
-        className="w-[440px] max-w-full h-[min(640px,calc(100dvh-32px))] flex flex-col bg-surface-1 border border-divider rounded-xl shadow-xl pb-3 outline-none"
+        className="w-[540px] max-w-[calc(100vw-32px)] h-[min(640px,calc(100dvh-32px))] flex flex-col bg-surface-1 border border-divider rounded-xl shadow-xl pb-3 outline-none"
       >
         <div className="px-4 pt-4 shrink-0">{top}</div>
         <div ref={bodyRef} className="px-4 pt-1 pb-3 overflow-y-auto min-h-0 flex-1 overscroll-contain" onScroll={onBodyScroll}>{body}</div>

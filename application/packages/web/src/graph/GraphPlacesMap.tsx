@@ -11,17 +11,13 @@
  * Spec: docs/internal/specs/graph-view.md (section 4.4)
  */
 import { useEffect, useRef, useState } from 'react';
-import { LngLatBounds, Map as MapLibreMap, addProtocol, setWorkerUrl } from 'maplibre-gl';
+import { LngLatBounds, Map as MapLibreMap } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
-// MapLibre looks for its worker next to its own module, which bundling moves and
-// which is no http address inside the native apps; the copied file is named here.
-import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
-import { Protocol } from 'pmtiles';
-import { language_script_pairs, layers, namedFlavor } from '@protomaps/basemaps';
-import { mapSource } from '../noteLocation';
+import { createProtomapsStyle, ensureMapLibreReady, isMapAbortEvent } from '../mapLibreSetup';
 import { canReadPosition, readCurrentPosition } from '../currentPosition';
 import { openExternal } from '../openExternal';
 import { isLookColor } from '../itemStyles';
+import { kindLookColor } from './GraphCanvas';
 import {
   CornersOut,
   Crosshair,
@@ -35,7 +31,7 @@ import { Callout, CanvasControlBar, EmptyState, FeedbackButton, IconButton, Spin
 export interface PlacesMapItem {
   id: string;
   title: string;
-  kind: 'note' | 'journal' | 'contact';
+  kind: 'note' | 'journal' | 'task' | 'file' | 'contact';
   lat: number;
   lng: number;
   label?: string;
@@ -95,46 +91,6 @@ const FOCUS_ZOOM = 13;
 const SINGLE_PIN_ZOOM = 12;
 /** Screen-space padding around the map viewport for keeping nearby markers mounted during drags. */
 const VIEWPORT_MARGIN_PX = 64;
-
-const PMTILES_GUARD_KEY = '__pnMapLibrePmtilesReady';
-
-function ensureMapLibreSetUp(): void {
-  const host = globalThis as Record<string, unknown>;
-  if (host[PMTILES_GUARD_KEY]) return;
-  setWorkerUrl(workerUrl);
-  const reader = new Protocol();
-  try {
-    // Clear cached archives on non-abort failures so a retry after an offline
-    // blip asks the host again instead of replaying a cached header error.
-    addProtocol('pmtiles', async (request, abort) => {
-      try {
-        return await reader.tile(request, abort);
-      } catch (error) {
-        if ((error as { name?: string } | undefined)?.name !== 'AbortError') {
-          reader.tiles.clear();
-        }
-        throw error;
-      }
-    });
-  } catch {
-    // Another map chunk already registered the pmtiles protocol in this session.
-  }
-  host[PMTILES_GUARD_KEY] = true;
-}
-
-function buildMapStyle(dark: boolean, lang: string) {
-  const source = mapSource();
-  const flavor = dark ? 'dark' : 'light';
-  const base = lang.split('-')[0] ?? 'en';
-  const labelLang = language_script_pairs.some((p) => p.lang === base) ? base : 'en';
-  return {
-    version: 8 as const,
-    glyphs: source.glyphs,
-    sprite: `${source.sprite}/${flavor}`,
-    sources: { protomaps: { type: 'vector' as const, url: source.tiles } },
-    layers: layers('protomaps', namedFlavor(flavor), { lang: labelLang }),
-  };
-}
 
 function areCoLocated(items: readonly PlacesMapItem[]): boolean {
   if (items.length <= 1) return true;
@@ -272,13 +228,9 @@ function computeScreenClusters(map: MapLibreMap, items: readonly PlacesMapItem[]
   });
 }
 
-function pinColorFor(item: PlacesMapItem): string {
-  if (item.colorKey && isLookColor(item.colorKey)) {
-    return `var(--pn-label-${item.colorKey}-ink)`;
-  }
-  if (item.kind === 'contact') return 'var(--pn-label-teal-ink)';
-  if (item.kind === 'journal') return 'var(--pn-label-purple-ink)';
-  return 'var(--color-accent-fill)';
+export function pinColorFor(item: PlacesMapItem): string {
+  const color = (item.colorKey && isLookColor(item.colorKey) ? item.colorKey : null) ?? kindLookColor(item.kind);
+  return color ? `var(--pn-label-${color}-ink)` : 'var(--color-accent-fill)';
 }
 
 function formatInitials(raw?: string): string {
@@ -401,7 +353,7 @@ export default function GraphPlacesMap({
 
     const fail = (event?: object) => {
       if (failed || loaded || gone) return;
-      if (event && 'error' in event && (event.error as { name?: string } | undefined)?.name === 'AbortError') return;
+      if (isMapAbortEvent(event)) return;
       failed = true;
       setMapFailed(true);
     };
@@ -414,7 +366,7 @@ export default function GraphPlacesMap({
     };
 
     try {
-      ensureMapLibreSetUp();
+      ensureMapLibreReady();
       const initialItems = itemsRef.current;
       const initialFocus = focusItemIdRef.current
         ? initialItems.find((item) => item.id === focusItemIdRef.current)
@@ -435,7 +387,7 @@ export default function GraphPlacesMap({
 
       map = new MapLibreMap({
         container: el,
-        style: buildMapStyle(dark, lang),
+        style: createProtomapsStyle(dark, lang),
         center: initialCenter,
         zoom: initialZoom,
         attributionControl: false,
@@ -553,7 +505,7 @@ export default function GraphPlacesMap({
     const nextKey = `${dark ? 'dark' : 'light'}:${lang}`;
     if (!map || mapFailed || styleKeyRef.current === nextKey) return;
     styleKeyRef.current = nextKey;
-    map.setStyle(buildMapStyle(dark, lang));
+    map.setStyle(createProtomapsStyle(dark, lang));
   }, [dark, lang, mapFailed]);
 
   // React to items changes: fit once initially, and once more when async contact town matches arrive (if user hasn't panned).
@@ -662,7 +614,7 @@ export default function GraphPlacesMap({
 
   if (mapFailed) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-surface-1 p-6">
+      <div className="flex h-full w-full items-center justify-center bg-surface-2 p-6">
         <div className="w-full max-w-md space-y-4">
           <EmptyState
             icon={<MapPin weight="duotone" aria-hidden="true" />}

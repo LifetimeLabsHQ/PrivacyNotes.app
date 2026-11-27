@@ -18,7 +18,7 @@ import type { ContextMenuItem } from './ContextMenu';
 import { SelectionCountStrip } from './SelectionCountStrip';
 import { HoverLabel } from './HoverLabel';
 import { ImportPromptEntry, importPromptFor, type ImportOffer } from './ImportPrompt';
-import { FunnelSimple, Download, PILLAR_GLYPHS, NEW_GLYPHS } from './icons';
+import { FunnelSimple, FileArrowDown, PILLAR_GLYPHS, NEW_GLYPHS } from './icons';
 import { NewButton } from './NewButton';
 
 /**
@@ -301,7 +301,7 @@ export function ContactsList({
                   <Button variant="primary" icon={<NEW_GLYPHS.contact aria-hidden="true" />} onClick={onRequestNew}>
                     {t('contacts.emptyAdd')}
                   </Button>
-                  <Button icon={<Download aria-hidden="true" />} onClick={onOpenImport}>
+                  <Button icon={<FileArrowDown aria-hidden="true" />} onClick={onOpenImport}>
                     {t('contacts.emptyImport')}
                   </Button>
                 </>

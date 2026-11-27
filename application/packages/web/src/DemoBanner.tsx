@@ -36,6 +36,7 @@ export function DemoBanner({ onDismiss }: Props) {
     <Banner
       tone="success"
       icon={Lock}
+      compactMobile
       action={
         <FeedbackButton icon={<UserPlus aria-hidden="true" />} href={withSource(DEMO_APP_URL)}>
           {t('security:demoTeaser.createAccount')}
@@ -44,8 +45,9 @@ export function DemoBanner({ onDismiss }: Props) {
       onDismiss={onDismiss}
       dismissLabel={t('common:updateToast.dismiss')}
     >
-      <span className="font-semibold">{t('demoBanner.title')}</span>
-      {/* Mini on phones: the description drops, leaving icon + title + CTA. */}
+      <span className="font-semibold sm:hidden">{t('demoBanner.shortTitle')}</span>
+      <span className="hidden sm:inline font-semibold">{t('demoBanner.title')}</span>
+      {/* Mini on phones: the description drops, leaving icon + short title + CTA on one row. */}
       <span className="hidden sm:inline text-pn-soft">
         {' '}
         {t('demoBanner.description')}

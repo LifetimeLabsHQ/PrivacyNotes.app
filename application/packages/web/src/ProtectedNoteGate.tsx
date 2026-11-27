@@ -214,6 +214,7 @@ function useBiometricUnlock(setErr: (msg: string | null) => void) {
 function BiometricMode({
   done,
   removing = false,
+  purpose,
   onStartRemove,
   onRemoveProtection,
   onCancelRemove,
@@ -226,6 +227,8 @@ function BiometricMode({
   /** What a passed check performs: unlock the note, or take the lock off. */
   done: () => void;
   removing?: boolean;
+  /** Modal purpose when rendered inside PinGateModal. */
+  purpose?: PinGatePurpose;
   /** Absent where removing protection is not on offer, such as the modal
    *  that gates a delete. */
   onStartRemove?: () => void;
@@ -247,7 +250,9 @@ function BiometricMode({
 
   const subtitle = removing
     ? t('protectedGate.disableBiometricSubtitle')
-    : section ? t('protectedGate.sectionBiometricSubtitle') : t('protectedGate.biometricSubtitle');
+    : purpose === 'export'
+      ? t('protectedGate.exportBiometricSubtitle')
+      : section ? t('protectedGate.sectionBiometricSubtitle') : t('protectedGate.biometricSubtitle');
 
   const controls = (
     <>
@@ -267,7 +272,9 @@ function BiometricMode({
               ? t('security:lockScreen.verifying')
               : removing
                 ? t('protectedGate.disableProtection')
-                : t('security:lockScreen.unlock')}
+                : purpose === 'export'
+                  ? t('protectedGate.verifyAndExport')
+                  : t('security:lockScreen.unlock')}
           </Button>
         </div>
         {showPinFallback && (
@@ -655,11 +662,12 @@ function BootstrapMode({
 
 /* ────────────────────────────────────────────────────────────────
  * PinGateModal - modal overlay for PIN verification before an action on
- * a protected note: a destructive one (delete, shred), or one that reads
- * the note out (an export, its history), which is worded as an unlock.
+ * a protected note: a destructive one (delete, shred), a plaintext bulk
+ * export carrying protected content (export), or one that reads a single
+ * locked note out (unlock).
  * ──────────────────────────────────────────────────────────────── */
 
-export type PinGatePurpose = 'delete' | 'unlock';
+export type PinGatePurpose = 'delete' | 'unlock' | 'export';
 
 export function PinGateModal({
   onUnlock,
@@ -682,9 +690,11 @@ export function PinGateModal({
   const [usePin, setUsePin] = useState(false);
 
   const modalTitle = bioEnrolled && !usePin
-    ? t('protectedGate.protectedItem')
+    ? purpose === 'export'
+      ? t('protectedGate.exportTitle')
+      : t('protectedGate.protectedItem')
     : pinIsSet
-      ? purpose === 'delete'
+      ? purpose === 'delete' || purpose === 'export'
         ? kind === 'passcode' ? t('protectedGate.passcodeRequired') : t('protectedGate.pinRequired')
         : t('protectedGate.protectedItem')
       : t('protectedGate.bootstrapTitle');
@@ -700,6 +710,7 @@ export function PinGateModal({
       {bioEnrolled && !usePin ? (
         <BiometricMode
           done={onUnlock}
+          purpose={purpose}
           showPinFallback={pinIsSet}
           pinKind={kind}
           onUsePin={() => setUsePin(true)}
@@ -794,7 +805,9 @@ function ModalVerifyMode({
   const disabled = busy || lockout.locked;
   const subtitle = purpose === 'delete'
     ? kind === 'passcode' ? t('protectedGate.deleteSubtitlePasscode') : t('protectedGate.deleteSubtitle')
-    : kind === 'passcode' ? t('protectedGate.verifySubtitlePasscode') : t('protectedGate.verifySubtitle');
+    : purpose === 'export'
+      ? kind === 'passcode' ? t('protectedGate.exportSubtitlePasscode') : t('protectedGate.exportSubtitle')
+      : kind === 'passcode' ? t('protectedGate.verifySubtitlePasscode') : t('protectedGate.verifySubtitle');
 
   return (
     <div className="space-y-4 text-center">
@@ -829,7 +842,11 @@ function ModalVerifyMode({
         >
           {busy
             ? t('security:lockScreen.checking')
-            : purpose === 'delete' ? t('protectedGate.confirmDelete') : t('security:lockScreen.unlock')}
+            : purpose === 'delete'
+              ? t('protectedGate.confirmDelete')
+              : purpose === 'export'
+                ? t('auth:continue')
+                : t('security:lockScreen.unlock')}
         </Button>
         {showBiometric && (
           <Button

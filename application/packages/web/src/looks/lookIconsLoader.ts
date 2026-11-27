@@ -11,14 +11,16 @@
  * Spec: docs/internal/specs/folder-tag-icons.md (sections 3.6 and 8)
  */
 import { useEffect, useState } from 'react';
+import { customIconDataUrl, isCustomIconId, type CustomIcons } from '../customIcons';
 import { LOGO_SHARD_STARTS } from './logos/shards.gen';
 
 type LookIconsModule = typeof import('./lookIcons');
 type LookLogosModule = typeof import('./lookLogos.gen');
 type LookEmojisModule = typeof import('./lookEmojis.gen');
 type LogoPaths = Readonly<Record<string, readonly string[]>>;
-/** Either the SVG paths of an icon/logo, or a single Unicode emoji string. */
-export type LookArt = readonly string[] | string;
+/** Either the SVG paths of an icon/logo, a Unicode emoji string, or a validated
+ *  custom icon image data URL. */
+export type LookArt = readonly string[] | string | { img: string };
 /** The name of every logo outside the curated set, for the search. */
 export interface LogoIndex {
   logos: readonly (readonly [id: string, name: string])[];
@@ -166,15 +168,19 @@ export function useLogoPaths(ids: readonly (string | null | undefined)[]): (id: 
   return (id) => curated?.LOOK_LOGO_PATHS[id] ?? (isLogoId(id) ? shardBox(shardNumber(id)).loaded?.[id] : undefined);
 }
 
-/** The artwork of a picked icon, logo or emoji: SVG paths from the catalog it
- *  lives in, the emoji string itself (synchronous, no chunk load), or undefined
- *  while a catalog loads or for an id this build does not know. */
-export function useLookPaths(id: string | null | undefined): LookArt | undefined {
-  const emoji = emojiChar(id);
-  const logo = !emoji && isLogoId(id);
-  const iconCatalog = useLookIcons(!!id && !logo && !emoji);
+/** The artwork of a picked icon, logo, emoji or custom icon: SVG paths from
+ *  the catalog it lives in, the emoji string or custom image data URL
+ *  (synchronous, no chunk load), or undefined while a catalog loads or for an
+ *  id this build does not know. */
+export function useLookPaths(id: string | null | undefined, customIcons?: CustomIcons): LookArt | undefined {
+  const custom = customIconDataUrl(customIcons, id);
+  const customId = isCustomIconId(id);
+  const emoji = !customId ? emojiChar(id) : null;
+  const logo = !customId && !emoji && isLogoId(id);
+  const iconCatalog = useLookIcons(!!id && !customId && !logo && !emoji);
   const logoPaths = useLogoPaths(logo ? [id] : []);
   if (!id) return undefined;
+  if (customId) return custom ? { img: custom } : undefined;
   if (emoji) return emoji;
   return logo ? logoPaths(id) : iconCatalog?.LOOK_ICONS[id];
 }
@@ -184,7 +190,7 @@ export function useLookPaths(id: string | null | undefined): LookArt | undefined
 export async function loadLookPaths(ids: readonly string[]): Promise<Map<string, readonly string[]>> {
   const out = new Map<string, readonly string[]>();
   const logoIds = ids.filter(isLogoId);
-  const iconIds = ids.filter((id) => !isLogoId(id) && !isEmojiId(id));
+  const iconIds = ids.filter((id) => !isLogoId(id) && !isEmojiId(id) && !isCustomIconId(id));
   const [iconMod, curated] = await Promise.all([
     iconIds.length ? icons.load() : null,
     logoIds.length ? logos.load() : null,

@@ -15,7 +15,7 @@ import { deviceRegistered, fetchQuotaUsage } from './devices';
 import { hasSettingsPulled, hasUnpushedSettings, loadLocalSettings, settingsKeyEpoch, syncUserSettings, updateLocalSettings, type UserSettings } from './userSettings';
 import { syncPinCache } from './pin';
 import { saveHeldPinRehash, syncPinWrap } from './pinRecovery';
-import { hasLiveSignIn, signInStamp, signedOutSince } from './liveSignIn';
+import { hasLiveSignIn, isLivePhrase, signInStamp, signedOutSince } from './liveSignIn';
 import { currentKeyEpoch } from './keyRing';
 import { seedOnboardingNotes } from './welcomeNote';
 import { isDemoMode, proUnlocked } from './demo';
@@ -641,6 +641,7 @@ export function useSyncOrchestrator({
       if (syncResult.ran && syncResult.pullOk) {
         fetchQuotaUsage(supabase, auth.isPro)
           .then((q) => {
+            if (!hasLiveSignIn() || signedOutSince(signedInAt) || !isLivePhrase(auth.phrase)) return;
             quotaRef.current = { usedBytes: q.totalBytes + q.imageBytes, maxBytes: q.maxTotalBytes };
             publishShareLimit(auth.isPro ?? false, q.maxTotalBytes);
             if (q.quotaExceededSince) {
@@ -665,6 +666,7 @@ export function useSyncOrchestrator({
             // without the error, the null would fall through to the else below
             // and tell the user their payment problem is resolved.
             if (error) return;
+            if (!hasLiveSignIn() || signedOutSince(signedInAt) || !isLivePhrase(auth.phrase)) return;
             if (data && Array.isArray(data) && data.length > 0 && data[0].has_past_due) {
               setStoragePastDue(true);
             } else if (data && !Array.isArray(data) && (data as { has_past_due?: boolean })?.has_past_due) {

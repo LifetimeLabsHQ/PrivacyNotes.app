@@ -18,6 +18,7 @@ import { useProGate } from './ui/proGate';
 import { SectionEyebrow } from './settingsUI';
 import { useAuth } from './auth';
 import { isDemoMode, DEMO_APP_URL, proUnlocked } from './demo';
+import { useUnsyncedLocalVault } from './localOnly';
 import { LocalOnlyNotice } from './LocalOnlyNotice';
 import { ExtensionCallError, loadExtensionState, removeExtension, type ExtensionRow } from './extensionApi';
 import { forgetSenderOf, PairingCodeBox, pushSettingsNow, useCodeWatch, type ExtensionAccess } from './BrowserPane';
@@ -80,7 +81,8 @@ import { Step } from './ui/Step';
 export function CommandLinePane({ extensionKeys, settings, mutateSettings, createFolder, isPro, onUpgrade, onOpenSync }: CommandLinePaneProps) {
   const { t } = useTranslation('shell');
   const { auth, supabase } = useAuth();
-  const localOnly = auth.status === 'authenticated' && auth.localOnly;
+  const unsyncedLocal = useUnsyncedLocalVault();
+  const localOnly = (auth.status === 'authenticated' && auth.localOnly) || unsyncedLocal;
   const access: ExtensionAccess | null = isDemoMode() || auth.status !== 'authenticated' || localOnly
     ? null
     : { supabase, pubkey: auth.pubkey, phrase: auth.phrase, contentKey: auth.encryptionKey, ...extensionKeys };

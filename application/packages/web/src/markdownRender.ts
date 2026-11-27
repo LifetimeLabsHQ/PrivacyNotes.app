@@ -21,9 +21,9 @@ import type { LineSpacing } from './theme';
 import { faviconUrl } from './favicon';
 import { attachmentLinks, unescapeMarkdownText } from './fileNames';
 import { RENDER_LINK, RENDER_PICTURE, SRC_PICTURE, markdownLinks, replaceMatches } from './linkScan';
-import { getFavicons } from './theme';
+import { checkedTaskInlineStyle, getFavicons } from './theme';
 import { effectiveWidths, widthsFromTableLines } from './tableColumnWidths';
-import { columnBorderExportColors, columnBorderGapCss, parseColumnBorder } from './columnBorders';
+import { columnContainerStyle, parseColCalloutHeader, parseColumnBorder } from './columnBorders';
 import { fillAt, tableFillsFromMarker, tableWidthFromMarker } from './tableDelimiterRow';
 import { cellFillColor } from './editorColors';
 import { noteLinkDisplayText } from './noteLinks';
@@ -36,6 +36,7 @@ import { INLINE_ICON_RE, inlineIconId } from './editorIconSyntax';
 import { formatTaskReminderSpec, parseTaskReminderSpec, TASK_REMINDER_RE } from './taskReminderSyntax';
 import { firstLetter, letterDirection, listNumerals, writesPersian } from './textDirection';
 import { escapeHtml } from './escapeHtml';
+import { findInlineTagSpansInText } from './inlineTags';
 import { nextFence } from './markdownFence';
 
 // ─── Callout types ──────────────────────────────────────────────────────
@@ -56,7 +57,7 @@ const CALLOUT_LABELS: Record<CalloutType, string> = {
 
 // A Kanban board lays its columns side by side and wraps them on a narrow
 // page; each column is a callout of its own inside the board.
-const KANBAN_BODY_STYLE = 'padding:0.15em 0.85em 0.7em;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0 0.7em;align-items:start';
+const KANBAN_BODY_STYLE = 'padding:0.25em 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.6rem;align-items:start';
 
 // Phosphor caret-down / caret-right (bold weight, 256 viewBox): the fold
 // control at the start of the exported summary, as in the editor. The
@@ -64,6 +65,18 @@ const KANBAN_BODY_STYLE = 'padding:0.15em 0.85em 0.7em;display:grid;grid-templat
 // the right caret mirrors in a right-to-left document.
 const CALLOUT_CARET_DOWN = 'M216.49,104.49l-80,80a12,12,0,0,1-17,0l-80-80a12,12,0,0,1,17-17L128,159l71.51-71.52a12,12,0,0,1,17,17Z';
 const CALLOUT_CARET_RIGHT = 'M184.49,136.49l-80,80a12,12,0,0,1-17-17L159,128,87.51,56.49a12,12,0,1,1,17-17l80,80A12,12,0,0,1,184.49,136.49Z';
+
+// Phosphor bold-weight SVG paths for inline UI chips (reminders, attachments,
+// location cards) so exports and burn notes never rely on OS emoji glyphs.
+const BELL_ICON_PATH = 'M225.29,165.93C216.61,151,212,129.57,212,104a84,84,0,0,0-168,0c0,25.58-4.59,47-13.27,61.93A20.08,20.08,0,0,0,30.66,186,19.77,19.77,0,0,0,48,196H208a19.77,19.77,0,0,0,17.31-10A20.08,20.08,0,0,0,225.29,165.93ZM54.66,172C63.51,154,68,131.14,68,104a60,60,0,0,1,120,0c0,27.13,4.48,50,13.33,68ZM172,224a12,12,0,0,1-12,12H96a12,12,0,0,1,0-24h64A12,12,0,0,1,172,224Z';
+const PAPERCLIP_ICON_PATH = 'M212.48,136.49l-82.06,82a60,60,0,0,1-84.85-84.88l98.16-97.89a40,40,0,0,1,56.56,56.59l-.17.16-95.8,92.22a12,12,0,1,1-16.64-17.3l95.71-92.12a16,16,0,0,0-22.7-22.56L62.53,150.57a36,36,0,0,0,50.93,50.91l82.06-82a12,12,0,0,1,17,17Z';
+const MAP_PIN_ICON_PATH = 'M128,60a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,60Zm0,64a20,20,0,1,1,20-20A20,20,0,0,1,128,124Zm0-112a92.1,92.1,0,0,0-92,92c0,77.36,81.64,135.4,85.12,137.83a12,12,0,0,0,13.76,0,259,259,0,0,0,42.18-39C205.15,170.57,220,136.37,220,104A92.1,92.1,0,0,0,128,12Zm31.3,174.71A249.35,249.35,0,0,1,128,216.89a249.35,249.35,0,0,1-31.3-30.18C80,167.37,60,137.31,60,104a68,68,0,0,1,136,0C196,137.31,176,167.37,159.3,186.71Z';
+const COPY_BOX_LANGUAGE = 'copy';
+
+function inlineSvg(paths: readonly string[], size: string): string {
+  const d = paths.map((p) => `<path d="${p}"/>`).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="${size}" height="${size}" fill="currentColor" style="display:inline-block;flex-shrink:0" aria-hidden="true">${d}</svg>`;
+}
 
 /**
  * Allowlist a CSS color for the inline color spans emitted by the
@@ -267,18 +280,18 @@ let noteLinkAnchors = false;
  * the caller's click handler follows it. Exports and shares keep plain text.
  * Spec: docs/internal/issues/0852.md (more connections)
  */
-export function renderMarkdownWithNoteLinks(md: string): string {
+export function renderMarkdownWithNoteLinks(md: string, locale?: string): string {
   noteLinkAnchors = true;
   try {
-    return renderMarkdownSafe(md);
+    return renderMarkdownSafe(md, locale);
   } finally {
     noteLinkAnchors = false;
   }
 }
 
-export function renderMarkdownSafe(md: string): string {
+export function renderMarkdownSafe(md: string, locale?: string): string {
   try {
-    return renderMarkdown(md);
+    return renderMarkdown(md, locale);
   } catch (err) {
     console.error('[render] falling back to plain text:', err);
     return `<pre>${escapeHtml(md)}</pre>`;
@@ -307,6 +320,7 @@ function renderTex(tex: string, display: boolean): string | null {
  * produced.
  */
 let highlightCode: ((code: string, lang: string) => string | null) | null = null;
+let codeLangLabel: ((lang: string | null | undefined) => string | null) | null = null;
 
 async function prepareCodeHighlight(md: string): Promise<void> {
   // A fence with a language is ``` or ~~~ followed by a tag character; a
@@ -314,6 +328,16 @@ async function prepareCodeHighlight(md: string): Promise<void> {
   if (highlightCode || !/(?:```|~~~)[^\s`~]/.test(md)) return;
   const mod = await import('./markdownHighlight');
   highlightCode = mod.highlightCode;
+  codeLangLabel = mod.codeLanguageLabel;
+}
+
+/** Callout and Kanban Phosphor icon paths, loaded on demand only when a body
+ *  contains a callout marker (`[!`), keeping them off the boot path. */
+let calloutIconPaths: Readonly<Partial<Record<CalloutType, readonly string[]>>> | null = null;
+
+async function prepareCalloutIcons(md: string): Promise<void> {
+  if (calloutIconPaths || !md.includes('[!')) return;
+  calloutIconPaths = (await import('./calloutIconPaths')).CALLOUT_ICON_PATHS;
 }
 
 /** The paths of the `:icon[id]` icons the body holds, loaded by
@@ -330,7 +354,13 @@ async function prepareInlineIcons(md: string): Promise<void> {
 
 /** Everything the three export paths and the burn viewer await before renderMarkdown. */
 export async function prepareRender(md: string): Promise<void> {
-  await Promise.all([prepareMath(md), prepareCodeHighlight(md), prepareInlineIcons(md), prepareDoodles(md)]);
+  await Promise.all([
+    prepareMath(md),
+    prepareCodeHighlight(md),
+    prepareCalloutIcons(md),
+    prepareInlineIcons(md),
+    prepareDoodles(md),
+  ]);
 }
 
 /** A doodle block's drawing, loaded by prepareRender only for a body that
@@ -360,8 +390,11 @@ function renderFenceCode(code: string, lang: string): string | null {
  * otherwise eat the `\{`, `\}` and `\\` that LaTeX is made of.
  */
 function extractInlineMath(raw: string, keep: (html: string, source: string) => string): string {
+  if (!katexRender || !raw.includes('$')) return raw;
   let out = '';
   let i = 0;
+  let tick = raw.indexOf('`');
+  let close = -1;
   while (i < raw.length) {
     const open = raw.indexOf('$', i);
     if (open < 0) { out += raw.slice(i); break; }
@@ -373,14 +406,16 @@ function extractInlineMath(raw: string, keep: (html: string, source: string) => 
     // being about the most ordinary thing a note can contain. Backtick runs
     // are matched the same single-backtick way the code-span pass below does,
     // so the two agree on what a code span is.
-    const tick = raw.indexOf('`', i);
+    if (tick >= 0 && tick < i) tick = raw.indexOf('`', i);
     if (tick >= 0 && tick < open) {
       const closeTick = raw.indexOf('`', tick + 1);
       if (closeTick > tick) {
         out += raw.slice(i, closeTick + 1);
         i = closeTick + 1;
+        tick = raw.indexOf('`', i);
         continue;
       }
+      tick = -1;
     }
 
     out += raw.slice(i, open);
@@ -389,14 +424,22 @@ function extractInlineMath(raw: string, keep: (html: string, source: string) => 
       i = open + 1;
       continue;
     }
-    // Closing delimiter, skipping any escaped \$.
-    let search = open + 1;
-    let close = -1;
-    while (search < raw.length) {
-      const idx = raw.indexOf('$', search);
-      if (idx < 0) break;
-      if (raw[idx - 1] === '\\') { search = idx + 1; continue; }
-      close = idx;
+    // Closing delimiter, skipping any escaped \$. Whether a `$` is escaped
+    // depends only on the character before it, so the scan pointer never
+    // moves backward across failed openers.
+    if (close <= open) {
+      let search = open + 1;
+      close = raw.length;
+      while (search < raw.length) {
+        const idx = raw.indexOf('$', search);
+        if (idx < 0) break;
+        if (raw[idx - 1] === '\\') { search = idx + 1; continue; }
+        close = idx;
+        break;
+      }
+    }
+    if (close >= raw.length) {
+      out += '$' + raw.slice(open + 1);
       break;
     }
     const tex = close > open + 1 ? raw.slice(open + 1, close) : '';
@@ -417,20 +460,57 @@ function extractInlineMath(raw: string, keep: (html: string, source: string) => 
   return out;
 }
 
+/**
+ * Replace `&lt;tag style=&quot;...&quot;&gt;...&lt;/tag&gt;` (ASCII
+ * case-insensitive) in one forward pass. Because `style` stops at the first
+ * `&` and the body stops at the first closing tag, each failed or matched
+ * scan advances past the region it read; when no closing tag remains, no
+ * later opener can close either.
+ */
+function replaceEscapedStyledTag(
+  text: string,
+  tag: 'span' | 'mark',
+  render: (style: string, inner: string) => string,
+): string {
+  if (!text.includes('&lt;')) return text;
+  const lower = /[A-Z]/.test(text)
+    ? (/[^\x00-\x7f]/.test(text)
+        ? text.replace(/[A-Z]/g, (c) => String.fromCharCode(c.charCodeAt(0) | 32))
+        : text.toLowerCase())
+    : text;
+  const openPrefix = `&lt;${tag} style=&quot;`;
+  const openEnd = '&quot;&gt;';
+  const closeTag = `&lt;/${tag}&gt;`;
+  let out = '';
+  let lastEmit = 0;
+  let pos = 0;
+  while (pos < lower.length) {
+    const openIdx = lower.indexOf(openPrefix, pos);
+    if (openIdx < 0) break;
+    const styleStart = openIdx + openPrefix.length;
+    const ampIdx = lower.indexOf('&', styleStart);
+    if (ampIdx < 0) break;
+    if (!lower.startsWith(openEnd, ampIdx)) {
+      pos = ampIdx;
+      continue;
+    }
+    const innerStart = ampIdx + openEnd.length;
+    const closeIdx = lower.indexOf(closeTag, innerStart);
+    if (closeIdx < 0) break;
+    out += text.slice(lastEmit, openIdx) + render(text.slice(styleStart, ampIdx), text.slice(innerStart, closeIdx));
+    pos = closeIdx + closeTag.length;
+    lastEmit = pos;
+  }
+  return lastEmit === 0 ? text : out + text.slice(lastEmit);
+}
+
 // The references the editor writes for a typed `&`, `<` or `>`, plus the two
 // quotes. Only these: each names a character that can never spell a URL
 // scheme, a markdown mark or one of the renderer's control-byte sentinels.
 const SAVED_REF = /&amp;(amp|lt|gt|quot|apos);/g;
 const SAVED_CHAR: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
 
-function renderInline(raw: string): string {
-  // The editor serializes empty paragraphs as the literal entity &nbsp;
-  // (see EmptyParagraphSerializer). escapeHtml() below would turn it into
-  // visible "&nbsp;" text in HTML/PDF export, so decode it to a real
-  // non-breaking space up front - escapeHtml leaves U+00A0 untouched.
-  // Spec: GitHub #103.
-  raw = raw.replace(/&nbsp;/g, '\u00A0');
-
+function renderInline(raw: string, opts?: { inlineTags?: boolean }): string {
   // Inline math comes out FIRST: its LaTeX is made of the very characters
   // the backslash-escape pass below consumes, and its rendered MathML is
   // made of the tags escapeHtml would turn into visible text. Held behind a
@@ -465,6 +545,12 @@ function renderInline(raw: string): string {
 
   let t = escapeHtml(preprocessed);
 
+  // The editor serializes empty paragraphs as the literal entity &nbsp;
+  // (see EmptyParagraphSerializer). Running after code spans are stashed
+  // keeps `&nbsp;` inside inline code literal while turning prose &nbsp;
+  // into a real non-breaking space. Spec: GitHub #103.
+  t = t.replace(/&amp;nbsp;/g, '\u00A0');
+
   // An attribute value holds text, never markup. Math or a code span inside
   // an image's alt or a link's target goes back as its own source there,
   // because the MathML or <code> restored at the end would close the
@@ -494,11 +580,65 @@ function renderInline(raw: string): string {
     return `\x01T${idx}\x01`;
   };
 
-  // Images ![alt](src) or ![alt](src){width=N} - must come before link
+  // Extract CommonMark quoted titles on pictures and links (`![alt](src "caption")`
+  // and `[text](url "hover text")`, GitHub #702, #969) before RENDER_PICTURE and
+  // RENDER_LINK run: both shapes read the target to the first space, so the title
+  // moves out into a sentinel that each pass reads back. Values arrive HTML-escaped.
+  // Escaped quotes (`\&quot;`) stay inside the match so titles containing `")` work.
+  const linkTitles: string[] = [];
+  t = t.replace(/\]\(([^\s)\]]+) (?:&quot;((?:\\&quot;|(?!&quot;\))[^\n]){0,2000})&quot;|'((?:\\'|(?<!\\)(?!'\))[^\n]){0,2000})')\)/g,
+    (_m: string, href: string, dq: string | undefined, sq: string | undefined) => {
+      linkTitles.push((dq ?? sq ?? '').replace(/\\(&quot;|')/g, '$1'));
+      return `](${href}\x01L${linkTitles.length - 1}\x01)`;
+    });
+
+  // Remember stashed image descriptors so a linked image (`[![alt](src)](href){width=50}`, #970)
+  // can attach its outer `{width=N align=X caption-align=Y}` suffix and wrap the `<img>` in `<a>` without a favicon.
+  type CaptionAlign = 'left' | 'center' | 'right';
+  const parseCaptionAlign = (attrs: string | undefined): CaptionAlign | null => {
+    const m = attrs?.match(/(?:^|\s)caption-align=["']?(left|center|right)["']?/i)?.[1]?.toLowerCase();
+    return m === 'left' || m === 'center' || m === 'right' ? m : null;
+  };
+  type PictureDesc = { clean: string; alt: string; caption: string; width?: string; align: string | null; captionAlign: CaptionAlign };
+  const pictureTags = new Map<number, PictureDesc>();
+  const buildPictureHtml = (pic: PictureDesc, link?: { href: string; titleAttr: string }): string => {
+    const w = pic.width;
+    const wPct = w ? (w.endsWith('%') ? w : `${w}%`) : null;
+    const widthStyle = wPct ? `width:${wPct};` : '';
+    const alignStyle =
+      pic.align === 'center' ? 'display:block;margin-left:auto;margin-right:auto;'
+      : pic.align === 'right' ? 'display:block;margin-left:auto;margin-right:0;'
+      : '';
+    if (pic.caption) {
+      const figAlign =
+        pic.align === 'center' ? 'margin-left:auto;margin-right:auto;'
+        : pic.align === 'right' ? 'margin-left:auto;margin-right:0;'
+        : '';
+      const imgAlign =
+        pic.align === 'center' ? 'margin:0 auto;'
+        : pic.align === 'right' ? 'margin:0 0 0 auto;'
+        : 'margin:0;';
+      const imgTag = `<img src="${pic.clean}" alt="${pic.alt}" style="display:block;max-width:100%;${widthStyle}border-radius:8px;${imgAlign}" />`;
+      const media = link
+        ? `<a href="${link.href}"${link.titleAttr} target="_blank" rel="noopener noreferrer">${imgTag}</a>`
+        : imgTag;
+      const capWidth = wPct ? `width:max(${wPct},min(360px,100%));` : '';
+      return `<figure style="margin:0.5em 0 0.75em;max-width:100%;">${media}<figcaption dir="auto" style="margin-top:0.35em;font-size:0.85em;line-height:1.45;opacity:0.72;text-align:${pic.captionAlign};max-width:100%;${capWidth}${figAlign}">${pic.caption}</figcaption></figure>`;
+    }
+    const imgTag = `<img src="${pic.clean}" alt="${pic.alt}" style="max-width:100%;border-radius:8px;${widthStyle}${alignStyle}" />`;
+    return link
+      ? `<a href="${link.href}"${link.titleAttr} target="_blank" rel="noopener noreferrer">${imgTag}</a>`
+      : imgTag;
+  };
+
+  // Images ![alt](src) or ![alt](src "caption"){width=N} - must come before link
   // handling since the syntax is similar. Optional {width=N} suffix from
   // tiptap-markdown is captured and applied as an inline style.
   t = replaceMatches(t, markdownLinks(t, RENDER_PICTURE),
-    ({ text: rawAlt, target: src, suffix: attrs }) => {
+    ({ text: rawAlt, target: rawTarget, suffix: attrs }) => {
+      const titled = /\x01L(\d+)\x01$/.exec(rawTarget);
+      const src = titled ? rawTarget.slice(0, titled.index) : rawTarget;
+      const caption = titled ? attrText(linkTitles[Number(titled[1])] ?? '').trim() : '';
       const alt = attrText(rawAlt);
       const clean = sanitizeImageSrc(attrText(src));
       if (clean === null) return null; // leave raw - safer than emitting a broken <img>
@@ -514,17 +654,13 @@ function renderInline(raw: string): string {
       // px here made XS/S/M collapse to 25/50/75px (near-identical thumbs)
       // in HTML/PDF export. Spec: GitHub #103.
       const widthMatch = attrs?.match(/width=["']?(\d+%?)["']?/);
-      const w = widthMatch?.[1];
-      const widthStyle = w ? `width:${w.endsWith('%') ? w : `${w}%`};` : '';
-      // `align=X` in the same suffix. An image is an inline element inside
-      // its paragraph, so the alignment has to become a block box with auto
-      // margins - putting text-align on the <img> itself does nothing.
-      const align = sanitizeAlign(attrs?.match(/align=["']?([a-z]+)["']?/)?.[1] ?? '');
-      const alignStyle =
-        align === 'center' ? 'display:block;margin-left:auto;margin-right:auto;'
-        : align === 'right' ? 'display:block;margin-left:auto;margin-right:0;'
-        : '';
-      return stash(`<img src="${clean}" alt="${alt}" style="max-width:100%;border-radius:4px;${widthStyle}${alignStyle}" />`);
+      const width = widthMatch?.[1];
+      const align = sanitizeAlign(attrs?.match(/(?:^|\s)align=["']?([a-z]+)["']?/)?.[1] ?? '');
+      const captionAlign = parseCaptionAlign(attrs) ?? 'left';
+      const desc: PictureDesc = { clean, alt, caption, ...(width ? { width } : {}), align, captionAlign };
+      const idx = tagBuf.length;
+      pictureTags.set(idx, desc);
+      return stash(buildPictureHtml(desc));
     },
   );
 
@@ -535,18 +671,21 @@ function renderInline(raw: string): string {
     ({ name: rawName, size }) => {
       // Raw body text, so the name arrives markdown-escaped.
       const name = unescapeMarkdownText(rawName);
-      return stash(`<span title="This attachment is encrypted and only accessible within PrivacyNotes. Use the full backup (zip) export to include file attachments." style="display:inline-flex;align-items:center;gap:0.4em;padding:0.15em 0.5em;background:#f3f3f3;border-radius:4px;font-size:0.9em;cursor:help">&#128206; ${name} (${size})</span>`);
+      const clip = inlineSvg([PAPERCLIP_ICON_PATH], '0.95em');
+      return stash(`<span class="pn-attachment-chip" title="This attachment is encrypted and only accessible within PrivacyNotes. Use the full backup (zip) export to include file attachments." style="display:inline-flex;align-items:center;gap:0.35em;padding:0.15em 0.55em;background:rgba(128,128,128,0.12);border:1px solid rgba(128,128,128,0.22);border-radius:6px;font-size:0.9em;cursor:help">${clip}<span>${name} (${size})</span></span>`);
     },
   );
 
   // :icon[name] and :logo[name] - the icon in the text's color, at the
   // text's size, when prepareRender loaded it; an unknown one drops out, as
-  // in a list preview.
+  // in a list preview. display:inline-block overrides Tailwind Preflight's
+  // `svg { display: block }` in the Burn viewer so inline icons stay on the
+  // line with surrounding text.
   t = t.replace(INLINE_ICON_RE, (_run: string, kind: string, name: string) => {
     const paths = inlineIconPaths.get(inlineIconId(kind, name));
     if (!paths) return '';
     const d = paths.map((p) => `<path d="${escapeHtml(p)}"/>`).join('');
-    return stash(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1.1em" height="1.1em" fill="currentColor" style="vertical-align:-0.18em" aria-hidden="true">${d}</svg>`);
+    return stash(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="1.1em" height="1.1em" fill="currentColor" style="display:inline-block;vertical-align:-0.18em" aria-hidden="true">${d}</svg>`);
   });
 
   // :remind[YYYY-MM-DD HH:MM ...] - compact inline reminder pill for exports and burn shares.
@@ -556,8 +695,9 @@ function renderInline(raw: string): string {
     return stash(taskReminderPillHtml(parsed));
   });
 
-  // Note-links [[target]] or [[target|label]] - render as plain text
-  // since note-to-note links can't work outside the app.
+  // Note-links [[target]] or [[target|label]] - styled to match the editor's
+  // underlined accent note-links (distinct from plain web links) even where
+  // note-to-note navigation cannot work outside the app.
   // The second branch of each keeps a `[[` that opens none, up to where one
   // opening inside it would fail the same way, so a run of `[` is not read
   // again from every bracket (external report, 2026-10-24).
@@ -565,7 +705,7 @@ function renderInline(raw: string): string {
   // follows by its `data-note-link` target, which arrives HTML-escaped.
   const noteLink = (target: string, label: string) => (noteLinkAnchors
     ? stash(`<a href="#" data-note-link="${target}">`) + label + stash('</a>')
-    : `<em>${label}</em>`);
+    : stash('<span class="pn-note-link">') + label + stash('</span>'));
   t = t.replace(/\[\[([^\]|]+)\|([^\]]+)\]\](?:&lt;!--suggested--&gt;)?|\[\[[^\]|]*/g, (run: string, target?: string, label?: string) =>
     label === undefined ? run : noteLink(target!, label));
   t = t.replace(/\[\[([^\]]+)\]\](?:&lt;!--suggested--&gt;)?|\[\[[^\]]*/g, (run: string, target?: string) =>
@@ -584,18 +724,29 @@ function renderInline(raw: string): string {
   // only passes that let a tag back through rebuild it from a fixed list
   // and validate every value, so a burn note cannot smuggle markup in
   // through a link label. Spec: GitHub #328.
-  // A link's hover text, `[text](url "hover text")` (GitHub #702), as the
-  // serializer quotes it: in "" or, when it holds a ", in ''. RENDER_LINK
-  // reads the target to the first space, so the title moves out first and
-  // its place in the target holds a sentinel the link pass reads back. It
-  // arrives HTML-escaped, so it is safe inside the attribute. Bounded, so a
-  // line of unclosed titles costs no more than its length.
-  const linkTitles: string[] = [];
-  t = t.replace(/\]\(([^\s)\]]+) (?:&quot;((?:(?!&quot;\))[^\n]){0,500})&quot;|'((?:(?!'\))[^\n]){0,500})')\)/g,
-    (_m: string, href: string, dq: string | undefined, sq: string | undefined) => {
-      linkTitles.push((dq ?? sq ?? '').replace(/\\(&quot;|')/g, '$1'));
-      return `](${href}\x01L${linkTitles.length - 1}\x01)`;
+  // Linked images `[![alt](src "caption")](href "title"){width=N align=X}` (#970):
+  // handled before general links so `{width=N align=X}` attaches to the photo/figure
+  // and no inline 14px favicon is prepended beside a full-size picture.
+  if (pictureTags.size > 0) {
+    t = t.replace(/\[\x01T(\d+)\x01\]\(([^\s)]+)\)(?:\{([^}]*)\})?/g, (whole: string, picId: string, rawTarget: string, attrs?: string) => {
+      const pic = pictureTags.get(Number(picId));
+      if (!pic) return whole;
+      const titled = /\x01L(\d+)\x01$/.exec(rawTarget);
+      const rawHref = titled ? rawTarget.slice(0, titled.index) : rawTarget;
+      const titleAttr = titled ? ` title="${linkTitles[Number(titled[1])] ?? ''}"` : '';
+      const href = attrText(rawHref).replace(/\x01E(\d+)\x01/g, (_m: string, i: string) => escapeHtml(bsEscapes[Number(i)] ?? ''));
+      const safe = sanitizeLinkHref(href);
+      const widthMatch = attrs?.match(/width=["']?(\d+%?)["']?/);
+      const width = widthMatch?.[1] ?? pic.width;
+      const align = sanitizeAlign(attrs?.match(/(?:^|\s)align=["']?([a-z]+)["']?/)?.[1] ?? '') || pic.align;
+      const captionAlign = parseCaptionAlign(attrs) ?? pic.captionAlign;
+      const nextPic: PictureDesc = { ...pic, ...(width ? { width } : {}), align, captionAlign };
+      if (safe === null) return stash(buildPictureHtml(nextPic));
+      return stash(buildPictureHtml(nextPic, { href: safe, titleAttr }));
     });
+  }
+
+  // Links [text](url) with optional title already extracted into `linkTitles` above.
   t = replaceMatches(t, markdownLinks(t, RENDER_LINK),
     ({ text: label, target: rawTarget }) => {
       const titled = /\x01L(\d+)\x01$/.exec(rawTarget);
@@ -608,7 +759,7 @@ function renderInline(raw: string): string {
       const domain = domainFromHref(href);
       const fav = domain && getFavicons() ? faviconUrl(domain) : '';
       const favicon = fav
-        ? `<img src="${fav}" width="14" height="14" style="display:inline-block;vertical-align:middle;margin:0 3px 0 0;border-radius:2px;max-width:none" onerror="this.style.display='none'" />`
+        ? `<img class="pn-favicon" src="${fav}" width="14" height="14" style="display:inline-block;vertical-align:middle;margin-inline:0 3px;border-radius:2px;max-width:none" onerror="this.style.display='none'" />`
         : '';
       const safe = sanitizeLinkHref(href);
       if (safe === null) return label;
@@ -634,7 +785,7 @@ function renderInline(raw: string): string {
       const domain = domainFromHref(href);
       const fav = domain && getFavicons() ? faviconUrl(domain) : '';
       const favicon = fav
-        ? `<img src="${fav}" width="14" height="14" style="display:inline-block;vertical-align:middle;margin:0 3px 0 0;border-radius:2px;max-width:none" onerror="this.style.display='none'" />`
+        ? `<img class="pn-favicon" src="${fav}" width="14" height="14" style="display:inline-block;vertical-align:middle;margin-inline:0 3px;border-radius:2px;max-width:none" onerror="this.style.display='none'" />`
         : '';
       // The icon is a box of its own, and CSS offers a line break right
       // after one. The text here is a whole URL, which is a single word, so
@@ -675,26 +826,23 @@ function renderInline(raw: string): string {
   // at the closing quote right after the color, so a run that was BOTH
   // colored and resized rendered as visible escaped tags, and font size
   // and family never rendered in an export at all.
-  t = t.replace(
-    /&lt;span style=&quot;([^&]*)&quot;&gt;([\s\S]*?)&lt;\/span&gt;/gi,
-    (_m: string, style: string, inner: string) => {
-      const decls: string[] = [];
-      for (const part of style.split(';')) {
-        const [rawProp, ...rest] = part.split(':');
-        const prop = (rawProp ?? '').trim().toLowerCase();
-        const value = rest.join(':');
-        if (!prop || !value) continue;
-        const safe =
-          prop === 'color' ? sanitizeColor(value)
-          : prop === 'font-size' ? sanitizeFontSize(value)
-          : prop === 'font-family' ? sanitizeFontFamily(value)
-          : null;
-        if (safe) decls.push(`${prop}:${safe}`);
-      }
-      if (decls.length === 0) return inner;
-      return stash(`<span style="${decls.join(';')}">`) + inner + stash('</span>');
+  t = replaceEscapedStyledTag(t, 'span', (style: string, inner: string) => {
+    const decls: string[] = [];
+    for (const part of style.split(';')) {
+      const [rawProp, ...rest] = part.split(':');
+      const prop = (rawProp ?? '').trim().toLowerCase();
+      const value = rest.join(':');
+      if (!prop || !value) continue;
+      const safe =
+        prop === 'color' ? sanitizeColor(value)
+        : prop === 'font-size' ? sanitizeFontSize(value)
+        : prop === 'font-family' ? sanitizeFontFamily(value)
+        : null;
+      if (safe) decls.push(`${prop}:${safe}`);
     }
-  );
+    if (decls.length === 0) return inner;
+    return stash(`<span style="${decls.join(';')}">`) + inner + stash('</span>');
+  });
 
   // Marks the editor writes as bare inline HTML: underline, superscript
   // and subscript. No attributes to sanitize - the tag name IS the whole
@@ -715,16 +863,13 @@ function renderInline(raw: string): string {
   // is dropped, so an untrusted burn note cannot smuggle CSS through the
   // tag we let past the escaper. Runs before the `==` pass below, which
   // would otherwise never see these, and before the emphasis passes.
-  t = t.replace(
-    /&lt;mark style=&quot;([^&]*)&quot;&gt;([\s\S]*?)&lt;\/mark&gt;/gi,
-    (_m: string, style: string, inner: string) => {
-      const [rawProp, ...rest] = style.split(':');
-      const prop = (rawProp ?? '').trim().toLowerCase();
-      const safe = prop === 'background-color' ? sanitizeColor(rest.join(':')) : null;
-      if (!safe) return stash('<mark>') + inner + stash('</mark>');
-      return stash(`<mark style="background-color:${safe}">`) + inner + stash('</mark>');
-    }
-  );
+  t = replaceEscapedStyledTag(t, 'mark', (style: string, inner: string) => {
+    const [rawProp, ...rest] = style.split(':');
+    const prop = (rawProp ?? '').trim().toLowerCase();
+    const safe = prop === 'background-color' ? sanitizeColor(rest.join(':')) : null;
+    if (!safe) return stash('<mark>') + inner + stash('</mark>');
+    return stash(`<mark style="background-color:${safe}">`) + inner + stash('</mark>');
+  });
 
   // ==highlight== (Obsidian syntax, HighlightWithMarkdown). Runs before
   // the emphasis passes so the doubled `=` can never be chewed up.
@@ -755,6 +900,23 @@ function renderInline(raw: string): string {
   t = t.replace(/(^|\W)__([^_]+)__(?!\w)/g, '$1<strong>$2</strong>');
   t = t.replace(/(^|\W)_([^_\s][^_]*?)_(?!\w)/g, '$1<em>$2</em>');
   t = t.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+
+  // Inline `#tags` outside headings, code spans, links and note-links
+  // (inlineTags.ts). Runs before stashed tags are restored so link hrefs and
+  // anchors stay untouched.
+  if (opts?.inlineTags !== false && t.includes('#')) {
+    const spans = findInlineTagSpansInText(t);
+    if (spans.length > 0) {
+      let tagged = '';
+      let cursor = 0;
+      for (const span of spans) {
+        tagged += t.slice(cursor, span.from);
+        tagged += stash('<span class="pn-inline-tag">') + t.slice(span.from, span.to) + stash('</span>');
+        cursor = span.to;
+      }
+      t = tagged + t.slice(cursor);
+    }
+  }
 
   // Restore stashed tags.
   t = t.replace(/\x01T(\d+)\x01/g, (_m: string, i: string) => tagBuf[Number(i)] ?? '');
@@ -1124,8 +1286,6 @@ function cleanEditorHtml(html: string): string {
 const TASK_CHECK_SVG =
   "url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><path d=%22M3.5 8.5l3 3 6-7%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%222.4%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>')";
 
-const TASK_DONE_TEXT = 'text-decoration:line-through;color:#a3a3a3';
-
 function taskCheckboxHtml(checked: boolean): string {
   const base =
     'appearance:none;-webkit-appearance:none;flex-shrink:0;font:inherit;width:1.45em;height:1.45em;margin:calc((1lh - 1.45em) / 2) 0 0;border-radius:0.33em;border:1.5px solid #a3a3a3;background:transparent';
@@ -1136,12 +1296,16 @@ function taskCheckboxHtml(checked: boolean): string {
 /** Styled inline reminder pill shared by Markdown and aligned-HTML task exports. */
 function taskReminderPillHtml(parsed: Parameters<typeof formatTaskReminderSpec>[0]): string {
   const text = escapeHtml(formatTaskReminderSpec(parsed));
-  return `<span style="display:inline-flex;align-items:center;gap:0.25em;padding:0.1em 0.45em;border-radius:999px;border:1px solid #d4d4d8;background:#f4f4f5;color:#3f3f46;font-size:0.82em;white-space:nowrap;vertical-align:0.05em">&#128276; ${text}</span>`;
+  const bell = inlineSvg([BELL_ICON_PATH], '0.95em');
+  return `<span class="pn-task-reminder" style="display:inline-flex;align-items:center;gap:0.3em;padding:0.1em 0.5em;border-radius:999px;border:1px solid var(--pn-rem-border,rgba(30,64,175,0.28));background:var(--pn-rem-bg,rgba(30,64,175,0.1));color:var(--pn-rem-fg,#1e40af);font-size:0.8em;font-weight:500;line-height:1.35;white-space:nowrap;vertical-align:0.04em;margin-inline-start:0.25em">${bell}<span>${text}</span></span>`;
 }
 
-/** Task text, struck through and dimmed when done - sub-lists stay outside. */
+/** Task text, styled per the checked task setting when done - sub-lists stay outside. */
 function taskTextHtml(checked: boolean, body: string, subHtml: string): string {
-  const text = checked ? `<span style="${TASK_DONE_TEXT}">${body}</span>` : body;
+  const inline = checked ? checkedTaskInlineStyle() : '';
+  const text = checked
+    ? `<span class="pn-task-done"${inline ? ` style="${inline}"` : ''}>${body}</span>`
+    : body;
   return `<span>${text}${subHtml}</span>`;
 }
 
@@ -1430,7 +1594,10 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
     return [`<ol${startAttr}${dir}${styles.length ? ` style="${styles.join(';')}"` : ''}>${body}</ol>`, i];
   }
   if (hasTask) {
-    const taskStyle = `list-style:none;padding-inline-start:0${gutterPinned ? ';margin-inline-start:0' : ''}`;
+    // Top-level checklists sit flush with headings and prose, matching the
+    // editor (ul[data-type='taskList'] has no outer indent); nested checklists
+    // keep the stylesheet's list indent so child tasks step in cleanly.
+    const taskStyle = `list-style:none;padding-inline-start:0${gutterPinned || baseIndent === 0 ? ';margin-inline-start:0' : ''}`;
     return [`<ul${dir} style="${taskStyle}">${body}</ul>`, i];
   }
   return [`<ul${dir}${styles.length ? ` style="${styles.join(';')}"` : ''}>${body}</ul>`, i];
@@ -1443,18 +1610,22 @@ function parseListBlock(lines: string[], startI: number, baseIndent: number): [s
  * inside the Burn viewer (Tailwind prose) without style coordination.
  */
 let footnoteRenders = 0;
+let noteLocale: string | undefined = undefined;
 
-export function renderMarkdown(md: string): string {
+export function renderMarkdown(md: string, locale?: string): string {
   // Strip control characters used as internal sentinels to prevent
   // crafted input from colliding with the stash/restore mechanism.
   const text = md.replace(/\r\n?/g, '\n').replace(/[\x01\x02]/g, '');
   const render = () => (/\[\^|\^\[/.test(text) ? renderWithFootnotes(text) : renderBlocks(text));
-  if (notePersian !== null) return render();
-  notePersian = writesPersian(text);
+  const prevLocale = noteLocale;
+  if (locale !== undefined) noteLocale = locale;
+  const ownPersian = notePersian === null;
+  if (ownPersian) notePersian = writesPersian(text);
   try {
     return render();
   } finally {
-    notePersian = null;
+    if (ownPersian) notePersian = null;
+    noteLocale = prevLocale;
   }
 }
 
@@ -1551,6 +1722,63 @@ function replaceFences(text: string, place: (info: string, body: string, prefix:
   return out.join('\n');
 }
 
+/** The text before a trailing `$$[ \t]*` on `s`, or null when `s` does not end with one. */
+function stripClosingDollars(s: string): string | null {
+  let end = s.length;
+  while (end > 0 && (s[end - 1] === ' ' || s[end - 1] === '\t')) end--;
+  return end >= 2 && s[end - 1] === '$' && s[end - 2] === '$' ? s.slice(0, end - 2) : null;
+}
+
+/**
+ * Every `$$...$$` display-math block in `text` (one-line or multi-line, with
+ * optional trailing spaces or tabs on the closing line), matched in one linear
+ * pass over the lines. When a `$$` opener finds no closing line anywhere below
+ * it, no later `$$` line can close either, so the rest of the body is copied
+ * once without backtracking.
+ */
+function replaceDisplayMath(
+  text: string,
+  place: (whole: string, tex: string) => string | null,
+): string {
+  if (!text.includes('$$')) return text;
+  const lines = text.split('\n');
+  const out: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    if (!line.startsWith('$$')) {
+      out.push(line);
+      continue;
+    }
+    const singleTex = stripClosingDollars(line.slice(2));
+    if (singleTex !== null) {
+      out.push(place(line, singleTex) ?? line);
+      continue;
+    }
+    let end = i + 1;
+    let closeHead: string | null = null;
+    while (end < lines.length) {
+      closeHead = stripClosingDollars(lines[end]!);
+      if (closeHead !== null) break;
+      end++;
+    }
+    if (closeHead === null) {
+      for (let k = i; k < lines.length; k++) out.push(lines[k]!);
+      break;
+    }
+    const whole = lines.slice(i, end + 1).join('\n');
+    const mid = end > i + 1 ? '\n' + lines.slice(i + 1, end).join('\n') : '';
+    const tex = line.slice(2) + mid + '\n' + closeHead;
+    const replaced = place(whole, tex);
+    if (replaced !== null) {
+      out.push(replaced);
+    } else {
+      for (let k = i; k <= end; k++) out.push(lines[k]!);
+    }
+    i = end;
+  }
+  return out.join('\n');
+}
+
 function renderBlocks(text: string): string {
 
   // Pull fenced code blocks out of the flow first so nothing inside
@@ -1602,14 +1830,23 @@ function renderBlocks(text: string): string {
       if (place) {
         const at = formatCoordinates(place);
         const text = place.label ? `${escapeHtml(place.label)} (${at})` : at;
-        fences.push(`<p><a href="${escapeHtml(osmUrl(place.lat, place.lng))}">${text}</a></p>`);
+        const pin = inlineSvg([MAP_PIN_ICON_PATH], '16');
+        fences.push(
+          `<p class="pn-map-card"><a class="pn-map-link" href="${escapeHtml(osmUrl(place.lat, place.lng))}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:0.45em;padding:0.45em 0.8em;border-radius:8px;border:1px solid var(--pn-table-border,rgba(128,128,128,0.25));background:rgba(128,128,128,0.06);text-decoration:none">${pin}<span>${text}</span></a></p>`,
+        );
+        return `\x02F${idx}\x02`;
+      }
+      if (info.language?.toLowerCase() === COPY_BOX_LANGUAGE) {
+        fences.push(`<pre class="pn-copybox"><code>${escapeHtml(code)}</code></pre>`);
         return `\x02F${idx}\x02`;
       }
       const highlighted = renderFenceCode(code, info.language ?? '');
+      const langLabel = codeLangLabel ? codeLangLabel(info.language) : null;
+      const langAttr = langLabel ? ` data-lang="${escapeHtml(langLabel)}"` : '';
       const title = info.title
-        ? `<span class="code-title" style="display:block;font-weight:600;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid #3a3a3a">${escapeHtml(info.title)}</span>`
+        ? `<span class="code-title"${langAttr} style="display:flex;align-items:baseline;justify-content:space-between;gap:1em;font-weight:600;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid #3a3a3a"><span>${escapeHtml(info.title)}</span></span>`
         : '';
-      fences.push(`<pre>${title}<code>${highlighted ?? escapeHtml(code)}</code></pre>`);
+      fences.push(`<pre${info.title ? '' : langAttr}>${title}<code>${highlighted ?? escapeHtml(code)}</code></pre>`);
       return `\x02F${idx}\x02`;
     }
   );
@@ -1618,22 +1855,21 @@ function renderBlocks(text: string): string {
   // the multi-line form Obsidian and pandoc write (blockMathRule in
   // editorInlineSyntax.ts reads both, so this has to as well). It runs AFTER
   // the fence pass, so a `$$` inside a code block is already behind a
-  // sentinel and stays literal. The result is pushed into the same `fences`
-  // array: both are block HTML that is finished before the line loop starts,
-  // so the placeholder the loop already understands is the whole mechanism.
-  const withoutMath = withoutFences.replace(
-    /^\$\$([\s\S]*?)\$\$[ \t]*$/gm,
-    (whole: string, tex: string) => {
-      const html = renderTex(tex.trim(), true);
-      if (!html) return whole;
-      const idx = fences.length;
-      // A block-level wrapper, centred inline because the exported document
-      // has no stylesheet of ours to lean on.
-      fences.push(`<div style="text-align:center;margin:1em 0">${html}</div>`);
-      fenceSource.push(whole);
-      return `\x02F${idx}\x02`;
-    }
-  );
+  // sentinel and stays literal. Scanned line by line so unclosed or non-EOL
+  // `$$` lines never re-scan the rest of the body. The result is pushed into
+  // the same `fences` array: both are block HTML that is finished before the
+  // line loop starts, so the placeholder the loop already understands is the
+  // whole mechanism.
+  const withoutMath = replaceDisplayMath(withoutFences, (whole: string, tex: string) => {
+    const html = renderTex(tex.trim(), true);
+    if (!html) return null;
+    const idx = fences.length;
+    // A block-level wrapper, centered inline because the exported document
+    // has no stylesheet of ours to lean on.
+    fences.push(`<div style="text-align:center;margin:1em 0">${html}</div>`);
+    fenceSource.push(whole);
+    return `\x02F${idx}\x02`;
+  });
 
   const lines = withoutMath.split('\n');
   const out: string[] = [];
@@ -1749,10 +1985,10 @@ function renderBlocks(text: string): string {
       if (tag === 'table') {
         block = block
           .replace(/<table(?![^>]*style)/gi, '<table style="border-collapse:collapse;width:100%;margin:1em 0"')
-          .replace(/<th(?![^>]*style)/gi, '<th style="border:1px solid #d4d4d4;padding:6px 10px;text-align:left;font-weight:600"')
-          .replace(/<td(?![^>]*style)/gi, '<td style="border:1px solid #d4d4d4;padding:6px 10px"')
-          .replace(/(<th\b[^>]*\bdata-fill="[a-z]+"[^>]*\bstyle=")(?!border)/gi, '$1border:1px solid #d4d4d4;padding:6px 10px;text-align:left;font-weight:600;')
-          .replace(/(<td\b[^>]*\bdata-fill="[a-z]+"[^>]*\bstyle=")(?!border)/gi, '$1border:1px solid #d4d4d4;padding:6px 10px;');
+          .replace(/<th(?![^>]*style)/gi, '<th style="border:1px solid var(--pn-table-border,#e5e5e5);padding:6px 10px;text-align:left;font-weight:600"')
+          .replace(/<td(?![^>]*style)/gi, '<td style="border:1px solid var(--pn-table-border,#e5e5e5);padding:6px 10px"')
+          .replace(/(<th\b[^>]*\bdata-fill="[a-z]+"[^>]*\bstyle=")(?!border)/gi, '$1border:1px solid var(--pn-table-border,#e5e5e5);padding:6px 10px;text-align:left;font-weight:600;')
+          .replace(/(<td\b[^>]*\bdata-fill="[a-z]+"[^>]*\bstyle=")(?!border)/gi, '$1border:1px solid var(--pn-table-border,#e5e5e5);padding:6px 10px;');
       }
       out.push(block);
       continue;
@@ -1771,7 +2007,7 @@ function renderBlocks(text: string): string {
     const h = line.match(/^(#{1,6})\s+(.*)$/);
     if (h && h[1] && h[2] !== undefined) {
       const level = h[1].length;
-      out.push(`<h${level}>${renderInline(h[2].trim())}</h${level}>`);
+      out.push(`<h${level}>${renderInline(h[2].trim(), { inlineTags: false })}</h${level}>`);
       i++;
       continue;
     }
@@ -1807,35 +2043,20 @@ function renderBlocks(text: string): string {
           for (const inner of innerLines) {
             const isQ = /^>\s?/.test(inner);
             if (isQ && !inBlock) {
-              const cm = inner.replace(/^>\s?/, '').match(/^\[!col(?:\|(\d{1,2}))?\][+-]?(?:\s.*)?$/i);
-              if (cm) {
-                const n = cm[1] ? Number(cm[1]) : NaN;
-                colWidths.push(n >= 1 && n <= 99 ? n : null);
-              }
+              const col = parseColCalloutHeader(inner.replace(/^>\s?/, ''));
+              if (col) colWidths.push(col.width);
             }
             inBlock = isQ;
           }
-          const weights = effectiveWidths(colWidths);
-          const template = weights
-            ? weights.map((w) => `minmax(0,${w}fr)`).join(' ')
-            : `repeat(${Math.max(1, colWidths.length)},minmax(0,1fr))`;
           const bodyMd = unplace(innerLines.join('\n'));
           const bodyHtml = bodyMd.trim() === '' ? '' : renderMarkdown(bodyMd);
           const border = parseColumnBorder(callout[2]);
-          if (border.style === 'none') {
-            out.push(
-              `<div class="pn-columns" style="margin:1em 0;display:grid;grid-template-columns:${template};gap:1.25rem;align-items:start">${bodyHtml}</div>`
-            );
-          } else {
-            const gap = columnBorderGapCss(border.style);
-            const { bc, bg } = columnBorderExportColors(border);
-            const frameCss = border.style === 'frame'
-              ? `;border:${border.weight}px ${border.line} ${bc};border-radius:7px;overflow:hidden${bg !== 'transparent' ? `;background:${bg}` : ''}`
-              : '';
-            out.push(
-              `<div class="pn-columns" data-border-style="${border.style}" style="margin:1em 0;display:grid;grid-template-columns:${template};gap:${gap};align-items:stretch;--pn-col-bw:${border.weight}px;--pn-col-bs:${border.line};--pn-col-bc:${bc};--pn-col-bg:${bg}${frameCss}">${bodyHtml}</div>`
-            );
-          }
+          const styleAttr = columnContainerStyle(effectiveWidths(colWidths), border, {
+            mode: 'export',
+            columnCount: colWidths.length,
+          });
+          const borderAttr = border.style === 'none' ? '' : ` data-border-style="${border.style}"`;
+          out.push(`<div class="pn-columns"${borderAttr} style="${styleAttr}">${bodyHtml}</div>`);
           continue;
         }
         if (rawType === 'col') {
@@ -1853,21 +2074,64 @@ function renderBlocks(text: string): string {
         const titleHtml = title ? renderInline(title) : escapeHtml(CALLOUT_LABELS[canon]);
         const bodyMd = unplace(buf.slice(1).join('\n'));
         const bodyHtml = bodyMd.trim() === '' ? '' : renderMarkdown(bodyMd);
+        const dir = dirAttr(firstLetterOfHtml(title ? `${titleHtml} ${bodyHtml}` : bodyHtml));
+        // Kanban boards and their columns are layout containers rather than
+        // folded callouts: board shows the Kanban icon (unless the title starts
+        // with its own inline icon), and each column gets a 3px top accent bar,
+        // a card count badge, and framed task cards.
+        if (canon === 'kanban') {
+          const ownIcon = titleHtml.trimStart().startsWith('<svg');
+          const kanbanPaths = !ownIcon ? calloutIconPaths?.kanban : undefined;
+          const kanbanGlyph = kanbanPaths
+            ? `<span class="pn-kanban-glyph" style="display:inline-flex;align-items:center;opacity:0.65;flex-shrink:0" aria-hidden="true">${inlineSvg(kanbanPaths, '16')}</span>`
+            : '';
+          out.push(
+            `<div class="pn-callout pn-callout-kanban"${dir} style="margin:1em 0;padding:0.55em 0.65em 0.65em;border:1px solid var(--pn-table-border,rgba(128,128,128,0.25));border-radius:10px;background:rgba(128,128,128,0.03)">` +
+              `<div class="pn-kanban-title" style="display:flex;align-items:center;gap:0.45em;padding:0.1em 0.15em 0.45em;font-weight:600;font-size:1.067em">${kanbanGlyph}<span>${titleHtml}</span></div>` +
+              `<div class="pn-callout-body pn-kanban-body" style="${KANBAN_BODY_STYLE}">${bodyHtml}</div>` +
+            `</div>`
+          );
+          continue;
+        }
+        if (canon === 'column') {
+          const cardCount = bodyMd.split('\n').filter((l) => /^[-*+]\s+\[[ xX]\]\s+/.test(l)).length;
+          const countPill = cardCount > 0
+            ? `<span class="pn-column-count" style="flex-shrink:0;min-width:1.5em;padding:0 0.45em;border-radius:999px;background:rgba(${tint},0.16);color:var(--pn-muted,#6a6a6a);font-size:0.78em;font-weight:500;line-height:1.7;text-align:center">${cardCount}</span>`
+            : '';
+          out.push(
+            `<div class="pn-callout pn-callout-column"${dir} style="min-width:0;padding:0.45em 0.5em 0.55em;border:1px solid rgba(${tint},0.3);border-top:3px solid ${color};border-radius:8px;background:rgba(${tint},0.09)">` +
+              `<div class="pn-column-head" style="display:flex;align-items:center;justify-content:space-between;gap:0.4em;font-weight:600${color ? `;color:${color}` : ''}"><span style="display:inline-flex;align-items:center;gap:0.35em;min-width:0">${titleHtml}</span>${countPill}</div>` +
+              `<div class="pn-callout-body pn-kanban-col-body">${bodyHtml}</div>` +
+            `</div>`
+          );
+          continue;
+        }
         // Fold has no box and no accent: the caret and the title in the text
         // color. Box frames it with a gray title strip over a plain body;
-        // Panel frames it with one soft wash. A neutral gray reads on a light
-        // and a dark export alike.
+        // Panel frames it with one soft wash. Colored types show their
+        // Phosphor icon at rest (and in print) and swap to the caret on hover,
+        // with body text aligned under the title edge as in the editor.
         const frame = 'margin:1em 0;border:1px solid rgba(128,128,128,0.35);border-radius:6px;overflow:hidden';
         const detailsStyle = canon === 'fold'
           ? 'margin:1em 0'
           : canon === 'box'
             ? frame
-            : canon === 'panel' || canon === 'kanban'
+            : canon === 'panel'
               ? `${frame};background:rgba(128,128,128,0.06)`
               : `margin:1em 0;border:1px solid rgba(${tint},0.35);border-inline-start:3px solid ${color};border-radius:6px;background:rgba(${tint},0.09);overflow:hidden`;
         const summaryStrip = canon === 'box' ? ';background:rgba(128,128,128,0.09)' : '';
-        const summaryStyle = `cursor:pointer;list-style:none;display:flex;align-items:center;gap:0.4em;padding:${canon === 'fold' ? '0.15em 0' : '0.4em 0.85em'};font-weight:600${color ? `;color:${color}` : ''}${summaryStrip}`;
-        const caret = `<span class="pn-callout-caret" style="flex-shrink:0;line-height:0" aria-hidden="true"><svg class="pn-caret-down" viewBox="0 0 256 256" width="14" height="14" fill="currentColor"><path d="${CALLOUT_CARET_DOWN}"/></svg><svg class="pn-caret-right" viewBox="0 0 256 256" width="14" height="14" fill="currentColor" style="display:none"><path d="${CALLOUT_CARET_RIGHT}"/></svg></span>`;
+        const summaryPad = canon === 'fold' ? '0.15em 0' : canon === 'box' ? '0.4em 0.85em' : '0.45em 0.85em 0.2em 0.7em';
+        const summaryStyle = `cursor:pointer;list-style:none;display:flex;align-items:center;gap:0.45em;padding:${summaryPad};font-weight:600${color ? `;color:${color}` : ''}${summaryStrip}`;
+        const typePaths = canon !== 'fold' && canon !== 'box' && canon !== 'panel' ? calloutIconPaths?.[canon] : undefined;
+        const typeIcon = typePaths
+          ? `<span class="pn-callout-type-icon" style="flex-shrink:0;line-height:0;display:inline-flex;align-items:center" aria-hidden="true">${inlineSvg(typePaths, '16')}</span>`
+          : '';
+        const caret = `<span class="pn-callout-caret" style="flex-shrink:0;line-height:0" aria-hidden="true"><svg class="pn-caret-down" viewBox="0 0 256 256" width="16" height="16" fill="currentColor"><path d="${CALLOUT_CARET_DOWN}"/></svg><svg class="pn-caret-right" viewBox="0 0 256 256" width="16" height="16" fill="currentColor" style="display:none"><path d="${CALLOUT_CARET_RIGHT}"/></svg></span>`;
+        const bodyStyle = canon === 'fold'
+          ? 'padding-inline-start:1.5em'
+          : canon === 'box'
+            ? 'padding:0.5em 0.85em 0.55em;border-top:1px solid rgba(128,128,128,0.25)'
+            : 'padding-block:0.15em 0.55em;padding-inline:2.2em 0.85em';
         // The `-` suffix carries the fold state into the export and the burn
         // viewer, the same as the editor: a folded callout starts closed and
         // the reader clicks it open (the :not([open]) rules swap the caret).
@@ -1875,10 +2139,11 @@ function renderBlocks(text: string): string {
         // stylesheet's print block force-shows every callout body, because
         // paper cannot be clicked.
         const folded = callout[3] === '-';
+        const typedClass = typePaths ? ' pn-callout-typed' : '';
         out.push(
-          `<details class="pn-callout pn-callout-${canon}"${folded ? '' : ' open'}${dirAttr(firstLetterOfHtml(title ? `${titleHtml} ${bodyHtml}` : bodyHtml))} style="${detailsStyle}">` +
-            `<summary class="pn-callout-summary" style="${summaryStyle}">${caret}<span>${titleHtml}</span></summary>` +
-            `<div class="pn-callout-body" style="${canon === 'fold' ? 'padding-inline-start:1.4em' : canon === 'box' ? 'padding:0.5em 0.85em 0.55em;border-top:1px solid rgba(128,128,128,0.25)' : canon === 'kanban' ? KANBAN_BODY_STYLE : 'padding:0.15em 0.85em 0.55em'}">${bodyHtml}</div>` +
+          `<details class="pn-callout pn-callout-${canon}${typedClass}"${folded ? '' : ' open'}${dir} style="${detailsStyle}">` +
+            `<summary class="pn-callout-summary" style="${summaryStyle}">${typeIcon}${caret}<span>${titleHtml}</span></summary>` +
+            `<div class="pn-callout-body" style="${bodyStyle}">${bodyHtml}</div>` +
           `</details>`
         );
         continue;
@@ -1960,7 +2225,7 @@ function renderBlocks(text: string): string {
       if (hasSep) {
         tableHtml.push('<thead><tr>');
         headerRow.forEach((cell, idx) => {
-          tableHtml.push(`<th${fillAttr(0, idx)} style="border:1px solid #d4d4d4;padding:6px 10px;text-align:${aligns[idx] ?? 'left'};font-weight:600${fillStyle(0, idx)}">${renderInline(cell)}</th>`);
+          tableHtml.push(`<th${fillAttr(0, idx)} style="border:1px solid var(--pn-table-border,#e5e5e5);padding:6px 10px;text-align:${aligns[idx] ?? 'left'};font-weight:600${fillStyle(0, idx)}">${renderInline(cell)}</th>`);
         });
         tableHtml.push('</tr></thead>');
       }
@@ -1994,9 +2259,11 @@ function renderBlocks(text: string): string {
           // and the number is grouped for whichever browser renders it. The
           // editor passes the app language; an export is read wherever it
           // lands.
-          const body = result && 'value' in result ? escapeHtml(formatFormulaValue(result.value)) : renderInline(cell);
+          const body = result && 'value' in result
+            ? `<span class="pn-formula-value">${escapeHtml(formatFormulaValue(result.value, noteLocale))}</span>`
+            : renderInline(cell);
           const row = rowIdx + headerOffset;
-          tableHtml.push(`<td${fillAttr(row, idx)} style="border:1px solid #d4d4d4;padding:6px 10px${align}${fillStyle(row, idx)}">${body}</td>`);
+          tableHtml.push(`<td${fillAttr(row, idx)} style="border:1px solid var(--pn-table-border,#e5e5e5);padding:6px 10px${align}${fillStyle(row, idx)}">${body}</td>`);
         });
         tableHtml.push('</tr>');
       });
@@ -2036,7 +2303,16 @@ function renderBlocks(text: string): string {
       }
       return l;
     }).join(' ');
-    out.push(`<p>${renderInline(withBreaks).replace(/\x02B/g, '<br />')}</p>`);
+    const rendered = renderInline(withBreaks).replace(/\x02B/g, '<br />');
+    if (
+      rendered.startsWith('<figure ') &&
+      rendered.endsWith('</figure>') &&
+      !rendered.slice(0, -'</figure>'.length).includes('</figure>')
+    ) {
+      out.push(rendered);
+    } else {
+      out.push(`<p>${rendered}</p>`);
+    }
   }
 
   // A placeholder that did not stand on a line of its own (a fence inside a
@@ -2114,6 +2390,10 @@ export async function inlineSameOriginImages(
         if (!res.ok) return;
         const blob = await res.blob();
         const dataUri = await blobToDataUri(blob);
+        // Reject non-image responses (e.g. an SPA 200 HTML fallback for a missing
+        // asset path) so the original ref stays untouched instead of turning
+        // into an invalid `data:text/html` URI that fails image sanitization.
+        if (!/^data:image\//i.test(dataUri)) return;
         resolved.set(src, dataUri);
       } catch {
         // Silent - leave the URL ref in place.
@@ -2184,15 +2464,21 @@ export async function inlineRenderedFavicons(html: string): Promise<string> {
     }),
   );
 
-  if (resolved.size === 0) return html;
+  const inlined = resolved.size === 0
+    ? html
+    : html.replace(
+        /src="[^"]*\/favicon\?domain=([^"]+)"/g,
+        (match: string, encoded: string) => {
+          const domain = faviconDomain(encoded);
+          const dataUri = domain === null ? undefined : resolved.get(domain);
+          if (!dataUri) return match;
+          return `src="${dataUri}"`;
+        },
+      );
 
-  return html.replace(
-    /src="[^"]*\/favicon\?domain=([^"]+)"/g,
-    (match: string, encoded: string) => {
-      const domain = faviconDomain(encoded);
-      const dataUri = domain === null ? undefined : resolved.get(domain);
-      if (!dataUri) return match;
-      return `src="${dataUri}"`;
-    }
-  );
+  // Drop renderer-emitted link favicons that could not be inlined: exported
+  // HTML and print views lock scripts and network behind CSP (`default-src
+  // 'none'`), so `onerror` cannot hide an unresolved `/favicon` and it would
+  // otherwise print as an empty broken-image box beside the link.
+  return inlined.replace(/<img class="pn-favicon" src="[^"]*\/favicon\?domain=[^"]*"[^>]*\/?>/g, '');
 }

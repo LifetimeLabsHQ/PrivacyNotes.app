@@ -203,6 +203,7 @@
     "cut": "Kes",
     "copyAsPlain": "Düz metin olarak kopyala",
     "copyAsMarkdown": "Markdown olarak kopyala",
+    "clearFormatting": "Biçimlendirmeyi temizle",
     "sortAsc": "Satırları A'dan Z'ye sırala",
     "sortDesc": "Satırları Z'den A'ya sırala"
   },
@@ -275,6 +276,9 @@
   "inlineCode": {
     "copyHint": "Kopyalamak için {{key}}+tıklayın"
   },
+  "inlineTag": {
+    "filter": "Etikete göre filtrele"
+  },
   "codeBlock": {
     "copyFailed": "Başarısız",
     "wrap": "Uzun satırları kaydır",
@@ -303,7 +307,8 @@
     "linkHeading": "Bir başlığa bağla...",
     "headingNotFound": "Başlık bulunamadı",
     "headingsLocked": "Başlıklarını görmek için bu notun kilidini açın",
-    "noHeadings": "Bu notta başlık yok"
+    "noHeadings": "Bu notta başlık yok",
+    "notFound": "Not bulunamadı"
   },
   "footnote": {
     "placeholder": "Dipnot metni",

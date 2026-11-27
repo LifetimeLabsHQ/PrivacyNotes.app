@@ -3040,7 +3040,7 @@ dependencies = [
 
 [[package]]
 name = "privacynotes"
-version = "0.836.3"
+version = "0.864.3"
 dependencies = [
  "auto-launch",
  "base64 0.22.1",
@@ -4187,6 +4187,7 @@ dependencies = [
  "heck 0.5.0",
  "http",
  "http-range",
+ "image",
  "jni",
  "libc",
  "log",

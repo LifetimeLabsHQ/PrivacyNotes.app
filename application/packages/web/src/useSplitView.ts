@@ -16,7 +16,7 @@ import { useIsPhoneLayout } from './useIsMobile';
  * brings it back. Hiding the Split view item on Settings > Toolbar turns it
  * off, so it never stays on with no button to close it. The phone layout has
  * room for neither.
- * Spec: docs/internal/plans/heading-folds-and-source-preview.md (Part 2)
+ * Spec: docs/internal/specs/heading-folds-and-source-preview.md (Part 2)
  */
 export function useSplitView({ pane, markdownShown, showMarkdown }: {
   /** The pane's scroller, measured for the 600 px fit. */

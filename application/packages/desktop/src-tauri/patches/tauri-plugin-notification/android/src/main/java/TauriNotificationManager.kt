@@ -83,7 +83,19 @@ class TauriNotificationManager(
       }
     } catch (_: JSONException) {
     }
+    // Always include the integer notification id even when `show()` left
+    // `sourceJson` null, so tapping a notification opens the exact item (#949).
+    if (request == null) {
+      request = JSObject().apply { put("id", notificationId) }
+    } else if (!request.has("id")) {
+      request.put("id", notificationId)
+    }
     dataJson.put("notification", request)
+    // Clear handled extras so a WebView reload does not replay the same tap.
+    data.removeExtra(NOTIFICATION_INTENT_KEY)
+    data.removeExtra(ACTION_INTENT_KEY)
+    data.removeExtra(NOTIFICATION_OBJ_INTENT_KEY)
+    data.removeExtra(NOTIFICATION_IS_REMOVABLE_KEY)
     return dataJson
   }
 

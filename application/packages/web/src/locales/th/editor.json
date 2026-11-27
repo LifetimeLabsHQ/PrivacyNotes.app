@@ -202,6 +202,7 @@
     "cut": "ตัด",
     "copyAsPlain": "คัดลอกเป็นข้อความธรรมดา",
     "copyAsMarkdown": "คัดลอกเป็น Markdown",
+    "clearFormatting": "ล้างการจัดรูปแบบ",
     "sortAsc": "เรียงบรรทัดจาก ก ถึง ฮ",
     "sortDesc": "เรียงบรรทัดจาก ฮ ถึง ก"
   },
@@ -270,6 +271,9 @@
   "inlineCode": {
     "copyHint": "{{key}}+คลิกเพื่อคัดลอก"
   },
+  "inlineTag": {
+    "filter": "กรองตามแท็ก"
+  },
   "codeBlock": {
     "copyFailed": "ล้มเหลว",
     "wrap": "ตัดบรรทัดยาว",
@@ -297,7 +301,8 @@
     "linkHeading": "ลิงก์ไปยังหัวเรื่อง...",
     "headingNotFound": "ไม่พบหัวเรื่อง",
     "headingsLocked": "ปลดล็อกโน้ตนี้เพื่อดูหัวเรื่อง",
-    "noHeadings": "โน้ตนี้ไม่มีหัวเรื่อง"
+    "noHeadings": "โน้ตนี้ไม่มีหัวเรื่อง",
+    "notFound": "ไม่พบโน้ต"
   },
   "footnote": {
     "placeholder": "ข้อความเชิงอรรถ",

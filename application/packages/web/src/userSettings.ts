@@ -4,7 +4,7 @@ import { isMfaRefusal, MfaRequiredError } from './mfaStep';
 import { encryptJson, decryptJson, bytesToBase64, base64ToBytes, type SupabaseClient } from '@notes/shared';
 import { hydrateScopedListPrefs, hydrateListPrefsStore } from './listPrefs';
 import { CAFFEINE_UNITS, defaultTrackerSettings, readFactors, readHabits, WATER_UNITS, type CaffeineUnit, WEIGHT_UNITS, type WaterUnit, type FactorDef, type TrackerSettings, type WeightUnit, type CustomTrackerTemplate, type MedicationTemplate } from './trackerTypes';
-import { isColorTheme, isLineSpacing, isNestedNumbers } from './theme';
+import { isCheckedTaskStyle, isColorTheme, isLineSpacing, isNestedNumbers } from './theme';
 import { isJournalTitleFormat, JOURNAL_SUFFIX_MAX } from './notesViewUtils';
 import { isClock, isDateOrder, isWeekStart } from './intlFormat';
 import { credentialKey, isDemoMode } from './demo';
@@ -24,6 +24,8 @@ import { deletedFolderIds, isNoteColorStyle, itemStylesEqual, mergeItemStyles, v
 import { deviceLabelsEqual, mergeDeviceLabels, validateDeviceLabels } from './deviceLabels';
 import { extensionKeysEqual, mergeExtensionKeys, validateExtensionKeys } from './extensionKeys';
 import { customThemesEqual, mergeCustomThemes, validateCustomThemes } from './customThemes';
+import { customIconsEqual, mergeCustomIcons, validateCustomIcons } from './customIcons';
+import { graphViewsEqual, mergeGraphViews, validateGraphViews } from './graphViews';
 import { calendarFeedsEqual, mergeCalendarFeeds, validateCalendarFeeds } from './calendarFeeds';
 import { formatBarSettingsEqual, mergeFormatBarSettings, validateFormatBarSetting } from './formatBar';
 import { dashboardSettingsEqual, mergeDashboardSettings, validateDashboardSetting } from './dashboard/dashboardLayout';
@@ -35,6 +37,7 @@ import { currentKeyEpoch, epochOf, holdsEpoch, keyEpochColumn, noteAccountEpoch,
 import { isPhraseReplacedRefusal, PhraseReplacedError, phraseReplacedStop, reportPhraseReplaced } from './phraseReplaced';
 import { localDataKeyCopy } from './localKey';
 import { readPwGen } from './passwordGen';
+import { readPageNumbers } from './pageNumbers';
 import { MAX_DISMISSED_SUGGESTIONS, mergeDismissedSuggestions } from './dismissedSuggestions';
 import { jwtClaims } from './jwtClaims';
 
@@ -140,6 +143,9 @@ function hydrate(raw: unknown): UserSettings {
   }
   if (typeof obj.taskConfetti === 'boolean') {
     base.taskConfetti = obj.taskConfetti;
+  }
+  if (isCheckedTaskStyle(obj.checkedTaskStyle)) {
+    base.checkedTaskStyle = obj.checkedTaskStyle;
   }
   if (obj.agentFolder === null || (typeof obj.agentFolder === 'string' && obj.agentFolder.length <= 64)) {
     base.agentFolder = obj.agentFolder;
@@ -258,6 +264,9 @@ function hydrate(raw: unknown): UserSettings {
   if (isNestedNumbers(obj.nestedNumbers)) {
     base.nestedNumbers = obj.nestedNumbers;
   }
+  if (obj.pageNumbers && typeof obj.pageNumbers === 'object') {
+    base.pageNumbers = readPageNumbers(obj.pageNumbers);
+  }
   if (isJournalTitleFormat(obj.journalTitleFormat)) {
     base.journalTitleFormat = obj.journalTitleFormat;
   }
@@ -296,6 +305,15 @@ function hydrate(raw: unknown): UserSettings {
   }
   if (obj.customThemes !== undefined) {
     base.customThemes = validateCustomThemes(obj.customThemes);
+  }
+  if (obj.customIcons !== undefined) {
+    base.customIcons = validateCustomIcons(obj.customIcons);
+  }
+  if (obj.themeIcons !== undefined) {
+    base.themeIcons = validateCustomIcons(obj.themeIcons);
+  }
+  if (obj.graphViews !== undefined) {
+    base.graphViews = validateGraphViews(obj.graphViews);
   }
   if (obj.calendarFeeds !== undefined) {
     base.calendarFeeds = validateCalendarFeeds(obj.calendarFeeds);
@@ -420,7 +438,7 @@ export function alertDefaults(s: Pick<UserSettings, 'calendar'>): { timed: Alert
  * every section lock on each device that pulled.
  * Spec: docs/internal/specs/section-lock.md
  */
-const NEWER_SCALARS = ['tintNotes', 'noteColorStyle', 'archivedInAll', 'includeSubfolders', 'sinkCheckedTasks', 'taskConfetti', 'agentFolder', 'typedSymbols', 'linkSuggestions', 'confirmTrash', 'confirmArchive', 'spaces', 'dateOrder', 'clock', 'weekStart', 'viewOrder', 'journalTitlePattern', 'calendar', 'checkIn', 'nestedNumbers', 'scopedListPrefs', 'dismissedSuggestions', 'protectedViews', 'imageSpaceSaverLevel'] as const;
+const NEWER_SCALARS = ['tintNotes', 'noteColorStyle', 'archivedInAll', 'includeSubfolders', 'sinkCheckedTasks', 'taskConfetti', 'checkedTaskStyle', 'agentFolder', 'typedSymbols', 'linkSuggestions', 'confirmTrash', 'confirmArchive', 'spaces', 'dateOrder', 'clock', 'weekStart', 'viewOrder', 'journalTitlePattern', 'calendar', 'checkIn', 'nestedNumbers', 'pageNumbers', 'scopedListPrefs', 'dismissedSuggestions', 'protectedViews', 'imageSpaceSaverLevel'] as const;
 
 /**
  * Whether the blob lacks a newer scalar this device holds at a value of its
@@ -812,7 +830,7 @@ const LEGACY_PIN_GROUP = [...PIN_GROUP, 'appLockEnabled'] as const;
  *  maximum, a flag that never goes back), never by the per-key base. */
 const OWN_RULE_KEYS = new Set<string>([
   'settingsRev', 'notesCreated', 'folders', 'foldersDeleted', 'itemStyles', 'deviceLabels', 'extensionKeys',
-  'customThemes', 'calendarFeeds', 'formatBar', 'dashboard', 'pinnedTabs', 'factors', 'customHabits', 'medications', 'trackerSettings',
+  'customThemes', 'customIcons', 'themeIcons', 'graphViews', 'calendarFeeds', 'formatBar', 'dashboard', 'pinnedTabs', 'factors', 'customHabits', 'medications', 'trackerSettings',
   'favoriteTags', 'dismissedAnnouncements', 'dismissedSuggestions', 'welcomeNoteSeeded', 'importHintDismissed',
   'milestonesSeen', 'firstSeenAt', 'ratingDone', 'importPromptDismissed', 'clipperHintDismissed', ...PIN_GROUP,
   ...DEVICE_SETTINGS, 'protectedViews',
@@ -2022,7 +2040,7 @@ function mergeTrackerSettings(
 }
 
 /** The fields `mergeAtEverySyncPoint` owns. */
-type EntryMerged = 'folders' | 'foldersDeleted' | 'itemStyles' | 'deviceLabels' | 'extensionKeys' | 'customThemes' | 'calendarFeeds' | 'formatBar' | 'dashboard' | 'pinnedTabs' | 'factors' | 'customHabits';
+type EntryMerged = 'folders' | 'foldersDeleted' | 'itemStyles' | 'deviceLabels' | 'extensionKeys' | 'customThemes' | 'customIcons' | 'themeIcons' | 'graphViews' | 'calendarFeeds' | 'formatBar' | 'dashboard' | 'pinnedTabs' | 'factors' | 'customHabits';
 
 /**
  * The folder tree, the folder and tag looks, the device labels, the custom
@@ -2049,6 +2067,9 @@ function mergeAtEverySyncPoint(
     deviceLabels: mergeDeviceLabels(local.deviceLabels, remote.deviceLabels),
     extensionKeys: mergeExtensionKeys(local.extensionKeys, remote.extensionKeys),
     customThemes: mergeCustomThemes(local.customThemes, remote.customThemes),
+    customIcons: mergeCustomIcons(local.customIcons, remote.customIcons),
+    themeIcons: mergeCustomIcons(local.themeIcons, remote.themeIcons),
+    graphViews: mergeGraphViews(local.graphViews, remote.graphViews),
     calendarFeeds: mergeCalendarFeeds(local.calendarFeeds, remote.calendarFeeds),
     formatBar: mergeFormatBarSettings(local.formatBar, remote.formatBar),
     dashboard: mergeDashboardSettings(local.dashboard, remote.dashboard),
@@ -2399,6 +2420,9 @@ export async function syncUserSettings(
           !deviceLabelsEqual(pulled.deviceLabels, remoteSettings.deviceLabels) ||
           !extensionKeysEqual(pulled.extensionKeys, remoteSettings.extensionKeys) ||
           !customThemesEqual(pulled.customThemes, remoteSettings.customThemes) ||
+          !customIconsEqual(pulled.customIcons, remoteSettings.customIcons) ||
+          !customIconsEqual(pulled.themeIcons, remoteSettings.themeIcons) ||
+          !graphViewsEqual(pulled.graphViews, remoteSettings.graphViews) ||
           !calendarFeedsEqual(pulled.calendarFeeds, remoteSettings.calendarFeeds) ||
           !formatBarSettingsEqual(pulled.formatBar, remoteSettings.formatBar) ||
           !dashboardSettingsEqual(pulled.dashboard, remoteSettings.dashboard) ||

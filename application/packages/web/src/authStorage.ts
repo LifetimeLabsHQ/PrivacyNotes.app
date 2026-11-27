@@ -13,6 +13,7 @@ import { tabSecrets, trustAwareStorage } from './trustStorage';
 import { settingsLocalKey } from './settingsLocalKey';
 import { forgetCryptoOrder } from './cryptoCheckout';
 import { clearLocalOnlyFlagsSync } from './localOnly';
+import { signOutFinishSettled } from './liveSignIn';
 
 // Demo-bucketed (see credentialKey in demo.ts): a demo session must
 // never read or write a real account's credential keys on the same
@@ -113,6 +114,7 @@ async function claimedOwner(): Promise<string | null> {
   // The demo never writes the marker, and a real account on the same origin
   // does: read here, it refused every demo phrase on the lock screen.
   if (isDemoMode()) return null;
+  await signOutFinishSettled();
   let owner: string | null = null;
   try {
     owner = localStorage.getItem(PUBKEY_OWNER_KEY);
@@ -230,9 +232,10 @@ export function clearAccountScopedUiState(): void {
     // Which items this account had open as tabs: ids only, but this account's.
     localStorage.removeItem('privacynotes.openTabs'); // notesView/useOpenTabs.ts
     sessionStorage.removeItem('privacynotes.openTabs'); // notesView/useOpenTabs.ts (when reopenLastOpen is off)
-    // Device-local graph positions (opaque UUID keys only) and last lens.
+    // Device-local graph positions (opaque UUID keys only), last lens, and last saved view id.
     localStorage.removeItem('privacynotes.graph.layout'); // graph/graphModel.ts
     localStorage.removeItem('privacynotes.graph.lens'); // graph/GraphModal.tsx
+    localStorage.removeItem('privacynotes.graph.activeView'); // graph/GraphModal.tsx
     // The notes this account turned spell check off for: ids only.
     localStorage.removeItem('privacynotes.spellcheckOffNotes'); // theme.ts
     // The sections this account folded, keyed by note id.
@@ -332,6 +335,7 @@ export function clearPriorAccountChoices(): void {
  * makes the unknown-owner wipe clean it instead of adopting around it.
  */
 export async function hasLocalAccountState(): Promise<boolean> {
+  if (!isDemoMode()) await signOutFinishSettled();
   try {
     if (localStorage.getItem(settingsLocalKey())) return true;
   } catch { /* ignore */ }
@@ -360,6 +364,7 @@ export async function hasLocalAccountState(): Promise<boolean> {
  * boot per install predating it.
  */
 export async function switchWouldWipe(phrase: string, online = true): Promise<boolean> {
+  if (!isDemoMode()) await signOutFinishSettled();
   if (await phraseOwnsThisDevice(phrase)) return false;
   // A phrase of a changed account this device has no record of yet: the
   // server says which account it signs for, so the account this device

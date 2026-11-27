@@ -34,7 +34,7 @@ export function NinjaKeyRow() {
   if (binding) last.current = binding;
 
   return (
-    <div className="py-3">
+    <div className="px-3.5 py-3">
       <Switch
         setting="appearance.ninjaKey"
         icon={<NinjaIcon className="text-accent" />}
@@ -46,26 +46,28 @@ export function NinjaKeyRow() {
         className="gap-x-5"
       />
       {binding && (
-        <div className="mt-2 flex flex-col items-start gap-2">
-          <HotkeyField
-            value={binding}
-            os={KEY_OS}
-            read={(e) => bindingFromPress(e)}
-            onChange={(next) => {
-              setInvalid(false);
-              setNinjaKey(next);
-            }}
-            onInvalid={() => setInvalid(true)}
-            onFocusChange={(focused) => {
-              setInvalid(false);
-              if (focused) pauseNinjaKey();
-              else resumeNinjaKey();
-            }}
-            label={t('appearance.ninjaKeyTitle')}
-          />
-          <p className={SETTINGS_HELP}>
-            {invalid ? t(KEY_OS === 'mac' ? 'appearance.ninjaKeyInvalidMac' : 'appearance.ninjaKeyInvalid') : t('appearance.ninjaKeyHelp')}
-          </p>
+        <div className="mt-2.5 space-y-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md border border-divider bg-track/60 px-3 py-2">
+            <HotkeyField
+              value={binding}
+              os={KEY_OS}
+              read={(e) => bindingFromPress(e)}
+              onChange={(next) => {
+                setInvalid(false);
+                setNinjaKey(next);
+              }}
+              onInvalid={() => setInvalid(true)}
+              onFocusChange={(focused) => {
+                setInvalid(false);
+                if (focused) pauseNinjaKey();
+                else resumeNinjaKey();
+              }}
+              label={t('appearance.ninjaKeyTitle')}
+            />
+            <p className={`${SETTINGS_HELP} flex-1 min-w-[12rem]`}>
+              {invalid ? t(KEY_OS === 'mac' ? 'appearance.ninjaKeyInvalidMac' : 'appearance.ninjaKeyInvalid') : t('appearance.ninjaKeyHelp')}
+            </p>
+          </div>
           {!tray && <p className={SETTINGS_HELP}>{t('appearance.ninjaKeyTray')}</p>}
           {!atLogin && <p className={SETTINGS_HELP}>{t('appearance.ninjaKeyLogin')}</p>}
           {taken && <Callout tone="warning">{t('appearance.ninjaKeyTaken')}</Callout>}

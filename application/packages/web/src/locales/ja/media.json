@@ -18,7 +18,13 @@
     "viewAria": "画像を表示",
     "copyAria": "画像をコピー",
     "copyFailed": "画像をコピーできませんでした。",
-    "picturesLeftOut": "一部の画像は追加されませんでした。画像は単独でコピーして貼り付けてください。"
+    "picturesLeftOut": "一部の画像は追加されませんでした。画像は単独でコピーして貼り付けてください。",
+    "captionLabel": "キャプション",
+    "captionAddAria": "キャプションを追加",
+    "captionEditAria": "キャプションを編集",
+    "captionPlaceholder": "キャプションを追加...",
+    "captionClearAria": "キャプションをクリア",
+    "captionHint": "Enter で保存 · Esc でキャンセル"
   },
   "attachment": {
     "fallbackName": "添付ファイル",

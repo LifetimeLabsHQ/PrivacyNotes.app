@@ -31,6 +31,33 @@ export function nextStop(body: string, stop: RegExp): (i: number) => number {
   };
 }
 
+/**
+ * Find the closing quote of a CommonMark quoted title on the same line,
+ * skipping backslash-escaped characters. Memoized like `nextStop` so a long
+ * run of unclosed quotes stays linear.
+ */
+function nextQuoteClose(body: string, quote: string): (start: number) => number {
+  let from = 0;
+  let at = -1;
+  return (start) => {
+    if (start < from || start >= at) {
+      from = start;
+      at = start;
+      while (at < body.length) {
+        const ch = body[at]!;
+        if (ch === '\n' || ch === '\r') break;
+        if (ch === '\\' && at + 1 < body.length && body[at + 1] !== '\n' && body[at + 1] !== '\r') {
+          at += 2;
+          continue;
+        }
+        if (ch === quote) break;
+        at++;
+      }
+    }
+    return at;
+  };
+}
+
 /** Where a link target ends: `[^)]*\)`, `[^)\s]+\)` or `.*?\)`. */
 const TARGET_STOPS = { paren: /\)/, space: /[)\s]/, line: /[)\n\r\u2028\u2029]/ } as const;
 
@@ -47,6 +74,8 @@ export type LinkShape = {
   target: keyof typeof TARGET_STOPS;
   /** The whole target must match this. */
   targetIs?: RegExp;
+  /** An optional CommonMark quoted title after the target (` "title"` or ` 'title'`). */
+  title?: boolean;
   /** An optional `{...}` after the link, `(?:\{([^}]*)\})?`. */
   suffix?: boolean;
   /** An optional line break after the link (and suffix), `\n?`. */
@@ -60,6 +89,8 @@ export type LinkMatch = {
   end: number;
   text: string;
   target: string;
+  /** Raw title segment including its leading space and quotes (e.g. ` "caption"`), or undefined. */
+  rawTitle?: string | undefined;
   /** Inside the `{...}`, or undefined when there is none. */
   suffix: string | undefined;
 };
@@ -69,7 +100,9 @@ export function markdownLinks(body: string, shape: LinkShape): LinkMatch[] {
   const matches: LinkMatch[] = [];
   const opener = shape.picture ? '![' : '[';
   const close = nextStop(body, shape.oneLine ? /[\]\n]/ : /\]/);
-  const targetEnd = nextStop(body, TARGET_STOPS[shape.target]);
+  const targetEnd = nextStop(body, shape.title ? /[)\s]/ : TARGET_STOPS[shape.target]);
+  const dqClose = shape.title ? nextQuoteClose(body, '"') : null;
+  const sqClose = shape.title ? nextQuoteClose(body, "'") : null;
   const suffixEnd = shape.suffix ? nextStop(body, /\}/) : null;
   let index = body.indexOf(opener);
   while (index >= 0) {
@@ -86,11 +119,30 @@ export function markdownLinks(body: string, shape: LinkShape): LinkMatch[] {
     if (body[q] !== ']' || body[q + 1] !== '(') return null;
     if (shape.textRequired && q === textAt) return null;
     const w = targetEnd(q + 1);
-    if (body[w] !== ')') return null;
-    const target = body.slice(q + 2, w);
+    let target: string;
+    let rawTitle: string | undefined;
+    let closeParen = w;
+    if (body[w] === ')') {
+      target = body.slice(q + 2, w);
+    } else if (shape.title && (body[w] === ' ' || body[w] === '\t') && (body[w + 1] === '"' || body[w + 1] === "'")) {
+      const quote = body[w + 1]!;
+      const qEnd = (quote === '"' ? dqClose! : sqClose!)(w + 2);
+      if (body[qEnd] !== quote || body[qEnd + 1] !== ')') return null;
+      target = body.slice(q + 2, w);
+      rawTitle = body.slice(w, qEnd + 1);
+      closeParen = qEnd + 1;
+    } else if (shape.title && shape.target === 'paren') {
+      // No valid quoted title started here; fall back to scanning to `)` as `target: 'paren'` did.
+      const p = body.indexOf(')', w);
+      if (p < 0) return null;
+      target = body.slice(q + 2, p);
+      closeParen = p;
+    } else {
+      return null;
+    }
     if (shape.target === 'space' && !target) return null;
     if (shape.targetIs && !shape.targetIs.test(target)) return null;
-    let end = w + 1;
+    let end = closeParen + 1;
     let suffix: string | undefined;
     if (suffixEnd && body[end] === '{') {
       const s = suffixEnd(end);
@@ -100,7 +152,7 @@ export function markdownLinks(body: string, shape: LinkShape): LinkMatch[] {
       }
     }
     if (shape.newline && body[end] === '\n') end++;
-    return { index, end, text: body.slice(textAt, q), target, suffix };
+    return { index, end, text: body.slice(textAt, q), target, ...(rawTitle !== undefined ? { rawTitle } : {}), suffix };
   }
 }
 
@@ -132,11 +184,12 @@ const FILE_ID = /^pn:file\/[0-9a-f-]{36}$/;
  *  `/(?<!!)\[[^\]]*\]\(pn:file\/[0-9a-f-]{36}\)/g`. */
 export const FILE_LINK: LinkShape = { notAfterBang: true, target: 'paren', targetIs: FILE_ID };
 
-/** A picture placed from Files: `/!\[([^\]\n]*)\]\(pn:file\/([0-9a-f-]{36})\)/g`. */
-export const FILE_PICTURE: LinkShape = { picture: true, oneLine: true, target: 'paren', targetIs: FILE_ID };
+/** A picture placed from Files, with optional caption:
+ *  `/!\[([^\]\n]*)\]\((pn:file\/[0-9a-f-]{36})(?:[ \t](?:"(?:\\.|[^"\\\r\n])*"|'(?:\\.|[^'\\\r\n])*'))?\)/g`. */
+export const FILE_PICTURE: LinkShape = { picture: true, oneLine: true, target: 'paren', targetIs: FILE_ID, title: true };
 
-/** Any picture, its target read to the first `)`: `/!\[([^\]]*)\]\([^)]*\)/`. */
-export const ANY_PICTURE: LinkShape = { picture: true, target: 'paren' };
+/** Any picture, with optional caption. */
+export const ANY_PICTURE: LinkShape = { picture: true, target: 'paren', title: true };
 
 /** A link whose target ends on its line: `/\[([^\]]*)\]\(.*?\)/g`. */
 export const LINE_LINK: LinkShape = { target: 'line' };
@@ -148,22 +201,21 @@ export const WEB_LINK: LinkShape = { target: 'space', targetIs: /^https?:\/\/./ 
  *  `/!\[([^\]]*)\]\(([^)\s]+)\)(?:\{([^}]*)\})?/g`. */
 export const RENDER_PICTURE: LinkShape = { picture: true, target: 'space', suffix: true };
 
-/** A picture with a target: `/!\[([^\]]*)\]\(([^)\s]+)\)/g`. */
-export const SRC_PICTURE: LinkShape = { picture: true, target: 'space' };
+/** A picture with a target and optional caption. */
+export const SRC_PICTURE: LinkShape = { picture: true, target: 'space', title: true };
 
 /** A link with text and a target: `/\[([^\]]+)\]\(([^)\s]+)\)/g`. */
 export const RENDER_LINK: LinkShape = { textRequired: true, target: 'space' };
 
-/** A picture from the picture store: `/!\[([^\]]*)\]\(pn:img\/[^)]*\)/g`. */
-export const IMG_PICTURE: LinkShape = { picture: true, target: 'paren', targetIs: /^pn:img\// };
+/** A picture from the picture store, with optional caption. */
+export const IMG_PICTURE: LinkShape = { picture: true, target: 'paren', targetIs: /^pn:img\//, title: true };
 
 /** Any link to a file: `/\[([^\]]*)\]\(pn:file\/[^)]*\)/g`. */
 export const ANY_FILE_LINK: LinkShape = { target: 'paren', targetIs: /^pn:file\// };
 
-/** A stored picture with its attributes and line break:
- *  `/!\[[^\]]*\]\(pn:(?:img|file)\/([0-9a-f-]{36})\)(?:\{[^}]*\})?\n?/g`. */
+/** A stored picture with optional caption, attributes and line break. */
 export const MEDIA_PICTURE: LinkShape = {
-  picture: true, target: 'paren', targetIs: /^pn:(?:img|file)\/[0-9a-f-]{36}$/, suffix: true, newline: true,
+  picture: true, target: 'paren', targetIs: /^pn:(?:img|file)\/[0-9a-f-]{36}$/, title: true, suffix: true, newline: true,
 };
 
 /** A file link with its line break: `/\[[^\]]*\]\(pn:file\/([0-9a-f-]{36})\)\n?/g`. */

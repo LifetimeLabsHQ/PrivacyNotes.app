@@ -15,5 +15,5 @@ export function doodleHtml(text: string, rawHeight: number | null): string | nul
   const height = clampBoardHeight(rawHeight ?? BOARD_HEIGHT_DEFAULT) ?? BOARD_HEIGHT_DEFAULT;
   const paper = data.paper ? `<rect width="${BOARD_WIDTH}" height="${height}" fill="${data.paper}"/>` : '';
   const strokes = data.strokes.map((s) => strokeSvg(s, data.style)).join('');
-  return `<figure class="doodle" style="margin:1em 0"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${BOARD_WIDTH} ${height}" style="width:100%;height:auto;display:block" role="img">${paper}${strokes}</svg></figure>`;
+  return `<figure class="doodle" style="margin:1em 0;border:1px solid var(--pn-table-border,rgba(128,128,128,0.22));border-radius:10px;overflow:hidden"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${BOARD_WIDTH} ${height}" style="width:100%;height:auto;display:block" role="img">${paper}${strokes}</svg></figure>`;
 }

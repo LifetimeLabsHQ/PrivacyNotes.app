@@ -1,4 +1,12 @@
-import type { ImporterEntry } from './types';
+import type { ImportSource } from '../adminEvents';
+import { textMatcher } from '../textMatch';
+import type {
+  ImporterAlias,
+  ImporterEntry,
+  ImporterGroup,
+  ImporterIcon,
+  ImporterId,
+} from './types';
 import { standardNotesImporter } from './standardNotes';
 import { googleKeepImporter } from './googleKeep';
 import { parseMarkdown } from './markdown';
@@ -38,13 +46,6 @@ import { parseVcard } from './vcard';
 import { parseGoogleCalendar } from './googleCalendar';
 import { parseExcalidraw } from './excalidraw';
 
-/**
- * Registry of available importers, keyed by id at every call site. Each
- * entry carries the facts its card shows (`ImporterCard` in types.ts). The
- * Import tab owns the running order (the groups in `ImportPickPhase`), so
- * the order here carries no meaning.
- * An entry with `enabled: false` renders greyed out and unclickable.
- */
 /** Display names for the markdown-app aliases below. Brand names, so they are
  *  not translated; the row's DESCRIPTION comes from the catalog. */
 const MARKDOWN_APP_LABEL = {
@@ -67,6 +68,32 @@ const MARKDOWN_ACCEPT = '.md,.markdown,.mdown,.mkd,.txt,.zip';
 const MARKDOWN_APP_DESCRIPTION =
   'These notes are already Markdown files in a folder. Drop that folder in as a .zip and its subfolders, images, and #tags come with it.';
 
+/** Browser brand cards shared by Browser bookmarks and Browser passwords.
+ *  Safari wraps its export in a `.zip`; the other browsers export bare `.html` or `.csv`. */
+const BROWSER_BRANDS = [
+  { key: 'brave', label: 'Brave', src: '/help/icons/brave.svg' },
+  { key: 'chrome', label: 'Chrome', src: '/help/icons/chrome.svg' },
+  { key: 'edge', label: 'Edge', src: '/help/icons/edge.svg' },
+  { key: 'firefox', label: 'Firefox', src: '/help/icons/firefox.svg' },
+  { key: 'safari', label: 'Safari', src: '/help/icons/safari.webp' },
+  { key: 'vivaldi', label: 'Vivaldi', src: '/help/icons/vivaldi.svg' },
+] as const;
+
+function browserAliases(bareExt: '.html' | '.csv', safariTypes: string): ImporterAlias[] {
+  return BROWSER_BRANDS.map((b) => ({
+    key: b.key,
+    label: b.label,
+    icon: { src: b.src },
+    fileTypes: b.key === 'safari' ? safariTypes : bareExt,
+  }));
+}
+
+/**
+ * Registry of available importers, keyed by id at every call site. Each entry
+ * carries the facts its card shows (`ImporterCard` in `types.ts`), its picker
+ * group, any brand/browser alias cards, and whether it records an anonymous
+ * telemetry count. An entry with `enabled: false` renders disabled.
+ */
 export const IMPORTERS: ImporterEntry[] = [
   {
     id: 'privacynotes',
@@ -77,20 +104,24 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: '',
     parse: parsePrivacyNotesBackup,
+    group: null,
     icon: null,
     labelKey: 'sourceLabel.privacynotes',
     descKey: null,
     fileTypes: '',
     guide: null,
+    counted: true,
     restore: true,
   },
   {
     ...googleKeepImporter,
+    group: 'notes',
     icon: { src: '/help/icons/google-keep.svg' },
     labelKey: null,
     descKey: 'sourceDesc.googleKeep',
     fileTypes: '.zip, .json',
     guide: 'google-keep',
+    counted: true,
   },
   {
     id: 'browser-bookmarks',
@@ -104,11 +135,14 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: '',
     parse: parseBrowserBookmarks,
+    group: 'bookmarks',
     icon: null,
     labelKey: 'sourceLabel.browserBookmarks',
     descKey: 'sourceDesc.browserBookmarks',
     fileTypes: '.html, .zip',
     guide: 'browser-bookmarks',
+    aliases: browserAliases('.html', '.html, .zip'),
+    counted: true,
   },
   {
     id: 'raindrop',
@@ -119,6 +153,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'raindrop',
     parse: parseRaindrop,
+    group: 'bookmarks',
     icon: { src: '/help/icons/raindrop.svg' },
     labelKey: null,
     descKey: 'sourceDesc.raindrop',
@@ -136,11 +171,13 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: '',
     parse: parseVcard,
+    group: 'contacts',
     icon: { glyph: 'address-book' },
     labelKey: 'sourceLabel.vcard',
     descKey: 'sourceDesc.vcard',
     fileTypes: '.vcf',
     guide: 'contacts',
+    counted: true,
   },
   {
     id: 'google-calendar',
@@ -153,11 +190,22 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: '',
     parse: parseGoogleCalendar,
+    group: 'calendar',
     icon: { src: '/help/icons/google-calendar.svg' },
     labelKey: null,
     descKey: 'sourceDesc.googleCalendar',
     fileTypes: '.ics, .zip',
     guide: 'google-calendar',
+    aliases: [
+      {
+        key: 'apple-calendar',
+        label: 'Apple Calendar',
+        icon: { src: '/help/icons/apple-calendar.webp' },
+        fileTypes: '.ics',
+        descKey: 'sourceDesc.appleCalendar',
+        guide: 'apple-calendar',
+      },
+    ],
   },
   {
     id: 'excalidraw',
@@ -168,6 +216,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'excalidraw',
     parse: parseExcalidraw,
+    group: 'drawings',
     icon: { glyph: 'drawing' },
     labelKey: null,
     descKey: 'sourceDesc.excalidraw',
@@ -183,6 +232,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'obsidian',
     parse: parseObsidianCanvas,
+    group: 'drawings',
     icon: { src: '/help/icons/obsidian.svg' },
     labelKey: null,
     descKey: 'sourceDesc.obsidianCanvas',
@@ -198,6 +248,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'evernote',
     parse: parseEvernote,
+    group: 'notes',
     icon: { src: '/help/icons/evernote.svg' },
     labelKey: null,
     descKey: 'sourceDesc.evernote',
@@ -213,11 +264,13 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'apple',
     parse: parseAppleNotes,
+    group: 'notes',
     icon: { src: '/help/icons/apple-notes.svg' },
     labelKey: null,
     descKey: 'sourceDesc.appleNotes',
     fileTypes: '.zip',
     guide: 'apple-notes',
+    counted: true,
   },
   {
     id: 'apple-journal',
@@ -228,11 +281,13 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'apple-journal',
     parse: parseAppleJournal,
+    group: 'journal',
     icon: { src: '/help/icons/apple-journal.webp' },
     labelKey: null,
     descKey: 'sourceDesc.appleJournal',
     fileTypes: '.zip',
     guide: 'apple-journal',
+    counted: true,
   },
   {
     id: 'day-one',
@@ -243,6 +298,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'day-one',
     parse: parseDayOne,
+    group: 'journal',
     icon: { src: '/help/icons/day-one.webp' },
     labelKey: null,
     descKey: 'sourceDesc.dayOne',
@@ -258,6 +314,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'microsoft-to-do',
     parse: parseMicrosoftToDo,
+    group: 'tasks',
     icon: { src: '/help/icons/microsoft-to-do.svg' },
     labelKey: null,
     descKey: 'sourceDesc.microsoftToDo',
@@ -273,6 +330,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'todoist',
     parse: parseTodoist,
+    group: 'tasks',
     icon: { src: '/help/icons/todoist.svg' },
     labelKey: null,
     descKey: 'sourceDesc.todoist',
@@ -288,6 +346,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'daylio',
     parse: parseDaylio,
+    group: 'journal',
     icon: { src: '/help/icons/daylio.webp' },
     labelKey: null,
     descKey: 'sourceDesc.daylio',
@@ -303,11 +362,13 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'diaro',
     parse: parseDiaro,
+    group: 'journal',
     icon: { src: '/help/icons/diaro.webp' },
     labelKey: null,
     descKey: 'sourceDesc.diaro',
     fileTypes: '.zip, .xml',
     guide: 'diaro',
+    sortKey: 'diar0',
   },
   {
     id: 'diarium',
@@ -318,6 +379,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'diarium',
     parse: parseDiarium,
+    group: 'journal',
     icon: { src: '/help/icons/diarium.webp' },
     labelKey: null,
     descKey: 'sourceDesc.diarium',
@@ -333,6 +395,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'google-journal',
     parse: parseGoogleJournal,
+    group: 'journal',
     icon: { src: '/help/icons/google-journal.webp' },
     labelKey: null,
     descKey: 'sourceDesc.googleJournal',
@@ -348,30 +411,37 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'samsung',
     parse: parseSamsungNotes,
+    group: 'notes',
     icon: { src: '/help/icons/samsung-notes.webp' },
     labelKey: null,
     descKey: 'sourceDesc.samsungNotes',
     fileTypes: '.docx, .txt, .zip',
     guide: 'samsung-notes',
+    counted: true,
   },
   {
     ...simplenoteImporter,
+    group: 'notes',
     icon: { src: '/help/icons/simplenote.svg' },
     labelKey: null,
     descKey: 'sourceDesc.simplenote',
     fileTypes: '.zip, .json',
     guide: 'simplenote',
+    counted: true,
   },
   {
     ...standardNotesImporter,
+    group: 'notes',
     icon: { src: '/help/icons/standard-notes.webp' },
     labelKey: null,
     descKey: 'sourceDesc.standardNotes',
     fileTypes: '.zip, .txt',
     guide: 'standard-notes',
+    counted: true,
   },
   {
     ...bitwardenImporter,
+    group: 'passwords',
     icon: { src: '/help/icons/bitwarden.svg' },
     labelKey: null,
     descKey: 'sourceDesc.bitwarden',
@@ -380,14 +450,27 @@ export const IMPORTERS: ImporterEntry[] = [
   },
   {
     ...passwordCsvImporter,
+    group: 'passwords',
     icon: null,
     labelKey: 'sourceLabel.browserPasswords',
     descKey: 'sourceDesc.browserPasswords',
     fileTypes: '.csv, .zip',
     guide: 'browser-passwords',
+    aliases: [
+      {
+        key: 'apple-passwords',
+        label: 'Apple Passwords',
+        icon: { src: '/help/icons/apple-passwords.webp' },
+        fileTypes: '.csv',
+        sortKey: '0-apple-passwords',
+      },
+      ...browserAliases('.csv', '.csv, .zip'),
+    ],
+    counted: true,
   },
   {
     ...keepassxcImporter,
+    group: 'passwords',
     icon: { src: '/help/icons/keepassxc.svg' },
     labelKey: null,
     descKey: 'sourceDesc.keepassxc',
@@ -396,6 +479,7 @@ export const IMPORTERS: ImporterEntry[] = [
   },
   {
     ...keepassImporter,
+    group: 'passwords',
     icon: { src: '/help/icons/keepass.webp' },
     labelKey: null,
     descKey: 'sourceDesc.keepass',
@@ -404,6 +488,7 @@ export const IMPORTERS: ImporterEntry[] = [
   },
   {
     ...lastpassImporter,
+    group: 'passwords',
     icon: { src: '/help/icons/lastpass.svg' },
     labelKey: null,
     descKey: 'sourceDesc.lastpass',
@@ -412,6 +497,7 @@ export const IMPORTERS: ImporterEntry[] = [
   },
   {
     ...nordpassImporter,
+    group: 'passwords',
     icon: { src: '/help/icons/nordpass.webp' },
     labelKey: null,
     descKey: 'sourceDesc.nordpass',
@@ -420,6 +506,7 @@ export const IMPORTERS: ImporterEntry[] = [
   },
   {
     ...protonPassImporter,
+    group: 'passwords',
     icon: { src: '/help/icons/proton-pass.svg' },
     labelKey: null,
     descKey: 'sourceDesc.protonPass',
@@ -428,6 +515,7 @@ export const IMPORTERS: ImporterEntry[] = [
   },
   {
     ...onePasswordImporter,
+    group: 'passwords',
     icon: { src: '/help/icons/1password.webp' },
     labelKey: null,
     descKey: 'sourceDesc.onePassword',
@@ -436,6 +524,7 @@ export const IMPORTERS: ImporterEntry[] = [
   },
   {
     ...enpassImporter,
+    group: 'passwords',
     icon: { src: '/help/icons/enpass.svg' },
     labelKey: null,
     descKey: 'sourceDesc.enpass',
@@ -444,6 +533,7 @@ export const IMPORTERS: ImporterEntry[] = [
   },
   {
     ...dashlaneImporter,
+    group: 'passwords',
     icon: { src: '/help/icons/dashlane.svg' },
     labelKey: null,
     descKey: 'sourceDesc.dashlane',
@@ -452,6 +542,7 @@ export const IMPORTERS: ImporterEntry[] = [
   },
   {
     ...msecureImporter,
+    group: 'passwords',
     icon: { src: '/help/icons/msecure.svg' },
     labelKey: null,
     descKey: 'sourceDesc.msecure',
@@ -467,11 +558,13 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'obsidian',
     parse: parseObsidian,
+    group: 'notes',
     icon: { src: '/help/icons/obsidian.svg' },
     labelKey: null,
     descKey: 'sourceDesc.obsidian',
     fileTypes: '.zip, .canvas',
     guide: 'obsidian',
+    counted: true,
   },
   {
     id: 'notesnook',
@@ -482,11 +575,13 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'notesnook',
     parse: parseNotesnook,
+    group: 'notes',
     icon: { src: '/help/icons/notesnook.svg' },
     labelKey: null,
     descKey: 'sourceDesc.notesnook',
     fileTypes: '.zip',
     guide: 'notesnook',
+    counted: true,
   },
   {
     id: 'notion',
@@ -497,6 +592,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'notion',
     parse: parseNotion,
+    group: 'notes',
     icon: { src: '/help/icons/notion.webp' },
     labelKey: null,
     descKey: 'sourceDesc.notion',
@@ -512,6 +608,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'joplin',
     parse: parseJoplin,
+    group: 'notes',
     icon: { src: '/help/icons/joplin.svg' },
     labelKey: null,
     descKey: 'sourceDesc.joplin',
@@ -527,6 +624,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'anytype',
     parse: parseAnytype,
+    group: 'notes',
     icon: { src: '/help/icons/anytype.webp' },
     labelKey: null,
     descKey: 'sourceDesc.anytype',
@@ -542,6 +640,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'capacities',
     parse: parseCapacities,
+    group: 'notes',
     icon: { src: '/help/icons/capacities.svg' },
     labelKey: null,
     descKey: 'sourceDesc.capacities',
@@ -557,6 +656,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'siyuan',
     parse: parseSiyuan,
+    group: 'notes',
     icon: { src: '/help/icons/siyuan.svg' },
     labelKey: null,
     descKey: 'sourceDesc.siyuan',
@@ -572,6 +672,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'onenote',
     parse: parseOneNote,
+    group: 'notes',
     icon: { src: '/help/icons/onenote.webp' },
     labelKey: null,
     descKey: 'sourceDesc.onenote',
@@ -587,6 +688,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'bear',
     parse: parseBear,
+    group: 'notes',
     icon: { src: '/help/icons/bear.webp' },
     labelKey: null,
     descKey: 'sourceDesc.bear',
@@ -602,6 +704,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'upnote',
     parse: parseUpNote,
+    group: 'notes',
     icon: { src: '/help/icons/upnote.svg' },
     labelKey: null,
     descKey: 'sourceDesc.upnote',
@@ -612,7 +715,7 @@ export const IMPORTERS: ImporterEntry[] = [
   // the same function rather than a wrapper - there is nothing app-specific to
   // do, and a wrapper would invite one to grow. What differs is what the user
   // sees: the app's name, its icon, its guide, and the tag its notes arrive
-  // with. Adding a fifth is four lines here plus a row in ImportModal.
+  // with.
   ...(['typora', 'ia-writer', 'zettlr', 'nextcloud-notes'] as const).map((id) => ({
     id,
     label: MARKDOWN_APP_LABEL[id],
@@ -621,6 +724,7 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: id,
     parse: parseMarkdown,
+    group: 'notes' as const,
     icon: { src: MARKDOWN_APP_ICON[id] },
     labelKey: null,
     // One shared line for the four: the parser is the same, so four
@@ -639,10 +743,187 @@ export const IMPORTERS: ImporterEntry[] = [
     enabled: true,
     sourceTag: 'markdown',
     parse: parseMarkdown,
+    group: 'notes',
     icon: { src: '/help/icons/markdown.svg' },
     labelKey: 'sourceLabel.markdownFolder',
     descKey: 'sourceDesc.markdownFolder',
     fileTypes: '.md, .txt, .zip',
     guide: 'markdown',
+    counted: true,
   },
 ];
+
+const COUNTED_SOURCE_IDS: ReadonlySet<string> = new Set(
+  IMPORTERS.filter((i) => i.counted).map((i) => i.id),
+);
+
+/** The source key an import from this importer records in `admin_events`, or `null` when uncounted. */
+export function importerIdToSource(id: string): ImportSource | null {
+  return COUNTED_SOURCE_IDS.has(id) ? (id as ImportSource) : null;
+}
+
+/** An importer's name in the reader's language, or its brand name unchanged. */
+export function sourceLabel(
+  imp: Pick<ImporterEntry, 'label' | 'labelKey'>,
+  t: (key: string) => string,
+): string {
+  return imp.labelKey ? t(imp.labelKey) : imp.label;
+}
+
+export type PickerSectionKey = 'notes' | 'tasks' | 'drawings' | 'calendar' | 'bookmarks' | 'passwords';
+
+/** Structured picker tile identity (`aliasKey` is `null` for direct importer and Webcal cards). */
+export interface PickerCardKey {
+  importerId: ImporterId | 'webcal';
+  aliasKey: string | null;
+}
+
+export type PickerCard =
+  | {
+      kind: 'importer';
+      importerId: ImporterId;
+      aliasKey: string | null;
+      importer: ImporterEntry;
+      /** Entry passed to `onPick` (carries the alias's brand `label` when `aliasKey` is set). */
+      pickImporter: ImporterEntry;
+      label: string;
+      fileTypes: string;
+      desc: string;
+      icon: ImporterIcon;
+      guide: string | null;
+      /** Settings-search marker override for aliases with their own description (`import.alias.<key>`). */
+      aliasSetting: string | null;
+      sortKey: string;
+    }
+  | {
+      kind: 'webcal';
+      importerId: 'webcal';
+      aliasKey: null;
+      label: string;
+      fileTypes: string;
+      desc: string;
+      sortKey: string;
+    };
+
+export interface PickerGroup {
+  key: PickerSectionKey;
+  title: string;
+  cards: PickerCard[];
+}
+
+const SECTION_OF_GROUP: ReadonlyMap<ImporterGroup, PickerSectionKey> = new Map<ImporterGroup, PickerSectionKey>([
+  ['notes', 'notes'],
+  ['journal', 'notes'],
+  ['files', 'notes'],
+  ['tasks', 'tasks'],
+  ['drawings', 'drawings'],
+  ['calendar', 'calendar'],
+  ['contacts', 'calendar'],
+  ['bookmarks', 'bookmarks'],
+  ['passwords', 'passwords'],
+]);
+
+const PICKER_SECTIONS: readonly { key: PickerSectionKey; titleKey: string }[] = [
+  { key: 'notes', titleKey: 'shell:tagsRail.notes' },
+  { key: 'tasks', titleKey: 'shell:tagsRail.tasks' },
+  { key: 'drawings', titleKey: 'shell:tagsRail.drawings' },
+  { key: 'calendar', titleKey: 'importPick.groupCalendar' },
+  { key: 'bookmarks', titleKey: 'shell:tagsRail.bookmarks' },
+  { key: 'passwords', titleKey: 'shell.tabVault' },
+];
+
+const WEBCAL_TYPES = 'webcal://';
+
+/**
+ * Build the ordered picker sections and cards from `IMPORTERS` (plus the Webcal
+ * card in the Calendar section). Sources are grouped by destination pillar and
+ * sorted deterministically within each section; Obsidian appears under Notes
+ * for full vaults and under Drawings for standalone canvases.
+ */
+export function buildPickerGroups(
+  t: (key: string) => string,
+  importers: readonly ImporterEntry[] = IMPORTERS,
+): PickerGroup[] {
+  const buckets = new Map<PickerSectionKey, PickerCard[]>(
+    PICKER_SECTIONS.map((s) => [s.key, []]),
+  );
+
+  for (const imp of importers) {
+    if (!imp.group || imp.restore) continue;
+    const section = SECTION_OF_GROUP.get(imp.group);
+    const bucket = section ? buckets.get(section) : undefined;
+    if (!bucket) continue;
+
+    if (imp.icon) {
+      bucket.push({
+        kind: 'importer',
+        importerId: imp.id,
+        aliasKey: null,
+        importer: imp,
+        pickImporter: imp,
+        label: sourceLabel(imp, t),
+        fileTypes: imp.fileTypes,
+        desc: imp.descKey ? t(imp.descKey) : imp.description,
+        icon: imp.icon,
+        guide: imp.guide,
+        aliasSetting: null,
+        sortKey: imp.sortKey ?? imp.label.toLowerCase(),
+      });
+    }
+
+    for (const alias of imp.aliases ?? []) {
+      bucket.push({
+        kind: 'importer',
+        importerId: imp.id,
+        aliasKey: alias.key,
+        importer: imp,
+        pickImporter: { ...imp, label: alias.label },
+        label: alias.label,
+        fileTypes: alias.fileTypes,
+        desc: alias.descKey ? t(alias.descKey) : imp.descKey ? t(imp.descKey) : imp.description,
+        icon: alias.icon,
+        guide: alias.guide !== undefined ? alias.guide : alias.descKey ? null : imp.guide,
+        aliasSetting: alias.descKey ? `import.alias.${alias.key}` : null,
+        sortKey: alias.sortKey ?? alias.label.toLowerCase(),
+      });
+    }
+  }
+
+  buckets.get('calendar')?.push({
+    kind: 'webcal',
+    importerId: 'webcal',
+    aliasKey: null,
+    label: t('webcal.title'),
+    fileTypes: WEBCAL_TYPES,
+    desc: t('webcal.desc'),
+    sortKey: 'webcal',
+  });
+
+  return PICKER_SECTIONS.map((s) => {
+    const cards = [...(buckets.get(s.key) ?? [])].sort((a, b) =>
+      a.sortKey < b.sortKey ? -1 : a.sortKey > b.sortKey ? 1 : 0,
+    );
+    return { key: s.key, title: t(s.titleKey), cards };
+  }).filter((g) => g.cards.length > 0);
+}
+
+/**
+ * Filter picker groups by a user search query against card label, file
+ * extensions, or group heading (so searching `"bookmarks"` retains every
+ * browser card in the Bookmarks group).
+ */
+export function filterPickerCards(
+  groups: readonly PickerGroup[],
+  query: string,
+): PickerGroup[] {
+  const match = query.trim() ? textMatcher(query) : null;
+  if (!match) return groups.filter((g) => g.cards.length > 0);
+  return groups
+    .map((g) => ({
+      ...g,
+      cards: g.cards.filter(
+        (c) => Boolean(match(c.label) || match(c.fileTypes) || match(g.title)),
+      ),
+    }))
+    .filter((g) => g.cards.length > 0);
+}

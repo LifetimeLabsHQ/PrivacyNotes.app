@@ -331,7 +331,7 @@ export function lzxDecompress(src: Uint8Array, frames: number[], windowBits: num
   }
 
   if (!e8Size) return win;
-  const out = win.slice();
+  const out = win.subarray(0, total);
   let offset = 0;
   for (const frameLen of frames) {
     translateE8(out, offset, frameLen, e8Size);

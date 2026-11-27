@@ -41,8 +41,10 @@ import { useCallback, useSyncExternalStore } from 'react';
 import { applyAppZoom, DEFAULT_APP_ZOOM } from './appZoom';
 import { paintCodeWrap, setCodeWrap } from './codeWrap';
 import { FONT_FAMILIES } from './editorColors';
-import { credentialKey } from './demo';
+import { credentialKey, isDemoMode } from './demo';
+import { isValidCustomIconDataUrl } from './customIcons';
 import { readStringList } from './localStore';
+import type { Space, SpaceView } from './spaces';
 
 // ------------------------------------------------------------------
 // Light / dark axis
@@ -201,10 +203,14 @@ function suppressThemeTransitions(): void {
   });
 }
 
+/** Tracks whether paintTheme() has mirrored mode onto <html> at least once. */
+let hasPaintedTheme = false;
+
 /** Paint a resolved theme without animating every mounted item.
  * Spec: docs/contrib/color-themes.md (Theme switching performance)
  */
 function paintTheme(theme: Theme): void {
+  hasPaintedTheme = true;
   const root = document.documentElement;
   if (root.classList.contains('dark') !== (theme === 'dark')) suppressThemeTransitions();
   if (theme === 'dark') {
@@ -552,6 +558,43 @@ export function applyNestedNumbers(style: NestedNumbers): void {
 export function readNestedNumbers(): NestedNumbers {
   const painted = document.documentElement.dataset.nestedNumbers;
   return isNestedNumbers(painted) ? painted : 'flat';
+}
+
+// ------------------------------------------------------------------
+// Checked task style axis
+// ------------------------------------------------------------------
+
+/**
+ * How a checked task item's text looks in notes, Tasks, Markdown preview
+ * and exports (GitHub #963). Drives `data-checked-task-style` on <html>,
+ * which index.css reads. Synced like `sinkCheckedTasks` and `taskConfetti`;
+ * nothing is written into note Markdown.
+ */
+export const CHECKED_TASK_STYLES = ['fade-strike', 'fade', 'strike', 'none'] as const;
+export type CheckedTaskStyle = (typeof CHECKED_TASK_STYLES)[number];
+
+/** Type guard, for the settings blob's decode step. */
+export function isCheckedTaskStyle(v: unknown): v is CheckedTaskStyle {
+  return typeof v === 'string' && (CHECKED_TASK_STYLES as readonly string[]).includes(v);
+}
+
+/** Paint the checked task style on <html>. The caller owns the value. */
+export function applyCheckedTaskStyle(style: CheckedTaskStyle): void {
+  document.documentElement.dataset.checkedTaskStyle = style;
+}
+
+/** The style painted now, for exports and markdown rendering. Absent reads as fade-strike. */
+export function readCheckedTaskStyle(): CheckedTaskStyle {
+  const painted = document.documentElement.dataset.checkedTaskStyle;
+  return isCheckedTaskStyle(painted) ? painted : 'fade-strike';
+}
+
+/** Inline CSS for a checked task's text span in rendered HTML / export. */
+export function checkedTaskInlineStyle(style: CheckedTaskStyle = readCheckedTaskStyle()): string {
+  if (style === 'fade-strike') return 'text-decoration:line-through;opacity:0.6';
+  if (style === 'fade') return 'opacity:0.6';
+  if (style === 'strike') return 'text-decoration:line-through';
+  return '';
 }
 
 // ------------------------------------------------------------------
@@ -903,16 +946,39 @@ function applyInvisibles(on: boolean): void {
 // ------------------------------------------------------------------
 
 /**
- * Two slots: the palette for light mode and the palette for dark mode, so
- * Auto switches between the user's own pair. The key before the pair held
- * one palette for whichever mode it belonged to; it is read to seed the slot
- * of that mode and never written.
+ * Two slots per scope: the palette for light mode and the palette for dark
+ * mode, so Auto switches between the user's own pair. `all` is the base pair
+ * (used in All, when Spaces is off, and as the fallback for any space without
+ * its own theme). `personal` and `work` store optional device-local overrides
+ * (GitHub #948). The key before the pair held one palette for whichever mode
+ * it belonged to; it is read to seed the base slot of that mode and never
+ * written.
  */
 const LEGACY_COLOR_THEME_KEY = 'privacynotes.colorTheme';
-const COLOR_THEME_KEYS: Record<Theme, string> = {
-  light: 'privacynotes.colorTheme.light',
-  dark: 'privacynotes.colorTheme.dark',
-};
+const THEME_SPACE_KEY = 'privacynotes.theme.space';
+const THEME_SPACES: readonly SpaceView[] = ['all', 'personal', 'work'];
+const OVERRIDE_SPACES: readonly Space[] = ['personal', 'work'];
+
+function colorThemeKey(space: SpaceView, mode: Theme): string {
+  return space === 'all'
+    ? `privacynotes.colorTheme.${mode}`
+    : `privacynotes.colorTheme.${space}.${mode}`;
+}
+
+function customThemeKey(space: SpaceView, mode: Theme): string {
+  return space === 'all'
+    ? `privacynotes.customTheme.${mode}`
+    : `privacynotes.customTheme.${space}.${mode}`;
+}
+
+function readStoredThemeSpace(): SpaceView {
+  try {
+    const v = localStorage.getItem(THEME_SPACE_KEY);
+    return v === 'personal' || v === 'work' ? v : 'all';
+  } catch {
+    return 'all';
+  }
+}
 
 /**
  * Available color themes. Grouped by mode (light/dark).
@@ -1014,6 +1080,8 @@ export interface CustomSnapshot {
   colors: Record<string, string>;
   /** Set when the theme keeps the logo in its original colors. */
   logo?: 'original';
+  /** Optional user-uploaded custom sidebar app icon (validated raster data URL). */
+  icon?: string;
 }
 
 export const customChoice = (id: string): CustomChoice => `custom:${id}`;
@@ -1025,10 +1093,6 @@ export function isFreeTheme(choice: ThemeChoice): boolean {
   return FREE_THEMES.has(choice as ColorTheme);
 }
 
-const CUSTOM_KEYS: Record<Theme, string> = {
-  light: 'privacynotes.customTheme.light',
-  dark: 'privacynotes.customTheme.dark',
-};
 // The tokens a custom theme sets; TOKEN_KEYS in themeCode.ts, and
 // tests/themeCode.test.ts keeps the two lists equal.
 const CUSTOM_TOKENS = [
@@ -1063,31 +1127,72 @@ function validSnapshot(raw: unknown, mode: Theme): CustomSnapshot | null {
   // Optional too: a theme that tints the logo, as every theme does unless it
   // says otherwise, has none.
   if (r.logo !== undefined && r.logo !== 'original') return null;
-  return { id: r.id, code: r.code, mode, colors: out, ...(r.logo ? { logo: r.logo } : {}) };
+  if (r.icon !== undefined && !isValidCustomIconDataUrl(r.icon)) return null;
+  return {
+    id: r.id,
+    code: r.code,
+    mode,
+    colors: out,
+    ...(r.logo ? { logo: r.logo } : {}),
+    ...(r.icon ? { icon: r.icon } : {}),
+  };
 }
 
-function readSnapshot(mode: Theme): CustomSnapshot | null {
+function readSnapshot(space: SpaceView, mode: Theme): CustomSnapshot | null {
   try {
-    return validSnapshot(JSON.parse(localStorage.getItem(CUSTOM_KEYS[mode]) ?? 'null'), mode);
+    return validSnapshot(JSON.parse(localStorage.getItem(customThemeKey(space, mode)) ?? 'null'), mode);
   } catch {
     return null;
   }
 }
 
-const storedSnapshots: Record<Theme, CustomSnapshot | null> = {
-  light: readSnapshot('light'),
-  dark: readSnapshot('dark'),
+const storedSnapshots: Record<SpaceView, Record<Theme, CustomSnapshot | null>> = {
+  all: { light: readSnapshot('all', 'light'), dark: readSnapshot('all', 'dark') },
+  personal: { light: readSnapshot('personal', 'light'), dark: readSnapshot('personal', 'dark') },
+  work: { light: readSnapshot('work', 'light'), dark: readSnapshot('work', 'dark') },
 };
 /** A theme shown without being saved: the builder and a pasted code. */
 const previewSnapshots: Record<Theme, CustomSnapshot | null> = { light: null, dark: null };
 
-/** Read one slot. A slot never written takes the legacy value when that
- *  value belongs to its mode. A custom choice stands only while the device
+/** The active space driving the painted theme, and an optional Settings preview
+ *  space while browsing space theme cards (#948). */
+let activeThemeSpace: SpaceView = readStoredThemeSpace();
+let previewedThemeSpace: SpaceView | null = null;
+
+function effectiveThemeSpace(): SpaceView {
+  return previewedThemeSpace ?? activeThemeSpace;
+}
+
+/** Read an explicit override stored for Personal or Work, or null if it follows All. */
+function getSpaceOverride(space: Space, mode: Theme): ThemeChoice | null {
+  const stored = localStorage.getItem(colorThemeKey(space, mode));
+  if (!stored) return null;
+  if (customIdOf(stored) !== null) {
+    const snap = storedSnapshots[space][mode];
+    return snap && stored === customChoice(snap.id) ? (stored as CustomChoice) : null;
+  }
+  if (isColorTheme(stored) && (stored === 'default' || modeOf(stored) === mode)) return stored;
+  return null;
+}
+
+/** Whether Personal or Work has its own theme override on this device. */
+export function hasSpaceThemeOverride(space: SpaceView): boolean {
+  if (space === 'all') return false;
+  return getSpaceOverride(space, 'light') !== null || getSpaceOverride(space, 'dark') !== null;
+}
+
+/** Read one slot for a space (defaulting to the currently painted space).
+ *  Personal and Work fall back to All when unset; All falls back to the legacy
+ *  single key when never written. A custom choice stands only while the device
  *  holds its snapshot. */
-export function getStoredColorTheme(mode: Theme): ThemeChoice {
-  const stored = localStorage.getItem(COLOR_THEME_KEYS[mode]);
+export function getStoredColorTheme(mode: Theme, space: SpaceView = effectiveThemeSpace()): ThemeChoice {
+  if (space !== 'all') {
+    const override = getSpaceOverride(space, mode);
+    if (override !== null) return override;
+  }
+  const stored = localStorage.getItem(colorThemeKey('all', mode));
   if (stored && customIdOf(stored) !== null) {
-    const snap = storedSnapshots[mode];
+    const snap = storedSnapshots.all[mode];
     return snap && stored === customChoice(snap.id) ? (stored as CustomChoice) : 'default';
   }
   if (isColorTheme(stored) && (stored === 'default' || modeOf(stored) === mode)) return stored;
@@ -1095,6 +1200,43 @@ export function getStoredColorTheme(mode: Theme): ThemeChoice {
   if (legacy === 'cool-white') legacy = 'slate'; // the stored name of 'slate' in older installs
   if (isColorTheme(legacy) && modeOf(legacy) === mode) return legacy;
   return 'default';
+}
+
+function getStoredSnapshot(mode: Theme, space: SpaceView = effectiveThemeSpace()): CustomSnapshot | null {
+  if (space !== 'all' && getSpaceOverride(space, mode) !== null) {
+    return storedSnapshots[space][mode];
+  }
+  return storedSnapshots.all[mode];
+}
+
+/** Whether any space slot (All, Personal, or Work) currently holds a custom theme. */
+export function hasAnyCustomThemeSlot(): boolean {
+  return THEME_SPACES.some((space) =>
+    (['light', 'dark'] as const).some((mode) => customIdOf(getStoredColorTheme(mode, space)) !== null),
+  );
+}
+
+/** Summary of one space's resolved palette for one mode, for Settings > Design space cards. */
+export function spaceThemeInfo(space: SpaceView, mode: Theme): {
+  choice: ThemeChoice;
+  name: string;
+  swatch: [string, string, string];
+  inherited: boolean;
+} {
+  const choice = getStoredColorTheme(mode, space);
+  const inherited = space !== 'all' && !hasSpaceThemeOverride(space);
+  if (customIdOf(choice) !== null) {
+    const snap = getStoredSnapshot(mode, space);
+    const c = snap?.colors;
+    return {
+      choice,
+      name: snap?.code.split(':')[1] ?? THEME_DISPLAY_NAME.default,
+      swatch: [c?.['surface-0'] ?? themeSwatch('default', mode === 'dark')[0], c?.accent ?? themeSwatch('default', mode === 'dark')[1], c?.text ?? themeSwatch('default', mode === 'dark')[2]],
+      inherited,
+    };
+  }
+  const ct = choice as ColorTheme;
+  return { choice, name: THEME_DISPLAY_NAME[ct], swatch: themeSwatch(ct, mode === 'dark'), inherited };
 }
 
 /** The palette shown in each slot (may differ from storage during a preview). */
@@ -1107,7 +1249,7 @@ const activeColorThemes: Record<Theme, ThemeChoice> = {
 function slotSnapshot(mode: Theme): CustomSnapshot | null {
   const id = customIdOf(activeColorThemes[mode]);
   if (!id) return null;
-  const snap = previewSnapshots[mode] ?? storedSnapshots[mode];
+  const snap = previewSnapshots[mode] ?? getStoredSnapshot(mode, effectiveThemeSpace());
   return snap && snap.id === id ? snap : null;
 }
 
@@ -1115,6 +1257,48 @@ function slotSnapshot(mode: Theme): CustomSnapshot | null {
  *  when the choice is a custom theme. */
 export function paintedSlot(mode: Theme): { choice: ThemeChoice; snapshot: CustomSnapshot | null } {
   return { choice: activeColorThemes[mode], snapshot: slotSnapshot(mode) };
+}
+
+function syncActiveSlots(): void {
+  const space = effectiveThemeSpace();
+  for (const mode of ['light', 'dark'] as const) {
+    const preview = previewSnapshots[mode];
+    activeColorThemes[mode] = preview ? customChoice(preview.id) : getStoredColorTheme(mode, space);
+  }
+  paintColorThemes();
+}
+
+/** Keep the painted theme aligned with the open space (or 'all' when Spaces is off). */
+export function setThemeSpace(space: SpaceView): void {
+  const changed = activeThemeSpace !== space;
+  activeThemeSpace = space;
+  if (!isDemoMode()) {
+    try {
+      if (space === 'all') localStorage.removeItem(THEME_SPACE_KEY);
+      else localStorage.setItem(THEME_SPACE_KEY, space);
+    } catch { /* storage unavailable */ }
+  }
+  if (!changed) return;
+  if (previewedThemeSpace === null) syncActiveSlots();
+  emitThemeChange();
+}
+
+/** Temporarily paint another space's theme while editing its card in Settings > Design. */
+export function previewThemeSpace(space: SpaceView | null): void {
+  if (previewedThemeSpace === space) return;
+  previewedThemeSpace = space;
+  syncActiveSlots();
+  emitThemeChange();
+}
+
+/** Which space a theme pick without an explicit target writes to: an active
+ *  Settings preview card, else the open space if it already has its own theme,
+ *  else All so single-theme users keep changing the whole app. */
+function targetWriteSpace(explicit?: SpaceView): SpaceView {
+  if (explicit) return explicit;
+  if (previewedThemeSpace) return previewedThemeSpace;
+  if (activeThemeSpace !== 'all' && hasSpaceThemeOverride(activeThemeSpace)) return activeThemeSpace;
+  return 'all';
 }
 
 const channels = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(' ');
@@ -1186,22 +1370,55 @@ export function previewColorTheme(mode: Theme, ct: ThemeChoice): void {
 
 /** Save a palette in one slot and paint it. A built-in palette drops the
  *  slot's custom snapshot, so a theme deleted later leaves nothing behind. */
-function applyColorTheme(mode: Theme, ct: ThemeChoice): void {
-  activeColorThemes[mode] = ct;
+function applyColorTheme(mode: Theme, ct: ThemeChoice, space: SpaceView = targetWriteSpace()): void {
   previewSnapshots[mode] = null;
-  localStorage.setItem(COLOR_THEME_KEYS[mode], ct);
-  if (customIdOf(ct) === null && storedSnapshots[mode]) {
-    storedSnapshots[mode] = null;
-    localStorage.removeItem(CUSTOM_KEYS[mode]);
+  localStorage.setItem(colorThemeKey(space, mode), ct);
+  if (customIdOf(ct) === null && storedSnapshots[space][mode]) {
+    storedSnapshots[space][mode] = null;
+    localStorage.removeItem(customThemeKey(space, mode));
   }
-  paintColorThemes();
+  syncActiveSlots();
 }
 
 /** Save a custom theme in the slot of its mode and paint it. */
-function applyCustomTheme(snap: CustomSnapshot): void {
-  storedSnapshots[snap.mode] = snap;
-  localStorage.setItem(CUSTOM_KEYS[snap.mode], JSON.stringify(snap));
-  applyColorTheme(snap.mode, customChoice(snap.id));
+function applyCustomTheme(snap: CustomSnapshot, space: SpaceView = targetWriteSpace()): void {
+  storedSnapshots[space][snap.mode] = snap;
+  localStorage.setItem(customThemeKey(space, snap.mode), JSON.stringify(snap));
+  applyColorTheme(snap.mode, customChoice(snap.id), space);
+}
+
+/** Clear Personal or Work's overrides so it follows All again. */
+function clearSpaceThemeKeys(space: Space): void {
+  for (const mode of ['light', 'dark'] as const) {
+    storedSnapshots[space][mode] = null;
+    localStorage.removeItem(colorThemeKey(space, mode));
+    localStorage.removeItem(customThemeKey(space, mode));
+  }
+}
+
+export function clearSpaceTheme(space: Space): void {
+  clearSpaceThemeKeys(space);
+  syncActiveSlots();
+  emitThemeChange();
+}
+
+/** Clear a deleted custom theme from every space slot that pointed at it. */
+export function clearCustomThemeId(mode: Theme, id: string): void {
+  const target = customChoice(id);
+  let changed = false;
+  for (const space of THEME_SPACES) {
+    const raw = localStorage.getItem(colorThemeKey(space, mode));
+    if (raw !== target) continue;
+    storedSnapshots[space][mode] = null;
+    localStorage.removeItem(customThemeKey(space, mode));
+    if (space === 'all') localStorage.setItem(colorThemeKey('all', mode), 'default');
+    else localStorage.removeItem(colorThemeKey(space, mode));
+    changed = true;
+  }
+  if (changed) {
+    syncActiveSlots();
+    emitThemeChange();
+  }
 }
 
 /**
@@ -1224,58 +1441,77 @@ export function previewCustomTheme(mode: Theme, snap: CustomSnapshot | null): vo
  */
 export function dropProThemes(): void {
   let changed = false;
+  for (const space of OVERRIDE_SPACES) {
+    for (const mode of ['light', 'dark'] as const) {
+      const override = getSpaceOverride(space, mode);
+      if (!override || isFreeTheme(override)) continue;
+      storedSnapshots[space][mode] = null;
+      localStorage.removeItem(colorThemeKey(space, mode));
+      localStorage.removeItem(customThemeKey(space, mode));
+      changed = true;
+    }
+  }
   for (const mode of ['light', 'dark'] as const) {
-    if (isFreeTheme(getStoredColorTheme(mode))) continue;
-    applyColorTheme(mode, 'default');
+    if (isFreeTheme(getStoredColorTheme(mode, 'all'))) continue;
+    storedSnapshots.all[mode] = null;
+    localStorage.setItem(colorThemeKey('all', mode), 'default');
+    localStorage.removeItem(customThemeKey('all', mode));
     changed = true;
   }
-  if (changed) emitThemeChange();
+  if (changed) {
+    syncActiveSlots();
+    emitThemeChange();
+  }
 }
 
 /**
  * Keep the slots in step with the theme list after it loads or syncs: a
  * theme edited on another device repaints with its new colors, and a theme
  * that is gone (deleted, or never in this account) leaves its slot for
- * Default. `snapshotFor` returns the current snapshot of a listed theme of
- * that mode, or null. Call it only once the list is the account's own.
- * `persist` is false in the demo, which shares this storage with a real
- * install on the same origin.
+ * Default (or All for a space override). `snapshotFor` returns the current
+ * snapshot of a listed theme of that mode, or null. Call it only once the
+ * list is the account's own. `persist` is false in the demo, which shares
+ * this storage with a real install on the same origin.
  */
 export function reconcileCustomSlots(
   snapshotFor: (id: string, mode: Theme) => CustomSnapshot | null,
   persist: boolean,
 ): void {
   let changed = false;
-  for (const mode of ['light', 'dark'] as const) {
-    const id = customIdOf(getStoredColorTheme(mode));
-    if (!id) continue;
-    const next = snapshotFor(id, mode);
-    const prev = storedSnapshots[mode];
-    // The colors as well as the code: a snapshot written by an older build
-    // of this code repaints with the colors this build resolves.
-    if (next && (next.code !== prev?.code || JSON.stringify(next.colors) !== JSON.stringify(prev?.colors))) {
-      storedSnapshots[mode] = next;
-      if (persist) localStorage.setItem(CUSTOM_KEYS[mode], JSON.stringify(next));
-      changed = true;
-    } else if (!next) {
-      storedSnapshots[mode] = null;
-      if (persist) {
-        localStorage.setItem(COLOR_THEME_KEYS[mode], 'default');
-        localStorage.removeItem(CUSTOM_KEYS[mode]);
+  for (const space of THEME_SPACES) {
+    for (const mode of ['light', 'dark'] as const) {
+      const choice = space === 'all' ? getStoredColorTheme(mode, 'all') : getSpaceOverride(space, mode);
+      const id = choice ? customIdOf(choice) : null;
+      if (!id) continue;
+      const next = snapshotFor(id, mode);
+      const prev = storedSnapshots[space][mode];
+      // The colors as well as the code: a snapshot written by an older build
+      // of this code repaints with the colors this build resolves.
+      if (next && (next.code !== prev?.code || next.icon !== prev?.icon || JSON.stringify(next.colors) !== JSON.stringify(prev?.colors))) {
+        storedSnapshots[space][mode] = next;
+        if (persist) localStorage.setItem(customThemeKey(space, mode), JSON.stringify(next));
+        changed = true;
+      } else if (!next) {
+        storedSnapshots[space][mode] = null;
+        if (persist) {
+          if (space === 'all') localStorage.setItem(colorThemeKey('all', mode), 'default');
+          else localStorage.removeItem(colorThemeKey(space, mode));
+          localStorage.removeItem(customThemeKey(space, mode));
+        }
+        changed = true;
       }
-      if (!previewSnapshots[mode]) activeColorThemes[mode] = 'default';
-      changed = true;
     }
   }
   if (changed) {
-    paintColorThemes();
+    syncActiveSlots();
     emitThemeChange();
   }
 }
 
 /** Bootstrap color theme - called from initTheme(). */
 function initColorTheme(): void {
-  paintColorThemes();
+  activeThemeSpace = readStoredThemeSpace();
+  syncActiveSlots();
 }
 
 // ------------------------------------------------------------------
@@ -1303,6 +1539,9 @@ function initColorTheme(): void {
  */
 export function resetAppearance(): void {
   try {
+    activeThemeSpace = 'all';
+    previewedThemeSpace = null;
+    localStorage.removeItem(THEME_SPACE_KEY);
     applyThemeDefaults();
     applyStyleDefaults();
     applySpellcheck(true);
@@ -1318,8 +1557,10 @@ export function resetAppearance(): void {
 /** The device axes that Settings > Design shows. */
 function applyThemeDefaults(): void {
   applyThemeMode('auto');
-  applyColorTheme('light', 'default');
-  applyColorTheme('dark', 'default');
+  applyThemeIconsEnabled(true);
+  for (const space of OVERRIDE_SPACES) clearSpaceThemeKeys(space);
+  applyColorTheme('light', 'default', 'all');
+  applyColorTheme('dark', 'default', 'all');
 }
 
 /** The Themes tab's "Reset to defaults". */
@@ -1364,11 +1605,13 @@ export function resetStyleAxes(): void {
  * AppearanceSheet and the bottom-bar toggle can never desync.
  */
 const themeListeners = new Set<() => void>();
+let themeRevision = 0;
 function subscribeTheme(cb: () => void) {
   themeListeners.add(cb);
   return () => { themeListeners.delete(cb); };
 }
 function emitThemeChange() {
+  themeRevision += 1;
   themeListeners.forEach((cb) => cb());
 }
 
@@ -1378,11 +1621,66 @@ function getThemeSnapshot(): Theme { return peekTheme ?? getStoredTheme(); }
 function getThemeModeSnapshot(): ThemeMode { return getStoredThemeMode(); }
 function getLightColorThemeSnapshot(): ThemeChoice { return activeColorThemes.light; }
 function getDarkColorThemeSnapshot(): ThemeChoice { return activeColorThemes.dark; }
+function getThemeSpaceSnapshot(): SpaceView { return activeThemeSpace; }
+function getThemeRevisionSnapshot(): number { return themeRevision; }
 function getTextSizeSnapshot(): TextSize { return activeTextSize; }
 function getContentWidthSnapshot(): ContentWidth { return activeContentWidth; }
 function getSpellcheckSnapshot(): boolean { return activeSpellcheck; }
 function getInvisiblesSnapshot(): boolean { return activeInvisibles; }
 function getFaviconsSnapshot(): boolean { return activeFavicons; }
+
+/**
+ * Whether custom theme icons (both built-in bespoke theme icons and user-
+ * uploaded theme icons) replace the sidebar PrivacyNotes logo. On by default
+ * for new and existing users; device-local like Mode and Themes.
+ */
+const THEME_ICONS_KEY = 'privacynotes.themeIcons';
+function getStoredThemeIconsEnabled(): boolean {
+  try {
+    return localStorage.getItem(THEME_ICONS_KEY) !== '0';
+  } catch {
+    return true;
+  }
+}
+let activeThemeIconsEnabled: boolean = getStoredThemeIconsEnabled();
+function applyThemeIconsEnabled(on: boolean): void {
+  activeThemeIconsEnabled = on;
+  try {
+    if (on) localStorage.removeItem(THEME_ICONS_KEY);
+    else localStorage.setItem(THEME_ICONS_KEY, '0');
+  } catch { /* ignore */ }
+}
+function getThemeIconsEnabledSnapshot(): boolean { return activeThemeIconsEnabled; }
+/** The mode currently painted on <html> (falls back to stored mode before first paint). */
+function getPaintedMode(): Theme {
+  if (hasPaintedTheme && typeof document !== 'undefined' && document.documentElement) {
+    return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  }
+  return getThemeSnapshot();
+}
+
+function getActiveLogoIconSnapshot(): string | null {
+  if (!activeThemeIconsEnabled) return null;
+  return slotSnapshot(getPaintedMode())?.icon ?? null;
+}
+
+/**
+ * Compact `${id}\0${name}` identity of the active custom/community/team theme
+ * when theme icons are enabled and no user-uploaded icon overrides it, or null
+ * on built-in palettes. Keeps the full built-in theme logo table off the boot
+ * path (lazy-loaded in `themeLogoResolver.ts` only when needed).
+ */
+function getActiveThemeIdentitySnapshot(): string | null {
+  if (!activeThemeIconsEnabled) return null;
+  const snap = slotSnapshot(getPaintedMode());
+  if (!snap || snap.icon) return null;
+  let name = '';
+  if (snap.code.startsWith('pn1:')) {
+    const end = snap.code.indexOf(':', 4);
+    if (end > 4) name = snap.code.slice(4, end);
+  }
+  return `${snap.id}\0${name}`;
+}
 function getCopyFormatSnapshot(): CopyFormat { return activeCopyFormat; }
 function getPasteFormatSnapshot(): PasteFormat { return activePasteFormat; }
 function getLinkModifierSnapshot(): boolean { return activeLinkModifier; }
@@ -1395,8 +1693,18 @@ export function useFavicons(): boolean {
   return useSyncExternalStore(subscribeTheme, getFaviconsSnapshot);
 }
 
-function setColorTheme(mode: Theme, next: ThemeChoice): void {
-  applyColorTheme(mode, next);
+/** Custom sidebar app icon uploaded for the currently active custom theme, or null. */
+export function useThemeLogoIcon(): string | null {
+  return useSyncExternalStore(subscribeTheme, getActiveLogoIconSnapshot);
+}
+
+/** Compact identity of the active custom theme for bespoke sidebar logo lookup, or null. */
+export function useActiveCustomThemeIdentity(): string | null {
+  return useSyncExternalStore(subscribeTheme, getActiveThemeIdentitySnapshot);
+}
+
+function setColorTheme(mode: Theme, next: ThemeChoice, space?: SpaceView): void {
+  applyColorTheme(mode, next, space);
   emitThemeChange();
 }
 
@@ -1408,9 +1716,9 @@ function setColorTheme(mode: Theme, next: ThemeChoice): void {
  * Settings, the theme builder and Ninja all pick through this.
  * Spec: docs/contrib/color-themes.md (section 1, a click on a theme)
  */
-function pickTheme(mode: Theme, pick: ThemeChoice | CustomSnapshot): void {
-  if (typeof pick === 'string') applyColorTheme(mode, pick);
-  else applyCustomTheme(pick);
+function pickTheme(mode: Theme, pick: ThemeChoice | CustomSnapshot, space?: SpaceView): void {
+  if (typeof pick === 'string') applyColorTheme(mode, pick, space);
+  else applyCustomTheme(pick, space);
   if (getStoredTheme() !== mode) applyThemeMode(mode);
   else if (peekTheme) {
     peekTheme = null;
@@ -1450,6 +1758,8 @@ export function useTheme() {
   const themeMode = useSyncExternalStore(subscribeTheme, getThemeModeSnapshot);
   const lightTheme = useSyncExternalStore(subscribeTheme, getLightColorThemeSnapshot);
   const darkTheme = useSyncExternalStore(subscribeTheme, getDarkColorThemeSnapshot);
+  const themeSpace = useSyncExternalStore(subscribeTheme, getThemeSpaceSnapshot);
+  const revision = useSyncExternalStore(subscribeTheme, getThemeRevisionSnapshot);
   /** The palette on screen now: the slot of the painted mode. */
   const colorTheme = theme === 'dark' ? darkTheme : lightTheme;
   const textSize = useSyncExternalStore(subscribeTheme, getTextSizeSnapshot);
@@ -1457,6 +1767,7 @@ export function useTheme() {
   const spellcheck = useSyncExternalStore(subscribeTheme, getSpellcheckSnapshot);
   const invisibles = useSyncExternalStore(subscribeTheme, getInvisiblesSnapshot);
   const favicons = useSyncExternalStore(subscribeTheme, getFaviconsSnapshot);
+  const themeIconsEnabled = useSyncExternalStore(subscribeTheme, getThemeIconsEnabledSnapshot);
   const copyFormat = useSyncExternalStore(subscribeTheme, getCopyFormatSnapshot);
   const pasteFormat = useSyncExternalStore(subscribeTheme, getPasteFormatSnapshot);
   const linkModifier = useSyncExternalStore(subscribeTheme, getLinkModifierSnapshot);
@@ -1510,6 +1821,11 @@ export function useTheme() {
     emitThemeChange();
   }, []);
 
+  const setThemeIconsEnabled = useCallback((next: boolean) => {
+    applyThemeIconsEnabled(next);
+    emitThemeChange();
+  }, []);
+
   const setCopyFormat = useCallback((next: CopyFormat) => {
     applyCopyFormat(next);
     emitThemeChange();
@@ -1546,5 +1862,5 @@ export function useTheme() {
     emitThemeChange();
   }, []);
 
-  return { theme, themeMode, toggle, setTheme, setThemeMode, colorTheme, lightTheme, darkTheme, setColorTheme, setCustomTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, cycleContentWidth, spellcheck, setSpellcheck, invisibles, setInvisibles, favicons, setFavicons, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, openReadOnly, setOpenReadOnly, noteFont, setNoteFont, customFonts, setCustomFont };
+  return { theme, themeMode, toggle, setTheme, setThemeMode, colorTheme, lightTheme, darkTheme, themeSpace, revision, setColorTheme, setCustomTheme, pickTheme, previewColor, textSize, setTextSize, contentWidth, setContentWidth, cycleContentWidth, spellcheck, setSpellcheck, invisibles, setInvisibles, favicons, setFavicons, themeIconsEnabled, setThemeIconsEnabled, copyFormat, setCopyFormat, pasteFormat, setPasteFormat, linkModifier, setLinkModifier, openReadOnly, setOpenReadOnly, noteFont, setNoteFont, customFonts, setCustomFont };
 }

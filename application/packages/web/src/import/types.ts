@@ -1,19 +1,17 @@
 /**
  * Shared types for the pluggable import system.
  *
- * Each "importer" is an adapter that reads a foreign note-app export
- * (Standard Notes, Obsidian, Apple Notes, plain markdown folder, …) and
- * normalizes it into ImportedNote[]. The apply step is shared - it takes
- * ImportedNote[] and writes them into Dexie with dirty=1, then lets the
- * existing sync pass encrypt + upload them.
+ * Each importer is an adapter that reads a foreign app export
+ * (Standard Notes, Obsidian, Apple Notes, plain markdown folder, ...) and
+ * normalizes it into `ImportedNote[]`. `runImport` and `applyImport` stage
+ * media, merge folders, and write rows atomically into Dexie with `dirty=1`
+ * so sync encrypts and uploads them.
  *
- * Adding a new importer:
- *   1. Create a new file in this folder (e.g. `obsidian.ts`) with a parser,
- *      or an object that satisfies the `Importer` interface.
- *   2. Register it in `registry.ts` as an `ImporterEntry`: the type checker
- *      then asks for every fact its card shows (`ImporterCard`).
- *   3. Add its id to its group in `ImportPickPhase` (`ImportModal.tsx`),
- *      where the order of the cards is chosen by hand.
+ * Adding an importer:
+ *   1. Create an adapter in this folder with a `parse` function.
+ *   2. Register an `ImporterEntry` in `registry.ts` with its `ImporterCard`
+ *      metadata (`group`, `icon`, `labelKey`, `descKey`, `fileTypes`, `guide`,
+ *      optional `aliases`, and optional `counted`).
  */
 
 import type { AttachmentMeta } from '../attachmentStore';
@@ -49,16 +47,16 @@ export interface ImportedNote {
   starred?: boolean;
   /** Optional - only set if the source format has an archive flag. */
   archived?: boolean;
-  /** Note type - 'note' | 'login' | 'card' | 'ssh-key'. Defaults to 'note'. */
+  /** Item kind (`NoteType`: `'note'`, `'journal'`, `'task'`, `'event'`, `'link'`, `'contact'`, `'drawing'`, `'file'`, `'login'`, `'card'`, `'ssh-key'`); defaults to `'note'`. */
   type?: import('@notes/shared').NoteType;
   /** Pro: prevent accidental edits. */
   locked?: boolean;
   /** Pro: gate this note behind the user's PIN. */
   pinProtected?: boolean;
-  /** Mood & wellness tracker data for journal entries. */
+  /** Mood & wellness tracker data for journal entries, or source identity metadata on imported events. */
   trackers?: Record<string, unknown>;
-  /** Folder membership. Set by the PrivacyNotes backup formats and by the
-   *  Obsidian importer, which rebuilds the vault's folder tree. */
+  /** Rebuilt or preserved folder id (`ParsedImport.folders`), set by importers
+   *  that reconstruct a folder tree and by PrivacyNotes backup restores. */
   folderId?: string | null;
   /** Transient: the note's full original folder path segments (e.g.
    *  ["Work", "Projects", "2026"]). Used at apply time to derive folder
@@ -76,7 +74,6 @@ export interface ImportedNote {
   colorKey?: string;
 }
 
-/** What an importer returns after successfully parsing a file. */
 /**
  * One blob an importer carries across. `processed` marks a picture the
  * importer already ran through the image switches, so the shared blob
@@ -95,6 +92,7 @@ export type ImportBlob = {
   file?: boolean;
 };
 
+/** Normalized output returned by an importer's `parse` step. */
 export interface ParsedImport {
   notes: ImportedNote[];
   /** Non-fatal issues worth surfacing in the UI ("3 notes had no title", etc.). */
@@ -115,16 +113,20 @@ export interface ParsedImport {
    *  the blobs this device lacks (`restoreAdds`). */
   blobSizes?: Record<string, number>;
   /**
-   * Attachment/image blobs extracted during parsing.
-   * Keyed by the relative path as referenced in the markdown body
-   * (e.g. "Attachments/UUID.jpeg" or "images/photo.jpg").
-   * Used by post-apply blob import to store and rewrite references.
+   * Extracted image and attachment blobs, keyed by fixed-width scheme tokens
+   * (`FileKeys` in `fileRefs.ts`, such as `mdfile:000001` or `capfile:000001`,
+   * or importer-minted scheme tokens such as `keepimg:...`) so no key is a
+   * prefix of another key and prose mentioning a file name is untouched.
+   * `importBlobs` (`blobImport.ts`) stages them BEFORE `applyImport` and
+   * rewrites references to `pn:img/<uuid>` / `pn:file/<uuid>`, then
+   * `applyImport` commits `StagedBlob[]` in the same Dexie transaction as the notes.
    */
   blobs?: Map<string, ImportBlob>;
   /**
-   * Folder definitions rebuilt from the source's structure (Obsidian
-   * subfolders). Merged into the user's settings folder tree at apply
-   * time so each note's folderId resolves to a real folder.
+   * Folder definitions rebuilt from the source's hierarchy (Markdown, Obsidian,
+   * Notion, Capacities, bookmarks, calendars, PrivacyNotes backups, and others).
+   * Merged into the settings folder tree before `applyImport` writes notes, and
+   * rolled back if the note write fails.
    */
   folders?: FolderDef[];
   /**
@@ -137,7 +139,7 @@ export interface ParsedImport {
    * Our own full backup only: the looks of folders, tags and notes and the
    * custom themes, as the manifest holds them. Validated at apply time.
    */
-  settings?: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown };
+  settings?: { itemStyles?: unknown; customThemes?: unknown; customIcons?: unknown; themeIcons?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown };
 }
 
 /** Importer identifiers - add new ones here as adapters land. */
@@ -213,22 +215,52 @@ export interface Importer {
    * errors (corrupt file, wrong format) - the UI will catch and display.
    *
    * `onProgress` is optional and called with human-readable status
-   * messages during long operations ("Reading zip…", "Parsing JSON…").
+   * messages during long operations ("Reading zip...", "Parsing JSON...").
    */
   parse(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport>;
 }
 
+/** Destination group an importer belongs to in the picker catalog. */
+export type ImporterGroup =
+  | 'notes'
+  | 'tasks'
+  | 'passwords'
+  | 'bookmarks'
+  | 'journal'
+  | 'calendar'
+  | 'contacts'
+  | 'drawings'
+  | 'files';
+
 /** The mark on an importer's card: a picture from the /help/import guides
  *  (`public/help/icons`), or a glyph for a source no single vendor owns. */
-type ImporterIcon = { src: string } | { glyph: 'address-book' | 'drawing' };
+export type ImporterIcon = { src: string } | { glyph: 'address-book' | 'drawing' };
+
+/** An app card that opens a shared family importer under its own brand name
+ *  (e.g. Chrome under Browser bookmarks, or Apple Calendar under Google Calendar). */
+export interface ImporterAlias {
+  key: string;
+  /** Brand display name, rendered verbatim across locales. */
+  label: string;
+  icon: ImporterIcon;
+  fileTypes: string;
+  /** Optional `importExport` description key when the family description names another app. */
+  descKey?: string;
+  /** Optional `/help/import/<slug>` guide override (`null` suppresses the family guide). */
+  guide?: string | null;
+  /** Optional sort key override within its picker section. */
+  sortKey?: string;
+}
 
 /** What an importer's card in Settings > Transfer > Import shows, and what
- *  the window says about it (`ImportModal.tsx`). Every field but `restore`
- *  is required, so a new entry without one fails the type check. */
+ *  the window says about it (`ImportModal.tsx`). Required card fields enforce
+ *  complete metadata on every registered importer at compile time. */
 interface ImporterCard {
-  /** The card's mark. Null for an importer with no card of its own: our
-   *  backup (the Restore tab) and the two browser families, which only the
-   *  browser cards open. */
+  /** Destination group in the Import picker, or `null` for Restore-only entries (`privacynotes`). */
+  group: ImporterGroup | null;
+  /** The card's mark. Null for an importer with no standalone card of its own:
+   *  our backup (the Restore tab) and the two browser families, which open
+   *  through their `aliases` cards. */
   icon: ImporterIcon | null;
   /** The `importExport` key of a name that is our wording, not a brand.
    *  Null: the brand `label`, which renders as written in every language. */
@@ -244,6 +276,12 @@ interface ImporterCard {
   fileTypes: string;
   /** The slug of its guide, `/help/import/<slug>`; null: none. */
   guide: string | null;
+  /** Additional brand/browser cards that route to this importer. */
+  aliases?: readonly ImporterAlias[];
+  /** Optional sort key override within its picker section. */
+  sortKey?: string;
+  /** Sends an anonymous import count in `admin_events` under its own id. */
+  counted?: true;
   /** Our own backup: it waits for the restore gate, keeps the backup's own
    *  folders, and restores its pictures from the backup's list. */
   restore?: true;
@@ -252,7 +290,6 @@ interface ImporterCard {
 /** One row of `IMPORTERS`: the importer and its card. */
 export type ImporterEntry = Importer & ImporterCard;
 
-/** Result of writing a ParsedImport into the local DB. */
 /** What a restore of our own backup did, so the message can say it. */
 export interface RestoreCounts {
   updated: number;
@@ -269,14 +306,17 @@ export interface StagedBlob {
   meta: AttachmentMeta;
 }
 
+/** Outcome of writing a `ParsedImport` into the local Dexie database (`applyImport`). */
 export interface ApplyResult {
+  /** Number of newly created items (`rows.length - updated`), excluding restored updates and skipped/unchanged items. */
   imported: number;
-  /** Errors encountered per-note, so the user knows if anything was skipped. */
+  /** Transaction-level write errors; non-empty means the transaction rolled back and nothing was stored. */
   errors: string[];
-  /** IDs of the notes that were created, in the same order as the input. */
+  /** IDs of all rows written in the transaction (newly created and updated restored rows). */
   noteIds: string[];
-  /** Bookmarks skipped because a bookmark with the same URL already
-   *  exists (exact-match, non-trashed). Only ever set for 'link' rows. */
+  /** Items skipped because a matching live item already exists: `'link'` rows
+   *  by exact URL, `'contact'` rows by `contactMatches`, and `'event'` rows by
+   *  iCalendar `UID` or `<id>@privacynotes.app`. */
   skippedDuplicates?: number;
   /** Restoring our own backup: notes the vault already had, where the
    *  backup's copy was newer and replaced it. */

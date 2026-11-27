@@ -3,7 +3,7 @@ import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SupabaseClient } from '@notes/shared';
 import { fetchQuotaUsage } from '../devices';
-import { isLocalOnly } from '../localOnly';
+import { isUnsyncedLocalVault } from '../localOnly';
 import type { AttachmentStore } from '../attachmentStore';
 import { formatFileSize, validateAttachment } from '../attachmentValidation';
 import { proUnlocked } from '../demo';
@@ -13,6 +13,8 @@ import { parseMarkdown } from '../import/markdown';
 import { ensureImportLogLoaded } from '../i18n';
 import type { FolderDef } from '../folders';
 import { SUPPORTED_EXT } from '../markdownFolder/adapter';
+import { signInStamp, signedOutSince } from '../liveSignIn';
+import { holdLockReload } from '../lockReload';
 import { createNote } from '../notesRepo';
 import type { FileUploadEntry } from '../UploadProgressModal';
 import type { View } from '../views';
@@ -56,7 +58,7 @@ export function useFilesUpload({
   onBlobsRestored,
   inheritFilters,
 }: {
-  auth: { isPro: boolean };
+  auth: { status?: string; isPro: boolean };
   supabase: SupabaseClient;
   attachmentStoreRef: MutableRefObject<AttachmentStore | null>;
   quotaRef: MutableRefObject<{ usedBytes: number; maxBytes: number } | null>;
@@ -75,9 +77,10 @@ export function useFilesUpload({
    *  first await, so a space switch while the files are read cannot move the
    *  import: null for none, else a function that makes (or reuses) the folder,
    *  in Work a folder named after the source, since unfiled reads as Personal.
-   *  It is called once the first file has parsed, so a batch that fails to
-   *  parse leaves no empty folder. */
-  importDestination?: () => (() => string | null) | null;
+   *  Called once the first file has parsed, so a batch that fails to parse
+   *  leaves no empty folder; only an explicit `{ id, created: true }` result
+   *  is eligible for rollback if zero notes are written. */
+  importDestination?: () => (() => string | { id: string; created: boolean } | null) | null;
   /** Kick the pending-upload passes once blobs have landed locally. */
   onBlobsRestored?: () => void;
   /** The folder and tags the list the upload started from is filtered by. A
@@ -165,68 +168,129 @@ export function useFilesUpload({
     await doAttachmentUpload(fileArr, store);
   }
 
-  /** Run the import pipeline on markdown/.zip files, bypassing the Import
-   *  modal UI for a streamlined experience from the Files pillar.
+  /** Run the import pipeline on markdown/.zip files from the Files pillar.
    *
-   *  The steps are the Import window's own (`runImport` in import/importRun.ts),
-   *  with the choices a drop has no question for: the row's default
-   *  destination, decided once per batch; no folder tags, no cut of an
-   *  oversize note; the `markdown` source tag. */
+   *  Runs through `runImport` (`import/importRun.ts`) under `holdLockReload`
+   *  with the same defaults as `ImportModal`: the batch's default destination
+   *  (undone if no notes land), folder tags for free accounts, oversize-note
+   *  splitting, and the `markdown` source tag. */
   async function handleImportFromFiles(files: File[]) {
     setPendingImportableFiles(null);
-    let totalImported = 0;
-    const makeTarget = importDestination?.() ?? null;
-    let target: string | null | undefined;
-    for (const file of files) {
-      try {
-        await ensureImportLogLoaded();
-        const parsed = await parseMarkdown(file);
-        if (target === undefined) target = makeTarget?.() ?? null;
-        const { runImport } = await import('../import/importRun');
-        // The folder the batch shares is not this file's to take back.
-        const run = await runImport(
-          parsed,
-          { target, folderTags: false, browserTags: false, splitOversize: false, dropContactPhotos: false, sourceTag: 'markdown' },
-          {
-            mergeFolders: onImportFolders ? (folders, _originalIds, rootParent) => onImportFolders(folders, rootParent) : undefined,
-            undoFolders: onUndoImportFolders,
-            blobsStored: onBlobsRestored,
-          },
-        );
-        if (run.kind === 'refused') {
-          console.warn('[Files->Import] write failed for', file.name, run.errors);
-          continue;
+    const releaseLockReload = holdLockReload();
+    try {
+      let totalImported = 0;
+      let anyWritten = false;
+      let lastFailure: { fileName: string; detail: string } | null = null;
+      let lastMediaError: string | null = null;
+      const isPro = (auth.status === undefined || auth.status === 'authenticated') && auth.isPro;
+      const folderTags = !proUnlocked(isPro);
+      const makeTarget = importDestination?.() ?? null;
+      let target: string | null = null;
+      let createdTarget = false;
+      let targetResolved = false;
+
+      for (const file of files) {
+        try {
+          await ensureImportLogLoaded();
+          const parsed = await parseMarkdown(file);
+          if (!targetResolved) {
+            const resolved = makeTarget ? makeTarget() : null;
+            if (typeof resolved === 'string') {
+              target = resolved;
+              createdTarget = false;
+            } else if (resolved !== null) {
+              target = resolved.id;
+              createdTarget = resolved.created;
+            }
+            targetResolved = true;
+          }
+          const { runImport } = await import('../import/importRun');
+          // A multi-file batch shares `target`; if zero files write anything,
+          // the batch undo below removes `target` only when `createdTarget` is true.
+          const run = await runImport(
+            parsed,
+            {
+              target,
+              folderTags,
+              browserTags: false,
+              splitOversize: true,
+              dropContactPhotos: false,
+              sourceTag: 'markdown',
+            },
+            {
+              mergeFolders: onImportFolders ? (folders, _originalIds, rootParent) => onImportFolders(folders, rootParent) : undefined,
+              undoFolders: onUndoImportFolders,
+              blobsStored: onBlobsRestored,
+            },
+          );
+          if (run.kind === 'refused') {
+            const detail = run.errors.join('\n');
+            console.warn('[Files->Import] write failed for', file.name, run.errors);
+            lastFailure = { fileName: file.name, detail };
+            continue;
+          }
+          if (run.kind === 'failed') {
+            if (run.written) anyWritten = true;
+            const detail = run.error instanceof Error ? run.error.message : String(run.error);
+            console.warn('[Files->Import] failed for', file.name, run.error);
+            lastFailure = { fileName: file.name, detail };
+            continue;
+          }
+          if (run.result.imported > 0 || run.result.noteIds.length > 0) {
+            anyWritten = true;
+          }
+          if (run.mediaError) {
+            console.warn('[Files->Import] media failed for', file.name, run.mediaError);
+            lastMediaError = run.mediaError;
+          }
+          totalImported += run.result.imported;
+        } catch (err) {
+          const detail = err instanceof Error ? err.message : String(err);
+          console.warn('[Files->Import] failed for', file.name, err);
+          lastFailure = { fileName: file.name, detail };
         }
-        if (run.kind === 'failed') {
-          console.warn('[Files->Import] failed for', file.name, run.error);
-          continue;
-        }
-        if (run.mediaError) console.warn('[Files->Import] media failed for', file.name, run.mediaError);
-        totalImported += run.result.imported;
-      } catch (err) {
-        console.warn('[Files→Import] failed for', file.name, err);
       }
-    }
-    if (totalImported > 0) {
-      setImportToast(
-        t('toast.importedSyncing', { count: totalImported })
-      );
-      await refresh();
-      void runSync();
-      // Switch to Notes so the user sees the imported content immediately
-      // instead of staring at the Files pillar wondering if it worked.
-      setView('all');
-      window.setTimeout(() => setImportToast(null), 4000);
+
+      if (!anyWritten && totalImported === 0 && createdTarget && target !== null) {
+        onUndoImportFolders?.([target]);
+      }
+
+      if (anyWritten || totalImported > 0) {
+        setImportToast(
+          lastMediaError
+            ? t('importExport:errors.blobImportFailed', { detail: lastMediaError })
+            : lastFailure
+              ? t('toast.uploadFailedFor', { filename: lastFailure.fileName, error: lastFailure.detail })
+              : t('toast.importedSyncing', { count: totalImported }),
+        );
+        await refresh();
+        void runSync();
+        // Switch to Notes so the user sees the imported content immediately
+        // instead of staring at the Files pillar wondering if it worked.
+        setView('all');
+        window.setTimeout(() => setImportToast(null), 4000);
+      } else if (lastFailure) {
+        setImportToast(
+          t('importExport:errors.importNothingChanged', { detail: lastFailure.detail }),
+        );
+        window.setTimeout(() => setImportToast(null), 4000);
+      }
+    } finally {
+      releaseLockReload();
     }
   }
 
   /** Proceed with normal encrypted-attachment upload for selected files.
    *  Called explicitly via ConfirmModal's onCancel ("Store as files"). */
-  async function handleAttachFromFiles<T extends UploadSource>(files: T[]): Promise<T[]> {
+  async function handleAttachFromFiles<T extends UploadSource>(
+    files: T[],
+    isCurrent?: () => boolean,
+    overrideFilters?: { folderId?: string | null; tags?: string[] },
+  ): Promise<T[]> {
     setPendingImportableFiles(null);
     const store = attachmentStoreRef.current;
     if (!store) return [];
-    return doAttachmentUpload(files, store);
+    return doAttachmentUpload(files, store, isCurrent, overrideFilters);
   }
 
   /** Core attachment upload logic (extracted from handleFilesSelected).
@@ -234,13 +298,27 @@ export function useFilesUpload({
    *  for good on their size. A file that failed for a reason that can pass
    *  (no room yet, a failed read, a failed local store) is left out, so the
    *  share inbox keeps it. */
-  async function doAttachmentUpload<T extends UploadSource>(fileArr: T[], store: AttachmentStore): Promise<T[]> {
+  async function doAttachmentUpload<T extends UploadSource>(
+    fileArr: T[],
+    store: AttachmentStore,
+    isCurrent?: () => boolean,
+    overrideFilters?: { folderId?: string | null; tags?: string[] },
+  ): Promise<T[]> {
+    const uploadStamp = signInStamp();
+    const current = () => !signedOutSince(uploadStamp) && (isCurrent ? isCurrent() : true);
+    if (!current()) return [];
     const handled: T[] = [];
     const multi = fileArr.length > 1;
     // Read once, before the first await: the note is written minutes later
     // on a slow batch, and the file belongs to the list the user started
     // from, not to whatever they filtered to while it uploaded.
-    const filters = inheritFilters?.() ?? { tags: [], folderId: null };
+    const inherited = inheritFilters?.() ?? { tags: [], folderId: null };
+    const filters = overrideFilters
+      ? {
+          folderId: overrideFilters.folderId !== undefined ? overrideFilters.folderId : inherited.folderId,
+          tags: overrideFilters.tags !== undefined ? overrideFilters.tags : inherited.tags,
+        }
+      : inherited;
 
     // Build initial entries for the modal
     const initial: FileUploadEntry[] = fileArr.map((f) => ({
@@ -263,7 +341,7 @@ export function useFilesUpload({
     // failure here just skips the gate.
     let freeBytes: number | null = null;
     let maxTotalBytes: number | null = null;
-    if (!isLocalOnly()) {
+    if (!isUnsyncedLocalVault()) {
       try {
         const q = await fetchQuotaUsage(supabase, true);
         freeBytes = Math.max(0, q.maxTotalBytes - q.totalBytes - q.imageBytes);
@@ -272,8 +350,10 @@ export function useFilesUpload({
         freeBytes = null;
       }
     }
+    if (!current()) return [];
 
     for (let i = 0; i < fileArr.length; i++) {
+      if (!current()) return multi ? [] : handled;
       const source = fileArr[i]!;
       // Per-file cap from the fresh server read when we have one - quotaRef
       // is null before the first sync, which validated an add-on holder
@@ -282,7 +362,7 @@ export function useFilesUpload({
       const v = validateAttachment(source, proUnlocked(auth.isPro), (maxTotalBytes ?? quotaRef.current?.maxBytes ?? 0) > 500 * 1000 * 1000);
       if (!v.ok) {
         initial[i] = { ...initial[i]!, status: 'failed', error: v.error };
-        setUploadEntries([...initial]);
+        if (current()) setUploadEntries([...initial]);
         // Refused for good only on a limit that was read: before the first
         // quota answer an add-on holder meets the plain limit.
         if (maxTotalBytes !== null || quotaRef.current !== null) handled.push(source);
@@ -293,16 +373,19 @@ export function useFilesUpload({
       try {
         file = later ? await source.read() : source;
       } catch (err) {
+        if (!current()) return multi ? [] : handled;
         initial[i] = { ...initial[i]!, status: 'failed', error: err instanceof Error ? err.message : 'Upload failed' };
         setUploadEntries([...initial]);
         continue;
       }
+      if (!current()) return multi ? [] : handled;
       // Images obey the two image switches at this door too, and the row
       // then shows the file that is actually stored. A picture the module
       // cannot read is stored as it arrived, the way every non-image is.
       let upload = file;
       if (isSupportedImage(file)) {
         const processed = await processImage(file, currentImageOptions());
+        if (!current()) return multi ? [] : handled;
         if (processed.ok) {
           upload = new File([processed.image.data as BlobPart], processed.image.name, { type: processed.image.mime });
           initial[i] = { ...initial[i]!, name: upload.name, size: upload.size };
@@ -311,17 +394,19 @@ export function useFilesUpload({
       if (freeBytes !== null) {
         if (upload.size > freeBytes) {
           initial[i] = { ...initial[i]!, status: 'failed', errorCode: 'storage-full' };
-          setUploadEntries([...initial]);
+          if (current()) setUploadEntries([...initial]);
           continue;
         }
         // Reserve headroom so a batch cannot collectively overshoot.
         freeBytes -= upload.size;
       }
       initial[i] = { ...initial[i]!, status: 'uploading' };
-      setUploadEntries([...initial]);
+      if (current()) setUploadEntries([...initial]);
 
       try {
+        if (!current()) return multi ? [] : handled;
         const result = await store.uploadAttachment(upload);
+        if (!current()) return multi ? [] : handled;
         const { uuid, meta, uploaded } = result;
         const line = `[${meta.name}|${formatFileSize(meta.size)}|${meta.mime}](pn:file/${uuid})`;
 
@@ -337,10 +422,12 @@ export function useFilesUpload({
           const row = i;
           uploaded
             .then(() => {
+              if (!current()) return;
               initial[row] = { ...initial[row]!, status: 'done' };
               setUploadEntries([...initial]);
             })
             .catch((uploadErr) => {
+              if (!current()) return;
               const uploadMsg = uploadErr instanceof Error ? uploadErr.message : 'Server upload failed';
               const quota = /quota exceeded/i.test(uploadMsg);
               // Quota race lost after the preflight: the blob + note stay
@@ -356,13 +443,16 @@ export function useFilesUpload({
           // A file read later waits for its server upload before the next one
           // is read, so the batch holds one file's bytes at a time.
           if (later) await uploaded.catch(() => {});
+          if (!current()) return [];
         } else {
           // Single file - create its own note immediately.
           const note = await createNote(meta.name, line, filters.tags, undefined, 'file', filters.folderId);
           // Saved from here on, whatever the refresh answers, or the next
           // drain of the share inbox saves the file a second time.
           handled.push(source);
+          if (!current()) return handled;
           await refresh().catch((err) => console.warn('[upload] list refresh failed:', err));
+          if (!current()) return handled;
           void runSync();
           setSelectedId(note.id);
           try {
@@ -380,13 +470,15 @@ export function useFilesUpload({
           }
         }
       } catch (err) {
+        if (!current()) return multi ? [] : handled;
         const msg = err instanceof Error ? err.message : 'Upload failed';
         initial[i] = { ...initial[i]!, status: 'failed', error: msg };
       }
-      setUploadEntries([...initial]);
+      if (current()) setUploadEntries([...initial]);
     }
 
     // Multi-file: create one note containing all successfully uploaded files.
+    if (!current()) return multi ? [] : handled;
     if (multi && bodyLines.length > 0) {
       // One survivor of a batch is a single file and is named like one.
       const title = bodyLines.length === 1
@@ -394,7 +486,9 @@ export function useFilesUpload({
         : t('importExport:upload.batchTitle', { count: bodyLines.length });
       const body = bodyLines.join('\n');
       const note = await createNote(title, body, filters.tags, undefined, 'file', filters.folderId);
+      if (!current()) return handled;
       await refresh().catch((err) => console.warn('[upload] list refresh failed:', err));
+      if (!current()) return handled;
       void runSync();
       setSelectedId(note.id);
     }
@@ -404,7 +498,9 @@ export function useFilesUpload({
     // the Storage write and its adjust_blob_bytes call happen in the promise
     // it hands back. Reading the counter before those settle rendered the
     // pre-upload total, so a multi-file drop looked like it consumed nothing.
-    void Promise.allSettled(serverUploads).then(refreshStorage);
+    void Promise.allSettled(serverUploads).then(() => {
+      if (current()) refreshStorage();
+    });
 
     // A file from the share inbox that this upload keeps comes back on every
     // drain until it fits; its row lets the person drop it instead.

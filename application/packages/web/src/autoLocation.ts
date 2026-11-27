@@ -10,7 +10,7 @@
  * place goes through the writer NotesView registers (`handleTrackersPatch`),
  * so the chip shows at once, and never over a place set in the meantime. The
  * name is the nearest listed town within 25 km, read on the device.
- * Spec: docs/internal/plans/note-location.md (section 3c)
+ * Spec: docs/internal/specs/note-location.md (section 3c)
  */
 import { useSyncExternalStore } from 'react';
 import { canReadPosition } from './currentPosition';

@@ -18,7 +18,13 @@
     "viewAria": "Wyświetl obraz",
     "copyAria": "Kopiuj obraz",
     "copyFailed": "Nie udało się skopiować obrazu.",
-    "picturesLeftOut": "Niektóre obrazy nie zostały dodane. Skopiuj obraz osobno, żeby go wkleić."
+    "picturesLeftOut": "Niektóre obrazy nie zostały dodane. Skopiuj obraz osobno, żeby go wkleić.",
+    "captionLabel": "Podpis",
+    "captionAddAria": "Dodaj podpis",
+    "captionEditAria": "Edytuj podpis",
+    "captionPlaceholder": "Dodaj podpis...",
+    "captionClearAria": "Wyczyść podpis",
+    "captionHint": "Enter, aby zapisać · Esc, aby anulować"
   },
   "attachment": {
     "fallbackName": "Załącznik",

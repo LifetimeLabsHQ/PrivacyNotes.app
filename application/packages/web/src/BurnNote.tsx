@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, type CSSProperties } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
+import { activeLocale } from './i18n';
 import { Fire, Lock, Moon, Sun } from './icons';
 import { RevealGate } from './RevealGate';
 import { isLineSpacing, lineHeightCss, paragraphGapCss, useTheme, type LineSpacing } from './theme';
@@ -193,13 +194,14 @@ export default function BurnNote() {
   // re-render the body HTML every second. A vault item (it has fields) sends
   // its Notes box as the body, so its blank lines show as typed, the way the
   // item view shows them (keepBlankLines, #775).
+  const locale = activeLocale();
   const bodyHtml = useMemo(
     () => {
       if (!note?.body) return '';
       const md = note.fields.length ? keepBlankLines(note.body) : note.body;
-      return renderNoteBody(renderMarkdownSafe(md), note.spacing);
+      return renderNoteBody(renderMarkdownSafe(md, locale), note.spacing);
     },
-    [note?.body, note?.fields, note?.spacing, renderReady],
+    [note?.body, note?.fields, note?.spacing, locale, renderReady],
   );
 
   // A shared note can contain math or fenced code, and rendering those needs

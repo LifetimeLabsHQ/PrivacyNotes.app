@@ -12,7 +12,20 @@
 import { DEFAULT_HIGHLIGHT, HIGHLIGHT_COLORS, TEXT_COLORS } from '../editorColors';
 import { effectiveWidths } from '../tableColumnWidths';
 import { escapeMarkdownText, guardMarkdownLineStart, markdownCodeSpan } from './standardNotesSuper';
-import { normalizeTagList } from './importHelpers';
+import {
+  appendMathSafe,
+  containsMarkdownBlock,
+  escapePipeCell,
+  formatMarkdownLinkTarget,
+  isUnsafeUrl,
+  joinMathSafe,
+  normalizeTagList,
+  orderedListStart,
+  sanitizeBlockLatex,
+  sanitizeInlineLatex,
+  shouldUseHtmlMark,
+  sublistNeedsBlankLine,
+} from './importHelpers';
 
 const MAX_HTML_DEPTH = 64;
 const MAX_COLUMNS = 5;
@@ -62,12 +75,6 @@ function normalizeUuid(raw: string | null | undefined): string | null {
   return /^[0-9a-f]{32}$/.test(hex) ? hex : null;
 }
 
-/** Reject executable link/media schemes (`javascript:`, `vbscript:`, `data:`). */
-function isUnsafeUrl(url: string): boolean {
-  const cleaned = url.replace(/[\u0000-\u0020]+/g, '').toLowerCase();
-  return /^(?:javascript|vbscript|data):/.test(cleaned);
-}
-
 function inlineOnly(text: string): string {
   return text.replace(/\s*\n+\s*/g, ' ').trim();
 }
@@ -83,28 +90,9 @@ function fileBasename(raw: string): string {
   }
 }
 
-/** Convert positive numeric column ratios into integer weights summing to 100 (largest-remainder), or null when equal. */
+/** Convert positive numeric column ratios into integer weights summing to 100, or null when equal. */
 function columnWeightsFromRatios(ratios: number[]): number[] | null {
-  if (ratios.length < 2) return null;
-  const sum = ratios.reduce((a, b) => a + b, 0);
-  if (!(sum > 0)) return null;
-  const exact = ratios.map((r) => (r / sum) * 100);
-  const floors = exact.map((v) => Math.max(1, Math.floor(v)));
-  let remainder = 100 - floors.reduce((a, b) => a + b, 0);
-  const order = exact
-    .map((v, i) => ({ i, frac: v - Math.floor(v) }))
-    .sort((a, b) => b.frac - a.frac);
-  for (let k = 0; remainder > 0 && k < order.length; k++, remainder--) {
-    floors[order[k]!.i]! += 1;
-  }
-  for (let k = order.length - 1; remainder < 0 && k >= 0; k--) {
-    const idx = order[k]!.i;
-    if (floors[idx]! > 1) {
-      floors[idx]! -= 1;
-      remainder++;
-    }
-  }
-  return effectiveWidths(floors);
+  return ratios.every((r) => Number.isFinite(r) && r > 0) ? effectiveWidths(ratios) : null;
 }
 
 /** Extract a Notion column's numeric width ratio from `data-notion-column-ratio` or `style="width:N%"`. */
@@ -130,6 +118,7 @@ function readNotionHighlight(el: Element): string | null {
 function wrapRun(inner: string, open: string, close: string): string {
   if (!inner.trim()) return inner;
   const [, lead = '', core = '', trail = ''] = /^(\s*)([\s\S]*?)(\s*)$/.exec(inner) ?? [];
+  if (!core || containsMarkdownBlock(core)) return inner;
   return `${lead}${open}${core}${close}${trail}`;
 }
 
@@ -175,7 +164,7 @@ function readPropertiesTable(table: Element): { lines: string[]; tags: string[] 
       .filter(Boolean);
     let value = '';
     if (pills.length > 0) {
-      value = pills.join(', ');
+      value = pills.map((p) => escapeMarkdownText(p)).join(', ');
       if (/^tags?$/i.test(key)) rawTags.push(...pills);
     } else {
       const cb = td.querySelector('input[type="checkbox"]');
@@ -185,10 +174,13 @@ function readPropertiesTable(table: Element): { lines: string[]; tags: string[] 
         const a = td.querySelector('a[href]');
         const href = a?.getAttribute('href')?.trim() ?? '';
         const text = inlineOnly(td.textContent ?? '');
-        value = href && !isUnsafeUrl(href) && href === text ? href : text;
+        value =
+          href && /^(?:https?:\/\/|mailto:)/i.test(href) && !/[\s<>`\x00-\x1f\x7f]/.test(href) && href === text
+            ? `<${href}>`
+            : escapeMarkdownText(text);
       }
     }
-    if (value) lines.push(`${key}: ${value}`);
+    if (value) lines.push(`${guardMarkdownLineStart(escapeMarkdownText(key))}: ${value}`);
   }
   return { lines, tags: normalizeTagList(rawTags) };
 }
@@ -214,6 +206,8 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
   let columns = 0;
   let colors = 0;
   let inColumn = false;
+  let inlineDepth = 0;
+  let linkDepth = 0;
 
   /** Plain text of an anchor with any leading `.icon` emoji span removed. */
   function anchorPlainText(a: Element): string {
@@ -226,17 +220,59 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
   }
 
   function walkChildren(el: Element, depth: number): string {
-    return Array.from(el.childNodes).map((c) => walk(c, depth + 1)).join('');
+    return joinMathSafe(Array.from(el.childNodes).map((c) => walk(c, depth + 1)));
+  }
+
+  function walkInline(node: Node, depth: number): string {
+    inlineDepth++;
+    try {
+      return walk(node, depth);
+    } finally {
+      inlineDepth--;
+    }
+  }
+
+  function walkChildrenInline(el: Element, depth: number): string {
+    inlineDepth++;
+    try {
+      return walkChildren(el, depth);
+    } finally {
+      inlineDepth--;
+    }
+  }
+
+  function resolveFormattedLink(
+    href: string,
+    label: string,
+    plain: string,
+    pageId: string | null,
+  ): string {
+    const safeHref = /^[a-z][a-z0-9+.-]*:/i.test(href) ? formatMarkdownLinkTarget(href) : href;
+    if (!safeHref) return label;
+    const resolved = opts.resolveLink(safeHref, label, plain, pageId);
+    if (safeHref === href && resolved.endsWith(`](${href})`)) {
+      const formatted = formatMarkdownLinkTarget(href);
+      return formatted ? `${resolved.slice(0, -href.length - 1)}${formatted})` : label;
+    }
+    return resolved;
   }
 
   function renderParagraph(el: Element, depth: number): string {
-    const inner = walkChildren(el, depth).replace(/[ \t]+\n/g, '\n').trim();
+    const inner = walkChildren(el, depth)
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
     if (!inner) return '';
     const first = Array.from(el.childNodes).find(
       (c) => c.nodeType === Node.ELEMENT_NODE || (c.textContent ?? '').trim(),
     );
-    const guarded = first?.nodeType === Node.TEXT_NODE ? guardMarkdownLineStart(inner) : inner;
-    return `${guarded}\n\n`;
+    const startsPlain =
+      first?.nodeType === Node.TEXT_NODE ||
+      (first?.nodeType === Node.ELEMENT_NODE &&
+        (first as Element).tagName.toLowerCase() === 'a' &&
+        !inner.startsWith('['));
+    const guarded = startsPlain ? guardMarkdownLineStart(inner) : inner;
+    return `\n\n${guarded}\n\n`;
   }
 
   function renderCodeBlock(pre: Element, figure: Element | null, depth: number): string {
@@ -245,19 +281,23 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
     const lang = readCodeLanguage(pre, figure);
     const fence = fenceFor(raw);
     const capEl = figure?.querySelector(':scope > figcaption') ?? null;
-    const cap = capEl ? inlineOnly(walkChildren(capEl, depth)) : '';
+    const cap = capEl ? inlineOnly(walkChildrenInline(capEl, depth)) : '';
     const block = `${fence}${lang}\n${raw}\n${fence}`;
     return cap ? `\n${block}\n\n${cap}\n\n` : `\n${block}\n\n`;
   }
 
   function renderEquationBlock(el: Element): string {
-    const latex = (
+    const raw =
       el.getAttribute('data-notion-equation') ??
       el.querySelector('annotation[encoding="application/x-tex"]')?.textContent ??
-      ''
-    ).trim();
+      '';
+    if (inlineDepth > 0) {
+      const inline = sanitizeInlineLatex(raw);
+      return inline ? `$${inline}$` : '';
+    }
+    const latex = sanitizeBlockLatex(raw);
     if (!latex) return '';
-    return `\n$$\n${latex}\n$$\n\n`;
+    return `\n\n$$\n${latex}\n$$\n\n`;
   }
 
   function renderTable(table: Element, depth: number): string {
@@ -277,8 +317,8 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
             .filter(Boolean);
           const cellText = pills.length > 0
             ? pills.map((p) => escapeMarkdownText(p)).join(', ')
-            : inlineOnly(walkChildren(c, depth));
-          return cellText.replace(/(?<!\\)((?:\\\\)*)\|/g, '$1\\|').replace(/^$/, ' ');
+            : inlineOnly(walkChildrenInline(c, depth));
+          return escapePipeCell(cellText);
         });
 
     const grid = rows.map(cellsOf).filter((r) => r.length > 0);
@@ -330,12 +370,12 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
         if (cEl.classList.contains('icon')) continue;
         if (/^(?:p|div|ul|ol|blockquote|pre|figure|table|hr|aside|details|h[1-6])$/.test(cTag)) {
           flushInline();
-          const b = walk(cEl, depth + 1).replace(/^\n+|\n+$/g, '');
+          const b = walk(cEl, depth + 1).replace(/\n{3,}/g, '\n\n').replace(/^\n+|\n+$/g, '');
           if (b) parts.push(b);
           continue;
         }
       }
-      inlineBuf += walk(child, depth + 1);
+      inlineBuf = appendMathSafe(inlineBuf, walk(child, depth + 1));
     }
     flushInline();
 
@@ -350,26 +390,36 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
     const summaryHeading = summary?.querySelector('h1, h2, h3, h4, h5, h6') ?? null;
 
     const restNodes = Array.from(el.childNodes).filter((n) => n !== summary);
-    const innerBody = restNodes
-      .map((n) => walk(n, depth + 1))
-      .join('')
+    const innerBody = joinMathSafe(restNodes.map((n) => walk(n, depth + 1)))
       .replace(/\n{3,}/g, '\n\n')
       .trim();
 
     // Toggle heading (`<details><summary><h2>...</h2></summary>...`): emit heading + body.
     if (summaryHeading) {
       const level = Number(summaryHeading.tagName.slice(1));
-      const hText = inlineOnly(walkChildren(summaryHeading, depth + 1));
+      const hText = inlineOnly(walkChildrenInline(summaryHeading, depth + 1));
       const head = `${'#'.repeat(level)} ${hText}`;
       return innerBody ? `\n${head}\n\n${innerBody}\n\n` : `\n${head}\n\n`;
     }
 
-    const titleText = summary ? inlineOnly(walkChildren(summary, depth + 1)) : '';
+    const titleText = summary ? inlineOnly(walkChildrenInline(summary, depth + 1)) : '';
     const marker = el.hasAttribute('open') ? '+' : '-';
     const head = `> [!fold]${marker}${titleText ? ` ${titleText}` : ''}`;
     if (!innerBody) return `\n${head}\n\n`;
     const quoted = innerBody.split('\n').map((l) => (l.trim() ? `> ${l}` : '>')).join('\n');
     return `\n${head}\n${quoted}\n\n`;
+  }
+
+  function onlyWhitespaceBetween(a: Element, b: Element): boolean {
+    for (let cur = a.nextSibling; cur && cur !== b; cur = cur.nextSibling) {
+      if (cur.nodeType === Node.ELEMENT_NODE) return false;
+      if (cur.nodeType === Node.TEXT_NODE && (cur.textContent ?? '').trim()) return false;
+    }
+    return true;
+  }
+
+  function hasListItems(listEl: Element): boolean {
+    return Array.from(listEl.children).some((c) => c.tagName.toLowerCase() === 'li');
   }
 
   function renderList(el: Element, indent: string, depth: number): string {
@@ -378,8 +428,7 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
     const items = Array.from(el.children).filter((c) => c.tagName.toLowerCase() === 'li');
     if (items.length === 0) return '';
 
-    let n = Number(el.getAttribute('start') ?? '1');
-    if (!Number.isFinite(n) || n < 1) n = 1;
+    let n = orderedListStart(el.getAttribute('start'), items.length);
 
     const lines: string[] = [];
     for (const li of items) {
@@ -394,7 +443,7 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
         marker = '- ';
       }
 
-      const subIndent = indent + '    ';
+      const subIndent = indent + (!isTodo && ordered ? ' '.repeat(Math.max(4, marker.length)) : '    ');
       const nested: string[] = [];
       let inline = '';
 
@@ -406,7 +455,10 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
             if (cTag === 'input' && cEl.getAttribute('type') === 'checkbox') continue;
             if (cTag === 'ul' || cTag === 'ol') {
               const sub = renderList(cEl, subIndent, depth + 1).replace(/\n+$/, '');
-              if (sub) nested.push(sub);
+              if (sub) {
+                const hasPreceding = Boolean(inlineOnly(inline)) || nested.length > 0;
+                nested.push(hasPreceding && sublistNeedsBlankLine(sub) ? `\n${sub}` : sub);
+              }
               continue;
             }
             if (cTag === 'div' && cEl.classList.contains('indented')) {
@@ -414,14 +466,14 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
               continue;
             }
             if (/^(?:p|blockquote|pre|figure|table|aside|details|div)$/.test(cTag)) {
-              const block = walk(cEl, depth + 1).replace(/^\n+|\n+$/g, '');
+              const block = walk(cEl, depth + 1).replace(/\n{3,}/g, '\n\n').replace(/^\n+|\n+$/g, '');
               if (block) {
                 nested.push(block.split('\n').map((l) => (l ? subIndent + l : l)).join('\n'));
               }
               continue;
             }
           }
-          inline += walk(child, depth + 1);
+          inline = appendMathSafe(inline, walkInline(child, depth + 1));
         }
       };
 
@@ -432,19 +484,32 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
 
     // Notion emits each top-level numbered or to-do item as its own sibling <ol>/<ul>.
     // Join consecutive same-kind sibling lists with a single newline so they stay one list.
+    const prev = el.previousElementSibling;
+    const sameKindPrev =
+      indent === '' &&
+      prev !== null &&
+      prev.tagName === el.tagName &&
+      prev.classList.contains('to-do-list') === isTodo &&
+      hasListItems(prev) &&
+      onlyWhitespaceBetween(prev, el);
     const next = el.nextElementSibling;
     const sameKindNext =
+      indent === '' &&
       next !== null &&
       next.tagName === el.tagName &&
-      next.classList.contains('to-do-list') === isTodo;
-    return `${lines.join('\n')}${sameKindNext ? '\n' : '\n\n'}`;
+      next.classList.contains('to-do-list') === isTodo &&
+      hasListItems(next) &&
+      onlyWhitespaceBetween(el, next);
+    const prefix = indent === '' && !sameKindPrev ? (sublistNeedsBlankLine(lines[0]!) ? '\n\n' : '\n') : '';
+    return `${prefix}${lines.join('\n')}${sameKindNext ? '\n' : '\n\n'}`;
   }
 
   function renderColumnList(el: Element, depth: number): string {
     const colEls = Array.from(el.children).filter((c) => c.classList.contains('column'));
     if (colEls.length < 2 || inColumn) {
       // Nested column-list or degenerate 1-column wrapper: flatten in reading order so no text is lost.
-      return colEls.map((c) => walkChildren(c, depth)).join('');
+      const flat = joinMathSafe(colEls.map((c) => walkChildren(c, depth))).replace(/\n{3,}/g, '\n\n').trim();
+      return flat ? `\n\n${flat}\n\n` : '';
     }
 
     const prevInColumn = inColumn;
@@ -502,52 +567,66 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
     if (el.classList.contains('link-to-page')) {
       const a = el.querySelector('a[href]');
       if (!a) return '';
-      const href = a.getAttribute('href') ?? '';
+      const href = a.getAttribute('href')?.trim() ?? '';
+      if (!href || isUnsafeUrl(href)) return '';
       const plain = anchorPlainText(a) || href;
+      if (linkDepth > 0) return ` ${escapeMarkdownText(plain)} `;
       const pageId = normalizeUuid(a.getAttribute('data-notion-page-id'));
-      return `${opts.resolveLink(href, escapeMarkdownText(plain), plain, pageId)}\n\n`;
+      const resolved = resolveFormattedLink(href, escapeMarkdownText(plain), plain, pageId);
+      return resolved ? `\n\n${resolved}\n\n` : '';
     }
 
     // 4. Image figure
     const img = el.querySelector('img');
     if (el.classList.contains('image') || el.hasAttribute('data-notion-image') || img) {
       const src = (img?.getAttribute('src') ?? el.getAttribute('data-notion-image') ?? '').trim();
-      if (!src || isUnsafeUrl(src)) return '';
+      const safeSrc = !src || isUnsafeUrl(src) ? '' : formatMarkdownLinkTarget(src);
+      if (!safeSrc) return '';
       const capEl = el.querySelector(':scope > figcaption');
       const alt = (capEl ? inlineOnly(capEl.textContent ?? '') : '') || img?.getAttribute('alt')?.trim() || fileBasename(src);
-      return `![${alt.replace(/[[\]]/g, '')}](${src})\n\n`;
+      return `\n\n![${alt.replace(/[[\]]/g, '')}](${safeSrc})\n\n`;
     }
 
     // 5. Bookmark card
     const bookmark = el.querySelector('a.bookmark[href]');
     if (bookmark) {
       const href = bookmark.getAttribute('href')?.trim() ?? '';
-      if (!href || isUnsafeUrl(href)) return '';
+      const safeHref = !href || isUnsafeUrl(href) ? '' : formatMarkdownLinkTarget(href);
+      if (!safeHref) return '';
       const titleNode = bookmark.querySelector('.bookmark-title');
       const label = inlineOnly(titleNode?.textContent ?? '') || href;
-      return `[${escapeMarkdownText(label)}](${href})\n\n`;
+      if (linkDepth > 0) return ` ${escapeMarkdownText(label)} `;
+      return `\n\n[${escapeMarkdownText(label)}](${safeHref})\n\n`;
     }
 
     // 6. Attached file card (`<div class="source"><a data-notion-file="...">`)
     const fileLink = el.querySelector('a[data-notion-file], .source > a[href]');
     if (fileLink) {
       const href = (fileLink.getAttribute('href') ?? fileLink.getAttribute('data-notion-file') ?? '').trim();
-      if (!href || isUnsafeUrl(href)) return '';
+      const safeHref = !href || isUnsafeUrl(href) ? '' : formatMarkdownLinkTarget(href);
+      if (!safeHref) return '';
       const label =
         fileLink.getAttribute('data-notion-file-alias')?.trim() ||
         inlineOnly(fileLink.textContent ?? '') ||
         fileBasename(href);
-      return `[${escapeMarkdownText(label)}](${href})\n\n`;
+      if (linkDepth > 0) return ` ${escapeMarkdownText(label)} `;
+      return `\n\n[${escapeMarkdownText(label)}](${safeHref})\n\n`;
     }
 
-    return walkChildren(el, depth);
+    const fallback = walkChildren(el, depth).replace(/\n{3,}/g, '\n\n').trim();
+    return fallback ? `\n\n${fallback}\n\n` : '';
   }
 
   function renderHighlightMark(el: Element, depth: number): string {
-    const inner = walkChildren(el, depth);
+    const inner = walkChildrenInline(el, depth);
     if (!inner.trim()) return inner;
+    const [, , core = ''] = /^(\s*)([\s\S]*?)(\s*)$/.exec(inner) ?? [];
+    if (!core || containsMarkdownBlock(core)) return inner;
     const raw = readNotionHighlight(el);
-    if (!raw || raw === 'default' || raw === 'default_background') return inner;
+    if (!raw) {
+      return shouldUseHtmlMark(core) ? wrapRun(inner, '<mark>', '</mark>') : wrapRun(inner, '==', '==');
+    }
+    if (raw === 'default' || raw === 'default_background') return inner;
 
     const isBg = raw.endsWith('_background');
     const base = isBg ? raw.slice(0, -'_background'.length) : raw;
@@ -559,7 +638,9 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
       colors++;
       return hl.value
         ? wrapRun(inner, `<mark style="background-color: ${hl.value}">`, '</mark>')
-        : wrapRun(inner, '==', '==');
+        : shouldUseHtmlMark(core)
+          ? wrapRun(inner, '<mark>', '</mark>')
+          : wrapRun(inner, '==', '==');
     }
     const textHex = Object.hasOwn(TEXT_COLOR_BY_NAME, paletteName) ? TEXT_COLOR_BY_NAME[paletteName]! : null;
     if (!textHex) return inner;
@@ -580,7 +661,11 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
 
     // Inline math token (`<span data-notion-inline-equation="E = mc^2">`)
     if (el.hasAttribute('data-notion-inline-equation')) {
-      const latex = (el.getAttribute('data-notion-inline-equation') ?? '').trim();
+      const latex = sanitizeInlineLatex(
+        el.getAttribute('data-notion-inline-equation') ||
+          el.querySelector('annotation[encoding="application/x-tex"]')?.textContent ||
+          '',
+      );
       return latex ? `$${latex}$` : '';
     }
 
@@ -597,7 +682,7 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
       case 'h5':
       case 'h6': {
         const level = Number(tag.slice(1));
-        const text = inlineOnly(walkChildren(el, depth));
+        const text = inlineOnly(walkChildrenInline(el, depth));
         return text ? `\n${'#'.repeat(level)} ${text}\n\n` : '';
       }
       case 'p':
@@ -608,38 +693,47 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
         return '\n---\n\n';
       case 'strong':
       case 'b':
-        return wrapRun(walkChildren(el, depth), '**', '**');
+        return wrapRun(walkChildrenInline(el, depth), '**', '**');
       case 'em':
       case 'i':
-        return wrapRun(walkChildren(el, depth), '*', '*');
+        return wrapRun(walkChildrenInline(el, depth), '*', '*');
       case 'del':
       case 's':
       case 'strike':
-        return wrapRun(walkChildren(el, depth), '~~', '~~');
+        return wrapRun(walkChildrenInline(el, depth), '~~', '~~');
       case 'u':
-        return wrapRun(walkChildren(el, depth), '<u>', '</u>');
+        return wrapRun(walkChildrenInline(el, depth), '<u>', '</u>');
       case 'code':
         return markdownCodeSpan(el.textContent ?? '');
       case 'mark':
         return renderHighlightMark(el, depth);
       case 'span': {
         if (el.classList.contains('icon')) return '';
-        const inner = walkChildren(el, depth);
+        const inner = walkChildrenInline(el, depth);
         return isUnderlineSpan(el) ? wrapRun(inner, '<u>', '</u>') : inner;
       }
       case 'a': {
         const href = el.getAttribute('href')?.trim() ?? '';
-        const inner = inlineOnly(walkChildren(el, depth));
         const plain = anchorPlainText(el);
-        if (!href || isUnsafeUrl(href)) return inner || escapeMarkdownText(plain);
+        if (!href || isUnsafeUrl(href) || linkDepth > 0) {
+          return inlineOnly(walkChildrenInline(el, depth)) || escapeMarkdownText(plain || href);
+        }
+        linkDepth++;
+        let inner = '';
+        try {
+          inner = inlineOnly(walkChildrenInline(el, depth));
+        } finally {
+          linkDepth--;
+        }
         const pageId = normalizeUuid(el.getAttribute('data-notion-page-id'));
-        return opts.resolveLink(href, inner || escapeMarkdownText(plain || href), plain || href, pageId);
+        return resolveFormattedLink(href, inner || escapeMarkdownText(plain || href), plain || href, pageId);
       }
       case 'img': {
         const src = el.getAttribute('src')?.trim() ?? '';
-        if (!src || isUnsafeUrl(src)) return '';
+        const safeSrc = !src || isUnsafeUrl(src) ? '' : formatMarkdownLinkTarget(src);
+        if (!safeSrc) return '';
         const alt = el.getAttribute('alt')?.trim() || fileBasename(src);
-        return `![${alt.replace(/[[\]]/g, '')}](${src})`;
+        return `![${alt.replace(/[[\]]/g, '')}](${safeSrc})`;
       }
       case 'ul':
       case 'ol':
@@ -657,12 +751,12 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
             const cTag = (child as Element).tagName.toLowerCase();
             if (/^(?:p|div|ul|ol|blockquote|pre|figure|table|hr|aside|details|h[1-6])$/.test(cTag)) {
               flush();
-              const b = walk(child, depth + 1).replace(/^\n+|\n+$/g, '');
+              const b = walk(child, depth + 1).replace(/\n{3,}/g, '\n\n').replace(/^\n+|\n+$/g, '');
               if (b) parts.push(b);
               continue;
             }
           }
-          inlineBuf += walk(child, depth + 1);
+          inlineBuf = appendMathSafe(inlineBuf, walk(child, depth + 1));
         }
         flush();
         const content = parts.join('\n\n').trim();
@@ -677,6 +771,8 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
         return renderDetails(el, depth);
       case 'figure':
         return renderFigure(el, depth);
+      case 'figcaption':
+        return walkChildrenInline(el, depth);
       case 'table':
         return renderTable(el, depth);
       case 'header':
@@ -688,7 +784,7 @@ export function parseNotionHtml(html: string, opts: NotionHtmlOptions): NotionHt
 
   const parts: string[] = [];
   if (propLines.length > 0) parts.push(propLines.join('\n'));
-  if (description) parts.push(escapeMarkdownText(description));
+  if (description) parts.push(guardMarkdownLineStart(escapeMarkdownText(description)));
   const renderedBody = bodyEl ? walkChildren(bodyEl, 0).replace(/\n{3,}/g, '\n\n').trim() : '';
   if (renderedBody) parts.push(renderedBody);
 

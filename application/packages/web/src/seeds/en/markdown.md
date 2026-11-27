@@ -18,7 +18,7 @@ It can be ==highlighted in yellow== or <mark style="background-color: rgba(64, 1
 
 A spoiler hides words until someone clicks them: the present is ||a record player||. Select the words and pick **Spoiler** in the **Insert** menu, or type two bars on each side.
 
-An icon or a logo can sit in a line of text, like :icon[gift] :icon[coffee] :icon[rocket-launch] or :logo[github]. Pick one from **Insert** > **Icons & logos**.
+An icon or a logo can sit in a line of text, like :icon[gift] :icon[coffee] :icon[rocket-launch] or :logo[github]. Pick one from **Insert** > **Icons / logos / emojis**.
 
 The **Aa** button changes size and font. Text can be <span style="font-size: 0.85em">small</span>, normal, or <span style="font-size: 1.6em">large</span>. It can be <span style="font-family: ui-sans-serif, system-ui, sans-serif">plain</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">serif</span>, or <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">monospace</span>.
 

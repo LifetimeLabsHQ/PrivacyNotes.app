@@ -14,6 +14,8 @@ import { splitTagText } from '@notes/shared/extension';
 import { FloppyDisk, Note, NotePencil } from '@web/icons';
 import { Button } from '@web/ui/Button';
 import { Callout } from '@web/ui/feedback';
+import { HoverLabel } from '@web/HoverLabel';
+import { bindingKeyText } from '@web/shortcutMatch';
 import { FIELD_CLASS, FieldLabel } from '@web/formFields';
 import { mergeTags } from '../../src/organize';
 import type { NoteResult } from '../../src/save';
@@ -145,7 +147,7 @@ export function NoteView({ start, organize, onDone }: {
       <SheetHeader title={t('notes:header.newNote')} onBack={() => onDone(null)} />
       <div>
         <FieldLabel icon={<Note />} htmlFor="pn-note-title">{t('shell:listPrefs.title')}</FieldLabel>
-        <input id="pn-note-title" value={draft.title} onChange={(e) => set({ title: e.target.value })} placeholder={t('notes:editor.titlePlaceholder')} maxLength={200} className={FIELD_CLASS} dir="auto" />
+        <input id="pn-note-title" value={draft.title} onChange={(e) => set({ title: e.target.value })} placeholder={t('notes:editor.titlePlaceholder')} maxLength={200} className={`${FIELD_CLASS} !bg-surface-2 shadow-xs`} dir="auto" />
       </div>
       <div>
         <FieldLabel icon={<NotePencil />} htmlFor="pn-note-body">{t('notes:newMenu.note')}</FieldLabel>
@@ -155,7 +157,7 @@ export function NoteView({ start, organize, onDone }: {
           value={draft.markdown}
           onChange={(e) => set({ markdown: e.target.value })}
           rows={6}
-          className={`${FIELD_CLASS} resize-y`}
+          className={`${FIELD_CLASS} !bg-surface-2 shadow-xs resize-y`}
           dir="auto"
         />
       </div>
@@ -171,17 +173,20 @@ export function NoteView({ start, organize, onDone }: {
       {error && <Callout look="card" tone="danger">{error}</Callout>}
       <div className="grid grid-cols-2 gap-2">
         {/* Cancel drops the draft; the back arrow and Escape keep it. */}
-        <Button action="cancel" onClick={() => void browser.storage.session.remove(DRAFT_KEY).then(() => onDone(null))} disabled={busy || done} />
-        <SaveButton
-          type="submit"
-          variant="primary"
-          state={done ? 'done' : busy ? 'busy' : 'idle'}
-          disabled={!ready}
-          icon={<FloppyDisk aria-hidden="true" />}
-          label={t('common:actions.save')}
-          busyLabel={t('common:state.saving')}
-          doneLabel={t('shell:checkIn.saved')}
-        />
+        <Button action="cancel" onClick={() => void browser.storage.session.remove(DRAFT_KEY).then(() => onDone(null))} disabled={busy || done} className="bg-surface-2 shadow-xs" />
+        <HoverLabel label={t('common:actions.save')} keys={bindingKeyText({ mod: true, key: 'Enter' })} position="above">
+          <SaveButton
+            type="submit"
+            variant="primary"
+            state={done ? 'done' : busy ? 'busy' : 'idle'}
+            disabled={!ready}
+            icon={<FloppyDisk aria-hidden="true" />}
+            label={t('common:actions.save')}
+            busyLabel={t('common:state.saving')}
+            doneLabel={t('shell:checkIn.saved')}
+            className="w-full"
+          />
+        </HoverLabel>
       </div>
     </form>
   );

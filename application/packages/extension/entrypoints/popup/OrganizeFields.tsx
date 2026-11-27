@@ -129,13 +129,13 @@ export function OrganizeFields({
       : `#${effectiveTags[0]} +${effectiveTags.length - 1}`;
 
   return (
-    <div className={`rounded-lg border bg-surface-1 overflow-hidden transition-colors ${open ? 'border-accent/45' : 'border-divider'}`}>
+    <div className={`rounded-lg border bg-surface-2 shadow-xs overflow-hidden transition-colors ${open ? 'border-accent/45' : 'border-divider'}`}>
       <button
         type="button"
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => onOpenChange(!open)}
-        className="flex w-full items-center gap-2 px-2.5 py-2 text-start text-small text-pn hover:bg-surface-2/60 transition-colors"
+        className="flex w-full items-center gap-2 px-2.5 py-2 text-start text-small text-pn hover:bg-surface-1 transition-colors"
       >
         {canFolder
           ? <Folder aria-hidden="true" className="shrink-0 text-label" />

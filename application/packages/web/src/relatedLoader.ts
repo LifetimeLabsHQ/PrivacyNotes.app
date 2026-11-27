@@ -7,7 +7,7 @@ import type { NotesIndexOps } from './searchIndexSync';
  * take part, the "Not related" pair key, where a cursor link goes, and the
  * index ops that load `relatedNotes.ts` (the ranking and its index) the first
  * time a note opens. Everything else stays off the boot path.
- * Spec: docs/internal/plans/related-notes.md
+ * Spec: docs/internal/specs/related-notes.md
  */
 
 type RelatedModule = {

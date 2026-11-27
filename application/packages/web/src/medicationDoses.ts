@@ -1,11 +1,12 @@
 import { occurrencesOf, shiftDay, weekdayOf, type Repeat } from './schedule';
 import { hhmm, toLocalIso } from './localDate';
-import type {
-  MedicationDose,
-  MedicationLogEntry,
-  MedicationScheduleEntry,
-  MedicationStatus,
-  MedicationTemplate,
+import {
+  activeMedications,
+  type MedicationDose,
+  type MedicationLogEntry,
+  type MedicationScheduleEntry,
+  type MedicationStatus,
+  type MedicationTemplate,
 } from './trackerTypes';
 
 /**
@@ -170,7 +171,7 @@ export function dosesOn(med: MedicationTemplate, day: string): MedicationDose[] 
 }
 
 /** Doses by time; a dose with no time keeps its place after the timed ones. */
-export function sortDoses(doses: MedicationDose[]): MedicationDose[] {
+function sortDoses(doses: MedicationDose[]): MedicationDose[] {
   return doses
     .map((d, i) => ({ d, i }))
     .sort((a, b) => (a.d.time && b.d.time ? (a.d.time < b.d.time ? -1 : a.d.time > b.d.time ? 1 : a.i - b.i) : a.d.time ? -1 : b.d.time ? 1 : a.i - b.i))
@@ -375,4 +376,39 @@ export function splitScheduledGroups<T extends { items: readonly unknown[] }>(
     }
   }
   return [groups.slice(0, bestSplit), groups.slice(bestSplit)];
+}
+
+type MedicationRow = { med: MedicationTemplate; doses: MedicationDose[]; asNeeded: boolean };
+
+/** The medications of a day: a live one the day asks about, an as-needed
+ *  one, and any one the day already holds a log for, so a log never hides.
+ *  The pill, the medication card, and Home's header list these. */
+export function medicationRowsOn(templates: MedicationTemplate[], value: MedicationLogEntry[] | undefined, entryDay: string): MedicationRow[] {
+  return activeMedications(templates).flatMap((med): MedicationRow[] => {
+    const logs = logsOf(value, med.id);
+    if (isLiveOn(med, entryDay) && asNeededOn(med, entryDay)) return [{ med, doses: [] as MedicationDose[], asNeeded: true }];
+    const doses = dosesOn(med, entryDay);
+    if (doses.length > 0) return [{ med, doses, asNeeded: false }];
+    if (logs.length === 0) return [];
+    // A day the schedule does not ask about, with logs: scheduled doses show
+    // as their rows; doses the schedule never had are as-needed ones.
+    const byId = new Map(dosesOf(med).map((d) => [d.id, d]));
+    const known = logs.map((l) => byId.get(logDoseId(l.medicationId)));
+    if (known.every(Boolean)) return [{ med, doses: sortDoses(known as MedicationDose[]), asNeeded: false }];
+    return [{ med, doses: [] as MedicationDose[], asNeeded: true }];
+  });
+}
+
+/** Taken doses out of the scheduled ones. As-needed doses are not owed, so
+ *  they do not count. */
+export function takenOfRows(rows: readonly MedicationRow[], value: MedicationLogEntry[] | undefined): { expected: number; taken: number } {
+  let expected = 0;
+  let taken = 0;
+  for (const r of rows) {
+    if (r.asNeeded) continue;
+    const done = new Set(logsOf(value, r.med.id).filter((l) => l.status === 'taken').map((l) => logDoseId(l.medicationId)));
+    expected += r.doses.length;
+    taken += r.doses.filter((d) => done.has(d.id)).length;
+  }
+  return { expected, taken };
 }

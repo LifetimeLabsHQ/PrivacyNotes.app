@@ -16,6 +16,7 @@ import { encryptBlob, decryptBlob, type SupabaseClient } from '@notes/shared';
 import { db } from './db';
 import { openWithRing } from './keyRing';
 import { isDemoMode } from './demo';
+import { isUnsyncedLocalVault } from './localOnly';
 import { recordSyncFault } from './syncFaults';
 import { isServerWriteBlocked } from './syncPause';
 import { uploadsHeldForWifi } from './wifiOnly';
@@ -329,6 +330,7 @@ export class ImageStore extends BlobStoreBase<{ data: Uint8Array }> {
     // Check cache first.
     const cached = await db.imageCache.get(uuid);
     if (cached) return cached.data;
+    if (isUnsyncedLocalVault()) return null;
 
     // Download from the store, with one retry on auth errors.
     const result = await this._downloadWithRetry(uuid);

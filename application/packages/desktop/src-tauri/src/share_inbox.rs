@@ -35,9 +35,21 @@ const APP_GROUP: &str = "group.app.privacynotes";
 
 const ITEM_FILE: &str = "item.json";
 /// Beside the inbox, never in it: `list_in` would delete it as an invalid item.
-/// ShareViewController.swift reads the same name.
+/// ShareViewController.swift reads the same names.
 #[cfg_attr(not(target_os = "ios"), allow(dead_code))]
 const LIMIT_FILE: &str = "ShareLimit";
+/// Non-sensitive organizer metadata (non-PIN task list titles, folder names,
+/// tags) mirrored for the iOS share extension while App Lock is off, plus the
+/// extension's last-picked task list ID. Kept in a sibling directory marked
+/// complete-protection and excluded from device backups, never inside
+/// `ShareInbox`. Cleared on sign-out, account switch, wipe, and when App Lock
+/// is turned on.
+#[cfg_attr(not(target_os = "ios"), allow(dead_code))]
+const META_DIR: &str = "ShareMeta";
+#[cfg_attr(not(target_os = "ios"), allow(dead_code))]
+const CATALOG_FILE: &str = "ShareCatalog.json";
+#[cfg_attr(not(target_os = "ios"), allow(dead_code))]
+const LAST_PICK_FILE: &str = "ShareLastPick";
 const PAYLOAD_FILE: &str = "payload";
 /// The largest per-file limit the app grants (the storage add-on); the app's
 /// own check names the lower limits to the user. The extension holds the same cap.
@@ -46,11 +58,19 @@ const MAX_ITEM_JSON_BYTES: u64 = 2 * 1024 * 1024;
 const MAX_TEXT_CHARS: usize = 500_000;
 const MAX_URL_CHARS: usize = 8_192;
 const MAX_SHORT_CHARS: usize = 1_000;
+const MAX_FOLDER_ID_CHARS: usize = 100;
+const MAX_TAGS: usize = 20;
+const MAX_TAG_CHARS: usize = 100;
+const MAX_CATALOG_TASK_LISTS: usize = 100;
+const MAX_CATALOG_FOLDERS: usize = 150;
+const MAX_CATALOG_TAGS: usize = 100;
+const MAX_CATALOG_LABEL_CHARS: usize = 120;
 /// A `.tmp-` folder older than this was abandoned by an extension that was
 /// stopped mid-copy, and is deleted.
 const STALE_TMP: Duration = Duration::from_secs(60 * 60);
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct RawItem {
     v: u32,
     kind: String,
@@ -62,6 +82,9 @@ struct RawItem {
     mime: Option<String>,
     target: Option<String>,
     group: Option<String>,
+    task_list_id: Option<String>,
+    folder_id: Option<String>,
+    tags: Option<Vec<String>>,
 }
 
 /// One item, as the frontend receives it. A `file` carries no bytes here: the
@@ -88,6 +111,49 @@ pub struct SharedItem {
     pub target: Option<&'static str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub group: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub task_list_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub folder_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<Vec<String>>,
+}
+
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ShareCatalogTaskList {
+    pub id: String,
+    pub title: String,
+}
+
+#[derive(Deserialize, Serialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ShareCatalogFolder {
+    pub id: String,
+    pub name: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ShareCatalogInput {
+    #[serde(default)]
+    pub folders_unlocked: bool,
+    #[serde(default)]
+    pub task_lists: Vec<ShareCatalogTaskList>,
+    #[serde(default)]
+    pub folders: Vec<ShareCatalogFolder>,
+    #[serde(default)]
+    pub tags: Vec<String>,
+}
+
+#[derive(Serialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct ShareCatalogFile {
+    v: u32,
+    folders_unlocked: bool,
+    task_lists: Vec<ShareCatalogTaskList>,
+    folders: Vec<ShareCatalogFolder>,
+    tags: Vec<String>,
 }
 
 /// A UUID in its canonical text form, either case. The only shape of name
@@ -98,6 +164,72 @@ fn is_uuid(s: &str) -> bool {
             8 | 13 | 18 | 23 => c == '-',
             _ => c.is_ascii_hexdigit(),
         })
+}
+
+fn valid_folder_id(s: Option<String>) -> Option<String> {
+    let s = s?.trim().to_string();
+    if s.is_empty() || s.len() > MAX_FOLDER_ID_CHARS {
+        return None;
+    }
+    s.bytes()
+        .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+        .then_some(s)
+}
+
+fn sanitize_tags(tags: Option<Vec<String>>, max_count: usize, max_len: usize) -> Option<Vec<String>> {
+    let mut out = Vec::new();
+    for raw in tags? {
+        if out.len() >= max_count {
+            break;
+        }
+        let cleaned: String = raw.trim().chars().take(max_len).collect();
+        let cleaned = cleaned.trim().to_string();
+        if !cleaned.is_empty() && !out.contains(&cleaned) {
+            out.push(cleaned);
+        }
+    }
+    (!out.is_empty()).then_some(out)
+}
+
+fn sanitize_catalog(input: ShareCatalogInput) -> ShareCatalogFile {
+    let mut task_lists = Vec::new();
+    for item in input.task_lists {
+        if task_lists.len() >= MAX_CATALOG_TASK_LISTS {
+            break;
+        }
+        let id = item.id.trim().to_string();
+        let Some(title) = capped(Some(item.title), MAX_CATALOG_LABEL_CHARS) else {
+            continue;
+        };
+        if is_uuid(&id) && !task_lists.iter().any(|t: &ShareCatalogTaskList| t.id == id) {
+            task_lists.push(ShareCatalogTaskList { id, title });
+        }
+    }
+    let mut folders = Vec::new();
+    if input.folders_unlocked {
+        for item in input.folders {
+            if folders.len() >= MAX_CATALOG_FOLDERS {
+                break;
+            }
+            let Some(id) = valid_folder_id(Some(item.id)) else {
+                continue;
+            };
+            let Some(name) = capped(Some(item.name), MAX_CATALOG_LABEL_CHARS) else {
+                continue;
+            };
+            if !folders.iter().any(|f: &ShareCatalogFolder| f.id == id) {
+                folders.push(ShareCatalogFolder { id, name });
+            }
+        }
+    }
+    let tags = sanitize_tags(Some(input.tags), MAX_CATALOG_TAGS, MAX_TAG_CHARS).unwrap_or_default();
+    ShareCatalogFile {
+        v: 1,
+        folders_unlocked: input.folders_unlocked,
+        task_lists,
+        folders,
+        tags,
+    }
 }
 
 fn capped(s: Option<String>, max: usize) -> Option<String> {
@@ -175,11 +307,42 @@ fn read_item(dir: &Path, id: &str) -> ItemRead {
     }
 }
 
+fn parse_target_for_url(raw: Option<&str>) -> Option<&'static str> {
+    match raw? {
+        "bookmark" => Some("bookmark"),
+        "clip" => Some("clip"),
+        "note" => Some("note"),
+        "task" => Some("task"),
+        "journal" => Some("journal"),
+        _ => None,
+    }
+}
+
+fn parse_target_for_text(raw: Option<&str>) -> Option<&'static str> {
+    match raw? {
+        "note" => Some("note"),
+        "task" => Some("task"),
+        "journal" => Some("journal"),
+        "bookmark" => Some("bookmark"),
+        _ => None,
+    }
+}
+
+fn parse_target_for_file(raw: Option<&str>) -> Option<&'static str> {
+    match raw? {
+        "note" => Some("note"),
+        "journal" => Some("journal"),
+        "files" => Some("files"),
+        _ => None,
+    }
+}
+
 fn parse_item(dir: &Path, id: &str, bytes: &[u8]) -> Option<SharedItem> {
     let raw: RawItem = serde_json::from_slice(bytes).ok()?;
     if raw.v != 1 {
         return None;
     }
+    let tags = sanitize_tags(raw.tags, MAX_TAGS, MAX_TAG_CHARS);
     let base = SharedItem {
         id: id.to_string(),
         kind: "text",
@@ -192,10 +355,32 @@ fn parse_item(dir: &Path, id: &str, bytes: &[u8]) -> Option<SharedItem> {
         size: None,
         target: None,
         group: None,
+        task_list_id: None,
+        folder_id: None,
+        tags: None,
     };
     match raw.kind.as_str() {
         "url" => match web_url(raw.url.clone()) {
-            Some(url) => Some(SharedItem { kind: "url", url: Some(url), title: capped(raw.title, MAX_SHORT_CHARS), ..base }),
+            Some(url) => {
+                let target = parse_target_for_url(raw.target.as_deref());
+                let task_list_id = (target == Some("task"))
+                    .then(|| raw.task_list_id.as_deref().filter(|t| is_uuid(t)).map(str::to_string))
+                    .flatten();
+                let folder_id = (!matches!(target, Some("task" | "journal")))
+                    .then(|| valid_folder_id(raw.folder_id))
+                    .flatten();
+                Some(SharedItem {
+                    kind: "url",
+                    url: Some(url),
+                    title: capped(raw.title, MAX_SHORT_CHARS),
+                    text: capped(raw.text, MAX_TEXT_CHARS),
+                    target,
+                    task_list_id,
+                    folder_id,
+                    tags: (target != Some("task")).then_some(tags).flatten(),
+                    ..base
+                })
+            }
             // A web address the share sheet already reported as saved, too
             // long or refused by the parser (Android writes any
             // `^https?://\S+$` text as a link): kept as text, not deleted
@@ -206,18 +391,58 @@ fn parse_item(dir: &Path, id: &str, bytes: &[u8]) -> Option<SharedItem> {
                     || u.get(..8).is_some_and(|h| h.eq_ignore_ascii_case(b"https://"))
             }) =>
             {
-                Some(SharedItem { kind: "text", text: Some(capped(raw.url, MAX_TEXT_CHARS)?), ..base })
+                let target = parse_target_for_text(raw.target.as_deref());
+                let task_list_id = (target == Some("task"))
+                    .then(|| raw.task_list_id.as_deref().filter(|t| is_uuid(t)).map(str::to_string))
+                    .flatten();
+                let folder_id = (!matches!(target, Some("task" | "journal")))
+                    .then(|| valid_folder_id(raw.folder_id))
+                    .flatten();
+                Some(SharedItem {
+                    kind: "text",
+                    title: capped(raw.title, MAX_SHORT_CHARS),
+                    text: Some(capped(raw.url, MAX_TEXT_CHARS)?),
+                    target,
+                    task_list_id,
+                    folder_id,
+                    tags: (target != Some("task")).then_some(tags).flatten(),
+                    ..base
+                })
             }
             None => None,
         },
-        "text" => Some(SharedItem { kind: "text", text: Some(capped(raw.text, MAX_TEXT_CHARS)?), ..base }),
+        "text" => {
+            let target = parse_target_for_text(raw.target.as_deref());
+            let task_list_id = (target == Some("task"))
+                .then(|| raw.task_list_id.as_deref().filter(|t| is_uuid(t)).map(str::to_string))
+                .flatten();
+            let folder_id = (!matches!(target, Some("task" | "journal")))
+                .then(|| valid_folder_id(raw.folder_id))
+                .flatten();
+            Some(SharedItem {
+                kind: "text",
+                title: capped(raw.title, MAX_SHORT_CHARS),
+                text: Some(capped(raw.text, MAX_TEXT_CHARS)?),
+                target,
+                task_list_id,
+                folder_id,
+                tags: (target != Some("task")).then_some(tags).flatten(),
+                ..base
+            })
+        }
         "file" => {
             let meta = std::fs::symlink_metadata(dir.join(PAYLOAD_FILE)).ok()?;
             if !meta.is_file() || meta.len() == 0 || meta.len() > MAX_PAYLOAD_BYTES {
                 return None;
             }
-            let target = matches!(raw.target.as_deref(), Some("note")).then_some("note");
-            let group = target.and_then(|_| raw.group.as_deref().filter(|g| is_uuid(g)).map(str::to_string));
+            let target = parse_target_for_file(raw.target.as_deref());
+            let grouped = matches!(target, Some("note" | "journal"));
+            let group = grouped
+                .then(|| raw.group.as_deref().filter(|g| is_uuid(g)).map(str::to_string))
+                .flatten();
+            let folder_id = (target != Some("journal"))
+                .then(|| valid_folder_id(raw.folder_id))
+                .flatten();
             Some(SharedItem {
                 kind: "file",
                 name: Some(file_name(raw.name).unwrap_or_else(|| "file".to_string())),
@@ -225,8 +450,10 @@ fn parse_item(dir: &Path, id: &str, bytes: &[u8]) -> Option<SharedItem> {
                 size: Some(meta.len()),
                 target,
                 group,
-                title: target.and_then(|_| capped(raw.title, MAX_SHORT_CHARS)),
-                text: target.and_then(|_| capped(raw.text, MAX_TEXT_CHARS)),
+                title: grouped.then(|| capped(raw.title, MAX_SHORT_CHARS)).flatten(),
+                text: grouped.then(|| capped(raw.text, MAX_TEXT_CHARS)).flatten(),
+                folder_id,
+                tags,
                 ..base
             })
         }
@@ -320,6 +547,113 @@ pub fn remove_in(inbox: &Path, id: &str) -> Result<(), String> {
     }
 }
 
+/// Removes every waiting and staged entry inside `inbox` while keeping `inbox`
+/// itself (so its iOS file-protection and backup-exclusion marks stay), and
+/// removes `ShareLimit` beside it when `group` is given.
+pub fn clear_in(inbox: &Path, group: Option<&Path>) -> Result<(), String> {
+    let mut failed = false;
+    match std::fs::read_dir(inbox) {
+        Ok(entries) => {
+            for entry in entries {
+                let Ok(entry) = entry else {
+                    failed = true;
+                    continue;
+                };
+                let path = entry.path();
+                let res = match entry.file_type() {
+                    Ok(kind) if kind.is_dir() => std::fs::remove_dir_all(&path),
+                    Ok(_) => std::fs::remove_file(&path),
+                    Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+                    Err(_) => {
+                        failed = true;
+                        continue;
+                    }
+                };
+                if res.is_err_and(|e| e.kind() != std::io::ErrorKind::NotFound) {
+                    failed = true;
+                }
+            }
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+        Err(_) => failed = true,
+    }
+    if let Some(dir) = group {
+        for name in [LIMIT_FILE, ".share-limit.tmp"] {
+            if std::fs::remove_file(dir.join(name))
+                .is_err_and(|e| e.kind() != std::io::ErrorKind::NotFound)
+            {
+                failed = true;
+            }
+        }
+        let meta_dir = dir.join(META_DIR);
+        for name in [
+            CATALOG_FILE,
+            ".share-catalog.tmp",
+            LAST_PICK_FILE,
+            ".share-last-pick.tmp",
+        ] {
+            if std::fs::remove_file(meta_dir.join(name))
+                .is_err_and(|e| e.kind() != std::io::ErrorKind::NotFound)
+            {
+                failed = true;
+            }
+        }
+    }
+    if failed { Err("not_cleared".into()) } else { Ok(()) }
+}
+
+/// Applies iOS complete data protection (NSFileProtectionComplete = class A)
+/// directly to a file or directory descriptor so metadata is encrypted by the
+/// OS hardware key while the phone is locked.
+#[cfg(target_os = "ios")]
+fn protect_complete_ios(path: &Path) {
+    use std::os::unix::io::AsRawFd;
+    const F_SETPROTECTIONCLASS: std::ffi::c_int = 64;
+    const PROTECTION_CLASS_A: std::ffi::c_int = 1;
+    extern "C" {
+        fn fcntl(fd: std::ffi::c_int, cmd: std::ffi::c_int, ...) -> std::ffi::c_int;
+    }
+    if let Ok(file) = std::fs::File::open(path) {
+        unsafe {
+            let _ = fcntl(file.as_raw_fd(), F_SETPROTECTIONCLASS, PROTECTION_CLASS_A);
+        }
+    }
+}
+
+/// Writes or clears the iOS share extension's organizer catalog under
+/// `<group>/ShareMeta/ShareCatalog.json`. Passing `None` deletes both the
+/// catalog and the extension's last-picked task list ID.
+#[cfg_attr(not(target_os = "ios"), allow(dead_code))]
+fn write_catalog_in(group: &Path, catalog: Option<ShareCatalogInput>) -> Result<(), String> {
+    let meta_dir = group.join(META_DIR);
+    let Some(input) = catalog else {
+        for name in [
+            CATALOG_FILE,
+            ".share-catalog.tmp",
+            LAST_PICK_FILE,
+            ".share-last-pick.tmp",
+        ] {
+            if std::fs::remove_file(meta_dir.join(name))
+                .is_err_and(|e| e.kind() != std::io::ErrorKind::NotFound)
+            {
+                return Err("not_cleared".into());
+            }
+        }
+        return Ok(());
+    };
+    std::fs::create_dir_all(&meta_dir).map_err(|_| "not_written".to_string())?;
+    #[cfg(target_os = "ios")]
+    protect_complete_ios(&meta_dir);
+    let sanitized = sanitize_catalog(input);
+    let bytes = serde_json::to_vec(&sanitized).map_err(|_| "not_written".to_string())?;
+    let tmp = meta_dir.join(".share-catalog.tmp");
+    std::fs::write(&tmp, bytes).map_err(|_| "not_written".to_string())?;
+    #[cfg(target_os = "ios")]
+    protect_complete_ios(&tmp);
+    std::fs::rename(&tmp, meta_dir.join(CATALOG_FILE)).map_err(|_| "not_written".to_string())?;
+    Ok(())
+}
+
 #[cfg(target_os = "ios")]
 fn group_dir() -> Option<PathBuf> {
     use objc2_foundation::{NSFileManager, NSString};
@@ -381,9 +715,45 @@ pub fn share_limit_set(bytes: u64) -> Result<(), String> {
     Ok(())
 }
 
+/// Writes or clears the signed-in account's non-PIN organizer metadata (task
+/// list titles, Pro folder names, and tags) under `ShareMeta/ShareCatalog.json`
+/// for the iOS share extension. Passing `None` clears the catalog (called when
+/// App Lock is enabled or on sign-out). Android needs none because its share
+/// sheet runs inside the unlocked app.
+#[tauri::command]
+pub fn share_catalog_set(catalog: Option<ShareCatalogInput>) -> Result<(), String> {
+    #[cfg(target_os = "ios")]
+    {
+        let dir = group_dir().ok_or("no_group")?;
+        return write_catalog_in(&dir, catalog);
+    }
+    #[cfg(not(target_os = "ios"))]
+    let _ = catalog;
+    Ok(())
+}
+
 #[tauri::command]
 pub fn share_inbox_remove(app: tauri::AppHandle, id: String) -> Result<(), String> {
     remove_in(&inbox_dir(&app).ok_or("no_inbox")?, &id)
+}
+
+#[tauri::command]
+pub fn share_inbox_clear(app: tauri::AppHandle) -> Result<(), String> {
+    #[cfg(target_os = "ios")]
+    {
+        let _ = app;
+        let group = group_dir().ok_or("no_group")?;
+        return clear_in(&group.join("ShareInbox"), Some(&group));
+    }
+    #[cfg(target_os = "android")]
+    {
+        return clear_in(&inbox_dir(&app).ok_or("no_inbox")?, None);
+    }
+    #[cfg(not(any(target_os = "ios", target_os = "android")))]
+    {
+        let _ = app;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -599,5 +969,142 @@ mod tests {
         assert_eq!(items[1].title, None);
         assert_eq!(items[1].text, None);
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn clears_waiting_items_staged_folders_and_limit_while_keeping_inbox_dir() {
+        let group = inbox();
+        let dir = group.join("ShareInbox");
+        std::fs::create_dir_all(&dir).unwrap();
+        put(&dir, A, r#"{"v":1,"kind":"text","text":"secret"}"#, None);
+        put(&dir, &format!(".tmp-{B}"), r#"{"v":1,"kind":"file"}"#, Some(b"bytes"));
+        std::fs::write(group.join(LIMIT_FILE), "5000000").unwrap();
+        std::fs::write(group.join(".share-limit.tmp"), "50000000").unwrap();
+        let meta = group.join(META_DIR);
+        std::fs::create_dir_all(&meta).unwrap();
+        std::fs::write(meta.join(CATALOG_FILE), "{}").unwrap();
+        std::fs::write(meta.join(".share-catalog.tmp"), "{}").unwrap();
+        std::fs::write(meta.join(LAST_PICK_FILE), A).unwrap();
+        std::fs::write(meta.join(".share-last-pick.tmp"), B).unwrap();
+
+        clear_in(&dir, Some(&group)).unwrap();
+
+        assert!(dir.is_dir());
+        assert!(list_in(&dir).is_empty());
+        assert_eq!(std::fs::read_dir(&dir).unwrap().count(), 0);
+        assert!(!group.join(LIMIT_FILE).exists());
+        assert!(!group.join(".share-limit.tmp").exists());
+        assert!(!meta.join(CATALOG_FILE).exists());
+        assert!(!meta.join(".share-catalog.tmp").exists());
+        assert!(!meta.join(LAST_PICK_FILE).exists());
+        assert!(!meta.join(".share-last-pick.tmp").exists());
+        // Clearing when ShareInbox has not been created yet succeeds without creating it.
+        let missing = group.join("MissingInbox");
+        clear_in(&missing, Some(&group)).unwrap();
+        assert!(!missing.exists());
+        std::fs::remove_dir_all(&group).unwrap();
+    }
+
+    #[test]
+    fn reads_unified_targets_task_list_folder_and_tags_and_drops_invalid_values() {
+        let dir = inbox();
+        let list_id = "0a1b2c3d-0000-4000-8000-000000000077";
+        let c = "0a1b2c3d-0000-4000-8000-000000000003";
+        put(
+            &dir,
+            A,
+            &format!(
+                r#"{{"v":1,"kind":"url","created":1,"url":"https://example.com/flight","title":"Flight","target":"task","taskListId":"{list_id}","folderId":"work_1","tags":["travel"]}}"#
+            ),
+            None,
+        );
+        put(
+            &dir,
+            B,
+            r#"{"v":1,"kind":"url","created":2,"url":"https://example.com/read","title":"Guide","text":"Check section 2","target":"clip","taskListId":"not-a-uuid","folderId":"fld_123","tags":["  reading ","reading","","web"]}"#,
+            None,
+        );
+        put(
+            &dir,
+            c,
+            r#"{"v":1,"kind":"text","created":3,"title":"Snippet","text":"Hello world","target":"journal","folderId":"../bad","tags":["daily"]}"#,
+            None,
+        );
+        let items = list_in(&dir);
+        assert_eq!(items.len(), 3);
+        // Task target keeps taskListId, drops folderId and tags.
+        assert_eq!(items[0].target, Some("task"));
+        assert_eq!(items[0].task_list_id.as_deref(), Some(list_id));
+        assert_eq!(items[0].folder_id, None);
+        assert_eq!(items[0].tags, None);
+        // Clip target keeps folderId, deduped tags, title & note text; drops taskListId.
+        assert_eq!(items[1].target, Some("clip"));
+        assert_eq!(items[1].task_list_id, None);
+        assert_eq!(items[1].folder_id.as_deref(), Some("fld_123"));
+        assert_eq!(items[1].text.as_deref(), Some("Check section 2"));
+        assert_eq!(items[1].tags.as_deref(), Some(&["reading".to_string(), "web".to_string()][..]));
+        // Journal target drops folderId, keeps tags.
+        assert_eq!(items[2].target, Some("journal"));
+        assert_eq!(items[2].folder_id, None);
+        assert_eq!(items[2].tags.as_deref(), Some(&["daily".to_string()][..]));
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn writes_sanitized_share_catalog_and_clears_it_when_none() {
+        let group = inbox();
+        let valid_task_id = "0a1b2c3d-0000-4000-8000-000000000088";
+        write_catalog_in(
+            &group,
+            Some(ShareCatalogInput {
+                folders_unlocked: true,
+                task_lists: vec![
+                    ShareCatalogTaskList { id: valid_task_id.into(), title: " Work ".into() },
+                    ShareCatalogTaskList { id: "not-a-uuid".into(), title: "Bad".into() },
+                    ShareCatalogTaskList { id: valid_task_id.into(), title: "Duplicate".into() },
+                ],
+                folders: vec![
+                    ShareCatalogFolder { id: "fld_1".into(), name: " Projects ".into() },
+                    ShareCatalogFolder { id: "../escape".into(), name: "Bad".into() },
+                ],
+                tags: vec![" urgent ".into(), "urgent".into(), " ".into(), "home".into()],
+            }),
+        )
+        .unwrap();
+        let saved: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(group.join(META_DIR).join(CATALOG_FILE)).unwrap())
+                .unwrap();
+        assert_eq!(saved["v"], 1);
+        assert_eq!(saved["foldersUnlocked"], true);
+        assert_eq!(saved["taskLists"].as_array().unwrap().len(), 1);
+        assert_eq!(saved["taskLists"][0]["id"], valid_task_id);
+        assert_eq!(saved["taskLists"][0]["title"], "Work");
+        assert_eq!(saved["folders"].as_array().unwrap().len(), 1);
+        assert_eq!(saved["folders"][0]["id"], "fld_1");
+        assert_eq!(saved["tags"], serde_json::json!(["urgent", "home"]));
+
+        // When folders are locked (free plan), folders list is omitted.
+        write_catalog_in(
+            &group,
+            Some(ShareCatalogInput {
+                folders_unlocked: false,
+                task_lists: vec![],
+                folders: vec![ShareCatalogFolder { id: "fld_1".into(), name: "Projects".into() }],
+                tags: vec![],
+            }),
+        )
+        .unwrap();
+        let free: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(group.join(META_DIR).join(CATALOG_FILE)).unwrap())
+                .unwrap();
+        assert_eq!(free["foldersUnlocked"], false);
+        assert_eq!(free["folders"].as_array().unwrap().len(), 0);
+
+        // Clearing removes ShareCatalog.json and ShareLastPick.
+        std::fs::write(group.join(META_DIR).join(LAST_PICK_FILE), valid_task_id).unwrap();
+        write_catalog_in(&group, None).unwrap();
+        assert!(!group.join(META_DIR).join(CATALOG_FILE).exists());
+        assert!(!group.join(META_DIR).join(LAST_PICK_FILE).exists());
+        std::fs::remove_dir_all(&group).unwrap();
     }
 }

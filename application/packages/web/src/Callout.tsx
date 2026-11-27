@@ -31,6 +31,7 @@
  * StarterKit's blockquote untouched.
  */
 
+import { useEffect, useState } from 'react';
 import { Node, mergeAttributes, InputRule } from '@tiptap/core';
 import { ReactNodeViewRenderer, NodeViewWrapper, NodeViewContent, type NodeViewProps } from '@tiptap/react';
 import { Fragment, Slice, type Node as ProseMirrorNode, type NodeType } from '@tiptap/pm/model';
@@ -43,8 +44,8 @@ import { CALLOUT_BY_TYPE, canonicalCalloutType, type CalloutType } from './callo
 import { KanbanBoardView, KanbanColumnView, type KanbanOptions } from './KanbanBoard';
 import { BlockGrip } from './BlockGrip';
 import { isBoard, isColumn, kanbanNormalizePlugin } from './kanban';
-import { canInsertColumns, insertColumnsInTr, parseColumnWidth } from './columns';
-import { formatColumnBorder, parseColumnBorder } from './columnBorders';
+import { canInsertColumns, insertColumnsInTr } from './columns';
+import { formatColumnBorder, parseColumnBorder, parseColumnWidth } from './columnBorders';
 import { calloutSuggestion } from './CalloutSuggestion';
 
 declare module '@tiptap/core' {
@@ -198,10 +199,25 @@ function enterAtEndOfBox(state: EditorState, view: EditorView): boolean {
 function CalloutView(props: NodeViewProps) {
   const { node, updateAttributes, editor, getPos } = props;
   const { t } = useTranslation('editor');
+  // Tracked across `setEditable`, as map and file blocks do: a read-only or
+  // full-screen fold toggles on screen only and leaves `node.attrs.folded`
+  // untouched so leaving read-only cannot overwrite the saved fold marker.
+  const [editable, setEditable] = useState(editor.isEditable);
+  const [viewFold, setViewFold] = useState<{ base: boolean; folded: boolean } | null>(null);
+  useEffect(() => {
+    const sync = () => {
+      setEditable(editor.isEditable);
+      if (editor.isEditable) setViewFold(null);
+    };
+    sync();
+    editor.on('update', sync);
+    return () => { editor.off('update', sync); };
+  }, [editor]);
   const type = node.attrs.type as CalloutType;
   if (type === 'kanban') return <KanbanBoardView {...props} />;
   if (type === 'column') return <KanbanColumnView {...props} />;
-  const folded = node.attrs.folded as boolean;
+  const nodeFolded = node.attrs.folded as boolean;
+  const folded = !editor.isEditable && viewFold?.base === nodeFolded ? viewFold.folded : nodeFolded;
   const def = CALLOUT_BY_TYPE[type] ?? CALLOUT_BY_TYPE.info;
   const Icon = def.icon;
   // A plain type (Fold, Box, Panel) has no accent: its title and caret take
@@ -231,7 +247,14 @@ function CalloutView(props: NodeViewProps) {
         className="pn-callout-toggle"
         contentEditable={false}
         onMouseDown={(e) => e.preventDefault()}
-        onClick={() => updateAttributes({ folded: !folded })}
+        onClick={() => {
+          if (!editor.isEditable) {
+            setViewFold({ base: nodeFolded, folded: !folded });
+            return;
+          }
+          setViewFold(null);
+          updateAttributes({ folded: !folded });
+        }}
         aria-label={folded ? t('callout.expand') : t('callout.collapse')}
         aria-expanded={!folded}
       >
@@ -249,7 +272,7 @@ function CalloutView(props: NodeViewProps) {
           {label}
         </span>
       )}
-      {editor.isEditable && <BlockGrip editor={editor} getPos={getPos} className="pn-callout-grip" />}
+      {editable && <BlockGrip editor={editor} getPos={getPos} className="pn-callout-grip" />}
       <NodeViewContent className="pn-callout-content" />
     </NodeViewWrapper>
   );

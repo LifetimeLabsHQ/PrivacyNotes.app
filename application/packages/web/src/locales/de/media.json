@@ -18,7 +18,13 @@
     "viewAria": "Bild ansehen",
     "copyAria": "Bild kopieren",
     "copyFailed": "Das Bild konnte nicht kopiert werden.",
-    "picturesLeftOut": "Einige Bilder wurden nicht eingefügt. Kopiere ein Bild einzeln, um es einzufügen."
+    "picturesLeftOut": "Einige Bilder wurden nicht eingefügt. Kopiere ein Bild einzeln, um es einzufügen.",
+    "captionLabel": "Bildunterschrift",
+    "captionAddAria": "Bildunterschrift hinzufügen",
+    "captionEditAria": "Bildunterschrift bearbeiten",
+    "captionPlaceholder": "Bildunterschrift hinzufügen...",
+    "captionClearAria": "Bildunterschrift entfernen",
+    "captionHint": "Enter zum Speichern · Esc zum Abbrechen"
   },
   "attachment": {
     "fallbackName": "Anhang",

@@ -1,13 +1,13 @@
 {
-  "version": "0.847.1",
-  "scope": "Live source scan of all 399 non-marketing app .tsx files (11 marketing files excluded).",
+  "version": "0.864.3",
+  "scope": "Live source scan of all 412 non-marketing app .tsx files (11 marketing files excluded).",
   "summary": {
-    "totalAppFiles": 399,
+    "totalAppFiles": 412,
     "excludedMarketingFiles": 11,
-    "totalSettingsRoutes": 223,
-    "filesWithLint": 16,
-    "totalLintFindings": 28,
-    "filesWithFixedColors": 35,
+    "totalSettingsRoutes": 227,
+    "filesWithLint": 21,
+    "totalLintFindings": 33,
+    "filesWithFixedColors": 34,
     "modalFilesUsingModal": 59,
     "modalFilesUsingDockable": 2,
     "handRolledOverlays": 5,
@@ -40,8 +40,8 @@
     {
       "name": "Shell, Banners & Modals",
       "files": 74,
-      "filesWithLint": 3,
-      "lintFindings": 10,
+      "filesWithLint": 5,
+      "lintFindings": 12,
       "filesWithFixedColors": 5,
       "handRolledOverlays": 1,
       "handRolledBanners": 0
@@ -49,8 +49,8 @@
     {
       "name": "Lists, Cards & Menus",
       "files": 28,
-      "filesWithLint": 2,
-      "lintFindings": 2,
+      "filesWithLint": 4,
+      "lintFindings": 4,
       "filesWithFixedColors": 5,
       "handRolledOverlays": 1,
       "handRolledBanners": 0
@@ -60,7 +60,7 @@
       "files": 60,
       "filesWithLint": 2,
       "lintFindings": 3,
-      "filesWithFixedColors": 6,
+      "filesWithFixedColors": 5,
       "handRolledOverlays": 2,
       "handRolledBanners": 0
     },
@@ -75,7 +75,7 @@
     },
     {
       "name": "Calendar, Home & Graph",
-      "files": 22,
+      "files": 26,
       "filesWithLint": 1,
       "lintFindings": 1,
       "filesWithFixedColors": 0,
@@ -102,9 +102,9 @@
     },
     {
       "name": "Auth, Security & Sync",
-      "files": 59,
-      "filesWithLint": 3,
-      "lintFindings": 7,
+      "files": 68,
+      "filesWithLint": 4,
+      "lintFindings": 8,
       "filesWithFixedColors": 5,
       "handRolledOverlays": 1,
       "handRolledBanners": 0
@@ -130,6 +130,7 @@
     "addDays": [
       "CalendarAgenda.tsx",
       "CalendarPane.tsx",
+      "dashboard/Dashboard.tsx",
       "stats/WeekRecap.tsx",
       "stats/WritingTab.tsx"
     ],
@@ -150,6 +151,7 @@
       "rateLinks.tsx"
     ],
     "AppWindow": [
+      "AppIconPicker.tsx",
       "looks/LookPicker.tsx",
       "security/BiometricTab.tsx",
       "security/TwoFactorTab.tsx"
@@ -191,6 +193,7 @@
       "NotesView.tsx",
       "SelectionToolbar.tsx",
       "ThemeBuilder.tsx",
+      "dashboard/widgets.tsx",
       "graph/GraphModal.tsx",
       "import/ImportModal.tsx",
       "looks/LookPicker.tsx",
@@ -240,7 +243,9 @@
       "ScheduleView.tsx",
       "TableControls.tsx",
       "checkoutParts.tsx",
-      "dashboard/Dashboard.tsx"
+      "dashboard/Dashboard.tsx",
+      "dashboard/widgets.tsx",
+      "notesView/NoteEditorPane.tsx"
     ],
     "ArrowsClockwise": [
       "BrowserPane.tsx",
@@ -251,6 +256,7 @@
       "SyncOptionsModal.tsx",
       "SyncPanel.tsx",
       "SyncStatus.tsx",
+      "dashboard/widgets.tsx",
       "markdownFolder/MarkdownListPane.tsx",
       "security/PhraseLength.tsx"
     ],
@@ -291,8 +297,7 @@
       "ConnectionsPanel.tsx",
       "NoteOptionsMenu.tsx",
       "doodle/DoodleView.tsx",
-      "graph/GraphModal.tsx",
-      "notesView/NoteEditorPane.tsx"
+      "graph/GraphModal.tsx"
     ],
     "ArrowsOutLineVertical": [
       "EditorToolbar.tsx",
@@ -385,11 +390,15 @@
       "PrivacyLadder.tsx",
       "StorageUsagePane.tsx",
       "SyncOptionsModal.tsx",
+      "ThemeBuilder.tsx",
       "TrackerConfig.tsx",
       "autoBackup/AutomaticPane.tsx",
+      "dashboard/Dashboard.tsx",
+      "dashboard/WidgetCatalog.tsx",
       "graph/GraphCanvas.tsx",
       "graph/GraphModal.tsx",
       "graph/LocalGraphCard.tsx",
+      "security/PasskeysTab.tsx",
       "security/TwoFactorTab.tsx",
       "trackers/MedicationPill.tsx"
     ],
@@ -464,7 +473,10 @@
       "import/ImportModal.tsx"
     ],
     "BookOpen": [
+      "AppearanceSheet.tsx",
       "CommandLinePane.tsx",
+      "notesView/FullScreenControls.tsx",
+      "notesView/NoteEditorPane.tsx",
       "stats/WritingTab.tsx"
     ],
     "BookOpenText": [
@@ -556,7 +568,6 @@
       "DeviceLimitModal.tsx",
       "DmsPanel.tsx",
       "DonationModal.tsx",
-      "EncryptedImage.tsx",
       "ExportProgressModal.tsx",
       "FilesList.tsx",
       "HotkeysPane.tsx",
@@ -564,6 +575,7 @@
       "LinkSheet.tsx",
       "LockScreen.tsx",
       "LoginForm.tsx",
+      "MedicationCard.tsx",
       "MfaPrompt.tsx",
       "NinjaWindow.tsx",
       "NoteHistoryModal.tsx",
@@ -579,11 +591,13 @@
       "RevealGate.tsx",
       "ScheduleView.tsx",
       "SettingsWindow.tsx",
+      "ShareApprovalModal.tsx",
       "ShortcutOffer.tsx",
       "SshKeyForm.tsx",
       "SyncOptionsModal.tsx",
       "SyncPanel.tsx",
       "TaskReminderPopover.tsx",
+      "ThemeBuilder.tsx",
       "TrackerConfig.tsx",
       "TrackerPills.tsx",
       "UpdateToast.tsx",
@@ -594,6 +608,8 @@
       "calendarFeedUI.tsx",
       "customThemeUI.tsx",
       "dashboard/Dashboard.tsx",
+      "dashboard/PlacesWidget.tsx",
+      "dashboard/QuickCaptureWidget.tsx",
       "dashboard/WidgetCatalog.tsx",
       "dashboard/widgets.tsx",
       "detailPane.tsx",
@@ -676,13 +692,15 @@
     "CalendarDot": [
       "MonthGrid.tsx",
       "QuickSwitcher.tsx",
-      "SlashSuggestion.tsx"
+      "SlashSuggestion.tsx",
+      "dashboard/widgets.tsx"
     ],
     "CalendarDots": [
       "CalendarSettings.tsx",
       "MonthGrid.tsx",
       "NoteRow.tsx",
       "ScheduleView.tsx",
+      "dashboard/WidgetCatalog.tsx",
       "dashboard/widgetGlyphs.tsx",
       "dashboard/widgets.tsx",
       "import/ImportModal.tsx",
@@ -697,7 +715,6 @@
     ],
     "CalendarPlus": [
       "CheckInCard.tsx",
-      "NotesList.tsx",
       "NotesView.tsx",
       "TaskReminderPopover.tsx",
       "calendarFeedUI.tsx",
@@ -711,6 +728,7 @@
     "Callout": [
       "AboutModal.tsx",
       "AccountSignInSetup.tsx",
+      "AppIconPicker.tsx",
       "BrowserPane.tsx",
       "BurnNote.tsx",
       "CalendarSettings.tsx",
@@ -737,6 +755,7 @@
       "SyncOptionsModal.tsx",
       "SyncPanel.tsx",
       "ThemeBuilder.tsx",
+      "TrackerConfig.tsx",
       "UnopenedNotesList.tsx",
       "UpgradeModal.tsx",
       "autoBackup/AutomaticPane.tsx",
@@ -800,7 +819,7 @@
       "MediaViewer.tsx",
       "MonthGrid.tsx",
       "NoteOptionsMenu.tsx",
-      "notesView/NoteEditorPane.tsx",
+      "dashboard/Dashboard.tsx",
       "stats/WeekRecap.tsx",
       "stats/YearInPixels.tsx"
     ],
@@ -819,8 +838,7 @@
       "OptionsMenu.tsx",
       "SettingsWindow.tsx",
       "ThemeBuilder.tsx",
-      "graph/GraphModal.tsx",
-      "notesView/NoteEditorPane.tsx",
+      "dashboard/Dashboard.tsx",
       "stats/OverviewTab.tsx",
       "stats/WeekRecap.tsx",
       "stats/YearInPixels.tsx",
@@ -842,6 +860,7 @@
       "stats/ExploreSubTab.tsx"
     ],
     "ChartLineUp": [
+      "dashboard/WidgetCatalog.tsx",
       "dashboard/widgetGlyphs.tsx",
       "stats/OverviewTab.tsx",
       "stats/PatternsSubTab.tsx",
@@ -890,10 +909,11 @@
       "TrackerConfig.tsx",
       "VaultItem.tsx",
       "autoBackup/AutomaticPane.tsx",
+      "dashboard/WidgetCatalog.tsx",
       "detailPane.tsx",
-      "import/ImportModal.tsx",
+      "graph/GraphModal.tsx",
       "listItem.tsx",
-      "markdownFolder/MarkdownEmptyState.tsx",
+      "looks/LookPicker.tsx",
       "notesView/BurnShareModal.tsx",
       "notesView/useReminders.tsx",
       "pullToSync.tsx",
@@ -912,6 +932,7 @@
       "NotesView.tsx",
       "Onboarding.tsx",
       "PasswordGeneratorPanel.tsx",
+      "dashboard/WidgetCatalog.tsx",
       "doodle/DoodleView.tsx",
       "import/ImportModal.tsx",
       "notesView/FolderDeleteConfirm.tsx",
@@ -920,6 +941,7 @@
       "security/TwoFactorTab.tsx"
     ],
     "CheckCircle": [
+      "AppIconPicker.tsx",
       "CheckInCard.tsx",
       "dashboard/widgetGlyphs.tsx",
       "markdownFolder/MarkdownDefaultApp.tsx",
@@ -932,7 +954,8 @@
       "TasksList.tsx",
       "checkoutParts.tsx",
       "dashboard/widgetGlyphs.tsx",
-      "dashboard/widgets.tsx"
+      "dashboard/widgets.tsx",
+      "graph/GraphModal.tsx"
     ],
     "CheckInGlyph": [
       "NoteRow.tsx"
@@ -961,8 +984,7 @@
       "AppearanceSheet.tsx"
     ],
     "CircleNotch": [
-      "SyncPanel.tsx",
-      "import/ImportModal.tsx"
+      "SyncPanel.tsx"
     ],
     "Clipboard": [
       "drawing/DrawingMenu.tsx"
@@ -1035,8 +1057,7 @@
     "CloudSlash": [
       "SyncPanel.tsx",
       "listItem.tsx",
-      "markdownFolder/MarkdownExplainer.tsx",
-      "settingsUI.tsx"
+      "markdownFolder/MarkdownExplainer.tsx"
     ],
     "CloudX": [
       "DmsPanel.tsx"
@@ -1089,7 +1110,8 @@
       "security/PinTab.tsx"
     ],
     "Compass": [
-      "QuickSwitcher.tsx"
+      "QuickSwitcher.tsx",
+      "graph/GraphModal.tsx"
     ],
     "Confetti": [
       "AppearanceSheet.tsx",
@@ -1145,6 +1167,7 @@
       "NotesView.tsx",
       "SelectionToolbar.tsx",
       "TagsRail.tsx",
+      "dashboard/Dashboard.tsx",
       "drawing/DrawingMenu.tsx"
     ],
     "ContextMenuState": [
@@ -1167,7 +1190,6 @@
       "drawing/DrawingMenu.tsx",
       "formatBarItems.tsx",
       "graph/GraphModal.tsx",
-      "markdownFolder/MarkdownEmptyState.tsx",
       "markdownFolder/MarkdownListPane.tsx",
       "notesView/BurnShareModal.tsx",
       "notesView/NoteQuickActions.tsx",
@@ -1258,11 +1280,15 @@
       "TrackerConfig.tsx",
       "UnopenedNotesList.tsx",
       "calendarFeedUI.tsx",
+      "dashboard/WidgetCatalog.tsx",
+      "dashboard/widgets.tsx",
+      "graph/GraphModal.tsx",
       "notesView/NoteLocationChip.tsx",
       "plugins/PluginsPane.tsx",
       "trackers/CustomPill.tsx"
     ],
     "Desktop": [
+      "SystemPane.tsx",
       "notesView/settingsCategories.tsx"
     ],
     "DETAIL_COLUMN": [
@@ -1318,6 +1344,7 @@
     ],
     "DeviceMobile": [
       "DeviceIcon.tsx",
+      "security/PasskeysTab.tsx",
       "security/TwoFactorTab.tsx"
     ],
     "DeviceOnlyTip": [
@@ -1333,7 +1360,8 @@
       "SyncOptionsModal.tsx",
       "TagsRail.tsx",
       "notesView/MassDeleteModal.tsx",
-      "notesView/ReleaseNoticeBanner.tsx"
+      "notesView/ReleaseNoticeBanner.tsx",
+      "settingsUI.tsx"
     ],
     "DeviceTablet": [
       "DeviceIcon.tsx"
@@ -1344,7 +1372,8 @@
     "Disclosure": [
       "ConflictModal.tsx",
       "ContactForm.tsx",
-      "ContactItem.tsx"
+      "ContactItem.tsx",
+      "graph/GraphModal.tsx"
     ],
     "Divider": [
       "NoteLinkSuggestion.tsx",
@@ -1392,18 +1421,13 @@
       "notesView/NoteEditorPane.tsx"
     ],
     "Download": [
-      "BookmarksList.tsx",
       "CalendarPane.tsx",
       "CommandLinePane.tsx",
-      "ContactsList.tsx",
       "EncryptedAttachment.tsx",
       "EncryptedImage.tsx",
-      "ImportPrompt.tsx",
       "MediaViewer.tsx",
       "SelectionToolbar.tsx",
-      "TagsRail.tsx",
       "VaultItem.tsx",
-      "import/ImportModal.tsx",
       "markdownFolder/MarkdownEmptyState.tsx",
       "notesView/DmsReturnModal.tsx",
       "security/TwoFactorTab.tsx"
@@ -1417,7 +1441,6 @@
       "AppearanceSheet.tsx",
       "FolderTreeView.tsx",
       "FormatBarBoard.tsx",
-      "dashboard/Dashboard.tsx",
       "notesView/TabStrip.tsx"
     ],
     "Drop": [
@@ -1430,7 +1453,6 @@
       "AppearanceSheet.tsx",
       "FolderTreeView.tsx",
       "FormatBarBoard.tsx",
-      "dashboard/Dashboard.tsx",
       "notesView/TabStrip.tsx"
     ],
     "EditRow": [
@@ -1442,13 +1464,17 @@
       "CalendarAgenda.tsx",
       "ContactsList.tsx",
       "FilesList.tsx",
+      "MedicationCard.tsx",
       "NotesList.tsx",
       "NotesView.tsx",
       "StorageUsagePane.tsx",
       "TasksList.tsx",
       "dashboard/Dashboard.tsx",
+      "dashboard/GraphWidget.tsx",
+      "dashboard/PlacesWidget.tsx",
       "dashboard/WidgetCatalog.tsx",
       "dashboard/widgets.tsx",
+      "graph/GraphCanvas.tsx",
       "graph/GraphModal.tsx",
       "graph/GraphPlacesMap.tsx",
       "plugins/DuplicatesSheet.tsx",
@@ -1484,6 +1510,7 @@
       "CalendarSettings.tsx",
       "CustomFields.tsx",
       "EncryptedAttachment.tsx",
+      "Onboarding.tsx",
       "PasscodeInput.tsx",
       "PhraseInput.tsx",
       "TagsRail.tsx",
@@ -1491,7 +1518,8 @@
       "ThemeBuilder.tsx",
       "TrackerConfig.tsx",
       "VaultVersionPreview.tsx",
-      "markdownFolder/MarkdownExplainer.tsx"
+      "markdownFolder/MarkdownExplainer.tsx",
+      "security/PasskeysTab.tsx"
     ],
     "EYEBROW_ICON_ROW": [
       "AboutModal.tsx",
@@ -1520,11 +1548,13 @@
       "ConnectionsPanel.tsx",
       "CustomFields.tsx",
       "MedicationCard.tsx",
+      "Onboarding.tsx",
       "PasscodeInput.tsx",
       "PhraseInput.tsx",
       "TasksList.tsx",
       "VaultVersionPreview.tsx",
       "formatBarItems.tsx",
+      "security/PasskeysTab.tsx",
       "security/PhraseView.tsx"
     ],
     "FeaturePitch": [
@@ -1544,6 +1574,7 @@
       "MoveBanner.tsx",
       "ShortcutOffer.tsx",
       "SyncPanel.tsx",
+      "TrackerConfig.tsx",
       "UnopenedNotesList.tsx",
       "autoBackup/AutomaticPane.tsx",
       "graph/GraphModal.tsx",
@@ -1575,7 +1606,6 @@
       "ShareApprovalModal.tsx",
       "SshKeyForm.tsx",
       "ThemeBuilder.tsx",
-      "import/ImportModal.tsx",
       "plugins/OcrSheet.tsx",
       "plugins/VoiceSheet.tsx",
       "stats/WeekRecap.tsx",
@@ -1590,7 +1620,8 @@
       "PhraseReplacedScreen.tsx",
       "SshKeyForm.tsx",
       "plugins/TranslateSheet.tsx",
-      "plugins/VoiceSheet.tsx"
+      "plugins/VoiceSheet.tsx",
+      "security/PasskeysTab.tsx"
     ],
     "File": [
       "CollapsedSidebar.tsx",
@@ -1601,9 +1632,17 @@
       "TagsRail.tsx",
       "looks/LookPicker.tsx"
     ],
+    "FileArrowDown": [
+      "BookmarksList.tsx",
+      "ContactsList.tsx",
+      "ImportPrompt.tsx",
+      "TagsRail.tsx",
+      "import/ImportModal.tsx"
+    ],
     "FileArrowUp": [
       "VaultFiles.tsx",
-      "formatBarItems.tsx"
+      "formatBarItems.tsx",
+      "import/ImportModal.tsx"
     ],
     "FileCsv": [
       "stats/WellnessExport.tsx"
@@ -1723,7 +1762,6 @@
       "looks/LookPicker.tsx",
       "markdownFolder/MarkdownListPane.tsx",
       "markdownFolder/MarkdownRail.tsx",
-      "notesView/NoteQuickActions.tsx",
       "notesView/useFolderActions.tsx",
       "plugins/SuggestChips.tsx"
     ],
@@ -1777,6 +1815,7 @@
       "CalendarPane.tsx",
       "CheckInCard.tsx",
       "MedicationCard.tsx",
+      "TagsRail.tsx",
       "TrackerPills.tsx",
       "drawing/drawingBar.tsx",
       "formatBarItems.tsx",
@@ -1838,6 +1877,9 @@
     "Graph": [
       "ConnectionsPanel.tsx",
       "ConnectionsPill.tsx",
+      "dashboard/WidgetCatalog.tsx",
+      "dashboard/widgetGlyphs.tsx",
+      "graph/GraphCanvas.tsx",
       "graph/GraphModal.tsx",
       "notesView/AppFooter.tsx"
     ],
@@ -1845,6 +1887,7 @@
       "dashboard/Dashboard.tsx"
     ],
     "GridFour": [
+      "dashboard/widgetGlyphs.tsx",
       "drawing/DrawingMenu.tsx",
       "formatBarItems.tsx",
       "stats/YearInPixels.tsx"
@@ -1866,7 +1909,6 @@
     ],
     "halfOf": [
       "AppearanceSheet.tsx",
-      "dashboard/Dashboard.tsx",
       "notesView/TabStrip.tsx"
     ],
     "Hand": [
@@ -1881,6 +1923,7 @@
     "HardDrives": [
       "StorageUsagePane.tsx",
       "SyncOptionsModal.tsx",
+      "dashboard/widgetGlyphs.tsx",
       "notesView/QuotaExceededBanner.tsx",
       "plugins/PluginsPane.tsx"
     ],
@@ -1895,6 +1938,8 @@
       "QuickSwitcher.tsx",
       "TagsRail.tsx",
       "TrackerConfig.tsx",
+      "dashboard/WidgetCatalog.tsx",
+      "dashboard/widgetGlyphs.tsx",
       "drawing/drawingBar.tsx",
       "looks/LookGlyph.tsx",
       "looks/LookPicker.tsx",
@@ -1919,6 +1964,7 @@
       "CalendarTrackers.tsx",
       "StatsModal.tsx",
       "TrackerConfig.tsx",
+      "dashboard/Dashboard.tsx",
       "import/ImportModal.tsx",
       "looks/LookPicker.tsx",
       "notesView/settingsCategories.tsx",
@@ -2021,12 +2067,10 @@
       "VaultItem.tsx",
       "ViewModeToggle.tsx",
       "dashboard/Dashboard.tsx",
-      "dashboard/WidgetCatalog.tsx",
       "detailPane.tsx",
       "doodle/DoodleView.tsx",
       "editorToolbarParts.tsx",
       "editorToolbarPopovers.tsx",
-      "markdownFolder/MarkdownFilePane.tsx",
       "markdownFolder/MarkdownListPane.tsx",
       "notesView/AppFooter.tsx",
       "notesView/FullScreenControls.tsx",
@@ -2052,6 +2096,8 @@
       "SpaceSwitch.tsx",
       "TagsRail.tsx",
       "TrackerConfig.tsx",
+      "dashboard/Dashboard.tsx",
+      "dashboard/WidgetCatalog.tsx",
       "dashboard/widgetGlyphs.tsx",
       "drawing/DrawingMenu.tsx",
       "editorToolbarPopovers.tsx",
@@ -2061,7 +2107,8 @@
       "settingsUI.tsx",
       "stats/PatternsSubTab.tsx",
       "trackers/MedicationEditor.tsx",
-      "trackers/icons.tsx"
+      "trackers/icons.tsx",
+      "typeMark.tsx"
     ],
     "iconArchive": [
       "NoteOptionsMenu.tsx",
@@ -2081,17 +2128,24 @@
       "KanbanBoard.tsx",
       "LockScreen.tsx",
       "MonthGrid.tsx",
+      "Onboarding.tsx",
       "SyncOptionsModal.tsx",
+      "ThemeBuilder.tsx",
       "TrackerConfig.tsx",
       "calendarFeedUI.tsx",
       "dashboard/Dashboard.tsx",
+      "dashboard/QuickCaptureWidget.tsx",
+      "dashboard/widgets.tsx",
       "graph/GraphCanvas.tsx",
       "graph/GraphModal.tsx",
       "graph/GraphPlacesMap.tsx",
       "graph/LocalGraphCard.tsx",
+      "markdownFolder/MarkdownFilePane.tsx",
+      "markdownFolder/MarkdownListPane.tsx",
       "notesView/FullScreenControls.tsx",
       "notesView/NoteLocationChip.tsx",
       "notesView/NoteLocationMap.tsx",
+      "security/PasskeysTab.tsx",
       "stats/WeekRecap.tsx",
       "trackers/MedicationEditor.tsx"
     ],
@@ -2119,7 +2173,9 @@
     ],
     "iconExternal": [
       "Editor.tsx",
+      "EncryptedImage.tsx",
       "NoteLink.tsx",
+      "dashboard/Dashboard.tsx",
       "notesView/contextMenus.tsx"
     ],
     "iconFile": [
@@ -2166,12 +2222,14 @@
       "notesView/contextMenus.tsx"
     ],
     "iconSettings": [
+      "dashboard/Dashboard.tsx",
       "notesView/contextMenus.tsx"
     ],
     "iconShield": [
       "notesView/contextMenus.tsx"
     ],
     "iconSidebar": [
+      "dashboard/Dashboard.tsx",
       "notesView/contextMenus.tsx"
     ],
     "iconSideBySide": [
@@ -2189,6 +2247,7 @@
       "CommandLinePane.tsx",
       "Onboarding.tsx",
       "RevealGate.tsx",
+      "security/PasskeysTab.tsx",
       "security/PhraseLength.tsx",
       "security/TwoFactorTab.tsx"
     ],
@@ -2228,6 +2287,7 @@
       "notesView/contextMenus.tsx"
     ],
     "iconZen": [
+      "dashboard/Dashboard.tsx",
       "notesView/contextMenus.tsx"
     ],
     "IdentificationCard": [
@@ -2243,6 +2303,7 @@
       "drawing/drawingBar.tsx",
       "formatBarItems.tsx",
       "listItem.tsx",
+      "looks/LookPicker.tsx",
       "notesView/StoragePane.tsx",
       "scan/ScanEditor.tsx"
     ],
@@ -2258,7 +2319,8 @@
     ],
     "InlineRenameField": [
       "EncryptedAttachment.tsx",
-      "SyncOptionsModal.tsx"
+      "SyncOptionsModal.tsx",
+      "graph/GraphModal.tsx"
     ],
     "Intersect": [
       "AppearanceSheet.tsx",
@@ -2277,7 +2339,9 @@
       "Editor.tsx",
       "EncryptedImage.tsx",
       "MediaViewer.tsx",
-      "NotesView.tsx"
+      "NewButton.tsx",
+      "NotesView.tsx",
+      "dashboard/Dashboard.tsx"
     ],
     "ItemSwitcher": [
       "TrackerConfig.tsx",
@@ -2324,6 +2388,7 @@
       "notesView/SignOutConfirmModal.tsx",
       "notesView/contextMenus.tsx",
       "security/KeyCustodyTab.tsx",
+      "security/PasskeysTab.tsx",
       "security/PhraseLength.tsx",
       "security/TwoFactorTab.tsx"
     ],
@@ -2359,6 +2424,7 @@
     ],
     "Lightning": [
       "PrivacyLadder.tsx",
+      "dashboard/widgetGlyphs.tsx",
       "trackers/icons.tsx"
     ],
     "LineSegment": [
@@ -2381,6 +2447,7 @@
     "LinkSimple": [
       "AppearanceSheet.tsx",
       "ConnectionsPanel.tsx",
+      "EncryptedImage.tsx",
       "FilesList.tsx",
       "OutlinePanel.tsx",
       "graph/GraphModal.tsx",
@@ -2399,6 +2466,8 @@
     "ListBullets": [
       "AppearanceSheet.tsx",
       "OutlinePanel.tsx",
+      "dashboard/WidgetCatalog.tsx",
+      "dashboard/widgetGlyphs.tsx",
       "formatBarItems.tsx",
       "notesView/settingsCategories.tsx"
     ],
@@ -2470,6 +2539,7 @@
       "import/ImportModal.tsx",
       "markdownFolder/MarkdownFilePane.tsx",
       "markdownFolder/MarkdownListPane.tsx",
+      "security/PasskeysTab.tsx",
       "security/PhrasePinGate.tsx"
     ],
     "LockKey": [
@@ -2497,6 +2567,7 @@
       "QuickNoteView.tsx",
       "StorageUsagePane.tsx",
       "TagsRail.tsx",
+      "dashboard/widgets.tsx",
       "drawing/DrawingMenu.tsx",
       "drawing/DrawingToolbar.tsx",
       "graph/GraphModal.tsx"
@@ -2507,6 +2578,7 @@
       "TagsRail.tsx",
       "drawing/DrawingMenu.tsx",
       "drawing/drawingBar.tsx",
+      "graph/GraphModal.tsx",
       "readOnlyNotice.tsx"
     ],
     "LogoIcon": [
@@ -2560,6 +2632,7 @@
       "PlaceMapNode.tsx",
       "QuickSwitcher.tsx",
       "VaultItem.tsx",
+      "dashboard/widgetGlyphs.tsx",
       "formatBarItems.tsx",
       "graph/GraphModal.tsx",
       "graph/GraphPlacesMap.tsx",
@@ -2591,11 +2664,12 @@
     ],
     "Microphone": [
       "AudioRecorder.tsx",
+      "dashboard/QuickCaptureWidget.tsx",
       "formatBarItems.tsx"
     ],
     "Minus": [
       "ContactForm.tsx",
-      "dashboard/WidgetCatalog.tsx",
+      "dashboard/widgets.tsx",
       "formatBarItems.tsx"
     ],
     "MinusCircle": [
@@ -2628,7 +2702,6 @@
       "doodle/DoodleView.tsx",
       "drawing/DrawingHotkeys.tsx",
       "drawing/DrawingItem.tsx",
-      "graph/GraphModal.tsx",
       "import/ImportModal.tsx",
       "markdownFolder/MarkdownExplainer.tsx",
       "notesView/BurnShareModal.tsx",
@@ -2653,6 +2726,7 @@
       "ProtectedNoteGate.tsx",
       "ShortcutOffer.tsx",
       "SyncOptionsModal.tsx",
+      "dashboard/WidgetCatalog.tsx",
       "import/ImportModal.tsx",
       "looks/LookPicker.tsx",
       "notesView/BurnShareModal.tsx",
@@ -2732,9 +2806,10 @@
       "BookmarksList.tsx",
       "ClipPageModal.tsx",
       "ContactsList.tsx",
-      "NotesList.tsx",
+      "NotesView.tsx",
       "QuickSwitcher.tsx",
       "TasksList.tsx",
+      "dashboard/Dashboard.tsx",
       "import/ImportModal.tsx",
       "notesView/contextMenus.tsx"
     ],
@@ -2760,6 +2835,7 @@
       "LinkSheet.tsx",
       "ListSearchInput.tsx",
       "LoginForm.tsx",
+      "Onboarding.tsx",
       "PhraseReplacedScreen.tsx",
       "PinInput.tsx",
       "QuickSwitcher.tsx",
@@ -2775,6 +2851,7 @@
       "customThemeUI.tsx",
       "import/ImportModal.tsx",
       "notesView/DmsReturnModal.tsx",
+      "security/PasskeysTab.tsx",
       "trackers/panelUI.tsx"
     ],
     "Notches": [
@@ -2794,6 +2871,9 @@
       "TagsRail.tsx",
       "stats/StatsPage.tsx"
     ],
+    "NoteBoyMark": [
+      "AppIconPicker.tsx"
+    ],
     "NoteLinkOpenContext": [
       "notesView/NoteEditorPane.tsx"
     ],
@@ -2811,7 +2891,6 @@
       "dashboard/widgets.tsx",
       "graph/GraphModal.tsx",
       "looks/NoteColorExample.tsx",
-      "markdownFolder/MarkdownListPane.tsx",
       "stats/OverviewTab.tsx"
     ],
     "NotesText": [
@@ -2829,7 +2908,8 @@
       "TaskReminderPopover.tsx"
     ],
     "optsOutOfAppMenu": [
-      "NotesView.tsx"
+      "NotesView.tsx",
+      "dashboard/Dashboard.tsx"
     ],
     "OverflowTip": [
       "ConnectionsPanel.tsx",
@@ -2842,6 +2922,7 @@
       "notesView/TabStrip.tsx"
     ],
     "Package": [
+      "dashboard/WidgetCatalog.tsx",
       "trackers/MedicationEditor.tsx"
     ],
     "PaintBrush": [
@@ -2872,6 +2953,7 @@
     "Paperclip": [
       "FormatBarBoard.tsx",
       "formatBarItems.tsx",
+      "graph/GraphModal.tsx",
       "listItem.tsx"
     ],
     "Paragraph": [
@@ -2918,6 +3000,7 @@
       "customThemeUI.tsx",
       "doodle/DoodleView.tsx",
       "drawing/drawingBar.tsx",
+      "graph/GraphModal.tsx",
       "notesView/NoteLocationChip.tsx",
       "stats/OverviewTab.tsx",
       "stats/StatsPage.tsx",
@@ -2945,21 +3028,27 @@
     "Phone": [
       "ContactItem.tsx"
     ],
+    "PHRASE_INPUT_IDLE_CLEAR_SECONDS": [
+      "Onboarding.tsx"
+    ],
     "PhraseInput": [
       "LockScreen.tsx",
       "Onboarding.tsx",
       "PhraseReplacedScreen.tsx",
-      "PinRecoveryForm.tsx"
+      "PinRecoveryForm.tsx",
+      "import/ImportModal.tsx"
     ],
     "PickerModal": [
       "FolderPicker.tsx",
       "PicturePicker.tsx",
-      "TagPicker.tsx"
+      "TagPicker.tsx",
+      "graph/GraphModal.tsx"
     ],
     "Pill": [
       "ListPrefsPopover.tsx",
       "MedicationCard.tsx",
       "TrackerConfig.tsx",
+      "dashboard/widgetGlyphs.tsx",
       "stats/MedicationSubTab.tsx",
       "stats/StatsPage.tsx",
       "trackers/MedicationEditor.tsx",
@@ -2979,8 +3068,8 @@
       "dashboard/Dashboard.tsx",
       "dashboard/widgetGlyphs.tsx",
       "import/ImportModal.tsx",
-      "listItem.tsx",
-      "markdownFolder/MarkdownListPane.tsx"
+      "markdownFolder/MarkdownListPane.tsx",
+      "typeMark.tsx"
     ],
     "PinInput": [
       "MfaPrompt.tsx",
@@ -3046,8 +3135,10 @@
       "TrackerConfig.tsx",
       "TrackerPills.tsx",
       "dashboard/Dashboard.tsx",
+      "dashboard/widgets.tsx",
       "icons.tsx",
       "plugins/SuggestChips.tsx",
+      "security/PasskeysTab.tsx",
       "stats/OverviewTab.tsx",
       "trackers/MedicationEditor.tsx",
       "trackers/MedicationPill.tsx",
@@ -3068,6 +3159,7 @@
       "TagsRail.tsx",
       "doodle/DoodleView.tsx",
       "graph/GraphModal.tsx",
+      "markdownFolder/MarkdownDefaultApp.tsx",
       "notesView/NoteLocationChip.tsx",
       "notesView/ShareMenu.tsx",
       "trackers/MedicationEditor.tsx"
@@ -3087,8 +3179,6 @@
       "ListFilterChips.tsx",
       "MoveScreen.tsx",
       "OAuthRetryScreen.tsx",
-      "markdownFolder/MarkdownDefaultApp.tsx",
-      "markdownFolder/MarkdownEmptyState.tsx",
       "notesView/useReminders.tsx"
     ],
     "Printer": [
@@ -3145,7 +3235,9 @@
       "CommandLinePane.tsx",
       "EventCard.tsx",
       "QuickSwitcher.tsx",
+      "ShareApprovalModal.tsx",
       "dashboard/Dashboard.tsx",
+      "dashboard/WidgetCatalog.tsx",
       "plugins/PluginsPane.tsx",
       "stats/ExploreSubTab.tsx",
       "stats/MedicationSubTab.tsx",
@@ -3217,7 +3309,8 @@
     ],
     "QuotaRing": [
       "StorageBar.tsx",
-      "SyncOptionsModal.tsx"
+      "SyncOptionsModal.tsx",
+      "dashboard/widgets.tsx"
     ],
     "QuotaRingButton": [
       "notesView/AppFooter.tsx"
@@ -3234,6 +3327,9 @@
     "RatingStar": [
       "RateModal.tsx",
       "SyncOptionsModal.tsx"
+    ],
+    "Record": [
+      "dashboard/QuickCaptureWidget.tsx"
     ],
     "RedditLogo": [
       "security/PhraseTab.tsx"
@@ -3326,6 +3422,9 @@
       "security/PhraseLength.tsx",
       "security/PhraseLengthChoice.tsx"
     ],
+    "SAFE_INSET_PAD": [
+      "SettingsWindow.tsx"
+    ],
     "Scales": [
       "AboutModal.tsx",
       "Onboarding.tsx",
@@ -3369,6 +3468,7 @@
     ],
     "SectionEyebrow": [
       "AccountLoginsPanel.tsx",
+      "AppIconPicker.tsx",
       "AppearanceSheet.tsx",
       "BrowserPane.tsx",
       "CalendarSettings.tsx",
@@ -3413,6 +3513,7 @@
       "ListPrefsPopover.tsx",
       "RepeatIntervalFields.tsx",
       "ScheduleView.tsx",
+      "ShareApprovalModal.tsx",
       "autoBackup/AutomaticPane.tsx",
       "doodle/DoodleView.tsx",
       "import/ImportModal.tsx",
@@ -3428,7 +3529,8 @@
       "drawing/DrawingMenu.tsx"
     ],
     "SelectionCountStrip": [
-      "FilesList.tsx"
+      "FilesList.tsx",
+      "markdownFolder/MarkdownListPane.tsx"
     ],
     "SelectionPlus": [
       "drawing/DrawingMenu.tsx"
@@ -3440,7 +3542,6 @@
       "AppearanceSheet.tsx",
       "BookmarkRowActions.tsx",
       "CommandLinePane.tsx",
-      "ThemeBuilder.tsx",
       "TrackerConfig.tsx",
       "import/ImportModal.tsx"
     ],
@@ -3454,10 +3555,12 @@
       "DonationModal.tsx",
       "ShortcutOffer.tsx",
       "SyncPanel.tsx",
-      "ThemeBuilder.tsx",
-      "TrackerConfig.tsx"
+      "TrackerConfig.tsx",
+      "markdownFolder/MarkdownEmptyState.tsx"
     ],
     "SETTINGS_CARD": [
+      "AppIconPicker.tsx",
+      "AppearanceSheet.tsx",
       "BrowserPane.tsx",
       "import/ImportModal.tsx"
     ],
@@ -3465,9 +3568,13 @@
       "import/ImportModal.tsx"
     ],
     "SETTINGS_CARD_ON": [
+      "AppIconPicker.tsx",
+      "AppearanceSheet.tsx",
       "BrowserPane.tsx"
     ],
     "SETTINGS_CARD_REST": [
+      "AppIconPicker.tsx",
+      "AppearanceSheet.tsx",
       "BrowserPane.tsx",
       "import/ImportModal.tsx"
     ],
@@ -3487,19 +3594,21 @@
       "TasksList.tsx",
       "ToolbarInsertMenu.tsx",
       "TrackerConfig.tsx",
-      "markdownFolder/MarkdownDefaultApp.tsx",
       "markdownFolder/MarkdownRail.tsx",
       "notesView/WeekInReview.tsx",
       "settingsSearch/SettingsSearchResults.tsx",
       "stats/PatternsSubTab.tsx"
     ],
     "SETTINGS_GROUP": [
-      "BrowserPane.tsx"
+      "AppIconPicker.tsx",
+      "BrowserPane.tsx",
+      "SystemPane.tsx"
     ],
     "SETTINGS_HELP": [
       "AboutModal.tsx",
       "AccountLoginsPanel.tsx",
       "AccountSignInSetup.tsx",
+      "AppIconPicker.tsx",
       "AppSizeRow.tsx",
       "AppearanceSheet.tsx",
       "BookmarkItem.tsx",
@@ -3567,6 +3676,7 @@
       "PasswordGeneratorPanel.tsx",
       "ThemeBuilder.tsx",
       "ViewModeToggle.tsx",
+      "graph/GraphModal.tsx",
       "looks/LookPicker.tsx",
       "trackers/MedicationEditor.tsx"
     ],
@@ -3576,6 +3686,7 @@
       "plugins/PluginsPane.tsx"
     ],
     "settingsChipClass": [
+      "AppearanceSheet.tsx",
       "JournalsSheet.tsx",
       "PasswordGeneratorPanel.tsx",
       "TrackerConfig.tsx",
@@ -3593,6 +3704,7 @@
       "PasswordGeneratorPanel.tsx",
       "ThemeBuilder.tsx",
       "ViewModeToggle.tsx",
+      "graph/GraphModal.tsx",
       "looks/LookPicker.tsx",
       "trackers/MedicationEditor.tsx"
     ],
@@ -3603,6 +3715,8 @@
       "TaskReminderPopover.tsx",
       "TrackerConfig.tsx",
       "calendarFeedUI.tsx",
+      "dashboard/Dashboard.tsx",
+      "dashboard/WidgetCatalog.tsx",
       "graph/GraphModal.tsx",
       "graph/LocalGraphCard.tsx",
       "markdownFolder/MarkdownFilePane.tsx",
@@ -3621,6 +3735,8 @@
       "StatsModal.tsx",
       "SyncOptionsModal.tsx",
       "TrackerConfig.tsx",
+      "dashboard/widgets.tsx",
+      "graph/GraphModal.tsx",
       "import/ImportModal.tsx",
       "looks/LookPicker.tsx",
       "notesView/StoragePane.tsx"
@@ -3634,6 +3750,8 @@
       "StatsModal.tsx",
       "SyncOptionsModal.tsx",
       "TrackerConfig.tsx",
+      "dashboard/widgets.tsx",
+      "graph/GraphModal.tsx",
       "import/ImportModal.tsx",
       "looks/LookPicker.tsx",
       "notesView/StoragePane.tsx"
@@ -3669,6 +3787,7 @@
       "graph/GraphModal.tsx",
       "notesView/NoteLocationChip.tsx",
       "rateLinks.tsx",
+      "security/PasskeysTab.tsx",
       "security/PhraseChangeWizard.tsx",
       "security/PhraseOdds.tsx",
       "security/TwoFactorTab.tsx"
@@ -3684,7 +3803,11 @@
       "security/TwoFactorTab.tsx"
     ],
     "shouldUseBrowserDefault": [
-      "NotesView.tsx"
+      "NotesView.tsx",
+      "dashboard/Dashboard.tsx"
+    ],
+    "SidebarSimple": [
+      "graph/GraphModal.tsx"
     ],
     "Sigma": [
       "formatBarItems.tsx"
@@ -3756,6 +3879,8 @@
       "QuickSwitcher.tsx",
       "ViewModeToggle.tsx",
       "checkoutParts.tsx",
+      "dashboard/widgetGlyphs.tsx",
+      "dashboard/widgets.tsx",
       "graph/GraphModal.tsx",
       "markdownFolder/MarkdownExplainer.tsx",
       "plugins/PluginsPane.tsx",
@@ -3776,6 +3901,7 @@
       "SyncPanel.tsx",
       "UpdateToast.tsx",
       "calendarFeedUI.tsx",
+      "dashboard/widgets.tsx",
       "drawing/DrawingItem.tsx",
       "graph/GraphPlacesMap.tsx",
       "import/ImportModal.tsx",
@@ -3792,6 +3918,7 @@
       "StatsModal.tsx",
       "ViewModeToggle.tsx",
       "dashboard/Dashboard.tsx",
+      "dashboard/WidgetCatalog.tsx",
       "dashboard/widgetGlyphs.tsx",
       "rateLinks.tsx",
       "stats/OverviewTab.tsx"
@@ -3802,8 +3929,10 @@
       "sourcePreviewButtons.tsx"
     ],
     "Stack": [
+      "AppearanceSheet.tsx",
       "NotesView.tsx",
-      "SpaceSwitch.tsx"
+      "SpaceSwitch.tsx",
+      "graph/GraphModal.tsx"
     ],
     "Star": [
       "AboutModal.tsx",
@@ -3836,6 +3965,8 @@
       "SyncOptionsModal.tsx",
       "autoBackup/AutomaticPane.tsx",
       "calendarFeedUI.tsx",
+      "dashboard/QuickCaptureWidget.tsx",
+      "dashboard/widgets.tsx",
       "graph/GraphModal.tsx",
       "graph/GraphPlacesMap.tsx",
       "markdownFolder/MarkdownDefaultApp.tsx",
@@ -3861,6 +3992,9 @@
     "StorageBar": [
       "FilesList.tsx",
       "NotesList.tsx"
+    ],
+    "Subtitles": [
+      "EncryptedImage.tsx"
     ],
     "SubViewHeader": [
       "TrackerConfig.tsx",
@@ -3968,7 +4102,8 @@
     ],
     "TerminalBlock": [
       "CommandLinePane.tsx",
-      "NinjaKeyRow.tsx"
+      "NinjaKeyRow.tsx",
+      "markdownFolder/MarkdownEmptyState.tsx"
     ],
     "TerminalWindow": [
       "CommandLinePane.tsx",
@@ -3987,7 +4122,8 @@
       "stats/WritingTab.tsx"
     ],
     "TextAlignCenter": [
-      "EditorToolbar.tsx"
+      "EditorToolbar.tsx",
+      "EncryptedImage.tsx"
     ],
     "TextAlignJustify": [
       "AppearanceSheet.tsx",
@@ -4001,7 +4137,8 @@
       "formatBarItems.tsx"
     ],
     "TextAlignRight": [
-      "EditorToolbar.tsx"
+      "EditorToolbar.tsx",
+      "EncryptedImage.tsx"
     ],
     "TextAUnderline": [
       "EditorToolbar.tsx",
@@ -4035,6 +4172,9 @@
       "TrackerConfig.tsx",
       "calendarFeedUI.tsx",
       "customThemeUI.tsx",
+      "dashboard/QuickCaptureWidget.tsx",
+      "dashboard/widgets.tsx",
+      "graph/GraphModal.tsx",
       "import/ImportModal.tsx",
       "notesView/BurnShareModal.tsx",
       "notesView/DmsReturnModal.tsx",
@@ -4110,7 +4250,9 @@
       "trackers/MedicationEditor.tsx"
     ],
     "TextTSlash": [
-      "drawing/DrawingMenu.tsx"
+      "Editor.tsx",
+      "drawing/DrawingMenu.tsx",
+      "formatBarItems.tsx"
     ],
     "TextUnderline": [
       "EditorToolbar.tsx",
@@ -4203,6 +4345,7 @@
       "SyncOptionsModal.tsx",
       "TableControls.tsx",
       "TagsRail.tsx",
+      "ThemeBuilder.tsx",
       "UploadProgressModal.tsx",
       "customThemeUI.tsx",
       "dashboard/Dashboard.tsx",
@@ -4211,6 +4354,7 @@
       "drawing/drawingBar.tsx",
       "editorToolbarPopovers.tsx",
       "graph/GraphModal.tsx",
+      "looks/LookPicker.tsx",
       "markdownFolder/MarkdownFilePane.tsx",
       "markdownFolder/MarkdownListPane.tsx",
       "notesView/NoteEditorPane.tsx"
@@ -4251,7 +4395,9 @@
       "NotesList.tsx",
       "Onboarding.tsx",
       "QrScannerModal.tsx",
-      "import/ImportModal.tsx"
+      "ThemeBuilder.tsx",
+      "import/ImportModal.tsx",
+      "looks/LookPicker.tsx"
     ],
     "useContextMenu": [
       "AppearanceSheet.tsx",
@@ -4397,6 +4543,7 @@
       "CustomFields.tsx",
       "EditorSlotPill.tsx",
       "EncryptedAttachment.tsx",
+      "EncryptedImage.tsx",
       "FolderNameInput.tsx",
       "LanguageSuggest.tsx",
       "ListEntryCard.tsx",
@@ -4415,6 +4562,7 @@
       "VaultItem.tsx",
       "autoBackup/AutomaticPane.tsx",
       "graph/GraphModal.tsx",
+      "looks/LookPicker.tsx",
       "markdownFolder/MarkdownFilePane.tsx",
       "markdownFolder/MarkdownListPane.tsx",
       "notesView/FullScreenControls.tsx",
@@ -4595,6 +4743,33 @@
       "driftCount": 0
     },
     {
+      "file": "AppIconPicker.tsx",
+      "domain": "Auth, Security & Sync",
+      "kind": "overlay",
+      "uiImports": [
+        "Callout",
+        "SETTINGS_CARD",
+        "SETTINGS_CARD_ON",
+        "SETTINGS_CARD_REST",
+        "SETTINGS_GROUP",
+        "SETTINGS_HELP",
+        "SectionEyebrow"
+      ],
+      "directImports": [
+        "AppWindow (icons)",
+        "CheckCircle (icons)",
+        "NoteBoyMark (LogoIcon)"
+      ],
+      "lintCount": 0,
+      "lintRules": [],
+      "lintSamples": [],
+      "fixedColorCount": 0,
+      "fixedColors": [],
+      "modalKind": null,
+      "bannerKind": null,
+      "driftCount": 0
+    },
+    {
       "file": "AppSizeRow.tsx",
       "domain": "Settings, Themes & Plugins",
       "kind": "list-card",
@@ -4640,6 +4815,7 @@
         "ArrowRight (icons)",
         "ArrowSquareOut (icons)",
         "ArrowUp (icons)",
+        "BookOpen (icons)",
         "BoxArrowDown (icons)",
         "Brain (icons)",
         "CaretDown (icons)",
@@ -4690,6 +4866,9 @@
         "ResetDefaultsButton (settingsUI)",
         "RowTitle (settingsUI)",
         "SETTINGS_BTN (settingsUI)",
+        "SETTINGS_CARD (settingsUI)",
+        "SETTINGS_CARD_ON (settingsUI)",
+        "SETTINGS_CARD_REST (settingsUI)",
         "SETTINGS_EYEBROW (settingsUI)",
         "SETTINGS_HELP (settingsUI)",
         "SETTINGS_SELECT (settingsUI)",
@@ -4699,6 +4878,7 @@
         "SettingsTabStrip (settingsUI)",
         "Sparkle (icons)",
         "SquaresFour (icons)",
+        "Stack (icons)",
         "Star (icons)",
         "Sun (icons)",
         "Switch (Switch)",
@@ -4709,6 +4889,7 @@
         "Toolbox (icons)",
         "UserSwitch (icons)",
         "X (icons)",
+        "settingsChipClass (settingsUI)",
         "settingsSegClass (settingsUI)",
         "settingsTabClass (settingsUI)",
         "useContextMenu (ContextMenu)"
@@ -4851,7 +5032,7 @@
         "Bookmark (icons)",
         "BookmarkSimple (icons)",
         "Bookmarks (icons)",
-        "Download (icons)",
+        "FileArrowDown (icons)",
         "FunnelSimple (icons)",
         "HoverLabel (HoverLabel)",
         "ListSearchInput (ListSearchInput)",
@@ -4862,9 +5043,16 @@
         "Plus (icons)",
         "Switch (Switch)"
       ],
-      "lintCount": 0,
-      "lintRules": [],
-      "lintSamples": [],
+      "lintCount": 1,
+      "lintRules": [
+        "primary-btn-skin"
+      ],
+      "lintSamples": [
+        {
+          "rule": "primary-btn-skin",
+          "line": 2
+        }
+      ],
       "fixedColorCount": 2,
       "fixedColors": [
         "border-amber-500",
@@ -4872,7 +5060,7 @@
       ],
       "modalKind": null,
       "bannerKind": null,
-      "driftCount": 0
+      "driftCount": 1
     },
     {
       "file": "Brand.tsx",
@@ -5461,14 +5649,21 @@
         "WARNING_BTN_SKIN (settingsUI)",
         "Warning (icons)"
       ],
-      "lintCount": 0,
-      "lintRules": [],
-      "lintSamples": [],
+      "lintCount": 1,
+      "lintRules": [
+        "primary-btn-skin"
+      ],
+      "lintSamples": [
+        {
+          "rule": "primary-btn-skin",
+          "line": 9
+        }
+      ],
       "fixedColorCount": 0,
       "fixedColors": [],
       "modalKind": "Modal",
       "bannerKind": null,
-      "driftCount": 0
+      "driftCount": 1
     },
     {
       "file": "ConflictModal.tsx",
@@ -5674,7 +5869,7 @@
         "EmptyState"
       ],
       "directImports": [
-        "Download (icons)",
+        "FileArrowDown (icons)",
         "FunnelSimple (icons)",
         "HoverLabel (HoverLabel)",
         "ListSearchInput (ListSearchInput)",
@@ -6048,6 +6243,7 @@
         "TextB (icons)",
         "TextItalic (icons)",
         "TextStrikethrough (icons)",
+        "TextTSlash (icons)",
         "iconCopy (icons)",
         "iconEditPencil (icons)",
         "iconExternal (icons)",
@@ -6196,7 +6392,6 @@
       "domain": "Editor, Drawing & Media",
       "kind": "component",
       "uiImports": [
-        "Button",
         "Callout",
         "DeleteButton",
         "FeedbackButton",
@@ -6210,11 +6405,17 @@
         "Copy (icons)",
         "Download (icons)",
         "HoverLabel (HoverLabel)",
+        "LinkSimple (icons)",
         "Notches (icons)",
+        "Subtitles (icons)",
+        "TextAlignCenter (icons)",
         "TextAlignLeft (icons)",
+        "TextAlignRight (icons)",
         "TextT (icons)",
+        "X (icons)",
         "iconCopy (icons)",
         "iconDownload (icons)",
+        "iconExternal (icons)",
         "isTouchContextMenu (ContextMenu)",
         "useContextMenu (ContextMenu)"
       ],
@@ -6665,7 +6866,7 @@
       "kind": "overlay",
       "uiImports": [],
       "directImports": [
-        "Download (icons)",
+        "FileArrowDown (icons)",
         "ListEntryCard (ListEntryCard)"
       ],
       "lintCount": 0,
@@ -6681,6 +6882,21 @@
       "file": "InlineRenameField.tsx",
       "domain": "UI Library & Atoms",
       "kind": "shared-atom",
+      "uiImports": [],
+      "directImports": [],
+      "lintCount": 0,
+      "lintRules": [],
+      "lintSamples": [],
+      "fixedColorCount": 0,
+      "fixedColors": [],
+      "modalKind": null,
+      "bannerKind": null,
+      "driftCount": 0
+    },
+    {
+      "file": "InlineTagSuggestion.tsx",
+      "domain": "Auth, Security & Sync",
+      "kind": "editor-chrome",
       "uiImports": [],
       "directImports": [],
       "lintCount": 0,
@@ -6874,8 +7090,10 @@
       "lintCount": 0,
       "lintRules": [],
       "lintSamples": [],
-      "fixedColorCount": 0,
-      "fixedColors": [],
+      "fixedColorCount": 1,
+      "fixedColors": [
+        "text-neutral-400"
+      ],
       "modalKind": null,
       "bannerKind": null,
       "driftCount": 0
@@ -6902,7 +7120,7 @@
       "lintSamples": [
         {
           "rule": "hand-overlay",
-          "line": 276
+          "line": 296
         }
       ],
       "fixedColorCount": 0,
@@ -6982,14 +7200,21 @@
         "Prohibit (icons)",
         "X (icons)"
       ],
-      "lintCount": 0,
-      "lintRules": [],
-      "lintSamples": [],
+      "lintCount": 1,
+      "lintRules": [
+        "primary-btn-skin"
+      ],
+      "lintSamples": [
+        {
+          "rule": "primary-btn-skin",
+          "line": 7
+        }
+      ],
       "fixedColorCount": 0,
       "fixedColors": [],
       "modalKind": null,
       "bannerKind": null,
-      "driftCount": 0
+      "driftCount": 1
     },
     {
       "file": "ListGroupHeader.tsx",
@@ -7298,6 +7523,8 @@
       "kind": "list-card",
       "uiImports": [
         "Badge",
+        "Button",
+        "EmptyState",
         "ProgressBar",
         "Snackbar"
       ],
@@ -7452,7 +7679,8 @@
       "directImports": [
         "CaretDown (icons)",
         "HoverLabel (HoverLabel)",
-        "PlusCircle (icons)"
+        "PlusCircle (icons)",
+        "isTouchContextMenu (ContextMenu)"
       ],
       "lintCount": 0,
       "lintRules": [],
@@ -7744,7 +7972,6 @@
       "directImports": [
         "Book (icons)",
         "BookmarkSimple (icons)",
-        "CalendarPlus (icons)",
         "ChartBar (icons)",
         "CheckSquare (icons)",
         "CreditCard (icons)",
@@ -7758,7 +7985,6 @@
         "ListSearchInput (ListSearchInput)",
         "Lock (icons)",
         "LockSimple (icons)",
-        "NEW_GLYPHS (icons)",
         "Note (icons)",
         "NotePencil (icons)",
         "Notebook (icons)",
@@ -7816,6 +8042,7 @@
         "LockSimple (icons)",
         "LockSimpleOpen (icons)",
         "LogoIcon (LogoIcon)",
+        "NEW_GLYPHS (icons)",
         "PILLAR_GLYPHS (icons)",
         "Pause (icons)",
         "Play (icons)",
@@ -7845,11 +8072,11 @@
       "lintSamples": [
         {
           "rule": "filled-button",
-          "line": 8334
+          "line": 9042
         },
         {
           "rule": "button-no-icon",
-          "line": 8334
+          "line": 9042
         }
       ],
       "fixedColorCount": 0,
@@ -7870,14 +8097,21 @@
         "LogoIcon (LogoIcon)",
         "PRIMARY_BTN_SKIN (settingsUI)"
       ],
-      "lintCount": 0,
-      "lintRules": [],
-      "lintSamples": [],
+      "lintCount": 1,
+      "lintRules": [
+        "primary-btn-skin"
+      ],
+      "lintSamples": [
+        {
+          "rule": "primary-btn-skin",
+          "line": 8
+        }
+      ],
       "fixedColorCount": 0,
       "fixedColors": [],
       "modalKind": null,
       "bannerKind": null,
-      "driftCount": 0
+      "driftCount": 1
     },
     {
       "file": "Onboarding.tsx",
@@ -7888,6 +8122,7 @@
         "Button",
         "Callout",
         "Checkbox",
+        "IconButton",
         "IconTile",
         "StatusLine",
         "TextField"
@@ -7899,6 +8134,8 @@
         "Check (icons)",
         "ConfirmModal (ConfirmModal)",
         "Copy (icons)",
+        "Eye (icons)",
+        "EyeSlash (icons)",
         "FileText (icons)",
         "Fingerprint (icons)",
         "GithubIcon (providerIcons)",
@@ -7907,6 +8144,8 @@
         "KeyReturn (icons)",
         "Lock (icons)",
         "LogoIcon (LogoIcon)",
+        "NO_TEXT_ASSIST (formFields)",
+        "PHRASE_INPUT_IDLE_CLEAR_SECONDS (PhraseInput)",
         "PROVIDER_CONTINUE_KEY (providerIcons)",
         "PROVIDER_ORDER (providerIcons)",
         "Password (icons)",
@@ -7924,19 +8163,19 @@
       "lintSamples": [
         {
           "rule": "outlined-button",
-          "line": 563
+          "line": 596
         },
         {
           "rule": "outlined-button",
-          "line": 616
+          "line": 649
         },
         {
           "rule": "hand-choice-tile",
-          "line": 806
+          "line": 839
         },
         {
           "rule": "hand-choice-tile",
-          "line": 846
+          "line": 879
         }
       ],
       "fixedColorCount": 0,
@@ -8734,6 +8973,7 @@
         "FIELD_CLASS",
         "Kbd",
         "NATIVE_PHONE",
+        "SAFE_INSET_PAD",
         "WindowSizeButtons",
         "dockBackdropClass",
         "dockPanelClass",
@@ -8765,7 +9005,10 @@
       "domain": "Auth, Security & Sync",
       "kind": "overlay",
       "uiImports": [
+        "Button",
         "FIELD_CLASS",
+        "ProMark",
+        "Select",
         "SettingsSegmented",
         "TextField"
       ],
@@ -9129,11 +9372,11 @@
       "lintSamples": [
         {
           "rule": "outlined-button",
-          "line": 972
+          "line": 977
         },
         {
           "rule": "button-no-icon",
-          "line": 972
+          "line": 977
         }
       ],
       "fixedColorCount": 0,
@@ -9216,11 +9459,11 @@
       "lintSamples": [
         {
           "rule": "hand-spinner",
-          "line": 246
+          "line": 245
         },
         {
           "rule": "hand-spinner",
-          "line": 295
+          "line": 294
         }
       ],
       "fixedColorCount": 0,
@@ -9236,9 +9479,11 @@
       "uiImports": [],
       "directImports": [
         "ArrowsInSimple (icons)",
+        "Desktop (icons)",
         "Files (icons)",
         "ROW_TITLE (settingsUI)",
         "ResetDefaultsButton (settingsUI)",
+        "SETTINGS_GROUP (settingsUI)",
         "SectionEyebrow (settingsUI)",
         "SignIn (icons)",
         "Switch (Switch)",
@@ -9315,6 +9560,21 @@
       "driftCount": 0
     },
     {
+      "file": "TagSuggestionMenu.tsx",
+      "domain": "Auth, Security & Sync",
+      "kind": "popover-menu",
+      "uiImports": [],
+      "directImports": [],
+      "lintCount": 0,
+      "lintRules": [],
+      "lintSamples": [],
+      "fixedColorCount": 0,
+      "fixedColors": [],
+      "modalKind": null,
+      "bannerKind": null,
+      "driftCount": 0
+    },
+    {
       "file": "TagsRail.tsx",
       "domain": "Shell, Banners & Modals",
       "kind": "component",
@@ -9339,12 +9599,13 @@
         "ContextMenuItem (ContextMenu)",
         "Devices (icons)",
         "DotsThree (icons)",
-        "Download (icons)",
         "Eye (icons)",
         "File (icons)",
+        "FileArrowDown (icons)",
         "FileMd (icons)",
         "Folder (icons)",
         "FunnelSimple (icons)",
+        "Gear (icons)",
         "Hash (icons)",
         "HoverLabel (HoverLabel)",
         "Icon (icons)",
@@ -9461,11 +9722,16 @@
       "domain": "Settings, Themes & Plugins",
       "kind": "overlay",
       "uiImports": [
+        "Badge",
+        "Button",
         "Callout",
         "CloseButton",
         "FIELD_CLASS",
+        "IconButton",
         "IconUpgrade",
-        "TextField"
+        "SETTINGS_TRACK",
+        "TextField",
+        "settingsSegClass"
       ],
       "directImports": [
         "ArrowCounterClockwise (icons)",
@@ -9479,12 +9745,10 @@
         "MagicWand (icons)",
         "Moon (icons)",
         "NO_TEXT_ASSIST (formFields)",
-        "SETTINGS_BTN (settingsUI)",
-        "SETTINGS_BTN_PRIMARY (settingsUI)",
-        "SETTINGS_TRACK (settingsUI)",
         "Sun (icons)",
-        "Warning (icons)",
-        "settingsSegClass (settingsUI)"
+        "Trash (icons)",
+        "Upload (icons)",
+        "Warning (icons)"
       ],
       "lintCount": 0,
       "lintRules": [],
@@ -9609,8 +9873,10 @@
       "uiImports": [
         "Badge",
         "Button",
+        "Callout",
         "DeleteButton",
         "EditRow",
+        "FeedbackButton",
         "GlyphTile",
         "IconButton",
         "IconUpgrade",
@@ -10168,16 +10434,15 @@
       "domain": "Calendar, Home & Graph",
       "kind": "domain-widget",
       "uiImports": [
+        "Badge",
         "Button",
         "ContextMenu",
-        "DRAG_SOURCE",
-        "DropLine",
         "EmptyState",
         "GridCard",
         "IconButton",
         "ProMark",
+        "SettingsSegmented",
         "Snackbar",
-        "halfOf",
         "useContextMenu",
         "usePointerReorder"
       ],
@@ -10188,18 +10453,49 @@
         "ArrowUp (icons)",
         "Briefcase (icons)",
         "CalendarCheck (icons)",
+        "CaretLeft (icons)",
+        "CaretRight (icons)",
         "ClockClockwise (icons)",
+        "ContextMenuItem (ContextMenu)",
         "DotsSix (icons)",
+        "Heartbeat (icons)",
         "House (icons)",
         "HoverLabel (HoverLabel)",
+        "Icon (icons)",
+        "NEW_GLYPHS (icons)",
         "Notches (icons)",
         "NotePencil (icons)",
         "PILLAR_GLYPHS (icons)",
         "PenNib (icons)",
         "Plus (icons)",
         "SquaresFour (icons)",
-        "Trash (icons)"
+        "Trash (icons)",
+        "addDays (MonthGrid)",
+        "iconExternal (icons)",
+        "iconSettings (icons)",
+        "iconSidebar (icons)",
+        "iconZen (icons)",
+        "isTouchContextMenu (ContextMenu)",
+        "optsOutOfAppMenu (ContextMenu)",
+        "shouldUseBrowserDefault (ContextMenu)"
       ],
+      "lintCount": 0,
+      "lintRules": [],
+      "lintSamples": [],
+      "fixedColorCount": 0,
+      "fixedColors": [],
+      "modalKind": null,
+      "bannerKind": null,
+      "driftCount": 0
+    },
+    {
+      "file": "dashboard/GraphWidget.tsx",
+      "domain": "Calendar, Home & Graph",
+      "kind": "domain-widget",
+      "uiImports": [
+        "EmptyState"
+      ],
+      "directImports": [],
       "lintCount": 0,
       "lintRules": [],
       "lintSamples": [],
@@ -10225,22 +10521,76 @@
       "driftCount": 0
     },
     {
-      "file": "dashboard/WidgetCatalog.tsx",
+      "file": "dashboard/PlacesWidget.tsx",
       "domain": "Calendar, Home & Graph",
       "kind": "domain-widget",
       "uiImports": [
         "Button",
+        "EmptyState"
+      ],
+      "directImports": [],
+      "lintCount": 0,
+      "lintRules": [],
+      "lintSamples": [],
+      "fixedColorCount": 0,
+      "fixedColors": [],
+      "modalKind": null,
+      "bannerKind": null,
+      "driftCount": 0
+    },
+    {
+      "file": "dashboard/QuickCaptureWidget.tsx",
+      "domain": "Calendar, Home & Graph",
+      "kind": "domain-widget",
+      "uiImports": [
+        "Button",
+        "IconButton",
+        "StatusLine",
+        "TextField"
+      ],
+      "directImports": [
+        "Microphone (icons)",
+        "Record (icons)"
+      ],
+      "lintCount": 0,
+      "lintRules": [],
+      "lintSamples": [],
+      "fixedColorCount": 0,
+      "fixedColors": [],
+      "modalKind": null,
+      "bannerKind": null,
+      "driftCount": 0
+    },
+    {
+      "file": "dashboard/WidgetCatalog.tsx",
+      "domain": "Calendar, Home & Graph",
+      "kind": "domain-widget",
+      "uiImports": [
+        "Badge",
+        "Button",
+        "Checkbox",
+        "DeleteButton",
         "EmptyState",
         "Modal",
+        "ModalFooter",
+        "ProMark",
         "SETTINGS_HELP",
         "SectionEyebrow",
+        "SettingsSegmented",
         "useProGate"
       ],
       "directImports": [
+        "CalendarDots (icons)",
+        "ChartLineUp (icons)",
+        "Check (icons)",
         "Folder (icons)",
-        "HoverLabel (HoverLabel)",
+        "Graph (icons)",
+        "Hash (icons)",
+        "Icon (icons)",
+        "ListBullets (icons)",
         "ListSearchInput (ListSearchInput)",
-        "Minus (icons)",
+        "Package (icons)",
+        "SquaresFour (icons)",
         "Tag (icons)"
       ],
       "lintCount": 0,
@@ -10249,6 +10599,21 @@
       "fixedColorCount": 0,
       "fixedColors": [],
       "modalKind": "Modal",
+      "bannerKind": null,
+      "driftCount": 0
+    },
+    {
+      "file": "dashboard/WidgetPreview.tsx",
+      "domain": "Calendar, Home & Graph",
+      "kind": "domain-widget",
+      "uiImports": [],
+      "directImports": [],
+      "lintCount": 0,
+      "lintRules": [],
+      "lintSamples": [],
+      "fixedColorCount": 0,
+      "fixedColors": [],
+      "modalKind": null,
       "bannerKind": null,
       "driftCount": 0
     },
@@ -10268,13 +10633,22 @@
         "Fire (icons)",
         "Flag (icons)",
         "Folder (icons)",
+        "Graph (icons)",
+        "GridFour (icons)",
+        "HardDrives (icons)",
+        "Hash (icons)",
         "Icon (icons)",
+        "Lightning (icons)",
+        "ListBullets (icons)",
+        "MapPin (icons)",
         "NotePencil (icons)",
         "PILLAR_GLYPHS (icons)",
         "PenNib (icons)",
+        "Pill (icons)",
         "Pulse (icons)",
         "PushPin (icons)",
         "Smiley (icons)",
+        "Sparkle (icons)",
         "SquaresFour (icons)",
         "Tag (icons)"
       ],
@@ -10293,18 +10667,34 @@
       "kind": "domain-widget",
       "uiImports": [
         "Button",
+        "DeleteButton",
         "EmptyState",
+        "IconButton",
         "ProgressBar",
-        "TaskCheckbox"
+        "QuotaRing",
+        "SettingsTabStrip",
+        "Spinner",
+        "StatusLine",
+        "TaskCheckbox",
+        "TextField",
+        "settingsTabClass"
       ],
       "directImports": [
+        "ArrowCounterClockwise (icons)",
+        "ArrowRight (icons)",
+        "ArrowsClockwise (icons)",
         "BellSimple (icons)",
         "Cake (icons)",
+        "CalendarDot (icons)",
         "CalendarDots (icons)",
         "CheckFat (icons)",
         "FileImage (icons)",
         "FileText (icons)",
+        "LockSimple (icons)",
+        "Minus (icons)",
         "NotePencil (icons)",
+        "Plus (icons)",
+        "Sparkle (icons)",
         "StatTile (settingsUI)"
       ],
       "lintCount": 0,
@@ -10721,6 +11111,7 @@
         "TextSubscript (icons)",
         "TextSuperscript (icons)",
         "TextT (icons)",
+        "TextTSlash (icons)",
         "TextUnderline (icons)"
       ],
       "lintCount": 0,
@@ -10739,10 +11130,12 @@
       "uiImports": [
         "Badge",
         "CanvasControlBar",
+        "EmptyState",
         "IconButton"
       ],
       "directImports": [
         "CornersOut (icons)",
+        "Graph (icons)",
         "MagnifyingGlassMinus (icons)",
         "MagnifyingGlassPlus (icons)"
       ],
@@ -10765,23 +11158,31 @@
         "Callout",
         "CloseButton",
         "ContextMenu",
+        "DeleteButton",
+        "Disclosure",
         "Divider",
         "DockableWindow",
         "EmptyState",
         "FeedbackButton",
         "IconButton",
         "IconUpgrade",
+        "InlineRenameField",
         "Kbd",
         "ListSearchInput",
-        "Modal",
+        "PickerModal",
         "Popover",
         "RangeSlider",
         "SETTINGS_HELP",
+        "SETTINGS_TRACK",
         "SectionEyebrow",
         "SettingsSegmented",
+        "SettingsTabStrip",
         "Snackbar",
         "StatusLine",
         "Switch",
+        "TextField",
+        "settingsSegClass",
+        "settingsTabClass",
         "useContextMenu"
       ],
       "directImports": [
@@ -10792,9 +11193,11 @@
         "ArrowsOutSimple (icons)",
         "Browsers (icons)",
         "CaretDown (icons)",
-        "CaretRight (icons)",
+        "Check (icons)",
+        "CheckFat (icons)",
         "ClockCounterClockwise (icons)",
         "Columns (icons)",
+        "Compass (icons)",
         "Copy (icons)",
         "CornersOut (icons)",
         "Crosshair (icons)",
@@ -10805,16 +11208,21 @@
         "Intersect (icons)",
         "LinkSimple (icons)",
         "LockSimple (icons)",
+        "LockSimpleOpen (icons)",
         "MapPin (icons)",
         "NotePencil (icons)",
+        "Paperclip (icons)",
         "Pause (icons)",
         "PenNib (icons)",
+        "PencilSimple (icons)",
         "Play (icons)",
         "PushPin (icons)",
         "PushPinSlash (icons)",
         "ShieldCheck (icons)",
+        "SidebarSimple (icons)",
         "SlidersHorizontal (icons)",
         "Sparkle (icons)",
+        "Stack (icons)",
         "Tag (icons)",
         "Trash (icons)",
         "User (icons)",
@@ -10907,11 +11315,11 @@
         "Button",
         "Callout",
         "Checkbox",
-        "FIELD_CLASS",
         "IconUpgrade",
         "ListSearchInput",
         "Modal",
         "ModalFooter",
+        "PhraseInput",
         "Select",
         "Spinner",
         "TextField"
@@ -10925,11 +11333,10 @@
         "BracketsCurly (icons)",
         "CalendarDots (icons)",
         "CalendarPlus (icons)",
-        "Check (icons)",
-        "CircleNotch (icons)",
         "ClockCounterClockwise (icons)",
-        "Download (icons)",
         "EXPORT_GLYPHS (icons)",
+        "FileArrowDown (icons)",
+        "FileArrowUp (icons)",
         "FileHtml (icons)",
         "FileText (icons)",
         "FileZip (icons)",
@@ -10964,7 +11371,7 @@
       "lintSamples": [
         {
           "rule": "outlined-button",
-          "line": 2144
+          "line": 1924
         }
       ],
       "fixedColorCount": 0,
@@ -11030,7 +11437,6 @@
         "CloudSlash (icons)",
         "Icon (icons)",
         "Image (icons)",
-        "PILLAR_GLYPHS (icons)",
         "Paperclip (icons)",
         "PencilSimpleSlash (icons)",
         "PushPin (icons)",
@@ -11081,6 +11487,7 @@
       "directImports": [
         "AppWindow (icons)",
         "ArrowCounterClockwise (icons)",
+        "Check (icons)",
         "ColorSwatchRow (ColorSwatch)",
         "File (icons)",
         "Folder (icons)",
@@ -11088,6 +11495,7 @@
         "Hash (icons)",
         "HeadlineRule (settingsUI)",
         "Heartbeat (icons)",
+        "Image (icons)",
         "ListSearchInput (ListSearchInput)",
         "Palette (icons)",
         "SETTINGS_HELP (settingsUI)",
@@ -11096,6 +11504,9 @@
         "Shapes (icons)",
         "Star (icons)",
         "Switch (Switch)",
+        "Trash (icons)",
+        "Upload (icons)",
+        "X (icons)",
         "settingsSegClass (settingsUI)",
         "settingsTabClass (settingsUI)"
       ],
@@ -11163,8 +11574,8 @@
       "kind": "editor-chrome",
       "uiImports": [
         "Button",
+        "Popover",
         "RowTitle",
-        "SETTINGS_EYEBROW",
         "SETTINGS_HELP",
         "SETTINGS_ROW",
         "StatusLine"
@@ -11173,15 +11584,14 @@
         "ArrowSquareOut (icons)",
         "CheckCircle (icons)",
         "FileMd (icons)",
-        "FileText (icons)",
-        "PRIMARY_BTN_SKIN (settingsUI)"
+        "FileText (icons)"
       ],
       "lintCount": 0,
       "lintRules": [],
       "lintSamples": [],
       "fixedColorCount": 0,
       "fixedColors": [],
-      "modalKind": "popover-dialog",
+      "modalKind": null,
       "bannerKind": null,
       "driftCount": 0
     },
@@ -11190,15 +11600,14 @@
       "domain": "Editor, Drawing & Media",
       "kind": "editor-chrome",
       "uiImports": [
-        "Button"
+        "Button",
+        "SETTINGS_BTN_PRIMARY",
+        "TerminalBlock"
       ],
       "directImports": [
-        "Check (icons)",
-        "Copy (icons)",
         "Download (icons)",
         "FileText (icons)",
         "FolderOpen (icons)",
-        "PRIMARY_BTN_SKIN (settingsUI)",
         "SlidersHorizontal (icons)"
       ],
       "lintCount": 0,
@@ -11250,13 +11659,13 @@
       "uiImports": [
         "Banner",
         "FeedbackButton",
+        "IconButton",
         "SettingsSegmented"
       ],
       "directImports": [
         "ArrowLeft (icons)",
         "FileMd (icons)",
         "FileTxt (icons)",
-        "HoverLabel (HoverLabel)",
         "Lock (icons)",
         "MagnifyingGlass (icons)",
         "Swap (icons)",
@@ -11266,14 +11675,8 @@
       "lintCount": 0,
       "lintRules": [],
       "lintSamples": [],
-      "fixedColorCount": 5,
-      "fixedColors": [
-        "text-red-500",
-        "text-red-600",
-        "bg-red-500/10",
-        "text-red-400",
-        "text-red-300"
-      ],
+      "fixedColorCount": 0,
+      "fixedColors": [],
       "modalKind": null,
       "bannerKind": "ui-Banner",
       "driftCount": 0
@@ -11300,7 +11703,12 @@
       "file": "markdownFolder/MarkdownListPane.tsx",
       "domain": "Editor, Drawing & Media",
       "kind": "settings-pane",
-      "uiImports": [],
+      "uiImports": [
+        "HoverLabel",
+        "IconButton",
+        "ListSearchInput",
+        "SelectionCountStrip"
+      ],
       "directImports": [
         "ArrowsClockwise (icons)",
         "CheckSquare (icons)",
@@ -11309,10 +11717,7 @@
         "FileTxt (icons)",
         "Folder (icons)",
         "FunnelSimple (icons)",
-        "HoverLabel (HoverLabel)",
-        "ListSearchInput (ListSearchInput)",
         "Lock (icons)",
-        "NotePencil (icons)",
         "PILLAR_GLYPHS (icons)",
         "Question (icons)",
         "Trash (icons)",
@@ -11325,21 +11730,15 @@
       "lintSamples": [
         {
           "rule": "hand-spinner",
-          "line": 631
+          "line": 526
         },
         {
           "rule": "hand-spinner",
-          "line": 635
+          "line": 530
         }
       ],
-      "fixedColorCount": 5,
-      "fixedColors": [
-        "border-green-600/50",
-        "border-green-500/50",
-        "border-green-600",
-        "border-green-500",
-        "bg-green-600/5"
-      ],
+      "fixedColorCount": 0,
+      "fixedColors": [],
       "modalKind": null,
       "bannerKind": null,
       "driftCount": 2
@@ -11387,6 +11786,21 @@
       "uiImports": [
         "Callout"
       ],
+      "directImports": [],
+      "lintCount": 0,
+      "lintRules": [],
+      "lintSamples": [],
+      "fixedColorCount": 0,
+      "fixedColors": [],
+      "modalKind": null,
+      "bannerKind": null,
+      "driftCount": 0
+    },
+    {
+      "file": "noteBoyMark.tsx",
+      "domain": "Auth, Security & Sync",
+      "kind": "component",
+      "uiImports": [],
       "directImports": [],
       "lintCount": 0,
       "lintRules": [],
@@ -11529,6 +11943,7 @@
         "IconButton"
       ],
       "directImports": [
+        "BookOpen (icons)",
         "MagnifyingGlassMinus (icons)",
         "MagnifyingGlassPlus (icons)",
         "X (icons)",
@@ -11626,14 +12041,13 @@
         "ArrowCircleUp (icons)",
         "ArrowCounterClockwise (icons)",
         "ArrowLeft (icons)",
+        "ArrowRight (icons)",
         "ArrowUUpLeft (icons)",
         "ArrowUUpRight (icons)",
-        "ArrowsOut (icons)",
         "ArticleMedium (icons)",
+        "BookOpen (icons)",
         "CalendarDots (icons)",
         "CalendarPlus (icons)",
-        "CaretLeft (icons)",
-        "CaretRight (icons)",
         "DotsThreeOutlineVertical (icons)",
         "FrameCorners (icons)",
         "HoverLabel (HoverLabel)",
@@ -11730,7 +12144,6 @@
       "directImports": [
         "ClockCounterClockwise (icons)",
         "Copy (icons)",
-        "Folder (icons)",
         "PencilSimpleSlash (icons)",
         "Repeat (icons)",
         "Shield (icons)"
@@ -12228,14 +12641,21 @@
         "PRIMARY_BTN_SKIN (settingsUI)",
         "UpdateToast (UpdateToast)"
       ],
-      "lintCount": 0,
-      "lintRules": [],
-      "lintSamples": [],
+      "lintCount": 1,
+      "lintRules": [
+        "primary-btn-skin"
+      ],
+      "lintSamples": [
+        {
+          "rule": "primary-btn-skin",
+          "line": 2
+        }
+      ],
       "fixedColorCount": 0,
       "fixedColors": [],
       "modalKind": null,
       "bannerKind": null,
-      "driftCount": 0
+      "driftCount": 1
     },
     {
       "file": "notesView/useSpaceMoves.tsx",
@@ -12689,19 +13109,31 @@
       "domain": "Auth, Security & Sync",
       "kind": "settings-pane",
       "uiImports": [
+        "Badge",
         "Button",
         "Callout",
         "EmptyState",
         "FeedbackButton",
+        "FieldLabel",
+        "IconButton",
+        "IconTile",
         "Spinner",
         "TextField"
       ],
       "directImports": [
         "ConfirmModal (ConfirmModal)",
+        "DeviceMobile (icons)",
+        "Eye (icons)",
+        "EyeSlash (icons)",
         "HelpChip (HelpChip)",
+        "Key (icons)",
+        "Lock (icons)",
+        "NO_TEXT_ASSIST (formFields)",
         "Password (icons)",
+        "Plus (icons)",
         "SETTINGS_HELP (settingsUI)",
-        "SectionEyebrow (settingsUI)"
+        "SectionEyebrow (settingsUI)",
+        "ShieldCheck (icons)"
       ],
       "lintCount": 0,
       "lintRules": [],
@@ -13008,7 +13440,7 @@
       ],
       "directImports": [
         "ClockClockwise (icons)",
-        "CloudSlash (icons)",
+        "Devices (icons)",
         "Icon (icons)",
         "Question (icons)",
         "TIP_SKIN (HoverLabel)",
@@ -13368,6 +13800,66 @@
       "file": "swipeRow.tsx",
       "domain": "Lists, Cards & Menus",
       "kind": "list-card",
+      "uiImports": [],
+      "directImports": [],
+      "lintCount": 0,
+      "lintRules": [],
+      "lintSamples": [],
+      "fixedColorCount": 0,
+      "fixedColors": [],
+      "modalKind": null,
+      "bannerKind": null,
+      "driftCount": 0
+    },
+    {
+      "file": "themeLogos.tsx",
+      "domain": "Auth, Security & Sync",
+      "kind": "component",
+      "uiImports": [],
+      "directImports": [],
+      "lintCount": 0,
+      "lintRules": [],
+      "lintSamples": [],
+      "fixedColorCount": 0,
+      "fixedColors": [],
+      "modalKind": null,
+      "bannerKind": null,
+      "driftCount": 0
+    },
+    {
+      "file": "themeLogosCraft.tsx",
+      "domain": "Auth, Security & Sync",
+      "kind": "component",
+      "uiImports": [],
+      "directImports": [],
+      "lintCount": 0,
+      "lintRules": [],
+      "lintSamples": [],
+      "fixedColorCount": 0,
+      "fixedColors": [],
+      "modalKind": null,
+      "bannerKind": null,
+      "driftCount": 0
+    },
+    {
+      "file": "themeLogosPop.tsx",
+      "domain": "Auth, Security & Sync",
+      "kind": "component",
+      "uiImports": [],
+      "directImports": [],
+      "lintCount": 0,
+      "lintRules": [],
+      "lintSamples": [],
+      "fixedColorCount": 0,
+      "fixedColors": [],
+      "modalKind": null,
+      "bannerKind": null,
+      "driftCount": 0
+    },
+    {
+      "file": "themeLogosStudio.tsx",
+      "domain": "Auth, Security & Sync",
+      "kind": "component",
       "uiImports": [],
       "directImports": [],
       "lintCount": 0,
@@ -13779,6 +14271,24 @@
       "uiImports": [],
       "directImports": [
         "NO_TEXT_ASSIST (formFields)"
+      ],
+      "lintCount": 0,
+      "lintRules": [],
+      "lintSamples": [],
+      "fixedColorCount": 0,
+      "fixedColors": [],
+      "modalKind": null,
+      "bannerKind": null,
+      "driftCount": 0
+    },
+    {
+      "file": "typeMark.tsx",
+      "domain": "Auth, Security & Sync",
+      "kind": "component",
+      "uiImports": [],
+      "directImports": [
+        "Icon (icons)",
+        "PILLAR_GLYPHS (icons)"
       ],
       "lintCount": 0,
       "lintRules": [],
@@ -14685,7 +15195,7 @@
       "path": "Settings > Statistics > Mood > Year in pixels",
       "gate": "all",
       "anchors": [
-        "stats/YearInPixels.tsx:101"
+        "stats/YearInPixels.tsx:183"
       ]
     },
     {
@@ -14862,7 +15372,7 @@
       "path": "Settings > Transfer > Import > Webcal",
       "gate": "all",
       "anchors": [
-        "import/ImportModal.tsx:1390"
+        "import/ImportModal.tsx:1185"
       ]
     },
     {
@@ -15190,7 +15700,7 @@
       "path": "Settings > Backup > Restore > Full backup (.zip)",
       "gate": "all",
       "anchors": [
-        "import/ImportModal.tsx:1479"
+        "import/ImportModal.tsx:1267"
       ]
     },
     {
@@ -15201,7 +15711,7 @@
       "path": "Settings > Backup > Restore > Encrypted backup (.pnbackup, .pnbackupz)",
       "gate": "all",
       "anchors": [
-        "import/ImportModal.tsx:1490"
+        "import/ImportModal.tsx:1278"
       ]
     },
     {
@@ -15364,8 +15874,8 @@
       "path": "Settings > Account > Registered devices",
       "gate": "all",
       "anchors": [
-        "SyncOptionsModal.tsx:1255",
-        "SyncOptionsModal.tsx:1260"
+        "SyncOptionsModal.tsx:1260",
+        "SyncOptionsModal.tsx:1265"
       ]
     },
     {
@@ -15376,7 +15886,7 @@
       "path": "Settings > Account > Upgrade to Pro",
       "gate": "all",
       "anchors": [
-        "SyncOptionsModal.tsx:1366"
+        "SyncOptionsModal.tsx:1371"
       ]
     },
     {
@@ -15387,7 +15897,7 @@
       "path": "Settings > Account > Restore purchases",
       "gate": "storeBuild",
       "anchors": [
-        "SyncOptionsModal.tsx:697"
+        "SyncOptionsModal.tsx:702"
       ]
     },
     {
@@ -15398,7 +15908,7 @@
       "path": "Settings > Account > Sign out",
       "gate": "all",
       "anchors": [
-        "SyncOptionsModal.tsx:1379"
+        "SyncOptionsModal.tsx:1384"
       ]
     },
     {
@@ -15409,7 +15919,7 @@
       "path": "Settings > Account > Danger zone",
       "gate": "all",
       "anchors": [
-        "DangerZone.tsx:356"
+        "DangerZone.tsx:296"
       ]
     },
     {
@@ -15420,7 +15930,7 @@
       "path": "Settings > Storage > All your encrypted data",
       "gate": "all",
       "anchors": [
-        "SyncOptionsModal.tsx:753"
+        "SyncOptionsModal.tsx:758"
       ]
     },
     {
@@ -15431,7 +15941,7 @@
       "path": "Settings > Storage > Storage add-on",
       "gate": "all",
       "anchors": [
-        "SyncOptionsModal.tsx:780"
+        "SyncOptionsModal.tsx:785"
       ]
     },
     {
@@ -15516,7 +16026,7 @@
       "path": "Settings > Security > PIN",
       "gate": "all",
       "anchors": [
-        "SecurityModal.tsx:110"
+        "SecurityModal.tsx:112"
       ]
     },
     {
@@ -15549,7 +16059,7 @@
       "path": "Settings > Security > Lock",
       "gate": "all",
       "anchors": [
-        "SecurityModal.tsx:114"
+        "SecurityModal.tsx:116"
       ]
     },
     {
@@ -15626,7 +16136,7 @@
       "path": "Settings > Security > Your phrase",
       "gate": "all",
       "anchors": [
-        "SecurityModal.tsx:118"
+        "SecurityModal.tsx:120"
       ]
     },
     {
@@ -15637,7 +16147,7 @@
       "path": "Settings > Security > 2FA / Passkeys > Passkeys",
       "gate": "all",
       "anchors": [
-        "SecurityModal.tsx:141"
+        "SecurityModal.tsx:143"
       ]
     },
     {
@@ -15648,7 +16158,7 @@
       "path": "Settings > Security > 2FA / Passkeys > 2FA",
       "gate": "realAccount",
       "anchors": [
-        "SecurityModal.tsx:122"
+        "SecurityModal.tsx:124"
       ]
     },
     {
@@ -15770,7 +16280,7 @@
       "path": "Settings > Lists > Reopen where I left off",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1594"
+        "AppearanceSheet.tsx:1863"
       ]
     },
     {
@@ -15781,7 +16291,7 @@
       "path": "Settings > Lists > Show the open item in a tab",
       "gate": "paneLayout",
       "anchors": [
-        "AppearanceSheet.tsx:1656"
+        "AppearanceSheet.tsx:1925"
       ]
     },
     {
@@ -15792,7 +16302,7 @@
       "path": "Settings > Design > Mode",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:947"
+        "AppearanceSheet.tsx:990"
       ]
     },
     {
@@ -15803,7 +16313,7 @@
       "path": "Settings > Design > Light themes",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:967"
+        "AppearanceSheet.tsx:1010"
       ]
     },
     {
@@ -15814,7 +16324,7 @@
       "path": "Settings > Design > New theme",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:970"
+        "AppearanceSheet.tsx:1013"
       ]
     },
     {
@@ -15829,6 +16339,17 @@
       ]
     },
     {
+      "id": "appearance.themeIcons",
+      "name": "Theme app icons",
+      "section": "Design",
+      "tab": null,
+      "path": "Settings > Design > Theme app icons",
+      "gate": "all",
+      "anchors": [
+        "AppearanceSheet.tsx:1196"
+      ]
+    },
+    {
       "id": "appearance.tintNotes",
       "name": "Folder and tag colors",
       "section": "Design",
@@ -15836,7 +16357,7 @@
       "path": "Settings > Design > Folder and tag colors",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1089"
+        "AppearanceSheet.tsx:1210"
       ]
     },
     {
@@ -15847,7 +16368,7 @@
       "path": "Settings > Editor > Text size",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1147"
+        "AppearanceSheet.tsx:1268"
       ]
     },
     {
@@ -15858,7 +16379,7 @@
       "path": "Settings > Editor > Line spacing",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1154"
+        "AppearanceSheet.tsx:1275"
       ]
     },
     {
@@ -15869,7 +16390,7 @@
       "path": "Settings > Editor > Editor width",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1279"
+        "AppearanceSheet.tsx:1400"
       ]
     },
     {
@@ -15880,7 +16401,7 @@
       "path": "Settings > Editor > Editor",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1291"
+        "AppearanceSheet.tsx:1412"
       ]
     },
     {
@@ -15891,7 +16412,7 @@
       "path": "Settings > Editor > Behavior > Open notes read-only",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1351"
+        "AppearanceSheet.tsx:1572"
       ]
     },
     {
@@ -15902,7 +16423,7 @@
       "path": "Settings > Editor > Behavior > Copied text",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1366"
+        "AppearanceSheet.tsx:1587"
       ]
     },
     {
@@ -15913,7 +16434,7 @@
       "path": "Settings > Editor > Behavior > Pasted text",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1390"
+        "AppearanceSheet.tsx:1611"
       ]
     },
     {
@@ -15924,7 +16445,7 @@
       "path": "Settings > Editor > Invisible characters",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1319"
+        "AppearanceSheet.tsx:1440"
       ]
     },
     {
@@ -15935,7 +16456,18 @@
       "path": "Settings > Editor > Line numbers",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1332"
+        "AppearanceSheet.tsx:1453"
+      ]
+    },
+    {
+      "id": "appearance.pageNumbers",
+      "name": "Page numbers",
+      "section": "Editor",
+      "tab": null,
+      "path": "Settings > Editor > Page numbers",
+      "gate": "all",
+      "anchors": [
+        "AppearanceSheet.tsx:1467"
       ]
     },
     {
@@ -15946,7 +16478,7 @@
       "path": "Settings > Editor > Behavior > Open links with Cmd or Ctrl-click",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1414"
+        "AppearanceSheet.tsx:1635"
       ]
     },
     {
@@ -15957,7 +16489,7 @@
       "path": "Settings > Editor > Behavior > Turn typed symbols into arrows and math signs",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1428"
+        "AppearanceSheet.tsx:1649"
       ]
     },
     {
@@ -15968,7 +16500,7 @@
       "path": "Settings > Editor > Behavior > Suggested connections",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1445"
+        "AppearanceSheet.tsx:1666"
       ]
     },
     {
@@ -15979,7 +16511,7 @@
       "path": "Settings > Editor > Behavior > Smart connections",
       "gate": "plugins",
       "anchors": [
-        "AppearanceSheet.tsx:450"
+        "AppearanceSheet.tsx:463"
       ]
     },
     {
@@ -16061,7 +16593,7 @@
       "path": "Settings > Editor > Note font",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1189"
+        "AppearanceSheet.tsx:1310"
       ]
     },
     {
@@ -16072,7 +16604,7 @@
       "path": "Settings > Editor > Nested numbers",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1220"
+        "AppearanceSheet.tsx:1341"
       ]
     },
     {
@@ -16083,7 +16615,7 @@
       "path": "Settings > Lists > Website icons",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1674"
+        "AppearanceSheet.tsx:1943"
       ]
     },
     {
@@ -16094,7 +16626,7 @@
       "path": "Settings > Toolbar > Toolbar",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1818"
+        "AppearanceSheet.tsx:2087"
       ]
     },
     {
@@ -16105,7 +16637,7 @@
       "path": "Settings > Lists > Show when app opens",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1554"
+        "AppearanceSheet.tsx:1823"
       ]
     },
     {
@@ -16116,7 +16648,7 @@
       "path": "Settings > Lists > Show items as",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1605"
+        "AppearanceSheet.tsx:1874"
       ]
     },
     {
@@ -16127,7 +16659,7 @@
       "path": "Settings > Editor > Behavior > Ask before deleting",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1463"
+        "AppearanceSheet.tsx:1684"
       ]
     },
     {
@@ -16138,7 +16670,7 @@
       "path": "Settings > Editor > Behavior > Ask before archiving",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1476"
+        "AppearanceSheet.tsx:1697"
       ]
     },
     {
@@ -16149,7 +16681,7 @@
       "path": "Settings > Editor > Behavior > Automatically add my location",
       "gate": "phoneApp",
       "anchors": [
-        "AppearanceSheet.tsx:1496"
+        "AppearanceSheet.tsx:1717"
       ]
     },
     {
@@ -16160,7 +16692,7 @@
       "path": "Settings > Editor > Behavior > New journal entries",
       "gate": "phoneApp",
       "anchors": [
-        "AppearanceSheet.tsx:1502"
+        "AppearanceSheet.tsx:1723"
       ]
     },
     {
@@ -16171,7 +16703,7 @@
       "path": "Settings > Editor > Behavior > Confetti when checked",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1517"
+        "AppearanceSheet.tsx:1738"
       ]
     },
     {
@@ -16182,7 +16714,18 @@
       "path": "Settings > Editor > Behavior > Move checked items down",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1527"
+        "AppearanceSheet.tsx:1748"
+      ]
+    },
+    {
+      "id": "appearance.checkedTaskStyle",
+      "name": "Checked items",
+      "section": "Editor",
+      "tab": "Behavior",
+      "path": "Settings > Editor > Behavior > Checked items",
+      "gate": "all",
+      "anchors": [
+        "AppearanceSheet.tsx:1757"
       ]
     },
     {
@@ -16193,7 +16736,7 @@
       "path": "Settings > System > Open with PrivacyNotes",
       "gate": "desktopApp",
       "anchors": [
-        "SystemPane.tsx:83"
+        "SystemPane.tsx:98"
       ]
     },
     {
@@ -16204,7 +16747,7 @@
       "path": "Settings > System > Open at login",
       "gate": "desktopApp",
       "anchors": [
-        "SystemPane.tsx:29"
+        "SystemPane.tsx:32"
       ]
     },
     {
@@ -16215,7 +16758,18 @@
       "path": "Settings > System > Start minimized",
       "gate": "desktopApp",
       "anchors": [
-        "SystemPane.tsx:40"
+        "SystemPane.tsx:45"
+      ]
+    },
+    {
+      "id": "system.appIcon",
+      "name": "App icon",
+      "section": "System",
+      "tab": null,
+      "path": "Settings > System > App icon",
+      "gate": "desktopApp",
+      "anchors": [
+        "AppIconPicker.tsx:256"
       ]
     },
     {
@@ -16226,7 +16780,7 @@
       "path": "Settings > System > Keep running in the tray",
       "gate": "desktopApp",
       "anchors": [
-        "SystemPane.tsx:70"
+        "SystemPane.tsx:82"
       ]
     },
     {
@@ -16248,7 +16802,7 @@
       "path": "Settings > Trackers > General > Choose trackers",
       "gate": "all",
       "anchors": [
-        "TrackerConfig.tsx:229"
+        "TrackerConfig.tsx:250"
       ]
     },
     {
@@ -16259,7 +16813,7 @@
       "path": "Settings > Trackers > General > Habit questions",
       "gate": "all",
       "anchors": [
-        "TrackerConfig.tsx:254"
+        "TrackerConfig.tsx:275"
       ]
     },
     {
@@ -16270,7 +16824,7 @@
       "path": "Settings > Trackers > General > Add habit",
       "gate": "all",
       "anchors": [
-        "TrackerConfig.tsx:330"
+        "TrackerConfig.tsx:351"
       ]
     },
     {
@@ -16281,7 +16835,7 @@
       "path": "Settings > Trackers > Custom > Custom trackers",
       "gate": "all",
       "anchors": [
-        "TrackerConfig.tsx:438"
+        "TrackerConfig.tsx:459"
       ]
     },
     {
@@ -16292,7 +16846,7 @@
       "path": "Settings > Trackers > Factors > Your factors",
       "gate": "all",
       "anchors": [
-        "TrackerConfig.tsx:545"
+        "TrackerConfig.tsx:582"
       ]
     },
     {
@@ -16303,7 +16857,7 @@
       "path": "Settings > Trackers > Medication > Your medications",
       "gate": "all",
       "anchors": [
-        "TrackerConfig.tsx:647"
+        "TrackerConfig.tsx:714"
       ]
     },
     {
@@ -16314,7 +16868,7 @@
       "path": "Settings > Trackers > Medication > Medication card",
       "gate": "all",
       "anchors": [
-        "TrackerConfig.tsx:652"
+        "TrackerConfig.tsx:733"
       ]
     },
     {
@@ -16325,7 +16879,7 @@
       "path": "Settings > Lists > Spaces",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1633"
+        "AppearanceSheet.tsx:1902"
       ]
     },
     {
@@ -16336,7 +16890,7 @@
       "path": "Settings > Lists > Sidebar and All",
       "gate": "all",
       "anchors": [
-        "AppearanceSheet.tsx:1726"
+        "AppearanceSheet.tsx:1995"
       ]
     },
     {
@@ -16457,7 +17011,7 @@
       "path": "Settings > Trackers > General > Daily check-in reminder",
       "gate": "all",
       "anchors": [
-        "TrackerConfig.tsx:846"
+        "TrackerConfig.tsx:931"
       ]
     },
     {
@@ -16541,7 +17095,7 @@
       "path": "Settings > Extension > Install the extension",
       "gate": "all",
       "anchors": [
-        "BrowserPane.tsx:392"
+        "BrowserPane.tsx:394"
       ]
     },
     {
@@ -16552,7 +17106,7 @@
       "path": "Settings > Extension > Choose what it can do",
       "gate": "realAccount",
       "anchors": [
-        "BrowserPane.tsx:202"
+        "BrowserPane.tsx:203"
       ]
     },
     {
@@ -16563,7 +17117,7 @@
       "path": "Settings > Extension > Make a code",
       "gate": "realAccount",
       "anchors": [
-        "BrowserPane.tsx:213"
+        "BrowserPane.tsx:214"
       ]
     },
     {

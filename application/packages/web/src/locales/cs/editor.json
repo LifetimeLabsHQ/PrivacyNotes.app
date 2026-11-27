@@ -205,6 +205,7 @@
     "cut": "Vyjmout",
     "copyAsPlain": "Kopírovat jako prostý text",
     "copyAsMarkdown": "Kopírovat jako Markdown",
+    "clearFormatting": "Vymazat formátování",
     "sortAsc": "Seřadit řádky od A do Z",
     "sortDesc": "Seřadit řádky od Z do A"
   },
@@ -284,6 +285,9 @@
   "inlineCode": {
     "copyHint": "{{key}}+klik zkopíruje"
   },
+  "inlineTag": {
+    "filter": "Filtrovat podle značky"
+  },
   "codeBlock": {
     "copyFailed": "Nepovedlo se",
     "wrap": "Zalamovat dlouhé řádky",
@@ -314,7 +318,8 @@
     "linkHeading": "Odkázat na nadpis...",
     "headingNotFound": "Nadpis nenalezen",
     "headingsLocked": "Nadpisy uvidíš po odemčení poznámky",
-    "noHeadings": "Tato poznámka nemá nadpisy"
+    "noHeadings": "Tato poznámka nemá nadpisy",
+    "notFound": "Poznámka nenalezena"
   },
   "footnote": {
     "placeholder": "Text poznámky",

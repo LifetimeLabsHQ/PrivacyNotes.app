@@ -207,7 +207,7 @@
     "color": "Farbe",
     "colorNone": "Keine Farbe",
     "colorUseDefault": "Standard verwenden",
-    "icon": "Symbole und Logos",
+    "icon": "Symbole / Logos / Emojis",
     "colorFromFolder": "Aus Ordner: {{name}}",
     "colorFromTag": "Aus Tag: #{{name}}",
     "colorOwnHint": "Eine hier gewählte Farbe füllt den Hintergrund dieser Notiz. <setting>Ordner- und Tag-Farben</setting> ändern sie nicht.",
@@ -365,6 +365,7 @@
   },
   "demoBanner": {
     "title": "Ohne Risiko ausprobieren",
+    "shortTitle": "Demo",
     "description": "Hier wird nichts gespeichert. Hol dir dein eigenes verschlüsseltes Notizbuch, kostenlos."
   },
   "markdown": {
@@ -627,6 +628,10 @@
     "tooLarge": "Zu groß. Maximal {{limit}} MB pro Datei.",
     "titlePlaceholder": "Titel (optional)",
     "notePlaceholder": "Notiz hinzufügen...",
+    "taskPlaceholder": "Aufgabe...",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "Wird an den heutigen Tagebucheintrag angehängt.",
+    "clipFallbackToast": "Die Seite konnte nicht geclippt werden. Stattdessen als Lesezeichen gespeichert.",
     "photoCount": "{{count}} Fotos"
   },
   "shortcut": {
@@ -958,7 +963,8 @@
     "label": "Schnell hinzufügen"
   },
   "offline": {
-    "notLoaded": "Du bist offline, und dieser Teil der App ist noch nicht geladen. Versuch es erneut, sobald du wieder online bist."
+    "notLoaded": "Du bist offline, und dieser Teil der App ist noch nicht geladen. Versuch es erneut, sobald du wieder online bist.",
+    "chunkBlocked": "Diese Ansicht konnte nicht geladen werden. Lade die Seite neu oder prüfe deinen Inhaltsblocker."
   },
   "checkIn": {
     "prompt": "Wie geht es dir heute?",
@@ -1136,6 +1142,7 @@
     "removed": "Von der Startseite entfernt",
     "showOnHome": "Auf der Startseite anzeigen",
     "removeFromHome": "Von der Startseite entfernen",
+    "openTarget": "{{target}} öffnen",
     "resize": "Größe von {{name}} ändern",
     "narrower": "Schmaler",
     "taller": "Höher",
@@ -1143,29 +1150,75 @@
     "moveEarlier": "Nach vorne",
     "moveLater": "Nach hinten",
     "chooseNote": "Notiz wählen",
+    "chooseNotes": "Notizen wählen",
     "chooseTag": "Tag wählen",
+    "chooseTags": "Tags wählen",
     "chooseFolder": "Ordner wählen",
+    "chooseFolders": "Ordner wählen",
     "chooseTracker": "Tracker wählen",
+    "chooseCounter": "Zähler wählen",
+    "chooseCounters": "Zähler wählen",
+    "chooseTypes": "Eintragstypen wählen",
     "choose": "Wählen",
     "gone": "Nicht mehr vorhanden",
     "otherSpace": "Im anderen Bereich",
     "proLocked": "Teil von Pro",
     "noneToChoose": "Noch nichts zur Auswahl",
+    "catalogSearch": "Widgets suchen",
+    "catalogFilter": "Widgets filtern",
+    "allWidgets": "Alle Widgets",
+    "onHomeLabel": "Auf der Startseite",
+    "onHomeCount": "Auf der Startseite ({{count}})",
     "headerEvents_other": "{{formatted}} Termine heute",
+    "headerOverdue_other": "{{formatted}} überfällig",
+    "headerOverdue_one": "{{formatted}} überfällig",
     "headerTasks_other": "{{formatted}} offene Aufgaben",
+    "headerDosesLeft_other": "{{formatted}} Dosen übrig",
+    "headerDosesLeft_one": "{{formatted}} Dosis übrig",
     "startToday": "Heutigen Eintrag beginnen",
+    "setupMedication": "Medikation einrichten",
+    "setupCounter": "Zähler erstellen",
+    "counterIncrease": "Eins zu {{name}} hinzufügen",
+    "counterDecrease": "Eins von {{name}} abziehen",
+    "storageSummary": "{{notes}} Notizen · {{files}} Dateien",
+    "graphSummary": "{{linked}} verlinkt · {{orphans}} nicht verlinkt",
+    "placesSummary_other": "{{count}} Einträge mit Ort",
+    "quickCapture": {
+      "placeholderJournal": "Zum heutigen Tagebucheintrag hinzufügen...",
+      "placeholderTask": "Aufgabe hinzufügen...",
+      "placeholderNote": "Schnellnotiz schreiben...",
+      "destination": "Speicherort",
+      "voice": "Sprachnotiz aufnehmen",
+      "voiceNoteTitle": "Sprachnotiz",
+      "recording": "Aufnahme {{duration}}",
+      "savingVoice": "Sprachnotiz wird verschlüsselt...",
+      "savedTo": "Gespeichert in {{title}}",
+      "failed": "Konnte gerade nicht gespeichert werden.",
+      "micUnavailable": "Mikrofonaufnahme ist hier nicht verfügbar.",
+      "micDenied": "Der Zugriff aufs Mikrofon wurde verweigert."
+    },
+    "placesSummary_one": "{{count}} Eintrag mit Ort",
     "groups": {
-      "keep": "Was du aufbewahrst"
+      "graph": "Graph & Karten",
+      "keep": "Extras"
     },
     "layout": {
       "everyday": "Alltag",
       "planner": "Planung",
-      "writer": "Schreiben"
+      "writer": "Schreiben",
+      "wellness": "Wohlbefinden"
     },
     "w": {
       "checkIn": {
         "name": "Check-in",
         "help": "Wie es dir heute geht, und deine Tracker"
+      },
+      "medication": {
+        "help": "Heutige Dosen, Eingenommen oder Überspringen, und Erinnerungen zum Nachkaufen"
+      },
+      "quickCapture": {
+        "name": "Schnellerfassung",
+        "help": "Text oder eine Sprachnotiz direkt von der Startseite hinzufügen"
       },
       "calendar": {
         "help": "Der Monat, mit Punkten für Einträge und Termine"
@@ -1180,7 +1233,7 @@
       },
       "tasks": {
         "name": "Offene Aufgaben",
-        "help": "Nicht abgehakte Aufgaben aus deinen Notizen"
+        "help": "Überfällige und fällige Aufgaben zuerst, mit Schnell hinzufügen"
       },
       "recent": {
         "name": "Zuletzt bearbeitet",
@@ -1201,9 +1254,19 @@
         "name": "Ein Ordner",
         "help": "Die neuesten Einträge in einem Ordner"
       },
+      "types": {
+        "name": "Eintragsliste",
+        "help": "Die neuesten Einträge der Typen deiner Wahl"
+      },
       "onThisDay": {
         "name": "An diesem Tag",
         "help": "Tagebucheinträge aus früheren Jahren"
+      },
+      "graph": {
+        "help": "Live-Minikarte der verlinkten Notizen in deinem Tresor"
+      },
+      "places": {
+        "help": "Deine Notizen, Einträge und Kontakte mit Ort auf einer Karte"
       },
       "week": {
         "help": "Wörter, aktive Tage, Einträge und Check-ins"
@@ -1218,6 +1281,12 @@
         "name": "Dein Rhythmus",
         "help": "26 Wochen Schreiben und Stimmung"
       },
+      "yearPixels": {
+        "help": "Dein ganzes Jahr in Stimmungsfarben auf einen Blick"
+      },
+      "patterns": {
+        "help": "Was deine Stimmung am stärksten hebt oder senkt"
+      },
       "milestone": {
         "name": "Nächster Meilenstein",
         "help": "Wie nah der nächste ist"
@@ -1225,6 +1294,9 @@
       "tracker": {
         "name": "Ein Tracker",
         "help": "Ein Tracker: seine Zahl und seine Tage"
+      },
+      "counter": {
+        "help": "Tippe +1 direkt auf der Startseite für einen eigenen Zähler"
       },
       "weekRecap": {
         "help": "Deine Woche auf einer Karte"
@@ -1238,9 +1310,13 @@
       },
       "birthdays": {
         "help": "Geburtstage in den nächsten 30 Tagen"
+      },
+      "storage": {
+        "help": "Dein verschlüsselter Speicherring, mit Neuzählung"
       }
     },
     "empty": {
+      "medication": "Heute sind keine Medikamente fällig",
       "upcoming": "Nichts in den nächsten 7 Tagen",
       "tasks": "Keine offenen Aufgaben",
       "recent": "Noch nichts hier",
@@ -1248,6 +1324,11 @@
       "tag": "Keine Einträge mit diesem Tag",
       "folder": "Nichts in diesem Ordner",
       "onThisDay": "Keine Einträge an diesem Tag in früheren Jahren",
+      "graph": "Verlinke zwei Notizen, um hier deinen Graph zu sehen",
+      "places": "Füge einer Notiz oder einem Kontakt einen Standort hinzu, um hier Markierungen zu sehen",
+      "yearPixels": "Erfasse deine Stimmung, um das Jahr einzufärben",
+      "patterns": "Erfasse noch ein paar Tage, um Muster zu erkennen",
+      "counter": "Noch keine Zähler-Tracker",
       "files": "Noch keine Dateien",
       "bookmarks": "Noch keine Lesezeichen",
       "birthdays": "Keine Geburtstage in den nächsten 30 Tagen",

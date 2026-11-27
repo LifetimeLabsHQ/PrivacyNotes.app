@@ -168,6 +168,7 @@ const PHOSPHOR_WEIGHTS = ['thin', 'light', 'regular', 'bold', 'fill', 'duotone']
 const PHOSPHOR_DROP_WEIGHTS: readonly string[] = ['thin', 'light'];
 const PHOSPHOR_KEEP_WEIGHTS: Record<string, readonly string[]> = {
   ArticleMedium: ['light'],
+  BookOpen: ['light'],
   Hash: ['light'],
   PushPin: ['light'],
   TextAa: ['light'],
@@ -1022,8 +1023,10 @@ export default defineConfig({
               // signed inbox row (ML-KEM-768) is another such entry, loaded
               // only by a dynamic import (inbox-signed-hybrid.md section 4),
               // and so is the minisign check (minisign.js, with BLAKE2b), which
-              // loads only when an update policy has a signature to check.
-              test: /[\\/](?:packages|node_modules)[\\/]shared[\\/]dist[\\/](?!extension\.js|inboxSigned\.js|minisign\.js)/,
+              // loads only when an update policy has a signature to check, and
+              // the passkey password KDF (passkeyKdf.js, with scrypt), which
+              // loads only when adding or opening a non-PRF sign-in passkey.
+              test: /[\\/](?:packages|node_modules)[\\/]shared[\\/]dist[\\/](?!extension\.js|inboxSigned\.js|minisign\.js|passkeyKdf\.js)/,
             },
           ],
         },

@@ -88,12 +88,22 @@ export class ImportBudgetError extends ImportTooLargeError {}
 /** What one import may read across the whole file (see the header). */
 export class ImportBudget {
   private spent = 0;
-  constructor(private readonly limit = IMPORT_TEXT_LIMIT) {}
+  private entries = 0;
+  constructor(
+    private readonly limit = IMPORT_TEXT_LIMIT,
+    private readonly entryLimit = IMPORT_ENTRY_LIMIT,
+  ) {}
 
   /** Counts `bytes` read; throws once the total passes the limit. */
   spend(bytes: number): void {
     this.spent += bytes;
     if (this.spent > this.limit) throw new ImportBudgetError(msg('importTooLarge', { limit: formatBytes(this.limit) }));
+  }
+
+  /** Counts `count` zip entries; throws once the total passes the entry limit. */
+  spendEntries(count: number): void {
+    if (count > 0) this.entries += count;
+    if (this.entries > this.entryLimit) throw new ImportBudgetError(msg('tooManyEntries', { max: this.entryLimit }));
   }
 }
 
@@ -101,16 +111,11 @@ export class ImportBudget {
 const entryBudgets = new WeakMap<JSZip.JSZipObject, ImportBudget>();
 
 /** One budget for every entry of `zip`, refused past `IMPORT_ENTRY_LIMIT` entries. */
-export function budgetZip(zip: JSZip, budget = new ImportBudget()): JSZip {
+export function budgetZip(zip: JSZip, budget = new ImportBudget(), alreadyCounted = 0): JSZip {
   const entries = Object.values(zip.files);
-  refuseEntryCount(entries.length);
+  budget.spendEntries(Math.max(0, entries.length - alreadyCounted));
   for (const entry of entries) entryBudgets.set(entry, budget);
   return zip;
-}
-
-/** Refuses a zip that lists more entries than any real export. */
-export function refuseEntryCount(count: number): void {
-  if (count > IMPORT_ENTRY_LIMIT) throw new ImportBudgetError(msg('tooManyEntries', { max: IMPORT_ENTRY_LIMIT }));
 }
 
 function tooLarge(name: string, limit: number, size?: number): ImportTooLargeError {

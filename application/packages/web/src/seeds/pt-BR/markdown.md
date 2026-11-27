@@ -15,7 +15,7 @@ Pode ficar ==destacado em amarelo== ou <mark style="background-color: rgba(64, 1
 
 Um spoiler esconde palavras até alguém clicar nelas: o presente é ||uma vitrola||. Selecione as palavras e escolha **Spoiler** no menu **Inserir**, ou digite duas barras de cada lado.
 
-Um ícone ou um logo pode ficar no meio do texto, como :icon[gift] :icon[coffee] :icon[rocket-launch] ou :logo[github]. Escolha um em **Inserir** > **Ícones e logos**.
+Um ícone ou um logo pode ficar no meio do texto, como :icon[gift] :icon[coffee] :icon[rocket-launch] ou :logo[github]. Escolha um em **Inserir** > **Ícones / logos / emojis**.
 
 O botão **Aa** muda o tamanho e a fonte. O texto pode ser <span style="font-size: 0.85em">pequeno</span>, normal ou <span style="font-size: 1.6em">grande</span>. Pode ser <span style="font-family: ui-sans-serif, system-ui, sans-serif">simples</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">com serifa</span> ou <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">monoespaçado</span>.
 

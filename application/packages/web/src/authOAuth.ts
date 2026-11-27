@@ -28,7 +28,7 @@ import {
   PUBKEY_OWNER_KEY,
 } from './authStorage';
 import { logAuthEvent } from './authDiag';
-import { signInStamp, type SignInStamp } from './liveSignIn';
+import { signInStamp, signOutFinishSettled, type SignInStamp } from './liveSignIn';
 import { ensureLevel2, MfaCancelledError, mfaSessionIdentity } from './mfaStep';
 import { consumeOAuthPending, markOAuthPending } from './oauthPending';
 import { holdLocalDataLock } from './localDataLock';
@@ -318,6 +318,8 @@ export function useOAuthFlows({
     // Asked before the flag is written, so a start wipe that ends now sees a
     // sign-in waiting and keeps it (localDataLock.ts).
     void holdLocalDataLock();
+    await signOutFinishSettled();
+    if (superseded()) return;
     setTrustedDevice(trust);
 
     // Existing user? Check app_metadata.pubkey, written by link-pubkey
@@ -633,6 +635,7 @@ export function useOAuthFlows({
   async function signInWithOAuth(provider: OAuthProvider) {
     return withBackendNetworkAllowed(async () => {
     try {
+      await signOutFinishSettled();
       userAuthGen.current++;
       // Trust the device for OAuth flows - the whole point of OAuth is
       // re-authentication convenience, so persisting across reloads is
@@ -842,13 +845,19 @@ export function useOAuthFlows({
   async function exchangeAndHydrate(code: string, flowId?: string): Promise<boolean> {
     if (oauthExchangeInFlight.current) return false;
     oauthExchangeInFlight.current = true;
-    const generation = userAuthGen.current;
-    const storedPhrase = trustAwareStorage.getItem(PHRASE_STORAGE_KEY);
-    const owner = trustAwareStorage.getItem(PUBKEY_OWNER_KEY);
-    const isCurrent = () => userAuthGen.current === generation && !authInFlight.current && !vaultOpenRef.current &&
-      trustAwareStorage.getItem(PHRASE_STORAGE_KEY) === storedPhrase && trustAwareStorage.getItem(PUBKEY_OWNER_KEY) === owner;
+    let isCurrent = () => false;
     try {
       return await withBackendNetworkAllowed(async () => {
+        const genBeforeWait = userAuthGen.current;
+        await signOutFinishSettled();
+        if (userAuthGen.current !== genBeforeWait || authInFlight.current || vaultOpenRef.current) {
+          return false;
+        }
+        const generation = userAuthGen.current;
+        const storedPhrase = trustAwareStorage.getItem(PHRASE_STORAGE_KEY);
+        const owner = trustAwareStorage.getItem(PUBKEY_OWNER_KEY);
+        isCurrent = () => userAuthGen.current === generation && !authInFlight.current && !vaultOpenRef.current &&
+          trustAwareStorage.getItem(PHRASE_STORAGE_KEY) === storedPhrase && trustAwareStorage.getItem(PUBKEY_OWNER_KEY) === owner;
         // The code verifier must outlive the exchange: no start wipe of another
         // tab (untrustedLeftover.ts) runs while this page holds the lock.
         await holdLocalDataLock();

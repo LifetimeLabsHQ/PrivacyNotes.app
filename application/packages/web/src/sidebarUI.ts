@@ -20,6 +20,11 @@
 export const SIDEBAR_ACTIVE =
   'pn-on-tint bg-accent/15 hover:bg-accent/20 dark:bg-accent/20 dark:hover:bg-accent/25 text-pn';
 
+/** Leading icon size for sidebar rows (Views, Folders, Tags, Trash, CollapsedSidebar),
+ *  matching the 20px note list row boxes and desktop footer anchors (22px on
+ *  phones) and sitting cleanly below the 24px Ninja/brand marks. */
+export const SIDEBAR_ICON_PX = 20;
+
 /**
  * A row a drag would land INSIDE: a folder that takes a dragged folder or a
  * dragged note, a tag that takes a note. A wash and a ring, no border and no

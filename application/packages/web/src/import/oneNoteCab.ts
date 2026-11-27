@@ -20,7 +20,7 @@
  * be given the previous block as a preset window.
  *
  * The file is a stranger's bytes. Every offset is checked against the buffer,
- * the folder's declared output is checked against `ONEPKG_OUTPUT_LIMIT`
+ * the cumulative folder output is checked against `ONEPKG_OUTPUT_LIMIT`
  * before anything is allocated, and every block is refused the moment it
  * writes past what it declared.
  */
@@ -175,6 +175,7 @@ export function readCab(bytes: Uint8Array, limit = ONEPKG_OUTPUT_LIMIT): CabFile
 
   const fc = new Cursor(bytes, coffFiles);
   const entries: { name: string; size: number; offset: number; folder: number }[] = [];
+  const folderUses = new Uint32Array(folders.length);
   const utf8 = new TextDecoder('utf-8');
   const latin1 = new TextDecoder('windows-1252');
   let declared = 0;
@@ -191,19 +192,24 @@ export function readCab(bytes: Uint8Array, limit = ONEPKG_OUTPUT_LIMIT): CabFile
     if (folder >= folders.length) throw new OneNoteError('cab-corrupt', 'file names a missing folder');
     declared += size;
     if (declared > limit) throw new OneNoteError('cab-too-large');
+    folderUses[folder]!++;
     entries.push({ name, size, offset, folder });
   }
 
+  let remaining = limit;
   const inflated = new Map<number, Uint8Array>();
   const files: CabFile[] = [];
   for (const e of entries) {
     let data = inflated.get(e.folder);
     if (!data) {
-      data = readFolder(bytes, folders[e.folder]!, cbDataReserve, limit);
+      data = readFolder(bytes, folders[e.folder]!, cbDataReserve, remaining);
+      remaining -= data.byteLength;
       inflated.set(e.folder, data);
     }
     if (e.offset + e.size > data.length) throw new OneNoteError('cab-corrupt', 'file past its folder');
-    files.push({ name: e.name, data: data.subarray(e.offset, e.offset + e.size) });
+    const slice = e.size * 4 <= data.byteLength ? data.slice(e.offset, e.offset + e.size) : data.subarray(e.offset, e.offset + e.size);
+    files.push({ name: e.name, data: slice });
+    if (--folderUses[e.folder]! === 0) inflated.delete(e.folder);
   }
   return files;
 }

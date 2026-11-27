@@ -66,7 +66,20 @@ export type RoadmapIcon =
   | 'sidebar'
   | 'robot'
   | 'coin'
-  | 'map';
+  | 'map'
+  | 'tabs'
+  | 'palette'
+  | 'layers'
+  | 'calendar'
+  | 'heart'
+  | 'kanban'
+  | 'command'
+  | 'home'
+  | 'browser'
+  | 'terminal'
+  | 'puzzle'
+  | 'columns'
+  | 'wifi-off';
 
 export type RoadmapItem = {
   /** Stable slug, used as the anchor id on the /roadmap page. */
@@ -405,12 +418,92 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     icon: 'store',
   },
   {
+    id: 'tabs-and-history',
+    title: 'Tabs and note history',
+    status: 'shipped',
+    description:
+      'Keep several notes open in browser-style tabs above the editor, with pinned tabs synced across your devices. Note history keeps past snapshots so you can compare versions and restore earlier text whenever you need it.',
+    icon: 'tabs',
+  },
+  {
+    id: 'custom-themes',
+    title: 'Custom and community themes',
+    status: 'shipped',
+    description:
+      'Build your own light and dark color themes or pick from community themes, with separate palettes for Personal and Work. Customize folders, tags and notes with icons, brand logos, emojis and your own uploaded icons.',
+    icon: 'palette',
+  },
+  {
+    id: 'spaces',
+    title: 'Spaces: Personal and Work',
+    status: 'shipped',
+    description:
+      'Keep Personal and Work apart with one keyboard shortcut. Each space can have its own Home layout, filtered Calendar, subscribed calendars and color theme, while All brings everything back together when you want it.',
+    icon: 'layers',
+  },
+  {
+    id: 'calendar',
+    title: 'Calendar and reminders',
+    status: 'shipped',
+    description:
+      'Events, repeating tasks, per-checkbox reminders and Quick add that turns a plain line into a scheduled event. Subscribe to your Google, iCloud or Nextcloud calendars, see your journal trackers on every day, and count days between dates.',
+    icon: 'calendar',
+  },
+  {
+    id: 'medication-and-health',
+    title: 'Medication schedules and health stats',
+    status: 'shipped',
+    description:
+      'A time-grouped medication checklist with dose reminders and one-tap logging, alongside a daily check-in, blood pressure and custom trackers, and rebuilt statistics that chart what lifts your mood.',
+    icon: 'heart',
+  },
+  {
+    id: 'kanban-and-formulas',
+    title: 'Kanban boards and table formulas',
+    status: 'shipped',
+    description:
+      'Drop a drag-and-drop Kanban board into any note, with icons and colors on boards and columns. Tables do spreadsheet arithmetic, sort by column and color cells, all stored as plain Markdown.',
+    icon: 'kanban',
+  },
+  {
+    id: 'ninja',
+    title: 'Ninja: command palette everywhere',
+    status: 'shipped',
+    description:
+      'Press Cmd+K (or Ctrl+K) to jump to any note, folder, tag, file or setting, create items, or run commands without touching the mouse. On desktop, Ninja opens above any app like Spotlight or Alfred.',
+    icon: 'command',
+  },
+  {
+    id: 'home-dashboard',
+    title: 'Home: a dashboard of widgets',
+    status: 'shipped',
+    description:
+      'Arrange your own start page from widgets for pinned notes, tasks, calendar, trackers, folders, tags and custom item lists, with separate Home layouts for Personal and Work.',
+    icon: 'home',
+  },
+  {
     id: 'drawing',
     title: 'Drawings',
     status: 'shipped',
     description:
       'Sketch, diagram and lay out ideas on a canvas that is its own item type, beside your notes and with the same on-device encryption. Open it full screen when you need the room. Drawings are free on every plan.',
     icon: 'pencil',
+  },
+  {
+    id: 'browser-extension',
+    title: 'Browser extension and web clipper',
+    status: 'shipped',
+    description:
+      'Save any web page cleanly as a note, pick its folder and tags, and fill your Vault logins, 2FA codes and website passkeys with one click across desktop browsers.',
+    icon: 'browser',
+  },
+  {
+    id: 'agent-cli',
+    title: 'Command line for scripts and AI agents',
+    status: 'shipped',
+    description:
+      'The privacynotes CLI lets shell scripts, local automations and AI coding agents over MCP add and work with your notes while keeping everything encrypted on your device.',
+    icon: 'terminal',
   },
   {
     id: 'places-and-maps',
@@ -429,7 +522,64 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     icon: 'database',
   },
   {
-    // Near the end of the `shipped` run: renderItems() puts the "You are
+    id: 'switch-from-anything',
+    title: 'Switch from Notion, OneNote and password managers',
+    status: 'shipped',
+    description:
+      'Bring over your notes, journals, tasks and logins from Notion, OneNote, Capacities, Anytype, SiYuan, Day One, Daylio, Diarium, Diaro, Todoist, Microsoft To Do, Raindrop.io, 1Password, LastPass, Dashlane, Proton Pass, NordPass, KeePass and more, each with a step-by-step guide.',
+    icon: 'download',
+  },
+  {
+    id: 'crypto-payments',
+    title: 'Paying in crypto',
+    status: 'shipped',
+    description:
+      'Pro can be paid with Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin or TON, at the card price, on the web and in the desktop app. The payment page asks for no name and no email. Crypto payments are final, so try the free plan first. A way to pay, not a blockchain in the app.',
+    icon: 'coin',
+  },
+  {
+    id: 'on-device-plugins',
+    title: 'On-device AI and offline plugins',
+    status: 'shipped',
+    description:
+      'Add optional tools one at a time in Settings > Plugins: each downloads once and runs locally with no internet connection. Scan pages, read text from pictures and PDFs, translate notes, transcribe voice recordings, remove background noise, and find Smart connections by meaning.',
+    icon: 'puzzle',
+  },
+  {
+    id: 'passkeys-and-vault-security',
+    title: "Passkeys, section locks and dead man's switch",
+    status: 'shipped',
+    description:
+      "Sign in with a passkey and keep website passkeys in the Vault, add optional 2FA, turn on new-device sign-in approval, lock any sidebar section behind your PIN, and set an inactivity dead man's switch for the server copy of your notes.",
+    icon: 'shield',
+  },
+  {
+    id: 'side-by-side-and-writing',
+    title: 'Side-by-side, split Markdown and slash commands',
+    status: 'shipped',
+    description:
+      'Open two notes side by side or edit Markdown next to its formatted view, with line numbers, foldable headings and lists, multi-column layouts, slash commands (/), inline doodles and a free Full screen mode.',
+    icon: 'columns',
+  },
+  {
+    id: 'local-only-mode',
+    title: 'Local-only mode, no account needed',
+    status: 'shipped',
+    description:
+      'Start a vault in the desktop and mobile apps completely offline with sync off and no server registration. Keep it local forever, or turn on sync whenever you want with one click.',
+    icon: 'wifi-off',
+  },
+  {
+    // The id stays: links to #graph-view still land here.
+    id: 'graph-view',
+    title: 'Maps & graph view',
+    status: 'shipped',
+    description:
+      'Two ways to see your notes as a whole. The graph draws every note-link as a web you can pan and follow, so the shape of what you have written becomes something you can navigate. The map puts every note with a place on one map, so a trip or a year of journal entries shows where it happened. Tap a pin or a dot to open the note.',
+    icon: 'graph',
+  },
+  {
+    // At the end of the `shipped` run: renderItems() puts the "You are
     // here" marker at the FIRST non-shipped item, so a shipped card placed
     // after a non-shipped one would render green, on the done-colored rail,
     // underneath a marker saying the shipped work is above it. Keep every
@@ -441,14 +591,6 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     description:
       'The big pieces the app was planned around are in place. New ones will be rare from here on, so the work turns to the features that are already here.',
     icon: 'sparkles',
-  },
-  {
-    id: 'crypto-payments',
-    title: 'Paying in crypto',
-    status: 'shipped',
-    description:
-      'Pro can be paid with Bitcoin, Ethereum, Lightning, USDC, USDT, Litecoin, Bitcoin Cash, Dogecoin or TON, at the card price, on the web and in the desktop app. The payment page asks for no name and no email. Crypto payments are final, so try the free plan first. A way to pay, not a blockchain in the app.',
-    icon: 'coin',
   },
   {
     id: 'improvements',
@@ -466,15 +608,6 @@ export const PUBLIC_ROADMAP: RoadmapItem[] = [
     description:
       'Reports get triaged quickly and fixes ship in the next release rather than waiting for a milestone. Found something? The bug tracker is open.',
     icon: 'bug',
-  },
-  {
-    // The id stays: links to #graph-view still land here.
-    id: 'graph-view',
-    title: 'Maps & graph view',
-    status: 'up-next',
-    description:
-      'Two ways to see your notes as a whole. The graph draws every note-link as a web you can pan and follow, so the shape of what you have written becomes something you can navigate. The map puts every note with a place on one map, so a trip or a year of journal entries shows where it happened. Tap a pin or a dot to open the note.',
-    icon: 'graph',
   },
   {
     id: 'app-polish',

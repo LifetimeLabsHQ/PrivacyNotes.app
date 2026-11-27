@@ -7,10 +7,10 @@
  * the newest change wins on every device. An older app reads `a|b#2` as a key
  * that matches no pair, so it shows the pair too.
  * Import-free: `userSettings.ts` and the panel both read it.
- * Spec: docs/internal/plans/related-notes.md (section 9, "Not related")
+ * Spec: docs/internal/specs/related-notes.md (section 9, "Not related")
  */
 
-/** Pairs kept, newest last. Spec: docs/internal/plans/related-notes.md (section 9) */
+/** Pairs kept, newest last. Spec: docs/internal/specs/related-notes.md (section 9) */
 export const MAX_DISMISSED_SUGGESTIONS = 2000;
 
 function parse(entry: string): [key: string, version: number] {

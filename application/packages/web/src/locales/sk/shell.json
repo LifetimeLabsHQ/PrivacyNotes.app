@@ -211,7 +211,7 @@
     "color": "Farba",
     "colorNone": "Bez farby",
     "colorUseDefault": "Použiť predvolenú",
-    "icon": "Ikony a logá",
+    "icon": "Ikony / logá / emoji",
     "colorFromFolder": "Z priečinka: {{name}}",
     "colorFromTag": "Zo značky: #{{name}}",
     "colorOwnHint": "Tu zvolená farba vyplní pozadie tejto poznámky. <setting>Farby priečinkov a značiek</setting> ju nemenia.",
@@ -375,6 +375,7 @@
   },
   "demoBanner": {
     "title": "Vyskúšaj to bez rizika",
+    "shortTitle": "Demo",
     "description": "Nič sa tu neukladá. Získaj vlastný šifrovaný zápisník, zadarmo."
   },
   "markdown": {
@@ -649,6 +650,10 @@
     "tooLarge": "Príliš veľké. Maximum je {{limit}} MB na súbor.",
     "titlePlaceholder": "Názov (voliteľné)",
     "notePlaceholder": "Pridať poznámku...",
+    "taskPlaceholder": "Úloha…",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "Pripojí sa k dnešnému záznamu v denníku.",
+    "clipFallbackToast": "Stránku sa nepodarilo uložiť. Namiesto toho sa uložila ako záložka.",
     "photoCount": "Fotky: {{count}}"
   },
   "shortcut": {
@@ -1024,7 +1029,8 @@
     "label": "Rýchle pridanie"
   },
   "offline": {
-    "notLoaded": "Si offline a táto časť aplikácie sa ešte nenačítala. Skús to znova, keď budeš opäť online."
+    "notLoaded": "Si offline a táto časť aplikácie sa ešte nenačítala. Skús to znova, keď budeš opäť online.",
+    "chunkBlocked": "Toto zobrazenie sa nepodarilo načítať. Obnov stránku alebo skontroluj blokovač obsahu."
   },
   "checkIn": {
     "prompt": "Ako sa dnes máš?",
@@ -1207,6 +1213,7 @@
     "removed": "Odobraté z Domova",
     "showOnHome": "Zobraziť na Domove",
     "removeFromHome": "Odobrať z Domova",
+    "openTarget": "Otvoriť {{target}}",
     "resize": "Zmeniť veľkosť widgetu „{{name}}“",
     "narrower": "Užšie",
     "taller": "Vyššie",
@@ -1214,33 +1221,82 @@
     "moveEarlier": "Posunúť dopredu",
     "moveLater": "Posunúť dozadu",
     "chooseNote": "Vyber poznámku",
+    "chooseNotes": "Vyber poznámky",
     "chooseTag": "Vyber značku",
+    "chooseTags": "Vyber značky",
     "chooseFolder": "Vyber priečinok",
+    "chooseFolders": "Vyber priečinky",
     "chooseTracker": "Vyber sledovanú hodnotu",
+    "chooseCounter": "Vyber počítadlo",
+    "chooseCounters": "Vyber počítadlá",
+    "chooseTypes": "Vyber typy položiek",
     "choose": "Vybrať",
     "gone": "Už tu nie je",
     "otherSpace": "V druhom priestore",
     "proLocked": "Súčasť Pro",
     "noneToChoose": "Zatiaľ nie je z čoho vyberať",
+    "catalogSearch": "Hľadaj widgety",
+    "catalogFilter": "Filtrovať widgety",
+    "allWidgets": "Všetky widgety",
+    "onHomeLabel": "Na Domove",
+    "onHomeCount": "Na Domove ({{count}})",
     "headerEvents_one": "{{formatted}} udalosť dnes",
     "headerEvents_few": "{{formatted}} udalosti dnes",
     "headerEvents_other": "{{formatted}} udalostí dnes",
+    "headerOverdue_one": "{{formatted}} po termíne",
+    "headerOverdue_few": "{{formatted}} po termíne",
+    "headerOverdue_other": "{{formatted}} po termíne",
     "headerTasks_one": "{{formatted}} otvorená úloha",
     "headerTasks_few": "{{formatted}} otvorené úlohy",
     "headerTasks_other": "{{formatted}} otvorených úloh",
+    "headerDosesLeft_one": "zostáva {{formatted}} dávka",
+    "headerDosesLeft_few": "zostávajú {{formatted}} dávky",
+    "headerDosesLeft_other": "zostáva {{formatted}} dávok",
     "startToday": "Začať dnešný záznam",
+    "setupMedication": "Nastaviť lieky",
+    "setupCounter": "Vytvoriť počítadlo",
+    "counterIncrease": "Pridať jedno k {{name}}",
+    "counterDecrease": "Odobrať jedno z {{name}}",
+    "storageSummary": "poznámky: {{notes}} · súbory: {{files}}",
+    "graphSummary": "prepojené: {{linked}} · neprepojené: {{orphans}}",
+    "placesSummary_one": "{{count}} položka na mape",
+    "placesSummary_few": "{{count}} položky na mape",
+    "placesSummary_other": "{{count}} položiek na mape",
+    "quickCapture": {
+      "placeholderJournal": "Pridaj do dnešného denníka…",
+      "placeholderTask": "Pridaj úlohu…",
+      "placeholderNote": "Napíš rýchlu poznámku…",
+      "destination": "Kam uložiť",
+      "voice": "Nahrať hlasovú poznámku",
+      "voiceNoteTitle": "Hlasová poznámka",
+      "recording": "Nahráva sa {{duration}}",
+      "savingVoice": "Šifruje sa hlasová poznámka…",
+      "savedTo": "Uložené do {{title}}",
+      "failed": "Teraz sa to nepodarilo uložiť.",
+      "micUnavailable": "Nahrávanie z mikrofónu tu nie je dostupné.",
+      "micDenied": "Prístup k mikrofónu bol zamietnutý."
+    },
     "groups": {
-      "keep": "Veci, ktoré uchovávaš"
+      "graph": "Graf a mapy",
+      "keep": "Doplnkové"
     },
     "layout": {
       "everyday": "Na každý deň",
       "planner": "Plánovanie",
-      "writer": "Písanie"
+      "writer": "Písanie",
+      "wellness": "Pohoda"
     },
     "w": {
       "checkIn": {
         "name": "Záznam nálady",
         "help": "Ako sa dnes máš a tvoje sledované hodnoty"
+      },
+      "medication": {
+        "help": "Dnešné dávky, Užité alebo Preskočiť a upozornenia na doplnenie"
+      },
+      "quickCapture": {
+        "name": "Rýchly záznam",
+        "help": "Pridaj text alebo hlasovú poznámku priamo z Domova"
       },
       "calendar": {
         "help": "Mesiac s bodkami pre záznamy a udalosti"
@@ -1255,7 +1311,7 @@
       },
       "tasks": {
         "name": "Otvorené úlohy",
-        "help": "Nezaškrtnuté úlohy z tvojich poznámok"
+        "help": "Najprv úlohy po termíne a na rade, s rýchlym pridaním"
       },
       "recent": {
         "name": "Nedávno upravené",
@@ -1276,9 +1332,19 @@
         "name": "Priečinok",
         "help": "Najnovšie položky v jednom priečinku"
       },
+      "types": {
+        "name": "Zoznam položiek",
+        "help": "Najnovšie položky typov, ktoré vyberieš"
+      },
       "onThisDay": {
         "name": "V tento deň",
         "help": "Záznamy v denníku z minulých rokov"
+      },
+      "graph": {
+        "help": "Živá minimapa prepojených poznámok v tvojom trezore"
+      },
+      "places": {
+        "help": "Tvoje poznámky, záznamy a kontakty s polohou na mape"
       },
       "week": {
         "help": "Slová, aktívne dni, položky a záznamy nálady"
@@ -1293,6 +1359,12 @@
         "name": "Tvoj rytmus",
         "help": "26 týždňov písania a nálady"
       },
+      "yearPixels": {
+        "help": "Farby nálady za celý rok na jeden pohľad"
+      },
+      "patterns": {
+        "help": "Čo najviac zlepšuje alebo zhoršuje tvoju náladu"
+      },
       "milestone": {
         "name": "Ďalší míľnik",
         "help": "Ako blízko je ďalší"
@@ -1300,6 +1372,9 @@
       "tracker": {
         "name": "Sledovaná hodnota",
         "help": "Jedna sledovaná hodnota: jej číslo a jej dni"
+      },
+      "counter": {
+        "help": "Ťukni na +1 priamo na Domove pre vlastné počítadlo"
       },
       "weekRecap": {
         "help": "Tvoj týždeň na jednej karte"
@@ -1313,9 +1388,13 @@
       },
       "birthdays": {
         "help": "Narodeniny v nasledujúcich 30 dňoch"
+      },
+      "storage": {
+        "help": "Kruh tvojho šifrovaného úložiska s prepočítaním"
       }
     },
     "empty": {
+      "medication": "Dnes nie je na rade žiadny liek",
       "upcoming": "V nasledujúcich 7 dňoch nič",
       "tasks": "Žiadne otvorené úlohy",
       "recent": "Zatiaľ tu nič nie je",
@@ -1323,6 +1402,11 @@
       "tag": "Žiadne položky s touto značkou",
       "folder": "V tomto priečinku nič nie je",
       "onThisDay": "V tento deň z minulých rokov žiadne záznamy",
+      "graph": "Prepoj dve poznámky a uvidíš tu svoj graf",
+      "places": "Pridaj polohu k poznámke alebo kontaktu a uvidíš tu špendlíky",
+      "yearPixels": "Zapisuj náladu a vyfarbi si rok",
+      "patterns": "Zapisuj ešte pár dní a odhalíš vzorce",
+      "counter": "Zatiaľ žiadne počítadlá",
       "files": "Zatiaľ žiadne súbory",
       "bookmarks": "Zatiaľ žiadne záložky",
       "birthdays": "V nasledujúcich 30 dňoch žiadne narodeniny",

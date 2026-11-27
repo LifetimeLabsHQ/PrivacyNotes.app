@@ -525,7 +525,7 @@ export async function restoreNativePurchases(pubkey: string): Promise<RestoreOut
     // 'notApplied' immediately tells the user to sign in with the purchasing
     // phrase while keeping Restore purchases visible for Apple Guideline 3.1.1
     // and sending nothing to our backend.
-    if (isLocalOnly()) return 'notApplied';
+    if (isLocalOnly() && !isBackendNetworkAllowed()) return 'notApplied';
 
     let restored = 0;
     for (const p of purchases) {

@@ -427,7 +427,14 @@ function useRoomForMonth(on: boolean, boxed: boolean): { ref: (el: HTMLLIElement
         ? parseFloat(cs.paddingTop) + parseFloat(cs.borderTopWidth) + frameOf(el)
         : content.getBoundingClientRect().top - top + frameOf(el);
       if (days.children.length > 14) {
-        monthNeed.current = content.offsetHeight + frame;
+        if (boxed && content.hasAttribute('data-fill-box')) {
+          const headH = (content.firstElementChild as HTMLElement | null)?.offsetHeight ?? 36;
+          const weekdayH = (days.firstElementChild as HTMLElement | null)?.offsetHeight ?? 24;
+          const touch = typeof window !== 'undefined' && window.matchMedia?.('(hover: none)').matches;
+          monthNeed.current = headH + 4 + weekdayH + 6 * ((touch ? 44 : 40) + 2) + frame;
+        } else {
+          monthNeed.current = content.offsetHeight + frame;
+        }
       } else {
         const row = (days.lastElementChild as HTMLElement | null)?.offsetHeight ?? 0;
         monthNeed.current = Math.max(monthNeed.current, content.offsetHeight + frame + 5 * (row + 2));
@@ -531,7 +538,7 @@ export function JournalCalendarCard({ grid, home = false, onExpand, drop, weekNu
       data-reorder-id={reorderId}
       className={
         grid
-          ? `pn-grid-cal rounded-xl border border-divider bg-surface-2 p-2 ${home ? 'relative flex flex-col justify-center' : weeks === 6 && !roomy.fits ? 'row-span-2' : ''} ${className ?? ''}`
+          ? `pn-grid-cal rounded-xl border border-divider bg-surface-2 ${home ? 'relative flex flex-col p-3' : `p-2 ${weeks === 6 && !roomy.fits ? 'row-span-2' : ''}`} ${className ?? ''}`
           : 'px-4 pt-1 pb-1.5 md:pt-2 md:pb-3 bg-surface-2 border-b border-divider'
       }
     >
@@ -540,6 +547,7 @@ export function JournalCalendarCard({ grid, home = false, onExpand, drop, weekNu
         selected={choosing ?? undefined}
         onPick={pick}
         wide={!grid || home}
+        fill={home && shown === 6 && !choosing}
         weeks={shown}
         onToggleWeeks={toggle}
         focus={month}

@@ -311,12 +311,13 @@ export function computeVaultStorage(
       } else {
         if (bytes > existing.bytes) existing.bytes = bytes;
         if (isBetterBlobOwner(existing, { location, absent, gated: isGated })) {
+          existing.kind = 'file';
           existing.location = location;
           existing.noteId = note.id;
           existing.noteType = note.type;
           existing.noteTitle = noteTitle;
           existing.title = title;
-          existing.mime = mime || existing.mime;
+          existing.mime = mime;
           existing.spaceLabel = spaceLabel;
           existing.gated = isGated;
           existing.absent = absent;
@@ -351,11 +352,15 @@ export function computeVaultStorage(
         } else {
           if (bytes > existing.bytes) existing.bytes = bytes;
           if (isBetterBlobOwner(existing, { location, absent, gated: isGated })) {
+            // Only an unlocked, visible file attachment keeps its filename across a Picture-from-Files reference.
+            const keepFile = existing.kind === 'file' && !existing.gated && !existing.absent && !isGated;
+            existing.kind = keepFile ? 'file' : 'image';
             existing.location = location;
             existing.noteId = note.id;
             existing.noteType = note.type;
             existing.noteTitle = noteTitle;
-            existing.title = existing.kind === 'file' && !isGated ? existing.title : title;
+            existing.title = keepFile ? existing.title : title;
+            existing.mime = isGated ? '' : keepFile ? (existing.mime || 'image/*') : 'image/*';
             existing.spaceLabel = spaceLabel;
             existing.gated = isGated;
             existing.absent = absent;

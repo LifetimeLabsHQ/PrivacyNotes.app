@@ -1,17 +1,16 @@
 /**
- * What the Markdown pane shows before a folder or file is open.
+ * Entry state for the Markdown pane when no folder or file is open.
  *
- * Three states, because "not supported" splits into two genuinely different
- * situations - a desktop browser without the API has a fix worth selling, a
- * phone does not - plus the remembered-folder prompt that only Chromium needs.
+ * Covers Brave's disabled File System Access flag, desktop browsers without the
+ * File System Access API (pointing to the desktop app), and supported platforms
+ * (with an optional remembered-folder reopen card ahead of the folder and file
+ * pickers).
  *
  * Spec: docs/internal/specs/markdown-folder.md (sections 5 and 12)
  */
 import { useTranslation } from 'react-i18next';
-import { Download, SlidersHorizontal, Copy, Check, FileText, FolderOpen } from '../icons';
-import { Button } from '../ui';
-import { PRIMARY_BTN_SKIN } from '../settingsUI';
-import { useCopyToClipboard } from '../clipboard';
+import { Download, SlidersHorizontal, FileText, FolderOpen } from '../icons';
+import { Button, SETTINGS_BTN_PRIMARY, TerminalBlock } from '../ui';
 import { marketingHomeHref } from '../siteLinks';
 import { detectPlatform } from '../devices';
 import { MarkdownPitch } from './MarkdownExplainer';
@@ -29,63 +28,37 @@ export function MarkdownEmptyState({
   support: ReturnType<typeof markdownSupport>;
   error: string | null;
   busy: boolean;
-  /** Set when a folder is remembered but the browser dropped its permission,
-   *  or, in the desktop app, the file scope no longer holds it. */
+  /** Set when a folder is remembered without active browser permission or desktop fs scope. */
   reopenName: string | null;
   onReopen: () => void;
   onOpenFile: () => void;
   onOpenFolder: () => void;
 }) {
   const { t } = useTranslation('shell');
-  const { copy, copied } = useCopyToClipboard();
 
-  // Brave is a Chromium that fails the capability check, and the fix is a flag
-  // rather than a download - so it gets the flag, and the app pitch drops to a
-  // footnote. Selling a 100 MB install to someone twenty seconds from the real
-  // feature is the wrong trade.
+  // Brave ships the File System Access API behind a flag; surface the flag URL
+  // to copy and keep the desktop app download as a secondary link.
   if (support === 'needs-brave-flag') {
     return (
       <div className="h-full overflow-y-auto flex flex-col px-6 py-10">
-        {/* rtl-ok: every string in this card is forced English (see below), and
-            an English sentence inheriting dir=rtl puts its full stop on the
-            wrong end - Arabic rendered ".API" to Enabled, then relaunch Brave".
-            The card is English, so it is an LTR island, whole. */}
+        {/* rtl-ok: every string in this card stays in English across locales, so the card is an LTR island to keep English punctuation in order. */}
         <div
           dir="ltr"
           className="w-full max-w-sm mx-auto my-auto rounded-xl border border-divider bg-surface-2 p-6 shadow-sm flex flex-col items-center text-center gap-3"
         >
           <SlidersHorizontal size={26} weight="duotone" className="text-pn-muted" />
-          {/* Every string in this card reads English in every catalog, held by
-              the verbatim list of tools/lint-locales.mjs. It walks the reader
-              through a Chromium flags page, and Chromium ships those pages in
-              English everywhere - a card translated around an untranslated
-              screen helps nobody. `flag` is a constant for the same reason. */}
+          {/* Every string in this card stays in English via tools/lint-locales.mjs
+              verbatim rules to match Chromium's untranslated `brave://flags` UI. */}
           <p className="text-row font-semibold">
             {t('markdown.braveTitle', { flag: BRAVE_FLAG_NAME })}
           </p>
-          {/* Text with a copy button, not a link: Chromium blocks page-initiated
-              navigation to `brave://`, so an anchor would read as clickable and
-              silently do nothing. */}
-          <div className="w-full flex items-center gap-2 rounded-md border border-divider bg-surface-1 ps-2.5 pe-1.5 py-1.5">
-            {/* `text-start` resolves to left inside the card's LTR island, so
-                the URL never needs a physical utility or its own dir. */}
-            <code className="flex-1 min-w-0 truncate text-start font-mono text-small text-pn-soft">
-              {BRAVE_FLAG_URL}
-            </code>
-            <Button
-              icon={copied === 'brave-flag' ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
-              onClick={() => copy(BRAVE_FLAG_URL, 'brave-flag')}
-              className="shrink-0 !px-2 !py-1 !text-small"
-            >
-              {copied === 'brave-flag'
-                ? t('markdown.braveCopied')
-                : t('markdown.braveCopy')}
-            </Button>
+          {/* Copyable block rather than a link because Chromium blocks page-initiated
+              navigation to `brave://` URLs. */}
+          <div className="w-full text-start">
+            <TerminalBlock value={BRAVE_FLAG_URL} copyLabel={t('markdown.braveCopy')} />
           </div>
-          {/* Body size, matching the sibling empty state: this line carries the
-              whole instruction now, and it is the last thing that should be
-              squinted at. The app link stays secondary on colour and underline
-              rather than on being smaller. */}
+          {/* Compact body copy matching the sibling empty state; the desktop app
+              link stays secondary via muted color and underline rather than smaller text. */}
           <p className="text-compact text-pn-muted leading-relaxed">
             {t('markdown.braveSteps', { flag: BRAVE_FLAG_NAME })}
           </p>
@@ -108,25 +81,22 @@ export function MarkdownEmptyState({
         <div className="w-full max-w-sm mx-auto my-auto rounded-xl border border-divider bg-surface-2 p-6 shadow-sm flex flex-col items-center text-center gap-3">
           <Download size={26} weight="duotone" className="text-pn-muted" />
           <p className="text-row font-semibold">{t('markdown.needsAppTitle')}</p>
-          {/* Two sentences, one per line: as a single string it stretched the
-              full width of the pane on a desktop window and read as a wall. The
-              break sits on the sentence boundary, so it survives translation. */}
+          {/* Split at the sentence boundary so the two lines stay readable in a
+              wide desktop pane and translate cleanly. */}
           <p className="text-compact text-pn-muted leading-relaxed">
             {t('markdown.needsAppBody')}
             <br />
             {t('markdown.needsAppWhere')}
           </p>
-          {/* The state exists to sell the app, so it offers the remedy it
-              names. Same target as the sidebar's Downloads entry,
-              built through `marketingHomeHref()` so it carries the reader's
-              locale slug and cannot land on the bare apex, which boots the app
-              for a signed-in visitor instead of showing the page. */}
+          {/* Uses `marketingHomeHref()` so the link carries the active locale slug
+              rather than hitting the bare apex (which boots the app when signed in). */}
           <a
             href={`${marketingHomeHref()}#downloads`}
             target="_blank"
             rel="noreferrer"
-            className={`text-compact font-semibold px-3 py-1.5 rounded-md ${PRIMARY_BTN_SKIN} transition mt-1`}
+            className={`${SETTINGS_BTN_PRIMARY} mt-1`}
           >
+            <Download aria-hidden="true" className="shrink-0" />
             {t('markdown.getDesktopApp')}
           </a>
         </div>
@@ -134,35 +104,29 @@ export function MarkdownEmptyState({
     );
   }
 
-  // The same pitch the explainer shows, not a paraphrase of it: `MarkdownPitch`
-  // owns the content, so one feature is described in one place and the wording
-  // moves in one edit. This owns the two pickers underneath it.
+  // Reuses `MarkdownPitch` directly above the folder and file pickers so the
+  // pitch copy has a single home.
   return (
-    // `my-auto` on the child rather than `items-center` on the scroller: an
-    // overflowing child of a centred flex container has its top edge pushed out
-    // of reach, and this card is taller than a short window. Auto margins
-    // collapse to zero once the content overflows, so it centres when it fits
-    // and scrolls from the top when it does not.
+    // `my-auto` centers the card when it fits the viewport and collapses to zero
+    // on overflow so the top edge remains scrollable in short windows.
     <div className="h-full overflow-y-auto flex flex-col px-6 py-10">
       <div className="w-full max-w-lg mx-auto my-auto rounded-xl border border-divider bg-surface-2 p-6 shadow-sm">
         <MarkdownPitch />
         {reopenName && (
-          <div className="rounded-lg border border-divider bg-surface-1 p-3 mt-4">
+          <div className="rounded-lg border border-divider bg-surface-2 p-3 mt-4">
             <p className="text-compact text-pn-soft mb-2">
               {t(detectPlatform() === 'desktop' ? 'markdown.reopenPromptDesktop' : 'markdown.reopenPrompt', { name: reopenName })}
             </p>
-            <button
-              type="button"
+            <Button
+              variant="primary"
+              icon={<FolderOpen aria-hidden="true" className="shrink-0" />}
               onClick={onReopen}
-              className={`text-compact font-semibold px-3 py-1.5 rounded-md ${PRIMARY_BTN_SKIN} transition`}
             >
               {t('markdown.reopenFolder', { name: reopenName })}
-            </button>
+            </Button>
           </div>
         )}
-        {/* Two columns rather than a centred pair: these are the only actions on
-            the screen, and equal halves make them read as one choice with two
-            answers instead of a primary with an afterthought. */}
+        {/* Equal-width columns present folder and single-file opening as peer choices. */}
         <div className="grid grid-cols-2 gap-2 mt-4">
           <Button
             variant="primary"

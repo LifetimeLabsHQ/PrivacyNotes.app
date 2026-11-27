@@ -202,6 +202,7 @@
     "cut": "잘라내기",
     "copyAsPlain": "일반 텍스트로 복사",
     "copyAsMarkdown": "Markdown으로 복사",
+    "clearFormatting": "서식 지우기",
     "sortAsc": "줄을 오름차순으로 정렬",
     "sortDesc": "줄을 내림차순으로 정렬"
   },
@@ -270,6 +271,9 @@
   "inlineCode": {
     "copyHint": "{{key}}+클릭으로 복사"
   },
+  "inlineTag": {
+    "filter": "태그로 필터링"
+  },
   "codeBlock": {
     "copyFailed": "실패",
     "wrap": "긴 줄 줄바꿈",
@@ -297,7 +301,8 @@
     "linkHeading": "제목에 연결...",
     "headingNotFound": "제목을 찾을 수 없어요",
     "headingsLocked": "제목을 보려면 이 노트의 잠금을 해제하세요",
-    "noHeadings": "이 노트에는 제목이 없어요"
+    "noHeadings": "이 노트에는 제목이 없어요",
+    "notFound": "노트를 찾을 수 없어요"
   },
   "footnote": {
     "placeholder": "각주 내용",

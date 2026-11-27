@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MagnifyingGlassMinus, MagnifyingGlassPlus, X } from '../icons';
+import { BookOpen, MagnifyingGlassMinus, MagnifyingGlassPlus, X } from '../icons';
 import { CanvasControlBar, CanvasControlDivider, HoverLabel, IconButton } from '../ui';
 import { isEditableTarget } from '../ContextMenu';
 import { hasOpenOverlay } from '../useEscapeToClose';
@@ -29,11 +29,15 @@ export function FullScreenControls({
   scale,
   onStep,
   onReset,
+  pageNumbersShown,
+  onTogglePageNumbers,
   onExit,
 }: {
   scale: FullScreenScale;
   onStep: (direction: 1 | -1) => void;
   onReset: () => void;
+  pageNumbersShown: boolean;
+  onTogglePageNumbers: () => void;
   onExit: () => void;
 }) {
   const { t } = useTranslation('notes');
@@ -182,6 +186,15 @@ export function FullScreenControls({
           onClick={() => onStep(1)}
         >
           <MagnifyingGlassPlus aria-hidden="true" />
+        </IconButton>
+        <CanvasControlDivider />
+        <IconButton
+          label={t(pageNumbersShown ? 'fullScreen.hidePageNumbers' : 'fullScreen.showPageNumbers')}
+          position="below"
+          active={pageNumbersShown}
+          onClick={onTogglePageNumbers}
+        >
+          <BookOpen aria-hidden="true" />
         </IconButton>
         <CanvasControlDivider />
         <IconButton

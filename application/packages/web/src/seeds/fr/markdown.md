@@ -15,7 +15,7 @@ Il peut être ==surligné en jaune== ou <mark style="background-color: rgba(64, 
 
 Un spoiler cache des mots jusqu'à ce qu'on clique dessus : le cadeau est ||un tourne-disque||. Sélectionne les mots et choisis **Spoiler** dans le menu **Insérer**, ou tape deux barres de chaque côté.
 
-Une icône ou un logo peut se glisser dans une ligne de texte, comme :icon[gift] :icon[coffee] :icon[rocket-launch] ou :logo[github]. Choisis-en un dans **Insérer** > **Icônes et logos**.
+Une icône ou un logo peut se glisser dans une ligne de texte, comme :icon[gift] :icon[coffee] :icon[rocket-launch] ou :logo[github]. Choisis-en un dans **Insérer** > **Icônes / logos / émojis**.
 
 Le bouton **Aa** change la taille et la police. Le texte peut être <span style="font-size: 0.85em">petit</span>, normal ou <span style="font-size: 1.6em">grand</span>. Il peut être <span style="font-family: ui-sans-serif, system-ui, sans-serif">simple</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">avec empattements</span> ou <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">à chasse fixe</span>.
 

@@ -32,10 +32,15 @@ import {
   type NoteColorStyle,
   type NoteLook,
 } from '../itemStyles';
+import type { CustomIcons } from '../customIcons';
 import { useLookPaths, type LookArt } from './lookIconsLoader';
 
 export interface LooksValue {
   styles: ItemStyles;
+  /** User-uploaded custom icons (`userSettings.customIcons`). */
+  customIcons?: CustomIcons;
+  /** Update the account's custom icons (upload or delete), syncing immediately. */
+  onCustomIconsChange?: (updater: (prev: CustomIcons) => CustomIcons) => void;
   /** Whether notes take their tag or folder color: rows, tiles, tabs and the
    *  open note. */
   tintNotes: boolean;
@@ -90,7 +95,7 @@ export function useNoteIconPaths(
 ): LookArt | null {
   const looks = useContext(LooksContext);
   const id = n ? noteIconId(looks, { id: noteId, ...n }) : noteOwnIcon(looks.styles, noteId);
-  return useLookPaths(id) ?? null;
+  return useLookPaths(id, looks.customIcons) ?? null;
 }
 
 /** A color as a light background, drawn as an image so the background color
@@ -160,9 +165,9 @@ export function useItemLook(noteId: string, tags: readonly string[], folderId: s
  *  color setting says, as calendar apps draw a calendar's color.
  *  Spec: docs/internal/specs/calendar-pillar-spec.md (section 14) */
 export function useFeedLook(feedId: string | null): (ItemLookDraw & { iconPaths: LookArt | null }) | null {
-  const { styles } = useContext(LooksContext);
+  const { styles, customIcons } = useContext(LooksContext);
   const look = feedId ? lookOf(styles, feedLookKey(feedId)) : null;
-  const iconPaths = useLookPaths(look?.icon) ?? null;
+  const iconPaths = useLookPaths(look?.icon, customIcons) ?? null;
   const color = isLookColor(look?.color) ? look.color : null;
   return useMemo(
     () => (look ? { ...itemLookDraw(color ? { color, style: 'background' } : null), iconPaths } : null),
@@ -195,7 +200,7 @@ export function inkStyle(color: LookColor | null): CSSProperties | undefined {
  */
 export function PathGlyph({
   paths,
-  size = 14,
+  size,
   className,
   style,
 }: {
@@ -204,11 +209,35 @@ export function PathGlyph({
   className?: string;
   style?: CSSProperties;
 }) {
+  if (typeof paths === 'object' && !Array.isArray(paths) && 'img' in paths) {
+    const sized =
+      size !== undefined
+        ? { width: size, height: size }
+        : { width: 'var(--icon-size)', height: 'var(--icon-size)' };
+    return (
+      <img
+        src={paths.img}
+        alt=""
+        draggable={false}
+        className={className ? `pn-custom-icon ${className}` : 'pn-custom-icon'}
+        style={{ ...sized, ...style }}
+        aria-hidden="true"
+      />
+    );
+  }
   if (typeof paths === 'string') {
+    const sized =
+      size !== undefined
+        ? { width: size, height: size, fontSize: Math.round(size * 0.92) }
+        : {
+            width: 'var(--icon-size)',
+            height: 'var(--icon-size)',
+            ...(style?.width ? {} : { fontSize: 'calc(var(--icon-size) * 0.92)' }),
+          };
     return (
       <span
         className={className ? `pn-emoji ${className}` : 'pn-emoji'}
-        style={{ width: size, height: size, fontSize: Math.round(size * 0.92), ...style }}
+        style={{ ...sized, ...style }}
         aria-hidden="true"
       >
         {paths}
@@ -218,6 +247,7 @@ export function PathGlyph({
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
+      data-pn-icon=""
       width={size}
       height={size}
       viewBox="0 0 256 256"
@@ -243,8 +273,8 @@ export function FolderGlyph({
   size?: number;
   className?: string;
 }) {
-  const { styles } = useContext(LooksContext);
-  const paths = useLookPaths(lookOf(styles, folderLookKey(folderId)).icon);
+  const { styles, customIcons } = useContext(LooksContext);
+  const paths = useLookPaths(lookOf(styles, folderLookKey(folderId)).icon, customIcons);
   const style = inkStyle(folderColor(folderId, styles));
   if (paths) return <PathGlyph paths={paths} size={size} className={className} style={style} />;
   return <Folder size={size} className={className} style={style} aria-hidden="true" />;
@@ -264,9 +294,9 @@ export function TagGlyph({
   size?: number;
   className?: string;
 }) {
-  const { styles } = useContext(LooksContext);
+  const { styles, customIcons } = useContext(LooksContext);
   const look = lookOf(styles, tagLookKey(tag));
-  const paths = useLookPaths(look.icon);
+  const paths = useLookPaths(look.icon, customIcons);
   const style = inkStyle(isLookColor(look.color) ? look.color : null);
   if (paths) return <PathGlyph paths={paths} size={size} className={className} style={style} />;
   if (favorite) {
@@ -279,10 +309,10 @@ export function TagGlyph({
  * The mark before a tag's name in a text chip or pill: its icon when it has
  * one, else the `#` it always had, in the tag's color when it has one.
  */
-export function TagMark({ tag, size = 12 }: { tag: string; size?: number }) {
-  const { styles } = useContext(LooksContext);
+export function TagMark({ tag, size }: { tag: string; size?: number }) {
+  const { styles, customIcons } = useContext(LooksContext);
   const look = lookOf(styles, tagLookKey(tag));
-  const paths = useLookPaths(look.icon);
+  const paths = useLookPaths(look.icon, customIcons);
   const style = inkStyle(isLookColor(look.color) ? look.color : null);
   if (paths) {
     return <PathGlyph paths={paths} size={size} className="shrink-0 self-center me-0.5" style={style} />;

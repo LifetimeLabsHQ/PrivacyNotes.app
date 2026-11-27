@@ -86,7 +86,7 @@
 	     button (currentPosition.ts), never at launch. When In Use only: there
 	     is no "Always" key, and the app never reads the position in the
 	     background. iOS-only here because the macOS bundle has no location
-	     feature. Spec: docs/internal/plans/note-location.md (section 3) -->
+	     feature. Spec: docs/internal/specs/note-location.md (section 3) -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>PrivacyNotes uses your location when you tap Use my current location, or for each new note if you turn on Automatically add my location, to add that place to the note.</string>
 </dict>

@@ -33,7 +33,7 @@ export function trackerContent(trackers: Record<string, unknown> | undefined): R
  *  the reminder the entry rings now is not part of that. The place on the
  *  note stays too: only journal entries keep tracker values in a version, so
  *  a restore that moved the place would do it for one type and not another.
- *  Spec: docs/internal/plans/note-location.md (section 2, rule 4a) */
+ *  Spec: docs/internal/specs/note-location.md (section 2, rule 4a) */
 export function withTrackerContent(
   trackers: Record<string, unknown> | undefined,
   values: Record<string, unknown>,

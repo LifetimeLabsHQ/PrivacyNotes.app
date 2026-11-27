@@ -15,13 +15,13 @@ export function ViewModeToggle({ mode, onChange }: { mode: ViewMode; onChange: (
   const autoLabel = t('tagsRail.viewAuto', exemptOpts('shell:tagsRail.viewAuto'));
   return (
     <div role="group" aria-label={t('listPrefs.layout', { defaultValue: 'Layout' })} className={SETTINGS_TRACK}>
-      <HoverLabel label={autoLabel} position="end">
+      <HoverLabel label={autoLabel} position="end" className="flex">
         <button
           type="button"
           onClick={() => onChange('auto')}
           aria-pressed={mode === 'auto'}
           aria-label={autoLabel}
-          className={`${settingsSegClass(mode === 'auto')} !flex-none inline-flex items-center justify-center !px-2.5`}
+          className={`${settingsSegClass(mode === 'auto', true)} !flex-none inline-flex items-center justify-center !px-2.5`}
         >
           <Sparkle aria-hidden="true" />
         </button>
@@ -32,7 +32,7 @@ export function ViewModeToggle({ mode, onChange }: { mode: ViewMode; onChange: (
           type="button"
           onClick={() => onChange(m)}
           aria-pressed={mode === m}
-          className={`${settingsSegClass(mode === m)} min-w-0 inline-flex items-center justify-center gap-1`}
+          className={`${settingsSegClass(mode === m, true)} min-w-0 inline-flex items-center justify-center gap-1`}
         >
           {m === 'list' ? <List className="shrink-0" aria-hidden="true" /> : <SquaresFour className="shrink-0" aria-hidden="true" />}
           <span className="truncate">{m === 'list' ? t('settings:appearance.viewList') : t('settings:appearance.viewGrid')}</span>

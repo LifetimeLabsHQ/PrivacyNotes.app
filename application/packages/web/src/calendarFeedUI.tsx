@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useContext, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CalendarPlus, Globe } from './icons';
 import { Button, DeleteButton, GlyphTile, IconButton, Spinner, StatusLine, TextField } from './ui';
@@ -15,7 +15,7 @@ import { addCalendarFeed, CALENDAR_FEED_MAX, liveCalendarFeeds, removeCalendarFe
 import { feedHost, forgetFeed, refreshFeed, useFeedStates, type FeedError } from './calendarFeedStore';
 import { formatInstant } from './intlFormat';
 import { feedLookKey, isLookColor, lookOf, type ItemStyles, type LookAttr } from './itemStyles';
-import { inkStyle, PathGlyph } from './looks/LookGlyph';
+import { inkStyle, LooksContext, PathGlyph } from './looks/LookGlyph';
 import { useLookPaths } from './looks/lookIconsLoader';
 
 const LookPicker = lazy(() => import('./looks/LookPicker').then((m) => ({ default: m.LookPicker })));
@@ -228,7 +228,8 @@ function FeedRow({ id, name, looks, children }: { id: string; name: string; look
   const [before, setBefore] = useState<{ icon: string | null; color: string | null } | null>(null);
   const key = feedLookKey(id);
   const look = lookOf(looks?.styles ?? {}, key);
-  const paths = useLookPaths(look.icon);
+  const { customIcons } = useContext(LooksContext);
+  const paths = useLookPaths(look.icon, customIcons);
   const color = isLookColor(look.color) ? look.color : null;
   const glyph = (size: number) => (paths
     ? <PathGlyph paths={paths} size={size} />
@@ -239,7 +240,7 @@ function FeedRow({ id, name, looks, children }: { id: string; name: string; look
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         {looks ? (
           <IconButton label={`${t('looks.menu')}: ${name}`} position="above-start" onClick={open} className="!h-9 !w-9 hover:!bg-transparent">
-            <GlyphTile size={36} color={color ? `var(--pn-label-${color}-ink)` : undefined}>{glyph(18)}</GlyphTile>
+            <GlyphTile size={36} color={color ? `var(--pn-label-${color}-ink)` : undefined}>{glyph(20)}</GlyphTile>
           </IconButton>
         ) : (
           <Globe size={16} aria-hidden="true" className="shrink-0 text-accent" />

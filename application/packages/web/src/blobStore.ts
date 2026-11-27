@@ -21,7 +21,7 @@
 
 import type { SupabaseClient } from '@notes/shared';
 import { isDemoMode } from './demo';
-import { isLocalOnly, LocalOnlyNetworkBlockedError } from './localOnly';
+import { isUnsyncedLocalVault, LocalOnlyNetworkBlockedError } from './localOnly';
 import { FILES_ORIGIN, usesOfficialServer } from './hosts';
 import { isAlreadyExists } from './blobUploadRecovery';
 import { isMfaRefusal } from './mfaStep';
@@ -120,7 +120,7 @@ function supabaseBackend(supabase: SupabaseClient, pubkey: string): BlobBackend 
   return {
     async put(uuid, sealed) {
       if (isDemoMode()) return;
-      if (isLocalOnly()) throw new LocalOnlyNetworkBlockedError();
+      if (isUnsyncedLocalVault()) throw new LocalOnlyNetworkBlockedError();
       const name = path(uuid);
       const { error } = await supabase.storage
         .from(BUCKET)
@@ -133,7 +133,7 @@ function supabaseBackend(supabase: SupabaseClient, pubkey: string): BlobBackend 
 
     async overwrite(uuid, sealed) {
       if (isDemoMode()) return;
-      if (isLocalOnly()) throw new LocalOnlyNetworkBlockedError();
+      if (isUnsyncedLocalVault()) throw new LocalOnlyNetworkBlockedError();
       // The one upload that may overwrite; tests/reencryptMigration.test.ts
       // reads the source for any other.
       const name = path(uuid);
@@ -145,7 +145,7 @@ function supabaseBackend(supabase: SupabaseClient, pubkey: string): BlobBackend 
 
     async get(uuid) {
       if (isDemoMode()) return null;
-      if (isLocalOnly()) throw new LocalOnlyNetworkBlockedError();
+      if (isUnsyncedLocalVault()) throw new LocalOnlyNetworkBlockedError();
       const { data, error } = await supabase.storage.from(BUCKET).download(path(uuid));
       if (!error) return data ?? null;
 
@@ -172,7 +172,7 @@ function supabaseBackend(supabase: SupabaseClient, pubkey: string): BlobBackend 
 
     async remove(uuids) {
       if (uuids.length === 0 || isDemoMode()) return { removed: [], failed: [] };
-      if (isLocalOnly()) throw new LocalOnlyNetworkBlockedError();
+      if (isUnsyncedLocalVault()) throw new LocalOnlyNetworkBlockedError();
       const { error } = await supabase.storage.from(BUCKET).remove(uuids.map(path));
       // Storage reports one error for the batch, not one per name. A "not
       // found" answer means the objects are gone already, which is the wanted
@@ -186,7 +186,7 @@ function supabaseBackend(supabase: SupabaseClient, pubkey: string): BlobBackend 
 
     async exists(uuid) {
       if (isDemoMode()) return null;
-      if (isLocalOnly()) throw new LocalOnlyNetworkBlockedError();
+      if (isUnsyncedLocalVault()) throw new LocalOnlyNetworkBlockedError();
       try {
         const { data } = await supabase.storage.from(BUCKET).exists(path(uuid));
         return data === true;
@@ -197,7 +197,7 @@ function supabaseBackend(supabase: SupabaseClient, pubkey: string): BlobBackend 
 
     async list(after, limit) {
       if (isDemoMode()) return null;
-      if (isLocalOnly()) throw new LocalOnlyNetworkBlockedError();
+      if (isUnsyncedLocalVault()) throw new LocalOnlyNetworkBlockedError();
       let offset = after === null ? 0 : offsetAfter.get(after);
       if (offset === undefined) return null;
       const out: BlobEntry[] = [];
@@ -259,7 +259,7 @@ type WorkerRefusal = { status: number; error: string; message: string; code?: st
 /** One request to the files Worker, the only one of the app
  *  (tools/sinks.mjs, `filesWorkerFetch`): no cookie, nothing cached. */
 function filesWorkerFetch(path: string, init: RequestInit): Promise<Response> {
-  if (isLocalOnly()) return Promise.reject(new LocalOnlyNetworkBlockedError());
+  if (isUnsyncedLocalVault()) return Promise.reject(new LocalOnlyNetworkBlockedError());
   // A redirect fails: the body and the token go to the files host or nowhere.
   return fetch(`${FILES_ORIGIN}${path}`, { ...init, credentials: 'omit', cache: 'no-store', redirect: 'error' });
 }
@@ -420,7 +420,7 @@ export function workerBackend(supabase: SupabaseClient, pubkey: string, io: Work
   return {
     async put(uuid, sealed) {
       if (isDemoMode()) return;
-      if (isLocalOnly()) throw new LocalOnlyNetworkBlockedError();
+      if (isUnsyncedLocalVault()) throw new LocalOnlyNetworkBlockedError();
       const held = uploadsHeldUntil(pubkey, io.now());
       if (held !== null) throw new BlobError('upload_limit', 'upload limit');
       const refusal = await write(uuid, sealed, false);
@@ -433,14 +433,14 @@ export function workerBackend(supabase: SupabaseClient, pubkey: string, io: Work
 
     async overwrite(uuid, sealed) {
       if (isDemoMode()) return;
-      if (isLocalOnly()) throw new LocalOnlyNetworkBlockedError();
+      if (isUnsyncedLocalVault()) throw new LocalOnlyNetworkBlockedError();
       const refusal = await write(uuid, sealed, true);
       if (refusal) throw workerError(refusal);
     },
 
     async get(uuid) {
       if (isDemoMode()) return null;
-      if (isLocalOnly()) throw new LocalOnlyNetworkBlockedError();
+      if (isUnsyncedLocalVault()) throw new LocalOnlyNetworkBlockedError();
       let res = await call(`/o/${uuid}`, { method: 'GET' });
       if (res instanceof Response) {
         try {
@@ -459,7 +459,7 @@ export function workerBackend(supabase: SupabaseClient, pubkey: string, io: Work
 
     async remove(uuids) {
       if (uuids.length === 0 || isDemoMode()) return { removed: [], failed: [] };
-      if (isLocalOnly()) throw new LocalOnlyNetworkBlockedError();
+      if (isUnsyncedLocalVault()) throw new LocalOnlyNetworkBlockedError();
       const removed: string[] = [];
       const failed: string[] = [];
       // One request a name, and the Worker answers each: 204 also when
@@ -479,7 +479,7 @@ export function workerBackend(supabase: SupabaseClient, pubkey: string, io: Work
 
     async exists(uuid) {
       if (isDemoMode()) return null;
-      if (isLocalOnly()) throw new LocalOnlyNetworkBlockedError();
+      if (isUnsyncedLocalVault()) throw new LocalOnlyNetworkBlockedError();
       try {
         const { data, error } = await supabase.rpc('blob_exists', { p_uuid: uuid });
         if (error || !data || typeof data !== 'object') return null;
@@ -492,7 +492,7 @@ export function workerBackend(supabase: SupabaseClient, pubkey: string, io: Work
 
     async list(after, limit) {
       if (isDemoMode()) return null;
-      if (isLocalOnly()) throw new LocalOnlyNetworkBlockedError();
+      if (isUnsyncedLocalVault()) throw new LocalOnlyNetworkBlockedError();
       const out: BlobEntry[] = [];
       let from = after;
       // blob_list pages by uuid, at most 1000 rows a call. A page ends only

@@ -194,12 +194,14 @@ export function CheckInStreakTile({ run, week, bare = false }: { run: number; we
   );
 }
 
+export type RhythmLayer = 'both' | 'writing' | 'mood';
+
 /**
  * The rhythm grid: one column per week, Monday first, ending this week. The
  * cell is how much was written that day, the dot the mood of the day. The
  * layer switch shows when there are moods to show; `header` places it.
  */
-export function RhythmHeatmap({ heatmap, moodHeatmap, tracks, header, fit = false }: {
+export function RhythmHeatmap({ heatmap, moodHeatmap, tracks, header, fit = false, layer: controlledLayer }: {
   heatmap: Stats['heatmap'];
   moodHeatmap: Record<string, number>;
   tracks: boolean;
@@ -208,6 +210,8 @@ export function RhythmHeatmap({ heatmap, moodHeatmap, tracks, header, fit = fals
   fit?: boolean;
   /** Draws the section head with the layer switch in it. */
   header: (layerSwitch: React.ReactNode) => React.ReactNode;
+  /** Controlled layer when the caller places the switch in its own header (Home). */
+  layer?: RhythmLayer;
 }) {
   const { t } = useTranslation('stats');
   const today = toLocalIso(new Date());
@@ -223,20 +227,21 @@ export function RhythmHeatmap({ heatmap, moodHeatmap, tracks, header, fit = fals
     }
     return { first, cells };
   }, [heatmap, moodHeatmap, today]);
-  const [layer, setLayer] = useState<'both' | 'writing' | 'mood'>('both');
+  const [localLayer, setLocalLayer] = useState<RhythmLayer>('both');
+  const layer = controlledLayer ?? localLayer;
   const maxEdits = Math.max(1, ...rhythm.cells.map((c) => c.edits));
   const layerSwitch = tracks ? (
     <SettingsSegmented
       label={t('overview.rhythm', { weeks: RHYTHM_WEEKS })}
       value={layer}
-      onChange={setLayer}
+      onChange={setLocalLayer}
       options={(['both', 'writing', 'mood'] as const).map((l) => ({ value: l, label: t(l === 'both' ? 'overview.layerBoth' : l === 'writing' ? 'stats:tabs.writing' : 'stats:wellness.mood.heading') }))}
     />
   ) : null;
   const body = (
     <>
       {header(layerSwitch)}
-      <div dir="ltr" className={fit ? 'min-h-0 flex-1' : undefined}>
+      <div dir="ltr" className={fit ? 'flex min-h-0 flex-1 items-center justify-center' : undefined}>
         <svg viewBox={`0 0 ${RHYTHM_WEEKS * 15 + 16} 112`} width="100%" height={fit ? '100%' : undefined} role="img" aria-label={t('overview.rhythmLegend')} style={{ display: 'block' }}>
           {/* Rows run Monday first, so rows 0, 2 and 4 are Monday, Wednesday and Friday (0 = Sunday). */}
           {[1, 3, 5].map((wd, i) => (

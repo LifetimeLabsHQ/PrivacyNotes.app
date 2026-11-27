@@ -17,7 +17,7 @@ import { OverflowTip } from './OverflowTip';
 import { JournalCalendarCard, JournalCalendarPopover, useJournalCalendarMood, useJournalCalendarShown, type CalendarCardExtras } from './JournalCalendar';
 import { EmptyState, KindChips } from './ui';
 import { TrashReplacedCopies } from './notesView/TrashReplacedCopies';
-import { Key, CreditCard, Fingerprint, Lock, NotePencil, Trash, TrashSimple, SquaresFour, Book, Shield, ShieldPlus, PushPin, FileText, FunnelSimple, Note, CheckSquare, Upload, BookmarkSimple, Plus, Notebook, CalendarPlus, ChartBar, LockSimple, PILLAR_GLYPHS, NEW_GLYPHS } from './icons';
+import { Key, CreditCard, Fingerprint, Lock, NotePencil, Trash, TrashSimple, SquaresFour, Book, Shield, ShieldPlus, PushPin, FileText, FunnelSimple, Note, CheckSquare, Upload, BookmarkSimple, Plus, Notebook, ChartBar, LockSimple, PILLAR_GLYPHS } from './icons';
 import { ActiveFilterEntry, ActiveSearchEntry, FilteredEmpty, ListFilterChips, type TrackerChip } from './ListFilterChips';
 import { ListEntryCard } from './ListEntryCard';
 import { BookmarkRowActions } from './BookmarkRowActions';
@@ -150,15 +150,8 @@ export interface NotesListProps {
 
   // Actions
   onNew: (vaultType?: 'login' | 'card' | 'ssh-key', overrideView?: View, template?: 'kanban') => void;
-  /** Switch to Files and open the OS file picker - the All-view "New"
-   *  type picker's File option. */
-  onNewFile: () => void;
   /** The password generator on its own, last in the Vault's New menu. */
   onOpenGenerator: () => void;
-  onNewBookmark: () => void;
-  /** Opens the Clip page window. */
-  onClipPage: () => void;
-  onNewContact: () => void;
   /** The quick add: the switcher in create mode. */
   onQuickAdd: () => void;
   /** Open the import modal on the tab this pillar imports from - the
@@ -291,11 +284,7 @@ export function NotesList({
   onLongPressEnd,
   isNoteLocked,
   onNew,
-  onNewFile,
   onOpenGenerator,
-  onNewBookmark,
-  onClipPage,
-  onNewContact,
   onQuickAdd,
   onOpenImport,
   onBackfillDate,
@@ -335,7 +324,7 @@ export function NotesList({
   const listPrefsButtonRef = useRef<HTMLButtonElement | null>(null);
   const [showBackfill, setShowBackfill] = useState(false);
   const backfillButtonRef = useRef<HTMLButtonElement | null>(null);
-  const newSlot = useContext(NewButtonDock).slot;
+  const { slot: newSlot, allOptions } = useContext(NewButtonDock);
   useEffect(() => setShowBackfill(false), [newSlot]);
 
   const [contextTargetId, setContextTargetId] = useContextTarget();
@@ -512,36 +501,6 @@ export function NotesList({
     { key: 'generator', label: t('vaultNew.generator'), icon: <GeneratorIcon />, onSelect: onOpenGenerator },
   ];
 
-  // All + Pinned "New" type picker (#190) - same items as the global
-  // right-click menu, so any type can be started without switching pillars
-  // first. Each creates in place (both views show every type); File is the
-  // lone exception - it switches to Files and opens the OS picker. ONE array
-  // feeds both views (single source of truth); NotesView decides whether the
-  // created item is starred, from the active view. Bare-noun labels live in
-  // notes:newMenu.* so the button's "New" isn't repeated in every row.
-  // Order MUST match the sidebar pillar nav (TagsRail.tsx) and the right-click
-  // menu (contextMenus.tsx buildGlobalMenu): Note, Task, Kanban board, Drawing, Login, File, Journal, Event, Contact, Bookmark.
-  // A tag or folder filter narrows the list, never the menu: every type
-  // inherits both filters on creation, so all seven stay reachable and land
-  // where the user is looking (GitHub #324).
-  // Spec: docs/internal/design/ui-patterns.md section 45 (New-menu order invariant)
-  const allNewOptions: NewMenuOption[] = [
-    // Quick add heads the menu: one line that reads a day and a time.
-    { key: 'quickAdd', label: t('shell:quickAdd.label'), icon: <CalendarPlus />, onSelect: () => onQuickAdd(), keys: keyText('quickAdd') },
-    { key: 'note', label: t('newMenu.note'), icon: <NEW_GLYPHS.note />, onSelect: () => onNew() },
-    { key: 'task', label: t('newMenu.task'), icon: <NEW_GLYPHS.task />, onSelect: () => onNew(undefined, 'tasks') },
-    { key: 'kanban', label: t('newMenu.kanban'), icon: <NEW_GLYPHS.kanban />, onSelect: () => onNew(undefined, 'tasks', 'kanban') },
-    { key: 'drawing', label: t('newMenu.drawing'), icon: <NEW_GLYPHS.drawing />, onSelect: () => onNew(undefined, 'drawings') },
-    { key: 'login', label: t('newMenu.login'), icon: <NEW_GLYPHS.login />, onSelect: () => onNew('login', 'vault') },
-    { key: 'file', label: t('shell:fileTypes.file'), icon: <NEW_GLYPHS.file />, onSelect: () => onNewFile() },
-    { key: 'journal', label: t('newMenu.journal'), icon: <NEW_GLYPHS.journal />, onSelect: () => onNew(undefined, 'journal') },
-    // An event is made in the quick add, which shows what it can read.
-    { key: 'event', label: t('newMenu.event'), icon: <NEW_GLYPHS.event />, onSelect: () => onQuickAdd() },
-    { key: 'contact', label: t('newMenu.contact'), icon: <NEW_GLYPHS.contact />, onSelect: () => onNewContact() },
-    { key: 'bookmark', label: t('newMenu.bookmark'), icon: <NEW_GLYPHS.bookmark />, onSelect: () => onNewBookmark() },
-    { key: 'clipPage', label: t('newMenu.clipPage'), icon: <NEW_GLYPHS.clip />, onSelect: () => onClipPage() },
-  ];
-
   return (
     <>
       {/* Title row - fixed h-14 so the bottom border aligns pixel-perfect
@@ -623,7 +582,7 @@ export function NotesList({
             {view === 'vault' ? (
               <NewDropdown label={t('vaultNew.ariaLabel')} options={vaultNewOptions} />
             ) : view === 'home' || view === 'starred' || view === 'dashboard' ? (
-              <NewDropdown label={t('header.new')} options={allNewOptions} />
+              <NewDropdown label={t('header.new')} options={allOptions ?? []} />
             ) : view === 'journal' ? (
               /* The date picker hangs off the New button rather than a calendar
                  button beside it. This pillar is the only one that wanted three
@@ -634,6 +593,7 @@ export function NotesList({
               <NewButton
                 buttonRef={backfillButtonRef}
                 onClick={() => setShowBackfill((v) => !v)}
+                onLongPressOpen={() => setShowBackfill(false)}
                 label={t('journal.newEntry')}
                 keys={keyText('newNote')}
                 popup="dialog"

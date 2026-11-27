@@ -15,7 +15,7 @@ title: Markdown 在這裡能做的一切
 
 防雷文字會把字藏起來，直到有人點一下：禮物是 ||一台黑膠唱機||。選取文字，在 **插入** 選單中選 **防雷文字**，或在兩邊各打兩條直線。
 
-圖示或標誌可以放在一行文字裡，例如 :icon[gift] :icon[coffee] :icon[rocket-launch] 或 :logo[github]。到 **插入** > **圖示與標誌** 挑一個。
+圖示或標誌可以放在一行文字裡，例如 :icon[gift] :icon[coffee] :icon[rocket-launch] 或 :logo[github]。到 **插入** > **圖示 / 標誌 / 表情符號** 挑一個。
 
 **Aa** 按鈕會改變大小和字體。文字可以 <span style="font-size: 0.85em">小</span>、正常，或 <span style="font-size: 1.6em">大</span>。可以是 <span style="font-family: ui-sans-serif, system-ui, sans-serif">黑體</span>、<span style="font-family: ui-serif, Georgia, Cambria, serif">襯線</span> 或 <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">等寬</span>。
 

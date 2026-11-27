@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ContextMenu, closedMenuJustNow, type ContextMenuItem } from './ContextMenu';
-import { SIDEBAR_ACTIVE, SIDEBAR_DROP_INSIDE, SIDEBAR_ROW_MENU_BUTTON } from './sidebarUI';
+import { SIDEBAR_ACTIVE, SIDEBAR_DROP_INSIDE, SIDEBAR_ICON_PX, SIDEBAR_ROW_MENU_BUTTON } from './sidebarUI';
 import { FolderTreeView, type FolderTreeViewProps } from './FolderTreeView';
 import { INDENT_PX, MAX_INDENT_LEVEL, useFolderExpansion } from './folderTreeState';
 import { FolderNameInput } from './FolderNameInput';
@@ -286,7 +286,7 @@ export function FolderTree({
                 <span className="shrink-0 w-5 ms-0.5" aria-hidden="true" />
                 <div className="flex-1 min-w-0 flex items-center gap-2 py-2 pe-2">
                   <span className="inline-flex shrink-0 text-label">
-                    <Folder />
+                    <Folder size={SIDEBAR_ICON_PX} />
                   </span>
                   <FolderNameInput
                     value={createDraft}
@@ -325,7 +325,7 @@ export function FolderTree({
         >
           <span className="flex items-center gap-2 min-w-0">
             <span className="inline-flex shrink-0">
-              <Prohibit />
+              <Prohibit size={SIDEBAR_ICON_PX} />
             </span>
             <span className={`truncate${openNoteFolder === null ? ' font-bold' : ''}`}>
               {t('folders.unfiled')}
@@ -341,7 +341,7 @@ export function FolderTree({
         <div className="w-full rounded text-row font-medium flex items-center text-pn">
           <div className="flex-1 min-w-0 flex items-center gap-2 px-2 py-2">
             <span className="inline-flex shrink-0 text-accent">
-              <Folder />
+              <Folder size={SIDEBAR_ICON_PX} />
             </span>
             <FolderNameInput
               value={createDraft}

@@ -7,14 +7,21 @@
  */
 import { createContext, lazy, Suspense, useContext, useLayoutEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { NoteType } from '@notes/shared';
 import type { LocalNote } from '../db';
+import { VIEW_NOTE_TYPES, type View } from '../views';
 import NoteRow from '../NoteRow';
-import { Button, EmptyState, ProgressBar, TaskCheckbox } from '../ui';
-import { BellSimple, Cake, CalendarDots, CheckFat, FileImage, FileText, NotePencil } from '../icons';
+import {
+  Button, DeleteButton, EmptyState, IconButton, ProgressBar, QuotaRing, SettingsTabStrip, settingsTabClass, Spinner, StatusLine, TaskCheckbox, TextField,
+} from '../ui';
+import {
+  ArrowCounterClockwise, ArrowRight, ArrowsClockwise, BellSimple, Cake, CalendarDot, CalendarDots, CheckFat, FileImage, FileText, LockSimple, Minus, NotePencil, Plus, Sparkle,
+} from '../icons';
 import type { DayKind } from '../notesViewUtils';
 import { editedAtOf, entryDayOf, journalOn, stripToPlainText, toLocalIso } from '../notesViewUtils';
 import type { TaskItem } from '../tasks';
 import { formatTaskReminderLabel, isTaskReminderOverdue } from '../taskReminderText';
+import { sortTasksDueFirst } from './dashboardLayout';
 import { contactBirthday, contactDisplayName, parseContactBody } from '../contactBody';
 import { computeStats, type Stats } from '../stats';
 import { milestoneLabel, milestoneProgress } from '../milestones';
@@ -23,24 +30,36 @@ import { capitalize, formatDay, formatInstant, relativeDayName } from '../intlFo
 import { intlLocale } from '../languages';
 import { MARKDOWN_NOTE_TYPES } from '../noteTypes';
 import { StatTile } from '../settingsUI';
-import { checkInStreak } from '../checkIn';
-import { computeTrackerStats } from '../trackerStats';
+import { checkInEntry, checkInStreak } from '../checkIn';
+import { computeTrackerStats, insightText } from '../trackerStats';
+import { compareAll } from '../trackerCompare';
 import { visibleInUi } from '../trackerRegistry';
 import { TrackerChart } from '../TrackerChart';
-import { buildWellnessModel, hasData, trackerName, type WellnessModel } from '../stats/wellnessModel';
+import { buildWellnessModel, hasData, standoutLabel, trackerName, type WellnessModel } from '../stats/wellnessModel';
 import { cardNumbers, chartSpecFor } from '../stats/TrackerCard';
 import { Change, changeOf, loggedSpan } from '../stats/StatsPage';
+import { EffectBarRow, SureDots } from '../stats/statsParts';
 import { WeekRecap } from '../stats/WeekRecap';
-import { CheckInStreakTile, RhythmHeatmap, WeekTiles, WritingStreakTile, shiftDay, useLedger } from '../stats/overviewParts';
+import { YearInPixels } from '../stats/YearInPixels';
+import { CheckInStreakTile, RhythmHeatmap, WeekTiles, WritingStreakTile, shiftDay, useLedger, type RhythmLayer } from '../stats/overviewParts';
 import type { ListPrefs } from '../listPrefs';
 import { useDashboardEnv } from './env';
-import { useElementHeight } from '../useElementSize';
+import { useElementHeight, useElementSize } from '../useElementSize';
 import { useTrackerHistory } from '../trackerLastLogged';
-import { counterTotal } from '../customCounter';
-import type { CustomTrackerTemplate } from '../trackerTypes';
+import { counterSetDay, counterStartAgain, counterTotal } from '../customCounter';
+import { formatBytes } from '../formatBytes';
+import {
+  activeCustomTrackers,
+  COUNTER_DAY_MAX,
+  type CustomTrackerTemplate,
+  type JournalTrackerData,
+} from '../trackerTypes';
 import { ItemList, useItemList } from '../itemList';
 
 const NotePreview = lazy(() => import('./NotePreview'));
+const GraphWidgetLazy = lazy(() => import('./GraphWidget'));
+const PlacesWidgetLazy = lazy(() => import('./PlacesWidget'));
+export { QuickCaptureWidget } from './QuickCaptureWidget';
 
 /** A plain row in a widget: an item, an event, a file; its glyph first. */
 const ROW_BUTTON = 'flex w-full min-w-0 gap-2 rounded-md px-1 py-0.5 text-start text-compact text-pn hover:bg-pn/5 transition';
@@ -85,8 +104,11 @@ function useFitRows(): (el: HTMLElement | null) => void {
       }
       const bottom = box.getBoundingClientRect().bottom + 0.5;
       let cut = false;
-      for (const row of rows) {
-        cut ||= row.getBoundingClientRect().bottom > bottom;
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i]!;
+        // Never hide the very first item if doing so would leave a populated
+        // card completely blank; let the card's own edge clip it instead.
+        if (i > 0) cut ||= row.getBoundingClientRect().bottom > bottom;
         if (cut) row.style.visibility = 'hidden';
       }
       const shown = rows.filter((row) => row.style.visibility !== 'hidden');
@@ -98,8 +120,10 @@ function useFitRows(): (el: HTMLElement | null) => void {
       const final = shown.at(-1);
       if (final) final.dataset.fitLast = '';
       const end = final?.getBoundingClientRect().bottom;
-      if (!cut || end === undefined) return;
-      const share = (bottom - 0.5 - end) / shown.length / 2;
+      if (!cut || end === undefined || shown.length === 0) return;
+      // Cap extra breathing room so compact lists never stretch into sparse,
+      // over-padded rows when one more row barely missed fitting.
+      const share = Math.min(4, (bottom - 0.5 - end) / shown.length / 2);
       if (share <= 0) return;
       for (const row of shown) {
         const cs = getComputedStyle(row);
@@ -151,6 +175,7 @@ function Rows({ notes, prefs }: { notes: LocalNote[]; prefs?: ListPrefs }) {
           listPrefs={prefs ?? rowPrefs}
           isNoteLocked={env.isNoteLocked(n)}
           onClick={() => env.open(n.id)}
+          onContextMenu={env.onNoteContextMenu ? (e) => env.onNoteContextMenu!(e, n) : undefined}
         />
       ))}
     </ItemList>
@@ -210,6 +235,18 @@ export function FolderWidget({ folderId }: { folderId: string }) {
   return notes.length ? <Rows notes={notes} /> : <Empty>{t('dashboard.empty.folder')}</Empty>;
 }
 
+/** Newest items of one or more chosen pillars, sorted by last edited. */
+export function TypesWidget({ views }: { views: readonly View[] }) {
+  const { t } = useTranslation('shell');
+  const { pool } = useDashboardEnv();
+  const notes = useMemo(() => {
+    const allowed = new Set<NoteType>();
+    for (const v of views) for (const nt of VIEW_NOTE_TYPES[v] ?? []) allowed.add(nt);
+    return pool.filter((n) => allowed.has(n.type ?? 'note')).sort(byEdited).slice(0, MAX_ROWS);
+  }, [pool, views]);
+  return notes.length ? <Rows notes={notes} /> : <Empty>{t('dashboard.empty.recent')}</Empty>;
+}
+
 /** Journal entries of today's month and day in earlier years, newest year first. */
 export function OnThisDayWidget() {
   const { t } = useTranslation('shell');
@@ -230,77 +267,157 @@ export function OnThisDayWidget() {
 
 /** Today's journal entry, with its first lines, or the button that starts it. */
 export function TodayWidget() {
-  const { t } = useTranslation('shell');
+  const { t } = useTranslation(['shell', 'common']);
   const env = useDashboardEnv();
   const today = toLocalIso(new Date());
   // Asked of every listed item: an entry the list switches hide still exists,
   // and a second one must not be started beside it.
   const entry = useMemo(() => journalOn(env.listed, today), [env.listed, today]);
-  const prefs = useMemo(() => ({ ...env.listPrefs, showPreview: true, longPreview: true, showTags: false }), [env.listPrefs]);
-  // An entry the list switches hide shows as its bare row, never its lines.
-  if (entry) return <Rows notes={[entry]} {...(env.pool.includes(entry) ? { prefs } : {})} />;
+  const excerpt = useMemo(
+    () => (entry && env.pool.includes(entry) && !env.isNoteLocked(entry) ? stripToPlainText(entry.body).trim() : ''),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- gatedKey tracks lock changes
+    [entry, env.pool, env.gatedKey],
+  );
+  if (entry) {
+    // An entry hidden by the list switches or PIN-gated shows only as its bare
+    // row, never its body lines.
+    if (!env.pool.includes(entry) || env.isNoteLocked(entry)) return <Rows notes={[entry]} />;
+    return (
+      <button
+        type="button"
+        onClick={() => env.open(entry.id)}
+        className="flex h-full w-full min-h-0 flex-col gap-1.5 rounded-md p-1 -m-1 text-start hover:bg-pn/5 transition"
+      >
+        <span className="flex shrink-0 items-center gap-2 min-w-0">
+          <NotePencil className="shrink-0 text-accent" aria-hidden="true" />
+          <span className="min-w-0 flex-1 truncate text-body font-semibold text-pn" dir="auto">
+            {entry.title || t('common:state.untitled')}
+          </span>
+        </span>
+        {excerpt && (
+          <span
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain text-compact leading-relaxed text-pn-muted whitespace-pre-line"
+            dir="auto"
+          >
+            {excerpt}
+          </span>
+        )}
+      </button>
+    );
+  }
   return (
     <div className="flex h-full flex-col items-center justify-center gap-2 py-3">
-      <Button action="create" onClick={env.startToday}>{t('dashboard.startToday')}</Button>
+      <Button action="create" onClick={env.startToday}>{t('shell:dashboard.startToday')}</Button>
     </div>
   );
 }
 
-/** Unchecked checkbox lines, newest edited note first. The box completes the
- *  line through the Tasks pane's own path. */
+/** Unchecked checkbox lines, overdue and due-today first, with inline quick-add.
+ *  The box completes the line through the Tasks pane's own path. */
 export function TasksWidget({ tasks }: { tasks: TaskItem[] }) {
-  const { t } = useTranslation('shell');
+  const { t } = useTranslation(['shell', 'common']);
   const env = useDashboardEnv();
   const fit = useFitRows();
+  const [rootBox, setRootBox] = useState<HTMLElement | null>(null);
+  const rootHeight = useElementHeight(rootBox);
+  const compact = rootHeight > 0 && rootHeight < 100;
+  const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
   const shown = tasks.slice(0, MAX_ROWS);
-  if (!shown.length) return <Empty>{t('dashboard.empty.tasks')}</Empty>;
   const todayIso = toLocalIso(new Date());
+
+  const submit = async () => {
+    const clean = draft.trim();
+    if (!clean || busy) return;
+    setBusy(true);
+    try {
+      const ok = await env.addQuickTask(clean);
+      if (ok) setDraft('');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <ul ref={fit} className="flex flex-col gap-0.5">
-      {shown.map((task) => {
-        const overdue = task.reminder ? isTaskReminderOverdue(task.reminder) : false;
-        return (
-          <li key={`${task.noteId}:${task.lineIdx}`} className="flex items-start gap-2 min-w-0">
-            <TaskCheckbox
-              checked={task.checked}
-              onChange={(e) => env.toggleTask(task, e.target.checked)}
-              aria-label={t('tasksList.markComplete')}
-              className="mt-1"
-            />
-            <button
-              type="button"
-              onClick={() => env.openTaskSource(task)}
-              title={task.noteTitle}
-              className={`${ROW_BUTTON} flex-col gap-0`}
-            >
-              <span className="block truncate">{stripToPlainText(task.text)}</span>
-              <span className="flex items-center gap-1.5 min-w-0 text-meta text-pn-muted">
-                <span className="truncate">{task.noteTitle}</span>
-                {task.reminder && (
-                  <span className={`shrink-0 inline-flex items-center gap-0.5 ${overdue ? 'text-danger' : 'text-accent'}`}>
-                    <BellSimple aria-hidden="true" />
-                    <span>{formatTaskReminderLabel(task.reminder, todayIso)}</span>
-                  </span>
-                )}
-              </span>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+    <div ref={setRootBox} className="flex h-full min-h-0 flex-col gap-1.5">
+      <div data-card-body="" className="min-h-0 flex-1 overflow-y-clip">
+        {!shown.length ? (
+          <Empty>{t('shell:dashboard.empty.tasks')}</Empty>
+        ) : (
+          <ul ref={fit} className="flex flex-col gap-0.5">
+            {shown.map((task) => {
+              const overdue = task.reminder ? isTaskReminderOverdue(task.reminder) : false;
+              return (
+                <li key={`${task.noteId}:${task.lineIdx}`} className="flex items-start gap-2 min-w-0">
+                  <TaskCheckbox
+                    checked={task.checked}
+                    onChange={(e) => env.toggleTask(task, e.target.checked)}
+                    aria-label={t('shell:tasksList.markComplete')}
+                    className="mt-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => env.openTaskSource(task)}
+                    title={task.noteTitle}
+                    className={`${ROW_BUTTON} flex-col gap-0`}
+                  >
+                    <span className="block truncate">{stripToPlainText(task.text)}</span>
+                    {!compact && (
+                      <span className="flex items-center gap-1.5 min-w-0 text-meta text-pn-muted">
+                        <span className="truncate">{task.noteTitle}</span>
+                        {task.reminder && (
+                          <span className={`shrink-0 inline-flex items-center gap-0.5 ${overdue ? 'font-medium text-danger' : 'text-accent'}`}>
+                            <BellSimple aria-hidden="true" />
+                            <span>{formatTaskReminderLabel(task.reminder, todayIso)}</span>
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submit();
+        }}
+        className="flex shrink-0 items-center gap-1.5 border-t border-divider pt-1.5"
+      >
+        <TextField
+          size="sm"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={t('shell:dashboard.quickCapture.placeholderTask')}
+          aria-label={t('shell:dashboard.quickCapture.placeholderTask')}
+          disabled={busy}
+          className="flex-1"
+        />
+        <IconButton
+          type="submit"
+          tone="accent"
+          label={t('common:actions.add')}
+          disabled={!draft.trim() || busy}
+        >
+          <Plus aria-hidden="true" />
+        </IconButton>
+      </form>
+    </div>
   );
 }
 
-/** Open tasks of the pool, newest edited note first; gated notes left out. */
+/** Open tasks of the pool, overdue and due-today first; gated notes left out. */
 export function useOpenTasks(): TaskItem[] {
   const env = useDashboardEnv();
   const { pool, isNoteLocked, gatedKey } = env;
   return useMemo(() => {
     const readable = pool.filter((n) => !isNoteLocked(n));
     // A line with nothing to read once its markdown is gone is left out.
-    return env.tasksOf(readable)
-      .filter((task) => !task.checked && stripToPlainText(task.text).trim() !== '')
-      .sort((a, b) => b.editedAt.localeCompare(a.editedAt));
+    const open = env.tasksOf(readable).filter((task) => !task.checked && stripToPlainText(task.text).trim() !== '');
+    return sortTasksDueFirst(open);
     // gatedKey: the lock predicate is a fresh function each render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pool, gatedKey]);
@@ -485,7 +602,7 @@ export function CheckInStreakWidget() {
   return <CheckInStreakTile run={run.run} week={run.week} bare />;
 }
 
-export function RhythmWidget({ stats }: { stats: Stats }) {
+export function RhythmWidget({ stats, layer }: { stats: Stats; layer?: RhythmLayer }) {
   const env = useDashboardEnv();
   const month = useMonthModel();
   const tStats = useMemo(
@@ -496,10 +613,11 @@ export function RhythmWidget({ stats }: { stats: Stats }) {
   return (
     <RhythmHeatmap
       fit
+      layer={layer}
       heatmap={stats.heatmap}
       moodHeatmap={tStats.moodHeatmap}
       tracks={month.entries.length > 0}
-      header={(layerSwitch) => (layerSwitch ? <div className="mb-2 flex justify-end">{layerSwitch}</div> : null)}
+      header={() => null}
     />
   );
 }
@@ -540,6 +658,8 @@ export function TrackerWidget({ trackerId }: { trackerId: string }) {
   const { t: tShell } = useTranslation('shell');
   const env = useDashboardEnv();
   const month = useMonthModel();
+  const [rootBox, setRootBox] = useState<HTMLElement | null>(null);
+  const rootHeight = useElementHeight(rootBox);
   const [chartBox, setChartBox] = useState<HTMLElement | null>(null);
   const chartHeight = useElementHeight(chartBox);
   const d = month.byId(trackerId);
@@ -552,19 +672,37 @@ export function TrackerWidget({ trackerId }: { trackerId: string }) {
   const raw = changeOf(month, d, series);
   const delta = raw !== null && Math.abs(raw) >= (d.unit === 'steps' || d.unit === 'bpm' ? 0.5 : 0.05) ? raw : null;
   const span = loggedSpan(series);
+  // In a short card (like 1x2, ~72px body), stacking leaves under 24px for the
+  // sparkline; placing the sparkline beside the number lets it draw cleanly.
+  const compactRow = rootHeight > 0 && rootHeight < 104;
   return (
-    <button type="button" onClick={env.openStats} className="flex h-full w-full min-w-0 flex-col gap-2 text-start @md:flex-row @md:gap-4">
-      <span className="flex min-w-0 flex-col justify-center @md:max-w-[45%] @md:shrink-0">
+    <button
+      ref={setRootBox}
+      type="button"
+      onClick={env.openStats}
+      className={`flex h-full w-full min-h-0 min-w-0 overflow-hidden text-start ${
+        compactRow
+          ? 'flex-row items-center gap-3'
+          : 'flex-col justify-center gap-2 @md:flex-row @md:items-stretch @md:gap-4'
+      }`}
+    >
+      <span className={`flex shrink-0 min-w-0 flex-col justify-center ${compactRow ? 'max-w-[56%]' : '@md:max-w-[45%]'}`}>
         <span className="flex items-baseline gap-2 min-w-0">
           <span className="text-display font-semibold tabular-nums truncate">{headline}</span>
           {delta !== null && <Change d={d} delta={delta} />}
         </span>
-        <span className="block text-meta text-pn-muted truncate">{sub}</span>
+        <span className={`block text-meta text-pn-muted ${compactRow ? 'line-clamp-2 leading-tight' : 'truncate'}`}>{sub}</span>
       </span>
       {span && (
-        <span ref={setChartBox} aria-hidden={chartHeight < CHART_MIN} className="block min-h-0 min-w-0 flex-1">
+        <span
+          ref={setChartBox}
+          aria-hidden={chartHeight < CHART_MIN}
+          className={`relative block min-h-0 min-w-0 flex-1 overflow-hidden ${compactRow ? 'h-full self-stretch' : ''}`}
+        >
           {chartHeight >= SPARK_MIN && (
-            <TrackerChart spec={chartSpecFor(d, chartHeight < CHART_MIN ? span : series, false)} height={Math.floor(chartHeight)} ariaLabel={`${trackerName(d, t)}: ${headline}`} />
+            <span className="absolute inset-0 block">
+              <TrackerChart spec={chartSpecFor(d, chartHeight < CHART_MIN ? span : series, false)} height={Math.floor(chartHeight)} ariaLabel={`${trackerName(d, t)}: ${headline}`} />
+            </span>
           )}
         </span>
       )}
@@ -590,10 +728,315 @@ function CounterWidget({ template, onOpen }: { template: CustomTrackerTemplate; 
   );
 }
 
-export function WeekRecapWidget() {
+export function WeekRecapWidget({ back }: { back?: number }) {
   const env = useDashboardEnv();
   const month = useMonthModel();
-  return <WeekRecap model={month} notes={env.pool} bare />;
+  return <WeekRecap model={month} notes={env.pool} bare hideHeader back={back} />;
+}
+
+/** Year in pixels mood grid on Home, clicking a day opens that journal entry. */
+export function YearPixelsWidget({ year }: { year?: number }) {
+  const { t } = useTranslation('shell');
+  const env = useDashboardEnv();
+  const month = useMonthModel();
+  const [box, setBox] = useState<HTMLElement | null>(null);
+  const boxSize = useElementSize(box);
+  const hasMood = useMemo(() => {
+    const mood = month.byId('mood');
+    return mood ? month.entries.some((e) => typeof e.data.mood === 'number') : false;
+  }, [month]);
+  if (!hasMood) return <Empty>{t('dashboard.empty.yearPixels')}</Empty>;
+  return (
+    <div ref={setBox} className="flex h-full w-full min-h-0 items-center justify-center">
+      <YearInPixels model={month} bare hideHeader year={year} onOpenDay={env.openJournalDay} fitBox={boxSize} />
+    </div>
+  );
+}
+
+/** Patterns (Pro): mood effect correlations (Same day / Next day) and detected insights. */
+export function PatternsWidget() {
+  const { t } = useTranslation(['stats', 'shell']);
+  const env = useDashboardEnv();
+  const month = useMonthModel();
+  const fit = useFitRows();
+  const [tab, setTab] = useState<'same' | 'next' | 'insights'>('same');
+  const mood = month.byId('mood');
+  const compareRange = useMemo(
+    () => ({ from: shiftDay(month.range.to, -89), to: month.range.to }),
+    [month.range.to],
+  );
+  const lag: 0 | 1 = tab === 'next' ? 1 : 0;
+  const rows = useMemo(
+    () => (mood && tab !== 'insights' ? compareAll(month.entries, month.registry, mood, compareRange, lag) : []),
+    [month, mood, compareRange, lag, tab],
+  );
+  const shown = useMemo(
+    () => rows.filter((r) => r.delta !== null).sort((a, b) => Math.abs(b.delta ?? 0) - Math.abs(a.delta ?? 0)),
+    [rows],
+  );
+  const scale = Math.max(1, ...shown.map((r) => Math.abs(r.delta ?? 0)));
+  const tStats = useMemo(
+    () => computeTrackerStats(env.pool, env.medications, env.isNoteLocked),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [env.pool, env.medications, env.gatedKey],
+  );
+  const insights = tStats.patterns;
+
+  const hasAny = !!mood || insights.length > 0;
+  if (!hasAny) {
+    return <Empty>{t('shell:dashboard.empty.patterns')}</Empty>;
+  }
+
+  return (
+    <div className="flex h-full min-h-0 flex-col gap-2">
+      <SettingsTabStrip
+        role="tablist"
+        aria-label={t('stats:wellness.subTabs.patterns')}
+        className="-mx-3 -mt-1 shrink-0 px-1"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'same'}
+          onClick={() => setTab('same')}
+          className={settingsTabClass(tab === 'same')}
+        >
+          <CalendarDot aria-hidden="true" />
+          <span>{t('stats:wellness.effects.sameDay')}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'next'}
+          onClick={() => setTab('next')}
+          className={settingsTabClass(tab === 'next')}
+        >
+          <ArrowRight aria-hidden="true" className="rtl:-scale-x-100" />
+          <span>{t('stats:wellness.effects.nextDay')}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'insights'}
+          onClick={() => setTab('insights')}
+          className={settingsTabClass(tab === 'insights')}
+        >
+          <Sparkle aria-hidden="true" />
+          <span>{t('stats:wellness.patterns.insights')}</span>
+        </button>
+      </SettingsTabStrip>
+      <div data-card-body="" className="min-h-0 flex-1 overflow-y-clip">
+        {tab === 'insights' ? (
+          insights.length > 0 ? (
+            <div ref={fit} className="divide-y divide-divider [&>[data-fit-last]]:border-b-0">
+              {insights.map((p, i) => (
+                <div key={i} className="flex items-center gap-2 py-2 text-compact text-pn">
+                  <Sparkle aria-hidden="true" className="shrink-0 text-accent" />
+                  <span className="min-w-0 flex-1">{insightText(p, t)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Empty>{t('shell:dashboard.empty.patterns')}</Empty>
+          )
+        ) : shown.length > 0 ? (
+          <div ref={fit} className="divide-y divide-divider [&>[data-fit-last]]:border-b-0">
+            {shown.map((r) => {
+              const d = month.byId(r.trackerId);
+              return d ? (
+                <EffectBarRow
+                  key={r.trackerId + (r.tag ?? '')}
+                  d={d}
+                  label={standoutLabel(r, d, t)}
+                  sub={t('stats:home.daysSplit', { a: r.a.n, b: r.b.n })}
+                  delta={r.delta ?? 0}
+                  sure={<SureDots r={r} />}
+                  share={Math.abs(r.delta ?? 0) / scale}
+                />
+              ) : null;
+            })}
+          </div>
+        ) : (
+          <Empty>{t('shell:dashboard.empty.patterns')}</Empty>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Interactive Counter widget (Pro): +1 / -1 / Start again straight on Home. */
+export function InteractiveCounterWidget({ trackerId }: { trackerId: string }) {
+  const { t } = useTranslation(['trackers', 'shell']);
+  const env = useDashboardEnv();
+  const today = toLocalIso(new Date());
+  const history = useTrackerHistory();
+  const template = useMemo(
+    () => activeCustomTrackers(env.trackerSettings.customTrackers).find((c) => c.id === trackerId && c.type === 'counter'),
+    [env.trackerSettings.customTrackers, trackerId],
+  );
+  if (!template) return null;
+
+  const entry = checkInEntry(env.listed, today);
+  const guarded = !!entry && (env.isNoteLocked(entry) || entry.locked === 1);
+  if (guarded) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <button
+          type="button"
+          onClick={() => env.openJournalDay(today)}
+          className="inline-flex items-center gap-2 text-compact text-pn-muted hover:text-pn transition"
+        >
+          <span>{t('shell:checkIn.locked')}</span>
+          <LockSimple aria-hidden="true" className="shrink-0" />
+        </button>
+      </div>
+    );
+  }
+
+  const customs = (entry?.trackers as JournalTrackerData | undefined)?.customTrackers ?? [];
+  const live = customs.find((c) => c.trackerId === template.id);
+  const todayUses = typeof live?.value === 'number' && Number.isFinite(live.value) ? Math.max(0, Math.floor(live.value)) : 0;
+  const total = counterTotal(template.id, history, today, live);
+  const limit = template.limit;
+  const reached = limit !== undefined && total >= limit;
+
+  const writeEntry = (nextEntry: ReturnType<typeof counterSetDay>) => {
+    const rest = customs.filter((c) => c.trackerId !== template.id);
+    const nextList = nextEntry ? [...rest, nextEntry] : rest;
+    void env.saveCheckIn(today, { customTrackers: nextList });
+  };
+
+  const step = (delta: number) => {
+    const nextUses = Math.max(0, Math.min(COUNTER_DAY_MAX, todayUses + delta));
+    if (nextUses === todayUses) return;
+    writeEntry(counterSetDay(template.id, live, nextUses));
+  };
+
+  return (
+    <div className="flex h-full min-h-0 flex-col justify-center gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-1.5 min-w-0">
+            <span className="text-display font-semibold tabular-nums text-pn truncate">{total}</span>
+            {limit !== undefined && <span className="text-meta text-pn-muted truncate">{t('trackers:custom.counterOf', { limit })}</span>}
+          </div>
+          <p className="text-meta text-pn-muted tabular-nums truncate">
+            {todayUses} {t('trackers:custom.counterToday')}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <IconButton
+            label={t('shell:dashboard.counterDecrease', { name: template.name })}
+            disabled={todayUses <= 0}
+            onClick={() => step(-1)}
+          >
+            <Minus aria-hidden="true" />
+          </IconButton>
+          <IconButton
+            label={t('shell:dashboard.counterIncrease', { name: template.name })}
+            tone="accent"
+            disabled={todayUses >= COUNTER_DAY_MAX}
+            onClick={() => step(1)}
+          >
+            <Plus aria-hidden="true" />
+          </IconButton>
+          <DeleteButton
+            kind="remove"
+            icon={ArrowCounterClockwise}
+            label={t('trackers:custom.counterStartAgain', { name: template.name })}
+            confirmLabel={t('trackers:custom.counterStartAgainConfirm')}
+            onConfirm={() => writeEntry(counterStartAgain(template.id, live))}
+            position="above-end"
+          />
+        </div>
+      </div>
+      {limit !== undefined && (
+        <ProgressBar value={total / limit} label={template.name} tone={reached ? 'warning' : 'info'} />
+      )}
+    </div>
+  );
+}
+
+/** Storage quota gauge on Home: QuotaRing + recount button + local counts. */
+export function StorageWidget() {
+  const { t } = useTranslation(['shell', 'common']);
+  const env = useDashboardEnv();
+  const [busy, setBusy] = useState(false);
+  const [box, setBox] = useState<HTMLElement | null>(null);
+  const boxHeight = useElementHeight(box);
+
+  const handleRefresh = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await Promise.all([
+        env.refreshStorage(),
+        new Promise((resolve) => setTimeout(resolve, 600)),
+      ]);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const summary = t('shell:dashboard.storageSummary', {
+    notes: fmt(env.storageNoteCount),
+    files: fmt(env.storageFileCount),
+  });
+
+  if (env.storageMaxBytes <= 0) {
+    return (
+      <div ref={setBox} className="flex h-full items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={env.openStorage}
+          aria-label={t('common:storageBar.open')}
+          className="min-w-0 flex-1 text-start"
+        >
+          <div className="text-heading font-semibold tabular-nums text-pn truncate">{formatBytes(env.storageUsedBytes)}</div>
+          <div className="text-meta text-pn-muted truncate">{summary}</div>
+        </button>
+        <IconButton label={t('common:storageBar.refresh')} disabled={busy} onClick={() => void handleRefresh()}>
+          {busy ? <Spinner size={14} /> : <ArrowsClockwise aria-hidden="true" />}
+        </IconButton>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={setBox} className="flex h-full items-center gap-2">
+      <button
+        type="button"
+        onClick={env.openStorage}
+        aria-label={t('common:storageBar.open')}
+        className="min-w-0 flex-1 rounded-lg p-1 -m-1 text-start hover:bg-pn/5 transition"
+      >
+        <QuotaRing compact={boxHeight >= 100 ? true : 'small'} usedBytes={env.storageUsedBytes} maxBytes={env.storageMaxBytes} label={summary} />
+      </button>
+      <IconButton label={t('common:storageBar.refresh')} disabled={busy} onClick={() => void handleRefresh()}>
+        {busy ? <Spinner size={14} /> : <ArrowsClockwise aria-hidden="true" />}
+      </IconButton>
+    </div>
+  );
+}
+
+/** Lazy Graph constellation tile. */
+export function GraphWidgetSlot() {
+  const { t } = useTranslation('common');
+  return (
+    <Suspense fallback={<div className="flex h-full items-center justify-center"><StatusLine busy>{t('state.loading')}</StatusLine></div>}>
+      <GraphWidgetLazy />
+    </Suspense>
+  );
+}
+
+/** Lazy Places map tile (Pro). */
+export function PlacesWidgetSlot() {
+  const { t } = useTranslation('notes');
+  return (
+    <Suspense fallback={<div className="flex h-full items-center justify-center"><StatusLine busy>{t('location.mapLoading')}</StatusLine></div>}>
+      <PlacesWidgetLazy />
+    </Suspense>
+  );
 }
 
 /** A chosen markdown note, read-only, its note-links live. A gated note or

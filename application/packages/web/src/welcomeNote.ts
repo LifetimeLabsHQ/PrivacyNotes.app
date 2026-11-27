@@ -34,6 +34,7 @@ import type { NoteType } from '@notes/shared';
 import { db, type LocalNote } from './db';
 import type {
   BuiltinTrackerId,
+  CustomTrackerTemplate,
   JournalTrackerData,
   FactorDef,
   MedicationTemplate,
@@ -90,9 +91,13 @@ const CARD_NOTE_BODY = JSON.stringify({
 
 /** Deterministic medication ID for the seed Multivitamin. */
 const SEED_MED_ID = '00000000-0000-4000-b000-000000000001';
+/** Deterministic medication ID for the demo evening Magnesium. */
+const DEMO_MED_EVENING_ID = '00000000-0000-4000-b000-000000000002';
+/** Deterministic custom Counter tracker ID for the demo Water counter. */
+export const DEMO_WATER_COUNTER_ID = '00000000-0000-4000-b200-000000000001';
 
 /** Pre-configured medication template seeded alongside the wellness note. */
-export const SEED_MEDICATION: MedicationTemplate = {
+const SEED_MEDICATION: MedicationTemplate = {
   id: SEED_MED_ID,
   name: 'Multivitamin',
   dosage: '1 tablet',
@@ -100,6 +105,45 @@ export const SEED_MEDICATION: MedicationTemplate = {
   startedAt: toLocalIso(new Date()),
   dosageHistory: [],
 };
+
+/** Demo medications: morning Multivitamin (with low refill supply for the Pro
+ *  alert) plus evening Magnesium so the Medication widget shows live progress. */
+export function demoMedications(now = new Date()): MedicationTemplate[] {
+  const start = toLocalIso(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 45, 12));
+  const refillAt = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 8).toISOString();
+  return [
+    {
+      ...SEED_MEDICATION,
+      startedAt: start,
+      form: 'tablet',
+      doses: [{ id: 'main', time: '08:00', amount: 1 }],
+      refills: [{ id: 'demo-refill-1', at: refillAt, count: 5 }],
+    },
+    {
+      id: DEMO_MED_EVENING_ID,
+      name: 'Magnesium',
+      dosage: '400 mg',
+      timing: 'evening',
+      startedAt: start,
+      dosageHistory: [],
+      form: 'capsule',
+      doses: [{ id: 'main', time: '20:00', amount: 1 }],
+    },
+  ];
+}
+
+/** Demo Counter custom tracker (Pro): Water, 8 glasses limit. */
+export function demoWaterCounter(now = new Date()): CustomTrackerTemplate {
+  return {
+    id: DEMO_WATER_COUNTER_ID,
+    name: 'Water',
+    type: 'counter',
+    color: '#1971c2',
+    limit: 8,
+    icon: 'drop',
+    createdAt: toLocalIso(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30, 12)),
+  };
+}
 
 /** The starter factors a fresh vault holds as its own list. The other
  *  starter names stay suggestions in the Factors tab of the tracker setup. */
@@ -407,6 +451,149 @@ async function seedCalendarDemo(pubkey: string, baseTs: number, now = new Date()
   );
 }
 
+/**
+ * Demo-only Home richness: lightweight journal history for Year in pixels and
+ * Patterns, today's partial medication + Water counter log, a task list with
+ * overdue and due-today reminders, and two extra placed travel notes for
+ * Places map and Graph. Never runs on real accounts.
+ */
+async function seedHomeDemo(pubkey: string, baseTs: number, now = new Date()): Promise<void> {
+  const day = (offset: number) => toLocalIso(new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset, 12));
+  const today = day(0);
+  const yesterday = day(-1);
+  const tomorrow = day(1);
+
+  // 26 past journal days: 7-day recent streak (-1..-6 + today), a gap at -7,
+  // a 13-day consecutive run (-8..-20) giving >=7 good & >=7 low consecutive
+  // pairs so BOTH Same day and Next day tabs in Patterns show real positive and
+  // negative mood correlations, plus earlier months for Year in pixels.
+  const history: Array<[offset: number, mood: number, sleepHours: number, sleepQuality: 'poor' | 'okay' | 'good' | 'great', activity: 'sedentary' | 'light' | 'moderate' | 'active', medTaken: boolean]> = [
+    [-1, 8, 8.0, 'good', 'active', true],
+    [-2, 9, 8.5, 'great', 'active', true],
+    [-3, 8, 8.0, 'good', 'active', true],
+    [-4, 5, 5.5, 'poor', 'sedentary', false],
+    [-5, 4, 5.0, 'poor', 'sedentary', false],
+    [-6, 8, 8.0, 'good', 'active', true],
+    [-8, 9, 8.5, 'great', 'active', true],
+    [-9, 8, 8.0, 'good', 'active', true],
+    [-10, 9, 8.5, 'great', 'active', true],
+    [-11, 8, 8.0, 'good', 'active', true],
+    [-12, 4, 5.0, 'poor', 'sedentary', false],
+    [-13, 5, 5.5, 'poor', 'sedentary', false],
+    [-14, 4, 5.0, 'poor', 'sedentary', false],
+    [-15, 5, 5.5, 'poor', 'sedentary', false],
+    [-16, 9, 8.5, 'great', 'active', true],
+    [-17, 8, 8.0, 'good', 'active', true],
+    [-18, 5, 5.5, 'poor', 'sedentary', false],
+    [-19, 4, 5.0, 'poor', 'sedentary', false],
+    [-20, 5, 5.5, 'poor', 'sedentary', false],
+    [-28, 7, 7.5, 'good', 'moderate', true],
+    [-36, 9, 8.5, 'great', 'active', true],
+    [-45, 5, 5.5, 'poor', 'light', false],
+    [-56, 8, 8.0, 'good', 'active', true],
+    [-68, 7, 7.5, 'good', 'moderate', true],
+    [-81, 9, 8.5, 'great', 'active', true],
+    [-96, 8, 8.0, 'good', 'active', true],
+  ];
+
+  const journalWrites = history.map(([offset, mood, hours, quality, activity, medTaken], idx) => {
+    const d = day(offset);
+    const sentinel = `20${idx.toString(16).padStart(2, '0')}`;
+    const lowDay = mood <= 5;
+    const trackers: JournalTrackerData = {
+      journalDate: d,
+      mood,
+      energy: Math.min(10, Math.max(1, mood)),
+      sleep: { hours, quality },
+      activity,
+      steps: activity === 'active' ? 10500 : activity === 'moderate' ? 7400 : 3200,
+      screenTime: lowDay ? 7.0 : 2.0,
+      caffeine: lowDay ? 4 : 1,
+      medications: [
+        { medicationId: SEED_MED_ID, status: medTaken ? 'taken' : 'skipped' },
+        { medicationId: DEMO_MED_EVENING_ID, status: medTaken ? 'taken' : 'skipped' },
+      ],
+    };
+    return seedNote(
+      seedId(pubkey, sentinel),
+      d,
+      '',
+      ['journal'],
+      false,
+      new Date(`${d}T20:30:00`).toISOString(),
+      trackers,
+      'journal',
+      null,
+    );
+  });
+
+  // Today's partial entry: mood + sleep + activity logged for Check-in, morning
+  // Multivitamin taken (evening Magnesium still due), and 5/8 on Water.
+  const todayEntry = seedNote(
+    seedId(pubkey, '20ff'),
+    today,
+    'Morning walk before coffee. Kept the afternoon clear for deep work.',
+    ['journal'],
+    false,
+    new Date(baseTs - 200).toISOString(),
+    {
+      journalDate: today,
+      mood: 8,
+      sleep: { hours: 8, quality: 'good' },
+      activity: 'moderate',
+      screenTime: 2.0,
+      medications: [{ medicationId: SEED_MED_ID, status: 'taken', ts: new Date(baseTs - 3600_000).toISOString() }],
+      customTrackers: [{ trackerId: DEMO_WATER_COUNTER_ID, value: 5, ts: new Date(baseTs - 600_000).toISOString() }],
+    },
+    'journal',
+    null,
+  );
+
+  // Due-first task list with overdue, today, and upcoming checkbox reminders.
+  const taskChecklist = seedNote(
+    seedId(pubkey, '2101'),
+    'Weekly checklist',
+    [
+      `- [ ] Renew passport :remind[${yesterday} 09:00]`,
+      `- [ ] Send project recap :remind[${today} 23:30]`,
+      `- [ ] Pick up coffee beans :remind[${tomorrow} 10:00]`,
+      '- [ ] Review backup phrase location',
+    ].join('\n'),
+    ['work'],
+    true,
+    new Date(baseTs - 400).toISOString(),
+    undefined,
+    'task',
+    null,
+  );
+
+  // Extra placed travel notes for Places map and Graph links.
+  const lisbonPlace = seedNote(
+    seedId(pubkey, '2102'),
+    'Lisbon food spots',
+    'Saved from the Alfama walk. Pairs well with [[Bifana]] and [[Friday: landed]].',
+    ['recipes'],
+    false,
+    new Date(baseTs - 600).toISOString(),
+    { location: { lat: 38.7139, lng: -9.1394, label: 'Lisbon' } } as unknown as JournalTrackerData,
+    'note',
+    SEED_FOLDERS.Travel?.id ?? null,
+  );
+  const zurichPlace = seedNote(
+    seedId(pubkey, '2103'),
+    'Zurich weekend notes',
+    'Lake walk and espresso stops. Linked to [[Welcome to PrivacyNotes]].',
+    ['tokyo'],
+    false,
+    new Date(baseTs - 800).toISOString(),
+    { location: { lat: 47.3769, lng: 8.5417, label: 'Zurich' } } as unknown as JournalTrackerData,
+    'note',
+    SEED_FOLDERS.Travel?.id ?? null,
+  );
+
+  await Promise.all([...journalWrites, todayEntry, taskChecklist, lisbonPlace, zurichPlace]);
+}
+
 /** Insert the demo login vault item. Idempotent. */
 async function seedLoginNote(
   pubkey: string,
@@ -507,7 +694,11 @@ export async function seedOnboardingNotes(
     seedCardNote(pubkey, new Date(vaultBase - 1000).toISOString()),
     seedBookmarkNotes(pubkey, vaultBase - 1500),
     seedContactNotes(pubkey, vaultBase - 2500),
-    ...(isDemoMode() ? [seedWorkEvent(pubkey, vaultBase - 3000), seedCalendarDemo(pubkey, vaultBase - 3500)] : []),
+    ...(isDemoMode() ? [
+      seedWorkEvent(pubkey, vaultBase - 3000),
+      seedCalendarDemo(pubkey, vaultBase - 3500),
+      seedHomeDemo(pubkey, vaultBase - 4000),
+    ] : []),
   ]);
 }
 
@@ -594,7 +785,7 @@ export const SEED_TAG_ICONS: Record<string, string> = {
   encryption: 'key',
   privacy: 'fingerprint',
   recipes: 'cooking-pot',
-  tokyo: 'map-pin',
+  tokyo: 'compass',
   rating: 'star',
   work: 'briefcase',
 };

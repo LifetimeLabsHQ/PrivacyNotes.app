@@ -31,7 +31,7 @@ import {
 } from '@notes/shared';
 import { collectFingerprint, detectDeviceOs, hashFingerprint } from './deviceFingerprint';
 import { isDemoMode } from './demo';
-import { isLocalOnly } from './localOnly';
+import { isUnsyncedLocalVault } from './localOnly';
 import { isMfaRefusal } from './mfaStep';
 import { mfaSessionIdentity } from './sessionWriteGuard';
 import { reportPhraseReplaced } from './phraseReplaced';
@@ -226,7 +226,7 @@ let edgeWarmupFired = false;
  * happened.
  */
 export function warmAuthEdgeFunctions(): void {
-  if (edgeWarmupFired || isDemoMode() || isLocalOnly()) return;
+  if (edgeWarmupFired || isDemoMode() || isUnsyncedLocalVault()) return;
   edgeWarmupFired = true;
   const base = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   if (!base) return;
@@ -308,7 +308,10 @@ export function isStaleTokenLinkError(
   body: unknown,
 ): boolean {
   if (!err || err.context?.status !== 401) return false;
-  return (body as { error?: string } | null)?.error === 'invalid or expired JWT';
+  const code = (body as { error?: string } | null)?.error;
+  // Accept both the opaque `invalid_session` code and the legacy prose string
+  // so clients handle 401 stale-token verdicts across the server rollout.
+  return code === 'invalid_session' || code === 'invalid or expired JWT';
 }
 
 /**
@@ -1143,8 +1146,8 @@ export async function fetchQuotaUsage(
   supabase: SupabaseClient,
   isPro?: boolean,
 ): Promise<QuotaUsage> {
-  // Demo mode and local-only vaults never query the server - return inert defaults.
-  if (isDemoMode() || isLocalOnly()) {
+  // Demo mode and unsynced local vaults never query the server - return inert defaults.
+  if (isDemoMode() || isUnsyncedLocalVault()) {
     return {
       noteCount: 0,
       totalBytes: 0,
@@ -1249,7 +1252,7 @@ const PENDING_GC_RPC_MAX = 5000;
  * returns false: it makes no server call, so nothing was recounted.
  */
 export async function recalculateQuota(supabase: SupabaseClient): Promise<boolean> {
-  if (isDemoMode()) return false;
+  if (isDemoMode() || isUnsyncedLocalVault()) return false;
   const pending = (await db.blobGC.limit(PENDING_GC_RPC_MAX).toArray()).map((e) => e.uuid);
   const { error } = await readWithRetry(() => supabase.rpc('recalculate_my_quota', { p_pending_gc: pending }));
   if (error) {

@@ -11,6 +11,7 @@ export function GridCard({
   title,
   icon,
   link,
+  headerEnd,
   controls,
   style,
   children,
@@ -20,6 +21,7 @@ export function GridCard({
   title?: ReactNode;
   icon?: Icon;
   link?: { label: string; onClick: () => void };
+  headerEnd?: ReactNode;
   controls?: ReactNode;
   style?: CSSProperties;
   children?: ReactNode;
@@ -32,14 +34,22 @@ export function GridCard({
       className={`relative flex min-h-0 min-w-0 flex-col rounded-xl border border-divider bg-surface-2 p-3 ${className ?? ''}`}
     >
       {title && (
-        <div className="mb-2 flex min-h-7 min-w-0 items-center gap-2">
-          <SectionEyebrow icon={icon} className="min-w-0 flex-1 [&>span]:truncate">
+        <div className={`${headerEnd ? 'mb-2 min-h-7' : 'mb-1.5 min-h-6'} flex min-w-0 flex-wrap items-center justify-between gap-2`}>
+          <SectionEyebrow
+            icon={icon}
+            className={headerEnd ? 'shrink-0 whitespace-nowrap' : 'min-w-0 flex-1 [&>span]:truncate'}
+          >
             <span>{title}</span>
           </SectionEyebrow>
-          {link && (
-            <button type="button" onClick={link.onClick} className="shrink-0 text-small text-accent hover:underline">
-              {link.label}
-            </button>
+          {(headerEnd || link) && (
+            <div className="ms-auto flex shrink-0 items-center gap-2">
+              {headerEnd}
+              {link && (
+                <button type="button" onClick={link.onClick} className="shrink-0 text-small text-accent hover:underline">
+                  {link.label}
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}

@@ -207,7 +207,7 @@
     "color": "Color",
     "colorNone": "No color",
     "colorUseDefault": "Use default",
-    "icon": "Icons & logos",
+    "icon": "Icons / logos / emojis",
     "colorFromFolder": "From folder: {{name}}",
     "colorFromTag": "From tag: #{{name}}",
     "colorOwnHint": "A color picked here fills this note's background. <setting>Folder and tag colors</setting> do not change it.",
@@ -365,6 +365,7 @@
   },
   "demoBanner": {
     "title": "Try it with zero risk",
+    "shortTitle": "Demo",
     "description": "Nothing's saved here. Get your own encrypted notebook, free."
   },
   "markdown": {
@@ -627,6 +628,10 @@
     "tooLarge": "Too large. Maximum is {{limit}} MB per file.",
     "titlePlaceholder": "Title (optional)",
     "notePlaceholder": "Add a note...",
+    "taskPlaceholder": "Task item...",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "Appends to today's journal entry.",
+    "clipFallbackToast": "Page could not be clipped. Saved as a bookmark instead.",
     "photoCount": "{{count}} photos"
   },
   "shortcut": {
@@ -958,7 +963,8 @@
     "label": "Quick add"
   },
   "offline": {
-    "notLoaded": "You're offline, and this part of the app has not loaded yet. Try again when you're back online."
+    "notLoaded": "You're offline, and this part of the app has not loaded yet. Try again when you're back online.",
+    "chunkBlocked": "Could not load this view. Reload the page, or check your content blocker."
   },
   "checkIn": {
     "prompt": "How are you today?",
@@ -1136,6 +1142,7 @@
     "removed": "Removed from Home",
     "showOnHome": "Show on Home",
     "removeFromHome": "Remove from Home",
+    "openTarget": "Open {{target}}",
     "resize": "Resize {{name}}",
     "narrower": "Narrower",
     "taller": "Taller",
@@ -1143,31 +1150,77 @@
     "moveEarlier": "Move earlier",
     "moveLater": "Move later",
     "chooseNote": "Choose a note",
+    "chooseNotes": "Choose notes",
     "chooseTag": "Choose a tag",
+    "chooseTags": "Choose tags",
     "chooseFolder": "Choose a folder",
+    "chooseFolders": "Choose folders",
     "chooseTracker": "Choose a tracker",
+    "chooseCounter": "Choose a counter",
+    "chooseCounters": "Choose counters",
+    "chooseTypes": "Choose item types",
     "choose": "Choose",
     "gone": "No longer here",
     "otherSpace": "In the other space",
     "proLocked": "Part of Pro",
     "noneToChoose": "Nothing to choose yet",
+    "catalogSearch": "Search widgets",
+    "catalogFilter": "Filter widgets",
+    "allWidgets": "All widgets",
+    "onHomeLabel": "On Home",
+    "onHomeCount": "On Home ({{count}})",
     "headerEvents_one": "{{formatted}} event today",
     "headerEvents_other": "{{formatted}} events today",
+    "headerOverdue_one": "{{formatted}} overdue",
+    "headerOverdue_other": "{{formatted}} overdue",
     "headerTasks_one": "{{formatted}} open task",
     "headerTasks_other": "{{formatted}} open tasks",
+    "headerDosesLeft_one": "{{formatted}} dose left",
+    "headerDosesLeft_other": "{{formatted}} doses left",
     "startToday": "Start today's entry",
+    "setupMedication": "Set up medication",
+    "setupCounter": "Create a counter",
+    "counterIncrease": "Add one to {{name}}",
+    "counterDecrease": "Remove one from {{name}}",
+    "storageSummary": "{{notes}} notes · {{files}} files",
+    "graphSummary": "{{linked}} linked · {{orphans}} unlinked",
+    "placesSummary_one": "{{count}} placed item",
+    "placesSummary_other": "{{count}} placed items",
+    "quickCapture": {
+      "placeholderJournal": "Add to today's journal...",
+      "placeholderTask": "Add a task...",
+      "placeholderNote": "Write a quick note...",
+      "destination": "Save destination",
+      "voice": "Record voice note",
+      "voiceNoteTitle": "Voice note",
+      "recording": "Recording {{duration}}",
+      "savingVoice": "Encrypting voice note...",
+      "savedTo": "Saved to {{title}}",
+      "failed": "Could not save right now.",
+      "micUnavailable": "Microphone recording is not available here.",
+      "micDenied": "Microphone access was denied."
+    },
     "groups": {
-      "keep": "Things you keep"
+      "graph": "Graph & maps",
+      "keep": "Extras"
     },
     "layout": {
       "everyday": "Everyday",
       "planner": "Planner",
-      "writer": "Writer"
+      "writer": "Writer",
+      "wellness": "Wellness"
     },
     "w": {
       "checkIn": {
         "name": "Check-in",
         "help": "How you are today, and your trackers"
+      },
+      "medication": {
+        "help": "Today's doses, Taken or Skip, and refill alerts"
+      },
+      "quickCapture": {
+        "name": "Quick capture",
+        "help": "Add text or a voice note right from Home"
       },
       "calendar": {
         "help": "The month, with entry and event dots"
@@ -1182,7 +1235,7 @@
       },
       "tasks": {
         "name": "Open tasks",
-        "help": "Unchecked tasks from your notes"
+        "help": "Overdue and due tasks first, with quick-add"
       },
       "recent": {
         "name": "Recently edited",
@@ -1203,9 +1256,19 @@
         "name": "A folder",
         "help": "The newest items in one folder"
       },
+      "types": {
+        "name": "Item list",
+        "help": "The newest items of types you choose"
+      },
       "onThisDay": {
         "name": "On this day",
         "help": "Journal entries from earlier years"
+      },
+      "graph": {
+        "help": "Live mini-map of linked notes in your vault"
+      },
+      "places": {
+        "help": "Your placed notes, entries and contacts on a map"
       },
       "week": {
         "help": "Words, active days, items and check-ins"
@@ -1220,6 +1283,12 @@
         "name": "Your rhythm",
         "help": "26 weeks of writing and mood"
       },
+      "yearPixels": {
+        "help": "Your whole year of mood colors at a glance"
+      },
+      "patterns": {
+        "help": "What moves your mood up or down most"
+      },
       "milestone": {
         "name": "Next milestone",
         "help": "How close the next one is"
@@ -1227,6 +1296,9 @@
       "tracker": {
         "name": "A tracker",
         "help": "One tracker: its number and its days"
+      },
+      "counter": {
+        "help": "Tap +1 right on Home for a custom counter"
       },
       "weekRecap": {
         "help": "Your week, in one card"
@@ -1240,9 +1312,13 @@
       },
       "birthdays": {
         "help": "Birthdays in the next 30 days"
+      },
+      "storage": {
+        "help": "Your encrypted storage ring, with recount"
       }
     },
     "empty": {
+      "medication": "No medications due today",
       "upcoming": "Nothing in the next 7 days",
       "tasks": "No open tasks",
       "recent": "Nothing here yet",
@@ -1250,6 +1326,11 @@
       "tag": "No items with this tag",
       "folder": "Nothing in this folder",
       "onThisDay": "No entries on this day in earlier years",
+      "graph": "Link two notes to see your graph here",
+      "places": "Add a location to a note or contact to see pins here",
+      "yearPixels": "Log your mood to color the year",
+      "patterns": "Log a few more days to spot patterns",
+      "counter": "No counter trackers yet",
       "files": "No files yet",
       "bookmarks": "No bookmarks yet",
       "birthdays": "No birthdays in the next 30 days",

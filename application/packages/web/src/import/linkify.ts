@@ -71,6 +71,8 @@
  * (too many false positives on things like "filename.txt").
  */
 
+import { SUGGESTED_LINK_MARKER } from '../noteLinks';
+
 // Bare URL matcher. Terminators: whitespace, angle brackets (would mean
 // it's already an autolink), backticks (code span), double quotes, and
 // control characters, which markdown refuses inside an autolink: the text
@@ -128,111 +130,1151 @@ const TRAILING_PUNCT_RE = /[.,;:!?"'}*_~]/;
 
 type Span = { start: number; end: number };
 
-/**
- * Existing inline links `[label](url)`, found the way the regex
- * `/\[[^\]\n]*\]\([^)\n]*\)/g` finds them, in one forward scan. Every `[`
- * before the same `]` reaches that `]`, so when one fails they all do, and a
- * destination scan that met a line end without `)` fails for every later
- * start before that line end. The regex retried both per start, which is
- * quadratic on a line full of `[` or `](`.
- */
-function linkSpans(input: string, out: Span[]): void {
-  let pos = 0;
-  let destFailEnd = -1;
-  while (pos < input.length) {
-    const p = input.indexOf('[', pos);
-    if (p < 0) return;
-    let j = p + 1;
-    while (j < input.length && input[j] !== ']' && input[j] !== '\n') j++;
-    if (j >= input.length) return;
-    if (input[j] === '\n' || input[j + 1] !== '(') {
-      pos = input[j] === '\n' ? j : j + 1;
-      continue;
-    }
-    let k = j + 2;
-    if (k < destFailEnd) {
-      pos = j + 1;
-      continue;
-    }
-    while (k < input.length && input[k] !== ')' && input[k] !== '\n') k++;
-    if (k < input.length && input[k] === ')') {
-      out.push({ start: p, end: k + 1 });
-      pos = k + 1;
-    } else {
-      destFailEnd = k;
-      pos = j + 1;
-    }
+interface BracketMatch {
+  close: number;
+  linkEnd: number;
+  nested: boolean;
+}
+
+export interface LineIndex {
+  lineStart: number;
+  lineEnd: number;
+  line: string | null;
+  linkifyBareUrls: boolean;
+  indexed: boolean;
+  backtickLenAt: Map<number, number>;
+  backtickRunsByLen: Map<number, number[]>;
+  brackets: Map<number, BracketMatch>;
+  lastCloseParen: number;
+  noCloseParenUntil: number;
+  lastCloseAngle: number;
+  noCloseAngleUntil: number;
+  lastDoubleCloseBracket: number;
+  noDoubleCloseBracketUntil: number;
+  blankNoteLinkFailUntil: number;
+  lastUnescapedDollar: number;
+  dollarScanPos: number;
+  doubleQuoteFailUntil: number;
+  singleQuoteFailUntil: number;
+  tagDoubleQuoteFailUntil: number;
+  tagSingleQuoteFailUntil: number;
+  skipHtmlSpecial: boolean;
+}
+
+export function createLineIndex(
+  lineStart: number,
+  lineEnd: number,
+  linkifyBareUrls = false,
+): LineIndex {
+  return {
+    lineStart,
+    lineEnd,
+    line: null,
+    linkifyBareUrls,
+    indexed: false,
+    backtickLenAt: new Map(),
+    backtickRunsByLen: new Map(),
+    brackets: new Map(),
+    lastCloseParen: -1,
+    noCloseParenUntil: -1,
+    lastCloseAngle: -1,
+    noCloseAngleUntil: -1,
+    lastDoubleCloseBracket: -1,
+    noDoubleCloseBracketUntil: -1,
+    blankNoteLinkFailUntil: -1,
+    lastUnescapedDollar: -1,
+    dollarScanPos: lineStart,
+    doubleQuoteFailUntil: -1,
+    singleQuoteFailUntil: -1,
+    tagDoubleQuoteFailUntil: -1,
+    tagSingleQuoteFailUntil: -1,
+    skipHtmlSpecial: false,
+  };
+}
+
+function lineIndexOf(input: string, idx: LineIndex, needle: string, from: number): number {
+  if (from >= idx.lineEnd) return -1;
+  if (idx.line === null) idx.line = input.slice(idx.lineStart, idx.lineEnd);
+  const rel = idx.line.indexOf(needle, Math.max(0, from - idx.lineStart));
+  return rel < 0 ? -1 : idx.lineStart + rel;
+}
+
+function findNextRunAfter(runs: readonly number[], pos: number): number {
+  let lo = 0;
+  let hi = runs.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (runs[mid]! <= pos) lo = mid + 1;
+    else hi = mid;
   }
+  return lo < runs.length ? runs[lo]! : -1;
 }
 
 /**
- * Raw HTML tags, found the way `/<[a-zA-Z][^>\n]*>/g` finds them, in one
- * forward scan: every `<` before the same `>` or line end reaches it, so a
- * failed start fails for all of them.
+ * Match a `[[target]]` or `[[target|label]]` note-link (plus optional
+ * `<!--suggested-->` suffix) starting at `input[pos] === '['` within `bound`,
+ * mirroring `wikiLinkRule` (`NoteLink.tsx`) in O(1) amortized time.
  */
-function htmlTagSpans(input: string, out: Span[]): void {
-  let pos = 0;
-  while (pos < input.length) {
-    const p = input.indexOf('<', pos);
-    if (p < 0) return;
-    if (!/[a-zA-Z]/.test(input[p + 1] ?? '')) {
-      pos = p + 1;
+export function scanNoteLinkEnd(
+  input: string,
+  pos: number,
+  bound: number,
+  idx: LineIndex,
+): number {
+  if (pos + 3 >= bound || pos < idx.noDoubleCloseBracketUntil) return -1;
+  if (input.charCodeAt(pos) !== 0x5b || input.charCodeAt(pos + 1) !== 0x5b) return -1;
+  if (pos > 0 && input.charCodeAt(pos - 1) === 0x21) return -1;
+
+  if (idx.lastDoubleCloseBracket < pos + 2) {
+    idx.lastDoubleCloseBracket = lineIndexOf(input, idx, ']]', pos + 2);
+    if (idx.lastDoubleCloseBracket < 0) {
+      idx.noDoubleCloseBracketUntil = idx.lineEnd;
+      return -1;
+    }
+  }
+  const closeIdx = idx.lastDoubleCloseBracket;
+  if (closeIdx + 2 > bound) return -1;
+  if (pos + 2 <= idx.blankNoteLinkFailUntil) return -1;
+
+  let k = pos + 2;
+  while (k < closeIdx && /\s/.test(input[k]!)) k++;
+  if (k >= closeIdx || input.charCodeAt(k) === 0x7c) {
+    idx.blankNoteLinkFailUntil = k;
+    return -1;
+  }
+
+  const end = closeIdx + 2;
+  if (
+    end + SUGGESTED_LINK_MARKER.length <= bound &&
+    input.startsWith(SUGGESTED_LINK_MARKER, end)
+  ) {
+    return end + SUGGESTED_LINK_MARKER.length;
+  }
+  return end;
+}
+
+/**
+ * Match `$...$` inline math starting at `input[pos] === '$'` within `bound`
+ * (`bound <= idx.lineEnd`), mirroring `inlineMathRule` (`editorInlineSyntax.ts`)
+ * in O(1) amortized time across the line.
+ */
+export function scanInlineMathEnd(
+  input: string,
+  pos: number,
+  bound: number,
+  idx: LineIndex,
+): number {
+  const start = pos + 1;
+  if (start >= bound) return -1;
+  if (input.charCodeAt(start) === 0x24 || /\s/.test(input[start]!)) return -1;
+
+  if (idx.lastUnescapedDollar < start) {
+    let q = Math.max(start, idx.dollarScanPos);
+    while (q < idx.lineEnd) {
+      if (input.charCodeAt(q) === 0x24 && input.charCodeAt(q - 1) !== 0x5c) {
+        break;
+      }
+      q++;
+    }
+    idx.dollarScanPos = q + 1;
+    idx.lastUnescapedDollar = q;
+  }
+
+  const end = idx.lastUnescapedDollar;
+  if (end <= start || end >= bound) return -1;
+  if (/\s/.test(input[end - 1]!) || /\d/.test(input[end + 1] ?? '')) return -1;
+  return end + 1;
+}
+
+function tryScanLinkDest(input: string, openParen: number, idx: LineIndex): number {
+  const { lineEnd } = idx;
+  if (openParen >= lineEnd || input.charCodeAt(openParen) !== 0x28) return -1;
+  if (openParen < idx.noCloseParenUntil) return -1;
+  if (idx.lastCloseParen <= openParen) {
+    idx.lastCloseParen = lineIndexOf(input, idx, ')', openParen + 1);
+    if (idx.lastCloseParen < 0) {
+      idx.noCloseParenUntil = lineEnd;
+      return -1;
+    }
+  }
+  return scanLinkDestinationEnd(input, openParen, idx);
+}
+
+function bareUrlPrefixLen(input: string, pos: number): number {
+  const ch = input.charCodeAt(pos);
+  if (ch === 0x68) {
+    if (input.startsWith('https://', pos)) return 8;
+    if (input.startsWith('http://', pos)) return 7;
+  } else if (ch === 0x6d && input.startsWith('mailto:', pos)) {
+    return 7;
+  }
+  return 0;
+}
+
+function scanBareUrlDuringIndex(
+  input: string,
+  pos: number,
+  lineStart: number,
+  lineEnd: number,
+): number {
+  const prefixLen = bareUrlPrefixLen(input, pos);
+  if (prefixLen === 0) return -1;
+  let end = pos + prefixLen;
+  while (end < lineEnd) {
+    const c = input.charCodeAt(end);
+    if (c <= 0x20 || c === 0x7f || c === 0x3c || c === 0x3e || c === 0x60 || c === 0x22) {
+      break;
+    }
+    if (c === 0x21 && end + 1 < lineEnd && input.charCodeAt(end + 1) === 0x5b) break;
+    if (c === 0x5b) {
+      if (
+        end + 1 < lineEnd &&
+        input.charCodeAt(end + 1) === 0x5d &&
+        (end + 2 >= lineEnd || input.charCodeAt(end + 2) !== 0x28)
+      ) {
+        end += 2;
+        continue;
+      }
+      break;
+    }
+    end++;
+  }
+  if (end === pos + prefixLen) return -1;
+  const rawMatch = input.slice(pos, end);
+  let inHighlight = false;
+  if (rawMatch.endsWith('==')) {
+    inHighlight = (input.slice(lineStart, pos).match(/==/g)?.length ?? 0) % 2 === 1;
+  }
+  const { url } = trimUrl(rawMatch, inHighlight);
+  return url.length > 0 ? pos + url.length : -1;
+}
+
+function ensureLineIndexed(input: string, idx: LineIndex): void {
+  if (idx.indexed) return;
+  idx.indexed = true;
+  const { lineStart, lineEnd } = idx;
+
+  // Index every maximal contiguous backtick run on the line so `scanCodeSpan`
+  // can find CommonMark's matching closing run in logarithmic time. When a run
+  // starts right after `\`, `escape` consumes the first backtick and `backticks`
+  // opens on the remaining `ticks - 1` backticks starting at `i + 1`.
+  let i = lineStart;
+  while (i < lineEnd) {
+    if (input.charCodeAt(i) === 0x60) {
+      let p = i + 1;
+      while (p < lineEnd && input.charCodeAt(p) === 0x60) p++;
+      const ticks = p - i;
+      idx.backtickLenAt.set(i, ticks);
+      if (ticks > 1 && i > lineStart && input.charCodeAt(i - 1) === 0x5c) {
+        idx.backtickLenAt.set(i + 1, ticks - 1);
+      }
+      let list = idx.backtickRunsByLen.get(ticks);
+      if (!list) {
+        list = [];
+        idx.backtickRunsByLen.set(ticks, list);
+      }
+      list.push(i);
+      i = p;
       continue;
     }
-    let j = p + 2;
-    while (j < input.length && input[j] !== '>' && input[j] !== '\n') j++;
-    if (j < input.length && input[j] === '>') {
-      out.push({ start: p, end: j + 1 });
-      pos = j + 1;
-    } else {
-      pos = j;
+    i++;
+  }
+
+  // Pair `[` / `![` with `](destination)` in left-to-right token precedence
+  // order, skipping escapes, code spans, `[[...]]` note-links, `<...>` HTML
+  // tags/autolinks, `$...$` inline math, and completed link destinations, while
+  // enforcing CommonMark's rule against nested links inside link labels.
+  const stack: {
+    open: number;
+    isImage: boolean;
+    nested: boolean;
+    hasInnerLink: boolean;
+  }[] = [];
+  i = lineStart;
+  while (i < lineEnd) {
+    const ch = input.charCodeAt(i);
+    if (ch === 0x5c && i + 1 < lineEnd) {
+      const next = input.charCodeAt(i + 1);
+      if (next === 0x20) {
+        i++;
+        continue;
+      }
+      if (next === 0x5d && stack.length > 0) {
+        stack[stack.length - 1]!.nested = true;
+      }
+      i += 2;
+      continue;
     }
+    if (ch === 0x60) {
+      const { closeEnd, afterOpen } = scanCodeSpan(input, i, idx);
+      i = closeEnd >= 0 ? closeEnd : afterOpen;
+      continue;
+    }
+    if (ch === 0x21 && i + 1 < lineEnd && input.charCodeAt(i + 1) === 0x5b) {
+      if (stack.length > 0) stack[stack.length - 1]!.nested = true;
+      stack.push({
+        open: i + 1,
+        isImage: true,
+        nested: false,
+        hasInnerLink: false,
+      });
+      i += 2;
+      continue;
+    }
+    if (ch === 0x5b) {
+      const noteLinkEnd = scanNoteLinkEnd(input, i, lineEnd, idx);
+      if (noteLinkEnd > i) {
+        const closeAfter = input.startsWith(
+          SUGGESTED_LINK_MARKER,
+          noteLinkEnd - SUGGESTED_LINK_MARKER.length,
+        )
+          ? noteLinkEnd - SUGGESTED_LINK_MARKER.length
+          : noteLinkEnd;
+        const canOuterLink =
+          (stack.length === 0 || stack[stack.length - 1]!.isImage) &&
+          input.charCodeAt(i + 2) !== 0x5b &&
+          !input.slice(i + 2, closeAfter - 2).includes('[') &&
+          tryScanLinkDest(input, closeAfter, idx) > 0;
+        if (!canOuterLink) {
+          if (stack.length > 0 && !stack[stack.length - 1]!.isImage) {
+            stack[stack.length - 1]!.hasInnerLink = true;
+          }
+          i = noteLinkEnd;
+          continue;
+        }
+      }
+      if (stack.length > 0) stack[stack.length - 1]!.nested = true;
+      stack.push({
+        open: i,
+        isImage: false,
+        nested: false,
+        hasInnerLink: false,
+      });
+      i++;
+      continue;
+    }
+    if (ch === 0x5d) {
+      if (stack.length > 0) {
+        const top = stack.pop()!;
+        if (stack.length > 0 && top.nested) {
+          stack[stack.length - 1]!.nested = true;
+        }
+        const canFormLink = top.isImage || !top.hasInnerLink;
+        const linkEnd = canFormLink ? tryScanLinkDest(input, i + 1, idx) : -1;
+        if (linkEnd > 0) {
+          idx.brackets.set(top.open, { close: i, linkEnd, nested: top.nested });
+          if (!top.isImage && stack.length > 0) {
+            stack[stack.length - 1]!.hasInnerLink = true;
+          }
+          i = linkEnd;
+          continue;
+        }
+        if (!top.isImage && top.hasInnerLink && stack.length > 0) {
+          stack[stack.length - 1]!.hasInnerLink = true;
+        }
+      }
+      i++;
+      continue;
+    }
+    if (ch === 0x3c) {
+      const tagEnd = scanAngleTokenEnd(input, i, idx, false);
+      i = tagEnd > i ? tagEnd : i + 1;
+      continue;
+    }
+    if (idx.linkifyBareUrls && stack.length === 0 && (ch === 0x68 || ch === 0x6d)) {
+      const bareEnd = scanBareUrlDuringIndex(input, i, lineStart, lineEnd);
+      if (bareEnd > i) {
+        i = bareEnd;
+        continue;
+      }
+    }
+    if (ch === 0x24) {
+      const mathEnd = scanInlineMathEnd(input, i, lineEnd, idx);
+      i = mathEnd > i ? mathEnd : i + 1;
+      continue;
+    }
+    i++;
+  }
+
+  idx.lastCloseParen = -1;
+  idx.lastCloseAngle = -1;
+  idx.lastDoubleCloseBracket = -1;
+  idx.blankNoteLinkFailUntil = -1;
+  idx.lastUnescapedDollar = -1;
+  idx.dollarScanPos = lineStart;
+  idx.skipHtmlSpecial = false;
+}
+
+/**
+ * If `input[pos]` opens an unescaped CommonMark inline code span on `idx`'s
+ * line, return the index right after its matching closing backtick run; else
+ * return `closeEnd: -1` and `afterOpen` past the opening run.
+ */
+export function scanCodeSpan(
+  input: string,
+  pos: number,
+  idx: LineIndex,
+): { closeEnd: number; afterOpen: number } {
+  ensureLineIndexed(input, idx);
+  const ticks = idx.backtickLenAt.get(pos);
+  if (ticks === undefined) return { closeEnd: -1, afterOpen: pos + 1 };
+  const runs = idx.backtickRunsByLen.get(ticks);
+  const matchStart = runs ? findNextRunAfter(runs, pos) : -1;
+  if (matchStart >= 0) {
+    return { closeEnd: matchStart + ticks, afterOpen: pos + ticks };
+  }
+  return { closeEnd: -1, afterOpen: pos + ticks };
+}
+
+function scanLinkDestinationEnd(input: string, openParen: number, idx: LineIndex): number {
+  const { lineEnd } = idx;
+  let k = openParen + 1;
+  while (k < lineEnd && (input[k] === ' ' || input[k] === '\t')) k++;
+  if (k >= lineEnd) return -1;
+
+  if (input.charCodeAt(k) === 0x3c) {
+    k++;
+    while (k < lineEnd) {
+      const ch = input.charCodeAt(k);
+      if (ch === 0x3c) return -1;
+      if (ch === 0x3e) {
+        k++;
+        break;
+      }
+      if (ch === 0x5c && k + 1 < lineEnd) {
+        k += 2;
+        continue;
+      }
+      k++;
+    }
+    if (k > lineEnd || input.charCodeAt(k - 1) !== 0x3e) return -1;
+  } else {
+    let depth = 0;
+    while (k < lineEnd) {
+      const ch = input.charCodeAt(k);
+      if (ch <= 0x20 || ch === 0x7f) break;
+      if (ch === 0x5c && k + 1 < lineEnd) {
+        if (input.charCodeAt(k + 1) === 0x20) {
+          k++;
+          break;
+        }
+        k += 2;
+        continue;
+      }
+      if (ch === 0x28) {
+        depth++;
+        if (depth > 32) return -1;
+      } else if (ch === 0x29) {
+        if (depth === 0) return k + 1;
+        depth--;
+      }
+      k++;
+    }
+    if (depth !== 0) return -1;
+  }
+
+  const afterDest = k;
+  while (k < lineEnd && (input[k] === ' ' || input[k] === '\t')) k++;
+  if (k < lineEnd && input.charCodeAt(k) === 0x29) return k + 1;
+  if (k === afterDest || k >= lineEnd) return -1;
+  const quote = input.charCodeAt(k);
+  if (quote !== 0x22 && quote !== 0x27 && quote !== 0x28) return -1;
+  if (quote === 0x22 && k < idx.doubleQuoteFailUntil) return -1;
+  if (quote === 0x27 && k < idx.singleQuoteFailUntil) return -1;
+  const closeMarker = quote === 0x28 ? 0x29 : quote;
+  k++;
+  while (k < lineEnd) {
+    const ch = input.charCodeAt(k);
+    if (ch === closeMarker) {
+      k++;
+      while (k < lineEnd && (input[k] === ' ' || input[k] === '\t')) k++;
+      return k < lineEnd && input.charCodeAt(k) === 0x29 ? k + 1 : -1;
+    }
+    if (quote === 0x28 && ch === 0x28) return -1;
+    if (ch === 0x5c && k + 1 < lineEnd) {
+      k += 2;
+      continue;
+    }
+    k++;
+  }
+  if (quote === 0x22) idx.doubleQuoteFailUntil = lineEnd;
+  else if (quote === 0x27) idx.singleQuoteFailUntil = lineEnd;
+  return -1;
+}
+
+/**
+ * Match `[label](destination)` starting at `input[pos] === '['` in O(1)
+ * amortized time using `idx`'s pre-indexed bracket pairs.
+ */
+export function scanMarkdownLink(
+  input: string,
+  pos: number,
+  idx: LineIndex,
+): { closeBracket: number; linkEnd: number; nested: boolean } | null {
+  ensureLineIndexed(input, idx);
+  const match = idx.brackets.get(pos);
+  if (!match) return null;
+  return { closeBracket: match.close, linkEnd: match.linkEnd, nested: match.nested };
+}
+
+const SCHEME_AUTOLINK_RE = /^<([a-zA-Z][a-zA-Z0-9+.-]{1,31}):([^<>\x00-\x20]*)>$/;
+const EMAIL_AUTOLINK_RE =
+  /^<[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*>$/;
+const BAD_AUTOLINK_PROTO_RE = /^(?:vbscript|javascript|file|data):/i;
+const DATA_IMAGE_AUTOLINK_RE = /^data:image\/(?:gif|png|jpeg|webp);/i;
+
+function isAsciiLetter(ch: number): boolean {
+  const lc = ch | 0x20;
+  return lc >= 0x61 && lc <= 0x7a;
+}
+
+function isMarkdownAutolink(slice: string): boolean {
+  if (EMAIL_AUTOLINK_RE.test(slice)) return true;
+  if (!SCHEME_AUTOLINK_RE.test(slice)) return false;
+  const inner = slice.slice(1, -1);
+  return !BAD_AUTOLINK_PROTO_RE.test(inner) || DATA_IMAGE_AUTOLINK_RE.test(inner);
+}
+
+function parseSpecialHtmlHeader(
+  input: string,
+  pos: number,
+  limit: number,
+): { immediateEnd: number; start: number; terminator: string } | null {
+  if (pos + 2 >= limit) return null;
+  const c1 = input.charCodeAt(pos + 1);
+  if (c1 === 0x21) {
+    if (input.startsWith('<!--', pos)) {
+      if (pos + 5 <= limit && input.startsWith('>', pos + 4)) {
+        return { immediateEnd: pos + 5, start: -1, terminator: '' };
+      }
+      if (pos + 6 <= limit && input.startsWith('->', pos + 4)) {
+        return { immediateEnd: pos + 6, start: -1, terminator: '' };
+      }
+      return { immediateEnd: -1, start: pos + 4, terminator: '-->' };
+    }
+    if (input.startsWith('<![CDATA[', pos)) {
+      return { immediateEnd: -1, start: pos + 9, terminator: ']]>' };
+    }
+    if (isAsciiLetter(input.charCodeAt(pos + 2))) {
+      return { immediateEnd: -1, start: pos + 3, terminator: '>' };
+    }
+    return null;
+  }
+  if (c1 === 0x3f) {
+    return { immediateEnd: -1, start: pos + 2, terminator: '?>' };
+  }
+  return null;
+}
+
+function scanSpecialHtmlLineEnd(input: string, pos: number, idx: LineIndex): number {
+  const spec = parseSpecialHtmlHeader(input, pos, idx.lineEnd);
+  if (!spec) return -1;
+  if (spec.immediateEnd > 0) return spec.immediateEnd;
+  if (spec.start > idx.lineEnd || idx.skipHtmlSpecial) return -1;
+  const end = lineIndexOf(input, idx, spec.terminator, spec.start);
+  if (end < 0) {
+    idx.skipHtmlSpecial = true;
+    return -1;
+  }
+  return end + spec.terminator.length;
+}
+
+function scanHtmlTagEnd(input: string, pos: number, idx: LineIndex): number {
+  const { lineEnd } = idx;
+  let k = pos + 1;
+  if (k >= lineEnd) return -1;
+  const closing = input.charCodeAt(k) === 0x2f;
+  if (closing) k++;
+  if (k >= lineEnd) return -1;
+  const first = input.charCodeAt(k);
+  if (!((first >= 0x41 && first <= 0x5a) || (first >= 0x61 && first <= 0x7a))) return -1;
+  k++;
+  while (k < lineEnd) {
+    const c = input.charCodeAt(k);
+    if (
+      (c >= 0x41 && c <= 0x5a) ||
+      (c >= 0x61 && c <= 0x7a) ||
+      (c >= 0x30 && c <= 0x39) ||
+      c === 0x2d
+    ) {
+      k++;
+    } else {
+      break;
+    }
+  }
+  if (closing) {
+    while (k < lineEnd && (input[k] === ' ' || input[k] === '\t')) k++;
+    return k < lineEnd && input.charCodeAt(k) === 0x3e ? k + 1 : -1;
+  }
+  while (k < lineEnd) {
+    const wsStart = k;
+    while (k < lineEnd && (input[k] === ' ' || input[k] === '\t')) k++;
+    if (k >= lineEnd) return -1;
+    const ch = input.charCodeAt(k);
+    if (ch === 0x3e) return k + 1;
+    if (ch === 0x2f) {
+      return k + 1 < lineEnd && input.charCodeAt(k + 1) === 0x3e ? k + 2 : -1;
+    }
+    if (k === wsStart) return -1;
+    if (
+      !((ch >= 0x41 && ch <= 0x5a) || (ch >= 0x61 && ch <= 0x7a) || ch === 0x5f || ch === 0x3a)
+    ) {
+      return -1;
+    }
+    k++;
+    while (k < lineEnd) {
+      const ac = input.charCodeAt(k);
+      if (
+        (ac >= 0x41 && ac <= 0x5a) ||
+        (ac >= 0x61 && ac <= 0x7a) ||
+        (ac >= 0x30 && ac <= 0x39) ||
+        ac === 0x5f ||
+        ac === 0x2e ||
+        ac === 0x3a ||
+        ac === 0x2d
+      ) {
+        k++;
+      } else {
+        break;
+      }
+    }
+    const afterName = k;
+    while (k < lineEnd && (input[k] === ' ' || input[k] === '\t')) k++;
+    if (k >= lineEnd || input.charCodeAt(k) !== 0x3d) {
+      k = afterName;
+      continue;
+    }
+    k++;
+    while (k < lineEnd && (input[k] === ' ' || input[k] === '\t')) k++;
+    if (k >= lineEnd) return -1;
+    const vc = input.charCodeAt(k);
+    if (vc === 0x22) {
+      if (k < idx.tagDoubleQuoteFailUntil) return -1;
+      const closeQ = lineIndexOf(input, idx, '"', k + 1);
+      if (closeQ < 0) {
+        idx.tagDoubleQuoteFailUntil = lineEnd;
+        return -1;
+      }
+      k = closeQ + 1;
+    } else if (vc === 0x27) {
+      if (k < idx.tagSingleQuoteFailUntil) return -1;
+      const closeQ = lineIndexOf(input, idx, "'", k + 1);
+      if (closeQ < 0) {
+        idx.tagSingleQuoteFailUntil = lineEnd;
+        return -1;
+      }
+      k = closeQ + 1;
+    } else {
+      const valStart = k;
+      while (k < lineEnd) {
+        const uc = input.charCodeAt(k);
+        if (
+          uc <= 0x20 ||
+          uc === 0x22 ||
+          uc === 0x27 ||
+          uc === 0x3d ||
+          uc === 0x3c ||
+          uc === 0x3e ||
+          uc === 0x60
+        ) {
+          break;
+        }
+        k++;
+      }
+      if (k === valStart) return -1;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Match an autolink (`<scheme:...>`, `<me@example.com>`) or CommonMark inline
+ * HTML token (`<tag...>`, `</tag>`, `<!--...-->`, `<?...?>`, `<![CDATA[...]]>`,
+ * `<![A-Za-z]...>` ) starting at `input[pos] === '<'` in linear time. When
+ * `escapedOpen` is true (`\<`), special HTML constructs are rejected and any
+ * `$`, `` ` ``, `[`, or `]` disqualifies it so escaped prose angle brackets
+ * never swallow following syntax.
+ */
+export function scanAngleTokenEnd(
+  input: string,
+  pos: number,
+  idx: LineIndex,
+  escapedOpen = false,
+): number {
+  const { lineEnd } = idx;
+  if (pos + 2 >= lineEnd) return -1;
+  const c1 = input.charCodeAt(pos + 1);
+  if (c1 <= 0x20 || c1 === 0x3c || c1 === 0x3e) return -1;
+  if (!escapedOpen && (c1 === 0x21 || c1 === 0x3f)) {
+    return scanSpecialHtmlLineEnd(input, pos, idx);
+  }
+  if (pos < idx.noCloseAngleUntil) return -1;
+  if (idx.lastCloseAngle <= pos) {
+    idx.lastCloseAngle = lineIndexOf(input, idx, '>', pos + 1);
+    if (idx.lastCloseAngle < 0) {
+      idx.noCloseAngleUntil = lineEnd;
+      return -1;
+    }
+  }
+  const tagEnd = scanHtmlTagEnd(input, pos, idx);
+  if (tagEnd > pos) {
+    if (escapedOpen && /[$`[\]]/.test(input.slice(pos, tagEnd))) return -1;
+    return tagEnd;
+  }
+  const gt = idx.lastCloseAngle;
+  if (gt - pos > 2048) return -1;
+  const slice = input.slice(pos, gt + 1);
+  if (escapedOpen && /[$`[\]]/.test(slice)) return -1;
+  return isMarkdownAutolink(slice) ? gt + 1 : -1;
+}
+
+function isBlockMathPrefix(input: string, start: number, end: number): boolean {
+  let k = start;
+  while (k < end) {
+    const c = input.charCodeAt(k);
+    if (c === 0x20 || c === 0x09 || c === 0x3e) {
+      k++;
+      continue;
+    }
+    if (
+      (c === 0x2d || c === 0x2b || c === 0x2a) &&
+      k + 1 < end &&
+      (input.charCodeAt(k + 1) === 0x20 || input.charCodeAt(k + 1) === 0x09)
+    ) {
+      k += 2;
+      while (k < end && (input.charCodeAt(k) === 0x20 || input.charCodeAt(k) === 0x09)) k++;
+      if (
+        k + 3 < end &&
+        input.charCodeAt(k) === 0x5b &&
+        (input.charCodeAt(k + 1) === 0x20 ||
+          input.charCodeAt(k + 1) === 0x78 ||
+          input.charCodeAt(k + 1) === 0x58) &&
+        input.charCodeAt(k + 2) === 0x5d &&
+        (input.charCodeAt(k + 3) === 0x20 || input.charCodeAt(k + 3) === 0x09)
+      ) {
+        k += 4;
+      }
+      continue;
+    }
+    if (c >= 0x30 && c <= 0x39) {
+      let d = k + 1;
+      while (d < end && input.charCodeAt(d) >= 0x30 && input.charCodeAt(d) <= 0x39) d++;
+      if (
+        d + 1 < end &&
+        (input.charCodeAt(d) === 0x2e || input.charCodeAt(d) === 0x29) &&
+        (input.charCodeAt(d + 1) === 0x20 || input.charCodeAt(d + 1) === 0x09)
+      ) {
+        k = d + 2;
+        continue;
+      }
+    }
+    return false;
+  }
+  return true;
+}
+
+function skipQuotePrefix(input: string, start: number, end: number): number {
+  let k = start;
+  while (k < end) {
+    let sp = 0;
+    while (sp < 3 && k + sp < end && input.charCodeAt(k + sp) === 0x20) sp++;
+    if (k + sp < end && input.charCodeAt(k + sp) === 0x3e) {
+      k += sp + 1;
+      if (k < end && (input.charCodeAt(k) === 0x20 || input.charCodeAt(k) === 0x09)) k++;
+    } else {
+      break;
+    }
+  }
+  return k;
+}
+
+function isBlankOrQuoteBlank(input: string, start: number, end: number): boolean {
+  let k = skipQuotePrefix(input, start, end);
+  while (k < end) {
+    const c = input.charCodeAt(k);
+    if (c !== 0x20 && c !== 0x09) return false;
+    k++;
+  }
+  return true;
+}
+
+type HtmlBlockKind = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+const HTML_BLOCK_TYPE1_OPEN_RE = /^<(?:script|pre|style|textarea)(?=[\s>]|$)/i;
+const HTML_BLOCK_TYPE1_CLOSE_RE = /<\/(?:script|pre|style|textarea)>/i;
+
+const HTML_BLOCK_TAG_RE =
+  /^<\/?(?:address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul)(?=[\s>]|\/?>|$)/i;
+
+function detectHtmlBlockStart(input: string, start: number, end: number): HtmlBlockKind {
+  let k = skipQuotePrefix(input, start, end);
+  let sp = 0;
+  while (sp < 4 && k < end && input.charCodeAt(k) === 0x20) {
+    k++;
+    sp++;
+  }
+  if (sp >= 4 || k >= end || input.charCodeAt(k) !== 0x3c) return 0;
+  if (k + 1 >= end) return 0;
+  const c1 = input.charCodeAt(k + 1);
+  if (c1 === 0x21) {
+    if (input.startsWith('<!--', k)) return 2;
+    if (input.startsWith('<![CDATA[', k)) return 5;
+    if (k + 2 < end && isAsciiLetter(input.charCodeAt(k + 2))) return 4;
+    return 0;
+  }
+  if (c1 === 0x3f) return 3;
+  const head = input.slice(k, Math.min(end, k + 24));
+  if (HTML_BLOCK_TYPE1_OPEN_RE.test(head)) return 1;
+  if (HTML_BLOCK_TAG_RE.test(head)) return 6;
+  return 0;
+}
+
+function htmlBlockClosesOnLine(kind: HtmlBlockKind, lineSlice: string): boolean {
+  switch (kind) {
+    case 1:
+      return HTML_BLOCK_TYPE1_CLOSE_RE.test(lineSlice);
+    case 2:
+      return lineSlice.includes('-->');
+    case 3:
+      return lineSlice.includes('?>');
+    case 4:
+      return lineSlice.includes('>');
+    case 5:
+      return lineSlice.includes(']]>');
+    default:
+      return false;
   }
 }
 
-export function linkifyMarkdown(input: string): string {
-  if (!input) return input;
+function nestedLinkNeedsOuterSkip(destSlice: string): boolean {
+  const inner = destSlice.slice(1, -1);
+  if (!inner || inner.endsWith('==')) return true;
+  if (inner.includes('$') || /[\s"'<>\\`\x00-\x1f\x7f]/.test(inner)) return true;
+  if (!/^(?:https?:\/\/|mailto:)/i.test(inner)) return true;
+  return trimUrl(inner, false).trailing !== '';
+}
 
-  // Collect regions that must NOT be touched.
-  const skipSpans: Span[] = [];
-  const SKIPS: RegExp[] = [
-    // Fenced code block - non-greedy so separate blocks don't merge.
-    /```[\s\S]*?```/g,
-    // Tilde-fenced code block. CommonMark treats ~~~ as equivalent to ```,
-    // and we consume markdown written by OTHER apps, so which fence character
-    // our own serializer happens to emit says nothing about what arrives.
-    /~~~[\s\S]*?~~~/g,
-    // Inline code span - single backticks, no newlines inside.
-    /`[^`\n]*`/g,
-    // Existing inline markdown links [label](url): linkSpans, below.
-    // Existing autolink <http://...> or <mailto:...>.
-    /<(?:https?:\/\/|mailto:)[^>\s]+>/g,
-    // Math: `$$...$$` and `$...$`, with the editor's guards for the inline
-    // form (no space inside either dollar, no digit after the closing one),
-    // so a price stays prose and a formula is never turned into a link.
-    /\$\$[\s\S]*?\$\$/g,
-    /(?<![\\$])\$(?![\s\d$])[^$\n]*?[^\s$\\]\$(?!\d)/g,
-  ];
-  // Existing inline links, and raw HTML tags. Markdown allows inline HTML and
-  // imported bodies carry it, so without the tag skip an `<a href="https://x">`
-  // became `<a href="<https://x>">` - a corrupted attribute rather than a
-  // link. A tag needs a letter after `<` so prose comparisons ("a < b") are
-  // untouched, and stops at a newline so a stray `<` cannot swallow a
-  // paragraph. Both are scans rather than regexes, so a crafted line stays linear.
-  linkSpans(input, skipSpans);
-  htmlTagSpans(input, skipSpans);
-
-  for (const re of SKIPS) {
-    for (const m of input.matchAll(re)) {
-      const start = m.index ?? 0;
-      skipSpans.push({ start, end: start + m[0].length });
+function scanEscapedBracketPseudoLink(
+  input: string,
+  backslashPos: number,
+  lineEnd: number,
+): number {
+  const labelLimit = Math.min(lineEnd, backslashPos + 2048);
+  let j = backslashPos + 2;
+  while (j < labelLimit) {
+    const c = input.charCodeAt(j);
+    if (c === 0x5c && j + 1 < lineEnd) {
+      const next = input.charCodeAt(j + 1);
+      if (next === 0x5b) return -1;
+      if (next === 0x5d) {
+        if (j + 2 >= lineEnd || input.charCodeAt(j + 2) !== 0x28) return -1;
+        const destLimit = Math.min(lineEnd, j + 2051);
+        let k = j + 3;
+        while (k < destLimit) {
+          const dc = input.charCodeAt(k);
+          if (dc === 0x29) return k > j + 3 ? k + 1 : -1;
+          if (
+            (dc < 0x20 && dc !== 0x09) ||
+            dc === 0x7f ||
+            dc === 0x24 ||
+            dc === 0x5b ||
+            dc === 0x5d ||
+            dc === 0x28 ||
+            dc === 0x3c ||
+            dc === 0x3e ||
+            dc === 0x60 ||
+            dc === 0x5c
+          ) {
+            return -1;
+          }
+          k++;
+        }
+        return -1;
+      }
+      j += 2;
+      continue;
     }
+    if (c === 0x5b || c === 0x5d || c === 0x60 || c === 0x3c || c === 0x24) return -1;
+    j++;
   }
-  skipSpans.sort((a, b) => a.start - b.start);
+  return -1;
+}
 
-  // Merge any overlapping or nested skip regions so we don't double-copy.
+function scanBareUrlInSegment(input: string, pos: number, idx: LineIndex): number {
+  const prefixLen = bareUrlPrefixLen(input, pos);
+  if (prefixLen === 0) return -1;
+  const { lineStart, lineEnd } = idx;
+  let end = pos + prefixLen;
+  while (end < lineEnd) {
+    const c = input.charCodeAt(end);
+    if (c <= 0x20 || c === 0x7f || c === 0x3c || c === 0x3e || c === 0x60 || c === 0x22) {
+      break;
+    }
+    if (c === 0x21 && end + 1 < lineEnd && input.charCodeAt(end + 1) === 0x5b) {
+      ensureLineIndexed(input, idx);
+      if (idx.brackets.has(end + 1)) break;
+    } else if (c === 0x5b) {
+      ensureLineIndexed(input, idx);
+      if (idx.brackets.has(end) || scanNoteLinkEnd(input, end, lineEnd, idx) > end) {
+        break;
+      }
+    }
+    end++;
+  }
+  if (end === pos + prefixLen) return -1;
+  const rawMatch = input.slice(pos, end);
+  let inHighlight = false;
+  if (rawMatch.endsWith('==')) {
+    inHighlight = (input.slice(lineStart, pos).match(/==/g)?.length ?? 0) % 2 === 1;
+  }
+  const { url } = trimUrl(rawMatch, inHighlight);
+  return url.length > 0 ? pos + url.length : -1;
+}
+
+function extendMathSpanPastEnclosingHtmlTag(
+  input: string,
+  from: number,
+  mathEnd: number,
+  idx: LineIndex,
+): number {
+  let lt = from;
+  while (lt < mathEnd) {
+    if (
+      input.charCodeAt(lt) === 0x3c &&
+      (lt === idx.lineStart || input.charCodeAt(lt - 1) !== 0x5c)
+    ) {
+      const tagEnd = scanHtmlTagEnd(input, lt, idx);
+      if (tagEnd > mathEnd) {
+        return /[[`$\]]/.test(input.slice(mathEnd, tagEnd)) ? mathEnd : tagEnd;
+      }
+      if (tagEnd > lt) {
+        lt = tagEnd;
+        continue;
+      }
+    }
+    lt++;
+  }
+  return mathEnd;
+}
+
+function findParagraphEnd(input: string, fromLineEnd: number, segEnd: number): number {
+  let p = fromLineEnd;
+  while (p < segEnd && input.charCodeAt(p) === 0x0a) {
+    const lineStart = p + 1;
+    const nl = input.indexOf('\n', lineStart);
+    const lEnd = nl < 0 || nl > segEnd ? segEnd : nl;
+    if (
+      isBlankOrQuoteBlank(input, lineStart, lEnd) ||
+      detectHtmlBlockStart(input, lineStart, lEnd) !== 0
+    ) {
+      return p;
+    }
+    p = lEnd;
+  }
+  return p;
+}
+
+/**
+ * Scan `[segStart, segEnd)` left-to-right outside fenced code blocks to collect
+ * CommonMark HTML blocks, inline code spans, `[label](url)` links, `[[...]]`
+ * note-links, `<...>` autolinks, raw HTML tags/comments, `$$...$$` block math,
+ * and `$...$` inline math in markdown-it's precedence order so `$` inside code,
+ * links, note-links, autolinks, bare URLs, comments, or tag attributes never
+ * pairs with a following `$...$` equation.
+ */
+function scanSegmentSkips(input: string, segStart: number, segEnd: number, out: Span[]): void {
+  let pos = segStart;
+  let lineEnd = -1;
+  let idx = createLineIndex(segStart, segStart, true);
+  let noBlockMathClose = false;
+  let escapedAngleAt = -1;
+  let htmlBlockKind: HtmlBlockKind = 0;
+  let paraEnd = -1;
+  let paraSkipHtmlSpecial = false;
+
+  const refreshLine = (atLineStart: boolean) => {
+    const nl = input.indexOf('\n', pos);
+    lineEnd = nl < 0 || nl > segEnd ? segEnd : nl;
+    const actualStart = atLineStart
+      ? pos
+      : Math.max(segStart, input.lastIndexOf('\n', pos - 1) + 1);
+    idx = createLineIndex(actualStart, lineEnd, true);
+    escapedAngleAt = -1;
+    if (!atLineStart) return;
+    if (htmlBlockKind !== 0) {
+      if (htmlBlockKind === 6 && isBlankOrQuoteBlank(input, pos, lineEnd)) {
+        htmlBlockKind = 0;
+        paraEnd = -1;
+        paraSkipHtmlSpecial = false;
+      } else {
+        out.push({ start: pos, end: lineEnd });
+        if (htmlBlockKind !== 6 && htmlBlockClosesOnLine(htmlBlockKind, input.slice(pos, lineEnd))) {
+          htmlBlockKind = 0;
+        }
+        pos = lineEnd;
+      }
+      return;
+    }
+    if (isBlankOrQuoteBlank(input, pos, lineEnd)) {
+      paraEnd = -1;
+      paraSkipHtmlSpecial = false;
+      return;
+    }
+    const kind = detectHtmlBlockStart(input, pos, lineEnd);
+    if (kind !== 0) {
+      paraEnd = -1;
+      paraSkipHtmlSpecial = false;
+      out.push({ start: pos, end: lineEnd });
+      if (kind === 6 || !htmlBlockClosesOnLine(kind, input.slice(pos, lineEnd))) {
+        htmlBlockKind = kind;
+      }
+      pos = lineEnd;
+    }
+  };
+  refreshLine(segStart === 0 || input.charCodeAt(segStart - 1) === 0x0a);
+
+  while (pos < segEnd) {
+    if (pos > lineEnd) refreshLine(pos === 0 || input.charCodeAt(pos - 1) === 0x0a);
+    if (pos >= segEnd) break;
+    const ch = input.charCodeAt(pos);
+    if (ch === 0x0a) {
+      pos++;
+      refreshLine(true);
+      continue;
+    }
+    if (ch === 0x5c && pos + 1 < lineEnd) {
+      const next = input.charCodeAt(pos + 1);
+      if (next === 0x20) {
+        pos++;
+        continue;
+      }
+      if (next === 0x5b) {
+        const pseudoEnd = scanEscapedBracketPseudoLink(input, pos, lineEnd);
+        if (pseudoEnd > pos) {
+          out.push({ start: pos, end: pseudoEnd });
+          pos = pseudoEnd;
+          continue;
+        }
+      } else if (next === 0x3c) {
+        escapedAngleAt = pos + 1;
+        pos++;
+        continue;
+      }
+      pos += 2;
+      continue;
+    }
+    if (ch === 0x60) {
+      const { closeEnd, afterOpen } = scanCodeSpan(input, pos, idx);
+      if (closeEnd >= 0) {
+        out.push({ start: pos, end: closeEnd });
+        pos = closeEnd;
+      } else {
+        pos = afterOpen;
+      }
+      continue;
+    }
+    if (ch === 0x5b) {
+      const link = scanMarkdownLink(input, pos, idx);
+      if (link) {
+        if (
+          !link.nested ||
+          nestedLinkNeedsOuterSkip(input.slice(link.closeBracket + 1, link.linkEnd))
+        ) {
+          out.push({ start: pos, end: link.linkEnd });
+        } else {
+          out.push({ start: pos, end: link.closeBracket + 1 });
+        }
+        pos = link.linkEnd;
+        continue;
+      }
+      const noteLinkEnd = scanNoteLinkEnd(input, pos, lineEnd, idx);
+      if (noteLinkEnd > pos) {
+        out.push({ start: pos, end: noteLinkEnd });
+        pos = noteLinkEnd;
+        continue;
+      }
+      pos++;
+      continue;
+    }
+    if (ch === 0x3c) {
+      const isEscaped = escapedAngleAt === pos;
+      let tagEnd = scanAngleTokenEnd(input, pos, idx, isEscaped);
+      if (tagEnd < 0 && !isEscaped && pos + 2 < segEnd) {
+        const c1 = input.charCodeAt(pos + 1);
+        if ((c1 === 0x21 || c1 === 0x3f) && !paraSkipHtmlSpecial) {
+          if (paraEnd < lineEnd) paraEnd = findParagraphEnd(input, lineEnd, segEnd);
+          if (paraEnd > lineEnd) {
+            const spec = parseSpecialHtmlHeader(input, pos, paraEnd);
+            if (spec && spec.start > 0 && spec.start <= paraEnd) {
+              const pSlice = input.slice(spec.start, paraEnd);
+              const rel = pSlice.indexOf(spec.terminator);
+              if (rel >= 0) {
+                tagEnd = spec.start + rel + spec.terminator.length;
+              } else {
+                paraSkipHtmlSpecial = true;
+              }
+            }
+          } else {
+            paraSkipHtmlSpecial = true;
+          }
+        }
+      }
+      if (tagEnd > pos) {
+        out.push({ start: pos, end: tagEnd });
+        pos = tagEnd;
+        if (pos > lineEnd) refreshLine(pos === 0 || input.charCodeAt(pos - 1) === 0x0a);
+        continue;
+      }
+      pos++;
+      continue;
+    }
+    if (ch === 0x68 || ch === 0x6d) {
+      const bareEnd = scanBareUrlInSegment(input, pos, idx);
+      if (bareEnd > pos) {
+        pos = bareEnd;
+        continue;
+      }
+      pos++;
+      continue;
+    }
+    if (ch === 0x24) {
+      if (
+        pos + 1 < segEnd &&
+        input.charCodeAt(pos + 1) === 0x24 &&
+        isBlockMathPrefix(input, idx.lineStart, pos)
+      ) {
+        if (!noBlockMathClose) {
+          const close = input.indexOf('$$', pos + 2);
+          if (close >= 0 && close + 2 <= segEnd) {
+            out.push({ start: pos, end: close + 2 });
+            pos = close + 2;
+            if (pos > lineEnd) refreshLine(pos === 0 || input.charCodeAt(pos - 1) === 0x0a);
+            continue;
+          }
+          noBlockMathClose = true;
+        }
+        pos += 2;
+        while (pos < segEnd && input.charCodeAt(pos) === 0x24) pos++;
+        continue;
+      }
+      const mathEnd = scanInlineMathEnd(input, pos, lineEnd, idx);
+      if (mathEnd > pos) {
+        const safeEnd = extendMathSpanPastEnclosingHtmlTag(input, pos + 1, mathEnd, idx);
+        out.push({ start: pos, end: safeEnd });
+        pos = mathEnd;
+        continue;
+      }
+      pos++;
+      continue;
+    }
+    pos++;
+  }
+}
+
+function mergeSpans(spans: Span[]): Span[] {
+  spans.sort((a, b) => a.start - b.start);
   const merged: Span[] = [];
-  for (const s of skipSpans) {
+  for (const s of spans) {
     const last = merged[merged.length - 1];
     if (last && s.start <= last.end) {
       last.end = Math.max(last.end, s.end);
@@ -240,6 +1282,35 @@ export function linkifyMarkdown(input: string): string {
       merged.push({ ...s });
     }
   }
+  return merged;
+}
+
+export function linkifyMarkdown(input: string): string {
+  if (!input) return input;
+
+  // Fenced code blocks (` ``` ` and `~~~`) are skipped first at the block level
+  // so tokens inside fences never pair with prose outside them.
+  const fenceSpans: Span[] = [];
+  for (const re of [/```[\s\S]*?```/g, /~~~[\s\S]*?~~~/g]) {
+    for (const m of input.matchAll(re)) {
+      const start = m.index ?? 0;
+      fenceSpans.push({ start, end: start + m[0].length });
+    }
+  }
+  const mergedFences = mergeSpans(fenceSpans);
+
+  const skipSpans: Span[] = [...mergedFences];
+  let segCursor = 0;
+  for (const fence of mergedFences) {
+    if (segCursor < fence.start) {
+      scanSegmentSkips(input, segCursor, fence.start, skipSpans);
+    }
+    segCursor = fence.end;
+  }
+  if (segCursor < input.length) {
+    scanSegmentSkips(input, segCursor, input.length, skipSpans);
+  }
+  const merged = mergeSpans(skipSpans);
 
   // Walk the input: copy skipped regions verbatim, run the linkify pass
   // on the gaps between them.

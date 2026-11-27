@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './auth';
+import { withBackendNetworkAllowed } from './localOnly';
 import type { DeviceRow } from './devices';
 import { shortDeviceId } from './deviceSlots';
 import { formatRelative } from './intlFormat';
@@ -24,7 +25,7 @@ import { Badge, Button, Callout, IconUpgrade, Modal, ModalFooter, SectionEyebrow
  */
 export function DeviceLimitModal() {
   const { t } = useTranslation('security');
-  const { auth, resolveDeviceLimit, signOut, refreshProStatus } = useAuth();
+  const { auth, resolveDeviceLimit, cancelLocalOnlyGraduation, signOut, refreshProStatus } = useAuth();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -161,19 +162,21 @@ export function DeviceLimitModal() {
               onClick={async () => {
                 setCheckoutLoading(true);
                 try {
-                  await startProCheckout(
-                    auth.pubkey,
-                    () => {
-                      void refreshProStatus();
-                    },
-                    () => {
-                      // Desktop return: re-check Pro silently, no payment banner.
-                      void refreshProStatus({ silent: true });
-                    },
-                    // Native IAP failure: reuse the modal's error box so the
-                    // tap never fails silently (Play internal test).
-                    (reason) => setError(t(`billing:purchaseError.${reason}`)),
-                  );
+                  const runCheckout = () =>
+                    startProCheckout(
+                      auth.pubkey,
+                      () => {
+                        void refreshProStatus();
+                      },
+                      () => {
+                        // Desktop return: re-check Pro silently, no payment banner.
+                        void refreshProStatus({ silent: true });
+                      },
+                      // Native IAP failure: reuse the modal's error box so the
+                      // tap never fails silently (Play internal test).
+                      (reason) => setError(t(`billing:purchaseError.${reason}`)),
+                    );
+                  await (auth.localOnly ? withBackendNetworkAllowed(runCheckout) : runCheckout());
                 } catch (err) {
                   console.error('Paddle checkout error:', err);
                 } finally {
@@ -213,14 +216,23 @@ export function DeviceLimitModal() {
         )}
 
         <ModalFooter>
-          <Button
-            icon={<SignOut aria-hidden="true" />}
-            onClick={() => void signOut({ keepUnsyncedNotes: true })}
-            className="w-full sm:w-auto"
-            disabled={busy !== null}
-          >
-            {t('settings:account.signOut')}
-          </Button>
+          {auth.localOnly ? (
+            <Button
+              action="back"
+              onClick={cancelLocalOnlyGraduation}
+              className="w-full sm:w-auto"
+              disabled={busy !== null || checkoutLoading}
+            />
+          ) : (
+            <Button
+              icon={<SignOut aria-hidden="true" />}
+              onClick={() => void signOut({ keepUnsyncedNotes: true })}
+              className="w-full sm:w-auto"
+              disabled={busy !== null || checkoutLoading}
+            >
+              {t('settings:account.signOut')}
+            </Button>
+          )}
         </ModalFooter>
     </Modal>
   );

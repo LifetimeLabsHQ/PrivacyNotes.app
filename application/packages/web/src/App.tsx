@@ -26,6 +26,7 @@ import { clearManualLock, lockCurtainIsStale, lockReloadKeptReminders, manualLoc
 import { lockReloadHeld, lockReloadsPage, reloadForLock } from './lockReload';
 import { exitWritesRun, flushEditorsForExit, tabEditWaits } from './flushStash';
 import { syncPassRunning } from './sync';
+import { startAppIcon } from './appIcon';
 import { startTrayMode } from './trayMode';
 import { ninjaKeySupported, startNinjaShortcut } from './ninjaShortcut';
 import { startNinjaHost } from './ninjaHost';
@@ -35,7 +36,7 @@ import { removedWhileLocked, wipeRemovedWhileLocked } from './lockRemovalCheck';
 import { loadLocalSettings, saveLocalSettings } from './userSettings';
 import { isTrustedDevice } from './trustStorage';
 import { isDemoMode } from './demo';
-import { hasLocalOnlyVault, isLocalOnly } from './localOnly';
+import { hasLocalOnlyVault, hasUnsyncedLocalVault, isLocalOnly, isUnsyncedLocalVault } from './localOnly';
 import { reopenDb } from './db';
 import { detectPlatform, isOpenLinkModifier } from './devices';
 import { isApexHost, usesOfficialServer } from './hosts';
@@ -280,6 +281,7 @@ export default function App() {
   // Ninja from any app: push the key, and answer the box (#694). A start at
   // sign-in shows as Start minimized says (Settings > System).
   useEffect(() => {
+    startAppIcon();
     startTrayMode();
     if (ninjaKeySupported()) {
       startNinjaShortcut();
@@ -568,7 +570,7 @@ export default function App() {
     // and only the server can say so: this device has no record of it yet.
     // A cold start asks the server too, once the offline test says no: an
     // adopted device whose record went missing still takes its current phrase.
-    const localOnly = await hasLocalOnlyVault();
+    const localOnly = (await hasLocalOnlyVault()) || (await hasUnsyncedLocalVault());
     const onlineCheck = !localOnly;
     const belongsHere =
       auth.status === 'authenticated'
@@ -612,12 +614,12 @@ export default function App() {
       // own error reporting from here. signInWithPhrase skips the phrase
       // persist while the lock is armed, so this cannot write the phrase
       // back to disk and undo the lock. Local-only vaults stay offline.
-      if (!localOnly && !isLocalOnly()) {
+      if (!localOnly && !isLocalOnly() && !isUnsyncedLocalVault()) {
         void signInWithPhrase(phrase, isTrustedDevice(), false, undefined, false);
       }
       return true;
     }
-    if (localOnly || isLocalOnly()) {
+    if (localOnly || isLocalOnly() || isUnsyncedLocalVault()) {
       // Never fall through to network sign-in for a local-only vault: a
       // transient IndexedDB hiccup must not silently register/graduate the
       // vault or strand an offline user on a network error screen. Retry

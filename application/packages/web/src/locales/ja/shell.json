@@ -205,7 +205,7 @@
     "color": "色",
     "colorNone": "色なし",
     "colorUseDefault": "標準に戻す",
-    "icon": "アイコンとロゴ",
+    "icon": "アイコン / ロゴ / 絵文字",
     "colorFromFolder": "フォルダから: {{name}}",
     "colorFromTag": "タグから: #{{name}}",
     "colorOwnHint": "ここで選んだ色は、このノートの背景を塗りつぶします。<setting>フォルダとタグの色</setting>では変わりません。",
@@ -360,6 +360,7 @@
   },
   "demoBanner": {
     "title": "リスクなしでお試しください",
+    "shortTitle": "デモ",
     "description": "ここでは何も保存されません。自分専用の暗号化ノートを無料で作れます。"
   },
   "markdown": {
@@ -616,6 +617,10 @@
     "tooLarge": "大きすぎます。上限は1ファイルあたり{{limit}} MBです。",
     "titlePlaceholder": "タイトル（任意）",
     "notePlaceholder": "ノートを追加...",
+    "taskPlaceholder": "タスク項目...",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "今日のジャーナルの記録に追記します。",
+    "clipFallbackToast": "ページをクリップできませんでした。代わりにブックマークとして保存しました。",
     "photoCount": "写真 {{count}}枚"
   },
   "shortcut": {
@@ -921,7 +926,8 @@
     "label": "クイック追加"
   },
   "offline": {
-    "notLoaded": "オフラインのため、アプリのこの部分はまだ読み込まれていません。オンラインに戻ってから、もう一度お試しください。"
+    "notLoaded": "オフラインのため、アプリのこの部分はまだ読み込まれていません。オンラインに戻ってから、もう一度お試しください。",
+    "chunkBlocked": "この画面を読み込めませんでした。ページを再読み込みするか、コンテンツブロッカーを確認してください。"
   },
   "checkIn": {
     "prompt": "今日の気分はどうですか?",
@@ -1094,6 +1100,7 @@
     "removed": "ホームから削除しました",
     "showOnHome": "ホームに表示",
     "removeFromHome": "ホームから削除",
+    "openTarget": "{{target}}を開く",
     "resize": "{{name}}のサイズを変更",
     "narrower": "もっと狭く",
     "taller": "もっと高く",
@@ -1101,29 +1108,72 @@
     "moveEarlier": "前に移動",
     "moveLater": "後ろに移動",
     "chooseNote": "ノートを選択",
+    "chooseNotes": "ノートを選択",
     "chooseTag": "タグを選択",
+    "chooseTags": "タグを選択",
     "chooseFolder": "フォルダを選択",
+    "chooseFolders": "フォルダを選択",
     "chooseTracker": "トラッカーを選択",
+    "chooseCounter": "カウンターを選択",
+    "chooseCounters": "カウンターを選択",
+    "chooseTypes": "項目の種類を選択",
     "choose": "選択",
     "gone": "見つかりません",
     "otherSpace": "別のスペースにあります",
     "proLocked": "Pro 機能",
     "noneToChoose": "選択できるものはまだありません",
+    "catalogSearch": "ウィジェットを検索",
+    "catalogFilter": "ウィジェットを絞り込む",
+    "allWidgets": "すべてのウィジェット",
+    "onHomeLabel": "ホームに表示中",
+    "onHomeCount": "ホームに表示中({{count}})",
     "headerEvents_other": "今日の予定 {{formatted}}件",
+    "headerOverdue_other": "期限切れ {{formatted}}件",
     "headerTasks_other": "未完了のタスク {{formatted}}件",
+    "headerDosesLeft_other": "残りの服用 {{formatted}}回",
     "startToday": "今日の記録を始める",
+    "setupMedication": "薬を設定",
+    "setupCounter": "カウンターを作成",
+    "counterIncrease": "{{name}}に1を足す",
+    "counterDecrease": "{{name}}から1を引く",
+    "storageSummary": "ノート {{notes}}件 · ファイル {{files}}件",
+    "graphSummary": "リンクあり {{linked}} · リンクなし {{orphans}}",
+    "placesSummary_other": "場所のある項目 {{count}}件",
+    "quickCapture": {
+      "placeholderJournal": "今日のジャーナルに追加...",
+      "placeholderTask": "タスクを追加...",
+      "placeholderNote": "クイックノートを書く...",
+      "destination": "保存先",
+      "voice": "ボイスメモを録音",
+      "voiceNoteTitle": "ボイスメモ",
+      "recording": "録音中 {{duration}}",
+      "savingVoice": "ボイスメモを暗号化しています...",
+      "savedTo": "{{title}}に保存しました",
+      "failed": "今は保存できませんでした。",
+      "micUnavailable": "ここではマイクで録音できません。",
+      "micDenied": "マイクへのアクセスが拒否されました。"
+    },
     "groups": {
-      "keep": "保管しているもの"
+      "graph": "グラフと地図",
+      "keep": "その他"
     },
     "layout": {
       "everyday": "毎日",
       "planner": "プランナー",
-      "writer": "ライター"
+      "writer": "ライター",
+      "wellness": "ウェルネス"
     },
     "w": {
       "checkIn": {
         "name": "チェックイン",
         "help": "今日の調子とトラッカー"
+      },
+      "medication": {
+        "help": "今日の服用、「服用」か「スキップ」、補充の通知"
+      },
+      "quickCapture": {
+        "name": "クイックキャプチャ",
+        "help": "ホームから直接テキストやボイスメモを追加"
       },
       "calendar": {
         "help": "記録と予定の点が付いた月表示"
@@ -1138,7 +1188,7 @@
       },
       "tasks": {
         "name": "未完了のタスク",
-        "help": "ノート内のチェックされていないタスク"
+        "help": "期限切れと期限のタスクを先頭に、クイック追加付き"
       },
       "recent": {
         "name": "最近編集した項目",
@@ -1159,9 +1209,19 @@
         "name": "フォルダ",
         "help": "1つのフォルダ内の最新のアイテム"
       },
+      "types": {
+        "name": "項目リスト",
+        "help": "選んだ種類の最新の項目"
+      },
       "onThisDay": {
         "name": "過去の今日",
         "help": "前の年の同じ日のジャーナルの記録"
+      },
+      "graph": {
+        "help": "保管庫内のリンクされたノートのライブミニマップ"
+      },
+      "places": {
+        "help": "場所のあるノート、記録、連絡先を地図に表示"
       },
       "week": {
         "help": "単語数、活動日数、アイテム、チェックイン"
@@ -1176,6 +1236,12 @@
         "name": "あなたのリズム",
         "help": "26週間の執筆と気分"
       },
+      "yearPixels": {
+        "help": "1年分の気分の色をひと目で"
+      },
+      "patterns": {
+        "help": "気分を最も上げ下げするもの"
+      },
       "milestone": {
         "name": "次のマイルストーン",
         "help": "次のマイルストーンまでの進み具合"
@@ -1183,6 +1249,9 @@
       "tracker": {
         "name": "トラッカー",
         "help": "1つのトラッカーの数値と記録した日"
+      },
+      "counter": {
+        "help": "ホームで直接+1をタップできるカスタムカウンター"
       },
       "weekRecap": {
         "help": "1週間を1枚のカードで"
@@ -1196,9 +1265,13 @@
       },
       "birthdays": {
         "help": "30日以内の誕生日"
+      },
+      "storage": {
+        "help": "暗号化ストレージの使用量リング、再集計付き"
       }
     },
     "empty": {
+      "medication": "今日服用する薬はありません",
       "upcoming": "7日以内の予定はありません",
       "tasks": "未完了のタスクはありません",
       "recent": "まだ何もありません",
@@ -1206,6 +1279,11 @@
       "tag": "このタグが付いたアイテムはありません",
       "folder": "このフォルダには何もありません",
       "onThisDay": "前の年のこの日の記録はありません",
+      "graph": "2つのノートをリンクすると、ここにグラフが表示されます",
+      "places": "ノートや連絡先に場所を追加すると、ここにピンが表示されます",
+      "yearPixels": "気分を記録して1年を色で埋めましょう",
+      "patterns": "あと数日記録すると、パターンが見えてきます",
+      "counter": "カウンタートラッカーはまだありません",
       "files": "ファイルはまだありません",
       "bookmarks": "ブックマークはまだありません",
       "birthdays": "30日以内の誕生日はありません",

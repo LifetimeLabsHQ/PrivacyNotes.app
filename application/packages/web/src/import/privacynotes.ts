@@ -40,7 +40,8 @@ import { formatBytes } from '../formatBytes';
 import { hasVaultFiles } from '../vaultBody';
 import { isJunkEntry, normalizeTagList } from './importHelpers';
 import { isUuid } from '../uuid';
-import { cleanFileName } from '../fileNames';
+import { cleanFileName, cleanMimeType } from '../fileNames';
+import { mimeFromExt } from './blobImport';
 import { createFolder, type FolderDef } from '../folders';
 import { commonRootPrefix, IMPORT_FOLDER_LIMIT, parseFolderPath } from './folderImport';
 
@@ -96,7 +97,7 @@ function parseFrontmatter(md: string): { meta: Record<string, unknown>; body: st
 }
 
 /** The trackers a note restores with, the place from its own `location` line
- *  put back into them. Spec: docs/internal/plans/note-location.md (section 6) */
+ *  put back into them. Spec: docs/internal/specs/note-location.md (section 6) */
 function withPlace(
   trackers: Record<string, unknown> | undefined,
   place: NoteLocation | undefined,
@@ -148,10 +149,12 @@ function rewriteAttachmentsForImport(
       if (!uuid) return match;
       if (bang) return `![${name}](pn:file/${uuid})`;
       const info = manifest.attachments[uuid]!;
+      const fallbackName = cleanFileName(typeof info.name === 'string' ? info.name : '', 'Attachment');
       const sizeStr = formatBytes(info.size);
+      const mime = cleanMimeType(info.mime) || mimeFromExt(fallbackName);
       // The link's own text first: one file can be referenced twice under
       // two names, and the manifest holds room for only one of them.
-      return `[${name || info.name}|${sizeStr}|${info.mime}](pn:file/${uuid})`;
+      return `[${name || fallbackName}|${sizeStr}|${mime}](pn:file/${uuid})`;
     },
   );
 }
@@ -446,7 +449,7 @@ export async function parsePrivacyNotesBackup(
   return {
     folders: rebuiltFolders,
     originalFolderIds: originalIds,
-    ...(carried ? { settings: { itemStyles: carried.itemStyles, customThemes: carried.customThemes, factors: carried.factors, customHabits: carried.customHabits, medications: carried.medications, customTrackers: carried.customTrackers, favoriteTags: carried.favoriteTags, calendarFeeds: carried.calendarFeeds, dashboard: carried.dashboard, agentFolder: carried.agentFolder, trackerSetup: carried.trackerSetup } } : {}),
+    ...(carried ? { settings: { itemStyles: carried.itemStyles, customThemes: carried.customThemes, customIcons: carried.customIcons, themeIcons: carried.themeIcons, factors: carried.factors, customHabits: carried.customHabits, medications: carried.medications, customTrackers: carried.customTrackers, favoriteTags: carried.favoriteTags, calendarFeeds: carried.calendarFeeds, dashboard: carried.dashboard, agentFolder: carried.agentFolder, trackerSetup: carried.trackerSetup } } : {}),
     notes,
     warnings,
     transforms: [],
@@ -603,9 +606,10 @@ export async function restoreBlobs(
     // The name and type are the manifest's word: the name is cleaned as
     // every imported file name is (blobImport), and a type that is not text
     // is none.
+    const cleanName = cleanFileName(info.name, 'Attachment');
     const meta: AttachmentMeta = {
-      name: cleanFileName(info.name, 'Attachment'),
-      mime: typeof info.mime === 'string' && info.mime ? info.mime : 'application/octet-stream',
+      name: cleanName,
+      mime: cleanMimeType(info.mime) || mimeFromExt(cleanName),
       size: data.length,
     };
 

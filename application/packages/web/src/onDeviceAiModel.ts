@@ -12,7 +12,7 @@ import { DUPLICATE_CAP, DUPLICATE_LINE, type Neighbor } from './plugins/smartSug
  * The heavy half of Smart connections: the download into the plugin store, the model,
  * and the meaning vectors of the notes (memory only). Loaded on demand by
  * `onDeviceAi.ts` and the settings pane, so none of it is on the boot path.
- * Spec: docs/internal/plans/related-notes.md (part 2)
+ * Spec: docs/internal/specs/related-notes.md (part 2)
  */
 
 let model: StaticModel | null = null;
@@ -201,7 +201,7 @@ function dot(a: Float32Array, b: Float32Array): number {
  * Below this cosine two notes are not about the same thing. Measured on
  * Wikipedia text in seven languages: unrelated notes stay below about 0.34,
  * while the same topic in another language is often 0.43 to 0.49, which a
- * line of 0.5 cut off. Spec: docs/internal/plans/related-notes.md (section 4g)
+ * line of 0.5 cut off. Spec: docs/internal/specs/related-notes.md (section 4g)
  */
 const MIN_MEANING = 0.42;
 

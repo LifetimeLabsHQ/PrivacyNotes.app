@@ -3,7 +3,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { HelpChip } from '../HelpChip';
 import { Check, Copy, Fire } from '../icons';
 import { createBurnLink } from '../burnShare';
-import { useLocalOnly } from '../localOnly';
+import { useUnsyncedLocalVault } from '../localOnly';
 import { LocalOnlyNotice } from '../LocalOnlyNotice';
 import type { VaultField } from '../vaultFields';
 import { Button, Callout, Modal, ModalFooter, Select, TextField } from '../ui';
@@ -41,7 +41,7 @@ export function BurnShareModal({
   onOpenSync?: () => void;
 }) {
   const { t } = useTranslation('notesChrome');
-  const localOnly = useLocalOnly();
+  const localOnly = useUnsyncedLocalVault();
   const [readSeconds, setReadSeconds] = useState(DEFAULT_BURN_READ_SECONDS);
   const [lifetimeHours, setLifetimeHours] = useState(DEFAULT_BURN_LIFETIME_HOURS);
   const [url, setUrl] = useState<string | null>(null);

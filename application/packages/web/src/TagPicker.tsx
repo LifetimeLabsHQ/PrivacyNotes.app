@@ -91,7 +91,7 @@ export function TagPicker({
           className="w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-body cursor-pointer hover:bg-pn/5 transition min-h-[36px]"
         >
           <span className="text-pn-muted text-small shrink-0 inline-flex">
-            <TagMark tag={tag} size={13} />
+            <TagMark tag={tag} size={16} />
           </span>
           <span className="truncate text-start">{tag}</span>
           <span className="ms-auto shrink-0 text-small text-pn-muted tabular-nums">{count}</span>

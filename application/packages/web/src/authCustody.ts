@@ -17,6 +17,7 @@ import {
 import type { AuthState } from './auth';
 import { ensureLevel2, mfaSessionIdentity, MfaCancelledError } from './mfaStep';
 import { isDemoMode } from './demo';
+import { isUnsyncedLocalVault, useUnsyncedLocalVault } from './localOnly';
 
 export function useCustody({
   supabase,
@@ -50,9 +51,10 @@ export function useCustody({
   // cached answer stands.
   const authedPubkey = auth.status === 'authenticated' ? auth.pubkey : null;
   const authedCustodial = auth.status === 'authenticated' ? auth.isCustodial : null;
-  const authedLocalOnly = auth.status === 'authenticated' ? auth.localOnly : false;
+  const unsyncedLocal = useUnsyncedLocalVault();
+  const authedLocalOnly = (auth.status === 'authenticated' ? auth.localOnly : false) || unsyncedLocal;
   useEffect(() => {
-    if (!authedPubkey || authedCustodial === null || authedLocalOnly) return;
+    if (!authedPubkey || authedCustodial === null || authedLocalOnly || isUnsyncedLocalVault()) return;
     let cancelled = false;
     void (async () => {
       let token: string | undefined;
@@ -113,7 +115,7 @@ export function useCustody({
   async function changeCustody(next: boolean): Promise<{ ok: true } | { ok: false; error: string }> {
     if (isDemoMode()) return { ok: false, error: 'Key custody cannot be changed in the demo.' };
     if (auth.status !== 'authenticated') return { ok: false, error: 'Not signed in.' };
-    if (auth.localOnly) return { ok: false, error: 'Turn on sync to change key custody.' };
+    if (auth.localOnly || isUnsyncedLocalVault()) return { ok: false, error: 'Turn on sync to change key custody.' };
     const pubkey = auth.pubkey;
     try {
       const initial = await custodySession(pubkey);

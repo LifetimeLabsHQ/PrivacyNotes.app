@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type HTMLAttributes, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ClockClockwise, CloudSlash, Question, type Icon } from './icons';
+import { ClockClockwise, Devices, Question, type Icon } from './icons';
 import { observeTip, positionClasses, TIP_SKIN } from './HoverLabel';
 import { ARMED_MS } from './ui/DeleteButton';
 
@@ -51,13 +51,13 @@ export function RowTitle({ icon: Glyph, children, hint }: { icon: Icon; children
   );
 }
 
-/** A setting kept on this device and never synced: a cloud-off beside the
+/** A setting kept on this device and never synced: a devices glyph beside the
  *  row title, its words in the tip, so the rows need not end on the same
  *  sentence. `phone` for a phone-only setting.
  *  Spec: docs/internal/design/patterns/201-210.md (section 209) */
 export function DeviceOnlyTip({ phone = false }: { phone?: boolean }) {
   const { t } = useTranslation('settings');
-  return <HelpTip end icon={CloudSlash} text={t(phone ? 'appearance.phoneOnly' : 'appearance.deviceOnly')} />;
+  return <HelpTip end icon={Devices} text={t(phone ? 'appearance.phoneOnly' : 'appearance.deviceOnly')} />;
 }
 
 /** A setting row in a pane: label and helper on the left, the control on the
@@ -131,7 +131,7 @@ export const SETTINGS_SELECT = 'rounded-md bg-track border border-divider ps-2.5
  *  the card for a tile that is already one (a Home widget). */
 export function StatTile({ label, value, sub, children, bare = false }: { label: ReactNode; value: ReactNode; sub?: ReactNode; children?: ReactNode; bare?: boolean }) {
   return (
-    <div className={bare ? 'min-w-0' : 'min-w-0 rounded-lg border border-divider bg-surface-2 px-3 py-2.5'}>
+    <div className={bare ? 'min-w-0' : 'flex min-w-0 flex-col justify-center rounded-lg border border-divider bg-surface-2 px-3 py-2.5'}>
       <div className="text-meta text-pn-muted truncate">{label}</div>
       <div className="text-display font-semibold tabular-nums mt-0.5 truncate">{value}</div>
       {children}
@@ -347,7 +347,7 @@ export function settingsChipClass(on: boolean): string {
  * a tapped button takes no focus on iOS. The button's name is the explanation
  * itself, so a screen reader reads it without opening anything. `icon`
  * swaps the "?" for a glyph that says what kind of note it is, as the
- * cloud-off of a device-only setting does (`DeviceOnlyTip`).
+ * devices icon of a device-only setting does (`DeviceOnlyTip`).
  */
 export function HelpTip({ text, icon: Glyph = Question, end = false }: {
   text: string;

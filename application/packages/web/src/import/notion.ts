@@ -35,7 +35,7 @@
 
 import type JSZip from 'jszip';
 import { openZip } from './zipOpen';
-import { mediaTooLargeWarning, zipEntryBytes, zipEntryText } from './zipEntry';
+import { ImportBudget, mediaTooLargeWarning, zipEntryBytes, zipEntryText } from './zipEntry';
 import { buildFolderTree, commonRootPrefix } from './folderImport';
 import { withBareLinks } from './bareLinks';
 import { FileKeys, fileResolver, keyFileRefs, readKeyedFiles } from './fileRefs';
@@ -43,6 +43,7 @@ import { isBlobReferenced } from './blobImport';
 import { mapOutsideCode, mapOutsideFences } from './codeSegments';
 import { detailsToFold } from './detailsFold';
 import { cleanPath, escapeTypedTags, isJunkEntry, normalizeTagList, noteLink } from './importHelpers';
+import { escapeMarkdownText } from '../markdownEscape';
 import { parseNotionHtml } from './notionHtml';
 import { refusePrivacyNotesBackupZip } from './privacynotes';
 import { isUntitledStem } from '../exportNames';
@@ -192,7 +193,8 @@ function extractDbRowTags(body: string): string[] {
 
 /** Collect all cleaned non-junk file entries from a zip (expanding one level of nested Notion export zips). */
 async function collectZipEntries(file: File): Promise<Map<string, JSZip.JSZipObject>> {
-  const outer = await openZip(file);
+  const budget = new ImportBudget();
+  const outer = await openZip(file, budget);
   await refusePrivacyNotesBackupZip(outer);
 
   const readInto = (zip: JSZip, target: Map<string, JSZip.JSZipObject>) => {
@@ -212,10 +214,9 @@ async function collectZipEntries(file: File): Promise<Map<string, JSZip.JSZipObj
     const innerZips = [...entries.entries()].filter(([p]) => /\.zip$/i.test(p)).slice(0, MAX_INNER_ZIPS);
     if (innerZips.length > 0) {
       const merged = new Map<string, JSZip.JSZipObject>();
-      for (const [path, entry] of innerZips) {
+      for (const [, entry] of innerZips) {
         const bytes = await zipEntryBytes(entry);
-        const name = path.slice(path.lastIndexOf('/') + 1);
-        const inner = await openZip(new File([bytes], name, { type: 'application/zip' }));
+        const inner = await openZip(bytes, budget);
         await refusePrivacyNotesBackupZip(inner);
         readInto(inner, merged);
       }
@@ -246,8 +247,14 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
 
   const mdPaths = [...entries.keys()].filter((p) => /\.md$/i.test(p)).sort();
   const htmlPaths = [...entries.keys()].filter((p) => /\.html?$/i.test(p)).sort();
-  const isHtmlExport = mdPaths.length === 0 && htmlPaths.length > 0;
-  const docPaths = isHtmlExport ? htmlPaths : mdPaths;
+  const hasNotionPageId = (path: string): boolean => {
+    const filename = path.slice(path.lastIndexOf('/') + 1);
+    return stripNotionId(filename.replace(/\.(?:md|html?)$/i, '')).id !== null;
+  };
+  const notionMdPaths = mdPaths.filter(hasNotionPageId);
+  const notionHtmlPaths = htmlPaths.filter(hasNotionPageId);
+  const hasNotionIds = notionMdPaths.length > 0 || notionHtmlPaths.length > 0;
+  const docPaths = (hasNotionIds ? [...notionHtmlPaths, ...notionMdPaths] : [...htmlPaths, ...mdPaths]).sort();
   if (docPaths.length === 0) throw new Error(msg('notNotion'));
 
   // Strip one top-level wrapper folder when every page sits inside it (e.g. `Private & Shared/`).
@@ -303,9 +310,10 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
           .join('/')
       : '';
 
+    const isHtml = /\.html?$/i.test(rawPath);
     let body = rawText;
     let title = isUntitledStem(cleanStem) ? '' : cleanStem;
-    if (isHtmlExport) {
+    if (isHtml) {
       const htmlTitle = readHtmlPageTitle(rawText);
       if (htmlTitle) {
         title = isUntitledStem(cleanStem) && isUntitledStem(htmlTitle) ? '' : htmlTitle;
@@ -337,12 +345,13 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
       notionId,
       title,
       body,
-      isHtml: isHtmlExport,
+      isHtml,
       isDbRow: Boolean(cleanFolderDir) && dbFolderDirs.has(cleanFolderDir),
       entryDate,
     });
   }
 
+  const docSet = new Set(docPaths);
   const docByPath = new Map(docs.map((d) => [d.rawPath, d]));
   const docById = new Map<string, NotionDoc>();
   for (const d of docs) {
@@ -350,7 +359,7 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
   }
   const docResolve = fileResolver(docPaths);
   const csvResolve = fileResolver(csvPaths);
-  const mediaPaths = [...entries.keys()].filter((p) => (isHtmlExport ? !/\.(?:html?|csv)$/i.test(p) : !/\.(?:md|csv)$/i.test(p)));
+  const mediaPaths = [...entries.keys()].filter((p) => !docSet.has(p) && !csvPaths.has(p));
   const mediaResolve = fileResolver(mediaPaths);
   const keys = new FileKeys('ntfile');
 
@@ -373,20 +382,22 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
           let hit = docResolve(href, d.rawDir);
           if (!hit && href.includes('#') && !href.startsWith('#')) {
             const base = href.slice(0, href.lastIndexOf('#'));
-            if (/\.html?$/i.test(base)) hit = docResolve(base, d.rawDir);
+            if (/\.(?:html?|md)$/i.test(base)) hit = docResolve(base, d.rawDir);
           }
           if (hit) {
             const dest = docByPath.get(hit);
             if (dest) {
-              if (!dest.title) return plainText;
+              if (!dest.title) return label;
+              const nl = noteLink(dest.title, plainText);
+              if (!nl.startsWith('[[')) return label;
               counts.noteLinks++;
-              return noteLink(dest.title, plainText);
+              return nl;
             }
           }
 
           // 2. Database .csv link: keep readable text.
           if (/\.csv$/i.test(href) && csvResolve(href, d.rawDir)) {
-            return plainText;
+            return label;
           }
 
           // 3. Match by data-notion-page-id or Notion web URL 32-char hex ID.
@@ -394,15 +405,22 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
           if (idHit) {
             const dest = docById.get(idHit);
             if (dest && dest.title) {
-              counts.noteLinks++;
-              return noteLink(dest.title, plainText);
+              const nl = noteLink(dest.title, plainText);
+              if (nl.startsWith('[[')) {
+                counts.noteLinks++;
+                return nl;
+              }
+              return label;
+            }
+            if (dest && !dest.title && pageId) {
+              return label;
             }
           }
 
           // 4. Unresolved relative .html link (outside exported subtree or missing): keep text, count warning.
-          if (!/^[a-z][a-z0-9+.-]*:/i.test(href) && !href.startsWith('#') && /\.html?(?:$|\?|#)/i.test(href)) {
+          if (!mediaResolve(href, d.rawDir) && !/^[a-z][a-z0-9+.-]*:/i.test(href) && !href.startsWith('#') && /\.html?(?:$|\?|#)/i.test(href)) {
             counts.deadLinks++;
-            return plainText || href;
+            return label || escapeMarkdownText(href);
           }
 
           return `[${label}](${href})`;
@@ -439,14 +457,16 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
           let mdHit = docResolve(target, d.rawDir);
           if (!mdHit && target.includes('#') && !target.startsWith('#')) {
             const base = target.slice(0, target.lastIndexOf('#'));
-            if (/\.md$/i.test(base)) mdHit = docResolve(base, d.rawDir);
+            if (/\.(?:md|html?)$/i.test(base)) mdHit = docResolve(base, d.rawDir);
           }
           if (mdHit) {
             const dest = docByPath.get(mdHit);
             if (dest) {
               if (!dest.title) return label.trim();
+              const nl = noteLink(dest.title, label);
+              if (!nl.startsWith('[[')) return label.trim();
               counts.noteLinks++;
-              return noteLink(dest.title, label);
+              return nl;
             }
           }
 
@@ -460,16 +480,20 @@ async function readNotion(file: File, onProgress?: (msg: string) => void): Promi
           if (urlId) {
             const dest = docById.get(urlId);
             if (dest && dest.title) {
-              counts.noteLinks++;
-              return noteLink(dest.title, label);
+              const nl = noteLink(dest.title, label);
+              if (nl.startsWith('[[')) {
+                counts.noteLinks++;
+                return nl;
+              }
+              return label.trim();
             }
             return whole;
           }
 
           // Unresolved relative `.md` link (outside exported subtree or missing): keep text, count warning.
-          if (!/^[a-z][a-z0-9+.-]*:/i.test(target) && !target.startsWith('#') && /\.md(?:$|\?|#)/i.test(target)) {
+          if (!mediaResolve(target, d.rawDir) && !/^[a-z][a-z0-9+.-]*:/i.test(target) && !target.startsWith('#') && /\.md(?:$|\?|#)/i.test(target)) {
             counts.deadLinks++;
-            return label.trim() || target;
+            return label.trim() || escapeMarkdownText(target);
           }
 
           return whole;

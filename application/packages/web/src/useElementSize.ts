@@ -29,6 +29,28 @@ export function useElementHeight(el: HTMLElement | null): number {
   return useElementSide(el, 'height');
 }
 
+/** The content width and height of an element, kept current together. */
+export function useElementSize(el: HTMLElement | null): { width: number; height: number } {
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  useLayoutEffect(() => {
+    if (!el) return;
+    const read = () => {
+      const next = { width: contentSide(el, 'width'), height: contentSide(el, 'height') };
+      setSize((prev) => (prev.width === next.width && prev.height === next.height ? prev : next));
+    };
+    read();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver((entries) => {
+      const cr = entries[0]?.contentRect;
+      if (!cr) return;
+      setSize((prev) => (prev.width === cr.width && prev.height === cr.height ? prev : { width: cr.width, height: cr.height }));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [el]);
+  return size;
+}
+
 /**
  * An element's width, renewed only when `stepOf` gives a new key for it: a
  * pane dragged wider draws again at the steps where its layout changes, not

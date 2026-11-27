@@ -26,7 +26,9 @@ import { openExternal } from './openExternal';
 import { readLinkModifier } from './theme';
 import { isTouchPointer } from './useIsMobile';
 
-const IS_NATIVE = detectPlatform() !== 'web';
+function isNativePlatform(): boolean {
+  return typeof window !== 'undefined' && detectPlatform() !== 'web';
+}
 
 /**
  * The href of the link mark covering `pos`, or null where there is none.
@@ -116,7 +118,7 @@ export const LINK_MARKDOWN = {
 function clickOpensLink(editable: boolean): boolean {
   // A native build hands a tap, and any anchor outside a note being edited,
   // to the interceptor. Opening here too would open the URL twice.
-  if (IS_NATIVE) return editable && !isTouchPointer();
+  if (isNativePlatform()) return editable && !isTouchPointer();
   return true;
 }
 

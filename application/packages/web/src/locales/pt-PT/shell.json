@@ -207,7 +207,7 @@
     "color": "Cor",
     "colorNone": "Sem cor",
     "colorUseDefault": "Usar o padrão",
-    "icon": "Ícones e logótipos",
+    "icon": "Ícones / logótipos / emojis",
     "colorFromFolder": "Da pasta: {{name}}",
     "colorFromTag": "Da etiqueta: #{{name}}",
     "colorOwnHint": "Uma cor escolhida aqui preenche o fundo desta nota. <setting>Cores de pastas e etiquetas</setting> não a alteram.",
@@ -365,6 +365,7 @@
   },
   "demoBanner": {
     "title": "Experimenta sem qualquer risco",
+    "shortTitle": "Demo",
     "description": "Aqui não se guarda nada. Cria o teu próprio caderno encriptado, grátis."
   },
   "markdown": {
@@ -627,6 +628,10 @@
     "tooLarge": "Demasiado grande. O máximo é {{limit}} MB por ficheiro.",
     "titlePlaceholder": "Título (opcional)",
     "notePlaceholder": "Adicionar uma nota...",
+    "taskPlaceholder": "Tarefa...",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "Acrescenta à entrada de diário de hoje.",
+    "clipFallbackToast": "Não foi possível recortar a página. Foi guardada como marcador.",
     "photoCount": "{{count}} fotos"
   },
   "shortcut": {
@@ -958,7 +963,8 @@
     "label": "Adição rápida"
   },
   "offline": {
-    "notLoaded": "Estás offline e esta parte da app ainda não foi carregada. Tenta de novo quando voltares a ficar online."
+    "notLoaded": "Estás offline e esta parte da app ainda não foi carregada. Tenta de novo quando voltares a ficar online.",
+    "chunkBlocked": "Não foi possível carregar esta vista. Recarrega a página ou verifica o teu bloqueador de conteúdo."
   },
   "checkIn": {
     "prompt": "Como estás hoje?",
@@ -1136,6 +1142,7 @@
     "removed": "Removido do Início",
     "showOnHome": "Mostrar no Início",
     "removeFromHome": "Remover do Início",
+    "openTarget": "Abrir {{target}}",
     "resize": "Redimensionar {{name}}",
     "narrower": "Mais estreito",
     "taller": "Mais alto",
@@ -1143,29 +1150,75 @@
     "moveEarlier": "Mover para antes",
     "moveLater": "Mover para depois",
     "chooseNote": "Escolhe uma nota",
+    "chooseNotes": "Escolhe notas",
     "chooseTag": "Escolhe uma etiqueta",
+    "chooseTags": "Escolhe etiquetas",
     "chooseFolder": "Escolhe uma pasta",
+    "chooseFolders": "Escolhe pastas",
     "chooseTracker": "Escolhe um registo",
+    "chooseCounter": "Escolhe um contador",
+    "chooseCounters": "Escolhe contadores",
+    "chooseTypes": "Escolhe tipos de itens",
     "choose": "Escolher",
     "gone": "Já não está aqui",
     "otherSpace": "No outro espaço",
     "proLocked": "Faz parte do Pro",
     "noneToChoose": "Ainda não há nada para escolher",
+    "catalogSearch": "Procurar widgets",
+    "catalogFilter": "Filtrar widgets",
+    "allWidgets": "Todos os widgets",
+    "onHomeLabel": "No Início",
+    "onHomeCount": "No Início ({{count}})",
     "headerEvents_other": "{{formatted}} eventos hoje",
+    "headerOverdue_other": "{{formatted}} em atraso",
+    "headerOverdue_one": "{{formatted}} em atraso",
     "headerTasks_other": "{{formatted}} tarefas por fazer",
+    "headerDosesLeft_other": "{{formatted}} tomas por tomar",
+    "headerDosesLeft_one": "{{formatted}} toma por tomar",
     "startToday": "Começar a entrada de hoje",
+    "setupMedication": "Configurar medicação",
+    "setupCounter": "Criar um contador",
+    "counterIncrease": "Adicionar um a {{name}}",
+    "counterDecrease": "Retirar um a {{name}}",
+    "storageSummary": "{{notes}} notas · {{files}} ficheiros",
+    "graphSummary": "{{linked}} ligadas · {{orphans}} sem ligação",
+    "placesSummary_other": "{{count}} itens com local",
+    "quickCapture": {
+      "placeholderJournal": "Adicionar ao diário de hoje...",
+      "placeholderTask": "Adicionar uma tarefa...",
+      "placeholderNote": "Escreve uma nota rápida...",
+      "destination": "Destino",
+      "voice": "Gravar nota de voz",
+      "voiceNoteTitle": "Nota de voz",
+      "recording": "A gravar {{duration}}",
+      "savingVoice": "A encriptar a nota de voz...",
+      "savedTo": "Guardado em {{title}}",
+      "failed": "Não foi possível guardar neste momento.",
+      "micUnavailable": "A gravação com o microfone não está disponível aqui.",
+      "micDenied": "O acesso ao microfone foi recusado."
+    },
+    "placesSummary_one": "{{count}} item com local",
     "groups": {
-      "keep": "Coisas que guardas"
+      "graph": "Grafo e mapas",
+      "keep": "Outros"
     },
     "layout": {
       "everyday": "Dia a dia",
       "planner": "Planeamento",
-      "writer": "Escrita"
+      "writer": "Escrita",
+      "wellness": "Bem-estar"
     },
     "w": {
       "checkIn": {
         "name": "Check-in",
         "help": "Como estás hoje, e os teus registos"
+      },
+      "medication": {
+        "help": "As tomas de hoje, Tomado ou Saltar, e alertas de reposição"
+      },
+      "quickCapture": {
+        "name": "Captura rápida",
+        "help": "Adiciona texto ou uma nota de voz diretamente no Início"
       },
       "calendar": {
         "help": "O mês, com pontos nas entradas e nos eventos"
@@ -1180,7 +1233,7 @@
       },
       "tasks": {
         "name": "Tarefas por fazer",
-        "help": "Tarefas por assinalar das tuas notas"
+        "help": "Tarefas em atraso e por fazer primeiro, com adição rápida"
       },
       "recent": {
         "name": "Editados recentemente",
@@ -1201,9 +1254,19 @@
         "name": "Uma pasta",
         "help": "Os itens mais recentes numa pasta"
       },
+      "types": {
+        "name": "Lista de itens",
+        "help": "Os itens mais recentes dos tipos que escolheres"
+      },
       "onThisDay": {
         "name": "Neste dia",
         "help": "Entradas de diário de anos anteriores"
+      },
+      "graph": {
+        "help": "Minimapa ao vivo das notas ligadas no teu cofre"
+      },
+      "places": {
+        "help": "As tuas notas, entradas e contactos com local num mapa"
       },
       "week": {
         "help": "Palavras, dias ativos, itens e check-ins"
@@ -1218,6 +1281,12 @@
         "name": "O teu ritmo",
         "help": "26 semanas de escrita e humor"
       },
+      "yearPixels": {
+        "help": "O teu ano inteiro de cores de humor num relance"
+      },
+      "patterns": {
+        "help": "O que mais faz subir ou descer o teu humor"
+      },
       "milestone": {
         "name": "Próximo marco",
         "help": "Quão perto está o próximo"
@@ -1225,6 +1294,9 @@
       "tracker": {
         "name": "Um registo",
         "help": "Um registo: o seu número e os seus dias"
+      },
+      "counter": {
+        "help": "Toca em +1 diretamente no Início para um contador personalizado"
       },
       "weekRecap": {
         "help": "A tua semana, num cartão"
@@ -1238,9 +1310,13 @@
       },
       "birthdays": {
         "help": "Aniversários nos próximos 30 dias"
+      },
+      "storage": {
+        "help": "O teu anel de armazenamento encriptado, com recontagem"
       }
     },
     "empty": {
+      "medication": "Nenhum medicamento a tomar hoje",
       "upcoming": "Nada nos próximos 7 dias",
       "tasks": "Nenhuma tarefa por fazer",
       "recent": "Ainda não há nada aqui",
@@ -1248,6 +1324,11 @@
       "tag": "Nenhum item com esta etiqueta",
       "folder": "Nada nesta pasta",
       "onThisDay": "Nenhuma entrada neste dia em anos anteriores",
+      "graph": "Liga duas notas para veres o teu grafo aqui",
+      "places": "Adiciona uma localização a uma nota ou contacto para veres pontos aqui",
+      "yearPixels": "Regista o teu humor para colorir o ano",
+      "patterns": "Regista mais alguns dias para encontrar padrões",
+      "counter": "Ainda não há registos de contador",
       "files": "Ainda não há ficheiros",
       "bookmarks": "Ainda não há marcadores",
       "birthdays": "Nenhum aniversário nos próximos 30 dias",

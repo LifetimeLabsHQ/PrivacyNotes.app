@@ -297,6 +297,8 @@ export function HoverLabel({
   const Wrapper = inline ? 'span' : 'div';
   return (
     <Wrapper
+      data-pn-touch-tip={disabled ? undefined : label}
+      data-pn-touch-tip-pro={!disabled && pro ? '1' : undefined}
       className={`pn-tip-host relative group/tip${inline ? ' inline' : ''}${className ? ` ${className}` : ''}`}
     >
       {children}

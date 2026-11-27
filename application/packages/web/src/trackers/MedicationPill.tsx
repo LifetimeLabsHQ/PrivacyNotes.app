@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import {
   SKIP_REASONS,
   activeMedications,
-  type MedicationDose,
   type MedicationLogEntry,
   type MedicationStatus,
   type MedicationTemplate,
@@ -21,57 +20,19 @@ import { timeLabel } from '../JournalCalendar';
 import { useTrackerHistory } from '../trackerLastLogged';
 import {
   LOW_SUPPLY_DAYS,
-  asNeededOn,
   daysLeft,
   doseLogId,
-  dosesOf,
-  dosesOn,
   groupScheduledDoses,
-  isLiveOn,
   logDoseId,
   logsOf,
+  medicationRowsOn,
   newDoseId,
   runsOutOn,
-  sortDoses,
   splitScheduledGroups,
   supplyLeft,
+  takenOfRows,
   type ScheduledDoseItem,
 } from '../medicationDoses';
-
-type MedicationRow = { med: MedicationTemplate; doses: MedicationDose[]; asNeeded: boolean };
-
-/** The medications of a day: a live one the day asks about, an as-needed
- *  one, and any one the day already holds a log for, so a log never hides.
- *  The pill and the medication card (MedicationCard.tsx) list these. */
-export function medicationRowsOn(templates: MedicationTemplate[], value: MedicationLogEntry[] | undefined, entryDay: string): MedicationRow[] {
-  return activeMedications(templates).flatMap((med): MedicationRow[] => {
-    const logs = logsOf(value, med.id);
-    if (isLiveOn(med, entryDay) && asNeededOn(med, entryDay)) return [{ med, doses: [] as MedicationDose[], asNeeded: true }];
-    const doses = dosesOn(med, entryDay);
-    if (doses.length > 0) return [{ med, doses, asNeeded: false }];
-    if (logs.length === 0) return [];
-    // A day the schedule does not ask about, with logs: scheduled doses show
-    // as their rows; doses the schedule never had are as-needed ones.
-    const byId = new Map(dosesOf(med).map((d) => [d.id, d]));
-    const known = logs.map((l) => byId.get(logDoseId(l.medicationId)));
-    if (known.every(Boolean)) return [{ med, doses: sortDoses(known as MedicationDose[]), asNeeded: false }];
-    return [{ med, doses: [] as MedicationDose[], asNeeded: true }];
-  });
-}
-
-/** Taken doses out of the scheduled ones. As-needed doses are not owed, so
- *  they do not count. */
-export function takenOfRows(rows: readonly MedicationRow[], value: MedicationLogEntry[] | undefined): { expected: number; taken: number } {
-  let expected = 0;
-  let taken = 0;
-  for (const r of rows) {
-    if (r.asNeeded) continue;
-    const done = new Set(logsOf(value, r.med.id).filter((l) => l.status === 'taken').map((l) => logDoseId(l.medicationId)));
-    expected += r.doses.length;
-    taken += r.doses.filter((d) => done.has(d.id)).length;
-  }
-  return { expected, taken };
-}
 
 type RowsProps = {
   value?: MedicationLogEntry[];

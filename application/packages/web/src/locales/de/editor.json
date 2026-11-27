@@ -203,6 +203,7 @@
     "cut": "Ausschneiden",
     "copyAsPlain": "Als reinen Text kopieren",
     "copyAsMarkdown": "Als Markdown kopieren",
+    "clearFormatting": "Formatierung entfernen",
     "sortAsc": "Zeilen von A bis Z sortieren",
     "sortDesc": "Zeilen von Z bis A sortieren"
   },
@@ -275,6 +276,9 @@
   "inlineCode": {
     "copyHint": "{{key}}-Klick zum Kopieren"
   },
+  "inlineTag": {
+    "filter": "Nach Tag filtern"
+  },
   "codeBlock": {
     "copyFailed": "Fehlgeschlagen",
     "wrap": "Lange Zeilen umbrechen",
@@ -303,7 +307,8 @@
     "linkHeading": "Auf eine Überschrift verlinken...",
     "headingNotFound": "Überschrift nicht gefunden",
     "headingsLocked": "Entsperr diese Notiz, um ihre Überschriften zu sehen",
-    "noHeadings": "Diese Notiz hat keine Überschriften"
+    "noHeadings": "Diese Notiz hat keine Überschriften",
+    "notFound": "Notiz nicht gefunden"
   },
   "footnote": {
     "placeholder": "Fußnotentext",

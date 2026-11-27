@@ -145,7 +145,7 @@ type Props = NoteActionGuardDeps & {
    *  account to the upgrade window. Absent where a note has no color. */
   onPickIcon?: () => void;
   /** Opens the place popover in the tag row. Passed only where the note can
-   *  take a place and has none yet. Spec: docs/internal/plans/note-location.md (section 4) */
+   *  take a place and has none yet. Spec: docs/internal/specs/note-location.md (section 4) */
   onAddLocation?: () => void;
   /** Trash view: the menu carries only the two trash actions. */
   isTrash?: boolean;

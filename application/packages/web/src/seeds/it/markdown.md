@@ -15,7 +15,7 @@ Può essere ==evidenziato in giallo== o <mark style="background-color: rgba(64, 
 
 Uno spoiler nasconde delle parole finché qualcuno non ci clicca sopra: il regalo è ||un giradischi||. Seleziona le parole e scegli **Spoiler** nel menu **Inserisci**, oppure scrivi due barre verticali da ogni lato.
 
-Un'icona o un logo può stare in una riga di testo, come :icon[gift] :icon[coffee] :icon[rocket-launch] o :logo[github]. Scegline uno da **Inserisci** > **Icone e loghi**.
+Un'icona o un logo può stare in una riga di testo, come :icon[gift] :icon[coffee] :icon[rocket-launch] o :logo[github]. Scegline uno da **Inserisci** > **Icone / loghi / emoji**.
 
 Il pulsante **Aa** cambia dimensione e carattere. Il testo può essere <span style="font-size: 0.85em">piccolo</span>, normale o <span style="font-size: 1.6em">grande</span>. Può essere <span style="font-family: ui-sans-serif, system-ui, sans-serif">semplice</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">con grazie</span> o <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">a spaziatura fissa</span>.
 

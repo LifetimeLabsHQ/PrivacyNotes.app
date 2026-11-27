@@ -1,18 +1,24 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { customIdOf, getStoredColorTheme, reconcileCustomSlots } from '../theme';
+import { hasAnyCustomThemeSlot, reconcileCustomSlots } from '../theme';
 import { canSaveCustomTheme, saveCustomTheme, type CustomThemes } from '../customThemes';
+import { deleteCustomIcon, saveThemeIcon, themeIconDataUrl, type CustomIcons } from '../customIcons';
 import { hasSettingsPulled, type UserSettings } from '../userSettings';
 import { isDemoMode } from '../demo';
+import type { SpaceView } from '../spaces';
 
 const ThemeBuilder = lazy(() => import('../ThemeBuilder').then((m) => ({ default: m.ThemeBuilder })));
 
 /** What the builder opens on: a saved theme (id and code), a code to start
  *  from (a copy, a pasted code or a built-in palette's code), or nothing, for
- *  an exact copy of the theme on screen. */
+ *  an exact copy of the theme on screen. `space` names which space card in
+ *  Settings > Design opened the builder (#948). */
 export type ThemeBuilderTarget = {
   id?: string;
   code?: string;
   name?: string;
+  space?: SpaceView;
+  /** Optional custom icon data URL when duplicating a theme or resuming after upgrade. */
+  icon?: string | null;
 };
 
 /**
@@ -27,12 +33,14 @@ export type ThemeBuilderTarget = {
  */
 export function useThemeBuilder({
   customThemes,
+  themeIcons,
   mutateSettings,
   canSave,
   onOpen,
   onOpenUpgrade,
 }: {
   customThemes: CustomThemes;
+  themeIcons: CustomIcons;
   mutateSettings: (updater: (prev: UserSettings) => UserSettings) => void;
   /** Pro, or the demo. */
   canSave: boolean;
@@ -60,12 +68,11 @@ export function useThemeBuilder({
   }, [openThemeBuilder]);
 
   useEffect(() => {
-    const inSlots = (['light', 'dark'] as const).some((m) => customIdOf(getStoredColorTheme(m)) !== null);
-    if (!inSlots || !(isDemoMode() || hasSettingsPulled())) return;
+    if (!hasAnyCustomThemeSlot() || !(isDemoMode() || hasSettingsPulled())) return;
     let live = true;
     void import('../customThemeUI').then(({ teamThemeEntries, customThemeEntries }) => {
       if (!live) return;
-      const listed = [...teamThemeEntries(), ...customThemeEntries(customThemes)];
+      const listed = [...teamThemeEntries(), ...customThemeEntries(customThemes, themeIcons)];
       const byId = new Map(listed.map((e) => [e.id, e.snapshot]));
       reconcileCustomSlots((id, mode) => {
         const snap = byId.get(id);
@@ -73,22 +80,31 @@ export function useThemeBuilder({
       }, !isDemoMode());
     });
     return () => { live = false; };
-  }, [customThemes]);
+  }, [customThemes, themeIcons]);
+
+  const initialIcon = target
+    ? (target.icon !== undefined ? target.icon : target.id ? themeIconDataUrl(themeIcons, target.id) : null)
+    : null;
 
   const themeBuilder = target ? (
     <Suspense fallback={null}>
       <ThemeBuilder
         key={target.id ?? target.code ?? 'new'}
         target={target}
+        initialIcon={initialIcon}
         canSave={canSave}
         hasRoom={(id) => canSaveCustomTheme(customThemes, id)}
-        onSave={(id, code) => {
+        onSave={(id, code, icon) => {
           // The builder stays open after a save; Close or Cancel ends it.
-          mutateSettings((prev) => ({ ...prev, customThemes: saveCustomTheme(prev.customThemes, id, code) }));
+          mutateSettings((prev) => ({
+            ...prev,
+            customThemes: saveCustomTheme(prev.customThemes, id, code),
+            themeIcons: icon ? saveThemeIcon(prev.themeIcons, id, icon) : deleteCustomIcon(prev.themeIcons, id),
+          }));
         }}
         onClose={() => setTarget(null)}
-        onOpenUpgrade={(code) => {
-          parked.current = { id: target.id, code };
+        onOpenUpgrade={(code, icon) => {
+          parked.current = { id: target.id, code, space: target.space, icon };
           setTarget(null);
           onOpenUpgrade();
         }}

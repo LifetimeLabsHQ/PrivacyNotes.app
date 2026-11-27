@@ -47,7 +47,9 @@ const engine = () => import('@notes/clipper');
 const CLIP_DRAWN: Record<string, readonly string[]> = {
   p: ['dir'], h1: ['dir'], h2: ['dir'], h3: ['dir'], h4: ['dir'], h5: ['dir'], h6: ['dir'],
   a: ['href', 'target', 'rel', 'title'],
-  img: ['src', 'alt', 'width', 'height', 'style', 'onerror'],
+  img: ['class', 'src', 'alt', 'width', 'height', 'style', 'onerror'],
+  figure: ['style'],
+  figcaption: ['dir', 'style'],
   em: [], strong: [], del: [], s: [], code: [], pre: [], mark: [], br: [], hr: [],
   span: ['class', 'style', 'tabindex'],
   ul: ['dir', 'style'], ol: ['dir', 'style', 'start'], li: ['dir', 'style'],

@@ -302,6 +302,8 @@ select.pn-select {
     --pn-page-scale: 1;
     --pn-safe-top: calc(env(safe-area-inset-top, 0px) / var(--pn-page-scale));
     --pn-safe-bottom: calc(env(safe-area-inset-bottom, 0px) / var(--pn-page-scale));
+    --pn-safe-left: calc(env(safe-area-inset-left, 0px) / var(--pn-page-scale));
+    --pn-safe-right: calc(env(safe-area-inset-right, 0px) / var(--pn-page-scale));
   }
 }
 
@@ -342,6 +344,13 @@ select.pn-select {
   user-select: none;
   font-family: 'PN Country Flags', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
 }
+.pn-custom-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 3px;
+  user-select: none;
+}
 :root[data-pn-flag-font='on'] {
   --font-sans: 'PN Country Flags', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-mono: 'PN Country Flags', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
@@ -373,6 +382,53 @@ select.pn-select {
 :root[data-nested-numbers='outline'] .prose ol ol:not(ul ol) { --pn-list-pad: 2.925rem; }
 :root[data-nested-numbers='outline'] .prose ol ol ol:not(ul ol) { --pn-list-pad: 3.6rem; }
 :root[data-nested-numbers='outline'] .prose ol ol ol ol:not(ul ol) { --pn-list-pad: 4.275rem; }
+
+/* ------------------------------------------------------------------
+   Checked task style (GitHub #963). Drives how checked items look in
+   notes, Tasks and Markdown preview from `data-checked-task-style` on
+   <html>. Absent or 'fade-strike' keeps both fade and strikethrough.
+   Spec: theme.ts (Checked task style axis)
+   ------------------------------------------------------------------ */
+.pn-task-done-row {
+  color: rgb(var(--pn-text-muted));
+  text-decoration: line-through;
+}
+:root[data-checked-task-style='fade'] .pn-task-done-row {
+  text-decoration: none;
+}
+:root[data-checked-task-style='strike'] .pn-task-done-row {
+  color: rgb(var(--pn-text));
+}
+:root[data-checked-task-style='none'] .pn-task-done-row {
+  color: rgb(var(--pn-text));
+  text-decoration: none;
+}
+:root:is([data-checked-task-style='fade'], [data-checked-task-style='none']) .ProseMirror ul[data-type='taskList'] li[data-checked='true'] > div {
+  text-decoration-line: none;
+  text-decoration-color: transparent;
+}
+:root:is([data-checked-task-style='fade'], [data-checked-task-style='none']) .ProseMirror ul[data-type='taskList'] li[data-checked='true'] > div > p .pn-task-reminder-chip,
+:root:is([data-checked-task-style='fade'], [data-checked-task-style='none']) .pn-task-reminder-chip.pn-task-reminder-done,
+:root:is([data-checked-task-style='fade'], [data-checked-task-style='none']) .prose.prose-pn .pn-task-done .pn-task-reminder {
+  text-decoration: none;
+}
+:root:is([data-checked-task-style='strike'], [data-checked-task-style='none']) .ProseMirror ul[data-type='taskList'] li[data-checked='true'] > div > :not(ul):not(ol),
+:root:is([data-checked-task-style='strike'], [data-checked-task-style='none']) .ProseMirror ul[data-type='taskList'] li[data-checked='true'] > div > p .pn-task-reminder-chip,
+:root:is([data-checked-task-style='strike'], [data-checked-task-style='none']) .pn-task-reminder-chip.pn-task-reminder-done {
+  opacity: 1;
+}
+:root:is([data-checked-task-style='fade'], [data-checked-task-style='none']) .prose.prose-pn .pn-task-done {
+  text-decoration: none !important;
+}
+:root:is([data-checked-task-style='fade-strike'], [data-checked-task-style='strike']) .prose.prose-pn .pn-task-done {
+  text-decoration: line-through !important;
+}
+:root:is([data-checked-task-style='strike'], [data-checked-task-style='none']) .prose.prose-pn .pn-task-done {
+  opacity: 1 !important;
+}
+:root:is([data-checked-task-style='fade-strike'], [data-checked-task-style='fade']) .prose.prose-pn .pn-task-done {
+  opacity: 0.6 !important;
+}
 
 /* ------------------------------------------------------------------
    The Ninja box (NinjaWindow.tsx, GitHub #694). The window is the box: the
@@ -457,7 +513,7 @@ select.pn-select {
 /* The Markdown view with its preview holds two columns side by side, so the
    column takes up to twice the cap, the title row and the bar row with it.
    Under 'full' the cap is `none`, the product is no length, and the column
-   keeps no cap at all. Spec: docs/internal/plans/heading-folds-and-source-preview.md (Part 2, decision 6) */
+   keeps no cap at all. Spec: docs/internal/specs/heading-folds-and-source-preview.md (Part 2, decision 6) */
 .pn-content-col[data-split] {
   max-width: calc(2 * var(--pn-content-max));
 }
@@ -563,25 +619,22 @@ select.pn-select {
   .ProseMirror {
     /* Placeholder rendering for TipTap's Placeholder extension:
        - Unfocused empty note keeps its calm document placeholder on line 1.
-       - Focused empty top-level paragraph shows "Press / to insert blocks"
-         (unless a custom document placeholder such as an event's is active on
-         the untouched first line, or the editor is in read-only/preview mode).
+       - Focused empty note swaps that first-line placeholder to
+         "Press / to insert blocks" (unless a custom document placeholder such
+         as an event's is active, or the editor is in read-only/preview mode).
+       - Once the note has content, empty lines stay quiet (GitHub #943).
        Spec: docs/internal/specs/slash-menu.md (section 3) */
-    & :is(p, pn-p).is-editor-empty:first-child::before {
+    & > :is(p, pn-p).is-editor-empty:first-child::before {
       content: attr(data-placeholder);
       float: inline-start;
       color: rgb(var(--pn-text-muted));
       pointer-events: none;
       height: 0;
     }
-    &.ProseMirror-focused :is(p, pn-p).is-empty::before {
+    &.ProseMirror-focused > :is(p, pn-p).is-editor-empty:first-child::before {
       content: var(--pn-slash-ph, attr(data-placeholder));
-      float: inline-start;
-      color: rgb(var(--pn-text-muted));
-      pointer-events: none;
-      height: 0;
     }
-    &[data-custom-placeholder].ProseMirror-focused :is(p, pn-p).is-editor-empty:first-child::before {
+    &[data-custom-placeholder].ProseMirror-focused > :is(p, pn-p).is-editor-empty:first-child::before {
       content: attr(data-placeholder);
     }
     & .pn-slash-active {
@@ -1090,6 +1143,19 @@ select.pn-select {
     & :where(pre, code):not(:where([class~='not-prose'] *)) {
       direction: ltr;
       unicode-bidi: isolate;
+    }
+    /* Blockquotes show the start bar only, no generated quotation marks
+       (GitHub #950). Typography adds open-quote/close-quote pseudo-elements to
+       `blockquote p:first-of-type::before` and `p:last-of-type::after`, which
+       matched desktop `<p>` while mobile (`<pn-p>`) and HTML/PDF export drew
+       only the bar. Clearing them here equalizes every platform and prose
+       surface (editor, preview, history, burn viewer). */
+    & :where(blockquote):not(:where([class~='not-prose'] *)) {
+      quotes: none;
+    }
+    & :where(blockquote :is(p, pn-p):first-of-type):not(:where([class~='not-prose'] *))::before,
+    & :where(blockquote :is(p, pn-p):last-of-type):not(:where([class~='not-prose'] *))::after {
+      content: none;
     }
     /* Inline code as a quiet chip, the HTML export's look: Typography's
        default dresses it with literal backtick pseudo-elements and bold
@@ -1765,7 +1831,7 @@ select.pn-select {
    the editor's gutter, outside the text: in the line they took width at its
    end, and the editor clips what it draws before its own edge (it scrolls
    wide content sideways). A folded section is display:none; the document
-   keeps it. Spec: docs/internal/plans/heading-folds-and-source-preview.md */
+   keeps it. Spec: docs/internal/specs/heading-folds-and-source-preview.md */
 @layer editor {
   .pn-fold-gutter {
     position: absolute;
@@ -1978,6 +2044,43 @@ select.pn-select {
         opacity: 1;
       }
     }
+  }
+
+  /* Inline #tag pill inside the editor and rendered exports (editorInlineTags.ts).
+     Default uses theme accent tokens (same palette family as TagInput chips); a
+     tag with a look color overrides via data-pn-tag-color using --pn-label-*-*.
+     Hover tooltip is rendered by LinkAddressPill via placeFixedTip so it never
+     clips at the editor margin or sticky bars. */
+  .pn-inline-tag {
+    padding: 0.04em 0.36em;
+    border-radius: 9999px;
+    background: rgb(var(--pn-accent) / 0.12);
+    color: rgb(var(--pn-accent-strong));
+    font-weight: 500;
+    transition: background-color 120ms ease;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+
+    &[data-pn-tip] {
+      cursor: pointer;
+    }
+
+    &:hover {
+      background: rgb(var(--pn-accent) / 0.22);
+    }
+
+    &[data-pn-tag-color='gray'] { background: var(--pn-label-gray-tint); color: var(--pn-label-gray-ink); }
+    &[data-pn-tag-color='red'] { background: var(--pn-label-red-tint); color: var(--pn-label-red-ink); }
+    &[data-pn-tag-color='orange'] { background: var(--pn-label-orange-tint); color: var(--pn-label-orange-ink); }
+    &[data-pn-tag-color='yellow'] { background: var(--pn-label-yellow-tint); color: var(--pn-label-yellow-ink); }
+    &[data-pn-tag-color='lime'] { background: var(--pn-label-lime-tint); color: var(--pn-label-lime-ink); }
+    &[data-pn-tag-color='green'] { background: var(--pn-label-green-tint); color: var(--pn-label-green-ink); }
+    &[data-pn-tag-color='teal'] { background: var(--pn-label-teal-tint); color: var(--pn-label-teal-ink); }
+    &[data-pn-tag-color='blue'] { background: var(--pn-label-blue-tint); color: var(--pn-label-blue-ink); }
+    &[data-pn-tag-color='indigo'] { background: var(--pn-label-indigo-tint); color: var(--pn-label-indigo-ink); }
+    &[data-pn-tag-color='purple'] { background: var(--pn-label-purple-tint); color: var(--pn-label-purple-ink); }
+    &[data-pn-tag-color='grape'] { background: var(--pn-label-grape-tint); color: var(--pn-label-grape-ink); }
+    &[data-pn-tag-color='pink'] { background: var(--pn-label-pink-tint); color: var(--pn-label-pink-ink); }
   }
 
   /* The code block's copy icon after a copy (editorExtensions.ts): a green
@@ -3101,11 +3204,14 @@ select.pn-select {
 @layer editor {
   .pn-image-node {
     /* ---------------------------------------------------------------
-     * Image node - container + floating toolbar.
-     * The toolbar always sits ABOVE the image via flex column layout,
-     * never overlapping it.
+     * Image node - container + floating toolbar + optional caption.
+     * The toolbar rests on .pn-image-frame (the photo itself) so it
+     * never overlaps the caption below.
      * --------------------------------------------------------------- */
     margin: 0.5em 0;
+    &.pn-image-has-caption {
+      margin-bottom: 0.75em;
+    }
     /* In a note nobody can edit, a click on a picture opens the viewer
        (EncryptedImage.tsx, handleSelect). Read off the live attribute, so a
        note locked while open changes cursor without a re-render. */
@@ -3117,20 +3223,11 @@ select.pn-select {
 
 @layer editor {
   .pn-image-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    display: block;
     position: relative;
-    border-radius: 8px;
-    /* Hug the image: shrink to the rendered image width (which may be
-         narrower than the size preset when the max-height cap shrinks a
-         tall/square image) so the selection ring and toolbar match the
-         image edges instead of leaving empty space. The size preset is
-         applied as max-width via inline style, so the container never
-         exceeds the chosen column fraction. */
-    width: fit-content;
+    width: 100%;
     max-width: 100%;
-    transition: max-width 0.15s ease;
+    margin: 0;
     /* Block display kills the inline baseline gap below <img> so the
        toolbar sits flush against the image bottom. Also zero out the
        Tailwind Typography img margins (2em top+bottom by default)
@@ -3142,9 +3239,9 @@ select.pn-select {
          constraint resolver keep the aspect ratio when EITHER max-width
          or max-height binds. An explicit width:100% would lock the width
          so the max-height clamp could only squash the height - stretching
-         the image (a square rendered as a wide rectangle). The container
-         div already carries the 25/50/75/100% size preset, so max-width
-         still scales the image to the chosen column width. */
+         the image (a square rendered as a wide rectangle). The frame
+         carries the 25/50/75/100% size preset, so max-width still scales
+         the image to the chosen column width. */
       width: auto;
       max-width: 100%;
       /* Cap height so a tall (portrait) image can't grow past the visible
@@ -3166,14 +3263,63 @@ select.pn-select {
       max-height: calc(var(--pn-stable-vh, 100svh) * 0.7);
     }
   }
+
+  .pn-image-frame {
+    position: relative;
+    /* Hug the image: shrink to the rendered image width (which may be
+       narrower than the size preset when the max-height cap shrinks a
+       tall/square image) so the selection ring and toolbar match the
+       image edges instead of leaving empty space. The size preset is
+       applied as max-width via inline style, so the frame never exceeds
+       the chosen column fraction. */
+    width: fit-content;
+    max-width: 100%;
+    border-radius: 8px;
+    line-height: 0;
+    transition: max-width 0.15s ease;
+  }
+
+  .pn-image-link-badge-wrap {
+    position: absolute;
+    top: 6px;
+    inset-inline-start: 6px;
+    z-index: 11;
+    line-height: 1;
+    /* A right-aligned picture moves its resize handle to the left corner, so
+       the link button shifts to the right corner to stay clear of it. */
+    &.pn-image-link-badge-right {
+      inset-inline-start: auto;
+      right: 6px; /* rtl-ok: matches .pn-image-resize-left */
+    }
+  }
+
+  .pn-image-link-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid rgb(var(--pn-divider));
+    background: rgb(var(--pn-track) / 0.92);
+    color: rgb(var(--pn-accent));
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.16);
+    transition: background-color 0.12s ease, border-color 0.12s ease;
+    &:hover {
+      background: rgb(var(--pn-track));
+      border-color: rgb(var(--pn-accent) / 0.6);
+    }
+  }
 }
 
 @layer editor {
   .ProseMirror-selectednode {
-    /* Selection ring wraps both image + toolbar as one unit.
-       Inset outline so it isn't clipped by the editor's overflow-x-hidden
-       on mobile (iOS Safari) or desktop. Fix: GitHub #100 */
-    &.pn-image-node .pn-image-container {
+    /* Selection ring wraps the photo frame + floating toolbar as one unit,
+       leaving the caption below clear. Inset outline so it isn't clipped by
+       the editor's overflow-x-hidden on mobile (iOS Safari) or desktop.
+       Fix: GitHub #100 */
+    &.pn-image-node .pn-image-frame {
       outline: 2px solid rgb(var(--pn-accent));
       outline-offset: -2px;
     }
@@ -3214,7 +3360,7 @@ select.pn-select {
     & .pn-image-node:not(.pn-image-tapped) .pn-image-resize {
       display: none;
     }
-    & .pn-image-node:not(.pn-image-tapped).ProseMirror-selectednode .pn-image-container {
+    & .pn-image-node:not(.pn-image-tapped).ProseMirror-selectednode .pn-image-frame {
       outline: none;
     }
   }
@@ -3222,36 +3368,25 @@ select.pn-select {
 
 @layer editor {
   .pn-image-toolbar {
-    /* Toolbar - flush below image, no gap, shared border radius */
+    /* Floating toolbar inset inside the photo's bottom corner so the outer
+       selection ring stays clean on all four corners with no overlap. */
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    padding: 4px;
-    border-radius: 0 0 8px 8px;
+    padding: 4px 6px;
+    border-radius: 8px;
     background: rgb(var(--pn-track));
     border: 1px solid rgb(var(--pn-divider));
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.14);
     user-select: none;
     z-index: 10;
     animation: pn-toolbar-in 0.1s ease-out;
-    /* Out of the flow, resting on the image's own bottom edge, and that is
-       the whole point. A note opens with its first node selected, so a note
-       that starts with an image opens with that image selected and this bar
-       hidden by the :focus-within rule above. The first click anywhere in
-       the note then focuses the editor, the bar appears, and IN THE FLOW it
-       added its own height to the document - between the press and the
-       release of that very click. Every line below the image dropped by the
-       bar's height, the release landed on whichever line had moved into that
-       spot, and the browser fired the click on the common ancestor of press
-       and release: the editor. Whatever was actually pressed never saw it.
-       That is what ate the first click on a note-link and made it take two,
-       and it ate the first click on anything else under an image just as
-       quietly. Over the image rather than under it, because under it the bar
-       covered the reader's own first line - a caption, usually. Nothing
-       moves now, and nothing written is hidden. */
+    /* Out of the flow, resting inside the image's bottom edge so focusing an
+       image-first note never shifts the document below and never covers a
+       caption underneath. */
     position: absolute;
-    bottom: 0;
-    inset-inline-start: 0;
-    border-start-end-radius: 8px;
+    bottom: 8px;
+    inset-inline-start: 8px;
     /* As wide as its tools, never wider than the screen. The width is set
        from the screen and not the picture: the bar's frame is the picture,
        and at XS a bar capped at that frame folds into a narrow column. On a
@@ -3263,7 +3398,8 @@ select.pn-select {
     flex-wrap: wrap;
     @media (max-width: 480px) {
       & .pn-image-toolbar-label,
-      & .pn-image-toolbar-divider {
+      & .pn-image-toolbar-divider,
+      & .pn-image-toolbar-btn-text {
         display: none;
       }
     }
@@ -3299,7 +3435,9 @@ select.pn-select {
     /* No spin arrows: they covered the digits, and the presets and the
        keyboard arrows already step the value. */
     & input {
-      width: 3.75rem;
+      width: 3.5rem;
+      height: 28px;
+      padding-block: 0;
       text-align: center;
       appearance: textfield;
       -moz-appearance: textfield;
@@ -3399,7 +3537,7 @@ select.pn-select {
   }
 
   /* The width follows the pointer with no easing while the handle drags. */
-  .pn-image-container.pn-image-resizing {
+  .pn-image-frame.pn-image-resizing {
     transition: none;
   }
 
@@ -3441,7 +3579,11 @@ select.pn-select {
 
 @layer editor {
   .pn-image-toolbar-size {
-    padding: 4px 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    padding: 0 8px;
     border-radius: 6px;
     font-size: var(--fs-small);
     font-weight: 500;
@@ -3475,6 +3617,168 @@ select.pn-select {
     height: 16px;
     background: rgb(var(--pn-divider));
     margin: 0 2px;
+  }
+
+  .pn-image-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: rgb(var(--pn-text-muted));
+    font-size: var(--fs-small);
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+    &:hover {
+      background: rgb(var(--pn-text) / 0.08);
+      color: rgb(var(--pn-text));
+    }
+    &.active {
+      background: rgb(var(--pn-accent) / 0.14);
+      color: rgb(var(--pn-accent));
+    }
+  }
+
+  /* Image caption (#969): matches the rendered photo width (--pn-frame-w) on
+     normal/wide photos, and expands up to a 360px floor (capped at 100% of the
+     note column) on small images so captions never wrap into a tall narrow
+     column. Start-aligned (left in LTR) by default; user can switch to center
+     or right inside the caption editor bar. */
+  .pn-image-caption,
+  .pn-image-caption-editor {
+    width: max(var(--pn-frame-w, var(--pn-img-w, 100%)), min(360px, 100%));
+    max-width: 100%;
+    margin-top: 6px;
+  }
+
+  .pn-image-caption {
+    margin-bottom: 0;
+    text-align: start;
+    font-size: var(--fs-small);
+    line-height: 1.45;
+    color: rgb(var(--pn-text-muted));
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    border-radius: 5px;
+    padding: 2px 3px;
+    &.pn-image-caption-editable {
+      cursor: text;
+      &:hover {
+        background: rgb(var(--pn-text) / 0.05);
+        color: rgb(var(--pn-text));
+      }
+    }
+  }
+
+  .pn-image-caption-editor {
+    background: rgb(var(--pn-surface-2));
+    border: 1px solid rgb(var(--pn-accent));
+    border-radius: 8px;
+  }
+
+  .pn-image-caption-field {
+    position: relative;
+    width: 100%;
+  }
+
+  .pn-image-caption-input {
+    display: block;
+    width: 100%;
+    text-align: start;
+    font-family: inherit;
+    font-size: var(--fs-small);
+    line-height: 1.45;
+    color: rgb(var(--pn-text));
+    background: transparent;
+    border: none;
+    border-radius: 7px 7px 0 0;
+    padding: 7px 10px;
+    resize: none;
+    outline: none;
+    overflow: hidden;
+    &.has-clear {
+      padding-inline: 10px 32px;
+    }
+    &.is-centered {
+      padding-inline: 32px;
+    }
+    &::placeholder {
+      color: rgb(var(--pn-text-muted));
+    }
+  }
+
+  .pn-image-caption-clear {
+    position: absolute;
+    inset-inline-end: 4px;
+    top: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    border: none;
+    background: transparent;
+    color: rgb(var(--pn-text-muted));
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+    &:hover {
+      background: rgb(var(--pn-text) / 0.08);
+      color: rgb(var(--pn-text));
+    }
+  }
+
+  .pn-image-caption-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 3px 6px;
+    border-top: 1px solid rgb(var(--pn-divider));
+    background: rgb(var(--pn-track) / 0.65);
+    border-radius: 0 0 7px 7px;
+  }
+
+  .pn-image-caption-align {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .pn-image-caption-align-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    border: none;
+    background: transparent;
+    color: rgb(var(--pn-text-muted));
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+    &:hover {
+      background: rgb(var(--pn-text) / 0.08);
+      color: rgb(var(--pn-text));
+    }
+    &.active {
+      background: rgb(var(--pn-accent) / 0.14);
+      color: rgb(var(--pn-accent));
+    }
+  }
+
+  .pn-image-caption-hint {
+    font-size: var(--fs-meta);
+    color: rgb(var(--pn-text-muted));
+    user-select: none;
+    @media (pointer: coarse), (max-width: 480px) {
+      display: none;
+    }
   }
 }
 
@@ -3785,6 +4089,179 @@ select.pn-select {
     --tw-prose-pre-bg: #262626; /* theme-ok: the code panel */
     --tw-prose-th-borders: rgb(var(--pn-divider));
     --tw-prose-td-borders: rgb(var(--pn-divider));
+    --pn-table-border: rgb(var(--pn-divider));
+    --pn-muted: rgb(var(--pn-text-muted));
+    --pn-rem-border: rgb(var(--pn-accent) / 0.28);
+    --pn-rem-bg: rgb(var(--pn-accent) / 0.1);
+    --pn-rem-fg: rgb(var(--pn-accent));
+    overflow-wrap: break-word;
+  }
+  .prose.prose-pn a {
+    text-decoration: none;
+  }
+  .prose.prose-pn a:hover {
+    text-decoration: underline;
+  }
+  /* Solid round bullets at every nesting depth, matching the editor. Task
+     lists carry inline list-style:none, which overrides this rule. */
+  .prose.prose-pn ul {
+    list-style-type: disc;
+  }
+  .prose.prose-pn .pn-note-link {
+    color: rgb(var(--pn-accent));
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .prose.prose-pn .pn-inline-tag {
+    padding: 0.04em 0.36em;
+    border-radius: 9999px;
+    background: rgb(var(--pn-accent) / 0.12);
+    color: rgb(var(--pn-accent-strong));
+    font-weight: 500;
+  }
+  .prose.prose-pn .pn-formula-value {
+    border-bottom: 1px dotted rgb(var(--pn-text) / 0.35);
+  }
+  .prose.prose-pn .pn-task-done .pn-task-reminder {
+    border-color: rgb(var(--pn-divider)) !important;
+    background: rgb(var(--pn-surface-1)) !important;
+    color: rgb(var(--pn-text-muted)) !important;
+    text-decoration: line-through;
+  }
+  .prose.prose-pn .pn-map-card {
+    margin: 0.75em 0;
+  }
+  .prose.prose-pn .pn-map-link {
+    color: rgb(var(--pn-accent));
+  }
+  .prose.prose-pn .pn-map-link:hover {
+    text-decoration: none;
+    background: rgb(var(--pn-text) / 0.08) !important;
+  }
+  .prose.prose-pn pre[data-lang]::before {
+    content: attr(data-lang);
+    display: block;
+    font-family: var(--font-sans);
+    font-size: var(--fs-meta);
+    font-weight: 500;
+    color: #8b949e; /* theme-ok: the code panel is dark in every theme */
+    margin-bottom: 0.5rem;
+  }
+  .prose.prose-pn pre .code-title[data-lang]::after {
+    content: attr(data-lang);
+    font-family: var(--font-sans);
+    font-size: var(--fs-meta);
+    font-weight: 500;
+    color: #8b949e; /* theme-ok: the code panel is dark in every theme */
+    flex-shrink: 0;
+  }
+  .prose.prose-pn pre.pn-copybox {
+    background: rgb(var(--pn-text) / 0.04);
+    color: rgb(var(--pn-text));
+    border: 1px solid rgb(var(--pn-text) / 0.14);
+    border-radius: 10px;
+    padding: 0.6rem 0.9rem;
+    font-family: inherit;
+    font-size: var(--pn-editor-body);
+    line-height: var(--pn-line-height);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+  .prose.prose-pn pre.pn-copybox code {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    background: transparent;
+    padding: 0;
+  }
+  .prose.prose-pn details.pn-callout:not([open]) > summary .pn-caret-down {
+    display: none !important;
+  }
+  .prose.prose-pn details.pn-callout:not([open]) > summary .pn-caret-right {
+    display: inline-block !important;
+  }
+  .prose.prose-pn details.pn-callout-typed > summary .pn-callout-caret {
+    display: none;
+  }
+  .prose.prose-pn details.pn-callout-typed > summary:hover .pn-callout-type-icon,
+  .prose.prose-pn details.pn-callout-typed > summary:focus-visible .pn-callout-type-icon {
+    display: none !important;
+  }
+  .prose.prose-pn details.pn-callout-typed > summary:hover .pn-callout-caret,
+  .prose.prose-pn details.pn-callout-typed > summary:focus-visible .pn-callout-caret {
+    display: inline-flex !important;
+  }
+  .prose.prose-pn .pn-callout-body > :first-child {
+    margin-top: 0;
+  }
+  .prose.prose-pn .pn-callout-body > :last-child {
+    margin-bottom: 0;
+  }
+  .prose.prose-pn .pn-callout-column .pn-kanban-col-body > ul {
+    margin: 0.45em 0 0 !important;
+    padding: 0 !important;
+  }
+  .prose.prose-pn .pn-callout-column .pn-kanban-col-body > ul > li {
+    margin: 0.4em 0 0 !important;
+    padding: 0.35em 0.45em !important;
+    border: 1px solid rgb(var(--pn-text) / 0.1);
+    border-radius: 6px;
+    background: var(--color-surface-1);
+    font-size: 0.933em;
+  }
+  .prose.prose-pn .pn-callout-column .pn-kanban-col-body > ul > li ul {
+    margin-inline-start: 0.4em;
+  }
+  .prose.prose-pn table th:not([data-fill]) {
+    background: rgb(var(--pn-text) / 0.05);
+  }
+  .prose.prose-pn table :is(th, td) {
+    vertical-align: top;
+  }
+  .prose.prose-pn table :is(th, td) > p {
+    margin: 0;
+  }
+  .prose.prose-pn table :is(th, td) > p + p {
+    margin-top: 0.375em;
+  }
+  :root.dark .prose.prose-pn table :is(td, th)[data-fill='yellow'] {
+    background-color: rgb(250 204 21 / 0.24) !important;
+  }
+  .prose.prose-pn .footnote-ref a {
+    color: rgb(var(--pn-accent));
+    font-weight: 600;
+    text-decoration: none;
+    padding: 0 0.15em;
+  }
+  .prose.prose-pn .footnotes {
+    margin-top: 2em;
+    padding-top: 0.75em;
+    border-top: 1px solid rgb(var(--pn-divider));
+    font-size: 0.92em;
+  }
+  .prose.prose-pn .footnotes hr {
+    display: none;
+  }
+  .prose.prose-pn .footnotes ol {
+    margin: 0;
+  }
+  .prose.prose-pn .footnotes li p {
+    margin: 0.2em 0;
+  }
+  .prose.prose-pn .footnotes li p:first-child {
+    margin-top: 0;
+  }
+  .prose.prose-pn .footnotes li p:last-child {
+    margin-bottom: 0;
+  }
+  .prose.prose-pn .footnote-backref {
+    color: rgb(var(--pn-text-muted));
+    text-decoration: none;
+    margin-inline-start: 0.25em;
+  }
+  .prose.prose-pn .footnote-backref:hover {
+    color: rgb(var(--pn-accent));
+    text-decoration: none;
   }
   :root.dark .prose.prose-pn {
     --tw-prose-body: rgb(var(--pn-text));
@@ -3906,6 +4383,10 @@ select.pn-select {
   }
   .pn-logo {
     isolation: isolate;
+  }
+  .pn-logo-bespoke {
+    display: block;
+    filter: drop-shadow(0 1.5px 2.5px rgba(0, 0, 0, 0.28));
   }
   .pn-logo-tint {
     position: absolute;
@@ -4290,7 +4771,7 @@ select.pn-select {
    a small card shows more than one; the last row that shows has no divider,
    which would stand alone over the card's edge. */
 .pn-home-grid .pn-row {
-  padding-block: 0.5rem;
+  padding-block: 0.25rem;
 }
 .pn-home-grid .pn-row[data-fit-last] {
   border-bottom-color: transparent;
@@ -4724,14 +5205,12 @@ select.pn-select {
     display: block;
     position: absolute;
     inset-inline-start: 0;
-    top: 2px;
+    top: 1px;
     margin: 0;
   }
   /* Bookmarks and vault logins draw their favicon in this slot instead of a type
-     icon (CardGlyph). It is 15px against the 13px glyphs, so it seats a pixel
-     higher to stay centred on the title's first line, and the indent below clears
-     the wider of the two. The boxed 28px chip stays hidden here: a mini tile has
-     room for the site or for the title, not both. */
+     icon (CardGlyph), matching the 16px type and look glyphs. The boxed 28px chip
+     stays hidden here: a mini tile has room for the site or for the title, not both. */
   .pn-notes-grid .pn-card-glyph-fav {
     top: 1px;
   }
@@ -4755,7 +5234,7 @@ select.pn-select {
        inline spacer, text-indent adds no break opportunity, so a long unbreakable
        title still fills line 1 instead of orphaning the glyph on its own line. */
     display: block;
-    text-indent: 19px;
+    text-indent: 21px;
     white-space: normal;
     overflow: visible;
     overflow-wrap: anywhere;
@@ -5022,8 +5501,7 @@ select.pn-select {
    block near the top of this file) so the two can never disagree. Scoped to
    is-editor-empty, which means the WHOLE document is empty: a blank paragraph
    mid-note keeps its pilcrow, since seeing those is the point of the toggle. */
-.tiptap :is(p, pn-p).is-editor-empty:first-child > .tiptap-invisible-character,
-.tiptap.ProseMirror-focused :is(p, pn-p).is-empty > .tiptap-invisible-character {
+.tiptap > :is(p, pn-p).is-editor-empty:first-child > .tiptap-invisible-character {
   display: none;
 }
 
@@ -5254,6 +5732,11 @@ select.pn-select {
   .pn-jump-row:has(.pn-jump:is(:hover, :focus-visible)) .pn-browse-seg.is-open .pn-browse-name > span {
     opacity: 0;
     padding-inline-start: 0;
+  }
+}
+@container pn-sidebar (max-width: 259px) {
+  .pn-sb-ver {
+    display: none !important;
   }
 }
 @container pn-sidebar (max-width: 229px) {

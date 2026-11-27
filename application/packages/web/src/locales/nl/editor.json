@@ -203,6 +203,7 @@
     "cut": "Knippen",
     "copyAsPlain": "Kopiëren als platte tekst",
     "copyAsMarkdown": "Kopiëren als Markdown",
+    "clearFormatting": "Opmaak wissen",
     "sortAsc": "Regels sorteren van A tot Z",
     "sortDesc": "Regels sorteren van Z tot A"
   },
@@ -275,6 +276,9 @@
   "inlineCode": {
     "copyHint": "{{key}}-klik om te kopiëren"
   },
+  "inlineTag": {
+    "filter": "Filteren op tag"
+  },
   "codeBlock": {
     "copyFailed": "Mislukt",
     "wrap": "Lange regels afbreken",
@@ -303,7 +307,8 @@
     "linkHeading": "Naar een kop linken...",
     "headingNotFound": "Kop niet gevonden",
     "headingsLocked": "Ontgrendel deze notitie om de koppen te zien",
-    "noHeadings": "Deze notitie heeft geen koppen"
+    "noHeadings": "Deze notitie heeft geen koppen",
+    "notFound": "Notitie niet gevonden"
   },
   "footnote": {
     "placeholder": "Tekst van de voetnoot",

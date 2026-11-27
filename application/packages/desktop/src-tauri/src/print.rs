@@ -32,18 +32,83 @@
 //! shows the document in full. `runOperationModalForWindow:` keeps the main
 //! thread running, which is what puts ink on the page.
 
+use crate::PrintPageNumbers;
 use block2::RcBlock;
-use objc2::rc::Retained;
-use objc2::runtime::{AnyClass, AnyObject, Bool};
+use objc2::encode::{Encode, Encoding};
 use objc2::msg_send;
-#[cfg(target_os = "macos")]
+use objc2::rc::Retained;
+use objc2::runtime::{AnyClass, AnyObject, Bool, ClassBuilder, Sel};
 use objc2::sel;
 #[cfg(target_os = "macos")]
 use objc2::{AnyThread, DefinedClass};
 use objc2_foundation::{NSPoint, NSRect, NSSize, NSString};
-use std::cell::Cell;
-#[cfg(target_os = "macos")]
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
+
+const FOOTER_INSET_X: f64 = 56.7; // 20mm in points, matching export.ts @page margins
+const FOOTER_FONT_SIZE: f64 = 9.0;
+const FOOTER_GRAY: f64 = 0.42; // #6a6a6a, matching export.ts
+
+thread_local! {
+    static ACTIVE_PAGE_NUMBERS: RefCell<Option<PrintPageNumbers>> = const { RefCell::new(None) };
+}
+
+fn format_page_label(pn: &PrintPageNumbers, page: isize, total: isize) -> String {
+    if pn.format == "number" || total <= 0 {
+        page.to_string()
+    } else {
+        format!("{page} / {total}")
+    }
+}
+
+fn alignment_for(pn: &PrintPageNumbers) -> isize {
+    match pn.placement.as_str() {
+        "left" => 0,  // NSTextAlignmentLeft
+        "right" => 2, // NSTextAlignmentRight
+        _ => 1,       // NSTextAlignmentCenter
+    }
+}
+
+/// Build the `{ NSFont, NSColor, NSParagraphStyle }` dictionary for drawing
+/// the page-number footer string on AppKit (macOS) or UIKit (iOS).
+unsafe fn footer_attributes(pn: &PrintPageNumbers) -> Option<Retained<AnyObject>> {
+    #[cfg(target_os = "macos")]
+    let font_class = AnyClass::get(c"NSFont")?;
+    #[cfg(target_os = "ios")]
+    let font_class = AnyClass::get(c"UIFont")?;
+
+    #[cfg(target_os = "macos")]
+    let color_class = AnyClass::get(c"NSColor")?;
+    #[cfg(target_os = "ios")]
+    let color_class = AnyClass::get(c"UIColor")?;
+
+    let style_class = AnyClass::get(c"NSMutableParagraphStyle")?;
+    let dict_class = AnyClass::get(c"NSMutableDictionary")?;
+
+    let font: Retained<AnyObject> = msg_send![font_class, systemFontOfSize: FOOTER_FONT_SIZE];
+    #[cfg(target_os = "macos")]
+    let color: Retained<AnyObject> = msg_send![
+        color_class,
+        colorWithCalibratedWhite: FOOTER_GRAY,
+        alpha: 1.0f64
+    ];
+    #[cfg(target_os = "ios")]
+    let color: Retained<AnyObject> = msg_send![
+        color_class,
+        colorWithWhite: FOOTER_GRAY,
+        alpha: 1.0f64
+    ];
+    let style: Retained<AnyObject> = msg_send![style_class, new];
+    let _: () = msg_send![&*style, setAlignment: alignment_for(pn)];
+
+    let dict: Retained<AnyObject> = msg_send![dict_class, dictionaryWithCapacity: 3usize];
+    let k_font = NSString::from_str("NSFont");
+    let k_color = NSString::from_str("NSColor");
+    let k_para = NSString::from_str("NSParagraphStyle");
+    let _: () = msg_send![&*dict, setObject: &*font, forKey: &*k_font];
+    let _: () = msg_send![&*dict, setObject: &*color, forKey: &*k_color];
+    let _: () = msg_send![&*dict, setObject: &*style, forKey: &*k_para];
+    Some(dict)
+}
 
 /// A4 at 96dpi. Only the initial layout: both print paths re-lay the document
 /// out for whatever paper the user picks in the print UI.
@@ -63,7 +128,12 @@ const POLL_TICKS: u32 = 50;
 /// outlives the call, and the user's choices inside it are their own business.
 /// Every UI step below has to be on the main thread: AppKit and UIKit both
 /// require it, and WKWebView is main-thread-only in the first place.
-pub fn print(app: &tauri::AppHandle, html: String, job_name: String) -> Result<(), String> {
+pub fn print(
+    app: &tauri::AppHandle,
+    html: String,
+    job_name: String,
+    page_numbers: Option<PrintPageNumbers>,
+) -> Result<(), String> {
     app.run_on_main_thread(move || {
         let Some(webview) = build_webview() else {
             eprintln!("print: WKWebView is unavailable");
@@ -79,7 +149,7 @@ pub fn print(app: &tauri::AppHandle, html: String, job_name: String) -> Result<(
                 baseURL: std::ptr::null_mut::<AnyObject>(),
             ];
         }
-        print_when_loaded(webview, job_name);
+        print_when_loaded(webview, job_name, page_numbers);
     })
     .map_err(|e| e.to_string())
 }
@@ -104,7 +174,11 @@ fn build_webview() -> Option<Retained<AnyObject>> {
 /// every reference on the main thread, where they all have to live anyway, and
 /// a block carries the captured webview that a delegate class would need an
 /// ivar for.
-fn print_when_loaded(webview: Retained<AnyObject>, job_name: String) {
+fn print_when_loaded(
+    webview: Retained<AnyObject>,
+    job_name: String,
+    page_numbers: Option<PrintPageNumbers>,
+) {
     let Some(class) = AnyClass::get(c"NSTimer") else {
         return;
     };
@@ -122,10 +196,11 @@ fn print_when_loaded(webview: Retained<AnyObject>, job_name: String) {
         // left, so everything the closure captured is freed mid-call.
         let webview = webview.clone();
         let job_name = job_name.clone();
+        let page_numbers = page_numbers.clone();
         unsafe {
             let _: () = msg_send![timer, invalidate];
         }
-        present(webview, &job_name);
+        present(webview, &job_name, page_numbers);
     });
 
     unsafe {
@@ -204,11 +279,80 @@ fn host_view() -> Option<Retained<AnyObject>> {
     }
 }
 
+#[cfg(target_os = "macos")]
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct PrintRange {
+    location: usize,
+    length: usize,
+}
+
+#[cfg(target_os = "macos")]
+unsafe impl Encode for PrintRange {
+    const ENCODING: Encoding = Encoding::Struct("_NSRange", &[usize::ENCODING, usize::ENCODING]);
+}
+
+#[cfg(target_os = "macos")]
+const BORDER_SUBCLASS: &std::ffi::CStr = c"PNPrintBorderView";
+
+#[cfg(target_os = "macos")]
+extern "C" fn draw_page_border(_this: &AnyObject, _cmd: Sel, border_size: NSSize) {
+    let pn = ACTIVE_PAGE_NUMBERS.with(|cell| cell.borrow().clone());
+    let Some(pn) = pn else {
+        return;
+    };
+    unsafe {
+        let Some(op_class) = AnyClass::get(c"NSPrintOperation") else {
+            return;
+        };
+        let cur: *mut AnyObject = msg_send![op_class, currentOperation];
+        if cur.is_null() {
+            return;
+        }
+        let page: isize = msg_send![cur, currentPage];
+        let range: PrintRange = msg_send![cur, pageRange];
+        let total = range.length as isize;
+        let label = NSString::from_str(&format_page_label(&pn, page, total));
+        let Some(attrs) = footer_attributes(&pn) else {
+            return;
+        };
+        // AppKit invokes drawPageBorderWithSize: in unflipped page coordinates
+        // (origin at bottom-left), so y = 24 pt places the footer cleanly
+        // inside the 20mm bottom page margin.
+        let rect = NSRect::new(
+            NSPoint::new(FOOTER_INSET_X, 24.0),
+            NSSize::new((border_size.width - FOOTER_INSET_X * 2.0).max(40.0), 16.0),
+        );
+        let _: () = msg_send![&*label, drawInRect: rect, withAttributes: &*attrs];
+    }
+}
+
+#[cfg(target_os = "macos")]
+unsafe fn attach_border_footer(view: *mut AnyObject) {
+    if view.is_null() {
+        return;
+    }
+    let subclass = if let Some(existing) = AnyClass::get(BORDER_SUBCLASS) {
+        existing
+    } else {
+        let base: &AnyClass = (*view).class();
+        let Some(mut builder) = ClassBuilder::new(BORDER_SUBCLASS, base) else {
+            return;
+        };
+        builder.add_method(
+            sel!(drawPageBorderWithSize:),
+            draw_page_border as extern "C" fn(_, _, _),
+        );
+        builder.register()
+    };
+    let _: *const AnyClass = objc2::ffi::object_setClass(view, subclass);
+}
+
 /// macOS: the standard print panel, as a sheet on the app's window. Its "PDF"
 /// menu is the "Save as PDF" half of what the menu item promises, so one panel
 /// covers both.
 #[cfg(target_os = "macos")]
-fn present(webview: Retained<AnyObject>, job_name: &str) {
+fn present(webview: Retained<AnyObject>, job_name: &str, page_numbers: Option<PrintPageNumbers>) {
     let Some(window) = print_window(&webview) else {
         eprintln!("print: the app has no window to hang the print sheet on");
         return;
@@ -224,18 +368,34 @@ fn present(webview: Retained<AnyObject>, job_name: &str) {
         let Some(class) = AnyClass::get(c"NSPrintInfo") else {
             return;
         };
-        let info: Retained<AnyObject> = msg_send![class, sharedPrintInfo];
-        // The document draws its own 20mm page padding (the @media print block
-        // in export.ts), so AppKit's one-inch default margins would stack on
-        // top of it and crush the text into the middle of the page.
+        let shared: Retained<AnyObject> = msg_send![class, sharedPrintInfo];
+        let info: Retained<AnyObject> = msg_send![&*shared, copy];
+        // The document draws its own 20mm page padding (or @page margins when
+        // page numbers are on), so AppKit's one-inch default margins would
+        // stack on top of it and crush the text into the middle of the page.
         let _: () = msg_send![&*info, setTopMargin: 0.0f64];
         let _: () = msg_send![&*info, setRightMargin: 0.0f64];
         let _: () = msg_send![&*info, setBottomMargin: 0.0f64];
         let _: () = msg_send![&*info, setLeftMargin: 0.0f64];
 
+        if let Some(num_class) = AnyClass::get(c"NSNumber") {
+            let dict: Retained<AnyObject> = msg_send![&*info, dictionary];
+            let key = NSString::from_str("NSPrintHeaderAndFooter");
+            let flag: Retained<AnyObject> = msg_send![num_class, numberWithBool: Bool::new(page_numbers.is_some())];
+            let _: () = msg_send![&*dict, setObject: &*flag, forKey: &*key];
+        }
+
         let operation: Retained<AnyObject> = msg_send![&*webview, printOperationWithPrintInfo: &*info];
         let title = NSString::from_str(job_name);
         let _: () = msg_send![&*operation, setJobTitle: &*title];
+
+        ACTIVE_PAGE_NUMBERS.with(|cell| {
+            *cell.borrow_mut() = page_numbers.clone();
+        });
+        if page_numbers.is_some() {
+            let print_view: *mut AnyObject = msg_send![&*operation, view];
+            attach_border_footer(print_view);
+        }
 
         let done = PrintDone::new(webview);
         remember(&done);
@@ -281,6 +441,9 @@ objc2::define_class!(
             _success: Bool,
             _context: *mut std::ffi::c_void,
         ) {
+            ACTIVE_PAGE_NUMBERS.with(|cell| {
+                *cell.borrow_mut() = None;
+            });
             if let Some(webview) = self.ivars().borrow_mut().take() {
                 unsafe {
                     let _: () = msg_send![&*webview, removeFromSuperview];
@@ -317,11 +480,83 @@ fn remember(done: &Retained<PrintDone>) {
     });
 }
 
+#[cfg(target_os = "ios")]
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct IosEdgeInsets {
+    top: f64,
+    left: f64,
+    bottom: f64,
+    right: f64,
+}
+
+#[cfg(target_os = "ios")]
+unsafe impl Encode for IosEdgeInsets {
+    const ENCODING: Encoding = Encoding::Struct("UIEdgeInsets", &[f64::ENCODING; 4]);
+}
+
+#[cfg(target_os = "ios")]
+const IOS_RENDERER_CLASS: &std::ffi::CStr = c"PNPageNumberRenderer";
+
+#[cfg(target_os = "ios")]
+extern "C" fn draw_ios_footer(this: &AnyObject, _cmd: Sel, page_index: isize, footer_rect: NSRect) {
+    let pn = ACTIVE_PAGE_NUMBERS.with(|cell| cell.borrow().clone());
+    let Some(pn) = pn else {
+        return;
+    };
+    unsafe {
+        let total: isize = msg_send![this, numberOfPages];
+        let label = NSString::from_str(&format_page_label(&pn, page_index + 1, total));
+        let Some(attrs) = footer_attributes(&pn) else {
+            return;
+        };
+        let rect = NSRect::new(
+            NSPoint::new(footer_rect.origin.x + FOOTER_INSET_X, footer_rect.origin.y + 8.0),
+            NSSize::new((footer_rect.size.width - FOOTER_INSET_X * 2.0).max(40.0), 18.0),
+        );
+        let _: () = msg_send![&*label, drawInRect: rect, withAttributes: &*attrs];
+    }
+}
+
+#[cfg(target_os = "ios")]
+unsafe fn build_ios_renderer(formatter: &AnyObject) -> Option<Retained<AnyObject>> {
+    let cls = if let Some(existing) = AnyClass::get(IOS_RENDERER_CLASS) {
+        existing
+    } else {
+        let base = AnyClass::get(c"UIPrintPageRenderer")?;
+        let mut builder = ClassBuilder::new(IOS_RENDERER_CLASS, base)?;
+        builder.add_method(
+            sel!(drawFooterForPageAtIndex:inRect:),
+            draw_ios_footer as extern "C" fn(_, _, _, _),
+        );
+        builder.register()
+    };
+    // iOS UIViewPrintFormatter ignores CSS @page margins, so when page numbers
+    // move the 20mm margin off .page onto @page we supply the matching insets
+    // natively here (18mm top, 20mm sides, plus 44pt footer band).
+    let insets = IosEdgeInsets {
+        top: 51.0,
+        left: FOOTER_INSET_X,
+        bottom: 12.0,
+        right: FOOTER_INSET_X,
+    };
+    let _: () = msg_send![formatter, setPerPageContentInsets: insets];
+    let renderer: Retained<AnyObject> = msg_send![cls, new];
+    let _: () = msg_send![&*renderer, setHeaderHeight: 0.0f64];
+    let _: () = msg_send![&*renderer, setFooterHeight: 44.0f64];
+    let _: () = msg_send![
+        &*renderer,
+        addPrintFormatter: formatter,
+        startingAtPageAtIndex: 0isize
+    ];
+    Some(renderer)
+}
+
 /// iOS: the system print sheet. Presentation is asynchronous, so the webview has
 /// to stay alive and parented until the completion block says otherwise - it is
 /// what the print formatter renders from.
 #[cfg(target_os = "ios")]
-fn present(webview: Retained<AnyObject>, job_name: &str) {
+fn present(webview: Retained<AnyObject>, job_name: &str, page_numbers: Option<PrintPageNumbers>) {
     unsafe {
         let Some(class) = AnyClass::get(c"UIPrintInteractionController") else {
             return;
@@ -342,7 +577,18 @@ fn present(webview: Retained<AnyObject>, job_name: &str) {
         }
 
         let formatter: Retained<AnyObject> = msg_send![&*webview, viewPrintFormatter];
-        let _: () = msg_send![&*controller, setPrintFormatter: &*formatter];
+        ACTIVE_PAGE_NUMBERS.with(|cell| {
+            *cell.borrow_mut() = page_numbers.clone();
+        });
+        if page_numbers.is_some() {
+            if let Some(renderer) = build_ios_renderer(&formatter) {
+                let _: () = msg_send![&*controller, setPrintPageRenderer: &*renderer];
+            } else {
+                let _: () = msg_send![&*controller, setPrintFormatter: &*formatter];
+            }
+        } else {
+            let _: () = msg_send![&*controller, setPrintFormatter: &*formatter];
+        }
 
         // Resolved before the block below takes ownership of the webview: the
         // iPad popover hangs off the same view the webview was parented to.
@@ -352,6 +598,9 @@ fn present(webview: Retained<AnyObject>, job_name: &str) {
         // the block drops the last reference and deallocates it.
         let done = RcBlock::new(
             move |_controller: *mut AnyObject, _completed: Bool, _error: *mut AnyObject| {
+                ACTIVE_PAGE_NUMBERS.with(|cell| {
+                    *cell.borrow_mut() = None;
+                });
                 let _: () = msg_send![&*webview, removeFromSuperview];
             },
         );

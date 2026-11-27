@@ -49,6 +49,7 @@
   "packages/web/src/shortcutMatch.ts",
   "packages/web/src/softKeyboard.ts",
   "packages/web/src/syncFaults.ts",
+  "packages/web/src/syncPause.ts",
   "packages/web/src/tableDelimiterRow.ts",
   "packages/web/src/textDirection.ts",
   "packages/web/src/textFold.ts",
@@ -67,5 +68,7 @@
   "packages/web/src/usePopoverPosition.ts",
   "packages/web/src/useProgressiveReveal.ts",
   "packages/web/src/version.ts",
+  "packages/web/src/versionCheck.ts",
+  "packages/web/src/versionFloor.ts",
   "packages/web/src/wordCountUtils.ts"
 ]

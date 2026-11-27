@@ -310,6 +310,16 @@ export function MediaViewer({ items, index: startIndex, onClose }: {
           {count > 1 && next('start', true)}
         </div>
       </div>
+      {!mail && !pdf && item.caption && (
+        <div
+          data-backdrop=""
+          className="shrink-0 px-6 pb-[max(1rem,var(--pn-safe-bottom))] -mt-2 text-center"
+        >
+          <p dir="auto" className="mx-auto max-w-2xl text-small text-white/75 leading-relaxed">
+            {item.caption}
+          </p>
+        </div>
+      )}
     </div>,
     document.body,
   );

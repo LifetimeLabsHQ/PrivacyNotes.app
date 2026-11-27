@@ -1,6 +1,6 @@
 [package]
 name = "privacynotes"
-version = "0.836.3"
+version = "0.864.3"
 description = "PrivacyNotes - private notes, encrypted on your device"
 authors = ["Lifetime Labs LLC <hi@lifetimelabs.dev>"]
 homepage = "https://privacynotes.app"
@@ -35,7 +35,7 @@ serde_json = "1"
 # how the Markdown pillar will render an image a note references by relative
 # path. Enabling the config without this feature is a build error, by design.
 # Spec: docs/internal/specs/markdown-folder.md (section 8, media)
-tauri = { version = "~2.12", features = ["protocol-asset", "tray-icon"] }
+tauri = { version = "~2.12", features = ["protocol-asset", "tray-icon", "image-png"] }
 tauri-plugin-deep-link = "2"
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
@@ -181,6 +181,7 @@ windows = { version = "0.62", features = [
   # ShellExecuteW opens the Default apps page in Settings. Windows forbids an app
   # setting its own default, so reading and signposting is the whole surface.
   # Spec: docs/internal/specs/markdown-folder.md (section 11)
+  "Win32_Storage_FileSystem",
   "Win32_UI_Shell",
   "Win32_UI_WindowsAndMessaging",
   # src/cli_install.rs: the folder of the pn launcher goes on the user PATH
@@ -220,7 +221,7 @@ tauri-plugin-iap = "0.9"
 # One position reading for "Use my current location" in a note's place
 # popover. Phones only: the plugin has no desktop build. It asks for the
 # permission inside the call, never when it loads, so nothing asks at launch.
-# Spec: docs/internal/plans/note-location.md (section 3)
+# Spec: docs/internal/specs/note-location.md (section 3)
 tauri-plugin-geolocation = "2.5"
 # The folder automatic backups go to on a phone: a tree URI on Android, a
 # security-scoped bookmark on iOS. Our own Kotlin and Swift, reached from

@@ -5,7 +5,7 @@ import { lazy, Suspense, useCallback, useContext, useDeferredValue, useEffect, u
 import type { UpgradeTrigger } from '../UpgradeModal';
 import type { CSSProperties, Dispatch, ReactNode, RefObject, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUUpLeft as Undo2Icon, ArrowUUpRight as Redo2Icon, X, ArrowLeft, ArrowCounterClockwise, Trash, DotsThreeOutlineVertical, CaretLeft, CaretRight, MarkdownLogo, TextAa, ArticleMedium, Paragraph, PushPin, MagnifyingGlass, FrameCorners, ArrowCircleUp, ArrowCircleDown, CalendarDots, CalendarPlus, ArrowsOut } from '../icons';
+import { ArrowUUpLeft as Undo2Icon, ArrowUUpRight as Redo2Icon, X, ArrowLeft, ArrowRight, ArrowCounterClockwise, Trash, DotsThreeOutlineVertical, MarkdownLogo, TextAa, ArticleMedium, Paragraph, PushPin, BookOpen, MagnifyingGlass, FrameCorners, ArrowCircleUp, ArrowCircleDown, CalendarDots, CalendarPlus } from '../icons';
 import type { AuthState } from '../auth';
 import { captureAnchor, followAnchor, type ViewAnchor } from '../viewSwitchAnchor';
 import { noteAnchor, rememberNoteAnchor } from './listPlace';
@@ -46,7 +46,6 @@ import type { FileUse, LinkIndex } from '../connectionsIndex';
 import { ConnectionsPill } from '../ConnectionsPill';
 import { linkInsertPoint, suggestionPairKey } from '../relatedLoader';
 import { setPairHidden } from '../dismissedSuggestions';
-import { insertFootnote } from '../footnotes';
 import { scheduleOf } from '../schedule';
 import { formatDay } from '../intlFormat';
 import { timeLabel } from '../JournalCalendar';
@@ -73,6 +72,8 @@ import { readLocation } from '../noteLocation';
 import type { GraphLens } from '../graph/GraphModal';
 import { lazyPart } from '../chunkLoad';
 import { canOpenFullScreen, fullScreenContentWidth, type FullScreenScale } from '../fullScreen';
+import { formatPageNumber, nextPageNumbersPlacement, readPageNumbers, toggleEditorPageNumbersSetting } from '../pageNumbers';
+import { useScrollPage } from './useNoteScroll';
 
 // Loaded only when the reader enters Full screen mode (keeps controls off the boot path).
 const FullScreenControls = lazyPart(() => import('./FullScreenControls').then((m) => m.FullScreenControls));
@@ -199,12 +200,13 @@ interface NoteEditorHeaderNav {
   /** The header row is phone-narrow: previous/next and share leave it, and
    *  share moves into the "..." menu. Measured in NotesView. */
   headerCompact: boolean;
-  /** Previous/next note in the list (GitHub #246). Hidden on a compact header. */
-  /** The arrows step through the open tabs rather than the list. */
-  navTabs: boolean;
-  canGoPrev: boolean;
-  canGoNext: boolean;
-  onNavigateList: (direction: 'prev' | 'next') => void;
+  /** The header row is wide enough to show the calendar button / date pill;
+   *  below this width it stays in the "..." menu. Measured in NotesView. */
+  headerShowCalendar: boolean;
+  /** Browser-style Back / Forward through opened items (#968). Hidden on a compact header. */
+  canGoBack: boolean;
+  canGoForward: boolean;
+  onHistoryStep: (direction: 1 | -1) => void;
 }
 
 /** The elements NotesView measures and focuses. */
@@ -491,7 +493,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     layout: { gridMode, isMobile, mobileTabIndex, mobileEditing, footerVisible, keyboardUp, noteJump },
     zen: { zenMode, setZenMode, zenToolbar, setZenToolbar },
     fullScreen,
-    headerNav: { quickActionsTier, headerCompact, navTabs, canGoPrev, canGoNext, onNavigateList },
+    headerNav: { quickActionsTier, headerCompact, headerShowCalendar, canGoBack, canGoForward, onHistoryStep },
     paneRefs: {
       titleInputRef, tagInputRef, editorRef, drawingFlushRef, setHeaderRow, noteOptionsButtonRef,
       setStickyTagRow, setNoteScroller,
@@ -534,6 +536,14 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   const canFullScreen = !hasPhoneBar && canOpenFullScreen(selected, view, isNoteLocked(selected), removingProtection);
   const inFullScreen = fullScreen.active && canFullScreen;
   const fullScreenTitle = selected.title.trim() || (selected.type === 'journal' ? entryDayOf(selected) : '');
+  const pageNumbers = readPageNumbers(userSettings.pageNumbers);
+  const [fsPageNumbersOverride, setFsPageNumbersOverride] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!inFullScreen) setFsPageNumbersOverride(null);
+  }, [inFullScreen, selected.id]);
+  const showFsPageNumbers = inFullScreen && (fsPageNumbersOverride ?? (pageNumbers.placement !== 'off' && pageNumbers.fullScreen));
+  const showEditorPageNumbers = !zenMode && !inFullScreen && pageNumbers.placement !== 'off' && pageNumbers.editor;
+  const fsPagePlacement = pageNumbers.placement === 'off' ? 'center' : pageNumbers.placement;
   /**
    * "Open notes read-only" (#824): this device opens a text note read-only
    * without writing a thing to it. Turn off edits it until the note is left;
@@ -544,8 +554,8 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   useEffect(() => { setEditingId(null); }, [selected.id]);
   const deviceReadOnly = openReadOnly && markdownBody && view !== 'trash' && selected.locked !== 1
     && editingId !== selected.id && !createdHere(selected.id);
-  /** No edits to the text: the note's own flag or this device's setting. */
-  const readOnlyText = selected.locked === 1 || deviceReadOnly;
+  /** No edits to the text (readOnlyText) or to the header title (titleLocked). */
+  const readOnlyText = selected.locked === 1 || deviceReadOnly, titleLocked = readOnlyText || !knownType || isNoteLocked(selected) || removingProtection;
   /**
    * The open note's editing session (useNoteEditing.ts): each markdown editor
    * mount saves under a key of its own and records the body it mounted with,
@@ -686,6 +696,18 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
       pane.removeEventListener('scroll', onScroll);
     };
   }, [selected.id, paneEl]);
+  // Live viewport-page counter for Full screen and the editor footer (#944).
+  const scrollPage = useScrollPage(
+    paneEl,
+    showFsPageNumbers || showEditorPageNumbers,
+    `${selected.id}:${inFullScreen ? fullScreen.scale : selectedEditorMode}`,
+  );
+  const editorPageBadge = showEditorPageNumbers && scrollPage ? (
+    <span className="shrink-0 select-none text-small text-pn-muted tabular-nums whitespace-nowrap">
+      {t('editor.pageNumber', { value: formatPageNumber(scrollPage.current, scrollPage.total, pageNumbers.format) })}
+    </span>
+  ) : null;
+
   // Tab from the title or the tag field lands in whichever body is mounted.
   // False when none is, so the caller lets the browser's own Tab run.
   const sourceRef = useRef<MarkdownSourceHandle | null>(null);
@@ -736,7 +758,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   // straight on the type list, the "..." button on the main view.
   const [optionsStartView, setOptionsStartView] = useState<NoteOptionsView>('main');
   // The note whose place popover is open, so it closes when another note opens.
-  // Spec: docs/internal/plans/note-location.md (section 4)
+  // Spec: docs/internal/specs/note-location.md (section 4)
   const [locationOpenFor, setLocationOpenFor] = useState<string | null>(null);
   // The Schedule row the event card asked for (Repeat, Alert, Ends).
   const [scheduleSub, setScheduleSub] = useState<'ends' | 'repeat' | 'alerts' | undefined>(undefined);
@@ -871,7 +893,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
   // focus since it opened); "Link as a footnote" puts its number at that
   // cursor, or without one at the end of the last paragraph, and the
   // note-link in the footnote list. The editor saves either like a typed change.
-  // Spec: docs/internal/plans/related-notes.md
+  // Spec: docs/internal/specs/related-notes.md
   const [cursorNoteId, setCursorNoteId] = useState('');
   const cursorPlaced = cursorNoteId === selected.id;
   const noteLinkNode = (n: LocalNote) => ({ type: 'wikiLink', attrs: { target: noteLinkName(n, isNoteLocked(n)), label: null, suggested: true } });
@@ -886,25 +908,17 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
     const before = point.spaceBefore ? [{ type: 'text', text: ' ' }] : [];
     editor.chain().insertContentAt(at, [...before, noteLinkNode(n), { type: 'text', text: ' ' }]).run();
   };
-  const linkAsFootnote = (n: LocalNote) => {
+  const linkAsFootnote = async (n: LocalNote) => {
     const editor = editorRef.current?.getEditor();
-    if (!editor) return;
-    let at = editor.state.selection.to;
-    if (!cursorPlaced) {
-      // The end of the last textblock outside the footnote list.
-      at = -1;
-      editor.state.doc.forEach((child, offset) => {
-        if (child.type.name === 'footnotes') return;
-        child.descendants((node, pos) => {
-          if (node.isTextblock) at = offset + 1 + pos + node.nodeSize - 1;
-          return !node.isTextblock;
-        });
-        if (child.isTextblock) at = offset + child.nodeSize - 1;
-      });
-      if (at < 0) return;
-    }
-    const link = editor.schema.nodeFromJSON(noteLinkNode(n));
-    insertFootnote(editor, { at, inline: [link] });
+    if (!editor || editor.isDestroyed) return;
+    const targetName = noteLinkName(n, isNoteLocked(n));
+    const atCursor = cursorPlaced;
+    const { insertEditorFootnoteNoteLink } = await import('../noteLinkEdit');
+    if (editor.isDestroyed || editorRef.current?.getEditor() !== editor) return;
+    insertEditorFootnoteNoteLink(editor, targetName, {
+      atCursor,
+      suggested: true,
+    });
   };
   const [pinnedGraphCenterId, setPinnedGraphCenterId] = useState<string | null>(null);
   const connections = (open: boolean, onOpenChange: (open: boolean) => void) => (
@@ -939,10 +953,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
       isNoteLocked={isNoteLocked}
       onOpen={onRevealNote}
       open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) setPinnedGraphCenterId(null);
-        onOpenChange(nextOpen);
-      }}
+      onOpenChange={onOpenChange}
       tabIndex={isMobile ? -1 : undefined}
       idle={idle}
     />
@@ -1029,45 +1040,37 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
             </button>
           </HoverLabel>
         )}
-        {/* Previous and next note in the list, in the browser's own place
-            and order (GitHub #246); while tabs are open, the previous and
-            next tab, as a browser's arrows move within its pages. A compact header drops the pair and the
-            divider after it: on a phone they cost the title more than they
-            save, and the back arrow is the way to the list there. Chevrons,
-            never the curved arrows the tag row uses for undo - two
-            identical pairs one row apart would read as one control drawn
-            twice - and never plain arrows, because the mobile back-to-list
-            arrow sits right beside them. */}
+        {/* Browser-style Back and Forward through opened items (GitHub #968).
+            Hidden on a compact phone header where the back-to-list arrow sits
+            beside the title. Mirrored in RTL so Back still points startward. */}
         {!headerCompact && (
-          <>
-            <div className="shrink-0 flex items-center">
-              <HoverLabel label={t(navTabs ? 'common:palette.commands.previousTab' : 'media:viewer.previous')} keys={keyText(navTabs ? 'previousTab' : 'previousInList')} position="below-start">
-                <button
-                  type="button"
-                  tabIndex={mobileTabIndex}
-                  onClick={() => onNavigateList('prev')}
-                  disabled={!canGoPrev}
-                  aria-label={t(navTabs ? 'common:palette.commands.previousTab' : 'media:viewer.previous')}
-                  className={HEADER_BTN_NARROW}
-                >
-                  <CaretLeft size={HEADER_ICON} />
-                </button>
-              </HoverLabel>
-              <HoverLabel label={t(navTabs ? 'common:palette.commands.nextTab' : 'media:viewer.next')} keys={keyText(navTabs ? 'nextTab' : 'nextInList')} position="below-start">
-                <button
-                  type="button"
-                  tabIndex={mobileTabIndex}
-                  onClick={() => onNavigateList('next')}
-                  disabled={!canGoNext}
-                  aria-label={t(navTabs ? 'common:palette.commands.nextTab' : 'media:viewer.next')}
-                  className={HEADER_BTN_NARROW}
-                >
-                  <CaretRight size={HEADER_ICON} />
-                </button>
-              </HoverLabel>
-            </div>
-            <HeaderDivider />
-          </>
+          <div className={`shrink-0 flex items-center ${!gridMode && !props.onCloseSide ? 'md:-ms-2' : ''}`}>
+            <HoverLabel label={t('common:palette.commands.historyBack')} keys={keyText('historyBack')} position="below-start">
+              <button
+                type="button"
+                tabIndex={mobileTabIndex}
+                onClick={() => onHistoryStep(-1)}
+                disabled={!canGoBack}
+                aria-label={t('common:palette.commands.historyBack')}
+                className={HEADER_BTN_NARROW}
+              >
+                <ArrowLeft size={HEADER_ICON} className="rtl:-scale-x-100" />
+              </button>
+            </HoverLabel>
+            <HoverLabel label={t('common:palette.commands.historyForward')} keys={keyText('historyForward')} position="below-start">
+              <button
+                type="button"
+                tabIndex={mobileTabIndex}
+                onClick={() => onHistoryStep(1)}
+                disabled={!canGoForward}
+                aria-label={t('common:palette.commands.historyForward')}
+                className={HEADER_BTN_NARROW}
+              >
+                <ArrowRight size={HEADER_ICON} className="rtl:-scale-x-100" />
+              </button>
+            </HoverLabel>
+            <HeaderDivider className="ms-1 me-0.5" />
+          </div>
         )}
         <textarea
           ref={titleInputRef}
@@ -1075,7 +1078,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           tabIndex={mobileTabIndex}
           value={selected.title}
           onChange={(e) => {
-            // Strip newlines - title is single-concept, just visually wrapping.
+            if (view === 'trash' || titleLocked) return; // Strip newlines - title is single-concept, just visually wrapping.
             let clean = e.target.value.replace(/\n/g, '');
             titleSymbolRef.current = null;
             // A typed pair such as "->" turns into its symbol (#660). The
@@ -1097,7 +1100,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           onKeyDown={(e) => {
             if (isImeComposing(e)) return;
             // Backspace right after a typed symbol puts the pair back.
-            if (e.key === 'Backspace' && titleSymbolRef.current) {
+            if (e.key === 'Backspace' && titleSymbolRef.current && view !== 'trash' && !titleLocked) {
               const field = e.currentTarget;
               const back = field.selectionStart === field.selectionEnd
                 ? undoTypedSymbol(field.value, field.selectionEnd, titleSymbolRef.current)
@@ -1132,12 +1135,12 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           wrap="off"
           spellCheck={titleSpellcheck ? undefined : false}
           placeholder={
-            selected.type === 'link' ? (linkDomain(parseLinkBody(selected.body).url) || t(traits.titleKey))
-            : selected.type === 'contact' ? (contactDraftName || t(traits.titleKey))
+            selected.type === 'link' ? ((!isNoteLocked(selected) && linkDomain(parseLinkBody(selected.body).url)) || t(traits.titleKey))
+            : selected.type === 'contact' ? ((!isNoteLocked(selected) && contactDraftName) || t(traits.titleKey))
             : t(traits.titleKey)
           }
-          disabled={view === 'trash' || readOnlyText || !knownType}
-          readOnly={readOnlyText || !knownType}
+          disabled={view === 'trash' || titleLocked}
+          readOnly={titleLocked}
           // Single line (wrap="off"): the header stays a fixed height so
           // the column dividers line up. A too-long title scrolls and is
           // softly faded at the right edge (not hard-clipped) as a "more
@@ -1161,7 +1164,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           // breakpoint). Matching metrics is the only fix that holds
           // across the responsive title sizes; font-normal + muted
           // color keep it visually quiet.
-          className="pn-note-title flex-1 min-w-0 bg-transparent text-title sm:text-display lg:text-display-2 font-semibold tracking-tight focus:outline-none placeholder:text-pn-muted placeholder:font-normal disabled:opacity-60 resize-none overflow-hidden leading-tight whitespace-nowrap [&::-webkit-scrollbar]:hidden"
+          className="pn-note-title flex-1 min-w-0 bg-transparent text-title sm:text-heading lg:text-display font-semibold tracking-tight focus:outline-none placeholder:text-pn-muted placeholder:font-normal disabled:opacity-60 resize-none overflow-hidden leading-tight whitespace-nowrap [&::-webkit-scrollbar]:hidden"
         />
         {/* Shortcuts into the "..." menu, which keeps every one of these
             rows at every width. They appear only on a header row wide
@@ -1229,14 +1232,25 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
             exportDrawing={exportDrawing}
             onCopyShortcut={onCopyShortcut}
             onCopyNoteLink={onCopyNoteLink}
+            pageNumbers={pageNumbers}
+            onCyclePageNumbers={() => mutateSettings((prev) => {
+              const cur = readPageNumbers(prev.pageNumbers);
+              const effective = cur.print ? cur.placement : 'off';
+              const next = nextPageNumbersPlacement(effective);
+              return {
+                ...prev,
+                pageNumbers: { ...cur, placement: next, print: next === 'off' ? cur.print : true },
+              };
+            })}
           />
           </>
         )}
         {/* The calendar's door on every dated type: "Add to calendar" while
-            the item has no day, its day and time once it has one. It opens
-            the Schedule view of the "..." menu, the one place a schedule is
-            edited. Spec: docs/internal/specs/calendar-pillar-spec.md (step 8) */}
-        {view !== 'trash' && !zenMode && traits.dated && (() => {
+            the item has no day, its day and time once it has one. Hidden below
+            HEADER_CALENDAR_PX so narrow panes keep room for the title; Date &
+            reminders / Entry date stays in the "..." menu at every width.
+            Spec: docs/internal/specs/calendar-pillar-spec.md (step 8) */}
+        {view !== 'trash' && !zenMode && headerShowCalendar && traits.dated && (() => {
           const s = scheduleOf(selected.trackers as Record<string, unknown> | undefined, selected.type, traits.dated === 'entry' ? entryDayOf(selected) : undefined);
           const day = s ? (schedule.occurrence && s.repeat ? schedule.occurrence : s.day) : null;
           const label = day
@@ -1268,19 +1282,6 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
           <HoverLabel label={t('notes:drawing.fullScreen')} position="below">
             <button type="button" onClick={() => drawingFullScreen.current?.()} aria-label={t('notes:drawing.fullScreen')} className={HEADER_BTN}>
               <FrameCorners size={HEADER_ICON} aria-hidden="true" />
-            </button>
-          </HoverLabel>
-        )}
-        {/* Full-screen reading/presenting mode for text notes on desktop (#911). */}
-        {canFullScreen && !headerCompact && !zenMode && (
-          <HoverLabel label={t('notes:drawing.fullScreen')} keys={keyText('fullScreen')} position="below">
-            <button
-              type="button"
-              onClick={enterFullScreen}
-              aria-label={t('notes:drawing.fullScreen')}
-              className={HEADER_BTN}
-            >
-              <ArrowsOut size={HEADER_ICON} aria-hidden="true" />
             </button>
           </HoverLabel>
         )}
@@ -1611,9 +1612,28 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               scale={fullScreen.scale}
               onStep={fullScreen.onStepScale}
               onReset={fullScreen.onResetScale}
+              pageNumbersShown={showFsPageNumbers}
+              onTogglePageNumbers={() => setFsPageNumbersOverride((v) => !(v ?? (pageNumbers.placement !== 'off' && pageNumbers.fullScreen)))}
               onExit={fullScreen.onExit}
             />
           </Suspense>
+        )}
+        {showFsPageNumbers && scrollPage && (
+          <div
+            data-pn-fullscreen-page=""
+            aria-live="off"
+            className={`fixed bottom-4 inset-x-6 z-20 pointer-events-none select-none flex ${
+              fsPagePlacement === 'left'
+                ? 'justify-start'
+                : fsPagePlacement === 'right'
+                  ? 'justify-end'
+                  : 'justify-center'
+            }`}
+          >
+            <span className="px-2.5 py-0.5 rounded-full bg-surface-2/85 border border-divider/70 backdrop-blur-sm text-small font-medium tabular-nums text-pn-muted">
+              {formatPageNumber(scrollPage.current, scrollPage.total, pageNumbers.format)}
+            </span>
+          </div>
         )}
         <div
           ref={setScroller}
@@ -1827,7 +1847,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                   mobileTabIndex: isMobile ? -1 : undefined,
                   preview: props.onCloseSide ? undefined : sourceControls,
                 } : undefined}
-                preview={split ? (text, caretLine, edit) => <Suspense fallback={null}><SourcePreviewPane text={text} caretLine={caretLine} lineNumbers={lineNumbers} pane={paneEl} first={previewFirst} findPill={findPill} connections={connections} onEdit={edit} /></Suspense> : undefined}
+                preview={split ? (text, caretLine, edit) => <Suspense fallback={null}><SourcePreviewPane text={text} caretLine={caretLine} lineNumbers={lineNumbers} pane={paneEl} first={previewFirst} findPill={findPill} connections={connections} onEdit={edit} isPro={auth.isPro ?? false} onOpenUpgrade={(trigger) => setShowUpgrade({ trigger })} /></Suspense> : undefined}
               />
             ) : (
               <Editor
@@ -1868,6 +1888,8 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                 sinkCheckedTasks={userSettings.sinkCheckedTasks}
                 typedSymbols={userSettings.typedSymbols}
                 placeholder={selected.type === 'event' ? t('editor:eventPlaceholder') : undefined}
+                allTags={tagCounts.tags}
+                onSelectTag={(tag) => void handleSelectTag(tag)}
                 // Read-only, Archived and Unlocked share the notice row, each
                 // when it applies (#712, #723); none shows in the Trash.
                 notice={states.length ? <NoteStateRow states={states} place="editor" {...stateActions} /> : undefined}
@@ -1916,6 +1938,11 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
               // costs too much height there.
               <div className={`mt-auto pt-4 shrink-0 flex items-start justify-between gap-3 ${footerPinned && bodyOverflows ? PINNED_FOOTER : ''}`}>
                 <div className="min-w-0 flex items-start gap-1.5">
+                  {pageNumbers.placement === 'left' && editorPageBadge && (
+                    <span className="shrink-0 inline-flex items-center me-1.5">
+                      {editorPageBadge}
+                    </span>
+                  )}
                   {/* Invisible characters toggle. Only meaningful over the
                       rich-text editor - the markdown source view is a plain
                       textarea with nothing to decorate. The tip opens away
@@ -1963,6 +1990,24 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                     onSplit={splitNote && view !== 'trash' ? () => splitNote(selected) : undefined}
                     onOverLimit={() => onOverSyncLimit(selected.id)}
                   />
+                  {/* Page numbers quick toggle, left of the pin icon (#944).
+                      Light weight and muted/accent state match the pin and
+                      line-numbers toggles; turning on from Off defaults to
+                      bottom center. */}
+                  <HoverLabel label={showEditorPageNumbers ? t('fullScreen.hidePageNumbers') : t('fullScreen.showPageNumbers')}>
+                    <button
+                      type="button"
+                      onClick={() => mutateSettings((prev) => ({
+                        ...prev,
+                        pageNumbers: toggleEditorPageNumbersSetting(readPageNumbers(prev.pageNumbers)),
+                      }))}
+                      aria-pressed={showEditorPageNumbers}
+                      aria-label={showEditorPageNumbers ? t('fullScreen.hidePageNumbers') : t('fullScreen.showPageNumbers')}
+                      className={`shrink-0 h-4 flex items-center hover:text-accent transition ${showEditorPageNumbers ? 'text-accent' : 'text-pn-muted'}`}
+                    >
+                      <BookOpen weight="light" size={15} />
+                    </button>
+                  </HoverLabel>
                   {/* Pin, after the counts it holds in view. Grey like the
                       counts when off: a heavy pin outshouts the text it
                       sits beside. Light in both states (fill and duotone read too heavy); on is accent.
@@ -1984,6 +2029,11 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                     </button>
                   </HoverLabel>}
                 </div>
+                {pageNumbers.placement === 'center' && editorPageBadge && (
+                  <div className="shrink-0 flex items-center justify-center">
+                    {editorPageBadge}
+                  </div>
+                )}
                 <div className="shrink-0 flex items-start gap-3">
                 <LineNumbersToggle />
                 {view !== 'trash' && !readOnlyText && (
@@ -2008,6 +2058,7 @@ export function NoteEditorPane(props: NoteEditorPaneProps) {
                       : <ArticleMedium weight="light" size={16} className="text-accent shrink-0" aria-hidden="true" />}
                   </button>
                 )}
+                {pageNumbers.placement === 'right' && editorPageBadge}
                 </div>
               </div>
             )}

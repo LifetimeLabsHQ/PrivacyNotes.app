@@ -203,6 +203,7 @@
     "cut": "Klipp ut",
     "copyAsPlain": "Kopiera som ren text",
     "copyAsMarkdown": "Kopiera som Markdown",
+    "clearFormatting": "Rensa formatering",
     "sortAsc": "Sortera rader från A till Ö",
     "sortDesc": "Sortera rader från Ö till A"
   },
@@ -275,6 +276,9 @@
   "inlineCode": {
     "copyHint": "{{key}}-klicka för att kopiera"
   },
+  "inlineTag": {
+    "filter": "Filtrera efter tagg"
+  },
   "codeBlock": {
     "copyFailed": "Misslyckades",
     "wrap": "Radbryt långa rader",
@@ -303,7 +307,8 @@
     "linkHeading": "Länka till en rubrik...",
     "headingNotFound": "Rubriken hittades inte",
     "headingsLocked": "Lås upp anteckningen för att se dess rubriker",
-    "noHeadings": "Anteckningen har inga rubriker"
+    "noHeadings": "Anteckningen har inga rubriker",
+    "notFound": "Anteckningen hittades inte"
   },
   "footnote": {
     "placeholder": "Fotnotstext",

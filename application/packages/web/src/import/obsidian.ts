@@ -108,7 +108,7 @@ function parseFrontMatter(content: string): {
       // Map View's `location:` in any of the forms Obsidian writes: inline
       // (`40.68,-74.04` or `[40.68, -74.04]`), or the block list its
       // Properties panel makes, one `- value` line per number.
-      // Spec: docs/internal/plans/note-location.md (section 6)
+      // Spec: docs/internal/specs/note-location.md (section 6)
       if (rawVal) {
         location = rawVal;
       } else {

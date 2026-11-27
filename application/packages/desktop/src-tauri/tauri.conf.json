@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "PrivacyNotes",
-  "version": "0.836.3",
+  "version": "0.864.3",
   "identifier": "app.privacynotes",
   "build": {
     "beforeDevCommand": "pnpm --filter desktop sync-version && pnpm --filter shared build && pnpm --filter @notes/cli build && pnpm --filter web dev",
@@ -128,7 +128,8 @@
       "endpoints": [
         "https://releases.privacynotes.app/u/{{target}}-{{arch}}/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZDOTc2Njg3OTIxODlFNUYKUldSZm5oaVNoMmFYYkEvMGdRZ1lzOVJRN0lnd0RlbFgwZ1hGTzhHVU5MUUFLMEk3UnpjNWR0L2YK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZDOTc2Njg3OTIxODlFNUYKUldSZm5oaVNoMmFYYkEvMGdRZ1lzOVJRN0lnd0RlbFgwZ1hGTzhHVU5MUUFLMEk3UnpjNWR0L2YK",
+      "requireSignedVersion": true
     }
   }
 }

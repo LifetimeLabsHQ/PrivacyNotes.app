@@ -256,7 +256,7 @@ const CHECKABLE_SHAPES = new Set([
 const ROLE_CONTENT = 1;
 const ROLE_METADATA = 2;
 
-/** Limits on a stranger's graph: no real page nests this deep or holds this many blocks. */
+/** Limits on a stranger's graph: no real notebook nests this deep or visits this many nodes. */
 const DEPTH_LIMIT = 64;
 const BLOCK_LIMIT = 200_000;
 
@@ -362,17 +362,35 @@ function fileTime(set: PropSet | null, id: number): number | null {
 // Pages
 // ---------------------------------------------------------------------------
 
+interface Budget {
+  nodes: number;
+}
+
 interface Ctx {
   space: ObjectSpace;
   store: RevisionStore;
   book: OneNoteNotebook;
-  blocks: number;
+  budget: Budget;
+  seen: Set<string>;
   /** Tag definitions of the page in order of first use, which is how OneNote orders the tags of one paragraph. */
   tagOrder: Map<string, number>;
 }
 
 function obj(ctx: Ctx, key: string): OneObject | undefined {
   return ctx.space.objects.get(key);
+}
+
+function step(budget: Budget): void {
+  if (++budget.nodes > BLOCK_LIMIT) throw new OneNoteError('store-corrupt', 'too many blocks');
+}
+
+function claim(ctx: Ctx, key: string): (OneObject & { props: PropSet }) | undefined {
+  step(ctx.budget);
+  const o = obj(ctx, key);
+  if (!o?.props) return undefined;
+  if (ctx.seen.has(key)) throw new OneNoteError('store-corrupt', 'duplicate node');
+  ctx.seen.add(key);
+  return o as OneObject & { props: PropSet };
 }
 
 function readRuns(ctx: Ctx, node: PropSet): OneNoteRun[] {
@@ -496,11 +514,8 @@ function alignmentOf(node: PropSet, style: PropSet | null): 'left' | 'center' | 
   return 'left';
 }
 
-/** Appends the blocks of one content node at `indent`. */
-function readContent(ctx: Ctx, key: string, indent: number, list: OneNoteList | null, out: OneNoteBlock[], depth: number): void {
-  const o = obj(ctx, key);
-  if (!o?.props) return;
-  if (++ctx.blocks > BLOCK_LIMIT) throw new OneNoteError('store-corrupt', 'too many blocks');
+/** Appends the blocks of one already-claimed content node at `indent`. */
+function readContentNode(ctx: Ctx, o: OneObject & { props: PropSet }, indent: number, list: OneNoteList | null, out: OneNoteBlock[], depth: number): void {
   const node = o.props;
   const tags = readTags(ctx, node);
   switch (o.jcid) {
@@ -521,13 +536,14 @@ function readContent(ctx: Ctx, key: string, indent: number, list: OneNoteList | 
       return;
     }
     case J.TableNode: {
+      if (depth > DEPTH_LIMIT) throw new OneNoteError('store-corrupt', 'outline too deep');
       const rows: OneNoteBlock[][][] = [];
       for (const rowKey of oids(node, P.ElementChildNodes)) {
-        const row = obj(ctx, rowKey);
+        const row = claim(ctx, rowKey);
         if (row?.jcid !== J.TableRowNode) continue;
         const cells: OneNoteBlock[][] = [];
         for (const cellKey of oids(row.props, P.ElementChildNodes)) {
-          const cell = obj(ctx, cellKey);
+          const cell = claim(ctx, cellKey);
           const blocks: OneNoteBlock[] = [];
           if (cell?.jcid === J.TableCellNode) readElements(ctx, oids(cell.props, P.ElementChildNodes), 0, blocks, depth + 1);
           cells.push(blocks);
@@ -564,12 +580,19 @@ function readContent(ctx: Ctx, key: string, indent: number, list: OneNoteList | 
   }
 }
 
+/** Claims one content node and appends its blocks at `indent`. */
+function readContent(ctx: Ctx, key: string, indent: number, list: OneNoteList | null, out: OneNoteBlock[], depth: number): void {
+  const o = claim(ctx, key);
+  if (!o) return;
+  readContentNode(ctx, o, indent, list, out, depth);
+}
+
 /** Appends outline elements and outline groups, depth first, in document order. */
 function readElements(ctx: Ctx, keys: string[], indent: number, out: OneNoteBlock[], depth: number): void {
   if (depth > DEPTH_LIMIT) throw new OneNoteError('store-corrupt', 'outline too deep');
   for (const key of keys) {
-    const o = obj(ctx, key);
-    if (!o?.props) continue;
+    const o = claim(ctx, key);
+    if (!o) continue;
     if (o.jcid === J.OutlineGroup) {
       readElements(ctx, oids(o.props, P.ElementChildNodes), indent + 1, out, depth + 1);
       continue;
@@ -591,6 +614,7 @@ function plainText(blocks: OneNoteBlock[]): string {
 
 /** Page-level nodes sorted top to bottom, then left to right, as they sit on the page. */
 function byPosition(ctx: Ctx, keys: string[]): string[] {
+  if (keys.length > BLOCK_LIMIT) throw new OneNoteError('store-corrupt', 'too many blocks');
   const pos = keys.map((key, i) => {
     const p = obj(ctx, key)?.props ?? null;
     return { key, i, y: float(p, P.OffsetFromParentVert) ?? 0, x: float(p, P.OffsetFromParentHoriz) ?? 0 };
@@ -599,25 +623,30 @@ function byPosition(ctx: Ctx, keys: string[]): string[] {
   return pos.map((p) => p.key);
 }
 
-function readPage(store: RevisionStore, space: ObjectSpace, book: OneNoteNotebook): OneNotePage | null {
-  const ctx: Ctx = { space, store, book, blocks: 0, tagOrder: new Map() };
+function readPage(store: RevisionStore, space: ObjectSpace, book: OneNoteNotebook, budget: Budget): OneNotePage | null {
+  const ctx: Ctx = { space, store, book, budget, seen: new Set(), tagOrder: new Map() };
   const manifestKey = space.roots.get(ROLE_CONTENT);
-  const manifest = manifestKey ? obj(ctx, manifestKey) : undefined;
+  const manifest = manifestKey ? claim(ctx, manifestKey) : undefined;
   if (manifest?.jcid !== J.PageManifestNode) return null;
   const pageKey = oids(manifest.props, P.ContentChildNodes)[0];
-  const page = pageKey ? obj(ctx, pageKey) : undefined;
-  if (page?.jcid !== J.PageNode || !page.props) return null;
+  const page = pageKey ? claim(ctx, pageKey) : undefined;
+  if (page?.jcid !== J.PageNode) return null;
   const metaKey = space.roots.get(ROLE_METADATA);
   const meta = metaKey ? (obj(ctx, metaKey)?.props ?? null) : null;
 
   // The title: the outlines under the title node whose IsTitleText is set ([MS-ONE] 2.1.16).
   let title = '';
   const titleKey = oids(page.props, P.StructureElementChildNodes)[0];
-  const titleNode = titleKey ? obj(ctx, titleKey) : undefined;
+  const titleNode = titleKey ? claim(ctx, titleKey) : undefined;
   if (titleNode?.jcid === J.TitleNode) {
     for (const outlineKey of oids(titleNode.props, P.ElementChildNodes)) {
-      const outline = obj(ctx, outlineKey);
-      if (!outline?.props || bool(outline.props, P.IsTitleDate)) continue;
+      const peek = obj(ctx, outlineKey);
+      if (bool(peek?.props ?? null, P.IsTitleDate)) {
+        step(ctx.budget);
+        continue;
+      }
+      const outline = claim(ctx, outlineKey);
+      if (!outline) continue;
       const blocks: OneNoteBlock[] = [];
       readElements(ctx, oids(outline.props, P.ElementChildNodes), 0, blocks, 0);
       title = plainText(blocks);
@@ -629,13 +658,17 @@ function readPage(store: RevisionStore, space: ObjectSpace, book: OneNoteNoteboo
 
   const blocks: OneNoteBlock[] = [];
   for (const key of byPosition(ctx, oids(page.props, P.ElementChildNodes))) {
-    const o = obj(ctx, key);
-    if (!o?.props) continue;
+    const peek = obj(ctx, key);
+    if (peek?.jcid === J.OutlineNode && (bool(peek.props, P.IsTitleText) || bool(peek.props, P.IsTitleDate))) {
+      step(ctx.budget);
+      continue;
+    }
+    const o = claim(ctx, key);
+    if (!o) continue;
     if (o.jcid === J.OutlineNode) {
-      if (bool(o.props, P.IsTitleText) || bool(o.props, P.IsTitleDate)) continue;
       readElements(ctx, oids(o.props, P.ElementChildNodes), 0, blocks, 0);
     } else {
-      readContent(ctx, key, 0, null, blocks, 0);
+      readContentNode(ctx, o, 0, null, blocks, 0);
     }
   }
   const level = uint(meta, P.PageLevel);
@@ -660,8 +693,8 @@ function emptyBook(): OneNoteNotebook {
   return { sections: [], files: new Map(), skipped: [], unsupported: new Map(), missingFiles: 0 };
 }
 
-/** Reads one section file into `book`. A file it cannot read is listed in `book.skipped`. */
-function addSectionFile(book: OneNoteNotebook, data: Uint8Array, name: string, folders: string[], recycled: boolean): void {
+/** Reads one section file into `book`. A file whose store cannot be read is listed in `book.skipped`. */
+function addSectionFile(book: OneNoteNotebook, budget: Budget, data: Uint8Array, name: string, folders: string[], recycled: boolean): void {
   let store: RevisionStore;
   try {
     store = readRevisionStore(data);
@@ -672,10 +705,10 @@ function addSectionFile(book: OneNoteNotebook, data: Uint8Array, name: string, f
     }
     throw err;
   }
-  if (store.fileType === 'one') addSection(book, store, name, folders, recycled);
+  if (store.fileType === 'one') addSection(book, budget, store, name, folders, recycled);
 }
 
-function addSection(book: OneNoteNotebook, store: RevisionStore, name: string, folders: string[], recycled: boolean): void {
+function addSection(book: OneNoteNotebook, budget: Budget, store: RevisionStore, name: string, folders: string[], recycled: boolean): void {
   const root = store.spaces.get(store.rootSpace);
   if (!root || root.encrypted) {
     book.skipped.push({ name, folders, reason: root?.encrypted ? 'encrypted' : 'store-corrupt' });
@@ -687,19 +720,22 @@ function addSection(book: OneNoteNotebook, store: RevisionStore, name: string, f
   const displayName = wz(metaKey ? (root.objects.get(metaKey)?.props ?? null) : null, P.SectionDisplayName);
   const section: OneNoteSection = { id: bracedGuid(store.guidFile), name: displayName || name, folders, recycled, pages: [] };
   if (sectionNode?.jcid === J.SectionNode) {
+    const seenSeries = new Set<string>();
+    const seenSpaces = new Set<string>();
     for (const seriesKey of oids(sectionNode.props, P.ElementChildNodes)) {
+      step(budget);
+      if (seenSeries.has(seriesKey)) continue;
+      seenSeries.add(seriesKey);
       const series = root.objects.get(seriesKey);
       if (series?.jcid !== J.PageSeriesNode) continue;
       for (const spaceKey of osids(series.props, P.ChildGraphSpaceElementNodes)) {
+        step(budget);
+        if (seenSpaces.has(spaceKey)) continue;
+        seenSpaces.add(spaceKey);
         const space = store.spaces.get(spaceKey);
         if (!space || space.encrypted) continue;
-        try {
-          const page = readPage(store, space, book);
-          if (page) section.pages.push(page);
-        } catch (err) {
-          if (!(err instanceof OneNoteError)) throw err;
-          book.skipped.push({ name: `${section.name}`, folders, reason: err.code });
-        }
+        const page = readPage(store, space, book, budget);
+        if (page) section.pages.push(page);
       }
     }
   }
@@ -726,7 +762,7 @@ const TOC_ENTRIES = 0x1cf6;
 const TOC_CHILD_NAME = 0x1d6b;
 const TOC_ORDER = 0x1cb9;
 
-function readTocOrder(data: Uint8Array): Map<string, number> {
+function readTocOrder(data: Uint8Array, budget: Budget): Map<string, number> {
   const order = new Map<string, number>();
   let store: RevisionStore;
   try {
@@ -740,6 +776,7 @@ function readTocOrder(data: Uint8Array): Map<string, number> {
   const root = rootKey ? space?.objects.get(rootKey) : undefined;
   if (!space || !root?.props) return order;
   for (const key of oids(root.props, TOC_ENTRIES)) {
+    step(budget);
     const entry = space.objects.get(key)?.props ?? null;
     const name = wz(entry, TOC_CHILD_NAME);
     const position = uint(entry, TOC_ORDER);
@@ -751,12 +788,13 @@ function readTocOrder(data: Uint8Array): Map<string, number> {
 /** Reads every section of a `.onepkg` (a cabinet) or of the files already taken out of one. */
 export function readOneNoteFiles(files: CabFile[]): OneNoteNotebook {
   const book = emptyBook();
+  const budget: Budget = { nodes: 0 };
   const tocs = new Map<string, Map<string, number>>();
   const sections: { data: Uint8Array; parts: string[]; base: string; index: number }[] = [];
   files.forEach((f, index) => {
     const parts = safeParts(f.name);
     const base = parts.pop() ?? '';
-    if (/\.onetoc2$/i.test(base)) tocs.set(parts.join('/').toLowerCase(), readTocOrder(f.data));
+    if (/\.onetoc2$/i.test(base)) tocs.set(parts.join('/').toLowerCase(), readTocOrder(f.data, budget));
     else if (/\.one$/i.test(base)) sections.push({ data: f.data, parts, base, index });
   });
   // Sort by the table of contents at each level of the path, then by cabinet order.
@@ -770,22 +808,23 @@ export function readOneNoteFiles(files: CabFile[]): OneNoteNotebook {
   for (const sct of ranked) {
     const recycled = sct.parts.includes(RECYCLE_BIN);
     const folders = sct.parts.filter((p) => p !== RECYCLE_BIN);
-    addSectionFile(book, sct.data, sct.base.replace(/\.one$/i, ''), folders, recycled);
+    addSectionFile(book, budget, sct.data, sct.base.replace(/\.one$/i, ''), folders, recycled);
   }
   return book;
 }
 
 /**
  * Reads a `.onepkg` package or a single `.one` section file. Throws
- * `OneNoteError` when the file is neither; a section inside a package that
- * cannot be read is listed in `skipped` instead.
+ * `OneNoteError` when the file is neither or exceeds graph limits; a section
+ * inside a package whose store cannot be read is listed in `skipped` instead.
  */
 export function readOneNote(bytes: Uint8Array, fileName: string): OneNoteNotebook {
   if (isCabinet(bytes)) return readOneNoteFiles(readCab(bytes));
   const book = emptyBook();
+  const budget: Budget = { nodes: 0 };
   const name = (safeParts(fileName).pop() ?? '').replace(/\.one$/i, '');
   const store = readRevisionStore(bytes);
   if (store.fileType !== 'one') throw new OneNoteError('store-not-revision-store', 'table of contents only');
-  addSection(book, store, name, [], false);
+  addSection(book, budget, store, name, [], false);
   return book;
 }

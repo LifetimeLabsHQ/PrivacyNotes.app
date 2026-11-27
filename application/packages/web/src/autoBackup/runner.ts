@@ -19,13 +19,15 @@ import type { UserSettings } from '../userSettings';
 import type { ExportStep } from '../export';
 import { sha256Hex } from '../sha256Hex';
 import { backupSettingsKey, carriedSettings } from '../backupRestore';
+import { PUBKEY_OWNER_KEY, ownsLocalData } from '../authStorage';
+import { isDemoMode } from '../demo';
 import { backupGateOpen, forgetPulledBefore } from '../pullState';
 import {
   backupConfirmed, backupExists, clearDestination, connectionIsMetered, DestinationError, destinationKind, destinationStatus,
   isPhone, placeBackup, removeBackup,
 } from './destination';
 import { backupName, deviceSlug, editsText, fingerprint, isDue, isOverdue, isShrunk, mayRetry, pruneList, shrinkBaseline, SNOOZE_MS, stillThere } from './plan';
-import { addLog, clearAutoBackup, getAutoBackup, patchConfig, setFiles, setPhoneDefaults, type FailureCause } from './store';
+import { addLog, AUTO_BACKUP_CONFIG_KEY, clearAutoBackup, getAutoBackup, patchConfig, setFiles, setPhoneDefaults, type FailureCause } from './store';
 
 /** What the runner reads from the vault. Functions, so a run always sees
  *  the state of the moment it starts, not of the render that connected it. */
@@ -34,6 +36,8 @@ export interface AutoBackupDeps {
   /** False until the local read finished without an error. */
   loaded: () => boolean;
   encryptionKey: () => Uint8Array | null;
+  /** Optional account pubkey of the mounted vault for cross-tab fencing. */
+  pubkey?: () => string;
   imageStore: () => ImageStore | null;
   attachmentStore: () => AttachmentStore | null;
   settings: () => UserSettings;
@@ -65,19 +69,101 @@ const CHECK_EVERY_MS = 30 * 60_000;
 const DAY_MS = 24 * 3_600_000;
 const LOCK_NAME = 'privacynotes-auto-backup';
 
+const IDLE_LIVE: LiveState = { running: false };
+
 let deps: AutoBackupDeps | null = null;
 let live: LiveState = { running: false };
 const liveListeners = new Set<() => void>();
 let abort: AbortController | null = null;
 /** Raised by every Stop, so a run that waits for the lock sees one (`runBackup`). */
 let stops = 0;
+/** Raised when another account arrives (`forgetAutoBackup` or cross-tab owner
+ *  switch), so an in-flight run or check from the prior account writes nothing
+ *  back to storage or UI. */
+let accountEpoch = 0;
+let activeOwner: string | null = null;
 const startedAt = Date.now();
 /** One message per cause per day, and one overdue message per start. */
 const told = new Map<string, number>();
 
+type RunOwner = {
+  readonly pubkey: string | null;
+  readonly storedOwner: string | null;
+};
+
+function currentOwner(): string | null {
+  if (isDemoMode()) return null;
+  try {
+    return localStorage.getItem(PUBKEY_OWNER_KEY);
+  } catch {
+    return null;
+  }
+}
+
 function setLive(patch: Partial<LiveState>): void {
-  live = { ...live, ...patch };
+  const next: LiveState = { ...live, ...patch };
+  if (next.running === live.running && next.step === live.step && next.message === live.message) {
+    return;
+  }
+  live = next;
   liveListeners.forEach((cb) => cb());
+}
+
+function resetForAccountChange(nextOwner: string | null = currentOwner()): void {
+  accountEpoch++;
+  activeOwner = nextOwner;
+  stopBackup();
+  told.clear();
+  setLive({ running: false, step: undefined, message: undefined });
+}
+
+function syncActiveOwner(explicitOwner?: string | null): void {
+  if (isDemoMode()) return;
+  const next = explicitOwner ?? currentOwner();
+  if (activeOwner !== null && next !== activeOwner) {
+    resetForAccountChange(next);
+    return;
+  }
+  if (next !== null) {
+    activeOwner = next;
+  }
+}
+
+function captureRunOwner(d: AutoBackupDeps | null): RunOwner {
+  const explicit = isDemoMode() ? null : (d?.pubkey?.() ?? null);
+  syncActiveOwner(explicit);
+  return {
+    pubkey: explicit,
+    storedOwner: currentOwner(),
+  };
+}
+
+function stillSameAccount(epoch: number, owner: RunOwner): boolean {
+  if (epoch !== accountEpoch) return false;
+  if (isDemoMode()) return true;
+  const nowStored = currentOwner();
+  if (owner.storedOwner !== null && nowStored !== owner.storedOwner) return false;
+  if (owner.storedOwner === null && nowStored !== null && nowStored !== owner.pubkey) return false;
+  if (owner.pubkey !== null && !ownsLocalData(owner.pubkey)) return false;
+  return true;
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === null) {
+      resetForAccountChange(null);
+      return;
+    }
+    if (!isDemoMode() && e.key === PUBKEY_OWNER_KEY) {
+      if (e.newValue !== activeOwner) {
+        resetForAccountChange(e.newValue);
+      }
+      return;
+    }
+    if (e.key === AUTO_BACKUP_CONFIG_KEY() && e.newValue === null) {
+      resetForAccountChange(currentOwner());
+    }
+  });
 }
 
 function tell(message: BackupMessage, key: string): void {
@@ -99,8 +185,13 @@ export function useBackupLive(): LiveState {
         liveListeners.delete(cb);
       };
     },
-    () => live,
-    () => live,
+    () => {
+      if (!isDemoMode() && activeOwner !== null && currentOwner() !== activeOwner) {
+        return IDLE_LIVE;
+      }
+      return live;
+    },
+    () => IDLE_LIVE,
   );
 }
 
@@ -128,17 +219,19 @@ async function buildChecked(
   rows: LocalNote[],
   key: Uint8Array,
   signal: AbortSignal,
+  epoch: number,
+  owner: RunOwner,
 ): Promise<{ bytes: Uint8Array; missing: { reason: string }[] }> {
   const ex = await import('../export');
   const s = d.settings();
   const { type } = getAutoBackup().config;
   if (type === 'text') {
-    const bytes = ex.buildEncryptedTextBackup(rows, key, s.folders, s.itemStyles, s.customThemes, s.factors, s.customHabits);
+    const bytes = ex.buildEncryptedTextBackup(rows, key, s.folders, s.itemStyles, s.customThemes, s.factors, s.customHabits, s.customIcons);
     if (decodeBackup(bytes, key).notes.length !== rows.length) throw new RunFailure('seal');
     return { bytes, missing: [] };
   }
   const { sealed, zip, missing } = await ex.buildEncryptedFullBackup(
-    rows, d.imageStore(), d.attachmentStore(), key, (step) => setLive({ step }), s.folders,
+    rows, d.imageStore(), d.attachmentStore(), key, (step) => { if (stillSameAccount(epoch, owner)) setLive({ step }); }, s.folders,
     carriedSettings(s),
     signal,
   );
@@ -164,20 +257,29 @@ async function buildChecked(
  * is whole, never starts on one that is all zero, and clears its copy when it
  * ends.
  */
-async function runOnce(d: AutoBackupDeps, manual: boolean, signal: AbortSignal): Promise<boolean> {
+async function runOnce(d: AutoBackupDeps, manual: boolean, signal: AbortSignal, epoch: number, owner: RunOwner): Promise<boolean> {
+  if (!stillSameAccount(epoch, owner)) return false;
   const live = d.encryptionKey();
   if (!live || live.every((byte) => byte === 0)) return false;
   const key = Uint8Array.from(live);
   try {
-    return await runWithKey(d, manual, signal, key);
+    return await runWithKey(d, manual, signal, key, epoch, owner);
   } finally {
     key.fill(0);
   }
 }
 
-async function runWithKey(d: AutoBackupDeps, manual: boolean, signal: AbortSignal, key: Uint8Array): Promise<boolean> {
+async function runWithKey(
+  d: AutoBackupDeps,
+  manual: boolean,
+  signal: AbortSignal,
+  key: Uint8Array,
+  epoch: number,
+  owner: RunOwner,
+): Promise<boolean> {
   const kind = destinationKind();
   const status = kind === 'download' ? null : await destinationStatus();
+  if (!stillSameAccount(epoch, owner) || signal.aborted) return false;
   if (kind !== 'download') {
     if (!status || !status.reachable) throw new RunFailure('gone');
     // The browser took the write permission back; only a click returns it.
@@ -189,6 +291,7 @@ async function runWithKey(d: AutoBackupDeps, manual: boolean, signal: AbortSigna
   }
   const { config, files } = getAutoBackup();
   if (!manual && config.wifiOnly && (await connectionIsMetered())) return false;
+  if (!stillSameAccount(epoch, owner) || signal.aborted) return false;
 
   const rows = liveRows(d.notes());
   const items = rows.filter((n) => n.trashed !== 1).length;
@@ -200,28 +303,34 @@ async function runWithKey(d: AutoBackupDeps, manual: boolean, signal: AbortSigna
     edits: await sha256Hex(new TextEncoder().encode(editsText(rows))),
     settings: await sha256Hex(new TextEncoder().encode(backupSettingsKey(d.settings()))),
   });
+  if (!stillSameAccount(epoch, owner) || signal.aborted) return false;
   const newest = files.reduce<(typeof files)[number] | undefined>((a, b) => (!a || b.at > a.at ? b : a), undefined);
   // Back up now checks too: an unchanged copy would push an older, different
   // backup out of Keep (owner, 2026-11-11). Export still writes a file.
   // Only a copy the place confirms counts: one it cannot answer for is
   // written again, or a provider error would skip every run.
   if (print === config.lastFingerprint && newest && (await backupConfirmed(newest.ref))) {
+    if (!stillSameAccount(epoch, owner) || signal.aborted) return false;
     patchConfig({ lastGood: Date.now(), lastFailure: undefined });
     addLog({ at: Date.now(), result: 'unchanged' });
     return true;
   }
+  if (!stillSameAccount(epoch, owner) || signal.aborted) return false;
 
   setLive({ running: true, step: undefined });
-  const { bytes, missing } = await buildChecked(d, rows, key, signal);
+  const { bytes, missing } = await buildChecked(d, rows, key, signal, epoch, owner);
+  if (!stillSameAccount(epoch, owner)) return false;
   signal.throwIfAborted();
   const name = backupName(new Date(), deviceSlug(d.deviceName(), kind === 'native' ? (isPhone() ? 'phone' : 'desktop') : 'web', d.deviceId()), config.type);
   const placed = await placeBackup(name, bytes, signal);
+  if (!stillSameAccount(epoch, owner) || signal.aborted) return false;
   const now = Date.now();
 
   // Two runs in one minute share a name, and the second replaces the first
   // file: one row per file, never two for one.
   // A copy deleted by hand leaves the list here, before Keep counts it.
   const older = await stillThere(files.filter((f) => f.ref !== placed.ref), backupExists);
+  if (!stillSameAccount(epoch, owner) || signal.aborted) return false;
   let kept = [...older, { ref: placed.ref, name: placed.name, at: now, bytes: placed.bytes, items }];
   // A browser download is not ours to list or prune.
   if (kind === 'download') kept = [];
@@ -231,15 +340,20 @@ async function runWithKey(d: AutoBackupDeps, manual: boolean, signal: AbortSigna
   const before = shrinkBaseline(newest?.items, config.shrunk?.previous);
   const shrunk = isShrunk(items, before);
   if (shrunk && !config.shrinkAck) {
+    if (!stillSameAccount(epoch, owner) || signal.aborted) return false;
     patchConfig({ shrunk: { items, previous: before! } });
     tell({ kind: 'shrunk', items, previous: before! }, 'shrunk');
   } else {
     for (const old of pruneList(kept, config.keep, placed.ref)) {
-      if (await removeBackup(old.ref)) kept = kept.filter((f) => f.ref !== old.ref);
+      if (!stillSameAccount(epoch, owner) || signal.aborted) return false;
+      if (await removeBackup(old.ref, signal)) kept = kept.filter((f) => f.ref !== old.ref);
+      else if (!stillSameAccount(epoch, owner) || signal.aborted) return false;
       else if (!(await backupExists(old.ref))) kept = kept.filter((f) => f.ref !== old.ref);
     }
+    if (!stillSameAccount(epoch, owner) || signal.aborted) return false;
     if (!shrunk) patchConfig({ shrunk: undefined, shrinkAck: undefined });
   }
+  if (!stillSameAccount(epoch, owner) || signal.aborted) return false;
   setFiles(kept);
   // A picture that failed to load can be there tomorrow, so this run is no
   // baseline for "no changes".
@@ -254,11 +368,15 @@ async function runWithKey(d: AutoBackupDeps, manual: boolean, signal: AbortSigna
  *  vault still writes nothing. */
 export async function runBackup(manual = false): Promise<boolean> {
   const d = deps;
-  if (!d || live.running) return false;
+  if (!d) return false;
+  const owner = captureRunOwner(d);
+  if (live.running) return false;
   // The lock is granted a task later, when no controller exists yet: a Stop
   // in that gap moves this count, and the run ends as stopped (beta #200).
   const asked = stops;
+  const epoch = accountEpoch;
   const body = async (): Promise<boolean> => {
+    if (!stillSameAccount(epoch, owner)) return false;
     // Made after the lock, so a run that waits for no lock never replaces the
     // controller of the run that holds it (beta #171).
     const own = new AbortController();
@@ -266,11 +384,12 @@ export async function runBackup(manual = false): Promise<boolean> {
     const { signal } = own;
     try {
       if (stops !== asked) {
-        addLog({ at: Date.now(), result: 'stopped' });
+        if (stillSameAccount(epoch, owner)) addLog({ at: Date.now(), result: 'stopped' });
         return false;
       }
-      return await runOnce(d, manual, signal);
+      return await runOnce(d, manual, signal, epoch, owner);
     } catch (err) {
+      if (!stillSameAccount(epoch, owner)) return false;
       if ((err as Error | null)?.name === 'AbortError') {
         addLog({ at: Date.now(), result: 'stopped' });
         return false;
@@ -282,7 +401,7 @@ export async function runBackup(manual = false): Promise<boolean> {
       else tell({ kind: 'failed', cause }, `failed:${cause}`);
       return false;
     } finally {
-      setLive({ running: false, step: undefined });
+      if (stillSameAccount(epoch, owner)) setLive({ running: false, step: undefined });
       if (abort === own) abort = null;
     }
   };
@@ -315,6 +434,8 @@ function mayStart(d: AutoBackupDeps, now: number): boolean {
 export async function checkBackup(): Promise<void> {
   const d = deps;
   if (!d) return;
+  const owner = captureRunOwner(d);
+  const epoch = accountEpoch;
   const now = Date.now();
   const { config } = getAutoBackup();
   if (!config.on) return;
@@ -324,6 +445,7 @@ export async function checkBackup(): Promise<void> {
     return;
   }
   if (mayStart(d, now)) await runBackup(false);
+  if (!stillSameAccount(epoch, owner)) return;
   const after = getAutoBackup().config;
   if (!live.running && isOverdue(after.lastGood, after.period, Date.now())) {
     tell({ kind: 'overdue', days: Math.floor((Date.now() - (after.lastGood ?? 0)) / DAY_MS) }, 'overdue');
@@ -339,7 +461,10 @@ export function snoozeBackup(): void {
 /** The first backup decides whether the feature turns on: a folder that
  *  cannot take a file never holds a promise. */
 export async function turnOnWithFirstBackup(): Promise<boolean> {
+  const owner = captureRunOwner(deps);
+  const epoch = accountEpoch;
   const ok = await runBackup(true);
+  if (!stillSameAccount(epoch, owner)) return false;
   if (ok) patchConfig({ on: true });
   return ok;
 }
@@ -364,10 +489,14 @@ export function destinationChanged(): void {
 
 /** A different account arrived on this device (auth.tsx). */
 export async function forgetAutoBackup(): Promise<void> {
-  stopBackup();
-  clearAutoBackup();
-  forgetPulledBefore();
+  const clearSavedState = () => {
+    clearAutoBackup();
+    forgetPulledBefore();
+  };
+  resetForAccountChange(null);
+  clearSavedState();
   await clearDestination();
+  clearSavedState();
 }
 
 /** Connects the runner to the vault for as long as NotesView is mounted. */
@@ -375,11 +504,13 @@ export function useAutoBackupRunner(d: AutoBackupDeps): void {
   const ref = useRef(d);
   ref.current = d;
   useEffect(() => {
+    syncActiveOwner(ref.current.pubkey?.());
     setPhoneDefaults(isPhone());
     deps = {
       notes: () => ref.current.notes(),
       loaded: () => ref.current.loaded(),
       encryptionKey: () => ref.current.encryptionKey(),
+      ...(ref.current.pubkey ? { pubkey: () => ref.current.pubkey!() } : {}),
       imageStore: () => ref.current.imageStore(),
       attachmentStore: () => ref.current.attachmentStore(),
       settings: () => ref.current.settings(),

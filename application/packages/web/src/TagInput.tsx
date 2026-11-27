@@ -20,6 +20,7 @@ import { isImeComposing } from './imeComposing';
 import { useIsMobile } from './useIsMobile';
 import { NO_TEXT_ASSIST } from './formFields';
 import { TagMark } from './looks/LookGlyph';
+import { TagSuggestionMenu } from './TagSuggestionMenu';
 
 type Props = {
   tags: string[];
@@ -315,74 +316,24 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
     };
   }, []);
 
-  // The part of a suggestion the draft matched, in bold. The offsets come
-  // from the matcher, because the fold changes lengths ("İ", "ß").
-  const prefixMatch = textMatcher(draft.replace(/^#/, ''));
-  function boldPrefix(tag: string) {
-    const match = prefixMatch(tag);
-    if (!match) return tag;
-    return (
-      <>
-        {tag.slice(0, match.start)}
-        <span className="font-semibold">{tag.slice(match.start, match.end)}</span>
-        {tag.slice(match.end)}
-      </>
-    );
-  }
-
-  // Render the dropdown via portal.
-
+  // Render the dropdown via portal using the shared TagSuggestionMenu.
   const dropdown = hasDropdown && dropdownPos
     ? createPortal(
-        <div
-          className="fixed bg-surface-2 border border-divider rounded-lg overflow-hidden shadow-lg"
+        <TagSuggestionMenu
+          suggestions={suggestions}
+          query={normalizedDraft || draft}
+          showCreate={Boolean(showCreate)}
+          highlightIndex={highlightIndex}
+          onSelect={selectTag}
+          onCreate={commit}
+          isMobile={isMobile}
+          className="fixed"
           style={{
             top: dropdownPos.top,
             left: dropdownPos.left,
-            minWidth: 160,
-            maxWidth: 260,
             zIndex: 50,
           }}
-          onMouseDown={(e) => e.preventDefault()} // prevent blur
-        >
-          {suggestions.map(([tag, count], i) => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => selectTag(tag)}
-              className={`w-full flex items-center gap-2 px-3 text-body cursor-pointer transition-colors ${
-                i === highlightIndex
-                  ? 'bg-track'
-                  : 'hover:bg-pn/5'
-              } ${isMobile ? 'min-h-[44px] py-2.5' : 'py-2'}`}
-            >
-              <span className="text-pn-muted text-small">#</span>
-              <span className="text-pn truncate">{boldPrefix(tag)}</span>
-              <span className="ms-auto text-small text-pn-muted tabular-nums shrink-0">
-                {count}
-              </span>
-            </button>
-          ))}
-          {showCreate && (
-            <>
-              {suggestions.length > 0 && (
-                <div className="border-t border-divider" />
-              )}
-              <button
-                type="button"
-                onClick={() => commit()}
-                className={`w-full flex items-center gap-2 px-3 text-body cursor-pointer transition-colors text-pn-muted ${
-                  highlightIndex === suggestions.length
-                    ? 'bg-track'
-                    : 'hover:bg-pn/5'
-                } ${isMobile ? 'min-h-[44px] py-2.5' : 'py-2'}`}
-              >
-                <span className="text-small">+</span>
-                <span>{t('tagInput.create', { tag: normalizedDraft })}</span>
-              </button>
-            </>
-          )}
-        </div>,
+        />,
         document.body
       )
     : null;
@@ -428,7 +379,7 @@ export const TagInput = forwardRef<TagInputHandle, Props>(function TagInput(
               onClick={onSelectTag ? () => onSelectTag(tag) : undefined}
               className={`inline-flex items-center${onSelectTag ? ' cursor-pointer' : ''}`}
             >
-              <TagMark tag={tag} size={11} />
+              <TagMark tag={tag} size={14} />
               {tag}
             </span>
             {!readOnly && <button

@@ -3,6 +3,7 @@ import { Heading } from '@tiptap/extension-heading';
 import { HardBreak } from '@tiptap/extension-hard-break';
 import { Text } from '@tiptap/extension-text';
 import { Strike } from '@tiptap/extension-strike';
+import Underline from '@tiptap/extension-underline';
 import { OrderedList } from '@tiptap/extension-ordered-list';
 import { getHTMLFromFragment, mergeAttributes } from '@tiptap/core';
 import { Fragment, type Node as ProseMirrorNode } from '@tiptap/pm/model';
@@ -396,6 +397,27 @@ export const StrikeWithMarkdown = Strike.extend({
         serialize: { open: '~~', close: '~~', mixable: true, expelEnclosingWhitespace: true },
         parse: {
           // Handled by markdown-it.
+        },
+      },
+    };
+  },
+});
+
+/**
+ * Underline with `mixable: true` on its markdown serializer.
+ *
+ * tiptap-markdown's generic HTML mark fallback omits `mixable: true`, so
+ * prosemirror-markdown splits an outer highlight or color span around
+ * `<u>underline</u>` and expels the preceding space out of `<mark>`, leaving
+ * an unhighlighted gap in the rendered sentence.
+ */
+export const UnderlineWithMarkdown = Underline.extend({
+  addStorage() {
+    return {
+      markdown: {
+        serialize: { open: '<u>', close: '</u>', mixable: true },
+        parse: {
+          // Handled by markdown-it (html: true).
         },
       },
     };

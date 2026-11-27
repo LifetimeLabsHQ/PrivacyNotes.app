@@ -44,11 +44,13 @@ export function BiometricView({ connection, onDone }: { connection: Connection; 
   };
 
   return (
-    <div className="flex flex-col gap-3 px-3 py-4">
-      <p className={`m-0 ${SETTINGS_HELP}`}>{kind === 'pin' ? t('settings.biometricPin') : t('settings.biometricPasscode')}</p>
-      <SecretInput kind={kind} value={value} onChange={setValue} onComplete={(v) => void run(v)} autoFocus fill />
-      {error && <Callout look="card" tone="danger">{error}</Callout>}
-      {busy ? <StatusLine busy>{t('vault.unlocking')}</StatusLine> : <p className={`m-0 ${SETTINGS_HELP}`}>{t('protect.biometricHelp')}</p>}
+    <div className="p-3">
+      <div className="flex flex-col gap-3 rounded-lg border border-divider bg-surface-2 p-3.5 shadow-xs">
+        <p className={`m-0 ${SETTINGS_HELP}`}>{kind === 'pin' ? t('settings.biometricPin') : t('settings.biometricPasscode')}</p>
+        <SecretInput kind={kind} value={value} onChange={setValue} onComplete={(v) => void run(v)} autoFocus fill />
+        {error && <Callout look="card" tone="danger">{error}</Callout>}
+        {busy ? <StatusLine busy>{t('vault.unlocking')}</StatusLine> : <p className={`m-0 ${SETTINGS_HELP}`}>{t('protect.biometricHelp')}</p>}
+      </div>
     </div>
   );
 }

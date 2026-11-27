@@ -18,16 +18,10 @@ import {
   COLUMN_PRESETS,
   MIN_LAYOUT_COLUMNS,
   activeColumnsAt,
-  applyColumnPreset,
-  columnBorderOf,
-  columnsAreEqual,
-  deleteColumn,
-  dispatchColumnEdit,
-  matchingPresetId,
-  moveColumn,
-  setColumnBorder,
-  setColumnWidths,
-  unwrapColumns,
+  columnLayoutSummary,
+  isColumnsBlock,
+  runColumnCommand,
+  type ColumnCommand,
   type ColumnPresetId,
 } from './columns';
 import {
@@ -126,7 +120,7 @@ export function ColumnsControls({
   editor: TipTapEditor;
   /** Raw account Pro status: Pro badges key off !isPro so demo labels what it unlocks. */
   isPro: boolean;
-  /** True for Pro and demo: 3- and 4-column presets run. */
+  /** True for Pro and demo: 4- and 5-column presets run. */
   columnsUnlocked: boolean;
   onUpgrade?: () => void;
 }) {
@@ -135,7 +129,10 @@ export function ColumnsControls({
   const equalRef = useRef<HTMLSpanElement>(null);
   const borderBtnRef = useRef<HTMLButtonElement>(null);
   const posRef = useRef<number | undefined>(undefined);
-  const getPos = useCallback(() => posRef.current, []);
+  const getPos = useCallback(
+    () => (!editor.isDestroyed ? activeColumnsAt(editor.state)?.pos : undefined) ?? posRef.current,
+    [editor],
+  );
   const [snap, setSnap] = useState<BarSnapshot | null>(null);
   const [borderOpen, setBorderOpen] = useState(false);
   const closeBorderRef = useRef(setBorderOpen);
@@ -173,13 +170,14 @@ export function ColumnsControls({
       const blockRect = blockDOM.getBoundingClientRect();
       posRef.current = active.pos;
 
+      const summary = columnLayoutSummary(active.node);
       const next: BarSnapshot = {
         pos: active.pos,
         colIndex: active.colIndex,
         count: active.node.childCount,
-        preset: matchingPresetId(active.node),
-        equal: columnsAreEqual(active.node),
-        border: formatColumnBorder(columnBorderOf(active.node)),
+        preset: summary.presetId,
+        equal: summary.equal,
+        border: formatColumnBorder(summary.border),
       };
       // Toggle equal-widths button synchronously before measuring toolbar width
       // so narrow panes never misclamp for one frame (mirrors TableControls.tsx).
@@ -217,14 +215,19 @@ export function ColumnsControls({
     };
   }, [editor]);
 
-  const runEdit = (fn: (tr: typeof editor.state.tr, pos: number) => boolean, refocus = true) => {
-    if (!editor.isEditable || editor.isDestroyed) return;
-    const ok = dispatchColumnEdit(editor.view, (tr) => {
-      const current = activeColumnsAt(editor.state);
-      const pos = current?.pos ?? posRef.current;
-      return typeof pos === 'number' ? fn(tr, pos) : false;
-    });
-    if (ok && refocus) editor.commands.focus();
+  const run = (command: ColumnCommand) => {
+    if (editor.isDestroyed) return;
+    const active = activeColumnsAt(editor.state);
+    const pos = active?.pos ?? posRef.current;
+    const fallbackCol =
+      active === null && posRef.current !== undefined && posRef.current === snap?.pos
+        ? snap.colIndex
+        : active?.colIndex;
+    const resolved: ColumnCommand =
+      command.type === 'moveLeft' || command.type === 'moveRight' || command.type === 'deleteCol'
+        ? { ...command, colIndex: command.colIndex ?? fallbackCol }
+        : command;
+    runColumnCommand(editor, resolved, { pos });
   };
 
   const count = snap?.count ?? 2;
@@ -236,10 +239,20 @@ export function ColumnsControls({
   const isBorderOff = border.style === 'none';
 
   const updateBorder = (patch: Partial<ColumnBorderConfig>) => {
-    const style = patch.style ?? (border.style === 'none' ? 'divider' : border.style);
-    const next: ColumnBorderConfig = { ...border, ...patch, style };
-    // Keep keyboard focus inside the popover while the user adjusts multiple options.
-    runEdit((tr, pos) => setColumnBorder(tr, pos, next), false);
+    if (editor.isDestroyed) return;
+    const active = activeColumnsAt(editor.state);
+    const fallbackNode =
+      !active &&
+      typeof posRef.current === 'number' &&
+      Number.isInteger(posRef.current) &&
+      posRef.current >= 0 &&
+      posRef.current <= editor.state.doc.content.size
+        ? editor.state.doc.nodeAt(posRef.current)
+        : null;
+    const liveNode = active?.node ?? (fallbackNode && isColumnsBlock(fallbackNode) ? fallbackNode : null);
+    const base = liveNode ? columnLayoutSummary(liveNode).border : border;
+    const style = patch.style ?? (base.style === 'none' ? 'divider' : base.style);
+    run({ type: 'setBorder', border: { ...base, ...patch, style } });
   };
 
   const styleLabel = (style: ColumnBorderStyle): string => {
@@ -263,7 +276,7 @@ export function ColumnsControls({
       <BlockGrip editor={editor} getPos={getPos} className="pn-table-toolbar-btn pn-columns-grip" tipPosition="below" />
       <div className="pn-table-toolbar-divider" />
 
-      {/* Layout presets: 2, 1:2, 2:1 free; 3 and 4 Pro */}
+      {/* Layout presets: 2, 1:2, 2:1, 3 free; 4 and 5 Pro */}
       {COLUMN_PRESETS.map((preset) => {
         const meta = PRESET_GRID[preset.id];
         const label = meta.count ? t(meta.labelKey, { count: meta.count }) : t(meta.labelKey);
@@ -284,7 +297,7 @@ export function ColumnsControls({
                   onUpgrade?.();
                   return;
                 }
-                runEdit((tr, pos) => applyColumnPreset(tr, pos, preset.weights));
+                run({ type: 'setPreset', presetId: preset.id });
               }}
             >
               <ProGlyph pro={preset.pro && !isPro}>
@@ -309,7 +322,7 @@ export function ColumnsControls({
               e.preventDefault();
               e.stopPropagation();
             }}
-            onClick={() => runEdit((tr, pos) => setColumnWidths(tr, pos, null))}
+            onClick={() => run({ type: 'equalize' })}
           >
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="4" width="18" height="16" rx="1" />
@@ -476,7 +489,7 @@ export function ColumnsControls({
             e.stopPropagation();
           }}
           onClick={() => {
-            if (canMoveLeft) runEdit((tr, pos) => moveColumn(tr, pos, colIndex, -1));
+            if (canMoveLeft) run({ type: 'moveLeft' });
           }}
         >
           <ArrowLeft aria-hidden="true" />
@@ -493,7 +506,7 @@ export function ColumnsControls({
             e.stopPropagation();
           }}
           onClick={() => {
-            if (canMoveRight) runEdit((tr, pos) => moveColumn(tr, pos, colIndex, 1));
+            if (canMoveRight) run({ type: 'moveRight' });
           }}
         >
           <ArrowRight aria-hidden="true" />
@@ -512,7 +525,7 @@ export function ColumnsControls({
             e.preventDefault();
             e.stopPropagation();
           }}
-          onClick={() => runEdit((tr, pos) => unwrapColumns(tr, pos))}
+          onClick={() => run({ type: 'dissolve' })}
         >
           <XSquare aria-hidden="true" />
         </button>
@@ -530,7 +543,7 @@ export function ColumnsControls({
             e.stopPropagation();
           }}
           onClick={() => {
-            if (canDelete) runEdit((tr, pos) => deleteColumn(tr, pos, colIndex));
+            if (canDelete) run({ type: 'deleteCol' });
           }}
         >
           <Trash aria-hidden="true" />

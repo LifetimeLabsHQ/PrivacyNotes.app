@@ -1,6 +1,6 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useContext, type CSSProperties, type ReactNode } from 'react';
 import { Heartbeat } from '../icons';
-import { PathGlyph } from '../looks/LookGlyph';
+import { LooksContext, PathGlyph } from '../looks/LookGlyph';
 import { useLookPaths } from '../looks/lookIconsLoader';
 
 /**
@@ -15,7 +15,8 @@ export function CustomTrackerGlyph({ icon, size = 12, className, style }: {
   className?: string;
   style?: CSSProperties;
 }) {
-  const paths = useLookPaths(icon);
+  const { customIcons } = useContext(LooksContext);
+  const paths = useLookPaths(icon, customIcons);
   if (!paths) return <Heartbeat size={size} className={className} style={style} aria-hidden="true" />;
   return <PathGlyph paths={paths} size={size} className={className} style={style} />;
 }

@@ -21,7 +21,7 @@ import type { Node as PMNode, Schema, Slice } from '@tiptap/pm/model';
 import { closeHistory } from '@tiptap/pm/history';
 import { Plugin, PluginKey, TextSelection, type EditorState, type Transaction } from '@tiptap/pm/state';
 import { Decoration, DecorationSet, type EditorView } from '@tiptap/pm/view';
-import { commitWidths, dragWidths, effectiveWidths, mirrorEdge } from './tableColumnWidths';
+import { commitWidths, effectiveWidths } from './tableColumnWidths';
 import { isBlank } from './kanban';
 import { formatColumnBorder, parseColumnBorder, type ColumnBorderConfig } from './columnBorders';
 
@@ -53,13 +53,6 @@ export function isColumnsCol(node: PMNode | null | undefined): boolean {
   return !!node && node.type.name === 'columnsCol';
 }
 
-/** Parse a column width weight from `[!col|33]` metadata. */
-export function parseColumnWidth(raw: string | null | undefined): number | null {
-  if (!raw || !/^\d{1,2}$/.test(raw)) return null;
-  const n = Number(raw);
-  return n >= 1 && n <= 99 ? n : null;
-}
-
 /** Equal integer shares summing to 100 (e.g. 3 -> [33, 33, 34]). */
 function equalColumnShares(count: number): number[] {
   if (count <= 0) return [];
@@ -67,50 +60,39 @@ function equalColumnShares(count: number): number[] {
   return Array.from({ length: count }, (_, i) => (i === count - 1 ? 100 - base * (count - 1) : base));
 }
 
-/** Normalized widths for each column in a columnsBlock (summing to 100). */
-export function columnWeightsOf(block: PMNode): number[] {
-  const raw: (number | null)[] = [];
-  block.forEach((child) => {
-    if (isColumnsCol(child)) raw.push(typeof child.attrs.width === 'number' ? child.attrs.width : null);
-  });
-  if (raw.length === 0) return [];
-  return effectiveWidths(raw) ?? equalColumnShares(raw.length);
+export interface ColumnLayoutSummary {
+  weights: number[];
+  equal: boolean;
+  presetId: ColumnPresetId | null;
+  border: ColumnBorderConfig;
 }
 
-/** True when all columns have equal shares (no custom widths stored). */
-export function columnsAreEqual(block: PMNode): boolean {
+/** Normalized layout summary (weights, equal flag, active preset, and border) for a columnsBlock. */
+export function columnLayoutSummary(block: PMNode): ColumnLayoutSummary {
   const raw: (number | null)[] = [];
   block.forEach((child) => {
-    if (isColumnsCol(child)) raw.push(typeof child.attrs.width === 'number' ? child.attrs.width : null);
+    if (isColumnsCol(child)) {
+      const w = child.attrs.width;
+      raw.push(typeof w === 'number' && Number.isFinite(w) && w > 0 ? w : null);
+    }
   });
-  return effectiveWidths(raw) === null;
-}
-
-/** Matching preset id for a columnsBlock, or null when custom-dragged. */
-export function matchingPresetId(block: PMNode): ColumnPresetId | null {
-  const weights = columnWeightsOf(block);
-  const equal = columnsAreEqual(block);
+  const custom = raw.length > 0 ? effectiveWidths(raw) : null;
+  const equal = custom === null;
+  const weights = custom ?? equalColumnShares(raw.length);
+  let presetId: ColumnPresetId | null = null;
   for (const preset of COLUMN_PRESETS) {
     if (preset.weights.length !== weights.length) continue;
-    if (equal && effectiveWidths(preset.weights) === null) return preset.id;
-    if (!equal && preset.weights.every((w, i) => w === weights[i])) return preset.id;
+    if (equal && effectiveWidths(preset.weights) === null) {
+      presetId = preset.id;
+      break;
+    }
+    if (!equal && preset.weights.every((w, i) => w === weights[i])) {
+      presetId = preset.id;
+      break;
+    }
   }
-  return null;
-}
-
-/** CSS grid-template-columns value for normalized weights (e.g. "33fr 67fr"). */
-export function columnsGridTemplate(weights: readonly number[]): string {
-  return weights.map((w) => `minmax(0, ${w}fr)`).join(' ');
-}
-
-/** Drag math between column `border` and `border + 1`, reusing table resize rules. */
-export function dragColumnWeights(start: readonly number[], border: number, deltaPercent: number, fine = false): number[] {
-  return dragWidths(start, border, deltaPercent, mirrorEdge(start, border), fine);
-}
-
-/** Final snapped weights to commit after a drag (null when equal). */
-export function commitColumnWeights(weights: readonly number[], fine = false): number[] | null {
-  return commitWidths(weights, fine);
+  const border = parseColumnBorder(typeof block.attrs.border === 'string' ? block.attrs.border : null);
+  return { weights, equal, presetId, border };
 }
 
 export interface ActiveColumns {
@@ -171,12 +153,26 @@ export function canInsertColumns(state: EditorState): boolean {
   return true;
 }
 
+function hasValidWeights(weights: readonly number[], expectedLength?: number): boolean {
+  if (!Array.isArray(weights) || weights.length === 0) return false;
+  if (expectedLength !== undefined && weights.length !== expectedLength) return false;
+  if (!weights.every((w) => typeof w === 'number' && Number.isFinite(w) && w > 0)) return false;
+  return Number.isFinite(weights.reduce((sum, w) => sum + w, 0));
+}
+
 /**
  * Mutate `tr` to insert a columnsBlock at `tr.selection`, wrapping any
  * non-empty selection into column 1 and placing the caret inside column 1.
  */
 export function insertColumnsInTr(tr: Transaction, schema: Schema, weights: readonly number[] = [50, 50]): boolean {
   if (!schema.nodes.columnsBlock || !schema.nodes.columnsCol || !schema.nodes.paragraph) return false;
+  if (
+    weights.length < MIN_LAYOUT_COLUMNS ||
+    weights.length > MAX_LAYOUT_COLUMNS ||
+    !hasValidWeights(weights)
+  ) {
+    return false;
+  }
   const wrapped: Slice | null = tr.selection.empty ? null : tr.selection.content();
   const block = makeColumnsBlock(schema, weights);
   const from = tr.selection.from;
@@ -227,7 +223,7 @@ export function insertColumnsInTr(tr: Transaction, schema: Schema, weights: read
  * Run a structural column edit in its own isolated undo step so Undo never
  * merges a preset/resize/reorder/unwrap click with typing right before or after it.
  */
-export function dispatchColumnEdit(view: EditorView, mutate: (tr: Transaction) => boolean): boolean {
+function dispatchColumnEdit(view: EditorView, mutate: (tr: Transaction) => boolean): boolean {
   if (!view.editable) return false;
   const probe = view.state.tr;
   if (!mutate(probe) || !probe.docChanged) return false;
@@ -251,7 +247,68 @@ export function insertColumnsBlock(editor: TipTapEditor, weights: readonly numbe
   return ok;
 }
 
+export type ColumnCommand =
+  | { type: 'setPreset'; presetId: ColumnPresetId }
+  | { type: 'moveLeft'; colIndex?: number }
+  | { type: 'moveRight'; colIndex?: number }
+  | { type: 'deleteCol'; colIndex?: number }
+  | { type: 'equalize' }
+  | { type: 'dissolve' }
+  | { type: 'setBorder'; border: ColumnBorderConfig }
+  | { type: 'commitResize'; weights: readonly number[]; fine?: boolean };
+
+/**
+ * Execute a column layout edit on the active (or `options.pos`) columnsBlock
+ * as one isolated undo step. Focuses the editor after toolbar actions while
+ * keeping popover/drag focus untouched for `setBorder` and `commitResize`.
+ */
+export function runColumnCommand(
+  editor: TipTapEditor,
+  command: ColumnCommand,
+  options?: { pos?: number; focus?: boolean },
+): boolean {
+  if (!editor.isEditable || editor.isDestroyed) return false;
+  const ok = dispatchColumnEdit(editor.view, (tr) => {
+    const active = activeColumnsAt(editor.view.state);
+    const blockPos = options?.pos ?? active?.pos;
+    if (typeof blockPos !== 'number') return false;
+    const activeCol = active?.pos === blockPos ? active.colIndex : undefined;
+    const colIndex = ('colIndex' in command ? command.colIndex : undefined) ?? activeCol ?? 0;
+    switch (command.type) {
+      case 'setPreset': {
+        const preset = COLUMN_PRESETS.find((p) => p.id === command.presetId);
+        return preset ? applyColumnPreset(tr, blockPos, preset.weights) : false;
+      }
+      case 'moveLeft':
+        return moveColumn(tr, blockPos, colIndex, -1);
+      case 'moveRight':
+        return moveColumn(tr, blockPos, colIndex, 1);
+      case 'deleteCol':
+        return deleteColumn(tr, blockPos, colIndex);
+      case 'equalize':
+        return setColumnWidths(tr, blockPos, null);
+      case 'dissolve':
+        return unwrapColumns(tr, blockPos);
+      case 'setBorder':
+        return setColumnBorder(tr, blockPos, command.border);
+      case 'commitResize': {
+        const block = blockAt(tr, blockPos);
+        if (!block) return false;
+        const cols = childrenOf(block).filter(isColumnsCol);
+        if (!hasValidWeights(command.weights, cols.length)) return false;
+        const total = command.weights.reduce((sum, w) => sum + w, 0);
+        const pct = total === 100 ? command.weights : command.weights.map((w) => (w / total) * 100);
+        return setColumnWidths(tr, blockPos, commitWidths(pct, command.fine));
+      }
+    }
+  });
+  const shouldFocus = options?.focus ?? (command.type !== 'setBorder' && command.type !== 'commitResize');
+  if (ok && shouldFocus) editor.commands.focus();
+  return ok;
+}
+
 function blockAt(tr: Transaction, pos: number): PMNode | null {
+  if (!Number.isInteger(pos) || pos < 0 || pos > tr.doc.content.size) return null;
   const node = tr.doc.nodeAt(pos);
   return isColumnsBlock(node) ? node : null;
 }
@@ -262,7 +319,7 @@ function meaningfulBlocks(col: PMNode): PMNode[] {
 }
 
 /** Apply a layout preset (change column count and widths) in one transaction. */
-export function applyColumnPreset(tr: Transaction, blockPos: number, weights: readonly number[]): boolean {
+function applyColumnPreset(tr: Transaction, blockPos: number, weights: readonly number[]): boolean {
   const block = blockAt(tr, blockPos);
   if (!block) return false;
   const schema = block.type.schema;
@@ -306,9 +363,11 @@ export function applyColumnPreset(tr: Transaction, blockPos: number, weights: re
 }
 
 /** Set column widths (null clears to equal shares) in one transaction. */
-export function setColumnWidths(tr: Transaction, blockPos: number, widths: readonly number[] | null): boolean {
+function setColumnWidths(tr: Transaction, blockPos: number, widths: readonly number[] | null): boolean {
   const block = blockAt(tr, blockPos);
   if (!block) return false;
+  const cols = childrenOf(block).filter(isColumnsCol);
+  if (widths !== null && !hasValidWeights(widths, cols.length)) return false;
   const normalized = widths ? effectiveWidths(widths) : null;
   let offset = blockPos + 1;
   let idx = 0;
@@ -327,13 +386,8 @@ export function setColumnWidths(tr: Transaction, blockPos: number, widths: reado
   return changed;
 }
 
-/** Normalized border settings for a columnsBlock. */
-export function columnBorderOf(block: PMNode): ColumnBorderConfig {
-  return parseColumnBorder(typeof block.attrs.border === 'string' ? block.attrs.border : null);
-}
-
 /** Update a columnsBlock's border settings in one transaction. */
-export function setColumnBorder(tr: Transaction, blockPos: number, next: ColumnBorderConfig): boolean {
+function setColumnBorder(tr: Transaction, blockPos: number, next: ColumnBorderConfig): boolean {
   const block = blockAt(tr, blockPos);
   if (!block) return false;
   const serialized = formatColumnBorder(next);
@@ -344,10 +398,11 @@ export function setColumnBorder(tr: Transaction, blockPos: number, next: ColumnB
 }
 
 /** Swap column `index` with `index + dir` and keep the caret inside the moved column. */
-export function moveColumn(tr: Transaction, blockPos: number, index: number, dir: -1 | 1): boolean {
+function moveColumn(tr: Transaction, blockPos: number, index: number, dir: -1 | 1): boolean {
   const block = blockAt(tr, blockPos);
   if (!block) return false;
   const cols = childrenOf(block).filter(isColumnsCol);
+  if (!Number.isInteger(index)) return false;
   const to = index + dir;
   if (index < 0 || index >= cols.length || to < 0 || to >= cols.length) return false;
 
@@ -369,11 +424,11 @@ export function moveColumn(tr: Transaction, blockPos: number, index: number, dir
 }
 
 /** Delete column `index`, merging its non-blank content into its neighbor. Refused at MIN_LAYOUT_COLUMNS. */
-export function deleteColumn(tr: Transaction, blockPos: number, index: number): boolean {
+function deleteColumn(tr: Transaction, blockPos: number, index: number): boolean {
   const block = blockAt(tr, blockPos);
   if (!block) return false;
   const cols = childrenOf(block).filter(isColumnsCol);
-  if (cols.length <= MIN_LAYOUT_COLUMNS || index < 0 || index >= cols.length) return false;
+  if (cols.length <= MIN_LAYOUT_COLUMNS || !Number.isInteger(index) || index < 0 || index >= cols.length) return false;
   const schema = block.type.schema;
   const gone = cols[index]!;
   const into = index > 0 ? index - 1 : 1;
@@ -394,7 +449,7 @@ export function deleteColumn(tr: Transaction, blockPos: number, index: number): 
 }
 
 /** Dissolve the columns block back into sequential top-level blocks, keeping every word. */
-export function unwrapColumns(tr: Transaction, blockPos: number): boolean {
+function unwrapColumns(tr: Transaction, blockPos: number): boolean {
   const block = blockAt(tr, blockPos);
   if (!block) return false;
   const schema = block.type.schema;

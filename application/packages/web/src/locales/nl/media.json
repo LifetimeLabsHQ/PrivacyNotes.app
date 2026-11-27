@@ -18,7 +18,13 @@
     "viewAria": "Afbeelding bekijken",
     "copyAria": "Afbeelding kopiëren",
     "copyFailed": "De afbeelding kon niet worden gekopieerd.",
-    "picturesLeftOut": "Sommige afbeeldingen zijn niet toegevoegd. Kopieer een afbeelding los om hem te plakken."
+    "picturesLeftOut": "Sommige afbeeldingen zijn niet toegevoegd. Kopieer een afbeelding los om hem te plakken.",
+    "captionLabel": "Bijschrift",
+    "captionAddAria": "Bijschrift toevoegen",
+    "captionEditAria": "Bijschrift bewerken",
+    "captionPlaceholder": "Voeg een bijschrift toe...",
+    "captionClearAria": "Bijschrift wissen",
+    "captionHint": "Enter om op te slaan · Esc om te annuleren"
   },
   "attachment": {
     "fallbackName": "Bijlage",

@@ -426,7 +426,7 @@ export function FolderPicker({
               }`}
             >
               <span className={`inline-flex shrink-0 ${disabled ? '' : 'text-label'}`}>
-                <FolderGlyph folderId={folder.id} size={15} />
+                <FolderGlyph folderId={folder.id} />
               </span>
               <span className="flex-1 min-w-0 truncate">
                 {path && <span className="text-pn-muted">{path} / </span>}

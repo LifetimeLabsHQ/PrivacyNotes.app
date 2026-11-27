@@ -19,6 +19,7 @@ import { installAndroidBackBridge } from './androidBack';
 import { installStrayDropGuard } from './strayDropGuard';
 import { installCheckboxConfetti } from './checkboxConfetti';
 import { installStatusBarTap } from './statusBarTap';
+import { installTouchTooltips } from './touchTooltip';
 import { i18nReady } from './i18n';
 import { initWriterGenListener, announceSealedWriter } from './writerGen';
 import { ROW_TYPE_SEALED_IN_PRODUCTION, SEALED_WRITES_IN_PRODUCTION, setRowTypeSealed, setSealedWrites } from './localSeal';
@@ -63,6 +64,10 @@ installCheckboxConfetti();
 // A tap on the iOS status bar takes the note or list to the top (#617).
 // Inert on every other platform.
 installStatusBarTap();
+
+// Long-press on touch reveals HoverLabel tooltips above the finger without
+// triggering the control (touchTooltip.ts).
+installTouchTooltips();
 
 // Off-screen grid tiles skip layout and paint wherever a grid track reads a
 // skipped item's intrinsic size. The Linux app's web engine does not read it

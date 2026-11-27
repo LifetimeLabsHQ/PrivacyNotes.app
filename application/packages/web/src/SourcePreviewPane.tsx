@@ -37,9 +37,22 @@ const UNDER_BARS = 'var(--pn-tagrow-h, 0px) + var(--pn-editor-toolbar-h, 0px)';
  * the text: find opens the Markdown view's own bar, the outline's jump moves
  * the text (the preview follows), Connections is the same panel. `preview`
  * mode draws no corner of its own, so these come from here.
- * Spec: docs/internal/plans/heading-folds-and-source-preview.md (Part 2)
+ * Spec: docs/internal/specs/heading-folds-and-source-preview.md (Part 2)
  */
-export function SourcePreviewPane({ text, caretLine = null, lineNumbers = false, pane, first = false, findPill, connections, onEdit }: {
+export function SourcePreviewPane({
+  text,
+  caretLine = null,
+  lineNumbers = false,
+  pane,
+  first = false,
+  findPill,
+  connections,
+  onEdit,
+  hideEncryptedMedia,
+  onInsertFiles,
+  isPro,
+  onOpenUpgrade,
+}: {
   text: string;
   /** An edit in the preview, as Markdown: the caller writes it into the text.
    *  Absent, the preview is read only (a read-only note). */
@@ -55,6 +68,14 @@ export function SourcePreviewPane({ text, caretLine = null, lineNumbers = false,
   /** The formatted view's find pill, pointed at the Markdown view's find. */
   findPill?: ReactNode;
   connections?: (open: boolean, onOpenChange: (open: boolean) => void) => ReactNode;
+  /** Keep pasted or dropped images out of the encrypted blob store. */
+  hideEncryptedMedia?: boolean;
+  /** Handler for files inserted when encrypted media is off. */
+  onInsertFiles?: (files: File[]) => void;
+  /** Whether Pro features inside the preview editor are unlocked. */
+  isPro?: boolean;
+  /** Opens the upgrade modal when a free account triggers a Pro control. */
+  onOpenUpgrade?: (trigger: 'replace' | 'alerts' | null) => void;
 }) {
   const [firstText] = useState(text);
   const [editor, setEditor] = useState<TipTapEditor | null>(null);
@@ -154,6 +175,10 @@ export function SourcePreviewPane({ text, caretLine = null, lineNumbers = false,
           // The Markdown view's bar spans both columns: no second bar here.
           toolbarVisible={false}
           preview
+          hideEncryptedMedia={hideEncryptedMedia}
+          onInsertFiles={onInsertFiles}
+          isPro={isPro}
+          onOpenUpgrade={onOpenUpgrade}
           onReady={setEditor}
           lineNumbers={lineNumbers ? { text: shownText, caretLine } : false}
         />

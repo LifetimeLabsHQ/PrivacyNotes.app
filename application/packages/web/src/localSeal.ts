@@ -238,10 +238,9 @@ export function sealedWritesOn(): boolean {
 
 /**
  * Whether a sealed write puts the row type inside the payload (#795 point
- * 8). Built false: the bundles released before the move refuse a payload
- * that holds it, so a stale tab or a rollback to one of them could not open
- * such a row. The release after the one that carries this reader turns it
- * on. With it false this bundle writes the bytes the released bundles write.
+ * 8). On in production since 2026-11-23 after the reader release rolled out;
+ * when false (in legacy compatibility tests) this bundle writes the plain
+ * row-type layout older bundles expect.
  * Spec: docs/internal/specs/row-type-seal.md (3.2, 6)
  */
 export const ROW_TYPE_SEALED_IN_PRODUCTION = true;

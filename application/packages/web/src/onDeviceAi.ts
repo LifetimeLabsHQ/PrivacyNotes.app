@@ -19,7 +19,7 @@ import { MEANING_FLAG, pluginFlagOn, pluginState, setPlanPro, setPluginState, us
  *
  * Released (owner, 2026-11-14): the model is on our plugin host and the FAQ
  * answer "no-ai" describes it. The switch stays, so one line hides it again.
- * Spec: docs/internal/plans/related-notes.md (part 2)
+ * Spec: docs/internal/specs/related-notes.md (part 2)
  */
 
 const ON_DEVICE_AI_RELEASED = true;
@@ -45,7 +45,7 @@ export function pluginsShown(): boolean {
  * language it reads works (plan sections 4b and 4c), as the files we host. Each name carries the start of its SHA-256, so a new model is a new
  * name and the browser never mixes two; the whole hash is checked before the
  * model loads. `tools/embed-model/convert.mjs` prints these lines.
- * Spec: docs/internal/plans/related-notes.md (section 4d)
+ * Spec: docs/internal/specs/related-notes.md (section 4d)
  */
 export const MEANING_FILES = [
   { name: 'bekko256-vocab-3646307292d4.txt', bytes: 1_814_140, sha256: '3646307292d41b3bc33500b26a0110601d2887da9579375c22d2c3254460f61d' },

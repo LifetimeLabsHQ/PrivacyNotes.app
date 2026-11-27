@@ -83,6 +83,8 @@ class NotificationPlugin(private val activity: Activity): Plugin(activity) {
   private lateinit var notificationManager: NotificationManager
   private lateinit var notificationStorage: NotificationStorage
   private var channelManager = ChannelManager(activity)
+  // Cold-start or lock-screen notification tap waiting for JS `onAction` (#949).
+  private var pendingAction: JSObject? = null
 
   companion object {
     var instance: NotificationPlugin? = null
@@ -128,7 +130,32 @@ class NotificationPlugin(private val activity: Activity): Plugin(activity) {
     }
     val dataJson = manager.handleNotificationActionPerformed(intent, notificationStorage)
     if (dataJson != null) {
+      deliverOrQueueAction(dataJson)
+    }
+  }
+
+  @Synchronized
+  private fun deliverOrQueueAction(dataJson: JSObject) {
+    if (hasListener("actionPerformed")) {
+      pendingAction = null
       trigger("actionPerformed", dataJson)
+    } else {
+      pendingAction = dataJson
+    }
+  }
+
+  @Command
+  override fun registerListener(invoke: Invoke) {
+    super.registerListener(invoke)
+    val pending = synchronized(this) {
+      if (hasListener("actionPerformed")) {
+        pendingAction.also { pendingAction = null }
+      } else {
+        null
+      }
+    }
+    if (pending != null) {
+      trigger("actionPerformed", pending)
     }
   }
 
@@ -156,7 +183,10 @@ class NotificationPlugin(private val activity: Activity): Plugin(activity) {
     manager.cancel(
       args.notifications ?: notificationStorage.getSavedNotificationIds().mapNotNull { it.toIntOrNull() }
     )
-    if (args.notifications == null) notificationStorage.forgetAllShown()
+    if (args.notifications == null) {
+      notificationStorage.forgetAllShown()
+      synchronized(this) { pendingAction = null }
+    }
     invoke.resolve()
   }
 

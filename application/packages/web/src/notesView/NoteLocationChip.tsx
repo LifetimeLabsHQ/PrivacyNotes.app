@@ -10,7 +10,7 @@
  *
  * Nothing here calls a server. "Use my current location" asks the phone's own
  * location service, and only when tapped (currentPosition.ts).
- * Spec: docs/internal/plans/note-location.md (section 4)
+ * Spec: docs/internal/specs/note-location.md (section 4)
  */
 import { Suspense, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -23,6 +23,7 @@ import { activeLocale } from '../i18n';
 import { openExternal } from '../openExternal';
 import {
   formatCoordinates,
+  googleMapsUrl,
   LOCATION_KEY,
   MAP_HEIGHT_DEFAULT,
   makeLocation,
@@ -37,9 +38,9 @@ import { canReadPosition, readCurrentPosition, type PositionResult } from '../cu
 import { turnAutoLocation, useAutoLocation, type AutoLocationType } from '../autoLocation';
 import { Switch } from '../Switch';
 import { ROW_TITLE } from '../settingsUI';
-import { loadPlaces, searchPlaces, type PlaceHit, type PlaceRow } from '../placeSearch';
+import type { PlaceHit, PlaceList } from '../placeSearch';
 
-// MapLibre and the map style load with the first map, never on the boot path.
+// MapLibre, the map style, and place search load with the first place UI, never on the boot path.
 const NoteLocationMapLazy = lazyPart(() => import('./NoteLocationMap').then((m) => m.default));
 
 type ParseError = Extract<LocationParse, { ok: false }>['error'];
@@ -198,7 +199,7 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
   const [shown, setShown] = useState(false);
   const [fix, setFix] = useState<{ busy: boolean; error?: FixError }>({ busy: false });
   const [saveFailed, setSaveFailed] = useState(false);
-  const [towns, setTowns] = useState<PlaceRow[] | 'loading' | 'failed'>('loading');
+  const [towns, setTowns] = useState<{ rows: PlaceList; search: typeof import('../placeSearch').searchPlaces } | 'loading' | 'failed'>('loading');
   const [highlight, setHighlight] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
@@ -207,13 +208,15 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
   useEffect(() => {
     if (!editing) return;
     let live = true;
-    loadPlaces(activeLocale()).then((rows) => { if (live) setTowns(rows); }, () => { if (live) setTowns('failed'); });
+    import('../placeSearch')
+      .then(async (m) => ({ rows: await m.loadPlaces(activeLocale()), search: m.searchPlaces }))
+      .then((loaded) => { if (live) setTowns(loaded); }, () => { if (live) setTowns('failed'); });
     return () => { live = false; };
   }, [editing]);
 
   const parsed = input.trim() && !picked ? parseLocationInput(input) : null;
   const typed = parsed && !parsed.ok && parsed.error === 'unreadable';
-  const hits = typed && Array.isArray(towns) ? searchPlaces(towns, input) : [];
+  const hits = typed && typeof towns !== 'string' ? towns.search(towns.rows, input) : [];
   const waiting = typed && towns === 'loading' && [...input.trim()].length >= 2;
   // An error waits for a pause in the typing (a blur or a save), but a good
   // reading shows at once, so the person sees the paste was understood.
@@ -273,16 +276,28 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
         <CopyButton value={formatCoordinates(place, 5)} label={t('location.copyCoordinates')} />
       </div>
     );
-    const actions = (
+    const mapLinks = (
       <>
         <Button
           action="open"
-          className={layout === 'popup' ? 'flex-1 justify-center' : ''}
+          className={layout === 'popup' ? 'w-full justify-center' : ''}
           aria-label={t('location.openOsm')}
           onClick={() => openExternal(osmUrl(place.lat, place.lng), { browser: true })}
         >
           OpenStreetMap
         </Button>
+        <Button
+          action="open"
+          className={layout === 'popup' ? 'w-full justify-center' : ''}
+          aria-label={t('location.openGoogleMaps')}
+          onClick={() => openExternal(googleMapsUrl(place.lat, place.lng), { browser: true })}
+        >
+          Google Maps
+        </Button>
+      </>
+    );
+    const toolButtons = (
+      <>
         {onShowOnMap && (
           <IconButton label={t('location.showOnMap')} onClick={() => { onDone(); onShowOnMap(); }}>
             <span className="relative flex">
@@ -318,7 +333,8 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
             <div className="flex flex-wrap items-center gap-1.5">
               <div className="max-sm:w-full">{coordinates}</div>
               <span className="flex-1" />
-              {actions}
+              {mapLinks}
+              {toolButtons}
               {onCollapse && (
                 <IconButton label={t('shell:folders.collapse')} onClick={onCollapse}>
                   <ArrowsInSimple aria-hidden="true" />
@@ -333,18 +349,21 @@ export function LocationPanel({ place, readOnly, onDone, onSave, onRemove, start
     }
     return (
       <div className="flex flex-col gap-2 px-1.5 pb-1">
-        {/* The name is the window's title (NoteLocationChip); the coordinates sit under it. */}
+        {/* The name is the window's title (NoteLocationChip); the coordinates and tools sit under it. */}
         <div className="-mt-1.5 flex items-center justify-between gap-1">
           {coordinates}
-          {onExpand && (
-            <IconButton label={t('shell:folders.expand')} onClick={onExpand}>
-              <ArrowsOutSimple aria-hidden="true" />
-            </IconButton>
-          )}
+          <div className="flex shrink-0 items-center gap-0.5">
+            {toolButtons}
+            {onExpand && (
+              <IconButton label={t('shell:folders.expand')} onClick={onExpand}>
+                <ArrowsOutSimple aria-hidden="true" />
+              </IconButton>
+            )}
+          </div>
         </div>
         {/* Edge to edge: out through the panel's padding and the popover's. */}
         <div className="-mx-3.5"><ShownMap place={place} scrollZoom bleed /></div>
-        <div className="flex items-center gap-1.5">{actions}</div>
+        <div className="grid grid-cols-2 gap-1.5">{mapLinks}</div>
         {notice}
         {saveFailed && <StatusLine tone="danger">{t('location.saveFailed')}</StatusLine>}
       </div>
@@ -532,7 +551,7 @@ export function ShownMap({ place, scrollZoom = false, bleed = false, height = MA
  * "Automatically add my location" for one item type: the place window's form
  * shows the switch for the item it is on (owner, 2026-11-11), and Settings >
  * Editor shows one per type. Phones only; the parent checks.
- * Spec: docs/internal/plans/note-location.md (section 3c)
+ * Spec: docs/internal/specs/note-location.md (section 3c)
  */
 export function AutoLocationSwitch({ type, label, icon, setting, className }: {
   type: AutoLocationType;

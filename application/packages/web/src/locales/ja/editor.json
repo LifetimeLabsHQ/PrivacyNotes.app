@@ -202,6 +202,7 @@
     "cut": "切り取り",
     "copyAsPlain": "プレーンテキストとしてコピー",
     "copyAsMarkdown": "Markdownとしてコピー",
+    "clearFormatting": "書式をクリア",
     "sortAsc": "行を昇順に並び替え",
     "sortDesc": "行を降順に並び替え"
   },
@@ -270,6 +271,9 @@
   "inlineCode": {
     "copyHint": "{{key}}+クリックでコピー"
   },
+  "inlineTag": {
+    "filter": "タグで絞り込む"
+  },
   "codeBlock": {
     "copyFailed": "失敗しました",
     "wrap": "長い行を折り返す",
@@ -297,7 +301,8 @@
     "linkHeading": "見出しにリンク...",
     "headingNotFound": "見出しが見つかりません",
     "headingsLocked": "見出しを表示するには、このノートのロックを解除してください",
-    "noHeadings": "このノートには見出しがありません"
+    "noHeadings": "このノートには見出しがありません",
+    "notFound": "ノートが見つかりません"
   },
   "footnote": {
     "placeholder": "脚注のテキスト",

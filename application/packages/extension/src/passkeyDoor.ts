@@ -55,6 +55,8 @@ export interface StoredRequest {
   at: number;
   /** The background is saving its passkey and answers the tab itself. */
   saving?: boolean;
+  /** The background fell back from the toolbar popup to a standalone window. */
+  windowFallback?: boolean;
 }
 
 // ── The pure rules ───────────────────────────────────────────────────
@@ -100,11 +102,12 @@ export function rpIdAllowed(rpId: string, host: string): boolean {
   return domain !== null && domain === getDomain(host, { allowPrivateDomains: true }) && rpId.endsWith(domain);
 }
 
-/** The RP ID a request asks for: its own, or the page's host. */
+/** The RP ID a request asks for: its own, or the page's host. An empty
+ *  string stands for omitted; domain matching is case-insensitive. */
 export function requestRpId(kind: PasskeyKind, options: WireCreateOptions | WireGetOptions, origin: string): string | null {
-  const host = new URL(origin).hostname;
+  const host = new URL(origin).hostname.toLowerCase();
   const asked = kind === 'create' ? (options as WireCreateOptions).rp?.id : (options as WireGetOptions).rpId;
-  const rpId = asked ?? host;
+  const rpId = typeof asked === 'string' && asked.length > 0 ? asked.toLowerCase() : asked === undefined || asked === '' ? host : null;
   return typeof rpId === 'string' && rpIdAllowed(rpId, host) ? rpId : null;
 }
 
@@ -175,6 +178,33 @@ async function strike(key: string, names: readonly string[], now: number): Promi
   await hold((await isHeld(key, names, now)) ? COOLDOWN_KEY : key, names, now);
 }
 
+/** Remove `names` from each hold map: after the person approves a save or
+ *  sign-in in our own popup, they are never locked out of that site on their
+ *  next try. */
+async function clearHolds(keys: readonly string[], names: readonly string[], now: number): Promise<void> {
+  const patch: Record<string, Record<string, number>> = {};
+  for (const key of keys) {
+    const held = await readHeld(key, now);
+    let changed = false;
+    for (const n of names) {
+      if (n in held) {
+        delete held[n];
+        changed = true;
+      }
+    }
+    if (changed) patch[key] = held;
+  }
+  if (Object.keys(patch).length) await browser.storage.session.set(patch);
+}
+
+/** Drop every no-match hold after a fresh unlock so newly pulled passkeys
+ *  are offered at once. */
+export function clearNoMatchHolds(): Promise<void> {
+  return serial(async () => {
+    await browser.storage.session.set({ [NO_MATCH_KEY]: {} });
+  });
+}
+
 /** One change to the stored requests at a time, in this context. */
 let chain: Promise<unknown> = Promise.resolve();
 function serial<T>(task: () => Promise<T>): Promise<T> {
@@ -188,20 +218,38 @@ export async function readRequest(id: string, now = Date.now()): Promise<StoredR
   return (await readRequests(now))[id] ?? null;
 }
 
-/** Forget a request; a dismissal also starts the origin's cooldown. A
- *  dismissal leaves a request alone while its passkey is being saved: the
- *  save answers it. The tab's toolbar popup goes back to the plain one. */
-export function finishRequest(id: string, dismissed: boolean, now = Date.now()): Promise<StoredRequest | null> {
+/** Mark a request as having fallen back to a standalone popup window so any
+ *  late-mounting toolbar popup closes silently instead of cancelling it. */
+export function markWindowFallback(id: string, now = Date.now()): Promise<boolean> {
   return serial(async () => {
     const all = await readRequests(now);
-    const req = all[id] ?? null;
-    if (!req || (dismissed && req.saving)) return null;
-    delete all[id];
-    await restorePopup(req.tabId);
+    const req = all[id];
+    if (!req) return false;
+    all[id] = { ...req, windowFallback: true };
     await writeRequests(all);
-    if (dismissed) await hold(COOLDOWN_KEY, siteNames(req), now);
-    return req;
+    return true;
   });
+}
+
+async function finishRequestInner(id: string, dismissed: boolean, now: number, approved: boolean): Promise<StoredRequest | null> {
+  const all = await readRequests(now);
+  const req = all[id] ?? null;
+  if (!req || (dismissed && req.saving)) return null;
+  delete all[id];
+  await restorePopup(req.tabId);
+  await writeRequests(all);
+  if (dismissed) await hold(COOLDOWN_KEY, siteNames(req), now);
+  else if (approved) await clearHolds([COOLDOWN_KEY, ABORTED_KEY, NO_MATCH_KEY, SIGN_IN_KEY], siteNames(req), now);
+  return req;
+}
+
+/** Forget a request; a dismissal also starts the origin's cooldown. A
+ *  dismissal leaves a request alone while its passkey is being saved: the
+ *  save answers it. An approved save or sign-in clears that site's holds, so
+ *  the person can immediately sign in after registering or sign in again. The
+ *  tab's toolbar popup goes back to the plain one. */
+export function finishRequest(id: string, dismissed: boolean, now = Date.now(), approved = false): Promise<StoredRequest | null> {
+  return serial(() => finishRequestInner(id, dismissed, now, approved));
 }
 
 /** Forget every request of a tab: its page went away. */
@@ -237,10 +285,32 @@ export interface DoorDeps {
   /** Every site passkey the extension holds (copy and pending store), or
    *  null while locked. */
   passkeys: () => Promise<Pick<SitePasskey, 'rpId' | 'credentialId'>[] | null>;
+  /** Optional bounded refresh when an unlocked sign-in finds no cached match
+   *  yet (a passkey saved in another browser or device). */
+  refresh?: () => Promise<void>;
   /** The count written at the last pull, for a locked extension. */
   count: () => Promise<number>;
   openPrompt: (req: StoredRequest, tab: Browser.tabs.Tab) => void;
   now: () => number;
+}
+
+/** Aborts that arrived while `onPasskeyRequest` was still awaiting (for
+ *  example during an unlocked miss refresh), so the request never opens a
+ *  prompt after the page already ended its call. */
+const abortedInFlight = new Map<string, { tabId: number; at: number }>();
+
+function pruneAbortedInFlight(now: number): void {
+  for (const [key, entry] of abortedInFlight) {
+    if (now - entry.at >= REQUEST_MAX_MS) abortedInFlight.delete(key);
+  }
+}
+
+function consumeAbortedInFlight(id: string, tabId: number, now: number): boolean {
+  pruneAbortedInFlight(now);
+  const entry = abortedInFlight.get(id);
+  if (!entry || entry.tabId !== tabId) return false;
+  abortedInFlight.delete(id);
+  return true;
 }
 
 /**
@@ -258,6 +328,7 @@ export function onPasskeyRequest(msg: PasskeyRequestMessage, sender: Browser.run
   const tabId = tab.id;
   return serial(async () => {
     const now = deps.now();
+    if (consumeAbortedInFlight(msg.id, tabId, now)) return fallback;
     if (!(await deps.logins()) || !(await deps.offer())) return fallback;
     if (!(await deps.inFront(tab))) return fallback;
     const documentId = deps.chrome ? (sender as { documentId?: string }).documentId : undefined;
@@ -270,7 +341,11 @@ export function onPasskeyRequest(msg: PasskeyRequestMessage, sender: Browser.run
     if (!rpId) return fallback;
     const names = siteNames({ origin, rpId });
     if (await isHeld(COOLDOWN_KEY, names, now)) return fallback;
-    if (msg.kind === 'create' && !(msg.options as WireCreateOptions).pubKeyCredParams.some((p) => p?.type === 'public-key' && p.alg === ES256)) return fallback;
+    if (msg.kind === 'create') {
+      // WebAuthn Level 3: an empty pubKeyCredParams defaults to ES256 and RS256.
+      const params = (msg.options as WireCreateOptions).pubKeyCredParams;
+      if (params.length > 0 && !params.some((p) => p?.type === 'public-key' && p.alg === ES256)) return fallback;
+    }
     if (msg.kind === 'get') {
       // Only a sign-in the person started reaches the Vault: without user
       // activation, the answer would tell the page in silence whether the
@@ -283,16 +358,36 @@ export function onPasskeyRequest(msg: PasskeyRequestMessage, sender: Browser.run
       // sign-in there answers the same for a match, before the Vault is read
       // (finding 4, beta #123).
       if ((await isHeld(NO_MATCH_KEY, names, now)) || (await isHeld(ABORTED_KEY, names, now)) || (await isHeld(SIGN_IN_KEY, names, now))) return fallback;
-      const stored = await deps.passkeys();
+      const allow = (msg.options as WireGetOptions).allowCredentials;
+      let stored = await deps.passkeys();
       if (stored === null) {
         if ((await deps.count()) === 0) return fallback;
-      } else if (candidates(stored, rpId, (msg.options as WireGetOptions).allowCredentials).length === 0) {
-        await hold(NO_MATCH_KEY, names, now);
-        return fallback;
+      } else if (candidates(stored, rpId, allow).length === 0) {
+        if (deps.refresh) {
+          await deps.refresh().catch(() => undefined);
+          if (consumeAbortedInFlight(msg.id, tabId, deps.now())) {
+            await strike(ABORTED_KEY, names, deps.now());
+            return fallback;
+          }
+          stored = await deps.passkeys();
+        }
+        if (stored === null || candidates(stored, rpId, allow).length === 0) {
+          await hold(NO_MATCH_KEY, names, now);
+          return fallback;
+        }
       }
     }
+    if (consumeAbortedInFlight(msg.id, tabId, deps.now())) {
+      await strike(ABORTED_KEY, names, deps.now());
+      return fallback;
+    }
+    // Re-read requests after any async refresh so we never overwrite a
+    // concurrent finishRequest from another popup.
+    const latest = await readRequests(deps.now());
+    for (const [key, r] of Object.entries(latest)) if (r.tabId === tabId && documentId && r.documentId && r.documentId !== documentId) delete latest[key];
+    if (Object.values(latest).some((r) => r.tabId === tabId)) return fallback;
     const req: StoredRequest = { id: msg.id, tabId, ...(documentId ? { documentId } : {}), origin, rpId, kind: msg.kind, options: msg.options, at: now };
-    await writeRequests({ ...requests, [req.id]: req });
+    await writeRequests({ ...latest, [req.id]: req });
     // The answer of a sign-in is given here, however the prompt ends: the
     // site's next sign-in within the minute goes to the browser's prompt.
     if (msg.kind === 'get') await hold(SIGN_IN_KEY, names, now);
@@ -309,11 +404,24 @@ export function onPasskeyRequest(msg: PasskeyRequestMessage, sender: Browser.run
  * holds it as a dismissal does, so a page cannot open the prompt again and
  * again.
  */
+const ABORT_ID_RE = /^[0-9a-f-]{36}$/i;
+
 export async function onPasskeyAbort(id: unknown, sender: Browser.runtime.MessageSender, now = Date.now()): Promise<void> {
-  if (typeof id !== 'string' || sender.id !== browser.runtime.id || sender.tab?.id == null) return;
-  const req = await readRequest(id, now);
-  if (!req || req.tabId !== sender.tab.id || !(await finishRequest(id, false, now))) return;
-  await serial(() => strike(ABORTED_KEY, siteNames(req), now));
+  if (typeof id !== 'string' || !ABORT_ID_RE.test(id) || sender.id !== browser.runtime.id || sender.tab?.id == null) return;
+  const tabId = sender.tab.id;
+  pruneAbortedInFlight(now);
+  abortedInFlight.set(id, { tabId, at: now });
+  await serial(async () => {
+    // Runs strictly after any in-flight onPasskeyRequest (including writeRequests):
+    // either onPasskeyRequest already consumed the abort and returned fallback,
+    // or the request was stored and we remove it and record the strike here.
+    abortedInFlight.delete(id);
+    const all = await readRequests(now);
+    const req = all[id] ?? null;
+    if (!req || req.tabId !== tabId) return;
+    if (!(await finishRequestInner(id, false, now, false))) return;
+    await strike(ABORTED_KEY, siteNames(req), now);
+  });
 }
 
 /** The page asks whether a platform passkey can be made: yes while this
@@ -325,9 +433,10 @@ export async function onUvpaQuery(sender: Browser.runtime.MessageSender, deps: P
 
 /** The popup's port for one request closed: a window closed with no answer
  *  is a dismissal, so the page gets the browser's prompt and the origin its
- *  cooldown. */
-export async function onPromptGone(id: string): Promise<void> {
-  const req = await finishRequest(id, true);
+ *  cooldown. When the popup never mounted (`dismissed = false`), no cooldown
+ *  is started so the user can try again once the browser recovers. */
+export async function onPromptGone(id: string, dismissed = true, now = Date.now()): Promise<void> {
+  const req = await finishRequest(id, dismissed, now);
   if (req) await answerTab(req, { kind: 'fallback' });
 }
 
@@ -371,8 +480,11 @@ export async function savePasskeyFor<R extends { state: string }>(id: string, cr
   try {
     result = await save();
   } finally {
-    await answerTab(req, result.state === 'sent' ? credential : { kind: 'fallback' });
-    await finishRequest(id, false);
+    const sent = result.state === 'sent';
+    // Clear the request and site holds before answering the page so a site
+    // that immediately authenticates or navigates never races with cleanup.
+    await finishRequest(id, false, Date.now(), sent).catch(() => undefined);
+    await answerTab(req, sent ? credential : { kind: 'fallback' });
   }
   return result;
 }

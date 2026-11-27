@@ -19,7 +19,7 @@
  */
 
 import { liveVotes, parseShipped, rankThemes } from './themeVotes';
-import { faviconAllowed, handleClipFetch, type ClipEnv } from './clipFetchRoute';
+import { faviconAllowed, handleClipFetch, readCapped, type ClipEnv } from './clipFetchRoute';
 
 // The web clipper's counters live in a Durable Object, which the runtime
 // finds by its export from the main module.
@@ -122,6 +122,8 @@ const BADGE_UPSTREAM = 'https://privacytools.io/badge/privacynotes/rating-light.
 
 /** 24 hours - the upstream refresh cadence, so a longer cache buys nothing. */
 const BADGE_TTL = 24 * 60 * 60;
+const BADGE_TIMEOUT_MS = 5_000;
+const BADGE_MAX_BYTES = 64 * 1024;
 
 // One Worker serves every hostname of the zone. The apex is the marketing
 // site (and, during the domain-split transition, still serves the app);
@@ -856,26 +858,44 @@ function keptByEdgeOnly(response: Response): Response {
  * If upstream is unreachable, the answer is an opaque 502 and the
  * homepage falls back to the image's alt text.
  */
+const badgeUnavailable = (request: Request): Response =>
+  new Response(request.method === 'HEAD' ? null : 'Badge unavailable', {
+    status: 502,
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+
 async function handleBadge(request: Request, url: URL, ctx: ExecutionContext): Promise<Response> {
+  // A lookup only: any other method is refused before it reaches the cache or upstream.
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return new Response(null, { status: 405, headers: { Allow: 'GET, HEAD', 'Cache-Control': 'no-store' } });
+  }
+
   const cache = caches.default;
-  const cacheKey = new Request(`${url.origin}/badge/privacytools.svg?_cv=${CACHE_VERSION}`, request);
+  // Fixed GET key with no caller headers: the edge cache stores GET only, and HEAD shares it.
+  const cacheKey = new Request(`${url.origin}/badge/privacytools.svg?_cv=${CACHE_VERSION}`);
   const cached = await cache.match(cacheKey);
-  if (cached) return cached;
+  if (cached) return request.method === 'HEAD' ? new Response(null, cached) : cached;
 
   let svg: string;
   try {
     const upstream = await fetch(BADGE_UPSTREAM, {
       headers: { 'User-Agent': 'PrivacyNotes-Badge-Proxy/1.0' },
+      signal: AbortSignal.timeout(BADGE_TIMEOUT_MS),
     });
     const contentType = upstream.headers.get('content-type') || '';
     if (!upstream.ok || !contentType.includes('image/svg')) {
+      await upstream.body?.cancel();
       console.error(`badge: upstream answered ${upstream.status} ${contentType}`);
-      return new Response('Badge unavailable', { status: 502 });
+      return badgeUnavailable(request);
     }
-    svg = await upstream.text();
+    svg = new TextDecoder().decode(await readCapped(upstream, BADGE_MAX_BYTES));
   } catch (err) {
     console.error(`badge: upstream unreachable: ${err instanceof Error ? err.name : 'error'}`);
-    return new Response('Badge unavailable', { status: 502 });
+    return badgeUnavailable(request);
   }
 
   const response = new Response(svg, {
@@ -890,7 +910,7 @@ async function handleBadge(request: Request, url: URL, ctx: ExecutionContext): P
 
   ctx.waitUntil(cache.put(cacheKey, response.clone()));
 
-  return response;
+  return request.method === 'HEAD' ? new Response(null, response) : response;
 }
 
 /**

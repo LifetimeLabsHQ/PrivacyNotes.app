@@ -50,7 +50,7 @@ export function formatFenceInfo(language: string | null, title: string | null, f
  * `width=N` and `height=N` in an info string, as whole numbers, or null where
  * one is missing. A map block keeps its size there (```map width=60
  * height=320): an app that does not know the words still shows the place.
- * Spec: docs/internal/plans/note-location.md (section 4b)
+ * Spec: docs/internal/specs/note-location.md (section 4b)
  */
 export function parseFenceSize(info: string): { width: number | null; height: number | null } {
   const read = (key: string) => {

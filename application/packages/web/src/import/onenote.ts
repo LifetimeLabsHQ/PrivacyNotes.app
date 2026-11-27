@@ -26,12 +26,12 @@
  */
 
 import { openZip } from './zipOpen';
-import { zipEntryMedia } from './zipEntry';
+import { zipEntryBytes } from './zipEntry';
 import { buildFolderTree } from './folderImport';
 import { withBareLinks } from './bareLinks';
 import { htmlNoteToMarkdown } from './notesnook';
 import { mimeFromExt, isBlobReferenced } from './blobImport';
-import { noteLink, normalizeTagList } from './importHelpers';
+import { cleanPath, isJunkEntry, noteLink, normalizeTagList } from './importHelpers';
 import { OneNoteError, type CabFile } from './oneNoteCab';
 import {
   readOneNote,
@@ -295,16 +295,16 @@ async function zipNotebook(file: File): Promise<CabFile[]> {
   const zip = await openZip(file);
   const out: CabFile[] = [];
   for (const entry of Object.values(zip.files)) {
-    if (entry.dir || !/\.(one|onetoc2)$/i.test(entry.name)) continue;
-    const data = await zipEntryMedia(entry);
-    if (data) out.push({ name: entry.name, data });
+    const raw = (entry as { unsafeOriginalName?: string }).unsafeOriginalName ?? entry.name;
+    const name = cleanPath(raw);
+    if (entry.dir || !name || isJunkEntry(name) || !/\.(one|onetoc2)$/i.test(name)) continue;
+    out.push({ name, data: await zipEntryBytes(entry) });
   }
   if (!out.some((f) => /\.one$/i.test(f.name))) throw new Error(msg('notOneNote'));
   return out;
 }
 
-function errorMessage(e: unknown): string {
-  if (!(e instanceof OneNoteError)) return e instanceof Error ? e.message : String(e);
+function errorMessage(e: OneNoteError): string {
   switch (e.code) {
     case 'store-fsshttpb':
       return msg('cloudFormat');
@@ -329,7 +329,8 @@ async function readOneNoteExport(file: File, onProgress?: (msg: string) => void)
   try {
     book = isZip ? readOneNoteFiles(await zipNotebook(file)) : readOneNote(new Uint8Array(await file.arrayBuffer()), file.name);
   } catch (e) {
-    throw new Error(errorMessage(e));
+    if (e instanceof OneNoteError) throw new Error(errorMessage(e));
+    throw e;
   }
   const nowMs = Date.now();
   const fileTime = file.lastModified && file.lastModified <= nowMs ? new Date(file.lastModified).toISOString() : new Date(nowMs).toISOString();

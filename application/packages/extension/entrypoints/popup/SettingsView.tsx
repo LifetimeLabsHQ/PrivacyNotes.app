@@ -36,7 +36,7 @@ const ROW = 'flex items-center gap-3 px-3 py-1.5';
 /** A row that opens another screen, with the caret that says so. */
 function SampleBar({ off }: { off: boolean }) {
   const now = useSecondTick(!off);
-  return <TotpBar period={30} now={now} off={off} className="absolute start-3 end-[76px] bottom-[5px]" />;
+  return <TotpBar period={30} now={now} off={off} className="absolute start-3 end-[76px] bottom-[4px]" />;
 }
 
 function NavRow({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) {
@@ -77,7 +77,7 @@ export function SettingsView({ prefs, onChange, vault, onShortcuts, onDisconnect
       {vault && (
         <section className="flex flex-col gap-2">
           <SectionEyebrow className="px-1">{t('notes:settings.securityLabel')}</SectionEyebrow>
-          <div className={SETTINGS_GROUP}>
+          <div className={`${SETTINGS_GROUP} bg-surface-2 shadow-xs`}>
             <div className={ROW}>
               <Timer className="shrink-0 text-accent" aria-hidden="true" />
               <span className={`flex-1 min-w-0 ${ROW_TITLE}`}>{t('vault.autoLock')}</span>
@@ -100,18 +100,18 @@ export function SettingsView({ prefs, onChange, vault, onShortcuts, onDisconnect
         </section>
       )}
       {/* The shortcuts sit above Display, in a card of their own (owner, 2026-11-11). */}
-      <div className={SETTINGS_GROUP}>
+      <div className={`${SETTINGS_GROUP} bg-surface-2 shadow-xs`}>
           <NavRow icon={<Keyboard className="shrink-0 text-accent" aria-hidden="true" />} label={t('common:palette.commands.help')} onClick={onShortcuts} />
       </div>
       <section className="flex flex-col gap-2">
         <SectionEyebrow className="px-1">{t('settings:appearance.editorTabDisplay')}</SectionEyebrow>
-        <div className={SETTINGS_GROUP}>
+        <div className={`${SETTINGS_GROUP} bg-surface-2 shadow-xs`}>
           {vault && (
             <>
               <div className="px-3 py-1.5">
                 <Switch labelClassName={ROW_TITLE} icon={<Password className="text-accent" />} label={t('settings.codes')} description={t('settings.codesHelp')} checked={prefs.showTotp} onChange={(on) => onChange({ showTotp: on })} />
               </div>
-              <div className="relative px-3 pt-1.5 pb-2.5">
+              <div className="relative px-3 pt-1.5 pb-3">
                 <Switch labelClassName={ROW_TITLE} icon={<Hourglass className="text-accent" />} label={t('settings.bar')} description={t('settings.barHelp')} checked={prefs.totpBar} disabled={!prefs.showTotp} onChange={(on) => onChange({ totpBar: on })} />
                 {/* A live sample of the bar: a 30-second code's, still and dim
                     while off. In the row's bottom padding, so the page keeps
@@ -127,7 +127,7 @@ export function SettingsView({ prefs, onChange, vault, onShortcuts, onDisconnect
       </section>
       {/* Disconnect, last and in a card of its own, with no heading (owner, 2026-11-11). */}
       {onDisconnect && (
-      <div className={SETTINGS_GROUP}>
+      <div className={`${SETTINGS_GROUP} bg-surface-2 shadow-xs`}>
         {asking && disconnectLoses && (
           <div className="px-3 pt-2.5">
             <Callout look="card" tone="warning">{t('account.pendingPasskey')}</Callout>

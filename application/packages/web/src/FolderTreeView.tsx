@@ -6,6 +6,7 @@ import { ancestorIds, canMoveFolder, childrenOf, subtreeIds, type FolderDef } fr
 import { CaretDown, DotsSixVertical } from './icons';
 import { FolderGlyph, LooksContext, sidebarRowTint } from './looks/LookGlyph';
 import { folderColor } from './itemStyles';
+import { SIDEBAR_ICON_PX } from './sidebarUI';
 import { DRAG_SOURCE, DROP_INSIDE, DropLine, usePointerReorder } from './ui';
 
 /**
@@ -350,7 +351,7 @@ export function FolderTreeView({
               }`}
             >
               <span className="inline-flex shrink-0 text-label">
-                <FolderGlyph folderId={folder.id} size={rail ? 16 : 15} />
+                <FolderGlyph folderId={folder.id} size={rail ? SIDEBAR_ICON_PX : undefined} />
               </span>
               {renderName?.(folder)}
             </div>
@@ -381,7 +382,7 @@ export function FolderTreeView({
                     disabled ? '' : active ? 'text-accent' : 'text-label'
                   }${dimmed ? ' opacity-60' : ''}${onGlyphClick ? ' pn-look-glyph' : ''}`}
                 >
-                  <FolderGlyph folderId={folder.id} size={rail ? 16 : 15} />
+                  <FolderGlyph folderId={folder.id} size={rail ? SIDEBAR_ICON_PX : undefined} />
                 </span>
                 {renderName ? renderName(folder) : <span className="truncate">{folder.name}</span>}
               </button>

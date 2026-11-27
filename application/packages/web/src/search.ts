@@ -12,6 +12,7 @@ import { parseScene, sceneText } from './drawing/scene';
 import { isPublicField, loginExtrasOf } from './loginExtras';
 import { withoutDoodleData } from './doodle/doodleFence';
 import { readLocation } from './noteLocation';
+import { effectiveNoteTags } from './inlineTags';
 
 /**
  * Client-side full-text search over decrypted notes.
@@ -135,7 +136,7 @@ function noteToDoc(n: LocalNote): IndexedDoc {
   // found by typing its name - only by clicking the tag rail. Bookmarks made
   // that plain: the pillar's own search box matched tags, this index did not,
   // which is one reason the pane grew a private search (2026-08-22).
-  const tagsText = n.tags.join(' ');
+  const tagsText = effectiveNoteTags(n).join(' ');
   return { id: n.id, title: n.title, body: indexedBodyText(n), tagsText, place: indexedPlaceText(n) };
 }
 

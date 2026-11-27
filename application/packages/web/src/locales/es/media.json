@@ -18,7 +18,13 @@
     "viewAria": "Ver imagen",
     "copyAria": "Copiar imagen",
     "copyFailed": "No se pudo copiar la imagen.",
-    "picturesLeftOut": "Algunas imágenes no se añadieron. Copia una imagen sola para pegarla."
+    "picturesLeftOut": "Algunas imágenes no se añadieron. Copia una imagen sola para pegarla.",
+    "captionLabel": "Pie de foto",
+    "captionAddAria": "Añadir pie de foto",
+    "captionEditAria": "Editar pie de foto",
+    "captionPlaceholder": "Añade un pie de foto...",
+    "captionClearAria": "Borrar pie de foto",
+    "captionHint": "Intro para guardar · Esc para cancelar"
   },
   "attachment": {
     "fallbackName": "Adjunto",

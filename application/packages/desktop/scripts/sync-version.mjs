@@ -152,8 +152,12 @@ for (const lang of readdirSync(resolve(root, 'packages/web/src/locales'))) {
   if (!texts?.saved || !texts?.failed || !texts?.tooLarge) continue;
   const commonPath = resolve(dirPath, 'common.json');
   const notesPath = resolve(dirPath, 'notes.json');
+  const editorPath = resolve(dirPath, 'editor.json');
+  const extensionPath = resolve(dirPath, 'extension.json');
   const common = existsSync(commonPath) ? JSON.parse(readFileSync(commonPath, 'utf8')) : {};
   const notes = existsSync(notesPath) ? JSON.parse(readFileSync(notesPath, 'utf8')) : {};
+  const editor = existsSync(editorPath) ? JSON.parse(readFileSync(editorPath, 'utf8')) : {};
+  const extension = existsSync(extensionPath) ? JSON.parse(readFileSync(extensionPath, 'utf8')) : {};
   const entries = [
     ['saved', texts.saved],
     ['failed', texts.failed],
@@ -161,10 +165,23 @@ for (const lang of readdirSync(resolve(root, 'packages/web/src/locales'))) {
     ['save', common.actions?.save],
     ['cancel', common.actions?.cancel],
     ['note', notes.newMenu?.note],
+    ['bookmark', notes.newMenu?.bookmark],
+    ['clipPage', notes.newMenu?.clipPage],
+    ['task', notes.newMenu?.task],
+    ['journal', notes.newMenu?.journal],
     ['files', shell.tagsRail?.files],
+    ['folder', shell.folders?.chipUnfiled],
+    ['unfiled', shell.folders?.unfiled],
+    ['tags', shell.tagsRail?.tags],
+    ['taskList', editor.toolbar?.taskList],
+    ['quickTasks', texts.quickTasks],
     ['titlePlaceholder', texts.titlePlaceholder],
     ['notePlaceholder', texts.notePlaceholder],
+    ['taskPlaceholder', texts.taskPlaceholder],
+    ['journalHint', texts.journalHint],
+    ['addTagPlaceholder', extension.organize?.addTag],
     ['photoCount', texts.photoCount],
+    ['fileCount', shell.noteRow?.files_other],
   ].filter(([, value]) => typeof value === 'string' && value.length > 0);
   const quote = (s) => JSON.stringify(s);
   const strings = entries.map(([k, v]) => `"${k}" = ${quote(v)};\n`).join('');

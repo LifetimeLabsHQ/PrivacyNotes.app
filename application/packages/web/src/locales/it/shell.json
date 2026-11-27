@@ -207,7 +207,7 @@
     "color": "Colore",
     "colorNone": "Nessun colore",
     "colorUseDefault": "Usa predefinito",
-    "icon": "Icone e loghi",
+    "icon": "Icone / loghi / emoji",
     "colorFromFolder": "Dalla cartella: {{name}}",
     "colorFromTag": "Dal tag: #{{name}}",
     "colorOwnHint": "Un colore scelto qui riempie lo sfondo di questa nota. I <setting>Colori di cartelle e tag</setting> non lo cambiano.",
@@ -365,6 +365,7 @@
   },
   "demoBanner": {
     "title": "Provalo senza rischi",
+    "shortTitle": "Demo",
     "description": "Qui non viene salvato niente. Crea il tuo taccuino cifrato, gratis."
   },
   "markdown": {
@@ -627,6 +628,10 @@
     "tooLarge": "Troppo grande. Il massimo è {{limit}} MB per file.",
     "titlePlaceholder": "Titolo (facoltativo)",
     "notePlaceholder": "Aggiungi una nota...",
+    "taskPlaceholder": "Attività...",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "Si aggiunge alla pagina di diario di oggi.",
+    "clipFallbackToast": "Impossibile salvare la pagina. Salvata invece come segnalibro.",
     "photoCount": "{{count}} foto"
   },
   "shortcut": {
@@ -958,7 +963,8 @@
     "label": "Aggiunta rapida"
   },
   "offline": {
-    "notLoaded": "Sei offline e questa parte dell'app non è ancora stata caricata. Riprova quando torni online."
+    "notLoaded": "Sei offline e questa parte dell'app non è ancora stata caricata. Riprova quando torni online.",
+    "chunkBlocked": "Impossibile caricare questa vista. Ricarica la pagina o controlla il tuo blocco contenuti."
   },
   "checkIn": {
     "prompt": "Come stai oggi?",
@@ -1136,6 +1142,7 @@
     "removed": "Rimosso dalla Home",
     "showOnHome": "Mostra nella Home",
     "removeFromHome": "Rimuovi dalla Home",
+    "openTarget": "Apri {{target}}",
     "resize": "Ridimensiona {{name}}",
     "narrower": "Più stretto",
     "taller": "Più alto",
@@ -1143,29 +1150,75 @@
     "moveEarlier": "Sposta prima",
     "moveLater": "Sposta dopo",
     "chooseNote": "Scegli una nota",
+    "chooseNotes": "Scegli le note",
     "chooseTag": "Scegli un tag",
+    "chooseTags": "Scegli i tag",
     "chooseFolder": "Scegli una cartella",
+    "chooseFolders": "Scegli le cartelle",
     "chooseTracker": "Scegli un tracker",
+    "chooseCounter": "Scegli un contatore",
+    "chooseCounters": "Scegli i contatori",
+    "chooseTypes": "Scegli i tipi di elemento",
     "choose": "Scegli",
     "gone": "Non c'è più",
     "otherSpace": "Nell'altro spazio",
     "proLocked": "Fa parte di Pro",
     "noneToChoose": "Ancora niente da scegliere",
+    "catalogSearch": "Cerca widget",
+    "catalogFilter": "Filtra widget",
+    "allWidgets": "Tutti i widget",
+    "onHomeLabel": "Nella Home",
+    "onHomeCount": "Nella Home ({{count}})",
     "headerEvents_other": "{{formatted}} eventi oggi",
+    "headerOverdue_other": "{{formatted}} in ritardo",
+    "headerOverdue_one": "{{formatted}} in ritardo",
     "headerTasks_other": "{{formatted}} attività da fare",
+    "headerDosesLeft_other": "{{formatted}} dosi rimaste",
+    "headerDosesLeft_one": "{{formatted}} dose rimasta",
     "startToday": "Inizia la pagina di oggi",
+    "setupMedication": "Configura i farmaci",
+    "setupCounter": "Crea un contatore",
+    "counterIncrease": "Aggiungi uno a {{name}}",
+    "counterDecrease": "Togli uno da {{name}}",
+    "storageSummary": "{{notes}} note · {{files}} file",
+    "graphSummary": "{{linked}} collegate · {{orphans}} non collegate",
+    "placesSummary_other": "{{count}} elementi sulla mappa",
+    "quickCapture": {
+      "placeholderJournal": "Aggiungi al diario di oggi...",
+      "placeholderTask": "Aggiungi un'attività...",
+      "placeholderNote": "Scrivi una nota veloce...",
+      "destination": "Dove salvare",
+      "voice": "Registra una nota vocale",
+      "voiceNoteTitle": "Nota vocale",
+      "recording": "Registrazione {{duration}}",
+      "savingVoice": "Cifratura della nota vocale...",
+      "savedTo": "Salvato in {{title}}",
+      "failed": "Impossibile salvare in questo momento.",
+      "micUnavailable": "La registrazione dal microfono non è disponibile qui.",
+      "micDenied": "L'accesso al microfono è stato negato."
+    },
+    "placesSummary_one": "{{count}} elemento sulla mappa",
     "groups": {
-      "keep": "Cose che conservi"
+      "graph": "Grafo e mappe",
+      "keep": "Extra"
     },
     "layout": {
       "everyday": "Quotidiano",
       "planner": "Agenda",
-      "writer": "Scrittura"
+      "writer": "Scrittura",
+      "wellness": "Benessere"
     },
     "w": {
       "checkIn": {
         "name": "Check-in",
         "help": "Come stai oggi, e i tuoi tracker"
+      },
+      "medication": {
+        "help": "Le dosi di oggi, Assunto o Salta, e gli avvisi di ricarica"
+      },
+      "quickCapture": {
+        "name": "Annotazione rapida",
+        "help": "Aggiungi testo o una nota vocale direttamente dalla Home"
       },
       "calendar": {
         "help": "Il mese, con i punti delle pagine e degli eventi"
@@ -1180,7 +1233,7 @@
       },
       "tasks": {
         "name": "Attività da fare",
-        "help": "Le attività non spuntate delle tue note"
+        "help": "Prima le attività in ritardo e in scadenza, con aggiunta rapida"
       },
       "recent": {
         "name": "Modificati di recente",
@@ -1201,9 +1254,19 @@
         "name": "Una cartella",
         "help": "Gli elementi più recenti in una cartella"
       },
+      "types": {
+        "name": "Elenco di elementi",
+        "help": "Gli elementi più recenti dei tipi che scegli"
+      },
       "onThisDay": {
         "name": "In questo giorno",
         "help": "Pagine di diario degli anni passati"
+      },
+      "graph": {
+        "help": "Mini-mappa dal vivo delle note collegate nella tua cassaforte"
+      },
+      "places": {
+        "help": "Le tue note, pagine e contatti con un luogo, su una mappa"
       },
       "week": {
         "help": "Parole, giorni attivi, elementi e check-in"
@@ -1218,6 +1281,12 @@
         "name": "Il tuo ritmo",
         "help": "26 settimane di scrittura e umore"
       },
+      "yearPixels": {
+        "help": "Tutto il tuo anno di colori dell'umore a colpo d'occhio"
+      },
+      "patterns": {
+        "help": "Cosa alza o abbassa di più il tuo umore"
+      },
       "milestone": {
         "name": "Prossimo traguardo",
         "help": "Quanto manca al prossimo"
@@ -1225,6 +1294,9 @@
       "tracker": {
         "name": "Un tracker",
         "help": "Un tracker: il suo numero e i suoi giorni"
+      },
+      "counter": {
+        "help": "Tocca +1 direttamente nella Home per un contatore personalizzato"
       },
       "weekRecap": {
         "help": "La tua settimana, in una scheda"
@@ -1238,9 +1310,13 @@
       },
       "birthdays": {
         "help": "Compleanni nei prossimi 30 giorni"
+      },
+      "storage": {
+        "help": "Il tuo anello dello spazio cifrato, con ricalcolo"
       }
     },
     "empty": {
+      "medication": "Nessun farmaco previsto oggi",
       "upcoming": "Niente nei prossimi 7 giorni",
       "tasks": "Nessuna attività da fare",
       "recent": "Ancora niente qui",
@@ -1248,6 +1324,11 @@
       "tag": "Nessun elemento con questo tag",
       "folder": "Niente in questa cartella",
       "onThisDay": "Nessuna pagina in questo giorno negli anni passati",
+      "graph": "Collega due note per vedere qui il tuo grafo",
+      "places": "Aggiungi una posizione a una nota o a un contatto per vedere qui i segnaposto",
+      "yearPixels": "Registra il tuo umore per colorare l'anno",
+      "patterns": "Registra ancora qualche giorno per scoprire degli schemi",
+      "counter": "Ancora nessun tracker contatore",
       "files": "Ancora nessun file",
       "bookmarks": "Ancora nessun segnalibro",
       "birthdays": "Nessun compleanno nei prossimi 30 giorni",

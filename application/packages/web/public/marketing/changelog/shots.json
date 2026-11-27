@@ -1504,5 +1504,135 @@
       "bytes": 610244,
       "sha256": "4b85b4d1d686696b620669dffb48c22a8e415fd2af74a62d9762cc113b0e633b"
     }
+  },
+  "0.853": {
+    "checked-task-style": {
+      "w": 2000,
+      "h": 1618,
+      "bytes": 176514,
+      "sha256": "68a9967789e8a7a82f37b43441f7c6b76dfe172fa05f76875d7ef08ec72c3bde"
+    },
+    "note-link-states": {
+      "w": 1444,
+      "h": 954,
+      "bytes": 33208,
+      "sha256": "b013a0ed89ec094b0850171a76a31b62199b6e39117d0295938b274a015a1dfe"
+    }
+  },
+  "0.854": {
+    "export-fidelity": {
+      "w": 1840,
+      "h": 1400,
+      "bytes": 42824,
+      "sha256": "4d92f8676b9436c1e9b71c8ed0f45901eb4fa8421086bc2f3f6d84a08b4dd708"
+    }
+  },
+  "0.855": {
+    "space-themes": {
+      "w": 2000,
+      "h": 1618,
+      "bytes": 164190,
+      "sha256": "3ed7dce3c65ee44b99495f9ab0ef19ca7c5a3bf2768fc77e2d6521661e320189"
+    }
+  },
+  "0.856": {
+    "page-numbers-editor": {
+      "w": 1444,
+      "h": 1720,
+      "bytes": 109422,
+      "sha256": "a1ecdfc902ddbff3a1b4b6b7f35efc5288aed09893a68c48b1c4a1fc791b8301"
+    },
+    "page-numbers-settings": {
+      "w": 2000,
+      "h": 1618,
+      "bytes": 142898,
+      "sha256": "7dd5b3e2e931d325d640cdc9b28f4a7c819325ff37614ae0bc623422dded0acc"
+    }
+  },
+  "0.857": {
+    "graph-views-lock": {
+      "w": 2000,
+      "h": 1347,
+      "bytes": 135964,
+      "sha256": "bb85d10adbcc19045abb9e4aeac5a330be3fcc7e4001ff324929ad9c8b004dbc"
+    },
+    "places-panel": {
+      "w": 2000,
+      "h": 1347,
+      "bytes": 928190,
+      "sha256": "5fb4249b46eb89f8a6e73105ce113f3626c756634b47bf1cf4161e2196328385"
+    }
+  },
+  "0.858": {
+    "custom-icons": {
+      "w": 1088,
+      "h": 1288,
+      "bytes": 43188,
+      "sha256": "c90ee39bdcea73c5dc2e3499a9b980002ec3b2de9efcc34edbc0f9c0119f270c"
+    }
+  },
+  "0.860": {
+    "image-captions": {
+      "w": 1444,
+      "h": 872,
+      "bytes": 540662,
+      "sha256": "b1024ad6545cc214f06da4a7e55706d8dc46dbb0421027d4b158bb39fc5a1c0b"
+    }
+  },
+  "0.861": {
+    "inline-tags": {
+      "w": 1444,
+      "h": 954,
+      "bytes": 40104,
+      "sha256": "6386f7d6d6c5477f36ca326f2a591489082857b0a46357b030db567922effb4b"
+    }
+  },
+  "0.862": {
+    "home-showcase": {
+      "w": 2000,
+      "h": 1278,
+      "bytes": 140144,
+      "sha256": "a46814fa77830edd23dadab38e707e15ab64fbb4fe174b47626c78c13e9a84eb"
+    },
+    "item-list-widget": {
+      "w": 904,
+      "h": 1058,
+      "bytes": 18398,
+      "sha256": "33ed5b57bcfebb900210ea5424730b7b4ccfbda19165903b2ec0e76faa4368c3"
+    },
+    "widget-gallery": {
+      "w": 2000,
+      "h": 1440,
+      "bytes": 98888,
+      "sha256": "7b3cd872fdef942fe69a6d717a9b5391315e9bb937c5bb50f71f57a9fc2cd129"
+    }
+  },
+  "0.863": {
+    "theme-builder-icon": {
+      "w": 736,
+      "h": 1556,
+      "bytes": 57080,
+      "sha256": "867fb49b9028d528659b2afd90c732103751d2a8af3e6d4634102da150318b7d"
+    },
+    "theme-icons": {
+      "w": 2000,
+      "h": 1407,
+      "bytes": 252048,
+      "sha256": "e088bd8da1e15b316882b7129bdef36bdd48e5e065fb4ee45193b94a375e0717"
+    },
+    "themes-gallery": {
+      "w": 2000,
+      "h": 1012,
+      "bytes": 400754,
+      "sha256": "03f46afab51281df5bf3d2084b81ac5d50484c9eec0daf2d3894d3a23087b78a"
+    }
+  },
+  "0.864": {
+    "extension-popup": {
+      "w": 965,
+      "h": 1271,
+      "bytes": 37114,
+      "sha256": "460f40a148f1905e1a687ec10dd932e28bed9c92396ce6ec6220138a2c7c7454"
+    }
   }
 }

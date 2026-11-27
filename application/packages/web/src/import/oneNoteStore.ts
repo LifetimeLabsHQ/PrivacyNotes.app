@@ -116,16 +116,19 @@ export function readGuid(b: Uint8Array, at: number): string {
 }
 
 class Reader {
+  readonly start: number;
+
   constructor(
     readonly b: Uint8Array,
     public pos: number,
     readonly end: number = b.length,
   ) {
     if (pos < 0 || end > b.length || pos > end) throw corrupt('range');
+    this.start = pos;
   }
 
   need(n: number): void {
-    if (n < 0 || this.pos + n > this.end) throw corrupt('read past end');
+    if (n < 0 || this.pos < this.start || this.pos + n > this.end) throw corrupt('read past end');
   }
 
   left(): number {
@@ -215,18 +218,48 @@ const FRAGMENT_MAGIC_HI = 0xa4567ab1;
 const FRAGMENT_FOOTER_LO = 0x8233ba4b;
 const FRAGMENT_FOOTER_HI = 0x8bc215c3;
 
-/** Most fragments one list may chain, and most nodes one file may hold; both far above a real file. */
+/** Per-store bounds far above a real file (`tests/oneNoteStore.test.ts`). */
 const FRAGMENT_LIMIT = 1_000_000;
 const NODE_LIMIT = 20_000_000;
+const GID_LIMIT = 1_000_000;
+const PROP_LIMIT = 1_000_000;
 
 class Store {
   readonly b: Uint8Array;
   /** Committed FileNode count by FileNodeListID, from the transaction log. */
   private readonly committed = new Map<number, number>();
+  private readonly propSets = new WeakMap<GidTable, Map<string, PropSet>>();
+  private fragmentsRead = 0;
   private nodesRead = 0;
+  private gidOps = 0;
+  private propsRead = 0;
 
   constructor(bytes: Uint8Array) {
     this.b = bytes;
+  }
+
+  chargeGid(n: number): void {
+    this.gidOps += n;
+    if (this.gidOps > GID_LIMIT) throw corrupt('too many global ids');
+  }
+
+  chargeProps(n: number): void {
+    this.propsRead += n;
+    if (this.propsRead > PROP_LIMIT) throw corrupt('too many properties');
+  }
+
+  readPropSet(ref: ChunkRef, table: GidTable): PropSet {
+    const key = `${ref.stp}:${ref.cb}`;
+    let byChunk = this.propSets.get(table);
+    const hit = byChunk?.get(key);
+    if (hit) return hit;
+    const parsed = readPropSetObject(this, ref, table);
+    if (!byChunk) {
+      byChunk = new Map();
+      this.propSets.set(table, byChunk);
+    }
+    byChunk.set(key, parsed);
+    return parsed;
   }
 
   /** FileChunkReference64x32 read raw, so fcrNil (all stp bits set) is recognized before the 2^53 check. */
@@ -246,6 +279,7 @@ class Store {
     const seen = new Set<number>();
     while (done < transactions) {
       if (ref.nil || seen.has(ref.stp)) throw corrupt('transaction log ends early');
+      if (ref.cb < 12) throw corrupt('transaction log too small');
       seen.add(ref.stp);
       if (seen.size > FRAGMENT_LIMIT) throw corrupt('transaction log too long');
       const r = new Reader(this.b, ref.stp, ref.stp + ref.cb);
@@ -320,7 +354,9 @@ class Store {
     let limit = Infinity;
     const seen = new Set<number>();
     for (;;) {
-      if (seen.has(ref.stp) || seen.size > FRAGMENT_LIMIT) throw corrupt('fragment loop');
+      if (seen.has(ref.stp) || seen.size > FRAGMENT_LIMIT || ++this.fragmentsRead > FRAGMENT_LIMIT) {
+        throw corrupt('fragment loop');
+      }
       seen.add(ref.stp);
       if (ref.cb < 16 + 20) throw corrupt('fragment too small');
       const r = new Reader(this.b, ref.stp, ref.stp + ref.cb);
@@ -397,6 +433,7 @@ function resolveCompact(cid: number, table: GidTable): ExGuid | null {
 
 const ROLE_DEFAULT = 1;
 const DEFAULT_CONTEXT = `${NIL_GUID}:0`;
+const EMPTY_GID_TABLE: GidTable = new Map();
 
 /** JCID bits ([MS-ONESTORE] 2.6.14). */
 const JCID_IS_PROPERTY_SET = 0x20000;
@@ -413,7 +450,7 @@ function readSpace(store: Store, gosid: ExGuid, listRef: ChunkRef): ObjectSpace 
   const labels = new Map<string, string>();
   const nodes = store.readList(revListRef);
   let current: Revision | null = null;
-  let table: GidTable = new Map();
+  let table: GidTable = EMPTY_GID_TABLE;
   let pendingTable: GidTable | null = null;
 
   const declare = (decl: Declaration): void => {
@@ -439,12 +476,13 @@ function readSpace(store: Store, gosid: ExGuid, listRef: ChunkRef): ObjectSpace 
           rid: exKey(rid),
           dependent: depKey,
           encrypted: odcs !== 0 || (parent?.encrypted ?? false),
-          table: new Map(parent?.table ?? []),
+          table: parent?.table ?? EMPTY_GID_TABLE,
           decls: new Map(),
           roots: new Map(),
           compactRoots: [],
         };
         table = current.table;
+        pendingTable = null;
         revisions.set(current.rid, current);
         labels.set(`${ctx}|${role}`, current.rid);
         break;
@@ -459,7 +497,10 @@ function readSpace(store: Store, gosid: ExGuid, listRef: ChunkRef): ObjectSpace 
       case 0x024: {
         const index = r.u32();
         const guid = r.guid();
-        pendingTable?.set(index, guid);
+        if (pendingTable) {
+          store.chargeGid(1);
+          pendingTable.set(index, guid);
+        }
         break;
       }
       case 0x025: {
@@ -468,7 +509,10 @@ function readSpace(store: Store, gosid: ExGuid, listRef: ChunkRef): ObjectSpace 
         const to = r.u32();
         const dep = current?.dependent ? revisions.get(current.dependent) : undefined;
         const g = dep?.table.get(from);
-        if (g !== undefined) pendingTable?.set(to, g);
+        if (g !== undefined && pendingTable) {
+          store.chargeGid(1);
+          pendingTable.set(to, g);
+        }
         break;
       }
       case 0x026: {
@@ -477,9 +521,20 @@ function readSpace(store: Store, gosid: ExGuid, listRef: ChunkRef): ObjectSpace 
         const to = r.u32();
         if (count > 0xffffff) throw corrupt('table range');
         const dep = current?.dependent ? revisions.get(current.dependent) : undefined;
-        for (let k = 0; k < count; k++) {
-          const g = dep?.table.get(from + k);
-          if (g !== undefined) pendingTable?.set(to + k, g);
+        if (dep && pendingTable && count > 0) {
+          if (dep.table.size < count) {
+            store.chargeGid(dep.table.size);
+            const end = from + count;
+            for (const [idx, g] of dep.table) {
+              if (idx >= from && idx < end) pendingTable.set(to + (idx - from), g);
+            }
+          } else {
+            store.chargeGid(count);
+            for (let k = 0; k < count; k++) {
+              const g = dep.table.get(from + k);
+              if (g !== undefined) pendingTable.set(to + k, g);
+            }
+          }
         }
         break;
       }
@@ -539,6 +594,7 @@ function readSpace(store: Store, gosid: ExGuid, listRef: ChunkRef): ObjectSpace 
           }
         }
         current = null;
+        pendingTable = null;
         break;
       default:
         break;
@@ -573,7 +629,7 @@ function readSpace(store: Store, gosid: ExGuid, listRef: ChunkRef): ObjectSpace 
     if (decl.file) {
       space.objects.set(key, { id: decl.id, jcid: decl.jcid, props: null, file: decl.file });
     } else if (decl.blob && !decl.blob.nil && decl.jcid & JCID_IS_PROPERTY_SET) {
-      space.objects.set(key, { id: decl.id, jcid: decl.jcid, props: readPropSetObject(store.b, decl.blob, decl.table) });
+      space.objects.set(key, { id: decl.id, jcid: decl.jcid, props: store.readPropSet(decl.blob, decl.table) });
     } else {
       space.objects.set(key, { id: decl.id, jcid: decl.jcid, props: new Map() });
     }
@@ -583,7 +639,7 @@ function readSpace(store: Store, gosid: ExGuid, listRef: ChunkRef): ObjectSpace 
 
 function readObjectGroup(store: Store, ref: ChunkRef, declare: (d: Declaration) => void): void {
   const nodes = store.readList(ref);
-  let table: GidTable = new Map();
+  let table: GidTable = EMPTY_GID_TABLE;
   let pending: GidTable | null = null;
   for (const node of nodes) {
     const r = node.r;
@@ -595,7 +651,10 @@ function readObjectGroup(store: Store, ref: ChunkRef, declare: (d: Declaration) 
       case 0x024: {
         const index = r.u32();
         const guid = r.guid();
-        pending?.set(index, guid);
+        if (pending) {
+          store.chargeGid(1);
+          pending.set(index, guid);
+        }
         break;
       }
       case 0x028:
@@ -639,6 +698,7 @@ function readObjectGroup(store: Store, ref: ChunkRef, declare: (d: Declaration) 
 const PROP_SET_DEPTH_LIMIT = 32;
 
 interface Streams {
+  store: Store;
   oids: number[];
   osids: number[];
   ctxs: number[];
@@ -648,28 +708,29 @@ interface Streams {
   table: GidTable;
 }
 
-function readIdStream(r: Reader): { ids: number[]; extended: boolean; osidAbsent: boolean } {
+function readIdStream(r: Reader, store: Store): { ids: number[]; extended: boolean; osidAbsent: boolean } {
   const h = r.u32();
   const count = h & 0xffffff;
   const extended = ((h >>> 30) & 1) === 1;
   const osidAbsent = ((h >>> 31) & 1) === 1;
   if (count * 4 > r.left()) throw corrupt('id stream past end');
+  store.chargeProps(count);
   const ids: number[] = [];
   for (let i = 0; i < count; i++) ids.push(r.u32());
   return { ids, extended, osidAbsent };
 }
 
-function readPropSetObject(b: Uint8Array, ref: ChunkRef, table: GidTable): PropSet {
-  const r = new Reader(b, ref.stp, ref.stp + ref.cb);
-  const oids = readIdStream(r);
+function readPropSetObject(store: Store, ref: ChunkRef, table: GidTable): PropSet {
+  const r = new Reader(store.b, ref.stp, ref.stp + ref.cb);
+  const oids = readIdStream(r, store);
   let osids: number[] = [];
   let ctxs: number[] = [];
   if (!oids.osidAbsent) {
-    const s = readIdStream(r);
+    const s = readIdStream(r, store);
     osids = s.ids;
-    if (s.extended) ctxs = readIdStream(r).ids;
+    if (s.extended) ctxs = readIdStream(r, store).ids;
   }
-  const streams: Streams = { oids: oids.ids, osids, ctxs, oi: 0, si: 0, ci: 0, table };
+  const streams: Streams = { store, oids: oids.ids, osids, ctxs, oi: 0, si: 0, ci: 0, table };
   return readPropSet(r, streams, 0);
 }
 
@@ -683,6 +744,8 @@ function takeIds(list: number[], at: number, count: number, table: GidTable): (E
 function readPropSet(r: Reader, s: Streams, depth: number): PropSet {
   if (depth > PROP_SET_DEPTH_LIMIT) throw corrupt('property sets nested too deep');
   const count = r.u16();
+  if (count * 4 > r.left()) throw corrupt('property set past end');
+  s.store.chargeProps(1 + count);
   const prids: number[] = [];
   for (let i = 0; i < count; i++) prids.push(r.u32());
   const set: PropSet = new Map();

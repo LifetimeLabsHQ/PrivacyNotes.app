@@ -17,7 +17,7 @@ import {
   isValidPhrase,
 } from '@notes/shared';
 import type { BackupPayload, SitePasskey } from '@notes/shared';
-import i18n from './i18n';
+import i18n, { activeLocale } from './i18n';
 import { trackerRows, trackerHeading } from './trackerExport';
 import { loadLocalSettings } from './userSettings';
 import { openWithRing } from './keyRing';
@@ -36,10 +36,10 @@ import type { AttachmentStore as BlobAttachmentStore } from './attachmentStore';
  *  no session to download with). */
 type ImageStore = Pick<BlobImageStore, 'getImage'>;
 type AttachmentStore = Pick<BlobAttachmentStore, 'getAttachment'>;
-import { attachmentLinks, unescapeMarkdownText } from './fileNames';
+import { attachmentLinks, cleanMimeType, unescapeMarkdownText } from './fileNames';
 import { FILE_PICTURE, markdownLinks, replaceMatches } from './linkScan';
 import { extractImageIds } from './imageProcessing';
-import { renderMarkdown, renderNoteBody, prepareRender, inlineSameOriginImages, inlineRenderedFavicons } from './markdownRender';
+import { keepBlankLines, renderMarkdown, renderNoteBody, prepareRender, inlineSameOriginImages, inlineRenderedFavicons } from './markdownRender';
 import { parseLoginBody } from './LoginForm';
 import { isPublicField, loginExtrasOf } from './loginExtras';
 import { parseCardBody, detectCardNetwork } from './CardForm';
@@ -50,15 +50,18 @@ import type { VaultContent } from './vaultFields';
 import { ancestorIds, folderNamePath, type FolderDef } from './folders';
 import type { ItemStyles } from './itemStyles';
 import type { CustomThemes } from './customThemes';
+import type { CustomIcons } from './customIcons';
 import type { CustomTrackerTemplate, FactorDef, MedicationTemplate } from './trackerTypes';
 import { linkExportMarkdown } from './linkBody';
 import { slugify, windowsSafeFileName, zipEntryStems } from './exportNames';
 import { parseScene, toExcalidrawFile } from './drawing/scene';
-import { lineHeightCss, paragraphGapCss, readLineSpacing, readNestedNumbers } from './theme';
+import { lineHeightCss, NOTE_FONTS, noteFontStack, paragraphGapCss, readCheckedTaskStyle, readLineSpacing, readNestedNumbers, type NoteFont } from './theme';
 import { isSameOriginPath } from './sameOriginPath';
 import { IMAGE_REF_RE } from './mediaRefs';
 import { contactDisplayName, contactFullName, contactInitialsFor, formatAddressLines, formatContactDate, parseContactBody, telHref, type Contact } from './contactBody';
 import { escapeHtml } from './escapeHtml';
+import { pageNumbersPrintCss, readPageNumbers } from './pageNumbers';
+import { paginateDocumentForPrint, supportsPageMarginBoxes } from './printPaginate';
 
 /** Export helpers. All exports are generated client-side as Blob downloads. */
 
@@ -200,8 +203,13 @@ function replaceWithDataUris(
  * every export that resolves `pn:img/` refs has to resolve these too. The alt
  * text excludes newlines, like the attachment link. `uuid` is the blob's id.
  */
-function filePictures(body: string): { index: number; end: number; alt: string; uuid: string }[] {
-  return markdownLinks(body, FILE_PICTURE).map((p) => ({ ...p, alt: p.text, uuid: p.target.slice('pn:file/'.length) }));
+function filePictures(body: string): { index: number; end: number; alt: string; uuid: string; rawTitle: string }[] {
+  return markdownLinks(body, FILE_PICTURE).map((p) => ({
+    ...p,
+    alt: p.text,
+    uuid: p.target.slice('pn:file/'.length),
+    rawTitle: p.rawTitle ?? '',
+  }));
 }
 
 /** Resolve all picture references in a body to inline data URIs: `pn:img/`
@@ -239,12 +247,13 @@ async function resolveFilePictures(
       missing,
     );
     if (!att) continue;
-    const mime = att.meta.mime.startsWith('image/') ? att.meta.mime : sniffImageMime(att.data);
+    const validMime = cleanMimeType(att.meta.mime);
+    const mime = validMime.startsWith('image/') ? validMime : sniffImageMime(att.data);
     uris.set(uuid, `data:${mime};base64,${bytesToBase64(att.data)}`);
   }
-  return replaceMatches(body, filePictures(body), ({ alt, uuid }) => {
+  return replaceMatches(body, filePictures(body), ({ alt, uuid, rawTitle }) => {
     const uri = uris.get(uuid);
-    return uri ? `![${alt}](${uri})` : null;
+    return uri ? `![${alt}](${uri}${rawTitle})` : null;
   });
 }
 
@@ -381,7 +390,7 @@ export interface BackupManifest {
   /** The looks of folders, tags and notes, the custom themes and the factor
    *  names, the settings the notes alone cannot carry. Written only when there
    *  is something to carry; the restore validates each. */
-  settings?: { itemStyles?: unknown; customThemes?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown };
+  settings?: { itemStyles?: unknown; customThemes?: unknown; customIcons?: unknown; themeIcons?: unknown; factors?: unknown; customHabits?: unknown; medications?: unknown; customTrackers?: unknown; favoriteTags?: unknown; calendarFeeds?: unknown; dashboard?: unknown; agentFolder?: unknown; trackerSetup?: unknown };
 }
 
 /**
@@ -404,9 +413,9 @@ function rewriteBodyForExport(
   });
   // Pictures placed from Files point at the upload's file in the zip, and
   // the restore maps that path back (import/privacynotes.ts).
-  result = replaceMatches(result, filePictures(result), ({ alt, uuid }) => {
+  result = replaceMatches(result, filePictures(result), ({ alt, uuid, rawTitle }) => {
     const info = attachmentMap.get(uuid);
-    return info ? `![${alt}](${mdLinkTarget(up + info.path)})` : null;
+    return info ? `![${alt}](${mdLinkTarget(up + info.path)}${rawTitle})` : null;
   });
   // Rewrite attachments: [name|size|mime](pn:file/<uuid>) → [name](<folder/original name.ext>)
   return replaceMatches(result, attachmentLinks(result), (link) => {
@@ -600,8 +609,9 @@ async function buildFullBackupZip(
       // under the name they gave it. Size and mime still come from the
       // header, because those describe the bytes rather than the label.
       const shownName = unescapeMarkdownText(allAttLinks.get(uuid)?.name || '') || att.meta.name;
-      const folder = attachmentFolder(att.meta.mime);
-      const ext = extensionFromName(shownName, att.meta.mime);
+      const attMime = cleanMimeType(att.meta.mime, 'application/octet-stream');
+      const folder = attachmentFolder(attMime);
+      const ext = extensionFromName(shownName, attMime);
       const filename = uniqueAttachmentName(shownName, ext, folder, takenAttPaths);
       const path = `${folder}/${filename}`;
       zip.file(path, att.data);
@@ -610,7 +620,7 @@ async function buildFullBackupZip(
         // Restoring rebuilds the link from this, so a stale name here
         // would undo the rename on the way back in.
         name: shownName,
-        mime: att.meta.mime,
+        mime: attMime,
         size: att.meta.size,
         folder,
         file: filename,
@@ -665,6 +675,8 @@ async function buildFullBackupZip(
   const carried = {
     ...(Object.keys(settings.itemStyles ?? {}).length > 0 ? { itemStyles: settings.itemStyles } : {}),
     ...(Object.keys(settings.customThemes ?? {}).length > 0 ? { customThemes: settings.customThemes } : {}),
+    ...(Object.keys(settings.customIcons ?? {}).length > 0 ? { customIcons: settings.customIcons } : {}),
+    ...(Object.keys(settings.themeIcons ?? {}).length > 0 ? { themeIcons: settings.themeIcons } : {}),
     ...((settings.factors ?? []).length > 0 ? { factors: settings.factors } : {}),
     ...((settings.customHabits ?? []).length > 0 ? { customHabits: settings.customHabits } : {}),
     // Medications and custom tracker definitions live in the settings only;
@@ -815,13 +827,14 @@ export async function exportAllJson(
   customThemes: CustomThemes = {},
   factors: FactorDef[] = [],
   customHabits: CustomHabitDef[] = [],
+  customIcons: CustomIcons = {},
 ): Promise<void> {
   // Same payload builder as the encrypted .pnbackup, folders included since
   // 2026-08-26. It used to pass none, which meant every note carried a
   // `folderId` pointing at a folder the file did not contain: a restore had
   // the membership and no tree to hang it on. The field is additive, so an
   // older reader ignores it.
-  const payload = buildBackupPayload(notes, folders, undefined, itemStyles, customThemes, factors, customHabits);
+  const payload = buildBackupPayload(notes, folders, undefined, itemStyles, customThemes, factors, customHabits, customIcons);
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: 'application/json',
   });
@@ -1002,17 +1015,19 @@ async function calendarFileForBackup(notes: LocalNote[]): Promise<string | null>
  *   works fully offline after download.
  */
 /** Render a vault item's fields as a table instead of its raw JSON body. */
-function renderVaultHtml(vault: VaultContent): string {
-  let html = '<table class="vault-fields">' +
-    vault.fields
-      .map(
-        (f) =>
-          `<tr><th>${escapeHtml(f.label)}</th><td${f.mono ? ' class="mono"' : ''}>${escapeHtml(f.value)}</td></tr>`,
-      )
-      .join('') +
-    '</table>';
+function renderVaultHtml(vault: VaultContent, locale?: string): string {
+  let html = vault.fields.length
+    ? '<table class="vault-fields">' +
+      vault.fields
+        .map(
+          (f) =>
+            `<tr><th>${escapeHtml(f.label)}</th><td${f.mono ? ' class="mono"' : ''}>${escapeHtml(f.value)}</td></tr>`,
+        )
+        .join('') +
+      '</table>'
+    : '';
   if (vault.notes) {
-    html += `<div class="vault-notes"><strong>${escapeHtml(vault.notesLabel)}</strong><p>${escapeHtml(vault.notes)}</p></div>`;
+    html += `<div class="vault-notes"><strong>${escapeHtml(vault.notesLabel)}</strong><div class="vault-notes-body">${renderMarkdown(keepBlankLines(vault.notes), locale)}</div></div>`;
   }
   // The files are named, not carried: the page has nowhere to put them.
   if (vault.files?.length) {
@@ -1029,7 +1044,7 @@ function renderVaultHtml(vault: VaultContent): string {
  * Numbers, emails and web addresses stay links, so the exported page dials
  * and mails like the app does.
  */
-function renderContactHtml(title: string, c: Contact): string {
+function renderContactHtml(title: string, c: Contact, renderLocale?: string): string {
   const t = (key: string, opts: Record<string, unknown> = {}) => i18n.t(`shell:contacts.${key}`, opts);
   const labelText = (raw: string) => (raw ? t(`labels.${raw}`, { defaultValue: raw }) : '');
   const row = (label: string, valueHtml: string) =>
@@ -1061,7 +1076,7 @@ function renderContactHtml(title: string, c: Contact): string {
     group(t('menuName'), nameRows),
   ].join('');
   if (c.notes.trim()) {
-    html += `<section class="contact-group"><h2 class="contact-group-title">${escapeHtml(t('itemNote'))}</h2><p class="contact-notes" dir="auto">${escapeHtml(c.notes)}</p></section>`;
+    html += `<section class="contact-group"><h2 class="contact-group-title">${escapeHtml(t('itemNote'))}</h2><div class="contact-notes" dir="auto">${renderMarkdown(keepBlankLines(c.notes), renderLocale)}</div></section>`;
   }
   // The owner's own sections, after the note as in the app. A print is an
   // export the owner asked for, so a hidden value is printed too.
@@ -1130,16 +1145,17 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
   const vault = vaultContent(note);
   const linkMd = linkExportMarkdown(note);
   const contact = note.type === 'contact' ? parseContactBody(note.body) : null;
+  const locale = activeLocale();
   const rendered = linkMd
-    ? renderMarkdown(linkMd)
+    ? renderMarkdown(linkMd, locale)
     : contact
-      ? renderContactHtml(note.title, contact)
+      ? renderContactHtml(note.title, contact, locale)
       : vault
-        ? renderVaultHtml(vault)
+        ? renderVaultHtml(vault, locale)
         // A drawing's body is its scene: the page carries the title alone.
         : note.type === 'drawing'
           ? ''
-          : renderMarkdown(note.body || '');
+          : renderMarkdown(note.body || '', locale);
   // A contact's header is the pane's hero: the tile beside the name, the job
   // and the company under it.
   const contactTile = contact ? contactTileHtml(note.title, contact) : '';
@@ -1170,6 +1186,7 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
     ? `\n      <div class="meta schedule">${escapeHtml(describeSchedule(schedule, i18n.getFixedT(null, 'shell')))}</div>`
     : '';
   const settings = loadLocalSettings();
+  const pageNumbers = readPageNumbers(settings.pageNumbers);
   const trackerSettings = settings.trackerSettings;
   const rows = trackerRows(note.trackers, trackerSettings, trackerSettings.customTrackers, settings.factors);
   const trackersHtml =
@@ -1185,8 +1202,23 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
     </section>`
       : '';
 
+  const root = typeof document !== 'undefined' ? document.documentElement : null;
+  const paintedFont = root?.dataset.noteFont;
+  const noteFont: NoteFont = paintedFont && (NOTE_FONTS as readonly string[]).includes(paintedFont) ? (paintedFont as NoteFont) : 'sans';
+  const paintedStack = (font: NoteFont): string => root?.style.getPropertyValue(`--pn-font-${font}`).trim() ?? '';
+  const customSans = paintedStack('sans');
+  const customSerif = paintedStack('serif');
+  const customMono = paintedStack('mono');
+  const customFont = root?.style.getPropertyValue('--pn-note-font-custom').trim();
+  const bodyFontCss = customFont || (noteFont === 'sans' ? 'var(--pn-sans)' : noteFontStack(noteFont, {}));
+  const customFontOverrides = [
+    customSans ? `  .content [style*="ui-sans-serif"] { font-family: ${customSans} !important; }\n` : '',
+    customSerif ? `  .content [style*="ui-serif"] { font-family: ${customSerif} !important; }\n` : '',
+    customMono ? `  .content [style*="ui-monospace"] { font-family: ${customMono} !important; }\n` : '',
+  ].join('');
+
   return `<!doctype html>
-<html lang="en">
+<html lang="${escapeHtml(locale)}">
 <head>
 <meta charset="utf-8" />
 <!-- This document leaves every policy the app runs under: the print view is
@@ -1200,26 +1232,31 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>${escapeHtml(title)}</title>
 <style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
   :root {
-    color-scheme: light;
-    /* The editor's own two stacks, so an exported note reads as the note
-       that was written. The body used to be Georgia while every other
-       element here was already sans, which is the mismatch that made the
-       export look like a different document from the editor rather than a
-       printed version of it. Both stacks are what the app computes
-       (Tailwind's defaults, no webfont anywhere) - change them together
-       with the app or the two drift apart again.
+    color-scheme: light only;
+    /* The editor's own stacks and light-theme tokens, so an exported or
+       printed note reads as the note that was written. The body font follows
+       the reader's Note font choice (sans, serif, mono, or custom device font).
        Spec: docs/internal/design-decisions.md (export typography) */
-    --pn-sans: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --pn-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --pn-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --pn-body-font: ${bodyFontCss};
+    --pn-text: #0a0a0a;
+    --pn-text-soft: #404040;
+    --pn-muted: #6a6a6a;
+    --pn-accent: #1e40af;
+    --pn-table-border: #e5e5e5;
   }
   html, body {
     margin: 0;
     padding: 0;
     background: #ffffff;
-    color: #111111;
-    font-family: var(--pn-sans);
-    font-size: 16px;
+    color: var(--pn-text-soft);
+    font-family: var(--pn-body-font);
+    font-size: 15px;
     line-height: ${lineHeightCss()};
     /* The app renders with class="antialiased" on its own body. Without
        the same two declarations the very same stack renders heavier here
@@ -1229,25 +1266,35 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+  sub, sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+  sub { bottom: -0.25em; }
+  sup { top: -0.5em; }
   .page {
     max-width: 720px;
     margin: 0 auto;
     padding: 48px 32px 64px;
   }
   header.note-head {
-    border-bottom: 1px solid #e5e5e5;
+    border-bottom: 1px solid var(--pn-table-border);
     padding-bottom: 16px;
     margin-bottom: 24px;
   }
   h1.note-title {
-    font-size: 2.4rem;
+    font-size: 2.2rem;
     line-height: 1.2;
     margin: 0 0 8px;
     font-weight: 700;
+    color: var(--pn-text);
+    unicode-bidi: plaintext;
   }
   .meta {
     font-size: 0.85rem;
-    color: #666;
+    color: var(--pn-muted);
     font-family: var(--pn-sans);
   }
   .tags {
@@ -1258,30 +1305,39 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
   .tag {
     display: inline-block;
     margin-right: 6px;
-    color: #555;
+    color: var(--pn-muted);
   }
   .content h1, .content h2, .content h3,
   .content h4, .content h5, .content h6 {
-    font-family: var(--pn-sans);
+    font-family: inherit;
     font-weight: 700;
-    line-height: 1.3;
-    margin-top: 1.6em;
-    margin-bottom: 0.4em;
-    color: #000;
+    color: var(--pn-text);
   }
-  /* The editor's heading ladder, same six ratios against body copy (the
-     editor anchors on --pn-editor-body, here body copy is the 16px root).
-     H4, H5 and H6 all read 1rem until v0.422.0, so three of the six levels
-     exported as the same size as each other AND as the paragraph under
-     them. The note title above sits a step clear of a body H1.
+  .content strong {
+    font-weight: 700;
+    color: var(--pn-text);
+  }
+  .content span[style*="color:"] strong,
+  .content span[style*="color:"] code {
+    color: inherit;
+  }
+  /* The editor's heading ladder, same six ratios against body copy so both
+     screen (15px) and print (11pt) keep the exact hierarchy.
      Spec: docs/internal/design-decisions.md (editor heading scale) */
-  .content h1 { font-size: 1.867rem; }
-  .content h2 { font-size: 1.667rem; }
-  .content h3 { font-size: 1.493rem; }
-  .content h4 { font-size: 1.333rem; }
-  .content h5 { font-size: 1.2rem; }
-  .content h6 { font-size: 1.067rem; }
-  .content {
+  .content h1 { font-size: 1.867em; line-height: 1.2; margin: 1.6em 0 0.5em; }
+  .content h2 { font-size: 1.667em; line-height: 1.25; margin: 1.4em 0 0.4em; }
+  .content h3 { font-size: 1.493em; line-height: 1.3; margin: 1.2em 0 0.3em; }
+  .content h4 { font-size: 1.333em; line-height: 1.35; margin: 1.1em 0 0.25em; }
+  .content h5 { font-size: 1.2em; line-height: 1.4; margin: 1.1em 0 0.25em; }
+  .content h6 { font-size: 1.067em; line-height: 1.4; margin: 1.1em 0 0.25em; }
+  .content h1 + *, .content h2 + *, .content h3 + *,
+  .content h4 + *, .content h5 + *, .content h6 + * {
+    margin-top: 0;
+  }
+  .content > :first-child {
+    margin-top: 0;
+  }
+${customFontOverrides}  .content {
     /* A pasted URL or an unbroken long word must wrap, not push the page
        sideways (or off the printable area). Inherited, so it covers
        paragraphs, list items, links and table cells alike. */
@@ -1314,23 +1370,103 @@ export function buildNoteHtmlDocument(note: LocalNote, folderPath: string[] = []
      (markdownRender.ts), so a Persian list indents and puts its bullets on
      the right, as in the editor (GitHub #725). */
   .content ul, .content ol {
-    margin: 0 0 1em;
+    margin: 0.5em 0;
     margin-inline-start: 1.5em;
     padding: 0;
   }
+  /* Keep solid round bullets at every nesting depth, matching the editor.
+     Task lists carry inline list-style:none, which overrides this rule. */
+  .content ul {
+    list-style-type: disc;
+  }
+  .content li > ul, .content li > ol {
+    margin-top: 0.2em;
+    margin-bottom: 0;
+  }
   .content li {
-    margin-bottom: 0.25em;
+    margin: 0.2em 0;
+  }
+  .content li::marker {
+    color: var(--pn-muted);
   }
 ${nestedNumbersCss()}  .content blockquote {
-    border-inline-start: 3px solid #ccc;
-    margin: 0 0 1em;
+    border-inline-start: 3px solid var(--pn-table-border);
+    margin: 0.85em 0;
     padding-block: 0.1em;
     padding-inline: 1em 0;
-    color: #444;
+    color: var(--pn-text);
     font-style: italic;
   }
   .content a {
-    color: #2060c0;
+    color: var(--pn-accent);
+    text-decoration: none;
+  }
+  .content a:hover {
+    text-decoration: underline;
+  }
+  /* Note-links keep the editor's distinct underlined accent look so they read
+     differently from web links. */
+  .content .pn-note-link {
+    color: var(--pn-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  /* Computed table formula value: subtle dotted underline matching editor. */
+  .content .pn-formula-value {
+    border-bottom: 1px dotted rgba(10, 10, 10, 0.35);
+  }
+  /* Checked task reminder pill follows the checked task style setting (#963). */
+${checkedTaskReminderCss()}  /* Location map card. */
+  .content .pn-map-card {
+    margin: 0.75em 0;
+  }
+  .content .pn-map-link {
+    color: var(--pn-accent);
+  }
+  .content .pn-map-link:hover {
+    text-decoration: none;
+    background: rgba(128, 128, 128, 0.12) !important;
+  }
+  /* Footnotes, matching the editor's quiet reference numbers and ruled footer. */
+  .content .footnote-ref a {
+    color: var(--pn-accent);
+    font-weight: 600;
+    text-decoration: none;
+    padding: 0 0.15em;
+  }
+  .content .footnotes {
+    margin-top: 2em;
+    padding-top: 0.75em;
+    border-top: 1px solid var(--pn-table-border);
+    font-size: 0.92em;
+    color: var(--pn-text-soft);
+  }
+  .content .footnotes hr {
+    display: none;
+  }
+  .content .footnotes ol {
+    margin: 0;
+    margin-inline-start: 1.5em;
+    padding: 0;
+  }
+  .content .footnotes li {
+    margin: 0.3em 0;
+  }
+  .content .footnotes li p {
+    margin: 0.2em 0;
+  }
+  .content .footnotes li p:first-child {
+    margin-top: 0;
+  }
+  .content .footnotes li p:last-child {
+    margin-bottom: 0;
+  }
+  .content .footnote-backref {
+    color: var(--pn-accent);
+    text-decoration: none;
+    margin-inline-start: 0.25em;
+  }
+  .content .footnote-backref:hover {
     text-decoration: underline;
   }
   /* Highlights. The document had no rule at all, so a plain ==highlight==
@@ -1363,10 +1499,12 @@ ${nestedNumbersCss()}  .content blockquote {
   .content .pn-spoiler:focus .pn-spoiler-text { filter: none; opacity: 1; }
   .content code {
     font-family: var(--pn-mono);
-    background: #f3f3f3;
-    padding: 0.1em 0.35em;
-    border-radius: 3px;
-    font-size: 0.92em;
+    background: rgba(10, 10, 10, 0.07);
+    color: var(--pn-text);
+    font-weight: 400;
+    padding: 0.12em 0.35em;
+    border-radius: 4px;
+    font-size: 0.875em;
   }
   /* Code blocks are a dark panel with the editor's own syntax palette -
      the editor's panel is dark in BOTH app themes, so the export matches
@@ -1377,13 +1515,53 @@ ${nestedNumbersCss()}  .content blockquote {
     border: none;
     padding: 12px 16px;
     overflow-x: auto;
-    border-radius: 6px;
-    margin: 0 0 1em;
+    border-radius: 8px;
+    margin: 0.85em 0;
+  }
+  .content pre[data-lang]::before {
+    content: attr(data-lang);
+    display: block;
+    font-family: var(--pn-sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #8b949e;
+    margin-bottom: 8px;
+  }
+  .content pre .code-title[data-lang]::after {
+    content: attr(data-lang);
+    font-family: var(--pn-sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #8b949e;
+    flex-shrink: 0;
   }
   .content pre code {
     background: transparent;
+    color: inherit;
     padding: 0;
-    font-size: 0.9em;
+    font-size: 0.875em;
+  }
+  /* Copy box: light rounded card in the note's own font, never the dark code panel. */
+  .content pre.pn-copybox {
+    background: rgba(10, 10, 10, 0.04);
+    color: var(--pn-text);
+    border: 1px solid rgba(10, 10, 10, 0.14);
+    border-radius: 10px;
+    padding: 0.6rem 0.9rem;
+    font-family: inherit;
+    font-size: 1em;
+    line-height: inherit;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    direction: inherit;
+    unicode-bidi: plaintext;
+  }
+  .content pre.pn-copybox code {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    direction: inherit;
+    unicode-bidi: inherit;
   }
   /* hljs token colors, mirroring the hand-picked palette in index.css
      (the .prose pre .hljs-* block) - change the two together. */
@@ -1400,7 +1578,7 @@ ${nestedNumbersCss()}  .content blockquote {
   .content pre .hljs-strong { font-weight: 700; }
   .content img {
     max-width: 100%;
-    border-radius: 4px;
+    border-radius: 8px;
     margin: 0.5em 0;
   }
   .content table {
@@ -1414,18 +1592,26 @@ ${nestedNumbersCss()}  .content blockquote {
     margin: 1em 0;
   }
   .content th, .content td {
-    border: 1px solid #d4d4d4;
+    border: 1px solid var(--pn-table-border);
     padding: 6px 10px;
     text-align: left;
+    vertical-align: top;
+  }
+  .content th > p, .content td > p {
+    margin: 0;
+  }
+  .content th > p + p, .content td > p + p {
+    margin-top: 0.375em;
   }
   .content th {
     font-weight: 600;
-    background: #f8f8f8;
+    color: var(--pn-text);
+    background: rgba(10, 10, 10, 0.05);
   }
   .content hr {
     border: none;
-    border-top: 1px solid #ddd;
-    margin: 2em 0;
+    border-top: 1px solid var(--pn-table-border);
+    margin: 1.75em 0;
   }
   /* Frame on the table box, inner lines on cell top/right edges only, and
      the .content prefix is required - see the note above this function. */
@@ -1467,15 +1653,17 @@ ${nestedNumbersCss()}  .content blockquote {
   .vault-notes {
     margin-top: 1em;
   }
-  .vault-notes strong {
+  .vault-notes > strong {
     display: block;
     margin-bottom: 4px;
     font-family: var(--pn-sans);
     font-size: 0.9em;
   }
-  .vault-notes p {
-    margin: 0;
-    white-space: pre-wrap;
+  .vault-notes-body > :first-child {
+    margin-top: 0;
+  }
+  .vault-notes-body > :last-child {
+    margin-bottom: 0;
   }
   /* A value keeps its own line breaks: a private key, a multi-line note. */
   .content .vault-fields td {
@@ -1550,13 +1738,42 @@ ${nestedNumbersCss()}  .content blockquote {
     margin: 0;
     padding-top: 0.3rem;
     border-top: 1px solid #eeece7;
-    white-space: pre-wrap;
+  }
+  .contact-notes > :first-child {
+    margin-top: 0;
+  }
+  .contact-notes > :last-child {
+    margin-bottom: 0;
   }
   summary.pn-callout-summary::-webkit-details-marker { display: none }
   summary.pn-callout-summary { list-style: none }
-  details.pn-callout:not([open]) > summary .pn-caret-down { display: none }
-  details.pn-callout:not([open]) > summary .pn-caret-right { display: inline !important }
+  details.pn-callout-typed > summary .pn-callout-caret { display: none }
+  details.pn-callout-typed > summary:hover .pn-callout-type-icon,
+  details.pn-callout-typed > summary:focus-visible .pn-callout-type-icon { display: none !important }
+  details.pn-callout-typed > summary:hover .pn-callout-caret,
+  details.pn-callout-typed > summary:focus-visible .pn-callout-caret { display: inline-flex !important }
+  details.pn-callout:not([open]) > summary .pn-caret-down { display: none !important }
+  details.pn-callout:not([open]) > summary .pn-caret-right { display: inline-block !important }
   details.pn-callout:dir(rtl) > summary .pn-caret-right { transform: scaleX(-1) }
+  .content .pn-callout-body > :first-child { margin-top: 0 }
+  .content .pn-callout-body > :last-child { margin-bottom: 0 }
+  /* Kanban cards: top-level task items in a column sit on framed white cards. */
+  .content .pn-callout-column .pn-kanban-col-body > ul {
+    margin: 0.45em 0 0 !important;
+    margin-inline-start: 0 !important;
+    padding: 0 !important;
+  }
+  .content .pn-callout-column .pn-kanban-col-body > ul > li {
+    margin: 0.4em 0 0 !important;
+    padding: 0.35em 0.45em !important;
+    border: 1px solid rgba(10, 10, 10, 0.1);
+    border-radius: 6px;
+    background: #ffffff;
+    font-size: 0.933em;
+  }
+  .content .pn-callout-column .pn-kanban-col-body > ul > li ul {
+    margin-inline-start: 0.4em;
+  }
   .content .pn-columns-col > :first-child { margin-top: 0 }
   .content .pn-columns-col > :last-child { margin-bottom: 0 }
   .content .pn-columns[data-border-style="divider"] > .pn-columns-col { position: relative }
@@ -1592,52 +1809,102 @@ ${nestedNumbersCss()}  .content blockquote {
       border-top: var(--pn-col-bw, 1px) var(--pn-col-bs, solid) var(--pn-col-bc, rgba(128,128,128,0.45));
     }
   }
+${pageNumbersPrintCss(pageNumbers)}
   @media print {
-    .content .pn-spoiler { background: none; }
-    .content .pn-spoiler-text { filter: none; opacity: 1; }
-    @page {
-      size: A4;
-      margin: 0;
+    /* Paper cannot be clicked, so spoilers print legible inside a subtle
+       dashed pill that still marks them as spoilers. */
+    .content .pn-spoiler {
+      background: rgba(10, 10, 10, 0.06) !important;
+      background-image: none !important;
+      border: 1px dashed rgba(10, 10, 10, 0.25);
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
+    .content .pn-spoiler-text { filter: none; opacity: 1; }
     html, body {
       background: #ffffff;
-      color: #000;
-      font-size: 12pt;
+      /* Slightly softer than screen #404040 and 10pt to match the editor's
+         perceived weight and line density in vector PDF output (where
+         -webkit-font-smoothing: antialiased does not thin stems). Exact color
+         adjustment on root inherits to every colored text span so print
+         engines never brighten mid-luminance palette colors under default
+         economy mode. */
+      color: #4a4a4a;
+      font-size: 10pt;
       margin: 0;
       padding: 0;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
-    .page {
-      max-width: none;
-      margin: 0;
-      padding: 20mm;
-      -webkit-box-decoration-break: clone;
-      box-decoration-break: clone;
+    .content {
+      /* 1px horizontal breathing room keeps border-collapse half-pixel right
+         borders and rounded right edges of callouts and copy boxes inside the
+         print clip rect across every engine. */
+      padding-inline: 1px;
     }
     .content a {
-      color: #000;
-      text-decoration: underline;
+      color: var(--pn-accent);
+      text-decoration: none;
+    }
+    .content .footnote-backref {
+      color: var(--pn-accent);
+      text-decoration: none;
     }
     .content code {
-      background: #f3f3f3 !important;
+      background: rgba(10, 10, 10, 0.07) !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
     /* The dark code panel and its token colors survive printing - print
-       engines drop backgrounds unless told not to, same as the callout and
-       highlight rules below. The inline-code chip above stays light. */
-    .content pre, .content pre code {
+       engines drop backgrounds unless told not to. Long lines wrap on paper
+       instead of clipping past the right margin. */
+    .content pre:not(.pn-copybox) {
       background: #262626 !important;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      overflow-x: visible;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    .content pre code {
+    .content pre:not(.pn-copybox) code {
+      background: transparent !important;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+    .content pre.pn-copybox {
+      background: rgba(10, 10, 10, 0.04) !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .content pre.pn-copybox code {
       background: transparent !important;
     }
-    /* Checkbox fill and check glyph are backgrounds too. */
-    .content input[type="checkbox"] {
+    /* Preserve every tinted surface when print engines default printBackground off. */
+    .content input[type="checkbox"],
+    .content mark,
+    .content th,
+    .content td[data-fill],
+    .content th[data-fill],
+    .content .vault-fields th,
+    .content .pn-columns,
+    .content .pn-columns-col,
+    .content .pn-callout,
+    .content .pn-callout-kanban,
+    .content .pn-callout-column,
+    .content .pn-column-count,
+    .content .pn-callout-column .pn-kanban-col-body > ul > li,
+    .content .pn-task-reminder,
+    .content .pn-attachment-chip,
+    .content .pn-map-link,
+    .content figure.doodle,
+    .trackers,
+    .contact-initials {
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
-    .content pre, .content blockquote, .content img,
-    .content ul, .content ol {
+    .content blockquote, .content img, .content figure,
+    .content li, .content .pn-columns, .content pre.pn-copybox,
+    .content .pn-map-card, .content .pn-callout-kanban, .content .pn-callout-column {
       break-inside: avoid;
     }
     /* A table kept whole moves to the next page when it does not fit and
@@ -1667,14 +1934,13 @@ ${nestedNumbersCss()}  .content blockquote {
     .vault-notes strong, .content .contact-group-title {
       break-after: avoid;
     }
-    details.pn-callout { break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    /* Print engines drop background colors unless asked not to, which is why
-       the callout rule above exists - and why a highlight printed as plain
-       text, its whole point gone, both before the palette shipped and after. */
-    .content mark { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    /* A colored table cell (#616), for the same reason. */
-    .content td[data-fill], .content th[data-fill] { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    details.pn-callout { break-inside: avoid; }
+    details.pn-callout-typed > summary .pn-callout-type-icon { display: inline-flex !important; }
+    details.pn-callout-typed > summary .pn-callout-caret { display: none !important; }
+    details.pn-callout:not([open])::details-content { display: block !important; content-visibility: visible !important; }
     details.pn-callout:not([open]) > .pn-callout-body { display: block !important; }
+    details.pn-callout:not(.pn-callout-typed):not([open]) > summary .pn-caret-down { display: inline-block !important; }
+    details.pn-callout:not(.pn-callout-typed):not([open]) > summary .pn-caret-right { display: none !important; }
     .content h1, .content h2, .content h3,
     .content h4, .content h5, .content h6 {
       break-after: avoid;
@@ -1743,7 +2009,7 @@ ${nestedNumbersCss()}  .content blockquote {
 <body>
   <div class="page">
     <header class="note-head${contactTile ? ' has-tile' : ''}">${contactTile}<div class="note-head-text">
-      <h1 class="note-title">${escapeHtml(title)}</h1>${scheduleHtml}${contactRole ? `
+      <h1 class="note-title" dir="auto">${escapeHtml(title)}</h1>${scheduleHtml}${contactRole ? `
       <div class="contact-role" dir="auto">${escapeHtml(contactRole)}</div>` : ''}${titleOnly ? '' : `
       <div class="meta">${escapeHtml(formatInstant(editedAtOf(note), 'dateTime'))}</div>
       ${folderHtml}
@@ -1859,7 +2125,16 @@ declare global {
  * False means "print it yourself": the web build, and the Windows and Linux
  * apps, whose webviews do implement `window.print()` and are left on that path.
  */
-async function printViaOs(html: string, jobName: string): Promise<boolean> {
+type NativePrintPageNumbers = {
+  placement: 'left' | 'center' | 'right';
+  format: 'of' | 'number';
+};
+
+async function printViaOs(
+  html: string,
+  jobName: string,
+  pageNumbers: NativePrintPageNumbers | null,
+): Promise<boolean> {
   if (detectPlatform() === 'web') return false;
   const android = window.__pnPrint;
   if (android) {
@@ -1868,7 +2143,7 @@ async function printViaOs(html: string, jobName: string): Promise<boolean> {
   }
   try {
     const { invoke } = await import('@tauri-apps/api/core');
-    await invoke('print_html', { html, jobName });
+    await invoke('print_html', { html, jobName, pageNumbers });
     return true;
   } catch {
     return false;
@@ -1899,7 +2174,12 @@ export async function printNote(
   html = await inlineRenderedFavicons(html);
 
   const jobName = note.title.trim() || 'Untitled';
-  if (await printViaOs(html, jobName)) return;
+  const pnSetting = readPageNumbers(loadLocalSettings().pageNumbers);
+  const nativePageNumbers: NativePrintPageNumbers | null =
+    pnSetting.print && pnSetting.placement !== 'off'
+      ? { placement: pnSetting.placement, format: pnSetting.format }
+      : null;
+  if (await printViaOs(html, jobName, nativePageNumbers)) return;
 
   // Use a hidden iframe so the print dialog targets only the note,
   // not the app itself.
@@ -1907,8 +2187,13 @@ export async function printNote(
   iframe.style.position = 'fixed';
   iframe.style.left = '-9999px';
   iframe.style.top = '-9999px';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
+  // Give the hidden print frame an A4 layout box rather than 0x0 so browsers
+  // compute table, callout and copy-box widths cleanly before pagination.
+  iframe.style.width = '794px';
+  iframe.style.height = '1123px';
+  iframe.style.border = '0';
+  iframe.style.opacity = '0';
+  iframe.style.pointerEvents = 'none';
   document.body.appendChild(iframe);
 
   const iframeDoc = iframe.contentDocument ?? iframe.contentWindow?.document;
@@ -1936,34 +2221,63 @@ export async function printNote(
     if (printed) return;
     printed = true;
     if (safetyTimer) clearTimeout(safetyTimer);
-    // Chromium (Chrome, Edge, the Windows app's WebView2) names the "Save as
-    // PDF" file after the TOP document's title, not the printed iframe's, so
-    // every PDF came out as "PrivacyNotes.pdf" (#720). Lend the note title to
-    // the app for the length of the print.
-    const appTitle = document.title;
-    document.title = jobName;
-    try {
-      iframe.contentWindow?.print();
-    } finally {
-      setTimeout(() => {
+    // Firefox, Safari, WebKitGTK and Chromium < 131 strip CSS @page margin
+    // boxes, so paginate the hidden print frame into A4 sheets with real
+    // footer counters before printing. Chrome 131+ / Edge / Brave / WebView2
+    // render @page { @bottom-* } natively and skip this path completely.
+    if (nativePageNumbers && !supportsPageMarginBoxes()) {
+      paginateDocumentForPrint(iframeDoc, pnSetting);
+    }
+    const triggerPrint = () => {
+      // Chromium (Chrome, Edge, the Windows app's WebView2) names the "Save as
+      // PDF" file after the TOP document's title, not the printed iframe's, so
+      // every PDF came out as "PrivacyNotes.pdf" (#720). Lend the note title to
+      // the app for the length of the print.
+      const appTitle = document.title;
+      document.title = jobName;
+      let cleaned = false;
+      const cleanup = () => {
+        if (cleaned) return;
+        cleaned = true;
         document.title = appTitle;
-        document.body.removeChild(iframe);
-      }, 1000);
+        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      };
+      iframe.contentWindow?.addEventListener('afterprint', cleanup, { once: true });
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } finally {
+        // Fallback cleanup when `afterprint` does not fire on an iframe; keep
+        // the iframe alive long enough for non-blocking print dialogs to capture.
+        setTimeout(cleanup, 60_000);
+      }
+    };
+    // Let one frame settle so injected `@page` / sheet rules paint before
+    // Chromium, Safari, or Firefox captures the iframe for Print Preview.
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => triggerPrint());
+    } else {
+      triggerPrint();
     }
   };
 
   const waitForImages = () => {
     const images = Array.from(iframeDoc!.querySelectorAll('img'));
-    const pending = images.filter((img) => !img.complete);
-    if (pending.length === 0) { doPrint(); return; }
-    let loaded = 0;
-    const check = () => { if (++loaded >= pending.length) doPrint(); };
-    for (const img of pending) {
-      img.addEventListener('load', check);
-      img.addEventListener('error', check);
-    }
+    if (images.length === 0) { doPrint(); return; }
+    // Wait for both load AND decode so Safari/WebKit has exact natural image
+    // heights before fallback pagination measures sheet heights.
+    const ready = images.map((img) => {
+      const loaded = img.complete
+        ? Promise.resolve()
+        : new Promise<void>((res) => {
+            img.addEventListener('load', () => res(), { once: true });
+            img.addEventListener('error', () => res(), { once: true });
+          });
+      return loaded.then(() => (typeof img.decode === 'function' ? img.decode().catch(() => {}) : undefined));
+    });
     // Safety timeout - don't block indefinitely on broken images.
     safetyTimer = setTimeout(doPrint, 3000);
+    void Promise.all(ready).then(doPrint);
   };
 
   if (iframeDoc.readyState === 'complete') {
@@ -2005,8 +2319,10 @@ export async function exportEncryptedBackup(
   factors: FactorDef[] = [],
   /** The person's own habit questions (userSettings.customHabits). */
   customHabits: CustomHabitDef[] = [],
+  /** User-uploaded custom icons (userSettings.customIcons). */
+  customIcons: CustomIcons = {},
 ): Promise<void> {
-  const out = buildEncryptedTextBackup(notes, encryptionKey, folders, itemStyles, customThemes, factors, customHabits);
+  const out = buildEncryptedTextBackup(notes, encryptionKey, folders, itemStyles, customThemes, factors, customHabits, customIcons);
 
   const stamp = toLocalIso(new Date());
   await downloadBlob(
@@ -2025,10 +2341,11 @@ export function buildEncryptedTextBackup(
   customThemes: CustomThemes = {},
   factors: FactorDef[] = [],
   customHabits: CustomHabitDef[] = [],
+  customIcons: CustomIcons = {},
 ): Uint8Array {
   const key = sealingKeyCopy(encryptionKey);
   try {
-    return encodeBackup(buildBackupPayload(notes, folders, undefined, itemStyles, customThemes, factors, customHabits), key);
+    return encodeBackup(buildBackupPayload(notes, folders, undefined, itemStyles, customThemes, factors, customHabits, customIcons), key);
   } finally {
     key.fill(0);
   }
@@ -2424,4 +2741,27 @@ function nestedNumbersCss(): string {
   .content ol[style*="persian"]:not(ul ol) > li::marker { content: counters(list-item, '.', persian) '. '; }
   .content ol ol:not(ul ol) { margin-inline-start: 2.5em; }
 `;
+}
+
+/**
+ * Checked task reminder pill styling for the export stylesheet (#963),
+ * matching the editor's `data-checked-task-style` rules.
+ */
+function checkedTaskReminderCss(): string {
+  const style = readCheckedTaskStyle();
+  if (style === 'none') return '';
+  const fade = style === 'fade-strike' || style === 'fade';
+  const strike = style === 'fade-strike' || style === 'strike';
+  const decls: string[] = [];
+  if (fade) {
+    decls.push(
+      '    border-color: var(--pn-table-border) !important;',
+      '    background: rgba(10, 10, 10, 0.04) !important;',
+      '    color: var(--pn-muted) !important;',
+    );
+  }
+  if (strike) {
+    decls.push('    text-decoration: line-through;');
+  }
+  return `  .content .pn-task-done .pn-task-reminder {\n${decls.join('\n')}\n  }\n`;
 }

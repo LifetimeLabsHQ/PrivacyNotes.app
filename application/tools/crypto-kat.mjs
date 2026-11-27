@@ -937,3 +937,33 @@ test('pairing code 2: frozen, both versions decode, and neither reads as the oth
   assert.equal(decodePairingCode(PAIR_CODE).signed, undefined, 'a version 1 code stays version 1');
   assert.equal(decodePairingCode(withKext.slice(0, -1) + (withKext.endsWith('0') ? '1' : '0')), null, 'the check holds');
 });
+
+// ------------------------------------------------------------------------------------
+// Password-wrapped sign-in passkeys (wrap_kind = 'pw-s1'): RFC 7914 scrypt primitive
+// and the frozen derivePasskeyScrypt vector checked against Node's native OpenSSL scrypt.
+// Spec: docs/contrib/passkeys.md (section 4.1)
+// ------------------------------------------------------------------------------------
+
+test('scrypt matches RFC 7914 section 12 vector (the primitive under pw-s1 passkey slots)', async () => {
+  const { scryptAsync } = await import('../packages/shared/node_modules/@noble/hashes/scrypt.js');
+  // RFC 7914 §12 test vector 2: P="password", S="NaCl", N=1024, r=8, p=16, dkLen=64
+  const out = await scryptAsync('password', 'NaCl', { N: 1024, r: 8, p: 16, dkLen: 64 });
+  assert.equal(
+    bytesToHex(out),
+    'fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640',
+  );
+});
+
+test('derivePasskeyScrypt: frozen pw-s1 vector, NFC normalization, and input bounds', async () => {
+  const kdf = await import('../packages/shared/dist/passkeyKdf.js');
+  const salt = new Uint8Array(32).fill(0x42);
+  const out = await kdf.derivePasskeyScrypt('correct horse battery staple', salt);
+  // Verified independently against node:crypto scryptSync (N=65536, r=8, p=2, dkLen=32).
+  assert.equal(bytesToHex(out), 'a5b1b9f7b3efa36eccc9475bfd59297362d6944c1faf91ae170a435fd1a761e0');
+  const nfc = await kdf.derivePasskeyScrypt('café passkey secret', salt);
+  const nfd = await kdf.derivePasskeyScrypt('cafe\u0301 passkey secret', salt);
+  assert.deepEqual(nfc, nfd, 'NFC normalization keeps composed and decomposed inputs identical');
+  await assert.rejects(() => kdf.derivePasskeyScrypt('', salt));
+  await assert.rejects(() => kdf.derivePasskeyScrypt('a'.repeat(1025), salt));
+  await assert.rejects(() => kdf.derivePasskeyScrypt('correct horse battery staple', new Uint8Array(16)));
+});

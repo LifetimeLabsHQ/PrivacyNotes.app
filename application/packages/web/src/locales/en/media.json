@@ -18,7 +18,13 @@
     "viewAria": "View image",
     "copyAria": "Copy image",
     "copyFailed": "Could not copy the picture.",
-    "picturesLeftOut": "Some pictures were not added. Copy a picture on its own to paste it."
+    "picturesLeftOut": "Some pictures were not added. Copy a picture on its own to paste it.",
+    "captionLabel": "Caption",
+    "captionAddAria": "Add caption",
+    "captionEditAria": "Edit caption",
+    "captionPlaceholder": "Add a caption...",
+    "captionClearAria": "Clear caption",
+    "captionHint": "Enter to save · Esc to cancel"
   },
   "attachment": {
     "fallbackName": "Attachment",

@@ -46,7 +46,7 @@ type Props = {
   /** The formatted preview beside the text, given the text as typed and,
    *  unless read only, `edit`, which replaces the text with an edit made in
    *  the preview. The bar spans both columns.
-   *  Spec: docs/internal/plans/heading-folds-and-source-preview.md (Part 2) */
+   *  Spec: docs/internal/specs/heading-folds-and-source-preview.md (Part 2) */
   preview?: (text: string, caretLine: number | null, edit: ((markdown: string) => void) | undefined) => ReactNode;
   /** Focuses the text, so Tab from the tag field lands in the body here too. */
   ref?: Ref<MarkdownSourceHandle>;

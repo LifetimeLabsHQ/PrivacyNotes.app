@@ -16,7 +16,7 @@ import { browser } from 'wxt/browser';
 import { base64ToBytes, bytesToBase64, decryptJsonAad, encryptJsonAad, parseSitePasskey } from '@notes/shared';
 import { COPY_VERSION, type CopyEntry, type LoginCopyEntry, type SitePasskey } from '@notes/shared/extension';
 
-const PENDING_KEY = 'pendingLogins';
+export const PENDING_KEY = 'pendingLogins';
 
 /** The five fields the extension edits (P31). */
 export type LoginEditSet = Partial<Record<'name' | 'url' | 'username' | 'password' | 'totp', string>>;

@@ -45,6 +45,18 @@ echo "  $DEST"
 GEN="$HERE/src-tauri/gen/apple"
 cp "$HERE/src-tauri/PrivacyInfo.xcprivacy" "$GEN/PrivacyInfo.xcprivacy"
 SPEC_CHANGED=0
+
+# Backup exclusion for Library/WebKit and the app group's ShareInbox. A fresh
+# `tauri ios init` wipes privacynotes_iOS/, so keep the canonical source beside
+# this script and copy it back before xcodegen scans the target folder.
+# Spec: docs/internal/specs/share-into-app.md
+mkdir -p "$GEN/privacynotes_iOS"
+if [ ! -f "$GEN/privacynotes_iOS/BackupExclusion.m" ] || \
+   { [ -f "$GEN/privacynotes.xcodeproj/project.pbxproj" ] && ! grep -q "BackupExclusion.m" "$GEN/privacynotes.xcodeproj/project.pbxproj"; }; then
+  SPEC_CHANGED=1
+fi
+cp "$HERE/scripts/ios-BackupExclusion.m" "$GEN/privacynotes_iOS/BackupExclusion.m"
+echo "Restored BackupExclusion.m in $GEN/privacynotes_iOS."
 if ! grep -q "PrivacyInfo.xcprivacy" "$GEN/project.yml"; then
   python3 - "$GEN/project.yml" <<'PYEOF'
 import sys

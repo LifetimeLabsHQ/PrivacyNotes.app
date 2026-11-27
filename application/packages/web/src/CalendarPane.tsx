@@ -81,7 +81,7 @@ function InkBox({ entry, className, style, children }: { entry: DayEntry; classN
 
 /** The item's own icon, or its type's, in the item's own color when it has
  *  one; a globe for an event of a subscribed calendar (#619). */
-function EntryGlyph({ entry, size = 12 }: { entry: DayEntry; size?: number }) {
+function EntryGlyph({ entry, size = 14 }: { entry: DayEntry; size?: number }) {
   const { iconPaths, icon: style } = useEntryLook(entry);
   const { Icon } = typeGlyph(entry.kind);
   const Glyph = entry.feed ? Globe : entry.kind === 'contact' ? Gift : Icon;
@@ -192,7 +192,7 @@ function Bars({ days, index, hidden, onOpen, onMenu, top, weekCol, passThrough =
                 aria-label={[title, b.entry.feed].filter(Boolean).join(', ')}
                 className="flex-1 min-w-0 h-full flex items-center gap-1 px-1.5 text-meta font-semibold text-pn text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent rounded"
               >
-                <span data-slot="icon" className="inline-flex shrink-0"><EntryGlyph entry={b.entry} size={11} /></span>
+                <span data-slot="icon" className="inline-flex shrink-0"><EntryGlyph entry={b.entry} /></span>
                 <span data-slot="title" dir="auto" className="min-w-0 truncate">{title}</span>
                 {b.entry.repeating && <RepeatGlyph entry={b.entry} />}
                 {b.entry.space === 'work' && <SPACE_ICONS.work size={10} aria-hidden="true" className="shrink-0 ms-auto text-pn-muted" />}
@@ -649,7 +649,7 @@ function TimedCard({ block, day, onOpen, onMenu }: { block: TimedBlock; day: str
       className={`pn-timed-card w-full h-full overflow-hidden rounded-md border-s-[3px] border-current bg-current/15 px-1.5 py-0.5 text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${e.repeating ? 'border-dashed pn-repeat' : ''} ${dayKindColor(e.kind)}`}
     >
       <span className="flex items-center gap-1 text-meta font-semibold text-pn">
-        <span data-slot="icon" className="inline-flex shrink-0"><EntryGlyph entry={e} size={11} /></span>
+        <span data-slot="icon" className="inline-flex shrink-0"><EntryGlyph entry={e} /></span>
         <span dir="auto" className="min-w-0 truncate">{title}</span>
         {e.alerted && <BellSimple size={10} aria-hidden="true" className="shrink-0 text-pn-muted" />}
         {e.repeating && <RepeatGlyph entry={e} />}

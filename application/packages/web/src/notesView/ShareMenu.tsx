@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { LocalNote } from '../db';
 import { BracketsSquare, Export, EXPORT_GLYPHS, LinkSimple } from '../icons';
 import { shortcutNoun } from '../noteShortcut';
+import type { PageNumbersSetting } from '../pageNumbers';
 import { isUuid } from '../uuid';
 import { HoverLabel, Popover } from '../ui';
 
@@ -20,6 +21,8 @@ export function ShareMenu({
   exportDrawing,
   onCopyShortcut,
   onCopyNoteLink,
+  pageNumbers,
+  onCyclePageNumbers,
 }: {
   open: boolean;
   onClose: () => void;
@@ -43,6 +46,10 @@ export function ShareMenu({
   /** Copy the note-link to this item, for a link inside the notes; null
    *  when it has no name a note-link can carry. */
   onCopyNoteLink: ((n: LocalNote) => void) | null;
+  /** Synced page-number setting for print and HTML export (#944). */
+  pageNumbers?: PageNumbersSetting;
+  /** Cycles placement directly from the share menu without leaving the note. */
+  onCyclePageNumbers?: () => void;
 }) {
   const { t } = useTranslation('notes');
   const anchorRef = useRef<HTMLDivElement | null>(null);
@@ -253,6 +260,26 @@ export function ShareMenu({
                   </span>
                 </span>
               </button>
+              {pageNumbers && onCyclePageNumbers && (
+                <div className="mt-1 border-t border-divider px-3 py-2 flex items-center justify-between gap-2">
+                  <span className="text-small text-pn-muted">{t('settings:appearance.pageNumbersTitle')}</span>
+                  <button
+                    type="button"
+                    onClick={onCyclePageNumbers}
+                    className="text-small font-medium text-accent hover:underline transition"
+                  >
+                    {t(
+                      pageNumbers.placement === 'off' || !pageNumbers.print
+                        ? 'settings:appearance.noteColorsOff'
+                        : pageNumbers.placement === 'left'
+                          ? 'settings:appearance.pageNumbersLeft'
+                          : pageNumbers.placement === 'center'
+                            ? 'settings:appearance.pageNumbersCenter'
+                            : 'settings:appearance.pageNumbersRight',
+                    )}
+                  </button>
+                </div>
+              )}
               </>
               )}
       </Popover>

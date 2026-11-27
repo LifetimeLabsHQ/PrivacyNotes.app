@@ -207,7 +207,7 @@
     "color": "Kleur",
     "colorNone": "Geen kleur",
     "colorUseDefault": "Standaard gebruiken",
-    "icon": "Iconen en logo’s",
+    "icon": "Iconen / logo’s / emoji’s",
     "colorFromFolder": "Uit map: {{name}}",
     "colorFromTag": "Uit tag: #{{name}}",
     "colorOwnHint": "Een kleur die je hier kiest, vult de achtergrond van deze notitie. <setting>Map- en tagkleuren</setting> veranderen die niet.",
@@ -365,6 +365,7 @@
   },
   "demoBanner": {
     "title": "Probeer het zonder risico",
+    "shortTitle": "Demo",
     "description": "Hier wordt niets opgeslagen. Neem je eigen versleutelde notitieboek, gratis."
   },
   "markdown": {
@@ -627,6 +628,10 @@
     "tooLarge": "Te groot. Maximaal {{limit}} MB per bestand.",
     "titlePlaceholder": "Titel (optioneel)",
     "notePlaceholder": "Voeg een notitie toe...",
+    "taskPlaceholder": "Taak...",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "Wordt toegevoegd aan de dagboeknotitie van vandaag.",
+    "clipFallbackToast": "De pagina kon niet worden geclipt. In plaats daarvan opgeslagen als bladwijzer.",
     "photoCount": "{{count}} foto's"
   },
   "shortcut": {
@@ -958,7 +963,8 @@
     "label": "Snel toevoegen"
   },
   "offline": {
-    "notLoaded": "Je bent offline en dit deel van de app is nog niet geladen. Probeer het opnieuw zodra je weer online bent."
+    "notLoaded": "Je bent offline en dit deel van de app is nog niet geladen. Probeer het opnieuw zodra je weer online bent.",
+    "chunkBlocked": "Kon deze weergave niet laden. Laad de pagina opnieuw, of controleer je contentblocker."
   },
   "checkIn": {
     "prompt": "Hoe gaat het vandaag?",
@@ -1136,6 +1142,7 @@
     "removed": "Verwijderd van Home",
     "showOnHome": "Tonen op Home",
     "removeFromHome": "Verwijderen van Home",
+    "openTarget": "{{target}} openen",
     "resize": "Formaat van {{name}} wijzigen",
     "narrower": "Smaller",
     "taller": "Hoger",
@@ -1143,31 +1150,77 @@
     "moveEarlier": "Naar voren",
     "moveLater": "Naar achteren",
     "chooseNote": "Kies een notitie",
+    "chooseNotes": "Kies notities",
     "chooseTag": "Kies een tag",
+    "chooseTags": "Kies tags",
     "chooseFolder": "Kies een map",
+    "chooseFolders": "Kies mappen",
     "chooseTracker": "Kies een tracker",
+    "chooseCounter": "Kies een teller",
+    "chooseCounters": "Kies tellers",
+    "chooseTypes": "Kies itemtypen",
     "choose": "Kiezen",
     "gone": "Niet meer hier",
     "otherSpace": "In de andere ruimte",
     "proLocked": "Onderdeel van Pro",
     "noneToChoose": "Nog niets om te kiezen",
+    "catalogSearch": "Widgets zoeken",
+    "catalogFilter": "Widgets filteren",
+    "allWidgets": "Alle widgets",
+    "onHomeLabel": "Op Home",
+    "onHomeCount": "Op Home ({{count}})",
     "headerEvents_one": "{{formatted}} afspraak vandaag",
     "headerEvents_other": "{{formatted}} afspraken vandaag",
+    "headerOverdue_other": "{{formatted}} te laat",
+    "headerOverdue_one": "{{formatted}} te laat",
     "headerTasks_one": "{{formatted}} open taak",
     "headerTasks_other": "{{formatted}} open taken",
+    "headerDosesLeft_other": "Nog {{formatted}} doses",
+    "headerDosesLeft_one": "Nog {{formatted}} dosis",
     "startToday": "Begin aan de dagboeknotitie van vandaag",
+    "setupMedication": "Medicatie instellen",
+    "setupCounter": "Een teller maken",
+    "counterIncrease": "Eén optellen bij {{name}}",
+    "counterDecrease": "Eén aftrekken van {{name}}",
+    "storageSummary": "{{notes}} notities · {{files}} bestanden",
+    "graphSummary": "{{linked}} gelinkt · {{orphans}} niet gelinkt",
+    "placesSummary_other": "{{count}} items met een plaats",
+    "quickCapture": {
+      "placeholderJournal": "Toevoegen aan het dagboek van vandaag...",
+      "placeholderTask": "Een taak toevoegen...",
+      "placeholderNote": "Schrijf een snelle notitie...",
+      "destination": "Opslaan in",
+      "voice": "Spraaknotitie opnemen",
+      "voiceNoteTitle": "Spraaknotitie",
+      "recording": "Opnemen {{duration}}",
+      "savingVoice": "Spraaknotitie versleutelen...",
+      "savedTo": "Opgeslagen in {{title}}",
+      "failed": "Kon nu niet opslaan.",
+      "micUnavailable": "Opnemen met de microfoon is hier niet beschikbaar.",
+      "micDenied": "Toegang tot de microfoon is geweigerd."
+    },
+    "placesSummary_one": "{{count}} item met een plaats",
     "groups": {
-      "keep": "Wat je bewaart"
+      "graph": "Graaf en kaarten",
+      "keep": "Extra's"
     },
     "layout": {
       "everyday": "Dagelijks",
       "planner": "Planner",
-      "writer": "Schrijver"
+      "writer": "Schrijver",
+      "wellness": "Welzijn"
     },
     "w": {
       "checkIn": {
         "name": "Check-in",
         "help": "Hoe het vandaag met je gaat, en je trackers"
+      },
+      "medication": {
+        "help": "De doses van vandaag, Ingenomen of Overslaan, en meldingen om bij te vullen"
+      },
+      "quickCapture": {
+        "name": "Snel vastleggen",
+        "help": "Voeg tekst of een spraaknotitie toe, direct vanaf Home"
       },
       "calendar": {
         "help": "De maand, met stippen voor dagboeknotities en afspraken"
@@ -1182,7 +1235,7 @@
       },
       "tasks": {
         "name": "Open taken",
-        "help": "Niet afgevinkte taken uit je notities"
+        "help": "Te late en vervallende taken eerst, met snel toevoegen"
       },
       "recent": {
         "name": "Onlangs bewerkt",
@@ -1203,9 +1256,19 @@
         "name": "Een map",
         "help": "De nieuwste items in één map"
       },
+      "types": {
+        "name": "Itemlijst",
+        "help": "De nieuwste items van de typen die je kiest"
+      },
       "onThisDay": {
         "name": "Op deze dag",
         "help": "Dagboeknotities uit eerdere jaren"
+      },
+      "graph": {
+        "help": "Live minikaart van gelinkte notities in je kluis"
+      },
+      "places": {
+        "help": "Je notities, dagboeknotities en contacten met een plaats op een kaart"
       },
       "week": {
         "help": "Woorden, actieve dagen, items en check-ins"
@@ -1220,6 +1283,12 @@
         "name": "Jouw ritme",
         "help": "26 weken schrijven en stemming"
       },
+      "yearPixels": {
+        "help": "Je hele jaar aan stemmingskleuren in één oogopslag"
+      },
+      "patterns": {
+        "help": "Wat je stemming het meest omhoog of omlaag brengt"
+      },
       "milestone": {
         "name": "Volgende mijlpaal",
         "help": "Hoe dichtbij de volgende is"
@@ -1227,6 +1296,9 @@
       "tracker": {
         "name": "Een tracker",
         "help": "Eén tracker: zijn getal en zijn dagen"
+      },
+      "counter": {
+        "help": "Tik +1 direct op Home voor een eigen teller"
       },
       "weekRecap": {
         "help": "Je week, op één kaart"
@@ -1240,9 +1312,13 @@
       },
       "birthdays": {
         "help": "Verjaardagen in de komende 30 dagen"
+      },
+      "storage": {
+        "help": "Je versleutelde opslagring, met opnieuw tellen"
       }
     },
     "empty": {
+      "medication": "Vandaag geen medicijnen aan de beurt",
       "upcoming": "Niets in de komende 7 dagen",
       "tasks": "Geen open taken",
       "recent": "Hier staat nog niets",
@@ -1250,6 +1326,11 @@
       "tag": "Geen items met deze tag",
       "folder": "Niets in deze map",
       "onThisDay": "Geen dagboeknotities op deze dag in eerdere jaren",
+      "graph": "Link twee notities om hier je graaf te zien",
+      "places": "Voeg een locatie toe aan een notitie of contact om hier spelden te zien",
+      "yearPixels": "Leg je stemming vast om het jaar te kleuren",
+      "patterns": "Leg nog een paar dagen vast om patronen te zien",
+      "counter": "Nog geen teller-trackers",
       "files": "Nog geen bestanden",
       "bookmarks": "Nog geen bladwijzers",
       "birthdays": "Geen verjaardagen in de komende 30 dagen",

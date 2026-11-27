@@ -49,7 +49,9 @@
     "biometricHelp": "이 브라우저용 패스키를 통해 Touch ID나 Windows Hello를 쓸 수 있어요. PIN이나 패스코드도 언제나 작동해요.",
     "repeat": "한 번 더 입력하세요",
     "mismatch": "두 값이 일치하지 않아요. 다시 시도하세요.",
-    "commonPin": "이 PIN은 너무 쉽게 추측할 수 있어요. 다른 PIN을 고르세요."
+    "commonPin": "이 PIN은 너무 쉽게 추측할 수 있어요. 다른 PIN을 고르세요.",
+    "pinHint": "가장 빠르게 잠금 해제해요. 10번 틀리면 연결이 끊겨요.",
+    "passcodeHint": "8자 이상, 추측하기 더 어려워요."
   },
   "clip": {
     "selection": "선택한 내용",

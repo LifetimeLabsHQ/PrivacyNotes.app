@@ -128,7 +128,7 @@ export const FORMAT_BAR_ITEMS: readonly FormatBarItem[] = [
   // Split view (the Markdown view with its preview, #727) stands right before
   // the way between the views, where both bars draw it.
   end('attachMenu', false), end('customize'), end('splitView', true, true), end('markdownView'),
-  offered('copyAsPlain', 'notation'), offered('copyAsMarkdown', 'notation'),
+  offered('copyAsPlain', 'notation'), offered('copyAsMarkdown', 'notation'), offered('clearFormatting', 'format'),
 ];
 
 /** Format bar items automatically published into Ninja while an editor is open. */

@@ -1,12 +1,13 @@
 import type JSZip from 'jszip';
 import i18n from '../i18n';
+import { escapeMarkdownText, guardMarkdownLineStart } from '../markdownEscape';
 import { LOCATION_KEY, importedLocation } from '../noteLocation';
 import { withBareLinks } from './bareLinks';
 import { mimeFromExtOrBytes } from './blobImport';
 import { mapOutsideCode, stripHtmlComments } from './codeSegments';
 import { detailsToFold } from './detailsFold';
 import { buildFolderTree } from './folderImport';
-import { cleanPath, escapeScriptTags, isJunkEntry, normalizeTagList, noteLink, num, str } from './importHelpers';
+import { cleanPath, escapeScriptTags, formatMarkdownLinkTarget, isJunkEntry, normalizeTagList, noteLink, num, str } from './importHelpers';
 import { blobKey, isoDay, untitledEntryTitle } from './journalImport';
 import type { ImportBlob, ImportedNote, ParsedImport } from './types';
 import { mediaTooLargeWarning, zipEntryMedia, zipEntryText } from './zipEntry';
@@ -157,11 +158,15 @@ function readAssets(e: Json): DayOneAsset[] {
   return out;
 }
 
+function cleanMetaField(v: unknown): string {
+  return escapeMarkdownText(str(v).replace(/[\r\n]+/g, ' ').trim());
+}
+
 function buildInfoLine(e: Json): string {
   const parts: string[] = [];
   if (isObj(e.weather)) {
     const w = e.weather;
-    const desc = str(w.conditionsDescription).trim();
+    const desc = cleanMetaField(w.conditionsDescription);
     const temp = num(w.temperatureCelsius) ?? num(w.tempCelsius);
     const wParts: string[] = [];
     if (desc) wParts.push(desc);
@@ -170,7 +175,7 @@ function buildInfoLine(e: Json): string {
   }
   if (isObj(e.userActivity)) {
     const a = e.userActivity;
-    const name = str(a.activityName).trim();
+    const name = cleanMetaField(a.activityName);
     const steps = num(a.stepCount);
     if (name && steps && steps > 0) parts.push(`${name} (${Math.round(steps).toLocaleString('en-US')} steps)`);
     else if (name) parts.push(name);
@@ -178,12 +183,12 @@ function buildInfoLine(e: Json): string {
   }
   if (isObj(e.music)) {
     const m = e.music;
-    const track = str(m.track).trim();
-    const artist = str(m.artist).trim();
+    const track = cleanMetaField(m.track);
+    const artist = cleanMetaField(m.artist);
     if (track && artist) parts.push(`${track} - ${artist}`);
     else if (track) parts.push(track);
   }
-  return parts.join(' · ');
+  return parts.length > 0 ? guardMarkdownLineStart(parts.join(' · ')) : '';
 }
 
 function buildLocationLabel(loc: Json): string {
@@ -311,7 +316,8 @@ function cleanDayOneMarkdown(raw: string): string {
     // Unwrap Day One's `<url>` inside `[label](<url>)` when no whitespace or unbalanced parens.
     out = out.replace(ANGLE_LINK_RE, (whole, label: string, url: string) => {
       const unescaped = url.replace(/\\([_\-.~!()])/g, '$1');
-      if (/\s/.test(unescaped)) return whole;
+      const formatted = formatMarkdownLinkTarget(unescaped);
+      if (!formatted || formatted !== unescaped) return whole;
       return `[${label}](${unescaped})`;
     });
     // Unescape Day One's backslash-escaped characters inside bare URLs (`https://example.org/dayone\_test`).
@@ -480,8 +486,10 @@ async function readDayOne(file: File, onProgress?: (msg: string) => void): Promi
           brokenLinks++;
           return label;
         }
+        const nl = noteLink(target, label);
+        if (!nl.startsWith('[[')) return label;
         links++;
-        return noteLink(target, label);
+        return nl;
       }),
     );
 

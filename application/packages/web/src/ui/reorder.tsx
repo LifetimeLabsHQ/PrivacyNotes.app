@@ -48,6 +48,8 @@ export interface PointerReorderOptions<T> {
   /** A string that changes when the target does; the list re-renders only then. */
   targetKey: (target: T) => string;
   onDrop: (id: string, target: T) => void;
+  /** Live pointer coordinates while a drag is active (null on end/cancel), for floating previews. */
+  onMove?: (pos: { id: string; x: number; y: number } | null) => void;
   /** Off for a read-only list. */
   enabled?: boolean;
 }
@@ -60,7 +62,7 @@ export interface PressOptions {
   grip?: boolean;
 }
 
-export function usePointerReorder<T>({ resolve, targetKey, onDrop, enabled = true }: PointerReorderOptions<T>) {
+export function usePointerReorder<T>({ resolve, targetKey, onDrop, onMove, enabled = true }: PointerReorderOptions<T>) {
   const [drag, setDrag] = useState<ReorderDrag<T> | null>(null);
   const live = useRef<{
     id: string;
@@ -76,8 +78,8 @@ export function usePointerReorder<T>({ resolve, targetKey, onDrop, enabled = tru
   } | null>(null);
   /** Set by a drag, so the click it ends on does not also select. */
   const dragged = useRef(false);
-  const opts = useRef({ resolve, targetKey, onDrop });
-  opts.current = { resolve, targetKey, onDrop };
+  const opts = useRef({ resolve, targetKey, onDrop, onMove });
+  opts.current = { resolve, targetKey, onDrop, onMove };
 
   const publish = useCallback(() => {
     const d = live.current;
@@ -106,6 +108,7 @@ export function usePointerReorder<T>({ resolve, targetKey, onDrop, enabled = tru
       // Already released.
     }
     setDrag(null);
+    opts.current.onMove?.(null);
     if (drop && d?.active && d.target !== null) opts.current.onDrop(d.id, d.target);
     // The click after this release must not select, but a release over empty
     // space makes no click, and a flag left standing would eat the next real
@@ -156,6 +159,7 @@ export function usePointerReorder<T>({ resolve, targetKey, onDrop, enabled = tru
           off?.();
         };
       }
+      opts.current.onMove?.({ id: d.id, x: d.x, y: d.y });
       aim();
     };
     const up = (e: PointerEvent) => {

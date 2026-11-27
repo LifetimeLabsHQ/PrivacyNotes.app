@@ -48,8 +48,9 @@ export default defineContentScript({
 });
 
 type Bytes = ArrayBuffer | ArrayBufferView;
-const isBytes = (v: unknown): v is Bytes => v instanceof ArrayBuffer || ArrayBuffer.isView(v);
-const bytesOf = (v: Bytes): Uint8Array => (v instanceof ArrayBuffer ? new Uint8Array(v) : new Uint8Array(v.buffer, v.byteOffset, v.byteLength));
+const isBytes = (v: unknown): v is Bytes =>
+  v instanceof ArrayBuffer || ArrayBuffer.isView(v) || Object.prototype.toString.call(v) === '[object ArrayBuffer]';
+const bytesOf = (v: Bytes): Uint8Array => (ArrayBuffer.isView(v) ? new Uint8Array(v.buffer, v.byteOffset, v.byteLength) : new Uint8Array(v));
 const b64 = (v: unknown): string | null => (isBytes(v) ? toB64url(bytesOf(v)) : null);
 
 function prfOf(ext: unknown): WirePrf | undefined | null {
@@ -59,7 +60,7 @@ function prfOf(ext: unknown): WirePrf | undefined | null {
     if (!p) return undefined;
     const first = b64(p.first);
     if (first === null) return null;
-    if (p.second === undefined) return { first };
+    if (p.second == null) return { first };
     const second = b64(p.second);
     return second === null ? null : { first, second };
   };
@@ -81,7 +82,7 @@ function prfOf(ext: unknown): WirePrf | undefined | null {
 }
 
 const descriptors = (list: unknown): { id: string; type: string }[] | null => {
-  if (list === undefined) return [];
+  if (list == null) return [];
   if (!Array.isArray(list)) return null;
   const out: { id: string; type: string }[] = [];
   for (const d of list as { id?: unknown; type?: unknown }[]) {
@@ -102,7 +103,7 @@ function encodeCreate(pk: PublicKeyCredentialCreationOptions): WireCreateOptions
   if (challenge === null || userId === null || !exclude || prf === null || !pk.rp || !Array.isArray(pk.pubKeyCredParams)) return null;
   const sel = pk.authenticatorSelection;
   return {
-    rp: { ...(pk.rp.id !== undefined ? { id: String(pk.rp.id) } : {}), name: String(pk.rp.name ?? '') },
+    rp: { ...(pk.rp.id != null && pk.rp.id !== '' ? { id: String(pk.rp.id) } : {}), name: String(pk.rp.name ?? '') },
     user: { id: userId, name: String(pk.user.name ?? ''), displayName: String(pk.user.displayName ?? '') },
     challenge,
     pubKeyCredParams: pk.pubKeyCredParams.map((p) => ({ type: String(p.type), alg: Number(p.alg) })),
@@ -119,7 +120,7 @@ function encodeGet(pk: PublicKeyCredentialRequestOptions): WireGetOptions | null
   const prf = prfOf(pk.extensions);
   if (challenge === null || !allow || prf === null) return null;
   return {
-    ...(pk.rpId !== undefined ? { rpId: String(pk.rpId) } : {}),
+    ...(pk.rpId != null && pk.rpId !== '' ? { rpId: String(pk.rpId) } : {}),
     challenge,
     allowCredentials: allow,
     ...(pk.userVerification ? { userVerification: pk.userVerification } : {}),
@@ -129,12 +130,12 @@ function encodeGet(pk: PublicKeyCredentialRequestOptions): WireGetOptions | null
 }
 
 /** The calls the browser keeps (P21): conditional or silent mediation, a
- *  request for a security key. */
+ *  request that asks for a security key first (or cross-platform create). */
 function passThrough(options: CredentialCreationOptions | CredentialRequestOptions, kind: PasskeyKind): boolean {
   const mediation = (options as { mediation?: string }).mediation;
   if (mediation === 'conditional' || mediation === 'silent') return true;
   const pk = options.publicKey as { hints?: unknown; authenticatorSelection?: { authenticatorAttachment?: string } };
-  if (Array.isArray(pk.hints) && pk.hints.includes('security-key')) return true;
+  if (Array.isArray(pk.hints) && pk.hints[0] === 'security-key') return true;
   return kind === 'create' && pk.authenticatorSelection?.authenticatorAttachment === 'cross-platform';
 }
 
@@ -256,24 +257,53 @@ function wrapCredentials(): void {
       },
     });
 
-  proto.create = wrap('create', proto.create as never);
-  proto.get = wrap('get', proto.get as never);
+  // Another passkey extension (for instance Bitwarden) may have written own
+  // `create` / `get` properties onto `navigator.credentials` before our
+  // dynamically registered script ran, shadowing `CredentialsContainer.prototype`.
+  // Wrap those own properties when present (chaining to them on fallback),
+  // else wrap the prototype as usual.
+  const container = navigator.credentials as unknown as Record<string, unknown> | undefined;
+  const install = (k: 'create' | 'get') => {
+    try {
+      const desc = container ? Object.getOwnPropertyDescriptor(container, k) : undefined;
+      if (container && desc) {
+        const fn = container[k];
+        if (typeof fn !== 'function') return;
+        const wrapped = wrap(k, fn as never);
+        if (desc.configurable) {
+          Object.defineProperty(container, k, { value: wrapped, writable: true, configurable: true, enumerable: desc.enumerable ?? true });
+        } else if (desc.writable) {
+          container[k] = wrapped;
+        }
+        return;
+      }
+      proto[k] = wrap(k, proto[k] as never);
+    } catch {
+      // Frozen property or throwing accessor on navigator.credentials / prototype: leave existing handler in place.
+    }
+  };
+  install('create');
+  install('get');
 
   // A site that asks whether a platform passkey can be made hears yes while
   // PrivacyNotes would offer one here (review 18), with the same ack rule.
   const uvpa = PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable;
   if (typeof uvpa === 'function') {
-    PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable = new Proxy(uvpa, {
-      apply(target, thisArg, args: unknown[]) {
-        const call = () => Reflect.apply(target, thisArg, args) as Promise<boolean>;
-        if (window.top !== window || !isSecureContext || globalThis.origin === 'null') return call();
-        return ask({ pn: 'passkey-uvpa' }).then((result) => (result?.kind === 'available' ? true : call()));
-      },
-      get(target, key, receiver) {
-        if (key === 'toString') return toString.bind(target);
-        return Reflect.get(target, key, receiver);
-      },
-    });
+    try {
+      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable = new Proxy(uvpa, {
+        apply(target, thisArg, args: unknown[]) {
+          const call = () => Reflect.apply(target, thisArg, args) as Promise<boolean>;
+          if (window.top !== window || !isSecureContext || globalThis.origin === 'null') return call();
+          return ask({ pn: 'passkey-uvpa' }).then((result) => (result?.kind === 'available' ? true : call()));
+        },
+        get(target, key, receiver) {
+          if (key === 'toString') return toString.bind(target);
+          return Reflect.get(target, key, receiver);
+        },
+      });
+    } catch {
+      // Frozen property on PublicKeyCredential: leave the native check in place.
+    }
   }
 }
 

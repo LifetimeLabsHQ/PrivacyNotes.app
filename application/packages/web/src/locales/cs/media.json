@@ -18,7 +18,13 @@
     "viewAria": "Zobrazit obrázek",
     "copyAria": "Kopírovat obrázek",
     "copyFailed": "Obrázek se nepodařilo zkopírovat.",
-    "picturesLeftOut": "Některé obrázky se nepřidaly. Obrázek zkopíruj samostatně a pak ho vlož."
+    "picturesLeftOut": "Některé obrázky se nepřidaly. Obrázek zkopíruj samostatně a pak ho vlož.",
+    "captionLabel": "Popisek",
+    "captionAddAria": "Přidat popisek",
+    "captionEditAria": "Upravit popisek",
+    "captionPlaceholder": "Přidej popisek...",
+    "captionClearAria": "Vymazat popisek",
+    "captionHint": "Enter uloží · Esc zruší"
   },
   "attachment": {
     "fallbackName": "Příloha",

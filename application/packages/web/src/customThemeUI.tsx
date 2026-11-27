@@ -4,11 +4,12 @@ import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { parseThemeCode, resolveTheme, serializeThemeCode, themePasses, withoutAuthor, type CustomTheme } from './themeCode';
 import { canSaveCustomTheme, CUSTOM_THEME_MAX, deleteCustomTheme, liveCustomThemes, newCustomThemeId, saveCustomTheme, type CustomThemes } from './customThemes';
+import { deleteCustomIcon, isValidCustomIconDataUrl, themeIconDataUrl, type CustomIcons } from './customIcons';
 import { TEAM_THEMES } from './teamThemes';
 import { COMMUNITY_THEMES, THEME_DISCUSSIONS_URL } from './communityThemes';
 import { openExternal } from './openExternal';
 import { textMatcher } from './textMatch';
-import { customChoice, isFreeTheme, peekThemeMode, previewCustomTheme, type ColorTheme, type CustomSnapshot, type Theme, type ThemeChoice } from './theme';
+import { clearCustomThemeId, customChoice, isFreeTheme, peekThemeMode, previewCustomTheme, type ColorTheme, type CustomSnapshot, type Theme, type ThemeChoice } from './theme';
 import { BUILTIN_THEME_CODES } from './builtinThemeCodes';
 import type { ContextMenuItem } from './ContextMenu';
 import type { ThemeBuilderTarget } from './notesView/useThemeBuilder';
@@ -45,10 +46,18 @@ export interface CustomThemeEntry {
 const EXTRA_COLLAPSED = 8;
 
 /** What a slot paints for a theme: its resolved colors, under its id. */
-export function snapshotOf(id: string, theme: CustomTheme): CustomSnapshot {
+export function snapshotOf(id: string, theme: CustomTheme, icon?: string | null): CustomSnapshot {
   const resolved = resolveTheme(theme);
   const colors: Record<string, string> = { ...resolved.colors, label: resolved.label, paper: resolved.paper };
-  return { id, code: serializeThemeCode(theme), mode: resolved.mode, colors, ...(theme.logo ? { logo: theme.logo } : {}) };
+  const validIcon = icon && isValidCustomIconDataUrl(icon) ? icon : undefined;
+  return {
+    id,
+    code: serializeThemeCode(theme),
+    mode: resolved.mode,
+    colors,
+    ...(theme.logo ? { logo: theme.logo } : {}),
+    ...(validIcon ? { icon: validIcon } : {}),
+  };
 }
 
 /** The themes the app ships: the team's, then the community's, each in the
@@ -75,11 +84,11 @@ export function themeNameOf(id: string, themes: CustomThemes): string | null {
 }
 
 /** The listed themes this version can paint, sorted by name. */
-export function customThemeEntries(themes: CustomThemes): CustomThemeEntry[] {
+export function customThemeEntries(themes: CustomThemes, themeIcons?: CustomIcons): CustomThemeEntry[] {
   return liveCustomThemes(themes)
     .flatMap(({ id, code }) => {
       const theme = parseThemeCode(code);
-      return theme ? [{ id, theme, snapshot: snapshotOf(id, theme) }] : [];
+      return theme ? [{ id, theme, snapshot: snapshotOf(id, theme, themeIconDataUrl(themeIcons, id)) }] : [];
     })
     .sort((a, b) => a.theme.name.localeCompare(b.theme.name));
 }
@@ -87,6 +96,7 @@ export function customThemeEntries(themes: CustomThemes): CustomThemeEntry[] {
 /** What the extra cards and the paste field need from the gallery around them. */
 export interface ThemeGalleryCtx {
   customThemes: CustomThemes;
+  themeIcons?: CustomIcons;
   isPro: boolean;
   /** Pro, or the demo. */
   canSave: boolean;
@@ -108,6 +118,7 @@ export interface ThemeGalleryCtx {
   star: (mode: Theme, choice: ThemeChoice) => void;
   /** Embedded pane only. */
   onChange?: (update: (prev: CustomThemes) => CustomThemes) => void;
+  onThemeIconsChange?: (update: (prev: CustomIcons) => CustomIcons) => void;
   openBuilder?: (target: ThemeBuilderTarget) => void;
 }
 
@@ -130,7 +141,7 @@ export function ExtraThemeCards({ mode, compact, ctx, query = '', builtinCount =
 }) {
   const { t } = useTranslation('settings');
   const team = useMemo(() => teamThemeEntries(), []);
-  const own = useMemo(() => customThemeEntries(ctx.customThemes), [ctx.customThemes]);
+  const own = useMemo(() => customThemeEntries(ctx.customThemes, ctx.themeIcons), [ctx.customThemes, ctx.themeIcons]);
   const [deleting, setDeleting] = useState<CustomThemeEntry | null>(null);
   const active = mode === 'dark' ? ctx.darkTheme : ctx.lightTheme;
   // Your own first: they are the ones a person looks for.
@@ -154,7 +165,10 @@ export function ExtraThemeCards({ mode, compact, ctx, query = '', builtinCount =
       {
         label: t('shell:contextMenu.duplicate'),
         icon: <PencilSimple />,
-        onSelect: () => ctx.openBuilder?.({ code: serializeThemeCode({ ...entry.theme, name: ctx.copyName(entry.theme.name) }) }),
+        onSelect: () => ctx.openBuilder?.({
+          code: serializeThemeCode({ ...entry.theme, name: ctx.copyName(entry.theme.name) }),
+          ...(entry.snapshot.icon ? { icon: entry.snapshot.icon } : {}),
+        }),
       },
       { label: t('appearance.custom.copyCode'), icon: <Copy />, onSelect: () => copyCode(entry) },
     ];
@@ -196,8 +210,9 @@ export function ExtraThemeCards({ mode, compact, ctx, query = '', builtinCount =
 
   function remove(entry: CustomThemeEntry) {
     ctx.onChange?.((prev) => deleteCustomTheme(prev, entry.id));
+    ctx.onThemeIconsChange?.((prev) => deleteCustomIcon(prev, entry.id));
     if (ctx.quickMarks[mode].includes(customChoice(entry.id))) toggleQuickTheme(mode, customChoice(entry.id));
-    if (active === customChoice(entry.id)) ctx.setColorTheme(mode, 'default');
+    clearCustomThemeId(mode, entry.id);
   }
 
   return (

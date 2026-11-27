@@ -49,7 +49,9 @@
     "biometricHelp": "Touch ID or Windows Hello, through a passkey for this browser. The PIN or passcode always works too.",
     "repeat": "Enter it again",
     "mismatch": "The two do not match. Try again.",
-    "commonPin": "This PIN is too easy to guess. Choose another."
+    "commonPin": "This PIN is too easy to guess. Choose another.",
+    "pinHint": "Fastest to unlock. 10 wrong tries disconnect.",
+    "passcodeHint": "8+ chars, harder to guess."
   },
   "clip": {
     "selection": "Selection",

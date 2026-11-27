@@ -18,7 +18,13 @@
     "viewAria": "Mostra la imatge",
     "copyAria": "Copia la imatge",
     "copyFailed": "No s'ha pogut copiar la imatge.",
-    "picturesLeftOut": "Algunes imatges no s'han afegit. Copia una imatge sola per enganxar-la."
+    "picturesLeftOut": "Algunes imatges no s'han afegit. Copia una imatge sola per enganxar-la.",
+    "captionLabel": "Peu de foto",
+    "captionAddAria": "Afegeix un peu de foto",
+    "captionEditAria": "Edita el peu de foto",
+    "captionPlaceholder": "Afegeix un peu de foto...",
+    "captionClearAria": "Esborra el peu de foto",
+    "captionHint": "Retorn per desar · Esc per cancel·lar"
   },
   "attachment": {
     "fallbackName": "Adjunt",

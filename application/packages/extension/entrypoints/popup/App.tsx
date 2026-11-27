@@ -13,14 +13,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { browser } from 'wxt/browser';
-import { CaretDown, GearSix, GlobeSimple, LockSimple, NotePencil, Password, Question, Scissors } from '@web/icons';
+import { CaretDown, GearSix, LockSimple, NotePencil, Password, Question, Scissors, ShieldPlus } from '@web/icons';
 import { Button, IconButton } from '@web/ui/Button';
 import { Badge, Spinner } from '@web/ui/feedback';
 import { ListSearchInput } from '@web/ListSearchInput';
 import { ContextMenu, type ContextMenuItem } from '@web/ContextMenu';
 import { useRoomyMenu } from './roomyMenu';
 import { useEscapeToClose } from '@web/useEscapeToClose';
-import { APP_KEYS, keyText, matchesKey } from '@web/shortcutMatch';
+import { APP_KEYS, bindingKeyText, keyText, matchesKey, type KeyBinding } from '@web/shortcutMatch';
 import { SETTINGS_TRACK, settingsSegClass } from '@web/settingsUI';
 import { disconnect, readConnection, type Connection } from '../../src/connection';
 import { knownPro } from '../../src/logins';
@@ -52,6 +52,9 @@ import type { LoginCopyEntry } from '@notes/shared/extension';
  *  by its id in the address, never through the one-slot route. */
 const PASSKEY_REQUEST = passkeysReleased() ? new URLSearchParams(location.search).get('passkey') : null;
 
+/** In-popup shortcut for Add login, matching the extension's Alt+Shift+<letter> family. */
+const ADD_LOGIN_KEY: readonly KeyBinding[] = [{ alt: true, shift: true, key: 'a', optionWhileTyping: true }];
+
 type View = { kind: 'main' } | { kind: 'settings' } | { kind: 'biometric' } | { kind: 'generator' } | { kind: 'addLogin' } | { kind: 'editLogin'; login: LoginCopyEntry } | { kind: 'note'; start?: string } | { kind: 'shortcuts' } | { kind: 'changeSecret' };
 
 
@@ -61,7 +64,7 @@ type View = { kind: 'main' } | { kind: 'settings' } | { kind: 'biometric' } | { 
 function HeaderBrand() {
   return (
     <span className="flex min-w-0 items-center gap-2 py-1 text-body truncate">
-      <img src="/icon/48.png" alt="" className="w-7 h-7 rounded" />
+      <img src="/icon/48.png" alt="" className="w-7 h-7 rounded shrink-0" />
       <Brand />
     </span>
   );
@@ -222,7 +225,7 @@ export function App() {
           </>
         ) : (
           <>
-            <header className="flex items-center gap-2 px-3 py-2 border-b border-divider">
+            <header className="flex items-center gap-2 px-3 py-2 border-b border-divider bg-surface-0">
               <HeaderBrand />
               <span className="flex-1" />
               <IconButton label={t('connect.help')} position="below" onClick={() => void browser.tabs.create({ url: HELP_URL })}>
@@ -296,6 +299,12 @@ export function App() {
     if (matchesKey(e, APP_KEYS.openSettings, typing)) {
       e.preventDefault();
       setView({ kind: 'settings' });
+    } else if (connection.logins && view.kind === 'main' && matchesKey(e, ADD_LOGIN_KEY, typing)) {
+      e.preventDefault();
+      setView({ kind: 'addLogin' });
+    } else if (connection.clips && view.kind === 'main' && matchesKey(e, APP_KEYS.newNote, typing)) {
+      e.preventDefault();
+      setView({ kind: 'note' });
     } else if (connection.logins && view.kind === 'main' && matchesKey(e, APP_KEYS.focusSearch, typing)) {
       e.preventDefault();
       pickTab('vault');
@@ -341,30 +350,34 @@ export function App() {
       return i === 6 ? [{ type: 'separator' }, row] : [row];
     }),
   ];
-  const addItems = (): ContextMenuItem[] => [
-    ...(connection.logins ? [{ label: t('notes:newMenu.login'), icon: <GlobeSimple />, onSelect: () => setView({ kind: 'addLogin' }) }] : []),
-    ...(connection.clips ? [{ label: t('notes:newMenu.note'), icon: <NotePencil />, shortcut: keys['new-note'] || undefined, onSelect: () => setView({ kind: 'note' }) }] : []),
-  ];
 
-  const tabs = bothTabs && (
-    <div className="px-3 py-2 border-b border-divider">
-      <div role="group" aria-label={t('tabs.label')} className={`${SETTINGS_TRACK} w-full`}>
-        <button type="button" aria-pressed={shownTab === 'clip'} onClick={() => pickTab('clip')} className={`${settingsSegClass(shownTab === 'clip', true)} inline-flex items-center justify-center gap-1.5`}>
-          <Scissors aria-hidden="true" />
-          {t('tabs.clip')}
-        </button>
-        <button type="button" aria-pressed={shownTab === 'vault'} onClick={() => pickTab('vault')} className={`${settingsSegClass(shownTab === 'vault', true)} inline-flex items-center justify-center gap-1.5`}>
-          <LockSimple aria-hidden="true" />
-          {t('shell:tagsRail.vault')}
-          {siteLogins > 0 && <Badge tone="info">{siteLogins.toLocaleString()}</Badge>}
-        </button>
-      </div>
+  const inlineTabs = bothTabs && (
+    <div role="group" aria-label={t('tabs.label')} className={`${SETTINGS_TRACK} !p-0.5 !gap-0.5 border border-divider/70 shrink-0`}>
+      <button
+        type="button"
+        aria-pressed={shownTab === 'clip'}
+        onClick={() => pickTab('clip')}
+        className={`${settingsSegClass(shownTab === 'clip')} !px-2.5 !py-1 inline-flex items-center justify-center gap-1.5 whitespace-nowrap`}
+      >
+        <Scissors aria-hidden="true" />
+        {t('tabs.clip')}
+      </button>
+      <button
+        type="button"
+        aria-pressed={shownTab === 'vault'}
+        onClick={() => pickTab('vault')}
+        className={`${settingsSegClass(shownTab === 'vault')} !px-2.5 !py-1 inline-flex items-center justify-center gap-1.5 whitespace-nowrap`}
+      >
+        <LockSimple aria-hidden="true" />
+        {t('shell:tagsRail.vault')}
+        {siteLogins > 0 && <Badge tone="info">{siteLogins.toLocaleString()}</Badge>}
+      </button>
     </div>
   );
 
   const searchRow = (
     <div
-      className="flex items-center gap-2 px-3 py-2 border-b border-divider"
+      className="flex items-center gap-2 px-3 py-2.5 border-b border-divider bg-surface-0"
       // Locked, the search is a door to the PIN.
       onFocusCapture={(e) => {
         if (!unlocked && e.target instanceof HTMLInputElement) {
@@ -380,7 +393,7 @@ export function App() {
         placeholder={!unlocked ? t('vault.unlockToSearch') : typeFilter === 'all' ? t('vault.search') : t('vault.searchKind', { kind: typeLabel(typeFilter).toLowerCase() })}
         ariaLabel={t('vault.search')}
       />
-      <Button icon={<CaretDown aria-hidden="true" />} onClick={(e) => openUnder(e.currentTarget, typeItems())} aria-haspopup="menu" className="shrink-0">
+      <Button icon={<CaretDown aria-hidden="true" />} onClick={(e) => openUnder(e.currentTarget, typeItems())} aria-haspopup="menu" className="shrink-0 bg-surface-2 shadow-xs">
         {typeLabel(typeFilter)}
       </Button>
     </div>
@@ -391,14 +404,45 @@ export function App() {
       {/* The header, the tabs and the search stay put while the vault scrolls (Bitwarden). */}
       {/* z-[60]: over a row's tooltip (56, style.css) while the list scrolls under it, under a menu (z-[1000]). */}
       {/* Its height goes to --pn-head, where a vault group's heading sticks. */}
-      <div ref={(el) => void (el && document.body.style.setProperty('--pn-head', `${el.offsetHeight}px`))} className="sticky top-0 z-[60] bg-surface-2">
-        <header className="flex items-center gap-2 px-3 py-2 border-b border-divider">
-          <HeaderBrand />
+      <div ref={(el) => void (el && document.body.style.setProperty('--pn-head', `${el.offsetHeight}px`))} className="sticky top-0 z-[60] bg-surface-0">
+        <header className="flex items-center gap-1.5 px-3 py-2 border-b border-divider bg-surface-0">
+          {bothTabs ? (
+            <>
+              <img src="/icon/48.png" alt={t('notes:settings.groupBrand')} className="w-6 h-6 rounded shrink-0 me-2" />
+              {inlineTabs}
+            </>
+          ) : (
+            <HeaderBrand />
+          )}
           <span className="flex-1" />
-          {/* One Add with a menu of kinds, as Bitwarden's header has it. A card
-              or an SSH key cannot travel through the inbox yet. */}
+          {/* Two direct Add icon buttons (Login, Note) separated by a hairline
+              from Lock, Generate and Settings; tooltips carry their hotkeys. */}
+          {connection.logins && (
+            <IconButton
+              label={t('menu.addLogin')}
+              keys={bindingKeyText(ADD_LOGIN_KEY[0]!)}
+              tone="accent"
+              position="below"
+              className="bg-accent/12 border border-accent/30 hover:border-accent/55 hover:bg-accent/18"
+              onClick={() => setView({ kind: 'addLogin' })}
+            >
+              <ShieldPlus aria-hidden="true" />
+            </IconButton>
+          )}
+          {connection.clips && (
+            <IconButton
+              label={t('notes:header.newNote')}
+              keys={keys['new-note'] || keyText('newNote')}
+              tone="accent"
+              position="below"
+              className="bg-accent/12 border border-accent/30 hover:border-accent/55 hover:bg-accent/18"
+              onClick={() => setView({ kind: 'note' })}
+            >
+              <NotePencil aria-hidden="true" />
+            </IconButton>
+          )}
           {(connection.clips || connection.logins) && (
-            <Button action="add" variant="accent" aria-haspopup="menu" onClick={(e) => openUnder(e.currentTarget, addItems())} />
+            <span aria-hidden="true" className="h-4 w-px bg-divider mx-0.5 shrink-0" />
           )}
           {/* Lock and Settings sit in the header with the generator; the
               footer is only the home of a message (owner, 2026-11-11). */}
@@ -407,14 +451,13 @@ export function App() {
               <LockSimple aria-hidden="true" />
             </IconButton>
           )}
-          <IconButton label={t('menu.generatePassword')} position="below" onClick={() => setView({ kind: 'generator' })}>
+          <IconButton label={t('menu.generatePassword')} keys={keys['generate-password']} position="below" onClick={() => setView({ kind: 'generator' })}>
             <Password aria-hidden="true" />
           </IconButton>
           <IconButton label={t('notes:footer.settings')} keys={keyText('openSettings')} position="below-end" onClick={() => setView({ kind: 'settings' })}>
             <GearSix aria-hidden="true" />
           </IconButton>
         </header>
-        {tabs}
         {shownTab === 'vault' && searchRow}
       </div>
       <main className="flex-1">

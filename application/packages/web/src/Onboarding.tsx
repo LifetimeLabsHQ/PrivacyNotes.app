@@ -2,11 +2,21 @@ import { withMfaAwareTimeout } from './mfaStep';
 import { lazy, Suspense, useState, useEffect, useRef, type ReactNode } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { generatePhrase, isValidPhrase } from '@notes/shared';
-import { CaretDown, Check, Copy, FileText, Fingerprint, Key, KeyReturn, Lock, Password, QrCode, Scales, Scan, Upload } from './icons';
+import { CaretDown, Check, Copy, Eye, EyeSlash, FileText, Fingerprint, Key, KeyReturn, Lock, Password, QrCode, Scales, Scan, Upload } from './icons';
 import { QRCodeCanvas } from 'qrcode.react';
 import { buildPhraseFile, PHRASE_FILE_NAME } from './phraseFile';
 import { buildSignInCode, extractPhraseFromScan } from './qrSignIn';
-import { passkeySignInAvailable, signInPasskeyPhrase, type SignInPasskeyResult } from './passkeySignIn';
+import {
+  clearPendingPasswordSignIn,
+  PASSKEY_PASSWORD_MAX_LENGTH,
+  passkeySignInAvailable,
+  SIGNIN_PASSKEY_NAME,
+  signInPasskeyPhrase,
+  unlockPasswordSignInSlot,
+  type PendingPasswordSignIn,
+  type SignInPasskeyResult,
+} from './passkeySignIn';
+import { NO_TEXT_ASSIST } from './formFields';
 import { saveBlob } from './saveFile';
 import { useAuth } from './auth';
 import type { OAuthProvider } from './auth';
@@ -15,6 +25,7 @@ import { TurnstileWidget } from './TurnstileWidget';
 import { readResumablePhrase } from './phraseAtRest';
 import { isTrustedDevice } from './trustStorage';
 import { detectPlatform, warmAuthEdgeFunctions } from './devices';
+import { keyboardViewportHeightClass, useKeyboardOpen } from './useKeyboardOpen';
 import { useSecretOnScreen } from './privacyScreen';
 import { isAppHost, isBetaHost } from './hosts';
 import { applyStoredTheme } from './theme';
@@ -27,9 +38,9 @@ import { Brand } from './Brand';
 import { PrivacyLadder } from './PrivacyLadder';
 import { PHRASE_CHANGE_PREVIEW } from './phraseLaunch';
 import { isSyncPaused, setSyncPaused } from './syncPause';
-import { isLocalOnly } from './localOnly';
-import { Badge, Button, Callout, Checkbox, IconTile, StatusLine, TextField } from './ui';
-import { PhraseInput } from './PhraseInput';
+import { isUnsyncedLocalVault } from './localOnly';
+import { Badge, Button, Callout, Checkbox, IconButton, IconTile, StatusLine, TextField } from './ui';
+import { PHRASE_INPUT_IDLE_CLEAR_SECONDS, PhraseInput } from './PhraseInput';
 import { isImeComposing } from './imeComposing';
 import { AppleIcon, GithubIcon, GoogleIcon, PROVIDER_CONTINUE_KEY, PROVIDER_ORDER } from './providerIcons';
 
@@ -47,24 +58,46 @@ type Mode = 'choose' | 'create' | 'import' | 'signin';
  * phrase entry for returning users). Shows only the logo + a centered
  * card - no hero text, feature pillars, or pricing. Gives the user a
  * clear visual break after the provider redirect.
+ *
+ * Scrolls internally inside a viewport-bounded box so iOS `scroll_pin.rs`
+ * never traps tall steps (such as custody choice or phrase entry with the
+ * keyboard up), and uses `my-auto` on the inner column instead of
+ * `justify-center` on the scroll container so top overflow is never clipped.
  */
-function OAuthSetupScreen({ children }: { children: ReactNode }) {
+function OAuthSetupScreen({
+  scrollResetKey,
+  children,
+}: {
+  scrollResetKey?: string;
+  children: ReactNode;
+}) {
+  useKeyboardOpen();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [scrollResetKey]);
+  const heightClass = keyboardViewportHeightClass();
   return (
-    <div className="pn-washi min-h-screen bg-[var(--wl-bg)] text-[var(--wl-ink)] flex flex-col items-center justify-center px-5 py-10">
+    <div
+      ref={scrollRef}
+      className={`pn-washi ${heightClass} overflow-y-auto overflow-x-hidden bg-[var(--wl-bg)] text-[var(--wl-ink)] flex flex-col pl-[calc(var(--pn-safe-left,0px)+1.25rem)] pr-[calc(var(--pn-safe-right,0px)+1.25rem)] pt-[calc(var(--pn-safe-top)+2.5rem)] pb-[calc(var(--pn-safe-bottom)+2.5rem)]`} /* rtl-ok: physical hardware safe-area insets */
+    >
       {/* The washi variables live in FX_CSS; this screen renders without
           the LandingPage shell, so it brings the style tag itself. */}
       <style>{FX_CSS}</style>
-      {/* Logo */}
-      <div className="flex items-center gap-3 mb-8">
-        <LogoIcon size={56} className="text-accent w-14 h-14" />
-        <span className="text-display-3 tracking-tight">
-          <Brand />
-        </span>
-      </div>
-      {/* Step card */}
-      <div className="w-full max-w-md">
-        <div className="rounded-2xl border border-[var(--wl-line)] bg-[var(--wl-card)] shadow-sm p-5 sm:p-6">
-          {children}
+      <div className="my-auto mx-auto shrink-0 w-full max-w-md flex flex-col items-center">
+        {/* Logo */}
+        <div className="flex items-center gap-3 mb-8">
+          <LogoIcon size={56} className="text-accent w-14 h-14" />
+          <span className="text-display-3 tracking-tight">
+            <Brand />
+          </span>
+        </div>
+        {/* Step card */}
+        <div className="w-full">
+          <div className="rounded-2xl border border-[var(--wl-line)] bg-[var(--wl-card)] shadow-sm p-5 sm:p-6">
+            {children}
+          </div>
         </div>
       </div>
     </div>
@@ -201,7 +234,7 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
   // sees the setup screen instead of the marketing page during hydration.
   if (oauthLoading) {
     return (
-      <OAuthSetupScreen>
+      <OAuthSetupScreen scrollResetKey="loading">
         <LoadingScreen inline />
       </OAuthSetupScreen>
     );
@@ -210,7 +243,7 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
   // New OAuth user: custody choice
   if (auth.status === 'oauth_custody_choice') {
     return (
-      <OAuthSetupScreen>
+      <OAuthSetupScreen scrollResetKey="custody">
         <KeyCustodyChoice onBack={() => { void signOut(); }} />
       </OAuthSetupScreen>
     );
@@ -237,7 +270,7 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
       content = null;
     }
     return (
-      <OAuthSetupScreen>
+      <OAuthSetupScreen scrollResetKey={`handoff:${mode}`}>
         {content}
       </OAuthSetupScreen>
     );
@@ -245,7 +278,7 @@ export function Onboarding({ onAuthedEnterApp }: { onAuthedEnterApp?: () => void
 
   // --- Normal (non-OAuth) onboarding: full landing page ---
   return (
-    <LandingPage onAuthedEnterApp={onAuthedEnterApp}>
+    <LandingPage onAuthedEnterApp={onAuthedEnterApp} scrollResetKey={mode}>
       {mode === 'choose' ? (
         <ChooseMode onPick={setMode} />
       ) : mode === 'create' ? (
@@ -357,7 +390,7 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
       // A held phrase makes the resume button the likely next click, and
       // it starts the handshake at once - unless this device holds a
       // local-only vault, which resumes offline without contacting the server.
-      if (p && !isLocalOnly()) warmAuthEdgeFunctions();
+      if (p && !isUnsyncedLocalVault()) warmAuthEdgeFunctions();
     });
     return () => { cancelled = true; };
   }, []);
@@ -373,7 +406,7 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
       void readResumablePhrase().then((p) => {
         if (cancelled || !p) return;
         setResumable(p);
-        if (!isLocalOnly()) warmAuthEdgeFunctions();
+        if (!isUnsyncedLocalVault()) warmAuthEdgeFunctions();
       });
     }
     window.addEventListener('focus', recheck);
@@ -431,9 +464,9 @@ function ChooseMode({ onPick }: { onPick: (m: Mode) => void }) {
     if (!resumable || resumeBusy) return;
     setOauthError(null);
     setResumeBusy(true);
-    // A local-only vault whose OS keyring was locked at boot resumes straight
-    // into local-only mode without contacting any server.
-    if (isLocalOnly()) {
+    // An unsynced local vault whose OS keyring was locked at boot resumes straight
+    // into local mode without contacting any server.
+    if (isUnsyncedLocalVault()) {
       if (!(await unlockLocally(resumable))) {
         setOauthError(t('signIn.failedUnexpectedly'));
       }
@@ -1175,6 +1208,7 @@ const PASSKEY_FAILURE = {
   not_found: 'passkeySignIn.notFound',
   retired: 'passkeySignIn.retired',
   rate_limited: 'passkeySignIn.rateLimited',
+  unsupported_slot: 'passkeySignIn.unsupportedSlot',
   network: 'passkeySignIn.failed',
 } as const;
 
@@ -1202,6 +1236,65 @@ function ImportPhrase({
   const [passkeyOffered] = useState(() => passkeySignInAvailable());
   const [passkeyBusy, setPasskeyBusy] = useState(false);
   const [passkeyError, setPasskeyError] = useState<string | null>(null);
+  const [pendingPasskey, setPendingPasskey] = useState<PendingPasswordSignIn | null>(null);
+  const [passkeyPassword, setPasskeyPassword] = useState('');
+  const [showPasskeyPassword, setShowPasskeyPassword] = useState(false);
+  const [passkeyUnlocking, setPasskeyUnlocking] = useState(false);
+  const [passkeyPasswordError, setPasskeyPasswordError] = useState<string | null>(null);
+  const pendingPasskeyRef = useRef<PendingPasswordSignIn | null>(null);
+  const unlockingRef = useRef(false);
+  const lastActivityRef = useRef(0);
+  const aliveRef = useRef(true);
+
+  useSecretOnScreen(showPasskeyPassword && passkeyPassword.length > 0);
+
+  useEffect(() => {
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
+      clearPendingPasswordSignIn(pendingPasskeyRef.current);
+      pendingPasskeyRef.current = null;
+    };
+  }, []);
+
+  // Clear an idle Step-2 password session after PHRASE_INPUT_IDLE_CLEAR_SECONDS
+  // (checked on interval, visibilitychange, and focus so a backgrounded tab
+  // clears on return, matching PhraseInput).
+  useEffect(() => {
+    if (!pendingPasskey) return;
+    lastActivityRef.current = Date.now();
+    const checkIdle = () => {
+      if (unlockingRef.current) return;
+      if (Date.now() - lastActivityRef.current < PHRASE_INPUT_IDLE_CLEAR_SECONDS * 1000) return;
+      clearPendingPasswordSignIn(pendingPasskeyRef.current);
+      pendingPasskeyRef.current = null;
+      setPendingPasskey(null);
+      setInput('');
+      setPasskeyPassword('');
+      setShowPasskeyPassword(false);
+      setPasskeyPasswordError(null);
+      setPasskeyError(t('passkeySignIn.passwordClearedIdle'));
+    };
+    const id = setInterval(checkIdle, 5000);
+    const onVisible = () => { if (document.visibilityState === 'visible') checkIdle(); };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', checkIdle);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', checkIdle);
+    };
+  }, [pendingPasskey, t]);
+
+  function dismissPendingPasskey() {
+    clearPendingPasswordSignIn(pendingPasskeyRef.current);
+    pendingPasskeyRef.current = null;
+    setPendingPasskey(null);
+    setInput('');
+    setPasskeyPassword('');
+    setShowPasskeyPassword(false);
+    setPasskeyPasswordError(null);
+  }
 
   async function handlePasskey() {
     setPasskeyError(null);
@@ -1212,13 +1305,141 @@ function ImportPhrase({
     } catch {
       result = { ok: false, reason: 'network' };
     }
+    if (!aliveRef.current) {
+      if (!result.ok && result.reason === 'needs_password') clearPendingPasswordSignIn(result.pending);
+      return;
+    }
     setPasskeyBusy(false);
     if (result.ok) {
       onReady(result.phrase);
       return;
     }
+    if (result.reason === 'needs_password') {
+      clearPendingPasswordSignIn(pendingPasskeyRef.current);
+      pendingPasskeyRef.current = result.pending;
+      lastActivityRef.current = Date.now();
+      setInput('');
+      setPendingPasskey(result.pending);
+      setPasskeyPassword('');
+      setShowPasskeyPassword(false);
+      setPasskeyPasswordError(null);
+      return;
+    }
     if (result.reason === 'cancelled' || result.reason === 'unavailable') return;
     setPasskeyError(t(PASSKEY_FAILURE[result.reason]));
+  }
+
+  async function handlePasskeyPasswordSubmit() {
+    const current = pendingPasskeyRef.current;
+    if (!current || !passkeyPassword || unlockingRef.current) return;
+    unlockingRef.current = true;
+    lastActivityRef.current = Date.now();
+    setPasskeyUnlocking(true);
+    setPasskeyPasswordError(null);
+    try {
+      const unlocked = await unlockPasswordSignInSlot(current, passkeyPassword);
+      if (!aliveRef.current) return;
+      if (unlocked.ok) {
+        pendingPasskeyRef.current = null;
+        setPendingPasskey(null);
+        setPasskeyPassword('');
+        setShowPasskeyPassword(false);
+        onReady(unlocked.phrase);
+        return;
+      }
+      lastActivityRef.current = Date.now();
+      setPasskeyPasswordError(t(unlocked.reason === 'wrong_password' ? 'passkeySignIn.passwordWrong' : 'passkeySignIn.failed'));
+    } catch {
+      if (aliveRef.current) setPasskeyPasswordError(t('passkeySignIn.failed'));
+    } finally {
+      unlockingRef.current = false;
+      if (aliveRef.current) setPasskeyUnlocking(false);
+    }
+  }
+
+  if (pendingPasskey) {
+    return (
+      <form
+        className="space-y-4"
+        onSubmit={(e) => { e.preventDefault(); void handlePasskeyPasswordSubmit(); }}
+      >
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 shrink-0">
+            <IconTile tone="info" size="sm">
+              <Lock aria-hidden="true" />
+            </IconTile>
+          </span>
+          <div className="min-w-0">
+            <h3 className="text-title font-semibold text-[var(--wl-ink)]">
+              {t('passkeySignIn.passwordTitle')}
+            </h3>
+            <p className="text-small text-[var(--wl-sub)] mt-0.5">
+              {t('passkeySignIn.passwordBody')}
+            </p>
+          </div>
+        </div>
+        {/* Matches the passkey's user.name so password managers autofill the
+            passkey password saved alongside it. Visually hidden, never display:none. */}
+        <input
+          type="text"
+          name="username"
+          autoComplete="username"
+          readOnly
+          tabIndex={-1}
+          aria-hidden="true"
+          value={SIGNIN_PASSKEY_NAME}
+          className="sr-only"
+        />
+        <div className="flex items-center gap-1.5">
+          <TextField
+            type={showPasskeyPassword ? 'text' : 'password'}
+            value={passkeyPassword}
+            maxLength={PASSKEY_PASSWORD_MAX_LENGTH}
+            placeholder={t('passkeySignIn.passwordPlaceholder')}
+            aria-label={t('passkeySignIn.passwordPlaceholder')}
+            autoComplete="current-password"
+            {...NO_TEXT_ASSIST}
+            disabled={passkeyUnlocking}
+            autoFocus
+            onChange={(e) => {
+              lastActivityRef.current = Date.now();
+              setPasskeyPassword(e.target.value);
+              setPasskeyPasswordError(null);
+            }}
+            className="flex-1 !bg-[var(--wl-bg)] !text-[var(--wl-ink)] !border-[var(--wl-line)] placeholder:text-[var(--wl-muted)]"
+          />
+          <IconButton
+            label={showPasskeyPassword ? t('loginForm.hidePassword') : t('loginForm.showPassword')}
+            onClick={() => {
+              lastActivityRef.current = Date.now();
+              setShowPasskeyPassword((s) => !s);
+            }}
+            disabled={passkeyUnlocking}
+            className="text-[var(--wl-sub)] hover:text-[var(--wl-ink)]"
+          >
+            {showPasskeyPassword ? <EyeSlash aria-hidden="true" /> : <Eye aria-hidden="true" />}
+          </IconButton>
+        </div>
+        {passkeyPasswordError && <p role="alert" className="text-body text-danger">{passkeyPasswordError}</p>}
+        <p className="text-small text-[var(--wl-muted)]">{t('importPhrase.clearsIdle')}</p>
+        <TrustDeviceCheckbox
+          trustDevice={trustDevice}
+          onTrustDeviceChange={onTrustDeviceChange}
+        />
+        <div className="flex gap-2 pt-1">
+          <Button action="back" disabled={passkeyUnlocking} onClick={dismissPendingPasskey} />
+          <Button
+            action="next"
+            variant="primary"
+            type="submit"
+            disabled={passkeyUnlocking || !passkeyPassword}
+            className="flex-1"
+          >
+            {passkeyUnlocking ? t('passkeySignIn.passwordUnlocking') : t('passkeySignIn.passwordUnlock')}
+          </Button>
+        </div>
+      </form>
+    );
   }
 
   function handleSubmit() {

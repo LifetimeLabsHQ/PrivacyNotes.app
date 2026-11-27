@@ -14,6 +14,7 @@
  * Spec: docs/internal/specs/graph-view.md (section 4.2)
  */
 
+import { fnv1a } from '../noteShortcut';
 import type { SavedGraphLayout, SavedNodePosition } from './graphModel';
 
 interface SimNodeInput {
@@ -117,14 +118,7 @@ interface GridCell {
   meanY: number;
 }
 
-function hashId(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
+const hashId = (s: string): number => Number.parseInt(fnv1a(s), 16);
 
 function spiralCoords(index: number): { x: number; y: number } {
   const radius = 28 * Math.sqrt(index + 1);

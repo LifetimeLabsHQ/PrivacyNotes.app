@@ -18,7 +18,13 @@
     "viewAria": "ดูรูปภาพ",
     "copyAria": "คัดลอกรูปภาพ",
     "copyFailed": "คัดลอกรูปภาพไม่สำเร็จ",
-    "picturesLeftOut": "บางรูปไม่ได้ถูกเพิ่ม คัดลอกรูปแยกทีละรูปเพื่อวาง"
+    "picturesLeftOut": "บางรูปไม่ได้ถูกเพิ่ม คัดลอกรูปแยกทีละรูปเพื่อวาง",
+    "captionLabel": "คำบรรยายภาพ",
+    "captionAddAria": "เพิ่มคำบรรยายภาพ",
+    "captionEditAria": "แก้ไขคำบรรยายภาพ",
+    "captionPlaceholder": "เพิ่มคำบรรยายภาพ...",
+    "captionClearAria": "ล้างคำบรรยายภาพ",
+    "captionHint": "Enter เพื่อบันทึก · Esc เพื่อยกเลิก"
   },
   "attachment": {
     "fallbackName": "ไฟล์แนบ",

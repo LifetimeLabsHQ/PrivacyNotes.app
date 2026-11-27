@@ -13,7 +13,7 @@
  * `geo:` link that came in with an import stays a plain link and never loads
  * anything. A fence the parse cannot read stays a code block, so nothing is
  * lost.
- * Spec: docs/internal/plans/note-location.md (section 4b)
+ * Spec: docs/internal/specs/note-location.md (section 4b)
  */
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { Node, mergeAttributes } from '@tiptap/core';

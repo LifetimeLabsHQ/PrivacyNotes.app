@@ -29,7 +29,7 @@ import { textMatcher } from './textMatch';
 import { WEB_LINK, markdownLinks } from './linkScan';
 import { stripToPlainText } from './notesViewUtils';
 import { isImeComposing } from './imeComposing';
-import { Bookmark, Bookmarks, BookmarkSimple, FunnelSimple, Plus, Download, PILLAR_GLYPHS, NEW_GLYPHS } from './icons';
+import { Bookmark, Bookmarks, BookmarkSimple, FunnelSimple, Plus, FileArrowDown, PILLAR_GLYPHS, NEW_GLYPHS } from './icons';
 import { NewButton } from './NewButton';
 
 /**
@@ -545,7 +545,7 @@ export function BookmarksList({
                   <Button variant="primary" icon={<NEW_GLYPHS.bookmark aria-hidden="true" />} onClick={() => quickInputRef.current?.focus()}>
                     {t('bookmarks.emptyAdd')}
                   </Button>
-                  <Button icon={<Download aria-hidden="true" />} onClick={onOpenImport}>
+                  <Button icon={<FileArrowDown aria-hidden="true" />} onClick={onOpenImport}>
                     {t('bookmarks.emptyImport')}
                   </Button>
                 </>

@@ -15,7 +15,21 @@ import { importBlobs, mimeFromExtOrBytes } from './blobImport';
 import { IMAGE_WIDTH_MAX, clampImageWidth } from '../imageWidth';
 import type { ImportedNote, ParsedImport } from './types';
 import { escapeHtml } from '../escapeHtml';
-import { ALIGN_RE, isJunkEntry, noteLink } from './importHelpers';
+import {
+  ALIGN_RE,
+  appendMathSafe,
+  containsMarkdownBlock,
+  escapePipeCell,
+  formatMarkdownLinkTarget,
+  isJunkEntry,
+  joinMathSafe,
+  noteLink,
+  orderedListStart,
+  sanitizeBlockLatex,
+  sanitizeInlineLatex,
+  shouldUseHtmlMark,
+  sublistNeedsBlankLine,
+} from './importHelpers';
 
 const msg = (key: string, options: Record<string, unknown> = {}): string => i18n.t(`importLog:notesnook.${key}`, options);
 
@@ -301,9 +315,13 @@ function isSimpleAlignable(el: Element, ctx: ConvCtx): boolean {
   return Array.from(el.childNodes).every((c) => isSimpleInline(c, ctx));
 }
 
+const DIARIUM_LINK_TOKEN_RE = /zzdiariumlink\d+zz/;
+
 /** One node of a simple inline run: text, a mark, or a plain external link. */
 function isSimpleInline(child: Node, ctx: ConvCtx): boolean {
-  if (child.nodeType !== Node.ELEMENT_NODE) return true;
+  if (child.nodeType !== Node.ELEMENT_NODE) {
+    return !DIARIUM_LINK_TOKEN_RE.test(child.textContent ?? '');
+  }
   const c = child as Element;
   const tag = c.tagName.toLowerCase();
   if (tag === 'br') return true;
@@ -342,7 +360,9 @@ function fitsPipeCell(cell: Element): boolean {
  */
 function isSimpleCell(el: Element, ctx: ConvCtx): boolean {
   return Array.from(el.childNodes).every((child) => {
-    if (child.nodeType !== Node.ELEMENT_NODE) return true;
+    if (child.nodeType !== Node.ELEMENT_NODE) {
+      return !DIARIUM_LINK_TOKEN_RE.test(child.textContent ?? '');
+    }
     const c = child as Element;
     if (!CELL_BLOCKS.has(c.tagName.toLowerCase())) return isSimpleInline(c, ctx);
     if (/checklist/i.test(c.getAttribute('class') ?? '')) return false;
@@ -382,6 +402,13 @@ function editorFontSize(style: string): string | null {
   return name ? (FONT_SIZES.find((s) => s.name === name)?.value ?? null) : null;
 }
 
+/** Phrasing and inline-heading wrappers whose children must stay single-line inline tokens. */
+const INLINE_WRAPPER_TAGS = new Set([
+  'span', 'font', 'small', 'big', 'q', 'cite', 'ins', 'label', 'abbr',
+  'dfn', 'var', 'samp', 'bdi', 'bdo', 'time', 'data', 'output',
+  'figcaption', 'summary', 'dt',
+]);
+
 /**
  * Wrap a styled run in the palette color nearest to each of its colors and
  * the editor size nearest to its font size, in the editor's own form: one
@@ -402,9 +429,11 @@ function paletteRun(inner: string, style: string, ctx: ConvCtx, html: boolean, i
   if (!color && !highlight && !size) return inner;
 
   const [, lead = '', body = '', trail = ''] = inner.match(/^(\s*)([\s\S]*?)(\s*)$/) ?? [];
-  // An inline tag cannot hold a paragraph break: the blocks keep their text.
-  if (/\n\s*\n/.test(body)) {
-    ctx.flags.droppedColors++;
+  // An inline tag cannot hold a paragraph break or Markdown block delimiters:
+  // the blocks keep their own structure and drop the outer inline style.
+  if (/\n\s*\n/.test(body) || (!html && containsMarkdownBlock(body))) {
+    if (color || highlight) ctx.flags.droppedColors++;
+    if (size) ctx.flags.droppedStyling++;
     return inner;
   }
   let out = body;
@@ -412,7 +441,9 @@ function paletteRun(inner: string, style: string, ctx: ConvCtx, html: boolean, i
     ctx.flags.highlights++;
     out = highlight.value
       ? `<mark style="background-color: ${highlight.value}">${out}</mark>`
-      : html ? `<mark>${out}</mark>` : `==${out}==`;
+      : html || shouldUseHtmlMark(out)
+        ? `<mark>${out}</mark>`
+        : `==${out}==`;
   }
   const css: string[] = [];
   if (color) {
@@ -519,6 +550,19 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
 
   // Inside a link's label a bare URL is only text: a link cannot hold another.
   let linkDepth = 0;
+  let inlineDepth = 0;
+
+  const walkInline = (node: Node, indent: string): string => {
+    inlineDepth++;
+    try {
+      return walk(node, indent);
+    } finally {
+      inlineDepth--;
+    }
+  };
+
+  const childrenInline = (el: Element, indent: string): string =>
+    joinMathSafe(Array.from(el.childNodes).map((c) => walkInline(c, indent)));
 
   /** The marker each list got (`-` or `*`, `.` or `)`), for the list after it. */
   const listMarks = new WeakMap<Element, string>();
@@ -585,8 +629,7 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     const mark = ordered ? (swap ? ')' : '.') : swap ? '*' : '-';
     listMarks.set(el, mark);
     const lines: string[] = [];
-    let n = Number(el.getAttribute('start') ?? '1');
-    if (!Number.isFinite(n) || n < 1) n = 1;
+    let n = orderedListStart(el.getAttribute('start'), items.length);
 
     for (const li of items) {
       const marker = isChecklist
@@ -613,10 +656,20 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
             ? (child as Element).tagName.toLowerCase()
             : '';
         if (tag === 'ul' || tag === 'ol') {
-          nested.push(renderList(child as Element, column));
+          const sub = renderList(child as Element, column);
+          if (sub) {
+            const hasPreceding = Boolean(inline.trim()) || nested.length > 0;
+            nested.push(hasPreceding && sublistNeedsBlankLine(sub) ? `\n${sub}` : sub);
+          }
         } else if (
           ITEM_BLOCKS.has(tag) &&
-          (tag !== 'p' || inline.trim() || nested.length > 0)
+          (tag !== 'p' || inline.trim() || nested.length > 0) &&
+          !(
+            isChecklist &&
+            !inline.trim() &&
+            nested.length === 0 &&
+            /math-block/i.test((child as Element).getAttribute('class') ?? '')
+          )
         ) {
           const block = walk(child, '').replace(/^\n+|\n+$/g, '');
           if (block.trim()) {
@@ -626,15 +679,15 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
           }
         } else if (nested.length > 0) {
           // Loose text after a block is a paragraph of its own.
-          const text = inlineOnly(walk(child, indent));
+          const text = inlineOnly(walkInline(child, indent));
           if (text) nested.push(`\n${column}${text}`);
         } else {
-          inline += walk(child, indent);
+          inline = appendMathSafe(inline, walkInline(child, indent));
         }
       }
 
       const text = inlineOnly(inline);
-      if (!text && nested[0]?.startsWith(`\n${column}`)) {
+      if (!isChecklist && !text && nested[0]?.startsWith(`\n${column}`)) {
         // An item that opens with a block: the block starts on the marker
         // line, as an item cannot open with a blank line and go on.
         lines.push(indent + marker + nested.shift()!.slice(column.length + 1));
@@ -648,7 +701,15 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     }
     if (lines.length === 0) return '';
     const titleLine = listTitle ? `${guardMarkdownLineStart(escapeMarkdownText(listTitle))}\n\n` : '';
-    return `${titleLine}${lines.join('\n')}\n\n`;
+    const afterBr = el.previousSibling?.nodeName === 'BR';
+    const lead = indent
+      ? ''
+      : titleLine || sublistNeedsBlankLine(lines[0]!)
+        ? '\n\n'
+        : afterBr
+          ? ''
+          : '\n';
+    return `${lead}${titleLine}${lines.join('\n')}\n\n`;
   }
 
   /** Prefix every line with `> `, an empty line with a bare `>`. */
@@ -673,12 +734,13 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     const first = el.firstElementChild;
     const heading = first && /^h[1-6]$/i.test(first.tagName) ? first : null;
     const title = heading
-      ? inlineOnly(Array.from(heading.childNodes).map((c) => walk(c, '')).join(''))
+      ? inlineOnly(childrenInline(heading, ''))
       : '';
-    const body = Array.from(el.childNodes)
-      .filter((c) => c !== heading)
-      .map((c) => walk(c, ''))
-      .join('')
+    const body = joinMathSafe(
+      Array.from(el.childNodes)
+        .filter((c) => c !== heading)
+        .map((c) => walk(c, '')),
+    )
       .replace(/[ \t]+\n/g, '\n')
       .replace(/\n{3,}/g, '\n\n')
       .trim();
@@ -695,10 +757,7 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     const cellsOf = (tr: Element) =>
       Array.from(tr.children)
         .filter((c) => /^(td|th)$/i.test(c.tagName))
-        .map((c) =>
-          // A typed pipe is already escaped; one inside a link or note-link is not.
-          inlineOnly(walk(c, '')).replace(/(?<!\\)((?:\\\\)*)\|/g, '$1\\|').replace(/^$/, ' ')
-        );
+        .map((c) => escapePipeCell(inlineOnly(walkInline(c, ''))));
 
     const cells = rows.flatMap((tr) =>
       Array.from(tr.children).filter((c) => /^(td|th)$/i.test(c.tagName))
@@ -761,11 +820,16 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
 
   function renderAnchor(el: Element, indent: string): string {
     const href = el.getAttribute('href') ?? '';
+    if (linkDepth > 0) {
+      return inlineOnly(childrenInline(el, indent)) || escapeMarkdownText(href);
+    }
     linkDepth++;
-    const inner = inlineOnly(
-      Array.from(el.childNodes).map((c) => walk(c, indent)).join('')
-    );
-    linkDepth--;
+    let inner = '';
+    try {
+      inner = inlineOnly(childrenInline(el, indent));
+    } finally {
+      linkDepth--;
+    }
     const label = inner || escapeMarkdownText(href);
     // A note-link label and an attachment name are read as plain text.
     const text = inlineOnly(el.textContent ?? '') || href;
@@ -777,8 +841,10 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     // Internal note link.
     const target = noteLinkTarget(ctx, href);
     if (target) {
+      const nl = noteLink(target, text);
+      if (!nl.startsWith('[[')) return label;
       ctx.flags.noteLinks++;
-      return noteLink(target, text);
+      return nl;
     }
 
     // A relative .html/.md href we could not resolve still reads as an
@@ -786,12 +852,15 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     // a dead file:// style link.
     const resolved = resolveRelative(ctx.baseDir, href);
     if (resolved && (HTML_EXT.test(resolved) || MD_EXT.test(resolved))) {
+      const nl = noteLink(text, text);
+      if (!nl.startsWith('[[')) return label;
       ctx.flags.noteLinks++;
-      return noteLink(text, text);
+      return nl;
     }
 
-    if (!href) return label;
-    return `[${label}](${href})`;
+    const targetUrl = formatMarkdownLinkTarget(href);
+    if (!targetUrl) return label;
+    return `[${label}](${targetUrl})`;
   }
 
   function walk(node: Node, indent: string): string {
@@ -816,13 +885,20 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     // source lands there and renders again instead of sitting in a code
     // fence.
     if (/math-block/i.test(cls)) {
-      const src = latexOf(el);
+      const raw = latexOf(el);
+      if (inlineDepth > 0 || tag === 'span') {
+        const inline = sanitizeInlineLatex(raw);
+        if (!inline) return '';
+        ctx.flags.math++;
+        return `$${inline}$`;
+      }
+      const src = sanitizeBlockLatex(raw);
       if (!src) return '';
       ctx.flags.math++;
-      return `\n$$${src}$$\n\n`;
+      return src.includes('\n') ? `\n$$\n${src}\n$$\n\n` : `\n$$${src}$$\n\n`;
     }
     if (/math-inline/i.test(cls)) {
-      const src = latexOf(el);
+      const src = sanitizeInlineLatex(latexOf(el));
       if (!src) return '';
       ctx.flags.math++;
       return `$${src}$`;
@@ -831,7 +907,7 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     if (tag === 'div' && /(?:^|\s)callout(?:\s|$)/.test(cls)) return renderCallout(el);
 
     const children = () =>
-      Array.from(el.childNodes).map((c) => walk(c, indent)).join('');
+      joinMathSafe(Array.from(el.childNodes).map((c) => walk(c, indent)));
 
     switch (tag) {
       case 'script':
@@ -861,40 +937,45 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
           }
         }
         if (align) ctx.flags.droppedAlign++;
-        const text = inlineOnly(children());
+        const text = inlineOnly(childrenInline(el, indent));
         if (!text) return '';
         return `\n${'#'.repeat(Number(tag[1]))} ${text}\n\n`;
       }
 
       case 'strong':
       case 'b': {
-        const inner = children();
-        return inner.trim() ? `**${inner.trim()}**` : inner;
+        const inner = childrenInline(el, indent);
+        const core = inner.trim();
+        return core && !containsMarkdownBlock(core) ? `**${core}**` : inner;
       }
       case 'em':
       case 'i': {
-        const inner = children();
-        return inner.trim() ? `*${inner.trim()}*` : inner;
+        const inner = childrenInline(el, indent);
+        const core = inner.trim();
+        return core && !containsMarkdownBlock(core) ? `*${core}*` : inner;
       }
       case 'u': {
-        const inner = children();
-        if (!inner.trim()) return inner;
+        const inner = childrenInline(el, indent);
+        const core = inner.trim();
+        if (!core || containsMarkdownBlock(core)) return inner;
         ctx.flags.underline++;
-        return `<u>${inner.trim()}</u>`;
+        return `<u>${core}</u>`;
       }
       case 's':
       case 'del':
       case 'strike': {
-        const inner = children();
-        return inner.trim() ? `~~${inner.trim()}~~` : inner;
+        const inner = childrenInline(el, indent);
+        const core = inner.trim();
+        return core && !containsMarkdownBlock(core) ? `~~${core}~~` : inner;
       }
       case 'mark':
-        return paletteRun(children(), style, ctx, false, true);
+        return paletteRun(childrenInline(el, indent), style, ctx, false, true);
 
       case 'sup':
       case 'sub': {
-        const inner = children();
-        return inner.trim() ? `<${tag}>${inner}</${tag}>` : inner;
+        const inner = childrenInline(el, indent);
+        const core = inner.trim();
+        return core && !containsMarkdownBlock(core) ? `<${tag}>${inner}</${tag}>` : inner;
       }
       case 'code':
       case 'kbd': {
@@ -908,7 +989,12 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
         const code = (el.textContent ?? '').replace(/\n+$/, '');
         if (!code.trim()) return '';
         ctx.flags.codeBlocks++;
-        return `\n\`\`\`${codeLanguage(el)}\n${code}\n\`\`\`\n\n`;
+        let maxTicks = 2;
+        for (const m of code.matchAll(/`+/g)) {
+          if (m[0].length > maxTicks) maxTicks = m[0].length;
+        }
+        const fence = '`'.repeat(maxTicks + 1);
+        return `\n${fence}${codeLanguage(el)}\n${code}\n${fence}\n\n`;
       }
 
       case 'br':
@@ -930,10 +1016,21 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
           }
         }
         if (align) ctx.flags.droppedAlign++;
-        const inner = children().trim();
+        const inner = children().replace(/\n{3,}/g, '\n\n').trim();
         if (!inner) return '\n';
-        // A <p> holds no blocks, so only typed text can open it.
-        const text = tag === 'p' && opensWithText(el) ? guardMarkdownLineStart(inner) : inner;
+        // A <p> holds no blocks, so only typed text or a link flattened to plain text can open it.
+        const firstSig = Array.from(el.childNodes).find(
+          (c) => c.nodeType === Node.ELEMENT_NODE || (c.textContent ?? '').trim(),
+        );
+        const startsPlainAnchor =
+          firstSig?.nodeType === Node.ELEMENT_NODE &&
+          (firstSig as Element).tagName.toLowerCase() === 'a' &&
+          !inner.startsWith('[') &&
+          !inner.startsWith('<');
+        const text =
+          tag === 'p' && (opensWithText(el) || startsPlainAnchor)
+            ? guardMarkdownLineStart(inner)
+            : inner;
         // Shift+Enter in Notesnook starts a single-spaced paragraph, which
         // shows as the next line of the paragraph above it. It becomes a
         // line break there: SINGLE_SPACED pulls it up when the text is done.
@@ -943,7 +1040,8 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
           el.getAttribute('data-spacing') === 'single' &&
           prev?.tagName === 'P' &&
           !!prev.textContent?.trim();
-        return `${joins ? SINGLE_SPACED : ''}${text}\n\n`;
+        const lead = joins ? SINGLE_SPACED : '\n\n';
+        return `${lead}${text}\n\n`;
       }
 
       case 'ul':
@@ -952,10 +1050,10 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
 
       case 'li':
         // Only reached for a stray <li> outside a list.
-        return `- ${inlineOnly(children())}\n`;
+        return `\n- ${inlineOnly(childrenInline(el, indent))}\n`;
 
       case 'blockquote': {
-        const inner = children().trim();
+        const inner = children().replace(/\n{3,}/g, '\n\n').trim();
         if (!inner) return '';
         return `\n${quoteLines(inner)}\n\n`;
       }
@@ -967,8 +1065,9 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
         const src = el.getAttribute('src') ?? '';
         const alt = (el.getAttribute('alt') ?? '').replace(/[[\]]/g, '');
         const token = attachmentToken(ctx, src);
-        if (!token && !src) return '';
-        return `\n\n![${alt}](${token ?? src})${imageSuffix(el)}\n\n`;
+        const targetSrc = token ?? formatMarkdownLinkTarget(src);
+        if (!targetSrc) return '';
+        return `\n\n![${alt}](${targetSrc})${imageSuffix(el)}\n\n`;
       }
 
       case 'a':
@@ -985,14 +1084,21 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
         // walk inside the other, until the stack runs out.
         const src = (el.getAttribute('src') ?? '').trim();
         const token = attachmentToken(ctx, src);
-        let out = token
-          ? `\n[${attachmentName(resolveRelative(ctx.baseDir, src) ?? src)}](${token})\n\n`
-          : src ? `\n[${src}](${src})\n\n` : '';
+        const targetSrc = formatMarkdownLinkTarget(src);
+        let out: string;
+        if (linkDepth > 0) {
+          const label = token ? attachmentName(resolveRelative(ctx.baseDir, src) ?? src) : src;
+          out = label ? ` ${escapeMarkdownText(label)} ` : '';
+        } else {
+          out = token
+            ? `\n[${attachmentName(resolveRelative(ctx.baseDir, src) ?? src)}](${token})\n\n`
+            : targetSrc ? `\n[${escapeMarkdownText(src)}](${targetSrc})\n\n` : '';
+        }
         const rest = tag === 'iframe' ? (el.textContent ?? '') : '';
         if (rest.trim()) {
           const closed = closeIframes(rest);
           const doc = new DOMParser().parseFromString(closed, 'text/html');
-          out += Array.from(doc.body.childNodes).map((c) => walk(c, indent)).join('');
+          out += joinMathSafe(Array.from(doc.body.childNodes).map((c) => walk(c, indent)));
         }
         return out;
       }
@@ -1003,7 +1109,7 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
         // background color move onto the palette and a font size onto the
         // editor's sizes; a font family has no node, so the text stays and
         // the family goes.
-        const inner = children();
+        const inner = INLINE_WRAPPER_TAGS.has(tag) ? childrenInline(el, indent) : children();
         if (
           inner.trim() &&
           (el.hasAttribute('data-font-family') ||
@@ -1017,9 +1123,7 @@ function htmlToMarkdown(bodyEl: Element, ctx: ConvCtx): string {
     }
   }
 
-  const md = Array.from(bodyEl.childNodes)
-    .map((c) => walk(c, ''))
-    .join('');
+  const md = joinMathSafe(Array.from(bodyEl.childNodes).map((c) => walk(c, '')));
 
   return md
     // A single-spaced paragraph joins the line above it, inside a list item
@@ -1158,29 +1262,37 @@ function readMarkdownNote(text: string, rel: string, fileDate: Date | null): Raw
 function rewriteMarkdownLinks(body: string, ctx: ConvCtx): string {
   // Bounded runs: with no `)` ahead, an unbounded href scanned to the end of
   // the body from every `[`, which is quadratic on a crafted note.
-  const LINK_RE = /(!?)\[([^\]]{0,2000})\]\(\s*<?([^)>]{0,2000}?)>?(?:\s+"([^"]{0,2000})")?\s*\)/g;
+  const LINK_RE =
+    /(!?)\[([^\]]{0,2000})\]\(\s*(?:<([^>\r\n]{0,2000})>|([^)\s>]{0,2000}))(?:\s+"([^"]{0,2000})")?\s*\)/g;
 
-  return body.replace(LINK_RE, (whole, bang: string, label: string, href: string) => {
-    const target = href.trim();
-    if (!target) return whole;
+  return body.replace(
+    LINK_RE,
+    (whole, bang: string, label: string, angled?: string, bare?: string) => {
+      const target = (angled ?? bare ?? '').trim();
+      if (!target) return whole;
 
     const token = attachmentToken(ctx, target);
     if (token) return `${bang}[${label}](${token})`;
 
     const noteTitle = noteLinkTarget(ctx, target);
     if (noteTitle) {
+      const nl = noteLink(noteTitle, label);
+      if (!nl.startsWith('[[')) return label;
       ctx.flags.noteLinks++;
-      return noteLink(noteTitle, label);
+      return nl;
     }
 
     const resolved = resolveRelative(ctx.baseDir, target);
     if (resolved && (HTML_EXT.test(resolved) || MD_EXT.test(resolved))) {
+      const nl = noteLink(label, label);
+      if (!nl.startsWith('[[')) return label;
       ctx.flags.noteLinks++;
-      return noteLink(label, label);
+      return nl;
     }
 
     // External link: drop the angle brackets so tiptap-markdown parses it.
-    return `${bang}[${label}](${target})`;
+    const formatted = formatMarkdownLinkTarget(target);
+    return formatted ? `${bang}[${label}](${formatted})` : label;
   });
 }
 

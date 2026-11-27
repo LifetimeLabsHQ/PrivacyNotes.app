@@ -15,9 +15,12 @@
  */
 import type { CSSProperties, HTMLAttributes, ReactNode, RefCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Archive, Bell, Check, CloudSlash, Image, PILLAR_GLYPHS, Paperclip, PencilSimpleSlash, PushPin, Shield, Warning, type Icon } from './icons';
+import { Archive, Bell, Check, CloudSlash, Image, Paperclip, PencilSimpleSlash, PushPin, Shield, Warning, type Icon } from './icons';
 import { PILL_TONE, type PillTone } from './trackerTone';
 import { SwipeRow, type SwipeRowAction } from './swipeRow';
+import { TypeMark, type ItemMark } from './typeMark';
+
+export type { ItemMark };
 
 export type ItemFlag = 'notBackedUp' | 'pinned' | 'pinProtected' | 'readOnly' | 'archived' | 'localOnly';
 
@@ -72,35 +75,6 @@ export interface ListItem {
   look: { color?: string; style?: string; css?: CSSProperties } | null;
   /** Compact rows, set by `applyCompactRows`. */
   compact?: boolean;
-}
-
-/** The types that wear a corner mark. The vault stays bare (section 78). */
-export type ItemMark = 'link' | 'note' | 'task' | 'journal' | 'event' | 'drawing' | 'file' | 'contact';
-
-/** The sidebar glyph each type wears, so a row names its type with the very
- *  icon its list has in the sidebar. Spec: docs/internal/design/ui-patterns.md
- *  section 78 */
-const MARK_GLYPHS: Record<ItemMark, Icon> = {
-  link: PILLAR_GLYPHS.bookmarks,
-  note: PILLAR_GLYPHS.notes,
-  task: PILLAR_GLYPHS.tasks,
-  journal: PILLAR_GLYPHS.journals,
-  event: PILLAR_GLYPHS.calendar,
-  drawing: PILLAR_GLYPHS.drawings,
-  file: PILLAR_GLYPHS.files,
-  contact: PILLAR_GLYPHS.contacts,
-};
-
-/** The type mark: the type's glyph as a faint, tilted watermark behind the
- *  item's end, cut off by its edge. It takes no room, so the title, the date
- *  and the buttons keep their places. See `.pn-watermark` in index.css. */
-function TypeMark({ mark }: { mark: ItemMark }) {
-  const Glyph = MARK_GLYPHS[mark];
-  return (
-    <span data-slot="mark" data-mark={mark} className="pn-watermark" aria-hidden="true">
-      <Glyph size="100%" />
-    </span>
-  );
 }
 
 /**

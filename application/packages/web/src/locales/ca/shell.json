@@ -207,7 +207,7 @@
     "color": "Color",
     "colorNone": "Sense color",
     "colorUseDefault": "Per defecte",
-    "icon": "Icones i logotips",
+    "icon": "Icones / logotips / emojis",
     "colorFromFolder": "De la carpeta: {{name}}",
     "colorFromTag": "De l'etiqueta: #{{name}}",
     "colorOwnHint": "Un color triat aquí omple el fons d'aquesta nota. <setting>Colors de carpetes i etiquetes</setting> no el canvien.",
@@ -367,6 +367,7 @@
   },
   "demoBanner": {
     "title": "Prova-ho sense cap risc",
+    "shortTitle": "Demo",
     "description": "Aquí no es desa res. Aconsegueix la teva pròpia llibreta xifrada, gratis."
   },
   "markdown": {
@@ -631,6 +632,10 @@
     "tooLarge": "Massa gran. El màxim és {{limit}} MB per fitxer.",
     "titlePlaceholder": "Títol (opcional)",
     "notePlaceholder": "Afegeix una nota...",
+    "taskPlaceholder": "Element de tasca...",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "S'afegeix a l'entrada de diari d'avui.",
+    "clipFallbackToast": "No s'ha pogut retallar la pàgina. S'ha desat com a marcador.",
     "photoCount": "{{count}} fotos"
   },
   "shortcut": {
@@ -962,7 +967,8 @@
     "label": "Afegit ràpid"
   },
   "offline": {
-    "notLoaded": "Estàs fora de línia i aquesta part de l'aplicació encara no s'ha carregat. Torna-ho a provar quan tornis a estar en línia."
+    "notLoaded": "Estàs fora de línia i aquesta part de l'aplicació encara no s'ha carregat. Torna-ho a provar quan tornis a estar en línia.",
+    "chunkBlocked": "No s'ha pogut carregar aquesta vista. Torna a carregar la pàgina o revisa el bloquejador de contingut."
   },
   "checkIn": {
     "prompt": "Com estàs avui?",
@@ -1140,6 +1146,7 @@
     "removed": "Eliminat de l'Inici",
     "showOnHome": "Mostra a l'Inici",
     "removeFromHome": "Elimina de l'Inici",
+    "openTarget": "Obre {{target}}",
     "resize": "Redimensiona {{name}}",
     "narrower": "Més estret",
     "taller": "Més alt",
@@ -1147,29 +1154,75 @@
     "moveEarlier": "Mou abans",
     "moveLater": "Mou després",
     "chooseNote": "Tria una nota",
+    "chooseNotes": "Tria notes",
     "chooseTag": "Tria una etiqueta",
+    "chooseTags": "Tria etiquetes",
     "chooseFolder": "Tria una carpeta",
+    "chooseFolders": "Tria carpetes",
     "chooseTracker": "Tria un seguiment",
+    "chooseCounter": "Tria un comptador",
+    "chooseCounters": "Tria comptadors",
+    "chooseTypes": "Tria els tipus d'element",
     "choose": "Tria",
     "gone": "Ja no és aquí",
     "otherSpace": "A l'altre espai",
     "proLocked": "Forma part de Pro",
     "noneToChoose": "Encara no hi ha res per triar",
+    "catalogSearch": "Cerca ginys",
+    "catalogFilter": "Filtra els ginys",
+    "allWidgets": "Tots els ginys",
+    "onHomeLabel": "A l'Inici",
+    "onHomeCount": "A l'Inici ({{count}})",
     "headerEvents_other": "{{formatted}} esdeveniments avui",
+    "headerOverdue_one": "{{formatted}} endarrerida",
+    "headerOverdue_other": "{{formatted}} endarrerides",
     "headerTasks_other": "{{formatted}} tasques pendents",
+    "headerDosesLeft_one": "Queda {{formatted}} dosi",
+    "headerDosesLeft_other": "Queden {{formatted}} dosis",
     "startToday": "Comença l'entrada d'avui",
+    "setupMedication": "Configura la medicació",
+    "setupCounter": "Crea un comptador",
+    "counterIncrease": "Suma'n un a {{name}}",
+    "counterDecrease": "Resta'n un a {{name}}",
+    "storageSummary": "{{notes}} notes · {{files}} fitxers",
+    "graphSummary": "{{linked}} enllaçades · {{orphans}} sense enllaçar",
+    "placesSummary_one": "{{count}} element amb ubicació",
+    "placesSummary_other": "{{count}} elements amb ubicació",
+    "quickCapture": {
+      "placeholderJournal": "Afegeix al diari d'avui...",
+      "placeholderTask": "Afegeix una tasca...",
+      "placeholderNote": "Escriu una nota ràpida...",
+      "destination": "On es desa",
+      "voice": "Grava una nota de veu",
+      "voiceNoteTitle": "Nota de veu",
+      "recording": "S'està gravant {{duration}}",
+      "savingVoice": "S'està xifrant la nota de veu...",
+      "savedTo": "S'ha desat a {{title}}",
+      "failed": "Ara mateix no s'ha pogut desar.",
+      "micUnavailable": "La gravació amb el micròfon no està disponible aquí.",
+      "micDenied": "S'ha denegat l'accés al micròfon."
+    },
     "groups": {
-      "keep": "Coses que guardes"
+      "graph": "Graf i mapes",
+      "keep": "Extres"
     },
     "layout": {
       "everyday": "Dia a dia",
       "planner": "Planificació",
-      "writer": "Escriptura"
+      "writer": "Escriptura",
+      "wellness": "Benestar"
     },
     "w": {
       "checkIn": {
         "name": "Registre diari",
         "help": "Com estàs avui, i els teus seguiments"
+      },
+      "medication": {
+        "help": "Les dosis d'avui, Pres o Omet, i avisos per reposar"
+      },
+      "quickCapture": {
+        "name": "Captura ràpida",
+        "help": "Afegeix text o una nota de veu des de l'Inici"
       },
       "calendar": {
         "help": "El mes, amb punts d'entrades i d'esdeveniments"
@@ -1184,7 +1237,7 @@
       },
       "tasks": {
         "name": "Tasques pendents",
-        "help": "Tasques sense marcar de les teves notes"
+        "help": "Primer les tasques endarrerides i les que vencen, amb afegit ràpid"
       },
       "recent": {
         "name": "Editats fa poc",
@@ -1205,9 +1258,19 @@
         "name": "Una carpeta",
         "help": "Els elements més nous d'una carpeta"
       },
+      "types": {
+        "name": "Llista d'elements",
+        "help": "Els elements més nous dels tipus que triïs"
+      },
       "onThisDay": {
         "name": "Tal dia com avui",
         "help": "Entrades de diari d'anys anteriors"
+      },
+      "graph": {
+        "help": "Minimapa en directe de les notes enllaçades de la teva caixa forta"
+      },
+      "places": {
+        "help": "Les teves notes, entrades i contactes amb ubicació en un mapa"
       },
       "week": {
         "help": "Paraules, dies actius, elements i registres diaris"
@@ -1222,6 +1285,12 @@
         "name": "El teu ritme",
         "help": "26 setmanes d'escriptura i estat d'ànim"
       },
+      "yearPixels": {
+        "help": "Tot el teu any de colors d'estat d'ànim d'un cop d'ull"
+      },
+      "patterns": {
+        "help": "Què fa pujar o baixar més el teu estat d'ànim"
+      },
       "milestone": {
         "name": "Propera fita",
         "help": "Quant falta per a la propera"
@@ -1229,6 +1298,9 @@
       "tracker": {
         "name": "Un seguiment",
         "help": "Un seguiment: la seva xifra i els seus dies"
+      },
+      "counter": {
+        "help": "Toca +1 a l'Inici mateix per a un comptador personalitzat"
       },
       "weekRecap": {
         "help": "La teva setmana, en una targeta"
@@ -1242,9 +1314,13 @@
       },
       "birthdays": {
         "help": "Aniversaris dels propers 30 dies"
+      },
+      "storage": {
+        "help": "El teu anell d'emmagatzematge xifrat, amb recompte"
       }
     },
     "empty": {
+      "medication": "Avui no toca cap medicament",
       "upcoming": "Res als propers 7 dies",
       "tasks": "Cap tasca pendent",
       "recent": "Encara no hi ha res aquí",
@@ -1252,6 +1328,11 @@
       "tag": "Cap element amb aquesta etiqueta",
       "folder": "No hi ha res en aquesta carpeta",
       "onThisDay": "Cap entrada tal dia com avui en anys anteriors",
+      "graph": "Enllaça dues notes per veure el teu graf aquí",
+      "places": "Afegeix una ubicació a una nota o a un contacte per veure xinxetes aquí",
+      "yearPixels": "Registra el teu estat d'ànim per pintar l'any",
+      "patterns": "Registra uns quants dies més per detectar patrons",
+      "counter": "Encara no hi ha cap seguiment comptador",
       "files": "Encara no hi ha fitxers",
       "bookmarks": "Encara no hi ha marcadors",
       "birthdays": "Cap aniversari als propers 30 dies",

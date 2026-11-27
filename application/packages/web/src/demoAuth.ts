@@ -8,7 +8,14 @@ import {
 import { clearLocalDatabase } from './notesRepo';
 import { clearLocalSettings, loadLocalSettings, saveLocalSettings } from './userSettings';
 import { DEMO_PHRASE, demoSessionIsFresh } from './demo';
-import { seedOnboardingNotes, SEED_MEDICATION, withSeedFactors } from './welcomeNote';
+import { demoShowcaseDashboard, writeDashboardSetting } from './dashboard/dashboardLayout';
+import {
+  DEMO_WATER_COUNTER_ID,
+  demoMedications,
+  demoWaterCounter,
+  seedOnboardingNotes,
+  withSeedFactors,
+} from './welcomeNote';
 import type { AuthState } from './auth';
 
 export async function buildDemoAuthState(): Promise<AuthState> {
@@ -21,19 +28,32 @@ export async function buildDemoAuthState(): Promise<AuthState> {
   // Settings live in a demo-only localStorage bucket (see
   // userSettings.ts localKey) and reset alongside the notes so
   // every fresh session starts from defaults.
-  if (demoSessionIsFresh()) {
+  const fresh = demoSessionIsFresh();
+  if (fresh) {
     await clearLocalDatabase();
     clearLocalSettings();
   }
   await seedOnboardingNotes(pubkey); // idempotent
-  // Seed the example medication template so the wellness pill
-  // renders, mirroring the first-run flow in NotesView.
+  // Seed the demo medications, Water counter, factors, and showcase Home
+  // dashboard so every new widget opens with live interactive data.
   const s = loadLocalSettings();
-  if (!s.medications?.some((m) => m.id === SEED_MEDICATION.id) || (s.factors ?? []).length === 0) {
+  const meds = demoMedications();
+  const existingMedIds = new Set((s.medications ?? []).map((m) => m.id));
+  const nextMeds = [...(s.medications ?? []), ...meds.filter((m) => !existingMedIds.has(m.id))];
+  const existingCustom = s.trackerSettings?.customTrackers ?? [];
+  const hasWater = existingCustom.some((c) => c.id === DEMO_WATER_COUNTER_ID);
+  const nextCustomTrackers = hasWater ? existingCustom : [...existingCustom, demoWaterCounter()];
+  const needsDashboard = fresh || !s.dashboard?.layout;
+  const nextDashboard = needsDashboard
+    ? writeDashboardSetting(s.dashboard ?? {}, demoShowcaseDashboard(DEMO_WATER_COUNTER_ID))
+    : s.dashboard;
+  if (nextMeds.length !== (s.medications ?? []).length || (s.factors ?? []).length === 0 || !hasWater || needsDashboard) {
     saveLocalSettings({
       ...s,
-      medications: s.medications?.some((m) => m.id === SEED_MEDICATION.id) ? s.medications : [...(s.medications ?? []), SEED_MEDICATION],
+      medications: nextMeds,
       factors: withSeedFactors(s.factors),
+      ...(s.trackerSettings ? { trackerSettings: { ...s.trackerSettings, customTrackers: nextCustomTrackers } } : {}),
+      dashboard: nextDashboard,
     });
   }
   return {

@@ -90,9 +90,12 @@ export function buildBookmarksHtml(
   const byId = new Map(folders.map((f) => [f.id, f]));
   const childrenOf = new Map<string | null, FolderDef[]>();
   for (const f of folders) {
-    const list = childrenOf.get(f.parentId) ?? [];
+    // A folder whose parent is missing becomes a root rather than stranding
+    // every bookmark filed inside it.
+    const parentId = f.parentId && byId.has(f.parentId) ? f.parentId : null;
+    const list = childrenOf.get(parentId) ?? [];
     list.push(f);
-    childrenOf.set(f.parentId, list);
+    childrenOf.set(parentId, list);
   }
   for (const list of childrenOf.values()) list.sort((a, b) => a.order - b.order);
 
@@ -112,9 +115,13 @@ export function buildBookmarksHtml(
 
   // A folder is written only when it, or something below it, holds one.
   const occupied = new Set<string>();
+  const visiting = new Set<string>();
   const fill = (f: FolderDef): boolean => {
+    if (visiting.has(f.id)) return false;
+    visiting.add(f.id);
     let used = (inFolder.get(f.id)?.length ?? 0) > 0;
     for (const child of childrenOf.get(f.id) ?? []) if (fill(child)) used = true;
+    visiting.delete(f.id);
     if (used) occupied.add(f.id);
     return used;
   };
@@ -145,8 +152,10 @@ export function buildBookmarksHtml(
     if (notes) out.push(`${indent}<DD>${escapeHtml(notes)}`);
   };
 
+  const written = new Set<string>();
   const writeFolder = (f: FolderDef, depth: number) => {
-    if (!occupied.has(f.id)) return;
+    if (!occupied.has(f.id) || written.has(f.id)) return;
+    written.add(f.id);
     const indent = '    '.repeat(depth);
     out.push(`${indent}<DT><H3>${escapeHtml(f.name)}</H3>`);
     out.push(`${indent}<DL><p>`);

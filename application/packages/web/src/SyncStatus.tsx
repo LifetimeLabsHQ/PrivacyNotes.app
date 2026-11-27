@@ -6,7 +6,7 @@ import { usePendingUploads } from './usePendingUploads';
 import { useSyncing } from './syncingStore';
 import { HoverLabel } from './HoverLabel';
 import { isDemoMode } from './demo';
-import { useLocalOnly, useLocalTruthOnly } from './localOnly';
+import { useUnsyncedLocalVault } from './localOnly';
 import { useBelowVersionFloor } from './versionFloor';
 import { useSyncPaused } from './syncPause';
 import { useFilesWifiOnly } from './wifiOnly';
@@ -177,8 +177,7 @@ export function SyncStatus({ size = 20, onOpen, tipPosition = 'above-start', tip
   const syncing = useSyncing();
   const belowFloor = useBelowVersionFloor();
   const paused = useSyncPaused();
-  const localOnly = useLocalOnly();
-  const localTruth = useLocalTruthOnly();
+  const unsyncedLocal = useUnsyncedLocalVault();
   const wifi = useFilesWifiOnly();
   const failures = usePushFailures();
   const halt = usePushHalt();
@@ -213,7 +212,7 @@ export function SyncStatus({ size = 20, onOpen, tipPosition = 'above-start', tip
   // saved" - the required update toast can cover content, this cannot.
   // Local-only mode (and registered-but-never-synced vaults with sync still
   // off) shows a calm neutral device icon instead of an amber warning.
-  const state = localOnly || (localTruth && paused)
+  const state = unsyncedLocal
     ? {
         body: <Laptop size={size} className="text-pn-muted" />,
         tip: t('syncStatus.localOnly'),

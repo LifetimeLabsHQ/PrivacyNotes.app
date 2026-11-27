@@ -1,5 +1,5 @@
 import type JSZip from 'jszip';
-import { gunzipText, ImportTooLargeError, mediaTooLargeWarning, zipEntryBytes, zipEntryMedia, zipEntryText } from './zipEntry';
+import { gunzipText, ImportBudget, ImportTooLargeError, mediaTooLargeWarning, zipEntryBytes, zipEntryMedia, zipEntryText } from './zipEntry';
 import { openZip } from './zipOpen';
 import type { FolderDef } from '../folders';
 import { normalizeTag } from '../notesRepo';
@@ -1384,6 +1384,8 @@ async function parseSingleExports(
 /* Zip parsing                                                        */
 /* ------------------------------------------------------------------ */
 
+const MAX_INNER_ZIPS = 200;
+
 /** Blob placeholder token. Fixed width so no key is a prefix of another. */
 function blobToken(index: number): string {
   return `upnatt:${String(index).padStart(6, '0')}`;
@@ -1393,10 +1395,12 @@ export async function parseUpNote(
   file: File,
   onProgress?: (msg: string) => void
 ): Promise<ParsedImport> {
+  const budget = new ImportBudget();
   // A bare .md or .html is a per-note export shared without its zip (a
   // note that carries no media exports as just the file).
   const bareKind = /\.html?$/i.test(file.name) ? 'html' : /\.md$/i.test(file.name) ? 'md' : null;
   if (bareKind) {
+    budget.spend(file.size);
     const text = await file.text();
     return await parseSingleExports(
       [{ name: file.name, text, date: null, kind: bareKind }],
@@ -1409,8 +1413,9 @@ export async function parseUpNote(
   const buf = await file.arrayBuffer();
   let zip: JSZip;
   try {
-    zip = await openZip(buf);
-  } catch {
+    zip = await openZip(buf, budget);
+  } catch (err) {
+    if (err instanceof ImportTooLargeError) throw err;
     throw new Error(msg('zipUnreadable'));
   }
 
@@ -1468,14 +1473,15 @@ export async function parseUpNote(
     // ATTACHMENT and expanding it would destroy it. (Media basenames are
     // assumed unique across one batch; a collision keeps the last file.)
     if (noteFiles.length === 0) {
-      for (const { entry: nz } of outerZips) {
+      for (const { entry: nz } of outerZips.slice(0, MAX_INNER_ZIPS)) {
         try {
-          const inner = await openZip(await zipEntryBytes(nz));
+          const inner = await openZip(await zipEntryBytes(nz), budget);
           inner.forEach((path, entry) => {
             if (entry.dir || isJunk(path)) return;
             classify(path, entry, false);
           });
-        } catch {
+        } catch (err) {
+          if (err instanceof ImportTooLargeError) throw err;
           // Not a readable zip: leave it alone.
         }
       }

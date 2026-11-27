@@ -203,6 +203,7 @@
     "cut": "Cortar",
     "copyAsPlain": "Copiar como texto sin formato",
     "copyAsMarkdown": "Copiar como Markdown",
+    "clearFormatting": "Borrar formato",
     "sortAsc": "Ordenar líneas de la A a la Z",
     "sortDesc": "Ordenar líneas de la Z a la A"
   },
@@ -275,6 +276,9 @@
   "inlineCode": {
     "copyHint": "{{key}}+clic para copiar"
   },
+  "inlineTag": {
+    "filter": "Filtrar por etiqueta"
+  },
   "codeBlock": {
     "copyFailed": "Error",
     "wrap": "Ajustar las líneas largas",
@@ -304,7 +308,8 @@
     "linkHeading": "Enlazar con un encabezado...",
     "headingNotFound": "Encabezado no encontrado",
     "headingsLocked": "Desbloquea esta nota para ver sus encabezados",
-    "noHeadings": "Esta nota no tiene encabezados"
+    "noHeadings": "Esta nota no tiene encabezados",
+    "notFound": "Nota no encontrada"
   },
   "footnote": {
     "placeholder": "Texto de la nota",

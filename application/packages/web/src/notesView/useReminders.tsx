@@ -241,11 +241,14 @@ function readScheduled(): Scheduled[] {
   }
 }
 const SNOOZE_ACTION = 'snooze-';
-/** How long a rung alert stays in the map, for a tap on Android. */
-const RANG_KEPT_MS = 6 * 60 * 60_000;
+/** How long a rung alert stays in the map so tapping a notification still
+ *  resolves its item even hours later (e.g. evening reminder tapped next morning, #949). */
+const RANG_KEPT_MS = 24 * 60 * 60_000;
+/** Legacy no-id fallback window when a plugin build omits `notification.id`. */
+const FALLBACK_RANG_MS = 6 * 60 * 60_000;
 
 /** Every id this device handed the OS, with its instant, until it is
- *  cancelled. The map lets an alert go six hours after its minute, and
+ *  cancelled. The map lets an alert go twenty-four hours after its minute, and
  *  Android may still hold it then; the teardown cancels from this list too,
  *  because Android's cancel-all reaches only its own store, which these
  *  never enter. Ids and times only. */
@@ -551,15 +554,15 @@ export function remindersTeardownSettled(ms: number): Promise<void> {
   return Promise.race([deviceRun.catch(() => {}), new Promise<void>((resolve) => { setTimeout(resolve, ms); })]);
 }
 
-/** The alert a phone's tap or action names. iOS sends the notification id;
- *  Android sends only the action id, so a tap there opens the one alert that
- *  rang in the last hours, and nothing when that is not one alert. */
-function alertOfAction(actionId: string, nid: number | undefined): Scheduled | undefined {
+/** The alert a phone's tap or action names. Both iOS and our patched Android
+ *  plugin send `notification.id` (#949); the Snooze action carries it in
+ *  `actionId` too. If an older build omits the id, fall back to the single
+ *  alert that rang in the last six hours. */
+export function alertOfAction(actionId: string, nid: number | undefined, now = Date.now()): Scheduled | undefined {
   const all = readScheduled();
   if (actionId.startsWith(SNOOZE_ACTION)) nid = Number(actionId.slice(SNOOZE_ACTION.length));
   if (nid !== undefined && Number.isFinite(nid)) return all.find((s) => s.nid === nid);
-  const now = Date.now();
-  const rang = all.filter((s) => s.at <= now && s.at > now - RANG_KEPT_MS);
+  const rang = all.filter((s) => s.at <= now && s.at > now - FALLBACK_RANG_MS);
   return rang.length === 1 ? rang[0] : undefined;
 }
 
@@ -809,6 +812,9 @@ export function useReminders({
   const firedHere = useRef(new Map<string, number>());
   const onOpenRef = useRef(onOpen);
   onOpenRef.current = onOpen;
+  const loadedRef = useRef(loaded);
+  loadedRef.current = loaded;
+  const pendingTapRef = useRef<{ itemId: string; occurrence: string } | null>(null);
   const permission = useReminderPermission();
   useEffect(() => { if (permission === 'granted') setTick((n) => n + 1); }, [permission]);
 
@@ -962,6 +968,15 @@ export function useReminders({
     return () => document.removeEventListener('visibilitychange', again);
   }, []);
 
+  // A cold-start notification tap can arrive before the first local read lands;
+  // hold it until `loaded` so `allNotes` is ready and startup restore cannot clobber it (#949).
+  useEffect(() => {
+    if (!loaded || !pendingTapRef.current) return;
+    const pending = pendingTapRef.current;
+    pendingTapRef.current = null;
+    onOpenRef.current(pending.itemId, pending.occurrence);
+  }, [loaded]);
+
   // A phone's notification: a tap opens the item, Snooze puts it ten minutes out.
   useEffect(() => {
     if (!NATIVE_MOBILE) return;
@@ -980,7 +995,11 @@ export function useReminders({
           setTick((n) => n + 1);
           return;
         }
-        onOpenRef.current(alert.itemId, alert.occurrence);
+        if (loadedRef.current) {
+          onOpenRef.current(alert.itemId, alert.occurrence);
+        } else {
+          pendingTapRef.current = { itemId: alert.itemId, occurrence: alert.occurrence };
+        }
       });
       if (gone) listener.unregister();
       else off = listener;

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { computeScrollPage, type ScrollPage } from '../pageNumbers';
 
 // Spec: docs/internal/design/ui-patterns.md section 137
 /** Travel that counts as a scroll in one direction; less is a jitter. */
@@ -139,4 +140,48 @@ export function useNoteScroll(
     scroller.scrollTo({ top: where === 'top' ? 0 : scroller.scrollHeight, behavior: 'smooth' });
   }, [scroller]);
   return { away: hideBar && away, spot: scroller ? spot : 'short', scrolling, keepShown, scrollTo };
+}
+
+/**
+ * Live viewport-based page position (`{ current, total }`) for a scrolling
+ * note pane (editor footer and Full screen mode, GitHub #944). Attaches no
+ * listeners when `enabled` is false.
+ */
+export function useScrollPage(
+  scroller: HTMLElement | null,
+  enabled: boolean,
+  resetKey: unknown,
+): ScrollPage | null {
+  const [page, setPage] = useState<ScrollPage | null>(null);
+
+  useEffect(() => {
+    if (!enabled || !scroller) {
+      setPage(null);
+      return;
+    }
+    let frame = 0;
+    const measure = () => {
+      const next = computeScrollPage(scroller.scrollTop, scroller.clientHeight, scroller.scrollHeight);
+      setPage((prev) => (prev && prev.current === next.current && prev.total === next.total ? prev : next));
+    };
+    const schedule = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        measure();
+      });
+    };
+    measure();
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(schedule);
+    ro?.observe(scroller);
+    if (scroller.firstElementChild) ro?.observe(scroller.firstElementChild);
+    scroller.addEventListener('scroll', schedule, { passive: true });
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      ro?.disconnect();
+      scroller.removeEventListener('scroll', schedule);
+    };
+  }, [scroller, enabled, resetKey]);
+
+  return enabled && scroller ? page : null;
 }

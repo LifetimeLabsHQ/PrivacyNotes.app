@@ -166,6 +166,7 @@ export function buildSettingsCategories({
   supabase,
   onRefreshStorage,
   updateAvailable,
+  unsyncedLocal,
 }: {
   t: TFunction;
   notes: LocalNote[];
@@ -264,6 +265,8 @@ export function buildSettingsCategories({
   onRefreshStorage?: () => void;
   /** Outstanding desktop/direct-APK update version, for the About row's dot. */
   updateAvailable?: string | null;
+  /** True when the vault is local-only or never-synced with Sync paused. */
+  unsyncedLocal?: boolean;
 }): SettingsCategory[] {
   const bind = settingsBinder(userSettings, mutateSettings);
   // Design, Editor and Lists are three panes of one sheet, one Settings
@@ -291,7 +294,9 @@ export function buildSettingsCategories({
       onOpenUpgrade={(trigger) => { setShowSettings(false); setShowUpgrade({ trigger: trigger ?? 'theme' }); }}
       onClose={() => setShowSettings(false)}
       customThemes={userSettings.customThemes}
+      themeIcons={userSettings.themeIcons}
       onCustomThemesChange={(update) => mutateSettings((prev) => ({ ...prev, customThemes: update(prev.customThemes) }))}
+      onThemeIconsChange={(update) => mutateSettings((prev) => ({ ...prev, themeIcons: update(prev.themeIcons) }))}
       onOpenThemeBuilder={openThemeBuilder}
     />
   );
@@ -450,9 +455,9 @@ export function buildSettingsCategories({
                   usage={
                     <StorageUsagePane
                       breakdown={vaultStorage}
-                      maxBytes={auth.localOnly ? null : (storageLimitBytes ?? (proUnlocked(auth.isPro) ? 500_000_000 : 50_000_000))}
+                      maxBytes={(auth.localOnly || unsyncedLocal) ? null : (storageLimitBytes ?? (proUnlocked(auth.isPro) ? 500_000_000 : 50_000_000))}
                       isPro={auth.isPro}
-                      localOnly={auth.localOnly === true}
+                      localOnly={auth.localOnly === true || Boolean(unsyncedLocal)}
                       onOpenNote={onOpenNote}
                       onOpenTrash={onOpenTrashFromSettings}
                       onOpenFiles={onOpenFilesFromSettings}

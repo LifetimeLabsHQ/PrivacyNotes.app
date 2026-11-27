@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowsOutSimple, PushPin } from '../icons';
-import { isLookColor, type LookColor } from '../itemStyles';
+import type { LookColor } from '../itemStyles';
 import { Badge, CanvasControlBar, IconButton, SettingsSegmented } from '../ui';
-import { resolveGraphThemePalette, type CanvasNodeKind } from './GraphCanvas';
+import {
+  resolveGraphCanvasFonts,
+  resolveGraphThemePalette,
+  resolveNodeColor,
+  truncateGraphLabel,
+  type CanvasNodeKind,
+} from './GraphCanvas';
 
 // Spec: docs/internal/specs/graph-view.md (section 4.5)
 
@@ -36,6 +42,8 @@ interface LocalGraphLabels {
 export interface LocalGraphCardProps {
   centerId: string;
   centerTitle: string;
+  /** Currently open note id (differs from centerId when pinned while browsing other notes). */
+  activeNoteId?: string;
   nodes: readonly LocalGraphNode[];
   edges: readonly LocalGraphEdge[];
   depth: 1 | 2;
@@ -56,13 +64,6 @@ interface PlacedMiniNode {
   r: number;
   hop: 0 | 1 | 2;
   role: 'center' | 'in' | 'out' | 'smart' | 'hop2';
-}
-
-const FONT_STACK = '-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif';
-
-function shortLabel(title: string, max = 16): string {
-  if (title.length <= max) return title;
-  return `${title.slice(0, max - 1)}…`;
 }
 
 function distributeArc(
@@ -299,6 +300,7 @@ function layoutMiniGraph(
 export function LocalGraphCard({
   centerId,
   centerTitle,
+  activeNoteId,
   nodes,
   edges,
   depth,
@@ -339,8 +341,10 @@ export function LocalGraphCard({
   }, []);
 
   const paletteRef = useRef<ReturnType<typeof resolveGraphThemePalette> | null>(null);
+  const fontsRef = useRef<ReturnType<typeof resolveGraphCanvasFonts> | null>(null);
   useEffect(() => {
     paletteRef.current = resolveGraphThemePalette(containerRef.current, dark);
+    fontsRef.current = resolveGraphCanvasFonts(containerRef.current);
   }, [dark]);
   useEffect(() => {
     setHoveredId(null);
@@ -367,6 +371,8 @@ export function LocalGraphCard({
 
     const palette = paletteRef.current ?? resolveGraphThemePalette(container, dark);
     paletteRef.current = palette;
+    const fonts = fontsRef.current ?? resolveGraphCanvasFonts(container);
+    fontsRef.current = fonts;
     const dpr = window.devicePixelRatio || 1;
     const { width, height } = size;
     const targetW = Math.round(width * dpr);
@@ -435,11 +441,12 @@ export function LocalGraphCard({
     }
 
     // 2. Nodes (draw all dots first, then collision-free labels on top)
-    const labelQueue: Array<{ item: PlacedMiniNode; isCenter: boolean; isHovered: boolean; inHoverSet: boolean }> = [];
+    const labelQueue: Array<{ item: PlacedMiniNode; isCenter: boolean; isHovered: boolean; isCurrentOpen: boolean; inHoverSet: boolean }> = [];
     for (const item of placed) {
       const { node, x, y, r, hop, role } = item;
       const isCenter = hop === 0;
       const isHovered = node.id === hoveredId;
+      const isCurrentOpen = Boolean(activeNoteId && activeNoteId !== centerId && node.id === activeNoteId);
       const inHoverSet = !hasHover || hoverNeighbors.has(node.id);
 
       let fill: string;
@@ -449,20 +456,18 @@ export function LocalGraphCard({
         fill = palette.success;
       } else if (role === 'in') {
         fill = palette.warning;
-      } else if (role === 'out' || isCenter) {
-        fill = node.colorKey && isLookColor(node.colorKey) ? palette.labels[node.colorKey] : palette.accent;
       } else {
-        fill = node.colorKey && isLookColor(node.colorKey) ? palette.labels[node.colorKey] : palette.accent;
+        fill = resolveNodeColor({ ...node, tags: [], degree: node.degree ?? 0 }, palette);
       }
 
       ctx.save();
       ctx.globalAlpha = inHoverSet ? 1 : 0.25;
 
-      // Center / hovered soft halo
-      if (isCenter || isHovered) {
+      // Center / hovered / currently-open-while-pinned soft halo
+      if (isCenter || isHovered || isCurrentOpen) {
         ctx.beginPath();
         ctx.arc(x, y, r + 4.5, 0, Math.PI * 2);
-        ctx.fillStyle = fill;
+        ctx.fillStyle = isCurrentOpen ? palette.accent : fill;
         ctx.globalAlpha = inHoverSet ? 0.22 : 0.08;
         ctx.fill();
         ctx.globalAlpha = inHoverSet ? 1 : 0.25;
@@ -481,9 +486,9 @@ export function LocalGraphCard({
       } else {
         ctx.fillStyle = fill;
         ctx.fill();
-        if (isCenter || isHovered) {
+        if (isCenter || isHovered || isCurrentOpen) {
           ctx.lineWidth = 1.8;
-          ctx.strokeStyle = palette.ringWhite;
+          ctx.strokeStyle = isCurrentOpen ? palette.accent : palette.ringWhite;
           ctx.stroke();
         }
       }
@@ -492,29 +497,38 @@ export function LocalGraphCard({
       const showLabel =
         isCenter ||
         isHovered ||
+        isCurrentOpen ||
         (hop === 1 && placed.length <= 12 && inHoverSet);
       if (showLabel) {
-        labelQueue.push({ item, isCenter, isHovered, inHoverSet });
+        labelQueue.push({ item, isCenter, isHovered, isCurrentOpen, inHoverSet });
       }
     }
 
-    // Draw prioritized labels (hovered -> center -> 1-hop) with collision avoidance & edge clamping
-    labelQueue.sort((a, b) => Number(b.isHovered) - Number(a.isHovered) || Number(b.isCenter) - Number(a.isCenter));
+    // Draw prioritized labels (hovered -> current open -> center -> 1-hop) with collision avoidance & edge clamping
+    labelQueue.sort(
+      (a, b) =>
+        Number(b.isHovered) - Number(a.isHovered) ||
+        Number(b.isCurrentOpen) - Number(a.isCurrentOpen) ||
+        Number(b.isCenter) - Number(a.isCenter),
+    );
     const labelBoxes: Array<{ x0: number; y0: number; x1: number; y1: number }> = [];
     for (const entry of labelQueue) {
-      const { item, isCenter, isHovered, inHoverSet } = entry;
+      const { item, isCenter, isHovered, isCurrentOpen, inHoverSet } = entry;
       const { node, x, y, r, role } = item;
       ctx.save();
       ctx.globalAlpha = inHoverSet ? 1 : 0.25;
-      ctx.font = `${isCenter || isHovered ? 600 : 500} ${isCenter ? 10.5 : 9.5}px ${FONT_STACK}`;
+      const labelPx = isCenter
+        ? Math.max(10, Math.round(fonts.metaPx * 0.95 * 10) / 10)
+        : Math.max(9, Math.round(fonts.metaPx * 0.86 * 10) / 10);
+      ctx.font = `${isCenter || isHovered || isCurrentOpen ? 600 : 500} ${labelPx}px ${fonts.sans}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
-      const text = shortLabel(node.title, isHovered ? 24 : 15);
+      const text = truncateGraphLabel(node.title, isHovered ? 24 : 15);
       const halfW = ctx.measureText(text).width / 2 + 4;
       const lx = Math.max(halfW + 4, Math.min(width - halfW - 4, x));
       const ly = Math.min(height - (pinned ? 22 : 6), y + r + 11.5);
       const box = { x0: lx - halfW, y0: ly - 10, x1: lx + halfW, y1: ly + 2 };
-      if (!isHovered && !isCenter) {
+      if (!isHovered && !isCenter && !isCurrentOpen) {
         const hits = labelBoxes.some((p) => box.x0 < p.x1 && box.x1 > p.x0 && box.y0 < p.y1 && box.y1 > p.y0);
         if (hits) {
           ctx.restore();
@@ -531,13 +545,15 @@ export function LocalGraphCard({
           ? palette.muted
           : role === 'smart'
             ? palette.success
-            : isCenter
-              ? palette.text
-              : palette.soft;
+            : isCurrentOpen
+              ? palette.accent
+              : isCenter
+                ? palette.text
+                : palette.soft;
       ctx.fillText(text, lx, ly);
       ctx.restore();
     }
-  }, [placed, placedById, edges, centerId, hoveredId, size, dark, pinned]);
+  }, [placed, placedById, edges, centerId, activeNoteId, hoveredId, size, dark, pinned]);
 
   const hitAt = useCallback((sx: number, sy: number): PlacedMiniNode | null => {
     for (let i = placed.length - 1; i >= 0; i--) {
@@ -557,10 +573,12 @@ export function LocalGraphCard({
     setHoveredId(hit ? hit.node.id : null);
   };
 
+  const canSelectCenter = Boolean(activeNoteId && activeNoteId !== centerId);
+
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const hit = hitAt(e.clientX - rect.left, e.clientY - rect.top);
-    if (hit && hit.node.id !== centerId && hit.node.kind !== 'missing') {
+    if (hit && hit.node.kind !== 'missing' && (hit.node.id !== centerId || canSelectCenter)) {
       onSelectNeighbor(hit.node.id);
     }
   };
@@ -574,13 +592,21 @@ export function LocalGraphCard({
   );
 
   const neighbors = useMemo(() => placed.filter((p) => p.hop > 0), [placed]);
+  const selectableNodes = useMemo(
+    () => (canSelectCenter ? placed.filter((p) => p.node.kind !== 'missing') : neighbors),
+    [canSelectCenter, placed, neighbors],
+  );
   const hoveredPlaced = hoveredId ? placedById.get(hoveredId) : null;
-  const isHoveringNeighbor = Boolean(hoveredPlaced && hoveredPlaced.node.id !== centerId && hoveredPlaced.node.kind !== 'missing');
+  const isHoveringNeighbor = Boolean(
+    hoveredPlaced &&
+      hoveredPlaced.node.kind !== 'missing' &&
+      (hoveredPlaced.node.id !== centerId || canSelectCenter),
+  );
 
   return (
     <div
       ref={containerRef}
-      className="relative mb-2 h-[156px] w-full overflow-hidden rounded-lg border border-divider bg-surface-1 select-none"
+      className="relative mb-2 h-[156px] w-full overflow-hidden rounded-lg border border-divider bg-surface-2 select-none"
       style={{
         backgroundImage: dark
           ? 'radial-gradient(rgb(var(--pn-text) / 0.055) 1px, transparent 1px)'
@@ -649,9 +675,9 @@ export function LocalGraphCard({
       )}
 
       {/* Keyboard / screen-reader accessible neighbor list */}
-      {neighbors.length > 0 && (
+      {selectableNodes.length > 0 && (
         <ul className="sr-only" aria-label={labels.ariaLabel ?? centerTitle}>
-          {neighbors.map(({ node }) => (
+          {selectableNodes.map(({ node }) => (
             <li key={node.id}>
               <button type="button" onClick={() => onSelectNeighbor(node.id)}>
                 {node.title}

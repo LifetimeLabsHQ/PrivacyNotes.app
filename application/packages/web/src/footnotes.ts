@@ -192,7 +192,7 @@ function isEmptyDefinition(def: ProseMirrorNode): boolean {
  * A definition that holds only note-links, as "Link as a footnote" makes it
  * (a link suggestion in the Connections panel). Without its marker it says
  * nothing, so it goes with the marker like an empty one: no typed text is lost.
- * Spec: docs/internal/plans/related-notes.md
+ * Spec: docs/internal/specs/related-notes.md
  */
 function isLinkOnlyDefinition(def: ProseMirrorNode): boolean {
   if (def.childCount !== 1 || def.firstChild!.type.name !== 'paragraph') return false;

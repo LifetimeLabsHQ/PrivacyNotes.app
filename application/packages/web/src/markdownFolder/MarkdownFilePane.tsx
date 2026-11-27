@@ -14,22 +14,26 @@ import { WordCount } from '../WordCount';
 import { Editor, type EditorHandle } from '../Editor';
 import { FormatBarContext } from '../formatBarContext';
 import { setWikiLinkNavigator } from '../NoteLink';
-import { setWikiLinkNoteContext, setWikiLinkNoteTitles } from '../NoteLinkSuggestion';
+import {
+  setWikiLinkNoteContext,
+  setWikiLinkNoteTitles,
+  setWikiLinkStatusResolver,
+  type WikiLinkStatusResolver,
+} from '../NoteLinkSuggestion';
 import { setLocalLinkOpener } from '../editorLinks';
 import { ArrowLeft, FileMd, FileTxt, Lock, MagnifyingGlass, Swap, Trash, X } from '../icons';
 import { EditorSlotPill } from '../EditorSlotPill';
 import { editorCommands } from '../editorCommands';
-import { HoverLabel } from '../HoverLabel';
 import { keyText } from '../shortcutMatch';
 import { useSplitView } from '../useSplitView';
 import { LineNumbersToggle } from '../sourcePreviewButtons';
 import { adaptFile, isTextFile, tidyRichSave } from './adapter';
 import { openFailedText, stampsMatch, type FileStamp, type OpenedFileRef } from './fileAccess';
 import { applyAssets, assetsKey, restoreAssets, useAssets } from './useAssets';
-import { trackExitWrite } from '../flushStash';
+import { isFlushingEditorsForExit, trackExitWrite } from '../flushStash';
 import { isLocalHref, noteLinkPathFor, resolveNoteLinkPath, resolveRelativeLinkPath } from './links';
 import type { OpenedMarkdownDir, OpenedMarkdownFile, SaveState } from './types';
-import { Banner, FeedbackButton, SettingsSegmented } from '../ui';
+import { Banner, FeedbackButton, IconButton, SettingsSegmented } from '../ui';
 
 /** Idle gap before an edit reaches the disk. Longer than the encrypted
  *  editor's 300ms on purpose: this folder is very likely watched by git,
@@ -225,6 +229,16 @@ export function MarkdownFilePane({
     () => relPaths.map((rel) => ({ id: rel, title: noteLinkPathFor(rel) })),
     [relPaths],
   );
+  // A lone file opened outside a folder has no peer list, so leave its links
+  // neutral; inside a folder, match the same basename/path rule as clicks.
+  const wikiLinkStatusResolver = useMemo<WikiLinkStatusResolver>(() => {
+    if (!dir) return () => 'active';
+    return (target: string) => {
+      const hash = target.indexOf('#');
+      if (hash >= 0 && !target.slice(0, hash).trim()) return 'active';
+      return resolveNoteLinkPath(relPaths, target) ? 'active' : 'missing';
+    };
+  }, [dir, relPaths]);
 
   /** Open another file of the folder in this pane. A pending edit to the
    *  file on screen still lands in it: the flush below names its own file. */
@@ -298,6 +312,7 @@ export function MarkdownFilePane({
     const ed = editorRef.current?.getEditor() ?? null;
     setWikiLinkNavigator(ed, followNoteLink);
     setWikiLinkNoteTitles(ed, linkTitles);
+    setWikiLinkStatusResolver(ed, wikiLinkStatusResolver);
     setLocalLinkOpener(ed, followRelativeLink);
     const rel = currentRelPath();
     setWikiLinkNoteContext(ed, rel === null ? null : { id: rel, title: noteLinkPathFor(rel) });
@@ -423,11 +438,10 @@ export function MarkdownFilePane({
     if (isCurrent) setState((s) => (s.kind === 'stale' ? s : { kind: 'dirty' }));
     pending.current = { target, text };
     if (timer.current) window.clearTimeout(timer.current);
-    // A flush arriving from the outgoing editor has no debounce left to wait
-    // for - the pane is already on the next file and this cleanup is the last
-    // moment the text exists. Write it now rather than parking it in a timer
-    // the next switch would clear.
-    if (!isCurrent) {
+    // A flush arriving from the outgoing editor or from flushEditorsForExit()
+    // has no debounce left to wait for: write it now so trackExitWrite()
+    // registers synchronously before an updater quit, reload, or App Lock.
+    if (!isCurrent || isFlushingEditorsForExit()) {
       timer.current = null;
       const next = pending.current;
       pending.current = null;
@@ -441,6 +455,30 @@ export function MarkdownFilePane({
       if (next) void save(next);
     }, SAVE_DEBOUNCE_MS);
   }
+
+  // Flush a pending edit on tab close, App Lock reload, or updater restart
+  // (flushEditorsForExit dispatches beforeunload and pagehide). Covers both
+  // rich mode (when an edit is already buffered in pending.current) and source
+  // mode (which does not mount TipTap's own beforeunload listener).
+  useEffect(() => {
+    const flushPending = () => {
+      if (timer.current) {
+        window.clearTimeout(timer.current);
+        timer.current = null;
+      }
+      const next = pending.current;
+      pending.current = null;
+      if (next) void save(next);
+    };
+    window.addEventListener('beforeunload', flushPending);
+    window.addEventListener('pagehide', flushPending);
+    return () => {
+      window.removeEventListener('beforeunload', flushPending);
+      window.removeEventListener('pagehide', flushPending);
+    };
+    // save reads only refs (saveChain, openedRef, ownWrites, onUpdatedRef).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Flush a pending edit when the file is closed or swapped. Without this the
   // last keystrokes before a close are silently dropped - the same class of bug
@@ -653,25 +691,25 @@ export function MarkdownFilePane({
               1400px, so in both cases this pane is the whole window and the
               control is the only exit. */}
           {gridMode ? (
-            <HoverLabel label={t('notes:editor.backToGrid')} position="below-start">
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label={t('notes:editor.backToGrid')}
-                className="rounded p-1.5 -ms-1 text-pn-muted hover:bg-pn/10 hover:text-accent transition shrink-0"
-              >
-                <X />
-              </button>
-            </HoverLabel>
-          ) : (
-            <button
-              type="button"
+            <IconButton
+              label={t('notes:editor.backToGrid')}
+              position="below-start"
               onClick={onClose}
-              aria-label={t('notes:editor.backToList')}
-              className="md:hidden rounded p-1.5 -ms-1 text-pn-muted hover:bg-pn/10 transition shrink-0"
+              className="-ms-1"
             >
-              <ArrowLeft />
-            </button>
+              <X aria-hidden="true" />
+            </IconButton>
+          ) : (
+            <span className="md:hidden inline-flex">
+              <IconButton
+                label={t('notes:editor.backToList')}
+                position="below-start"
+                onClick={onClose}
+                className="-ms-1"
+              >
+                <ArrowLeft aria-hidden="true" />
+              </IconButton>
+            </span>
           )}
           <span
             className="flex-1 min-w-0 truncate text-title sm:text-display lg:text-display-2 font-semibold tracking-tight text-pn"
@@ -680,47 +718,45 @@ export function MarkdownFilePane({
             {opened.adapted.title}
           </span>
           <span className="shrink-0 text-small text-pn-muted">{statusLabel(state, t)}</span>
-          {/* The file's type, at the head of the action group rather than in
-              front of the title: that slot belongs to the way back, which every
-              other editor in the app puts there and which a reader looks for
-              first. Extension, not editor mode - see `isTextFile`. */}
+          {/* File type glyph sits at the start of the action group so the
+              leading slot stays reserved for back/close navigation. Keyed off
+              extension rather than editor mode (`isTextFile`). */}
           {isTextFile(opened.ref.name)
             ? <FileTxt className="shrink-0 text-pn-muted" />
             : <FileMd className="shrink-0 text-pn-muted" />}
-          {/* Find and replace has no "..." menu to live in here, so it sits in
-              the header, for both modes. Cmd/Ctrl+F and Option+Cmd+F reach the
-              same bars. */}
-          <HoverLabel label={t('common:palette.commands.findReplace')} keys={keyText('findReplace')} position="below">
-            <button
-              type="button"
-              onClick={() => (mode === 'rich' ? editorRef.current?.toggleReplace() : editorCommands.findReplace?.())}
-              aria-label={t('common:palette.commands.findReplace')}
-              className="rounded-md p-2.5 text-pn-muted hover:text-accent hover:bg-accent/10 transition shrink-0"
-            >
-              <Swap size={20} />
-            </button>
-          </HoverLabel>
-          <HoverLabel label={t('markdown.saveToNotes')} position="below">
-            <button
-              type="button"
-              onClick={() => onImportToNotes(opened.ref.name, opened.raw)}
-              aria-label={t('markdown.saveToNotes')}
-              className="rounded-md p-2.5 text-accent hover:bg-accent/10 transition shrink-0"
-            >
-              <Lock size={20} />
-            </button>
-          </HoverLabel>
+          {/* Header trigger for Find & Replace across both editor modes
+              (matching Cmd/Ctrl+F and Option+Cmd+F). */}
+          <IconButton
+            label={t('common:palette.commands.findReplace')}
+            keys={keyText('findReplace')}
+            position="below"
+            onClick={() => (mode === 'rich' ? editorRef.current?.toggleReplace() : editorCommands.findReplace?.())}
+          >
+            <Swap size={20} aria-hidden="true" />
+          </IconButton>
+          <IconButton
+            label={t('markdown.saveToNotes')}
+            tone="accent"
+            position="below"
+            onClick={() => {
+              editorRef.current?.flushPendingSave();
+              const latestRaw = pending.current?.target.ref.location === opened.ref.location
+                ? pending.current.text
+                : opened.raw;
+              onImportToNotes(opened.ref.name, latestRaw);
+            }}
+          >
+            <Lock size={20} aria-hidden="true" />
+          </IconButton>
           {onDelete && (
-            <HoverLabel label={t('common:actions.delete')} position="below">
-              <button
-                type="button"
-                onClick={onDelete}
-                aria-label={t('common:actions.delete')}
-                className="rounded-md p-2.5 text-red-500 hover:text-red-600 hover:bg-red-500/10 dark:text-red-400 dark:hover:text-red-300 transition shrink-0"
-              >
-                <Trash size={20} />
-              </button>
-            </HoverLabel>
+            <IconButton
+              label={t('common:actions.delete')}
+              tone="danger"
+              position="below"
+              onClick={onDelete}
+            >
+              <Trash size={20} aria-hidden="true" />
+            </IconButton>
           )}
           {/* Segmented toggle AND the footer link below both drive `mode` -
               two affordances, one state. The footer link is the app's existing
@@ -812,11 +848,14 @@ export function MarkdownFilePane({
                   lineNumbers={lineNumbers}
                   pane={paneEl}
                   first={previewFirst}
+                  hideEncryptedMedia
+                  onInsertFiles={(files) => void attachFiles(files)}
+                  isPro
                   // An edit in the preview is the body, as the formatted
                   // view's is: paths back, the front matter back on top.
                   onEdit={edit && ((md) => {
                     const { frontMatterRaw, body } = adaptFile(opened.ref.name, text);
-                    edit(frontMatterRaw + tidyRichSave(restoreAssets(md, assets), body));
+                    edit(frontMatterRaw + tidyRichSave(restoreAssets(restoreAssets(md, pastedAssets.current), assets), body));
                   })}
                 />
               </Suspense>

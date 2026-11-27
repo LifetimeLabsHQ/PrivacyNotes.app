@@ -21,6 +21,10 @@
     "./minisign": {
       "types": "./dist/minisign.d.ts",
       "import": "./dist/minisign.js"
+    },
+    "./passkey-kdf": {
+      "types": "./dist/passkeyKdf.d.ts",
+      "import": "./dist/passkeyKdf.js"
     }
   },
   "scripts": {

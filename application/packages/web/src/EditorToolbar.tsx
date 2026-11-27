@@ -244,7 +244,7 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
         code: e.isActive('code'),
         codeBlock: e.isActive('codeBlock'),
         highlight: e.isActive('highlight'),
-        link: e.isActive('link'),
+        link: e.isActive('link') || (e.isActive('image') && Boolean(e.getAttributes('image').linkHref)),
         superscript: e.isActive('superscript'),
         subscript: e.isActive('subscript'),
         spoiler: e.isActive('spoiler'),
@@ -880,9 +880,10 @@ export function Toolbar({ editor, place, mobileTabIndex, onOpenLinkPopover, link
     // The note's place window, prefilled; Insert map puts a map block at the caret.
     location: { hint: null, active: false, run: () => setLocationOpen(true) },
     doodle: { hint: null, active: false, run: () => { void import('./doodle/insertDoodle').then((m) => m.insertDoodle(editor)); } },
-    // The touch home of the selection menu's "Copy as ..." entries (#546).
+    // The touch home of the selection menu's "Copy as ..." and Clear formatting entries (#546, #973).
     copyAsPlain: { hint: null, active: false, run: () => copySelectionAs(editor, 'plain') },
     copyAsMarkdown: { hint: null, active: false, run: () => copySelectionAs(editor, 'markdown') },
+    clearFormatting: { hint: null, active: false, run: () => { void import('./editorClearFormatting').then((m) => m.clearFormatting(editor)); } },
   };
   if (folds.foldable > 0) {
     actions.foldAll = { hint: null, active: false, run: runFoldAll, label: foldAllLabel, Icon: FoldAllIcon };

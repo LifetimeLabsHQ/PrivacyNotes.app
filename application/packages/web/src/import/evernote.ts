@@ -961,7 +961,7 @@ function parseNoteChunk(chunk: string): EnexNote | null {
     updatedAt: parseEnexDate(text('updated')),
     sourceUrl: attr('source-url'),
     // The place Evernote recorded when the note was made, with its name when
-    // it has one. Spec: docs/internal/plans/note-location.md (section 6)
+    // it has one. Spec: docs/internal/specs/note-location.md (section 6)
     place: importedLocation(attr('latitude'), attr('longitude'), attr('place-name')),
     reminderTime: parseEnexDate(attr('reminder-time')),
     reminderDone: parseEnexDate(attr('reminder-done-time')),

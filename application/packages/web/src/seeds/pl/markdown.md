@@ -15,7 +15,7 @@ Może być ==podświetlony na żółto== albo <mark style="background-color: rgb
 
 Spoiler ukrywa słowa, dopóki ktoś ich nie kliknie: prezent to ||gramofon||. Zaznacz słowa i wybierz **Spoiler** w menu **Wstaw** albo wpisz dwie kreski z każdej strony.
 
-Ikona albo logo może stać w linijce tekstu, jak :icon[gift] :icon[coffee] :icon[rocket-launch] albo :logo[github]. Wybierz je w **Wstaw** > **Ikony i loga**.
+Ikona albo logo może stać w linijce tekstu, jak :icon[gift] :icon[coffee] :icon[rocket-launch] albo :logo[github]. Wybierz je w **Wstaw** > **Ikony / loga / emoji**.
 
 Przycisk **Aa** zmienia rozmiar i krój. Tekst może być <span style="font-size: 0.85em">mały</span>, zwykły albo <span style="font-size: 1.6em">duży</span>. Może być <span style="font-family: ui-sans-serif, system-ui, sans-serif">bezszeryfowy</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">szeryfowy</span> albo <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">o stałej szerokości</span>.
 

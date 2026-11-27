@@ -9,101 +9,30 @@ import { setDeletingAccount } from './sync';
 import { Trash } from './icons';
 import { SectionEyebrow } from './settingsUI';
 import { Button, Callout, Checkbox, TextField } from './ui';
-import { isDemoMode, isDemoOwnedKey } from './demo';
-import { settingsLocalKey } from './settingsLocalKey';
+import { isDemoMode } from './demo';
 import { HelpChip } from './HelpChip';
 import { ensureLevel2, MfaCancelledError, mfaSessionIdentity } from './mfaStep';
 import { jwtPayloadPubkey, PHRASE_STORAGE_KEY } from './authStorage';
 import { announceSignOut, beginSignOutMark, endLiveSignIn } from './liveSignIn';
-import { tabSecrets, trustAwareStorage } from './trustStorage';
+import { trustAwareStorage } from './trustStorage';
 import { removeBiometricCredential, removePinWrappedPhrase } from './biometric';
 import { clearLocalOnlyFlagsSync, isLocalOnly } from './localOnly';
+import { clearLocalDataKey } from './localKey';
 import { forgetFolder } from './markdownFolder/folderMemory';
 import { clearDestination } from './autoBackup/destination';
 import { clearPluginFolders } from './plugins/pluginStore';
-import { cancelDeviceReminders, remindersTeardownSettled, REMINDER_TO_CANCEL_KEY } from './notesView/useReminders';
+import { clearShareInbox } from './useShareInbox';
+import { clearAllStorageKeys, forgetDeviceLeftovers, markPhoneShareInboxPending } from './signOutFinish';
+import { cancelDeviceReminders, remindersTeardownSettled } from './notesView/useReminders';
 
 /** How long the reload after a wipe waits for the reminders' teardown. */
 const RELOAD_WAIT_MS = 10_000;
 /** How long the wipe waits for the auth server's sign-out. */
 const REMOTE_SIGN_OUT_MS = 4_000;
 
-/** The Cache Storage names of the on-device model and the plugins
- *  (plugins/pluginStore.ts StoreId); desktop keeps them in folders too. */
-const DEVICE_CACHES = ['pn-on-device-ai', 'pn-plugins'] as const;
-
-/**
- * The parts of this device's state that live outside the app's database and
- * outside the `privacynotes.` keys, which a full wipe takes too. Not in the
- * demo: the folder and backup records have demo buckets of their own, and
- * the caches are the real install's.
- */
-async function forgetDeviceLeftovers(): Promise<void> {
-  if (isDemoMode()) return;
-  await forgetFolder().catch(() => {});
-  await clearDestination().catch(() => {});
-  // The tracker range under its name from before the app's prefix
-  // (stats/wellnessRange.ts); the sweep takes the new one.
-  try { localStorage.removeItem('pn-wellness-range'); } catch { /* ignore */ }
-  for (const name of DEVICE_CACHES) {
-    try {
-      await caches.delete(name);
-    } catch {
-      /* no Cache Storage here */
-    }
-  }
-  // Desktop: the plugin folders. The caches go first, so nothing is moved into them.
-  try {
-    await clearPluginFolders();
-  } catch {
-    /* nothing to clear */
-  }
-}
-
 // ------------------------------------------------------------------
 // Danger zone - account & data deletion
 // ------------------------------------------------------------------
-
-/**
- * Wipe this session's keys from localStorage, from the tab's own memory
- * (a tab that is not trusted, trustStorage.ts) and from sessionStorage.
- * Catches per-key to avoid one bad key blocking the rest.
- *
- * The demo runs on the SAME origin as a real install whenever the URL
- * carries `?demo=1`, and it renders this panel with the local half
- * already ticked. A prefix sweep there removes the real account's phrase
- * envelope, PIN wrap, biometric wrap and Supabase session, none of which
- * the demo owns: every credential the demo writes goes into a `.demo`
- * bucket for exactly this reason, and this was the one sweep that did
- * not respect it. So in demo the sweep is the bucket plus the demo
- * settings key, which is the same set clearFreshDemoCredentials drops on
- * a fresh tab, and nothing else is touched.
- */
-function clearAllStorageKeys(): void {
-  const demo = isDemoMode();
-  const demoSettings = settingsLocalKey();
-  for (const store of [localStorage, tabSecrets, sessionStorage]) {
-    const keys: string[] = [];
-    for (let i = 0; i < store.length; i++) {
-      const k = store.key(i);
-      if (!k) continue;
-      // Clear app keys AND Supabase auth session keys. Without the
-      // sb- prefix, a stale OAuth session survives account deletion
-      // and hydrateFromOAuthSession treats the deleted user as
-      // existing on the next page load.
-      const owned = demo
-        ? isDemoOwnedKey(k) || k === demoSettings
-        : k.startsWith('privacynotes.') || k.startsWith('sb-');
-      // One key stays: the reminder ids the teardown has not seen cancelled
-      // yet, ids only, which exists only until that cancel went out, and
-      // which the next start cancels when the reload came first.
-      if (owned && k !== REMINDER_TO_CANCEL_KEY) keys.push(k);
-    }
-    for (const k of keys) {
-      try { store.removeItem(k); } catch { /* ignore */ }
-    }
-  }
-}
 
 /**
  * The local half of a deletion: everything this account left on this
@@ -115,6 +44,7 @@ export async function wipeThisDevice(
   authed: { encryptionKey: Uint8Array; signingPrivateKey: Uint8Array },
   supabase: ReturnType<typeof useAuth>['supabase'],
 ): Promise<void> {
+  const localOnlyVault = isLocalOnly();
   // A sync pass already in flight must not write the phrase back
   // between this wipe and the reload, here or in another tab of this
   // browser (liveSignIn.ts).
@@ -124,6 +54,7 @@ export async function wipeThisDevice(
   // leaves it, and the next start finishes the job (signOutFinish.ts). The
   // sweep takes the mark with every other app key.
   beginSignOutMark('wipe');
+  markPhoneShareInboxPending();
   // The phrase and the wrapped doors go before the first await, as a
   // sign-out's do: a wipe that does not end must not leave the phrase at
   // rest for the next start to sign in with (beta.privacynotes.app #211).
@@ -138,6 +69,7 @@ export async function wipeThisDevice(
   // Zero key material.
   authed.encryptionKey.fill(0);
   authed.signingPrivateKey.fill(0);
+  clearLocalDataKey();
   // Kill the Supabase session before wiping storage, locally only:
   // after an account deletion the server user is gone, and a device
   // wipe keeps the account. Without this the sb-* session key survives
@@ -147,7 +79,7 @@ export async function wipeThisDevice(
   //
   // Not in demo or local-only mode: neither holds a Supabase session.
   if (!isDemoMode()) {
-    if (!isLocalOnly()) {
+    if (!localOnlyVault) {
       let deadline: ReturnType<typeof setTimeout> | undefined;
       await Promise.race([
         supabase.auth.signOut({ scope: 'local' }).catch(() => {}),
@@ -160,11 +92,19 @@ export async function wipeThisDevice(
   // reopen for whoever signs in next, the backup destination, the model
   // and plugin files in Cache Storage (beta.privacynotes.app #214 items 2
   // and 3). Each one fails alone; none stops the wipe.
-  await forgetDeviceLeftovers();
+  const shareInboxCleared = await forgetDeviceLeftovers({
+    forgetFolder,
+    clearDestination,
+    clearPluginFolders,
+    clearShareInbox,
+  });
   // Nuke IndexedDB (notes, images, attachments, dedup tables).
   await deleteEntireLocalDatabase();
   // Wipe all localStorage/sessionStorage privacynotes.* + sb-* keys.
   clearAllStorageKeys();
+  // If iOS file protection held ShareInbox while locked, keep the pending
+  // inbox-clear flag so the next unlocked boot or vault open clears it.
+  if (!shareInboxCleared) markPhoneShareInboxPending();
   // The sweep took the sign-out notice too, and a stamp taken before
   // any notice existed would read as current again without one.
   announceSignOut();

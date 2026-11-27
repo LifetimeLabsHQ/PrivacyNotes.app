@@ -215,7 +215,7 @@
     "color": "اللون",
     "colorNone": "بلا لون",
     "colorUseDefault": "استخدام الافتراضي",
-    "icon": "الأيقونات والشعارات",
+    "icon": "الأيقونات / الشعارات / الرموز التعبيرية",
     "colorFromFolder": "من المجلد: {{name}}",
     "colorFromTag": "من الوسم: #{{name}}",
     "colorOwnHint": "اللون الذي تختاره هنا يملأ خلفية هذه الملاحظة. ولا تغيّره <setting>ألوان المجلدات والوسوم</setting>.",
@@ -385,6 +385,7 @@
   },
   "demoBanner": {
     "title": "جرّبه بلا أي مخاطرة",
+    "shortTitle": "تجربة",
     "description": "لا شيء يُحفظ هنا. احصل على مفكرتك المشفّرة الخاصة، مجانًا."
   },
   "markdown": {
@@ -671,6 +672,10 @@
     "tooLarge": "الملف كبير جدًا. الحد الأقصى {{limit}} ميغابايت لكل ملف.",
     "titlePlaceholder": "العنوان (اختياري)",
     "notePlaceholder": "أضف ملاحظة...",
+    "taskPlaceholder": "عنصر مهمة...",
+    "quickTasks": "Quick Tasks",
+    "journalHint": "يُضاف إلى يومية اليوم.",
+    "clipFallbackToast": "تعذّر قصّ الصفحة. حُفظت كإشارة مرجعية بدلًا من ذلك.",
     "photoCount": "الصور: {{count}}"
   },
   "shortcut": {
@@ -1106,7 +1111,8 @@
     "label": "إضافة سريعة"
   },
   "offline": {
-    "notLoaded": "أنت دون اتصال، ولم يُحمَّل هذا الجزء من التطبيق بعد. حاول مجددًا عند اتصالك بالإنترنت."
+    "notLoaded": "أنت دون اتصال، ولم يُحمَّل هذا الجزء من التطبيق بعد. حاول مجددًا عند اتصالك بالإنترنت.",
+    "chunkBlocked": "تعذّر تحميل هذا العرض. أعد تحميل الصفحة، أو تحقق من أداة حظر المحتوى لديك."
   },
   "checkIn": {
     "prompt": "كيف حالك اليوم؟",
@@ -1304,6 +1310,7 @@
     "removed": "أُزيلت من الرئيسية",
     "showOnHome": "العرض في الرئيسية",
     "removeFromHome": "إزالة من الرئيسية",
+    "openTarget": "فتح {{target}}",
     "resize": "تغيير حجم {{name}}",
     "narrower": "أضيق",
     "taller": "أطول",
@@ -1311,39 +1318,97 @@
     "moveEarlier": "نقل إلى الأمام",
     "moveLater": "نقل إلى الخلف",
     "chooseNote": "اختيار ملاحظة",
+    "chooseNotes": "اختيار ملاحظات",
     "chooseTag": "اختيار وسم",
+    "chooseTags": "اختيار وسوم",
     "chooseFolder": "اختيار مجلد",
+    "chooseFolders": "اختيار مجلدات",
     "chooseTracker": "اختيار متتبع",
+    "chooseCounter": "اختيار عدّاد",
+    "chooseCounters": "اختيار عدّادات",
+    "chooseTypes": "اختيار أنواع العناصر",
     "choose": "اختيار",
     "gone": "لم يعد موجودًا",
     "otherSpace": "في المساحة الأخرى",
     "proLocked": "جزء من Pro",
     "noneToChoose": "لا شيء للاختيار بعد",
+    "catalogSearch": "ابحث عن أداة",
+    "catalogFilter": "تصفية الأدوات",
+    "allWidgets": "كل الأدوات",
+    "onHomeLabel": "في الرئيسية",
+    "onHomeCount": "في الرئيسية ({{count}})",
     "headerEvents_zero": "{{formatted}} أحداث اليوم",
     "headerEvents_one": "{{formatted}} حدث اليوم",
     "headerEvents_two": "{{formatted}} حدثان اليوم",
     "headerEvents_few": "{{formatted}} أحداث اليوم",
     "headerEvents_many": "{{formatted}} حدثًا اليوم",
     "headerEvents_other": "{{formatted}} حدث اليوم",
+    "headerOverdue_zero": "متأخرة: {{formatted}}",
+    "headerOverdue_one": "متأخرة: {{formatted}}",
+    "headerOverdue_two": "متأخرة: {{formatted}}",
+    "headerOverdue_few": "متأخرة: {{formatted}}",
+    "headerOverdue_many": "متأخرة: {{formatted}}",
+    "headerOverdue_other": "متأخرة: {{formatted}}",
     "headerTasks_zero": "{{formatted}} مهام مفتوحة",
     "headerTasks_one": "{{formatted}} مهمة مفتوحة",
     "headerTasks_two": "{{formatted}} مهمتان مفتوحتان",
     "headerTasks_few": "{{formatted}} مهام مفتوحة",
     "headerTasks_many": "{{formatted}} مهمةً مفتوحة",
     "headerTasks_other": "{{formatted}} مهمة مفتوحة",
+    "headerDosesLeft_zero": "{{formatted}} جرعة متبقية",
+    "headerDosesLeft_one": "{{formatted}} جرعة متبقية",
+    "headerDosesLeft_two": "{{formatted}} جرعة متبقية",
+    "headerDosesLeft_few": "{{formatted}} جرعات متبقية",
+    "headerDosesLeft_many": "{{formatted}} جرعة متبقية",
+    "headerDosesLeft_other": "{{formatted}} جرعة متبقية",
     "startToday": "بدء يومية اليوم",
+    "setupMedication": "إعداد الأدوية",
+    "setupCounter": "إنشاء عدّاد",
+    "counterIncrease": "إضافة واحد إلى {{name}}",
+    "counterDecrease": "إزالة واحد من {{name}}",
+    "storageSummary": "الملاحظات: {{notes}} · الملفات: {{files}}",
+    "graphSummary": "مرتبطة: {{linked}} · غير مرتبطة: {{orphans}}",
+    "placesSummary_zero": "{{count}} عنصر على الخريطة",
+    "placesSummary_one": "عنصر واحد على الخريطة",
+    "placesSummary_two": "عنصران على الخريطة",
+    "placesSummary_few": "{{count}} عناصر على الخريطة",
+    "placesSummary_many": "{{count}} عنصرًا على الخريطة",
+    "placesSummary_other": "{{count}} عنصر على الخريطة",
+    "quickCapture": {
+      "placeholderJournal": "أضف إلى يومية اليوم...",
+      "placeholderTask": "أضف مهمة...",
+      "placeholderNote": "اكتب ملاحظة سريعة...",
+      "destination": "وجهة الحفظ",
+      "voice": "تسجيل ملاحظة صوتية",
+      "voiceNoteTitle": "ملاحظة صوتية",
+      "recording": "جارٍ التسجيل {{duration}}",
+      "savingVoice": "جارٍ تشفير الملاحظة الصوتية...",
+      "savedTo": "تم الحفظ في {{title}}",
+      "failed": "تعذّر الحفظ الآن.",
+      "micUnavailable": "تسجيل الميكروفون غير متاح هنا.",
+      "micDenied": "تم رفض الوصول إلى الميكروفون."
+    },
     "groups": {
-      "keep": "ما تحتفظ به"
+      "graph": "المخطط الشبكي والخرائط",
+      "keep": "إضافات أخرى"
     },
     "layout": {
       "everyday": "يومي",
       "planner": "المخطِّط",
-      "writer": "الكاتب"
+      "writer": "الكاتب",
+      "wellness": "العافية"
     },
     "w": {
       "checkIn": {
         "name": "تسجيل الحالة",
         "help": "حالك اليوم، ومتتبعاتك"
+      },
+      "medication": {
+        "help": "جرعات اليوم، «تم تناوله» أو «تخطي»، وتنبيهات إعادة التعبئة"
+      },
+      "quickCapture": {
+        "name": "التدوين السريع",
+        "help": "أضف نصًا أو ملاحظة صوتية مباشرة من الرئيسية"
       },
       "calendar": {
         "help": "الشهر، مع نقاط اليوميات والأحداث"
@@ -1358,7 +1423,7 @@
       },
       "tasks": {
         "name": "المهام المفتوحة",
-        "help": "المهام غير المحددة من ملاحظاتك"
+        "help": "المهام المتأخرة والمستحقة أولًا، مع إضافة سريعة"
       },
       "recent": {
         "name": "المعدّلة مؤخرًا",
@@ -1379,9 +1444,19 @@
         "name": "مجلد",
         "help": "أحدث العناصر في مجلد واحد"
       },
+      "types": {
+        "name": "قائمة العناصر",
+        "help": "أحدث العناصر من الأنواع التي تختارها"
+      },
       "onThisDay": {
         "name": "في مثل هذا اليوم",
         "help": "يوميات من سنوات سابقة"
+      },
+      "graph": {
+        "help": "خريطة مصغّرة حية للملاحظات المرتبطة في خزنتك"
+      },
+      "places": {
+        "help": "ملاحظاتك ويومياتك وجهات اتصالك ذات الموقع على خريطة"
       },
       "week": {
         "help": "الكلمات والأيام النشطة والعناصر وتسجيلات الحالة"
@@ -1396,6 +1471,12 @@
         "name": "إيقاعك",
         "help": "26 أسبوعًا من الكتابة والمزاج"
       },
+      "yearPixels": {
+        "help": "سنتك كاملة بألوان مزاجك في لمحة واحدة"
+      },
+      "patterns": {
+        "help": "ما يرفع مزاجك أو يخفضه أكثر من غيره"
+      },
       "milestone": {
         "name": "المعلم التالي",
         "help": "كم يقترب المعلم التالي"
@@ -1403,6 +1484,9 @@
       "tracker": {
         "name": "متتبع",
         "help": "متتبع واحد: رقمه وأيامه"
+      },
+      "counter": {
+        "help": "انقر +1 مباشرة في الرئيسية لعدّاد مخصص"
       },
       "weekRecap": {
         "help": "أسبوعك، في بطاقة واحدة"
@@ -1416,9 +1500,13 @@
       },
       "birthdays": {
         "help": "أعياد الميلاد في الأيام الثلاثين القادمة"
+      },
+      "storage": {
+        "help": "حلقة مساحة التخزين المشفّرة لديك، مع إعادة العدّ"
       }
     },
     "empty": {
+      "medication": "لا أدوية مستحقة اليوم",
       "upcoming": "لا شيء في الأيام السبعة القادمة",
       "tasks": "لا مهام مفتوحة",
       "recent": "لا شيء هنا بعد",
@@ -1426,6 +1514,11 @@
       "tag": "لا عناصر بهذا الوسم",
       "folder": "لا شيء في هذا المجلد",
       "onThisDay": "لا يوميات في مثل هذا اليوم من سنوات سابقة",
+      "graph": "اربط ملاحظتين لترى المخطط الشبكي هنا",
+      "places": "أضف موقعًا إلى ملاحظة أو جهة اتصال لترى الدبابيس هنا",
+      "yearPixels": "سجّل مزاجك لتلوين السنة",
+      "patterns": "سجّل بضعة أيام أخرى لاكتشاف الأنماط",
+      "counter": "لا متتبعات عدّاد بعد",
       "files": "لا ملفات بعد",
       "bookmarks": "لا إشارات مرجعية بعد",
       "birthdays": "لا أعياد ميلاد في الأيام الثلاثين القادمة",

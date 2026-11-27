@@ -4,7 +4,7 @@
  *   an action, a tick (green) or "!" (red);
  * - for one tab: how many logins the vault has for that tab's site (grey),
  *   while the vault is unlocked, like Bitwarden.
- * The icon itself turns grey while the vault is locked.
+ * The icon drops its green check and shows a keyhole while the vault is locked.
  * The browser shows a tab's own text over the text for all tabs, so a mark
  * is written on the tab in front too, and that tab gets its count back after
  * the mark's three seconds. The browser keeps a tab's text when the
@@ -20,8 +20,8 @@ const PROBLEM_COLOR = '#C10007';
 const SITE_COLOR = '#52525B';
 const MARK_MS = 3000;
 const ICON = { 16: '/icon/16.png', 32: '/icon/32.png', 48: '/icon/48.png', 128: '/icon/128.png' };
-// The same icon, check included, all in a light grey that keeps the whole
-// shape visible on a dark toolbar, as 1Password marks a locked vault. Mockup: mockups/extension-locked-icon-15nov2026.html (B).
+// Brand blue with the green check removed and a keyhole in the padlock so
+// locked stays on-brand instead of looking disabled (owner pick B, 2026-11-27).
 const LOCKED_ICON = { 16: '/icon-locked/16.png', 32: '/icon-locked/32.png', 48: '/icon-locked/48.png', 128: '/icon-locked/128.png' };
 
 /** Sets the count of the tab in front again; the background registers it. */
@@ -68,8 +68,8 @@ export async function showMark(mark: 'saved' | 'problem', after: () => Promise<v
   }, MARK_MS);
 }
 
-/** The toolbar icon: grey while the vault is locked, the usual
- *  icon while it is open or the logins are off. The browser keeps the icon
+/** The toolbar icon: brand blue with a keyhole and no green check while the vault is locked,
+ *  the usual icon while it is open or the logins are off. The browser keeps the icon
  *  while it runs; `refreshMenus` sets it again at every start. */
 let shownLocked: boolean | null = null;
 export async function showLocked(locked: boolean): Promise<void> {

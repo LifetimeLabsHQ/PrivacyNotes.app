@@ -49,7 +49,9 @@
     "biometricHelp": "Touch ID of Windows Hello, via een passkey voor deze browser. De PIN of toegangscode werkt ook altijd.",
     "repeat": "Voer hem nog een keer in",
     "mismatch": "De twee komen niet overeen. Probeer het opnieuw.",
-    "commonPin": "Deze PIN is te makkelijk te raden. Kies een andere."
+    "commonPin": "Deze PIN is te makkelijk te raden. Kies een andere.",
+    "pinHint": "Snelst te ontgrendelen. Na 10 foute pogingen wordt de verbinding verbroken.",
+    "passcodeHint": "8+ tekens, moeilijker te raden."
   },
   "clip": {
     "selection": "Selectie",

@@ -30,7 +30,38 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { detectPlatform } from './devices';
 import { setSoftKeyboardUp } from './softKeyboard';
+
+/**
+ * True on Android (native app or Android browser), where
+ * `interactive-widget=resizes-content` resizes the layout viewport itself when
+ * the soft keyboard rises. Guarded for non-DOM environments.
+ */
+export function isAndroidViewport(): boolean {
+  return (
+    (typeof window !== 'undefined' && detectPlatform() === 'android') ||
+    (typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent))
+  );
+}
+
+/**
+ * Full-viewport height class for top-level scrollable shells (onboarding, lock
+ * screen). On iOS the webview pins document scroll (`scroll_pin.rs`) and
+ * overlays the keyboard without shrinking `100dvh`, so the shell scrolls
+ * internally and tracks `--pn-app-h` while the keyboard is up. On Android
+ * `interactive-widget=resizes-content` already resizes `100dvh`, and also
+ * tracking `--pn-app-h` closes the keyboard on input (`SettingsWindow.tsx`).
+ */
+export function keyboardViewportHeightClass(): string {
+  return isAndroidViewport() ? 'h-dvh' : 'h-[var(--pn-app-h,100dvh)]';
+}
+
+/** Number of currently mounted `useKeyboardOpen` consumers. Only the last one
+ *  to unmount clears `--pn-app-h` and `softKeyboardUp`, so transient shells
+ *  (onboarding, lock screen) never leak keyboard state after unmount while
+ *  secondary consumers inside `NotesView` never clobber the main shell. */
+let activeKeyboardHooks = 0;
 
 const THRESHOLD = 150;
 
@@ -187,6 +218,7 @@ export function useKeyboardOpen(): boolean {
       if (document.documentElement.style.getPropertyValue('--pn-app-h')) requestAnimationFrame(keepCaretVisible);
     };
 
+    activeKeyboardHooks += 1;
     vv.addEventListener('resize', onResize);
     vv.addEventListener('scroll', onScroll);
     document.addEventListener('focusin', onFocusIn);
@@ -195,6 +227,11 @@ export function useKeyboardOpen(): boolean {
       vv.removeEventListener('resize', onResize);
       vv.removeEventListener('scroll', onScroll);
       document.removeEventListener('focusin', onFocusIn);
+      activeKeyboardHooks = Math.max(0, activeKeyboardHooks - 1);
+      if (activeKeyboardHooks === 0) {
+        document.documentElement.style.removeProperty('--pn-app-h');
+        setSoftKeyboardUp(false);
+      }
     };
   }, []);
 

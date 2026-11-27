@@ -56,7 +56,8 @@ const msg = (key: string, options: Record<string, unknown> = {}): string => i18n
 /** Root folder every imported bookmark lands under. */
 const ROOT_FOLDER = 'Bookmarks';
 
-const TOKEN = /<DT[^>]*>\s*<H3([^>]*)>([\s\S]*?)<\/H3>|<DT[^>]*>\s*<A([^>]*)>([\s\S]*?)<\/A>|<DD>([^<]*)|<\/DL>/gi;
+const TOKEN =
+  /(?:<DT[^>]*>\s*(?:<p\b[^>]*>\s*)*)?<H3\b([^>]*)>([\s\S]*?)<\/H3>|<DT[^>]*>\s*(?:<p\b[^>]*>\s*)*<A\b([^>]*)>([\s\S]*?)<\/A>|<DD\b[^>]*>([^<]*)|<DL\b[^>]*>|<\/DL\s*>/gi;
 
 const NAMED_ENTITY: Record<string, string> = {
   lt: '<',
@@ -97,8 +98,9 @@ function decodeEntities(s: string): string {
 }
 
 function attr(attrs: string, name: string): string | null {
-  const m = new RegExp(`${name}\\s*=\\s*"([^"]*)"`, 'i').exec(attrs);
-  return m ? decodeEntities(m[1]!) : null;
+  const m = new RegExp(`(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s>]+))`, 'i').exec(attrs);
+  const raw = m ? (m[1] ?? m[2] ?? m[3] ?? null) : null;
+  return raw !== null ? decodeEntities(raw) : null;
 }
 
 /** ADD_DATE is unix seconds; tolerate exports that emit ms or us. */
@@ -158,15 +160,22 @@ export async function parseBrowserBookmarks(file: File): Promise<ParsedImport> {
   const now = new Date().toISOString();
   const notes: ImportedNote[] = [];
   const warnings: string[] = [];
-  // Folder stack entries: the display segment, or null for a dropped
-  // container level (its children merge into the level above).
+  // Folder stack entries: one slot per open <DL>. A named folder holds its
+  // display segment; a dropped container root or an anonymous <DL> (such as
+  // the document's root list) holds null so every </DL> pops exactly the <DL>
+  // that opened it.
   const stack: (string | null)[] = [];
+  // The folder declared by the most recent <H3>, waiting for its <DL>. If an
+  // empty <H3> is never followed by a <DL>, the next <H3>, <A>, or </DL>
+  // discards it instead of leaving it stuck on the stack.
+  let pending: { seg: string | null } | null = null;
   let skippedSchemes = 0;
 
   const path = () => stack.filter((seg): seg is string => seg !== null);
 
   // The bookmark a <DD> right after it describes; any other token ends it.
   let described: ImportedNote | null = null;
+  TOKEN.lastIndex = 0;
   let m: RegExpExecArray | null;
   while ((m = TOKEN.exec(text)) !== null) {
     if (m[5] !== undefined) {
@@ -176,9 +185,14 @@ export async function parseBrowserBookmarks(file: File): Promise<ParsedImport> {
       continue;
     }
     described = null;
-    if (m[0].toUpperCase() === '</DL>') {
-      // The outermost </DL> closes the document's root list, which never
-      // had a pushed segment - guard so a malformed file cannot underflow.
+    if (/^<DL\b/i.test(m[0])) {
+      stack.push(pending ? pending.seg : null);
+      pending = null;
+      continue;
+    }
+    if (/^<\/DL/i.test(m[0])) {
+      pending = null;
+      // Guard against malformed files with extra closing tags.
       if (stack.length > 0) stack.pop();
       continue;
     }
@@ -186,15 +200,16 @@ export async function parseBrowserBookmarks(file: File): Promise<ParsedImport> {
       // Folder. Container roots contribute no path segment.
       const attrs = m[1];
       const isContainer =
-        attr(attrs, 'PERSONAL_TOOLBAR_FOLDER') === 'true' ||
-        attr(attrs, 'UNFILED_BOOKMARKS_FOLDER') === 'true';
+        attr(attrs, 'PERSONAL_TOOLBAR_FOLDER')?.toLowerCase() === 'true' ||
+        attr(attrs, 'UNFILED_BOOKMARKS_FOLDER')?.toLowerCase() === 'true';
       // A '/' inside a folder name would split into two levels downstream
       // (buildFolderTree joins on '/'), so it is flattened to a hyphen.
       const name = decodeEntities(m[2]!.trim()).replace(/\//g, '-');
-      stack.push(isContainer || !name ? null : name);
+      pending = { seg: isContainer || !name ? null : name };
       continue;
     }
-    // Bookmark.
+    // Bookmark. Any unclosed <H3> before it had no <DL> of its own.
+    pending = null;
     const attrs = m[3]!;
     const href = attr(attrs, 'HREF') ?? '';
     if (!/^https?:\/\//i.test(href)) {

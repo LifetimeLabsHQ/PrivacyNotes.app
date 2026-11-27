@@ -152,7 +152,10 @@ export function QuotaRingButton({ usedBytes, maxBytes, onOpen, size = 20, tipPos
         aria-label={`${usage} - ${t('storageBar.open')}`}
         className="inline-flex items-center justify-center rounded-md p-1 hover:bg-pn/5 transition"
       >
-        <Ring pct={pct} stroke={16} radius={40} size={size} />
+        {/* Radius 35 + stroke 13 spans 83% of the 100x100 viewBox, matching
+            Phosphor bold's circular optical box (Gear, ArrowsClockwise) so
+            the storage ring does not tower over its footer neighbors. */}
+        <Ring pct={pct} stroke={13} radius={35} size={size} />
       </button>
     </HoverLabel>
   );

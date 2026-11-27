@@ -35,10 +35,10 @@ import { withBareLinks } from './bareLinks';
 import { FileKeys, fileResolver, keyFileRefs, readKeyedFiles } from './fileRefs';
 import { isBlobReferenced } from './blobImport';
 import { mapOutsideCode } from './codeSegments';
-import { noteLink, splitFrontMatter } from './importHelpers';
+import { cleanPath, isJunkEntry, isUnsafeUrl, normalizeTagList, noteLink, splitFrontMatter } from './importHelpers';
 import { parseFrontMatterDate } from './markdown';
-import { normalizeTag } from '../notesRepo';
-import { escapeMarkdownText } from '../markdownEscape';
+import { refusePrivacyNotesBackupZip } from './privacynotes';
+import { escapeMarkdownText, guardMarkdownLineStart } from '../markdownEscape';
 import type { ImportedNote, ParsedImport } from './types';
 import i18n from '../i18n';
 
@@ -68,6 +68,13 @@ function listValue(raw: string[] | undefined): string[] {
 function scalar(raw: string[] | undefined): string {
   const v = (raw ?? []).join(', ').trim();
   return v === 'null' ? '' : v;
+}
+
+function formatFrontMatterUrl(raw: string): string {
+  const clean = raw.replace(/[\r\n]+/g, ' ').trim();
+  if (!clean || isUnsafeUrl(clean)) return '';
+  if (/^https?:\/\/[^\s<>`\x00-\x1f\x7f]+$/i.test(clean)) return `<${clean}>`;
+  return guardMarkdownLineStart(escapeMarkdownText(clean));
 }
 
 /** `readingTimeline` -> `Reading timeline`, `type_` -> `Type`. */
@@ -129,11 +136,12 @@ export const parseCapacities = withBareLinks(readCapacities);
 async function readCapacities(file: File, onProgress?: (msg: string) => void): Promise<ParsedImport> {
   onProgress?.(i18n.t('importLog:shared.readingZip'));
   const zip = await openZip(file);
+  await refusePrivacyNotesBackupZip(zip);
   const entries = new Map<string, JSZip.JSZipObject>();
   for (const e of Object.values(zip.files)) {
     if (e.dir) continue;
-    const path = e.name.replace(/\\/g, '/').replace(/^\/+/, '');
-    if (path.split('/').some((seg) => seg === '..')) continue;
+    const path = cleanPath(e.name);
+    if (!path || isJunkEntry(path)) continue;
     entries.set(path, e);
   }
   const mdPaths = [...entries.keys()].filter((p) => /\.md$/i.test(p) && p.split('/').length >= 3).sort();
@@ -206,8 +214,10 @@ async function readCapacities(file: File, onProgress?: (msg: string) => void): P
       p = p.replace(/(?<!!)\[([^\]\n]*)\]\(([^)\s]+\.md)\)/g, (whole, label: string, target: string) => {
         const path = resolve(target, d.dir);
         if (path && titleByPath.has(path)) {
+          const nl = noteLink(titleByPath.get(path)!, label);
+          if (!nl.startsWith('[[')) return label;
           counts.noteLinks++;
-          return noteLink(titleByPath.get(path)!, label);
+          return nl;
         }
         if (/^[a-z][a-z0-9+.-]*:/i.test(target)) return whole;
         counts.deadLinks++;
@@ -229,12 +239,12 @@ async function readCapacities(file: File, onProgress?: (msg: string) => void): P
       props.push(value === 'true' ? `- [x] ${escapeMarkdownText(propertyLabel(key))}` : `- ${escapeMarkdownText(propertyLabel(key))}: ${escapeMarkdownText(value.replace(/\s+/g, ' '))}`);
     }
     if (props.length) counts.properties++;
-    const description = scalar(d.values.get('description'));
-    const url = scalar(d.values.get('url'));
-    const top = [props.join('\n'), description ? escapeMarkdownText(description) : '', url ? `<${url.replace(/[<>\s]/g, '')}>` : ''].filter(Boolean);
+    const description = scalar(d.values.get('description')).replace(/[\r\n]+/g, ' ').trim();
+    const url = formatFrontMatterUrl(scalar(d.values.get('url')));
+    const top = [props.join('\n'), description ? guardMarkdownLineStart(escapeMarkdownText(description)) : '', url].filter(Boolean);
     if (top.length) body = [...top, body].filter(Boolean).join('\n\n');
 
-    const tags = [...new Set(listValue(d.values.get('tags')).map((t) => normalizeTag(t)).filter(Boolean))];
+    const tags = normalizeTagList(listValue(d.values.get('tags')));
     const created = parseFrontMatterDate(scalar(d.values.get('createdAt'))) ?? parseFrontMatterDate(scalar(d.values.get('date'))) ?? fileTime;
     const updated = parseFrontMatterDate(scalar(d.values.get('lastUpdated'))) ?? created;
     const sane = (iso: string) => (Date.parse(iso) > nowMs + 86_400_000 ? fileTime : iso);

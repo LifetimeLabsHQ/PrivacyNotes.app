@@ -15,7 +15,7 @@ Er kann ==gelb hervorgehoben== sein oder <mark style="background-color: rgba(64,
 
 Ein Spoiler verbirgt Wörter, bis jemand darauf klickt: Das Geschenk ist ||ein Plattenspieler||. Markiere die Wörter und wähle **Spoiler** im Menü **Einfügen**, oder tippe zwei senkrechte Striche auf jede Seite.
 
-Ein Symbol oder ein Logo kann mitten in einer Textzeile stehen, etwa :icon[gift] :icon[coffee] :icon[rocket-launch] oder :logo[github]. Wähle eins unter **Einfügen** > **Symbole und Logos**.
+Ein Symbol oder ein Logo kann mitten in einer Textzeile stehen, etwa :icon[gift] :icon[coffee] :icon[rocket-launch] oder :logo[github]. Wähle eins unter **Einfügen** > **Symbole / Logos / Emojis**.
 
 Der Knopf **Aa** ändert Größe und Schrift. Text kann <span style="font-size: 0.85em">klein</span>, normal oder <span style="font-size: 1.6em">groß</span> sein. Er kann <span style="font-family: ui-sans-serif, system-ui, sans-serif">schlicht</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">serif</span> oder <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">monospace</span> sein.
 

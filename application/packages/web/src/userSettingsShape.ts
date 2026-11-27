@@ -1,7 +1,7 @@
 import type { CustomHabitDef } from './habitList';
 import { DEFAULT_STORE as DEFAULT_LIST_PREFS_STORE, type ScopedListPrefsStore, type ListPrefsStore } from './listPrefs';
 import { defaultTrackerSettings, type FactorDef, type TrackerSettings, type MedicationTemplate } from './trackerTypes';
-import type { ColorTheme, LineSpacing, NestedNumbers } from './theme';
+import type { CheckedTaskStyle, ColorTheme, LineSpacing, NestedNumbers } from './theme';
 import type { JournalTitleFormat } from './notesViewUtils';
 import type { Clock, DateOrder, WeekStart } from './intlFormat';
 import type { View } from './views';
@@ -10,11 +10,14 @@ import type { ItemStyles, NoteColorStyle } from './itemStyles';
 import type { DeviceLabels } from './deviceLabels';
 import type { ExtensionKeys } from './extensionKeys';
 import type { CustomThemes } from './customThemes';
+import type { CustomIcons } from './customIcons';
+import type { GraphViews } from './graphViews';
 import type { CalendarFeeds } from './calendarFeeds';
 import type { FormatBarSetting } from './formatBar';
 import type { DashboardSetting } from './dashboard/dashboardLayout';
 import type { PinnedTabsSetting } from './pinnedTabs';
 import { defaultPwGen, type PwGen } from './passwordGen';
+import { defaultPageNumbers, type PageNumbersSetting } from './pageNumbers';
 
 // ------------------------------------------------------------------
 // Shape
@@ -182,6 +185,12 @@ export type UserSettings = {
    */
   taskConfetti: boolean;
   /**
+   * How a checked task's text looks in notes, Tasks and exports (GitHub #963):
+   * faded and struck through (default), faded only, struck through only, or
+   * plain text with the box checked.
+   */
+  checkedTaskStyle: CheckedTaskStyle;
+  /**
    * The folder the command line `privacynotes` saves into (Settings > CLI),
    * or null while that is off. A folder id that no longer exists reads as
    * off. Spec: docs/internal/plans/agent-cli.md (C4)
@@ -197,13 +206,13 @@ export type UserSettings = {
    * Whether Connections lists link suggestions: notes on the same topic that
    * no link joins (`relatedNotes.ts`). Off, the Connections icon shows only
    * on notes with links, as before. Synced; on by default.
-   * Spec: docs/internal/plans/related-notes.md
+   * Spec: docs/internal/specs/related-notes.md
    */
   linkSuggestions: boolean;
   /**
    * Link suggestions the user marked "Not related": each a pair of note ids,
    * sorted and joined by "|" (`suggestionPairKey`). A union across devices,
-   * so a dismissal anywhere holds everywhere. Spec: docs/internal/plans/related-notes.md
+   * so a dismissal anywhere holds everywhere. Spec: docs/internal/specs/related-notes.md
    */
   dismissedSuggestions: string[];
   /**
@@ -393,6 +402,12 @@ export type UserSettings = {
    */
   nestedNumbers: NestedNumbers;
   /**
+   * Page numbers in Full screen, the editor footer, and print/HTML export
+   * (GitHub #944). Synced like lineSpacing and nestedNumbers so printed
+   * output and reading view stay consistent across devices.
+   */
+  pageNumbers: PageNumbersSetting;
+  /**
    * Date shape new journal entry titles are born with. Synced like
    * viewMode: someone who prefers ISO dates prefers them on every
    * device. Only new entries are affected - existing titles are free
@@ -471,6 +486,27 @@ export type UserSettings = {
    * Spec: docs/contrib/color-themes.md (section 6)
    */
   customThemes: CustomThemes;
+  /**
+   * Pro: user-uploaded custom icons (48x48 px, <= 5 KB each, max 48), stored
+   * as validated raster data URLs keyed by 12-char id and referenced via
+   * `custom:<id>` in `itemStyles`. Merged per icon at every sync point, like
+   * `customThemes`. See customIcons.ts.
+   * Spec: docs/internal/specs/folder-tag-icons.md (section 3.9)
+   */
+  customIcons: CustomIcons;
+  /**
+   * Pro: user-uploaded custom sidebar app icons (64x64 px, <= 5 KB each, 1 per
+   * custom theme), keyed by theme id. Merged per theme at every sync point,
+   * using the same register map and data URL validator as `customIcons`.
+   */
+  themeIcons: CustomIcons;
+  /**
+   * Named saved Graph workspace views (filters, search, focus, color mode,
+   * collapse, spread). Merged per view at every sync point, like `customThemes`,
+   * so names and search queries stay encrypted and follow across devices.
+   * Spec: docs/internal/specs/graph-view.md (section 4.1)
+   */
+  graphViews: GraphViews;
   /**
    * The calendars a person subscribes to (#619), one address per feed id.
    * Merged per feed at every sync point; sealed in the device cache, since
@@ -658,6 +694,7 @@ export function defaultSettings(): UserSettings {
     tasksShowDone: false,
     sinkCheckedTasks: true,
     taskConfetti: true,
+    checkedTaskStyle: 'fade-strike',
     agentFolder: null,
     typedSymbols: false,
     linkSuggestions: true,
@@ -691,6 +728,7 @@ export function defaultSettings(): UserSettings {
     // Spec: docs/internal/design-decisions.md (editor paragraph rhythm)
     lineSpacing: 'compact',
     nestedNumbers: 'flat',
+    pageNumbers: defaultPageNumbers(),
     // Spec: docs/internal/design-decisions.md (journal entry titles)
     journalTitleFormat: 'long',
     journalTitleSuffix: '',
@@ -704,6 +742,9 @@ export function defaultSettings(): UserSettings {
     deviceLabels: {},
     extensionKeys: {},
     customThemes: {},
+    customIcons: {},
+    themeIcons: {},
+    graphViews: {},
     calendarFeeds: {},
     formatBar: {},
     dashboard: {},

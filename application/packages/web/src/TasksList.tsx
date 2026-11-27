@@ -875,7 +875,7 @@ function ClampedTaskText({ text, checked, onClick }: {
         onClick={onClick}
         className={`w-full text-start text-row leading-snug ${
           checked
-            ? 'text-pn-muted line-through'
+            ? 'pn-task-done-row'
             : 'text-pn'
         }`}
         aria-label={tr('tasksList.openSourceNote')}

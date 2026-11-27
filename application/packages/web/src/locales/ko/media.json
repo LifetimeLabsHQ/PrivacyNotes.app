@@ -18,7 +18,13 @@
     "viewAria": "이미지 보기",
     "copyAria": "이미지 복사",
     "copyFailed": "이미지를 복사하지 못했어요.",
-    "picturesLeftOut": "일부 이미지는 추가되지 않았어요. 이미지는 따로 복사해서 붙여 넣으세요."
+    "picturesLeftOut": "일부 이미지는 추가되지 않았어요. 이미지는 따로 복사해서 붙여 넣으세요.",
+    "captionLabel": "캡션",
+    "captionAddAria": "캡션 추가",
+    "captionEditAria": "캡션 편집",
+    "captionPlaceholder": "캡션 추가...",
+    "captionClearAria": "캡션 지우기",
+    "captionHint": "Enter로 저장 · Esc로 취소"
   },
   "attachment": {
     "fallbackName": "첨부 파일",

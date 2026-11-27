@@ -49,7 +49,9 @@
     "biometricHelp": "Touch ID eller Windows Hello, via en passkey för den här webbläsaren. PIN-koden eller lösenkoden fungerar alltid också.",
     "repeat": "Ange den igen",
     "mismatch": "De två stämmer inte överens. Försök igen.",
-    "commonPin": "Den här PIN-koden är för lätt att gissa. Välj en annan."
+    "commonPin": "Den här PIN-koden är för lätt att gissa. Välj en annan.",
+    "pinHint": "Snabbast att låsa upp. 10 felaktiga försök kopplar från.",
+    "passcodeHint": "Minst 8 tecken, svårare att gissa."
   },
   "clip": {
     "selection": "Markering",

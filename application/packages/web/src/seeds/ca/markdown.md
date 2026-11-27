@@ -15,7 +15,7 @@ Pot anar ==ressaltat en groc== o <mark style="background-color: rgba(64, 192, 87
 
 Un espòiler amaga paraules fins que algú hi fa clic: el regal és ||un tocadiscos||. Selecciona les paraules i tria **Espòiler** al menú **Insereix**, o escriu dues barres a cada costat.
 
-Una icona o un logotip poden anar dins d'una línia de text, com :icon[gift] :icon[coffee] :icon[rocket-launch] o :logo[github]. Tria'n un a **Insereix** > **Icones i logotips**.
+Una icona o un logotip poden anar dins d'una línia de text, com :icon[gift] :icon[coffee] :icon[rocket-launch] o :logo[github]. Tria'n un a **Insereix** > **Icones / logotips / emojis**.
 
 El botó **Aa** canvia la mida i la tipografia. El text pot ser <span style="font-size: 0.85em">petit</span>, normal o <span style="font-size: 1.6em">gran</span>. Pot ser <span style="font-family: ui-sans-serif, system-ui, sans-serif">senzill</span>, <span style="font-family: ui-serif, Georgia, Cambria, serif">amb serifa</span> o <span style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace">monoespaiat</span>.
 

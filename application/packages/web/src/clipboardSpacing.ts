@@ -33,6 +33,7 @@ import { END_BREAK_ATTR, LINES_ATTR, LINE_BREAK_ATTR, joinParagraphLines } from 
 import { keepPaletteStyles } from './pasteStyles';
 import { keepWindowsPathBackslashes } from './pastedPaths';
 import { isEmptyParagraph } from './editorClipboard';
+import { isNbspOnlyParagraph } from './editorCleanup';
 
 /** Elements that only group their children, so a paragraph inside one still
  *  sits in the main flow of the text. */
@@ -232,12 +233,20 @@ function nbspAsEmpty(content: Fragment): Fragment {
   const out: ProseMirrorNode[] = [];
   let changed = false;
   content.forEach((node) => {
-    let onlyNbsp = node.type.name === 'paragraph' && node.content.size > 0;
-    node.forEach((child) => {
-      if (!child.isText || child.text!.replace(/\u00a0/g, '') !== '') onlyNbsp = false;
-    });
-    out.push(onlyNbsp ? node.type.create(node.attrs) : node);
-    changed ||= onlyNbsp;
+    if (isNbspOnlyParagraph(node)) {
+      out.push(node.type.create(node.attrs));
+      changed = true;
+      return;
+    }
+    if (!node.isLeaf && node.content.size > 0) {
+      const inner = nbspAsEmpty(node.content);
+      if (inner !== node.content) {
+        out.push(node.copy(inner));
+        changed = true;
+        return;
+      }
+    }
+    out.push(node);
   });
   return changed ? Fragment.from(out) : content;
 }

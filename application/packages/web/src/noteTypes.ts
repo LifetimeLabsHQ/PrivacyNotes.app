@@ -16,7 +16,7 @@ export interface NoteTypeTraits {
    *  and the place chip, with "Add location" in the "..." menu. */
   tagRow: boolean;
   /** The auto-place switch that fills in this type's place by itself, if any.
-   *  Spec: docs/internal/plans/note-location.md (section 3c) */
+   *  Spec: docs/internal/specs/note-location.md (section 3c) */
   autoPlace: AutoLocationType | null;
   /** Whether Translate notes reads the body.
    *  Spec: docs/internal/plans/plugins.md (section 6.5) */

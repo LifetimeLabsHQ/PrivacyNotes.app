@@ -11,7 +11,7 @@
  * desktop build, and a browser hands the nearby Wi-Fi networks to its
  * vendor's location service (our `Permissions-Policy: geolocation=()` blocks
  * it anyway).
- * Spec: docs/internal/plans/note-location.md (section 3)
+ * Spec: docs/internal/specs/note-location.md (section 3)
  */
 import { detectPlatform } from './devices';
 
